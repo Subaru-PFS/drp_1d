@@ -75,3 +75,6 @@ lib/*.so
 *.srctrlbm
 *.srctrldb
 *.srctrlprj
+
+# Sonarqube
+.scannerwork

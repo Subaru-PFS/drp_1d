@@ -80,9 +80,6 @@ public:
   typedef std::vector<TSolutionSet>
       TSolutionSetList; // a list of possible redshift solutions
 
-  CLineMatchingResult();
-  virtual ~CLineMatchingResult();
-
   void SaveSolutionSetToStream(std::ostream &stream,
                                TSolutionSetList selectedResults,
                                Int32 type) const;
@@ -113,9 +110,6 @@ public:
 
   CLineCatalog m_RestCatalog;
   CLineCatalog m_DetectedCatalog;
-
-private:
-  bool m_bypassDebug;
 };
 } // namespace NSEpic
 

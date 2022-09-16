@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
 
   std::shared_ptr<const COperatorResult> result_out_2 =
-      store_2.GetFlagResult("warningFlag", "", "warningFlag");
+      store_2.GetFlagLogResult("warningFlag", "", "warningFlag");
   BOOST_CHECK(result_out_2->getType() == "CFlagLogResult");
 }
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
   BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
 
   std::shared_ptr<const COperatorResult> result_out_2 =
-      store_2.GetFlagResult("warningFlag", "", "warningFlag");
+      store_2.GetFlagLogResult("warningFlag", "", "warningFlag");
   BOOST_CHECK(result_out_2->getType() == "CFlagLogResult");
 }
 
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
               "object.method.warningFlag");
 
   std::shared_ptr<const COperatorResult> result_out =
-      store_1.GetFlagResult("object", "method", "warningFlag");
+      store_1.GetFlagLogResult("object", "method", "warningFlag");
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
 
   // test store flag outside context
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   store_2.StoreFlagResult("warningFlag", Flag.getBitMask());
   BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
 
-  result_out = store_2.GetFlagResult("warningFlag", "", "warningFlag");
+  result_out = store_2.GetFlagLogResult("warningFlag", "", "warningFlag");
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
 }
 

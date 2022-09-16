@@ -56,7 +56,8 @@ void CTplCombinationResult::Init(Int32 n, Int32 EbmvListSize,
   ChiSquareIntermediate.clear();
   IsmEbmvCoeffIntermediate.clear();
   IgmMeiksinIdxIntermediate.clear();
-
+  nISM = EbmvListSize;
+  nIGM = MeiksinListSize;
   std::vector<TFloat64List> _chi2ListList(
       EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX));
   std::vector<TFloat64List> _ismListList(EbmvListSize,

@@ -46,7 +46,7 @@ using namespace std;
 #include <algorithm>
 #include <cfloat>
 #include <fstream>
-
+#include <numeric>
 COperatorPdfz::COperatorPdfz(
     const std::string &opt_combine, Float64 peakSeparation, Float64 meritcut,
     Int32 maxCandidate, const std::string &Id_prefix,
@@ -63,7 +63,7 @@ COperatorPdfz::COperatorPdfz(
   if (candidatesRedshifts.size() != parentCandidates.size())
     THROWG(
         INTERNAL_ERROR,
-        "candidatesRedshifts and parentCandidates does not have the same size");
+        "candidatesRedshifts and parentCandidates do not have the same size");
   for (Int32 i = 0; i < candidatesRedshifts.size(); ++i)
     m_candidatesZRanges[parentCandidates[i].first] =
         TFloat64Range(candidatesRedshifts[i]);
@@ -103,39 +103,37 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray, bool integ) {
     }
   }
 
+  for (int r = 0; r < CandidateszResult->size(); r++)
+    CandidateszResult->m_ranked_candidates[r].second->Rank = r;
+
   return CandidateszResult;
 }
 
 void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
   Log.LogInfo("COperatorPdfz::CombinePDF: Pdfz combination");
+  if (!chisquarearray.chisquares.size()) {
+    THROWG(INTERNAL_ERROR, Formatter() << "chisquarearray is empty");
+  }
 
-  if (chisquarearray.chisquares.size() > 0) {
-    // initialize m_postmargZResult
-    m_postmargZResult =
-        std::make_shared<CPdfMargZLogResult>(chisquarearray.redshifts);
+  // initialize m_postmargZResult
+  m_postmargZResult =
+      std::make_shared<CPdfMargZLogResult>(chisquarearray.redshifts);
 
-    if (m_opt_combine == "marg") {
-      Log.LogInfo("COperatorPdfz::CombinePDF: Marginalization");
-      Marginalize(chisquarearray);
+  if (m_opt_combine == "marg") {
+    Log.LogInfo("COperatorPdfz::CombinePDF: Marginalization");
+    Marginalize(chisquarearray);
 
-    } else if (m_opt_combine == "bestchi2") {
-      Log.LogInfo("COperatorPdfz::CombinePDF: BestChi2");
-      BestChi2(chisquarearray);
+  } else if (m_opt_combine == "bestchi2") {
+    Log.LogInfo("COperatorPdfz::CombinePDF: BestChi2");
+    BestChi2(chisquarearray);
 
-    } else if (m_opt_combine == "bestproba") {
-      Log.LogInfo("COperatorPdfz::CombinePDF: BestProba");
-      BestProba(chisquarearray);
+  } else if (m_opt_combine == "bestproba") {
+    Log.LogInfo("COperatorPdfz::CombinePDF: BestProba");
+    BestProba(chisquarearray);
 
-    } else {
-      THROWG(INTERNAL_ERROR, "Unable to parse pdf "
-                             "combination method option");
-    }
   } else {
-    THROWG(
-        INTERNAL_ERROR,
-        Formatter() << "Unable to find any "
-                       "chisquares prepared for combination. chisquares.size()="
-                    << chisquarearray.chisquares.size());
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Invalid pdfcombination method: " << m_opt_combine);
   }
 
   // check pdf is ok
@@ -177,18 +175,17 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
         extremum_op.Find(m_postmargZResult->Redshifts,
                          m_postmargZResult->valProbaLog, extremumList);
     if (!findok) {
-      if (m_candidatesZRanges.size() >
-          1) { // we are in 2nd pass (several redshift ranges)
-        Log.LogInfo("COperatorPdfz::searchMaxPDFcandidates: Second-pass "
-                    "fitting degenerates the first-pass results of "
-                    "candidate:%s in range [%f , %f]\n",
-                    cand.first.c_str(), redshiftsRange.GetBegin(),
-                    redshiftsRange.GetEnd());
-        Log.LogInfo(" Flag - Eliminating a second-pass candidate");
-        continue;
-      } else {
-        THROWG(INTERNAL_ERROR, "searchMaxPDFcandidates failed");
-      }
+      if (m_candidatesZRanges.size() == 1)
+        THROWG(INTERNAL_ERROR, " Failed to identify pdf candidates");
+
+      // we are in 2nd pass (several redshift ranges)
+      Log.LogInfo("COperatorPdfz::searchMaxPDFcandidates: Second-pass "
+                  "fitting degenerates the first-pass results of "
+                  "candidate:%s in range [%f , %f]\n",
+                  cand.first.c_str(), redshiftsRange.GetBegin(),
+                  redshiftsRange.GetEnd());
+      Log.LogInfo(" Flag - Eliminating a second-pass candidate");
+      continue;
     }
     Int32 i = 0;
     const std::string Id_prefix =
@@ -208,7 +205,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   }
 
   if (candidates.empty()) {
-    THROWG(INTERNAL_ERROR, "searchMaxPDFcandidates failed");
+    THROWG(INTERNAL_ERROR, " Failed to identify pdf candidates");
   }
 
   return candidates;
@@ -295,23 +292,7 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
                                const Float64 cstLog,
                                const TFloat64List &logZPrior,
                                TFloat64List &logPdf, Float64 &logEvidence) {
-  bool verbose = true;
   logPdf.clear();
-
-  if (verbose) {
-    Float64 meritmax = -DBL_MAX;
-    Float64 meritmin = DBL_MAX;
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (meritmax < merits[k]) {
-        meritmax = merits[k];
-      }
-      if (meritmin > merits[k]) {
-        meritmin = merits[k];
-      }
-    }
-    Log.LogDebug("COperatorPdfz::ComputePdf: using merit min=%e", meritmin);
-    Log.LogDebug("COperatorPdfz::ComputePdf: using merit max=%e", meritmax);
-  }
 
   // check if there is at least 1 redshift value
   if (redshifts.size() == 1) // consider this as a success
@@ -321,30 +302,12 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
     logEvidence = 1.0;
     return;
   } else if (redshifts.size() < 1) {
-    THROWG(INTERNAL_ERROR, "COperatorPdfz::ComputePdf, redshifts is empty");
+    THROWG(INTERNAL_ERROR, "redshifts is empty");
   }
 
   // check that the zPrior is size-compatible
   if (logZPrior.size() != redshifts.size()) {
-    THROWG(INTERNAL_ERROR, "redshifts and logZPrior "
-                           "have different sizes");
-  }
-
-  if (verbose) {
-    Float64 logZPriorMax = -DBL_MAX;
-    Float64 logZPriorMin = DBL_MAX;
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (logZPriorMax < logZPrior[k]) {
-        logZPriorMax = logZPrior[k];
-      }
-      if (logZPriorMin > logZPrior[k]) {
-        logZPriorMin = logZPrior[k];
-      }
-    }
-    Log.LogDebug("COperatorPdfz::ComputePdf: using logZPrior min=%e",
-                 logZPriorMax);
-    Log.LogDebug("COperatorPdfz::ComputePdf: using logZPrior max=%e",
-                 logZPriorMin);
+    THROWG(INTERNAL_ERROR, "Size do not match between redshifts and logZPrior");
   }
 
   // renormalize zprior to 1
@@ -359,31 +322,8 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
   Float64 logsumexp = logSumExpTrick(Xi2_2withPrior, redshifts);
   logEvidence = cstLog + logsumexp;
 
-  if (verbose) {
-    Log.LogDebug("COperatorPdfz::ComputePdf: using cstLog=%e", cstLog);
-    Log.LogDebug("COperatorPdfz::ComputePdf: using logEvidence=%e",
-                 logEvidence);
-    // Log.LogDebug("Pdfz: Pdfz computation: using logPrior=%f", logPrior);
-    // //logPrior can be variable with z
-  }
-
   for (Int32 k = 0; k < redshifts.size(); k++) {
     logPdf[k] = Xi2_2withPrior[k] + cstLog - logEvidence;
-  }
-
-  if (verbose) {
-    Float64 pdfmax = -DBL_MAX;
-    Float64 pdfmin = DBL_MAX;
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (pdfmax < logPdf[k]) {
-        pdfmax = logPdf[k];
-      }
-      if (pdfmin > logPdf[k]) {
-        pdfmin = logPdf[k];
-      }
-    }
-    Log.LogDebug("COperatorPdfz::ComputePdf: found pdf min=%e", pdfmin);
-    Log.LogDebug("COperatorPdfz::ComputePdf: found pdf max=%e", pdfmax);
   }
 }
 
@@ -435,6 +375,33 @@ void COperatorPdfz::ComputeEvidenceAll(const TFloat64List &LogEvidencesWPriorM,
                                  // classification
 }
 
+void COperatorPdfz::validateChisquareArray(
+    const ChisquareArray &chisquarearray) const {
+
+  const TFloat64List &redshifts = chisquarearray.redshifts;
+  const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
+  const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
+
+  if (meritResults.size() != zPriors.size())
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << " merit.size (" << meritResults.size()
+                               << ") != prior.size (" << zPriors.size() << ")");
+
+  if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1)
+    THROWG(INTERNAL_ERROR, Formatter() << "merit.size(" << meritResults.size()
+                                       << "), prior.size(" << zPriors.size()
+                                       << ") or redshifts.size("
+                                       << redshifts.size() << ") is zero");
+
+  // check merit curves. Maybe this should be assert stuff ?
+  for (const TFloat64List &_merit : meritResults)
+    for (const Float64 &m : _merit)
+      if (m != m) // test NAN value
+        THROWG(INTERNAL_ERROR, "merit result "
+                               "has at least one nan value");
+  return;
+}
+
 void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
                                    std::vector<TFloat64List> &logProbaList,
                                    TFloat64List &LogEvidencesWPriorM,
@@ -446,23 +413,7 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
   const Float64 &cstLog = chisquarearray.cstLog;
   const TFloat64List &modelPriors = chisquarearray.modelpriors;
 
-  if (meritResults.size() != zPriors.size())
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << " merit.size (" << meritResults.size()
-                               << ") != prior.size (" << zPriors.size() << ")");
-
-  if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1)
-    THROWG(INTERNAL_ERROR, Formatter() << "merit.size(" << meritResults.size()
-                                       << "), prior.size(" << zPriors.size()
-                                       << ") or redshifts.size("
-                                       << redshifts.size() << ") is zero !");
-
-  // check merit curves. Maybe this should be assert stuff ?
-  for (const TFloat64List &_merit : meritResults)
-    for (const Float64 &m : _merit)
-      if (m != m) // test NAN value
-        THROWG(INTERNAL_ERROR, "merit result "
-                               "has at least one nan value");
+  validateChisquareArray(chisquarearray);
 
   if (modelPriors.empty()) {
     const Float64 priorModelCst = 1.0 / Float64(meritResults.size());
@@ -470,7 +421,6 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
                 "constant priors (=%f)",
                 priorModelCst);
     logPriorModel = TFloat64List(meritResults.size(), log(priorModelCst));
-
   } else {
     if (modelPriors.size() != meritResults.size())
       THROWG(INTERNAL_ERROR, "modelPriors has wrong size");
@@ -479,18 +429,14 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
     std::transform(modelPriors.cbegin(), modelPriors.cend(),
                    logPriorModel.begin(), [](Float64 v) { return log(v); });
 
-    // logging priors used
-    Float64 sumPriors = 0.0;
-    for (Int32 km = 0; km < meritResults.size(); km++) {
-      sumPriors += exp(logPriorModel[km]);
-      Log.LogDetail(
-          "COperatorPdfz::ComputeAllPdfs: for model k=%d, using prior=%f", km,
-          exp(logPriorModel[km]));
-    }
+    // summing priors used
+    Float64 sumPriors = accumulate(
+        logPriorModel.begin(), logPriorModel.end(), 0.0,
+        [](Float64 sum, Float64 logprior) { return sum + exp(logprior); });
 
     Log.LogInfo("COperatorPdfz::ComputeAllPdfs: sumPriors=%f", sumPriors);
     if (sumPriors > 1.1 || sumPriors < 0.9)
-      THROWG(INTERNAL_ERROR, "sumPriors should be close to 1... !!!");
+      THROWG(INTERNAL_ERROR, "sumPriors should be between ]0.9;1.1[");
   }
 
   TFloat64List logEvidenceList(meritResults.size());
@@ -509,7 +455,6 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
 }
 
 void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
-  bool verbose = false;
 
   const auto nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
@@ -522,22 +467,19 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   ComputeAllPdfs(chisquarearray, logProbaList, LogEvidencesWPriorM,
                  logPriorModel, MaxiLogEvidence);
 
-  if (verbose)
-    Log.LogDebug("COperatorPdfz::Marginalize: MaxiLogEvidence=%e",
-                 MaxiLogEvidence);
+  Log.LogDebug("COperatorPdfz::Marginalize: MaxiLogEvidence=%e",
+               MaxiLogEvidence);
 
   m_postmargZResult->valEvidenceLog = m_postmargZResult->valMargEvidenceLog;
 
-  if (verbose)
-    Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e",
-                 m_postmargZResult->valMargEvidenceLog);
+  Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e",
+               m_postmargZResult->valMargEvidenceLog);
 
   // marginalize: ie sum all PDFS
   TInt32List nSum(zsize, 0);
   for (Int32 km = 0; km < nmodel; km++) {
-    if (verbose)
-      Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
-                   km);
+    Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
+                 km);
 
     // Todo: Check if the status is OK ?
     // meritResult->Status[i] == COperator::nStatus_OK
@@ -564,13 +506,12 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   for (Int32 k = 0; k < zsize; k++) {
     if (nSum[k] != nmodel) {
       m_postmargZResult->valProbaLog[k] = NAN;
-      Log.LogError("Pdfz: Pdfz computation failed. For z=%f, nSum=%d",
-                   m_postmargZResult->Redshifts[k], nSum[k]);
-      Log.LogError(
-          "Pdfz: Pdfz computation failed. For z=%f, meritResults.size()=%d",
-          m_postmargZResult->Redshifts[k], nmodel);
+      Log.LogError("Pdfz: Pdfz computation failed at z=%f: nSum(%d) !="
+                   "meritResults.size()(% d) ",
+                   m_postmargZResult->Redshifts[k], nSum[k], nmodel);
+
       THROWG(INTERNAL_ERROR, "Computation failed. Not all templates "
-                             "have 100 percent coverage for all redshifts!");
+                             "have 100 percent coverage for all redshifts");
     }
   }
 }
@@ -584,32 +525,15 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Log.LogError("Pdfz: Pdfz-bestproba computation ! This method is currently "
                "not working !! It will produce bad results as is....");
-  bool verbose = false;
+  validateChisquareArray(chisquarearray);
 
   const TFloat64List &redshifts = chisquarearray.redshifts;
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
   const Float64 &cstLog = chisquarearray.cstLog;
 
-  if (meritResults.size() != zPriors.size()) {
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << " Pdfz-bestproba problem, merit.size ("
-                               << meritResults.size() << ") != prior.size ("
-                               << zPriors.size() << ")");
-  }
-  if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1) {
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Pdfz-bestproba problem, merit.size("
-                               << meritResults.size() << "), prior.size("
-                               << zPriors.size() << ") or redshifts.size("
-                               << redshifts.size() << ") is zero !");
-  }
-
   for (Int32 km = 0; km < meritResults.size(); km++) {
-    if (verbose) {
-      Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d",
-                   km);
-    }
+    Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d", km);
 
     // Todo: Check if the status is OK ?
     // meritResult->Status[i] == COperator::nStatus_OK
@@ -620,14 +544,11 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
                logEvidence);
 
     // check if the redshift bins are the same
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (m_postmargZResult->Redshifts[k] != redshifts[k]) {
+    for (Int32 k = 0; k < redshifts.size(); k++)
+      if (m_postmargZResult->Redshifts[k] != redshifts[k])
         THROWG(INTERNAL_ERROR,
-               Formatter() << "Pdfz: Pdfz-bestproba, computation "
-                              "(z-bins comparison) failed for result km="
-                           << km);
-      }
-    }
+               Formatter() << "z-bins comparison failed for result km=" << km);
+
     for (Int32 k = 0; k < redshifts.size(); k++) {
       if (true /*meritResult->Status[k]== COperator::nStatus_OK*/) // todo:
                                                                    // check
@@ -637,11 +558,10 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
                                                                    // always OK
                                                                    // for
                                                                    // linemodel
-                                                                   // tplshape)
+                                                                   // tplratio)
       {
-        if (logProba[k] > m_postmargZResult->valProbaLog[k]) {
-          m_postmargZResult->valProbaLog[k] = logProba[k];
-        }
+        m_postmargZResult->valProbaLog[k] =
+            std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
       }
     }
   }
@@ -654,46 +574,36 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Float64 maxdz = -DBL_MAX;
   for (Int32 k = 1; k < redshifts.size(); k++) {
     Float64 diff = redshifts[k] - redshifts[k - 1];
-    if (mindz > diff) {
-      mindz = diff;
-    }
-    if (maxdz < diff) {
-      maxdz = diff;
-    }
+    mindz = std::min(mindz, diff);
+    maxdz = std::max(maxdz, diff);
   }
   Float64 zstep = (maxdz + mindz) / 2.0;
-  if (abs(maxdz - mindz) / zstep > reldzThreshold) {
-    THROWG(INTERNAL_ERROR,
-           "COperatorPdfz::BestProba: zstep is not constant, cannot normalize");
-  }
+  if (abs(maxdz - mindz) / zstep > reldzThreshold)
+    THROWG(INTERNAL_ERROR, "Impossible to normalize: zstep is not constant");
 
   // 2. prepare LogEvidence
   Float64 maxi = -DBL_MAX;
   TFloat64List smallVALUES(redshifts.size(), 0.0);
   for (Int32 k = 0; k < redshifts.size(); k++) {
     smallVALUES[k] = m_postmargZResult->valProbaLog[k];
-    if (maxi < smallVALUES[k]) {
-      maxi = smallVALUES[k]; // maxi will be used to avoid underflows when
-                             // summing exponential of small values
-    }
+    maxi = std::max(maxi,
+                    smallVALUES[k]); // maxi will be used to avoid underflows
+                                     // when summing exponential of small values
   }
 
-  Float64 sumModifiedExp = 0.0;
-  for (Int32 k = 0; k < redshifts.size(); k++) {
-    Float64 modifiedEXPO = exp(smallVALUES[k] - maxi);
-    sumModifiedExp += modifiedEXPO;
-  }
+  Float64 sumModifiedExp = accumulate(
+      smallVALUES.begin(), smallVALUES.end(), 0.0,
+      [maxi](Float64 sum, Float64 value) { return sum + exp(value - maxi); });
+
   Float64 logEvidence = maxi + log(sumModifiedExp) + log(zstep);
 
-  if (verbose) {
-    Log.LogDebug("COperatorPdfz::BestProba: using logEvidence=%e", logEvidence);
-    Log.LogDebug("COperatorPdfz::BestProba: using log(zstep)=%e", log(zstep));
-  }
+  Log.LogDebug("COperatorPdfz::BestProba: using logEvidence=%e", logEvidence);
+  Log.LogDebug("COperatorPdfz::BestProba: using log(zstep)=%e", log(zstep));
 
-  for (Int32 k = 0; k < redshifts.size(); k++) {
-    m_postmargZResult->valProbaLog[k] =
-        m_postmargZResult->valProbaLog[k] - logEvidence;
-  }
+  std::transform(m_postmargZResult->valProbaLog.cbegin(),
+                 m_postmargZResult->valProbaLog.cend(),
+                 m_postmargZResult->valProbaLog.begin(),
+                 [logEvidence](Float64 v) { return v - logEvidence; });
 }
 
 /**
@@ -710,7 +620,6 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
  * @return
  */
 void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
-  bool verbose = false;
 
   const auto nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
@@ -786,14 +695,14 @@ void COperatorPdfz::isPdfValid() const {
     }
   }
   if (minVal == maxVal) {
-    THROWG(INTERNAL_ERROR, "PDF is flat !");
+    THROWG(INTERNAL_ERROR, "PDF is flat");
   }
 
   // is pdf any value nan ?
   for (Int32 k = 0; k < m_postmargZResult->valProbaLog.size(); k++) {
     if (m_postmargZResult->valProbaLog[k] !=
         m_postmargZResult->valProbaLog[k]) {
-      THROWG(INTERNAL_ERROR, "PDF has nan or invalid values !");
+      THROWG(INTERNAL_ERROR, "PDF has nan or invalid values");
     }
   }
 

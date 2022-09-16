@@ -85,9 +85,11 @@ def test_reader():
     parameters["LSF"] = dict()
     parameters["LSF"]["LSFType"] = "FROMSPECTRUMDATA"
     parameters["airvacuum_method"] = ""
+    parameters["objects"]=[]
     cl = CalibrationLibrary(parameters, "/tmp")
     fsr = FakeSpectrumReader("000", parameters, cl, "000","random")
     fsr.load_all(None)
+    fsr.init()
     s = fsr.get_spectrum()
 
 
@@ -96,6 +98,7 @@ def test_multi_obs():
     parameters["LSF"] = dict()
     parameters["LSF"]["LSFType"] = "FROMSPECTRUMDATA"
     parameters["airvacuum_method"] = ""
+    parameters["objects"]=[]
     cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
     fsr = FakeSpectrumReader("000", parameters, cl, "000","range")
     fsr.load_wave([0,10])

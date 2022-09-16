@@ -38,6 +38,8 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 
 using namespace NSEpic;
@@ -49,48 +51,8 @@ void CTemplatesOrthogonalization::Orthogonalize(
   m_enableOrtho =
       inputContext.GetParameterStore()->EnableTemplateOrthogonalization(
           category);
-
-  std::string widthType = inputContext.GetParameterStore()->Get<std::string>(
-      category + ".LineModelSolve.linemodel.linewidthtype");
-  Float64 opt_nsigmasupport = inputContext.GetParameterStore()->Get<Float64>(
-      category + ".LineModelSolve.linemodel.nsigmasupport");
-  Float64 velocityEmission = inputContext.GetParameterStore()->Get<Float64>(
-      category + ".LineModelSolve.linemodel.velocityemission");
-  Float64 velocityAbsorption = inputContext.GetParameterStore()->Get<Float64>(
-      category + ".LineModelSolve.linemodel.velocityabsorption");
-  std::string opt_rules = inputContext.GetParameterStore()->Get<std::string>(
-      category + ".LineModelSolve.linemodel.rules");
-  std::string opt_rigidity = inputContext.GetParameterStore()->Get<std::string>(
-      category + ".LineModelSolve.linemodel.rigidity");
-  std::string opt_linetypefilter =
-      inputContext.GetParameterStore()->Get<std::string>(
-          category + ".LineModelSolve.linemodel.linetypefilter");
-  std::string opt_lineforcefilter =
-      inputContext.GetParameterStore()->Get<std::string>(
-          category + ".LineModelSolve.linemodel.lineforcefilter");
-  std::string rigidity = opt_rigidity.c_str();
-  std::string rules = opt_rules.c_str();
-  // temporary options override to be removed when full tpl ortho is implemented
-  bool enableOverride = true;
-  if (enableOverride) {
-    rigidity = "rules";
-    rules = "no";
-  }
-
-  Int32 typeFilter = -1;
-  if (opt_linetypefilter == "A")
-    typeFilter = CLine::nType_Absorption;
-  else if (opt_linetypefilter == "E")
-    typeFilter = CLine::nType_Emission;
-  Int32 forceFilter = -1; // CLine::nForce_Strong;
-  if (opt_lineforcefilter == "S")
-    forceFilter = CLine::nForce_Strong;
-
-  CLineCatalog::TLineVector restLineList =
-      inputContext.GetLineCatalog(category, "LineModelSolve")
-          ->GetFilteredList(typeFilter, forceFilter);
-  // prepare continuum templates catalog
-  std::string opt_fittingmethod = "hybrid";
+  CAutoScope autoscope_category(Context.m_ScopeStack, category);
+  CAutoScope autoscope_method(Context.m_ScopeStack, "LineModelSolve");
 
   // retrieve templateCatalog
   std::shared_ptr<CTemplateCatalog> tplCatalog =
@@ -102,8 +64,8 @@ void CTemplatesOrthogonalization::Orthogonalize(
 
   // check if LSF has changed, if yes reorthog all
   bool differentLSF = false;
-  Float64 lambda = (inputContext.m_lambdaRange.GetBegin() +
-                    inputContext.m_lambdaRange.GetEnd()) /
+  Float64 lambda = (inputContext.m_lambdaRange->GetBegin() +
+                    inputContext.m_lambdaRange->GetEnd()) /
                    2;
   if (tplCatalog->m_ortho_LSFWidth !=
       m_LSF->GetWidth(lambda)) // true also if m_ortho_LSFWidth is NAN
@@ -175,9 +137,7 @@ void CTemplatesOrthogonalization::Orthogonalize(
       Log.LogDetail(Formatter()
                     << "    TplOrthogonalization: now processing tpl"
                     << tpl.GetName());
-      std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(
-          tpl, restLineList, opt_fittingmethod, widthType, opt_nsigmasupport,
-          velocityEmission, velocityAbsorption, rules, rigidity);
+      std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(tpl);
       if (partial)
         tplCatalog->SetTemplate(_orthoTpl, i);
       else
@@ -199,12 +159,7 @@ void CTemplatesOrthogonalization::Orthogonalize(
  * @return
  */
 std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
-    const CTemplate &inputTemplate,
-    const CLineCatalog::TLineVector &restLineList,
-    const std::string &opt_fittingmethod, const std::string &opt_lineWidthType,
-    const Float64 opt_nsigmasupport, const Float64 opt_velocityEmission,
-    const Float64 opt_velocityAbsorption, const std::string &opt_rules,
-    const std::string &opt_rigidity) {
+    const CTemplate &inputTemplate) {
 
   std::shared_ptr<CTemplate> tplOrtho =
       std::make_shared<CTemplate>(inputTemplate);
@@ -214,43 +169,37 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     std::string opt_continuumcomponent = "fromspectrum";
     Float64 opt_continuum_neg_threshold =
         -INFINITY; // not relevant in the "fromspectrum" case
-    CSpectrum spectrum = inputTemplate;
-    spectrum.SetLSF(m_LSF);
+    Float64 opt_continuum_nullamp_threshold =
+        0.; // not relevant in the "fromspectrum" case;
+    tplOrtho->SetLSF(m_LSF);
 
     std::string saveContinuumEstimationMethod =
-        spectrum.GetContinuumEstimationMethod();
-    spectrum.SetContinuumEstimationMethod("zero");
-
-    CTemplateCatalog tplCatalogUnused;
-    TStringList tplCategoryListUnused;
+        tplOrtho->GetContinuumEstimationMethod();
+    tplOrtho->SetContinuumEstimationMethod("zero");
 
     // Compute linemodel on the template
     TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
-    CLineModelFitting model(
-        spectrum, lambdaRange, tplCatalogUnused, tplCategoryListUnused,
-        restLineList, opt_fittingmethod, opt_continuumcomponent,
-        opt_continuum_neg_threshold, opt_lineWidthType, opt_nsigmasupport,
-        opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelFitting model(tplOrtho, lambdaRange);
 
     Float64 redshift = 0.0;
     Float64 contreest_iterations = 0;
     bool enableLogging = true;
-    CLineModelSolution modelSolution;
+    CLineModelSolution modelSolution(Context.getLineVector());
     CContinuumModelSolution continuumModelSolution;
 
     model.fit(redshift, modelSolution, continuumModelSolution,
               contreest_iterations, enableLogging);
 
     // Restore the continuum estimation method
-    spectrum.SetContinuumEstimationMethod(saveContinuumEstimationMethod);
+    tplOrtho->SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
     // get mtm
     Float64 mtm = model.EstimateMTransposeM();
 
     // Subtract the fitted model from the original template
-    model.refreshModel();
-    CSpectrum modelSpc = model.GetModelSpectrum();
+    model.getSpectrumModel()->refreshModel();
+    CSpectrum modelSpc = model.getSpectrumModel()->GetModelSpectrum();
     /*//debug:
     FILE* f = fopen( "templatesortho_fittedmodel_dbg.txt", "w+" );
     for( Int32 t=0;t<modelSpc.GetSampleCount();t++)
@@ -262,7 +211,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     //*/
 
     const CSpectrumFluxAxis &modelFluxAxis = modelSpc.GetFluxAxis();
-    CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
+    CSpectrumFluxAxis continuumOrthoFluxAxis =
+        std::move(tplOrtho->GetFluxAxis());
     for (Int32 i = 0; i < continuumOrthoFluxAxis.GetSamplesCount(); i++) {
       continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
     }

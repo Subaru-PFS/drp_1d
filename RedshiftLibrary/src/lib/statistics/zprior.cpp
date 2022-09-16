@@ -103,17 +103,14 @@ TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(
 
 TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
                                             const Float64 aCoeff) const {
-  if (aCoeff <= 0.0) {
-    THROWG(INTERNAL_ERROR, Formatter() << "CZPrior::GetEuclidNhaLogZPrior: "
-                                          "problem found aCoeff<=0: aCoeff="
-                                       << aCoeff);
-  }
+  if (aCoeff <= 0.0)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Invalid aCoeff (<=0) value:" << aCoeff);
 
   TFloat64List zPrior(redshifts.size(), 0.0);
   TFloat64List logzPrior(redshifts.size(), -INFINITY);
 
   Float64 maxP = -DBL_MAX;
-  Float64 minP = DBL_MAX;
   for (Int32 kz = 0; kz < redshifts.size(); kz++) {
     Float64 z = redshifts[kz];
     Float64 z2 = z * z;
@@ -129,36 +126,27 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
 
     // shape prior at low z, left of the bell
     bool enable_low_z_flat = false;
-    if (enable_low_z_flat && z < 0.7204452872044528) {
+    if (enable_low_z_flat && z < 0.7204452872044528)
       zPrior[kz] = 20367.877916402278;
-    } else if (zPrior[kz] < 0) {
+    else if (zPrior[kz] < 0)
       zPrior[kz] = DBL_MIN;
-    }
 
     // apply strength & switch to log
     logzPrior[kz] = log(zPrior[kz]) * aCoeff;
 
-    if (logzPrior[kz] > maxP) {
-      maxP = logzPrior[kz];
-    }
-    if (logzPrior[kz] < minP) {
-      minP = logzPrior[kz];
-    }
+    maxP = std::max(maxP, logzPrior[kz]);
   }
 
-  Log.LogDebug("Pdfz: log zPrior: using HalphaZPrior min=%e", minP);
   Log.LogDebug("Pdfz: log zPrior: using HalphaZPrior max=%e", maxP);
 
   Float64 log_dynamicCut = -log(1e12);
   if (maxP == maxP && maxP != -INFINITY) // test NAN & -inf
   {
-    for (Float64 &zP : logzPrior) {
-      zP -= maxP;
-      if (zP < log_dynamicCut)
-        zP = log_dynamicCut;
-    }
+    std::transform(logzPrior.begin(), logzPrior.end(), logzPrior.begin(),
+                   [log_dynamicCut, maxP](Float64 &zP) {
+                     return std::max(zP - maxP, log_dynamicCut);
+                   });
   }
-
   if (m_normalizePrior)
     NormalizePrior(logzPrior);
 
@@ -176,8 +164,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
 TFloat64List CZPrior::CombineLogZPrior(const TFloat64List &logprior1,
                                        const TFloat64List &logprior2) const {
   if (logprior1.size() != logprior2.size()) {
-    THROWG(INTERNAL_ERROR,
-           "CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
+    THROWG(INTERNAL_ERROR, "zpriors vector sizes do not match");
   }
   Int32 n = logprior1.size();
 

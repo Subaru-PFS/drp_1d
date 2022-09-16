@@ -51,21 +51,17 @@ using namespace std;
 Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
                            const TFloat64List &pdf, const Float64 z,
                            const Int32 gslfit) {
-  Float64 dz = -1;
+  Float64 dz = NAN;
   if (!redshifts.size())
-    THROWG(INTERNAL_ERROR, "Deltaz: Redshift range is empty");
-  Int32 ret = -1, deltaz_i = 0, maxIter = 2;
+    THROWG(INTERNAL_ERROR, "Redshift range is empty");
+  Int32 ret = -1;
+  Int32 deltaz_i = 0;
+  Int32 maxIter = 2;
   while (deltaz_i < maxIter) { // iterate only twice
     Int32 izmin = -1;
     Int32 iz = -1;
     Int32 izmax = -1;
-
-    // Float64 zRangeHalf = 0.002/(deltaz_i+1);
-    // Log.LogInfo("  Deltaz: Deltaz computation nb %i with zRangeHalf %f",
-    // deltaz_i, zRangeHalf); TFloat64Range range = TFloat64Range(z -
-    // zRangeHalf*(1+z), z + zRangeHalf*(1+z)); ret = GetRangeIndices(redshifts,
-    // z, range, iz, izmin, izmax );
-
+    dz = NAN;
     Int32 half_samples_nb = 5 / (deltaz_i + 1);
     ret = GetIndices(redshifts, z, half_samples_nb, iz, izmin, izmax);
 
@@ -77,27 +73,22 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
       break;
     } catch (GlobalException &e) {
       if (e.getErrorCode() != ErrorCode::DZ_NOT_COMPUTABLE) {
-        std::string msg;
-        msg = e.getMessage();
+        std::string msg = e.getMessage();
         throw GlobalException(e.getErrorCode(), msg, __FILE__, __func__,
                               __LINE__);
-      } else {
-        if (deltaz_i < maxIter) {
-          // Log.LogWarning("  Deltaz: Deltaz computation failed for half range
-          // %f", zRangeHalf);
-          Flag.warning(Flag.DELTAZ_COMPUTATION_FAILED,
-                       Formatter()
-                           << "  CDeltaz::" << __func__
-                           << ": Deltaz computation failed for half range "
-                           << half_samples_nb << " samples");
-          deltaz_i++;
-        }
-        if (deltaz_i == maxIter - 1) {
-          dz = 0.001;
-        }
+      }
+      if (deltaz_i < maxIter) {
+        Flag.warning(Flag.DELTAZ_COMPUTATION_FAILED,
+                     Formatter()
+                         << "  CDeltaz::" << __func__
+                         << ": Deltaz computation failed for half range "
+                         << half_samples_nb << " samples");
+        deltaz_i++;
       }
     }
   }
+  if (std::isnan(dz))
+    dz = 0.001;
   return dz;
 }
 
@@ -111,12 +102,10 @@ Int32 CDeltaz::GetIndices(const TFloat64List &redshifts, const Float64 redshift,
   izmax = -1;
 
   iz = iiz - redshifts.begin();
-  if (iiz == redshifts.end() || *iiz != redshift) {
-    THROWG(INTERNAL_ERROR,
-           Formatter()
-               << "CDeltaz::GetIndices: impossible to get redshift index for z="
-               << redshift);
-  }
+  if (iiz == redshifts.end() || *iiz != redshift)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "impossible to get redshift index for z="
+                               << redshift);
 
   izmin = max(iz - HalfNbSamples, 0);
   izmax = min(iz + HalfNbSamples, Int32(redshifts.size() - 1));
@@ -144,10 +133,9 @@ Float64 CDeltaz::Compute(const TFloat64List &merits,
     sum2 += xi2 * xi2;
   }
   c0 = sum / sum2;
-  if (c0 <= 0) {
-    THROWG(DZ_NOT_COMPUTABLE,
-           Formatter() << "CDeltaz::Compute: impossible to compute sigma");
-  }
+  if (c0 <= 0)
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
+
   sigma = sqrt(1.0 / c0);
   return sigma;
 }
@@ -157,7 +145,6 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
                              const TFloat64List &redshifts, const Int32 iz,
                              const Int32 izmin, const Int32 izmax) {
   Float64 sigma = -1.0; // default value
-  bool verbose = false;
 
   // quadratic fit
   Int32 i, n;
@@ -166,10 +153,8 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   gsl_vector *y, *w, *c;
 
   n = izmax - izmin + 1;
-  if (n < 3) {
-    THROWG(DZ_NOT_COMPUTABLE,
-           Formatter() << "CDeltaz::Compute: impossible to compute sigma");
-  }
+  if (n < 3)
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
 
   X = gsl_matrix_alloc(n, 3);
   y = gsl_vector_alloc(n);
@@ -183,10 +168,8 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   for (i = 0; i < n; i++) {
     xi = redshifts[i + izmin];
     yi = merits[i + izmin];
-    if (verbose) {
-      fprintf(stderr, "  y = %+.5e ]\n", yi);
-      fprintf(stderr, "  x = %+.5e ]\n", xi);
-    }
+    Log.LogDebug("  y = %+.5e ]\n", yi);
+    Log.LogDebug("  x = %+.5e ]\n", xi);
     ei = 1.0; // todo, estimate weighting ?
     gsl_matrix_set(X, i, 0, 1.0);
     gsl_matrix_set(X, i, 1, xi - x0);
@@ -214,37 +197,17 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
   // Float64 logK = ( -(a - b2sur4c)/2.0 );
   // Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
-  if (verbose) {
-    Log.LogDebug("Center Redshift: %g", x0);
-    Log.LogDebug("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
-    fprintf(stderr, "# best fit: Y = %g + %g X + %g X^2\n", C(0), C(1), C(2));
-    if (1) // debug
-    {
-      Log.LogDebug("# covariance matrix:\n");
-      Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1),
-                   COV(0, 2));
-      Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1),
-                   COV(1, 2));
-      Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1),
-                   COV(2, 2));
-
-      fprintf(stderr, "# covariance matrix:\n");
-      fprintf(stderr, "[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1),
-              COV(0, 2));
-      fprintf(stderr, "  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1),
-              COV(1, 2));
-      fprintf(stderr, "  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1),
-              COV(2, 2));
-    }
-    Log.LogDebug("# chisq/n = %g", chisq / n);
-    Log.LogDebug("# zcorr = %g", zcorr);
-    Log.LogDebug("# sigma = %g", sigma);
-    // Log.LogDebug("# logarea = %g", logarea);
-    Log.LogDebug("\n");
-
-    fprintf(stderr, "# sigma = %g\n", sigma);
-    fprintf(stderr, "# chisq/n = %g\n", chisq / n);
-  }
+  Log.LogDebug("Center Redshift: %g", x0);
+  Log.LogDebug("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
+  Log.LogDebug("# covariance matrix:\n");
+  Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1), COV(0, 2));
+  Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1), COV(1, 2));
+  Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1), COV(2, 2));
+  Log.LogDebug("# chisq/n = %g", chisq / n);
+  Log.LogDebug("# zcorr = %g", zcorr);
+  Log.LogDebug("# sigma = %g", sigma);
+  // Log.LogDebug("# logarea = %g", logarea);
+  Log.LogDebug("\n");
 
   gsl_matrix_free(X);
   gsl_vector_free(y);
@@ -256,7 +219,6 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // results.SigmaZ[indz] = sigma;
   // results.LogAreaCorrectedExtrema[indz] = zcorr;
   if (c2 <= 0)
-    THROWG(DZ_NOT_COMPUTABLE,
-           Formatter() << "CDeltaz::Compute: impossible to compute sigma");
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
   return sigma;
 }

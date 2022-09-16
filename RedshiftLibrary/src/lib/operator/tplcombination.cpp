@@ -96,10 +96,8 @@ void COperatorTplcombination::BasicFit(
     Int32 opt_dustFitting, CMask spcMaskAdditional,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
-  bool verbose = false;
-  if (verbose) {
-    Log.LogDebug(" BasicFit - for z=%f", redshift);
-  }
+  Log.LogDebug(" BasicFit - for z=%f", redshift);
+
   boost::chrono::thread_clock::time_point start_prep =
       boost::chrono::thread_clock::now();
 
@@ -114,7 +112,7 @@ void COperatorTplcombination::BasicFit(
            Formatter() << "spcMaskAdditional does not "
                           "have the same size as the spectrum flux vector... ("
                        << spcMaskAdditional.GetMasksCount() << " vs "
-                       << spcFluxAxis.GetSamplesCount() << "), aborting");
+                       << spcFluxAxis.GetSamplesCount() << ")");
   }
 
   TFloat64Range currentRange;
@@ -167,11 +165,9 @@ void COperatorTplcombination::BasicFit(
   // Normalizing factor
   Float64 normFactor = GetNormFactor(spcFluxAxis, kStart, n);
 
-  if (verbose) {
-    Log.LogDetail(" Linear fitting, found "
-                  "normalization Factor=%e",
-                  normFactor);
-  }
+  Log.LogDetail(" Linear fitting, found "
+                "normalization Factor=%e",
+                normFactor);
 
   bool option_igmFastProcessing =
       (MeiksinList.size() == 1 ? false : true); // TODO
@@ -352,22 +348,18 @@ void COperatorTplcombination::BasicFit(
 
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-      if (verbose) {
-        if (1) {
-          Log.LogInfo("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-          Log.LogInfo("# covariance matrix:");
-          Log.LogInfo("[");
-          Log.LogInfo("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-          Log.LogInfo("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
-          Log.LogInfo("]");
-          Log.LogInfo("# chisq/n = %g", chisq / n);
-        }
+      Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+      Log.LogDebug("# covariance matrix:");
+      Log.LogDebug("[");
+      Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
+      Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
+      Log.LogDebug("]");
+      Log.LogDebug("# chisq/n = %g", chisq / n);
 
-        for (Int32 iddl = 0; iddl < nddl; iddl++) {
-          Float64 a = gsl_vector_get(c, iddl) * normFactor;
-          Log.LogInfo("# Found amplitude %d: %+.5e +- %.5e", iddl, a,
-                      COV(iddl, iddl) * normFactor);
-        }
+      for (Int32 iddl = 0; iddl < nddl; iddl++) {
+        Float64 a = gsl_vector_get(c, iddl) * normFactor;
+        Log.LogDebug("# Found amplitude %d: %+.5e +- %.5e", iddl, a,
+                     COV(iddl, iddl) * normFactor);
       }
 
       // save the fitted amps and fitErrors, etc...
@@ -551,17 +543,14 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     if (tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false) {
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "Operator-tplcombination: input template k=" << ktpl
-                         << " are not in log scale");
+      THROWG(INTERNAL_ERROR, Formatter() << "Input template k=" << ktpl
+                                         << " is not in log scale");
     }
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "Operator-tplcombination: no calzetti calib. file "
-                             "loaded... aborting");
+      THROWG(INTERNAL_ERROR, "ISM is not initialized");
     }
     if (opt_extinction && tplList[ktpl]->MeiksinInitFailed()) {
-      THROWG(INTERNAL_ERROR, " no meiksin calib. file "
-                             "loaded... aborting");
+      THROWG(INTERNAL_ERROR, "IGM is not initialized");
     }
   }
 
@@ -613,10 +602,9 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
     THROWG(INTERNAL_ERROR, Formatter()
-                               << "Operator-Tplcombination: masks-list size="
+                               << "masks-list and redshift size do not match: "
                                << additional_spcMasks.size()
-                               << "didn't match the input redshift-list size="
-                               << sortedRedshifts.size());
+                               << "!=" << sortedRedshifts.size());
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
@@ -671,8 +659,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
     if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
       THROWG(INTERNAL_ERROR, Formatter()
-                                 << "Operator-Tplcombination: found invalid "
-                                    "tplcombination products for z="
+                                 << "Invalid tplcombination products for z="
                                  << redshift);
     }
 
@@ -790,8 +777,7 @@ COperatorTplcombination::ComputeSpectrumModel(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    THROWG(INTERNAL_ERROR, "COperatorTplcombination::ComputeSpectrumModel: "
-                           "impossible to get valid kstart or kend");
+    THROWG(INTERNAL_ERROR, "impossible to get valid kstart or kend");
   }
 
   // create identityTemplate on which we apply meiksin and ism, once for all

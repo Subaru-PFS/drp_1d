@@ -1,4 +1,4 @@
-enum class ErrorCode{
+enum class ErrorCode {
   INTERNAL_ERROR = 0,
   EXTERNAL_LIB_ERROR,
   INVALID_SPECTRA_FLUX,

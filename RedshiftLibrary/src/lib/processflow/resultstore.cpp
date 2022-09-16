@@ -79,7 +79,7 @@ void COperatorResultStore::StoreResult(
 
   TResultsMap::iterator it = map.find(name);
   if (it != map.end()) {
-    THROWG(INTERNAL_ERROR, "Result already exist");
+    THROWG(INTERNAL_ERROR, "Can not store results: result already exists");
   }
 
   map[scopedName] = result;
@@ -114,11 +114,8 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
     }
   }
 
-  THROWG(
-      INTERNAL_ERROR,
-      Formatter()
-          << "COperatorResultStore::GetPerTemplateResult, per template result "
-          << name << " not found");
+  THROWG(INTERNAL_ERROR, Formatter()
+                             << "Not found result for template " << name);
   return std::weak_ptr<const COperatorResult>();
 }
 
@@ -221,9 +218,9 @@ COperatorResultStore::GetPdfMargZLogResult(const std::string &objectType,
 }
 
 std::shared_ptr<const CFlagLogResult>
-COperatorResultStore::GetFlagResult(const std::string &objectType,
-                                    const std::string &method,
-                                    const std::string &name) const {
+COperatorResultStore::GetFlagLogResult(const std::string &objectType,
+                                       const std::string &method,
+                                       const std::string &name) const {
   std::ostringstream oss;
   if (objectType == name) {
     oss << name;
@@ -392,16 +389,15 @@ int COperatorResultStore::getNbRedshiftCandidates(
   std::string type = cor->getType();
   if (type == "PdfCandidatesZResult")
     return std::dynamic_pointer_cast<const PdfCandidatesZResult>(cor)->size();
-  else if (type == "ExtremaResult")
+  if (type == "ExtremaResult")
     return std::dynamic_pointer_cast<const ExtremaResult>(cor)->size();
-  else if (type == "LineModelExtremaResult")
+  if (type == "LineModelExtremaResult")
     return std::dynamic_pointer_cast<const LineModelExtremaResult>(cor)->size();
-  else if (type == "TplCombinationExtremaResult")
+  if (type == "TplCombinationExtremaResult")
     return std::dynamic_pointer_cast<const TplCombinationExtremaResult>(cor)
         ->size();
 
-  else
-    return 0;
+  return 0;
 }
 
 void COperatorResultStore::StoreScopedPerTemplateResult(

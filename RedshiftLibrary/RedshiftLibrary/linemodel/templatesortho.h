@@ -73,13 +73,8 @@ public:
 private:
   bool m_enableOrtho;
   std::shared_ptr<const CLSF> m_LSF = nullptr;
-  std::shared_ptr<CTemplate> OrthogonalizeTemplate(
-      const CTemplate &inputTemplate,
-      const CLineCatalog::TLineVector &restLineList,
-      const std::string &opt_fittingmethod, const std::string &widthType,
-      const Float64 opt_nsigmasupport, const Float64 velocityEmission,
-      const Float64 velocityAbsorption, const std::string &opt_rules,
-      const std::string &opt_rigidity);
+  std::shared_ptr<CTemplate>
+  OrthogonalizeTemplate(const CTemplate &inputTemplate);
 };
 
 } // namespace NSEpic

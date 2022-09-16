@@ -82,7 +82,7 @@
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
-%shared_ptr(CLineCatalogsTplShape)
+%shared_ptr(CLineCatalogsTplRatio)
 %shared_ptr(CLineRatioCatalog)
 %shared_ptr(CFlagLogResult)
 %shared_ptr(CFlagWarning)
@@ -107,7 +107,7 @@
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineRatioCatalog.h"
-#include "RedshiftLibrary/line/catalogsTplShape.h"
+#include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -288,6 +288,7 @@ typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
 typedef std::vector<Float64> TFloat64List;
+typedef std::vector<Float32> TFloat32List;
 typedef std::vector<Int32> TInt32List;
 typedef std::vector<std::string> TStringList;
 
@@ -312,6 +313,8 @@ class PC
   static void get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_AxisSampleList) getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  %rename(Get_Float32Array) get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
 
 };
 
@@ -358,11 +361,11 @@ class CLineRatioCatalog : public CLineCatalog
 
 };
 
-class CLineCatalogsTplShape
+class CLineCatalogsTplRatio
 {
 
 public:
-  CLineCatalogsTplShape();
+  CLineCatalogsTplRatio();
   void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog);
 
 };
@@ -422,7 +425,7 @@ public:
 
   void Init();
   void setLineCatalog(const std::string& objectType, const std::string& method, const std::shared_ptr<CLineCatalog> &catalog); 
-  void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplShape> &catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplRatio> &catalog); 
   void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
   void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}
   void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum){ m_Spectrum = spectrum;}
@@ -472,9 +475,9 @@ class COperatorResultStore
 								    const std::string& method,
 								    const std::string& name ) const;
 
-  std::shared_ptr<const CFlagLogResult> GetFlagResult(const std::string& objectType,
-								    const std::string& method,
-								    const std::string& name ) const;
+  std::shared_ptr<const CFlagLogResult> GetFlagLogResult(const std::string& objectType,
+							 const std::string& method,
+							 const std::string& name ) const;
 
   std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
 							     const std::string& method,

@@ -52,6 +52,15 @@
 #include <string>
 #include <unordered_map>
 
+namespace Spectrum { // boost_test_suite
+// all boost_auto_test_case that use private method
+class constructor_test;
+class setXXX_test;
+class continuum_test;
+class Calcul;
+class rebin_test;
+} // namespace Spectrum
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -120,7 +129,6 @@ public:
   Float64 GetResolution() const;
   Float64 GetMeanResolution() const;
   TLambdaRange GetLambdaRange() const;
-  const std::string &GetBaseline() const;
 
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64 &mean,
                                 Float64 &std) const;
@@ -158,6 +166,12 @@ public:
   CSpectrum extract(Int32 startIdx, Int32 endIdx) const;
 
 protected:
+  friend class Spectrum::constructor_test;
+  friend class Spectrum::setXXX_test;
+  friend class Spectrum::continuum_test;
+  friend class Spectrum::Calcul;
+  friend class Spectrum::rebin_test;
+
   // protected mutable getters
   CSpectrumFluxAxis &GetFluxAxis_();
   CSpectrumFluxAxis &GetRawFluxAxis_();
@@ -193,14 +207,6 @@ protected:
 
   // Flag
   mutable bool alreadyRemoved = false;
-
-  // Map method2baseline
-  const std::unordered_map<std::string, std::string> m_method2baseline = {
-      {"IrregularSamplingMedian", "baselineISMedian"},
-      {"Median", "baselineMedian"},
-      {"raw", "baselineRAW"},
-      {"zero", "baselineZERO"},
-      {"manual", "baselineMANUAL"}};
 };
 
 inline Int32 CSpectrum::GetSampleCount() const {

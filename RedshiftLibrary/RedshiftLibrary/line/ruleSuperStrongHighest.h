@@ -63,6 +63,9 @@ private:
   FindHighestSuperStrongLineAmp(TStringList superstrongTags, Float64 &er,
                                 std::string &name,
                                 CLineModelElementList &LineModelElementList);
+  void constructLogMsg(const std::string &nameWeak,
+                       const std::string &strongName, Float64 ampB,
+                       Float64 maxB);
 };
 } // namespace NSEpic
 

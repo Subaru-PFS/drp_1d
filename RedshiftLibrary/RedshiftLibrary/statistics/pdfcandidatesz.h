@@ -49,6 +49,12 @@
 #include <utility>
 #include <vector>
 
+namespace Statistics_pdfcandidatesz { // boost_test_suite
+// all boost_auto_test_case that use private method
+class SortByValSumProbaInt_test;
+class getCandidateSumTrapez_test;
+class getCandidateRobustGaussFit_test;
+} // namespace Statistics_pdfcandidatesz
 namespace NSEpic {
 
 #include "RedshiftLibrary/statistics/pdfcandidatesz.i"
@@ -57,7 +63,8 @@ typedef std::map<std::string, std::shared_ptr<TCandidateZ>> TCandidateZbyID;
 typedef std::vector<std::pair<std::string, std::shared_ptr<TCandidateZ>>>
     TCandidateZbyRank;
 typedef std::map<std::string, TFloat64Range> TCandidateZRangebyID;
-
+typedef std::pair<std::string, std::shared_ptr<TCandidateZ>>
+    pair_Id_TCandidateZ;
 template <typename T> class CPdfCandidateszResult;
 
 class CPdfCandidatesZ : public COperator {
@@ -80,6 +87,10 @@ public:
   TCandidateZbyID m_candidates;
 
 private:
+  friend class Statistics_pdfcandidatesz::SortByValSumProbaInt_test;
+  friend class Statistics_pdfcandidatesz::getCandidateSumTrapez_test;
+  friend class Statistics_pdfcandidatesz::getCandidateRobustGaussFit_test;
+
   bool getCandidateSumTrapez(const TRedshiftList &redshifts,
                              const TFloat64List &valprobalog,
                              const TFloat64Range &zrange,

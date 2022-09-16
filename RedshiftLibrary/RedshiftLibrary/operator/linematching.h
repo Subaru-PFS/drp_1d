@@ -44,7 +44,7 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/operator/linematchingresult.h"
-
+#include <functional>
 namespace NSEpic {
 
 /**
@@ -55,19 +55,29 @@ namespace NSEpic {
  */
 class CLineMatching {
 public:
-  CLineMatching();
-  virtual ~CLineMatching();
-
   std::shared_ptr<CLineMatchingResult>
   Compute(const CLineCatalog &restLineCatalog,
           const CLineCatalog &detectedLineCatalog,
           const TFloat64Range &redshiftRange, Int32 nThreshold = 5,
           Float64 tol = 0.002, Int32 typeFilter = CLine::nType_Emission,
-          Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1);
+          Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1) const;
 
 private:
   bool AreSolutionSetsEqual(const CLineMatchingResult::TSolutionSet &s1,
-                            const CLineMatchingResult::TSolutionSet &s2);
+                            const CLineMatchingResult::TSolutionSet &s2) const;
+  const CLineMatchingResult::TSolutionSetList
+  refineSolutions(const CLineMatchingResult::TSolutionSetList &solutions,
+                  const TFloat64Range &redshiftRange, Int32 nThreshold) const;
+  void updateSolution(Int32 iDetectedLine, Float64 redShift, Float64 tol,
+                      CLineMatchingResult::TSolutionSet &solution, // to update
+                      const CLineCatalog::TLineVector &detectedLineList,
+                      const CLineCatalog::TLineVector &restLineList) const;
+  std::function<Float64(Int32, Int32)>
+  getRedshift(const CLineCatalog::TLineVector &detectedLineList,
+              const CLineCatalog::TLineVector &restLineList) const;
+  bool
+  isLineAlreadyPresent(const CLine &line,
+                       const CLineMatchingResult::TSolutionSet &solution) const;
 };
 } // namespace NSEpic
 

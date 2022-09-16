@@ -44,7 +44,7 @@ import pandas as pd
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxAxis_withSpectrum,
                                   CTemplate, CTemplateCatalog,
-                                  CLineCatalog,CLineCatalogsTplShape,
+                                  CLineCatalog,CLineCatalogsTplRatio,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
                                   TAsymParams,
@@ -83,6 +83,10 @@ class CalibrationLibrary:
         self.templates_ratios = dict()
         self.line_catalogs = dict()
         self.line_catalogs_df = dict()
+        for object_type in self.parameters["objects"]:
+            self.line_catalogs[object_type] = dict()
+            self.line_catalogs_df[object_type] = dict()
+
         self.line_ratio_catalog_lists = dict()
         self.lambda_offsets = dict()
         self.lsf = dict()
@@ -176,7 +180,7 @@ class CalibrationLibrary:
         enableIGM = self.parameters[object_type][method]["linemodel"]["igmfit"]
 
         #here should go the change of profiles if igm is applied
-        self.line_catalogs_df[object_type] = line_catalog
+        self.line_catalogs_df[object_type][method] = line_catalog
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
                 asymParams = TAsymParams(1., 4.5, 0.)
@@ -203,11 +207,11 @@ class CalibrationLibrary:
             if enableIGM:
                     self.line_catalogs[object_type][method].convertLineProfiles2SYMIGM(self.meiksin)                                  
 
-    def load_line_ratio_catalog_list(self, object_type, method):
+    def load_line_ratio_catalog_list(self, object_type):
         logger = logging.getLogger("calibration_api")
-        linemodel_params = self.parameters[object_type][method]["linemodel"]
+        linemodel_params = self.parameters[object_type]["LineModelSolve"]["linemodel"]
         if "tplratio_catalog" not in linemodel_params:
-            raise APIException(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format(method))
+            raise APIException(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format("LineModelSolve"))
 
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                linemodel_params["tplratio_catalog"],
@@ -218,13 +222,13 @@ class CalibrationLibrary:
         line_ratio_catalog_list.sort()
         logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
 
-        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplShape()
+        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1
-        if self.parameters[object_type][method]["linemodel"]["tplratio_ismfit"]:
+        if self.parameters[object_type]["LineModelSolve"]["linemodel"]["tplratio_ismfit"]:
             n_ebmv_coeffs = self.parameters["ebmv"]["count"]
         prior = 1./(n_ebmv_coeffs * len(line_ratio_catalog_list))
 
-        enableIGM = self.parameters[object_type][method]["linemodel"]["igmfit"]
+        enableIGM = self.parameters[object_type]["LineModelSolve"]["linemodel"]["igmfit"]
 
         for f in line_ratio_catalog_list:
             lr_catalog_df = pd.read_csv(f,sep='\t')
@@ -234,9 +238,9 @@ class CalibrationLibrary:
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
             for k in range(n_ebmv_coeffs):
-                lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type][method])
+                lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["LineModelSolve"])
                 for index,row in lr_catalog_df.iterrows():
-                    if row.Name in list(self.line_catalogs_df[object_type].Name):
+                    if row.Name in list(self.line_catalogs_df[object_type]["LineModelSolve"].Name):
                         lr_catalog.setLineAmplitude(_get_linecatalog_id(row), row.NominalAmplitude)
                 lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
                 lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
@@ -258,7 +262,7 @@ class CalibrationLibrary:
         self.line_catalogs[object_type][method] = CLineCatalog()
 
     def load_empty_line_ratio_catalog_list(self, object_type):
-        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplShape()
+        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
 
     def load_lsf(self):
         if self.parameters["LSF"]["LSFType"] == "GaussianVariableWidth":
@@ -308,7 +312,6 @@ class CalibrationLibrary:
 
     def load_all(self):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content
-
         """
         try:
             self.load_Meiksin()
@@ -316,12 +319,12 @@ class CalibrationLibrary:
             for object_type in self.parameters["objects"]:
                 self.load_templates_catalog(object_type)
                 #load linecatalog for linemodelsolve
-                self.line_catalogs[object_type] = dict()
+                
                 method = self.parameters[object_type]["method"]            
                 if method == "LineModelSolve":                
                     self.load_linecatalog(object_type,method)
-                    if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
-                        self.load_line_ratio_catalog_list(object_type, method)
+                    if self.parameters[object_type][method]["linemodel"]["lineRatioType"] == "tplratio" or self.parameters[object_type][method]["linemodel"]["lineRatioType"] == "tplcorr" :
+                        self.load_line_ratio_catalog_list(object_type)
 		            #load linecatalog for linemeassolve
                 linemeas_method = self.parameters[object_type]["linemeas_method"]
                 if linemeas_method == "LineMeasSolve":
@@ -357,6 +360,13 @@ class CalibrationLibrary:
 
     def init(self):
         """Initialize templates (init continuum removal, init ism/igm and lsf if lsf is not spectrum dependent
-
         """
         raise NotImplementedError("TODO after reviewing CProcessFlowContext::Init")
+
+    def get_sub_type(self, object_type,line_ratio_catalog):
+        linemodel_params = self.parameters[object_type]["LineModelSolve"]["linemodel"]
+        with open(os.path.join(self.calibration_dir,
+                               linemodel_params["tplratio_catalog"],
+                               line_ratio_catalog + ".json")) as f:
+                tpl_ratio_conf = json.load(f)
+                return tpl_ratio_conf["sub_type"]

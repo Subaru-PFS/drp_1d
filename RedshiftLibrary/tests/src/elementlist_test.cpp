@@ -179,51 +179,22 @@ BOOST_AUTO_TEST_CASE(Constructor) {
  lineCatalog.AddLineFromParams("Halpha",6562.8,"E","S","SYM",asymP,"",1.,"E1",0,false,3);
  lineCatalog.AddLineFromParams("Hdelta",4101.7,"E","W","SYM",asymP,"",1.,"E1",0,false,4);
   */
-  CLineCatalog::TLineVector lineList =
-      lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
-
-  // no continuum
-  CLineModelFitting model_nocontinuum(
-      spectrum, range, tplCatalog, tplCategories, lineList, "lmfit",
-      "nocontinuum", -INFINITY, opt_lineWidthType, opt_nsigmasupport,
-      opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
-
-  // continuum from spectrum
-  CLineModelFitting model_fromspectrum(
-      spectrum, range, tplCatalog, tplCategories, lineList, "lmfit",
-      "fromspectrum", -INFINITY, opt_lineWidthType, opt_nsigmasupport,
-      opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
-
-  model_fromspectrum.fit(0.5, solution, c_solution, iterations, false);
-
-  // tplfit
-  BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
-  CLineModelFitting model_tplfit(
-      spectrum, range, tplCatalog, tplCategories, lineList, "lmfit", "tplfit",
-      -5.0, opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
-      opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   /*
   model_tplfit.fit(0.5, range, solution, iterations, false);
   */
 
   // GetSpectrumModelContinuum
-  CSpectrum continuum = model_tplfit.GetSpectrumModelContinuum();
 
   // setPassMode
-  model_tplfit.setPassMode(1);
+
   // BOOST_CHECK( model_tplfit.m_forceDisableLyaFitting == true );
-  model_tplfit.setPassMode(2);
+
   // BOOST_CHECK( model_tplfit.m_forceDisableLyaFitting == false );
 
   // GetModelSpectrum
-  CSpectrum modelspectrum = model_tplfit.GetModelSpectrum();
 
   // GetObservedSpectrumWithLinesRemoved
-  CSpectrum emission =
-      model_tplfit.GetObservedSpectrumWithLinesRemoved(CLine::nType_Emission);
-  CSpectrum absorption =
-      model_tplfit.GetObservedSpectrumWithLinesRemoved(CLine::nType_Absorption);
 
   bfs::remove(noisePath);
   bfs::remove(linecatalogPath);

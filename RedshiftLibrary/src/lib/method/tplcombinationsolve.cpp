@@ -105,7 +105,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   // for now interp must be 'lin'. pfg not availbale for now...
   if (opt_interp != "lin") {
-    THROWG(INTERNAL_ERROR, "interp. parameter must be 'lin'");
+    THROWG(INTERNAL_ERROR, "interpolation parameter must be 'lin'");
   }
 
   Log.LogInfo("Method parameters:");
@@ -183,76 +183,40 @@ bool CTplcombinationSolve::Solve(
   }
 
   // prepare the list of components/templates
-  if (m_categoryList.size() > 1) {
+  if (m_categoryList.size() > 1)
     THROWG(INTERNAL_ERROR, "Multiple categories are passed for "
                            "tplcombinationsolve. Only one is required");
-  }
 
   const TTemplateConstRefList &tplList =
       tplCatalog.GetTemplateList(m_categoryList);
-  if (tplList.empty()) {
-    THROWG(BAD_TEMPLATECATALOG, Formatter()
-                                    << "Template catalog for category "
-                                    << m_categoryList[0] << " is empty");
-  }
-
-  // check all templates have same spectralAxis
-  const CSpectrumSpectralAxis &refSpcAxis = tplList[0]->GetSpectralAxis();
-  Int32 axisSize = refSpcAxis.GetSamplesCount();
-  for (Int32 ktpl = 1; ktpl < tplList.size(); ktpl++) {
-    const CSpectrumSpectralAxis &currentSpcAxis =
-        tplList[ktpl]->GetSpectralAxis();
-    if (axisSize != tplList[ktpl]->GetSampleCount()) {
-      THROWG(INTERNAL_ERROR,
-             "  Method-tplcombination: templates dont have same size");
-    }
-    for (Int32 i = 0; i < axisSize; i++) {
-      if (std::abs(refSpcAxis[i] - currentSpcAxis[i]) > 1E-8) {
-        THROWG(
-            INTERNAL_ERROR,
-            "  Method-tplcombination: templates dont have same spectralAxis");
-      }
-    }
-  }
+  checkTemplates(tplList);
 
   // case: nType_all
-  if (spctype == nType_all) {
+  if (spctype == nType_all)
     _ntype = 3;
-  }
 
   const CSpectrum::EType save_spcType = spc.GetType();
-
-  std::vector<CSpectrum::EType> save_tplTypes;
-  for (std::shared_ptr<const NSEpic::CTemplate> tpl : tplList) {
-    save_tplTypes.push_back(tpl->GetType());
-  }
+  std::vector<CSpectrum::EType> save_tplTypes(tplList.size());
+  std::transform(tplList.begin(), tplList.end(), save_tplTypes.begin(),
+                 [](std::shared_ptr<const NSEpic::CTemplate> tpl) {
+                   return tpl->GetType();
+                 });
 
   for (Int32 i = 0; i < _ntype; i++) {
-    if (spctype == nType_all) {
+    if (spctype == nType_all)
       _spctype = _spctypetab[i];
-    } else {
+    else
       _spctype = static_cast<CSpectrum::EType>(spctype);
-    }
 
     spc.SetType(_spctype);
-    for (std::shared_ptr<const NSEpic::CTemplate> tpl : tplList)
-      tpl->SetType(_spctype);
+    std::for_each(tplList.begin(), tplList.end(),
+                  [&_spctype](std::shared_ptr<const NSEpic::CTemplate> tpl) {
+                    tpl->SetType(_spctype);
+                  });
 
-    if (_spctype == CSpectrum::nType_continuumOnly) {
-      // use continuum only
-      scopeStr = "tplcombination_continuum";
-
-    } else if (_spctype == CSpectrum::nType_raw) {
-      // use full spectrum
-      scopeStr = "tplcombination";
-
-    } else if (_spctype == CSpectrum::nType_noContinuum) {
-      // use spectrum without continuum
-      scopeStr = "tplcombination_nocontinuum";
+    scopeStr = getSpecBasedScope(_spctype);
+    if (_spctype == CSpectrum::nType_noContinuum)
       enable_dustFitting = 0;
-    } else {
-      THROWG(INTERNAL_ERROR, "Unknown spectrum component");
-    }
 
     // Compute merit function
     auto result = std::dynamic_pointer_cast<CTplCombinationResult>(
@@ -260,31 +224,65 @@ bool CTplcombinationSolve::Solve(
             spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList,
             opt_interp, enable_extinction, enable_dustFitting));
 
-    if (!result) {
-      // Log.LogError( "Failed to compute chi square value");
+    if (!result)
       return false;
-    } else {
-      // Store results
-      Log.LogDetail("tplcombinationsolve: Save tplcombination results");
-      resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
-    }
+
+    // Store results
+    Log.LogDetail("tplcombinationsolve: Save tplcombination results");
+    resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
   }
 
   // restore component types
   spc.SetType(save_spcType);
   auto it = save_tplTypes.begin();
-  for (std::shared_ptr<const NSEpic::CTemplate> tpl : tplList) {
-    tpl->SetType(*it);
-    it++;
-  }
-
+  std::for_each(tplList.begin(), tplList.end(),
+                [&it](std::shared_ptr<const NSEpic::CTemplate> tpl) {
+                  tpl->SetType(*it);
+                  it++;
+                });
   return true;
+}
+
+void CTplcombinationSolve::checkTemplates(
+    const TTemplateConstRefList &tplList) const {
+  if (tplList.empty())
+    THROWG(BAD_TEMPLATECATALOG, Formatter()
+                                    << "Empty template catalog for category "
+                                    << m_categoryList[0]);
+
+  // check all templates have same spectralAxis
+  const CSpectrumSpectralAxis &refSpcAxis = tplList[0]->GetSpectralAxis();
+  Int32 axisSize = refSpcAxis.GetSamplesCount();
+  for (const auto &tpl : tplList) {
+    const CSpectrumSpectralAxis &currentSpcAxis = tpl->GetSpectralAxis();
+    if (axisSize != tpl->GetSampleCount())
+      THROWG(INTERNAL_ERROR, "templates do not have same size");
+
+    for (Int32 i = 0; i < axisSize; i++)
+      if (std::abs(refSpcAxis[i] - currentSpcAxis[i]) > 1E-8)
+        THROWG(INTERNAL_ERROR, "templates do not have same spectralAxis");
+  }
+}
+
+std::string CTplcombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
+  if (_spctype == CSpectrum::nType_continuumOnly)
+    // use continuum only
+    return "tplcombination_continuum";
+
+  if (_spctype == CSpectrum::nType_raw)
+    // use full spectrum
+    return "tplcombination";
+
+  if (_spctype == CSpectrum::nType_noContinuum)
+    // use spectrum without continuum
+    return "tplcombination_nocontinuum";
+  else
+    THROWG(INTERNAL_ERROR, "Unknown spectrum component");
 }
 
 ChisquareArray CTplcombinationSolve::BuildChisquareArray(
     std::shared_ptr<COperatorResultStore> store,
     const std::string &scopeStr) const {
-  ChisquareArray chisquarearray;
 
   Log.LogDetail("tplcombinationsolve: build chisquare array");
   Log.LogDetail(Formatter()
@@ -292,81 +290,63 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
                 << store->GetScopedName(scopeStr));
 
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
-  if (results.expired()) {
-    THROWG(INTERNAL_ERROR, "tplcombinationsolve: CombinePDF - Unable to "
-                           "retrieve tplcombination results");
-  }
+  if (results.expired())
+    THROWG(INTERNAL_ERROR, "Unable to retrieve tplcombination results");
+
   std::shared_ptr<const CTplCombinationResult> result =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
 
+  ChisquareArray chisquarearray;
   chisquarearray.cstLog = -1;
 
   Int32 retPdfz = -1;
-  {
-    Int32 nISM = -1;
-    Int32 nIGM = -1;
-    if (result->ChiSquareIntermediate.size() > 0) {
-      nISM = result->ChiSquareIntermediate[0].size();
-      if (result->ChiSquareIntermediate[0].size() > 0) {
-        nIGM = result->ChiSquareIntermediate[0][0].size();
-      }
-    }
-    if (chisquarearray.cstLog == -1) {
-      chisquarearray.cstLog = result->CstLog;
-      Log.LogInfo("tplcombinationsolve: using cstLog = %f",
-                  chisquarearray.cstLog);
-    } else if (chisquarearray.cstLog != result->CstLog) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "tplcombinationsolve: Found different "
-                                    "cstLog values in results... val-1="
-                                 << chisquarearray.cstLog
-                                 << " != val-2=" << result->CstLog);
-    }
-    if (chisquarearray.redshifts.size() == 0) {
-      chisquarearray.redshifts = result->Redshifts;
-    }
 
-    // check chi2 results status for this template
-    {
-      bool foundBadStatus = 0;
-      for (Int32 kz = 0; kz < result->Redshifts.size(); kz++) {
-        if (result->Status[kz] != COperator::nStatus_OK) {
-          foundBadStatus = 1;
-          break;
-        }
-      }
-      if (foundBadStatus) {
-        THROWG(INTERNAL_ERROR,
-               "tplcombinationsolve: Found bad status result...");
-      }
-    }
+  Int32 nISM = result->getISMCount();
+  Int32 nIGM = result->getIGMCount();
 
-    CZPrior zpriorhelper;
-    for (Int32 kism = 0; kism < nISM; kism++) {
-      for (Int32 kigm = 0; kigm < nIGM; kigm++) {
-        chisquarearray.zpriors.push_back(
-            zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
+  if (chisquarearray.cstLog == -1) {
+    chisquarearray.cstLog = result->CstLog;
+    Log.LogInfo("tplcombinationsolve: using cstLog = %f",
+                chisquarearray.cstLog);
+  } else if (chisquarearray.cstLog != result->CstLog)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "cstLog values do not match in results: val1="
+                               << chisquarearray.cstLog
+                               << " != val2=" << result->CstLog);
 
-        // correct chi2 for ampl. marg. if necessary: todo add switch, currently
-        // deactivated
-        chisquarearray.chisquares.emplace_back(
-            result->ChiSquareIntermediate.size(), DBL_MAX);
-        TFloat64List &logLikelihoodCorrected = chisquarearray.chisquares.back();
-        for (Int32 kz = 0; kz < result->Redshifts.size(); kz++) {
-          logLikelihoodCorrected[kz] =
-              result->ChiSquareIntermediate
-                  [kz][kism]
-                  [kigm]; // + resultXXX->ScaleMargCorrectionTplshapes[][]?;
-        }
-        Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit "
-                      "#%d for ism=%d, igm=%d",
-                      chisquarearray.chisquares.size() - 1, kism, kigm);
-      }
+  if (!chisquarearray.redshifts.size())
+    chisquarearray.redshifts = result->Redshifts;
+
+  // check chi2 results status for this template
+
+  for (auto status : result->Status)
+    if (status != COperator::nStatus_OK)
+      THROWG(INTERNAL_ERROR, " Found bad status result");
+
+  CZPrior zpriorhelper;
+  for (Int32 kism = 0; kism < nISM; kism++) {
+    for (Int32 kigm = 0; kigm < nIGM; kigm++) {
+      chisquarearray.zpriors.push_back(
+          zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
+
+      // correct chi2 for ampl. marg. if necessary: todo add switch,
+      // currently deactivated
+      chisquarearray.chisquares.emplace_back(
+          result->ChiSquareIntermediate.size(), DBL_MAX);
+      TFloat64List &logLikelihoodCorrected = chisquarearray.chisquares.back();
+      for (Int32 kz = 0; kz < result->ChiSquareIntermediate.size(); kz++)
+        logLikelihoodCorrected[kz] =
+            result->ChiSquareIntermediate
+                [kz][kism]
+                [kigm]; // + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+      Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit "
+                    "#%d for ism=%d, igm=%d",
+                    chisquarearray.chisquares.size() - 1, kism, kigm);
     }
   }
-
   return chisquarearray;
 }
+
 std::shared_ptr<const TplCombinationExtremaResult>
 CTplcombinationSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
@@ -375,8 +355,8 @@ CTplcombinationSolve::buildExtremaResults(
     const TFloat64Range &lambdaRange, Float64 overlapThreshold,
     std::string opt_interp) {
 
-  Log.LogDetail(
-      "CTplCombinationSolve::buildExtremaResults: building chisquare array");
+  Log.LogDetail("CTplCombinationSolve::buildExtremaResults: building "
+                "chisquare array");
   Log.LogDetail(Formatter()
                 << "    tplCombinationSolve: using results in scope: "
                 << store->GetScopedName(scopeStr));
@@ -384,8 +364,7 @@ CTplcombinationSolve::buildExtremaResults(
   // tplCombination
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
-    THROWG(INTERNAL_ERROR, "tplcombinationsolve: SaveExtremaResult - Unable to "
-                           "retrieve tplcombination results");
+    THROWG(INTERNAL_ERROR, "Unable to retrieve tplcombination results");
   }
   auto TplFitResult =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -394,15 +373,13 @@ CTplcombinationSolve::buildExtremaResults(
   bool foundRedshiftAtLeastOnce = false;
 
   if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-    THROWG(INTERNAL_ERROR, "CTplCombinationSolve::SaveExtremaResult, "
-                           "templatefitting results has wrong size");
+    THROWG(INTERNAL_ERROR, "Size do not match among templatefitting results");
   }
 
   bool foundBadStatus = false;
 
   if (foundBadStatus) {
-    THROWG(INTERNAL_ERROR,
-           "Found bad status result");
+    THROWG(INTERNAL_ERROR, "Bad status result");
   }
 
   // prepare the list of components/templates

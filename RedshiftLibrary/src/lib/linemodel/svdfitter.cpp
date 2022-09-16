@@ -36,32 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_SPECTRUM_COMBINATION_
-#define _REDSHIFT_SPECTRUM_COMBINATION_
+#include "RedshiftLibrary/linemodel/svdfitter.h"
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/processflow/context.h"
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+using namespace NSEpic;
+using namespace std;
 
-namespace NSEpic {
-
-class CSpectrumAxis;
-class CMask;
-
-/**
- * \ingroup Redshift
- */
-class CSpectrumCombination {
-
-public:
-  CSpectrumCombination();
-  ~CSpectrumCombination();
-
-  Int32 Combine(std::vector<std::shared_ptr<CSpectrum>>, CSpectrum &);
-
-private:
-};
-
-} // namespace NSEpic
-
-#endif
+// set all the amplitudes to 1.0
+void CSvdFitter::fit(Float64 redshift) {
+  TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+  TFloat64List ampsfitted;
+  TFloat64List errorsfitted;
+  fitAmplitudesLinSolveAndLambdaOffset(
+      validEltsIdx, m_inputSpc.GetSpectralAxis(), ampsfitted, errorsfitted,
+      m_enableLambdaOffsetsFit, redshift);
+}

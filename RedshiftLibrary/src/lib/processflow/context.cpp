@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
@@ -80,4 +81,22 @@ void CProcessFlowContext::Init() {
 void CProcessFlowContext::reset() {
   m_ResultStore->reset();
   m_inputContext->resetSpectrumSpecific();
+}
+
+const TLineVector CProcessFlowContext::getLineVector() {
+  CAutoScope autoscope(m_ScopeStack, "linemodel");
+  return m_inputContext->GetFilteredLineVector(
+      GetCurrentCategory(), GetCurrentMethod(),
+      m_parameterStore->GetScoped<std::string>("linetypefilter"),
+      m_parameterStore->GetScoped<std::string>("lineforcefilter"));
+}
+
+std::shared_ptr<CLineCatalogsTplRatio>
+CProcessFlowContext::GetTplRatioCatalog() {
+  return m_inputContext->GetTemplateRatioCatalog(m_ScopeStack[0]);
+}
+
+std::shared_ptr<const CPhotBandCatalog>
+CProcessFlowContext::GetPhotBandCatalog() {
+  return m_inputContext->GetPhotBandCatalog();
 }

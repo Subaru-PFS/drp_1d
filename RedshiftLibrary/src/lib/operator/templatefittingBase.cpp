@@ -99,7 +99,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (EbmvCoeff > 0.) {
     if (m_templateRebined_bf.CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "no calzetti initialization for template");
+      THROWG(INTERNAL_ERROR, "ISM in not initialized");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
@@ -111,7 +111,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf.MeiksinInitFailed()) {
-      THROWG(INTERNAL_ERROR, "no meiksin initialization for template");
+      THROWG(INTERNAL_ERROR, "IGM in not initialized");
     }
     m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
   }
@@ -166,9 +166,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
   bool b = tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
                       m_templateRebined_bf, m_mskRebined_bf, opt_interp);
   if (!b)
-    THROWG(
-        INTERNAL_ERROR,
-        "COperatorTemplateFittingBase::RebinTemplate: error in rebinning tpl");
+    THROWG(INTERNAL_ERROR, "Template rebinning failed");
 
   // overlapRate
   overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(
@@ -178,8 +176,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
   if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
     // status = nStatus_NoOverlap;
     THROWG(OVERLAPRATE_NOTACCEPTABLE,
-           Formatter() << "tpl overlap too small, overlaprate of "
-                       << overlapRate);
+           Formatter() << "tpl overlap rate is too small: " << overlapRate);
   }
 
   // the spectral axis should be in the same scale
