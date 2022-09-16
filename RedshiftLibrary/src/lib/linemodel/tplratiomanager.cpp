@@ -84,7 +84,7 @@ void CTplratioManager::SetTplratio_PriorHelper() {
 
   m_tplratio_priorhelper = std::make_shared<CPriorHelper>();
   m_tplratio_priorhelper->Init(ps->GetScoped<std::string>("catalog_dirpath"),
-                               0);
+                               1);
   m_tplratio_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_tplratio_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
   m_tplratio_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
