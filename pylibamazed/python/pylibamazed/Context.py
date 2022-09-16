@@ -158,7 +158,7 @@ class Context:
                     self.run_method(object_type, method)
                     enable_classification = True
                 except GlobalException as e:
-                    rso.store_error(AmazedErrorFromGlobalException(e),object_type,"solver")
+                    rso.store_error(AmazedErrorFromGlobalException(e),object_type,"redshift_solver")
                     # if 'warningFlag' not in rso.object_results[object_type]:
                     #     rso.object_results[object_type]['warningFlag'] = dict()
                     # if not rso.object_results[object_type]['warningFlag']:
@@ -184,7 +184,7 @@ class Context:
                     if linemeas_parameters_loaded:
                         self.run_method(object_type, self.parameters.get_linemeas_method(object_type))
                 except GlobalException as e:
-                    rso.store_error(AmazedErrorFromGlobalException(e),object_type,"linemeas")
+                    rso.store_error(AmazedErrorFromGlobalException(e),object_type,"linemeas_solver")
 
 
             if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models and solver_success:
@@ -192,7 +192,7 @@ class Context:
                     rel = Reliability(object_type, self.parameters,self.calibration_library)
                     reliabilities[object_type] = rel.Compute(self.process_flow_context)
                 except APIException as e:
-                    rso.store_error(AmazedError(e.errCode,e.message),object_type, "reliability" )
+                    rso.store_error(AmazedError(e.errCode,e.message),object_type, "reliability_solver" )
 
             if self.parameters.lineratio_catalog_enabled(object_type) and solver_success:
                 try:
@@ -201,7 +201,7 @@ class Context:
                                           self.calibration_library)
                     sub_types[object_type] = sub_classif.Compute(self.process_flow_context)
                 except APIException as e:
-                    rso.store_error(AmazedError(e.errCode,e.message), object_type,"sub_classif")
+                    rso.store_error(AmazedError(e.errCode,e.message), object_type,"sub_classif_solver")
 
 
         if enable_classification:

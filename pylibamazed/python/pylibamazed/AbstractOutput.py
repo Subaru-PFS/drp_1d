@@ -65,7 +65,7 @@ class AbstractOutput:
 
         #TODO find another emplacement for these informations
         self.root_stages = ["init","classification","result_store_fill"]
-        self.object_stages = ["solver","linemeas_catalog_load","linemeas","reliability","sub_classif"]
+        self.object_stages = ["redshift_solver","linemeas_catalog_load","linemeas_solver","reliability_solver","sub_classif_solver"]
 
     def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None):
         raise NotImplementedError("Implement in derived class")
@@ -133,7 +133,12 @@ class AbstractOutput:
             return False
 
     def has_attribute(self,object_type, dataset,attribute,rank=None):
-        if object_type in self.object_results and dataset in self.object_results[object_type]:
+        if not object_type:
+            if dataset in self.root_results:
+                return attribute in self.root_results[dataset]
+            else:
+                return False
+        elif object_type in self.object_results and dataset in self.object_results[object_type]:
             if rank is None:
                 return attribute in self.object_results[object_type][dataset]
             else:
@@ -360,8 +365,8 @@ class AbstractOutput:
             rank = None
 #            dataset = "model_parameters"
             if root == "classification":
-#                dataset = "classification"
-                category = None
+                if self.has_attribute(None,"classification",data,None):
+                    ret[attribute]=self.get_attribute(None,"classification",data,None)
             else:
                 category = root
                 if len(attr_parts) == 2:
@@ -369,9 +374,13 @@ class AbstractOutput:
                 elif len(attr_parts) == 3:
                     rank = int(attr_parts[1])
             if len(attr_parts) < 4:
-                for dataset in ["classification", "model_parameters", "linemeas_parameters", "reliability"]:
-                    if self.has_attribute(category,dataset, data, rank):
-                        ret[attribute] = self.get_attribute(category, dataset, data, rank)
+                if rank:
+                    for dataset in ["linemeas_parameters", "reliability"]:
+                        if self.has_attribute(category,dataset, data, rank):
+                            ret[attribute] = self.get_attribute(category, dataset, data, rank)
+                else:
+                    if self.has_attribute(category,"model_parameters", data, rank):
+                        ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
             elif root == "error":
                 if self.has_error(attr_parts[1], attr_parts[2]):
                     ret[attribute] = self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]

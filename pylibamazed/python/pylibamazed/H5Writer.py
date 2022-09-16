@@ -113,7 +113,7 @@ class H5Writer():
                 object_results = obs.create_group(object_type) #h5
                 self.write_hdf5_object_level(object_type, object_results)
 #                self.write_hdf5_method_level(object_type, object_results)
-                if not self.output.has_error(object_type,"solver") :
+                if not self.output.has_error(object_type,"redshift_solver") :
                     self.write_hdf5_candidate_level(object_type, object_results)
                 for stage in self.output.object_stages:
                     if self.output.has_error(object_type, stage):
