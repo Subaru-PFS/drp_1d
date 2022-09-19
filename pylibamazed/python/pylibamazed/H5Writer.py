@@ -37,7 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.AbstractOutput import AbstractOutput
+from pylibamazed.AbstractOutput import AbstractOutput,RootStages,ObjectStages
 from pylibamazed.Exception import AmazedError
 from pylibamazed.redshift import ErrorCode
 
@@ -106,16 +106,18 @@ class H5Writer():
             obs = hdf5_root.create_group(spectrum_id)
             self.write_hdf5_root(obs)
 
-            for stage in self.output.root_stages:
+            for stage in RootStages:
                 if self.output.has_error(None,stage):
                     self.write_error(obs, None, stage)
+            if self.output.has_error(None,"init"):
+                return
             for object_type in self.output.object_types:
                 object_results = obs.create_group(object_type) #h5
                 self.write_hdf5_object_level(object_type, object_results)
 #                self.write_hdf5_method_level(object_type, object_results)
                 if not self.output.has_error(object_type,"redshift_solver") :
                     self.write_hdf5_candidate_level(object_type, object_results)
-                for stage in self.output.object_stages:
+                for stage in ObjectStages:
                     if self.output.has_error(object_type, stage):
                         self.write_error(object_results,object_type, stage)
                     

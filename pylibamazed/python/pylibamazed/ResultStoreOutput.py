@@ -57,7 +57,6 @@ class ResultStoreOutput(AbstractOutput):
         AbstractOutput.__init__(self, parameters, extended_results=extended_results)
         self.results_store = result_store
         self.parameters = parameters
-        self.errors = dict()
         if auto_load:
             self.load_all()
         
@@ -124,9 +123,14 @@ class ResultStoreOutput(AbstractOutput):
             return hasattr(operator_result, attribute_info.OperatorResult_name)
 
     def has_dataset_in_source(self, object_type, method, dataset):
-        return self.results_store.HasDataset(object_type,
-                                             method,
-                                             dataset)
+        if object_type:
+            return self.results_store.HasDataset(object_type,
+                                                 method,
+                                                 dataset)
+        else:
+            return self.results_store.HasDataset(dataset,
+                                                 dataset,
+                                                 "solveResult")
 
     def has_candidate_dataset_in_source(self, object_type, method, dataset):
         rs = self.results_specifications

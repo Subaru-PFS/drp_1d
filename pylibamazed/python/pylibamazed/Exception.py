@@ -79,4 +79,4 @@ class APIException(Exception):
         self.message = message
 
     def __str__(self):
-        return message
+        return '{}:{}'.format(self.errCode.name,self.message)

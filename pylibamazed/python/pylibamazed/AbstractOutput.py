@@ -41,6 +41,10 @@ from pylibamazed.r_specifications import rspecifications
 from pylibamazed.Parameters import Parameters
 import numpy as np
 from pylibamazed.redshift import CLog, ErrorCode
+from pylibamazed.Exception import APIException
+
+RootStages = ["init","classification","result_store_fill"]
+ObjectStages = ["redshift_solver","linemeas_catalog_load","linemeas_solver","reliability_solver","sub_classif_solver"]
 
 zlog = CLog.GetInstance()
 
@@ -59,13 +63,11 @@ class AbstractOutput:
                                                   sep='\t'
                                                   )
         self.object_types = self.parameters.get_objects()
-        
+        self.errors = dict()        
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
 
         #TODO find another emplacement for these informations
-        self.root_stages = ["init","classification","result_store_fill"]
-        self.object_stages = ["redshift_solver","linemeas_catalog_load","linemeas_solver","reliability_solver","sub_classif_solver"]
 
     def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None):
         raise NotImplementedError("Implement in derived class")
@@ -142,7 +144,10 @@ class AbstractOutput:
             if rank is None:
                 return attribute in self.object_results[object_type][dataset]
             else:
-                return attribute in self.object_results[object_type][dataset][rank]
+                if type(self.object_results[object_type][dataset]) == list:
+                    return attribute in self.object_results[object_type][dataset][rank]
+                else:
+                    return False
         else:
             return False
 
@@ -246,7 +251,7 @@ class AbstractOutput:
         level = "root"
         rs, root_datasets = self.filter_datasets(level)
         for ds in root_datasets:
-            skip = not self.has_dataset_in_source(ds, ds, "solveResult")
+            skip = not self.has_dataset_in_source(None, None, ds)
             skip = skip and not "warning" in ds
             if skip:
                 zlog.LogInfo("skipping " + ds)
@@ -367,6 +372,13 @@ class AbstractOutput:
             if root == "classification":
                 if self.has_attribute(None,"classification",data,None):
                     ret[attribute]=self.get_attribute(None,"classification",data,None)
+                continue
+            elif root == "error":
+                if self.has_error(attr_parts[1], attr_parts[2]):
+                    ret[attribute] = self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
+                elif self.has_error(None,attr_parts[1]):
+                    ret[attribute] = self.get_error(None,attr_parts[1])[attr_parts[2]]
+                continue
             else:
                 category = root
                 if len(attr_parts) == 2:
@@ -374,24 +386,22 @@ class AbstractOutput:
                 elif len(attr_parts) == 3:
                     rank = int(attr_parts[1])
             if len(attr_parts) < 4:
-                if rank:
-                    for dataset in ["linemeas_parameters", "reliability"]:
-                        if self.has_attribute(category,dataset, data, rank):
-                            ret[attribute] = self.get_attribute(category, dataset, data, rank)
-                else:
-                    if self.has_attribute(category,"model_parameters", data, rank):
-                        ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
-            elif root == "error":
-                if self.has_error(attr_parts[1], attr_parts[2]):
-                    ret[attribute] = self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
+                for dataset in ["linemeas_parameters", "reliability","model_parameters"]:
+                    if self.has_attribute(category,dataset, data, rank):
+                        ret[attribute] = self.get_attribute(category, dataset, data, rank)
+                # else:
+                #     if self.has_attribute(category,"model_parameters", data, rank):
+                #         ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
             else:
                 dataset = attr_parts[1]
                 if not self.has_dataset(category, dataset):
-                    raise Exception("bad attribute " + attribute)
-                fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
-                fitted_lines.set_index("LinemeasLineID", inplace=True)
+                    continue
                 line_name = attr_parts[2]
                 col_name = attr_parts[3]
+                if line_name not in lines_ids:
+                    raise Exception("Line {}  not found in {}".format(line_name,lines_ids))
+                fitted_lines = pd.DataFrame(self.get_dataset(dataset, category))
+                fitted_lines.set_index("LinemeasLineID", inplace=True)
                 ret[attribute] = fitted_lines.at[lines_ids[line_name], col_name]
         return ret
 

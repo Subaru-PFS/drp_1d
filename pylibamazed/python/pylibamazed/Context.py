@@ -107,7 +107,11 @@ class Context:
 
     def run(self, spectrum_reader):
         resultStore = CProcessFlowContext.GetInstance().GetResultStore()
-        rso = None
+        rso = ResultStoreOutput(resultStore,
+                                self.parameters,
+                                auto_load = False,
+                                extended_results = self.extended_results)
+        
         context_warningFlagRecorded=False
         try:
             self.init_context()
@@ -119,10 +123,6 @@ class Context:
 
             #store flag in root object
             
-            rso = ResultStoreOutput(self.process_flow_context.GetResultStore(),
-                                    self.parameters,
-                                    auto_load = False,
-                                    extended_results = self.extended_results)
             
             resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
             zflag.resetFlag()
