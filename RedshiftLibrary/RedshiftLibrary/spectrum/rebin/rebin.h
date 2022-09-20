@@ -45,6 +45,10 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
+namespace Rebin {
+class rebinFineGrid_test;
+} // namespace Rebin
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -76,6 +80,8 @@ public:
   virtual void clearFineGrid() const {};
 
 protected:
+  friend class Rebin::rebinFineGrid_test;
+
   virtual bool rebinFineGrid() const { return true; };
 
   const CSpectrum &m_spectrum;

@@ -60,6 +60,12 @@ class continuum_test;
 class Calcul;
 class rebin_test;
 } // namespace Spectrum
+namespace Rebin {
+class rebinLinear_test;
+class rebinFineGrid_test;
+class rebinSpline_test;
+class rebinNgp_test;
+} // namespace Rebin
 
 namespace NSEpic {
 
@@ -171,6 +177,10 @@ protected:
   friend class Spectrum::continuum_test;
   friend class Spectrum::Calcul;
   friend class Spectrum::rebin_test;
+  friend class Rebin::rebinLinear_test;
+  friend class Rebin::rebinFineGrid_test;
+  friend class Rebin::rebinSpline_test;
+  friend class Rebin::rebinNgp_test;
 
   // protected mutable getters
   CSpectrumFluxAxis &GetFluxAxis_();
@@ -188,7 +198,6 @@ protected:
   void EstimateContinuum() const;
   void ResetContinuum() const;
 
-  mutable TFloat64List m_pfgFlux;
   mutable bool m_FineGridInterpolated = false;
 
   std::string m_Name;
