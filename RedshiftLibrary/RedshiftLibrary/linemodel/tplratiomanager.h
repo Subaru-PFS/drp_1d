@@ -155,6 +155,9 @@ protected:
   Float64 m_NSigmaSupport;
   Float64 m_opt_haprior = -1.;
   bool m_opt_dust_calzetti;
+
+private:
+  void fillHalphaArray(Int32 idx);
 };
 
 } // namespace NSEpic

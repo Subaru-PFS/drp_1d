@@ -41,8 +41,10 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-#include <algorithm>
+
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
 #include <cmath>
 #include <iterator>
 

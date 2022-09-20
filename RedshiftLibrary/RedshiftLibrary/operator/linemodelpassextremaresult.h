@@ -44,6 +44,8 @@
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 
+#include <unordered_set>
+
 namespace NSEpic {
 
 class CLineModelPassExtremaResult {
@@ -100,7 +102,7 @@ public:
   TFloat64List SigmaZ;                  // sigmaz for each extrema
 
   TFloat64List StrongELSNR;
-  std::vector<TStringList> StrongELSNRAboveCut;
+  std::vector<std::unordered_set<std::string>> StrongELSNRAboveCut;
   TFloat64List bic; // bayesian information criterion for each extrema
   std::vector<CContinuumIndexes::TContinuumIndexList>
       ContinuumIndexes; // continuum indexes for each extrema

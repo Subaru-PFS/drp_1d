@@ -40,10 +40,11 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/zprior.h"
+
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 using namespace NSEpic;
 using namespace std;

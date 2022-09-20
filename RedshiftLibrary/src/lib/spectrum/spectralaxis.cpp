@@ -37,12 +37,13 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/line/airvacuum.h"
+
 #include <cmath>
+
 using namespace NSEpic;
 using namespace std;
 

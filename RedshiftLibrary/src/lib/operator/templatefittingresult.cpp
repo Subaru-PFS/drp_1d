@@ -36,13 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/operator/templatefitting.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
+
 #include <fstream>
 #include <iomanip> // std::setprecision
 #include <string>

@@ -38,6 +38,9 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/linemodel.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
@@ -45,34 +48,29 @@
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/operator/templatefittingwithphot.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/log/log.h"
-
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
 
-#include "RedshiftLibrary/processflow/autoscope.h"
-#include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/processflow/parameterstore.h"
+#include <gsl/gsl_interp.h>
 
 #include <algorithm> //std::sort
-#include <assert.h>
-#include <boost/numeric/conversion/bounds.hpp>
-#include <gsl/gsl_interp.h>
 
 using namespace NSEpic;
 using namespace std;

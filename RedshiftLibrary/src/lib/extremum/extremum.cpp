@@ -44,7 +44,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/log/log.h"
-#include <float.h>
+#include <climits>
 #include <numeric>
 
 using namespace NSEpic;

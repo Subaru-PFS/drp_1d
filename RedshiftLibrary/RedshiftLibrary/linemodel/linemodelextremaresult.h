@@ -45,6 +45,8 @@
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/processflow/result.h"
 
+#include <unordered_set>
+
 namespace NSEpic {
 class CModelSpectrumResult;
 class CLineModelSolution;

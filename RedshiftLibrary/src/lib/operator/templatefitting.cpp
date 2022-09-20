@@ -37,7 +37,6 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/templatefitting.h"
-
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
@@ -49,21 +48,19 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
-#include <boost/numeric/conversion/bounds.hpp>
-
-#include <algorithm> // std::sort
-#include <float.h>
-#include <gsl/gsl_interp.h>
-#include <gsl/gsl_spline.h>
-#include <math.h>
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
+
+#include <gsl/gsl_interp.h>
+#include <gsl/gsl_spline.h>
+
+#include <algorithm> // std::sort
+#include <climits>
+#include <cmath>
 #include <iostream>
 #include <sstream>
-
-#include <assert.h>
 
 using namespace NSEpic;
 using namespace std;

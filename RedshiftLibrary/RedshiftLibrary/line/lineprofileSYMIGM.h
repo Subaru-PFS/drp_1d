@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
-#include <math.h>
+#include <cmath>
 #include <string>
 
 namespace NSEpic {

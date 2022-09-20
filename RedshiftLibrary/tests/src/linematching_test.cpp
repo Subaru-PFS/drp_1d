@@ -41,9 +41,8 @@
 #include "RedshiftLibrary/operator/linematching.h"
 
 #include <boost/test/unit_test.hpp>
+
 #include <iostream>
-#include <stdlib.h>
-#include <time.h>
 
 using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(test_linematching)

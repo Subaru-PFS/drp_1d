@@ -5,6 +5,8 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
+#include <unordered_set>
+
 namespace NSEpic {
 
 class CLineModelSolution;
@@ -43,8 +45,9 @@ public:
                                 bool substract_abslinesmodel, Float64 &fluxdi,
                                 Float64 &snrdi,
                                 const TFloat64Range &lambdaRange) const;
-  TStringList getLinesAboveSNR(const TFloat64Range &lambdaRange,
-                               Float64 snrcut = 3.5) const;
+  std::unordered_set<std::string>
+  getLinesAboveSNR(const TFloat64Range &lambdaRange,
+                   Float64 snrcut = 3.5) const;
 
   void
   integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
@@ -68,6 +71,9 @@ public:
   }
 
 private:
+  CSpectrumFluxAxis getContinuum(const TInt32RangeList &indexRangeList,
+                                 const TInt32List &eIdx_list,
+                                 bool substract_abslinesmodel) const;
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
   const CLineCatalog::TLineVector &m_RestLineList;
 

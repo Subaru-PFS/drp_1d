@@ -36,22 +36,22 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/fluxaxis.h"
-
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
-#include <math.h>
-#include <numeric>
 
 #include <boost/test/unit_test.hpp>
+
+#include <cmath>
+#include <numeric>
 
 using namespace NSEpic;
 using namespace std;
@@ -416,6 +416,26 @@ BOOST_AUTO_TEST_CASE(Subtract_test) {
   TFloat64List sample_ref = {-1., -2., -3., -4., -5., -6., -7., -8., -9., -10.};
 
   BOOST_CHECK(sample_ref == object_FluxAxisA.GetSamplesVector());
+}
+
+BOOST_AUTO_TEST_CASE(ComputeMaxAbsValue) {
+  //--------------------//
+  // test computeMaxAbsValue
+  TFloat64List sampleA = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
+  CSpectrumFluxAxis object_FluxAxisA(sampleA);
+
+  Float64 maxAbsVal = object_FluxAxisA.computeMaxAbsValue(0, 9);
+  BOOST_CHECK_CLOSE(maxAbsVal, 10., precision);
+
+  maxAbsVal = object_FluxAxisA.computeMaxAbsValue(3, 5);
+  BOOST_CHECK_CLOSE(maxAbsVal, 6., precision);
+
+  // check with negative values
+  TFloat64List sampleB = {1., 2., 3., 4., 5., 6., 7., 8., 9., -10.};
+  CSpectrumFluxAxis object_FluxAxisB(sampleB);
+
+  maxAbsVal = object_FluxAxisB.computeMaxAbsValue(0, 9);
+  BOOST_CHECK_CLOSE(maxAbsVal, 10., precision);
 }
 
 BOOST_AUTO_TEST_CASE(Invert_test) {

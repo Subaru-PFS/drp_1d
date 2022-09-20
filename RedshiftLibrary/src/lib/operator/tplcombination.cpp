@@ -49,19 +49,20 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
-#include <algorithm> // std::sort
-#include <assert.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <float.h>
+
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
-#include <math.h>
+
+#include <algorithm> // std::sort
+#include <climits>
+#include <cmath>
 #include <numeric>
 #include <sstream>
 

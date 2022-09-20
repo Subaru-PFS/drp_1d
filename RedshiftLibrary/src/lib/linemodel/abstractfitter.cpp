@@ -1,15 +1,15 @@
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
-#include "RedshiftLibrary/processflow/context.h"
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_multifit.h>
-#include <gsl/gsl_vector.h>
-
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
 #include "RedshiftLibrary/linemodel/individualfitter.h"
 #include "RedshiftLibrary/linemodel/onesfitter.h"
 #include "RedshiftLibrary/linemodel/randomfitter.h"
 #include "RedshiftLibrary/linemodel/svdfitter.h"
 #include "RedshiftLibrary/linemodel/svdlcfitter.h"
+#include "RedshiftLibrary/processflow/context.h"
+
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_multifit.h>
+#include <gsl/gsl_vector.h>
 
 using namespace NSEpic;
 

@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_COMMON_DATATYPES_
 #define _REDSHIFT_COMMON_DATATYPES_
 
+#include <cfloat>
 #include <memory>
 #include <string>
 #include <type_traits>

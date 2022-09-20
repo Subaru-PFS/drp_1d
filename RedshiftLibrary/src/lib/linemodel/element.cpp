@@ -43,7 +43,8 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <algorithm>
-#include <float.h>
+#include <cfloat>
+#include <climits>
 
 using namespace NSEpic;
 
@@ -799,7 +800,7 @@ void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
  *amplitude.
  **/
 void CLineModelElement::SetFittedAmplitude(Float64 A, Float64 SNR) {
-  if (isnan(A) || m_OutsideLambdaRange) {
+  if (std::isnan(A) || m_OutsideLambdaRange) {
     m_FittedAmplitudes.resize(m_Lines.size(), NAN);
     m_FittedAmplitudeErrorSigmas.resize(m_Lines.size(), NAN);
     return;
@@ -1060,7 +1061,7 @@ void CLineModelElement::addToSpectrumModel(
       Float64 lambda = spectral[i];
       Float64 Yi = getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
       flux[i] += Yi;
-      if (isnan(flux[i])) {
+      if (std::isnan(flux[i])) {
         THROWG(INTERNAL_ERROR,
                Formatter() << "addToSpectrumModel has a NaN flux Line" << k
                            << ": ContinuumFlux " << continuumfluxAxis[i]
@@ -1092,7 +1093,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(
       continue;
     }
     Float64 A = m_FittedAmplitudes[k];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");//to be uncommented
@@ -1143,7 +1144,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
     }
 
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
@@ -1154,7 +1155,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
         m_SignFactors[k2] * A * GetLineProfileAtRedshift(k2, redshift, x);
     Yi += m_SignFactors[k2] == -1 ? continuumFlux * fluxval : fluxval;
 
-    if (isnan(Yi)) {
+    if (std::isnan(Yi)) {
       Log.LogError("Line nb: %d and GetLineProfileAtRedshift: %f", k2,
                    GetLineProfileAtRedshift(k2, redshift, x));
     }
@@ -1204,7 +1205,7 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
     }
 
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
@@ -1233,7 +1234,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(
       continue;
     }
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
@@ -1275,7 +1276,7 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
       continue;
     }
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");

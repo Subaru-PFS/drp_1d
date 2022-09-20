@@ -43,8 +43,6 @@
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
-//#include <cmath>
-//#include <map>
 #include <ostream>
 #include <string>
 

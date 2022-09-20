@@ -63,8 +63,13 @@ private:
   Int32 fitAmplitudesLinesAndContinuumLinSolve(
       const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
       TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
-      Float64 redshift, Int32 polyOrder = -1);
+      Float64 redshift);
 
+  void fillMatrix(Int32 imin, Int32 imax, Float64 redshift,
+                  const TInt32List &EltsIdx,
+                  const CSpectrumSpectralAxis &spectralAxis,
+                  const CSpectrumFluxAxis &continuumfluxAxis,
+                  gsl_matrix *X) const;
   Int32 m_fitc_polyOrder = -1;
 
   std::shared_ptr<CContinuumManager> m_continuumManager;

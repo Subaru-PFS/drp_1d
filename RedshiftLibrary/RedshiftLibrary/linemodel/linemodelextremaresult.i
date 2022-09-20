@@ -78,7 +78,7 @@ public:
   Float64 SigmaZ;                  // sigmaz for each extrema
 
   Float64 StrongELSNR;
-  TStringList StrongELSNRAboveCut;
+  std::unordered_set<std::string> StrongELSNRAboveCut;
   Float64 bic; // bayesian information criterion for each extrema
   std::vector<CContinuumIndexes::TContinuumIndexList>
       ContinuumIndexes;   // continuum indexes for each extrema
