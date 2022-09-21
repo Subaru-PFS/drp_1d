@@ -86,6 +86,19 @@ public:
 
 BOOST_AUTO_TEST_SUITE(Rebin)
 
+BOOST_AUTO_TEST_CASE(rebin_test) {
+  CSpectrum spc;
+
+  // test convert
+  BOOST_CHECK_NO_THROW(CRebin::convert(std::move(spc.m_rebin), "lin"));
+  BOOST_CHECK_NO_THROW(
+      CRebin::convert(std::move(spc.m_rebin), "precomputedfinegrid"));
+  BOOST_CHECK_NO_THROW(CRebin::convert(std::move(spc.m_rebin), "spline"));
+  BOOST_CHECK_NO_THROW(CRebin::convert(std::move(spc.m_rebin), "ngp"));
+  BOOST_CHECK_THROW(CRebin::convert(std::move(spc.m_rebin), "linn"),
+                    GlobalException);
+}
+
 BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   // Initialize context
   MyInputContext ctx;
@@ -96,17 +109,17 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   CSpectrumNoiseAxis noiseAxis(noiseList);
   CSpectrumFluxAxis fluxAxis(fluxList);
   fluxAxis.GetError() = noiseAxis;
+  CSpectrum rebinedSpectrum;
   CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
   CMask rebinedMask;
-  CSpectrum rebinedSpectrum;
   std::string interp = "lin"; // lin, spline, precomputedfinegrid, ngp
   std::string errorRebinMethod = "rebin";
 
   // check throw : range is not included in spectral axis
-  spc.setRebinType("lin");
+  spc.setRebinInterpMethod("lin");
   TFloat64Range range2(9., 11.);
   BOOST_CHECK_THROW(spc.m_rebin->compute(range2, tgtSpectralAxis_1,
                                          rebinedSpectrum, rebinedMask,
@@ -174,17 +187,17 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
   CSpectrumNoiseAxis noiseAxis(noiseList);
   CSpectrumFluxAxis fluxAxis(fluxList);
   fluxAxis.GetError() = noiseAxis;
+  CSpectrum rebinedSpectrum;
   CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
   CMask rebinedMask;
-  CSpectrum rebinedSpectrum;
   std::string interp = "precomputedfinegrid";
   std::string errorRebinMethod = "no";
 
   // interp = "precomputedfinegrid" et errorRebinMethod = "no"
-  spc.setRebinType("precomputedfinegrid");
+  spc.setRebinInterpMethod("precomputedfinegrid");
   spc.m_rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                        errorRebinMethod);
   TFloat64List rebinedFlux =
@@ -239,17 +252,17 @@ BOOST_AUTO_TEST_CASE(rebinSpline_test) {
   CSpectrumNoiseAxis noiseAxis(noiseList);
   CSpectrumFluxAxis fluxAxis(fluxList);
   fluxAxis.GetError() = noiseAxis;
+  CSpectrum rebinedSpectrum;
   CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
   CMask rebinedMask;
-  CSpectrum rebinedSpectrum;
   std::string interp = "spline";
   std::string errorRebinMethod = "no";
 
   // interp = "spline" et errorRebinMethod = "no"
-  spc.setRebinType("spline");
+  spc.setRebinInterpMethod("spline");
   spc.m_rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                        errorRebinMethod);
   TFloat64List rebinedFlux =
@@ -282,17 +295,17 @@ BOOST_AUTO_TEST_CASE(rebinNgp_test) {
   CSpectrumNoiseAxis noiseAxis(noiseList);
   CSpectrumFluxAxis fluxAxis(fluxList);
   fluxAxis.GetError() = noiseAxis;
+  CSpectrum rebinedSpectrum;
   CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
   CMask rebinedMask;
-  CSpectrum rebinedSpectrum;
   std::string interp = "ngp";
   std::string errorRebinMethod = "rebin";
 
   // interp = "ngp" et errorRebinMethod = "rebin"
-  spc.setRebinType("ngp");
+  spc.setRebinInterpMethod("ngp");
   spc.m_rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                        errorRebinMethod);
   TFloat64List rebinedFlux =

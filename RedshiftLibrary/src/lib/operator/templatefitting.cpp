@@ -495,6 +495,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
         useDefaultMask ? default_spcMask
                        : additional_spcMasks[sortedIndexes[i]];
 
+    tpl->setRebinInterpMethod(opt_interp);
     TFittingIsmIgmResult result_z = BasicFit(
         tpl, redshift, overlapThreshold, opt_interp, -1, opt_extinction,
         opt_dustFitting, additional_spcMask, logp, MeiksinList, EbmvList);

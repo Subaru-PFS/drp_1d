@@ -61,6 +61,7 @@ class Calcul;
 class rebin_test;
 } // namespace Spectrum
 namespace Rebin {
+class rebin_test;
 class rebinLinear_test;
 class rebinFineGrid_test;
 class rebinSpline_test;
@@ -170,6 +171,8 @@ public:
              const std::string &opt_error_interp = "no") const;
   CSpectrum extract(Int32 startIdx, Int32 endIdx) const;
 
+  void setRebinInterpMethod(const std::string &opt_interp) const;
+
 protected:
   friend CRebin;
   friend class Spectrum::constructor_test;
@@ -177,6 +180,7 @@ protected:
   friend class Spectrum::continuum_test;
   friend class Spectrum::Calcul;
   friend class Spectrum::rebin_test;
+  friend class Rebin::rebin_test;
   friend class Rebin::rebinLinear_test;
   friend class Rebin::rebinFineGrid_test;
   friend class Rebin::rebinSpline_test;
@@ -192,8 +196,6 @@ protected:
   std::shared_ptr<const CLSF> m_LSF;
   std::shared_ptr<const CPhotometricData> m_photData;
   mutable std::unique_ptr<CRebin> m_rebin;
-
-  void setRebinType(const std::string &opt_interp) const;
 
   void EstimateContinuum() const;
   void ResetContinuum() const;

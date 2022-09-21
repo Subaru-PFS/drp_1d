@@ -63,6 +63,8 @@ public:
   CRebin(CRebin &&other) = default;
   CRebin &operator=(CRebin &&other) = default;
 
+  static std::unique_ptr<CRebin> convert(std::unique_ptr<CRebin> &&other,
+                                         const std::string opt_interp);
   bool compute(const TFloat64Range &range,
                const CSpectrumSpectralAxis &targetSpectralAxis,
                CSpectrum &rebinedSpectrum, CMask &rebinedMask,
@@ -89,6 +91,8 @@ protected:
 
   mutable TFloat64List m_pfgFlux;
   mutable bool m_FineGridInterpolated = false;
+  const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
+                                         // check if enough to be private
 };
 
 } // namespace NSEpic

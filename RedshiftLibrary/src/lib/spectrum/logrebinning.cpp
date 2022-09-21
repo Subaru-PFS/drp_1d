@@ -347,6 +347,7 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
         std::shared_ptr<const CTemplate> input_tpl =
             tplcat->GetTemplateByName(TStringList{category}, tpl->GetName());
         tplcat->m_logsampling = true;
+        input_tpl->setRebinInterpMethod("lin");
         tplcat->SetTemplate(
             loglambdaRebinTemplate(input_tpl, lambdaRange_tpl,
                                    loglambda_count_tpl),
@@ -361,6 +362,7 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
             ->GetTemplateList(TStringList{category});
     tplcat->m_logsampling = true;
     for (auto tpl : TplList) {
+      tpl->setRebinInterpMethod("lin");
       std::shared_ptr<CTemplate> rebinnedTpl =
           loglambdaRebinTemplate(tpl, lambdaRange_tpl, loglambda_count_tpl);
       tplcat->Add(rebinnedTpl);

@@ -496,6 +496,7 @@ void COperatorTplcombination::RebinTemplate(
     CTemplate &itplTplSpectrum = m_templatesRebined_bf[ktpl];
     CMask &itplMask = m_masksRebined_bf[ktpl];
 
+    tplList[ktpl]->setRebinInterpMethod(opt_interp);
     tplList[ktpl]->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
                          itplTplSpectrum, itplMask, opt_interp);
 

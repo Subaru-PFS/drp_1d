@@ -539,6 +539,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     tplCatalog.m_logsampling = false;
     std::shared_ptr<const CTemplate> tpl =
         tplCatalog.GetTemplateByName(m_categoryList, tplName);
+    tpl->setRebinInterpMethod(opt_interp);
     std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
         m_templateFittingOperator->ComputeSpectrumModel(
             tpl, z, TplFitResult->FitEbmvCoeff[idx],

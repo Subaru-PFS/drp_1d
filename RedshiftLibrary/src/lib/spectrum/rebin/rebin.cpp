@@ -39,21 +39,11 @@
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinSpline.h"
 
 using namespace NSEpic;
 using namespace std;
-
-// CRebin::CRebin(std::unique_ptr<CRebin> &&other) {
-//   m_pfgFlux = std::move(other->m_pfgFlux);
-//   m_FineGridInterpolated = std::move(other->m_FineGridInterpolated);
-//   // m_spectrum = std::move(other->m_spectrum);
-// }
-
-// CRebin &CRebin::operator=(std::unique_ptr<CRebin> &&other) {
-//   m_pfgFlux = std::move(other->m_pfgFlux);
-//   m_FineGridInterpolated = std::move(other->m_FineGridInterpolated);
-//   return *this;
-// }
 
 CRebin::CRebin(std::unique_ptr<CRebin> &&other)
     : m_pfgFlux(std::move(other->m_pfgFlux)),
@@ -117,4 +107,20 @@ bool CRebin::compute(const TFloat64Range &range,
                                          std::move(rebinedFluxAxis));
 
   return status;
+}
+
+std::unique_ptr<CRebin> CRebin::convert(std::unique_ptr<CRebin> &&other,
+                                        const std::string opt_interp) {
+  if (opt_interp == "lin")
+    return std::unique_ptr<CRebin>(new CRebinLinear(std::move(other)));
+  else if (opt_interp == "precomputedfinegrid")
+    return std::unique_ptr<CRebin>(new CRebinFineGrid(std::move(other)));
+  else if (opt_interp == "spline")
+    return std::unique_ptr<CRebin>(new CRebinSpline(std::move(other)));
+  else if (opt_interp == "ngp")
+    return std::unique_ptr<CRebin>(new CRebinNgp(std::move(other)));
+  else
+    THROWG(INVALID_PARAMETER,
+           "Only {lin, precomputedfinegrid} values are "
+           "supported for TemplateFittingSolve.interpolation");
 }

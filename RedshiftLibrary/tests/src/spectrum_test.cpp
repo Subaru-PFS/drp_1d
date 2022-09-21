@@ -914,14 +914,16 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   CSpectrumNoiseAxis noiseAxis(noiseList);
   CSpectrumFluxAxis fluxAxis(fluxList);
   fluxAxis.GetError() = noiseAxis;
+  CSpectrum rebinedSpectrum;
   CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
   CMask rebinedMask;
-  CSpectrum rebinedSpectrum;
+
   std::string interp = "lin"; // lin, spline, precomputedfinegrid, ngp
   std::string errorRebinMethod = "rebin";
+  spc.setRebinInterpMethod("lin");
 
   // check throw : spectrum is not valid
   spc.GetFluxAxis_().GetSamplesVector().pop_back();
@@ -952,11 +954,11 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   }
 
   // test setRebinType
-  BOOST_CHECK_NO_THROW(spc.setRebinType("lin"));
-  BOOST_CHECK_NO_THROW(spc.setRebinType("precomputedfinegrid"));
-  BOOST_CHECK_NO_THROW(spc.setRebinType("spline"));
-  BOOST_CHECK_NO_THROW(spc.setRebinType("ngp"));
-  BOOST_CHECK_THROW(spc.setRebinType("linn"), GlobalException);
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("lin"));
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("precomputedfinegrid"));
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("spline"));
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("ngp"));
+  BOOST_CHECK_THROW(spc.setRebinInterpMethod("linn"), GlobalException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

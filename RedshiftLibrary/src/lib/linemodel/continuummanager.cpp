@@ -60,6 +60,7 @@ Int32 CContinuumManager::ApplyContinuumOnGrid(
   TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n - 1]);
 
   std::string inter_opt = "spline";
+  tpl->setRebinInterpMethod(inter_opt);
   Float64 overlapThreshold = 1., amplitude = 1.;
   std::shared_ptr<CModelSpectrumResult> spcmodel =
       m_templateFittingOperator->ComputeSpectrumModel(

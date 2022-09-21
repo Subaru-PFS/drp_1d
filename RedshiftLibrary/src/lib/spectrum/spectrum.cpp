@@ -41,11 +41,8 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/spectrum/rebin/rebin.h"
-#include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
-#include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
-#include "RedshiftLibrary/spectrum/rebin/rebinSpline.h"
+
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
@@ -101,7 +98,9 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
 
 CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
                      CSpectrumFluxAxis fluxAxis)
-    : CSpectrum(std::move(spectralAxis), std::move(fluxAxis), nullptr) {}
+    : CSpectrum(std::move(spectralAxis), std::move(fluxAxis), nullptr) {
+  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
+}
 
 CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
                      CSpectrumFluxAxis fluxAxis,
@@ -694,19 +693,8 @@ void CSpectrum::SetContinuumEstimationMethod(
   m_ContinuumFluxAxis = ContinuumFluxAxis;
 }
 
-void CSpectrum::setRebinType(const std::string &opt_interp) const {
-  if (opt_interp == "lin")
-    m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(std::move(m_rebin)));
-  else if (opt_interp == "precomputedfinegrid")
-    m_rebin = std::unique_ptr<CRebin>(new CRebinFineGrid(std::move(m_rebin)));
-  else if (opt_interp == "spline")
-    m_rebin = std::unique_ptr<CRebin>(new CRebinSpline(std::move(m_rebin)));
-  else if (opt_interp == "ngp")
-    m_rebin = std::unique_ptr<CRebin>(new CRebinNgp(std::move(m_rebin)));
-  else
-    THROWG(INVALID_PARAMETER,
-           "Only {lin, precomputedfinegrid} values are "
-           "supported for TemplateFittingSolve.interpolation");
+void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
+  m_rebin = CRebin::convert(std::move(m_rebin), opt_interp);
 }
 
 // Test methode Rebin
@@ -737,7 +725,6 @@ void CSpectrum::Rebin(const TFloat64Range &range,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
 
-  setRebinType(opt_interp);
   bool status = m_rebin->compute(range, targetSpectralAxis, rebinedSpectrum,
                                  rebinedMask, opt_error_interp);
   return status;

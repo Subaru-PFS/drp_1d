@@ -117,6 +117,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   // Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
   Log.LogInfo("");
 
+  spc.setRebinInterpMethod(opt_interp);
   Solve(resultStore, spc, tplCatalog, m_lambdaRange, m_redshifts,
         overlapThreshold, maskList, _type, opt_interp, opt_extinction,
         opt_dustFit);

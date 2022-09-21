@@ -60,9 +60,6 @@ public:
 
 protected:
   bool rebinFineGrid() const override;
-
-  const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
-                                         // check if enough to be private
 };
 
 } // namespace NSEpic
