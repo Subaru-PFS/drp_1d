@@ -58,6 +58,13 @@ CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
   return *this;
 }
 
+CSpectrumAxis &CSpectrumAxis::operator/=(const Float64 op) {
+  for (Int32 i = 0; i < m_Samples.size(); i++) {
+    m_Samples[i] /= op;
+  }
+  return *this;
+}
+
 void CSpectrumAxis::SetSize(Int32 s) { m_Samples.resize(s); }
 void CSpectrumAxis::clear() {
   resetAxisProperties();

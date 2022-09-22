@@ -115,6 +115,14 @@ CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator*=(const Float64 op) {
     m_isSorted = (GetSamplesCount() < 2);
   return *this;
 }
+CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator/=(const Float64 op) {
+  CSpectrumAxis::operator/=(op);
+  if (op < 0 && !indeterminate(m_isSorted))
+    m_isSorted = m_isSorted ? static_cast<tribool>(false) : indeterminate;
+  if (!op)
+    m_isSorted = (GetSamplesCount() < 2);
+  return *this;
+}
 void CSpectrumSpectralAxis::MaskAxis(
     const TFloat64List &mask, CSpectrumSpectralAxis &maskedSpcAxis) const {
   CSpectrumAxis::MaskAxis(mask, maskedSpcAxis);
@@ -160,7 +168,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLength(
   if (direction == nShiftForward) {
     operator*=(wavelengthOffset);
   } else if (direction == nShiftBackward) {
-    operator*=(1.0 / wavelengthOffset);
+    operator/=(wavelengthOffset);
   }
 }
 

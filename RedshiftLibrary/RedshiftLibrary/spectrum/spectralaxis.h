@@ -78,6 +78,7 @@ public:
   CSpectrumSpectralAxis(const CSpectrumSpectralAxis &origin, Float64 redshift,
                         EShiftDirection direction);
   CSpectrumSpectralAxis &operator*=(const Float64 op) override;
+  CSpectrumSpectralAxis &operator/=(const Float64 op) override;
   CSpectrumSpectralAxis extract(Int32 startIdx, Int32 endIdx) const;
 
   Float64 GetResolution(Float64 atWavelength = -1.0) const;

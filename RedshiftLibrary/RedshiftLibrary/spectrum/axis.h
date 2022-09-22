@@ -63,6 +63,7 @@ public:
   CSpectrumAxis &operator=(const CSpectrumAxis &other) = default;
   CSpectrumAxis &operator=(CSpectrumAxis &&other) = default;
   virtual CSpectrumAxis &operator*=(const Float64 op);
+  virtual CSpectrumAxis &operator/=(const Float64 op);
   Float64 &operator[](const Int32 i);
   const Float64 &operator[](const Int32 i) const;
   void MaskAxis(const TFloat64List &mask, CSpectrumAxis &maskedAxis) const;
