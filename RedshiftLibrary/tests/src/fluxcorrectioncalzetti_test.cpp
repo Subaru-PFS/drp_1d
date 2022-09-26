@@ -36,69 +36,53 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_SPECTRUM_FLUXCORRECTIONCALZETTI_
-#define _REDSHIFT_SPECTRUM_FLUXCORRECTIONCALZETTI_
-
-#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
-namespace NSEpic {
-typedef struct CalzettiCorrection {
-  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr)
-      : lbda(_lbda), fluxcorr(_fluxcorr) {
-    Float64 lbdaGridStep = lbda[1] - lbda[0];
-    Float64 relativeLbdaGridStepTol = 1e-8;
-    Float64 lbda1 = lbda[0];
-    for (Int32 t = 2; t < lbda.size(); t++) {
-      Float64 lbda1 = lbda[t - 1];
-      Float64 lbda2 = lbda[t];
-      Float64 _lbdaGridStep;
-      _lbdaGridStep = lbda2 - lbda1;
-      Float64 relativeErrAbs =
-          std::abs((_lbdaGridStep - lbdaGridStep) / lbdaGridStep);
+#include <boost/test/unit_test.hpp>
 
-      if (relativeErrAbs > relativeLbdaGridStepTol)
-        THROWG(BAD_CALZETTICORR, "lambdas are not regular sampled");
-    }
-    step = lbdaGridStep;
-  };
-  TFloat64List lbda;
-  TFloat64List fluxcorr;
-  Float64 step;
-} CalzettiCorrection;
-/**
- * \ingroup Redshift
- */
-class CSpectrumFluxCorrectionCalzetti {
+using namespace NSEpic;
 
-public:
-  CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr,
-                                  Float64 ebmv_start, Float64 ebmv_step,
-                                  Float64 ebmv_n);
+BOOST_AUTO_TEST_SUITE(fluxcorrectioncalzetti_test)
 
-  Float64 getLambdaMin() const { return m_LambdaMin; };
-  Float64 getLambdaMax() const { return m_LambdaMax; };
-  Int32 GetNPrecomputedEbmvCoeffs() const { return m_nEbmvCoeff; };
+Float64 precision = 1e-12;
 
-  Float64 GetEbmvValue(Int32 k) const;
+BOOST_AUTO_TEST_CASE(overall_test) {
+  TFloat64List lbda_bad = {1., 100., 200., 300., 400.};
+  TFloat64List lbda = {1., 2., 3., 4., 5.};
+  TFloat64List flux = {0.1, 0.2, 0.5, 0.3, 0.8};
 
-  Float64 GetDustCoeff(Int32 kDust, Float64 restLambda) const;
-  Int32 GetEbmvIndex(Float64 ebmv) const;
+  BOOST_CHECK_THROW(CalzettiCorrection(lbda_bad, flux), GlobalException);
 
-  TFloat64List m_dataCalzetti;
+  CalzettiCorrection calzettiCorr(lbda, flux);
+  CSpectrumFluxCorrectionCalzetti spcCorrCalzetti(calzettiCorr, 0., 0.1, 10);
 
-  Int32 m_nEbmvCoeff = 0;
-  Float64 m_EbmvCoeffStep;
-  Float64 m_EbmvCoeffStart;
-  TFloat64List m_dataDustCoeff;
+  Float64 ebmv = spcCorrCalzetti.GetEbmvValue(1);
+  BOOST_CHECK_CLOSE(ebmv, 0.1, 1e-12);
 
-private:
-  Float64 m_LambdaMin;
-  Float64 m_LambdaMax;
-  Float64 m_step;
-};
+  Int32 ebmvIndex = spcCorrCalzetti.GetEbmvIndex(0.5);
+  BOOST_CHECK(ebmvIndex == 5);
 
-} // namespace NSEpic
+  Float64 dustCoeff = spcCorrCalzetti.GetDustCoeff(1, 4.);
+  BOOST_CHECK_CLOSE(dustCoeff, 0.9727472237769651, 1e-12);
 
-#endif
+  BOOST_CHECK_THROW(spcCorrCalzetti.GetDustCoeff(10, 4.), GlobalException);
+
+  Float64 lambdaMin = spcCorrCalzetti.getLambdaMin();
+  BOOST_CHECK(lambdaMin == 1.);
+
+  Float64 lambdaMax = spcCorrCalzetti.getLambdaMax();
+  BOOST_CHECK(lambdaMax == 5.);
+
+  Int32 ebmvCoeff = spcCorrCalzetti.GetNPrecomputedEbmvCoeffs();
+  BOOST_CHECK(ebmvCoeff == 10.);
+
+  TFloat64List lbda_2 = {1., 3., 5., 7., 9.};
+  CalzettiCorrection calzettiCorr_2(lbda_2, flux);
+  CSpectrumFluxCorrectionCalzetti spcCorrCalzetti_2(calzettiCorr_2, 0., 0.1,
+                                                    10);
+  dustCoeff = spcCorrCalzetti_2.GetDustCoeff(1, 3.);
+  BOOST_CHECK_CLOSE(dustCoeff, 0.98174794301998436, 1e-12);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
