@@ -837,30 +837,6 @@ BOOST_AUTO_TEST_CASE(Calcul) {
       << object_CSpectrum.GetSpectralAxis().GetLambdaRange().GetEnd());
 
   //--------------------//
-  // test ConvertToLinearScale
-
-  bool result2 = object_CSpectrum.ConvertToLinearScale();
-  CSpectrumSpectralAxis wavAxis1 = object_CSpectrum.GetSpectralAxis();
-  bool result3 = wavAxis1.ConvertToLinearScale();
-
-  BOOST_CHECK(result2 == result3);
-
-  BOOST_TEST_MESSAGE("result2:" << result2);
-  BOOST_TEST_MESSAGE("result3:" << result3);
-
-  //--------------------//
-  /// test ConvertToLogScale
-
-  bool result4 = object_CSpectrum.ConvertToLogScale();
-  CSpectrumSpectralAxis wavAxis2 = object_CSpectrum.GetSpectralAxis();
-  bool result5 = wavAxis2.ConvertToLogScale();
-
-  BOOST_CHECK(result4 == result5);
-
-  BOOST_TEST_MESSAGE("result4:" << result4);
-  BOOST_TEST_MESSAGE("result5:" << result5);
-
-  //--------------------//
   // test GetMeanResolution
 
   Float64 result6 = object_CSpectrum.GetMeanResolution();

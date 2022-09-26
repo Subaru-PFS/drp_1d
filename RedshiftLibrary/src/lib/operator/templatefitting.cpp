@@ -437,12 +437,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     THROWG(INTERNAL_ERROR, "IGM is not initialized");
   }
 
-  if (m_spectrum.GetSpectralAxis().IsInLinearScale() == false ||
-      tpl->GetSpectralAxis().IsInLinearScale() == false) {
-    Log.LogError("  Operator-TemplateFitting: input spectrum or template are "
-                 "not in linear scale");
-  }
-
   // sort the redshift and keep track of the indexes
   TFloat64List sortedRedshifts;
   TFloat64List sortedIndexes;

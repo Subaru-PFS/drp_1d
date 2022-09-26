@@ -148,12 +148,6 @@ void COperatorTemplateFittingBase::RebinTemplate(
 
   // the spectral and tpl axis should be in the same scale
   const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
-  if (m_spcSpectralAxis_restframe.IsInLinearScale() !=
-      tplSpectralAxis.IsInLinearScale()) {
-    // status = nStatus_DataError;
-    THROWG(INTERNAL_ERROR, "data "
-                           "and tpl not in the same scale (lin/log)");
-  }
 
   // Compute clamped lambda range over template in restframe
   TFloat64Range tplLambdaRange;
@@ -181,10 +175,6 @@ void COperatorTemplateFittingBase::RebinTemplate(
 
   // the spectral axis should be in the same scale
   currentRange = intersectedLambdaRange;
-  if (m_spcSpectralAxis_restframe.IsInLogScale()) {
-    currentRange = TFloat64Range(log(intersectedLambdaRange.GetBegin()),
-                                 log(intersectedLambdaRange.GetEnd()));
-  }
 }
 
 // get z at which igm starts given that LyA starts at lbda_rest=1216

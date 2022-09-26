@@ -120,8 +120,6 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CTemplate &templateRebined_phot = m_templateRebined_phot[bandName];
 
     CSpectrumSpectralAxis photSpectralaxis = bandLambda;
-    if (tpl->GetSpectralAxis().IsInLogScale())
-      photSpectralaxis.ConvertToLogScale();
 
     photSpectralAxis_restframe.ShiftByWaveLength(
         photSpectralaxis, onePlusRedshift,

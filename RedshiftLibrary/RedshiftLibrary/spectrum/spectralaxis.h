@@ -68,17 +68,17 @@ public:
   CSpectrumSpectralAxis(CSpectrumAxis &&other)
       : CSpectrumAxis(std::move(other)){};
 
-  CSpectrumSpectralAxis(Int32 n, bool isLogScale = false);
+  CSpectrumSpectralAxis(Int32 n);
   CSpectrumSpectralAxis(Int32 n, Float64 value);
-  CSpectrumSpectralAxis(const TFloat64List &samples, bool isLogScale = false,
+  CSpectrumSpectralAxis(const TFloat64List &samples,
                         std::string AirVacuum = "");
-  CSpectrumSpectralAxis(TFloat64List &&samples, bool isLogScale = false,
-                        std::string AirVacuum = "");
+  CSpectrumSpectralAxis(TFloat64List &&samples, std::string AirVacuum = "");
   CSpectrumSpectralAxis(const Float64 *samples, Int32 n,
                         std::string AirVacuum = "");
   CSpectrumSpectralAxis(const CSpectrumSpectralAxis &origin, Float64 redshift,
                         EShiftDirection direction);
   CSpectrumSpectralAxis &operator*=(const Float64 op) override;
+  CSpectrumSpectralAxis &operator/=(const Float64 op) override;
   CSpectrumSpectralAxis extract(Int32 startIdx, Int32 endIdx) const;
 
   Float64 GetResolution(Float64 atWavelength = -1.0) const;
@@ -94,18 +94,12 @@ public:
   TInt32Range
   GetIndexesAtWaveLengthRange(const TFloat64Range &waveLengthRange) const;
 
-  bool ConvertToLinearScale();
-  bool ConvertToLogScale();
-  bool IsInLogScale() const;
-  bool IsInLinearScale() const;
-
   TLambdaRange GetLambdaRange() const;
   bool ClampLambdaRange(const TFloat64Range &range,
                         TFloat64Range &clampedRange) const;
   void GetMask(const TFloat64Range &range, CMask &mask) const;
   Float64 IntersectMaskAndComputeOverlapRate(const TFloat64Range &lambdaRange,
                                              const CMask &omask) const;
-  void SetLogScale();
   bool CheckLoglambdaSampling() const;
   bool IsLogSampled(Float64 logGridstep) const;
   bool IsLogSampled() const;
@@ -134,7 +128,6 @@ private:
   void resetAxisProperties() override;
   mutable tribool m_isSorted = indeterminate;
   mutable tribool m_isLogSampled = indeterminate;
-  mutable bool m_isLogScale = false;
 };
 
 inline CSpectrumSpectralAxis
@@ -142,7 +135,6 @@ CSpectrumSpectralAxis::extract(Int32 startIdx, Int32 endIdx) const {
   CSpectrumSpectralAxis spcaxis = CSpectrumAxis::extract(startIdx, endIdx);
   spcaxis.m_isSorted = m_isSorted;
   spcaxis.m_isLogSampled = m_isLogSampled;
-  spcaxis.m_isLogScale = m_isLogScale;
   spcaxis.m_regularLogSamplingStep = m_regularLogSamplingStep;
   return spcaxis;
 }

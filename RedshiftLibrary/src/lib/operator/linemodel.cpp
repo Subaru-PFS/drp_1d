@@ -1860,9 +1860,6 @@ Int32 COperatorLineModel::Init(const TFloat64List &redshifts) {
   // error
   m_result = std::make_shared<CLineModelResult>();
 
-  if (Context.GetSpectrum()->GetSpectralAxis().IsInLinearScale() == false) {
-    THROWG(INTERNAL_ERROR, "input spectrum is not in linear scale.");
-  }
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
