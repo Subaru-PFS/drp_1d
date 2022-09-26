@@ -184,52 +184,51 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     }
   }
 
-  if (storeResult) {
-    COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
-                       m_opt_maxCandidate);
+  if (!storeResult)
+    THROWG(INTERNAL_ERROR, "no result for any template");
 
-    std::shared_ptr<PdfCandidatesZResult> candidateResult =
-        pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
+  COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
+                     m_opt_maxCandidate);
 
-    // save in resultstore pdf results
-    //        std::string pdfPath =
-    //        outputPdfRelDir+"/logposterior.logMargP_Z_data";
-    resultStore->StoreScopedGlobalResult(
-        "pdf",
-        pdfz.m_postmargZResult); // need to store this pdf with this exact same
-                                 // name so that zqual can load it. see
-                                 // zqual.cpp/ExtractFeaturesPDF (deprecated
-                                 // comment, must be removed)
+  std::shared_ptr<PdfCandidatesZResult> candidateResult =
+      pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
-    // save in resultstore candidates results
-    resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
+  // save in resultstore pdf results
+  //        std::string pdfPath =
+  //        outputPdfRelDir+"/logposterior.logMargP_Z_data";
+  resultStore->StoreScopedGlobalResult(
+      "pdf",
+      pdfz.m_postmargZResult); // need to store this pdf with this exact same
+                               // name so that zqual can load it. see
+                               // zqual.cpp/ExtractFeaturesPDF (deprecated
+                               // comment, must be removed)
 
-    // for each extrema, get best model by reading from datastore and selecting
-    // best fit
-    /////////////////////////////////////////////////////////////////////////////////////
-    if (fft_processing) {
-      tplCatalog.m_logsampling = false;
-    }
-    std::shared_ptr<const ExtremaResult> extremaResult = buildExtremaResults(
-        resultStore, scopeStr, candidateResult->m_ranked_candidates, tplCatalog,
-        overlapThreshold, opt_interp);
+  // save in resultstore candidates results
+  resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
-    // store extrema results
-    StoreExtremaResults(resultStore, extremaResult);
-
-    std::shared_ptr<CTemplateFittingSolveResult> TemplateFittingSolveResult =
-        std::make_shared<CTemplateFittingSolveResult>(
-            resultStore->GetCurrentScopeName(),
-            extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
-            pdfz.m_postmargZResult->valMargEvidenceLog);
-
-    return TemplateFittingSolveResult;
+  // for each extrema, get best model by reading from datastore and selecting
+  // best fit
+  /////////////////////////////////////////////////////////////////////////////////////
+  if (fft_processing) {
+    tplCatalog.m_logsampling = false;
   }
+  std::shared_ptr<const ExtremaResult> extremaResult = buildExtremaResults(
+      resultStore, scopeStr, candidateResult->m_ranked_candidates, tplCatalog,
+      overlapThreshold, opt_interp);
 
-  return NULL;
+  // store extrema results
+  StoreExtremaResults(resultStore, extremaResult);
+
+  std::shared_ptr<CTemplateFittingSolveResult> TemplateFittingSolveResult =
+      std::make_shared<CTemplateFittingSolveResult>(
+          resultStore->GetCurrentScopeName(),
+          extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
+          pdfz.m_postmargZResult->valMargEvidenceLog);
+
+  return TemplateFittingSolveResult;
 }
 
-bool CTemplateFittingSolve::Solve(
+void CTemplateFittingSolve::Solve(
     std::shared_ptr<COperatorResultStore> resultStore, const CSpectrum &spc,
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     std::vector<CMask> maskList, EType spctype, std::string opt_interp,
@@ -295,48 +294,44 @@ bool CTemplateFittingSolve::Solve(
                                                opt_interp, enable_extinction,
                                                option_dustFitting));
 
-    if (!templateFittingResult) {
-      // Log.LogError( "Failed to compute chi square value");
-      return false;
-    } else {
-      // Store results
-      resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
-                                                templateFittingResult);
+    if (!templateFittingResult)
+      THROWG(INTERNAL_ERROR, "no results returned by templateFittingOperator");
 
-      // Save intermediate templatefitting results
-      if (m_opt_enableSaveIntermediateTemplateFittingResults &&
-          templateFittingResult->ChiSquareIntermediate.size() > 0 &&
-          templateFittingResult->ChiSquareIntermediate.size() ==
-              templateFittingResult->Redshifts.size()) {
-        Int32 nISM = templateFittingResult->ChiSquareIntermediate[0].size();
-        if (templateFittingResult->ChiSquareIntermediate[0].size() > 0) {
-          Int32 nIGM =
-              templateFittingResult->ChiSquareIntermediate[0][0].size();
+    // Store results
+    resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
+                                              templateFittingResult);
 
-          for (Int32 kism = 0; kism < nISM; kism++) {
-            for (Int32 kigm = 0; kigm < nIGM; kigm++) {
-              std::shared_ptr<CTemplateFittingResult>
-                  result_chisquare_intermediate =
-                      std::shared_ptr<CTemplateFittingResult>(
-                          new CTemplateFittingResult());
-              result_chisquare_intermediate->Init(
-                  templateFittingResult->Redshifts.size(), 0, 0);
-              for (Int32 kz = 0; kz < templateFittingResult->Redshifts.size();
-                   kz++) {
-                result_chisquare_intermediate->Redshifts[kz] =
-                    templateFittingResult->Redshifts[kz];
-                result_chisquare_intermediate->ChiSquare[kz] =
-                    templateFittingResult
-                        ->ChiSquareIntermediate[kz][kism][kigm];
-              }
+    // Save intermediate templatefitting results
+    if (m_opt_enableSaveIntermediateTemplateFittingResults &&
+        templateFittingResult->ChiSquareIntermediate.size() > 0 &&
+        templateFittingResult->ChiSquareIntermediate.size() ==
+            templateFittingResult->Redshifts.size()) {
+      Int32 nISM = templateFittingResult->ChiSquareIntermediate[0].size();
+      if (templateFittingResult->ChiSquareIntermediate[0].size() > 0) {
+        Int32 nIGM = templateFittingResult->ChiSquareIntermediate[0][0].size();
 
-              std::string resname =
-                  (boost::format("%s_intermediate_ism%d_igm%d") %
-                   scopeStr.c_str() % kism % kigm)
-                      .str();
-              resultStore->StoreScopedPerTemplateResult(
-                  tpl, resname.c_str(), result_chisquare_intermediate);
+        for (Int32 kism = 0; kism < nISM; kism++) {
+          for (Int32 kigm = 0; kigm < nIGM; kigm++) {
+            std::shared_ptr<CTemplateFittingResult>
+                result_chisquare_intermediate =
+                    std::shared_ptr<CTemplateFittingResult>(
+                        new CTemplateFittingResult());
+            result_chisquare_intermediate->Init(
+                templateFittingResult->Redshifts.size(), 0, 0);
+            for (Int32 kz = 0; kz < templateFittingResult->Redshifts.size();
+                 kz++) {
+              result_chisquare_intermediate->Redshifts[kz] =
+                  templateFittingResult->Redshifts[kz];
+              result_chisquare_intermediate->ChiSquare[kz] =
+                  templateFittingResult->ChiSquareIntermediate[kz][kism][kigm];
             }
+
+            std::string resname =
+                (boost::format("%s_intermediate_ism%d_igm%d") %
+                 scopeStr.c_str() % kism % kigm)
+                    .str();
+            resultStore->StoreScopedPerTemplateResult(
+                tpl, resname.c_str(), result_chisquare_intermediate);
           }
         }
       }
@@ -345,8 +340,6 @@ bool CTemplateFittingSolve::Solve(
 
   spc.SetType(save_spcType);
   tpl->SetType(save_tplType);
-
-  return true;
 }
 
 ChisquareArray CTemplateFittingSolve::BuildChisquareArray(

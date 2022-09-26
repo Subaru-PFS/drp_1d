@@ -68,7 +68,7 @@ class COperatorTemplateFittingBase;
 class COperatorLineModel {
 
 public:
-  Int32 Init(const TFloat64List &redshifts);
+  void Init(const TFloat64List &redshifts);
 
   std::shared_ptr<COperatorResult> getResult();
 
@@ -76,21 +76,21 @@ public:
   PrecomputeContinuumFit(const TFloat64List &redshifts,
                          Int32 candidateIdx = -1);
 
-  Int32 ComputeFirstPass();
+  void ComputeFirstPass();
 
   void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List &largeGridRedshifts);
-  Int32 SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
+  void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
   void Combine_firstpass_candidates(
       std::shared_ptr<const CLineModelPassExtremaResult> results_b);
 
-  Int32 ComputeSecondPass(
+  void ComputeSecondPass(
       const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
 
-  Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
-                                     const TFloat64Range &lambdaRange);
+  void EstimateSecondPassParameters(const CSpectrum &spectrum,
+                                    const TFloat64Range &lambdaRange);
 
-  Int32 RecomputeAroundCandidates(
+  void RecomputeAroundCandidates(
       const std::string &opt_continuumreest, const Int32 tplfit_option,
       const bool overrideRecomputeOnlyOnTheCandidate = false);
   CLineModelSolution
@@ -170,10 +170,10 @@ private:
 
   bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
 
-  Int32 interpolateLargeGridOnFineGrid(const TFloat64List &redshiftsLargeGrid,
-                                       const TFloat64List &redshiftsFineGrid,
-                                       const TFloat64List &meritLargeGrid,
-                                       TFloat64List &meritFineGrid) const;
+  void interpolateLargeGridOnFineGrid(const TFloat64List &redshiftsLargeGrid,
+                                      const TFloat64List &redshiftsFineGrid,
+                                      const TFloat64List &meritLargeGrid,
+                                      TFloat64List &meritFineGrid) const;
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
   void
   fitContinuumTemplates(Int32 candidateIdx, const TFloat64List &redshiftsTplFit,

@@ -297,14 +297,12 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                            << " at restframe wl=" << Xtpl[j]);
       }
 
-      if (std::isinf(sumS) || std::isnan(sumS) || sumS != sumS) {
-        Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found "
-                     "invalid dtd : dtd=%e, Yspc=%e, err2=%e, error=%e, for "
-                     "index=%d at "
-                     "restframe wl=%f",
-                     sumS, Yspc[j], err2, error[j], j, Xtpl[j]);
-        THROWG(INTERNAL_ERROR, Formatter() << "Invalid dtd value");
-      }
+      if (std::isinf(sumS) || std::isnan(sumS) || sumS != sumS)
+        THROWG(INTERNAL_ERROR,
+               Formatter() << "Invalid dtd value: dtd=" << sumS
+                           << ", Yspc=" << Yspc[j] << ", err2=" << err2
+                           << ", error=" << error[j] << ", for index=" << j
+                           << " at restframe wl=" << Xtpl[j]);
 
       if (std::isinf(sumT) || std::isnan(sumT)) {
         THROWG(INTERNAL_ERROR, Formatter() << "Invalid mtm value:" << sumT
@@ -503,12 +501,10 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
     result->set_at_redshift(i, std::move(result_z));
 
-    if (result->Status[i] == nStatus_InvalidProductsError) {
-      Log.LogError("  Operator-TemplateFitting: found invalid chisquare "
-                   "products for z=%f. Breaking z loop.",
-                   redshift);
-      break;
-    }
+    if (result->Status[i] == nStatus_InvalidProductsError)
+      THROWG(INTERNAL_ERROR, Formatter() << "found invalid chisquare "
+                                            "products for z="
+                                         << redshift);
   }
 
   // overlap warning

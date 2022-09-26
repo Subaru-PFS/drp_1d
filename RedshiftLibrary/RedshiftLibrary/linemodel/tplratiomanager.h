@@ -113,7 +113,7 @@ protected:
   void initMerit(Int32 ntplratio);
   void SetTplratio_PriorHelper();
   void initTplratioCatalogs(Int32 opt_tplratio_ismFit);
-  bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
+  void SetMultilineNominalAmplitudesFast(Int32 iCatalog);
 
   Float64 GetIsmCoeff(Int32 idx) const;
 

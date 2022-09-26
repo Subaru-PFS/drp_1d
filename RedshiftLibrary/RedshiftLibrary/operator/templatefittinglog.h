@@ -114,8 +114,8 @@ private:
 
   TInt32RangeList FindZRanges(const TFloat64List &redshifts);
 
-  Int32 EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
-                    TFloat64List &XtY, Int32 precomputedFFT = -1);
+  void EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
+                   TFloat64List &XtY, Int32 precomputedFFT = -1);
   Int32 InitFFT(Int32 n);
   Int32 EstimateXtYSlow(const TFloat64List &X, const TFloat64List &Y,
                         Int32 nShifts, TFloat64List &XtY);

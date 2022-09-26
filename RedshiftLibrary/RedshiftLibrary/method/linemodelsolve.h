@@ -70,7 +70,7 @@ public:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope) override;
 
-  bool Solve();
+  void Solve();
 
 private:
   ChisquareArray BuildChisquareArray(

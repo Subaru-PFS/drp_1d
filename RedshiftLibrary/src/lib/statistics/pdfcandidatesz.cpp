@@ -226,7 +226,7 @@ void CPdfCandidatesZ::SortByValSumProbaInt(
  * @param zrange corresponds to the concerned range
  * @return -1.0 if error, else sum around the candidate
  */
-bool CPdfCandidatesZ::getCandidateSumTrapez(
+void CPdfCandidatesZ::getCandidateSumTrapez(
     const TRedshiftList &redshifts, const TFloat64List &valprobalog,
     const TFloat64Range &zrange,
     std::shared_ptr<TCandidateZ> &candidate) const {
@@ -259,8 +259,6 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(
 
   Float64 logSum = COperatorPdfz::logSumExpTrick(valprobainRange, ZinRange);
   candidate->ValSumProba = exp(logSum);
-
-  return true;
 }
 
 // TODO: this requires a deeper check to include the updates window support
@@ -277,9 +275,8 @@ bool CPdfCandidatesZ::getCandidateRobustGaussFit(
   Float64 zwidth_max = std::max(candidate->Redshift - zrange.GetBegin(),
                                 zrange.GetEnd() - candidate->Redshift);
   while (!fitSuccessful && iTry < nTry) {
-    Int32 retFit =
-        getCandidateGaussFit(redshifts, valprobalog, current_zrange, candidate);
-    if (retFit && candidate->GaussSigma < zwidth_max * 2.0 &&
+    getCandidateGaussFit(redshifts, valprobalog, current_zrange, candidate);
+    if (candidate->GaussSigma < zwidth_max * 2.0 &&
         std::abs(candidate->GaussSigma / candidate->GaussSigmaErr) > 1e-2) {
       fitSuccessful = true;
     } else {
@@ -349,7 +346,7 @@ int pdfz_lmfit_df(const gsl_vector *x, void *data, gsl_matrix *J) {
   return GSL_SUCCESS;
 }
 //** gaussian fit end**//
-bool CPdfCandidatesZ::getCandidateGaussFit(
+void CPdfCandidatesZ::getCandidateGaussFit(
     const TRedshiftList &redshifts, const TFloat64List &valprobalog,
     const TFloat64Range &zrange,
     std::shared_ptr<TCandidateZ> &candidate) const {
@@ -379,11 +376,8 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
 
   Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - n=%d, p=%d", n,
                p);
-  if (n < p) {
-    Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - LMfit not "
-                 "enough samples on support");
-    return false;
-  }
+  if (n < p)
+    THROWG(INTERNAL_ERROR, "LMfit has not enough samples on support");
 
   gsl_matrix *J = gsl_matrix_alloc(n, p);
   gsl_matrix *covar = gsl_matrix_alloc(p, p);
@@ -408,15 +402,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
       x_init[0], x_init[1]);
 
   gsl_vector_view x = gsl_vector_view_array(x_init, p);
-  //    if(x.vector==0){
-  //        Log.LogError( "    CPdfCandidatesZ::getCandidateSumGaussFit -
-  //        Unable to allocate x"); return -1;
-  //    }
   gsl_vector_view w = gsl_vector_view_array(weights, n);
-  //    if(w.vector==0){
-  //        Log.LogError( "    CPdfCandidatesZ::getCandidateSumGaussFit -
-  //        Unable to allocate w"); return -1;
-  //    }
 
   const double xtol = 1e-8;
   const double gtol = 1e-8;
@@ -500,6 +486,4 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   gsl_multifit_fdfsolver_free(s);
   gsl_matrix_free(covar);
   gsl_matrix_free(J);
-
-  return true;
 }

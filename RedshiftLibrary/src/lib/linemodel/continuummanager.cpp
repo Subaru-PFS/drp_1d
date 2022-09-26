@@ -91,7 +91,7 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
   return m_fitContinuum_priorhelper;
 }
 
-bool CContinuumManager::SolveContinuum(
+void CContinuumManager::SolveContinuum(
     const std::shared_ptr<const CTemplate> &tpl, const TFloat64List &redshifts,
     Float64 overlapThreshold, std::vector<CMask> maskList,
     std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFit,
@@ -100,12 +100,8 @@ bool CContinuumManager::SolveContinuum(
     Float64 &fitDtM, Float64 &fitMtM, Float64 &fitLogprior) {
   CPriorHelper::TPriorZEList zePriorData;
 
-  bool retGetPrior = m_fitContinuum_priorhelper->GetTplPriorData(
-      tpl->GetName(), redshifts, zePriorData);
-  if (retGetPrior == false) {
-    THROWG(INTERNAL_ERROR,
-           "    model: Failed to get prior for chi2 solvecontinuum.");
-  }
+  m_fitContinuum_priorhelper->GetTplPriorData(tpl->GetName(), redshifts,
+                                              zePriorData);
   bool keepigmism = false;
   if (FitEbmvCoeff + fitMeiksinIdx != -2) {
     keepigmism = true;
@@ -124,23 +120,19 @@ bool CContinuumManager::SolveContinuum(
               opt_dustFit, zePriorData, keepigmism, FitEbmvCoeff,
               fitMeiksinIdx));
 
-  if (!templateFittingResult) {
+  if (!templateFittingResult)
+    THROWG(INTERNAL_ERROR, "Failed to compute chi square value");
 
-    Log.LogError("Failed to compute chi square value");
-    return false;
-  } else {
-    // Store results
-    merit = templateFittingResult->ChiSquare[0];
-    fitAmplitude = templateFittingResult->FitAmplitude[0];
-    fitAmplitudeError = templateFittingResult->FitAmplitudeError[0];
-    fitAmplitudeSigma = templateFittingResult->FitAmplitudeSigma[0];
-    FitEbmvCoeff = templateFittingResult->FitEbmvCoeff[0];
-    fitMeiksinIdx = templateFittingResult->FitMeiksinIdx[0];
-    fitDtM = templateFittingResult->FitDtM[0];
-    fitMtM = templateFittingResult->FitMtM[0];
-    fitLogprior = templateFittingResult->LogPrior[0];
-    return true;
-  }
+  // Store results
+  merit = templateFittingResult->ChiSquare[0];
+  fitAmplitude = templateFittingResult->FitAmplitude[0];
+  fitAmplitudeError = templateFittingResult->FitAmplitudeError[0];
+  fitAmplitudeSigma = templateFittingResult->FitAmplitudeSigma[0];
+  FitEbmvCoeff = templateFittingResult->FitEbmvCoeff[0];
+  fitMeiksinIdx = templateFittingResult->FitMeiksinIdx[0];
+  fitDtM = templateFittingResult->FitDtM[0];
+  fitMtM = templateFittingResult->FitMtM[0];
+  fitLogprior = templateFittingResult->LogPrior[0];
 }
 
 const std::string &CContinuumManager::getFitContinuum_tplName() const {

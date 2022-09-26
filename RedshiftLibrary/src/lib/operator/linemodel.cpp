@@ -99,7 +99,7 @@ void COperatorLineModel::CreateRedshiftLargeGrid(
  * @brief COperatorLineModel::ComputeFirstPass
  * @return 0=no errors, -1=error
  */
-Int32 COperatorLineModel::ComputeFirstPass() {
+void COperatorLineModel::ComputeFirstPass() {
   const CSpectrum &spectrum = *(Context.GetSpectrum());
   const CSpectrum &logSampledSpectrum =
       *(Context.GetRebinnedSpectrum()); // this is temporary
@@ -333,8 +333,6 @@ Int32 COperatorLineModel::ComputeFirstPass() {
   Log.LogInfo("  Operator-Linemodel: first-pass done in %.4e sec",
               duration_firstpass_seconds);
   Log.LogInfo("<proc-lm-firstpass><%d>", (Int32)duration_firstpass_seconds);
-
-  return 0;
 }
 
 bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero,
@@ -401,12 +399,7 @@ void COperatorLineModel::fitContinuumTemplates(
     Log.LogDebug(Formatter() << "Processing tpl " << tplname);
 
     CPriorHelper::TPriorZEList zePriorData;
-    bool retGetPrior = m_phelperContinuum->GetTplPriorData(
-        tplname, redshiftsTplFit, zePriorData);
-    if (retGetPrior == false)
-      THROWG(INTERNAL_ERROR, "Failed to get prior "
-                             "for chi2 continuum precomp fit");
-
+    m_phelperContinuum->GetTplPriorData(tplname, redshiftsTplFit, zePriorData);
     m_templateFittingOperator->SetRedshifts(redshiftsTplFit);
     auto templatefittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
@@ -736,7 +729,7 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
   return extendedList;
 }
 
-Int32 COperatorLineModel::SetFirstPassCandidates(
+void COperatorLineModel::SetFirstPassCandidates(
     const TCandidateZbyRank &zCandidates) {
   m_firstpass_extremaResult =
       std::make_shared<CLineModelPassExtremaResult>(zCandidates.size());
@@ -796,8 +789,6 @@ Int32 COperatorLineModel::SetFirstPassCandidates(
 
     //... TODO: more first pass results can be saved here if needed
   }
-
-  return 0;
 }
 
 std::shared_ptr<const LineModelExtremaResult>
@@ -934,7 +925,7 @@ void COperatorLineModel::Combine_firstpass_candidates(
   }
 }
 
-Int32 COperatorLineModel::ComputeSecondPass(
+void COperatorLineModel::ComputeSecondPass(
     const std::shared_ptr<const LineModelExtremaResult> &firstpassResults) {
 
   const CSpectrum &spectrum = *(Context.GetSpectrum());
@@ -1061,7 +1052,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
   EstimateSecondPassParameters(spectrum, *(Context.GetClampedLambdaRange()));
 
   // recompute the fine grid results around the extrema
-  Int32 ret = RecomputeAroundCandidates(
+  RecomputeAroundCandidates(
       opt_continuumreest,
       m_continnuum_fit_option); // 0: retry all cont. templates at this stage
 
@@ -1101,8 +1092,6 @@ Int32 COperatorLineModel::ComputeSecondPass(
 
   m_fittingManager->m_continuumManager->SetFitContinuum_Option(
       savedFitContinuumOption);
-
-  return 0;
 }
 
 std::shared_ptr<LineModelExtremaResult>
@@ -1366,7 +1355,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
  *
  * @return
  */
-Int32 COperatorLineModel::EstimateSecondPassParameters(
+void COperatorLineModel::EstimateSecondPassParameters(
     const CSpectrum &spectrum, const TFloat64Range &lambdaRange) {
   // setup velocity fitting
 
@@ -1501,11 +1490,11 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
                 idxVelfitGroups.size());
             if (m_firstpass_extremaResult->size() > 1 &&
                 idxVelfitGroups.size() > 1) {
-              Log.LogError(
-                  "  Operator-Linemodel: not allowed to use more than 1 "
-                  "group per E/A for "
-                  "more than 1 extremum (see .json "
-                  "linemodel.extremacount)");
+              THROWG(INTERNAL_ERROR,
+                     "  Operator-Linemodel: not allowed to use more than 1 "
+                     "group per E/A for "
+                     "more than 1 extremum (see .json "
+                     "linemodel.extremacount)");
             }
           }
         } else {
@@ -1524,9 +1513,10 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
                 idxVelfitGroups.size());
             if (m_firstpass_extremaResult->size() > 1 &&
                 idxVelfitGroups.size() > 1) {
-              Log.LogError("  Operator-Linemodel: not allowed to use more "
-                           "than 1 group per E/A for more than 1 extremum "
-                           "(see .json linemodel.extremacount)");
+              THROWG(INTERNAL_ERROR,
+                     "  Operator-Linemodel: not allowed to use more "
+                     "than 1 group per E/A for more than 1 extremum "
+                     "(see .json linemodel.extremacount)");
             }
           }
         }
@@ -1692,11 +1682,9 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
       }
     }
   }
-
-  return 0;
 }
 
-Int32 COperatorLineModel::RecomputeAroundCandidates(
+void COperatorLineModel::RecomputeAroundCandidates(
     const std::string &opt_continuumreest, const Int32 tplfit_option,
     const bool overrideRecomputeOnlyOnTheCandidate) {
   CLineModelPassExtremaResult &extremaResult =
@@ -1849,11 +1837,9 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
               ->getContinuumScaleMargCorrection();
     }
   }
-
-  return 0;
 }
 
-Int32 COperatorLineModel::Init(const TFloat64List &redshifts) {
+void COperatorLineModel::Init(const TFloat64List &redshifts) {
 
   m_tplCategoryList = {Context.GetCurrentCategory()};
   // initialize empty results so that it can be returned anyway in case of an
@@ -1909,8 +1895,6 @@ Int32 COperatorLineModel::Init(const TFloat64List &redshifts) {
     m_opt_continuum_null_amp_threshold =
         ps->GetScoped<Float64>("continuumfit.nullthreshold");
   }
-
-  return 0;
 }
 
 std::shared_ptr<COperatorResult> COperatorLineModel::getResult() {
@@ -1955,7 +1939,7 @@ COperatorLineModel::GetContaminantSpectrumResult() {
   return m_savedContaminantSpectrumResult;
 }
 
-Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(
+void COperatorLineModel::interpolateLargeGridOnFineGrid(
     const TFloat64List &redshiftsLargeGrid,
     const TFloat64List &redshiftsFineGrid, const TFloat64List &meritLargeGrid,
     TFloat64List &meritFineGrid) const {
@@ -1993,8 +1977,6 @@ Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(
   gsl_interp_free(interpolation);
   gsl_interp_accel_free(accelerator);
   //*/
-
-  return 0;
 }
 
 /**

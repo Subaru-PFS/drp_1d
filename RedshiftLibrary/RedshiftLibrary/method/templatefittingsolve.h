@@ -76,7 +76,7 @@ private:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope) override;
 
-  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+  void Solve(std::shared_ptr<COperatorResultStore> resultStore,
              const CSpectrum &spc, const std::shared_ptr<const CTemplate> &tpl,
              Float64 overlapThreshold, std::vector<CMask> maskList,
              EType spctype = nType_raw, std::string opt_interp = "lin",

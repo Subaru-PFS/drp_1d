@@ -128,11 +128,8 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CMask mskRebined;
     const TFloat64Range lambdaRange_restframe =
         photSpectralAxis_restframe.GetLambdaRange();
-    bool b = tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
-                        templateRebined_phot, mskRebined, opt_interp);
-
-    if (!b)
-      THROWG(INTERNAL_ERROR, "error in rebinning tpl");
+    tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
+               templateRebined_phot, mskRebined, opt_interp);
 
     const Float64 overlapRate =
         photSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(

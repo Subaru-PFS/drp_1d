@@ -91,7 +91,7 @@ private:
   friend class Statistics_pdfcandidatesz::getCandidateSumTrapez_test;
   friend class Statistics_pdfcandidatesz::getCandidateRobustGaussFit_test;
 
-  bool getCandidateSumTrapez(const TRedshiftList &redshifts,
+  void getCandidateSumTrapez(const TRedshiftList &redshifts,
                              const TFloat64List &valprobalog,
                              const TFloat64Range &zrange,
                              std::shared_ptr<TCandidateZ> &candidate) const;
@@ -102,7 +102,7 @@ private:
                              const TFloat64Range &zrange,
                              std::shared_ptr<TCandidateZ> &candidate) const;
 
-  bool getCandidateGaussFit(const TRedshiftList &redshifts,
+  void getCandidateGaussFit(const TRedshiftList &redshifts,
                             const TFloat64List &valprobalog,
                             const TFloat64Range &zrange,
                             std::shared_ptr<TCandidateZ> &candidate) const;

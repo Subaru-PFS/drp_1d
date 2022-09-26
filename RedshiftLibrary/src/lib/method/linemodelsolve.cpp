@@ -121,17 +121,13 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   PopulateParameters(inputContext->GetParameterStore());
 
-  bool retSolve = Solve();
-
-  if (!retSolve) {
-    return NULL;
-  }
+  Solve();
 
   auto results = resultStore->GetScopedGlobalResult("linemodel");
-  if (results.expired()) {
-    Log.LogError("linemodelsolve: Unable to retrieve linemodel results");
-    return NULL;
-  }
+  if (results.expired())
+    THROWG(INTERNAL_ERROR,
+           "linemodelsolve: Unable to retrieve linemodel results");
+
   std::shared_ptr<const CLineModelResult> result =
       std::dynamic_pointer_cast<const CLineModelResult>(results.lock());
 
@@ -559,26 +555,19 @@ void CLineModelSolve::StoreChisquareTplRatioResults(
  * If that returned true, store results.
  **/
 
-bool CLineModelSolve::Solve() {
+void CLineModelSolve::Solve() {
   std::string scopeStr = "linemodel";
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
   // Compute with linemodel operator
-  Int32 retInit = m_linemodel.Init(m_redshifts);
-  if (retInit != 0) {
-    THROWG(INTERNAL_ERROR, "Linemodel, init failed");
-  }
+  m_linemodel.Init(m_redshifts);
 
   // logstep from redshift
 
   //**************************************************
   // FIRST PASS
   //**************************************************
-  Int32 retFirstPass = m_linemodel.ComputeFirstPass();
-  if (retFirstPass != 0) {
-    THROWG(INTERNAL_ERROR, "Linemodel, first pass failed");
-    return false;
-  }
+  m_linemodel.ComputeFirstPass();
 
   //**************************************************
   // Compute z-candidates
@@ -616,22 +605,15 @@ bool CLineModelSolve::Solve() {
   std::string fpb_opt_continuumcomponent =
       "fromspectrum"; // Note: this is hardocoded! given that condition for
                       // FPB relies on having "tplfit"
-  Int32 retInitB = linemodel_fpb.Init(m_redshifts);
-  if (retInitB != 0) {
-    Log.LogError("Linemodel fpB, init failed");
-    return false;
-  }
+  linemodel_fpb.Init(m_redshifts);
+
   if (enableFirstpass_B) {
     Log.LogInfo("Linemodel FIRST PASS B enabled. Computing now.");
 
     //**************************************************
     // FIRST PASS B
     //**************************************************
-    Int32 retFirstPass = linemodel_fpb.ComputeFirstPass();
-    if (retFirstPass != 0) {
-      Log.LogError("Linemodel, first pass failed");
-      return false;
-    }
+    linemodel_fpb.ComputeFirstPass();
 
     //**************************************************
     // Compute z-candidates B
@@ -677,11 +659,7 @@ bool CLineModelSolve::Solve() {
   // SECOND PASS
   //**************************************************
   if (!m_opt_skipsecondpass) {
-    Int32 retSecondPass = m_linemodel.ComputeSecondPass(fpExtremaResult);
-    if (retSecondPass != 0) {
-      Log.LogError("Linemodel, second pass failed.");
-      return false;
-    }
+    m_linemodel.ComputeSecondPass(fpExtremaResult);
   } else {
     m_linemodel.m_secondpass_parameters_extremaResult =
         *m_linemodel.m_firstpass_extremaResult;
@@ -700,6 +678,4 @@ bool CLineModelSolve::Solve() {
 
   // don't save linemodel extrema results, since will change with pdf
   // computation
-
-  return true;
 }

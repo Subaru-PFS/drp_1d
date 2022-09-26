@@ -72,7 +72,9 @@ public:
     INVALID_FOLDER_PATH,                 // 17
     TPL_NAME_EMPTY,                      // 18
     RELIABILITY_NEEDS_TENSORFLOW,        // 19
-    FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP
+    FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP, // 20
+    TEMPLATEFITTINGLOG_NO_MASK,          // 21
+    CORRECT_SPECTRUM_NOMINFLUX           // 22
   } WarningCode;
 
   void warning(WarningCode c, std::string message);
