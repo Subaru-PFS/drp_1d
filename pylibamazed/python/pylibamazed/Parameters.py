@@ -89,4 +89,16 @@ class Parameters():
         else:
             return False
         
-
+    def stage_enabled(self, object_type, stage):
+        if stage == "redshift_solver":
+            return self.get_solve_method(object_type) is not None
+        elif stage == "linemeas_solver":
+            return self.get_linemeas_method(object_type) is not None
+        elif stage == "linemeas_catalog_load":
+            return self.get_linemeas_method(object_type) is not None and self.get_solve_method(object_type) is None
+        elif stage == "reliability_solver":
+            return self.reliability_enabled(object_type)
+        elif stage == "sub_classif_solver":
+            return self.lineratio_catalog_enabled(object_type)
+        else:
+            raise Exception("Unknown stage {stage}")

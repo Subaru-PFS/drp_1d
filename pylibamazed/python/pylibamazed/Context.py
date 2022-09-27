@@ -122,8 +122,6 @@ class Context:
             self.process_flow_context.Init()
 
             #store flag in root object
-            
-            
             resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
             zflag.resetFlag()
             context_warningFlagRecorded = True
