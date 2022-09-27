@@ -40,9 +40,12 @@
 #define _REDSHIFT_EXCEPTION_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
+
 #include <exception>
 #include <iostream>
 #include <string>
+
 #define THROWG(code, msg)                                                      \
   throw GlobalException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
 namespace NSEpic {
@@ -64,14 +67,15 @@ public:
 
   virtual const char *what() const noexcept override { return _msg.c_str(); }
 
-  const std::string &getMessage() { return _msg; }
+  const std::string &getMessage() const { return _msg; }
 
-  ErrorCode getErrorCode() { return code; }
+  ErrorCode getErrorCode() const { return code; }
   void setErrorCode(ErrorCode ec) { code = ec; }
 
-  const std::string &getFileName() { return filename; }
-  const std::string &getMethod() { return method; }
-  int getLine() { return line; }
+  const std::string &getFileName() const { return filename; }
+  const std::string &getMethod() const { return method; }
+  int getLine() const { return line; }
+  void LogError(const std::string &msg) const { Log.LogError(msg); };
 
 protected:
   std::string _msg;
@@ -87,8 +91,6 @@ class GlobalException : public AmzException {
 public:
   using AmzException::AmzException;
 };
-
-//  typedef AmzException::ErrorCode ErrorCode;
 
 } // namespace NSEpic
 

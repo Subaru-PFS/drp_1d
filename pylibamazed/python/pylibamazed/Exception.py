@@ -36,10 +36,9 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from pylibamazed.redshift import CLog, AmzException, ErrorCode
+from pylibamazed.redshift import AmzException, ErrorCode
 import sys,traceback
 
-zlog = CLog.GetInstance()
 
 class AmazedError(AmzException):
     def __init__(self, errCode, message, line=-1, method="", filename=""):
@@ -55,7 +54,8 @@ class AmazedError(AmzException):
                                   frame.lineno)
         else:
             AmzException.__init__(self, errCode.value, message,filename,method,line)
-        zlog.LogError(self.__str__())
+            
+        self.LogError(self.__str__())
 
     def __str__(self):
         ret = self.errCode.name + ": " + self.getMessage() + " ["
