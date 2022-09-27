@@ -1006,6 +1006,9 @@ void CLineModelFitting::LoadModelSolution(
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue;
+    Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
+    if (subeIdx == undefIdx || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+      continue;
     if (m_enableAmplitudeOffsets) {
       TPolynomCoeffs contPolynomCoeffs = {
           modelSolution.continuum_pCoeff0[iRestLine],
@@ -1013,8 +1016,6 @@ void CLineModelFitting::LoadModelSolution(
           modelSolution.continuum_pCoeff2[iRestLine]};
       applyPolynomCoeffs(eIdx, contPolynomCoeffs);
     }
-
-    Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
 
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
@@ -1062,12 +1063,12 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 subeIdx = undefIdx;
     Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
-    modelSolution.ElementId[iRestLine] = eIdx;
-
     if (eIdx == undefIdx || subeIdx == undefIdx ||
         m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx)) {
       continue; // data already set to its default values
     }
+    modelSolution.ElementId[iRestLine] = eIdx;
+
     Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
     modelSolution.Amplitudes[iRestLine] = amp;
     Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);

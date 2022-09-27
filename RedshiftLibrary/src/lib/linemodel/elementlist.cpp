@@ -572,6 +572,8 @@ bool CLineModelElementList::addToSpectrumAmplitudeOffset(
     x0 = m_ampOffsetsCoeffs[i].x0;
     x1 = m_ampOffsetsCoeffs[i].x1;
     x2 = m_ampOffsetsCoeffs[i].x2;
+    if (std::isnan(x0) || std::isnan(x1) || std::isnan(x2))
+      THROWG(INTERNAL_ERROR, "Polynom coefficients cannot be NaN");
     for (Int32 k = m_ampOffsetsIdxStart[i]; k <= m_ampOffsetsIdxStop[i]; k++) {
       modelfluxAxis[k] +=
           x0 + x1 * spectralAxis[k] + x2 * spectralAxis[k] * spectralAxis[k];

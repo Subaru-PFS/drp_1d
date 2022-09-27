@@ -1046,7 +1046,7 @@ void CLineModelElement::addToSpectrumModel(
   }
 
   const Float64 *spectral = modelspectralAxis.GetSamples();
-  Float64 *flux = modelfluxAxis.GetSamples();
+  TFloat64List &flux = modelfluxAxis.GetSamplesVector();
   Int32 nLines = m_Lines.size();
   for (Int32 k = 0; k < nLines; k++) { // loop on the interval
     if (m_OutsideLambdaRangeList[k]) {
