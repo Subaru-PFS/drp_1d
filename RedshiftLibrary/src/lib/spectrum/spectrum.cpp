@@ -725,9 +725,8 @@ void CSpectrum::Rebin(const TFloat64Range &range,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
 
-  bool status = m_rebin->compute(range, targetSpectralAxis, rebinedSpectrum,
-                                 rebinedMask, opt_error_interp);
-  return status;
+  m_rebin->compute(range, targetSpectralAxis, rebinedSpectrum, rebinedMask,
+                   opt_error_interp);
 }
 
 void CSpectrum::ScaleFluxAxis(Float64 scale) {

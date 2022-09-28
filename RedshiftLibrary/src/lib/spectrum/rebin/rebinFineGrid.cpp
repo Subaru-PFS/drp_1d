@@ -45,12 +45,12 @@
 using namespace NSEpic;
 using namespace std;
 
-bool CRebinFineGrid::rebinFineGrid() const {
+void CRebinFineGrid::rebinFineGrid() const {
   // Precalculate a fine grid template to be used for the 'closest value' rebin
   // method
   Int32 n = m_spectrum.GetSampleCount();
   if (!n)
-    return false;
+    THROWG(INVALID_SPECTRUM, "Invalid spectrum : spectral axis is empty");
 
   CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
 
@@ -81,7 +81,6 @@ bool CRebinFineGrid::rebinFineGrid() const {
   gsl_spline_free(spline);
   gsl_interp_accel_free(accelerator);
   m_FineGridInterpolated = true;
-  return true;
 }
 
 void CRebinFineGrid::clearFineGrid() const {
@@ -89,7 +88,7 @@ void CRebinFineGrid::clearFineGrid() const {
   m_pfgFlux.clear();
 }
 
-bool CRebinFineGrid::rebin(
+void CRebinFineGrid::rebin(
     CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
     CMask &rebinedMask, const std::string m_opt_error_interp,
@@ -100,8 +99,8 @@ bool CRebinFineGrid::rebin(
     rebinFineGrid();
 
   if (m_pfgFlux.size() == 0 && m_FineGridInterpolated == true) {
-    Log.LogError("Problem buffer couldnt be computed\n");
-    return false;
+    THROWG(INTERNAL_ERROR,
+           "Problem finegrid interpolatted buffer couldnt be computed");
   }
 
   TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
@@ -123,10 +122,9 @@ bool CRebinFineGrid::rebin(
     // implemented for
     // precomputedfinegrid
     if (m_opt_error_interp != "no")
-      return false;
+      THROWG(INTERNAL_ERROR,
+             "noise rebining not implemented for precomputedfinegrid");
 
     m_cursor++;
   }
-
-  return true;
 }

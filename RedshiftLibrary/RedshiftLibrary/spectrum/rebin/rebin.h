@@ -65,12 +65,12 @@ public:
 
   static std::unique_ptr<CRebin> convert(std::unique_ptr<CRebin> &&other,
                                          const std::string opt_interp);
-  bool compute(const TFloat64Range &range,
+  void compute(const TFloat64Range &range,
                const CSpectrumSpectralAxis &targetSpectralAxis,
                CSpectrum &rebinedSpectrum, CMask &rebinedMask,
                const std::string m_opt_error_interp);
 
-  virtual bool rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+  virtual void rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                      const TFloat64Range &range,
                      const CSpectrumSpectralAxis &targetSpectralAxis,
                      CSpectrum &rebinedSpectrum, CMask &rebinedMask,
@@ -84,7 +84,7 @@ public:
 protected:
   friend class Rebin::rebinFineGrid_test;
 
-  virtual bool rebinFineGrid() const { return true; };
+  virtual void rebinFineGrid() const {};
 
   const CSpectrum &m_spectrum;
   Int32 m_cursor = 0;

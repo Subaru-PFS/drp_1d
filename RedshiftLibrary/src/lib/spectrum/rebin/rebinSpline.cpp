@@ -46,7 +46,7 @@
 using namespace NSEpic;
 using namespace std;
 
-bool CRebinSpline::rebin(
+void CRebinSpline::rebin(
     CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
     CMask &rebinedMask, const std::string m_opt_error_interp,
@@ -78,13 +78,12 @@ bool CRebinSpline::rebin(
     if (m_opt_error_interp != "no") {
       gsl_spline_free(spline);
       gsl_interp_accel_free(accelerator);
-      return false;
+      THROWG(INTERNAL_ERROR,
+             "noise rebining not implemented for spline interp");
     }
 
     m_cursor++;
   }
   gsl_spline_free(spline);
   gsl_interp_accel_free(accelerator);
-
-  return true;
 }

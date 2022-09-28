@@ -50,7 +50,7 @@ CRebin::CRebin(std::unique_ptr<CRebin> &&other)
       m_FineGridInterpolated(std::move(other->m_FineGridInterpolated)),
       m_spectrum(other->m_spectrum) {}
 
-bool CRebin::compute(const TFloat64Range &range,
+void CRebin::compute(const TFloat64Range &range,
                      const CSpectrumSpectralAxis &targetSpectralAxis,
                      CSpectrum &rebinedSpectrum, CMask &rebinedMask,
                      const std::string m_opt_error_interp) {
@@ -89,9 +89,8 @@ bool CRebin::compute(const TFloat64Range &range,
     m_cursor++;
   }
 
-  bool status =
-      rebin(rebinedFluxAxis, range, targetSpectralAxis, rebinedSpectrum,
-            rebinedMask, m_opt_error_interp, Xsrc, Ysrc, Xtgt, Error);
+  rebin(rebinedFluxAxis, range, targetSpectralAxis, rebinedSpectrum,
+        rebinedMask, m_opt_error_interp, Xsrc, Ysrc, Xtgt, Error);
 
   while (m_cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[m_cursor] = 0;
@@ -105,8 +104,6 @@ bool CRebin::compute(const TFloat64Range &range,
   rebinedSpectrum.SetType(CSpectrum::EType::nType_raw);
   rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,
                                          std::move(rebinedFluxAxis));
-
-  return status;
 }
 
 std::unique_ptr<CRebin> CRebin::convert(std::unique_ptr<CRebin> &&other,
@@ -121,6 +118,6 @@ std::unique_ptr<CRebin> CRebin::convert(std::unique_ptr<CRebin> &&other,
     return std::unique_ptr<CRebin>(new CRebinNgp(std::move(other)));
   else
     THROWG(INVALID_PARAMETER,
-           "Only {lin, precomputedfinegrid} values are "
+           "Only {lin, precomputedfinegrid, ngp, spline} values are "
            "supported for TemplateFittingSolve.interpolation");
 }

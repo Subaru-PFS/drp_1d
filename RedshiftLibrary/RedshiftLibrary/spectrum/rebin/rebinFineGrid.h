@@ -50,7 +50,7 @@ class CRebinFineGrid : public CRebin {
 public:
   using CRebin::CRebin;
 
-  bool rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
+  void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CSpectrum &rebinedSpectrum, CMask &rebinedMask,
              const std::string m_opt_error_interp, const TAxisSampleList &Xsrc,
@@ -59,7 +59,7 @@ public:
   void clearFineGrid() const override;
 
 protected:
-  bool rebinFineGrid() const override;
+  void rebinFineGrid() const override;
 };
 
 } // namespace NSEpic

@@ -43,7 +43,7 @@
 using namespace NSEpic;
 using namespace std;
 
-bool CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                       const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
@@ -94,6 +94,4 @@ bool CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     rebinedMask[m_cursor] = 1;
     m_cursor++;
   }
-
-  return true;
 }

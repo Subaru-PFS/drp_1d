@@ -43,7 +43,7 @@
 using namespace NSEpic;
 using namespace std;
 
-bool CRebinLinear::rebin(
+void CRebinLinear::rebin(
     CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
     CMask &rebinedMask, const std::string m_opt_error_interp,
@@ -92,5 +92,4 @@ bool CRebinLinear::rebin(
 
     k++;
   }
-  return true;
 }
