@@ -45,11 +45,9 @@
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/tests/test-tools.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
-using namespace CPFTest;
 
 // build spectrum
 // - spectralAxis

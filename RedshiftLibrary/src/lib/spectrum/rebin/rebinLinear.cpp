@@ -48,7 +48,7 @@ void CRebinLinear::rebin(
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
     CMask &rebinedMask, const std::string m_opt_error_interp,
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-    const TAxisSampleList &Xtgt, const TFloat64List &Error) {
+    const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
   TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
   TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
@@ -60,34 +60,24 @@ void CRebinLinear::rebin(
   while (k < spectralAxis.GetSamplesCount() - 1 && Xsrc[k] <= range.GetEnd()) {
     // For each sample in the target spectrum that are in between two
     // continous source sample
-    while (m_cursor < targetSpectralAxis.GetSamplesCount() &&
-           Xtgt[m_cursor] <= Xsrc[k + 1]) {
+    while (cursor < targetSpectralAxis.GetSamplesCount() &&
+           Xtgt[cursor] <= Xsrc[k + 1]) {
       // perform linear interpolation of the flux
       Float64 xSrcStep = (Xsrc[k + 1] - Xsrc[k]);
-      Float64 t = (Xtgt[m_cursor] - Xsrc[k]) / xSrcStep;
-      Yrebin[m_cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
-      rebinedMask[m_cursor] = 1;
+      Float64 t = (Xtgt[cursor] - Xsrc[k]) / xSrcStep;
+      Yrebin[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
+      rebinedMask[cursor] = 1;
 
-      if (m_opt_error_interp != "no") {
-        if (m_opt_error_interp == "rebin")
-          ErrorRebin[m_cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
-        else if (m_opt_error_interp == "rebinVariance") {
-          ErrorRebin[m_cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
-                                      Error[k + 1] * Error[k + 1] * t * t);
-          //*
-          Float64 xDestStep = NAN;
-          Float64 xStepCompensation = 1.;
-          if (m_cursor < targetSpectralAxis.GetSamplesCount() - 1) {
-            xDestStep = Xtgt[m_cursor + 1] - Xtgt[m_cursor];
-            xStepCompensation = xSrcStep / xDestStep;
-          } else if (m_cursor > 0) {
-            xDestStep = Xtgt[m_cursor] - Xtgt[m_cursor - 1];
-            xStepCompensation = xSrcStep / xDestStep;
-          }
-          ErrorRebin[m_cursor] *= sqrt(xStepCompensation);
-        }
+      if (m_opt_error_interp == "rebin")
+        ErrorRebin[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
+      else if (m_opt_error_interp == "rebinVariance") {
+        ErrorRebin[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
+                                  Error[k + 1] * Error[k + 1] * t * t);
+        Float64 xStepCompensation = computeXStepCompensation(
+            targetSpectralAxis, Xtgt, cursor, xSrcStep);
+        ErrorRebin[cursor] *= sqrt(xStepCompensation);
       }
-      m_cursor++;
+      cursor++;
     }
 
     k++;

@@ -52,20 +52,19 @@ using namespace std;
 
 CSpectrum::CSpectrum()
     : m_estimationMethod(""), m_medianWindowSize(-1),
-      m_medianEvenReflection(true), m_Name("") {
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
-}
+      m_medianEvenReflection(true), m_Name(""),
+      m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))) {}
 
-CSpectrum::CSpectrum(const std::string &name) : m_Name(name) {
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
-};
+CSpectrum::CSpectrum(const std::string &name)
+    : m_Name(name), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))){};
 
 CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
       m_Name(other.m_Name), m_spcType(other.m_spcType), m_LSF(other.m_LSF),
-      alreadyRemoved(other.alreadyRemoved), m_SpectralAxis(Int32(0)) {
+      alreadyRemoved(other.alreadyRemoved), m_SpectralAxis(Int32(0)),
+      m_rebin(CRebin::create(other.m_rebin->getType(), *this)) {
   const CSpectrumNoiseAxis &otherRawError = other.m_RawFluxAxis.GetError(),
                            &otherContinuumError =
                                other.m_ContinuumFluxAxis.GetError(),
@@ -93,7 +92,6 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
     if (!otherWithoutContinuumError.isEmpty())
       otherWithoutContinuumError.MaskAxis(mask, WithoutContinuumError);
   }
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
 }
 
 CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
@@ -108,18 +106,16 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
     : m_SpectralAxis(std::move(spectralAxis)),
       m_RawFluxAxis(std::move(fluxAxis)), m_estimationMethod(""),
       m_medianWindowSize(-1), m_medianEvenReflection(true), m_Name(""),
-      m_LSF(lsf) {
+      m_LSF(lsf), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))) {
   if (!IsValid()) {
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
   }
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
 }
 
 // copy constructor
-//  copy everything exept fullpath, rebined buffer (m_FineGridInterpolated,
-//  m_pfgFlux) and const members (m_dLambdaFineGrid &m_method2baseline)
+//  copy everything exept fullpath and const members &m_method2baseline
 CSpectrum::CSpectrum(const CSpectrum &other)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
@@ -128,13 +124,13 @@ CSpectrum::CSpectrum(const CSpectrum &other)
       m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
       m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
       m_spcType(other.m_spcType), m_LSF(other.m_LSF), m_Name(other.m_Name),
-      alreadyRemoved(other.alreadyRemoved) {
+      alreadyRemoved(other.alreadyRemoved),
+      m_rebin(CRebin::create(other.m_rebin->getType(), *this)) {
   if (!IsValid()) {
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
   }
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
 }
 
 CSpectrum::CSpectrum(CSpectrum &&other)
@@ -146,13 +142,13 @@ CSpectrum::CSpectrum(CSpectrum &&other)
       m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
       m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)),
       m_spcType(other.m_spcType), m_LSF(std::move(other.m_LSF)),
-      m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved) {
+      m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved),
+      m_rebin(CRebin::create(other.m_rebin->getType(), *this)) {
   if (!IsValid()) {
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
   }
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
 }
 
 CSpectrum::~CSpectrum() {}
@@ -174,7 +170,7 @@ CSpectrum &CSpectrum::operator=(const CSpectrum &other) {
   m_medianEvenReflection = other.m_medianEvenReflection;
   m_Name = other.m_Name;
   alreadyRemoved = other.alreadyRemoved;
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
+  m_rebin = CRebin::create(other.m_rebin->getType(), *this);
   return *this;
 }
 
@@ -193,7 +189,7 @@ CSpectrum &CSpectrum::operator=(CSpectrum &&other) {
   m_medianEvenReflection = other.m_medianEvenReflection;
   m_Name = std::move(other.m_Name);
   alreadyRemoved = other.alreadyRemoved;
-  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
+  m_rebin = CRebin::create(other.m_rebin->getType(), *this);
 
   return *this;
 }
@@ -225,7 +221,7 @@ void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis &fluxaxis) {
 
   ResetContinuum();
   SetType(EType::nType_raw);
-  m_rebin->clearFineGrid();
+  m_rebin->reset();
   m_RawFluxAxis = fluxaxis;
 }
 
@@ -239,7 +235,7 @@ void CSpectrum::SetFluxAxis(CSpectrumFluxAxis &&fluxaxis) {
 
   ResetContinuum();
   SetType(EType::nType_raw);
-  m_rebin->clearFineGrid();
+  m_rebin->reset();
   m_RawFluxAxis = std::move(fluxaxis);
 }
 
@@ -253,7 +249,7 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
 
   ResetContinuum();
   SetType(EType::nType_raw);
-  m_rebin->clearFineGrid();
+  m_rebin->reset();
 
   m_SpectralAxis = std::move(spcaxis);
   SetFluxAxis(std::move(fluxaxis));
@@ -434,7 +430,7 @@ const CSpectrum::EType CSpectrum::GetType() const { return m_spcType; }
 
 void CSpectrum::SetType(const CSpectrum::EType type) const {
   if (m_spcType != type) {
-    m_rebin->clearFineGrid();
+    m_rebin->reset();
     m_spcType = type;
   }
 }
@@ -694,7 +690,7 @@ void CSpectrum::SetContinuumEstimationMethod(
 }
 
 void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
-  m_rebin = CRebin::convert(std::move(m_rebin), opt_interp);
+  m_rebin = std::move(*m_rebin).convert(opt_interp);
 }
 
 // Test methode Rebin
@@ -719,7 +715,6 @@ void CSpectrum::Rebin(const TFloat64Range &range,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
                       const std::string &opt_interp,
                       const std::string &opt_error_interp) const {
-
   if (!IsValid())
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -735,7 +730,7 @@ void CSpectrum::ScaleFluxAxis(Float64 scale) {
     m_ContinuumFluxAxis *= scale;
     m_WithoutContinuumFluxAxis *= scale;
   }
-  m_rebin->clearFineGrid();
+  m_rebin->reset();
 }
 
 void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,

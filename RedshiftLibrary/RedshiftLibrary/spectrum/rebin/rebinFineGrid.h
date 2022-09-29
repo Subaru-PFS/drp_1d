@@ -40,6 +40,10 @@
 #define _REDSHIFT_SPECTRUM_REBIN_REBINFINEGRID_
 
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
+
+namespace Rebin {
+class rebinFineGrid_test;
+} // namespace Rebin
 namespace NSEpic {
 
 /**
@@ -49,17 +53,24 @@ class CRebinFineGrid : public CRebin {
 
 public:
   using CRebin::CRebin;
+  CRebinFineGrid(CRebin &&other) : CRebin(std::move(other)){};
 
   void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CSpectrum &rebinedSpectrum, CMask &rebinedMask,
              const std::string m_opt_error_interp, const TAxisSampleList &Xsrc,
              const TAxisSampleList &Ysrc, const TAxisSampleList &Xtgt,
-             const TFloat64List &Error) override;
-  void clearFineGrid() const override;
+             const TFloat64List &Error, Int32 &cursor) override;
+  void reset() { clearFineGrid(); };
+
+  const std::string &getType() override { return m_type; };
 
 protected:
-  void rebinFineGrid() const override;
+  friend class Rebin::rebinFineGrid_test;
+  void rebinFineGrid();
+  void clearFineGrid();
+
+  const std::string m_type = "precomputedfinegrid";
 };
 
 } // namespace NSEpic

@@ -49,7 +49,8 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
                       const std::string m_opt_error_interp,
                       const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-                      const TAxisSampleList &Xtgt, const TFloat64List &Error) {
+                      const TAxisSampleList &Xtgt, const TFloat64List &Error,
+                      Int32 &cursor) {
 
   TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
   TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
@@ -59,12 +60,12 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
   // nearest sample, lookup
   Int32 k = 0;
   Int32 n = spectralAxis.GetSamplesCount();
-  while (m_cursor < targetSpectralAxis.GetSamplesCount() &&
-         Xtgt[m_cursor] <= range.GetEnd()) {
+  while (cursor < targetSpectralAxis.GetSamplesCount() &&
+         Xtgt[cursor] <= range.GetEnd()) {
     // k = gsl_interp_bsearch
     // (Xsrc.data(), Xtgt[j], kprev,
     // n);
-    k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[m_cursor]);
+    k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[cursor]);
     Float64 xSrcStep = NAN;
     if (k == Xsrc.size() - 1)
       xSrcStep = Xsrc[k] - Xsrc[k - 1];
@@ -72,26 +73,18 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       xSrcStep = Xsrc[k + 1] - Xsrc[k];
 
     // closest value
-    Yrebin[m_cursor] = Ysrc[k];
+    Yrebin[cursor] = Ysrc[k];
 
     if (m_opt_error_interp != "no") {
-      ErrorRebin[m_cursor] = Error[k];
 
+      ErrorRebin[cursor] = Error[k];
       if (m_opt_error_interp == "rebinVariance") {
-        Float64 xDestStep = NAN;
-        Float64 xStepCompensation = 1.;
-        if (m_cursor < targetSpectralAxis.GetSamplesCount() - 1) {
-          xDestStep = Xtgt[m_cursor + 1] - Xtgt[m_cursor];
-          xStepCompensation = xSrcStep / xDestStep;
-        } else if (m_cursor > 0) {
-          xDestStep = Xtgt[m_cursor] - Xtgt[m_cursor - 1];
-          xStepCompensation = xSrcStep / xDestStep;
-        }
-        ErrorRebin[m_cursor] *= sqrt(xStepCompensation);
+        Float64 xStepCompensation = computeXStepCompensation(
+            targetSpectralAxis, Xtgt, cursor, xSrcStep);
+        ErrorRebin[cursor] *= sqrt(xStepCompensation);
       }
     }
-
-    rebinedMask[m_cursor] = 1;
-    m_cursor++;
+    rebinedMask[cursor] = 1;
+    cursor++;
   }
 }

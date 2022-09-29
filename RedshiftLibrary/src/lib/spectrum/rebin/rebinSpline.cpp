@@ -51,7 +51,7 @@ void CRebinSpline::rebin(
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
     CMask &rebinedMask, const std::string m_opt_error_interp,
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-    const TAxisSampleList &Xtgt, const TFloat64List &Error) {
+    const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
   TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
   TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
@@ -68,10 +68,10 @@ void CRebinSpline::rebin(
 
   // For each sample in the valid
   // lambda range interval.
-  while (m_cursor < targetSpectralAxis.GetSamplesCount() &&
-         Xtgt[m_cursor] <= range.GetEnd()) {
-    Yrebin[m_cursor] = gsl_spline_eval(spline, Xtgt[m_cursor], accelerator);
-    rebinedMask[m_cursor] = 1;
+  while (cursor < targetSpectralAxis.GetSamplesCount() &&
+         Xtgt[cursor] <= range.GetEnd()) {
+    Yrebin[cursor] = gsl_spline_eval(spline, Xtgt[cursor], accelerator);
+    rebinedMask[cursor] = 1;
 
     // note: error rebin not
     // implemented for spline interp
@@ -82,7 +82,7 @@ void CRebinSpline::rebin(
              "noise rebining not implemented for spline interp");
     }
 
-    m_cursor++;
+    cursor++;
   }
   gsl_spline_free(spline);
   gsl_interp_accel_free(accelerator);

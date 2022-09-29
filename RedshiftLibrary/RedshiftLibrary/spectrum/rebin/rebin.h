@@ -45,10 +45,6 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
-namespace Rebin {
-class rebinFineGrid_test;
-} // namespace Rebin
-
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -57,14 +53,15 @@ namespace NSEpic {
 class CRebin {
 
 public:
+  CRebin() = default;
   CRebin(const CSpectrum &spectrum) : m_spectrum(spectrum){};
-  CRebin(std::unique_ptr<CRebin> &&other);
+  virtual ~CRebin() = default;
 
   CRebin(CRebin &&other) = default;
-  CRebin &operator=(CRebin &&other) = default;
 
-  static std::unique_ptr<CRebin> convert(std::unique_ptr<CRebin> &&other,
-                                         const std::string opt_interp);
+  std::unique_ptr<CRebin> convert(const std::string opt_interp) &&;
+  static std::unique_ptr<CRebin> create(const std::string &opt_interp,
+                                        const CSpectrum &spectrum);
   void compute(const TFloat64Range &range,
                const CSpectrumSpectralAxis &targetSpectralAxis,
                CSpectrum &rebinedSpectrum, CMask &rebinedMask,
@@ -76,21 +73,22 @@ public:
                      CSpectrum &rebinedSpectrum, CMask &rebinedMask,
                      const std::string m_opt_error_interp,
                      const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-                     const TAxisSampleList &Xtgt,
-                     const TFloat64List &Error) = 0;
+                     const TAxisSampleList &Xtgt, const TFloat64List &Error,
+                     Int32 &cursor) = 0;
 
-  virtual void clearFineGrid() const {};
+  virtual void reset(){};
+  virtual const std::string &getType() { return m_type; };
 
 protected:
-  friend class Rebin::rebinFineGrid_test;
-
-  virtual void rebinFineGrid() const {};
-
+  Float64
+  computeXStepCompensation(const CSpectrumSpectralAxis &targetSpectralAxis,
+                           const TAxisSampleList &Xtgt, Int32 cursor,
+                           Float64 xSrcStep);
   const CSpectrum &m_spectrum;
-  Int32 m_cursor = 0;
 
-  mutable TFloat64List m_pfgFlux;
-  mutable bool m_FineGridInterpolated = false;
+  const std::string m_type = "None";
+  TFloat64List m_pfgFlux;
+  bool m_FineGridInterpolated = false;
   const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
                                          // check if enough to be private
 };

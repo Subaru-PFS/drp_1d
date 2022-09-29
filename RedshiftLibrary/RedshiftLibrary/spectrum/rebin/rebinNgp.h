@@ -49,15 +49,19 @@ class CRebinNgp : public CRebin {
 
 public:
   using CRebin::CRebin;
+  CRebinNgp(CRebin &&other) : CRebin(std::move(other)){};
 
   void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CSpectrum &rebinedSpectrum, CMask &rebinedMask,
              const std::string m_opt_error_interp, const TAxisSampleList &Xsrc,
              const TAxisSampleList &Ysrc, const TAxisSampleList &Xtgt,
-             const TFloat64List &Error) override;
+             const TFloat64List &Error, Int32 &cursor) override;
+
+  const std::string &getType() override { return m_type; };
 
 protected:
+  const std::string m_type = "ngp";
 };
 
 } // namespace NSEpic

@@ -40,17 +40,18 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
-// #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinSpline.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/tests/test-tools.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
-using namespace CPFTest;
 
 TFloat64List spectralList = {10, 20, 30};
 TFloat64List fluxList = {1, 2, 3};
@@ -88,15 +89,27 @@ BOOST_AUTO_TEST_SUITE(Rebin)
 
 BOOST_AUTO_TEST_CASE(rebin_test) {
   CSpectrum spc;
+  std::unique_ptr<CRebin> rebin =
+      std::unique_ptr<CRebin>(new CRebinLinear(spc));
 
   // test convert
-  BOOST_CHECK_NO_THROW(CRebin::convert(std::move(spc.m_rebin), "lin"));
-  BOOST_CHECK_NO_THROW(
-      CRebin::convert(std::move(spc.m_rebin), "precomputedfinegrid"));
-  BOOST_CHECK_NO_THROW(CRebin::convert(std::move(spc.m_rebin), "spline"));
-  BOOST_CHECK_NO_THROW(CRebin::convert(std::move(spc.m_rebin), "ngp"));
-  BOOST_CHECK_THROW(CRebin::convert(std::move(spc.m_rebin), "linn"),
-                    GlobalException);
+  BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("lin"));
+  BOOST_CHECK(rebin->getType() == "lin");
+  BOOST_CHECK_NO_THROW(rebin =
+                           std::move(*rebin).convert("precomputedfinegrid"));
+  BOOST_CHECK(rebin->getType() == "precomputedfinegrid");
+  BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("spline"));
+  BOOST_CHECK(rebin->getType() == "spline");
+  BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("ngp"));
+  BOOST_CHECK(rebin->getType() == "ngp");
+  BOOST_CHECK_THROW(std::move(*rebin).convert("linn"), GlobalException);
+
+  // test create
+  BOOST_CHECK_NO_THROW(CRebin::create("lin", spc));
+  BOOST_CHECK_NO_THROW(CRebin::create("precomputedfinegrid", spc));
+  BOOST_CHECK_NO_THROW(CRebin::create("spline", spc));
+  BOOST_CHECK_NO_THROW(CRebin::create("ngp", spc));
+  BOOST_CHECK_THROW(CRebin::create("linn", spc), GlobalException);
 }
 
 BOOST_AUTO_TEST_CASE(rebinLinear_test) {
@@ -119,16 +132,16 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   std::string errorRebinMethod = "rebin";
 
   // check throw : range is not included in spectral axis
-  spc.setRebinInterpMethod("lin");
+  std::unique_ptr<CRebin> rebin =
+      std::unique_ptr<CRebin>(new CRebinLinear(spc));
   TFloat64Range range2(9., 11.);
-  BOOST_CHECK_THROW(spc.m_rebin->compute(range2, tgtSpectralAxis_1,
-                                         rebinedSpectrum, rebinedMask,
-                                         errorRebinMethod),
+  BOOST_CHECK_THROW(rebin->compute(range2, tgtSpectralAxis_1, rebinedSpectrum,
+                                   rebinedMask, errorRebinMethod),
                     GlobalException);
 
   // interp = "lin" et errorRebinMethod = "rebin
-  spc.m_rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
-                       errorRebinMethod);
+  rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
   TFloat64List rebinedFlux =
       rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
   Int32 N = rebinedFlux.size();
@@ -150,8 +163,8 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   // interp = "lin" et errorRebinMethod = "rebinVariance"
   CSpectrumSpectralAxis tgtSpectralAxis_2({9., 10., 15., 20., 25., 30.});
   errorRebinMethod = "rebinVariance";
-  spc.m_rebin->compute(range1, tgtSpectralAxis_2, rebinedSpectrum, rebinedMask,
-                       errorRebinMethod);
+  rebin->compute(range1, tgtSpectralAxis_2, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
   rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
   N = rebinedFlux.size();
   BOOST_CHECK(N == 6);
@@ -175,6 +188,21 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   for (Int32 i = 1; i < N; i++) {
     BOOST_CHECK(rebinedMask[i] == 1);
   }
+
+  // interp = "lin" et errorRebinMethod = "no"
+  errorRebinMethod = "no";
+  rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
+  rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
+  N = rebinedFlux.size();
+  BOOST_CHECK(N == 7);
+  BOOST_CHECK(rebinedFlux[0] == 0. && rebinedFlux[N - 1] == 0.);
+  for (Int32 i = 1; i < N - 1; i++) {
+    BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
+  }
+  rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
+  TFloat64List errorRef(7, 1.);
+  BOOST_CHECK(rebinedError[0] == errorRef[0]);
 }
 
 BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
@@ -197,9 +225,11 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
   std::string errorRebinMethod = "no";
 
   // interp = "precomputedfinegrid" et errorRebinMethod = "no"
+  std::unique_ptr<CRebinFineGrid> rebin =
+      std::unique_ptr<CRebinFineGrid>(new CRebinFineGrid(spc));
   spc.setRebinInterpMethod("precomputedfinegrid");
-  spc.m_rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
-                       errorRebinMethod);
+  rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
   TFloat64List rebinedFlux =
       rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
   Int32 N = rebinedFlux.size();
@@ -220,15 +250,14 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
                     GlobalException);
 
   // check throw : bad RebinFineGrid
-  spc.m_rebin->m_pfgFlux = {};
-  BOOST_CHECK_THROW(spc.m_rebin->compute(range1, tgtSpectralAxis_1,
-                                         rebinedSpectrum, rebinedMask,
-                                         errorRebinMethod),
+  rebin->m_pfgFlux = {};
+  BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
+                                   rebinedMask, errorRebinMethod),
                     GlobalException);
 
   // RebinFinegrid
-  spc.m_rebin->rebinFineGrid();
-  TFloat64List pgfFlux = spc.m_rebin->m_pfgFlux;
+  rebin->rebinFineGrid();
+  TFloat64List pgfFlux = rebin->m_pfgFlux;
   Int32 n = pgfFlux.size();
   for (Int32 i = 0; i < 201; i++) {
     BOOST_CHECK_CLOSE(pgfFlux[i], 1 + i * 0.01, 1e-12);
@@ -238,9 +267,9 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
   }
 
   // clearFineGrid
-  spc.m_rebin->clearFineGrid();
-  BOOST_CHECK(spc.m_rebin->m_pfgFlux.size() == 0);
-  BOOST_CHECK(spc.m_rebin->m_FineGridInterpolated == false);
+  rebin->reset();
+  BOOST_CHECK(rebin->m_pfgFlux.size() == 0);
+  BOOST_CHECK(rebin->m_FineGridInterpolated == false);
 }
 
 BOOST_AUTO_TEST_CASE(rebinSpline_test) {
@@ -263,9 +292,10 @@ BOOST_AUTO_TEST_CASE(rebinSpline_test) {
   std::string errorRebinMethod = "no";
 
   // interp = "spline" et errorRebinMethod = "no"
-  spc.setRebinInterpMethod("spline");
-  spc.m_rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
-                       errorRebinMethod);
+  std::unique_ptr<CRebin> rebin =
+      std::unique_ptr<CRebin>(new CRebinSpline(spc));
+  rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
   TFloat64List rebinedFlux =
       rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
   Int32 N = rebinedFlux.size();
@@ -281,9 +311,8 @@ BOOST_AUTO_TEST_CASE(rebinSpline_test) {
 
   // interp = "spline" et errorRebinMethod != "no"
   errorRebinMethod = "rebin";
-  BOOST_CHECK_THROW(spc.m_rebin->compute(range1, tgtSpectralAxis_1,
-                                         rebinedSpectrum, rebinedMask,
-                                         errorRebinMethod),
+  BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
+                                   rebinedMask, errorRebinMethod),
                     GlobalException);
 }
 
@@ -307,9 +336,9 @@ BOOST_AUTO_TEST_CASE(rebinNgp_test) {
   std::string errorRebinMethod = "rebin";
 
   // interp = "ngp" et errorRebinMethod = "rebin"
-  spc.setRebinInterpMethod("ngp");
-  spc.m_rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
-                       errorRebinMethod);
+  std::unique_ptr<CRebin> rebin = std::unique_ptr<CRebin>(new CRebinNgp(spc));
+  rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
   TFloat64List rebinedFlux =
       rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
   Int32 N = rebinedFlux.size();
@@ -335,8 +364,8 @@ BOOST_AUTO_TEST_CASE(rebinNgp_test) {
   // interp = "ngp" et errorRebinMethod = "rebinVariance"
   CSpectrumSpectralAxis tgtSpectralAxis_2({9., 10., 15., 20., 25., 30.});
   errorRebinMethod = "rebinVariance";
-  spc.Rebin(range1, tgtSpectralAxis_2, rebinedSpectrum, rebinedMask, interp,
-            errorRebinMethod);
+  rebin->compute(range1, tgtSpectralAxis_2, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
   rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
   N = rebinedFlux.size();
   BOOST_CHECK(N == 6);
@@ -357,6 +386,25 @@ BOOST_AUTO_TEST_CASE(rebinNgp_test) {
   for (Int32 i = 1; i < N; i++) {
     BOOST_CHECK(rebinedMask[i] == 1);
   }
+
+  // interp = "ngp" et errorRebinMethod = "no"
+  errorRebinMethod = "no";
+  rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
+                 errorRebinMethod);
+  rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
+  N = rebinedFlux.size();
+  BOOST_CHECK(N == 7);
+  BOOST_CHECK(rebinedFlux[0] == 0. && rebinedFlux[N - 1] == 0.);
+  for (Int32 i = 1; i < N - 1; i++) {
+    Int32 i2 = i / 2;
+    if (2 * i2 == i)
+      BOOST_CHECK(rebinedFlux[i] == rebinedFlux[i + 1]);
+    else
+      BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
+  }
+  rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
+  TFloat64List errorRef(7, 1.);
+  BOOST_CHECK(rebinedError == errorRef);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

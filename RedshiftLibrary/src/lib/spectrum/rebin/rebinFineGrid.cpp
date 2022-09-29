@@ -45,7 +45,7 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinFineGrid::rebinFineGrid() const {
+void CRebinFineGrid::rebinFineGrid() {
   // Precalculate a fine grid template to be used for the 'closest value' rebin
   // method
   Int32 n = m_spectrum.GetSampleCount();
@@ -83,7 +83,7 @@ void CRebinFineGrid::rebinFineGrid() const {
   m_FineGridInterpolated = true;
 }
 
-void CRebinFineGrid::clearFineGrid() const {
+void CRebinFineGrid::clearFineGrid() {
   m_FineGridInterpolated = false;
   m_pfgFlux.clear();
 }
@@ -93,7 +93,7 @@ void CRebinFineGrid::rebin(
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
     CMask &rebinedMask, const std::string m_opt_error_interp,
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-    const TAxisSampleList &Xtgt, const TFloat64List &Error) {
+    const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
   if (m_FineGridInterpolated == false)
     rebinFineGrid();
@@ -112,11 +112,11 @@ void CRebinFineGrid::rebin(
   Float64 lmin = spectralAxis[0];
   // For each sample in the target
   // spectrum
-  while (m_cursor < targetSpectralAxis.GetSamplesCount() &&
-         Xtgt[m_cursor] <= range.GetEnd()) {
-    k = int((Xtgt[m_cursor] - lmin) / m_dLambdaFineGrid + 0.5);
-    Yrebin[m_cursor] = m_pfgFlux[k];
-    rebinedMask[m_cursor] = 1;
+  while (cursor < targetSpectralAxis.GetSamplesCount() &&
+         Xtgt[cursor] <= range.GetEnd()) {
+    k = int((Xtgt[cursor] - lmin) / m_dLambdaFineGrid + 0.5);
+    Yrebin[cursor] = m_pfgFlux[k];
+    rebinedMask[cursor] = 1;
 
     // note: error rebin not
     // implemented for
@@ -125,6 +125,6 @@ void CRebinFineGrid::rebin(
       THROWG(INTERNAL_ERROR,
              "noise rebining not implemented for precomputedfinegrid");
 
-    m_cursor++;
+    cursor++;
   }
 }
