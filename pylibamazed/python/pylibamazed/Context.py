@@ -56,6 +56,7 @@ from pylibamazed.redshift import (CProcessFlowContext,
 import pandas as pd
 import json
 import os
+import functools
 
 from pylibamazed.Exception import (AmazedError,
                                    AmazedErrorFromGlobalException,
@@ -120,113 +121,122 @@ class Context:
                 self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id)
             self.process_flow_context.LoadParameterStore(self.parameters.get_json())
             self.process_flow_context.Init()
-
             #store flag in root object
             resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
-            zflag.resetFlag()
             context_warningFlagRecorded = True
+            zflag.resetFlag()
         except GlobalException as e:
             if not context_warningFlagRecorded:
                 resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
                 zflag.resetFlag()
             rso.store_error(AmazedErrorFromGlobalException(e),None,"init")
+            rso.load_root()
             return rso
         except APIException as e:
             if not context_warningFlagRecorded:
                 resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
                 zflag.resetFlag()
             rso.store_error(AmazedError(e.errCode,e.message), None, "init")
+            rso.load_root()
             return rso
         except Exception as e:
             if not context_warningFlagRecorded:
                 resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
                 zflag.resetFlag()
             rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)),None,"init")
+            rso.load_root()
             return rso
 
-        enable_classification = False
-        reliabilities = dict()
-        sub_types = dict()
         for object_type in self.parameters.get_objects():
             linemeas_params_from_solver = not self.config["linemeascatalog"] and not object_type in self.config["linemeascatalog"]
             method = self.parameters.get_solve_method(object_type)
-            solver_success = True
             if method:
-                try:
-                    self.run_method(object_type, method)
-                    enable_classification = True
-                except GlobalException as e:
-                    rso.store_error(AmazedErrorFromGlobalException(e),object_type,"redshift_solver")
-                    # if 'warningFlag' not in rso.object_results[object_type]:
-                    #     rso.object_results[object_type]['warningFlag'] = dict()
-                    # if not rso.object_results[object_type]['warningFlag']:
-                    #     rso.object_results[object_type]['warningFlag'][method+'WarningFlags'] = 0
-                    linemeas_params_from_solver = False
-                    solver_success = False
+                self.run_redshift_solver(rso, object_type, "redshift_solver")
 
-            linemeas_parameters_loaded=True
             if self.parameters.get_linemeas_method(object_type):
-                if linemeas_params_from_solver :
-                    try:
-                        output = ResultStoreOutput(resultStore,
-                                                   self.parameters,
-                                                   auto_load=False,
-                                                   extended_results = self.extended_results)
+                if linemeas_params_from_solver and not rso.has_error(object_type, "redshift_solver"):
+                    self.run_load_linemeas_params(rso,object_type,"linemeas_catalog_load")
+                if not rso.has_error(object_type, "linemeas_catalog_load"):
+                    self.run_linemeas_solver(rso, object_type, "linemeas_solver") 
+            
+            if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models and not rso.has_error(object_type, "redshift_solver"):
+                self.run_reliability(rso, object_type, "reliability_solver")
 
-                        self.parameters.load_linemeas_parameters_from_result_store(output,object_type)
-                        self.process_flow_context.LoadParameterStore(self.parameters.get_json())
-                    except APIException as e:
-                        rso.store_error(AmazedError(e.errCode,e.message), object_type,"linemeas_catalog_load")
-                        linemeas_parameters_loaded = False
-                try:
-                    if linemeas_parameters_loaded:
-                        self.run_method(object_type, self.parameters.get_linemeas_method(object_type))
-                except GlobalException as e:
-                    rso.store_error(AmazedErrorFromGlobalException(e),object_type,"linemeas_solver")
+            if self.parameters.lineratio_catalog_enabled(object_type) and not rso.has_error(object_type, "redshift_solver"):
+                self.run_sub_classification(rso, object_type, "sub_classif_solver")
 
-
-            if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models and solver_success:
-                try:
-                    rel = Reliability(object_type, self.parameters,self.calibration_library)
-                    reliabilities[object_type] = rel.Compute(self.process_flow_context)
-                except APIException as e:
-                    rso.store_error(AmazedError(e.errCode,e.message),object_type, "reliability_solver" )
-
-            if self.parameters.lineratio_catalog_enabled(object_type) and solver_success:
-                try:
-                    sub_classif = SubType(object_type,
-                                          self.parameters,
-                                          self.calibration_library)
-                    sub_types[object_type] = sub_classif.Compute(self.process_flow_context)
-                except APIException as e:
-                    rso.store_error(AmazedError(e.errCode,e.message), object_type,"sub_classif_solver")
-
-
+        enable_classification = False
+        for object_type in self.parameters.get_objects():
+            if not rso.has_error(object_type, "redshift_solver"):
+                enable_classification = True
+                break
+            
         if enable_classification:
-            try:
-                self.run_method("classification", "ClassificationSolve")
-            except GlobalException as e:
-                rso.store_error(AmazedErrorFromGlobalException(e),None,"classification")
+            self.run_classification(rso,None,"classification")
 
-        try:
-            rso.load_all()
-            for object_type in reliabilities.keys():
-                rso.object_results[object_type]['reliability'] = dict()
-                rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
-            for object_type in sub_types.keys():
-                for rank in range(len(sub_types[object_type])):
-                    rso.object_results[object_type]['model_parameters'][rank]['SubType'] = sub_types[object_type][rank]
-        except APIException as e:
-            rso.store_error(AmazedError(e.errCode,e.message),None,
-                            "result_store_fill")
-        except Exception as e:
-            rso.store_error(AmazedError(ErrorCode.OUTPUT_READER_ERROR,"{}".format(e)),None,
-                            "result_store_fill")
-
+        self.load_result_store(rso,None,"load_result_store")
+        
         return rso
 
-    def run_method(self, object_type, method):
+    def run_method_exception_handler(func):
+        @functools.wraps(func)
+        def inner_function(self, *args, **kwargs):
+            try:
+                rso = args[0]
+                object_type = args[1]
+                stage = args[2]
+                func(self, *args, **kwargs)
+            except GlobalException as e:
+                rso.store_error(AmazedErrorFromGlobalException(e),object_type,stage)
+            except APIException as e:
+                rso.store_error(AmazedError(e.errCode, e.message, object_type, stage))
+            except Exception as e:
+                rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)),
+                                object_type,
+                                stage)
+        return inner_function
 
+    @run_method_exception_handler
+    def run_redshift_solver(self, rso, object_type, stage):
+        self.run_method(object_type,
+                        self.parameters.get_solve_method(object_type))
+
+    @run_method_exception_handler
+    def run_linemeas_solver(self, rso, object_type, stage):
+        self.run_method(object_type,
+                        self.parameters.get_linemeas_method(object_type))
+
+    @run_method_exception_handler
+    def run_load_linemeas_params(self, rso, object_type, stage):
+        self.parameters.load_linemeas_parameters_from_result_store(rso,object_type)
+        self.process_flow_context.LoadParameterStore(self.parameters.get_json())
+
+    @run_method_exception_handler
+    def run_reliability(self, rso, object_type, stage):
+        rel = Reliability(object_type, self.parameters,self.calibration_library)
+        rso.object_results[object_type]['reliability'] = dict()
+        rso.object_results[object_type]['reliability']['Reliability'] = rel.Compute(self.process_flow_context)
+
+    @run_method_exception_handler
+    def run_sub_classification(self, rso, object_type, stage):
+        sub_type = SubType(object_type,
+                           self.parameters,
+                           self.calibration_library)
+        sub_types = sub_type.Compute(self.process_flow_context)
+        rso.object_results[object_type]['model_parameters'] = []
+        for rank in range(len(sub_types[object_type])):
+            rso.object_results[object_type]['model_parameters'].append(dict())
+            rso.object_results[object_type]['model_parameters'][rank]['SubType'] = sub_types[object_type][rank]
+
+    @run_method_exception_handler
+    def run_classification(self, rso, object_type, stage):
+        self.run_method("classification","ClassificationSolve")
+
+    @run_method_exception_handler
+    def load_result_store(self, rso, object_type, stage):
+        rso.load_all()
+        
+    def run_method(self, object_type, method):
         if "C" + method not in globals():
             raise APIException(ErrorCode.INVALID_PARAMETER,"Unknown method {}".format(method))
         solver_method = globals()["C" + method]
@@ -234,6 +244,7 @@ class Context:
                                object_type)
         solver.Compute()
 
+        
 
 def _check_config(config):
     if "calibration_dir" not in config:

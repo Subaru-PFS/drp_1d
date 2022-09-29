@@ -206,7 +206,7 @@ class AbstractOutput:
         mp = self.object_results[object_type]["model_parameters"][rank][data_name]
         return mp
 
-    def get_dataset(self, dataset, object_type=None, rank=None):
+    def get_dataset(self,object_type, dataset,  rank=None):
         if object_type:
             if rank is not None:
                 return self.object_results[object_type][dataset][rank]
@@ -359,7 +359,9 @@ class AbstractOutput:
 
             nb_candidates = self.get_nb_candidates_in_source(object_type,
                                                              method)
-            candidates = []
+            if ds not in self.object_results[object_type]:
+                self.object_results[object_type][ds] = []
+            candidates = self.object_results[object_type][ds]
             for rank in range(nb_candidates):
                 candidates.append(dict())
                 for index, ds_row in ds_attributes.iterrows():
@@ -375,9 +377,6 @@ class AbstractOutput:
                                                               attr_name,
                                                               rank)
                         candidates[rank][attr_name] = attr
-            self.object_results[object_type][ds] = candidates
-
-                
                     
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
@@ -422,7 +421,7 @@ class AbstractOutput:
                 col_name = attr_parts[3]
                 if line_name not in lines_ids:
                     raise Exception("Line {}  not found in {}".format(line_name,lines_ids))
-                fitted_lines = pd.DataFrame(self.get_dataset(dataset, category))
+                fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
                 fitted_lines.set_index("LinemeasLineID", inplace=True)
                 ret[attribute] = fitted_lines.at[lines_ids[line_name], col_name]
         return ret
