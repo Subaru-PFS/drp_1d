@@ -213,8 +213,6 @@ public:
 
   static CLog& GetInstance();
 
-  void LogError( const char* format, ... );
-  void LogWarning( const char* format, ... );
   void LogInfo( const char* format, ... );
   void LogDetail( const char* format, ... );
   void LogDebug( const char* format, ... );
@@ -770,13 +768,15 @@ class AmzException : public std::exception
 
   virtual ~AmzException();
  
-  ErrorCode getErrorCode();
+  ErrorCode getErrorCode() const;
   virtual const char* what() ;
-  const std::string &getMessage();
+  const std::string &getMessage() const;
 
-  const std::string &getFileName();
-  const std::string &getMethod();
-  int getLine();
+  const std::string &getFileName() const;
+  const std::string &getMethod() const;
+  int getLine() const;
+
+  void LogError(const std::string &msg) const;
 
 };
 

@@ -1232,10 +1232,12 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_fittingManager->m_continuumManager
               ->getContinuumScaleMargCorrection();
     }
-    if (m != m_result->ChiSquare[idx]) {
-      Log.LogWarning("  Operator-Linemodel: m (%f for idx=%d) !=chi2 (%f) ", m,
-                     idx, m_result->ChiSquare[idx]);
-    }
+    if (m != m_result->ChiSquare[idx])
+      Flag.warning(Flag.LINEMODEL_CHI2_CHANGED,
+                   Formatter() << "COperatorLineModel::" << __func__ << ": m ("
+                               << m << " for idx=" << idx << ") !=chi2 ("
+                               << m_result->ChiSquare[idx] << ")");
+
     m = m_result->ChiSquare[idx]; // m_result->ChiSquare[idx];
 
     // save the model result

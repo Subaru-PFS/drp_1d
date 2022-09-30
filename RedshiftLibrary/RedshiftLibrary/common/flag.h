@@ -74,7 +74,8 @@ public:
     RELIABILITY_NEEDS_TENSORFLOW,        // 19
     FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP, // 20
     TEMPLATEFITTINGLOG_NO_MASK,          // 21
-    CORRECT_SPECTRUM_NOMINFLUX           // 22
+    CORRECT_SPECTRUM_NOMINFLUX,          // 22
+    LINEMODEL_CHI2_CHANGED               // 23
   } WarningCode;
 
   void warning(WarningCode c, std::string message);
