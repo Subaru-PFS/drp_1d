@@ -49,8 +49,15 @@ GlobalException::GlobalException(ErrorCode ec, const std::string &message,
                                  int line_)
     : AmzException(ec, message, filename_, method_, line_) {
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
-  resultStore->StoreScopedGlobalResult(
-      "warningFlag", std::make_shared<const CFlagLogResult>(
-                         Flag.getBitMask(), Flag.getListMessages()));
+  if (resultStore->getScopeDepth() > 2) {
+    resultStore->StoreGlobalResult(
+        resultStore->GetScopedNameAt("warningFlag", 2),
+        std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
+                                               Flag.getListMessages()));
+  } else {
+    resultStore->StoreScopedGlobalResult(
+        "warningFlag", std::make_shared<const CFlagLogResult>(
+                           Flag.getBitMask(), Flag.getListMessages()));
+  }
   Flag.resetFlag();
 }

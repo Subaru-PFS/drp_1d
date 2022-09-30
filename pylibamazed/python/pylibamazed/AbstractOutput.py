@@ -108,7 +108,7 @@ class AbstractOutput:
         self.errors[full_name]["filename"]=amz_exception.getFileName()
         self.errors[full_name]["method"]=amz_exception.getMethod()
 
-        if not object_type:
+        if not object_type and stage != "classification":
             for ot in self.object_types:
                 for o_stage in ObjectStages:
                     if self.parameters.stage_enabled(ot,o_stage):
@@ -405,14 +405,15 @@ class AbstractOutput:
                 if len(attr_parts) == 2:
                     rank = 0
                 elif len(attr_parts) == 3:
-                    rank = int(attr_parts[1])
+                    rank = int(attr_parts[1]) 
             if len(attr_parts) < 4:
-                for dataset in ["linemeas_parameters", "reliability","model_parameters"]:
-                    if self.has_attribute(category,dataset, data, rank):
-                        ret[attribute] = self.get_attribute(category, dataset, data, rank)
-                # else:
-                #     if self.has_attribute(category,"model_parameters", data, rank):
-                #         ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
+                if self.has_attribute(category,"model_parameters", data, rank):
+                    ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
+                else:
+                    rank = None
+                    for dataset in ["linemeas_parameters", "reliability"]:
+                        if self.has_attribute(category,dataset, data, rank):
+                            ret[attribute] = self.get_attribute(category, dataset, data, rank)
             else:
                 dataset = attr_parts[1]
                 if not self.has_dataset(category, dataset):

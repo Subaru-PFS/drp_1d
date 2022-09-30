@@ -81,7 +81,6 @@ void COperatorResultStore::StoreResult(
   if (it != map.end()) {
     THROWG(INTERNAL_ERROR, "Can not store results: result already exists");
   }
-
   map[scopedName] = result;
 }
 

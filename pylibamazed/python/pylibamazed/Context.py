@@ -167,7 +167,7 @@ class Context:
 
         enable_classification = False
         for object_type in self.parameters.get_objects():
-            if not rso.has_error(object_type, "redshift_solver"):
+            if self.parameters.get_solve_method(object_type) and not rso.has_error(object_type, "redshift_solver"):
                 enable_classification = True
                 break
             
@@ -224,9 +224,9 @@ class Context:
                            self.calibration_library)
         sub_types = sub_type.Compute(self.process_flow_context)
         rso.object_results[object_type]['model_parameters'] = []
-        for rank in range(len(sub_types[object_type])):
+        for rank in range(len(sub_types)):
             rso.object_results[object_type]['model_parameters'].append(dict())
-            rso.object_results[object_type]['model_parameters'][rank]['SubType'] = sub_types[object_type][rank]
+            rso.object_results[object_type]['model_parameters'][rank]['SubType'] = sub_types[rank]
 
     @run_method_exception_handler
     def run_classification(self, rso, object_type, stage):
