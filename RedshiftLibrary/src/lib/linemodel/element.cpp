@@ -449,7 +449,7 @@ void CLineModelElement::prepareSupport(
   m_EndNoOverlap.resize(nLines, -1);
   m_StartTheoretical.resize(nLines, -1);
   m_EndTheoretical.resize(nLines, -1);
-  m_OutsideLambdaRangeList.resize(nLines);
+  m_OutsideLambdaRangeList.resize(nLines, true);
   for (Int32 i = 0; i < nLines; i++) {
     EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
 
@@ -937,8 +937,6 @@ void CLineModelElement::fitAmplitude(
   const Float64 *fluxNoContinuum = noContinuumfluxAxis.GetSamples();
   const Float64 *spectral = spectralAxis.GetSamples();
   const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
-
-  Log.LogDebug("    error[0]:%e", error[0]);
   const Float64 *fluxContinuum = continuumfluxAxis.GetSamples();
 
   Float64 y = 0.0;
@@ -948,7 +946,7 @@ void CLineModelElement::fitAmplitude(
 
   Float64 err2 = 0.0;
   Int32 num = 0;
-  Log.LogDebug("    multiline: nLines=%d", nLines);
+  // Log.LogDebug("    multiline: nLines=%d", nLines);
 
   for (Int32 k = 0; k < nLines; k++) { // loop for the intervals
     if (m_OutsideLambdaRangeList[k]) {
@@ -991,10 +989,10 @@ void CLineModelElement::fitAmplitude(
     Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
                  " num=%d, mtm=%f",
                  num, m_sumGauss);
-    for (Int32 k2 = 0; k2 < nLines; k2++) {
+    /*for (Int32 k2 = 0; k2 < nLines; k2++) {
       Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2,
                    m_NominalAmplitudes[k2]);
-    }
+    }*/
     return;
   }
 
@@ -1391,4 +1389,49 @@ void CLineModelElement::debug(std::ostream &os) const {
   getLineProfile(i).GetName()<<"\t"<< GetSignFactor(i)<< "\n";
     }
   */
+}
+
+void CLineModelElement::dumpElement(std::ostream &os) const {
+  debug(os); // to dump lines info
+  os << "m_OutsideLambdaRange\t" << m_OutsideLambdaRange << "\n";
+  os << "m_fittingGroupInfo\t" << m_fittingGroupInfo << "\n";
+  os << "m_ElementType\t" << m_ElementType << "\n";
+  os << "m_NominalWidth\t" << m_NominalWidth << "\n";
+  os << "m_VelocityEmission\t" << m_VelocityEmission << "\n";
+  os << "m_VelocityAbsorption\t" << m_VelocityAbsorption << "\n";
+  os << "m_OutsideLambdaRangeOverlapThreshold\t"
+     << m_OutsideLambdaRangeOverlapThreshold << "\n";
+  os << "m_sumCross\t" << m_sumCross << "\n";
+  os << "m_sumGauss\t" << m_sumGauss << "\n";
+  os << "m_dtmFree\t" << m_dtmFree << "\n";
+  os << "m_fitAmplitude\t" << m_fitAmplitude << "\n";
+  os << "m_absLinesLimit\t" << m_absLinesLimit << "\n";
+
+  os << "m_LineIsActiveOnSupport \n";
+
+  for (Int32 i = 0; i < m_LineIsActiveOnSupport.size(); i++)
+    for (Int32 j = 0; j < m_LineIsActiveOnSupport.size(); j++)
+      os << i << "\t" << j << "\t" << m_LineIsActiveOnSupport[i][j] << "\n";
+
+  os << "\n";
+  os << "Line \t OutsideLR\t Sign \t Amp \t AmpErrSigma \t NomAmp \t StartNO "
+        "\t EndNO \t "
+        "StartTheo \t EndTheo\n";
+
+  for (Int32 i = 0; i < m_Lines.size(); i++) {
+    os << i << "\t " << m_OutsideLambdaRangeList[i] << "\t " << m_SignFactors[i]
+       << "\t " << m_FittedAmplitudes[i] << "\t"
+       << m_FittedAmplitudeErrorSigmas[i] << "\t" << m_NominalAmplitudes[i]
+       << "\t" << m_StartNoOverlap[i] << "\t" << m_EndNoOverlap[i] << "\t"
+       << m_StartTheoretical[i] << "\t" << m_EndTheoretical[i] << "\n";
+  }
+  os << "\n";
+  os << "m_LineCatalogIndexes \n";
+  for (Int32 i = 0; i < m_LineCatalogIndexes.size(); i++)
+    os << i << "\t" << m_LineCatalogIndexes[i] << "\n";
+
+  os << "\n";
+  os << "m_asymLineIndices \n";
+  for (Int32 i = 0; i < m_asymLineIndices.size(); i++)
+    os << i << "\t" << m_asymLineIndices[i] << "\n";
 }

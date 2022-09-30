@@ -255,10 +255,10 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
                                     // when summing exponential of small values
     }
   }
-
-  Log.LogDebug("COperatorPdfz::logSumExpTrick: using common factor value for "
-               "log-sum-exp trick=%e",
-               logfactor);
+  /*
+    Log.LogDebug("COperatorPdfz::logSumExpTrick: using common factor value for "
+                 "log-sum-exp trick=%e",
+                 logfactor);*/
 
   Float64 sumModifiedExp = 0.0;
   Float64 modifiedEXPO_previous = exp(valproba[0] - logfactor);
@@ -476,8 +476,8 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   // marginalize: ie sum all PDFS
   TInt32List nSum(zsize, 0);
   for (Int32 km = 0; km < nmodel; km++) {
-    Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
-                 km);
+    /*Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
+                 km);*/
 
     // Todo: Check if the status is OK ?
     // meritResult->Status[i] == COperator::nStatus_OK

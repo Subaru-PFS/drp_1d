@@ -150,7 +150,7 @@ public:
   Float64 getCumulSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
+  CLineModelSolution GetModelSolution(Int32 opt_level = 0) const;
 
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();

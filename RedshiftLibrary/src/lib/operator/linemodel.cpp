@@ -246,8 +246,9 @@ void COperatorLineModel::ComputeFirstPass() {
       m_result->ScaleMargCorrectionContinuum[i] =
           m_fittingManager->m_continuumManager
               ->getContinuumScaleMargCorrection();
-      Log.LogDebug("  Operator-Linemodel: Z interval %d: Chi2 = %f", i,
-                   m_result->ChiSquare[i]);
+      Log.LogDebug(
+          "  Operator-Linemodel: Z interval %d: and zvalue = %f Chi2 = %f", i,
+          m_result->Redshifts[i], m_result->ChiSquare[i]);
       indexLargeGrid++;
       // Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
     } else {
@@ -1122,8 +1123,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     std::string Id = zCandidates[i].first;
     std::string parentId = zCandidates[i].second->ParentId; // retrieve parentID
     Float64 z = zCandidates[i].second->Redshift;
-
-    // find the index in the zaxis results
+    /*if (std::abs(z - 1.178966) > 1E-5)//elcosomos
+      continue;*/
+    //  find the index in the zaxis results
     Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
     Float64 m = m_result->ChiSquare[idx];
 
@@ -1215,7 +1217,8 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     if (!mlmfit_modelInfoSave) {
       m_result->ChiSquare[idx] = m_fittingManager->fit(
           m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
-          m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
+          m_result->ContinuumModelSolutions[idx], contreest_iterations,
+          true); // false solves the warning prob for elcosmos
       m_result->ScaleMargCorrection[idx] =
           m_fittingManager->getScaleMargCorrection();
       if (m_fittingManager->getLineRatioType() == "tplratio")

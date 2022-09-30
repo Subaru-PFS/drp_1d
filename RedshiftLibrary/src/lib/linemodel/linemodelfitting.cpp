@@ -464,6 +464,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                                CLineModelSolution &modelSolution,
                                CContinuumModelSolution &continuumModelSolution,
                                Int32 contreest_iterations, bool enableLogging) {
+  if (std::abs(redshift - 1.178966) < 1E-5)
+    std::cout << "Got you: redshift = 1.178966" << m_lineRatioType << ", "
+              << enableLogging << " " << contreest_iterations << "\n";
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
   m_fitter->m_cont_reestim_iterations = contreest_iterations;
@@ -474,7 +477,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   Int32 ntplratio = m_lineRatioManager->prepareFit(
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
-
+  ntplratio = 1; // to be removed: test on one tplratio only
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
@@ -496,14 +499,14 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
-      if (m_lineRatioManager->init(redshift, itratio))
+      if (m_lineRatioManager->init(redshift, itratio)) // always false
         continue;
 
       m_fitter->fit(redshift);
 
       std::string bestTplratioName = "undefined";
 
-      _merit = m_lineRatioManager->computeMerit(itratio);
+      _merit = m_lineRatioManager->computeMerit(itratio, enableLogging);
 
       if (bestMerit + bestMeritPrior > _merit + _meritprior) {
         bestMerit = _merit;
@@ -516,6 +519,19 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             m_continuumManager->GetContinuumModelSolution();
 
         m_lineRatioManager->saveResults(itratio);
+
+        if (std::abs(redshift - 1.178966) < 1E-5 ||
+            std::abs(redshift - 3.596569) < 1E-5)
+          std::cout << "itplratio: " << itratio << " and "
+                    << _merit + _meritprior << "\n";
+        Float64 zqp8 = 3.596569;
+        Float64 zelcosmos = 1.178966;
+        if (std::abs(redshift - zqp8) < 1E-5 ||
+            std::abs(redshift - zelcosmos) < 1E-5) {
+          cout.precision(7);
+          std::cout << redshift << "\n";
+          m_Elements.dumpElement();
+        }
       }
       if (getContinuumComponent() == "nocontinuum")
         m_model->reinitModel();
@@ -533,7 +549,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, autoselect,
                                            redshift);
     }
-    /*    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
+    /*
+    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
                   "ebmv=%.3f), and A=%e",
                   savedIdxContinuumFitted, m_fitContinuum_tplName.c_str(),
                   m_fitContinuum_tplFitEbmvCoeff,
@@ -1048,7 +1065,7 @@ void CLineModelFitting::LoadModelSolution(
  * \brief Returns a CLineModelSolution object populated with the current
  *solutions.
  **/
-CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
+CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
   modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();

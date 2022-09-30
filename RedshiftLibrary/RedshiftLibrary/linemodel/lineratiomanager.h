@@ -69,7 +69,7 @@ public:
 
   virtual int prepareFit(Float64 redshift) { return 1; }
   virtual bool init(Float64 redshift, Int32 itratio = -1);
-  virtual Float64 computeMerit(Int32 itratio) = 0;
+  virtual Float64 computeMerit(Int32 itratio, bool enableLogging) = 0;
   virtual void finish(Float64 redshift) {}
   virtual void saveResults(Int32 itratio) {}
   virtual void setPassMode(Int32 iPass);

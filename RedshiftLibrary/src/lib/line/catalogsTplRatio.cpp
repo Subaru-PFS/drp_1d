@@ -165,8 +165,8 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
 
   for (Int32 iElt = 0; iElt < LineModelElementList.size(); iElt++) {
     for (Int32 k = 0; k < GetCatalogsCount(); k++) {
-      Log.LogDebug(Formatter() << "log linesCorrespondingNominalAmp for "
-                               << m_lineRatioCatalogs[k].getName());
+      /*Log.LogDebug(Formatter() << "log linesCorrespondingNominalAmp for "
+                               << m_lineRatioCatalogs[k].getName());*/
       Int32 nLines = LineModelElementList[iElt]->GetSize();
       for (Int32 j = 0; j < nLines; j++) {
         Float64 ebv = enableISMCalzetti
@@ -174,12 +174,12 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
                           : NAN;
         Float64 nomAmp = lineCatalogLinesCorrespondingNominalAmp[iElt][k][j];
         std::string lineName = LineModelElementList[iElt]->m_Lines[j].GetName();
-        Log.LogDebug("    CatalogsTplRatio - "
+        /*Log.LogDebug("    CatalogsTplRatio - "
                      "linesCorrespondingNominalAmp iElt=%d, "
                      "iCatalog=%d, iLine=%d with name=%s, ebv=%f: "
                      "NominalAmpFound = "
                      "%e",
-                     iElt, k, j, lineName.c_str(), ebv, nomAmp);
+                     iElt, k, j, lineName.c_str(), ebv, nomAmp);*/
       }
     }
   }

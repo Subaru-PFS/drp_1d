@@ -53,7 +53,7 @@ CRulesManager::CRulesManager(
     : CLineRatioManager(elements, model, inputSpc, lambdaRange,
                         continuumManager, restLineList) {}
 
-Float64 CRulesManager::computeMerit(Int32 iratio) {
+Float64 CRulesManager::computeMerit(Int32 iratio, bool enableLogging) {
   applyRules(true); // enableLogging);
   m_model->refreshModel();
   return getLeastSquareMerit();

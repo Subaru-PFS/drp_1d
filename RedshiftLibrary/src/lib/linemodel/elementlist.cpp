@@ -44,7 +44,7 @@
 #include <cmath>
 
 using namespace NSEpic;
-
+using namespace std;
 /**
  * \brief Returns the number of m_Elements that fail IsOutsideLambdaRange().
  **/
@@ -809,4 +809,18 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
       TInt32Range::joinIntersections(std::move(indexRangeList));
 
   return nonOverlappingIndexRangeList;
+}
+
+void CLineModelElementList::dumpElement() {
+  std::string fname = "ElementList_" + to_string(m__count) + ".txt";
+  m__count++;
+  std::ofstream os(fname);
+
+  os << "CLineModelElementList::m_Elements \n";
+  Int32 count = 0;
+  for (const auto &el : m_Elements) {
+    os << count++ << "\n";
+    el->dumpElement(os);
+  }
+  os.close();
 }

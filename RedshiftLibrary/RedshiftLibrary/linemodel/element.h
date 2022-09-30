@@ -196,6 +196,7 @@ public:
                               // be moved elsewhere ?
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
+  void dumpElement(std::ostream &os) const;
 
 protected:
   TLineWidthType m_LineWidthType;

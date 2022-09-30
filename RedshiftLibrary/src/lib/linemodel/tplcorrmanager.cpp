@@ -52,7 +52,7 @@ CTplCorrManager::CTplCorrManager(
     : CTplratioManager(elements, model, inputSpc, lambdaRange, continuumManager,
                        restLineList) {}
 
-Float64 CTplCorrManager::computeMerit(Int32 itratio) {
+Float64 CTplCorrManager::computeMerit(Int32 itratio, bool enableLogging) {
 
   m_model->refreshModel();
   Int32 s = m_RestLineList.size();
