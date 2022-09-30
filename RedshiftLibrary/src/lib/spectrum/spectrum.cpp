@@ -634,9 +634,10 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
     minFlux = std::min(std::abs(flux[i]), std::abs(minFlux));
   }
   if (minFlux == DBL_MAX) {
-    Log.LogError("    CSpectrum::correctSpectrum - unable to set minFlux value "
-                 "(=%e). Setting it to 0.",
-                 minFlux);
+    Flag.warning(Flag.CORRECT_SPECTRUM_NOMINFLUX,
+                 Formatter() << "CSpectrum::" << __func__
+                             << ": unable to set minFlux value (=" << minFlux
+                             << "). Setting it to 0.");
     minFlux = 0.0;
   }
   if (maxNoise == -DBL_MAX)
@@ -737,7 +738,7 @@ void CSpectrum::ClearFineGrid() const {
 /**
  * targetSpectralAxis should be expressed in same frame as source SpetralAxis
  */
-bool CSpectrum::Rebin(const TFloat64Range &range,
+void CSpectrum::Rebin(const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
                       const std::string &opt_interp,
@@ -764,10 +765,9 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
   }
 
   if (m_pfgFlux.size() == 0 && opt_interp == "precomputedfinegrid" &&
-      m_FineGridInterpolated == true) {
-    Log.LogError("Problem buffer couldnt be computed\n");
-    return false;
-  }
+      m_FineGridInterpolated == true)
+    THROWG(INTERNAL_ERROR,
+           "Problem finegrid interpolatted buffer couldnt be computed");
 
   CSpectrumFluxAxis rebinedFluxAxis = std::move(rebinedSpectrum.m_RawFluxAxis);
   rebinedFluxAxis.SetSize(s); // does not re-allocate if already allocated
@@ -845,7 +845,8 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
 
       // note: error rebin not implemented for precomputedfinegrid
       if (opt_error_interp != "no")
-        return false;
+        THROWG(INTERNAL_ERROR,
+               "noise rebining not implemented for precomputedfinegrid");
 
       j++;
     }
@@ -867,7 +868,8 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
       if (opt_error_interp != "no") {
         gsl_spline_free(spline);
         gsl_interp_accel_free(accelerator);
-        return false;
+        THROWG(INTERNAL_ERROR,
+               "noise rebining not implemented for spline interp");
       }
 
       j++;
@@ -926,8 +928,6 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
   rebinedSpectrum.SetType(EType::nType_raw);
   rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,
                                          std::move(rebinedFluxAxis));
-
-  return true;
 }
 
 void CSpectrum::ScaleFluxAxis(Float64 scale) {

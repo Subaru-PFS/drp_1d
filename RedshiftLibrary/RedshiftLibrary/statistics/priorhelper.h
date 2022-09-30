@@ -70,14 +70,14 @@ public:
 
   void Init(std::string priorDirPath, Int32 type);
 
-  bool GetTplPriorData(const std::string &tplname,
+  void GetTplPriorData(const std::string &tplname,
                        const TRedshiftList &redshifts,
                        TPriorZEList &zePriorData,
                        Int32 outsideZRangeExtensionMode = 0) const;
 
-  bool GetTZEPriorData(const std::string &tplname, Int32 EBVIndexfilter,
-                       Float64 redshift, SPriorTZE &tzePrioData,
-                       Int32 outsideZRangeExtensionMode = 0) const;
+  SPriorTZE GetTZEPriorData(const std::string &tplname, Int32 EBVIndexfilter,
+                            Float64 redshift,
+                            Int32 outsideZRangeExtensionMode = 0) const;
 
   void SetBetaA(Float64 beta);
   void SetBetaTE(Float64 beta);
@@ -103,9 +103,9 @@ private:
                                       const std::string &sigma_mean) const;
   void loadFromFileList(const std::string &sigma_mean,
                         const TStringList &filePathList);
-  bool getRedshiftIndex(Float64 redshift, Int32 outsideZRangeExtensionMode,
-                        Int32 &idz) const;
-  bool getTemplateIndex(const std::string &tplname, Int32 &idx) const;
+  Int32 getRedshiftIndex(Float64 redshift,
+                         Int32 outsideZRangeExtensionMode) const;
+  Int32 getTemplateIndex(const std::string &tplname) const;
   void fillPriorDataPerZ(TPriorEList &dataz, Int32 idz) const;
   Int32 m_type; // 0=Continuum, 1=Lines
 

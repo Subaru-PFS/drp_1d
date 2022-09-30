@@ -125,15 +125,10 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
       // prepare the lines prior data
       Int32 ebvfilter = m_CatalogTplRatio->GetIsmIndex(itratio);
-      CPriorHelper::SPriorTZE logPriorData;
+
       std::string tplrationame = m_CatalogTplRatio->GetCatalogName(itratio);
-      bool retGetPrior = m_tplratio_priorhelper->GetTZEPriorData(
-          tplrationame, ebvfilter, redshift, logPriorData);
-      if (retGetPrior == false)
-        THROWG(INTERNAL_ERROR,
-               "model: Failed to get prior for chi2 solvecontinuum.");
-      else
-        m_logPriorDataTplRatio.push_back(logPriorData);
+      m_logPriorDataTplRatio.push_back(m_tplratio_priorhelper->GetTZEPriorData(
+          tplrationame, ebvfilter, redshift));
     }
   }
   return ntplratio;
@@ -240,10 +235,11 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
  * @param iCatalog
  * @return
  */
-bool CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
-  if (iCatalog < 0) {
-    return false;
-  }
+void CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
+  if (iCatalog < 0)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "wrong line catalog index: " << iCatalog);
+
   Float64 nominalAmp = 0.0;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
     Int32 nLines = m_Elements[iElts]->GetSize();
@@ -253,7 +249,6 @@ bool CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
       m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
     }
   }
-  return true;
 }
 
 const std::string &CTplratioManager::getTplratio_bestTplName() const {
@@ -521,12 +516,7 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
 }
 
 void CTplratioManager::finish(Float64 redshift) {
-  bool retSetMultiAmplFast =
-      SetMultilineNominalAmplitudesFast(m_savedIdxFitted);
-  if (!retSetMultiAmplFast) {
-    Log.LogError("Linemodel: tplratio, Unable to set Multiline "
-                 "NominalAmplitudes from Tplratio !");
-  }
+  SetMultilineNominalAmplitudesFast(m_savedIdxFitted);
 
   // Set the velocities from templates: todo auto switch when velfit is ON
   // m_CatalogTplRatio->GetCatalogVelocities(savedIdxFitted,

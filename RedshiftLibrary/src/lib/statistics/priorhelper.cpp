@@ -245,11 +245,10 @@ void CPriorHelper::loadFileEZ(const char *filePath,
   std::ifstream file;
   file.open(filePath, std::ifstream::in);
   bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
-  if (fileOpenFailed) {
-    mInitFailed = true;
-    Log.LogError("Unable to load the prior data from file:", filePath);
-    return;
-  }
+  if (fileOpenFailed)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Unable to load the prior data from file: "
+                               << filePath);
 
   Int32 nlinesRead = 0;
   std::string line;
@@ -270,8 +269,6 @@ void CPriorHelper::loadFileEZ(const char *filePath,
     data.push_back(lineVals);
   }
   file.close();
-
-  return;
 }
 
 void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
@@ -279,11 +276,10 @@ void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
   std::ifstream file;
   file.open(filePath, std::ifstream::in);
   bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
-  if (fileOpenFailed) {
-    mInitFailed = true;
-    Log.LogError("Unable to load the prior data from file: %s", filePath);
-    return;
-  }
+  if (fileOpenFailed)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Unable to load the prior data from file: "
+                               << filePath);
   Int32 nlinesRead = 0;
   std::string line;
   // Read file line by line
@@ -304,7 +300,6 @@ void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
 
   if (nlinesRead != m_nZ)
     THROWG(INTERNAL_ERROR, Formatter() << "read n=" << nlinesRead << " lines");
-  return;
 }
 
 /**
@@ -316,67 +311,50 @@ void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
  * value for z>m_z0+m_dZ*m_nZ, 1=return error if z outside prior range
  * @return
  */
-bool CPriorHelper::GetTplPriorData(const std::string &tplname,
+void CPriorHelper::GetTplPriorData(const std::string &tplname,
                                    const TRedshiftList &redshifts,
                                    TPriorZEList &zePriorData,
                                    Int32 outsideZRangeExtensionMode) const {
-  if (m_betaA <= 0.0 && m_betaTE <= 0.0 && m_betaZ <= 0.0) {
-    Log.LogError("    CPriorHelper: beta coeff all zero (betaA=%e, "
-                 "betaTE=%e, betaZ=%e)",
-                 m_betaA, m_betaTE, m_betaZ);
-    zePriorData.clear();
-    return false;
-  }
+  if (m_betaA <= 0.0 && m_betaTE <= 0.0 && m_betaZ <= 0.0)
+    THROWG(INTERNAL_ERROR, Formatter() << "beta coeffs are all zero (betaA="
+                                       << m_betaA << ", betaTE=" << m_betaTE
+                                       << ", betaZ=" << m_betaZ << ")");
 
   if (mInitFailed) {
-    Log.LogDetail("    CPriorHelper: init. failed, unable to provide priors. "
-                  "Priors won't be used.");
+    Log.LogDetail(
+        "CPriorHelper::GetTplPriorData: failed, unable to provide priors. "
+        "Priors won't be used.");
     zePriorData.clear();
-    return true;
+    return;
   }
 
   // find idx for tplname
-  Int32 idx = -1;
-  bool ret = getTemplateIndex(tplname, idx);
-  if (!ret)
-    return false;
+  Int32 idx = getTemplateIndex(tplname);
 
   zePriorData.clear();
   zePriorData.reserve(redshifts.size());
   for (Float64 z : redshifts) {
-    Int32 idz = -1;
-    bool validZ = getRedshiftIndex(z, outsideZRangeExtensionMode, idz);
-    if (!validZ)
-      return false;
+    Int32 idz = getRedshiftIndex(z, outsideZRangeExtensionMode);
     TPriorEList dataz = m_data[idx][idz];
     fillPriorDataPerZ(dataz, idz);
     zePriorData.push_back(std::move(dataz));
   }
-
-  return true;
 }
 
 void CPriorHelper::fillPriorDataPerZ(TPriorEList &dataz, Int32 idz) const {
 
   for (auto &dataz_i : dataz) {
-    if (dataz_i.priorTZE <= 0.0) {
-      Log.LogError(
-          "    CPriorHelper: P_TZE is <=0 (priorTZE=%e) which is forbidden",
-          dataz_i.priorTZE);
+    if (dataz_i.priorTZE <= 0.0)
       THROWG(INTERNAL_ERROR, "P_TZE cannot be null");
-    }
+
     Float64 logPA = dataz_i.A_sigma > 0.0
                         ? -0.5 * log(2 * M_PI) - log(dataz_i.A_sigma)
                         : log(1. / m_deltaA);
 
     Float64 logPTE = log(dataz_i.priorTZE);
 
-    if (!isValidFloat(logPTE)) {
-      Log.LogError(
-          "    CPriorHelper: logP_TZE is NAN (priorTZE=%e, logP_TZE=%e)",
-          dataz_i.priorTZE, logPTE);
+    if (!isValidFloat(logPTE))
       THROWG(INTERNAL_ERROR, "logP_TZE is NAN or inf, or invalid");
-    }
 
     Float64 logPZ = m_data_pz[idz] > 0.0 ? log(m_data_pz[idz] / m_dz) : 0.;
 
@@ -389,10 +367,10 @@ void CPriorHelper::fillPriorDataPerZ(TPriorEList &dataz, Int32 idz) const {
   }
 }
 
-bool CPriorHelper::GetTZEPriorData(const std::string &tplname,
-                                   Int32 EBVIndexfilter, Float64 redshift,
-                                   SPriorTZE &tzePrioData,
-                                   Int32 outsideZRangeExtensionMode) const {
+CPriorHelper::SPriorTZE
+CPriorHelper::GetTZEPriorData(const std::string &tplname, Int32 EBVIndexfilter,
+                              Float64 redshift,
+                              Int32 outsideZRangeExtensionMode) const {
   if (EBVIndexfilter < 0 || EBVIndexfilter > m_nEbv - 1)
     THROWG(INTERNAL_ERROR, Formatter() << "Bad EBV index requested ="
                                        << EBVIndexfilter << " nEBV=" << m_nEbv);
@@ -401,41 +379,34 @@ bool CPriorHelper::GetTZEPriorData(const std::string &tplname,
   TPriorZEList zePriorData;
   GetTplPriorData(tplname, redshifts, zePriorData, outsideZRangeExtensionMode);
 
-  tzePrioData = zePriorData[0][EBVIndexfilter];
-
-  return true;
+  return zePriorData[0][EBVIndexfilter];
 }
 
-bool CPriorHelper::getTemplateIndex(const std::string &tplname,
-                                    Int32 &idx) const {
+Int32 CPriorHelper::getTemplateIndex(const std::string &tplname) const {
+
   auto itr = std::find(m_tplnames.begin(), m_tplnames.end(), tplname);
-  if (itr == m_tplnames.end()) {
-    Log.LogError("    CPriorHelper: unable to match this tplname in priors "
-                 "names list : %s",
-                 tplname.c_str());
-    return false;
-  }
+  if (itr == m_tplnames.end())
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "unable to match this tplname in prior names list : "
+                       << tplname);
 
   return itr - m_tplnames.begin();
 }
 
-bool CPriorHelper::getRedshiftIndex(Float64 redshift,
-                                    Int32 outsideZRangeExtensionMode,
-                                    Int32 &idz) const {
-  idz = Int32((redshift - m_z0) / m_dz);
+Int32 CPriorHelper::getRedshiftIndex(Float64 redshift,
+                                     Int32 outsideZRangeExtensionMode) const {
+  Int32 idz = Int32((redshift - m_z0) / m_dz);
   if (outsideZRangeExtensionMode == 1) {
-    if (idz < 0 || idz >= m_nZ) {
-      Log.LogError("    CPriorHelper: unable to match this redshift in prior "
-                   "list : %e",
-                   redshift);
-      return false;
-    }
+    if (idz < 0 || idz >= m_nZ)
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "unable to match this redshift in prior list:"
+                         << redshift);
   }
   if (outsideZRangeExtensionMode == 0) {
     idz = std::max(idz, 0);
     idz = std::min(idz, m_nZ);
   }
-  return true;
+  return idz;
 }
 
 bool CPriorHelper::isValidFloat(Float64 val) const {

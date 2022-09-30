@@ -157,10 +157,8 @@ void COperatorTemplateFittingBase::RebinTemplate(
   TFloat64Range::Intersect(tplLambdaRange, spcLambdaRange_restframe,
                            intersectedLambdaRange);
 
-  bool b = tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
-                      m_templateRebined_bf, m_mskRebined_bf, opt_interp);
-  if (!b)
-    THROWG(INTERNAL_ERROR, "Template rebinning failed");
+  tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
+             m_templateRebined_bf, m_mskRebined_bf, opt_interp);
 
   // overlapRate
   overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(

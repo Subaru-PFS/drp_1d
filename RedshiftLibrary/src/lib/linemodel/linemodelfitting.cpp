@@ -618,11 +618,9 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
  *STD input: which = 2: uses the spectrum error to compute STD
  **/
 Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
-  if (which != 1 && which != 2) {
-    Log.LogError("    model: getOutsideLinesSTD - Failed to parse input "
-                 "argument, which");
-    return -1;
-  }
+  if (which != 1 && which != 2)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "wrong argument, which (1 or 2): " << which);
 
   CMask _mask = getOutsideLinesMask();
 

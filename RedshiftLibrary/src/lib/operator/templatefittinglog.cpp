@@ -159,10 +159,10 @@ Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
   return 0;
 }
 
-Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
-                                               const TFloat64List &Y,
-                                               Int32 nshifts, TFloat64List &XtY,
-                                               Int32 precomputedFFT) {
+void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
+                                              const TFloat64List &Y,
+                                              Int32 nshifts, TFloat64List &XtY,
+                                              Int32 precomputedFFT) {
   // Processing the FFT
   Int32 nSpc = X.size();
   Int32 nTpl = Y.size();
@@ -216,11 +216,9 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
     if (precomputedFFT == 0) {
       precomputedFFT_spcFluxOverErr2 =
           (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-      if (precomputedFFT_spcFluxOverErr2 == 0) {
-        Log.LogError("Unable to "
-                     "allocate precomputedFFT_spcFluxOverErr2");
-        return -1;
-      }
+      if (precomputedFFT_spcFluxOverErr2 == 0)
+        THROWG(INTERNAL_ERROR, "Unable to "
+                               "allocate precomputedFFT_spcFluxOverErr2");
       for (Int32 k = 0; k < nPadded; k++) {
         precomputedFFT_spcFluxOverErr2[k][0] = outSpc[k][0];
         precomputedFFT_spcFluxOverErr2[k][1] = outSpc[k][1];
@@ -230,11 +228,9 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
 
       precomputedFFT_spcOneOverErr2 =
           (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-      if (precomputedFFT_spcOneOverErr2 == 0) {
-        Log.LogError("Unable to "
-                     "allocate precomputedFFT_spcOneOverErr2");
-        return -1;
-      }
+      if (precomputedFFT_spcOneOverErr2 == 0)
+        THROWG(INTERNAL_ERROR, "Unable to "
+                               "allocate precomputedFFT_spcOneOverErr2");
       for (Int32 k = 0; k < nPadded; k++) {
         precomputedFFT_spcOneOverErr2[k][0] = outSpc[k][0];
         precomputedFFT_spcOneOverErr2[k][1] = outSpc[k][1];
@@ -315,8 +311,6 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
 
     XtY[k] = inCombined[IndexCyclic] / (Float64)nPadded;
   }
-
-  return 0;
 }
 
 Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
@@ -1196,12 +1190,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   result->Redshifts = m_redshifts;
 
   // WARNING: no additional masks coded for use as of 2017-06-13
-  if (additional_spcMasks.size() != 0) {
-    Log.LogError("No additional masks used. "
-                 "Feature not coded for this log-lambda operator!)");
-    /*throw std::runtime_error(No additional
-       masks used. " "Feature not coded for this log-lambda operator!)");*/
-  }
+  if (additional_spcMasks.size() != 0)
+    Flag.warning(Flag.TEMPLATEFITTINGLOG_NO_MASK,
+                 Formatter()
+                     << "COperatorTemplateFittingLog::" << __func__
+                     << "No additional masks used. "
+                        "Feature not coded for this log-lambda operator");
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {
     THROWG(INTERNAL_ERROR,

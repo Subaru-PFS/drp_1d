@@ -114,8 +114,6 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   }
 
   if (n != yAxis.size()) {
-    Log.LogError(
-        "CExtremum::Find, input X and Y vector do not have the same size");
     THROWG(INTERNAL_ERROR, "input X and Y vector do not have the same size");
   }
 
@@ -126,12 +124,11 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   if (!m_XRange.GetIsEmpty()) {
     bool rangeok;
     rangeok = m_XRange.getClosedIntervalIndices(xAxis, BeginIndex, EndIndex);
-    if (!rangeok) {
-      Log.LogError("CExtremum::Find, bad range [%f, %f] for Xaxis: [%f,%f]",
-                   m_XRange.GetBegin(), m_XRange.GetEnd(), xAxis.front(),
-                   xAxis.back());
-      THROWG(INTERNAL_ERROR, "bad range");
-    }
+    if (!rangeok)
+      THROWG(INTERNAL_ERROR, Formatter() << "bad range [" << m_XRange.GetBegin()
+                                         << ", " << m_XRange.GetEnd()
+                                         << "] for Xaxis: [" << xAxis.front()
+                                         << ", " << xAxis.back() << "]");
   }
 
   TFloat64List maxX, minX;

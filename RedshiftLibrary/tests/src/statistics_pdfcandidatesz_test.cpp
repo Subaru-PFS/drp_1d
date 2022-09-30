@@ -343,9 +343,7 @@ BOOST_AUTO_TEST_CASE(getCandidateSumTrapez_test) {
   // Test OK
   TFloat64Range zrange_2(gaussZ.front() + 1e-6, gaussZ.back() - 1e-6);
   CPdfCandidatesZ zcand_op_2 = CPdfCandidatesZ(gaussZ);
-  bool ret =
-      zcand_op_2.getCandidateSumTrapez(gaussZ, gaussY, zrange_2, candidate);
-  BOOST_CHECK(ret == 1);
+  zcand_op_2.getCandidateSumTrapez(gaussZ, gaussY, zrange_2, candidate);
   BOOST_CHECK_CLOSE(candidate->ValSumProbaZmin, gaussZ.front(), precision);
   BOOST_CHECK_CLOSE(candidate->ValSumProbaZmax, gaussZ.back(), precision);
 

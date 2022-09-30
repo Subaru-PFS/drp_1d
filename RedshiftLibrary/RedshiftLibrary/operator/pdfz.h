@@ -83,7 +83,7 @@ public:
 
   void CombinePDF(const ChisquareArray &chisquares);
 
-  bool checkPdfSum() const;
+  void checkPdfSum() const;
 
   std::shared_ptr<CPdfMargZLogResult> m_postmargZResult;
 

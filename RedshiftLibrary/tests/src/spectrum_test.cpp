@@ -1016,15 +1016,15 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
 
   // interp = "precomputedfinegrid" et errorRebinMethod != "no"
   errorRebinMethod = "rebin";
-  bool result = spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
-                          rebinedMask, interp, errorRebinMethod);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
+                              rebinedMask, interp, errorRebinMethod),
+                    GlobalException);
 
   // check throw : bad RebinFineGrid
   spc.m_pfgFlux = {};
-  result = spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
-                     interp, errorRebinMethod);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
+                              rebinedMask, interp, errorRebinMethod),
+                    GlobalException);
 
   // interp = "spline" et errorRebinMethod = "no"
   interp = "spline";
@@ -1045,9 +1045,9 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
 
   // interp = "precomputedfinegrid" et errorRebinMethod != "no"
   errorRebinMethod = "rebin";
-  result = spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
-                     interp, errorRebinMethod);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
+                              rebinedMask, interp, errorRebinMethod),
+                    GlobalException);
 
   // interp = "ngp" et errorRebinMethod = "rebin"
   interp = "ngp";

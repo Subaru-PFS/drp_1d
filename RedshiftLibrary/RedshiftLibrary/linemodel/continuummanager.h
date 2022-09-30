@@ -25,7 +25,7 @@ public:
                     const std::shared_ptr<CSpectrumModel> &model,
                     const TLambdaRange &lambdaRange);
 
-  bool SolveContinuum(const std::shared_ptr<const CTemplate> &tpl,
+  void SolveContinuum(const std::shared_ptr<const CTemplate> &tpl,
                       const TFloat64List &redshifts, Float64 overlapThreshold,
                       std::vector<CMask> maskList, std::string opt_interp,
                       Int32 opt_extinction, Int32 opt_dustFit, Float64 &merit,

@@ -155,7 +155,7 @@ public:
 
   void ScaleFluxAxis(Float64 scale);
 
-  bool Rebin(const TFloat64Range &range,
+  void Rebin(const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CSpectrum &rebinedSpectrum, CMask &rebinedMask,
              const std::string &opt_interp = "lin",

@@ -140,8 +140,7 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
   isPdfValid(); // will throw an error if not
 }
 
-bool COperatorPdfz::checkPdfSum() const {
-  bool ret = true;
+void COperatorPdfz::checkPdfSum() const {
 
   // check pdf sum=1
   Float64 sumTrapez = getSumTrapez(m_postmargZResult->Redshifts,
@@ -149,14 +148,12 @@ bool COperatorPdfz::checkPdfSum() const {
   Log.LogDetail(
       "COperatorPdfz::checkPdfSum: Pdfz normalization - sum trapz. = %e",
       sumTrapez);
-  if (abs(sumTrapez - 1.0) > 1e-1) {
-    Log.LogError("COperatorPdfz::checkPdfSum: Pdfz normalization failed "
-                 "(trapzesum = %f)",
-                 sumTrapez);
-    ret = false;
-  }
-
-  return ret;
+  if (abs(sumTrapez - 1.0) > 1e-1)
+    THROWG(
+        INTERNAL_ERROR,
+        Formatter() << "COperatorPdfz::checkPdfSum: Pdfz normalization failed, "
+                       "trapzesum = "
+                    << sumTrapez);
 }
 
 TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
@@ -505,15 +502,9 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 
   // THIS DOES NOT ALLOW Marginalization with coverage<100% for ALL templates
   for (Int32 k = 0; k < zsize; k++) {
-    if (nSum[k] != nmodel) {
-      m_postmargZResult->valProbaLog[k] = NAN;
-      Log.LogError("Pdfz: Pdfz computation failed at z=%f: nSum(%d) !="
-                   "meritResults.size()(% d) ",
-                   m_postmargZResult->Redshifts[k], nSum[k], nmodel);
-
+    if (nSum[k] != nmodel)
       THROWG(INTERNAL_ERROR, "Computation failed. Not all templates "
                              "have 100 percent coverage for all redshifts");
-    }
   }
 }
 
@@ -524,8 +515,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 // TODO: this method should be replaced/modified to correspond to the MaxPDF
 // technique.
 void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
-  Log.LogError("Pdfz: Pdfz-bestproba computation ! This method is currently "
-               "not working !! It will produce bad results as is....");
+
   validateChisquareArray(chisquarearray);
 
   const TFloat64List &redshifts = chisquarearray.redshifts;
@@ -708,7 +698,5 @@ void COperatorPdfz::isPdfValid() const {
   }
 
   // is sum equal to 1
-  if (!checkPdfSum()) {
-    THROWG(INTERNAL_ERROR, "Pdfz normalization failed");
-  };
+  checkPdfSum();
 }

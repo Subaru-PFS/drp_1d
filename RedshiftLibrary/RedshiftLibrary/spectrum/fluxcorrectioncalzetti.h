@@ -45,28 +45,13 @@
 
 namespace NSEpic {
 typedef struct CalzettiCorrection {
-  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr)
-      : lbda(_lbda), fluxcorr(_fluxcorr) {
-    Float64 lbdaGridStep = lbda[1] - lbda[0];
-    Float64 relativeLbdaGridStepTol = 1e-8;
-    Float64 lbda1 = lbda[0];
-    for (Int32 t = 2; t < lbda.size(); t++) {
-      Float64 lbda1 = lbda[t - 1];
-      Float64 lbda2 = lbda[t];
-      Float64 _lbdaGridStep;
-      _lbdaGridStep = lbda2 - lbda1;
-      Float64 relativeErrAbs =
-          std::abs((_lbdaGridStep - lbdaGridStep) / lbdaGridStep);
+  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr);
 
-      if (relativeErrAbs > relativeLbdaGridStepTol)
-        THROWG(BAD_CALZETTICORR, "lambdas are not regular sampled");
-    }
-    step = lbdaGridStep;
-  };
   TFloat64List lbda;
   TFloat64List fluxcorr;
   Float64 step;
 } CalzettiCorrection;
+
 /**
  * \ingroup Redshift
  */

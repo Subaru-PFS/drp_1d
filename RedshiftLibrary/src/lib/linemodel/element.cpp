@@ -1155,10 +1155,11 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
         m_SignFactors[k2] * A * GetLineProfileAtRedshift(k2, redshift, x);
     Yi += m_SignFactors[k2] == -1 ? continuumFlux * fluxval : fluxval;
 
-    if (std::isnan(Yi)) {
-      Log.LogError("Line nb: %d and GetLineProfileAtRedshift: %f", k2,
-                   GetLineProfileAtRedshift(k2, redshift, x));
-    }
+    if (std::isnan(Yi))
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "NaN fluxval for Line nb: " << k2
+                                 << " and GetLineProfileAtRedshift: "
+                                 << GetLineProfileAtRedshift(k2, redshift, x));
   }
   return Yi;
 }
