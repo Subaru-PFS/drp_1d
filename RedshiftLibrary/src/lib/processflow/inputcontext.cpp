@@ -118,7 +118,6 @@ void CInputContext::RebinInputs() {
   std::string category;
   std::string errorRebinMethod = "rebinVariance";
   CSpectrumLogRebinning logReb(*this);
-  m_Spectrum->setRebinInterpMethod("lin");
 
   if (!m_Spectrum->GetSpectralAxis().IsLogSampled())
     m_rebinnedSpectrum =

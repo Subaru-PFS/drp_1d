@@ -114,6 +114,7 @@ void CContinuumManager::SolveContinuum(
   // (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange,
   // redshifts, overlapThreshold );
   m_templateFittingOperator->SetRedshifts(redshifts);
+  tpl->setRebinInterpMethod(opt_interp);
   auto templateFittingResult =
       std::dynamic_pointer_cast<CTemplateFittingResult>(
           m_templateFittingOperator->Compute(

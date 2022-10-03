@@ -117,7 +117,6 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   // Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
   Log.LogInfo("");
 
-  spc.setRebinInterpMethod(opt_interp);
   Solve(resultStore, spc, tplCatalog, m_lambdaRange, m_redshifts,
         overlapThreshold, maskList, _type, opt_interp, opt_extinction,
         opt_dustFit);
@@ -210,10 +209,12 @@ bool CTplcombinationSolve::Solve(
       _spctype = static_cast<CSpectrum::EType>(spctype);
 
     spc.SetType(_spctype);
-    std::for_each(tplList.begin(), tplList.end(),
-                  [&_spctype](std::shared_ptr<const NSEpic::CTemplate> tpl) {
-                    tpl->SetType(_spctype);
-                  });
+    std::for_each(
+        tplList.begin(), tplList.end(),
+        [&_spctype, &opt_interp](std::shared_ptr<const NSEpic::CTemplate> tpl) {
+          tpl->SetType(_spctype);
+          tpl->setRebinInterpMethod(opt_interp);
+        });
 
     scopeStr = getSpecBasedScope(_spctype);
     if (_spctype == CSpectrum::nType_noContinuum)
