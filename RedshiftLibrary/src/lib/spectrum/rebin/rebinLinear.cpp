@@ -46,7 +46,7 @@ using namespace std;
 void CRebinLinear::rebin(
     CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
-    CMask &rebinedMask, const std::string m_opt_error_interp,
+    CMask &rebinedMask, const std::string opt_error_interp,
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
     const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
@@ -68,9 +68,9 @@ void CRebinLinear::rebin(
       Yrebin[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
       rebinedMask[cursor] = 1;
 
-      if (m_opt_error_interp == "rebin")
+      if (opt_error_interp == "rebin")
         ErrorRebin[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
-      else if (m_opt_error_interp == "rebinVariance") {
+      else if (opt_error_interp == "rebinVariance") {
         ErrorRebin[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
                                   Error[k + 1] * Error[k + 1] * t * t);
         Float64 xStepCompensation = computeXStepCompensation(

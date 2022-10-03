@@ -47,7 +47,7 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                       const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-                      const std::string m_opt_error_interp,
+                      const std::string opt_error_interp,
                       const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
                       const TAxisSampleList &Xtgt, const TFloat64List &Error,
                       Int32 &cursor) {
@@ -75,10 +75,10 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     // closest value
     Yrebin[cursor] = Ysrc[k];
 
-    if (m_opt_error_interp != "no") {
+    if (opt_error_interp != "no") {
 
       ErrorRebin[cursor] = Error[k];
-      if (m_opt_error_interp == "rebinVariance") {
+      if (opt_error_interp == "rebinVariance") {
         Float64 xStepCompensation = computeXStepCompensation(
             targetSpectralAxis, Xtgt, cursor, xSrcStep);
         ErrorRebin[cursor] *= sqrt(xStepCompensation);

@@ -54,7 +54,7 @@ public:
   void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-             const std::string m_opt_error_interp, const TAxisSampleList &Xsrc,
+             const std::string opt_error_interp, const TAxisSampleList &Xsrc,
              const TAxisSampleList &Ysrc, const TAxisSampleList &Xtgt,
              const TFloat64List &Error, Int32 &cursor) override;
 

@@ -49,7 +49,7 @@ using namespace std;
 void CRebinSpline::rebin(
     CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
-    CMask &rebinedMask, const std::string m_opt_error_interp,
+    CMask &rebinedMask, const std::string opt_error_interp,
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
     const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
@@ -75,7 +75,7 @@ void CRebinSpline::rebin(
 
     // note: error rebin not
     // implemented for spline interp
-    if (m_opt_error_interp != "no") {
+    if (opt_error_interp != "no") {
       gsl_spline_free(spline);
       gsl_interp_accel_free(accelerator);
       THROWG(INTERNAL_ERROR,

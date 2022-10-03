@@ -65,19 +65,19 @@ public:
   void compute(const TFloat64Range &range,
                const CSpectrumSpectralAxis &targetSpectralAxis,
                CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-               const std::string m_opt_error_interp);
+               const std::string opt_error_interp);
 
   virtual void rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                      const TFloat64Range &range,
                      const CSpectrumSpectralAxis &targetSpectralAxis,
                      CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-                     const std::string m_opt_error_interp,
+                     const std::string opt_error_interp,
                      const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
                      const TAxisSampleList &Xtgt, const TFloat64List &Error,
                      Int32 &cursor) = 0;
 
   virtual void reset(){};
-  virtual const std::string &getType() { return m_type; };
+  virtual const std::string &getType() = 0;
 
 protected:
   Float64
@@ -86,7 +86,6 @@ protected:
                            Float64 xSrcStep);
   const CSpectrum &m_spectrum;
 
-  const std::string m_type = "None";
   TFloat64List m_pfgFlux;
   bool m_FineGridInterpolated = false;
   const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid

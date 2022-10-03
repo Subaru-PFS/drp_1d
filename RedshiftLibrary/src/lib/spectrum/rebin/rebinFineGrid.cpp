@@ -91,7 +91,7 @@ void CRebinFineGrid::clearFineGrid() {
 void CRebinFineGrid::rebin(
     CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
     const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
-    CMask &rebinedMask, const std::string m_opt_error_interp,
+    CMask &rebinedMask, const std::string opt_error_interp,
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
     const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
@@ -121,7 +121,7 @@ void CRebinFineGrid::rebin(
     // note: error rebin not
     // implemented for
     // precomputedfinegrid
-    if (m_opt_error_interp != "no")
+    if (opt_error_interp != "no")
       THROWG(INTERNAL_ERROR,
              "noise rebining not implemented for precomputedfinegrid");
 

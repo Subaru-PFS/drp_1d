@@ -48,7 +48,7 @@ using namespace std;
 void CRebin::compute(const TFloat64Range &range,
                      const CSpectrumSpectralAxis &targetSpectralAxis,
                      CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-                     const std::string m_opt_error_interp) {
+                     const std::string opt_error_interp) {
 
   Int32 s = targetSpectralAxis.GetSamplesCount();
   CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
@@ -79,18 +79,18 @@ void CRebin::compute(const TFloat64Range &range,
          Xtgt[cursor] < range.GetBegin()) {
     rebinedMask[cursor] = 0;
     Yrebin[cursor] = 0.0;
-    if (m_opt_error_interp == "rebin" || m_opt_error_interp == "rebinVariance")
+    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
       ErrorRebin[cursor] = INFINITY;
     cursor++;
   }
 
   rebin(rebinedFluxAxis, range, targetSpectralAxis, rebinedSpectrum,
-        rebinedMask, m_opt_error_interp, Xsrc, Ysrc, Xtgt, Error, cursor);
+        rebinedMask, opt_error_interp, Xsrc, Ysrc, Xtgt, Error, cursor);
 
   while (cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[cursor] = 0;
     Yrebin[cursor] = 0.0;
-    if (m_opt_error_interp == "rebin" || m_opt_error_interp == "rebinVariance")
+    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
       ErrorRebin[cursor] = INFINITY;
     cursor++;
   }
