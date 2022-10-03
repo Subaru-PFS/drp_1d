@@ -93,10 +93,9 @@ void COperatorTplcombination::BasicFit(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     const TFloat64Range &lambdaRange, Float64 redshift,
     Float64 overlapThreshold, STplcombination_basicfitresult &fittingResults,
-    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction,
-    Int32 opt_dustFitting, CMask spcMaskAdditional,
-    const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
-    const TInt32List &EbmvList) {
+    Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting,
+    CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
+    const TInt32List &MeiksinList, const TInt32List &EbmvList) {
   Log.LogDebug(" BasicFit - for z=%f", redshift);
 
   boost::chrono::thread_clock::time_point start_prep =
@@ -117,8 +116,8 @@ void COperatorTplcombination::BasicFit(
   }
 
   TFloat64Range currentRange;
-  RebinTemplate(spectrum, tplList, redshift, lambdaRange, opt_interp,
-                currentRange, fittingResults.overlapRate, overlapThreshold);
+  RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
+                fittingResults.overlapRate, overlapThreshold);
 
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
   // I consider here that all templates share the same spectralAxis
@@ -454,7 +453,7 @@ Float64 COperatorTplcombination::ComputeXi2_bruteForce(
 
 void COperatorTplcombination::RebinTemplate(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
-    Float64 redshift, const TFloat64Range &lambdaRange, std::string opt_interp,
+    Float64 redshift, const TFloat64Range &lambdaRange,
     TFloat64Range &currentRange, Float64 &overlapRate,
     const Float64 overlapThreshold) {
   Float64 onePlusRedshift = 1.0 + redshift;
@@ -497,7 +496,7 @@ void COperatorTplcombination::RebinTemplate(
     CMask &itplMask = m_masksRebined_bf[ktpl];
 
     tplList[ktpl]->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
-                         itplTplSpectrum, itplMask, opt_interp);
+                         itplTplSpectrum, itplMask);
 
     const CSpectrumSpectralAxis &itplTplSpectralAxis =
         itplTplSpectrum.GetSpectralAxis();
@@ -647,7 +646,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
         componentCount, TFloat64List(componentCount, NAN));
 
     BasicFit(spectrum, tplList, clampedlambdaRange, redshift, overlapThreshold,
-             fittingResults, opt_interp, -1, opt_extinction, opt_dustFitting,
+             fittingResults, -1, opt_extinction, opt_dustFitting,
              additional_spcMask, logp, MeiksinList, EbmvList);
 
     if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
@@ -742,8 +741,8 @@ std::shared_ptr<CModelSpectrumResult>
 COperatorTplcombination::ComputeSpectrumModel(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
-    const TFloat64List &amplitudes, std::string opt_interp,
-    const TFloat64Range &lambdaRange, const Float64 overlapThreshold) {
+    const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
+    const Float64 overlapThreshold) {
   Log.LogDetail("  Operator-COperatorTplCombination: building spectrum model "
                 "tptCombination for candidate Zcand=%f",
                 redshift);
@@ -754,8 +753,8 @@ COperatorTplcombination::ComputeSpectrumModel(
   // Estatus status;
   Float64 overlapRate = 0.0;
   TFloat64Range currentRange;
-  RebinTemplate(spectrum, tplList, redshift, lambdaRange, opt_interp,
-                currentRange, overlapRate, overlapThreshold);
+  RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
+                overlapRate, overlapThreshold);
   /*if( ret == -1 ){
       //status = nStatus_NoOverlap;
       return -1;

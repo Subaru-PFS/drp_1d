@@ -70,7 +70,6 @@ using namespace std;
  * @param tpl
  * @param redshift
  * @param overlapThreshold
- * @param opt_interp
  * @param forcedAmplitude
  * @param opt_extinction
  * @param opt_dustFitting : -1 = disabled, -10 = fit over all available indexes,
@@ -81,8 +80,8 @@ using namespace std;
  */
 TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 overlapThreshold, std::string opt_interp, Float64 forcedAmplitude,
-    Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional,
+    Float64 overlapThreshold, Float64 forcedAmplitude, Int32 opt_extinction,
+    Int32 opt_dustFitting, CMask spcMaskAdditional,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
   bool amplForcePositive = true;
@@ -104,7 +103,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   }
 
   TFloat64Range currentRange; // restframe
-  RebinTemplate(tpl, redshift, opt_interp, currentRange, result.overlapRate,
+  RebinTemplate(tpl, redshift, currentRange, result.overlapRate,
                 overlapThreshold);
 
   bool apply_ism =
@@ -496,8 +495,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
                        : additional_spcMasks[sortedIndexes[i]];
 
     TFittingIsmIgmResult result_z = BasicFit(
-        tpl, redshift, overlapThreshold, opt_interp, -1, opt_extinction,
-        opt_dustFitting, additional_spcMask, logp, MeiksinList, EbmvList);
+        tpl, redshift, overlapThreshold, -1, opt_extinction, opt_dustFitting,
+        additional_spcMask, logp, MeiksinList, EbmvList);
 
     result->set_at_redshift(i, std::move(result_z));
 

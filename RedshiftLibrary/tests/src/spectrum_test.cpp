@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   spc.GetFluxAxis_().GetSamplesVector().push_back(3.);
 
   // interp = "lin" et errorRebinMethod = "rebin"
-  spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask, interp,
+  spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
             errorRebinMethod);
   TFloat64List rebinedFlux =
       rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();

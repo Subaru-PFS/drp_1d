@@ -713,7 +713,6 @@ void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
 void CSpectrum::Rebin(const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-                      const std::string &opt_interp,
                       const std::string &opt_error_interp) const {
   if (!IsValid())
     THROWG(INVALID_SPECTRUM,

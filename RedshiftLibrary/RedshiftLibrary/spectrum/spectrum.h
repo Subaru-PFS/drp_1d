@@ -160,7 +160,6 @@ public:
   void Rebin(const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-             const std::string &opt_interp = "lin",
              const std::string &opt_error_interp = "no") const;
   CSpectrum extract(Int32 startIdx, Int32 endIdx) const;
 

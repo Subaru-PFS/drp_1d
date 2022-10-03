@@ -86,12 +86,10 @@ private:
   BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store,
                       const std::string &scopeStr) const;
 
-  std::shared_ptr<const ExtremaResult>
-  buildExtremaResults(shared_ptr<const COperatorResultStore> store,
-                      const std::string &scopeStr,
-                      const TCandidateZbyRank &ranked_zCandidates,
-                      const CTemplateCatalog &tplCatalog,
-                      Float64 overlapThreshold, std::string opt_interp);
+  std::shared_ptr<const ExtremaResult> buildExtremaResults(
+      shared_ptr<const COperatorResultStore> store, const std::string &scopeStr,
+      const TCandidateZbyRank &ranked_zCandidates,
+      const CTemplateCatalog &tplCatalog, Float64 overlapThreshold);
 
   void StoreExtremaResults(
       std::shared_ptr<COperatorResultStore> dataStore,

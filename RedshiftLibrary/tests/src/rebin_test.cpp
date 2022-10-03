@@ -245,8 +245,8 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
 
   // interp = "precomputedfinegrid" et errorRebinMethod != "no"
   errorRebinMethod = "rebin";
-  BOOST_CHECK_THROW(spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
-                              rebinedMask, interp, errorRebinMethod),
+  BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
+                                   rebinedMask, errorRebinMethod),
                     GlobalException);
 
   // check throw : bad RebinFineGrid

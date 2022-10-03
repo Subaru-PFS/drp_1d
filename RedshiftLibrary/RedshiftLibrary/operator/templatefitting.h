@@ -109,12 +109,13 @@ public:
           Int32 FitMeiksinIdx = -1) override;
 
 protected:
-  TFittingIsmIgmResult
-  BasicFit(const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-           Float64 overlapThreshold, std::string opt_interp,
-           Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting,
-           CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
-           const TInt32List &MeiksinList, const TInt32List &EbmvList);
+  TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
+                                Float64 redshift, Float64 overlapThreshold,
+                                Float64 forcedAmplitude, Int32 opt_extinction,
+                                Int32 opt_dustFitting, CMask spcMaskAdditional,
+                                const CPriorHelper::TPriorEList &logpriore,
+                                const TInt32List &MeiksinList,
+                                const TInt32List &EbmvList);
 
   virtual void
   InitIsmIgmConfig(Float64 redshift,

@@ -65,8 +65,7 @@ Int32 CContinuumManager::ApplyContinuumOnGrid(
   std::shared_ptr<CModelSpectrumResult> spcmodel =
       m_templateFittingOperator->ComputeSpectrumModel(
           tpl, zcontinuum, m_fitContinuum_tplFitEbmvCoeff,
-          m_fitContinuum_tplFitMeiksinIdx, amplitude, inter_opt,
-          overlapThreshold);
+          m_fitContinuum_tplFitMeiksinIdx, amplitude, overlapThreshold);
   if (spcmodel == nullptr)
     THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
 

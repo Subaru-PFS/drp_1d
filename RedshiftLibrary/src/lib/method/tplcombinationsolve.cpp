@@ -144,7 +144,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   std::shared_ptr<const TplCombinationExtremaResult> extremaResult =
       buildExtremaResults(resultStore, scopeStr,
                           candidateResult->m_ranked_candidates, spc, tplCatalog,
-                          clampedLbdaRange, overlapThreshold, opt_interp);
+                          clampedLbdaRange, overlapThreshold);
   // store extrema results
   StoreExtremaResults(resultStore, extremaResult);
 
@@ -354,8 +354,7 @@ CTplcombinationSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
-    const TFloat64Range &lambdaRange, Float64 overlapThreshold,
-    std::string opt_interp) {
+    const TFloat64Range &lambdaRange, Float64 overlapThreshold) {
 
   Log.LogDetail("CTplCombinationSolve::buildExtremaResults: building "
                 "chisquare array");
@@ -428,7 +427,7 @@ CTplcombinationSolve::buildExtremaResults(
         m_tplcombinationOperator.ComputeSpectrumModel(
             spc, tplList, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-            opt_interp, lambdaRange, overlapThreshold);
+            lambdaRange, overlapThreshold);
     tplCatalog.m_logsampling = currentSampling;
     if (spcmodelPtr == nullptr)
       THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
