@@ -90,7 +90,8 @@ protected:
 class GlobalException : public AmzException {
 public:
   GlobalException(ErrorCode ec, const std::string &message,
-                  const char *filename_, const char *method_, int line_);
+                  const char *filename_, const char *method_,
+                  int line_) noexcept;
 };
 
 } // namespace NSEpic

@@ -46,18 +46,27 @@ using namespace NSEpic;
 
 GlobalException::GlobalException(ErrorCode ec, const std::string &message,
                                  const char *filename_, const char *method_,
-                                 int line_)
+                                 int line_) noexcept
     : AmzException(ec, message, filename_, method_, line_) {
+
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
+
   if (resultStore->getScopeDepth() > 2) {
-    resultStore->StoreGlobalResult(
-        resultStore->GetScopedNameAt("warningFlag", 2),
-        std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
-                                               Flag.getListMessages()));
+    if (!resultStore->hasCurrentMethodWarningFlag()) {
+      resultStore->StoreGlobalResult(
+          resultStore->GetScopedNameAt("warningFlag", 2),
+          std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
+                                                 Flag.getListMessages()));
+    } else
+      LogError(Formatter() << "Warning flag already exists for "
+                           << resultStore->getCurrentScopeNameAt(2));
   } else {
-    resultStore->StoreScopedGlobalResult(
-        "warningFlag", std::make_shared<const CFlagLogResult>(
-                           Flag.getBitMask(), Flag.getListMessages()));
+    if (!resultStore->hasContextWarningFlag()) {
+      resultStore->StoreScopedGlobalResult(
+          "warningFlag", std::make_shared<const CFlagLogResult>(
+                             Flag.getBitMask(), Flag.getListMessages()));
+    } else
+      LogError("Context warning flag already exists");
   }
   Flag.resetFlag();
 }

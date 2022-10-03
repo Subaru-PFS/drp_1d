@@ -379,6 +379,18 @@ bool COperatorResultStore::HasDataset(const std::string &objectType,
   return (it != m_GlobalResults.end());
 }
 
+bool COperatorResultStore::hasContextWarningFlag() const {
+
+  TResultsMap::const_iterator it = m_GlobalResults.find("warningFlag");
+  return (it != m_GlobalResults.end());
+}
+
+bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
+  TResultsMap::const_iterator it =
+      m_GlobalResults.find(GetScopedNameAt("warningFlag", 2));
+  return (it != m_GlobalResults.end());
+}
+
 int COperatorResultStore::getNbRedshiftCandidates(
     const std::string &objectType, const std::string &method) const {
   std::ostringstream oss;

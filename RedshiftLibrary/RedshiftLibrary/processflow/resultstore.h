@@ -113,6 +113,8 @@ public:
 
   bool HasDataset(const std::string &objectType, const std::string &method,
                   const std::string &name) const;
+  bool hasContextWarningFlag() const;
+  bool hasCurrentMethodWarningFlag() const;
 
   std::shared_ptr<const CClassificationResult>
   GetClassificationResult(const std::string &objectType,
