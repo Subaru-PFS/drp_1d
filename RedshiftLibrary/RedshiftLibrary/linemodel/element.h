@@ -213,15 +213,11 @@ protected:
                                 // mainly LyA. Currently max 1 asymfit is found
                                 // per linecatalog
 
-  Float64 *m_dataExtinctionFlux = NULL;
-  Float64 m_dataStepLambda = 0.1;
-  Float64 m_dataN = 3000.0;
-
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;
   Float64 m_dtmFree =
       0.0; // dtmFree is the non-positive-constrained version of sumCross
-  Float64 m_fitAmplitude = 0.0;
+  Float64 m_fitAmplitude = NAN;
   const Float64 m_speedOfLightInVacuum = SPEED_OF_LIGHT_IN_VACCUM;
   std::shared_ptr<const CLSF> m_LSF;
 

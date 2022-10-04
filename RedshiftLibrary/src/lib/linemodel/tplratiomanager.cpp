@@ -194,20 +194,26 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
   Int32 elCount = m_Elements.size();
   // Resize tplratio buffers
-  m_MeritTplratio.resize(s, NAN);
-  m_ScaleMargCorrTplratio.resize(s, NAN);
-  m_StrongELPresentTplratio.resize(s, false);
-  m_StrongHalphaELPresentTplratio.resize(s, false);
-  m_NLinesAboveSNRTplratio.resize(s, -1);
-  m_FittedAmpTplratio.resize(s, TFloat64List(elCount, NAN));
-  m_LyaAsymCoeffTplratio.resize(s, TFloat64List(elCount, NAN));
-  m_LyaWidthCoeffTplratio.resize(s, TFloat64List(elCount, NAN));
-  m_LyaDeltaCoeffTplratio.resize(s, TFloat64List(elCount, NAN));
-  m_LyaIgmIdxTplratio.resize(s, TInt32List(elCount, -1));
-  m_FittedErrorTplratio.resize(s, TFloat64List(elCount, NAN));
-  m_MtmTplratio.resize(s, TFloat64List(elCount, NAN));
-  m_DtmTplratio.resize(s, TFloat64List(elCount, NAN));
-  m_LinesLogPriorTplratio.resize(s, TFloat64List(elCount, 0.));
+  m_MeritTplratio = TFloat64List(s, NAN);
+  m_ScaleMargCorrTplratio = TFloat64List(s, NAN);
+  m_StrongELPresentTplratio = TBoolList(s, false);
+  m_StrongHalphaELPresentTplratio = TBoolList(s, false);
+  m_NLinesAboveSNRTplratio = TInt32List(s, -1);
+  m_FittedAmpTplratio =
+      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
+  m_LyaAsymCoeffTplratio =
+      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
+  m_LyaWidthCoeffTplratio =
+      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
+  m_LyaDeltaCoeffTplratio =
+      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
+  m_LyaIgmIdxTplratio = std::vector<TInt32List>(s, TInt32List(elCount, -1));
+  m_FittedErrorTplratio =
+      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
+  m_MtmTplratio = std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
+  m_DtmTplratio = std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
+  m_LinesLogPriorTplratio =
+      std::vector<TFloat64List>(s, TFloat64List(elCount, 0.));
 
   m_tplratioLeastSquareFast = false;
 }
@@ -377,13 +383,14 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   m_NLinesAboveSNRTplratio[idx] = strongELSNRAboveCut.size();
 
   Int32 s = m_Elements.size();
-  m_FittedAmpTplratio[idx].resize(s, NAN);
-  m_FittedErrorTplratio[idx].resize(s, NAN);
-  m_DtmTplratio[idx].resize(s, NAN);
-  m_MtmTplratio[idx].resize(s, NAN);
-  m_LyaAsymCoeffTplratio[idx].resize(s, NAN);
-  m_LyaWidthCoeffTplratio[idx].resize(s, NAN);
-  m_LyaDeltaCoeffTplratio[idx].resize(s, NAN);
+  // reinit
+  m_FittedAmpTplratio[idx] = TFloat64List(s, NAN);
+  m_FittedErrorTplratio[idx] = TFloat64List(s, NAN);
+  m_DtmTplratio[idx] = TFloat64List(s, NAN);
+  m_MtmTplratio[idx] = TFloat64List(s, NAN);
+  m_LyaAsymCoeffTplratio[idx] = TFloat64List(s, NAN);
+  m_LyaWidthCoeffTplratio[idx] = TFloat64List(s, NAN);
+  m_LyaDeltaCoeffTplratio[idx] = TFloat64List(s, NAN);
   m_LyaIgmIdxTplratio[idx].resize(s, undefIdx);
   m_LinesLogPriorTplratio[idx].resize(s, _meritprior);
   // Saving the model A, errorA, and dtm, mtm, ... (for all tplratios,

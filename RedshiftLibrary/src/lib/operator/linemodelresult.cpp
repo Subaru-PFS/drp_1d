@@ -73,15 +73,15 @@ void CLineModelResult::Init(TFloat64List redshifts,
 
   Int32 nResults = redshifts.size();
   Status.resize(nResults);
-  ChiSquare.resize(nResults);
-  ScaleMargCorrection.resize(nResults);
+  ChiSquare.resize(nResults, NAN);
+  ScaleMargCorrection.resize(nResults, NAN);
   Redshifts = std::move(redshifts);
   restLineList = std::move(restLines);
   LineModelSolutions.resize(nResults);
   ContinuumModelSolutions.resize(nResults);
 
-  ChiSquareContinuum.resize(nResults);
-  ScaleMargCorrectionContinuum.resize(nResults);
+  ChiSquareContinuum.resize(nResults, NAN);
+  ScaleMargCorrectionContinuum.resize(nResults, NAN);
 
   if (nTemplates > 0)
     ChiSquareTplContinuum.assign(nTemplates, TFloat64List(nResults, DBL_MAX));
