@@ -161,7 +161,7 @@ private:
   TFloat64List m_sortedRedshifts;
   Int32 m_enableFastFitLargeGrid = 0;
   Int32 m_estimateLeastSquareFast = 0;
-
+  void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
   TFloat64List SpanRedshiftWindow(Float64 z) const;
 
   Float64 FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,

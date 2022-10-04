@@ -1313,6 +1313,13 @@ void CLineModelFitting::SetVelocityEmissionOneElement(Float64 vel,
   }
 }
 
+void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
+                                                   const TInt32List &inds) {
+  m_velocityEmission = vel;
+  for (auto idxElt : inds)
+    m_Elements[idxElt]->SetVelocityEmission(vel);
+}
+
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
   m_velocityAbsorption = vel;
   for (Int32 j = 0; j < m_Elements.size(); j++) {
@@ -1327,7 +1334,12 @@ void CLineModelFitting::SetVelocityAbsorptionOneElement(Float64 vel,
     m_Elements[idxElt]->SetVelocityAbsorption(vel);
   }
 }
-
+void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
+                                                     const TInt32List &inds) {
+  m_velocityAbsorption = vel;
+  for (auto idxElt : inds)
+    m_Elements[idxElt]->SetVelocityAbsorption(vel);
+}
 Float64 CLineModelFitting::GetVelocityEmission() const {
   return m_velocityEmission;
 }
