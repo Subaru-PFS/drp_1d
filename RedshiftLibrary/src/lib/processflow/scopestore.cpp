@@ -66,8 +66,6 @@ std::string CScopeStore::GetCurrentScopeName() const {
 std::string CScopeStore::getCurrentScopeNameAt(int depth) const {
   // TODO ugly, more elegant ways to do this
   std::string n;
-
-  TScopeStack::const_iterator it;
   if (m_ScopeStack.size() < depth)
     THROWG(INTERNAL_ERROR, Formatter() << "Scope smaller than" << depth);
 
