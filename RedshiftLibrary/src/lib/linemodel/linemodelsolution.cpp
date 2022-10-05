@@ -48,30 +48,30 @@ CLineModelSolution::CLineModelSolution(
     const CLineCatalog::TLineVector &restLineList) {
   this->m_type = "CLineModelSolution";
   // filling lineIds
-  lineId.resize(restLineList.size());
+  lineId.assign(restLineList.size(), -1);
   for (Int32 i = 0; i < restLineList.size(); i++)
     lineId[i] = restLineList[i].GetID();
 
   Int32 s = lineId.size();
-  ElementId = TInt32List(s, undefIdx);
-  Amplitudes = TFloat64List(s, NAN);
-  AmplitudesUncertainties = TFloat64List(s, NAN);
-  FittingError = TFloat64List(s, NAN);
-  LambdaObs = TFloat64List(s, NAN);
-  Offset = TFloat64List(s, NAN);
-  Velocity = TFloat64List(s, NAN);
-  CenterContinuumFlux = TFloat64List(s, NAN);
-  ContinuumError = TFloat64List(s, NAN);
-  Sigmas = TFloat64List(s, NAN);
-  Fluxs = TFloat64List(s, NAN);
-  FluxErrors = TFloat64List(s, NAN);
-  FluxDirectIntegration = TFloat64List(s, NAN);
-  FluxDirectIntegrationError = TFloat64List(s, NAN);
-  OutsideLambdaRange = TBoolList(s, true);
-  fittingGroupInfo = TStringList(s, "undefined");
-  continuum_pCoeff0 = TFloat64List(s, NAN);
-  continuum_pCoeff1 = TFloat64List(s, NAN);
-  continuum_pCoeff2 = TFloat64List(s, NAN);
+  ElementId.assign(s, undefIdx);
+  Amplitudes.assign(s, NAN);
+  AmplitudesUncertainties.assign(s, NAN);
+  FittingError.assign(s, NAN);
+  LambdaObs.assign(s, NAN);
+  Offset.assign(s, NAN);
+  Velocity.assign(s, NAN);
+  CenterContinuumFlux.assign(s, NAN);
+  ContinuumError.assign(s, NAN);
+  Sigmas.assign(s, NAN);
+  Fluxs.assign(s, NAN);
+  FluxErrors.assign(s, NAN);
+  FluxDirectIntegration.assign(s, NAN);
+  FluxDirectIntegrationError.assign(s, NAN);
+  OutsideLambdaRange.assign(s, true);
+  fittingGroupInfo.assign(s, "undefined");
+  continuum_pCoeff0.assign(s, NAN);
+  continuum_pCoeff1.assign(s, NAN);
+  continuum_pCoeff2.assign(s, NAN);
 }
 
 bool CLineModelSolution::isLineValid(Int32 lineIdx) const {

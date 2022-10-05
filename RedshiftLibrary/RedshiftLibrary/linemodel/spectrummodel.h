@@ -37,11 +37,7 @@ public:
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
                                              const TInt32List &EltsIdx) const;
 
-  Float64 GetContinuumError(
-      Int32 eIdx,
-      Int32 subeIdx); // cannot be const since calls
-                      // ::GetObservedSpectrumWithLinesRemoved which refreshes
-                      // the model and thuns modifies class variables
+  Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
   Float64 getModelErrorUnderElement(Int32 eltId,
                                     const CSpectrumFluxAxis &fluxRef) const;
   void getFluxDirectIntegration(const TInt32List &eIdx_list,

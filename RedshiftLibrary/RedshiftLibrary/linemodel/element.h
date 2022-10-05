@@ -202,8 +202,8 @@ protected:
   TLineWidthType m_LineWidthType;
   Float64 m_NominalWidth; // relevant only for LSF GaussianConstantWidth
 
-  Float64 m_VelocityEmission;
-  Float64 m_VelocityAbsorption;
+  Float64 m_VelocityEmission = NAN;
+  Float64 m_VelocityAbsorption = NAN;
 
   Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;

@@ -1014,8 +1014,8 @@ void COperatorLineModel::ComputeSecondPass(
     }
   }
 
-  m_secondpass_parameters_extremaResult.Resize(
-      m_firstpass_extremaResult->size());
+  m_secondpass_parameters_extremaResult =
+      CLineModelPassExtremaResult(m_firstpass_extremaResult->size());
   if (m_continnuum_fit_option == 2) {
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
       m_secondpass_parameters_extremaResult.FittedTplName[i] =
@@ -1169,6 +1169,8 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     }
 
     if (m_enableWidthFitByGroups) {
+      // Bug: this option requires that prepareSupport is called prior to
+      // calling GetModelVelFitGroups, which is not done here. TBSolved in #6623
       // absorption
       std::vector<TInt32List> idxVelfitGroups =
           m_fittingManager->m_Elements.GetModelVelfitGroups(
@@ -1370,9 +1372,6 @@ void COperatorLineModel::EstimateSecondPassParameters(
       ps->GetScoped<std::string>("linemodel.continuumreestimation");
   // HARDCODED - override: no-velocityfitting for abs
 
-  // enable/disable fit by groups. Once enabled, the velocity fitting groups
-  // are defined in the line catalog from v4.0 on.
-  m_enableWidthFitByGroups = false;
   m_fittingManager->logParameters();
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     Log.LogInfo("");
@@ -1527,6 +1526,9 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
                   "%s, for z = %.6f",
                   lineTypeStr, m_result->Redshifts[Zidx]);
     if (m_enableWidthFitByGroups) {
+      // Note: this option requires that prepareSupport is called prior to
+      // calling GetModelVelFitGroups,which is the case here (through a prior
+      // call to ::fit)
       idxVelfitGroups =
           m_fittingManager->m_Elements.GetModelVelfitGroups(lineTypeInt);
       Log.LogDetail("  Operator-Linemodel: VelfitGroups %s - n = %d",

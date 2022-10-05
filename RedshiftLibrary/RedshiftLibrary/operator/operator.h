@@ -54,7 +54,8 @@ public:
     nStatus_DataError,
     nStatus_LoopError,
     nStatus_InvalidProductsError,
-    nStatus_NoOverlap
+    nStatus_NoOverlap,
+    nStatus_UnSet
   };
 
   typedef std::vector<EStatus> TStatusList;

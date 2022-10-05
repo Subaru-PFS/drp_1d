@@ -71,10 +71,8 @@ CTplratioManager::CTplratioManager(
 }
 
 void CTplratioManager::initMerit(Int32 ntplratio) {
-  m_MeritTplratio.clear();
-  m_PriorMeritTplratio.clear();
-  m_MeritTplratio.resize(ntplratio, INFINITY);
-  m_PriorMeritTplratio.resize(ntplratio, 0.0);
+  m_MeritTplratio.assign(ntplratio, INFINITY);
+  m_PriorMeritTplratio.assign(ntplratio, 0.0);
 }
 
 void CTplratioManager::SetTplratio_PriorHelper() {
@@ -93,15 +91,14 @@ void CTplratioManager::SetTplratio_PriorHelper() {
 Int32 CTplratioManager::getLineIndexInCatalog(
     Int32 iElts, Int32 idxLine,
     const CLineCatalog::TLineVector &catalog) const {
-  Int32 lineIndex = undefIdx;
 
   // get index of line inside tplratio catalog
   const std::string &strID = m_Elements[iElts]->m_Lines[idxLine].GetStrID();
-  lineIndex = std::find_if(catalog.begin(), catalog.end(),
-                           [strID](const CLine &line) {
-                             return line.GetStrID() == strID;
-                           }) -
-              catalog.begin();
+  Int32 lineIndex = std::find_if(catalog.begin(), catalog.end(),
+                                 [strID](const CLine &line) {
+                                   return line.GetStrID() == strID;
+                                 }) -
+                    catalog.begin();
   if (lineIndex >= catalog.size())
     lineIndex = undefIdx;
 
@@ -194,26 +191,20 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
   Int32 elCount = m_Elements.size();
   // Resize tplratio buffers
-  m_MeritTplratio = TFloat64List(s, NAN);
-  m_ScaleMargCorrTplratio = TFloat64List(s, NAN);
-  m_StrongELPresentTplratio = TBoolList(s, false);
-  m_StrongHalphaELPresentTplratio = TBoolList(s, false);
-  m_NLinesAboveSNRTplratio = TInt32List(s, -1);
-  m_FittedAmpTplratio =
-      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
-  m_LyaAsymCoeffTplratio =
-      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
-  m_LyaWidthCoeffTplratio =
-      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
-  m_LyaDeltaCoeffTplratio =
-      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
-  m_LyaIgmIdxTplratio = std::vector<TInt32List>(s, TInt32List(elCount, -1));
-  m_FittedErrorTplratio =
-      std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
-  m_MtmTplratio = std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
-  m_DtmTplratio = std::vector<TFloat64List>(s, TFloat64List(elCount, NAN));
-  m_LinesLogPriorTplratio =
-      std::vector<TFloat64List>(s, TFloat64List(elCount, 0.));
+  m_MeritTplratio.assign(s, NAN);
+  m_ScaleMargCorrTplratio.assign(s, NAN);
+  m_StrongELPresentTplratio.assign(s, false);
+  m_StrongHalphaELPresentTplratio.assign(s, false);
+  m_NLinesAboveSNRTplratio.assign(s, -1);
+  m_FittedAmpTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaAsymCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaWidthCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaDeltaCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaIgmIdxTplratio.assign(s, TInt32List(elCount, -1));
+  m_FittedErrorTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_MtmTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_DtmTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LinesLogPriorTplratio.assign(s, TFloat64List(elCount, 0.));
 
   m_tplratioLeastSquareFast = false;
 }
@@ -384,15 +375,15 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
 
   Int32 s = m_Elements.size();
   // reinit
-  m_FittedAmpTplratio[idx] = TFloat64List(s, NAN);
-  m_FittedErrorTplratio[idx] = TFloat64List(s, NAN);
-  m_DtmTplratio[idx] = TFloat64List(s, NAN);
-  m_MtmTplratio[idx] = TFloat64List(s, NAN);
-  m_LyaAsymCoeffTplratio[idx] = TFloat64List(s, NAN);
-  m_LyaWidthCoeffTplratio[idx] = TFloat64List(s, NAN);
-  m_LyaDeltaCoeffTplratio[idx] = TFloat64List(s, NAN);
-  m_LyaIgmIdxTplratio[idx].resize(s, undefIdx);
-  m_LinesLogPriorTplratio[idx].resize(s, _meritprior);
+  m_FittedAmpTplratio[idx].assign(s, NAN);
+  m_FittedErrorTplratio[idx].assign(s, NAN);
+  m_DtmTplratio[idx].assign(s, NAN);
+  m_MtmTplratio[idx].assign(s, NAN);
+  m_LyaAsymCoeffTplratio[idx].assign(s, NAN);
+  m_LyaWidthCoeffTplratio[idx].assign(s, NAN);
+  m_LyaDeltaCoeffTplratio[idx].assign(s, NAN);
+  m_LyaIgmIdxTplratio[idx].assign(s, undefIdx);
+  m_LinesLogPriorTplratio[idx].assign(s, _meritprior);
   // Saving the model A, errorA, and dtm, mtm, ... (for all tplratios,
   // needed ?) NB: this is only needed for the index=savedIdxFitted
   // ultimately
@@ -481,16 +472,14 @@ Float64 CTplratioManager::computelogLinePriorMerit(
   return _meritprior;
 }
 
-Float64 CTplratioManager::computeMerit(Int32 itratio, bool enableLogging) {
-  // TODO enableLogging should be renamed and be a CRigidityManager member,
-  // initialized with parameter store
+Float64 CTplratioManager::computeMerit(Int32 itratio) {
   Float64 _merit;
-  if (!enableLogging && m_tplratioLeastSquareFast)
+  /*if (!enableLogging && m_tplratioLeastSquareFast)
     _merit = getLeastSquareMeritFast();
-  else {
-    m_model->refreshModel();
-    _merit = getLeastSquareMerit();
-  }
+  else */
+
+  m_model->refreshModel();
+  _merit = getLeastSquareMerit();
 
   Float64 _meritprior =
       computelogLinePriorMerit(itratio, m_logPriorDataTplRatio);

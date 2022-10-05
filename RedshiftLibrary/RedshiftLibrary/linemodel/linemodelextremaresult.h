@@ -72,7 +72,11 @@ public:
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
 
-  CExtremaResult<TLineModelResult>(const TCandidateZbyRank &zCandidates) {
+  CExtremaResult<TLineModelResult>(const TCandidateZbyRank &zCandidates)
+      : m_savedModelFittingResults(zCandidates.size()),
+        m_savedModelRulesResults(zCandidates.size()),
+        m_savedModelContinuumSpectrumResults(zCandidates.size()),
+        m_savedModelSpectrumResults(zCandidates.size()) {
     m_type = "LineModelExtremaResult";
     for (const auto &cand : zCandidates) {
       m_ranked_candidates.push_back(
@@ -80,17 +84,7 @@ public:
               std::string(cand.first),
               std::make_shared<TLineModelResult>(*cand.second)));
     }
-    Resize(zCandidates.size());
   };
-
-  void Resize(Int32 size) {
-    // CExtremaResult::Resize(size);
-
-    m_savedModelFittingResults.resize(size);
-    m_savedModelRulesResults.resize(size);
-    m_savedModelContinuumSpectrumResults.resize(size);
-    m_savedModelSpectrumResults.resize(size);
-  }
 
   void setCandidateFromContinuumSolution(int rank,
                                          CContinuumModelSolution cms) {

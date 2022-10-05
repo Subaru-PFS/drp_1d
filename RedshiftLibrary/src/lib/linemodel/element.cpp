@@ -443,13 +443,12 @@ void CLineModelElement::prepareSupport(
     const TFloat64Range &lambdaRange) {
   Int32 nLines = m_Lines.size();
   m_OutsideLambdaRange = true;
-  m_LineIsActiveOnSupport =
-      std::vector<TInt32List>(nLines, TInt32List(nLines, 0)); // bug
-  m_StartNoOverlap = TInt32List(nLines, -1);
-  m_EndNoOverlap = TInt32List(nLines, -1);
-  m_StartTheoretical = TInt32List(nLines, -1);
-  m_EndTheoretical = TInt32List(nLines, -1);
-  m_OutsideLambdaRangeList = TBoolList(nLines, true);
+  m_LineIsActiveOnSupport.assign(nLines, TInt32List(nLines, 0));
+  m_StartNoOverlap.assign(nLines, -1);
+  m_EndNoOverlap.assign(nLines, -1);
+  m_StartTheoretical.assign(nLines, -1);
+  m_EndTheoretical.assign(nLines, -1);
+  m_OutsideLambdaRangeList.assign(nLines, true);
   for (Int32 i = 0; i < nLines; i++) {
     EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
 
@@ -568,8 +567,8 @@ void CLineModelElement::prepareSupport(
   }
 
   // init the fitted amplitude values and related variables
-  m_FittedAmplitudes = TFloat64List(nLines, NAN);
-  m_FittedAmplitudeErrorSigmas = TFloat64List(nLines, NAN);
+  m_FittedAmplitudes.assign(nLines, NAN);
+  m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
   m_fitAmplitude = NAN;
   m_sumGauss = NAN;
   m_sumCross = NAN;
@@ -810,8 +809,8 @@ void CLineModelElement::SetFittedAmplitude(Float64 A, Float64 SNR) {
   m_dtmFree = NAN;
   if (std::isnan(A) || m_OutsideLambdaRange) {
     m_fitAmplitude = NAN;
-    m_FittedAmplitudes = TFloat64List(m_Lines.size(), NAN);
-    m_FittedAmplitudeErrorSigmas = TFloat64List(m_Lines.size(), NAN);
+    m_FittedAmplitudes.assign(m_Lines.size(), NAN);
+    m_FittedAmplitudeErrorSigmas.assign(m_Lines.size(), NAN);
     return;
   }
 
@@ -933,8 +932,8 @@ void CLineModelElement::fitAmplitude(
     Int32 lineIdx) {
   Int32 nLines = m_Lines.size();
 
-  m_FittedAmplitudes = TFloat64List(nLines, NAN);
-  m_FittedAmplitudeErrorSigmas = TFloat64List(nLines, NAN);
+  m_FittedAmplitudes.assign(nLines, NAN);
+  m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
 
   if (m_OutsideLambdaRange) {
     m_fitAmplitude = NAN;

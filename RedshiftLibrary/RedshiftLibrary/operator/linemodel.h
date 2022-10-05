@@ -108,7 +108,9 @@ public:
   void InitTplratioPriors();
   void evaluateContinuumAmplitude(
       const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
-  bool m_enableWidthFitByGroups = false;
+  const bool m_enableWidthFitByGroups = false;
+  // m_enableWidthFitByGroups: enable/disable fit by groups. Once enabled, the
+  // velocity fitting groups are defined in the line catalog from v4.0 on.
 
   Int32 m_maxModelSaveCount = 20;
   Float64 m_secondPass_halfwindowsize; // = 0.005;

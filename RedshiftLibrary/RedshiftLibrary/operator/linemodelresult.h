@@ -76,7 +76,6 @@ public:
 
   Float64 getMinChiSquare() const;
   Float64 getMaxChiSquare() const;
-  Int32 ResizeChisquareTplRatios(Int32 nTplratios, Int32 nRedshifts);
   void SetChisquareTplContinuumResult(
       Int32 index,
       const std::shared_ptr<const CTemplatesFitStore> &tplFitStore);

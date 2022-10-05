@@ -477,7 +477,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   Int32 ntplratio = m_lineRatioManager->prepareFit(
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
-  ntplratio = 1; // to be removed: test on one tplratio only
+  // ntplratio = 1; // to be removed: test on one tplratio only
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
@@ -499,14 +499,14 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
-      if (m_lineRatioManager->init(redshift, itratio)) // always false
+      if (m_lineRatioManager->init(redshift, itratio))
         continue;
 
       m_fitter->fit(redshift);
 
       std::string bestTplratioName = "undefined";
 
-      _merit = m_lineRatioManager->computeMerit(itratio, enableLogging);
+      _merit = m_lineRatioManager->computeMerit(itratio);
 
       if (bestMerit + bestMeritPrior > _merit + _meritprior) {
         bestMerit = _merit;
@@ -525,9 +525,13 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           std::cout << "itplratio: " << itratio << " and "
                     << _merit + _meritprior << "\n";
         Float64 zqp8 = 3.596569;
+        Float64 zqp8_final = 3.6011679;
         Float64 zelcosmos = 1.178966;
+        Float64 zelcosmos_sp = 1.179620;
         if (std::abs(redshift - zqp8) < 1E-5 ||
-            std::abs(redshift - zelcosmos) < 1E-5) {
+            (std::abs(redshift - zqp8_final) < 1E-5 && m_pass == 2) ||
+            std::abs(redshift - zelcosmos) < 1E-5 ||
+            (std::abs(redshift - zelcosmos_sp) < 1E-5 && m_pass == 2)) {
           cout.precision(7);
           std::cout << redshift << "\n";
           m_Elements.dumpElement();
@@ -1080,11 +1084,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 subeIdx = undefIdx;
     Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
+    modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || subeIdx == undefIdx ||
         m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx)) {
       continue; // data already set to its default values
     }
-    modelSolution.ElementId[iRestLine] = eIdx;
 
     Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
     modelSolution.Amplitudes[iRestLine] = amp;
