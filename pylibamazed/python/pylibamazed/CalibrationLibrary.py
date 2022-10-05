@@ -133,7 +133,6 @@ class CalibrationLibrary:
                 try:
                     data = np.loadtxt(file_path, unpack=True)
                 except Exception as e:
-                    #logger.error("Unable to read template file {}".format(file_path))#todo: check if we keep the logger
                     raise APIException(ErrorCode.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
                 wavelength = data[0]
                 flux = data[1]
@@ -332,17 +331,11 @@ class CalibrationLibrary:
 	
                 # Load the reliability model
                 if self.parameters[object_type].get("enable_reliability"):
-                    try:
-                        # to avoid annoying messages about gpu/cuda availability
-                        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-                        from tensorflow.keras import models
-                    except ImportError:
-                        zflag.warning(zflag.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
-                    else:
-                        model_path = os.path.join(self.calibration_dir,
-                                                  self.parameters[object_type]["reliability_model"])
-                        model = models.load_model(model_path)
-                        self.reliability_models[object_type] = model
+                    from tensorflow.keras import models
+                    model_path = os.path.join(self.calibration_dir,
+                                              self.parameters[object_type]["reliability_model"])
+                    model = models.load_model(model_path)
+                    self.reliability_models[object_type] = model
 
             if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
                 self.load_lsf()

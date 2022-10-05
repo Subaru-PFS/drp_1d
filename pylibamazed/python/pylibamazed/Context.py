@@ -70,6 +70,7 @@ class Context:
     def __init__(self, config, parameters):
         try:
             _check_config(config)
+            self.parameters = Parameters(parameters,config)
             self.calibration_library = CalibrationLibrary(parameters,
                                                           config["calibration_dir"])
             self.calibration_library.load_all()
@@ -79,7 +80,7 @@ class Context:
                 self.config["linemeascatalog"] = {}
             else:
                 _check_LinemeasValidity(config, parameters)
-            self.parameters = Parameters(parameters,config)
+            
 
             self.extended_results = config["extended_results"]
         except GlobalException as e:
