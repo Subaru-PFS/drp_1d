@@ -57,20 +57,17 @@ public:
 
   CExtremaResult<TTplCombinationResult>() = default;
 
-  CExtremaResult<TTplCombinationResult>(const TCandidateZbyRank &zCandidates) {
+  CExtremaResult<TTplCombinationResult>(const TCandidateZbyRank &zCandidates)
+      : m_savedModelSpectrumResults(zCandidates.size()) {
     m_type = "TplCombinationExtremaResult";
 
     for (std::pair<std::string, const std::shared_ptr<TCandidateZ> &> cand :
-         zCandidates) {
+         zCandidates)
       m_ranked_candidates.push_back(
           std::make_pair<std::string, std::shared_ptr<TTplCombinationResult>>(
               std::string(cand.first),
               std::make_shared<TTplCombinationResult>(*cand.second)));
-    }
-    Resize(zCandidates.size());
   }
-
-  void Resize(Int32 size) { m_savedModelSpectrumResults.resize(size); }
 
   std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,

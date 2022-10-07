@@ -1123,8 +1123,6 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     std::string Id = zCandidates[i].first;
     std::string parentId = zCandidates[i].second->ParentId; // retrieve parentID
     Float64 z = zCandidates[i].second->Redshift;
-    /*if (std::abs(z - 1.178966) > 1E-5)//elcosomos
-      continue;*/
     //  find the index in the zaxis results
     Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
     Float64 m = m_result->ChiSquare[idx];
@@ -1177,11 +1175,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
               CLine::nType_Absorption);
       std::string alv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
-        for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++) {
-          m_fittingManager->SetVelocityAbsorptionOneElement(
-              m_secondpass_parameters_extremaResult.GroupsALv[i_2pass][kgroup],
-              idxVelfitGroups[kgroup][ke]);
-        }
+        m_fittingManager->setVelocityAbsorptionByGroup(
+            m_secondpass_parameters_extremaResult.GroupsALv[i_2pass][kgroup],
+            idxVelfitGroups[kgroup]);
         alv_list_str.append(boost::str(
             boost::format("%.2f, ") %
             m_secondpass_parameters_extremaResult.GroupsALv[i_2pass][kgroup]));
@@ -1193,11 +1189,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           CLine::nType_Emission);
       std::string elv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
-        for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++) {
-          m_fittingManager->SetVelocityEmissionOneElement(
-              m_secondpass_parameters_extremaResult.GroupsELv[i_2pass][kgroup],
-              idxVelfitGroups[kgroup][ke]);
-        }
+        m_fittingManager->setVelocityEmissionByGroup(
+            m_secondpass_parameters_extremaResult.GroupsELv[i_2pass][kgroup],
+            idxVelfitGroups[kgroup]);
         elv_list_str.append(boost::str(
             boost::format("%.2f") %
             m_secondpass_parameters_extremaResult.GroupsELv[i_2pass][kgroup]));
@@ -1217,8 +1211,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     if (!mlmfit_modelInfoSave) {
       m_result->ChiSquare[idx] = m_fittingManager->fit(
           m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
-          m_result->ContinuumModelSolutions[idx], contreest_iterations,
-          true); // false solves the warning prob for elcosmos
+          m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
       m_result->ScaleMargCorrection[idx] =
           m_fittingManager->getScaleMargCorrection();
       if (m_fittingManager->getLineRatioType() == "tplratio")
@@ -1237,10 +1230,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
               ->getContinuumScaleMargCorrection();
     }
     if (m != m_result->ChiSquare[idx])
-      Flag.warning(Flag.LINEMODEL_CHI2_CHANGED,
-                   Formatter() << "COperatorLineModel::" << __func__ << ": m ("
-                               << m << " for idx=" << idx << ") !=chi2 ("
-                               << m_result->ChiSquare[idx] << ")");
+      THROWG(INTERNAL_ERROR, Formatter() << "COperatorLineModel::" << __func__
+                                         << ": m (" << m << " for idx=" << idx
+                                         << ") !=chi2 ("
+                                         << m_result->ChiSquare[idx] << ")");
 
     m = m_result->ChiSquare[idx]; // m_result->ChiSquare[idx];
 
@@ -1677,10 +1670,8 @@ void COperatorLineModel::RecomputeAroundCandidates(
           CLine::nType_Absorption);
       std::string alv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
-        for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++) {
-          m_fittingManager->SetVelocityAbsorptionOneElement(
-              extremaResult.GroupsALv[i][kgroup], idxVelfitGroups[kgroup][ke]);
-        }
+        m_fittingManager->setVelocityAbsorptionByGroup(
+            extremaResult.GroupsALv[i][kgroup], idxVelfitGroups[kgroup]);
         alv_list_str.append(boost::str(boost::format("%.2f, ") %
                                        extremaResult.GroupsALv[i][kgroup]));
       }
@@ -1691,10 +1682,8 @@ void COperatorLineModel::RecomputeAroundCandidates(
           CLine::nType_Emission);
       std::string elv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
-        for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++) {
-          m_fittingManager->SetVelocityEmissionOneElement(
-              extremaResult.GroupsELv[i][kgroup], idxVelfitGroups[kgroup][ke]);
-        }
+        m_fittingManager->setVelocityEmissionByGroup(
+            extremaResult.GroupsELv[i][kgroup], idxVelfitGroups[kgroup]);
         elv_list_str.append(boost::str(boost::format("%.2f") %
                                        extremaResult.GroupsELv[i][kgroup]));
       }
@@ -2078,19 +2067,6 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(
 */
   CLineModelSolution clms;
   return clms;
-}
-
-void COperatorLineModel::fitVelocityByGroups(TFloat64List velfitlist,
-                                             TFloat64List zfitlist,
-                                             Int32 lineType) {
-  std::vector<TInt32List> idxVelfitGroups =
-      m_fittingManager->m_Elements.GetModelVelfitGroups(lineType);
-
-  for (const auto &idxVelfitGroup : idxVelfitGroups)
-    for (const auto dzTest : zfitlist)
-      for (const auto vTest : velfitlist)
-        for (const auto elIdx : idxVelfitGroup)
-          m_fittingManager->setVelocity(vTest, elIdx, lineType);
 }
 
 CLineModelSolution COperatorLineModel::computeForLineMeas(

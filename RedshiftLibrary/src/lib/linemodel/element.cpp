@@ -802,11 +802,6 @@ void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
  *amplitude.
  **/
 void CLineModelElement::SetFittedAmplitude(Float64 A, Float64 SNR) {
-  // resetting these values to tell that we are forcing A and that values do
-  // not correspond - to be cleaned
-  m_sumCross = NAN;
-  m_sumGauss = NAN;
-  m_dtmFree = NAN;
   if (std::isnan(A) || m_OutsideLambdaRange) {
     m_fitAmplitude = NAN;
     m_FittedAmplitudes.assign(m_Lines.size(), NAN);
@@ -1332,7 +1327,7 @@ void CLineModelElement::initSpectrumModel(
   if (m_OutsideLambdaRange)
     return;
 
-  Float64 *flux = modelfluxAxis.GetSamples();
+  TFloat64List &flux = modelfluxAxis.GetSamplesVector();
 
   for (Int32 k = 0; k < m_Lines.size(); k++) { // loop on the interval
     if (m_OutsideLambdaRangeList[k])

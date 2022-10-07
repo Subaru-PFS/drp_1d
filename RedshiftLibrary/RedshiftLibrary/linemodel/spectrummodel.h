@@ -17,7 +17,7 @@ public:
                  std::shared_ptr<const CSpectrum> spc,
                  const CLineCatalog::TLineVector &m_RestLineList);
 
-  void reinitModel();
+  void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
   void refreshModel(Int32 lineTypeFilter = -1);
   void reinitModelUnderElements(const TInt32List &filterEltsIdx, Int32 lineIdx);
   void refreshModelInitAllGrid();

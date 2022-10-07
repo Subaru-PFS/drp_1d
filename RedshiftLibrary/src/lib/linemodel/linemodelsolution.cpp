@@ -45,33 +45,28 @@ CLineModelSolution::CLineModelSolution() {
 }
 
 CLineModelSolution::CLineModelSolution(
-    const CLineCatalog::TLineVector &restLineList) {
+    const CLineCatalog::TLineVector &restLineList)
+    : lineId(restLineList.size(), -1), ElementId(restLineList.size(), undefIdx),
+      Amplitudes(restLineList.size(), NAN),
+      AmplitudesUncertainties(restLineList.size(), NAN),
+      FittingError(restLineList.size(), NAN),
+      LambdaObs(restLineList.size(), NAN), Offset(restLineList.size(), NAN),
+      Velocity(restLineList.size(), NAN),
+      CenterContinuumFlux(restLineList.size(), NAN),
+      ContinuumError(restLineList.size(), NAN),
+      Sigmas(restLineList.size(), NAN), Fluxs(restLineList.size(), NAN),
+      FluxErrors(restLineList.size(), NAN),
+      FluxDirectIntegration(restLineList.size(), NAN),
+      FluxDirectIntegrationError(restLineList.size(), NAN),
+      OutsideLambdaRange(restLineList.size(), true),
+      fittingGroupInfo(restLineList.size(), "undefined"),
+      continuum_pCoeff0(restLineList.size(), NAN),
+      continuum_pCoeff1(restLineList.size(), NAN),
+      continuum_pCoeff2(restLineList.size(), NAN) {
   this->m_type = "CLineModelSolution";
   // filling lineIds
-  lineId.assign(restLineList.size(), -1);
   for (Int32 i = 0; i < restLineList.size(); i++)
     lineId[i] = restLineList[i].GetID();
-
-  Int32 s = lineId.size();
-  ElementId.assign(s, undefIdx);
-  Amplitudes.assign(s, NAN);
-  AmplitudesUncertainties.assign(s, NAN);
-  FittingError.assign(s, NAN);
-  LambdaObs.assign(s, NAN);
-  Offset.assign(s, NAN);
-  Velocity.assign(s, NAN);
-  CenterContinuumFlux.assign(s, NAN);
-  ContinuumError.assign(s, NAN);
-  Sigmas.assign(s, NAN);
-  Fluxs.assign(s, NAN);
-  FluxErrors.assign(s, NAN);
-  FluxDirectIntegration.assign(s, NAN);
-  FluxDirectIntegrationError.assign(s, NAN);
-  OutsideLambdaRange.assign(s, true);
-  fittingGroupInfo.assign(s, "undefined");
-  continuum_pCoeff0.assign(s, NAN);
-  continuum_pCoeff1.assign(s, NAN);
-  continuum_pCoeff2.assign(s, NAN);
 }
 
 bool CLineModelSolution::isLineValid(Int32 lineIdx) const {

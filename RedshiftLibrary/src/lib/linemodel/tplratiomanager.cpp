@@ -494,9 +494,6 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
 
 void CTplratioManager::finish(Float64 redshift) {
   SetMultilineNominalAmplitudesFast(m_savedIdxFitted);
-  if (std::abs(redshift - 1.178966) < 1E-5)
-    std::cout << m_savedIdxFitted << "\n";
-
   // Set the velocities from templates: todo auto switch when velfit is ON
   // m_CatalogTplRatio->GetCatalogVelocities(savedIdxFitted,
   // m_velocityEmission, m_velocityAbsorption);

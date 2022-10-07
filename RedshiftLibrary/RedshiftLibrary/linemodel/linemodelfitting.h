@@ -102,8 +102,6 @@ public:
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
-  void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
-  void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
   void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
   void setVelocityEmissionByGroup(Float64 vel, const TInt32List &inds);
 

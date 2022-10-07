@@ -464,9 +464,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                                CLineModelSolution &modelSolution,
                                CContinuumModelSolution &continuumModelSolution,
                                Int32 contreest_iterations, bool enableLogging) {
-  if (std::abs(redshift - 1.178966) < 1E-5)
-    std::cout << "Got you: redshift = 1.178966" << m_lineRatioType << ", "
-              << enableLogging << " " << contreest_iterations << "\n";
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
   m_fitter->m_cont_reestim_iterations = contreest_iterations;
@@ -477,7 +474,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   Int32 ntplratio = m_lineRatioManager->prepareFit(
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
-  // ntplratio = 1; // to be removed: test on one tplratio only
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
@@ -519,24 +515,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             m_continuumManager->GetContinuumModelSolution();
 
         m_lineRatioManager->saveResults(itratio);
-
-        if (std::abs(redshift - 1.178966) < 1E-5 ||
-            std::abs(redshift - 3.596569) < 1E-5)
-          std::cout << "itplratio: " << itratio << " and "
-                    << _merit + _meritprior << "\n";
-        Float64 zqp8 = 3.596569;
-        Float64 zqp8_final = 3.6011679;
-        Float64 zelcosmos = 1.178966;
-        Float64 zelcosmos_sp = 1.179620;
-        if (std::abs(redshift - zqp8) < 1E-5 ||
-            (std::abs(redshift - zqp8_final) < 1E-5 && m_pass == 2) ||
-            std::abs(redshift - zelcosmos) < 1E-5 ||
-            (std::abs(redshift - zelcosmos_sp) < 1E-5 && m_pass == 2)) {
-          cout.precision(7);
-          std::cout << redshift << "\n";
-          m_Elements.dumpElement();
-          m_model->dumpModel();
-        }
       }
       if (getContinuumComponent() == "nocontinuum")
         m_model->reinitModel();
@@ -1310,14 +1288,6 @@ void CLineModelFitting::setVelocity(Float64 vel, Int32 idxElt, Int32 lineType) {
            Formatter() << "Wrong index for line model element " << idxElt);
 }
 
-void CLineModelFitting::SetVelocityEmissionOneElement(Float64 vel,
-                                                      Int32 idxElt) {
-  m_velocityEmission = vel;
-  if (idxElt < m_Elements.size()) {
-    m_Elements[idxElt]->SetVelocityEmission(vel);
-  }
-}
-
 void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
                                                    const TInt32List &inds) {
   m_velocityEmission = vel;
@@ -1332,13 +1302,6 @@ void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
   }
 }
 
-void CLineModelFitting::SetVelocityAbsorptionOneElement(Float64 vel,
-                                                        Int32 idxElt) {
-  m_velocityAbsorption = vel;
-  if (idxElt < m_Elements.size()) {
-    m_Elements[idxElt]->SetVelocityAbsorption(vel);
-  }
-}
 void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
                                                      const TInt32List &inds) {
   m_velocityAbsorption = vel;

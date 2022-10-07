@@ -72,18 +72,6 @@ const CSpectrumFluxAxis &CSpectrumModel::GetModelContinuum() const {
   return m_ContinuumFluxAxis;
 }
 
-/**
- * \brief Init the whole spectrum model with continuum.
- **/
-void CSpectrumModel::reinitModel() {
-  /*CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    m_Elements[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis);
-  }*/
-
-  m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
-}
-
 void CSpectrumModel::initModelWithContinuum() {
   m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
   for (Int32 i = 0; i < m_SpectrumModel.GetSampleCount(); i++) {
@@ -253,11 +241,8 @@ CSpectrumModel::GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter) {
   fluxAndContinuum = fluxAxis.GetSamplesVector();
   refreshModel(lineTypeFilter);
 
-  CSpectrumFluxAxis fluxAxisNothingUnderLines(
-      m_spcCorrectedUnderLines.GetSampleCount());
-  // set noise to input noise, same as what is done in the constructor
-  fluxAxisNothingUnderLines.setError(
-      m_spcCorrectedUnderLines.GetFluxAxis().GetError());
+  CSpectrumFluxAxis fluxAxisNothingUnderLines =
+      m_spcCorrectedUnderLines.GetFluxAxis();
   TAxisSampleList &Y = fluxAxisNothingUnderLines.GetSamplesVector();
   const auto &SpcFluxAxis = m_SpcFluxAxis;
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
@@ -426,7 +411,6 @@ void CSpectrumModel::setContinuumComponent(const std::string &component) {
             ->GetRawFluxAxis(); // m_inputSpc->GetWithoutContinuumFluxAxis();
     m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
     m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
-    // reinit m_ContinuumFluxAxis with 0.
     m_ContinuumFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
   }
   if (component == "fromspectrum") {
@@ -442,6 +426,7 @@ void CSpectrumModel::setContinuumComponent(const std::string &component) {
     // spectrum
     m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();
     m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
+    m_ContinuumFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
   }
 }
 
@@ -704,9 +689,7 @@ void CSpectrumModel::dumpModel() {
   Int32 s1 = m_SpcFluxAxis.GetSamplesCount();
   Int32 s3 = m_ContinuumFluxAxis.GetSamplesCount();
   Int32 s4 = m_spcFluxAxisNoContinuum.GetSamplesCount();
-  if (s1 == s3 && s3 == s4)
-    std::cout << "size ok\n";
-  else
+  if (s1 != s3 || s3 != s4)
     THROWG(INTERNAL_ERROR, "sizes do not match");
   std::string fname = "Model_" + to_string(m__count) + ".txt";
   m__count++;
@@ -718,7 +701,6 @@ void CSpectrumModel::dumpModel() {
     os << count++ << "\n";
   }
   os << "Model at redshift: " << m_Redshift << "\n";
-  // below are identical
   os << m_enableAmplitudeOffsets << "\n";
   os << "SpcFluxAxis\tContinuumFluxAxis\tm_"
         "spcFluxAxisNoContinuum\n";
@@ -727,7 +709,6 @@ void CSpectrumModel::dumpModel() {
        << m_ContinuumFluxAxis[i] << "\t" << m_spcFluxAxisNoContinuum[i] << "\n";
   }
 
-  // below have differences mostly with FluxAxis
   os << "m_SpectrumModel: \n";
   os << "SpectralAxis\tFluxAxis\tErrorAxis\n";
   for (Int32 i = 0; i < m_SpectrumModel.GetSampleCount(); i++) {
@@ -736,11 +717,10 @@ void CSpectrumModel::dumpModel() {
        << m_SpectrumModel.GetFluxAxis().GetError()[i] << "\n";
   }
 
-  // below have differences mostly with FluxAxis
   os << "m_spcCorrectedUnderLines: \n";
   os << "SpectralAxis\tFluxAxis\tErrorAxis\n";
   for (Int32 i = 0; i < m_spcCorrectedUnderLines.GetSampleCount(); i++) {
-    os << "UnderLineModel: " << i << "\t"
+    os << "spcCorrUnderLineModel: " << i << "\t"
        << m_spcCorrectedUnderLines.GetSpectralAxis()[i] << "\t"
        << m_spcCorrectedUnderLines.GetFluxAxis()[i] << "\t"
        << m_spcCorrectedUnderLines.GetFluxAxis().GetError()[i] << "\n";
