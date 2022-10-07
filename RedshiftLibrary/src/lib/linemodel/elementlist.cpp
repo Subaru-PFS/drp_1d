@@ -796,8 +796,8 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
   return nonOverlappingIndexRangeList;
 }
 
-void CLineModelElementList::dumpElement() {
-  std::string fname = "ElementList_" + to_string(m__count) + ".txt";
+void CLineModelElementList::dumpElement(std::string pre) {
+  std::string fname = "ElementList_" + pre + "_" + to_string(m__count) + ".txt";
   m__count++;
   std::ofstream os(fname);
 

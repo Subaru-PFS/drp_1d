@@ -1328,11 +1328,12 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
 void CLineModelElement::initSpectrumModel(
     CSpectrumFluxAxis &modelfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx) const {
-  if (m_OutsideLambdaRange) {
+
+  if (m_OutsideLambdaRange)
     return;
-  }
 
   Float64 *flux = modelfluxAxis.GetSamples();
+
   for (Int32 k = 0; k < m_Lines.size(); k++) { // loop on the interval
     if (m_OutsideLambdaRangeList[k])
       continue;

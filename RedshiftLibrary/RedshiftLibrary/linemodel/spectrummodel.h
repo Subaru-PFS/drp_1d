@@ -57,7 +57,8 @@ public:
   bool m_enableAmplitudeOffsets = false;
   Float64 m_Redshift = 0.;
   // new methods
-
+  void dumpModel();
+  Int32 m__count = 0;
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
                               const TFloat64List &polyCoeffs,
@@ -80,7 +81,6 @@ private:
   CSpectrum m_SpectrumModel; // model
   CLineModelElementList &m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
-  CSpectrumFluxAxis m_modelFluxAxis;
   CSpectrum m_spcCorrectedUnderLines;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis

@@ -535,6 +535,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           cout.precision(7);
           std::cout << redshift << "\n";
           m_Elements.dumpElement();
+          m_model->dumpModel();
         }
       }
       if (getContinuumComponent() == "nocontinuum")
