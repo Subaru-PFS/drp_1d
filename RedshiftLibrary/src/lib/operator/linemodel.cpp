@@ -1163,7 +1163,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     // extrema selected
     Int32 contreest_iterations = 0;
     if (opt_continuumreest == "always" || opt_continuumreest == "onlyextrema") {
-      contreest_iterations = 8; // 4
+      contreest_iterations = 1; // 4
     }
 
     if (m_enableWidthFitByGroups) {
