@@ -102,11 +102,6 @@ public:
   bool GetModelStrongEmissionLinePresent() const;
   bool GetModelHaStrongest() const;
 
-  CLineModelSolution
-  GetModelSolution(Int32 opt_level,
-                   const CLineCatalog::TLineVector &restLineList,
-                   Float64 redshift);
-
   TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
 
   void debug(std::ostream &os) const;

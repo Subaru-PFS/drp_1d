@@ -53,7 +53,7 @@ CLineModelSolution::CLineModelSolution(
     lineId[i] = restLineList[i].GetID();
 
   Int32 s = lineId.size();
-  ElementId.resize(s);
+  ElementId.resize(s, -1);
   Amplitudes = TFloat64List(s, NAN);
   AmplitudesUncertainties = TFloat64List(s, NAN);
   FittingError = TFloat64List(s, NAN);
