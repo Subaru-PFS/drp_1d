@@ -136,3 +136,20 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
   }
   return uniqueIndices;
 }
+
+void CLineModelPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
+    Int32 i, const CContinuumModelSolution &contModelSol) {
+  FittedTplName[i] = contModelSol.tplName;
+  FittedTplAmplitude[i] = contModelSol.tplAmplitude;
+  FittedTplAmplitudeError[i] = contModelSol.tplAmplitudeError;
+  FittedTplMerit[i] = contModelSol.tplMerit;
+  FittedTplMeritPhot[i] = contModelSol.tplMeritPhot;
+  FittedTplEbmvCoeff[i] = contModelSol.tplEbmvCoeff;
+  FittedTplMeiksinIdx[i] = contModelSol.tplMeiksinIdx;
+  FittedTplRedshift[i] = contModelSol.tplRedshift;
+  FittedTplDtm[i] = contModelSol.tplDtm;
+  FittedTplMtm[i] = contModelSol.tplMtm;
+  FittedTplLogPrior[i] = contModelSol.tplLogPrior;
+  FittedTplpCoeffs[i] = contModelSol.pCoeffs;
+  return;
+}

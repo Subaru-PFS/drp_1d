@@ -59,7 +59,8 @@ public:
   TInt32List getUniqueCandidates(
       std::shared_ptr<const CLineModelPassExtremaResult> results_b);
   TFloat64List GetRedshifts() const;
-
+  void fillWithContinuumModelSolutionAtIndex(
+      Int32 i, const CContinuumModelSolution &contModelSol);
   Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
 
   TCandidateZbyRank m_ranked_candidates;

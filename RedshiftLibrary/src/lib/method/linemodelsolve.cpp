@@ -559,6 +559,7 @@ void CLineModelSolve::Solve() {
   std::string scopeStr = "linemodel";
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
+
   // Compute with linemodel operator
   m_linemodel.Init(m_redshifts);
 
