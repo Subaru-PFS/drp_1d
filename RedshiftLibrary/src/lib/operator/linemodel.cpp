@@ -1162,8 +1162,17 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     // reestimate the model (eventually with continuum reestimation) on the
     // extrema selected
     Int32 contreest_iterations = 0;
-    if (opt_continuumreest == "always" || opt_continuumreest == "onlyextrema") {
-      contreest_iterations = 1; // 4
+    if (opt_continuumreest == "always")
+      contreest_iterations = 1;
+    else if (opt_continuumreest == "onlyextrema") {
+      contreest_iterations = 8; // 4
+      if (Context.GetParameterStore()->GetScoped<bool>(
+              "linemodel.skipsecondpass")) {
+        contreest_iterations = 0;
+        Flag.warning(Flag.DEACTIVATE_CONTREESTIMATION_SKIPSECONDPASS,
+                     "onlyextrema value for ContinuumReestimation is "
+                     "unavailable since secondpass is skipped");
+      }
     }
 
     if (m_enableWidthFitByGroups) {
@@ -1198,7 +1207,6 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       }
       Log.LogInfo("    Operator-Linemodel: saveResults with groups elv=%s",
                   elv_list_str.c_str());
-
     } else {
       // m_fittingManager->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[i_2pass]);
       // m_fittingManager->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[i_2pass]);
@@ -1740,9 +1748,10 @@ void COperatorLineModel::RecomputeAroundCandidates(
     // reestimate the model (eventually with continuum reestimation) on
     // the extrema selected
     Int32 contreest_iterations = 0;
-    if (opt_continuumreest == "always") {
+    if (opt_continuumreest == "always")
       contreest_iterations = 1;
-    }
+    else if (opt_continuumreest == "onlyextrema")
+      contreest_iterations = 8;
 
     // finally compute the redshifts on the z-range around the extremum
     // m_fittingManager->SetFittingMethod("nofit");
