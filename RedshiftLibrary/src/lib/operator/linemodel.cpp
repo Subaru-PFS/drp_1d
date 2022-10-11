@@ -1040,6 +1040,8 @@ void COperatorLineModel::ComputeSecondPass(
           m_firstpass_extremaResult->FittedTplRedshift[i];
       m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] =
           m_firstpass_extremaResult->FittedTplpCoeffs[i];
+      m_secondpass_parameters_extremaResult.FittedTplMeritPhot[i] =
+          m_firstpass_extremaResult->FittedTplMeritPhot[i];
     }
   }
 
