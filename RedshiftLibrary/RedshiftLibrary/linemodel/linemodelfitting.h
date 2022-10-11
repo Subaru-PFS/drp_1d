@@ -176,7 +176,7 @@ public:
   std::shared_ptr<const CSpectrumModel> getConstSpectrumModel() {
     return m_model;
   }
-
+  const std::string &getFittingMethod() const { return m_fittingmethod; }
   // we keep that getters temporarily, waiting for refactoring linemodel extrema
   // result
   Int32 getTplratio_count() const;

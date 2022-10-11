@@ -1239,7 +1239,8 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_fittingManager->m_continuumManager
               ->getContinuumScaleMargCorrection();
     }
-    if (m != m_result->ChiSquare[idx])
+    if (m != m_result->ChiSquare[idx] &&
+        m_fittingManager->getFittingMethod() != "random")
       THROWG(INTERNAL_ERROR, Formatter() << "COperatorLineModel::" << __func__
                                          << ": m (" << m << " for idx=" << idx
                                          << ") !=chi2 ("
