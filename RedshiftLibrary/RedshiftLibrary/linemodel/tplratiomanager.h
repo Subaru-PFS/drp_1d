@@ -93,12 +93,9 @@ public:
   void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
   void SetForcedisableTplratioISMfit(bool opt);
-  void duplicateTplratioResult(Int32 ifitting, TFloat64List &bestTplratioMerit,
-                               TFloat64List &bestTplratioMeritPrior);
+  void duplicateTplratioResult(Int32 ifitting);
   void updateTplratioResults(Int32 ifitting, Float64 _merit,
-                             Float64 _meritprior,
-                             TFloat64List &bestTplratioMerit,
-                             TFloat64List &bestTplratioMeritPrior);
+                             Float64 _meritprior);
   Float64 computelogLinePriorMerit(
       Int32 itratio,
       const std::vector<CPriorHelper::SPriorTZE> &logPriorDataTplRatio);
@@ -120,11 +117,10 @@ protected:
   std::vector<std::vector<TFloat64List>>
       m_LineCatalogLinesCorrespondingNominalAmp;
   Int32 m_savedIdxFitted = -1; // for rigidity=tplratio
-  TFloat64List m_bestTplratioMerit;
-  TFloat64List m_bestTplratioMeritPrior;
+  TFloat64List m_MeritTplratio;
+  TFloat64List m_PriorMeritTplratio;
   std::vector<CPriorHelper::SPriorTZE> m_logPriorDataTplRatio;
 
-  TFloat64List m_ChisquareTplratio;
   std::vector<TFloat64List> m_FittedAmpTplratio;
   std::vector<TFloat64List> m_FittedErrorTplratio;
   std::vector<TFloat64List> m_MtmTplratio;

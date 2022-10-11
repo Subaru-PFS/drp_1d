@@ -474,7 +474,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   Int32 ntplratio = m_lineRatioManager->prepareFit(
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
-
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
@@ -533,7 +532,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, autoselect,
                                            redshift);
     }
-    /*    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
+    /*
+    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
                   "ebmv=%.3f), and A=%e",
                   savedIdxContinuumFitted, m_fitContinuum_tplName.c_str(),
                   m_fitContinuum_tplFitEbmvCoeff,
@@ -1048,7 +1048,7 @@ void CLineModelFitting::LoadModelSolution(
  * \brief Returns a CLineModelSolution object populated with the current
  *solutions.
  **/
-CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
+CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
   modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
@@ -1063,11 +1063,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 subeIdx = undefIdx;
     Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
+    modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || subeIdx == undefIdx ||
         m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx)) {
       continue; // data already set to its default values
     }
-    modelSolution.ElementId[iRestLine] = eIdx;
 
     Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
     modelSolution.Amplitudes[iRestLine] = amp;
@@ -1288,12 +1288,11 @@ void CLineModelFitting::setVelocity(Float64 vel, Int32 idxElt, Int32 lineType) {
            Formatter() << "Wrong index for line model element " << idxElt);
 }
 
-void CLineModelFitting::SetVelocityEmissionOneElement(Float64 vel,
-                                                      Int32 idxElt) {
+void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
+                                                   const TInt32List &inds) {
   m_velocityEmission = vel;
-  if (idxElt < m_Elements.size()) {
+  for (auto idxElt : inds)
     m_Elements[idxElt]->SetVelocityEmission(vel);
-  }
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
@@ -1303,14 +1302,12 @@ void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
   }
 }
 
-void CLineModelFitting::SetVelocityAbsorptionOneElement(Float64 vel,
-                                                        Int32 idxElt) {
+void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
+                                                     const TInt32List &inds) {
   m_velocityAbsorption = vel;
-  if (idxElt < m_Elements.size()) {
+  for (auto idxElt : inds)
     m_Elements[idxElt]->SetVelocityAbsorption(vel);
-  }
 }
-
 Float64 CLineModelFitting::GetVelocityEmission() const {
   return m_velocityEmission;
 }

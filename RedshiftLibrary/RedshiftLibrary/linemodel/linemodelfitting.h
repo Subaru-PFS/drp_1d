@@ -102,8 +102,8 @@ public:
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
-  void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
-  void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
+  void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
+  void setVelocityEmissionByGroup(Float64 vel, const TInt32List &inds);
 
   void setVelocity(Float64 vel, Int32 lineType);
   void setVelocity(Float64 vel, Int32 idxElt, Int32 lineType);
@@ -150,7 +150,7 @@ public:
   Float64 getCumulSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
+  CLineModelSolution GetModelSolution(Int32 opt_level = 0) const;
 
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
@@ -176,7 +176,7 @@ public:
   std::shared_ptr<const CSpectrumModel> getConstSpectrumModel() {
     return m_model;
   }
-
+  const std::string &getFittingMethod() const { return m_fittingmethod; }
   // we keep that getters temporarily, waiting for refactoring linemodel extrema
   // result
   Int32 getTplratio_count() const;

@@ -108,7 +108,9 @@ public:
   void InitTplratioPriors();
   void evaluateContinuumAmplitude(
       const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
-  bool m_enableWidthFitByGroups = false;
+  const bool m_enableWidthFitByGroups = false;
+  // m_enableWidthFitByGroups: enable/disable fit by groups. Once enabled, the
+  // velocity fitting groups are defined in the line catalog from v4.0 on.
 
   Int32 m_maxModelSaveCount = 20;
   Float64 m_secondPass_halfwindowsize; // = 0.005;
@@ -148,8 +150,6 @@ public:
   CLineModelSolution
   fitWidthByGroups(std::shared_ptr<const CInputContext> context,
                    Float64 redshift);
-  void fitVelocityByGroups(TFloat64List velfitlist, TFloat64List zfitlist,
-                           Int32 lineType);
 
   void setHapriorOption(Int32 opt);
   const CSpectrum &
@@ -161,7 +161,7 @@ private:
   TFloat64List m_sortedRedshifts;
   Int32 m_enableFastFitLargeGrid = 0;
   Int32 m_estimateLeastSquareFast = 0;
-
+  void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
   TFloat64List SpanRedshiftWindow(Float64 z) const;
 
   Float64 FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,

@@ -45,33 +45,28 @@ CLineModelSolution::CLineModelSolution() {
 }
 
 CLineModelSolution::CLineModelSolution(
-    const CLineCatalog::TLineVector &restLineList) {
+    const CLineCatalog::TLineVector &restLineList)
+    : lineId(restLineList.size(), -1), ElementId(restLineList.size(), undefIdx),
+      Amplitudes(restLineList.size(), NAN),
+      AmplitudesUncertainties(restLineList.size(), NAN),
+      FittingError(restLineList.size(), NAN),
+      LambdaObs(restLineList.size(), NAN), Offset(restLineList.size(), NAN),
+      Velocity(restLineList.size(), NAN),
+      CenterContinuumFlux(restLineList.size(), NAN),
+      ContinuumError(restLineList.size(), NAN),
+      Sigmas(restLineList.size(), NAN), Fluxs(restLineList.size(), NAN),
+      FluxErrors(restLineList.size(), NAN),
+      FluxDirectIntegration(restLineList.size(), NAN),
+      FluxDirectIntegrationError(restLineList.size(), NAN),
+      OutsideLambdaRange(restLineList.size(), true),
+      fittingGroupInfo(restLineList.size(), "undefined"),
+      continuum_pCoeff0(restLineList.size(), NAN),
+      continuum_pCoeff1(restLineList.size(), NAN),
+      continuum_pCoeff2(restLineList.size(), NAN) {
   this->m_type = "CLineModelSolution";
   // filling lineIds
-  lineId.resize(restLineList.size());
   for (Int32 i = 0; i < restLineList.size(); i++)
     lineId[i] = restLineList[i].GetID();
-
-  Int32 s = lineId.size();
-  ElementId.resize(s, -1);
-  Amplitudes = TFloat64List(s, NAN);
-  AmplitudesUncertainties = TFloat64List(s, NAN);
-  FittingError = TFloat64List(s, NAN);
-  LambdaObs = TFloat64List(s, NAN);
-  Offset = TFloat64List(s, NAN);
-  Velocity = TFloat64List(s, NAN);
-  CenterContinuumFlux = TFloat64List(s, NAN);
-  ContinuumError = TFloat64List(s, NAN);
-  Sigmas = TFloat64List(s, NAN);
-  Fluxs = TFloat64List(s, NAN);
-  FluxErrors = TFloat64List(s, NAN);
-  FluxDirectIntegration = TFloat64List(s, NAN);
-  FluxDirectIntegrationError = TFloat64List(s, NAN);
-  OutsideLambdaRange = TBoolList(s, true);
-  fittingGroupInfo = TStringList(s, "undefined");
-  continuum_pCoeff0 = TFloat64List(s, NAN);
-  continuum_pCoeff1 = TFloat64List(s, NAN);
-  continuum_pCoeff2 = TFloat64List(s, NAN);
 }
 
 bool CLineModelSolution::isLineValid(Int32 lineIdx) const {

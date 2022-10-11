@@ -54,7 +54,7 @@ CRulesManager::CRulesManager(
                         continuumManager, restLineList) {}
 
 Float64 CRulesManager::computeMerit(Int32 iratio) {
-  applyRules(true); // enableLogging);
+  applyRules(true);
   m_model->refreshModel();
   return getLeastSquareMerit();
 }

@@ -17,7 +17,7 @@ public:
                  std::shared_ptr<const CSpectrum> spc,
                  const CLineCatalog::TLineVector &m_RestLineList);
 
-  void reinitModel();
+  void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
   void refreshModel(Int32 lineTypeFilter = -1);
   void reinitModelUnderElements(const TInt32List &filterEltsIdx, Int32 lineIdx);
   void refreshModelInitAllGrid();
@@ -57,7 +57,8 @@ public:
   bool m_enableAmplitudeOffsets = false;
   Float64 m_Redshift = 0.;
   // new methods
-
+  void dumpModel();
+  Int32 m__count = 0;
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
                               const TFloat64List &polyCoeffs,
@@ -80,7 +81,6 @@ private:
   CSpectrum m_SpectrumModel; // model
   CLineModelElementList &m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
-  CSpectrumFluxAxis m_modelFluxAxis;
   CSpectrum m_spcCorrectedUnderLines;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis

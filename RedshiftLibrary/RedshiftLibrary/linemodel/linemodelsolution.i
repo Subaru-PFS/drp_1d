@@ -42,7 +42,7 @@ public:
   CLineModelSolution();
   CLineModelSolution(const CLineCatalog::TLineVector &restLineList);
   bool isLineValid(Int32 lineIdx) const;
-  TFloat64List ElementId; // id of the linemodel element it is part of
+  TInt32List ElementId; // id of the linemodel element it is part of
   TFloat64List Amplitudes;
   TFloat64List AmplitudesUncertainties; // noise sigma
   TFloat64List FittingError; // ModelLeastSquare error under each line
