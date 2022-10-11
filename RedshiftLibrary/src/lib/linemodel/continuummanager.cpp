@@ -60,12 +60,12 @@ Int32 CContinuumManager::ApplyContinuumOnGrid(
   TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n - 1]);
 
   std::string inter_opt = "spline";
+  tpl->setRebinInterpMethod(inter_opt);
   Float64 overlapThreshold = 1., amplitude = 1.;
   std::shared_ptr<CModelSpectrumResult> spcmodel =
       m_templateFittingOperator->ComputeSpectrumModel(
           tpl, zcontinuum, m_fitContinuum_tplFitEbmvCoeff,
-          m_fitContinuum_tplFitMeiksinIdx, amplitude, inter_opt,
-          overlapThreshold);
+          m_fitContinuum_tplFitMeiksinIdx, amplitude, overlapThreshold);
   if (spcmodel == nullptr)
     THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
 
@@ -113,6 +113,7 @@ void CContinuumManager::SolveContinuum(
   // (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange,
   // redshifts, overlapThreshold );
   m_templateFittingOperator->SetRedshifts(redshifts);
+  tpl->setRebinInterpMethod(opt_interp);
   auto templateFittingResult =
       std::dynamic_pointer_cast<CTemplateFittingResult>(
           m_templateFittingOperator->Compute(

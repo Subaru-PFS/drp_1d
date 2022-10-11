@@ -45,11 +45,9 @@
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/tests/test-tools.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
-using namespace CPFTest;
 
 // build spectrum
 // - spectralAxis
@@ -373,17 +371,6 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
                 -fluwWithoutContinuum[i]);
   }
   result = spc.InvertFlux();
-
-  // RebinFinegrid
-  spc.RebinFineGrid();
-  TFloat64List pgfFlux = spc.m_pfgFlux;
-  Int32 n = pgfFlux.size();
-  for (Int32 i = 0; i < 201; i++) {
-    BOOST_CHECK_CLOSE(spc.m_pfgFlux[i], 1 + i * 0.01, 1e-12);
-  }
-  for (Int32 i = 201; i < n; i++) {
-    BOOST_CHECK(spc.m_pfgFlux[i] == 0);
-  }
 
   // ScaleFluxAxis
   spc.ScaleFluxAxis(2.);
@@ -925,14 +912,16 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   CSpectrumNoiseAxis noiseAxis(noiseList);
   CSpectrumFluxAxis fluxAxis(fluxList);
   fluxAxis.GetError() = noiseAxis;
+  CSpectrum rebinedSpectrum;
   CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
   CMask rebinedMask;
-  CSpectrum rebinedSpectrum;
+
   std::string interp = "lin"; // lin, spline, precomputedfinegrid, ngp
   std::string errorRebinMethod = "rebin";
+  spc.setRebinInterpMethod("lin");
 
   // check throw : spectrum is not valid
   spc.GetFluxAxis_().GetSamplesVector().pop_back();
@@ -941,14 +930,8 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
       GlobalException);
   spc.GetFluxAxis_().GetSamplesVector().push_back(3.);
 
-  // check throw : range is not included in spectral axis
-  TFloat64Range range2(9., 11.);
-  BOOST_CHECK_THROW(
-      spc.Rebin(range2, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask),
-      GlobalException);
-
   // interp = "lin" et errorRebinMethod = "rebin"
-  spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask, interp,
+  spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
             errorRebinMethod);
   TFloat64List rebinedFlux =
       rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
@@ -968,136 +951,12 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
     BOOST_CHECK(rebinedMask[i] == 1);
   }
 
-  // interp = "lin" et errorRebinMethod = "rebinVariance"
-  CSpectrumSpectralAxis tgtSpectralAxis_2({9., 10., 15., 20., 25., 30.});
-  errorRebinMethod = "rebinVariance";
-  spc.Rebin(range1, tgtSpectralAxis_2, rebinedSpectrum, rebinedMask, interp,
-            errorRebinMethod);
-  rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
-  N = rebinedFlux.size();
-  BOOST_CHECK(N == 6);
-  BOOST_CHECK(rebinedFlux[0] == 0.);
-  for (Int32 i = 1; i < N; i++) {
-    BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
-  }
-  rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
-  TFloat64List t_list_ref = {0., 0.5, 0., 0.5, 0.};
-  BOOST_CHECK(rebinedError[0] == INFINITY);
-  for (Int32 i = 1; i < N; i++) {
-    Float64 t = t_list_ref[i - 1];
-    Float64 error_ref =
-        sqrt(noiseAxis[0] * noiseAxis[0] * (1 - t) * (1 - t) +
-             noiseAxis[1] * noiseAxis[1] * t *
-                 t); // noise is constant here (no need to loop over)
-    error_ref *= sqrt(2.);
-    BOOST_CHECK(rebinedError[i] == error_ref);
-  }
-  BOOST_CHECK(rebinedMask[0] == 0.);
-  for (Int32 i = 1; i < N; i++) {
-    BOOST_CHECK(rebinedMask[i] == 1);
-  }
-
-  // interp = "precomputedfinegrid" et errorRebinMethod = "no"
-  interp = "precomputedfinegrid";
-  errorRebinMethod = "no";
-  spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask, interp,
-            errorRebinMethod);
-  rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
-  N = rebinedFlux.size();
-  BOOST_CHECK(N == 7);
-  BOOST_CHECK(rebinedFlux[0] == 0. && rebinedFlux[N - 1] == 0.);
-  for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
-  }
-  BOOST_CHECK(rebinedMask[0] == 0. && rebinedMask[N - 1] == 0.);
-  for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedMask[i] == 1);
-  }
-
-  // interp = "precomputedfinegrid" et errorRebinMethod != "no"
-  errorRebinMethod = "rebin";
-  BOOST_CHECK_THROW(spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
-                              rebinedMask, interp, errorRebinMethod),
-                    GlobalException);
-
-  // check throw : bad RebinFineGrid
-  spc.m_pfgFlux = {};
-  BOOST_CHECK_THROW(spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
-                              rebinedMask, interp, errorRebinMethod),
-                    GlobalException);
-
-  // interp = "spline" et errorRebinMethod = "no"
-  interp = "spline";
-  errorRebinMethod = "no";
-  spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask, interp,
-            errorRebinMethod);
-  rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
-  N = rebinedFlux.size();
-  BOOST_CHECK(N == 7);
-  BOOST_CHECK(rebinedFlux[0] == 0. && rebinedFlux[N - 1] == 0.);
-  for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
-  }
-  BOOST_CHECK(rebinedMask[0] == 0. && rebinedMask[N - 1] == 0.);
-  for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedMask[i] == 1);
-  }
-
-  // interp = "precomputedfinegrid" et errorRebinMethod != "no"
-  errorRebinMethod = "rebin";
-  BOOST_CHECK_THROW(spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum,
-                              rebinedMask, interp, errorRebinMethod),
-                    GlobalException);
-
-  // interp = "ngp" et errorRebinMethod = "rebin"
-  interp = "ngp";
-  spc.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask, interp,
-            errorRebinMethod);
-  rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
-  N = rebinedFlux.size();
-  BOOST_CHECK(N == 7);
-  BOOST_CHECK(rebinedFlux[0] == 0. && rebinedFlux[N - 1] == 0.);
-  for (Int32 i = 1; i < N - 1; i++) {
-    Int32 i2 = i / 2;
-    if (2 * i2 == i)
-      BOOST_CHECK(rebinedFlux[i] == rebinedFlux[i + 1]);
-    else
-      BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
-  }
-  rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
-  BOOST_CHECK(rebinedError[0] == INFINITY && rebinedError[N - 1] == INFINITY);
-  for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedError[i] == 0.1);
-  }
-  BOOST_CHECK(rebinedMask[0] == 0. && rebinedMask[N - 1] == 0.);
-  for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedMask[i] == 1);
-  }
-
-  // interp = "ngp" et errorRebinMethod = "rebinVariance"
-  errorRebinMethod = "rebinVariance";
-  spc.Rebin(range1, tgtSpectralAxis_2, rebinedSpectrum, rebinedMask, interp,
-            errorRebinMethod);
-  rebinedFlux = rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
-  N = rebinedFlux.size();
-  BOOST_CHECK(N == 6);
-  BOOST_CHECK(rebinedFlux[0] == 0.);
-  for (Int32 i = 1; i < N; i++) {
-    Int32 i2 = i / 2;
-    if (2 * i2 == i)
-      BOOST_CHECK(rebinedFlux[i] == rebinedFlux[i + 1]);
-    else
-      BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
-  }
-  rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
-  BOOST_CHECK(rebinedError[0] == INFINITY);
-  for (Int32 i = 1; i < N; i++) {
-    BOOST_CHECK(rebinedError[i] == 0.1 * sqrt(2.));
-  }
-  BOOST_CHECK(rebinedMask[0] == 0.);
-  for (Int32 i = 1; i < N; i++) {
-    BOOST_CHECK(rebinedMask[i] == 1);
-  }
+  // test setRebinType
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("lin"));
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("precomputedfinegrid"));
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("spline"));
+  BOOST_CHECK_NO_THROW(spc.setRebinInterpMethod("ngp"));
+  BOOST_CHECK_THROW(spc.setRebinInterpMethod("linn"), GlobalException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

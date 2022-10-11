@@ -401,6 +401,7 @@ void COperatorLineModel::fitContinuumTemplates(
     CPriorHelper::TPriorZEList zePriorData;
     m_phelperContinuum->GetTplPriorData(tplname, redshiftsTplFit, zePriorData);
     m_templateFittingOperator->SetRedshifts(redshiftsTplFit);
+    tplList[i]->setRebinInterpMethod(opt_interp);
     auto templatefittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
             m_templateFittingOperator->Compute(

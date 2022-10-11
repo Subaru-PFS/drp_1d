@@ -91,8 +91,7 @@ public:
   std::shared_ptr<CModelSpectrumResult>
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
-                       Float64 amplitude, std::string opt_interp,
-                       const Float64 overlapThreshold);
+                       Float64 amplitude, const Float64 overlapThreshold);
 
   inline virtual bool IsFFTProcessing() { return false; };
 
@@ -100,8 +99,8 @@ public:
 
 protected:
   virtual void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
-                             Float64 redshift, const std::string &opt_interp,
-                             TFloat64Range &currentRange, Float64 &overlaprate,
+                             Float64 redshift, TFloat64Range &currentRange,
+                             Float64 &overlaprate,
                              const Float64 overlapThreshold);
   // Likelihood
   virtual Float64

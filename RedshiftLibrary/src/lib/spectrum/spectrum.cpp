@@ -41,6 +41,7 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_interp.h>
@@ -51,16 +52,19 @@ using namespace std;
 
 CSpectrum::CSpectrum()
     : m_estimationMethod(""), m_medianWindowSize(-1),
-      m_medianEvenReflection(true), m_Name("") {}
+      m_medianEvenReflection(true), m_Name(""),
+      m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))) {}
 
-CSpectrum::CSpectrum(const std::string &name) : m_Name(name){};
+CSpectrum::CSpectrum(const std::string &name)
+    : m_Name(name), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))){};
 
 CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
       m_Name(other.m_Name), m_spcType(other.m_spcType), m_LSF(other.m_LSF),
-      alreadyRemoved(other.alreadyRemoved), m_SpectralAxis(Int32(0)) {
+      alreadyRemoved(other.alreadyRemoved), m_SpectralAxis(Int32(0)),
+      m_rebin(CRebin::create(other.m_rebin->getType(), *this)) {
   const CSpectrumNoiseAxis &otherRawError = other.m_RawFluxAxis.GetError(),
                            &otherContinuumError =
                                other.m_ContinuumFluxAxis.GetError(),
@@ -92,7 +96,9 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
 
 CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
                      CSpectrumFluxAxis fluxAxis)
-    : CSpectrum(std::move(spectralAxis), std::move(fluxAxis), nullptr) {}
+    : CSpectrum(std::move(spectralAxis), std::move(fluxAxis), nullptr) {
+  m_rebin = std::unique_ptr<CRebin>(new CRebinLinear(*this));
+}
 
 CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
                      CSpectrumFluxAxis fluxAxis,
@@ -100,7 +106,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
     : m_SpectralAxis(std::move(spectralAxis)),
       m_RawFluxAxis(std::move(fluxAxis)), m_estimationMethod(""),
       m_medianWindowSize(-1), m_medianEvenReflection(true), m_Name(""),
-      m_LSF(lsf) {
+      m_LSF(lsf), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))) {
   if (!IsValid()) {
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -109,8 +115,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
 }
 
 // copy constructor
-//  copy everything exept fullpath, rebined buffer (m_FineGridInterpolated,
-//  m_pfgFlux) and const members (m_dLambdaFineGrid &m_method2baseline)
+//  copy everything exept fullpath and const members &m_method2baseline
 CSpectrum::CSpectrum(const CSpectrum &other)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
@@ -119,7 +124,8 @@ CSpectrum::CSpectrum(const CSpectrum &other)
       m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
       m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
       m_spcType(other.m_spcType), m_LSF(other.m_LSF), m_Name(other.m_Name),
-      alreadyRemoved(other.alreadyRemoved) {
+      alreadyRemoved(other.alreadyRemoved),
+      m_rebin(CRebin::create(other.m_rebin->getType(), *this)) {
   if (!IsValid()) {
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -136,7 +142,8 @@ CSpectrum::CSpectrum(CSpectrum &&other)
       m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
       m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)),
       m_spcType(other.m_spcType), m_LSF(std::move(other.m_LSF)),
-      m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved) {
+      m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved),
+      m_rebin(CRebin::create(other.m_rebin->getType(), *this)) {
   if (!IsValid()) {
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -163,6 +170,7 @@ CSpectrum &CSpectrum::operator=(const CSpectrum &other) {
   m_medianEvenReflection = other.m_medianEvenReflection;
   m_Name = other.m_Name;
   alreadyRemoved = other.alreadyRemoved;
+  m_rebin = CRebin::create(other.m_rebin->getType(), *this);
   return *this;
 }
 
@@ -181,6 +189,7 @@ CSpectrum &CSpectrum::operator=(CSpectrum &&other) {
   m_medianEvenReflection = other.m_medianEvenReflection;
   m_Name = std::move(other.m_Name);
   alreadyRemoved = other.alreadyRemoved;
+  m_rebin = CRebin::create(other.m_rebin->getType(), *this);
 
   return *this;
 }
@@ -212,7 +221,7 @@ void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis &fluxaxis) {
 
   ResetContinuum();
   SetType(EType::nType_raw);
-  ClearFineGrid();
+  m_rebin->reset();
   m_RawFluxAxis = fluxaxis;
 }
 
@@ -226,7 +235,7 @@ void CSpectrum::SetFluxAxis(CSpectrumFluxAxis &&fluxaxis) {
 
   ResetContinuum();
   SetType(EType::nType_raw);
-  ClearFineGrid();
+  m_rebin->reset();
   m_RawFluxAxis = std::move(fluxaxis);
 }
 
@@ -240,7 +249,7 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
 
   ResetContinuum();
   SetType(EType::nType_raw);
-  ClearFineGrid();
+  m_rebin->reset();
 
   m_SpectralAxis = std::move(spcaxis);
   SetFluxAxis(std::move(fluxaxis));
@@ -267,46 +276,6 @@ void CSpectrum::InitSpectrum(CParameterStore &parameterStore) {
   SetContinuumEstimationMethod(medianRemovalMethod);
   SetMedianWinsize(medianKernelWidth);
   SetMedianEvenReflection(medianEvenReflection);
-}
-
-/**
- * below should be calculated in the case of precomputedfinegrid
- */
-bool CSpectrum::RebinFineGrid() const {
-  // Precalculate a fine grid template to be used for the 'closest value' rebin
-  // method
-  Int32 n = GetSampleCount();
-  if (!n)
-    return false;
-
-  Float64 lmin = m_SpectralAxis[0]; // template wavelength never starts at 0
-  Float64 lmax = m_SpectralAxis[n - 1];
-  Int32 nTgt = (lmax - lmin) / m_dLambdaFineGrid + 2.0 / m_dLambdaFineGrid;
-
-  m_pfgFlux.resize(nTgt);
-
-  const TAxisSampleList &Ysrc = GetFluxAxis().GetSamplesVector();
-  const TAxisSampleList &Xsrc = m_SpectralAxis.GetSamplesVector();
-
-  // Initialize and allocate the gsl objects
-  gsl_spline *spline = gsl_spline_alloc(gsl_interp_cspline, n);
-  gsl_spline_init(spline, Xsrc.data(), Ysrc.data(), n);
-  gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
-
-  Int32 k = 0;
-  Float64 x = 0.0;
-  for (k = 0; k < nTgt; k++) {
-    x = lmin + k * m_dLambdaFineGrid;
-    if (x < m_SpectralAxis[0] || x > m_SpectralAxis[n - 1]) {
-      m_pfgFlux[k] = 0.0;
-    } else {
-      m_pfgFlux[k] = gsl_spline_eval(spline, x, accelerator);
-    }
-  }
-  gsl_spline_free(spline);
-  gsl_interp_accel_free(accelerator);
-  m_FineGridInterpolated = true;
-  return true;
 }
 
 void CSpectrum::ResetContinuum() const {
@@ -461,7 +430,7 @@ const CSpectrum::EType CSpectrum::GetType() const { return m_spcType; }
 
 void CSpectrum::SetType(const CSpectrum::EType type) const {
   if (m_spcType != type) {
-    ClearFineGrid();
+    m_rebin->reset();
     m_spcType = type;
   }
 }
@@ -720,214 +689,38 @@ void CSpectrum::SetContinuumEstimationMethod(
   m_ContinuumFluxAxis = ContinuumFluxAxis;
 }
 
-void CSpectrum::ClearFineGrid() const {
-  m_FineGridInterpolated = false;
-  m_pfgFlux.clear();
+void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
+  m_rebin = std::move(*m_rebin).convert(opt_interp);
 }
+
+// Test methode Rebin
 
 ///
 /// * This rebin method targets processing speed:
 /// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and
 /// rebinedMask
 /// - opt_interp = 'lin' : linear interpolation is performed by default
-/// - opt_interp = 'precomputedfinegrid' : nearest grid point interpolation is
-/// performed using m_pfgFlux which is the precomputed fine grid
-/// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO - not
+/// - opt_interp = 'precomputedfinegrid' : nearest grid point interpolation
+/// is performed using m_pfgFlux which is the precomputed fine grid
+/// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO -
+/// not tested)
+/// - opt_interp = 'ngp' : nearest grid point is performed (TODO - not
 /// tested)
-/// - opt_interp = 'ngp' : nearest grid point is performed (TODO - not tested)
 /**
- * targetSpectralAxis should be expressed in same frame as source SpetralAxis
+ * targetSpectralAxis should be expressed in same frame as source
+ * SpetralAxis
  */
 void CSpectrum::Rebin(const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-                      const std::string &opt_interp,
                       const std::string &opt_error_interp) const {
-
   if (!IsValid())
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
 
-  Int32 s = targetSpectralAxis.GetSamplesCount();
-  TFloat64Range currentRange = range;
-
-  // find start/end indexs for both axes
-  if (m_SpectralAxis[0] > currentRange.GetBegin() ||
-      m_SpectralAxis[m_SpectralAxis.GetSamplesCount() - 1] <
-          currentRange.GetEnd()) {
-    THROWG(INTERNAL_ERROR, "input spectral range is not "
-                           "included in spectral axis");
-  }
-
-  if (opt_interp == "precomputedfinegrid" && m_FineGridInterpolated == false) {
-    RebinFineGrid();
-  }
-
-  if (m_pfgFlux.size() == 0 && opt_interp == "precomputedfinegrid" &&
-      m_FineGridInterpolated == true)
-    THROWG(INTERNAL_ERROR,
-           "Problem finegrid interpolatted buffer couldnt be computed");
-
-  CSpectrumFluxAxis rebinedFluxAxis = std::move(rebinedSpectrum.m_RawFluxAxis);
-  rebinedFluxAxis.SetSize(s); // does not re-allocate if already allocated
-
-  rebinedMask.SetSize(s);
-
-  const TAxisSampleList &Xsrc = m_SpectralAxis.GetSamplesVector();
-  const TAxisSampleList &Ysrc = GetFluxAxis().GetSamplesVector();
-  const TAxisSampleList &Xtgt = targetSpectralAxis.GetSamplesVector();
-  TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
-  const TFloat64List &Error = GetFluxAxis().GetError().GetSamplesVector();
-  TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
-
-  // Move cursors up to lambda range start
-  Int32 j = 0;
-  while (j < targetSpectralAxis.GetSamplesCount() &&
-         Xtgt[j] < currentRange.GetBegin()) {
-    rebinedMask[j] = 0;
-    Yrebin[j] = 0.0;
-    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
-      ErrorRebin[j] = INFINITY;
-    j++;
-  }
-
-  if (opt_interp == "lin") {
-    // Default linear interp.
-    Int32 k = 0;
-    // For each sample in the valid lambda range interval.
-    while (k < m_SpectralAxis.GetSamplesCount() - 1 &&
-           Xsrc[k] <= currentRange.GetEnd()) {
-      // For each sample in the target spectrum that are in between two
-      // continous source sample
-      while (j < targetSpectralAxis.GetSamplesCount() &&
-             Xtgt[j] <= Xsrc[k + 1]) {
-        // perform linear interpolation of the flux
-        Float64 xSrcStep = (Xsrc[k + 1] - Xsrc[k]);
-        Float64 t = (Xtgt[j] - Xsrc[k]) / xSrcStep;
-        Yrebin[j] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
-        rebinedMask[j] = 1;
-
-        if (opt_error_interp != "no") {
-          if (opt_error_interp == "rebin")
-            ErrorRebin[j] = Error[k] + (Error[k + 1] - Error[k]) * t;
-          else if (opt_error_interp == "rebinVariance") {
-            ErrorRebin[j] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
-                                 Error[k + 1] * Error[k + 1] * t * t);
-            //*
-            Float64 xDestStep = NAN;
-            Float64 xStepCompensation = 1.;
-            if (j < targetSpectralAxis.GetSamplesCount() - 1) {
-              xDestStep = Xtgt[j + 1] - Xtgt[j];
-              xStepCompensation = xSrcStep / xDestStep;
-            } else if (j > 0) {
-              xDestStep = Xtgt[j] - Xtgt[j - 1];
-              xStepCompensation = xSrcStep / xDestStep;
-            }
-            ErrorRebin[j] *= sqrt(xStepCompensation);
-          }
-        }
-        j++;
-      }
-
-      k++;
-    }
-  } else if (opt_interp == "precomputedfinegrid") {
-    // Precomputed FINE GRID nearest sample, 20150801
-    Int32 k = 0;
-    Float64 lmin = m_SpectralAxis[0];
-    // For each sample in the target spectrum
-    while (j < targetSpectralAxis.GetSamplesCount() &&
-           Xtgt[j] <= currentRange.GetEnd()) {
-      k = int((Xtgt[j] - lmin) / m_dLambdaFineGrid + 0.5);
-      Yrebin[j] = m_pfgFlux[k];
-      rebinedMask[j] = 1;
-
-      // note: error rebin not implemented for precomputedfinegrid
-      if (opt_error_interp != "no")
-        THROWG(INTERNAL_ERROR,
-               "noise rebining not implemented for precomputedfinegrid");
-
-      j++;
-    }
-  } else if (opt_interp == "spline") {
-    // GSL method spline
-    // Initialize and allocate the gsl objects
-    Int32 n = m_SpectralAxis.GetSamplesCount();
-    gsl_spline *spline = gsl_spline_alloc(gsl_interp_cspline, n);
-    gsl_spline_init(spline, Xsrc.data(), Ysrc.data(), n);
-    gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
-
-    // For each sample in the valid lambda range interval.
-    while (j < targetSpectralAxis.GetSamplesCount() &&
-           Xtgt[j] <= currentRange.GetEnd()) {
-      Yrebin[j] = gsl_spline_eval(spline, Xtgt[j], accelerator);
-      rebinedMask[j] = 1;
-
-      // note: error rebin not implemented for spline interp
-      if (opt_error_interp != "no") {
-        gsl_spline_free(spline);
-        gsl_interp_accel_free(accelerator);
-        THROWG(INTERNAL_ERROR,
-               "noise rebining not implemented for spline interp");
-      }
-
-      j++;
-    }
-    gsl_spline_free(spline);
-    gsl_interp_accel_free(accelerator);
-
-  } else if (opt_interp == "ngp") {
-    // nearest sample, lookup
-    Int32 k = 0;
-    Int32 n = m_SpectralAxis.GetSamplesCount();
-    while (j < targetSpectralAxis.GetSamplesCount() &&
-           Xtgt[j] <= currentRange.GetEnd()) {
-      // k = gsl_interp_bsearch (Xsrc.data(), Xtgt[j], kprev, n);
-      k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[j]);
-      Float64 xSrcStep = NAN;
-      if (k == Xsrc.size() - 1)
-        xSrcStep = Xsrc[k] - Xsrc[k - 1];
-      else
-        xSrcStep = Xsrc[k + 1] - Xsrc[k];
-
-      // closest value
-      Yrebin[j] = Ysrc[k];
-
-      if (opt_error_interp != "no") {
-        ErrorRebin[j] = Error[k];
-
-        if (opt_error_interp == "rebinVariance") {
-          Float64 xDestStep = NAN;
-          Float64 xStepCompensation = 1.;
-          if (j < targetSpectralAxis.GetSamplesCount() - 1) {
-            xDestStep = Xtgt[j + 1] - Xtgt[j];
-            xStepCompensation = xSrcStep / xDestStep;
-          } else if (j > 0) {
-            xDestStep = Xtgt[j] - Xtgt[j - 1];
-            xStepCompensation = xSrcStep / xDestStep;
-          }
-          ErrorRebin[j] *= sqrt(xStepCompensation);
-        }
-      }
-
-      rebinedMask[j] = 1;
-      j++;
-    }
-  }
-
-  while (j < targetSpectralAxis.GetSamplesCount()) {
-    rebinedMask[j] = 0;
-    Yrebin[j] = 0.0;
-    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
-      ErrorRebin[j] = INFINITY;
-    j++;
-  }
-
-  rebinedSpectrum.ResetContinuum();
-  rebinedSpectrum.SetType(EType::nType_raw);
-  rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,
-                                         std::move(rebinedFluxAxis));
+  m_rebin->compute(range, targetSpectralAxis, rebinedSpectrum, rebinedMask,
+                   opt_error_interp);
 }
 
 void CSpectrum::ScaleFluxAxis(Float64 scale) {
@@ -936,8 +729,7 @@ void CSpectrum::ScaleFluxAxis(Float64 scale) {
     m_ContinuumFluxAxis *= scale;
     m_WithoutContinuumFluxAxis *= scale;
   }
-  if (m_FineGridInterpolated)
-    ClearFineGrid();
+  m_rebin->reset();
 }
 
 void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,

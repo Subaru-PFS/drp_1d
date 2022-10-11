@@ -79,15 +79,14 @@ std::shared_ptr<CModelSpectrumResult>
 COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
-    std::string opt_interp, const Float64 overlapThreshold) {
+    const Float64 overlapThreshold) {
   Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model "
                 "templateFitting for candidate Zcand=%f",
                 redshift);
 
   Float64 overlapRate = 0.0;
   TFloat64Range currentRange;
-  RebinTemplate(tpl, redshift, opt_interp, currentRange, overlapRate,
-                overlapThreshold);
+  RebinTemplate(tpl, redshift, currentRange, overlapRate, overlapThreshold);
 
   const TAxisSampleList &Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
 
@@ -129,8 +128,8 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
 void COperatorTemplateFittingBase::RebinTemplate(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    const std::string &opt_interp, TFloat64Range &currentRange,
-    Float64 &overlapRate, const Float64 overlapThreshold) {
+    TFloat64Range &currentRange, Float64 &overlapRate,
+    const Float64 overlapThreshold) {
   Float64 onePlusRedshift = 1.0 + redshift;
 
   // shift lambdaRange backward to be in restframe
@@ -158,7 +157,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
                            intersectedLambdaRange);
 
   tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
-             m_templateRebined_bf, m_mskRebined_bf, opt_interp);
+             m_templateRebined_bf, m_mskRebined_bf);
 
   // overlapRate
   overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(

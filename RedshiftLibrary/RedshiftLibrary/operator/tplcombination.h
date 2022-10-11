@@ -77,8 +77,8 @@ public:
   std::shared_ptr<CModelSpectrumResult> ComputeSpectrumModel(
       const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
       Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
-      const TFloat64List &amplitudes, std::string opt_interp,
-      const TFloat64Range &lambdaRange, const Float64 overlapThreshold);
+      const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
+      const Float64 overlapThreshold);
 
 private:
   struct STplcombination_basicfitresult {
@@ -107,14 +107,13 @@ private:
                 const TFloat64Range &lambdaRange, Float64 redshift,
                 Float64 overlapThreshold,
                 STplcombination_basicfitresult &fittingResults,
-                std::string opt_interp, Float64 forcedAmplitude,
-                Int32 opt_extinction, Int32 opt_dustFitting,
-                CMask spcMaskAdditional,
+                Float64 forcedAmplitude, Int32 opt_extinction,
+                Int32 opt_dustFitting, CMask spcMaskAdditional,
                 const CPriorHelper::TPriorEList &logpriore,
                 const TInt32List &MeiksinList, const TInt32List &EbmvList);
   void RebinTemplate(const CSpectrum &spectrum,
                      const TTemplateConstRefList &tplList, Float64 redshift,
-                     const TFloat64Range &lambdaRange, std::string opt_interp,
+                     const TFloat64Range &lambdaRange,
                      TFloat64Range &currentRange, Float64 &overlapRate,
                      const Float64 overlapThreshold);
   // buffers for the interpolated axis (templates & spectrum)

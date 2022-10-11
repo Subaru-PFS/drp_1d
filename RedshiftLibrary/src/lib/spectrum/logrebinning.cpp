@@ -172,8 +172,9 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
                                  0.5 * m_logGridStep);
 
   // rebin the spectrum
+  spectrum->setRebinInterpMethod(m_rebinMethod);
   spectrum->Rebin(spcLbdaRange, targetSpectralAxis, *spectrumRebinedLog,
-                  mskRebinedLog, m_rebinMethod, errorRebinMethod);
+                  mskRebinedLog, errorRebinMethod);
 
   spectrumRebinedLog->GetSpectralAxis().IsLogSampled(
       m_logGridStep); // double make sure that sampling is well done
@@ -264,6 +265,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
                              targetSpectralAxis[loglambda_count_tpl - 1] +
                                  0.5 * m_logGridStep);
 
+  tpl->setRebinInterpMethod(m_rebinMethod);
   tpl->Rebin(tplLbdaRange, targetSpectralAxis, *templateRebinedLog,
              mskRebinedLog);
 

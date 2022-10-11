@@ -214,7 +214,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   }
   std::shared_ptr<const ExtremaResult> extremaResult = buildExtremaResults(
       resultStore, scopeStr, candidateResult->m_ranked_candidates, tplCatalog,
-      overlapThreshold, opt_interp);
+      overlapThreshold);
 
   // store extrema results
   StoreExtremaResults(resultStore, extremaResult);
@@ -268,6 +268,7 @@ void CTemplateFittingSolve::Solve(
     }
     spc.SetType(_spctype);
     tpl->SetType(_spctype);
+    tpl->setRebinInterpMethod(opt_interp);
 
     if (_spctype == CSpectrum::nType_continuumOnly) {
       // use continuum only
@@ -429,8 +430,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
 std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
-    const CTemplateCatalog &tplCatalog, Float64 overlapThreshold,
-    std::string opt_interp) {
+    const CTemplateCatalog &tplCatalog, Float64 overlapThreshold) {
 
   Log.LogDetail(
       "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
@@ -543,7 +543,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
         m_templateFittingOperator->ComputeSpectrumModel(
             tpl, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-            opt_interp, overlapThreshold);
+            overlapThreshold);
 
     if (spcmodelPtr == nullptr)
       THROWG(INTERNAL_ERROR, "Could not "
