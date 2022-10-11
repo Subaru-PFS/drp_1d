@@ -79,7 +79,7 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const std::string &opt_continuumcomponent =
       "nocontinuum"; // params->GetScoped<std::string>("continuumcomponent");
 
-  m_linemodel.Init(m_redshifts);
+  m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 
   CLineModelSolution bestModelSolution;
   Float64 bestz = NAN;

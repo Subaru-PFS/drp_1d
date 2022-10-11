@@ -54,14 +54,15 @@ void CObjectSolve::InitRanges(
           "redshiftsampling");
 
   TFloat64Range redshiftRange;
-  Float64 redshiftStep;
-  GetRedshiftSampling(inputContext, redshiftRange, redshiftStep);
+  // below is to be reviewed
+  GetRedshiftSampling(inputContext, redshiftRange, m_redshiftStep);
+
   Log.LogInfo(Formatter() << "Init redshift range with " << redshiftRange
-                          << " and" << redshiftStep);
+                          << " and" << m_redshiftStep);
   if (m_redshiftSampling == "log")
     m_redshifts = redshiftRange.SpreadOverLogZplusOne(
-        redshiftStep); // experimental: spreadover a grid at delta/(1+z),
-                       // unusable because PDF needs regular z-step
+        m_redshiftStep); // experimental: spreadover a grid at delta/(1+z),
+                         // unusable because PDF needs regular z-step
   else
-    m_redshifts = redshiftRange.SpreadOver(redshiftStep);
+    m_redshifts = redshiftRange.SpreadOver(m_redshiftStep);
 }

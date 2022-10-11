@@ -108,7 +108,24 @@ public:
 
     return v;
   }
+  std::vector<T> SpreadOver_backward(T delta) const {
+    std::vector<T> v;
 
+    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta) {
+      v.resize(1);
+      v[0] = m_End;
+      return v;
+    }
+
+    Int32 count = (GetLength() + epsilon) / delta;
+
+    v.resize(count + 1);
+    for (Int32 i = v.size() - 1; i >= 0; i++) {
+      v[i] = GetEnd() - delta * i;
+    }
+
+    return v;
+  }
   std::vector<T> SpreadOverLog(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
@@ -133,11 +150,36 @@ public:
     }
     return v;
   }
-  // spread over log (z+1)
-  std::vector<T> SpreadOverLogZplusOne(T delta) const {
+  std::vector<T> SpreadOverLog_backward(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
-    return SpreadOverLog(delta, 1.);
+
+    std::vector<T> v;
+    if (GetIsEmpty() || delta == 0.0 ||
+        GetLength() < (GetBegin() + offset) * exp(delta) -
+                          (GetBegin() + offset) + epsilon) {
+      v.resize(1);
+      v[0] = m_End;
+      return v;
+    }
+
+    T x = m_End + offset;
+    T edelta = exp(delta);
+    Int32 count = 0;
+    Int32 maxCount = 1e8;
+    while (x > (m_Begin + offset + epsilon) && count < maxCount) {
+      v.insert(v.begin(), x - offset);
+      count++;
+      x /= edelta;
+    }
+    return v;
+  }
+  // spread over log (z+1)
+  std::vector<T> SpreadOverLogZplusOne(T delta, bool backward = false) const {
+    static_assert(std::is_same<T, Float64>::value,
+                  "not implemented"); // compile time check
+    return backward ? SpreadOverLog_backward(delta, 1.)
+                    : SpreadOverLog(delta, 1.);
   }
   //  template<typename T>
   friend std::ostream &operator<<(std::ostream &out, const CRange<T> &range) {

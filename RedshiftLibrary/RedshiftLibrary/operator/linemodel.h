@@ -68,7 +68,8 @@ class COperatorTemplateFittingBase;
 class COperatorLineModel {
 
 public:
-  void Init(const TFloat64List &redshifts);
+  void Init(const TFloat64List &redshifts, Float64 finestep,
+            const std::string &redshiftSampling);
 
   std::shared_ptr<COperatorResult> getResult();
 
@@ -160,7 +161,8 @@ private:
   std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_sortedRedshifts; // fine grid: meant to disappear
   TFloat64List m_Redshifts;       // coarse grid
-
+  Float64 m_fineStep = NAN;
+  std::string m_redshiftSampling = "undefined";
   Int32 m_enableFastFitLargeGrid = 0;
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
@@ -186,6 +188,7 @@ private:
   void getContinuumInfoFromFirstpassFitStore(
       Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
       TTemplateConstRefList &tplList) const;
+  void updateRedshiftGridAndResults();
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
   // lmfit

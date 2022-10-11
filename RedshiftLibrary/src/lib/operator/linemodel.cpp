@@ -609,25 +609,44 @@ void COperatorLineModel::evaluateContinuumAmplitude(
   }
 }
 /**
- * @brief COperatorLineModel::SpanRedshiftWindow
+ * @brief COperatorLineModel::SpanRedshiftWindow: ensure zcand belongs to
+ * extended redshifts
  * @param z
  * @return extendedList
  */
 TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
-  TFloat64List extendedList;
 
   const Float64 halfwindowsize_z = m_secondPass_halfwindowsize * (1. + z);
   TFloat64Range secondpass_window = {z - halfwindowsize_z,
                                      z + halfwindowsize_z};
-  Int32 i_min, i_max;
-  bool ret = secondpass_window.getClosedIntervalIndices(m_result->Redshifts,
-                                                        i_min, i_max);
-  if (!ret) {
-    THROWG(INTERNAL_ERROR, "Second pass window outside z range");
-  }
-  for (Int32 i = i_min; i <= i_max; ++i) {
-    extendedList.push_back(m_result->Redshifts[i]);
-  }
+
+  /*Int32 count =
+      (log(z + 1) - log(secondpass_window.GetBegin() + 1)) / m_fineStep;
+  Float64 log_min = log(z + 1) - count * m_fineStep;
+  Float64 min = exp(log_min) - 1;*/
+  TFloat64Range secondpass_window_part1 = {z - halfwindowsize_z, z}; //{min, z}
+  TFloat64List extendedList =
+      (m_redshiftSampling == "log")
+          ? secondpass_window_part1.SpreadOverLogZplusOne(m_fineStep,
+                                                          true) // backward
+          : secondpass_window_part1.SpreadOver_backward(m_fineStep);
+
+  // construct secondpass windows by parts to ensure having zcand in the
+  // interval //below code should be reviewed
+  TFloat64Range secondpass_window_part2 = {z, z + halfwindowsize_z};
+  TFloat64List extendedList_part2 =
+      (m_redshiftSampling == "log")
+          ? secondpass_window_part2.SpreadOverLogZplusOne(m_fineStep)
+          : secondpass_window_part2.SpreadOver(m_fineStep);
+
+  extendedList.insert(std::end(extendedList),
+                      std::begin(extendedList_part2) + 1,
+                      std::end(extendedList_part2));
+
+  if (!std::is_sorted(std::begin(extendedList), std::end(extendedList)))
+    THROWG(INTERNAL_ERROR, "vector is not sorted");
+  // check presence of z in extendedList
+  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
 
   return extendedList;
 }
@@ -906,6 +925,8 @@ void COperatorLineModel::ComputeSecondPass(
       firstpassResults->m_ranked_candidates.cbegin(),
       firstpassResults->m_ranked_candidates.cend());
 
+  // insert extendedRedshifts into m_Redshifts
+  updateRedshiftGridAndResults();
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
   //  estimate second pass parameters (mainly elv, alv...)
@@ -1213,10 +1234,36 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
   return ExtremaResult;
 }
 
+void COperatorLineModel::updateRedshiftGridAndResults() {
+
+  for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
+    Float64 z = m_firstpass_extremaResult->Redshift(i);
+    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
+    Int32 s = std::round(
+        (m_firstpass_extremaResult->ExtendedRedshifts[i].size() - 1) / 2);
+
+    TInt32List indices = CLineModelResult::insertIntoRedshiftGrid(
+        m_Redshifts, m_firstpass_extremaResult->ExtendedRedshifts[i]);
+    /*CLineModelResult::insertAroundIndex(
+        m_Redshifts, idx, s, m_firstpass_extremaResult->ExtendedRedshifts[i]);*/
+    // verifications:
+    auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
+    auto _j = std::distance(m_Redshifts.begin(), it);
+
+    std::cout << std::distance(m_Redshifts.begin(), it) << "\n";
+
+    if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
+      THROWG(INTERNAL_ERROR, "linemodel vector is not sorted");
+    /*m_result->updateVectors(idx,
+                            m_firstpass_extremaResult->ExtendedRedshifts[i]);*/
+    m_result->updateVectors(idx, indices,
+                            m_firstpass_extremaResult->ExtendedRedshifts[i]);
+  }
+}
 /**
  * @brief COperatorLineModel::estimateSecondPassParameters
  * - Estimates best parameters: elv and alv
- * - Store parameters for further use into:
+ * - Store parameters for further use
  *
  *
  * @return
@@ -1230,7 +1277,6 @@ void COperatorLineModel::EstimateSecondPassParameters(
       ps->GetScoped<bool>("linemodel.velocityfit");
   const std::string &opt_continuumreest =
       ps->GetScoped<std::string>("linemodel.continuumreestimation");
-  // HARDCODED - override: no-velocityfitting for abs
 
   m_fittingManager->logParameters();
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
@@ -1656,7 +1702,8 @@ void COperatorLineModel::RecomputeAroundCandidates(
   }
 }
 
-void COperatorLineModel::Init(const TFloat64List &redshifts) {
+void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
+                              const std::string &redshiftSampling) {
 
   m_tplCategoryList = {Context.GetCurrentCategory()};
   // initialize empty results so that it can be returned anyway in case of an
@@ -1669,15 +1716,19 @@ void COperatorLineModel::Init(const TFloat64List &redshifts) {
 
   m_opt_continuumcomponent = ps->GetScoped<std::string>("continuumcomponent");
 
-  // sort the redshifts: kept here temporarily since CreateRedshiftLargeGrid use
-  // it for the moment
+  // sort the redshifts: kept here temporarily since CreateRedshiftLargeGrid
+  // use it for the moment
   m_sortedRedshifts = redshifts;
   std::sort(m_sortedRedshifts.begin(), m_sortedRedshifts.end());
+
+  // init relevant elements to generate secondpass intervals
+  m_fineStep = finestep;
+  m_redshiftSampling = redshiftSampling;
 
   // TODO: temporary code till we decide with Didier about where to create the
   // coarse grid
   Int32 opt_twosteplargegridstep_ratio =
-      ps->GetScoped<Int32>("linemodel.firstpass.largegridstepratio");
+      ps->GetScoped<Int32>("firstpass.largegridstepratio");
   m_enableFastFitLargeGrid = Int32(opt_twosteplargegridstep_ratio > 1);
   CreateRedshiftLargeGrid(opt_twosteplargegridstep_ratio, m_Redshifts);
 

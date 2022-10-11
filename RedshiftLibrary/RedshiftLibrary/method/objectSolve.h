@@ -54,6 +54,7 @@ public:
 
 protected:
   void InitRanges(std::shared_ptr<const CInputContext> inputContext) override;
+  Float64 m_redshiftStep = NAN;
 };
 } // namespace NSEpic
 

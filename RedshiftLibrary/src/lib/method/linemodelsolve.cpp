@@ -561,7 +561,7 @@ void CLineModelSolve::Solve() {
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
 
   // Compute with linemodel operator
-  m_linemodel.Init(m_redshifts);
+  m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 
   // logstep from redshift
 
@@ -606,7 +606,7 @@ void CLineModelSolve::Solve() {
   std::string fpb_opt_continuumcomponent =
       "fromspectrum"; // Note: this is hardocoded! given that condition for
                       // FPB relies on having "tplfit"
-  linemodel_fpb.Init(m_redshifts);
+  linemodel_fpb.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 
   if (enableFirstpass_B) {
     Log.LogInfo("Linemodel FIRST PASS B enabled. Computing now.");
