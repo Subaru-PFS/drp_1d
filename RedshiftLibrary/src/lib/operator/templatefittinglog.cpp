@@ -509,8 +509,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
 
   for (Int32 k = 0; k < nzranges; k++) {
     // prepare the zrange-result container
-    std::shared_ptr<CTemplateFittingResult> subresult =
-        std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
+    std::shared_ptr<CTemplateFittingResult> subresult;
     TFloat64Range zrange =
         TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()],
                       result->Redshifts[izrangelist[k].GetEnd()]);
@@ -520,14 +519,17 @@ Int32 COperatorTemplateFittingLog::FitAllz(
                                    last = result->Redshifts.begin() +
                                           izrangelist[k].GetEnd() + 1;
       TFloat64List subRedshifts(first, last);
-      subresult->Init(subRedshifts.size(), EbmvList.size(), MeiksinList.size());
+      subresult = std::make_shared<CTemplateFittingResult>(
+          subRedshifts.size(), EbmvList.size(), MeiksinList.size());
+
       subresult->Redshifts = subRedshifts;
-      // slice the template
+
     } else {
-      subresult->Init(result->Redshifts.size(), EbmvList.size(),
-                      MeiksinList.size());
+      subresult = std::make_shared<CTemplateFittingResult>(
+          result->Redshifts.size(), EbmvList.size(), MeiksinList.size());
       subresult->Redshifts = result->Redshifts;
     }
+
     TInt32Range ilbda = FindTplSpectralIndex(zrange);
     Log.LogDebug("FitAllz: zrange min=%f, max=%f", zrange.GetBegin(),
                  zrange.GetEnd());
@@ -1178,8 +1180,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   m_enableIGM = opt_extinction;
   m_enableISM = opt_dustFitting;
   std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>();
-  result->Init(m_redshifts.size(), nISMCoeffs, nIGMCoeffs);
+      std::make_shared<CTemplateFittingResult>(m_redshifts.size(), nISMCoeffs,
+                                               nIGMCoeffs);
   result->Redshifts = m_redshifts;
 
   // WARNING: no additional masks coded for use as of 2017-06-13

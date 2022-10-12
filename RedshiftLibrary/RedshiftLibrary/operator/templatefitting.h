@@ -76,15 +76,16 @@ struct TFittingIsmIgmResult : TFittingResult {
       : ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
         IsmCalzettiCoeffInterm(EbmvListSize,
                                TFloat64List(MeiksinListSize, NAN)),
-        IgmMeiksinIdxInterm(EbmvListSize, TInt32List(MeiksinListSize, -1)) {}
+        IgmMeiksinIdxInterm(EbmvListSize,
+                            TInt32List(MeiksinListSize, undefIdx)) {}
 
   Float64 overlapRate = NAN;
   Float64 EbmvCoeff = NAN;
-  Int32 MeiksinIdx = -1;
+  Int32 MeiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
   std::vector<TFloat64List> IsmCalzettiCoeffInterm;
   std::vector<TInt32List> IgmMeiksinIdxInterm;
-  COperator::EStatus status = COperator::EStatus::nStatus_DataError;
+  COperator::EStatus status = COperator::EStatus::nStatus_UnSet;
 };
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {

@@ -424,9 +424,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
 
   // sort the redshift and keep track of the indexes
-  TFloat64List sortedRedshifts;
-  TFloat64List sortedIndexes;
-  // This is a vector of {value,index} pairs
+  TFloat64List sortedRedshifts(m_redshifts.size());
+  TFloat64List sortedIndexes(m_redshifts.size());
   vector<pair<Float64, Int32>> vp;
   vp.reserve(m_redshifts.size());
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
@@ -434,18 +433,17 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
   std::sort(vp.begin(), vp.end());
   for (Int32 i = 0; i < vp.size(); i++) {
-    sortedRedshifts.push_back(vp[i].first);
-    sortedIndexes.push_back(vp[i].second);
+    sortedRedshifts[i] = vp[i].first;
+    sortedIndexes[i] = vp[i].second;
   }
 
   std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>();
+      std::make_shared<CTemplateFittingResult>(sortedRedshifts.size());
   TInt32List MeiksinList;
   TInt32List EbmvList;
   tpl->GetIsmIgmIdxList(opt_extinction, opt_dustFitting, MeiksinList, EbmvList,
                         FitEbmvIdx, FitMeiksinIdx);
 
-  result->Init(sortedRedshifts.size());
   result->Redshifts = sortedRedshifts;
 
   // default mask

@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
@@ -57,6 +58,32 @@ namespace NSEpic {
 class CSpectrum;
 class COperatorResult;
 class CModelSpectrumResult;
+
+struct STplcombination_basicfitresult : TFittingIsmIgmResult {
+  STplcombination_basicfitresult(Int32 EbmvListSize, Int32 MeiksinListSize,
+                                 Int32 componentCount)
+      : TFittingIsmIgmResult(EbmvListSize, MeiksinListSize),
+        fittingAmplitudes(componentCount, NAN),
+        fittingAmplitudeErrors(componentCount, NAN),
+        fittingAmplitudeSigmas(componentCount, NAN),
+        fittingAmplitudesInterm(
+            EbmvListSize,
+            std::vector<TFloat64List>(MeiksinListSize,
+                                      TFloat64List(componentCount, NAN))),
+        tplNames(componentCount),
+        COV(componentCount, TFloat64List(componentCount, NAN)){};
+
+  TFloat64List fittingAmplitudes;
+  TFloat64List fittingAmplitudeErrors;
+  TFloat64List fittingAmplitudeSigmas;
+
+  std::vector<std::vector<TFloat64List>>
+      fittingAmplitudesInterm; // intermediate amplitudes
+  TStringList tplNames;        // cause combination of templates
+
+  Float64 SNR = NAN;
+  std::vector<TFloat64List> COV;
+};
 
 class COperatorTplcombination {
 public:
@@ -80,25 +107,6 @@ public:
       const Float64 overlapThreshold);
 
 private:
-  struct STplcombination_basicfitresult {
-    COperator::EStatus status;
-    Float64 overlapRate;
-    Float64 chisquare;
-    TFloat64List fittingAmplitudes;
-    TFloat64List fittingAmplitudeErrors;
-    TFloat64List fittingAmplitudeSigmas;
-    std::vector<TFloat64List> ChiSquareInterm;
-    std::vector<TFloat64List> IsmCalzettiCoeffInterm;
-    std::vector<TInt32List> IgmMeiksinIdxInterm;
-    std::vector<std::vector<TFloat64List>>
-        fittingAmplitudesInterm; // intermediate amplitudes
-    TStringList tplNames;        // cause combination of templates
-    Int32 IGMIdx;
-    Float64 EbmvCoeff;
-    Float64 SNR;
-    std::vector<TFloat64List> COV;
-  };
-
   void BasicFit_preallocateBuffers(const CSpectrum &spectrum,
                                    const TTemplateConstRefList &tplList);
 

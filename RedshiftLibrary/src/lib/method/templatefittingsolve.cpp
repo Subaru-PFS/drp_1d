@@ -296,25 +296,21 @@ void CTemplateFittingSolve::Solve(
         templateFittingResult->ChiSquareIntermediate.size() > 0 &&
         templateFittingResult->ChiSquareIntermediate.size() ==
             templateFittingResult->Redshifts.size()) {
-      Int32 nISM = templateFittingResult->ChiSquareIntermediate[0].size();
-      if (templateFittingResult->ChiSquareIntermediate[0].size() > 0) {
-        Int32 nIGM = templateFittingResult->ChiSquareIntermediate[0][0].size();
-
+      const Int32 nz = templateFittingResult->Redshifts.size();
+      const Int32 nISM = templateFittingResult->ChiSquareIntermediate[0].size();
+      if (nISM > 0) {
+        const Int32 nIGM =
+            templateFittingResult->ChiSquareIntermediate[0][0].size();
         for (Int32 kism = 0; kism < nISM; kism++) {
           for (Int32 kigm = 0; kigm < nIGM; kigm++) {
             std::shared_ptr<CTemplateFittingResult>
                 result_chisquare_intermediate =
-                    std::shared_ptr<CTemplateFittingResult>(
-                        new CTemplateFittingResult());
-            result_chisquare_intermediate->Init(
-                templateFittingResult->Redshifts.size(), 0, 0);
-            for (Int32 kz = 0; kz < templateFittingResult->Redshifts.size();
-                 kz++) {
-              result_chisquare_intermediate->Redshifts[kz] =
-                  templateFittingResult->Redshifts[kz];
+                    std::make_shared<CTemplateFittingResult>(nz);
+            result_chisquare_intermediate->Redshifts =
+                templateFittingResult->Redshifts;
+            for (Int32 kz = 0; kz < nz; kz++)
               result_chisquare_intermediate->ChiSquare[kz] =
                   templateFittingResult->ChiSquareIntermediate[kz][kism][kigm];
-            }
 
             std::string resname =
                 (boost::format("%s_intermediate_ism%d_igm%d") %
