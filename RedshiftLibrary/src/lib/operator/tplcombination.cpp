@@ -93,7 +93,7 @@ void COperatorTplcombination::BasicFit(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     const TFloat64Range &lambdaRange, Float64 redshift,
     Float64 overlapThreshold, STplcombination_basicfitresult &fittingResults,
-    Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting,
+    Float64 forcedAmplitude, bool opt_extinction, bool opt_dustFitting,
     CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
     const TInt32List &MeiksinList, const TInt32List &EbmvList) {
   Log.LogDebug(" BasicFit - for z=%f", redshift);
@@ -143,8 +143,8 @@ void COperatorTplcombination::BasicFit(
   Int32 nISM = EbmvList.size();
   Int32 nIGM = MeiksinList.size();
 
-  Int32 iEbmvCoeffMin = EbmvList[0];
-  Int32 iEbmvCoeffMax = EbmvList[nISM - 1];
+  Int32 iEbmvCoeffMin = EbmvList.front();
+  Int32 iEbmvCoeffMax = EbmvList.back();
 
   // Linear fit
   Int32 n = kEnd - kStart + 1;
@@ -223,7 +223,7 @@ void COperatorTplcombination::BasicFit(
 
     bool igmCorrectionAppliedOnce = false;
     // applyMeiksin on all templates
-    if (opt_extinction == 1 && !DisextinctData) {
+    if (opt_extinction && !DisextinctData) {
       if (currentRange.GetBegin() / (1 + redshift) >
           RESTLAMBDA_LYA) // bug??: why dividing by (1+z) if currentRange is
                           // already in restframe??
@@ -241,11 +241,11 @@ void COperatorTplcombination::BasicFit(
         igmLoopUseless_WavelengthRange = true;
     }
 
-    for (Int32 kEbmv = iEbmvCoeffMin; kEbmv <= iEbmvCoeffMax; kEbmv++) {
-      Int32 kEbmv_ = kEbmv - iEbmvCoeffMin; // index used to fill some arrays
-      Float64 coeffEBMV = -1.; // no ism by default (ie DustCoeff=1.)
+    for (Int32 kEbmv_ = 0; kEbmv_ < nISM; kEbmv_++) {
+      Int32 kEbmv = EbmvList[kEbmv_];
+      Float64 coeffEBMV = -1.0; // no ism by default
       // apply ism on all templates, once for all
-      if (opt_dustFitting == 1 && !DisextinctData) {
+      if (opt_dustFitting && !DisextinctData) {
         coeffEBMV =
             m_templatesRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvValue(
                 kEbmv);
@@ -393,7 +393,8 @@ void COperatorTplcombination::BasicFit(
       if (chisq < fittingResults.chisquare) {
         fittingResults.chisquare = chisq;
         fittingResults.SNR = SNR;
-        fittingResults.IGMIdx = igmCorrectionAppliedOnce ? meiksinIdx : -1;
+        fittingResults.IGMIdx =
+            igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
         fittingResults.EbmvCoeff = coeffEBMV;
         status_chisquareSetAtLeastOnce = true;
       }
@@ -402,7 +403,7 @@ void COperatorTplcombination::BasicFit(
       fittingResults.ChiSquareInterm[kEbmv_][kigm] = fittingResults.chisquare;
       fittingResults.IsmCalzettiCoeffInterm[kEbmv_][kigm] = coeffEBMV;
       fittingResults.IgmMeiksinIdxInterm[kEbmv_][kigm] =
-          igmCorrectionAppliedOnce ? meiksinIdx : -1;
+          igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
 
       boost::chrono::thread_clock::time_point stop_postprocess =
           boost::chrono::thread_clock::now();
@@ -531,9 +532,9 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
     Float64 overlapThreshold, const std::vector<CMask> &additional_spcMasks,
-    const std::string &opt_interp, Int32 opt_extinction, Int32 opt_dustFitting,
-    const CPriorHelper::TPriorZEList &logpriorze, bool keepigmism,
-    Float64 FitEbmvCoeff, Int32 FitMeiksinIdx) {
+    const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting,
+    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx) {
   Int32 componentCount = tplList.size();
   Log.LogInfo(" starting computation with N-template = %d", componentCount);
 
@@ -572,8 +573,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   TInt32List MeiksinList;
   TInt32List EbmvList;
   m_templatesRebined_bf.front().GetIsmIgmIdxList(
-      opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism,
-      FitEbmvCoeff, FitMeiksinIdx);
+      opt_extinction, opt_dustFitting, MeiksinList, EbmvList, FitEbmvIdx,
+      FitMeiksinIdx);
   Int32 MeiksinListSize = MeiksinList.size();
   Int32 EbmvListSize = EbmvList.size();
   Log.LogDebug(" prepare N ism coeffs = %d", EbmvListSize);
@@ -616,10 +617,9 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
     // initializing fittingResults: could be moved to another function
     STplcombination_basicfitresult fittingResults;
-    if (keepigmism && opt_dustFitting && opt_extinction) {
-      fittingResults.IGMIdx = FitMeiksinIdx;
-      fittingResults.EbmvCoeff = FitEbmvCoeff;
-    }
+    fittingResults.IGMIdx = undefIdx;
+    fittingResults.EbmvCoeff = NAN;
+
     // init fittingResult intermediate values before passing to ::BasicFit
     fittingResults.fittingAmplitudesInterm.resize(EbmvListSize);
 
@@ -627,8 +627,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
         EbmvListSize, TFloat64List(MeiksinListSize, INFINITY));
     fittingResults.IsmCalzettiCoeffInterm = std::vector<TFloat64List>(
         EbmvListSize, TFloat64List(MeiksinListSize, NAN));
-    fittingResults.IgmMeiksinIdxInterm =
-        std::vector<TInt32List>(EbmvListSize, TInt32List(MeiksinListSize, -1));
+    fittingResults.IgmMeiksinIdxInterm = std::vector<TInt32List>(
+        EbmvListSize, TInt32List(MeiksinListSize, undefIdx));
 
     fittingResults.fittingAmplitudesInterm =
         std::vector<std::vector<TFloat64List>>(

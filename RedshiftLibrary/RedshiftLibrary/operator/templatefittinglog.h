@@ -72,11 +72,10 @@ public:
   Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
           Float64 overlapThreshold,
           const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-          Int32 opt_extinction = 0, Int32 opt_dustFitting = -1,
+          bool opt_extinction = false, bool opt_dustFitting = false,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
-          bool keepigmism = false, Float64 FitEbmvCoeff = -1.,
-          Int32 FitMeiksinIdx = -1) override;
+          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
 
   inline bool IsFFTProcessing() override { return true; };
 

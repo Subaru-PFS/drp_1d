@@ -91,51 +91,6 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
   return m_fitContinuum_priorhelper;
 }
 
-void CContinuumManager::SolveContinuum(
-    const std::shared_ptr<const CTemplate> &tpl, const TFloat64List &redshifts,
-    Float64 overlapThreshold, std::vector<CMask> maskList,
-    std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFit,
-    Float64 &merit, Float64 &fitAmplitude, Float64 &fitAmplitudeError,
-    Float64 &fitAmplitudeSigma, Float64 &FitEbmvCoeff, Int32 &fitMeiksinIdx,
-    Float64 &fitDtM, Float64 &fitMtM, Float64 &fitLogprior) {
-  CPriorHelper::TPriorZEList zePriorData;
-
-  m_fitContinuum_priorhelper->GetTplPriorData(tpl->GetName(), redshifts,
-                                              zePriorData);
-  bool keepigmism = false;
-  if (FitEbmvCoeff + fitMeiksinIdx != -2) {
-    keepigmism = true;
-  }
-
-  // Compute merit function
-  // Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(),
-  // redshifts[0]); CRef<CChisquareResult>  chisquareResult =
-  // (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange,
-  // redshifts, overlapThreshold );
-  m_templateFittingOperator->SetRedshifts(redshifts);
-  tpl->setRebinInterpMethod(opt_interp);
-  auto templateFittingResult =
-      std::dynamic_pointer_cast<CTemplateFittingResult>(
-          m_templateFittingOperator->Compute(
-              tpl, overlapThreshold, maskList, opt_interp, opt_extinction,
-              opt_dustFit, zePriorData, keepigmism, FitEbmvCoeff,
-              fitMeiksinIdx));
-
-  if (!templateFittingResult)
-    THROWG(INTERNAL_ERROR, "Failed to compute chi square value");
-
-  // Store results
-  merit = templateFittingResult->ChiSquare[0];
-  fitAmplitude = templateFittingResult->FitAmplitude[0];
-  fitAmplitudeError = templateFittingResult->FitAmplitudeError[0];
-  fitAmplitudeSigma = templateFittingResult->FitAmplitudeSigma[0];
-  FitEbmvCoeff = templateFittingResult->FitEbmvCoeff[0];
-  fitMeiksinIdx = templateFittingResult->FitMeiksinIdx[0];
-  fitDtM = templateFittingResult->FitDtM[0];
-  fitMtM = templateFittingResult->FitMtM[0];
-  fitLogprior = templateFittingResult->LogPrior[0];
-}
-
 const std::string &CContinuumManager::getFitContinuum_tplName() const {
   return m_fitContinuum_tplName;
 }

@@ -241,17 +241,6 @@ void CTemplateFittingSolve::Solve(
                                      CSpectrum::nType_noContinuum,
                                      CSpectrum::nType_continuumOnly};
 
-  Int32 enable_extinction =
-      0; // TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-  if (opt_extinction) {
-    enable_extinction = 1;
-  }
-
-  Int32 option_dustFitting = -1;
-  if (opt_dustFitting) {
-    option_dustFitting = -10;
-  }
-
   // case: nType_all
   if (spctype == nType_all) {
     _ntype = 3;
@@ -282,7 +271,7 @@ void CTemplateFittingSolve::Solve(
       // use spectrum without continuum
       scopeStr = "templatefitting_nocontinuum";
       //
-      option_dustFitting = -1;
+      opt_dustFitting = false;
     } else {
       // unknown type
       THROWG(INTERNAL_ERROR, "Unknown spectrum component");
@@ -292,8 +281,8 @@ void CTemplateFittingSolve::Solve(
     auto templateFittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
             m_templateFittingOperator->Compute(tpl, overlapThreshold, maskList,
-                                               opt_interp, enable_extinction,
-                                               option_dustFitting));
+                                               opt_interp, opt_extinction,
+                                               opt_dustFitting));
 
     if (!templateFittingResult)
       THROWG(INTERNAL_ERROR, "no results returned by templateFittingOperator");

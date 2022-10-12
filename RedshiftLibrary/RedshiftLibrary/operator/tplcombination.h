@@ -65,12 +65,11 @@ public:
           const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
           Float64 overlapThreshold,
           const std::vector<CMask> &additional_spcMasks,
-          const std::string &opt_interp, Int32 opt_extinction = 0,
-          Int32 opt_dustFitting = 0,
+          const std::string &opt_interp, bool opt_extinction = false,
+          bool opt_dustFitting = false,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
-          bool keepigmism = false, Float64 FitEbmvCoeff = -1.,
-          Int32 FitMeiksinIdx = -1);
+          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx);
 
   Float64 ComputeDtD(const CSpectrumFluxAxis &spcFluxAxis,
                      const TInt32Range &range); // could be also made static
@@ -107,8 +106,8 @@ private:
                 const TFloat64Range &lambdaRange, Float64 redshift,
                 Float64 overlapThreshold,
                 STplcombination_basicfitresult &fittingResults,
-                Float64 forcedAmplitude, Int32 opt_extinction,
-                Int32 opt_dustFitting, CMask spcMaskAdditional,
+                Float64 forcedAmplitude, bool opt_extinction,
+                bool opt_dustFitting, CMask spcMaskAdditional,
                 const CPriorHelper::TPriorEList &logpriore,
                 const TInt32List &MeiksinList, const TInt32List &EbmvList);
   void RebinTemplate(const CSpectrum &spectrum,

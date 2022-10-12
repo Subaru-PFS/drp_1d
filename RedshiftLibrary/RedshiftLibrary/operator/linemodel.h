@@ -130,8 +130,8 @@ public:
              // deciding on rebinning
   bool m_opt_tplfit_fftprocessing_secondpass = false; // true;
   bool m_opt_tplfit_use_photometry = false;
-  Int32 m_opt_tplfit_dustFit = 1;
-  Int32 m_opt_tplfit_extinction = 1;
+  bool m_opt_tplfit_dustFit = true;
+  bool m_opt_tplfit_extinction = true;
   Int32 m_opt_fitcontinuum_maxN = 2;
   bool m_opt_tplfit_ignoreLinesSupport =
       false; // default: false, as ortho templates store makes this un-necessary
@@ -181,9 +181,9 @@ private:
                         std::vector<std::shared_ptr<CTemplateFittingResult>>
                             &chisquareResultsAllTpl,
                         TStringList &chisquareResultsTplName);
-  bool getContinuumInfoFromFirstpassFitStore(
-      Int32 candidateIdx, TInt32List &meiksinIndices, TFloat64List &EbmvCoeffs,
-      TInt32List &ebmvIndices, TTemplateConstRefList &tplList) const;
+  void getContinuumInfoFromFirstpassFitStore(
+      Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
+      TTemplateConstRefList &tplList) const;
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
   // lmfit

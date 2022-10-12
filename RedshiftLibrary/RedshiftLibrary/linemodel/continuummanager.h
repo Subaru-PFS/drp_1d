@@ -25,15 +25,6 @@ public:
                     const std::shared_ptr<CSpectrumModel> &model,
                     const TLambdaRange &lambdaRange);
 
-  void SolveContinuum(const std::shared_ptr<const CTemplate> &tpl,
-                      const TFloat64List &redshifts, Float64 overlapThreshold,
-                      std::vector<CMask> maskList, std::string opt_interp,
-                      Int32 opt_extinction, Int32 opt_dustFit, Float64 &merit,
-                      Float64 &fitAmplitude, Float64 &fitAmplitudeError,
-                      Float64 &fitAmplitudeSigma, Float64 &fitEbmvCoeff,
-                      Int32 &fitMeiksinIdx, Float64 &fitDtM, Float64 &fitMtM,
-                      Float64 &fitLogprior);
-
   const std::string &getFitContinuum_tplName() const;
   Float64 getFitContinuum_tplAmplitude() const;
   Float64 getFitContinuum_tplAmplitudeError() const;
