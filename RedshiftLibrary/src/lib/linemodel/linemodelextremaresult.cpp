@@ -166,7 +166,7 @@ void TLineModelResult::updateFromModel(
     Float64 ratioSTD = OutsideLinesSTDFlux / OutsideLinesSTDError;
     Float64 ratio_thres = 1.5;
     if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
-      Flag.warning(Flag.STDESTIMATION_NO_MATCHING,
+      Flag.warning(WarningCode::STDESTIMATION_NO_MATCHING,
                    Formatter()
                        << "  TLineModelResult::" << __func__
                        << ": STD estimations outside lines do not match: ratio="
@@ -178,7 +178,7 @@ void TLineModelResult::updateFromModel(
                   ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
     }
   } else {
-    Flag.warning(Flag.STDESTIMATION_FAILED,
+    Flag.warning(WarningCode::STDESTIMATION_FAILED,
                  Formatter() << "  TLineModelResult::" << __func__
                              << ": unable to get STD estimations...");
   }

@@ -672,7 +672,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     }
   }
   if (oneValidStatusFoundIndex == -1) {
-    Flag.warning(Flag.INVALID_MERIT_VALUES,
+    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
                  Formatter() << "  COperatorTplcombination::" << __func__
                              << ": STATUS WARNING: Not even one single valid "
                                 "fit/merit value found");
@@ -690,7 +690,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     }
   }
   if (loopErrorStatusFoundIndex != -1) {
-    Flag.warning(Flag.INVALID_MERIT_VALUES,
+    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
                  Formatter()
                      << "    COperatorTplcombination::" << __func__
                      << ": Loop Error - lst-square values not set even once");

@@ -551,7 +551,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
   if (fftprocessing && ignoreLinesSupport == true) {
     ignoreLinesSupport = false;
-    Flag.warning(Flag.IGNORELINESSUPPORT_DISABLED_FFT,
+    Flag.warning(WarningCode::IGNORELINESSUPPORT_DISABLED_FFT,
                  Formatter() << "  COperatorLineModel::" << __func__
                              << ": unable to ignoreLinesSupport if "
                                 "fftprocessing. ignoreLinesSupport disabled");
@@ -672,7 +672,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                          << fitValues.fitAmplitudeSigma
                          << " & error = " << fitValues.fitAmplitudeError);
     } else {
-      Flag.warning(Flag.FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
+      Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
                    Formatter()
                        << ": Switching to spectrum continuum since Negative "
                           "continuum amplitude found at z="
@@ -687,7 +687,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
   // check if continuum is too weak comparing to the preset threshold
   if (std::abs(fitValues.fitAmplitudeSigma) <
       m_opt_continuum_null_amp_threshold) {
-    Flag.warning(Flag.FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
+    Flag.warning(WarningCode::FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
                  Formatter()
                      << ": Switching to nocontinuum since close to null "
                         "continuum amplitude found at z="
@@ -902,13 +902,13 @@ void COperatorLineModel::Combine_firstpass_candidates(
           m_result->ContinuumModelSolutions[idx].pCoeffs;
 
       if (m_result->ContinuumModelSolutions[idx].tplName == "") {
-        Flag.warning(Flag.TPL_NAME_EMPTY,
+        Flag.warning(WarningCode::TPL_NAME_EMPTY,
                      Formatter() << "COperatorLineModel::" << __func__
                                  << ": Saving first pass extremum w. "
                                     "ContinuumModelSolutions tplname="
                                  << m_result->ContinuumModelSolutions[idx]
                                         .tplName.c_str());
-        Flag.warning(Flag.TPL_NAME_EMPTY,
+        Flag.warning(WarningCode::TPL_NAME_EMPTY,
                      Formatter()
                          << "COperatorLineModel::" << __func__
                          << ": Saving first pass extremum w. result idx=" << idx
@@ -1163,7 +1163,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       if (Context.GetParameterStore()->GetScoped<bool>(
               "linemodel.skipsecondpass")) {
         contreest_iterations = 0;
-        Flag.warning(Flag.DEACTIVATE_CONTREESTIMATION_SKIPSECONDPASS,
+        Flag.warning(WarningCode::DEACTIVATE_CONTREESTIMATION_SKIPSECONDPASS,
                      "onlyextrema value for ContinuumReestimation is "
                      "unavailable since secondpass is skipped");
       }

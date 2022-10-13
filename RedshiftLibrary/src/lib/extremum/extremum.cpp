@@ -139,7 +139,7 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
     // we should not raise an exception here
     // (we can accept a missing candidate in second pass window)
     // The boolean return has to be tested by the caller
-    Flag.warning(Flag.FINDER_NO_PEAKS,
+    Flag.warning(WarningCode::FINDER_NO_PEAKS,
                  Formatter() << "          CExtremum::" << __func__
                              << ": FindAllPeaks returned empty MaxX");
     return false;

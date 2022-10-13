@@ -1186,7 +1186,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
 
   // WARNING: no additional masks coded for use as of 2017-06-13
   if (additional_spcMasks.size() != 0)
-    Flag.warning(Flag.TEMPLATEFITTINGLOG_NO_MASK,
+    Flag.warning(WarningCode::TEMPLATEFITTINGLOG_NO_MASK,
                  Formatter()
                      << "COperatorTemplateFittingLog::" << __func__
                      << "No additional masks used. "

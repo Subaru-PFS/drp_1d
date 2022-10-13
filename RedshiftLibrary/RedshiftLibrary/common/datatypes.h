@@ -106,6 +106,7 @@ typedef struct {
 } TPolynomCoeffs;
 
 #include "RedshiftLibrary/common/errorcodes.i"
+#include "RedshiftLibrary/common/warningcodes.i"
 
 } // namespace NSEpic
 

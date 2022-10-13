@@ -59,7 +59,7 @@ void CSolve::GetRedshiftSampling(
     redshiftStep = inputContext->m_logGridStep;
     if (m_redshiftSampling == "lin") {
       m_redshiftSampling = "log";
-      Flag.warning(Flag.FORCE_LOGSAMPLING_FFT,
+      Flag.warning(WarningCode::FORCE_LOGSAMPLING_FFT,
                    Formatter() << "CSolve::" << __func__
                                << ": m_redshift sampling value is forced to "
                                   "log since FFTprocessing is used");

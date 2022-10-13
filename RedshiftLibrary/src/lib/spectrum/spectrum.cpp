@@ -603,7 +603,7 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
     minFlux = std::min(std::abs(flux[i]), std::abs(minFlux));
   }
   if (minFlux == DBL_MAX) {
-    Flag.warning(Flag.CORRECT_SPECTRUM_NOMINFLUX,
+    Flag.warning(WarningCode::CORRECT_SPECTRUM_NOMINFLUX,
                  Formatter() << "CSpectrum::" << __func__
                              << ": unable to set minFlux value (=" << minFlux
                              << "). Setting it to 0.");

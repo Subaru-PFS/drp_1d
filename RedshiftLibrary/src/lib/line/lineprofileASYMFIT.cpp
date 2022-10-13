@@ -59,7 +59,7 @@ std::unique_ptr<CLineProfile> CLineProfileASYMFIT::cloneToASYM() const {
 void CLineProfileASYMFIT::SetAsymParams(const TAsymParams &params) {
   if (std::isnan(params.sigma) || std::isnan(params.alpha) ||
       std::isnan(params.delta)) {
-    Flag.warning(Flag.ASYMFIT_NAN_PARAMS,
+    Flag.warning(WarningCode::ASYMFIT_NAN_PARAMS,
                  Formatter() << "CLineProfileASYMFIT::" << __func__
                              << " AsymFit params are NaN");
   }

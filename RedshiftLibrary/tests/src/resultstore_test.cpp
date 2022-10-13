@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
   // test store outside context
-  Flag.warning(Flag.CRANGE_NO_INTERSECTION, "Test code 4");
+  Flag.warning(WarningCode::CRANGE_NO_INTERSECTION, "Test code 4");
 
   TScopeStack scopeStack_2;
   COperatorResultStore store_2(scopeStack_2);
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
   // test store outside context
-  Flag.warning(Flag.CRANGE_NO_INTERSECTION, "Test code 4");
+  Flag.warning(WarningCode::CRANGE_NO_INTERSECTION, "Test code 4");
 
   TScopeStack scopeStack_2;
   COperatorResultStore store_2(scopeStack_2);
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
 BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   TScopeStack scopeStack_1 = getScopeStack();
 
-  Flag.warning(Flag.CRANGE_NO_INTERSECTION, "Test code 4");
+  Flag.warning(WarningCode::CRANGE_NO_INTERSECTION, "Test code 4");
   std::shared_ptr<const CFlagLogResult> result_in = getFlagResult();
 
   COperatorResultStore store_1(scopeStack_1);
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
 BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
   TScopeStack scopeStack = getScopeStack();
 
-  Flag.warning(Flag.CRANGE_NO_INTERSECTION, "Test code 4");
+  Flag.warning(WarningCode::CRANGE_NO_INTERSECTION, "Test code 4");
 
   std::shared_ptr<const CFlagLogResult> result_in = getFlagResult();
 
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
 BOOST_AUTO_TEST_CASE(GetMethods_test) {
   TScopeStack scopeStack = getScopeStack();
 
-  Flag.warning(Flag.CRANGE_NO_INTERSECTION, "Test code 4");
+  Flag.warning(WarningCode::CRANGE_NO_INTERSECTION, "Test code 4");
 
   std::shared_ptr<const CFlagLogResult> result_in = getFlagResult();
 

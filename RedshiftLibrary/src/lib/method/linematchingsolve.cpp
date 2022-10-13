@@ -352,7 +352,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
 
   if (iCmpt == cmptMax) {
     Flag.warning(
-        Flag.LINEMATCHING_REACHED_ENDLOOP,
+        WarningCode::LINEMATCHING_REACHED_ENDLOOP,
         Formatter()
             << "CMethodLineMatchingSolve::" << __func__
             << ": Warning. Stopped the linematching dynamic cut loop...");
