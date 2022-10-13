@@ -12,7 +12,6 @@ class Parameters():
         self.config = config
         self.calibration_dir = config["calibration_dir"]
         self.parameters["calibrationDir"]=config["calibration_dir"]
-        self.check_reliability()
         
     def get_solve_methods(self,object_type):
         method = self.parameters[object_type]["method"]
@@ -109,31 +108,3 @@ class Parameters():
         else:
             raise Exception("Unknown stage {stage}") 
        
-    def check_reliability(self):
-        for ot in self.get_objects():
-            if self.reliability_enabled(ot):
-                try:
-                    # to avoid annoying messages about gpu/cuda availability
-                    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-                    from tensorflow.keras import models
-                    import keras
-                    model_path = os.path.join(self.calibration_dir,
-                                              self.parameters[ot]["reliability_model"])
-                    model_ha = h5py.File(model_path).attrs
-                    keras_model_version = model_ha["keras_version"].split(".")
-                    keras_system_version = keras.__version__.split(".")
-                    if keras_model_version[0] > keras_system_version[0]:
-                        raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,
-                                           f"Tensorflow major version >= {keras_model_version[0]} required")
-                    redshift_range = [model_ha["zrange_min"],
-                                      model_ha["zrange_max"]]
-                    redshift_range_step = model_ha["zrange_step"]
-                    s_redshift_range = self.parameters[ot]["redshiftrange"]
-                    s_redshift_range_step = self.parameters[ot]["redshiftstep"]
-                    if s_redshift_range != redshift_range:
-                        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift range of reliability model must be identical to solver one : {redshift_range} != {s_redshift_range}")
-                    if s_redshift_range_step != redshift_range_step:
-                        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift step of reliability model must be identical to solver one : {redshift_range_step} != {s_redshift_range_step}")
-                except ImportError:
-                    raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
-
