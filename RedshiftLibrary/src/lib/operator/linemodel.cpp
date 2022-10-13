@@ -1244,18 +1244,12 @@ void COperatorLineModel::updateRedshiftGridAndResults() {
 
     TInt32List indices = CLineModelResult::insertIntoRedshiftGrid(
         m_Redshifts, m_firstpass_extremaResult->ExtendedRedshifts[i]);
-    /*CLineModelResult::insertAroundIndex(
-        m_Redshifts, idx, s, m_firstpass_extremaResult->ExtendedRedshifts[i]);*/
     // verifications:
     auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
     auto _j = std::distance(m_Redshifts.begin(), it);
 
-    std::cout << std::distance(m_Redshifts.begin(), it) << "\n";
-
     if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
       THROWG(INTERNAL_ERROR, "linemodel vector is not sorted");
-    /*m_result->updateVectors(idx,
-                            m_firstpass_extremaResult->ExtendedRedshifts[i]);*/
     m_result->updateVectors(idx, indices,
                             m_firstpass_extremaResult->ExtendedRedshifts[i]);
   }

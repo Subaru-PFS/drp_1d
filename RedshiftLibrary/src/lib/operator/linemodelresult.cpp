@@ -109,35 +109,6 @@ void CLineModelResult::Init(TFloat64List redshifts,
     PriorLinesTplratios.clear();
   }
 }
-/*
-void CLineModelResult::updateVectors(Int32 idx,
-                                     const TFloat64List &extendedRedshifts) {
-
-  Int32 s = std::round((extendedRedshifts.size() - 1) / 2);
-
-  insertAroundIndex(Redshifts, idx, s, extendedRedshifts);
-  if (!std::is_sorted(std::begin(Redshifts), std::end(Redshifts)))
-    THROWG(INTERNAL_ERROR, "vector is not sorted");
-  insertAroundIndex(Status, idx, s, COperator::nStatus_UnSet);
-  insertAroundIndex<Float64>(ChiSquare, idx, s, NAN);
-  insertAroundIndex<Float64>(ScaleMargCorrection, idx, s, NAN);
-  insertAroundIndex(LineModelSolutions, idx, s, CLineModelSolution());
-  insertAroundIndex(ContinuumModelSolutions, idx, s, CContinuumModelSolution());
-  insertAroundIndex<Float64>(ChiSquareContinuum, idx, s, NAN);
-  insertAroundIndex<Float64>(ScaleMargCorrectionContinuum, idx, s, NAN);
-
-  for (auto &xi2Cont : ChiSquareTplContinuum)
-    insertAroundIndex<Float64>(xi2Cont, idx, s, DBL_MAX);
-
-  for (Int32 i = 0; i < ChiSquareTplratios.size(); i++) {
-    insertAroundIndex<Float64>(ChiSquareTplratios[i], idx, s, DBL_MAX);
-    insertAroundIndex<Float64>(ScaleMargCorrectionTplratios[i], idx, s, 0.);
-    insertAroundIndex<bool>(StrongELPresentTplratios[i], idx, s, false);
-    insertAroundIndex<bool>(StrongHalphaELPresentTplratios[i], idx, s, false);
-    insertAroundIndex<Int32>(NLinesAboveSNRTplratios[i], idx, s, 0);
-    insertAroundIndex<Float64>(PriorLinesTplratios[i], idx, s, 0.);
-  }
-}*/
 
 void CLineModelResult::updateVectors(Int32 idx, const TInt32List &indices,
                                      const TFloat64List &extendedRedshifts) {
@@ -197,33 +168,6 @@ void CLineModelResult::updateVectors(Int32 idx, const TInt32List &indices,
                               count_smaller, count_higher, 0);
     insertAroundIndexS<Float64>(PriorLinesTplratios[i], idx, indices,
                                 count_smaller, count_higher, 0.);
-  }
-}
-// considering multiple duplicates exist between entity and vector
-// dropped cause too much complex
-void CLineModelResult::insertAroundIndex_multi(TFloat64List &entity,
-                                               const TFloat64List &vect) {
-  // check for duplicates other than entity[idx] between vect and entity
-  TFloat64List intersection;
-  std::set_intersection(entity.begin(), entity.end(), vect.begin(), vect.end(),
-                        std::back_inserter(intersection));
-  // probably we only care about keeping the result corresponding to zcand and
-  // not necessarily all z that falls into extendedRedshifts?
-  Int32 iv_previous = 0;
-  for (Int32 i = 0; i < intersection.size(); i++) {
-    Int32 iv = CIndexing<Float64>::getIndex(vect, intersection[i]);
-    Int32 ie = CIndexing<Float64>::getIndex(entity, intersection[i]);
-    // next is not completely correct
-    Float64 next =
-        i + 1 < intersection.size() ? intersection[i + 1] : vect.back();
-
-    Int32 iv_next = CIndexing<Float64>::getIndex(vect, next);
-    if (i + 1 == intersection.size())
-      iv_next++; // to take the last element
-
-    TFloat64List subarr(vect.begin() + iv_previous, vect.begin() + iv_next);
-    insertAroundIndex(entity, ie, 0, subarr);
-    iv_previous = iv_next;
   }
 }
 

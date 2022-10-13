@@ -143,42 +143,6 @@ BOOST_AUTO_TEST_CASE(insertAroundIndex_solo) {
   BOOST_CHECK(vect == resultingVect);
 }
 
-BOOST_AUTO_TEST_CASE(insertAroundIndex_multi) {
-
-  TFloat64List vect{10, 15, 20, 25, 30};
-  const TFloat64List extendedVect{15, 18, 20, 22};
-  CLineModelResult::insertAroundIndex_multi(vect, extendedVect);
-
-  TFloat64List resultingVect{10, 15, 18, 20, 22, 25, 30};
-
-  BOOST_CHECK(vect.size() == resultingVect.size());
-  BOOST_CHECK(vect == resultingVect);
-}
-
-BOOST_AUTO_TEST_CASE(insertAroundIndex_multi2) {
-
-  TFloat64List vect{10, 15, 20, 25, 30};
-  const TFloat64List extendedVect{15, 18, 20, 22, 25};
-  CLineModelResult::insertAroundIndex_multi(vect, extendedVect);
-
-  TFloat64List resultingVect{10, 15, 18, 20, 22, 25, 30};
-
-  BOOST_CHECK(vect.size() == resultingVect.size());
-  BOOST_CHECK(vect == resultingVect);
-}
-/* //code doesnt support this yet, ie., two consecutive common values  between
-entity and vect BOOST_AUTO_TEST_CASE(insertAroundIndex_multi3) {
-
-  TFloat64List vect{10, 15, 20, 25, 30};
-  const TFloat64List extendedVect{10, 18, 20, 22, 25};
-  CLineModelResult::insertAroundIndex_multi(vect, extendedVect);
-
-  TFloat64List resultingVect{10, 15, 18, 20, 22, 25, 30};
-
-  BOOST_CHECK(vect.size() == resultingVect.size());
-  BOOST_CHECK(vect == resultingVect);
-}
-*/
 BOOST_AUTO_TEST_CASE(insertIntoRedshiftGrid) {
 
   TFloat64List vect{10, 15, 20, 25, 30};
