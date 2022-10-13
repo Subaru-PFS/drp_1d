@@ -122,8 +122,6 @@ public:
 
   void SetFittingMethod(const std::string &fitMethod);
   void setLineRatioType(const std::string &lineratio);
-  void SetSecondpassContinuumFitPrms();
-
   void SetAbsLinesLimit(Float64 limit);
 
   Float64 GetRedshift() const;
@@ -190,7 +188,6 @@ public:
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
-  bool m_enableLambdaOffsetsFit;
 
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
@@ -225,27 +222,20 @@ private:
   Float64 m_velocityEmissionInit;
   Float64 m_velocityAbsorptionInit;
 
-  Float64 m_nominalWidthDefaultEmission;
-  Float64 m_nominalWidthDefaultAbsorption;
+  Float64 m_nominalWidthDefault;
 
   std::string m_fittingmethod;
 
   std::string m_lineRatioType;
 
-  Int32 m_secondpass_fitContinuum_dustfit;
-  Int32 m_secondpass_fitContinuum_igm;
-
   bool m_forcedisableMultipleContinuumfit = false;
 
   std::shared_ptr<const TFloat64Range> m_lambdaRange;
-
-  linetags ltags;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
 
   std::string m_opt_firstpass_fittingmethod = "hybrid";
   std::string m_opt_secondpass_fittingmethod = "hybrid";
-  bool m_ignoreLinesSupport = false;
 
   //  bool m_opt_enable_improveBalmerFit = false;
 
