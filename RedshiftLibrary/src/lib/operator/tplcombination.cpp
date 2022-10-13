@@ -400,8 +400,7 @@ void COperatorTplcombination::BasicFit(
       }
 
       // save the interm chisquares in the intermediate vector
-      fittingResults.ChiSquareInterm[kEbmv_][kigm] =
-          fittingResults.chiSquare; // should be chisq ????
+      fittingResults.ChiSquareInterm[kEbmv_][kigm] = chisq;
       fittingResults.IsmCalzettiCoeffInterm[kEbmv_][kigm] = coeffEBMV;
       fittingResults.IgmMeiksinIdxInterm[kEbmv_][kigm] =
           igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
