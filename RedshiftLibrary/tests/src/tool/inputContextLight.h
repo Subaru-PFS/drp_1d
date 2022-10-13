@@ -52,6 +52,7 @@
 #include "tests/src/tool/Meiksin_Var_curves_2.5.h"
 #include "tests/src/tool/Meiksin_Var_curves_3.0.h"
 #include "tests/src/tool/SB_calzetti_dl1.h"
+#include "tests/src/tool/stars_templates_munari-lowt_20170105.h"
 
 using namespace NSEpic;
 // #define fixture_Context (CProcessFlowContext::GetInstance())
@@ -234,6 +235,12 @@ public:
 
 class fixture_SharedStarTemplate {
 public:
+  std::shared_ptr<CTemplate> tpl =
+      std::make_shared<CTemplate>("star", "star", mySpectralList, myFluxList);
+};
+
+class fixture_SharedStarNotLogTemplate {
+public:
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
       "star", "star", myGalaxyLambdaList, myGalaxyFluxList);
 };
@@ -272,6 +279,12 @@ public:
 
 class fixture_sharedTemplateCatalog {
 public:
+  // fixture_sharedTemplateCatalog() {
+  //   catalog->Add(fixture_SharedStarTemplate().tpl);
+  //   catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+  //   catalog->m_logsampling = 1;
+  //   catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+  // }
   std::shared_ptr<CTemplateCatalog> catalog =
       std::make_shared<CTemplateCatalog>(0);
 };
@@ -286,7 +299,38 @@ public:
     ctx = std::make_shared<CInputContext>(paramStore);
 
     spc = fixture_SharedSpectrum().spc;
-    ctx->addSpectrum(spc);
+
+    ctx->m_lambdaRange = std::make_shared<TFloat64Range>(
+        paramStore->Get<TFloat64Range>("lambdarange"));
+    ctx->setSpectrum(spc);
+    rebinedSpectrum = std::make_shared<CSpectrum>(spc->GetName());
+    rebinedSpectrum->SetSpectralAndFluxAxes(spc->GetSpectralAxis(),
+                                            spc->GetRawFluxAxis());
+    ctx->m_logGridStep = rebinedSpectrum->GetSpectralAxis().GetlogGridStep();
+    ctx->SetRebinnedSpectrum(rebinedSpectrum);
+  }
+  std::shared_ptr<CInputContext> ctx;
+};
+class fixture_InputContext2 {
+public:
+  fixture_InputContext2(std::string jsonString,
+                        std::shared_ptr<CParameterStore> paramStore) {
+    std::shared_ptr<CSpectrum> spc;
+    std::shared_ptr<CSpectrum> rebinedSpectrum;
+    ctx = std::make_shared<CInputContext>(paramStore);
+    ctx->m_lambdaRange = std::make_shared<TFloat64Range>(
+        paramStore->Get<TFloat64Range>("lambdarange"));
+
+    spc = fixture_SharedSpectrum().spc;
+    TFloat64List spcAxis =
+        fixture_SharedSpectrum().spc->GetSpectralAxis().GetSamplesVector();
+    spcAxis[1] = 4.681000E+03;
+    spc->SetSpectralAxis(spcAxis);
+    ctx->setSpectrum(spc);
+    ctx->m_logGridStep = 1e-5;
+    CSpectrumLogRebinning logReb(*ctx);
+    rebinedSpectrum = logReb.loglambdaRebinSpectrum(spc, "rebinVariance");
+    ctx->SetRebinnedSpectrum(rebinedSpectrum);
   }
   std::shared_ptr<CInputContext> ctx;
 };
