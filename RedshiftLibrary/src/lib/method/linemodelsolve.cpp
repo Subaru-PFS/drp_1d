@@ -680,3 +680,31 @@ void CLineModelSolve::Solve() {
   // don't save linemodel extrema results, since will change with pdf
   // computation
 }
+
+void CLineModelSolve::createRedshiftGrid(
+    std::shared_ptr<const CInputContext> inputContext,
+    const TFloat64Range &redshiftRange) {
+
+  Int32 opt_twosteplargegridstep_ratio =
+      inputContext->GetParameterStore()->GetScoped<Int32>(
+          "LineModelSolve.linemodel.firstpass.largegridstepratio");
+
+  Float64 coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
+  m_redshifts.clear();
+
+  m_redshifts = m_redshiftSampling == "log"
+                    ? redshiftRange.SpreadOverLogZplusOne(coarseRedshiftStep)
+                    : redshiftRange.SpreadOver(coarseRedshiftStep);
+
+  if (m_redshifts.empty()) {
+    CObjectSolve::createRedshiftGrid(
+        inputContext, redshiftRange); // fall back to creating fine grid
+    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
+                "raw %d redshifts will be calculated",
+                m_redshifts.size());
+  } else {
+    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
+                "will be calculated on the large grid",
+                m_redshifts.size());
+  }
+}

@@ -167,7 +167,7 @@ public:
     T edelta = exp(delta);
     Int32 count = 0;
     Int32 maxCount = 1e8;
-    while (x > (m_Begin + offset + epsilon) && count < maxCount) {
+    while (x > (m_Begin + offset - epsilon) && count < maxCount) {
       v.insert(v.begin(), x - offset);
       count++;
       x /= edelta;

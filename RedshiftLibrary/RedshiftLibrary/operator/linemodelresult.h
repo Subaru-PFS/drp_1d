@@ -92,21 +92,20 @@ public:
   TBoolList getHaELPresentTplratioResult(Int32 index_z);
   TInt32List getNLinesAboveSNRTplratioResult(Int32 index_z);
   TFloat64List getPriorLinesTplratioResult(Int32 index_z);
-  void updateVectors(Int32 idx, const TInt32List &indices,
-                     const TFloat64List &extendedRedshifts);
-  // below two are not used
-  static void insertAroundIndex(TFloat64List &entity, Int32 idx, Int32 s,
-                                const TFloat64List &vect);
+  void updateVectors(Int32 idx, const TInt32List &indices, Int32 count_smaller,
+                     Int32 count_higher, const TFloat64List &extendedRedshifts);
+  static void insertIntoRedshiftGrid(TFloat64List &entity, Int32 idx,
+                                     const TInt32List &indices,
+                                     Int32 &count_smaller, Int32 &count_higher,
+                                     const TFloat64List &vect);
+  static void insertVectorAroundIndex(TFloat64List &entity, Int32 idx,
+                                      const TInt32List &indices,
+                                      Int32 count_smaller, Int32 count_higher,
+                                      const TFloat64List &vect);
   template <typename T>
-  static void insertAroundIndex(std::vector<T> &entity, Int32 idx, Int32 s,
+  static void insertAroundIndex(std::vector<T> &entity, Int32 idx,
+                                Int32 count_smaller, Int32 count_higher,
                                 T defaultVal);
-
-  static TInt32List insertIntoRedshiftGrid(TFloat64List &entity,
-                                           const TFloat64List &vect);
-  template <typename T>
-  static void insertAroundIndexS(std::vector<T> &entity, Int32 idx,
-                                 TInt32List indices, Int32 count_smaller,
-                                 Int32 count_higher, T defaultVal);
   // Merit results
   TFloat64List Redshifts;           // z axis
   TFloat64List ChiSquare;           // min chi2

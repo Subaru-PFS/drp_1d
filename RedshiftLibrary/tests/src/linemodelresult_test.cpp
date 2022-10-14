@@ -48,13 +48,12 @@
 using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(Linemodel_result)
-/*
+
 BOOST_AUTO_TEST_CASE(insertAroundIndex_float) {
 
   TFloat64List vect{10, 20, 30};
   Int32 idx = 1;
-  Int32 s = 1;
-  CLineModelResult::insertAroundIndex<Float64>(vect, idx, s, 0.);
+  CLineModelResult::insertAroundIndex<Float64>(vect, idx, 1, 1, 0.);
 
   TFloat64List resultingVect{10, 0., 20, 0., 30};
 
@@ -66,8 +65,7 @@ BOOST_AUTO_TEST_CASE(insertAroundIndex_float_begin) {
 
   TFloat64List vect{10, 20, 30};
   Int32 idx = 0;
-  Int32 s = 1;
-  CLineModelResult::insertAroundIndex<Float64>(vect, idx, s, 0.);
+  CLineModelResult::insertAroundIndex<Float64>(vect, idx, 1, 1, 0.);
 
   TFloat64List resultingVect{0., 10, 0., 20, 30};
 
@@ -79,21 +77,34 @@ BOOST_AUTO_TEST_CASE(insertAroundIndex_float_end) {
 
   TFloat64List vect{10};
   Int32 idx = 0;
-  Int32 s = 1;
-  CLineModelResult::insertAroundIndex<Float64>(vect, idx, s, 0.);
+  CLineModelResult::insertAroundIndex<Float64>(vect, idx, 1, 1, 0.);
 
   TFloat64List resultingVect{0., 10, 0.};
 
   BOOST_CHECK(vect.size() == resultingVect.size());
   BOOST_CHECK(vect == resultingVect);
-}*/
-BOOST_AUTO_TEST_CASE(insertAroundIndex_mid) {
+}
+
+BOOST_AUTO_TEST_CASE(insertAroundIndex_float_end0) {
+
+  TFloat64List vect{10};
+  Int32 idx = 0;
+  CLineModelResult::insertAroundIndex<Float64>(vect, idx, 1, 0, 0.);
+
+  TFloat64List resultingVect{0., 10};
+
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+
+BOOST_AUTO_TEST_CASE(insertVectorAroundIndex_mid) {
 
   TFloat64List vect{10, 20, 30};
   const TFloat64List extendedVect{18, 20, 22};
   Int32 idx = 1;
-  Int32 s = std::round(extendedVect.size() - 1) / 2;
-  CLineModelResult::insertAroundIndex(vect, idx, s, extendedVect);
+  TInt32List indices{1}; // duplicates
+  CLineModelResult::insertVectorAroundIndex(vect, idx, indices, 1, 1,
+                                            extendedVect);
 
   TFloat64List resultingVect{10, 18, 20, 22, 30};
 
@@ -101,13 +112,14 @@ BOOST_AUTO_TEST_CASE(insertAroundIndex_mid) {
   BOOST_CHECK(vect == resultingVect);
 }
 
-BOOST_AUTO_TEST_CASE(insertAroundIndex_begin) {
+BOOST_AUTO_TEST_CASE(insertVectorAroundIndex_begin) {
 
   TFloat64List vect{10, 20, 30};
   const TFloat64List extendedVect{8, 10, 12};
   Int32 idx = 0;
-  Int32 s = std::round(extendedVect.size() - 1) / 2;
-  CLineModelResult::insertAroundIndex(vect, idx, s, extendedVect);
+  TInt32List indices{0}; // duplicates
+  CLineModelResult::insertVectorAroundIndex(vect, idx, indices, 1, 1,
+                                            extendedVect);
 
   TFloat64List resultingVect{8, 10, 12, 20, 30};
 
@@ -115,53 +127,80 @@ BOOST_AUTO_TEST_CASE(insertAroundIndex_begin) {
   BOOST_CHECK(vect == resultingVect);
 }
 
-BOOST_AUTO_TEST_CASE(insertAroundIndex_end) {
+BOOST_AUTO_TEST_CASE(insertVectorAroundIndex_end) {
 
   TFloat64List vect{10, 20, 30};
   const TFloat64List extendedVect{28, 30, 32};
   Int32 idx = 2;
-  Int32 s = std::round(extendedVect.size() - 1) / 2;
-  CLineModelResult::insertAroundIndex(vect, idx, s, extendedVect);
+  TInt32List indices{2}; // duplicates
+  CLineModelResult::insertVectorAroundIndex(vect, idx, indices, 1, 1,
+                                            extendedVect);
 
   TFloat64List resultingVect{10, 20, 28, 30, 32};
 
   BOOST_CHECK(vect.size() == resultingVect.size());
   BOOST_CHECK(vect == resultingVect);
 }
+BOOST_AUTO_TEST_CASE(insertVectorAroundIndex_commononborder1) {
+  TFloat64List vect{10, 15, 20};
+  const TFloat64List extendedVect{10, 12, 15, 16};
+  Int32 idx = 1;
+  TInt32List indices{0, 1}; // duplicates
+  Int32 count_smaller = 1;
+  Int32 count_higher = 1; // nb of elements to add around idx
+  CLineModelResult::insertVectorAroundIndex(vect, idx, indices, count_smaller,
+                                            count_higher, extendedVect);
 
-BOOST_AUTO_TEST_CASE(insertAroundIndex_solo) {
+  TFloat64List resultingVect{10, 12, 15, 16, 20};
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
 
-  TFloat64List vect{10};
-  const TFloat64List extendedVect{8, 10, 12};
-  Int32 idx = 0;
-  Int32 s = std::round(extendedVect.size() - 1) / 2;
-  CLineModelResult::insertAroundIndex(vect, idx, s, extendedVect);
+BOOST_AUTO_TEST_CASE(insertVectorAroundIndex_commononborder) {
+  TFloat64List vect{10, 15, 20, 25, 30};
+  const TFloat64List extendedVect{15, 16, 18, 20, 22, 25, 26, 30};
+  Int32 idx = 2;
+  TInt32List indices{1, 2, 3, 4}; // duplicates
+  Int32 count_smaller = 2;
+  Int32 count_higher = 2; // nb of elements to add around idx
+  CLineModelResult::insertVectorAroundIndex(vect, idx, indices, count_smaller,
+                                            count_higher, extendedVect);
 
-  TFloat64List resultingVect{8, 10, 12};
-
+  TFloat64List resultingVect{10, 15, 16, 18, 20, 22, 25, 26, 30};
   BOOST_CHECK(vect.size() == resultingVect.size());
   BOOST_CHECK(vect == resultingVect);
 }
 
 BOOST_AUTO_TEST_CASE(insertIntoRedshiftGrid) {
+  TFloat64List vect{10};
+  const TFloat64List extendedVect{8, 10, 12};
+  Int32 idx = 0;
+  TInt32List indices{0}; // duplicates
+  Int32 count_smaller, count_higher;
+  CLineModelResult::insertIntoRedshiftGrid(vect, idx, indices, count_smaller,
+                                           count_higher, extendedVect);
 
-  TFloat64List vect{10, 15, 20, 25, 30};
-  const TFloat64List extendedVect{10, 15, 18, 20, 22, 25};
-  TInt32List indices =
-      CLineModelResult::insertIntoRedshiftGrid(vect, extendedVect);
-
-  TFloat64List resultingVect{10, 15, 18, 20, 22, 25, 30};
-  TInt32List resultingIndices{0, 1, 2, 3};
+  TFloat64List resultingVect{8, 10, 12};
+  BOOST_CHECK(count_smaller == 1);
+  BOOST_CHECK(count_higher == 1);
   BOOST_CHECK(vect.size() == resultingVect.size());
   BOOST_CHECK(vect == resultingVect);
-
-  BOOST_CHECK(resultingIndices.size() == indices.size());
-  BOOST_CHECK(resultingIndices == indices);
 }
-/*
-{
-  static void insertAroundIndexS(std::vector<T> & entity, Int32 idx,
-                                 TInt32List indices, Int32 count_smaller,
-                                 Int32 count_higher, T defaultVal);
-}*/
+
+BOOST_AUTO_TEST_CASE(insertIntoRedshiftGrid_multi) {
+  TFloat64List vect{10, 15, 20, 25, 30};
+  const TFloat64List extendedVect{15, 16, 18, 20, 22, 25, 26, 27};
+  Int32 idx = 2;
+  TInt32List indices{1, 2, 3};       // duplicate indices in vect
+  Int32 count_smaller, count_higher; // nb of elements to add around idx
+  CLineModelResult::insertIntoRedshiftGrid(vect, idx, indices, count_smaller,
+                                           count_higher, extendedVect);
+
+  TFloat64List resultingVect{10, 15, 16, 18, 20, 22, 25, 26, 27, 30};
+  BOOST_CHECK(count_smaller == 2);
+  BOOST_CHECK(count_higher == 3);
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

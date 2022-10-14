@@ -159,11 +159,9 @@ public:
 private:
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
-  TFloat64List m_sortedRedshifts; // fine grid: meant to disappear
-  TFloat64List m_Redshifts;       // coarse grid
+  TFloat64List m_Redshifts; // coarse grid
   Float64 m_fineStep = NAN;
   std::string m_redshiftSampling = "undefined";
-  Int32 m_enableFastFitLargeGrid = 0;
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
   TFloat64List SpanRedshiftWindow(Float64 z) const;

@@ -59,6 +59,13 @@ void CObjectSolve::InitRanges(
 
   Log.LogInfo(Formatter() << "Init redshift range with " << redshiftRange
                           << " and" << m_redshiftStep);
+  createRedshiftGrid(inputContext, redshiftRange);
+}
+
+// common for all except linemodelsolve
+void CObjectSolve::createRedshiftGrid(
+    std::shared_ptr<const CInputContext> inputContext,
+    const TFloat64Range &redshiftRange) {
   if (m_redshiftSampling == "log")
     m_redshifts = redshiftRange.SpreadOverLogZplusOne(
         m_redshiftStep); // experimental: spreadover a grid at delta/(1+z),

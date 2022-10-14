@@ -75,25 +75,6 @@
 using namespace NSEpic;
 using namespace std;
 
-// TODO: needs to be changed once we decide on how and where we create the
-// coarse grid: for the moment, we create it from the fine grid
-void COperatorLineModel::CreateRedshiftLargeGrid(
-    Int32 ratio, TFloat64List &largeGridRedshifts) {
-  largeGridRedshifts.clear();
-  for (Int32 i = 0; i < m_sortedRedshifts.size(); i += ratio) {
-    largeGridRedshifts.push_back(m_sortedRedshifts[i]);
-  }
-  if (largeGridRedshifts.empty()) {
-    m_enableFastFitLargeGrid = 0;
-    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
-                "raw %d redshifts will be calculated",
-                m_sortedRedshifts.size());
-  } else {
-    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
-                "will be calculated on the large grid (%d initially)",
-                largeGridRedshifts.size(), m_sortedRedshifts.size());
-  }
-}
 /**
  * @brief COperatorLineModel::ComputeFirstPass
  * @return 0=no errors, -1=error
@@ -1239,20 +1220,39 @@ void COperatorLineModel::updateRedshiftGridAndResults() {
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     Float64 z = m_firstpass_extremaResult->Redshift(i);
     Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
-    Int32 s = std::round(
-        (m_firstpass_extremaResult->ExtendedRedshifts[i].size() - 1) / 2);
 
-    TInt32List indices = CLineModelResult::insertIntoRedshiftGrid(
-        m_Redshifts, m_firstpass_extremaResult->ExtendedRedshifts[i]);
+    TFloat64Range range(m_firstpass_extremaResult->ExtendedRedshifts[i].front(),
+                        m_firstpass_extremaResult->ExtendedRedshifts[i].back());
+    Int32 imin = -1, imax = -1;
+    bool b = range.getClosedIntervalIndices(m_Redshifts, imin, imax);
+    if (imin == -1 && imax == -1)
+      // at least we should find one intersection
+      THROWG(INTERNAL_ERROR, "No intersection between vector and entity");
+
+    TInt32List indices(imax - imin + 1);
+    std::iota(indices.begin(), indices.end(), imin);
+
+    Int32 count_smaller = -1;
+    Int32 count_higher = -1;
+
+    CLineModelResult::insertIntoRedshiftGrid(
+        m_Redshifts, idx, indices, count_smaller, count_higher,
+        m_firstpass_extremaResult->ExtendedRedshifts[i]);
+
     // verifications:
     auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
     auto _j = std::distance(m_Redshifts.begin(), it);
 
     if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
       THROWG(INTERNAL_ERROR, "linemodel vector is not sorted");
-    m_result->updateVectors(idx, indices,
+    m_result->updateVectors(idx, indices, count_smaller, count_higher,
                             m_firstpass_extremaResult->ExtendedRedshifts[i]);
+    if (m_result->Redshifts.size() != m_Redshifts.size())
+      THROWG(INTERNAL_ERROR, "linemodel sizes do not match");
   }
+  for (auto z : m_Redshifts)
+    if (std::isnan(z))
+      THROWG(INTERNAL_ERROR, "redshift cant be NAN");
 }
 /**
  * @brief COperatorLineModel::estimateSecondPassParameters
@@ -1710,24 +1710,13 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
   m_opt_continuumcomponent = ps->GetScoped<std::string>("continuumcomponent");
 
-  // sort the redshifts: kept here temporarily since CreateRedshiftLargeGrid
-  // use it for the moment
-  m_sortedRedshifts = redshifts;
-  std::sort(m_sortedRedshifts.begin(), m_sortedRedshifts.end());
-
+  // below should be part of constructor
+  m_Redshifts = redshifts;
   // init relevant elements to generate secondpass intervals
   m_fineStep = finestep;
   m_redshiftSampling = redshiftSampling;
 
-  // TODO: temporary code till we decide with Didier about where to create the
-  // coarse grid
-  Int32 opt_twosteplargegridstep_ratio =
-      ps->GetScoped<Int32>("firstpass.largegridstepratio");
-  m_enableFastFitLargeGrid = Int32(opt_twosteplargegridstep_ratio > 1);
-  CreateRedshiftLargeGrid(opt_twosteplargegridstep_ratio, m_Redshifts);
-
   if (Context.GetCurrentMethod() == "LineModelSolve") {
-
     m_secondPass_halfwindowsize =
         ps->GetScoped<Float64>("secondpass.halfwindowsize");
 
