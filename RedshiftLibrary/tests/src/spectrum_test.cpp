@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
+#include "tests/src/tool/inputContextLight.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
@@ -67,8 +68,6 @@ void print_flux(TAxisSampleList sample) {
   BOOST_TEST_MESSAGE("=======");
 }
 
-TFloat64List maskList(mySpectralList.size(), 1);
-
 const std::string jsonString =
     "{\"smoothWidth\" : 0.5,"
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
@@ -82,24 +81,36 @@ public:
     fluxAxis = fixture_FluxAxis().fluxAxis;
   }
 
+  TScopeStack scopeStack; // = fixture_ScopeStore().scopeStack;
   CSpectrum spc = fixture_Spectrum().spc;
   CSpectrum spcWithVariableWidthLSF =
-      CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
-  CSpectrum spc(spectralAxis, fluxAxis);
-  spc.InitSpectrum(*ctx.GetParameterStore());
-=======
+      fixture_SpectrumWithLSF().spcWithVariableWidthLSF;
+  CSpectrum spcLight = fixture_SpectrumLight().spcLight;
+  CSpectrumFluxAxis fluxAxis = fixture_FluxAxis().fluxAxis;
+  CSpectrumSpectralAxis spcAxis = fixture_SpectralAxis().spcAxis;
+  CSpectrumNoiseAxis noiseAxis = fixture_NoiseAxis().noiseAxis;
+  std::shared_ptr<CParameterStore> paramStore =
+      fixture_ParamStore(jsonString, scopeStack).paramStore;
+  std::shared_ptr<CLSF> LSF = fixture_LSFGaussianVariableWidth().LSF;
+
+  // Size
+  Int32 spcAxisSize = fixture_SpectralAxis().spcAxisSize;
+};
+
+BOOST_FIXTURE_TEST_SUITE(Spectrum, fixture_SpectrumTest)
+
+BOOST_AUTO_TEST_CASE(constructor_test) {
   // create spectrum
   spc.InitSpectrum(*paramStore);
   spc.EstimateContinuum();
+  TFloat64List maskList(spcAxisSize, 1);
 
   // constructor
   CSpectrum spc_2;
   BOOST_CHECK(spc_2.m_estimationMethod == "");
   BOOST_CHECK(spc_2.m_Name == "");
   BOOST_CHECK(spc_2.GetSampleCount() == 0);
+
   CSpectrum spc_3("spectra");
   BOOST_CHECK(spc_3.m_estimationMethod == "");
   BOOST_CHECK(spc_3.m_Name == "spectra");
@@ -107,13 +118,12 @@ public:
 
   maskList[0] = 0.;
   CSpectrum spc_4(spc, maskList);
-  BOOST_CHECK(spc_4.GetSampleCount() == mySpectralList.size() - 1);
+  BOOST_CHECK(spc_4.GetSampleCount() == spcAxisSize - 1);
   BOOST_CHECK(spc_4.GetFluxAxis()[0] == myFluxList[1]);
 
   // CSpectrum spc_5 = ctx.createSpectrumWithLSF();
   std::shared_ptr<const CLSF> LSF_out = spcWithVariableWidthLSF.GetLSF();
-  BOOST_CHECK(spcWithVariableWidthLSF.GetSampleCount() ==
-              mySpectralList.size());
+  BOOST_CHECK(spcWithVariableWidthLSF.GetSampleCount() == spcAxisSize);
   BOOST_CHECK(spcWithVariableWidthLSF.GetFluxAxis().GetSamplesVector() ==
               myFluxList);
   BOOST_CHECK(LSF_out->GetWidth(1214) == 2);
@@ -124,7 +134,7 @@ public:
 
   // copy and copy assignement
   CSpectrum spc_6(spc);
-  BOOST_CHECK(spc_6.GetSampleCount() == mySpectralList.size());
+  BOOST_CHECK(spc_6.GetSampleCount() == spcAxisSize);
   BOOST_CHECK(spc_6.GetFluxAxis().GetSamplesVector() == myFluxList);
 
   spcWithVariableWidthLSF.GetRawFluxAxis_().GetSamplesVector().pop_back();
@@ -132,12 +142,12 @@ public:
 
   CSpectrum spc_7;
   spc_7 = spc;
-  BOOST_CHECK(spc_7.GetSampleCount() == mySpectralList.size());
+  BOOST_CHECK(spc_7.GetSampleCount() == spcAxisSize);
   BOOST_CHECK(spc_7.GetFluxAxis().GetSamplesVector() == myFluxList);
 
   // move and move assignement
   CSpectrum spc_8(std::move(spc_6));
-  BOOST_CHECK(spc_8.GetSampleCount() == mySpectralList.size());
+  BOOST_CHECK(spc_8.GetSampleCount() == spcAxisSize);
   BOOST_CHECK(spc_8.GetFluxAxis().GetSamplesVector() == myFluxList);
   BOOST_CHECK(spc_6.GetSampleCount() == 0);
 
@@ -146,7 +156,7 @@ public:
 
   CSpectrum spc_9;
   spc_9 = std::move(spc_8);
-  BOOST_CHECK(spc_9.GetSampleCount() == mySpectralList.size());
+  BOOST_CHECK(spc_9.GetSampleCount() == spcAxisSize);
   BOOST_CHECK(spc_9.GetFluxAxis().GetSamplesVector() == myFluxList);
   BOOST_CHECK(spc_8.GetSampleCount() == 0);
 }
@@ -155,7 +165,7 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   // add LSF
   spc.SetLSF(fixture_LSFGaussianVariableWidth().LSF);
   std::shared_ptr<const CLSF> LSF_out = spc.GetLSF();
-  BOOST_CHECK(LSF_out->GetWidth(20) == 1);
+  BOOST_CHECK(LSF_out->GetWidth(1214) == 2);
 
   // add photometric data
   const TStringList name = {"band1", "band2"};
@@ -186,15 +196,15 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   CSpectrumSpectralAxis spectralAxis_2;
   BOOST_CHECK_THROW(spc.SetSpectralAxis(spectralAxis_2), GlobalException);
 
-  spectralAxis_2.SetSize(mySpectralList.size());
+  spectralAxis_2.SetSize(spcAxisSize);
   spc.SetSpectralAxis(spectralAxis_2);
   BOOST_CHECK(spc.GetSpectralAxis().GetSamplesVector() ==
-              TFloat64List(mySpectralList.size(), 0.0));
+              TFloat64List(spcAxisSize, 0.0));
 
   // SetSpectralAxis (mv)
-  spectralAxis_2[0] = 11;
+  spectralAxis_2[0] = 1211;
   spc.SetSpectralAxis(std::move(spectralAxis_2));
-  BOOST_CHECK(spc.GetSpectralAxis().GetSamplesVector()[0] == 11);
+  BOOST_CHECK(spc.GetSpectralAxis().GetSamplesVector()[0] == 1211);
   BOOST_CHECK(spectralAxis_2.GetSamplesCount() == 0);
 
   CSpectrumSpectralAxis spectralAxis_3;
@@ -207,10 +217,10 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   CSpectrumFluxAxis fluxAxis_2;
   BOOST_CHECK_THROW(spc.SetFluxAxis(fluxAxis_2), GlobalException);
 
-  fluxAxis_2.SetSize(mySpectralList.size());
+  fluxAxis_2.SetSize(spcAxisSize);
   spc.SetFluxAxis(fluxAxis_2);
   BOOST_CHECK(spc.GetFluxAxis().GetSamplesVector() ==
-              TFloat64List(mySpectralList.size(), 0.0));
+              TFloat64List(spcAxisSize, 0.0));
 
   // SetFluxAxis (mv)
   fluxAxis_2[0] = 1.2;
@@ -231,10 +241,10 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   BOOST_CHECK_THROW(spc.SetSpectralAndFluxAxes(spectralAxis_2, fluxAxis_3),
                     GlobalException);
 
-  spectralAxis_2[0] = 11.;
+  spectralAxis_2[0] = 1210.;
   fluxAxis_2[0] = 1.5;
   spc.SetSpectralAndFluxAxes(spectralAxis_2, fluxAxis_2);
-  BOOST_CHECK(spc.GetSpectralAxis().GetSamplesVector()[0] == 11.);
+  BOOST_CHECK(spc.GetSpectralAxis().GetSamplesVector()[0] == 1210.);
   BOOST_CHECK(spc.GetFluxAxis().GetSamplesVector()[0] == 1.5);
 
   bool isEmpty = spc.IsEmpty();
@@ -325,8 +335,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
 
   // ValidateSpectrum
   spc.ScaleFluxAxis(0.5);
-  TFloat64Range lambdaRange(mySpectralList[0],
-                            mySpectralList[mySpectralList.size() - 1]);
+  TFloat64Range lambdaRange(mySpectralList[0], mySpectralList[spcAxisSize - 1]);
   BOOST_CHECK_NO_THROW(spc.ValidateSpectrum(lambdaRange, true));
   // not IsValid
   spc.GetRawFluxAxis_().GetSamplesVector().push_back(5592.);
@@ -349,7 +358,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   spc.GetRawFluxAxis_().GetError().GetSamplesVector()[1] = myNoiseList[1];
   // LSF spectralAxis don't cover lambdaRange
   spc.SetLSF(LSF);
-  TFloat64Range lambdaRange2(5560, 5590);
+  TFloat64Range lambdaRange2(4680, 4712);
   BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange2, false), GlobalException);
 
   // SetContinuumEstimationMethod
@@ -402,12 +411,11 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
 
 BOOST_AUTO_TEST_CASE(Calcul) {
   // GetMeanAndStdFluxInRange
-  TFloat64Range range1(mySpectralList[0],
-                       mySpectralList[mySpectralList.size() - 1]);
+  TFloat64Range range1(mySpectralList[0], mySpectralList[spcAxisSize - 1]);
   TFloat64Range range2(mySpectralList[0] - 5.,
-                       mySpectralList[mySpectralList.size() - 1] + 5);
+                       mySpectralList[spcAxisSize - 1] + 5);
   TFloat64Range range3(mySpectralList[0] + 5.,
-                       mySpectralList[mySpectralList.size() - 1] + 5);
+                       mySpectralList[spcAxisSize - 1] + 5);
   Float64 mean = 0.0;
   Float64 std = 0.0;
 
@@ -415,7 +423,9 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   BOOST_CHECK(result == true);
   Float64 mean_out, std_out;
   CMask mask;
+  CSpectrumSpectralAxis spectralAxis = spc.GetSpectralAxis();
   spectralAxis.GetMask(range1, mask);
+  CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
   result = fluxAxis.ComputeMeanAndSDev(mask, mean_out, std_out);
   BOOST_CHECK_CLOSE(mean, mean_out, 1e-12);
   BOOST_CHECK_CLOSE(std, std_out, 1e-12);
@@ -836,10 +846,11 @@ BOOST_AUTO_TEST_CASE(ExtractTest) {
 
 BOOST_AUTO_TEST_CASE(rebin_test) {
   CSpectrum rebinedSpectrum;
-  CSpectrum spc(spectralAxis, fluxAxis);
 
-  TFloat64Range range1(10., 30.);
-  CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
+  TFloat64Range range1(1213., 1218.);
+  CSpectrumSpectralAxis tgtSpectralAxis_1({1212, 1213, 1213.5, 1214, 1214.5,
+                                           1215, 1215.5, 1216, 1216.5, 1217,
+                                           1217.5, 1218, 1219});
   CMask rebinedMask;
 
   std::string interp = "lin"; // lin, spline, precomputedfinegrid, ngp
@@ -859,15 +870,15 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   TFloat64List rebinedFlux =
       rebinedSpectrum.GetRawFluxAxis().GetSamplesVector();
   Int32 N = rebinedFlux.size();
-  BOOST_CHECK(N == 7);
+  BOOST_CHECK(N == 13);
   BOOST_CHECK(rebinedFlux[0] == 0. && rebinedFlux[N - 1] == 0.);
   for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedFlux[i] == 1 + (i - 1) * 0.5);
+    BOOST_CHECK_CLOSE(rebinedFlux[i], 0.01 + (i - 1) * 5e-3, 1e-8);
   }
   TFloat64List rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
   BOOST_CHECK(rebinedError[0] == INFINITY && rebinedError[N - 1] == INFINITY);
   for (Int32 i = 1; i < N - 1; i++) {
-    BOOST_CHECK(rebinedError[i] == 0.1);
+    BOOST_CHECK(rebinedError[i] == 1e-4);
   }
   BOOST_CHECK(rebinedMask[0] == 0. && rebinedMask[N - 1] == 0.);
   for (Int32 i = 1; i < N - 1; i++) {
