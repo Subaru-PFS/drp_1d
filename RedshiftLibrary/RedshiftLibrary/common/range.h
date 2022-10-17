@@ -129,47 +129,42 @@ public:
   std::vector<T> SpreadOverLog(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
-
-    std::vector<T> v;
     if (GetIsEmpty() || delta == 0.0 ||
         GetLength() < (GetBegin() + offset) * exp(delta) -
-                          (GetBegin() + offset) + epsilon) {
-      v.resize(1);
-      v[0] = m_Begin;
-      return v;
-    }
+                          (GetBegin() + offset) + epsilon)
+      return {m_Begin};
 
     T x = m_Begin + offset;
     T edelta = exp(delta);
-    Int32 count = 0;
-    Int32 maxCount = 1e8;
-    while (x < (m_End + offset + epsilon) && count < maxCount) {
-      v.push_back(x - offset);
-      count++;
+
+    Int32 count =
+        (log(GetEnd() + offset + epsilon) - log(GetBegin() + offset)) / delta +
+        1;
+    std::vector<T> v(count);
+    for (Int32 i = 0; i < count; i++) {
+      v[i] = x - offset;
       x *= edelta;
     }
     return v;
   }
+
   std::vector<T> SpreadOverLog_backward(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
-
-    std::vector<T> v;
     if (GetIsEmpty() || delta == 0.0 ||
         GetLength() < (GetBegin() + offset) * exp(delta) -
-                          (GetBegin() + offset) + epsilon) {
-      v.resize(1);
-      v[0] = m_End;
-      return v;
-    }
+                          (GetBegin() + offset) + epsilon)
+      return {m_End};
 
     T x = m_End + offset;
     T edelta = exp(delta);
-    Int32 count = 0;
-    Int32 maxCount = 1e8;
-    while (x > (m_Begin + offset - epsilon) && count < maxCount) {
-      v.insert(v.begin(), x - offset);
-      count++;
+    Int32 count =
+        (log(GetEnd() + offset) - log(GetBegin() + offset - epsilon)) / delta +
+        1;
+
+    std::vector<T> v(count);
+    for (Int32 i = count - 1; i >= 0; i--) {
+      v[i] = x - offset;
       x /= edelta;
     }
     return v;
