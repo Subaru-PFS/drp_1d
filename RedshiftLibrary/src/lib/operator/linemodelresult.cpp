@@ -38,12 +38,12 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
-
 #include <cfloat>
 #include <fstream>
 #include <string>
@@ -154,53 +154,6 @@ void CLineModelResult::updateVectors(Int32 idx, const TInt32List &indices,
     insertAroundIndex<Float64>(PriorLinesTplratios[i], idx, count_smaller,
                                count_higher, 0.);
   }
-}
-
-// todo: mutualize code to the max possible
-void CLineModelResult::insertIntoRedshiftGrid(TFloat64List &entity, Int32 idx,
-                                              const TInt32List &indices,
-                                              Int32 &count_smaller,
-                                              Int32 &count_higher,
-                                              const TFloat64List &vect) {
-
-  Int32 i = CIndexing<Float64>::getIndex(vect, entity[idx]);
-
-  // count nb of duplicates below idx
-  auto count_duplicates_low =
-      std::count_if(indices.begin(), indices.end(),
-                    [&](const Float64 &val) { return val < idx; });
-  auto count_duplicates_high =
-      std::count_if(indices.begin(), indices.end(),
-                    [&](const Float64 &val) { return val > idx; });
-  count_smaller =
-      i - count_duplicates_low; // substract all indices smaller than i
-  count_higher = vect.size() - i - count_duplicates_high - 1;
-  insertVectorAroundIndex(entity, idx, indices, count_smaller, count_higher,
-                          vect);
-  return;
-}
-
-void CLineModelResult::insertVectorAroundIndex(TFloat64List &entity, Int32 idx,
-                                               const TInt32List &indices,
-                                               Int32 count_smaller,
-                                               Int32 count_higher,
-                                               const TFloat64List &vect) {
-  Float64 defaultValue = NAN;
-  insertAroundIndex(entity, idx, count_smaller, count_higher,
-                    defaultValue); // corresponds to a resize
-  Int32 start =
-      std::min(idx, indices.front()); // in case there is a common on the border
-  Int32 stop = std::max(start + Int32(vect.size()) - 1, indices.back());
-  for (Int32 i = start; i <= stop; i++)
-    entity[i] = vect[i - start];
-}
-
-template <typename T>
-void CLineModelResult::insertAroundIndex(std::vector<T> &entity, Int32 idx,
-                                         Int32 count_smaller,
-                                         Int32 count_higher, T defaultVal) {
-  entity.insert(entity.begin() + idx + 1, count_higher, defaultVal);
-  entity.insert(entity.begin() + idx, count_smaller, defaultVal);
 }
 
 void CLineModelResult::SetChisquareTplContinuumResult(

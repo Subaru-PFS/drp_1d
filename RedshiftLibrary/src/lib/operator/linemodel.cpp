@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
@@ -63,7 +64,6 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
-
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
@@ -1235,9 +1235,9 @@ void COperatorLineModel::updateRedshiftGridAndResults() {
     Int32 count_smaller = -1;
     Int32 count_higher = -1;
 
-    CLineModelResult::insertIntoRedshiftGrid(
-        m_Redshifts, idx, indices, count_smaller, count_higher,
-        m_firstpass_extremaResult->ExtendedRedshifts[i]);
+    insertIntoRedshiftGrid(m_Redshifts, idx, indices, count_smaller,
+                           count_higher,
+                           m_firstpass_extremaResult->ExtendedRedshifts[i]);
 
     // verifications:
     auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
