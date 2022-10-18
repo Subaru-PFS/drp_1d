@@ -36,69 +36,37 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/processflow/scopestore.h"
 #include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/operator/flagResult.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
 using namespace NSEpic;
-std::string CScopeStore::GetCurrentScopeName() const {
-  // TODO ugly, more elegant ways to do this
-  std::string n;
 
-  TScopeStack::const_iterator it;
+GlobalException::GlobalException(ErrorCode ec, const std::string &message,
+                                 const char *filename_, const char *method_,
+                                 int line_) noexcept
+    : AmzException(ec, message, filename_, method_, line_) {
 
-  if (m_ScopeStack.size() == 0)
-    return n;
+  std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
 
-  n = m_ScopeStack[0];
-  it = m_ScopeStack.begin();
-  ++it;
-
-  for (; it != m_ScopeStack.end(); ++it) {
-    n.append(".");
-    n.append((*it));
+  if (resultStore->getScopeDepth() > 2) {
+    if (!resultStore->hasCurrentMethodWarningFlag()) {
+      resultStore->StoreGlobalResult(
+          resultStore->GetScopedNameAt("warningFlag", 2),
+          std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
+                                                 Flag.getListMessages()));
+    } else
+      LogError(Formatter() << "Warning flag already exists for "
+                           << resultStore->getCurrentScopeNameAt(2));
+  } else {
+    if (!resultStore->hasContextWarningFlag()) {
+      resultStore->StoreScopedGlobalResult(
+          "warningFlag", std::make_shared<const CFlagLogResult>(
+                             Flag.getBitMask(), Flag.getListMessages()));
+    } else
+      LogError("Context warning flag already exists");
   }
-
-  return n;
-}
-
-std::string CScopeStore::getCurrentScopeNameAt(int depth) const {
-  // TODO ugly, more elegant ways to do this
-  std::string n;
-  if (m_ScopeStack.size() < depth)
-    THROWG(INTERNAL_ERROR, Formatter() << "Scope smaller than" << depth);
-
-  n = m_ScopeStack[0];
-  for (UInt8 i = 1; i < depth; i++) {
-    n.append(".");
-    n.append(m_ScopeStack[i]);
-  }
-
-  return n;
-}
-
-std::string CScopeStore::GetScopedName(const std::string &name) const {
-  std::string scopedName = GetCurrentScopeName();
-
-  if (!scopedName.empty()) {
-    scopedName.append(".");
-  }
-
-  scopedName.append(name);
-
-  return scopedName;
-}
-
-std::string CScopeStore::GetScopedNameAt(const std::string &name,
-                                         int depth) const {
-  std::string scopedName = getCurrentScopeNameAt(depth);
-
-  if (!scopedName.empty()) {
-    scopedName.append(".");
-  }
-
-  scopedName.append(name);
-
-  return scopedName;
+  Flag.resetFlag();
 }

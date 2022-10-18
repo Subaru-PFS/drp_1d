@@ -89,7 +89,9 @@ protected:
 // This exception should be caught only from pylibamazed or a client
 class GlobalException : public AmzException {
 public:
-  using AmzException::AmzException;
+  GlobalException(ErrorCode ec, const std::string &message,
+                  const char *filename_, const char *method_,
+                  int line_) noexcept;
 };
 
 } // namespace NSEpic

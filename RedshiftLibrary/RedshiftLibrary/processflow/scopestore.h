@@ -57,11 +57,11 @@ public:
   CScopeStore &operator=(CScopeStore &&other) = default;
   virtual ~CScopeStore() = default;
 
-  // should be protected not public, certainly. Client code should only push and
-  // pop the scopestack to manipulate to store/get data into ScopeStores
   std::string GetCurrentScopeName() const;
+  std::string getCurrentScopeNameAt(int depth) const;
   std::string GetScopedName(const std::string &name) const;
-
+  std::string GetScopedNameAt(const std::string &name, int depth) const;
+  UInt8 getScopeDepth() const { return m_ScopeStack.size(); }
   //  std::string GetScope(const COperatorResult& result) const;
 
 protected:

@@ -55,42 +55,52 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   std::map<std::string, std::weak_ptr<const CPdfSolveResult>> results;
   std::map<std::string, Float64> logEvidences;
-  std::map<std::string, Float64> probas;
-
+  std::map<std::string, bool> hasResult;
   for (const std::string &category : inputContext->m_categories) {
     const std::string &method =
         inputContext->GetParameterStore()->Get<std::string>(category +
                                                             ".method");
-    results[category] = std::dynamic_pointer_cast<const CPdfSolveResult>(
-        resultStore->GetSolveResult(category, method).lock());
+    try {
+      results[category] = std::dynamic_pointer_cast<const CPdfSolveResult>(
+          resultStore->GetSolveResult(category, method).lock());
+      hasResult[category] = true;
+    } catch (std::exception &e) {
+      hasResult[category] = false;
+    }
     logEvidences[category] = -INFINITY;
   }
   std::shared_ptr<CClassificationResult> classifResult =
       std::make_shared<CClassificationResult>();
   Float64 MaxLogEvidence = -DBL_MAX;
   for (const std::string &category : inputContext->m_categories) {
-    logEvidences[category] = results[category].lock()->getEvidence();
-    if (logEvidences[category] > MaxLogEvidence) {
-      MaxLogEvidence = logEvidences[category];
-      typeLabel = category;
+    if (hasResult[category]) {
+      logEvidences[category] = results[category].lock()->getEvidence();
+      if (logEvidences[category] > MaxLogEvidence) {
+        MaxLogEvidence = logEvidences[category];
+        typeLabel = category;
+      }
     }
   }
   Log.LogInfo("Setting object type: %s", typeLabel.c_str());
   Float64 sum = 0.;
 
   for (const std::string &category : inputContext->m_categories) {
-    Float64 Proba = exp(logEvidences[category] - MaxLogEvidence);
-    sum += Proba;
+    if (hasResult[category]) {
+      Float64 Proba = exp(logEvidences[category] - MaxLogEvidence);
+      sum += Proba;
+    }
   }
   if (sum <= 0) {
     THROWG(INTERNAL_ERROR,
            "Classification failed, all probabilities undefined");
   }
   for (const std::string &category : inputContext->m_categories) {
-    Float64 proba = exp(logEvidences[category] - MaxLogEvidence);
-    proba /= sum;
-    classifResult->SetProba(category, proba);
-    classifResult->SetEvidence(category, logEvidences[category]);
+    if (hasResult[category]) {
+      Float64 proba = exp(logEvidences[category] - MaxLogEvidence);
+      proba /= sum;
+      classifResult->SetProba(category, proba);
+      classifResult->SetEvidence(category, logEvidences[category]);
+    }
   }
   classifResult->SetTypeLabel(typeLabel);
 
