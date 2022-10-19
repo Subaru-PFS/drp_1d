@@ -48,6 +48,14 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+
+namespace Template { // boost_test_suite
+// all boost_auto_test_case that use private method
+class Constructor_test;
+class InitIsmIgmConfig_test;
+class ApplyDustCoeff_test;
+} // namespace Template
+
 namespace NSEpic {
 class CTemplateCatalog;
 class CTemplate : public CSpectrum {
@@ -132,6 +140,10 @@ public:
                            Int32 FitMeiksinIdx = undefIdx) const;
 
 private:
+  friend class Template::Constructor_test;
+  friend class Template::InitIsmIgmConfig_test;
+  friend class Template::ApplyDustCoeff_test;
+
   std::string m_Category;
 
   Int32 m_kDust = -1;
