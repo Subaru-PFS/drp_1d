@@ -378,20 +378,17 @@ void COperatorLineModel::fitContinuumTemplates(
                 opt_interp.c_str());
   TInt32List meiksinIndices;
   TInt32List ebmvIndices;
-  TFloat64List EbmvCoeffs;
   TTemplateConstRefList tplList;
 
-  bool keepismigm = false;
   if (m_fittingManager->GetPassNumber() == 2 && m_continnuum_fit_option == 3) {
     // case where we only want to refit around the m_opt_fitcontinuum_maxN
     // best continuum from firstpass
-    keepismigm = getContinuumInfoFromFirstpassFitStore(
-        candidateIdx, meiksinIndices, EbmvCoeffs, ebmvIndices, tplList);
+    getContinuumInfoFromFirstpassFitStore(candidateIdx, meiksinIndices,
+                                          ebmvIndices, tplList);
   } else {
     tplList = tplCatalog->GetTemplateList(m_tplCategoryList);
-    meiksinIndices.resize(tplList.size(), -1);
-    ebmvIndices.resize(tplList.size(), m_opt_tplfit_dustFit ? -10 : -1);
-    EbmvCoeffs.resize(tplList.size(), NAN);
+    meiksinIndices.assign(tplList.size(), undefIdx);
+    ebmvIndices.assign(tplList.size(), undefIdx);
   }
   Log.LogDebug(Formatter() << "Processing " << tplList.size() << " templates");
 
@@ -407,8 +404,8 @@ void COperatorLineModel::fitContinuumTemplates(
         std::dynamic_pointer_cast<CTemplateFittingResult>(
             m_templateFittingOperator->Compute(
                 tplList[i], overlapThreshold, maskList, opt_interp,
-                m_opt_tplfit_extinction, ebmvIndices[i], zePriorData,
-                keepismigm, EbmvCoeffs[i], meiksinIndices[i]));
+                m_opt_tplfit_extinction, m_opt_tplfit_dustFit, zePriorData,
+                ebmvIndices[i], meiksinIndices[i]));
 
     if (!templatefittingResult) {
       THROWG(INTERNAL_ERROR, Formatter()
@@ -425,26 +422,23 @@ void COperatorLineModel::fitContinuumTemplates(
 
 // get tplName, Meiksin and ISM coeff for all continuum
 // returns vectors of these entities
-bool COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
-    Int32 candidateIdx, TInt32List &meiksinIndices, TFloat64List &EbmvCoeffs,
-    TInt32List &ebmvIndices, TTemplateConstRefList &tplList) const {
+void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
+    Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
+    TTemplateConstRefList &tplList) const {
+
+  meiksinIndices.assign(m_opt_fitcontinuum_maxN, undefIdx);
+  ebmvIndices.assign(m_opt_fitcontinuum_maxN, undefIdx);
 
   if (m_fittingManager->GetPassNumber() != 2 ||
       m_continnuum_fit_option != 3) // not secondpass or not refitfirstpass
-    return false;
+    return;
 
-  if (candidateIdx < 0 ||
-      candidateIdx > m_firstpass_extremaResult->size() - 1) {
+  if (candidateIdx < 0 || candidateIdx >= m_firstpass_extremaResult->size())
     THROWG(INTERNAL_ERROR, "Candidate index is out of range");
-  }
+
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
-  bool keepismigm = m_opt_tplfit_dustFit || m_opt_tplfit_extinction;
-  // telling that we want to keep the ism and igm indexes
 
-  meiksinIndices.resize(m_opt_fitcontinuum_maxN, -1);
-  EbmvCoeffs.resize(m_opt_fitcontinuum_maxN, NAN);
-  ebmvIndices.resize(m_opt_fitcontinuum_maxN, -1);
   for (Int32 icontinuum = 0; icontinuum < m_opt_fitcontinuum_maxN;
        icontinuum++) {
     // get the closest lower or equal redshift in coarse grid
@@ -458,18 +452,16 @@ bool COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     tplList.push_back(
         tplCatalog->GetTemplateByName(m_tplCategoryList, fitValue.tplName));
 
-    if (!keepismigm)
-      continue;
+    if (m_opt_tplfit_extinction)
+      meiksinIndices[icontinuum] = fitValue.igmMeiksinIdx;
 
-    meiksinIndices[icontinuum] = fitValue.igmMeiksinIdx;
-    EbmvCoeffs[icontinuum] = fitValue.ismEbmvCoeff;
     // access any template and retrieve the ismcorrection object
     if (m_opt_tplfit_dustFit)
       ebmvIndices[icontinuum] =
           tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
-              ->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeffs[icontinuum]);
+              ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.ismEbmvCoeff);
   }
-  return keepismigm;
+  return;
 }
 
 /**

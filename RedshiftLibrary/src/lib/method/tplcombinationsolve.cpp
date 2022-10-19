@@ -303,8 +303,8 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 
   Int32 retPdfz = -1;
 
-  Int32 nISM = result->getISMCount();
-  Int32 nIGM = result->getIGMCount();
+  Int32 nISM = result->nISM;
+  Int32 nIGM = result->nIGM;
 
   if (chisquarearray.cstLog == -1) {
     chisquarearray.cstLog = result->CstLog;

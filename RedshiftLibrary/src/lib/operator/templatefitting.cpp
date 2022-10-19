@@ -72,16 +72,14 @@ using namespace std;
  * @param overlapThreshold
  * @param forcedAmplitude
  * @param opt_extinction
- * @param opt_dustFitting : -1 = disabled, -10 = fit over all available indexes,
- * positive integer 0, 1 or ... will be used as ism-calzetti index as
- * initialized in constructor.
+ * @param opt_dustFitting
  * @param spcMaskAdditional
  * @param priorjoint_pISM_tpl_z : vector size = nISM, joint prior p(ISM, TPL, Z)
  */
 TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 overlapThreshold, Float64 forcedAmplitude, Int32 opt_extinction,
-    Int32 opt_dustFitting, CMask spcMaskAdditional,
+    Float64 overlapThreshold, Float64 forcedAmplitude, bool opt_extinction,
+    bool opt_dustFitting, CMask spcMaskAdditional,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
   bool amplForcePositive = true;
@@ -106,9 +104,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   RebinTemplate(tpl, redshift, currentRange, result.overlapRate,
                 overlapThreshold);
 
-  bool apply_ism =
-      ((opt_dustFitting == -10 || opt_dustFitting > -1) ? true : false);
-
   bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
       m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), m_kStart,
       m_kEnd);
@@ -119,13 +114,13 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     THROWG(INTERNAL_ERROR, Formatter()
                                << "kStart=" << m_kStart << ", kEnd=" << m_kEnd);
 
-  if (apply_ism || opt_extinction) {
+  if (opt_dustFitting || opt_extinction) {
     InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
                      tpl->m_igmCorrectionMeiksin, EbmvListSize);
   }
 
-  Int32 iEbmvCoeffMin = EbmvList[0];
-  Int32 iEbmvCoeffMax = EbmvList[EbmvListSize - 1];
+  Int32 iEbmvCoeffMin = EbmvList.front();
+  Int32 iEbmvCoeffMax = EbmvList.back();
 
   m_option_igmFastProcessing = (MeiksinList.size() > 1 ? true : false);
 
@@ -172,9 +167,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     // Loop on the EBMV dust coeff
     for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
       Int32 kEbmv = EbmvList[kEbmv_];
-      Float64 coeffEBMV = -1.; // no ism by default (ie DustCoeff=1.)
+      Float64 coeffEBMV = -1.0; // no ism by default
 
-      if (apply_ism) {
+      if (opt_dustFitting) {
         coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
         ApplyDustCoeff(kEbmv);
       }
@@ -198,7 +193,8 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
             fitRes; // slicing, preserving specific TFittingIsmIGmResult members
 
         result.EbmvCoeff = coeffEBMV;
-        result.MeiksinIdx = igmCorrectionAppliedOnce == true ? meiksinIdx : -1;
+        result.MeiksinIdx =
+            igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
         status_chisquareSetAtLeastOnce = true;
       }
     }
@@ -400,44 +396,36 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
  * input: if additional_spcMasks size is 0, no additional mask will be used,
  *otherwise its size should match the redshifts list size
  *
- * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes,
- *positive integer 0, 1 or ... will be used as ism-calzetti index as initialized
- *in constructor.
- *
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-    Int32 opt_extinction, Int32 opt_dustFitting,
-    const CPriorHelper::TPriorZEList &logpriorze, bool keepigmism,
-    Float64 FitEbmvCoeff, Int32 FitMeiksinIdx) {
+    bool opt_extinction, bool opt_dustFitting,
+    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx) {
   Log.LogDetail(
       "  Operator-TemplateFitting: starting computation for template: %s",
       tpl->GetName().c_str());
 
-  if ((opt_dustFitting == -10 || opt_dustFitting > -1) &&
-      tpl->CalzettiInitFailed()) {
+  if (opt_dustFitting && tpl->CalzettiInitFailed())
     THROWG(INTERNAL_ERROR, "ISM is not initialized");
-  }
-  if (opt_dustFitting > -1 &&
-      opt_dustFitting >
-          tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs() - 1) {
+
+  if (opt_dustFitting &&
+      FitEbmvIdx >= tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs())
     THROWG(
         INTERNAL_ERROR,
-        Formatter() << "Invalid calzetti index. (dustfitting="
-                    << opt_dustFitting << ", while NPrecomputedEbmvCoeffs="
+        Formatter() << "Invalid calzetti index. (FitEbmvIdx=" << FitEbmvIdx
+                    << ", while NPrecomputedEbmvCoeffs="
                     << tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()
                     << ")");
-  }
 
   if (opt_extinction && tpl->MeiksinInitFailed()) {
     THROWG(INTERNAL_ERROR, "IGM is not initialized");
   }
 
   // sort the redshift and keep track of the indexes
-  TFloat64List sortedRedshifts;
-  TFloat64List sortedIndexes;
-  // This is a vector of {value,index} pairs
+  TFloat64List sortedRedshifts(m_redshifts.size());
+  TFloat64List sortedIndexes(m_redshifts.size());
   vector<pair<Float64, Int32>> vp;
   vp.reserve(m_redshifts.size());
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
@@ -445,20 +433,17 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
   std::sort(vp.begin(), vp.end());
   for (Int32 i = 0; i < vp.size(); i++) {
-    sortedRedshifts.push_back(vp[i].first);
-    sortedIndexes.push_back(vp[i].second);
+    sortedRedshifts[i] = vp[i].first;
+    sortedIndexes[i] = vp[i].second;
   }
 
   std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>();
+      std::make_shared<CTemplateFittingResult>(sortedRedshifts.size());
   TInt32List MeiksinList;
   TInt32List EbmvList;
   tpl->GetIsmIgmIdxList(opt_extinction, opt_dustFitting, MeiksinList, EbmvList,
-                        keepigmism, FitEbmvCoeff, FitMeiksinIdx);
-  Int32 MeiksinListSize = MeiksinList.size();
-  Int32 EbmvListSize = EbmvList.size();
+                        FitEbmvIdx, FitMeiksinIdx);
 
-  result->Init(sortedRedshifts.size());
   result->Redshifts = sortedRedshifts;
 
   // default mask

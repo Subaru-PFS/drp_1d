@@ -122,17 +122,14 @@ public:
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  void GetIsmIgmIdxList(Int32 opt_extinction, Int32 opt_dustFitting,
-                        TInt32List &MeiksinList, // return
-                        TInt32List &EbmvList,    // return
-                        bool keepigmism = 0, Float64 FitEbmvCoeff = NAN,
-                        Int32 FitMeiksinIdx = -1) const;
-  void GetIsmIdxList(Int32 opt_dustFitting,
-                     TInt32List &EbmvList, // return
-                     bool keepigmism, Float64 FitEbmvCoeff) const;
-  void GetIgmIdxList(Int32 opt_extinction,
-                     TInt32List &MeiksinList, // return
-                     bool keepigmism, Int32 FitMeiksinIdx) const;
+  void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
+                        TInt32List &MeiksinList, TInt32List &EbmvList,
+                        Int32 FitEbmvIdx = undefIdx,
+                        Int32 FitMeiksinIdx = undefIdx) const;
+  TInt32List GetIsmIdxList(bool opt_dustFitting,
+                           Int32 FitEbmvIdx = undefIdx) const;
+  TInt32List GetIgmIdxList(bool opt_extinction,
+                           Int32 FitMeiksinIdx = undefIdx) const;
 
 private:
   std::string m_Category;

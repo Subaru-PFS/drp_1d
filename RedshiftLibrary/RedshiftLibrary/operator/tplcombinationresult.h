@@ -50,16 +50,21 @@ namespace NSEpic {
 class CTplCombinationResult : public CTemplateFittingResult {
 
 public:
-  void Init(Int32 n, Int32 nISM, Int32 nIGM, Int32 componentSize);
-  Int32 getISMCount() const { return nISM; };
-  Int32 getIGMCount() const { return nIGM; };
+  CTplCombinationResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize,
+                        Int32 componentSize)
+      : CTemplateFittingResult(n, EbmvListSize, MeiksinListSize),
+        FitAmplitude(n, TFloat64List(componentSize, NAN)),
+        FitAmplitudeError(n, TFloat64List(componentSize, NAN)),
+        FitAmplitudeSigma(n, TFloat64List(componentSize, NAN)), FitCOV(n),
+        nISM(EbmvListSize), nIGM(MeiksinListSize) {}
+
   // best fit results
   std::vector<TFloat64List> FitAmplitude;
   std::vector<TFloat64List> FitAmplitudeError;
   std::vector<TFloat64List> FitAmplitudeSigma;
   std::vector<std::vector<TFloat64List>> FitCOV;
-  Int32 nISM = -1;
-  Int32 nIGM = -1;
+  Int32 nISM = undefIdx;
+  Int32 nIGM = undefIdx;
 };
 
 } // namespace NSEpic

@@ -83,10 +83,9 @@ public:
   virtual std::shared_ptr<COperatorResult> Compute(
       const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
       const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-      Int32 opt_extinction, Int32 opt_dustFitting,
+      bool opt_extinction, bool opt_dustFitting,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
-      bool keepigmism = false, Float64 FitEbmvCoeff = -1.,
-      Int32 FitMeiksinIdx = -1) = 0;
+      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
 
   std::shared_ptr<CModelSpectrumResult>
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,

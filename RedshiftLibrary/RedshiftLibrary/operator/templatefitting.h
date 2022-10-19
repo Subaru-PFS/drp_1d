@@ -76,15 +76,16 @@ struct TFittingIsmIgmResult : TFittingResult {
       : ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
         IsmCalzettiCoeffInterm(EbmvListSize,
                                TFloat64List(MeiksinListSize, NAN)),
-        IgmMeiksinIdxInterm(EbmvListSize, TInt32List(MeiksinListSize, -1)) {}
+        IgmMeiksinIdxInterm(EbmvListSize,
+                            TInt32List(MeiksinListSize, undefIdx)) {}
 
   Float64 overlapRate = NAN;
   Float64 EbmvCoeff = NAN;
-  Int32 MeiksinIdx = -1;
+  Int32 MeiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
   std::vector<TFloat64List> IsmCalzettiCoeffInterm;
   std::vector<TInt32List> IgmMeiksinIdxInterm;
-  COperator::EStatus status = COperator::EStatus::nStatus_DataError;
+  COperator::EStatus status = COperator::EStatus::nStatus_UnSet;
 };
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
@@ -102,17 +103,16 @@ public:
   std::shared_ptr<COperatorResult>
   Compute(const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
           const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-          Int32 opt_extinction = 0, Int32 opt_dustFitting = -1,
+          bool opt_extinction = false, bool opt_dustFitting = false,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
-          bool keepigmism = false, Float64 FitEbmvCoeff = -1.,
-          Int32 FitMeiksinIdx = -1) override;
+          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
 
 protected:
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
                                 Float64 redshift, Float64 overlapThreshold,
-                                Float64 forcedAmplitude, Int32 opt_extinction,
-                                Int32 opt_dustFitting, CMask spcMaskAdditional,
+                                Float64 forcedAmplitude, bool opt_extinction,
+                                bool opt_dustFitting, CMask spcMaskAdditional,
                                 const CPriorHelper::TPriorEList &logpriore,
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);

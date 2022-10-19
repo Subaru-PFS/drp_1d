@@ -135,9 +135,6 @@ void CLineModelFitting::initParameters() {
     m_opt_secondpass_fittingmethod = m_fittingmethod;
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
-    // TODO dedicated function ?
-
-    SetSecondpassContinuumFitPrms();
   }
 
   std::string continuumComponent =
@@ -153,14 +150,8 @@ void CLineModelFitting::initParameters() {
 }
 
 void CLineModelFitting::initMembers() {
-  // m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
-  m_nominalWidthDefaultEmission = 13.4; // euclid 1 px
-  m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
 
-  m_enableLambdaOffsetsFit =
-      true; // enable lambdaOffsetFit. Once enabled, the offset fixed value or
-  // the fitting on/off switch is done through the offset calibration
-  // file.
+  m_nominalWidthDefault = 13.4; // euclid 1 px
 
   Log.LogDetail("    model: Continuum winsize found is %.2f A",
                 m_inputSpc->GetMedianWinsize());
@@ -198,9 +189,6 @@ void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << " m_LambdaOffsetMax" << m_LambdaOffsetMax);
   Log.LogDetail(Formatter() << " m_LambdaOffsetStep" << m_LambdaOffsetStep);
   Log.LogDetail(Formatter()
-                << " m_enableLambdaOffsetsFit" << m_enableLambdaOffsetsFit);
-
-  Log.LogDetail(Formatter()
                 << " m_opt_firstpass_forcedisableMultipleContinuumfit"
                 << m_opt_firstpass_forcedisableMultipleContinuumfit);
   Log.LogDetail(Formatter() << "m_opt_firstpass_fittingmethod "
@@ -217,10 +205,7 @@ void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter()
                 << "velocityAbsorptionInit=" << m_velocityAbsorptionInit);
 
-  Log.LogDetail(Formatter() << "nominalWidthDefaultEmission="
-                            << m_nominalWidthDefaultEmission);
-  Log.LogDetail(Formatter() << "nominalWidthDefaultAbsorption="
-                            << m_nominalWidthDefaultAbsorption);
+  Log.LogDetail(Formatter() << "nominalWidthDefault=" << m_nominalWidthDefault);
 
   Log.LogDetail(Formatter() << "fittingmethod=" << m_fittingmethod);
 
@@ -228,11 +213,6 @@ void CLineModelFitting::logParameters() {
 
   // Log.LogDetail(Formatter()<<"tplCatalog="<<m_tplCatalog);
   // Log.LogDetail(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
-
-  Log.LogDetail(Formatter() << "secondpass_fitContinuum_dustfit="
-                            << m_secondpass_fitContinuum_dustfit);
-  Log.LogDetail(Formatter() << "secondpass_fitContinuum_igm="
-                            << m_secondpass_fitContinuum_igm);
 
   //  Log.LogDetail(Formatter()<<"fitContinuum_tplFitPolyCoeffs="<<m_fitContinuum_tplFitPolyCoeffs);
   //  // only used with
@@ -302,7 +282,7 @@ void CLineModelFitting::LoadCatalog(
       m_Elements.push_back(std::shared_ptr<CLineModelElement>(
           new CLineModelElement(lines, m_LineWidthType, m_velocityEmission,
                                 m_velocityAbsorption, amps,
-                                m_nominalWidthDefaultAbsorption, inds)));
+                                m_nominalWidthDefault, inds)));
     }
   }
 }
@@ -322,8 +302,8 @@ void CLineModelFitting::LoadCatalogOneMultiline(
   if (lines.size() > 0) {
     m_Elements.push_back(std::shared_ptr<CLineModelElement>(
         new CLineModelElement(lines, m_LineWidthType, m_velocityEmission,
-                              m_velocityAbsorption, amps,
-                              m_nominalWidthDefaultAbsorption, inds)));
+                              m_velocityAbsorption, amps, m_nominalWidthDefault,
+                              inds)));
   }
 }
 
@@ -348,7 +328,7 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
       m_Elements.push_back(std::shared_ptr<CLineModelElement>(
           new CLineModelElement(lines, m_LineWidthType, m_velocityEmission,
                                 m_velocityAbsorption, amps,
-                                m_nominalWidthDefaultAbsorption, inds)));
+                                m_nominalWidthDefault, inds)));
     }
   }
 }
@@ -547,27 +527,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     continuumModelSolution = m_continuumManager->GetContinuumModelSolution();
   }
   return bestMerit;
-}
-
-void CLineModelFitting::SetSecondpassContinuumFitPrms() {
-
-  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-
-  Int32 dustfit = -1;
-  if (ps->GetScoped<bool>("continuumfit.ismfit"))
-    dustfit = -10;
-
-  Int32 meiksinfit = ps->GetScoped<bool>("continuumfit.igmfit");
-  m_ignoreLinesSupport = ps->GetScoped<bool>("continuumfit.ignorelinesupport");
-  m_secondpass_fitContinuum_dustfit = dustfit;
-  m_secondpass_fitContinuum_igm = meiksinfit;
-
-  Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
-                "fitContinuum_dustfit = %d",
-                m_secondpass_fitContinuum_dustfit);
-  Log.LogDetail(
-      "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d",
-      m_secondpass_fitContinuum_igm);
 }
 
 void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
