@@ -166,7 +166,10 @@ class AbstractOutput:
                 return attribute in self.object_results[object_type][dataset]
             else:
                 if type(self.object_results[object_type][dataset]) == list:
-                    return attribute in self.object_results[object_type][dataset][rank]
+                    if len(self.object_results[object_type][dataset]) > rank:
+                        return attribute in self.object_results[object_type][dataset][rank]
+                    else:
+                        return False
                 else:
                     return False
         else:
