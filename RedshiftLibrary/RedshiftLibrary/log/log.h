@@ -83,10 +83,8 @@ public:
   friend class AmzException; // for calling private LogError
 
   // friend functions for calling private LogWarning :
-  friend void CFlagWarning::warning(CFlagWarning::WarningCode c,
-                                    std::string message);
-  friend void CFlagWarning::warning(CFlagWarning::WarningCode c,
-                                    const char *format, ...);
+  friend void CFlagWarning::warning(WarningCode c, std::string message);
+  friend void CFlagWarning::warning(WarningCode c, const char *format, ...);
 
   void LogInfo(const char *format, ...);
   void LogDetail(const char *format, ...);

@@ -1,6 +1,9 @@
 import pandas as pd
 import json
-
+import h5py
+import os
+from pylibamazed.Exception import APIException
+from pylibamazed.redshift import ErrorCode
 
 class Parameters():
 
@@ -35,6 +38,7 @@ class Parameters():
             else:
                 return self.parameters[object_type][self.parameters[object_type]["method"]]["linemodel"]["skipsecondpass"]
         return False
+
     def get_solve_method(self, object_type):
         return self.parameters[object_type]["method"]
 
@@ -56,6 +60,7 @@ class Parameters():
             self.parameters[object_type]["redshiftref"] = redshift_ref
             self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
             self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em
+
     def load_linemeas_parameters_from_result_store(self, output, object_type):
 
         redshift = output.get_attribute_from_source(object_type,
@@ -101,4 +106,5 @@ class Parameters():
         elif stage == "sub_classif_solver":
             return self.lineratio_catalog_enabled(object_type)
         else:
-            raise Exception("Unknown stage {stage}")
+            raise Exception("Unknown stage {stage}") 
+       

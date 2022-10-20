@@ -40,13 +40,14 @@ import pandas as pd
 from pylibamazed.r_specifications import rspecifications
 from pylibamazed.Parameters import Parameters
 import numpy as np
-from pylibamazed.redshift import CLog, ErrorCode
+from pylibamazed.redshift import CLog, ErrorCode, WarningCode
 from pylibamazed.Exception import APIException
 
 RootStages = ["init","classification","result_store_fill"]
 ObjectStages = ["redshift_solver","linemeas_catalog_load","linemeas_solver","reliability_solver","sub_classif_solver"]
 
 zlog = CLog.GetInstance()
+
 
 class AbstractOutput:
 
@@ -165,7 +166,10 @@ class AbstractOutput:
                 return attribute in self.object_results[object_type][dataset]
             else:
                 if type(self.object_results[object_type][dataset]) == list:
-                    return attribute in self.object_results[object_type][dataset][rank]
+                    if len(self.object_results[object_type][dataset]) > rank:
+                        return attribute in self.object_results[object_type][dataset][rank]
+                    else:
+                        return False
                 else:
                     return False
         else:
@@ -400,6 +404,10 @@ class AbstractOutput:
                 elif self.has_error(None,attr_parts[1]):
                     ret[attribute] = self.get_error(None,attr_parts[1])[attr_parts[2]]
                 continue
+            elif root == "ContextWarningFlags":
+                return self.root_results["context_warningFlag"]["ContextWarningFlags"]
+            elif "WarningFlags" in data:
+                return self.object_results[root]["warningFlag"][data]
             else:
                 category = root
                 if len(attr_parts) == 2:

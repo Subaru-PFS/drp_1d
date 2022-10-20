@@ -56,7 +56,10 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
 import numpy as np
 from astropy.io import fits, ascii
 import glob
+import h5py
 from pylibamazed.Exception import AmazedError,AmazedErrorFromGlobalException,APIException
+
+
 zflag = CFlagWarning.GetInstance()
 
 
@@ -98,6 +101,7 @@ class CalibrationLibrary:
         self.calzetti = None
         self.meiksin = None
         self.reliability_models = {}
+        self.reliability_parameters = dict()
 
     def _load_templates(self, object_type, path):
         """
@@ -133,7 +137,6 @@ class CalibrationLibrary:
                 try:
                     data = np.loadtxt(file_path, unpack=True)
                 except Exception as e:
-                    #logger.error("Unable to read template file {}".format(file_path))#todo: check if we keep the logger
                     raise APIException(ErrorCode.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
                 wavelength = data[0]
                 flux = data[1]
@@ -336,13 +339,32 @@ class CalibrationLibrary:
                         # to avoid annoying messages about gpu/cuda availability
                         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
                         from tensorflow.keras import models
+                        import keras
                     except ImportError:
-                        zflag.warning(zflag.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
-                    else:
-                        model_path = os.path.join(self.calibration_dir,
-                                                  self.parameters[object_type]["reliability_model"])
-                        model = models.load_model(model_path)
-                        self.reliability_models[object_type] = model
+                        raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
+
+                    model_path = os.path.join(self.calibration_dir,
+                                              self.parameters[object_type]["reliability_model"])
+                    model_ha = h5py.File(model_path).attrs
+                    keras_model_version = model_ha["keras_version"].split(".")
+                    keras_system_version = keras.__version__.split(".")
+                    if keras_model_version[0] > keras_system_version[0]:
+                        raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,
+                                           f"Tensorflow major version >= {keras_model_version[0]} required")
+                    redshift_range = [model_ha["zrange_min"],
+                                      model_ha["zrange_max"]]
+                    redshift_range_step = model_ha["zrange_step"]
+                    s_redshift_range = self.parameters[object_type]["redshiftrange"]
+                    s_redshift_range_step = self.parameters[object_type]["redshiftstep"]
+                    if s_redshift_range != redshift_range:
+                        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift range of reliability model must be identical to solver one : {redshift_range} != {s_redshift_range}")
+                    if s_redshift_range_step != redshift_range_step:
+                        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift step of reliability model must be identical to solver one : {redshift_range_step} != {s_redshift_range_step}")
+                    model = models.load_model(model_path)
+                    self.reliability_models[object_type] = model
+                    self.reliability_parameters[object_type] = dict()
+                    self.reliability_parameters[object_type]["zgrid_end"]=model_ha["zgrid_end"]
+                    self.reliability_parameters[object_type]["zrange_step"]=model_ha["zrange_step"]
 
             if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
                 self.load_lsf()

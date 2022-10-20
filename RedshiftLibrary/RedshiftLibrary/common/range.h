@@ -159,7 +159,7 @@ public:
                                    bool warning = true) const {
     if (value < m_Begin || value > m_End) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VALUE_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VALUE_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": value " << value
                          << " not inside ]" << m_Begin << "," << m_End << "[");
@@ -167,7 +167,7 @@ public:
     } else if (m_Begin < ordered_values.front() ||
                m_End > ordered_values.back()) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": ]" << m_Begin << ","
                          << m_End << "[ not inside ordered_values");
@@ -193,7 +193,7 @@ public:
                                    bool warning = true) const {
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": ]" << m_Begin << ","
                          << m_End << "[ not inside ordered_values");
@@ -220,7 +220,7 @@ public:
                                 bool warning = true) const {
     if (m_End < ordered_values.front() || m_Begin > ordered_values.back()) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": ]" << m_Begin << ","
                          << m_End << "[ not inside ordered_values");
@@ -242,7 +242,7 @@ public:
     if (i_min > i_max) {
       if (warning)
         Flag.warning(
-            Flag.CRANGE_NO_INTERSECTION,
+            WarningCode::CRANGE_NO_INTERSECTION,
             Formatter()
                 << "CRange::" << __func__
                 << ": There is no sample inside range (min,max indices=["

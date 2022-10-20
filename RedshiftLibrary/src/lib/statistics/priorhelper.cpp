@@ -54,7 +54,7 @@ void CPriorHelper::Init(std::string priorDirPath, Int32 type) {
   bfs::path rootFolder(priorDirPath.c_str());
   if (!bfs::exists(rootFolder)) {
     if (!rootFolder.string().empty()) {
-      Flag.warning(Flag.INVALID_FOLDER_PATH,
+      Flag.warning(WarningCode::INVALID_FOLDER_PATH,
                    Formatter() << "    CPriorHelper::" << __func__
                                << ": rootFolder path does not exist: "
                                << rootFolder.string().c_str());

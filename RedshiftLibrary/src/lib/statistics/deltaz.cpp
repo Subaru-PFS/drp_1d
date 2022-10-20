@@ -78,7 +78,7 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
         throw GlobalException(e.getErrorCode(), msg, __FILE__, __func__,
                               __LINE__);
       }
-      Flag.warning(Flag.DELTAZ_COMPUTATION_FAILED,
+      Flag.warning(WarningCode::DELTAZ_COMPUTATION_FAILED,
                    Formatter() << "  CDeltaz::" << __func__
                                << ": Deltaz computation failed for half range "
                                << half_samples_nb << " samples");

@@ -525,7 +525,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     }
   }
   if (oneValidStatusFoundIndex == -1) {
-    Flag.warning(Flag.INVALID_MERIT_VALUES,
+    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
                  Formatter()
                      << "  COperatorTemplateFitting::" << __func__
                      << ": STATUS WARNING for " << tpl->GetName().c_str()
@@ -544,7 +544,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     }
   }
   if (loopErrorStatusFoundIndex != -1) {
-    Flag.warning(Flag.INVALID_MERIT_VALUES,
+    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
                  Formatter()
                      << "    COperatorTemplateFitting::" << __func__
                      << ": Loop Error - chisquare values not set even once");

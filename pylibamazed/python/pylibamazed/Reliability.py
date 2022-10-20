@@ -58,9 +58,26 @@ class Reliability:
                                                self.parameters.get_solve_method(self.object_type),
                                                "pdf",
                                                "PDFProbaLog")
+        zgrid = output.get_attribute_from_source(self.object_type,
+                                                 self.parameters.get_solve_method(self.object_type),
+                                                 "pdf",
+                                                 "PDFZGrid")        
         model = self.calibration_library.reliability_models[self.object_type]
+
+        zgrid_end = zgrid[-1]
         if pdf.shape[0] != model.input_shape[1]:
-            raise APIException(ErrorCode.PYTHON_API_ERROR,"PDF and model shapes are not compatible")
+            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,"PDF and model shapes are not compatible")
                 # The model needs a PDF, not LogPDF
+        calib_parameters = self.calibration_library.reliability_parameters[self.object_type]
+        c_zgrid_zend = calib_parameters["zgrid_end"]
+        zend_diff = (zgrid_end - c_zgrid_zend)/zgrid_end
+        if zend_diff > 1e-6:
+            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {zgrid_end} != {c_zgrid_zend}")
+        z_step = (zgrid[-1]+1)/(zgrid[-2]+1)
+        c_zrange_step = calib_parameters["zrange_step"]
+        step_diff = (np.exp(c_zrange_step)-z_step)/z_step
+        if step_diff > 1e-6:
+            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {z_step} != {np.exp(c_zrange_step)}")
+
         return  model.predict(np.exp(pdf[None, :, None]))[0, 1]
 
