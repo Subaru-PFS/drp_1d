@@ -64,12 +64,35 @@ void CObjectSolve::InitRanges(
 
 // common for all except linemodelsolve
 void CObjectSolve::createRedshiftGrid(
-    std::shared_ptr<const CInputContext> inputContext,
+    const std::shared_ptr<const CInputContext> &inputContext,
     const TFloat64Range &redshiftRange) {
   if (m_redshiftSampling == "log")
-    m_redshifts = redshiftRange.SpreadOverLogZplusOne(
-        m_redshiftStep); // experimental: spreadover a grid at delta/(1+z),
-                         // unusable because PDF needs regular z-step
+    m_redshifts = redshiftRange.SpreadOverLogZplusOne(m_redshiftStep);
   else
     m_redshifts = redshiftRange.SpreadOver(m_redshiftStep);
+}
+
+void CObjectSolve::GetRedshiftSampling(
+    const std::shared_ptr<const CInputContext> &inputContext,
+    TFloat64Range &redshiftRange, Float64 &redshiftStep) {
+  auto searchLogRebin = inputContext->m_logRebin.find(m_objectType);
+  if (searchLogRebin != inputContext->m_logRebin.end()) {
+    redshiftRange = searchLogRebin->second.zrange;
+
+    redshiftStep = inputContext->m_logGridStep;
+    if (m_redshiftSampling == "lin") {
+      m_redshiftSampling = "log";
+      Flag.warning(WarningCode::FORCE_LOGSAMPLING_FFT,
+                   Formatter() << "CSolve::" << __func__
+                               << ": m_redshift sampling value is forced to "
+                                  "log since FFTprocessing is used");
+    }
+  } else {
+    // default is to read from the scoped paramStore
+    redshiftRange = inputContext->GetParameterStore()->GetScoped<TFloat64Range>(
+        "redshiftrange");
+    redshiftStep =
+        inputContext->GetParameterStore()->GetScoped<Float64>("redshiftstep");
+  }
+  return;
 }

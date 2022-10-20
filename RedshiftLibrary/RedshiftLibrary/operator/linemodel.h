@@ -56,6 +56,9 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+namespace Linemodel {
+class spanRedshift_test;
+}
 
 namespace NSEpic {
 
@@ -73,13 +76,8 @@ public:
 
   std::shared_ptr<COperatorResult> getResult();
 
-  std::shared_ptr<CTemplatesFitStore>
-  PrecomputeContinuumFit(const TFloat64List &redshifts,
-                         Int32 candidateIdx = -1);
-
   void ComputeFirstPass();
 
-  void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List &largeGridRedshifts);
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
   void Combine_firstpass_candidates(
@@ -88,12 +86,6 @@ public:
   void ComputeSecondPass(
       const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
 
-  void EstimateSecondPassParameters(const CSpectrum &spectrum,
-                                    const TFloat64Range &lambdaRange);
-
-  void RecomputeAroundCandidates(
-      const std::string &opt_continuumreest, const Int32 tplfit_option,
-      const bool overrideRecomputeOnlyOnTheCandidate = false);
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
@@ -106,9 +98,6 @@ public:
                       const TCandidateZbyRank &zCandidates,
                       const std::string &opt_continuumreest = "no");
 
-  void InitTplratioPriors();
-  void evaluateContinuumAmplitude(
-      const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
   const bool m_enableWidthFitByGroups = false;
   // m_enableWidthFitByGroups: enable/disable fit by groups. Once enabled, the
   // velocity fitting groups are defined in the line catalog from v4.0 on.
@@ -116,15 +105,6 @@ public:
   Int32 m_maxModelSaveCount = 20;
   Float64 m_secondPass_halfwindowsize; // = 0.005;
   TStringList m_tplCategoryList;
-
-  bool m_enableLoadContTemplate = false;
-  Int32 m_iRollContaminated = -1;
-  Float64 m_contLambdaOffset = 0;
-  std::shared_ptr<CTemplate> m_tplContaminant = NULL;
-  Int32 initContaminant(std::shared_ptr<CModelSpectrumResult> contModelSpectrum,
-                        Int32 iRollContaminated, Float64 contLambdaOffset);
-  std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
-  std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
   bool m_opt_tplfit_fftprocessing =
       false; // we cant set it as the default since not taken into account when
@@ -157,6 +137,19 @@ public:
   getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
 
 private:
+  friend class Linemodel::spanRedshift_test;
+
+  std::shared_ptr<CTemplatesFitStore>
+  PrecomputeContinuumFit(const TFloat64List &redshifts,
+                         Int32 candidateIdx = -1);
+  void EstimateSecondPassParameters(const CSpectrum &spectrum,
+                                    const TFloat64Range &lambdaRange);
+
+  void RecomputeAroundCandidates(
+      const std::string &opt_continuumreest, const Int32 tplfit_option,
+      const bool overrideRecomputeOnlyOnTheCandidate = false);
+  void evaluateContinuumAmplitude(
+      const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_Redshifts; // coarse grid

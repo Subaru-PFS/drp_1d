@@ -598,22 +598,13 @@ void COperatorLineModel::evaluateContinuumAmplitude(
 TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
 
   const Float64 halfwindowsize_z = m_secondPass_halfwindowsize * (1. + z);
-  TFloat64Range secondpass_window = {z - halfwindowsize_z,
-                                     z + halfwindowsize_z};
 
-  /*Int32 count =
-      (log(z + 1) - log(secondpass_window.GetBegin() + 1)) / m_fineStep;
-  Float64 log_min = log(z + 1) - count * m_fineStep;
-  Float64 min = exp(log_min) - 1;*/
-  TFloat64Range secondpass_window_part1 = {z - halfwindowsize_z, z}; //{min, z}
+  TFloat64Range secondpass_window_part1 = {z - halfwindowsize_z, z};
   TFloat64List extendedList =
       (m_redshiftSampling == "log")
-          ? secondpass_window_part1.SpreadOverLogZplusOne(m_fineStep,
-                                                          true) // backward
+          ? secondpass_window_part1.SpreadOverLogZplusOne(m_fineStep, true)
           : secondpass_window_part1.SpreadOver_backward(m_fineStep);
 
-  // construct secondpass windows by parts to ensure having zcand in the
-  // interval //below code should be reviewed
   TFloat64Range secondpass_window_part2 = {z, z + halfwindowsize_z};
   TFloat64List extendedList_part2 =
       (m_redshiftSampling == "log")
@@ -623,12 +614,6 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
   extendedList.insert(std::end(extendedList),
                       std::begin(extendedList_part2) + 1,
                       std::end(extendedList_part2));
-
-  if (!std::is_sorted(std::begin(extendedList), std::end(extendedList)))
-    THROWG(INTERNAL_ERROR, "vector is not sorted");
-  // check presence of z in extendedList
-  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
-
   return extendedList;
 }
 
@@ -1758,44 +1743,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
 std::shared_ptr<COperatorResult> COperatorLineModel::getResult() {
   return m_result;
-}
-
-/**
- * @brief COperatorLineModel::initContaminant
- * prepare the contaminant to be used when instantiating a multimodel in
- * compute()
- * @return
- */
-Int32 COperatorLineModel::initContaminant(
-    std::shared_ptr<CModelSpectrumResult> contModelSpectrum,
-    Int32 iRollContaminated, Float64 contLambdaOffset) {
-  /*
-    Log.LogInfo("  Operator-Linemodel: Initializing contaminant for roll #%d,
-    " "with offset=%.2f", iRollContaminated, contLambdaOffset);
-
-    m_iRollContaminated = iRollContaminated;
-    m_contLambdaOffset = contLambdaOffset;
-    const std::string &category = "emission";
-    m_tplContaminant =
-        std::shared_ptr<CTemplate>(new CTemplate("contaminant", category));
-    Int32 length = contModelSpectrum->ModelFlux.size();
-
-    CSpectrumFluxAxis  spcFluxAxis =
-    contModelSpectrum->GetSpectrum().GetFluxAxis(); CSpectrumSpectralAxis
-    spcSpectralAxis = contModelSpectrum->GetSpectrum().GetSpectralAxis();
-
-    // applying offset for ra/dec distance between main source and contaminant
-    spcSpectralAxis.ApplyOffset(m_contLambdaOffset);
-
-    m_tplContaminant->SetSpectralAndFluxAxes(std::move(spcSpectralAxis),
-    std::move(spcFluxAxis)); m_enableLoadContTemplate = true;
-  */
-  return 0;
-}
-
-std::shared_ptr<CModelSpectrumResult>
-COperatorLineModel::GetContaminantSpectrumResult() {
-  return m_savedContaminantSpectrumResult;
 }
 
 void COperatorLineModel::interpolateLargeGridOnFineGrid(

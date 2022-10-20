@@ -744,6 +744,18 @@ BOOST_AUTO_TEST_CASE(Union) {
   BOOST_CHECK(ret == true);
   BOOST_CHECK(resultUnion == TInt32Range(1, 4));
 }
+
+BOOST_AUTO_TEST_CASE(signCheck) {
+  TFloat64Range a(-3, 5);
+  TFloat64Range b(3, 5);
+  Float64 offset = 1;
+  Float64 delta = 1;
+  BOOST_CHECK(a.isSameSign(offset) == false);
+  BOOST_CHECK_THROW(a.SpreadOverLog(delta), GlobalException);
+  BOOST_CHECK_THROW(a.SpreadOverLog_backward(delta), GlobalException);
+
+  BOOST_CHECK(b.isSameSign(offset) == true);
+}
 //-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END()

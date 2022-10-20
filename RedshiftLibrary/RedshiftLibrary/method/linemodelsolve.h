@@ -71,8 +71,9 @@ public:
           TScopeStack &scope) override;
 
   void Solve();
-  void createRedshiftGrid(std::shared_ptr<const CInputContext> inputContext,
-                          const TFloat64Range &redshiftRange) override;
+  void
+  createRedshiftGrid(const std::shared_ptr<const CInputContext> &inputContext,
+                     const TFloat64Range &redshiftRange) override;
 
 private:
   ChisquareArray BuildChisquareArray(

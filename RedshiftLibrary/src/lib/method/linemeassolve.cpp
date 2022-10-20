@@ -46,7 +46,7 @@ CLineMeasSolve::CLineMeasSolve(TScopeStack &scope, string objectType)
     : CObjectSolve("LineMeasSolve", scope, objectType) {}
 
 void CLineMeasSolve::GetRedshiftSampling(
-    std::shared_ptr<const CInputContext> inputContext,
+    const std::shared_ptr<const CInputContext> &inputContext,
     TFloat64Range &redshiftRange, Float64 &redshiftStep) {
   // default is to read from the scoped paramStore
   Float64 rangeCenter =

@@ -66,8 +66,10 @@ public:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope);
 
-  void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext,
-                           TFloat64Range &redshiftRange, Float64 &redshiftStep);
+  void
+  GetRedshiftSampling(const std::shared_ptr<const CInputContext> &inputContext,
+                      TFloat64Range &redshiftRange,
+                      Float64 &redshiftStep) override;
 
 protected:
   COperatorLineModel m_linemodel;

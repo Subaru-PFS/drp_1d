@@ -36,34 +36,37 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _OBJECT_SOLVE_H_
-#define _OBJECT_SOLVE_H_
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/operator/linemodel.h"
+#include <boost/test/unit_test.hpp>
 
-#include "RedshiftLibrary/method/solve.h"
+using namespace NSEpic;
+using namespace std;
+BOOST_AUTO_TEST_SUITE(Linemodel)
 
-namespace NSEpic {
+BOOST_AUTO_TEST_CASE(spanRedshift_test) {
+  Float64 z = 5.;
+  Float64 step = 1;
+  TFloat64List redshifts{0, 5, 9};
+  std::string redshiftSampling = "lin";
+  Float64 secondPass_halfwindowsize = 0.5;
+  Int32 ref_idx = 3; // todo
+  TFloat64List extendedRedshifts_ref{2, 3, 4, 5, 6, 7, 8};
 
-class CObjectSolve : public CSolve {
-public:
-  using CSolve::CSolve;
-  virtual ~CObjectSolve() = default;
-  CObjectSolve(CObjectSolve const &other) = default;
-  CObjectSolve &operator=(CObjectSolve const &other) = default;
-  CObjectSolve(CObjectSolve &&other) = default;
-  CObjectSolve &operator=(CObjectSolve &&other) = default;
+  // prepare object
+  COperatorLineModel op;
+  op.m_Redshifts = redshifts;
+  op.m_fineStep = step;
+  op.m_redshiftSampling = redshiftSampling;
+  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
 
-protected:
-  void InitRanges(std::shared_ptr<const CInputContext> inputContext) override;
-  virtual void
-  createRedshiftGrid(const std::shared_ptr<const CInputContext> &inputContext,
-                     const TFloat64Range &redshiftRange);
-  virtual void
-  GetRedshiftSampling(const std::shared_ptr<const CInputContext> &inputContext,
-                      TFloat64Range &redshiftRange, Float64 &redshiftStep);
-  Float64 m_redshiftStep = NAN;
-  std::string m_redshiftSampling;
-  TFloat64List m_redshifts;
-};
-} // namespace NSEpic
-
-#endif
+  TFloat64List extendedList = op.SpanRedshiftWindow(z);
+  // check is sorted
+  BOOST_CHECK(
+      std::is_sorted(std::begin(extendedList), std::end(extendedList)) == true);
+  BOOST_CHECK(extendedList == extendedRedshifts_ref);
+  // check presence of z in extendedList
+  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
+  BOOST_CHECK(idx == ref_idx);
+}
+BOOST_AUTO_TEST_SUITE_END()

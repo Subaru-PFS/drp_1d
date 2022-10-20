@@ -682,7 +682,7 @@ void CLineModelSolve::Solve() {
 }
 
 void CLineModelSolve::createRedshiftGrid(
-    std::shared_ptr<const CInputContext> inputContext,
+    const std::shared_ptr<const CInputContext> &inputContext,
     const TFloat64Range &redshiftRange) {
 
   Int32 opt_twosteplargegridstep_ratio =
@@ -696,7 +696,7 @@ void CLineModelSolve::createRedshiftGrid(
                     ? redshiftRange.SpreadOverLogZplusOne(coarseRedshiftStep)
                     : redshiftRange.SpreadOver(coarseRedshiftStep);
 
-  if (m_redshifts.empty()) {
+  if (m_redshifts.size() < MIN_GRID_COUNT) {
     CObjectSolve::createRedshiftGrid(
         inputContext, redshiftRange); // fall back to creating fine grid
     Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "

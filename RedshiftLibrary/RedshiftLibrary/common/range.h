@@ -40,6 +40,7 @@
 #define _REDSHIFT_COMMON_RANGE_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
@@ -90,45 +91,39 @@ public:
 
   T GetLength() const { return m_End - m_Begin; }
 
+  bool isSameSign(T offset) const {
+    return (m_Begin + offset) * (m_End + offset) >= 0;
+  }
+
   std::vector<T> SpreadOver(T delta) const {
-    std::vector<T> v;
+    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+      return {m_Begin};
 
-    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta) {
-      v.resize(1);
-      v[0] = m_Begin;
-      return v;
-    }
+    Int32 count = (GetLength() + epsilon) / delta + 1;
 
-    Int32 count = (GetLength() + epsilon) / delta;
-
-    v.resize(count + 1);
-    for (Int32 i = 0; i < v.size(); i++) {
+    std::vector<T> v(count);
+    for (Int32 i = 0; i < v.size(); i++)
       v[i] = GetBegin() + delta * i;
-    }
 
     return v;
   }
   std::vector<T> SpreadOver_backward(T delta) const {
-    std::vector<T> v;
+    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+      return {m_End};
 
-    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta) {
-      v.resize(1);
-      v[0] = m_End;
-      return v;
-    }
+    Int32 count = (GetLength() + epsilon) / delta + 1;
 
-    Int32 count = (GetLength() + epsilon) / delta;
-
-    v.resize(count + 1);
-    for (Int32 i = v.size() - 1; i >= 0; i++) {
-      v[i] = GetEnd() - delta * i;
-    }
+    std::vector<T> v(count);
+    for (Int32 i = 0; i < count; i++)
+      v[i] = GetEnd() - delta * (count - i - 1);
 
     return v;
   }
   std::vector<T> SpreadOverLog(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
+    if (!isSameSign(offset))
+      THROWG(INTERNAL_ERROR, "borders should be of same sign");
     if (GetIsEmpty() || delta == 0.0 ||
         GetLength() < (GetBegin() + offset) * exp(delta) -
                           (GetBegin() + offset) + epsilon)
@@ -151,13 +146,15 @@ public:
   std::vector<T> SpreadOverLog_backward(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
+    if (!isSameSign(offset))
+      THROWG(INTERNAL_ERROR, "borders should be of same sign");
     if (GetIsEmpty() || delta == 0.0 ||
         GetLength() < (GetBegin() + offset) * exp(delta) -
                           (GetBegin() + offset) + epsilon)
       return {m_End};
 
     T x = m_End + offset;
-    T edelta = exp(delta);
+    T edelta = exp(-delta);
     Int32 count =
         (log(GetEnd() + offset) - log(GetBegin() + offset - epsilon)) / delta +
         1;
@@ -165,7 +162,7 @@ public:
     std::vector<T> v(count);
     for (Int32 i = count - 1; i >= 0; i--) {
       v[i] = x - offset;
-      x /= edelta;
+      x *= edelta;
     }
     return v;
   }
