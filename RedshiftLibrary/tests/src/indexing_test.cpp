@@ -52,6 +52,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_int) {
   Int32 target = 2, idx;
   idx = CIndexing<Int32>::getIndex(myVector, target);
   BOOST_CHECK(myVector[idx] == target);
+  BOOST_CHECK(idx == 1);
 }
 
 BOOST_AUTO_TEST_CASE(indexing_test_float) {
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float_erro) {
                         GlobalException, correctMessage);
 }
 
-BOOST_AUTO_TEST_CASE(LowesrIndex) {
+BOOST_AUTO_TEST_CASE(LowerIndex) {
   TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
                            4.5, 5.0, 5.5, 6.0, 6.5};
   Float64 target = 2.2;
@@ -82,6 +83,7 @@ BOOST_AUTO_TEST_CASE(LowesrIndex) {
 
   CIndexing<Float64>::getClosestLowerIndex(myVector, target, i_min);
   BOOST_CHECK(myVector[i_min] <= target);
+  BOOST_CHECK(i_min == 1);
 
   target = 6.519999999;
   bool b = CIndexing<Float64>::getClosestLowerIndex(myVector, target, i_min);
@@ -92,7 +94,7 @@ BOOST_AUTO_TEST_CASE(LowesrIndex) {
   BOOST_CHECK(b == false);
 }
 
-BOOST_AUTO_TEST_CASE(LowerIndex) {
+BOOST_AUTO_TEST_CASE(CloserIndex) {
   TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
                            4.5, 5.0, 5.5, 6.0, 6.5};
   const Float64 target = 2.019999999;
@@ -102,7 +104,7 @@ BOOST_AUTO_TEST_CASE(LowerIndex) {
 
   BOOST_CHECK(i_min == 1);
 }
-BOOST_AUTO_TEST_CASE(LowerIndex2) {
+BOOST_AUTO_TEST_CASE(CloserIndex2) {
   TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
                            4.5, 5.0, 5.5, 6.0, 6.5};
   const Float64 target = 2.419999999;
@@ -112,7 +114,7 @@ BOOST_AUTO_TEST_CASE(LowerIndex2) {
 
   BOOST_CHECK(i_min == 2);
 }
-BOOST_AUTO_TEST_CASE(LowerIndex_outsideBorders) {
+BOOST_AUTO_TEST_CASE(CloserIndex_outsideBorders) {
   TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
                            4.5, 5.0, 5.5, 6.0, 6.5};
   Int32 i_min = -1;
@@ -139,8 +141,11 @@ BOOST_AUTO_TEST_CASE(higherIndex) {
 
   target = -2.0;
   ret = CIndexing<Float64>::getClosestUpperIndex(myVector, target, i_max);
-  std::cout << i_max;
   BOOST_CHECK(i_max == 0);
+
+  target = 6.519999999;
+  ret = CIndexing<Float64>::getClosestUpperIndex(myVector, target, i_max);
+  BOOST_CHECK(ret == false);
 }
 /////
-}
+BOOST_AUTO_TEST_SUITE_END()

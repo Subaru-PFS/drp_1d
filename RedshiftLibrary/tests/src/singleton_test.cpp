@@ -78,9 +78,10 @@ template <typename T> void SingletonTest<T>::run(const T &a, const T &b) {
 
 // typedef SingletonTest<TFloat64Range> SRange;
 template <> void SingletonTest<TFloat64Range>::creation() {
+  BOOST_CHECK(SingletonType<TFloat64Range>::GetInstance().m == TFloat64Range());
   BOOST_CHECK(SingletonType<TFloat64Range>::GetInstance().m.GetBegin() ==
               TFloat64Range().GetBegin());
-  BOOST_CHECK(SingletonType<TFloat64Range>::GetInstance().m.GetBegin() ==
+  BOOST_CHECK(SingletonType<TFloat64Range>::GetInstance().m.GetEnd() ==
               TFloat64Range().GetEnd());
 }
 
