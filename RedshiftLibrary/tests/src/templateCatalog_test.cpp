@@ -41,7 +41,7 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "test-config.h"
+#include "tests/src/tool/inputContextLight.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -62,13 +62,19 @@ const std::string jsonString =
 
 class fixture_TemplateCatalogTest {
 public:
+  fixture_TemplateCatalogTest() {
+    igmCorrectionMeiksin->convolveByLSF(LSF,
+                                        fixture_MeiskinCorrection().lbdaRange);
+  }
+  TScopeStack scopeStack;
   CTemplateCatalog catalog = fixture_TemplateCatalog().catalog;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
       fixture_CalzettiCorrection().ismCorrectionCalzetti;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CParameterStore> paramStore =
-      fixture_ParamStore(jsonString).paramStore;
+      fixture_ParamStore(jsonString, scopeStack).paramStore;
+  std::shared_ptr<CLSF> LSF = fixture_LSFGaussianConstantWidth(scopeStack).LSF;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TemplateCatalog, fixture_TemplateCatalogTest)
@@ -528,7 +534,8 @@ BOOST_AUTO_TEST_CASE(ClearOneTemplate_test_Case4) {
 }
 
 BOOST_AUTO_TEST_CASE(InitContinuumRemoval_test) {
-  catalog.InitContinuumRemoval(fixture_ParamStore(jsonString).paramStore);
+  catalog.InitContinuumRemoval(
+      fixture_ParamStore(jsonString, scopeStack).paramStore);
 
   TStringList categories = catalog.GetCategoryList();
   TTemplateRefList tplList = catalog.GetTemplateList(categories);
