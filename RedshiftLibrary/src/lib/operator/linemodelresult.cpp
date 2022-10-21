@@ -110,49 +110,38 @@ void CLineModelResult::Init(TFloat64List redshifts,
   }
 }
 
-void CLineModelResult::updateVectors(Int32 idx, const TInt32List &indices,
-                                     Int32 count_smaller, Int32 count_higher,
-                                     const TFloat64List &extendedRedshifts) {
+/*
+insertWithDuplicates(std::vector<T> &dest, Int32 pos,
+                                 size_type count, const T &value, Int32 ndup)
+*/
+void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
 
-  // we can simplify this by passing the already computed Redshifts
-  insertVectorAroundIndex(Redshifts, idx, indices, count_smaller, count_higher,
-                          extendedRedshifts);
-  if (!std::is_sorted(std::begin(Redshifts), std::end(Redshifts)))
-    THROWG(INTERNAL_ERROR, "vector is not sorted");
-
-  insertAroundIndex(Status, idx, count_smaller, count_higher,
-                    COperator::nStatus_UnSet);
-  if (Redshifts.size() != Status.size())
-    THROWG(INTERNAL_ERROR, "problem updating vectors: size do not match");
-  insertAroundIndex<Float64>(ChiSquare, idx, count_smaller, count_higher, NAN);
-  insertAroundIndex<Float64>(ScaleMargCorrection, idx, count_smaller,
-                             count_higher, NAN);
-  insertAroundIndex(LineModelSolutions, idx, count_smaller, count_higher,
-                    CLineModelSolution());
-  insertAroundIndex(ContinuumModelSolutions, idx, count_smaller, count_higher,
-                    CContinuumModelSolution());
-  insertAroundIndex<Float64>(ChiSquareContinuum, idx, count_smaller,
-                             count_higher, NAN);
-  insertAroundIndex<Float64>(ScaleMargCorrectionContinuum, idx, count_smaller,
-                             count_higher, NAN);
+  insertWithDuplicates(Status, idx, count, COperator::nStatus_UnSet, ndup);
+  insertWithDuplicates<Float64>(ChiSquare, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(ScaleMargCorrection, idx, count, NAN, ndup);
+  insertWithDuplicates(LineModelSolutions, idx, count, CLineModelSolution(),
+                       ndup);
+  insertWithDuplicates(ContinuumModelSolutions, idx, count,
+                       CContinuumModelSolution(), ndup);
+  insertWithDuplicates<Float64>(ChiSquareContinuum, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, idx, count, NAN,
+                                ndup);
 
   for (auto &xi2Cont : ChiSquareTplContinuum)
-    insertAroundIndex<Float64>(xi2Cont, idx, count_smaller, count_higher,
-                               DBL_MAX);
+    insertWithDuplicates<Float64>(xi2Cont, idx, count, DBL_MAX, ndup);
 
   for (Int32 i = 0; i < ChiSquareTplratios.size(); i++) {
-    insertAroundIndex<Float64>(ChiSquareTplratios[i], idx, count_smaller,
-                               count_higher, DBL_MAX);
-    insertAroundIndex<Float64>(ScaleMargCorrectionTplratios[i], idx,
-                               count_smaller, count_higher, 0.);
-    insertAroundIndex<bool>(StrongELPresentTplratios[i], idx, count_smaller,
-                            count_higher, false);
-    insertAroundIndex<bool>(StrongHalphaELPresentTplratios[i], idx,
-                            count_smaller, count_higher, false);
-    insertAroundIndex<Int32>(NLinesAboveSNRTplratios[i], idx, count_smaller,
-                             count_higher, 0);
-    insertAroundIndex<Float64>(PriorLinesTplratios[i], idx, count_smaller,
-                               count_higher, 0.);
+    insertWithDuplicates<Float64>(ChiSquareTplratios[i], idx, count, DBL_MAX,
+                                  ndup);
+    insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i], idx, count,
+                                  0., ndup);
+    insertWithDuplicates<bool>(StrongELPresentTplratios[i], idx, count, false,
+                               ndup);
+    insertWithDuplicates<bool>(StrongHalphaELPresentTplratios[i], idx, count,
+                               false, ndup);
+    insertWithDuplicates<Int32>(NLinesAboveSNRTplratios[i], idx, count, 0,
+                                ndup);
+    insertWithDuplicates<Float64>(PriorLinesTplratios[i], idx, count, 0., ndup);
   }
 }
 

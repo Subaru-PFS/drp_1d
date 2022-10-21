@@ -1209,35 +1209,17 @@ void COperatorLineModel::updateRedshiftGridAndResults() {
     TFloat64Range range(m_firstpass_extremaResult->ExtendedRedshifts[i].front(),
                         m_firstpass_extremaResult->ExtendedRedshifts[i].back());
     Int32 imin = -1, imax = -1;
-    bool b = range.getClosedIntervalIndices(m_Redshifts, imin, imax);
-    if (imin == -1 && imax == -1)
-      // at least we should find one intersection
+    bool b = range.getClosedIntervalIndices(m_Redshifts, imin, imax, false);
+    if (!b)
       THROWG(INTERNAL_ERROR, "No intersection between vector and entity");
+    Int32 ndup = imax - imin + 1; // nb of duplicates
+    insertWithDuplicates(m_Redshifts, imin,
+                         m_firstpass_extremaResult->ExtendedRedshifts[i], ndup);
 
-    TInt32List indices(imax - imin + 1);
-    std::iota(indices.begin(), indices.end(), imin);
-
-    Int32 count_smaller = -1;
-    Int32 count_higher = -1;
-
-    insertIntoRedshiftGrid(m_Redshifts, idx, indices, count_smaller,
-                           count_higher,
-                           m_firstpass_extremaResult->ExtendedRedshifts[i]);
-
-    // verifications:
-    auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
-    auto _j = std::distance(m_Redshifts.begin(), it);
-
-    if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
-      THROWG(INTERNAL_ERROR, "linemodel vector is not sorted");
-    m_result->updateVectors(idx, indices, count_smaller, count_higher,
-                            m_firstpass_extremaResult->ExtendedRedshifts[i]);
-    if (m_result->Redshifts.size() != m_Redshifts.size())
-      THROWG(INTERNAL_ERROR, "linemodel sizes do not match");
+    m_result->updateVectors(
+        imin, ndup, m_firstpass_extremaResult->ExtendedRedshifts[i].size());
   }
-  for (auto z : m_Redshifts)
-    if (std::isnan(z))
-      THROWG(INTERNAL_ERROR, "redshift cant be NAN");
+  m_result->Redshifts = m_Redshifts;
 }
 /**
  * @brief COperatorLineModel::estimateSecondPassParameters

@@ -92,8 +92,7 @@ public:
   TBoolList getHaELPresentTplratioResult(Int32 index_z);
   TInt32List getNLinesAboveSNRTplratioResult(Int32 index_z);
   TFloat64List getPriorLinesTplratioResult(Int32 index_z);
-  void updateVectors(Int32 idx, const TInt32List &indices, Int32 count_smaller,
-                     Int32 count_higher, const TFloat64List &extendedRedshifts);
+  void updateVectors(Int32 idx, Int32 ndup, Int32 count);
 
   // Merit results
   TFloat64List Redshifts;           // z axis

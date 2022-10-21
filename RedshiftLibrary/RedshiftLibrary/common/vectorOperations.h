@@ -86,5 +86,28 @@ static void insertIntoRedshiftGrid(TFloat64List &entity, Int32 idx,
   return;
 }
 
+// insert a sub-array (src) into dest, at a specific position while avoinding
+// duplicates
+static void insertWithDuplicates(TFloat64List &dest, Int32 pos,
+                                 const TFloat64List &src, Int32 ndup) {
+  auto first = src.begin();
+  auto last = src.end() - ndup;
+  Int32 ninsert = last - first;
+  dest.insert(dest.begin() + pos, first, last);
+  std::copy(last, src.end(), dest.begin() + pos + ninsert);
+  // copy into dest the missing values from src
+}
+
+// todo: check if squaching already filled values keeps things valid
+template <typename T>
+static void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
+                                 std::size_t count, const T &value,
+                                 Int32 ndup) {
+  Int32 ninsert = count - ndup;
+  dest.insert(dest.begin() + pos, ninsert, value);
+  std::fill(dest.begin() + pos + ninsert, dest.begin() + pos + count,
+            value); // replace existing values with the defaultV
+}
+
 } // namespace NSEpic
 #endif

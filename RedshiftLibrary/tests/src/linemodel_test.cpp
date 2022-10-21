@@ -69,4 +69,33 @@ BOOST_AUTO_TEST_CASE(spanRedshift_test) {
   Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
   BOOST_CHECK(idx == ref_idx);
 }
+
+BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
+  /*//TODO
+    Float64 z = 5.;
+  Float64 step = 1;
+  TFloat64List redshifts{0, 5, 9};
+  std::string redshiftSampling = "lin";
+  Float64 secondPass_halfwindowsize = 0.5;
+  Int32 ref_idx = 3; // todo
+  TFloat64List extendedRedshifts_ref{2, 3, 4, 5, 6, 7, 8};
+
+  // prepare object
+  COperatorLineModel op;
+  op.m_Redshifts = redshifts;
+  op.m_fineStep = step;
+  op.m_redshiftSampling = redshiftSampling;
+  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
+  op.updateRedshiftGridAndResults();
+      // verifications:
+      auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
+      auto _j = std::distance(m_Redshifts.begin(), it);
+
+      if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
+        THROWG(INTERNAL_ERROR, "linemodel vector is not sorted");
+
+    if (m_result->Redshifts.size() != m_Redshifts.size())
+      THROWG(INTERNAL_ERROR, "linemodel sizes do not match");
+  */
+}
 BOOST_AUTO_TEST_SUITE_END()

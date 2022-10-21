@@ -199,5 +199,115 @@ BOOST_AUTO_TEST_CASE(insertIntoRedshiftGrid_multi) {
   BOOST_CHECK(vect.size() == resultingVect.size());
   BOOST_CHECK(vect == resultingVect);
 }
+/*
+insertWithDuplicates(std::vector<T> &dest, Int32 pos,
+                                 std::size_t count, const T &value,
+                                 Int32 ndup)
+*/
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_float) {
 
+  TFloat64List vect{10, 20, 30};
+  Int32 idx = 1;
+  Int32 ndup = 1;
+  insertWithDuplicates<Float64>(vect, idx, 3, 0., ndup);
+
+  TFloat64List resultingVect{10, 0, 0, 0, 30};
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_float_begin) {
+
+  TFloat64List vect{10, 20, 30};
+  Int32 idx = 0;
+  Int32 ndup = 1;
+  insertWithDuplicates<Float64>(vect, idx, 3, 0., ndup);
+
+  TFloat64List resultingVect{0., 0., 0., 20, 30};
+
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_float_end) {
+
+  TFloat64List vect{10};
+  Int32 idx = 0;
+  Int32 ndup = 1;
+  insertWithDuplicates<Float64>(vect, idx, 3, 0., ndup);
+
+  TFloat64List resultingVect{0., 0., 0.};
+
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+/*
+insertWithDuplicates(TFloat64List &dest, Int32 pos,
+                                 const TFloat64List &src, Int32 ndup)
+*/
+
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_mid) {
+
+  TFloat64List vect{10, 20, 30};
+  const TFloat64List extendedVect{18, 20, 22};
+  Int32 idx = 1;
+  Int32 ndup = 1;
+  insertWithDuplicates(vect, idx, extendedVect, ndup);
+
+  TFloat64List resultingVect{10, 18, 20, 22, 30};
+
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_begin) {
+
+  TFloat64List vect{10, 20, 30};
+  const TFloat64List extendedVect{8, 10, 12};
+  Int32 idx = 0;
+  Int32 ndup = 1;
+  insertWithDuplicates(vect, idx, extendedVect, ndup);
+
+  TFloat64List resultingVect{8, 10, 12, 20, 30};
+
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_end) {
+
+  TFloat64List vect{10, 20, 30};
+  const TFloat64List extendedVect{28, 30, 32};
+  Int32 idx = 2;
+  Int32 ndup = 1;
+  insertWithDuplicates(vect, idx, extendedVect, ndup);
+
+  TFloat64List resultingVect{10, 20, 28, 30, 32};
+
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_commononborder1) {
+  TFloat64List vect{10, 15, 20};
+  const TFloat64List extendedVect{10, 12, 15, 16};
+  Int32 idx = 0;
+  Int32 ndup = 2;
+  insertWithDuplicates(vect, idx, extendedVect, ndup);
+
+  TFloat64List resultingVect{10, 12, 15, 16, 20};
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
+
+BOOST_AUTO_TEST_CASE(insertWithDuplicates_commononborder) {
+  TFloat64List vect{10, 15, 20, 25, 30};
+  const TFloat64List extendedVect{15, 16, 18, 20, 22, 25, 26, 30};
+  Int32 idx = 1;
+  Int32 ndup = 4;
+  insertWithDuplicates(vect, idx, extendedVect, ndup);
+
+  TFloat64List resultingVect{10, 15, 16, 18, 20, 22, 25, 26, 30};
+  BOOST_CHECK(vect.size() == resultingVect.size());
+  BOOST_CHECK(vect == resultingVect);
+}
 BOOST_AUTO_TEST_SUITE_END()
