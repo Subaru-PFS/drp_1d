@@ -589,11 +589,7 @@ void CLineModelSolve::Solve() {
       pdfz.Compute(chisquares, false);
   m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
-  // save firstpass pdf
-  // do the necessary to pass a pdf with 1E-3 precision only
-  const std::shared_ptr<const CPdfMargZLogResult> coarsePDFZ =
-      pdfz.compressFirstpassPDF(m_opt_firstpass_largegridstepRatio);
-  resultStore->StoreScopedGlobalResult("firstpass_pdf", coarsePDFZ);
+  resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
 
   //**************************************************
   // FIRST PASS + CANDIDATES - B

@@ -208,22 +208,6 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   return candidates;
 }
 
-const std::shared_ptr<const CPdfMargZLogResult>
-COperatorPdfz::compressFirstpassPDF(Int32 ratio) {
-  std::shared_ptr<CPdfMargZLogResult> compressed_postmargZResult =
-      std::make_shared<CPdfMargZLogResult>();
-  Int32 s = (Int32)m_postmargZResult->Redshifts.size() / ratio;
-  compressed_postmargZResult->Redshifts.reserve(s);
-  compressed_postmargZResult->valProbaLog.reserve(s);
-  for (Int32 i = 0; i < m_postmargZResult->Redshifts.size(); i += ratio) {
-    compressed_postmargZResult->Redshifts.push_back(
-        m_postmargZResult->Redshifts[i]);
-    compressed_postmargZResult->valProbaLog.push_back(
-        m_postmargZResult->valProbaLog[i]);
-  }
-  return compressed_postmargZResult;
-}
-
 /**
  * Use the log sum exp trick to sum up small numbers while avoiding underflows
  *   * ----------------------------------------------------------------------
