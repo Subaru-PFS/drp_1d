@@ -165,6 +165,11 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
       "object", "method", "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
+  BOOST_CHECK_THROW(store_1.StoreResult(store_1.m_GlobalResults,
+                                        store_1.GetCurrentScopeName(),
+                                        "extremaResult", result_in),
+                    GlobalException);
+
   // test store outside context
   Flag.warning(WarningCode::CRANGE_NO_INTERSECTION, "Test code 4");
 
@@ -225,9 +230,11 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   COperatorResultStore store_1(scopeStack_1);
 
   // test store flag in context
+  BOOST_CHECK(store_1.hasCurrentMethodWarningFlag() == false);
   store_1.StoreScopedGlobalResult("warningFlag", result_in);
   BOOST_CHECK(store_1.GetScopedName("warningFlag") ==
               "object.method.warningFlag");
+  BOOST_CHECK(store_1.hasCurrentMethodWarningFlag() == true);
 
   std::shared_ptr<const COperatorResult> result_out =
       store_1.GetFlagLogResult("object", "method", "warningFlag");
@@ -237,8 +244,10 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   TScopeStack scopeStack_2;
   COperatorResultStore store_2(scopeStack_2);
 
+  BOOST_CHECK(store_2.hasContextWarningFlag() == false);
   store_2.StoreFlagResult("warningFlag", Flag.getBitMask());
   BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
+  BOOST_CHECK(store_2.hasContextWarningFlag() == true);
 
   result_out = store_2.GetFlagLogResult("warningFlag", "", "warningFlag");
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
@@ -583,6 +592,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
       make_shared<PdfCandidatesZResult>();
   result_in_2->m_ranked_candidates = getZCandidates();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_2);
 
   result_out = store.getNbRedshiftCandidates("object", "method");
@@ -590,6 +600,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
 
   std::shared_ptr<ExtremaResult> result_in_3 = getExtremaResult();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_3);
   result_out = store.getNbRedshiftCandidates("object", "method");
   BOOST_CHECK(result_out == 1);
@@ -597,6 +608,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   std::shared_ptr<LineModelExtremaResult> result_in_4 =
       getLineModelExtremaResult();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_4);
   result_out = store.getNbRedshiftCandidates("object", "method");
   BOOST_CHECK(result_out == 1);
@@ -604,6 +616,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   std::shared_ptr<TplCombinationExtremaResult> result_in_5 =
       getTplCombinationExtremaResult();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_5);
   result_out = store.getNbRedshiftCandidates("object", "method");
   BOOST_CHECK(result_out == 1);

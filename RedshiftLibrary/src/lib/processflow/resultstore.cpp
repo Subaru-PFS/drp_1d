@@ -68,7 +68,7 @@ void COperatorResultStore::StoreResult(
   }
   scopedName.append(name);
 
-  TResultsMap::iterator it = map.find(name);
+  TResultsMap::iterator it = map.find(scopedName);
   if (it != map.end()) {
     THROWG(INTERNAL_ERROR, "Can not store results: result already exists");
   }
