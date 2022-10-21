@@ -39,56 +39,10 @@
 #ifndef _REDSHIFT_COMMON_VECTOROPERATIONS_
 #define _REDSHIFT_COMMON_VECTOROPERATIONS_
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/indexing.h"
 #include <vector>
 namespace NSEpic {
-template <typename T>
-static void insertAroundIndex(std::vector<T> &entity, Int32 idx,
-                              Int32 count_smaller, Int32 count_higher,
-                              T defaultVal) {
-  entity.insert(entity.begin() + idx + 1, count_higher, defaultVal);
-  entity.insert(entity.begin() + idx, count_smaller, defaultVal);
-}
 
-static void insertVectorAroundIndex(TFloat64List &entity, Int32 idx,
-                                    const TInt32List &indices,
-                                    Int32 count_smaller, Int32 count_higher,
-                                    const TFloat64List &vect) {
-  Float64 defaultValue = NAN;
-  insertAroundIndex(entity, idx, count_smaller, count_higher,
-                    defaultValue); // corresponds to a resize
-  Int32 start =
-      std::min(idx, indices.front()); // in case there is a common on the border
-  Int32 stop = std::max(start + Int32(vect.size()) - 1, indices.back());
-  for (Int32 i = start; i <= stop; i++)
-    entity[i] = vect[i - start];
-}
-
-static void insertIntoRedshiftGrid(TFloat64List &entity, Int32 idx,
-                                   const TInt32List &indices,
-                                   Int32 &count_smaller, Int32 &count_higher,
-                                   const TFloat64List &vect) {
-
-  Int32 i = CIndexing<Float64>::getIndex(vect, entity[idx]);
-
-  // count nb of duplicates below idx
-  auto count_duplicates_low =
-      std::count_if(indices.begin(), indices.end(),
-                    [&](const Float64 &val) { return val < idx; });
-  auto count_duplicates_high =
-      std::count_if(indices.begin(), indices.end(),
-                    [&](const Float64 &val) { return val > idx; });
-  count_smaller =
-      i - count_duplicates_low; // substract all indices smaller than i
-  count_higher = vect.size() - i - count_duplicates_high - 1;
-  insertVectorAroundIndex(entity, idx, indices, count_smaller, count_higher,
-                          vect);
-  return;
-}
-
-// insert a sub-array (src) into dest, at a specific position while avoinding
-// duplicates
-static void insertWithDuplicates(TFloat64List &dest, Int32 pos,
+inline void insertWithDuplicates(TFloat64List &dest, Int32 pos,
                                  const TFloat64List &src, Int32 ndup) {
   auto first = src.begin();
   auto last = src.end() - ndup;
@@ -98,9 +52,8 @@ static void insertWithDuplicates(TFloat64List &dest, Int32 pos,
   // copy into dest the missing values from src
 }
 
-// todo: check if squaching already filled values keeps things valid
 template <typename T>
-static void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
+inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
                                  std::size_t count, const T &value,
                                  Int32 ndup) {
   Int32 ninsert = count - ndup;

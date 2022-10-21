@@ -110,10 +110,6 @@ void CLineModelResult::Init(TFloat64List redshifts,
   }
 }
 
-/*
-insertWithDuplicates(std::vector<T> &dest, Int32 pos,
-                                 size_type count, const T &value, Int32 ndup)
-*/
 void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
 
   insertWithDuplicates(Status, idx, count, COperator::nStatus_UnSet, ndup);
