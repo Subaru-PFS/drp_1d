@@ -162,8 +162,11 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   // store PDF results
   Log.LogInfo("%s: Storing PDF results", __func__);
-
+  // temporary solution to build the end-to-end pdf compression
+  pdfz.m_postmargZResult->setSecondPassZGridParams(
+      m_linemodel.getSPZGridParams());
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
@@ -589,7 +592,13 @@ void CLineModelSolve::Solve() {
       pdfz.Compute(chisquares, false);
   m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
+  m_coarseGridParams = ZGridParameters(
+      TFloat64Range(m_redshifts), m_coarseRedshiftStep, m_redshiftSampling);
+  pdfz.m_postmargZResult->setZGridParams(m_coarseGridParams);
   resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
+  // had to duplicate it to allow access from hdf5
+  resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
+                                       pdfz.m_postmargZResult);
 
   //**************************************************
   // FIRST PASS + CANDIDATES - B
@@ -630,6 +639,10 @@ void CLineModelSolve::Solve() {
 
     std::shared_ptr<PdfCandidatesZResult> candResult =
         pdfz.Compute(chisquares, false);
+
+    ZGridParameters gridParams(TFloat64Range(lmresult->Redshifts),
+                               m_redshiftStep, m_redshiftSampling);
+    pdfz.m_postmargZResult->setZGridParams(gridParams);
 
     linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
     // resultStore->StoreScopedGlobalResult( "firstpassb_pdf",
@@ -685,12 +698,12 @@ void CLineModelSolve::createRedshiftGrid(
       inputContext->GetParameterStore()->GetScoped<Int32>(
           "LineModelSolve.linemodel.firstpass.largegridstepratio");
 
-  Float64 coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
+  m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
   m_redshifts.clear();
 
   m_redshifts = m_redshiftSampling == "log"
-                    ? redshiftRange.SpreadOverLogZplusOne(coarseRedshiftStep)
-                    : redshiftRange.SpreadOver(coarseRedshiftStep);
+                    ? redshiftRange.SpreadOverLogZplusOne(m_coarseRedshiftStep)
+                    : redshiftRange.SpreadOver(m_coarseRedshiftStep);
 
   if (m_redshifts.size() < MIN_GRID_COUNT) {
     CObjectSolve::createRedshiftGrid(

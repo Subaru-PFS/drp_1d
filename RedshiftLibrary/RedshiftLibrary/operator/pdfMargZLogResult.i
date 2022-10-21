@@ -36,13 +36,30 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-class CPdfMargZLogResult : public COperatorResult {
+typedef struct ZGridParameters {
+  ZGridParameters(const TFloat64Range &range, Float64 step,
+                  const std::string &sampling, Float64 center = NAN)
+      : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
+        zcenter(center), zsampling(sampling){};
+  ZGridParameters() = default;
+  Float64 zmin = NAN;
+  Float64 zmax = NAN;
+  Float64 zstep = NAN;
+  Float64 zcenter = NAN;
+  std::string zsampling = "undefined";
+} ZGridParameters;
 
+typedef std::vector<ZGridParameters> TZGridListParams;
+
+class CPdfMargZLogResult : public COperatorResult {
 public:
   CPdfMargZLogResult();
   ~CPdfMargZLogResult() = default;
-  CPdfMargZLogResult(const TFloat64List &redshifts);
-
+  CPdfMargZLogResult(const TFloat64List &redshifts/*,
+                     const ZGridParameters &zparams*/);
+  // below setters are temporary
+  void setSecondPassZGridParams(const TZGridListParams &paramList);
+  void setZGridParams(const ZGridParameters &params);
   Int32 getIndex(Float64 z) const;
 
   TFloat64List Redshifts;
@@ -50,4 +67,13 @@ public:
   Float64 valEvidenceLog = NAN;
   Float64 valMargEvidenceLog = NAN;
   Int32 countTPL;
+
+  // temporary solution to speed up delivery
+  TFloat64List zcenter;
+  TFloat64List zmin;
+  TFloat64List zmax;
+  // below entities do not need to be a vector since common for all zgrid
+  // intervals, but kept as a vector to write easily into hdf5 dataset
+  TFloat64List zstep;
+  TInt32List zlogsampling;
 };

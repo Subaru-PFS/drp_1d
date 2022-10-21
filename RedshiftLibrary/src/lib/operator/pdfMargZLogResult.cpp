@@ -71,3 +71,17 @@ Int32 CPdfMargZLogResult::getIndex(Float64 z) const {
   }
   return solutionIdx;
 }
+
+void CPdfMargZLogResult::setSecondPassZGridParams(
+    const TZGridListParams &paramList) {
+  for (const auto &params : paramList)
+    setZGridParams(params);
+}
+
+void CPdfMargZLogResult::setZGridParams(const ZGridParameters &params) {
+  zcenter.push_back(params.zcenter);
+  zmin.push_back(params.zmin);
+  zmax.push_back(params.zmax);
+  zstep.push_back(params.zstep);
+  zlogsampling.push_back(int(params.zsampling == "log"));
+}
