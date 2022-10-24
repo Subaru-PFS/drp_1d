@@ -76,7 +76,7 @@ private:
     return new CLineProfileSYMIGM(*this);
   }
   void CheckMeiksinInit() const;
-  Int32 getIGMCorrection(Float64 x) const;
+  Float64 getIGMCorrection(Float64 x) const;
 
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   Float64 m_redshift = NAN;
