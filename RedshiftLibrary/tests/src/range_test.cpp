@@ -440,6 +440,26 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4) {
   BOOST_CHECK((myRange.GetEnd() + offset) / (functionResult.back() + offset) <
               exp(delta));
 }
+
+BOOST_AUTO_TEST_CASE(SpreadOverLog_backward_Float_test4) {
+  Float64 delta = 0.5;
+  Float64 offset = 0.1;
+
+  // test
+  TFloat64Range myRange(1, 11);
+  BOOST_CHECK(myRange.GetIsEmpty() == false);
+  BOOST_CHECK(myRange.GetLength() == 10);
+
+  TFloat64List functionResult = myRange.SpreadOverLog_backward(delta, offset);
+  BOOST_CHECK_CLOSE(functionResult.back(), myRange.GetEnd(), precision);
+  for (int i = functionResult.size() - 1; i > 0; i--) {
+    BOOST_CHECK_CLOSE((functionResult[i] + offset) /
+                          (functionResult[i - 1] + offset),
+                      exp(delta), precision);
+  }
+  BOOST_CHECK((myRange.GetEnd() + offset) / (functionResult.back() + offset) <
+              exp(delta));
+}
 //-----------------------------------------------------------------------------
 
 // TEST SpreadOverLogZplusOne --> offset is locked to one
@@ -723,6 +743,18 @@ BOOST_AUTO_TEST_CASE(Union) {
   ret = TInt32Range::getUnion(b, c, resultUnion);
   BOOST_CHECK(ret == true);
   BOOST_CHECK(resultUnion == TInt32Range(1, 4));
+}
+
+BOOST_AUTO_TEST_CASE(signCheck) {
+  TFloat64Range a(-3, 5);
+  TFloat64Range b(3, 5);
+  Float64 offset = 1;
+  Float64 delta = 1;
+  BOOST_CHECK(a.isSameSign(offset) == false);
+  BOOST_CHECK_THROW(a.SpreadOverLog(delta), GlobalException);
+  BOOST_CHECK_THROW(a.SpreadOverLog_backward(delta), GlobalException);
+
+  BOOST_CHECK(b.isSameSign(offset) == true);
 }
 //-----------------------------------------------------------------------------
 

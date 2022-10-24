@@ -36,34 +36,31 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _OBJECT_SOLVE_H_
-#define _OBJECT_SOLVE_H_
-
-#include "RedshiftLibrary/method/solve.h"
-
+#ifndef _REDSHIFT_COMMON_VECTOROPERATIONS_
+#define _REDSHIFT_COMMON_VECTOROPERATIONS_
+#include "RedshiftLibrary/common/defaults.h"
+#include <vector>
 namespace NSEpic {
 
-class CObjectSolve : public CSolve {
-public:
-  using CSolve::CSolve;
-  virtual ~CObjectSolve() = default;
-  CObjectSolve(CObjectSolve const &other) = default;
-  CObjectSolve &operator=(CObjectSolve const &other) = default;
-  CObjectSolve(CObjectSolve &&other) = default;
-  CObjectSolve &operator=(CObjectSolve &&other) = default;
+inline void insertWithDuplicates(TFloat64List &dest, Int32 pos,
+                                 const TFloat64List &src, Int32 ndup) {
+  auto first = src.begin();
+  auto last = src.end() - ndup;
+  Int32 ninsert = last - first;
+  dest.insert(dest.begin() + pos, first, last);
+  std::copy(last, src.end(), dest.begin() + pos + ninsert);
+  // copy into dest the missing values from src
+}
 
-protected:
-  void InitRanges(std::shared_ptr<const CInputContext> inputContext) override;
-  virtual void
-  createRedshiftGrid(const std::shared_ptr<const CInputContext> &inputContext,
-                     const TFloat64Range &redshiftRange);
-  virtual void
-  GetRedshiftSampling(const std::shared_ptr<const CInputContext> &inputContext,
-                      TFloat64Range &redshiftRange, Float64 &redshiftStep);
-  Float64 m_redshiftStep = NAN;
-  std::string m_redshiftSampling;
-  TFloat64List m_redshifts;
-};
+template <typename T>
+inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
+                                 std::size_t count, const T &value,
+                                 Int32 ndup) {
+  Int32 ninsert = count - ndup;
+  dest.insert(dest.begin() + pos, ninsert, value);
+  std::fill(dest.begin() + pos + ninsert, dest.begin() + pos + count,
+            value); // replace existing values with the defaultV
+}
+
 } // namespace NSEpic
-
 #endif

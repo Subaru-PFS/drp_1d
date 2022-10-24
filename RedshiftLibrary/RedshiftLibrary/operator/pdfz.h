@@ -103,9 +103,6 @@ public:
   static Float64 logSumExpTrick(const TFloat64List &valproba,
                                 const TFloat64List &redshifts);
 
-  const std::shared_ptr<const CPdfMargZLogResult>
-  compressFirstpassPDF(Int32 ratio);
-
 private:
   void ComputeEvidenceAll(const TFloat64List &LogEvidencesWPriorM,
                           Float64 &MaxiLogEvidence);

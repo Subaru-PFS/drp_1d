@@ -559,8 +559,9 @@ void CLineModelSolve::Solve() {
   std::string scopeStr = "linemodel";
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
+
   // Compute with linemodel operator
-  m_linemodel.Init(m_redshifts);
+  m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 
   // logstep from redshift
 
@@ -588,11 +589,7 @@ void CLineModelSolve::Solve() {
       pdfz.Compute(chisquares, false);
   m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
-  // save firstpass pdf
-  // do the necessary to pass a pdf with 1E-3 precision only
-  const std::shared_ptr<const CPdfMargZLogResult> coarsePDFZ =
-      pdfz.compressFirstpassPDF(m_opt_firstpass_largegridstepRatio);
-  resultStore->StoreScopedGlobalResult("firstpass_pdf", coarsePDFZ);
+  resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
 
   //**************************************************
   // FIRST PASS + CANDIDATES - B
@@ -605,7 +602,7 @@ void CLineModelSolve::Solve() {
   std::string fpb_opt_continuumcomponent =
       "fromspectrum"; // Note: this is hardocoded! given that condition for
                       // FPB relies on having "tplfit"
-  linemodel_fpb.Init(m_redshifts);
+  linemodel_fpb.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 
   if (enableFirstpass_B) {
     Log.LogInfo("Linemodel FIRST PASS B enabled. Computing now.");
@@ -678,4 +675,32 @@ void CLineModelSolve::Solve() {
 
   // don't save linemodel extrema results, since will change with pdf
   // computation
+}
+
+void CLineModelSolve::createRedshiftGrid(
+    const std::shared_ptr<const CInputContext> &inputContext,
+    const TFloat64Range &redshiftRange) {
+
+  Int32 opt_twosteplargegridstep_ratio =
+      inputContext->GetParameterStore()->GetScoped<Int32>(
+          "LineModelSolve.linemodel.firstpass.largegridstepratio");
+
+  Float64 coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
+  m_redshifts.clear();
+
+  m_redshifts = m_redshiftSampling == "log"
+                    ? redshiftRange.SpreadOverLogZplusOne(coarseRedshiftStep)
+                    : redshiftRange.SpreadOver(coarseRedshiftStep);
+
+  if (m_redshifts.size() < MIN_GRID_COUNT) {
+    CObjectSolve::createRedshiftGrid(
+        inputContext, redshiftRange); // fall back to creating fine grid
+    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
+                "raw %d redshifts will be calculated",
+                m_redshifts.size());
+  } else {
+    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
+                "will be calculated on the large grid",
+                m_redshifts.size());
+  }
 }

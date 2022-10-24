@@ -27,7 +27,8 @@ static const Int32 IGM_OVERSAMPLING = 1;
 
 static const Float64 OVERLAP_THRES_HYBRID_FIT =
     0.15; // 15% seemed necessary for Ha/SII complex when lines are very
-          // wide (either because of PSF or source size)
-          // mainly for hybrid fitting
+// wide (either because of PSF or source size)
+// mainly for hybrid fitting
+static const Int32 MIN_GRID_COUNT = 10;
 } // namespace NSEpic
 #endif
