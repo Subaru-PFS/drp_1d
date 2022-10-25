@@ -38,15 +38,14 @@
 // ============================================================================
 typedef struct ZGridParameters {
   ZGridParameters(const TFloat64Range &range, Float64 step,
-                  const std::string &sampling, Float64 center = NAN)
+                  Float64 center = NAN)
       : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
-        zcenter(center), zsampling(sampling){};
+        zcenter(center){};
   ZGridParameters() = default;
   Float64 zmin = NAN;
   Float64 zmax = NAN;
   Float64 zstep = NAN;
   Float64 zcenter = NAN;
-  std::string zsampling = "undefined";
 } ZGridParameters;
 
 typedef std::vector<ZGridParameters> TZGridListParams;
@@ -72,8 +71,7 @@ public:
   TFloat64List zcenter;
   TFloat64List zmin;
   TFloat64List zmax;
-  // below entities do not need to be a vector since common for all zgrid
+  // below entity does not need to be a vector since common for all zgrid
   // intervals, but kept as a vector to write easily into hdf5 dataset
   TFloat64List zstep;
-  TInt32List zlogsampling;
 };

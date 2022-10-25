@@ -624,7 +624,7 @@ TZGridListParams COperatorLineModel::getSPZGridParams() {
   for (Int32 i = 0; i < s; i++) {
     const auto &extendedGrid = m_firstpass_extremaResult->ExtendedRedshifts[i];
     centeredZgrid_params[i] = ZGridParameters(
-        TFloat64Range(extendedGrid), m_fineStep, m_redshiftSampling,
+        TFloat64Range(extendedGrid), m_fineStep,
         m_firstpass_extremaResult->m_ranked_candidates[i].second->Redshift);
   }
   return centeredZgrid_params;

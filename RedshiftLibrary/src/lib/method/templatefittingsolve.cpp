@@ -193,8 +193,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
-  ZGridParameters gridParams(TFloat64Range(m_redshifts), m_redshiftStep,
-                             m_redshiftSampling);
+  ZGridParameters gridParams(TFloat64Range(m_redshifts), m_redshiftStep);
   pdfz.m_postmargZResult->setZGridParams(gridParams);
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);

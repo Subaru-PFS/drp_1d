@@ -83,9 +83,7 @@ Rank	model_parameters	False	candidate	Rank	extrema_results	i
 FPZmin	firstpass_pdf_params	False	object	zmin	firstpass_pdf	f8
 FPZmax	firstpass_pdf_params	False	object	zmax	firstpass_pdf	f8
 FPZstep	firstpass_pdf_params	False	object	zstep	firstpass_pdf	f8
-FPZlogsampling	firstpass_pdf_params	False	object	zlogsampling	firstpass_pdf	I
 zmin	pdf_params	False	object	zmin	pdf	f8
 zmax	pdf_params	False	object	zmax	pdf	f8
 zstep	pdf_params	False	object	zstep	pdf	f8
-zlogsampling	pdf_params	False	object	zlogsampling	pdf	I
 zcenter	pdf_params	False	object	zcenter	pdf	f8

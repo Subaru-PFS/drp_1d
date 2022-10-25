@@ -128,8 +128,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
   // save in resultstore pdf results
-  ZGridParameters gridParams(TFloat64Range(m_redshifts), m_redshiftStep,
-                             m_redshiftSampling);
+  ZGridParameters gridParams(TFloat64Range(m_redshifts), m_redshiftStep);
   pdfz.m_postmargZResult->setZGridParams(gridParams);
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);

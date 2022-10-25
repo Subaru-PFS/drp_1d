@@ -83,5 +83,4 @@ void CPdfMargZLogResult::setZGridParams(const ZGridParameters &params) {
   zmin.push_back(params.zmin);
   zmax.push_back(params.zmax);
   zstep.push_back(params.zstep);
-  zlogsampling.push_back(int(params.zsampling == "log"));
 }

@@ -592,8 +592,8 @@ void CLineModelSolve::Solve() {
       pdfz.Compute(chisquares, false);
   m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
-  m_coarseGridParams = ZGridParameters(
-      TFloat64Range(m_redshifts), m_coarseRedshiftStep, m_redshiftSampling);
+  m_coarseGridParams =
+      ZGridParameters(TFloat64Range(m_redshifts), m_coarseRedshiftStep);
   pdfz.m_postmargZResult->setZGridParams(m_coarseGridParams);
   resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
   // had to duplicate it to allow access from hdf5
@@ -641,7 +641,7 @@ void CLineModelSolve::Solve() {
         pdfz.Compute(chisquares, false);
 
     ZGridParameters gridParams(TFloat64Range(lmresult->Redshifts),
-                               m_redshiftStep, m_redshiftSampling);
+                               m_redshiftStep);
     pdfz.m_postmargZResult->setZGridParams(gridParams);
 
     linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
