@@ -50,13 +50,18 @@ class CLSFGaussianVariableWidth : public CLSF {
 public:
   CLSFGaussianVariableWidth(
       const std::shared_ptr<const TLSFGaussianVarWidthArgs> &args);
-  Float64 GetWidth(Float64 lambda) const override;
+  Float64 GetWidth(Float64 lambda, bool cliplambda = false) const override;
 
   bool IsValid() const override;
 
   static std::shared_ptr<CLSF>
   make_LSF(const std::shared_ptr<const TLSFArguments> &args);
-  bool checkAvailability(Float64 lambda) const override;
+  bool checkAvailability(Float64 lambda) const override {
+    return lambda >= m_spcAxis[0] && lambda <= m_spcAxis[m_width.size() - 1];
+  };
+  TFloat64Range getSpectralRange() const override {
+    return TFloat64Range(m_spcAxis.GetSamplesVector());
+  };
 
 private:
   TFloat64List m_width;

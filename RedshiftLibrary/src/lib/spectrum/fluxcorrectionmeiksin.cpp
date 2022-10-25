@@ -164,8 +164,9 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
 
     // compute the LSF kernel centered at lambda0 (restframe)
     Float64 lambda0_obs = lambda0 * (1 + z_center);
+    // clip lambda0 to lambdaRange for z != z_center
     Float64 half_lsf_range =
-        lsf->GetWidth(lambda0_obs) * sigmaSupport; // restframe
+        lsf->GetWidth(lambda0_obs, true) * sigmaSupport; // restframe
     TFloat64Range lsf_range(lambda0 - half_lsf_range,
                             lambda0 + half_lsf_range); // restframe
     TInt32Range lsf_indices = getWaveRangeIndices(lsf_range, true);

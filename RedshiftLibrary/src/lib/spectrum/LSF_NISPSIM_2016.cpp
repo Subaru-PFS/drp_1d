@@ -47,7 +47,10 @@ CLSFGaussianNISPSIM2016::CLSFGaussianNISPSIM2016()
     : CLSF(GaussianNISPSIM2016,
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())) {}
 
-Float64 CLSFGaussianNISPSIM2016::GetWidth(Float64 lambda) const {
+Float64 CLSFGaussianNISPSIM2016::GetWidth(Float64 lambda,
+                                          bool cliplambda) const {
+  if (cliplambda)
+    lambda = getSpectralRange().Clamp(lambda);
   Float64 instrumentSigma = (lambda * 8.121e-4 + 7.4248) / 2.35;
   return instrumentSigma;
 }

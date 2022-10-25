@@ -20,7 +20,7 @@ static const Int32 MEDIAN_FAST_OR_BEERS_THRESHOLD = 1000;
 static const Float64 SPEED_OF_LIGHT_IN_VACCUM =
     GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
 
-static constexpr Float64 INSTRUMENT_RESOLUTION_EMPERICALFACTOR =
+static const Float64 INSTRUMENT_RESOLUTION_EMPERICALFACTOR =
     230.0 / 325.0 / 2.35;
 static const Float64 RESTLAMBDA_LYA = 1216.;
 static const Int32 IGM_OVERSAMPLING = 1;
@@ -32,5 +32,8 @@ static const Float64 OVERLAP_THRES_HYBRID_FIT =
 // wide (either because of PSF or source size)
 // mainly for hybrid fitting
 static const Int32 MIN_GRID_COUNT = 10;
+
+static const Float64 LSF_MIN_LAMBDA = 200.0;
+static const Float64 LSF_MAX_LAMBDA = 30000.0;
 } // namespace NSEpic
 #endif

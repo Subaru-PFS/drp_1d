@@ -95,6 +95,8 @@ public:
     return (m_Begin + offset) * (m_End + offset) >= 0;
   }
 
+  T Clamp(T v) const { return v < m_Begin ? m_Begin : (m_End < v ? m_End : v); }
+
   std::vector<T> SpreadOver(T delta) const {
     if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
       return {m_Begin};
