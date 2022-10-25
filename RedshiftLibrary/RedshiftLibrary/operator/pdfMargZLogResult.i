@@ -57,7 +57,8 @@ public:
   CPdfMargZLogResult(const TFloat64List &redshifts/*,
                      const ZGridParameters &zparams*/);
   // below setters are temporary
-  void setSecondPassZGridParams(const TZGridListParams &paramList);
+  void setSecondPassZGridParams(const ZGridParameters &fp_params,
+                                const TZGridListParams &paramList);
   void setZGridParams(const ZGridParameters &params);
   Int32 getIndex(Float64 z) const;
 
@@ -67,11 +68,8 @@ public:
   Float64 valMargEvidenceLog = NAN;
   Int32 countTPL;
 
-  // temporary solution to speed up delivery
   TFloat64List zcenter;
   TFloat64List zmin;
   TFloat64List zmax;
-  // below entity does not need to be a vector since common for all zgrid
-  // intervals, but kept as a vector to write easily into hdf5 dataset
   TFloat64List zstep;
 };

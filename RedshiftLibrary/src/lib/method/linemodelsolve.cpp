@@ -164,8 +164,9 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   Log.LogInfo("%s: Storing PDF results", __func__);
   // temporary solution to build the end-to-end pdf compression
   pdfz.m_postmargZResult->setSecondPassZGridParams(
-      m_linemodel.getSPZGridParams());
+      m_coarseGridParams, m_linemodel.getSPZGridParams());
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
+  // TODO: clean below line once #7646 is solved
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
@@ -640,9 +641,7 @@ void CLineModelSolve::Solve() {
     std::shared_ptr<PdfCandidatesZResult> candResult =
         pdfz.Compute(chisquares, false);
 
-    ZGridParameters gridParams(TFloat64Range(lmresult->Redshifts),
-                               m_redshiftStep);
-    pdfz.m_postmargZResult->setZGridParams(gridParams);
+    pdfz.m_postmargZResult->setZGridParams(m_coarseGridParams);
 
     linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
     // resultStore->StoreScopedGlobalResult( "firstpassb_pdf",

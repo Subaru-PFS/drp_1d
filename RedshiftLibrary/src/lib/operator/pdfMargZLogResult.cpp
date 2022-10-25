@@ -73,7 +73,8 @@ Int32 CPdfMargZLogResult::getIndex(Float64 z) const {
 }
 
 void CPdfMargZLogResult::setSecondPassZGridParams(
-    const TZGridListParams &paramList) {
+    const ZGridParameters &fp_params, const TZGridListParams &paramList) {
+  setZGridParams(fp_params); // index 0 corresponds to the firstpass coarse grid
   for (const auto &params : paramList)
     setZGridParams(params);
 }
