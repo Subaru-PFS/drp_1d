@@ -308,7 +308,7 @@ class CalibrationLibrary:
         meiksinCorrectionCurves = VecMeiksinCorrection()
         for z in zbins[1:]: 
             filename = f"Meiksin_Var_curves_{z}.txt"
-            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin", filename), names=columns)
+            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v2", filename), names=columns)
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)

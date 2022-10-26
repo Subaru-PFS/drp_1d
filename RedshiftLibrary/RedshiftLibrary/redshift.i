@@ -627,7 +627,7 @@ class CLSF
     };
  public:
   virtual ~CLSF();
-  virtual Float64 GetWidth(Float64 lambda) const=0;
+  virtual Float64 GetWidth(Float64 lambda, bool cliplambda = false) const=0;
   virtual bool IsValid() const=0;
 protected:
   CLSF();

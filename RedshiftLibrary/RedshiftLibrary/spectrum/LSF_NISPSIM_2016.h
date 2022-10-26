@@ -51,7 +51,7 @@ class CLSFGaussianNISPSIM2016 : public CLSF {
 public:
   CLSFGaussianNISPSIM2016();
 
-  Float64 GetWidth(Float64 lambda) const override;
+  Float64 GetWidth(Float64 lambda, bool cliplambda = false) const override;
   bool IsValid() const override;
 
   static std::shared_ptr<CLSF>

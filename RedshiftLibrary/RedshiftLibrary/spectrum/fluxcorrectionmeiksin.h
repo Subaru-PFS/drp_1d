@@ -107,19 +107,19 @@ private:
                         const TFloat64Range &zbin,
                         const std::shared_ptr<const CLSF> &lsf) const;
 
-  TInt32Range getWaveIndex(const TFloat64Range &wrange, bool raw) const;
+  TInt32Range getWaveRangeIndices(const TFloat64Range &wrange, bool raw) const;
   TFloat64List getWaveVector(const TFloat64Range &wrange, bool raw) const;
 
   TFloat64List m_zbins;
   std::vector<MeiksinCorrection> m_rawCorrections;
   std::vector<MeiksinCorrection> m_corrections;
-  Float64 m_LambdaMin;
-  Float64 m_LambdaMax;
-  Int32 m_LambdaSize;
-  Int32 m_fineLambdaSize;
+  const Float64 m_LambdaMin = NAN;
+  const Float64 m_LambdaMax = NAN;
+  Int32 m_LambdaSize = -1;
+  Int32 m_fineLambdaSize = -1;
   TFloat64Range m_convolRange;
   bool m_convolved = false;
-  Float64 m_finegridstep = 1.0 / IGM_OVERSAMPLING;
+  Float64 m_finegridstep = IGM_RAW_STEP / IGM_OVERSAMPLING;
 };
 
 } // namespace NSEpic

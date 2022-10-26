@@ -139,7 +139,7 @@ Int32 CLineProfileSYMIGM::getIGMIdxCount() const {
   return m_igmCorrectionMeiksin->getIdxCount();
 }
 
-Int32 CLineProfileSYMIGM::getIGMCorrection(Float64 x) const {
+Float64 CLineProfileSYMIGM::getIGMCorrection(Float64 x) const {
   if (m_igmidx < 0)
     return 1.0;
   return m_igmCorrectionMeiksin->getCorrection(m_redshift, m_igmidx,

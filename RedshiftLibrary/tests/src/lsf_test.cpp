@@ -81,9 +81,11 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth) {
   CSpectrum object_CSpectrum = CSpectrum(SpectralAxis, FluxAxis, LSF);
   Float64 lambda = 7000.;
   BOOST_CHECK(object_CSpectrum.GetLSF()->IsValid() == true);
+  BOOST_CHECK(object_CSpectrum.GetLSF()->checkAvailability(lambda) == true);
+  BOOST_CHECK(object_CSpectrum.GetLSF()->getSpectralRange() ==
+              TFloat64Range(LSF_MIN_LAMBDA, LSF_MAX_LAMBDA));
   BOOST_CHECK_CLOSE(object_CSpectrum.GetLSF()->GetWidth(lambda), 1.09,
                     precision);
-
   // Test assignment copy constructor
   CSpectrum object_CSpectrum1 = object_CSpectrum;
 
@@ -197,6 +199,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
 
   BOOST_CHECK(LSF->IsValid() == true);
   BOOST_CHECK(LSF->GetWidth(lambda) == width_ref);
+  BOOST_CHECK(LSF->GetWidth(lambda, true) == width_ref);
 
   Float64 res_ref = 7200. / 22. * instrumentResolutionEmpiricalFactor;
   Float64 res_1 = CLSFGaussianConstantResolution::computeResolution(7200, 22.);
@@ -242,6 +245,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPVSSPSF201707_test) {
 
   BOOST_CHECK(LSF->IsValid() == true);
   BOOST_CHECK(LSF->GetWidth(lambda) == width_ref);
+  BOOST_CHECK(LSF->GetWidth(lambda, true) == width_ref);
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianNISPSIM2016_test) {
@@ -256,6 +260,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPSIM2016_test) {
 
   BOOST_CHECK(LSF->IsValid() == true);
   BOOST_CHECK(LSF->GetWidth(lambda) == width_ref);
+  BOOST_CHECK(LSF->GetWidth(lambda, true) == width_ref);
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
@@ -277,12 +282,18 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
 
   BOOST_CHECK(LSF->IsValid() == true);
   BOOST_CHECK(LSF->checkAvailability(13000) == true);
+  BOOST_CHECK(LSF->getSpectralRange() == TFloat64Range(12000.0, 21000.0));
   for (Int32 i = 0; i < spcAxis.size(); i++) {
     BOOST_CHECK(LSF->GetWidth(spcAxis[i]) == widthList[i]);
   }
 
   Float64 width_ref = lambda * 3.939e-4 + 2.191;
   BOOST_CHECK_CLOSE(LSF->GetWidth(lambda), width_ref, precision);
+  BOOST_CHECK(LSF->GetWidth(lambda, true) == width_ref);
+  width_ref = spcAxis[0] * 3.939e-4 + 2.191;
+  BOOST_CHECK(LSF->GetWidth(10000.0, true) == width_ref);
+  width_ref = spcAxis[n - 1] * 3.939e-4 + 2.191;
+  BOOST_CHECK(LSF->GetWidth(25000.0, true) == width_ref);
 
   // TEST KO
   TFloat64List widthList_2(n + 1, 0.5);

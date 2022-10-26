@@ -66,7 +66,7 @@ TFloat64List CLSF::getNormalizedProfileVector(TFloat64List lambda,
   if (!IsValid())
     THROWG(INTERNAL_ERROR, "LSF is not valid");
 
-  Float64 sigma = GetWidth(lambda0);
+  Float64 sigma = GetWidth(lambda0, true);
 
   Float64 norm = 0.0;
   TFloat64List kernel;

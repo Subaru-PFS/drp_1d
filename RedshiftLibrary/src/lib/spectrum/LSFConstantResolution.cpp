@@ -51,7 +51,12 @@ CLSFGaussianConstantResolution::CLSFGaussianConstantResolution(
   IsValid();
 }
 
-Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda) const {
+Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda,
+                                                 bool cliplambda) const {
+
+  if (cliplambda)
+    lambda = getSpectralRange().Clamp(lambda);
+
   Float64 defaultSigma =
       lambda / m_Resolution * INSTRUMENT_RESOLUTION_EMPERICALFACTOR;
   return defaultSigma;
