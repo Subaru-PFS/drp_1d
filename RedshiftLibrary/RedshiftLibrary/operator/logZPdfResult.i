@@ -53,9 +53,22 @@ typedef std::vector<ZGridParameters> TZGridListParams;
 class CLogZPdfResult : public COperatorResult {
 public:
   CLogZPdfResult();
-  CLogZPdfResult(
-      const TFloat64List &redshifts,
-      const TZGridListParams &zparams); // to decide if we save as a struct
+
+  CLogZPdfResult(const TFloat64List &redshifts,
+                 const TZGridListParams &zparams);
+
+  CLogZPdfResult(const TZGridListParams &zparamList,
+                 const TFloat64List &valproba_mixed); // for ML learning
+
+  CLogZPdfResult(const TFloat64List &redshifts, const TFloat64List &valproba,
+                 const TZGridListParams &zparamList);
+
+  bool isZGridCoherent() const;
+  std::shared_ptr<const CLogZPdfResult> getValProbaFine(bool logsampling) const;
+  void interpolateLargeGridOnFineGrid(const TFloat64List &coarseGrid,
+                                      const TFloat64List &fineGrid,
+                                      const TFloat64List &entityLargeGrid,
+                                      TFloat64List &entityFineGrid) const;
 
   TFloat64List Redshifts;
   TFloat64List valProbaLog;

@@ -50,20 +50,23 @@ class Reliability:
         self.calibration_library = calibration
         
     def Compute(self, context):
+        context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
         output = ResultStoreOutput(context.GetResultStore(),
                                    self.parameters,
                                    auto_load=False,
-                                   extended_results=False)
+                                   extended_results=False)                                   
         pdf = output.get_attribute_from_source(self.object_type,
                                                self.parameters.get_solve_method(self.object_type),
-                                               "pdf",
-                                               "PDFProbaLog")
+                                               "fineZPdf",
+                                               "PDFProbaLogfine")                                                
         zgrid = output.get_attribute_from_source(self.object_type,
                                                  self.parameters.get_solve_method(self.object_type),
-                                                 "pdf",
-                                                 "PDFZGrid")        
+                                                 "fineZPdf",
+                                                 "PDFZGridfine")      
+
         model = self.calibration_library.reliability_models[self.object_type]
 
+        print(pdf.shape[0], model.input_shape[1]) 
         zgrid_end = zgrid[-1]
         if pdf.shape[0] != model.input_shape[1]:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,"PDF and model shapes are not compatible")

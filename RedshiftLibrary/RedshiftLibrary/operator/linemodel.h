@@ -166,10 +166,6 @@ private:
 
   bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
 
-  void interpolateLargeGridOnFineGrid(const TFloat64List &redshiftsLargeGrid,
-                                      const TFloat64List &redshiftsFineGrid,
-                                      const TFloat64List &meritLargeGrid,
-                                      TFloat64List &meritFineGrid) const;
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
   void
   fitContinuumTemplates(Int32 candidateIdx, const TFloat64List &redshiftsTplFit,

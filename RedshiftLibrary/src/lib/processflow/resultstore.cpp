@@ -202,7 +202,6 @@ COperatorResultStore::GetLogZPdfResult(const std::string &objectType,
                                        const std::string &name) const {
   std::ostringstream oss;
   oss << objectType << "." << method << "." << name;
-  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
   return std::dynamic_pointer_cast<const CLogZPdfResult>(
       GetGlobalResult(oss.str()).lock());

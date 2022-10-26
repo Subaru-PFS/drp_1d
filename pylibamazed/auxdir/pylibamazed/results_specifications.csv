@@ -87,3 +87,5 @@ zmin	pdf_params	False	object	zmin	pdf	f8
 zmax	pdf_params	False	object	zmax	pdf	f8
 zstep	pdf_params	False	object	zstep	pdf	f8
 zcenter	pdf_params	False	object	zcenter	pdf	f8
+PDFZGridfine	fineZPdf	False	object	Redshifts	fineZPdf	f8
+PDFProbaLogfine	fineZPdf	False	object	valProbaLog	fineZPdf	f8

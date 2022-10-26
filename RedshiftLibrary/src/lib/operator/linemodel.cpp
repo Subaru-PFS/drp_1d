@@ -68,10 +68,6 @@
 #include <boost/format.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 
-#include <gsl/gsl_interp.h>
-
-#include <algorithm> //std::sort
-
 using namespace NSEpic;
 using namespace std;
 
@@ -1738,46 +1734,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
 std::shared_ptr<COperatorResult> COperatorLineModel::getResult() {
   return m_result;
-}
-
-void COperatorLineModel::interpolateLargeGridOnFineGrid(
-    const TFloat64List &redshiftsLargeGrid,
-    const TFloat64List &redshiftsFineGrid, const TFloat64List &meritLargeGrid,
-    TFloat64List &meritFineGrid) const {
-  //* // GSL method LIN
-  Log.LogDetail("  Operator-Linemodel: First-Pass - interp FROM large grid "
-                "z0=%f to zEnd=%f (n=%d)",
-                redshiftsLargeGrid[0],
-                redshiftsLargeGrid[redshiftsLargeGrid.size() - 1],
-                redshiftsLargeGrid.size());
-  Log.LogDetail("  Operator-Linemodel: First-Pass - interp TO fine grid "
-                "z0=%f to zEnd=%f (n=%d)",
-                redshiftsFineGrid[0],
-                redshiftsFineGrid[redshiftsFineGrid.size() - 1],
-                redshiftsFineGrid.size());
-
-  // initialise and allocate the gsl objects
-  // lin
-  gsl_interp *interpolation =
-      gsl_interp_alloc(gsl_interp_linear, meritLargeGrid.size());
-  gsl_interp_init(interpolation, &(redshiftsLargeGrid.front()),
-                  &(meritLargeGrid.front()), meritLargeGrid.size());
-  gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
-
-  for (Int32 j = 0; j < redshiftsFineGrid.size(); j++) {
-    Float64 Xrebin = redshiftsFineGrid[j];
-    if (Xrebin < redshiftsLargeGrid[0] ||
-        Xrebin > redshiftsLargeGrid[redshiftsLargeGrid.size() - 1]) {
-      continue;
-    }
-    meritFineGrid[j] =
-        gsl_interp_eval(interpolation, &redshiftsLargeGrid.front(),
-                        &meritLargeGrid.front(), Xrebin, accelerator); // lin
-  }
-
-  gsl_interp_free(interpolation);
-  gsl_interp_accel_free(accelerator);
-  //*/
 }
 
 /**
