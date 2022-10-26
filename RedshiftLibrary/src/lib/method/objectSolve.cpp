@@ -78,15 +78,13 @@ void CObjectSolve::GetRedshiftSampling(
   auto searchLogRebin = inputContext->m_logRebin.find(m_objectType);
   if (searchLogRebin != inputContext->m_logRebin.end()) {
     redshiftRange = searchLogRebin->second.zrange;
-
     redshiftStep = inputContext->m_logGridStep;
-    if (m_redshiftSampling == "lin") {
-      m_redshiftSampling = "log";
-      Flag.warning(WarningCode::FORCE_LOGSAMPLING_FFT,
-                   Formatter() << "CSolve::" << __func__
-                               << ": m_redshift sampling value is forced to "
-                                  "log since FFTprocessing is used");
-    }
+    if (m_redshiftSampling == "lin")
+      THROWG(BAD_PARAMETER_VALUE,
+             Formatter() << "CSolve::" << __func__
+                         << ": redshiftsampling param should be set to log "
+                            "since FFTprocessing is used");
+
   } else {
     // default is to read from the scoped paramStore
     redshiftRange = inputContext->GetParameterStore()->GetScoped<TFloat64Range>(

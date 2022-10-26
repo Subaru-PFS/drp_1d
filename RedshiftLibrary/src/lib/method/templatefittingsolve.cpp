@@ -193,15 +193,10 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
-  // save in resultstore pdf results
-  //        std::string pdfPath =
-  //        outputPdfRelDir+"/logposterior.logMargP_Z_data";
-  resultStore->StoreScopedGlobalResult(
-      "pdf",
-      pdfz.m_postmargZResult); // need to store this pdf with this exact same
-                               // name so that zqual can load it. see
-                               // zqual.cpp/ExtractFeaturesPDF (deprecated
-                               // comment, must be removed)
+  ZGridParameters gridParams(TFloat64Range(m_redshifts), m_redshiftStep);
+  pdfz.m_postmargZResult->setZGridParams(gridParams);
+  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // save in resultstore candidates results
   resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);

@@ -119,6 +119,8 @@ private:
 
   Int32 m_opt_firstpass_largegridstepRatio;
   bool m_opt_skipsecondpass = false;
+  ZGridParameters m_coarseGridParams;
+  Float64 m_coarseRedshiftStep = NAN;
 };
 
 } // namespace NSEpic

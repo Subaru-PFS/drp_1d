@@ -617,6 +617,19 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
   return extendedList;
 }
 
+// only for secondpass grid
+TZGridListParams COperatorLineModel::getSPZGridParams() {
+  Int32 s = m_firstpass_extremaResult->m_ranked_candidates.size();
+  TZGridListParams centeredZgrid_params(s);
+  for (Int32 i = 0; i < s; i++) {
+    const auto &extendedGrid = m_firstpass_extremaResult->ExtendedRedshifts[i];
+    centeredZgrid_params[i] = ZGridParameters(
+        TFloat64Range(extendedGrid), m_fineStep,
+        m_firstpass_extremaResult->m_ranked_candidates[i].second->Redshift);
+  }
+  return centeredZgrid_params;
+}
+
 void COperatorLineModel::SetFirstPassCandidates(
     const TCandidateZbyRank &zCandidates) {
   m_firstpass_extremaResult =

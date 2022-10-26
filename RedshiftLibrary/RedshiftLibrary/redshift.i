@@ -273,7 +273,7 @@ typedef std::vector<std::string> TStringList;
 %template(TInt32List) std::vector<Int32>;
 %template(TStringList) std::vector<std::string>;
 %template(VecTFloat64List) std::vector<  std::vector<Float64> >;
-
+%template(TBoolList) std::vector<bool>;
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
 %apply Int64 &OUTPUT { Int64& out_long };

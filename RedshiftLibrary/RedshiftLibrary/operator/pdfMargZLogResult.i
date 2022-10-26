@@ -36,13 +36,30 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-class CPdfMargZLogResult : public COperatorResult {
+typedef struct ZGridParameters {
+  ZGridParameters(const TFloat64Range &range, Float64 step,
+                  Float64 center = NAN)
+      : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
+        zcenter(center){};
+  ZGridParameters() = default;
+  Float64 zmin = NAN;
+  Float64 zmax = NAN;
+  Float64 zstep = NAN;
+  Float64 zcenter = NAN;
+} ZGridParameters;
 
+typedef std::vector<ZGridParameters> TZGridListParams;
+
+class CPdfMargZLogResult : public COperatorResult {
 public:
   CPdfMargZLogResult();
   ~CPdfMargZLogResult() = default;
-  CPdfMargZLogResult(const TFloat64List &redshifts);
-
+  CPdfMargZLogResult(const TFloat64List &redshifts/*,
+                     const ZGridParameters &zparams*/);
+  // below setters are temporary
+  void setSecondPassZGridParams(const ZGridParameters &fp_params,
+                                const TZGridListParams &paramList);
+  void setZGridParams(const ZGridParameters &params);
   Int32 getIndex(Float64 z) const;
 
   TFloat64List Redshifts;
@@ -50,4 +67,9 @@ public:
   Float64 valEvidenceLog = NAN;
   Float64 valMargEvidenceLog = NAN;
   Int32 countTPL;
+
+  TFloat64List zcenter;
+  TFloat64List zmin;
+  TFloat64List zmax;
+  TFloat64List zstep;
 };
