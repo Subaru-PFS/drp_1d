@@ -1,3 +1,4 @@
+
 // ============================================================================
 //
 // This file is part of: AMAZED
@@ -54,61 +55,18 @@ TFloat64List fluxList = {1e-2, 1.5e-2, 1e-2, 1.2e-2, 1e-2, 1.1e-2};
 TFloat64List noiseList = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4};
 TFloat64List maskList = {0, 1, 1, 1, 1, 1};
 
-const std::string jsonString =
-    "{\"smoothWidth\" : 0.5,"
-    "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
-    "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}";
-
-class MyInputContext {
+class fixture_TemplateTest {
 public:
-  std::shared_ptr<CParameterStore> paramStore;
-  std::shared_ptr<CLSF> LSF;
-  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti;
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin;
-
-  void InitContext() {
-    TScopeStack scopeStack;
-    paramStore = std::make_shared<CParameterStore>(scopeStack);
-    paramStore->FromString(jsonString);
-
-    // create LSF
-    std::string lsfType = "GaussianConstantWidth";
-    paramStore->Set("LSF.width", 1.09);
-    std::shared_ptr<TLSFArguments> args =
-        std::make_shared<TLSFGaussianConstantWidthArgs>(paramStore);
-    LSF = LSFFactory.Create(lsfType, args);
-
-    // create Calzetti correction
-    TFloat64List lbda = {1214., 1215., 1216., 1217., 1218.};
-    TFloat64List flux = {0.1, 0.2, 0.5, 0.3, 0.8};
-    CalzettiCorrection calzettiCorr(lbda, flux);
-    ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>(
-        calzettiCorr, 0., 0.1, 10);
-
-    // create Meiksin correction
-    std::vector<MeiksinCorrection> meiskinCorr;
-    meiskinCorr.push_back(MeiksinCorrection(lbda, {flux, flux, flux}));
-    meiskinCorr.push_back(MeiksinCorrection(lbda, {flux, flux, flux}));
-    TFloat64List z_bins = {1, 2, 3};
-    igmCorrectionMeiksin =
-        std::make_shared<CSpectrumFluxCorrectionMeiksin>(meiskinCorr, z_bins);
-    TFloat64Range lbdaRange(1214, 1216);
-    igmCorrectionMeiksin->convolveByLSF(LSF, lbdaRange);
-  }
-
-  std::shared_ptr<CParameterStore> GetParameterStore() { return paramStore; }
-  std::shared_ptr<CLSF> GetLSF() { return LSF; }
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> GetMeiskinCorr() {
-    return igmCorrectionMeiksin;
-  }
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-  GetCalzettiCorr() {
-    return ismCorrectionCalzetti;
-  }
+  CTemplate tplStar = fixture_TemplateStarLight().tplStarLight;
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
+      fixture_CalzettiCorrection().ismCorrectionCalzetti;
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      fixture_MeiskinCorrection().igmCorrectionMeiksin;
+  CSpectrumSpectralAxis spcAxis = fixture_SpectralAxisLight().spcAxisLight;
+  CSpectrumFluxAxis fluxAxis = fixture_FluxAxisLight().fluxAxisLight;
 };
 
-BOOST_AUTO_TEST_SUITE(Template)
+BOOST_FIXTURE_TEST_SUITE(Template, fixture_TemplateTest)
 
 BOOST_AUTO_TEST_CASE(Constructor_test) {
   // create template
@@ -122,48 +80,36 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   BOOST_CHECK(tpl2.GetCategory() == "category");
   BOOST_CHECK(tpl2.GetSampleCount() == 0);
 
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
-  CTemplate tpl3("name", "category", spectralAxis, fluxAxis);
-  BOOST_CHECK(tpl3.GetSampleCount() == 6);
-  BOOST_CHECK(tpl3.GetFluxAxis().GetSamplesVector() == fluxList);
+  BOOST_CHECK(tplStar.GetSampleCount() == mySpectralListLight.size());
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
   // copy and copy assignement
-  CTemplate tpl4(tpl3);
-  BOOST_CHECK(tpl4.GetSampleCount() == 6);
-  BOOST_CHECK(tpl4.GetFluxAxis().GetSamplesVector() == fluxList);
+  CTemplate tpl4(tplStar);
+  BOOST_CHECK(tpl4.GetSampleCount() == mySpectralListLight.size());
+  BOOST_CHECK(tpl4.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
-  CTemplate tpl5(tpl3);
+  CTemplate tpl5(tplStar);
   tpl5.GetRawFluxAxis_().GetSamplesVector().pop_back();
   BOOST_CHECK_THROW(CTemplate tpl6(tpl5), GlobalException);
 
   CTemplate tpl7;
-  tpl7 = tpl3;
-  BOOST_CHECK(tpl7.GetSampleCount() == 6);
-  BOOST_CHECK(tpl7.GetFluxAxis().GetSamplesVector() == fluxList);
+  tpl7 = tplStar;
+  BOOST_CHECK(tpl7.GetSampleCount() == mySpectralListLight.size());
+  BOOST_CHECK(tpl7.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
   // move and move assignement
-  CTemplate tpl8(std::move(tpl3));
-  BOOST_CHECK(tpl8.GetSampleCount() == 6);
-  BOOST_CHECK(tpl8.GetFluxAxis().GetSamplesVector() == fluxList);
-  BOOST_CHECK(tpl3.GetSampleCount() == 0);
+  CTemplate tpl8(std::move(tplStar));
+  BOOST_CHECK(tpl8.GetSampleCount() == mySpectralListLight.size());
+  BOOST_CHECK(tpl8.GetFluxAxis().GetSamplesVector() == myFluxListLight);
+  BOOST_CHECK(tplStar.GetSampleCount() == 0);
 
   BOOST_CHECK_THROW(CTemplate tpl8b(std::move(tpl5)), GlobalException);
 
   CTemplate tpl9;
   tpl9 = std::move(tpl8);
-  BOOST_CHECK(tpl9.GetSampleCount() == 6);
-  BOOST_CHECK(tpl9.GetFluxAxis().GetSamplesVector() == fluxList);
+  BOOST_CHECK(tpl9.GetSampleCount() == mySpectralListLight.size());
+  BOOST_CHECK(tpl9.GetFluxAxis().GetSamplesVector() == myFluxListLight);
   BOOST_CHECK(tpl8.GetSampleCount() == 0);
-
-  MyInputContext ctx;
-  ctx.InitContext();
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-      ismCorrectionCalzetti = ctx.GetCalzettiCorr();
-  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
-      ctx.GetMeiskinCorr();
 
   // InitIsmIgmConfig
   tpl9.InitIsmIgmConfig(0, 2, 1214, ismCorrectionCalzetti,
@@ -202,204 +148,161 @@ BOOST_AUTO_TEST_CASE(Save) {
 }
 
 BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
-  // Create template
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
-  CTemplate tpl("name", "category", spectralAxis, fluxAxis);
-
-  MyInputContext ctx;
-  ctx.InitContext();
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-      ismCorrectionCalzetti = ctx.GetCalzettiCorr();
-  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
-      ctx.GetMeiskinCorr();
 
   // InitIsmIgmConfig with kstart, kend & redshift
-  BOOST_CHECK_THROW(tpl.InitIsmIgmConfig(1, 2, 1214), GlobalException);
-  BOOST_CHECK_THROW(tpl.InitIsmIgmConfig(8, 12, 1214, ismCorrectionCalzetti,
-                                         igmCorrectionMeiksin),
+  BOOST_CHECK_THROW(tplStar.InitIsmIgmConfig(1, 2, 1214), GlobalException);
+  BOOST_CHECK_THROW(tplStar.InitIsmIgmConfig(8, 12, 1214, ismCorrectionCalzetti,
+                                             igmCorrectionMeiksin),
                     GlobalException);
-  BOOST_CHECK_THROW(tpl.InitIsmIgmConfig(0, 8, 1214, ismCorrectionCalzetti,
-                                         igmCorrectionMeiksin),
+  BOOST_CHECK_THROW(tplStar.InitIsmIgmConfig(0, 8, 1214, ismCorrectionCalzetti,
+                                             igmCorrectionMeiksin),
                     GlobalException);
-  BOOST_CHECK_THROW(tpl.InitIsmIgmConfig(0, 2, 0.5, ismCorrectionCalzetti,
-                                         igmCorrectionMeiksin),
+  BOOST_CHECK_THROW(tplStar.InitIsmIgmConfig(0, 2, 0.5, ismCorrectionCalzetti,
+                                             igmCorrectionMeiksin),
                     GlobalException);
 
-  tpl.InitIsmIgmConfig(1, 2, 1214, ismCorrectionCalzetti, igmCorrectionMeiksin);
-  BOOST_CHECK(tpl.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxList);
-  BOOST_CHECK(tpl.m_computedMeiksingCoeff.size() == spectralList.size());
-  BOOST_CHECK(tpl.m_computedDustCoeff.size() == spectralList.size());
+  tplStar.InitIsmIgmConfig(1, 2, 1214, ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
+  BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == myFluxListLight);
+  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() ==
+              mySpectralListLight.size());
+  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == mySpectralListLight.size());
 
   // InitIsmIgmConfig with lambdarange & redshift
-  CTemplate tpl2("name", "category", spectralAxis, fluxAxis);
+  //   CTemplate tpl2 = ctx.createTemplate();
   TFloat64Range lbdaRange(7, 10);
-  BOOST_CHECK_THROW(tpl2.InitIsmIgmConfig(lbdaRange, 1214,
-                                          ismCorrectionCalzetti,
-                                          igmCorrectionMeiksin),
+  BOOST_CHECK_THROW(tplStar.InitIsmIgmConfig(lbdaRange, 1214,
+                                             ismCorrectionCalzetti,
+                                             igmCorrectionMeiksin),
                     GlobalException);
 
   lbdaRange.SetBegin(1214);
   lbdaRange.SetEnd(1218);
-  tpl2.InitIsmIgmConfig(lbdaRange, 1214, ismCorrectionCalzetti,
-                        igmCorrectionMeiksin);
-  BOOST_CHECK(tpl2.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxList);
-  BOOST_CHECK(tpl2.m_computedMeiksingCoeff.size() == spectralList.size());
-  BOOST_CHECK(tpl2.m_computedDustCoeff.size() == spectralList.size());
+  tplStar.InitIsmIgmConfig(lbdaRange, 1214, ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
+  BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == myFluxListLight);
+  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() ==
+              mySpectralListLight.size());
+  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == mySpectralListLight.size());
 
-  tpl2.ScaleFluxAxis(2);
-  tpl2.InitIsmIgmConfig(lbdaRange, 2428, ismCorrectionCalzetti,
-                        igmCorrectionMeiksin);
-  TFloat64List fluxList2 = {2e-2, 3e-2, 2e-2, 2.4e-2, 2e-2, 2.2e-2};
-  BOOST_CHECK(tpl2.GetFluxAxis().GetSamplesVector() == fluxList2);
+  tplStar.ScaleFluxAxis(2);
+  tplStar.InitIsmIgmConfig(lbdaRange, 2428, ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
+  TFloat64List fluxList2 = {2e-2, 4e-2, 6e-2, 8e-2, 10e-2, 12e-2};
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxList2);
 
   // InitIsmIgmConfig with redshift
-  CTemplate tpl3("name", "category", spectralAxis, fluxAxis);
-  tpl3.InitIsmIgmConfig(2428, ismCorrectionCalzetti, igmCorrectionMeiksin);
-  BOOST_CHECK(tpl3.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxList);
-  BOOST_CHECK(tpl3.m_computedMeiksingCoeff.size() == spectralList.size());
-  BOOST_CHECK(tpl3.m_computedDustCoeff.size() == spectralList.size());
+  //   CTemplate tpl3 = ctx.createTemplate();
+  tplStar.ScaleFluxAxis(0.5);
+  tplStar.InitIsmIgmConfig(2428, ismCorrectionCalzetti, igmCorrectionMeiksin);
+  BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == myFluxListLight);
+  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() ==
+              mySpectralListLight.size());
+  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == mySpectralListLight.size());
 }
 
 BOOST_AUTO_TEST_CASE(ApplyDustCoeff_test) {
-  // Create template
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
-  CTemplate tpl("name", "category", spectralAxis, fluxAxis);
+  BOOST_CHECK_THROW(tplStar.ApplyDustCoeff(-1), GlobalException);
+  BOOST_CHECK_THROW(tplStar.GetIsmCoeff(), GlobalException);
 
-  MyInputContext ctx;
-  ctx.InitContext();
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-      ismCorrectionCalzetti = ctx.GetCalzettiCorr();
-  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
-      ctx.GetMeiskinCorr();
+  tplStar.InitIsmIgmConfig(1, 2, 1214, ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
 
-  BOOST_CHECK_THROW(tpl.ApplyDustCoeff(-1), GlobalException);
-  BOOST_CHECK_THROW(tpl.GetIsmCoeff(), GlobalException);
+  bool res = tplStar.ApplyDustCoeff(-1);
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
-  tpl.InitIsmIgmConfig(1, 2, 1214, ismCorrectionCalzetti, igmCorrectionMeiksin);
+  res = tplStar.ApplyDustCoeff(-2);
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
-  bool res = tpl.ApplyDustCoeff(-1);
-  BOOST_CHECK(tpl.GetFluxAxis().GetSamplesVector() == fluxList);
-
-  res = tpl.ApplyDustCoeff(-2);
-  BOOST_CHECK(tpl.GetFluxAxis().GetSamplesVector() == fluxList);
-
-  res = tpl.ApplyDustCoeff(2);
+  res = tplStar.ApplyDustCoeff(2);
   Int32 coeff1 =
       (Int32)(2 * ismCorrectionCalzetti->m_dataCalzetti.size() +
-              spectralList[1] - ismCorrectionCalzetti->getLambdaMin());
+              mySpectralListLight[1] - ismCorrectionCalzetti->getLambdaMin());
   Int32 coeff2 =
       (Int32)(2 * ismCorrectionCalzetti->m_dataCalzetti.size() +
-              spectralList[2] - ismCorrectionCalzetti->getLambdaMin());
-  BOOST_CHECK(tpl.GetIsmCoeff() == 2);
-  BOOST_CHECK_CLOSE(tpl.GetcomputedDustCoeffs()[1],
+              mySpectralListLight[2] - ismCorrectionCalzetti->getLambdaMin());
+  BOOST_CHECK(tplStar.GetIsmCoeff() == 2);
+  BOOST_CHECK_CLOSE(tplStar.GetcomputedDustCoeffs()[1],
                     ismCorrectionCalzetti->m_dataDustCoeff[coeff1], 1e-12);
-  BOOST_CHECK_CLOSE(tpl.GetcomputedDustCoeffs()[2],
+  BOOST_CHECK_CLOSE(tplStar.GetcomputedDustCoeffs()[2],
                     ismCorrectionCalzetti->m_dataDustCoeff[coeff2], 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(ApplyMeiksinCoeff_test) {
-  // Create template
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
-  CTemplate tpl("name", "category", spectralAxis, fluxAxis);
+  BOOST_CHECK_THROW(tplStar.ApplyMeiksinCoeff(-1), GlobalException);
 
-  MyInputContext ctx;
-  ctx.InitContext();
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-      ismCorrectionCalzetti = ctx.GetCalzettiCorr();
-  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
-      ctx.GetMeiskinCorr();
-
-  BOOST_CHECK_THROW(tpl.ApplyMeiksinCoeff(-1), GlobalException);
-
-  BOOST_CHECK_THROW(tpl.GetIgmCoeff(), GlobalException);
-  BOOST_CHECK_THROW(tpl.GetIgmEndIndex(), GlobalException);
+  BOOST_CHECK_THROW(tplStar.GetIgmCoeff(), GlobalException);
+  BOOST_CHECK_THROW(tplStar.GetIgmEndIndex(), GlobalException);
   Int32 begin;
   Int32 ismEnd;
-  BOOST_CHECK_THROW(tpl.GetIsmIgmRangeIndex(begin, ismEnd), GlobalException);
+  BOOST_CHECK_THROW(tplStar.GetIsmIgmRangeIndex(begin, ismEnd),
+                    GlobalException);
 
   CSpectrumSpectralAxis spectralAxis2({1213, 1214, 1215, 1216, 1217, 1218});
-  tpl.SetSpectralAxis(spectralAxis2);
-  tpl.InitIsmIgmConfig(4, 5, 1213., ismCorrectionCalzetti,
-                       igmCorrectionMeiksin);
+  tplStar.SetSpectralAxis(spectralAxis2);
+  tplStar.InitIsmIgmConfig(4, 5, 1213., ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
 
   // m_Igm_kend == -1
-  bool res = tpl.ApplyMeiksinCoeff(-1);
+  bool res = tplStar.ApplyMeiksinCoeff(-1);
   BOOST_CHECK(res == false);
-  BOOST_CHECK(tpl.GetFluxAxis().GetSamplesVector() == fluxList);
-  res = tpl.ApplyMeiksinCoeff(1);
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == myFluxListLight);
+  res = tplStar.ApplyMeiksinCoeff(1);
   BOOST_CHECK(res == false);
-  BOOST_CHECK(tpl.GetFluxAxis().GetSamplesVector() == fluxList);
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
-  tpl.InitIsmIgmConfig(0, 2, 1214., ismCorrectionCalzetti,
-                       igmCorrectionMeiksin);
+  tplStar.InitIsmIgmConfig(0, 2, 1214., ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
 
   // m_Igm_kend == 2
-  res = tpl.ApplyMeiksinCoeff(-1);
+  res = tplStar.ApplyMeiksinCoeff(-1);
   BOOST_CHECK(res == true);
-  BOOST_CHECK(tpl.GetFluxAxis().GetSamplesVector() == fluxList);
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
   // m_meiksinIdx == -2
-  res = tpl.ApplyMeiksinCoeff(-2);
-  BOOST_CHECK(tpl.GetFluxAxis().GetSamplesVector() == fluxList);
+  res = tplStar.ApplyMeiksinCoeff(-2);
+  BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == myFluxListLight);
 
-  BOOST_CHECK(tpl.GetIgmCoeff() == -2);
-  BOOST_CHECK(tpl.GetIgmEndIndex() == 2);
-  tpl.GetIsmIgmRangeIndex(begin, ismEnd);
+  BOOST_CHECK(tplStar.GetIgmCoeff() == -2);
+  BOOST_CHECK(tplStar.GetIgmEndIndex() == 2);
+  tplStar.GetIsmIgmRangeIndex(begin, ismEnd);
   BOOST_CHECK(begin == 0);
   BOOST_CHECK(ismEnd == 2);
 
   // test OK
-  res = tpl.ApplyMeiksinCoeff(1);
+  res = tplStar.ApplyMeiksinCoeff(1);
   BOOST_CHECK(res == true);
-  TFloat64List meiskinCoeff = tpl.GetcomputedMeiksinCoeffs();
+  TFloat64List meiskinCoeff = tplStar.GetcomputedMeiksinCoeffs();
   for (size_t i = 0; i < meiskinCoeff.size(); i++)
-    BOOST_CHECK(meiskinCoeff[i] * fluxList[i] == tpl.GetFluxAxis()[i]);
+    BOOST_CHECK(meiskinCoeff[i] * myFluxListLight[i] ==
+                tplStar.GetFluxAxis()[i]);
 }
 
 BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
-  // Create template
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
-  CTemplate tpl("name", "category");
+  tplStar.SetSpectralAndFluxAxes(spcAxis, fluxAxis);
+  tplStar.SetContinuumEstimationMethod("zero");
 
-  tpl.SetSpectralAndFluxAxes(spectralAxis, fluxAxis);
-  tpl.SetContinuumEstimationMethod("zero");
+  tplStar.InitIsmIgmConfig(0, 2, 1214, ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
 
-  MyInputContext ctx;
-  ctx.InitContext();
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-      ismCorrectionCalzetti = ctx.GetCalzettiCorr();
-  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
-      ctx.GetMeiskinCorr();
+  BOOST_CHECK(tplStar.CheckIsmIgmEnabled() == true);
+  tplStar.SetType(CSpectrum::EType::nType_noContinuum);
+  BOOST_CHECK(tplStar.CheckIsmIgmEnabled() == false);
 
-  tpl.InitIsmIgmConfig(0, 2, 1214, ismCorrectionCalzetti, igmCorrectionMeiksin);
-
-  BOOST_CHECK(tpl.CheckIsmIgmEnabled() == true);
-  tpl.SetType(CSpectrum::EType::nType_noContinuum);
-  BOOST_CHECK(tpl.CheckIsmIgmEnabled() == false);
-
-  CSpectrumSpectralAxis spectralAxis2(spectralList);
-  tpl.SetSpectralAxis(spectralAxis2);
-  tpl.InitIsmIgmConfig(0, 2, 1214, ismCorrectionCalzetti, igmCorrectionMeiksin);
-  const CTemplate tpl2 = tpl;
+  CSpectrumSpectralAxis spectralAxis2(mySpectralListLight);
+  tplStar.SetSpectralAxis(spectralAxis2);
+  tplStar.InitIsmIgmConfig(0, 2, 1214, ismCorrectionCalzetti,
+                           igmCorrectionMeiksin);
+  const CTemplate tpl2 = tplStar;
   BOOST_CHECK_THROW(tpl2.SetType(CSpectrum::EType::nType_continuumOnly),
                     GlobalException);
-  tpl.SetFluxAxis(fluxAxis);
-  tpl.SetSpectralAxis(std::move(spectralAxis));
+  CSpectrumFluxAxis fluxAxis2(myFluxListLight);
+  tplStar.SetFluxAxis(fluxAxis2);
+  tplStar.SetSpectralAxis(std::move(mySpectralListLight));
 
   // GetIgmEndIndex
-  CTemplate tpl3("name", "category", tpl.GetSpectralAxis(), fluxAxis);
+  CTemplate tpl3("name", "category", tplStar.GetSpectralAxis(),
+                 myFluxListLight);
   BOOST_CHECK_THROW(tpl3.GetIgmEndIndex(0, 2), GlobalException);
 
   tpl3.InitIsmIgmConfig(0, 2, 1214, ismCorrectionCalzetti,
@@ -415,7 +318,8 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   BOOST_CHECK(igmEndIndex == -1);
 
   // GetIsmIdxList
-  CTemplate tpl4("name", "category", tpl.GetSpectralAxis(), fluxAxis);
+  CTemplate tpl4("name", "category", tplStar.GetSpectralAxis(),
+                 myFluxListLight);
   TInt32List ebmvList;
   BOOST_CHECK_THROW(tpl4.GetIsmIdxList(1, 1), GlobalException);
 
@@ -436,7 +340,8 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   BOOST_CHECK(ebmvList[0] == 3);
 
   // GetIgmIdxList
-  CTemplate tpl5("name", "category", tpl.GetSpectralAxis(), fluxAxis);
+  CTemplate tpl5("name", "category", tplStar.GetSpectralAxis(),
+                 myFluxListLight);
   TInt32List meiksinList;
   BOOST_CHECK_THROW(tpl5.GetIgmIdxList(1, 1), GlobalException);
 

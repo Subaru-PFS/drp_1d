@@ -53,39 +53,7 @@
 
 using namespace NSEpic;
 
-TFloat64List spectralList = {10, 20, 30};
-TFloat64List fluxList = {1, 2, 3};
-TFloat64List noiseList = {0.1, 0.1, 0.1};
-TFloat64List maskList = {0, 1, 1};
-TFloat64List widthList = {1, 1, 1};
-
-const std::string jsonString =
-    "{\"smoothWidth\" : 0.5,"
-    "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
-    "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}";
-
-class MyInputContext {
-public:
-  std::shared_ptr<CParameterStore> paramStore;
-  std::shared_ptr<CLSF> LSF;
-
-  void InitContext() {
-    TScopeStack scopeStack;
-    paramStore = std::make_shared<CParameterStore>(scopeStack);
-    paramStore->FromString(jsonString);
-
-    std::string lsfType = "GaussianVariableWidth";
-    std::shared_ptr<TLSFArguments> args =
-        std::make_shared<TLSFGaussianVarWidthArgs>(spectralList, widthList);
-    LSF = LSFFactory.Create(lsfType, args);
-  }
-
-  std::shared_ptr<CParameterStore> GetParameterStore() { return paramStore; }
-  std::shared_ptr<CLSF> GetLSF() { return LSF; }
-};
-
-BOOST_AUTO_TEST_SUITE(Rebin)
+BOOST_FIXTURE_TEST_SUITE(Rebin, fixture_SpectrumLight)
 
 BOOST_AUTO_TEST_CASE(rebin_test) {
   CSpectrum spc;
@@ -113,17 +81,7 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
 }
 
 BOOST_AUTO_TEST_CASE(rebinLinear_test) {
-  // Initialize context
-  MyInputContext ctx;
-  ctx.InitContext();
-
-  // create spectrum
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
   CSpectrum rebinedSpectrum;
-  CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
@@ -133,7 +91,7 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
 
   // check throw : range is not included in spectral axis
   std::unique_ptr<CRebin> rebin =
-      std::unique_ptr<CRebin>(new CRebinLinear(spc));
+      std::unique_ptr<CRebin>(new CRebinLinear(spcLight));
   TFloat64Range range2(9., 11.);
   BOOST_CHECK_THROW(rebin->compute(range2, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
@@ -175,6 +133,7 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
   TFloat64List t_list_ref = {0., 0.5, 0., 0.5, 0.};
   BOOST_CHECK(rebinedError[0] == INFINITY);
+  CSpectrumNoiseAxis noiseAxis = spcLight.GetErrorAxis();
   for (Int32 i = 1; i < N; i++) {
     Float64 t = t_list_ref[i - 1];
     Float64 error_ref =
@@ -206,17 +165,7 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
 }
 
 BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
-  // Initialize context
-  MyInputContext ctx;
-  ctx.InitContext();
-
-  // create spectrum
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
   CSpectrum rebinedSpectrum;
-  CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
@@ -226,8 +175,8 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
 
   // interp = "precomputedfinegrid" et errorRebinMethod = "no"
   std::unique_ptr<CRebinFineGrid> rebin =
-      std::unique_ptr<CRebinFineGrid>(new CRebinFineGrid(spc));
-  spc.setRebinInterpMethod("precomputedfinegrid");
+      std::unique_ptr<CRebinFineGrid>(new CRebinFineGrid(spcLight));
+  spcLight.setRebinInterpMethod("precomputedfinegrid");
   rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                  errorRebinMethod);
   TFloat64List rebinedFlux =
@@ -273,9 +222,7 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
 }
 
 BOOST_AUTO_TEST_CASE(rebinSpline_test) {
-  // Initialize context
-  MyInputContext ctx;
-  ctx.InitContext();
+  CSpectrum rebinedSpectrum;
 
   // create spectrum
   CSpectrumSpectralAxis spectralAxis(spectralList);
@@ -293,7 +240,7 @@ BOOST_AUTO_TEST_CASE(rebinSpline_test) {
 
   // interp = "spline" et errorRebinMethod = "no"
   std::unique_ptr<CRebin> rebin =
-      std::unique_ptr<CRebin>(new CRebinSpline(spc));
+      std::unique_ptr<CRebin>(new CRebinSpline(spcLight));
   rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                  errorRebinMethod);
   TFloat64List rebinedFlux =
@@ -317,17 +264,7 @@ BOOST_AUTO_TEST_CASE(rebinSpline_test) {
 }
 
 BOOST_AUTO_TEST_CASE(rebinNgp_test) {
-  // Initialize context
-  MyInputContext ctx;
-  ctx.InitContext();
-
-  // create spectrum
-  CSpectrumSpectralAxis spectralAxis(spectralList);
-  CSpectrumNoiseAxis noiseAxis(noiseList);
-  CSpectrumFluxAxis fluxAxis(fluxList);
-  fluxAxis.GetError() = noiseAxis;
   CSpectrum rebinedSpectrum;
-  CSpectrum spc(spectralAxis, fluxAxis);
 
   TFloat64Range range1(10., 30.);
   CSpectrumSpectralAxis tgtSpectralAxis_1({9., 10., 15., 20., 25., 30., 31.});
@@ -336,7 +273,8 @@ BOOST_AUTO_TEST_CASE(rebinNgp_test) {
   std::string errorRebinMethod = "rebin";
 
   // interp = "ngp" et errorRebinMethod = "rebin"
-  std::unique_ptr<CRebin> rebin = std::unique_ptr<CRebin>(new CRebinNgp(spc));
+  std::unique_ptr<CRebin> rebin =
+      std::unique_ptr<CRebin>(new CRebinNgp(spcLight));
   rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                  errorRebinMethod);
   TFloat64List rebinedFlux =
