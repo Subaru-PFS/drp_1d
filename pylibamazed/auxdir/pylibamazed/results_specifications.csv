@@ -74,15 +74,15 @@ Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	
 ModelLambda	linemeas_model	False	object	ModelLambda	linemeas_model	f8
 ModelFlux	linemeas_model	False	object	ModelFlux	linemeas_model	f8
 Reliability	reliability	False	object	m_ReliabilityLabel	solveResult	f8
-FirstpassPDFZGrid	firstpass_pdf	False	object	Redshifts	firstpass_pdf	f8
-FirstpassPDFProbaLog	firstpass_pdf	False	object	valProbaLog	firstpass_pdf	f8
+FirstpassPDFZGrid	firstpass_pdf	True	object	Redshifts	firstpass_pdf	f8
+FirstpassPDFProbaLog	firstpass_pdf	True	object	valProbaLog	firstpass_pdf	f8
 ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i
 <MethodType>WarningFlags	warningFlag	False	method	flagValue	warningFlag	i
 SubType	model_parameters	False	candidate			S10
 Rank	model_parameters	False	candidate	Rank	extrema_results	i
-FPZmin	firstpass_pdf_params	False	object	zmin	firstpass_pdf	f8
-FPZmax	firstpass_pdf_params	False	object	zmax	firstpass_pdf	f8
-FPZstep	firstpass_pdf_params	False	object	zstep	firstpass_pdf	f8
+FPZmin	firstpass_pdf_params	True	object	zmin	firstpass_pdf	f8
+FPZmax	firstpass_pdf_params	True	object	zmax	firstpass_pdf	f8
+FPZstep	firstpass_pdf_params	True	object	zstep	firstpass_pdf	f8
 zmin	pdf_params	False	object	zmin	pdf	f8
 zmax	pdf_params	False	object	zmax	pdf	f8
 zstep	pdf_params	False	object	zstep	pdf	f8
