@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(some_test) {
     BOOST_CHECK(listMsg[i].second == listMsg_ref[i].second);
   }
 
-  // Create one warning with digit 12
+  // Create one warning with digit 11
   message =
       Formatter() << "test log warning : code "
                   << (int)WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP;
@@ -86,8 +86,11 @@ BOOST_AUTO_TEST_CASE(some_test) {
     BOOST_CHECK(listMsg[i].second == listMsg_ref[i].second);
   }
 
+  Int32 refVal = 1 << int(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP) |
+                 1 << int(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE);
+
   // Recover flag value
-  BOOST_CHECK(Flag.getBitMask() == 4104); // 00010000 00001000
+  BOOST_CHECK(Flag.getBitMask() == refVal); // 2056 or 00001000 00001000
 
   // Create one warning with another digit 12
   message =
