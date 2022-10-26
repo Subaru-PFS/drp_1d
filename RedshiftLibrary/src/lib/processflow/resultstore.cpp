@@ -43,26 +43,18 @@
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <fstream>
-#include <sstream>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
-
-namespace bfs = boost::filesystem;
 
 COperatorResultStore::COperatorResultStore(const TScopeStack &scope)
     : CScopeStore(scope) {}
@@ -204,15 +196,15 @@ COperatorResultStore::GetReliabilityResult(const std::string &objectType,
       GetGlobalResult(oss.str()).lock());
 }
 
-std::shared_ptr<const CPdfMargZLogResult>
-COperatorResultStore::GetPdfMargZLogResult(const std::string &objectType,
-                                           const std::string &method,
-                                           const std::string &name) const {
+std::shared_ptr<const CLogZPdfResult>
+COperatorResultStore::GetLogZPdfResult(const std::string &objectType,
+                                       const std::string &method,
+                                       const std::string &name) const {
   std::ostringstream oss;
   oss << objectType << "." << method << "." << name;
   std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
-  return std::dynamic_pointer_cast<const CPdfMargZLogResult>(
+  return std::dynamic_pointer_cast<const CLogZPdfResult>(
       GetGlobalResult(oss.str()).lock());
 }
 

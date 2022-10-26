@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/solveresult.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 
 using namespace NSEpic;
 CTplCombinationSolveResult::CTplCombinationSolveResult(

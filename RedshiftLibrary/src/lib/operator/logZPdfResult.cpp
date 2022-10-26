@@ -36,7 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
@@ -51,37 +51,28 @@
 using namespace std;
 using namespace NSEpic;
 
-CPdfMargZLogResult::CPdfMargZLogResult() {
-  this->m_type = "CPdfMargZLogResult";
+CLogZPdfResult::CLogZPdfResult() { this->m_type = "CLogZPdfResult"; }
+
+CLogZPdfResult::CLogZPdfResult(const TFloat64List &redshifts,
+                               const TZGridListParams &zparamList)
+    : Redshifts(redshifts), valProbaLog(redshifts.size(), -DBL_MAX) {
+  this->m_type = "CLogZPdfResult";
+  setZGridParams(zparamList); // to decide if we replace this
 }
 
-CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List &redshifts)
-    : Redshifts(redshifts), countTPL(redshifts.size()), // assumed 1 model per z
-      valProbaLog(redshifts.size(), -DBL_MAX) {
-  this->m_type = "CPdfMargZLogResult";
-}
+void CLogZPdfResult::setZGridParams(const TZGridListParams &paramList) {
+  Int32 s = paramList.size();
+  zcenter.resize(s, NAN);
+  zmin.resize(s, NAN);
+  zmax.resize(s, NAN);
+  zstep.resize(s, NAN);
 
-Int32 CPdfMargZLogResult::getIndex(Float64 z) const {
-  Int32 solutionIdx = -1;
-  for (Int32 i2 = 0; i2 < Redshifts.size(); i2++) {
-    if (Redshifts[i2] == z) {
-      solutionIdx = i2;
-      break;
-    }
-  }
-  return solutionIdx;
-}
-
-void CPdfMargZLogResult::setSecondPassZGridParams(
-    const ZGridParameters &fp_params, const TZGridListParams &paramList) {
-  setZGridParams(fp_params); // index 0 corresponds to the firstpass coarse grid
-  for (const auto &params : paramList)
-    setZGridParams(params);
-}
-
-void CPdfMargZLogResult::setZGridParams(const ZGridParameters &params) {
-  zcenter.push_back(params.zcenter);
-  zmin.push_back(params.zmin);
-  zmax.push_back(params.zmax);
-  zstep.push_back(params.zstep);
+  std::transform(paramList.begin(), paramList.end(), zcenter.begin(),
+                 [](const ZGridParameters &params) { return params.zcenter; });
+  std::transform(paramList.begin(), paramList.end(), zmin.begin(),
+                 [](const ZGridParameters &params) { return params.zmin; });
+  std::transform(paramList.begin(), paramList.end(), zmax.begin(),
+                 [](const ZGridParameters &params) { return params.zmax; });
+  std::transform(paramList.begin(), paramList.end(), zstep.begin(),
+                 [](const ZGridParameters &params) { return params.zstep; });
 }

@@ -193,8 +193,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
-  ZGridParameters gridParams(TFloat64Range(m_redshifts), m_redshiftStep);
-  pdfz.m_postmargZResult->setZGridParams(gridParams);
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
@@ -337,7 +335,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
       store->GetScopedPerTemplateResult(scopeStr.c_str());
 
   chisquarearray.cstLog = -1;
-
+  chisquarearray.zstep = m_redshiftStep;
   for (TOperatorResultMap::const_iterator it = meritResults.begin();
        it != meritResults.end(); ++it) {
     auto meritResult =
