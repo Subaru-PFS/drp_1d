@@ -141,8 +141,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     const TFloat64List &fineLambdas, const TFloat64Range &zbin,
     const std::shared_ptr<const CLSF> &lsf) const {
   if (!arr.size()) {
-    THROWG(INTERNAL_ERROR,
-           "Cannot convolve: either kernel or array is empty. ");
+    THROWG(INTERNAL_ERROR, "Cannot convolve: array is empty. ");
   }
 
   Int32 n = arr.size();
@@ -183,10 +182,6 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
                    [z_center](Float64 v) { return v * (1.0 + z_center); });
     TFloat64List kernel =
         lsf->getNormalizedProfileVector(lambdas_obs, lambda0_obs);
-    if (!kernel.size()) {
-      THROWG(INTERNAL_ERROR,
-             "Cannot convolve: either kernel or array is empty. ");
-    }
 
     for (std::size_t j = 0; j < kernel.size(); ++j)
       convolvedArr[i] += kernel[j] * arr[lsf_indices.GetBegin() + j];
