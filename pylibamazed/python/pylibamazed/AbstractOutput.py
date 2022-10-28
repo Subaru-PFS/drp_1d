@@ -178,6 +178,8 @@ class AbstractOutput:
     def get_dataset_size(self, object_type, dataset, rank = None):
         if rank is None:
             if dataset in self.object_results[object_type]:
+                if not self.object_results[object_type][dataset]:
+                    return 0
                 first_attr = next(iter(self.object_results[object_type][dataset].values()))
             else:
                 raise APIException("Dataset " + dataset + " does not exist")
