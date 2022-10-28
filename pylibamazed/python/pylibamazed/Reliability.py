@@ -50,6 +50,13 @@ class Reliability:
         self.calibration_library = calibration
         
     def Compute(self, context):
+        # context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
+        output = ResultStoreOutput(
+            context.GetResultStore(),
+            self.parameters,
+            auto_load=False,
+            extended_results=False,
+        )
         method = self.parameters.get_solve_method(self.object_type)
         logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
         resultStore_key = str("pdf")
