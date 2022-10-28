@@ -190,7 +190,7 @@ class Context:
             except GlobalException as e:
                 rso.store_error(AmazedErrorFromGlobalException(e),object_type,stage)
             except APIException as e:
-                rso.store_error(AmazedError(e.errCode, e.message, object_type, stage))
+                rso.store_error(AmazedError(e.errCode, e.message), object_type, stage)
             except Exception as e:
                 rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)),
                                 object_type,
