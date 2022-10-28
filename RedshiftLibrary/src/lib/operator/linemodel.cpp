@@ -1212,9 +1212,6 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 void COperatorLineModel::updateRedshiftGridAndResults() {
 
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
-    Float64 z = m_firstpass_extremaResult->Redshift(i);
-    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
-
     TFloat64Range range(m_firstpass_extremaResult->ExtendedRedshifts[i].front(),
                         m_firstpass_extremaResult->ExtendedRedshifts[i].back());
     Int32 imin = -1, imax = -1;

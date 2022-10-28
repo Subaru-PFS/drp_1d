@@ -60,15 +60,15 @@ public:
   CLogZPdfResult(const TZGridListParams &zparamList,
                  const TFloat64List &valproba_mixed); // for ML learning
 
-  CLogZPdfResult(const TFloat64List &redshifts, const TFloat64List &valproba,
-                 const TZGridListParams &zparamList);
-
   bool isZGridCoherent() const;
-  std::shared_ptr<const CLogZPdfResult> getValProbaFine(bool logsampling) const;
-  void interpolateLargeGridOnFineGrid(const TFloat64List &coarseGrid,
-                                      const TFloat64List &fineGrid,
-                                      const TFloat64List &entityLargeGrid,
-                                      TFloat64List &entityFineGrid) const;
+  const TFloat64List buildLogZPdfGrid(bool logsampling, bool fine = false,
+                                      Int32 idx = 0) const;
+  const TFloat64List buildLogMixedZPdfGrid(bool logsampling) const;
+
+  const CLogZPdfResult getLogZPdf_fine(bool logsampling) const;
+  static void interpolateLargeGridOnFineGrid(
+      const TFloat64List &coarseGrid, const TFloat64List &fineGrid,
+      const TFloat64List &entityLargeGrid, TFloat64List &entityFineGrid);
 
   TFloat64List Redshifts;
   TFloat64List valProbaLog;

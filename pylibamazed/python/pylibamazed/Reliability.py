@@ -40,7 +40,7 @@
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 import numpy as np
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import (ErrorCode)
+from pylibamazed.redshift import (PC_Get_Float64Array, CLogZPdfResult, ErrorCode)
 
 
 class Reliability:
@@ -50,23 +50,17 @@ class Reliability:
         self.calibration_library = calibration
         
     def Compute(self, context):
-        context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
-        output = ResultStoreOutput(context.GetResultStore(),
-                                   self.parameters,
-                                   auto_load=False,
-                                   extended_results=False)                                   
-        pdf = output.get_attribute_from_source(self.object_type,
-                                               self.parameters.get_solve_method(self.object_type),
-                                               "fineZPdf",
-                                               "PDFProbaLogfine")                                                
-        zgrid = output.get_attribute_from_source(self.object_type,
-                                                 self.parameters.get_solve_method(self.object_type),
-                                                 "fineZPdf",
-                                                 "PDFZGridfine")      
+        method = self.parameters.get_solve_method(self.object_type)
+        logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
+        resultStore_key = str("pdf")
 
+        getter = getattr(context.GetResultStore(), "GetLogZPdfResult")
+        operator_result = getter(self.object_type, method, resultStore_key)
+        extendedPDF = operator_result.getLogZPdf_fine(logsampling)
+        zgrid = PC_Get_Float64Array(extendedPDF.Redshifts)
+        pdf = PC_Get_Float64Array(extendedPDF.valProbaLog)
         model = self.calibration_library.reliability_models[self.object_type]
 
-        print(pdf.shape[0], model.input_shape[1]) 
         zgrid_end = zgrid[-1]
         if pdf.shape[0] != model.input_shape[1]:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,"PDF and model shapes are not compatible")

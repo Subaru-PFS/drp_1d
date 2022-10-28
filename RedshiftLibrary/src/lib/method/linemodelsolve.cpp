@@ -697,12 +697,6 @@ void CLineModelSolve::createRedshiftGrid(
       m_redshiftSampling == "log"
           ? redshiftRange.SpreadOverLogZplusOne(m_redshiftStep)
           : redshiftRange.SpreadOver(m_redshiftStep);
-  std::string fname = "fineGridOriginal.txt";
-  std::ofstream os(fname);
-  os << "Redshifts \n";
-  for (auto z : fineGrid)
-    os << z << "\n";
-  os.close();
 
   if (m_redshifts.size() < MIN_GRID_COUNT) {
     CObjectSolve::createRedshiftGrid(

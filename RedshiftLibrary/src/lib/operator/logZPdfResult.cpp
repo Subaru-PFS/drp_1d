@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/logZPdfResult.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
@@ -52,22 +53,11 @@ using namespace std;
 using namespace NSEpic;
 
 CLogZPdfResult::CLogZPdfResult() { this->m_type = "CLogZPdfResult"; }
-CLogZPdfResult::CLogZPdfResult(const TFloat64List &redshifts,
-                               const TFloat64List &valproba,
-                               const TZGridListParams &zparamList)
-    : Redshifts(redshifts), valProbaLog(valproba) {
-  this->m_type = "CLogZPdfResult";
-  setZGridParams(zparamList);
-  // Todo: fill Redshifts grid?
-}
-// step2 : add a constructor with zparamList and valProba_mixed as input for
-// learning phase , à swiger
 CLogZPdfResult::CLogZPdfResult(const TZGridListParams &zparamList,
                                const TFloat64List &valproba_mixed)
     : valProbaLog(valproba_mixed), Redshifts(valproba_mixed.size(), -DBL_MAX) {
   this->m_type = "CLogZPdfResult";
   setZGridParams(zparamList);
-  // Todo: fill Redshifts grid?
 }
 CLogZPdfResult::CLogZPdfResult(const TFloat64List &redshifts,
                                const TZGridListParams &zparamList)
@@ -111,47 +101,60 @@ bool CLogZPdfResult::isZGridCoherent() const {
   return true;
 }
 
-// return to be save in API resultStore and retrieved by reliability code, in
-// fine use object variables as inputs to interpolate
-std::shared_ptr<const CLogZPdfResult>
-CLogZPdfResult::getValProbaFine(bool logsampling) const {
-  // use zgriParams
-  // call interpolate function
-  if (isZGridCoherent()) // nothing to do
-    return std::make_shared<const CLogZPdfResult>(*this);
+// common function to create either coarse or fine grid, default to coarse
+const TFloat64List CLogZPdfResult::buildLogZPdfGrid(bool logsampling, bool fine,
+                                                    Int32 idx) const {
+  if (idx == -1 || idx > zmin.size() - 1)
+    THROWG(INTERNAL_ERROR, "Index out of range");
+  Float64 zgridStep = zstep.front();
+  TFloat64Range zrange(zmin[idx], zmax[idx]);
+  if (fine && !isZGridCoherent())
+    zgridStep = zstep[1];
+  return logsampling ? zrange.SpreadOverLogZplusOne(zgridStep)
+                     : zrange.SpreadOver(zgridStep);
+}
 
-  // create a fine grid using spreadOverlog or spreadOver
-  TFloat64Range zrange(zmin.front(), zmax.front());
-  Float64 finestep = zstep[1];
+// mixed pdf
+const TFloat64List
+CLogZPdfResult::buildLogMixedZPdfGrid(bool logsampling) const {
+  TFloat64List mixedGrid = buildLogZPdfGrid(logsampling, false);
+  // insert fineGrid intervals
+  for (Int32 i = 1; i < zmin.size(); i++) {
+    TFloat64Range range(zmin[i], zmax[i]);
+    Int32 imin = -1;
+    Int32 imax = -1;
+    bool b = range.getClosedIntervalIndices(mixedGrid, imin, imax, false);
+    Int32 ndup = imax - imin + 1;
+    const TFloat64List &extendedZ = buildLogZPdfGrid(logsampling, true, i);
+    insertWithDuplicates(mixedGrid, imin, extendedZ, ndup);
+  }
+  return mixedGrid;
+}
 
-  const TFloat64List &fineGrid = logsampling
-                                     ? zrange.SpreadOverLogZplusOne(finestep)
-                                     : zrange.SpreadOver(finestep);
-  std::string fname = "fineGridDecompressed.txt";
-  std::ofstream os(fname);
-  os << "Redshifts \n";
-  for (auto z : fineGrid)
-    os << z << "\n";
-  os.close();
+const CLogZPdfResult CLogZPdfResult::getLogZPdf_fine(bool logsampling) const {
+  if (isZGridCoherent())
+    return *this;
+  CLogZPdfResult fineZPdf;
+  fineZPdf.Redshifts = buildLogZPdfGrid(logsampling, true);
+  fineZPdf.zmin.push_back(zmin.front());
+  fineZPdf.zmax.push_back(zmax.front());
+  fineZPdf.zstep.push_back(zstep[1]);
+  fineZPdf.zcenter.push_back(NAN);
 
-  const TZGridListParams params{
-      ZGridParameters(TFloat64Range(fineGrid), finestep)};
-  TFloat64List finevalProbaLog(fineGrid.size());
-  interpolateLargeGridOnFineGrid(Redshifts, fineGrid, valProbaLog,
-                                 finevalProbaLog);
-
-  return std::make_shared<const CLogZPdfResult>(fineGrid, finevalProbaLog,
-                                                params);
+  interpolateLargeGridOnFineGrid(Redshifts, fineZPdf.Redshifts, valProbaLog,
+                                 fineZPdf.valProbaLog);
+  return fineZPdf;
 }
 
 void CLogZPdfResult::interpolateLargeGridOnFineGrid(
     const TFloat64List &coarseGrid, const TFloat64List &fineGrid,
-    const TFloat64List &entityLargeGrid, TFloat64List &entityFineGrid) const {
+    const TFloat64List &entityLargeGrid, TFloat64List &entityFineGrid) {
   Log.LogDetail("interp FROM large grid z0=%f to zEnd=%f (n=%d)",
                 coarseGrid.front(), coarseGrid.back(), coarseGrid.size());
   Log.LogDetail("interp TO fine grid z0=%f to zEnd=%f (n=%d)", fineGrid.front(),
                 fineGrid.back(), fineGrid.size());
 
+  entityFineGrid.resize(fineGrid.size(), NAN);
   // initialise and allocate the gsl objects
   // lin
   gsl_interp *interpolation =

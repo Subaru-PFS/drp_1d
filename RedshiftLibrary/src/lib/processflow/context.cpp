@@ -100,28 +100,3 @@ std::shared_ptr<const CPhotBandCatalog>
 CProcessFlowContext::GetPhotBandCatalog() {
   return m_inputContext->GetPhotBandCatalog();
 }
-
-// fast solution to calculate and retrieve fineZgrid
-// check if we are in object scope
-void CProcessFlowContext::copyFineZPFD_IntoResultStore(
-    const std::string &redshiftSampling) {
-  m_redshiftSampling = redshiftSampling;
-  bool logsampling =
-      m_redshiftSampling == "log"; // m_redshiftSampling not set!!
-
-  std::shared_ptr<const CLogZPdfResult> pdf =
-      std::dynamic_pointer_cast<const CLogZPdfResult>(
-          m_ResultStore
-              ->GetScopedGlobalResult(
-                  "galaxy.LineModelSolve.pdf") // harcoded for test
-              .lock());
-  m_ResultStore->StoreScopedGlobalResult("galaxy.LineModelSolve.fineZPdf",
-                                         pdf->getValProbaFine(logsampling));
-  std::shared_ptr<const CLogZPdfResult> pdf_fine =
-      std::dynamic_pointer_cast<const CLogZPdfResult>(
-          m_ResultStore
-              ->GetScopedGlobalResult(
-                  "galaxy.LineModelSolve.fineZPdf") // harcoded for test
-              .lock());
-
-} // to get access from API

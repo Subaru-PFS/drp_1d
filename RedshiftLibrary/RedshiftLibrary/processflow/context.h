@@ -106,8 +106,6 @@ public:
   void Init();
   void reset();
 
-  void copyFineZPFD_IntoResultStore(const std::string &redshiftSampling);
-
   std::shared_ptr<const CParameterStore>
   LoadParameterStore(const std::string &paramsJSONString);
 

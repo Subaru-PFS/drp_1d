@@ -407,7 +407,6 @@ public:
   void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
   void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
   void reset();
-  void copyFineZPFD_IntoResultStore(const std::string &redshiftSampling);
 
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
@@ -420,7 +419,30 @@ public:
     
 };
 
+class CLogZPdfResult {
 
+public:
+  CLogZPdfResult();
+
+  CLogZPdfResult(const TZGridListParams &zparamList,
+                 const TFloat64List &valproba_mixed); // for ML learning
+  const CLogZPdfResult getLogZPdf_fine(bool logsampling) const;
+  const TFloat64List buildLogZPdfGrid(bool logsampling, bool fine = false) const;
+  const TFloat64List buildLogMixedZPdfGrid(bool logsampling) const;
+  static void interpolateLargeGridOnFineGrid(
+      const TFloat64List &coarseGrid, const TFloat64List &fineGrid,
+      const TFloat64List &entityLargeGrid, TFloat64List &entityFineGrid);
+
+  TFloat64List Redshifts;
+  TFloat64List valProbaLog;
+  Float64 valEvidenceLog = NAN;
+  Float64 valMargEvidenceLog = NAN;
+
+  TFloat64List zcenter;
+  TFloat64List zmin;
+  TFloat64List zmax;
+  TFloat64List zstep;
+};
 
 class CParameterStore : public CScopeStore
 {
@@ -475,7 +497,7 @@ class COperatorResultStore
   std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								 const std::string& method,
 								 const std::string& name,
-								     const int& rank 
+								 const int& rank 
 								 ) const  ;
 
     std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
