@@ -41,12 +41,23 @@ typedef struct ZGridParameters {
                   Float64 center = NAN)
       : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
         zcenter(center){};
+  ZGridParameters(Float64 min, Float64 max, Float64 step, Float64 center = NAN)
+      : zmin(min), zmax(max), zstep(step), zcenter(center){};
+
   ZGridParameters() = default;
   Float64 zmin = NAN;
   Float64 zmax = NAN;
   Float64 zstep = NAN;
   Float64 zcenter = NAN;
 } ZGridParameters;
+
+typedef struct TPdf {
+  TPdf(const TFloat64List &zgrid_, const TFloat64List &probaLog_)
+      : zgrid(zgrid_), probaLog(probaLog_){};
+  TPdf() = default;
+  TFloat64List zgrid;
+  TFloat64List probaLog;
+} TPdf;
 
 typedef std::vector<ZGridParameters> TZGridListParams;
 
@@ -70,6 +81,14 @@ public:
       const TFloat64List &coarseGrid, const TFloat64List &fineGrid,
       const TFloat64List &entityLargeGrid, TFloat64List &entityFineGrid);
 
+  static TPdf getFineGridPdf(
+      const TZGridListParams &pdf_params,
+      //			     const Float64* pdf_probaLog, Int32 n);
+      const TFloat64List &pdf_probaLog, bool logsampling = true);
+  static TPdf getMixedGridPdf(const TZGridListParams &pdf_params,
+                              const TFloat64List &pdf_probaLog,
+                              bool logsampling = true);
+
   TFloat64List Redshifts;
   TFloat64List valProbaLog;
   Float64 valEvidenceLog = NAN;
@@ -79,6 +98,8 @@ public:
   TFloat64List zmin;
   TFloat64List zmax;
   TFloat64List zstep;
+
+  TZGridListParams zparams;
 
 private:
   void setZGridParams(const TZGridListParams &paramList);

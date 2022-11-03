@@ -176,3 +176,36 @@ void CLogZPdfResult::interpolateLargeGridOnFineGrid(
   gsl_interp_free(interpolation);
   gsl_interp_accel_free(accelerator);
 }
+
+
+TPdf CLogZPdfResult::getFineGridPdf(const TZGridListParams& pdf_params,
+				    const TFloat64List& pdf_probaLog,
+				    bool logsampling)
+{
+  CLogZPdfResult pdf_result(pdf_params,pdf_probaLog);
+  CLogZPdfResult fine = pdf_result.getLogZPdf_fine(logsampling);
+  return TPdf(fine.Redshifts,fine.valProbaLog);
+}
+
+TPdf CLogZPdfResult::getMixedGridPdf(const TZGridListParams& pdf_params,
+				    const TFloat64List& pdf_probaLog,
+				     bool logsampling)
+{
+  CLogZPdfResult pdf_result(pdf_params,pdf_probaLog);
+  TFloat64List fine = pdf_result.buildLogMixedZPdfGrid(logsampling);
+  return TPdf(fine,pdf_probaLog);
+}
+
+
+
+/*
+TPdf CLogZPdfResult::getFineGridPdf(const TZGridListParams& pdf_params,
+				    const Float64* pdf_probaLog, Int32 n)
+{
+  TFloat64List ppl(n);
+  for(unsigned int i=0;i<n;i++) ppl[i]=pdf_probaLog[i];
+  CLogZPdfResult pdf_result(pdf_params,ppl);
+  CLogZPdfResult fine = pdf_result.getLogZPdf_fine(true);
+  return TPdf(fine.Redshifts,fine.valProbaLog);
+}
+*/
