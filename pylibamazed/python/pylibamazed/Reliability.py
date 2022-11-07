@@ -63,10 +63,10 @@ class Reliability:
         builder = PdfBuilder(output)
         extendedPDF = builder.get_fine_zgrid_pdf(self.object_type,
                                                  logsampling)
-        zgrid = extendedPDF.zgrid
-        pdf = extendedPDF.probaLog
+        zgrid = extendedPDF["zgrid"]
+        pdf = extendedPDF["probaLog"]
         model = self.calibration_library.reliability_models[self.object_type]
-
+        print(f"zgrid size={len(zgrid)} , pdf size={len(pdf)}")
         zgrid_end = zgrid[-1]
         if pdf.shape[0] != model.input_shape[1]:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,"PDF and model shapes are not compatible")

@@ -59,6 +59,8 @@ typedef struct TPdf {
   TFloat64List probaLog;
 } TPdf;
 
+typedef enum { COARSE = 0, FINE, MIXED } ZGridType;
+
 typedef std::vector<ZGridParameters> TZGridListParams;
 
 class CLogZPdfResult : public COperatorResult {
@@ -71,23 +73,20 @@ public:
   CLogZPdfResult(const TZGridListParams &zparamList,
                  const TFloat64List &valproba_mixed); // for ML learning
 
-  bool isZGridCoherent() const;
-  const TFloat64List buildLogZPdfGrid(bool logsampling, bool fine = false,
-                                      Int32 idx = 0) const;
-  const TFloat64List buildLogMixedZPdfGrid(bool logsampling) const;
+  static bool isZGridCoherent(const TFloat64List &zstep);
+  static const TFloat64List buildLogZPdfGrid(bool logsampling,
+                                             const TZGridListParams &zparams,
+                                             ZGridType zgrid_type);
+  static const TFloat64List
+  buildLogMixedZPdfGrid(bool logsampling, const TZGridListParams &zparams);
 
-  const CLogZPdfResult getLogZPdf_fine(bool logsampling) const;
-  static void interpolateLargeGridOnFineGrid(
-      const TFloat64List &coarseGrid, const TFloat64List &fineGrid,
-      const TFloat64List &entityLargeGrid, TFloat64List &entityFineGrid);
-
-  static TPdf getFineGridPdf(
-      const TZGridListParams &pdf_params,
-      //			     const Float64* pdf_probaLog, Int32 n);
-      const TFloat64List &pdf_probaLog, bool logsampling = true);
-  static TPdf getMixedGridPdf(const TZGridListParams &pdf_params,
-                              const TFloat64List &pdf_probaLog,
-                              bool logsampling = true);
+  static const TPdf getLogZPdf_fine(bool logsampling,
+                                    const TZGridListParams &zparams,
+                                    const TFloat64List &valProbaLog);
+  static void interpolateLargeGridOnFineGrid(const TFloat64List &originGrid,
+                                             const TFloat64List &targetGrid,
+                                             const TFloat64List &originValues,
+                                             TFloat64List &outputValues);
 
   TFloat64List Redshifts;
   TFloat64List valProbaLog;
