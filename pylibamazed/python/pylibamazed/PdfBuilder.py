@@ -39,10 +39,12 @@
 import json
 from pylibamazed.redshift import CLogZPdfResult_getLogZPdf_fine, CLogZPdfResult_buildLogMixedZPdfGrid
 from pylibamazed.redshift import ZGridParameters, PC_Get_Float64Array
+import numpy as np
 
-
-def _extract_pdf_params(pdf_params):
+def _extract_pdf_params(pdf_params, first_pass = False):
     v = [dict(zip(pdf_params, t)) for t in zip(*pdf_params.values())]
+    if first_pass:
+        return [ZGridParameters(p["FPZmin"], p["FPZmax"], p["FPZstep"], np.nan) for p in v]
     return [ZGridParameters(p["zmin"], p["zmax"], p["zstep"], p["zcenter"]) for p in v]
 
 
@@ -50,7 +52,7 @@ class PdfBuilder:
     def __init__(self, abstract_output):
         self.output = abstract_output
 
-    def get_fine_zgrid_pdf(self, object_type, logsampling):
+    def get_fine_zgrid_pdf(self, object_type, logsampling, first_pass=False):
         pdf_params = self.output.get_dataset(object_type, "pdf_params")
         pdf_proba = list(self.output.get_dataset(object_type, "pdf")["PDFProbaLog"])
         ret = CLogZPdfResult_getLogZPdf_fine(
@@ -61,12 +63,15 @@ class PdfBuilder:
             "probaLog": PC_Get_Float64Array(ret.probaLog),
         }
 
-    def get_mixed_zgrid_pdf(self, object_type, logsampling):
-        pdf_params = self.output.get_dataset(object_type,"pdf_params")
+    def get_mixed_zgrid_pdf(self, object_type, logsampling, first_pass=False):
+        if first_pass:
+            pdf_params = self.output.get_dataset(object_type,"firstpass_pdf_params")
+        else:
+            pdf_params = self.output.get_dataset(object_type,"pdf_params")
         ret = CLogZPdfResult_buildLogMixedZPdfGrid(
-            logsampling,_extract_pdf_params(pdf_params)
+            logsampling,_extract_pdf_params(pdf_params,first_pass)
         )
-        return PC_Get_Float64Array(ret)
+        return np.array(ret)
 
     def get_coarse_zgrid_pdf(self, object_type):
         pass
