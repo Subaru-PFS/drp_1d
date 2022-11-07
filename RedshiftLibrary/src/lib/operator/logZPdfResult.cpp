@@ -141,12 +141,24 @@ CLogZPdfResult::buildLogMixedZPdfGrid(bool logsampling,
     Int32 imax = -1;
     bool b = range.getClosedIntervalIndices(mixedGrid, imin, imax, false);
     Int32 ndup = imax - imin + 1;
-    const TFloat64List &extendedZ =
-        logsampling ? range.SpreadOverLogZplusOne(zparams[i].zstep)
-                    : range.SpreadOver(zparams[i].zstep);
+    // create a centered extended List around Zcand
+    const TFloat64List &extendedZ = getExtendedList(
+        logsampling, range, zparams[i].zstep, zparams[i].zcenter);
     insertWithDuplicates(mixedGrid, imin, extendedZ, ndup);
   }
   return mixedGrid;
+}
+
+// keep an option to create a mixed grid while ensuring zcand is present inside
+// or not
+const TFloat64List CLogZPdfResult::getExtendedList(bool logsampling,
+                                                   const TFloat64Range &zrange,
+                                                   Float64 zstep,
+                                                   Float64 center) {
+  if (!isnan(center))
+    return zrange.spanCenteredWindow(center, logsampling, zstep);
+  return logsampling ? zrange.SpreadOverLogZplusOne(zstep)
+                     : zrange.SpreadOver(zstep);
 }
 
 const TPdf CLogZPdfResult::getLogZPdf_fine(bool logsampling,
@@ -160,7 +172,8 @@ const TPdf CLogZPdfResult::getLogZPdf_fine(bool logsampling,
   ZGridType zgtype = CLogZPdfResult::isZGridCoherent(zsteps) ? COARSE : MIXED;
   TFloat64List origin_zgrid =
       CLogZPdfResult::buildLogZPdfGrid(logsampling, zparams, zgtype);
-
+  if (valProbaLog.size() != origin_zgrid.size())
+    THROWG(INTERNAL_ERROR, "zpdf building failed: count do not match");
   if (CLogZPdfResult::isZGridCoherent(zsteps) && zsteps.size() == 1)
     THROWG(INTERNAL_ERROR, "Cannot create fine grid out of coarse "
                            "parameters"); // return

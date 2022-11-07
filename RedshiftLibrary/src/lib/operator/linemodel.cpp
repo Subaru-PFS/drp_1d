@@ -594,23 +594,9 @@ void COperatorLineModel::evaluateContinuumAmplitude(
 TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
 
   const Float64 halfwindowsize_z = m_secondPass_halfwindowsize * (1. + z);
-
-  TFloat64Range secondpass_window_part1 = {z - halfwindowsize_z, z};
-  TFloat64List extendedList =
-      (m_redshiftSampling == "log")
-          ? secondpass_window_part1.SpreadOverLogZplusOne(m_fineStep, true)
-          : secondpass_window_part1.SpreadOver_backward(m_fineStep);
-
-  TFloat64Range secondpass_window_part2 = {z, z + halfwindowsize_z};
-  TFloat64List extendedList_part2 =
-      (m_redshiftSampling == "log")
-          ? secondpass_window_part2.SpreadOverLogZplusOne(m_fineStep)
-          : secondpass_window_part2.SpreadOver(m_fineStep);
-
-  extendedList.insert(std::end(extendedList),
-                      std::begin(extendedList_part2) + 1,
-                      std::end(extendedList_part2));
-  return extendedList;
+  TFloat64Range windowRange(z - halfwindowsize_z, z + halfwindowsize_z);
+  return windowRange.spanCenteredWindow(z, m_redshiftSampling == "log",
+                                        m_fineStep);
 }
 
 // only for secondpass grid

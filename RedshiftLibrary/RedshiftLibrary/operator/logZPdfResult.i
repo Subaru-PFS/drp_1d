@@ -87,7 +87,9 @@ public:
                                              const TFloat64List &targetGrid,
                                              const TFloat64List &originValues,
                                              TFloat64List &outputValues);
-
+  static const TFloat64List getExtendedList(bool logsampling,
+                                            const TFloat64Range &zrange,
+                                            Float64 zstep, Float64 center = NAN);
   TFloat64List Redshifts;
   TFloat64List valProbaLog;
   Float64 valEvidenceLog = NAN;
