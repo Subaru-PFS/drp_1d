@@ -54,23 +54,42 @@ class PdfBuilder:
     def __init__(self, abstract_output):
         self.output = abstract_output
 
-    def interpolate_pdf_on_regular_grid(self, object_type, logsampling, first_pass=False):
+    def interpolate_pdf_on_regular_grid(self, object_type, logsampling, c_zgrid_max=np.nan):
         pdf_params = self.output.get_dataset(object_type, "pdf_params")
+        #tmp code to fix reliability, the aim is to create 
+        extrapolate = False
+        if not np.isnan(c_zgrid_max) and pdf_params['zmax'][0] != c_zgrid_max:
+            extrapolate = True
+            pdf_params['zmax'][0] = c_zgrid_max #overwrite read value
+          
         pdf_proba = list(self.output.get_dataset(object_type, "pdf")["PDFProbaLog"])
         ret = CLogZPdfResult_getLogZPdf_fine(
             logsampling, _extract_pdf_params(pdf_params), pdf_proba
         )
+
+        probalog = np.array(ret.probaLog)
+        if extrapolate :
+            probalog =  self.extrapolate_pdf_onborder(probalog)
         return {
             "zgrid": np.array(ret.zgrid),
-            "probaLog": np.array(ret.probaLog),
+            "probaLog": probalog
         }
+
+    #temporary function, meant to disappear
+    #search for nan at the end of probalog and replace with the last value
+    #interpolation function adds up nan probalog at the end of the array
+    def extrapolate_pdf_onborder(self, probalog):
+        nan_indices = np.where(np.isnan(probalog))[0]
+        ref_value = probalog[nan_indices[0]-1]#last valid value
+        probalog = np.nan_to_num(probalog, nan=ref_value)
+        return probalog
 
     def get_zgrid(self, object_type, logsampling, first_pass=False):
         if first_pass:
             pdf_params = self.output.get_dataset(object_type,"firstpass_pdf_params")
         else:
             pdf_params = self.output.get_dataset(object_type,"pdf_params")
-        ret = CZGridListParams(_extract_pdf_params(pdf_params,first_pass)).buildLogMixedZGrid(
+        ret = _extract_pdf_params(pdf_params,first_pass).buildLogMixedZGrid(
             logsampling,
         )
         return np.array(ret)

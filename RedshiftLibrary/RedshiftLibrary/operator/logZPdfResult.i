@@ -59,7 +59,7 @@ struct TPdf {
 
 typedef enum { COARSE = 0, FINE, MIXED } ZGridType;
 
-typedef vector<TZGridParameters> TZGridListParams;
+typedef std::vector<TZGridParameters> TZGridListParams;
 
 
 class CZGridListParams
