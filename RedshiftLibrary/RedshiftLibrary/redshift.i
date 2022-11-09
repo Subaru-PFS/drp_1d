@@ -367,7 +367,7 @@ public:
 };
 
 %template(TMapFloat64) std::map<std::string, Float64>;
-%template(TZGridListParams) std::vector<ZGridParameters>;
+%template(TZGridListParams) std::vector<TZGridParameters>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
@@ -418,31 +418,6 @@ public:
     CProcessFlowContext();
     ~CProcessFlowContext();
     
-};
-
-class CLogZPdfResult {
-
-public:
-  CLogZPdfResult();
-
-  CLogZPdfResult(const TZGridListParams &zparamList,
-                 const TFloat64List &valproba_mixed); // for ML learning
-  const CLogZPdfResult getLogZPdf_fine(bool logsampling) const;
-  const TFloat64List buildLogZPdfGrid(bool logsampling, bool fine = false) const;
-  const TFloat64List buildLogMixedZPdfGrid(bool logsampling) const;
-  static void interpolateLargeGridOnFineGrid(
-      const TFloat64List &coarseGrid, const TFloat64List &fineGrid,
-      const TFloat64List &entityLargeGrid, TFloat64List &entityFineGrid);
-
-  TFloat64List Redshifts;
-  TFloat64List valProbaLog;
-  Float64 valEvidenceLog = NAN;
-  Float64 valMargEvidenceLog = NAN;
-
-  TFloat64List zcenter;
-  TFloat64List zmin;
-  TFloat64List zmax;
-  TFloat64List zstep;
 };
 
 class CParameterStore : public CScopeStore

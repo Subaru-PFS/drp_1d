@@ -605,7 +605,7 @@ TZGridListParams COperatorLineModel::getSPZGridParams() {
   TZGridListParams centeredZgrid_params(s);
   for (Int32 i = 0; i < s; i++) {
     const auto &extendedGrid = m_firstpass_extremaResult->ExtendedRedshifts[i];
-    centeredZgrid_params[i] = ZGridParameters(
+    centeredZgrid_params[i] = TZGridParameters(
         TFloat64Range(extendedGrid), m_fineStep,
         m_firstpass_extremaResult->m_ranked_candidates[i].second->Redshift);
   }
@@ -627,9 +627,8 @@ void COperatorLineModel::SetFirstPassCandidates(
     Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
                 cand->Redshift, cand->ValProba);
 
-    const Float64 &x = cand->Redshift;
-    const TFloat64List extendedList = SpanRedshiftWindow(x);
-    m_firstpass_extremaResult->ExtendedRedshifts[j] = extendedList;
+    m_firstpass_extremaResult->ExtendedRedshifts[j] =
+        SpanRedshiftWindow(cand->Redshift);
   }
 
   // now preparing the candidates extrema results

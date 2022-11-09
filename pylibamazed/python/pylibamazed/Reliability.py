@@ -40,7 +40,7 @@
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 import numpy as np
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import (PC_Get_Float64Array, CLogZPdfResult, ErrorCode)
+from pylibamazed.redshift import (CLogZPdfResult, ErrorCode)
 from pylibamazed.PdfBuilder import PdfBuilder
 
 class Reliability:
@@ -61,8 +61,8 @@ class Reliability:
         logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
         output.load_object_level(self.object_type)
         builder = PdfBuilder(output)
-        extendedPDF = builder.get_fine_zgrid_pdf(self.object_type,
-                                                 logsampling)
+        extendedPDF = builder.interpolate_pdf_on_regular_grid(self.object_type,
+                                                              logsampling)
         zgrid = extendedPDF["zgrid"]
         pdf = extendedPDF["probaLog"]
         model = self.calibration_library.reliability_models[self.object_type]

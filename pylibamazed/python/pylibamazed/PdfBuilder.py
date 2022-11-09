@@ -37,39 +37,41 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import json
-from pylibamazed.redshift import CLogZPdfResult_getLogZPdf_fine, CLogZPdfResult_buildLogMixedZPdfGrid
-from pylibamazed.redshift import ZGridParameters, PC_Get_Float64Array
+from pylibamazed.redshift import CLogZPdfResult_getLogZPdf_fine
+from pylibamazed.redshift import TZGridParameters
+from pylibamazed.redshift import CZGridListParams
+from pylibamazed.redshift import TFloat64Range
 import numpy as np
 
 def _extract_pdf_params(pdf_params, first_pass = False):
     v = [dict(zip(pdf_params, t)) for t in zip(*pdf_params.values())]
     if first_pass:
-        return [ZGridParameters(p["FPZmin"], p["FPZmax"], p["FPZstep"], np.nan) for p in v]
-    return [ZGridParameters(p["zmin"], p["zmax"], p["zstep"], p["zcenter"]) for p in v]
+        return CZGridListParams([TZGridParameters(TFloat64Range(p["FPZmin"], p["FPZmax"]), p["FPZstep"], np.nan) for p in v])
+    return CZGridListParams([TZGridParameters(TFloat64Range(p["zmin"], p["zmax"]), p["zstep"], p["zcenter"]) for p in v])
 
 
 class PdfBuilder:
     def __init__(self, abstract_output):
         self.output = abstract_output
 
-    def get_fine_zgrid_pdf(self, object_type, logsampling, first_pass=False):
+    def interpolate_pdf_on_regular_grid(self, object_type, logsampling, first_pass=False):
         pdf_params = self.output.get_dataset(object_type, "pdf_params")
         pdf_proba = list(self.output.get_dataset(object_type, "pdf")["PDFProbaLog"])
         ret = CLogZPdfResult_getLogZPdf_fine(
             logsampling, _extract_pdf_params(pdf_params), pdf_proba
         )
         return {
-            "zgrid": PC_Get_Float64Array(ret.zgrid),
-            "probaLog": PC_Get_Float64Array(ret.probaLog),
+            "zgrid": np.array(ret.zgrid),
+            "probaLog": np.array(ret.probaLog),
         }
 
-    def get_mixed_zgrid_pdf(self, object_type, logsampling, first_pass=False):
+    def get_zgrid(self, object_type, logsampling, first_pass=False):
         if first_pass:
             pdf_params = self.output.get_dataset(object_type,"firstpass_pdf_params")
         else:
             pdf_params = self.output.get_dataset(object_type,"pdf_params")
-        ret = CLogZPdfResult_buildLogMixedZPdfGrid(
-            logsampling,_extract_pdf_params(pdf_params,first_pass)
+        ret = CZGridListParams(_extract_pdf_params(pdf_params,first_pass)).buildLogMixedZGrid(
+            logsampling,
         )
         return np.array(ret)
 

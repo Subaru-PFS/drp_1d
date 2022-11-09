@@ -36,32 +36,52 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-typedef struct ZGridParameters {
-  ZGridParameters(const TFloat64Range &range, Float64 step,
+struct TZGridParameters {
+  TZGridParameters(const TFloat64Range &range, Float64 step,
                   Float64 center = NAN)
       : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
         zcenter(center){};
-  ZGridParameters(Float64 min, Float64 max, Float64 step, Float64 center = NAN)
-      : zmin(min), zmax(max), zstep(step), zcenter(center){};
 
-  ZGridParameters() = default;
+  TZGridParameters() = default;
   Float64 zmin = NAN;
   Float64 zmax = NAN;
   Float64 zstep = NAN;
   Float64 zcenter = NAN;
-} ZGridParameters;
+};
 
-typedef struct TPdf {
+struct TPdf {
   TPdf(const TFloat64List &zgrid_, const TFloat64List &probaLog_)
       : zgrid(zgrid_), probaLog(probaLog_){};
   TPdf() = default;
   TFloat64List zgrid;
   TFloat64List probaLog;
-} TPdf;
+};
 
 typedef enum { COARSE = 0, FINE, MIXED } ZGridType;
 
-typedef std::vector<ZGridParameters> TZGridListParams;
+typedef vector<TZGridParameters> TZGridListParams;
+
+
+class CZGridListParams
+{
+ public:
+  CZGridListParams() = default;
+ CZGridListParams(const TZGridListParams& params):zparams(params){}
+  
+  bool isZGridCoherent() const;
+  const TFloat64List buildLogZGrid(bool logsampling,
+				   ZGridType zgrid_type) const;
+  const TFloat64List
+  buildLogMixedZGrid(bool logsampling) const;
+  
+  const Int32 size() const {return zparams.size();}
+
+ private:
+  const TFloat64List getExtendedList(bool logsampling,
+				     Int32 index) const;
+
+  TZGridListParams zparams;
+};
 
 class CLogZPdfResult : public COperatorResult {
 public:
@@ -70,37 +90,24 @@ public:
   CLogZPdfResult(const TFloat64List &redshifts,
                  const TZGridListParams &zparams);
 
-  CLogZPdfResult(const TZGridListParams &zparamList,
-                 const TFloat64List &valproba_mixed); // for ML learning
-
-  static bool isZGridCoherent(const TFloat64List &zstep);
-  static const TFloat64List buildLogZPdfGrid(bool logsampling,
-                                             const TZGridListParams &zparams,
-                                             ZGridType zgrid_type);
-  static const TFloat64List
-  buildLogMixedZPdfGrid(bool logsampling, const TZGridListParams &zparams);
-
   static const TPdf getLogZPdf_fine(bool logsampling,
-                                    const TZGridListParams &zparams,
+                                    const CZGridListParams &zparams,
                                     const TFloat64List &valProbaLog);
   static void interpolateLargeGridOnFineGrid(const TFloat64List &originGrid,
                                              const TFloat64List &targetGrid,
                                              const TFloat64List &originValues,
                                              TFloat64List &outputValues);
-  static const TFloat64List getExtendedList(bool logsampling,
-                                            const TFloat64Range &zrange,
-                                            Float64 zstep, Float64 center = NAN);
+
   TFloat64List Redshifts;
   TFloat64List valProbaLog;
   Float64 valEvidenceLog = NAN;
   Float64 valMargEvidenceLog = NAN;
 
+  
   TFloat64List zcenter;
   TFloat64List zmin;
   TFloat64List zmax;
   TFloat64List zstep;
-
-  TZGridListParams zparams;
 
 private:
   void setZGridParams(const TZGridListParams &paramList);

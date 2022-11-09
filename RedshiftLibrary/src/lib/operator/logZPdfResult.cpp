@@ -52,13 +52,83 @@
 using namespace std;
 using namespace NSEpic;
 
-CLogZPdfResult::CLogZPdfResult() { this->m_type = "CLogZPdfResult"; }
-CLogZPdfResult::CLogZPdfResult(const TZGridListParams &zparamList,
-                               const TFloat64List &valproba_mixed)
-    : valProbaLog(valproba_mixed), Redshifts(valproba_mixed.size(), -DBL_MAX) {
-  this->m_type = "CLogZPdfResult";
-  setZGridParams(zparamList);
+bool CZGridListParams::isZGridCoherent() const {
+  if (zparams.empty())
+    THROWG(INTERNAL_ERROR, "zstep is empty");
+  if (zparams.size() == 1)
+    return true;
+
+  for (auto a : zparams)
+    if (a.zstep != zparams[0].zstep)
+      return false;
+
+  return true;
 }
+
+// common function to create either coarse or fine grid, default to coarse
+const TFloat64List CZGridListParams::buildLogZGrid(bool logsampling,
+                                                   ZGridType zgrid_type) const {
+
+  Float64 zgridStep = zparams.front().zstep;
+  TFloat64Range zrange(zparams.front().zmin, zparams.front().zmax);
+
+  switch (zgrid_type) {
+  case FINE: {
+    if (!isZGridCoherent())
+      zgridStep = zparams[1].zstep;
+    break;
+  }
+  case MIXED:
+    return buildLogMixedZGrid(logsampling);
+  case COARSE:
+  default:
+    break;
+  }
+
+  return logsampling ? zrange.SpreadOverLogZplusOne(zgridStep)
+                     : zrange.SpreadOver(zgridStep);
+}
+
+// mixed pdf
+const TFloat64List
+CZGridListParams::buildLogMixedZGrid(bool logsampling) const {
+  TFloat64List mixedGrid = buildLogZGrid(logsampling, COARSE);
+  // insert fineGrid intervals
+  for (Int32 i = 1; i < zparams.size(); i++) {
+    TFloat64Range range(zparams[i].zmin, zparams[i].zmax);
+    Int32 imin = -1;
+    Int32 imax = -1;
+    bool b = range.getClosedIntervalIndices(mixedGrid, imin, imax, false);
+    if (imin == -1 && imax == -1) // range not included in the main range
+      THROWG(INTERNAL_ERROR, "range not inside base grid ");
+    Int32 ndup = imax - imin + 1;
+    // create a centered extended List around Zcand
+    const TFloat64List &extendedZ = getExtendedList(logsampling, i);
+    insertWithDuplicates(mixedGrid, imin, extendedZ, ndup);
+  }
+  return mixedGrid;
+}
+
+// keep an option to create a mixed grid while ensuring zcand is present inside
+// or not
+const TFloat64List CZGridListParams::getExtendedList(bool logsampling,
+                                                     Int32 index) const {
+
+  TFloat64Range range(zparams[index].zmin, zparams[index].zmax);
+  if (!isnan(zparams[index].zcenter))
+    return range.spanCenteredWindow(zparams[index].zcenter, logsampling,
+                                    zparams[index].zstep);
+  else
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "GridParam at index " << index
+                               << " is not second pass window, can get "
+                                  "extended list only on second pass windows");
+  return logsampling ? range.SpreadOverLogZplusOne(zparams[index].zstep)
+                     : range.SpreadOver(zparams[index].zstep);
+}
+
+CLogZPdfResult::CLogZPdfResult() { this->m_type = "CLogZPdfResult"; }
+
 CLogZPdfResult::CLogZPdfResult(const TFloat64List &redshifts,
                                const TZGridListParams &zparamList)
     : Redshifts(redshifts), valProbaLog(redshifts.size(), -DBL_MAX) {
@@ -74,112 +144,30 @@ void CLogZPdfResult::setZGridParams(const TZGridListParams &paramList) {
   zstep.resize(s, NAN);
 
   std::transform(paramList.begin(), paramList.end(), zcenter.begin(),
-                 [](const ZGridParameters &params) { return params.zcenter; });
+                 [](const TZGridParameters &params) { return params.zcenter; });
   std::transform(paramList.begin(), paramList.end(), zmin.begin(),
-                 [](const ZGridParameters &params) { return params.zmin; });
+                 [](const TZGridParameters &params) { return params.zmin; });
   std::transform(paramList.begin(), paramList.end(), zmax.begin(),
-                 [](const ZGridParameters &params) { return params.zmax; });
+                 [](const TZGridParameters &params) { return params.zmax; });
   std::transform(paramList.begin(), paramList.end(), zstep.begin(),
-                 [](const ZGridParameters &params) { return params.zstep; });
-}
-
-// usefull in the case of skipsecondpass, TemplateFitting and TplCombination
-bool CLogZPdfResult::isZGridCoherent(const TFloat64List &zstep) {
-  if (!zstep.size())
-    THROWG(INTERNAL_ERROR, "zstep is empty");
-  if (zstep.size() == 1)
-    return true;
-  // TODO: check if Redshifts grid has a coherent step, using a different method
-  /*auto it = std::find_if(zstep.cbegin(), zstep.cend(),
-                         [&](Float64 c) { c != zstep[0]; });
-  bool isCoherent = it == zstep.end();
-  return isCoherent;*/
-  for (auto a : zstep)
-    if (a != zstep[0])
-      return false;
-
-  return true;
-}
-
-// common function to create either coarse or fine grid, default to coarse
-const TFloat64List CLogZPdfResult::buildLogZPdfGrid(
-    bool logsampling, const TZGridListParams &zparams, ZGridType zgrid_type) {
-
-  Float64 zgridStep = zparams.front().zstep;
-  TFloat64Range zrange(zparams.front().zmin, zparams.front().zmax);
-
-  switch (zgrid_type) {
-  case FINE: {
-    TFloat64List zsteps(zparams.size());
-    std::transform(zparams.begin(), zparams.end(), zsteps.begin(),
-                   [](const ZGridParameters &params) { return params.zstep; });
-    if (!CLogZPdfResult::isZGridCoherent(zsteps))
-      zgridStep = zparams[1].zstep;
-    break;
-  }
-  case MIXED:
-    return CLogZPdfResult::buildLogMixedZPdfGrid(logsampling, zparams);
-  case COARSE:
-  default:
-    break;
-  }
-
-  return logsampling ? zrange.SpreadOverLogZplusOne(zgridStep)
-                     : zrange.SpreadOver(zgridStep);
-}
-
-// mixed pdf
-const TFloat64List
-CLogZPdfResult::buildLogMixedZPdfGrid(bool logsampling,
-                                      const TZGridListParams &zparams) {
-  TFloat64List mixedGrid =
-      CLogZPdfResult::buildLogZPdfGrid(logsampling, zparams, COARSE);
-  // insert fineGrid intervals
-  for (Int32 i = 1; i < zparams.size(); i++) {
-    TFloat64Range range(zparams[i].zmin, zparams[i].zmax);
-    Int32 imin = -1;
-    Int32 imax = -1;
-    bool b = range.getClosedIntervalIndices(mixedGrid, imin, imax, false);
-    Int32 ndup = imax - imin + 1;
-    // create a centered extended List around Zcand
-    const TFloat64List &extendedZ = getExtendedList(
-        logsampling, range, zparams[i].zstep, zparams[i].zcenter);
-    insertWithDuplicates(mixedGrid, imin, extendedZ, ndup);
-  }
-  return mixedGrid;
-}
-
-// keep an option to create a mixed grid while ensuring zcand is present inside
-// or not
-const TFloat64List CLogZPdfResult::getExtendedList(bool logsampling,
-                                                   const TFloat64Range &zrange,
-                                                   Float64 zstep,
-                                                   Float64 center) {
-  if (!isnan(center))
-    return zrange.spanCenteredWindow(center, logsampling, zstep);
-  return logsampling ? zrange.SpreadOverLogZplusOne(zstep)
-                     : zrange.SpreadOver(zstep);
+                 [](const TZGridParameters &params) { return params.zstep; });
 }
 
 const TPdf CLogZPdfResult::getLogZPdf_fine(bool logsampling,
-                                           const TZGridListParams &zparams,
+                                           const CZGridListParams &zparams,
                                            const TFloat64List &valProbaLog) {
   TPdf res;
-  TFloat64List zsteps(zparams.size());
-  std::transform(zparams.begin(), zparams.end(), zsteps.begin(),
-                 [](const ZGridParameters &params) { return params.zstep; });
 
-  ZGridType zgtype = CLogZPdfResult::isZGridCoherent(zsteps) ? COARSE : MIXED;
-  TFloat64List origin_zgrid =
-      CLogZPdfResult::buildLogZPdfGrid(logsampling, zparams, zgtype);
+  ZGridType zgtype = zparams.isZGridCoherent() ? COARSE : MIXED;
+  TFloat64List origin_zgrid = zparams.buildLogZGrid(logsampling, zgtype);
   if (valProbaLog.size() != origin_zgrid.size())
     THROWG(INTERNAL_ERROR, "zpdf building failed: count do not match");
-  if (CLogZPdfResult::isZGridCoherent(zsteps) && zsteps.size() == 1)
+  if (zparams.isZGridCoherent() && zparams.size() == 1)
     THROWG(INTERNAL_ERROR, "Cannot create fine grid out of coarse "
                            "parameters"); // return
                                           // TPdf(origin_zgrid,valProbaLog);
 
-  res.zgrid = CLogZPdfResult::buildLogZPdfGrid(logsampling, zparams, FINE);
+  res.zgrid = zparams.buildLogZGrid(logsampling, FINE);
 
   interpolateLargeGridOnFineGrid(origin_zgrid, res.zgrid, valProbaLog,
                                  res.probaLog);
@@ -216,15 +204,3 @@ void CLogZPdfResult::interpolateLargeGridOnFineGrid(
   gsl_interp_free(interpolation);
   gsl_interp_accel_free(accelerator);
 }
-
-/*
-TPdf CLogZPdfResult::getFineGridPdf(const TZGridListParams& pdf_params,
-                                    const Float64* pdf_probaLog, Int32 n)
-{
-  TFloat64List ppl(n);
-  for(unsigned int i=0;i<n;i++) ppl[i]=pdf_probaLog[i];
-  CLogZPdfResult pdf_result(pdf_params,ppl);
-  CLogZPdfResult fine = pdf_result.getLogZPdf_fine(true);
-  return TPdf(fine.Redshifts,fine.valProbaLog);
-}
-*/
