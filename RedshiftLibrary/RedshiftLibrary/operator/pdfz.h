@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/operator.h"
 
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 
@@ -57,6 +57,8 @@ struct ChisquareArray {
   std::vector<TFloat64List> zpriors;
   TFloat64List modelpriors;
   Float64 cstLog = 0.;
+  Float64 zstep;
+  TZGridListParams zgridParams; // only used for linemodel
 };
 
 /**
@@ -68,7 +70,7 @@ class COperatorPdfz : public COperator {
 public:
   COperatorPdfz(
       const std::string &opt_combine,
-      Float64 peakSeparation = 0.0, // no minimal seaparation
+      Float64 peakSeparation = 0.0, // no minimal separation
       Float64 meritcut = 0.0,       // no cut
       Int32 maxCandidate = 10,      // max number of candidate at the end
       const std::string &Id_prefix = "EXT", bool allow_extrema_at_border = true,
@@ -85,7 +87,7 @@ public:
 
   void checkPdfSum() const;
 
-  std::shared_ptr<CPdfMargZLogResult> m_postmargZResult;
+  std::shared_ptr<CLogZPdfResult> m_postmargZResult;
 
   // static member function to do calculation on pdfs
   ///////////////////////////////////////////////////

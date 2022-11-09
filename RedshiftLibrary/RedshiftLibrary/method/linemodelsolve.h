@@ -40,15 +40,11 @@
 #define _REDSHIFT_METHOD_LINEMODELSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/operator/linemodel.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
-#include "RedshiftLibrary/operator/pdfz.h"
+
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 
@@ -76,8 +72,9 @@ public:
                      const TFloat64Range &redshiftRange) override;
 
 private:
-  ChisquareArray BuildChisquareArray(
-      const std::shared_ptr<const CLineModelResult> &result) const;
+  ChisquareArray
+  BuildChisquareArray(const std::shared_ptr<const CLineModelResult> &result,
+                      const TZGridListParams &zgridParams = {}) const;
 
   void GetZpriorsOptions(bool &zPriorStrongLinePresence,
                          bool &zPriorHaStrongestLine, bool &zPriorNLineSNR,
@@ -119,7 +116,6 @@ private:
 
   Int32 m_opt_firstpass_largegridstepRatio;
   bool m_opt_skipsecondpass = false;
-  ZGridParameters m_coarseGridParams;
   Float64 m_coarseRedshiftStep = NAN;
 };
 

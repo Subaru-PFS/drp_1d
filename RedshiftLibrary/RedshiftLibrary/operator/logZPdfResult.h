@@ -36,8 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATOR_PDFMARGZLOGRESULT_
-#define _REDSHIFT_OPERATOR_PDFMARGZLOGRESULT_
+#ifndef _REDSHIFT_OPERATOR_ZLOGPDFRESULT_
+#define _REDSHIFT_OPERATOR_ZLOGPDFRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
@@ -46,7 +46,7 @@
 using namespace std;
 namespace NSEpic {
 
-#include "RedshiftLibrary/operator/pdfMargZLogResult.i"
+#include "RedshiftLibrary/operator/logZPdfResult.i"
 
 }
 

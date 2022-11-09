@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/tplcombinationresult.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -128,8 +129,6 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
   // save in resultstore pdf results
-  ZGridParameters gridParams(TFloat64Range(m_redshifts), m_redshiftStep);
-  pdfz.m_postmargZResult->setZGridParams(gridParams);
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
   // save in resultstore candidates results
@@ -299,7 +298,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 
   ChisquareArray chisquarearray;
   chisquarearray.cstLog = -1;
-
+  chisquarearray.zstep = m_redshiftStep;
   Int32 retPdfz = -1;
 
   Int32 nISM = result->nISM;

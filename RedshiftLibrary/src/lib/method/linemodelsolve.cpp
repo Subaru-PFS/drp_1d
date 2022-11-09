@@ -37,21 +37,14 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/method/linemodelsolve.h"
-
 #include "RedshiftLibrary/log/log.h"
-
-#include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 
 #include "RedshiftLibrary/operator/pdfz.h"
-#include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/statistics/zprior.h"
-
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -133,7 +126,8 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   //  suggestion : CSolve::GetCurrentScopeName(TScopeStack)
   //  prepare the linemodel chisquares and prior results for pdf computation
-  ChisquareArray chisquares = BuildChisquareArray(result);
+  ChisquareArray chisquares =
+      BuildChisquareArray(result, m_linemodel.getSPZGridParams());
 
   /*
   Log.LogDetail("    linemodelsolve: Storing priors (size=%d)",
@@ -162,9 +156,6 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   // store PDF results
   Log.LogInfo("%s: Storing PDF results", __func__);
-  // temporary solution to build the end-to-end pdf compression
-  pdfz.m_postmargZResult->setSecondPassZGridParams(
-      m_coarseGridParams, m_linemodel.getSPZGridParams());
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   // TODO: clean below line once #7646 is solved
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
@@ -308,7 +299,8 @@ TFloat64List CLineModelSolve::BuildZpriors(
 }
 
 ChisquareArray CLineModelSolve::BuildChisquareArray(
-    const std::shared_ptr<const CLineModelResult> &result) const {
+    const std::shared_ptr<const CLineModelResult> &result,
+    const TZGridListParams &spZgridParams) const {
   Log.LogDetail("LinemodelSolve: building chisquare array");
 
   if (m_opt_pdfcombination != "bestchi2" &&
@@ -319,6 +311,8 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   ChisquareArray chisquarearray;
   std::vector<TFloat64List> &chisquares = chisquarearray.chisquares;
   std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
+  chisquarearray.zstep = m_coarseRedshiftStep;
+  chisquarearray.zgridParams = spZgridParams;
 
   chisquarearray.cstLog = result->cstLog;
   Log.LogDetail("%s: using cstLog = %f", __func__, chisquarearray.cstLog);
@@ -593,9 +587,6 @@ void CLineModelSolve::Solve() {
       pdfz.Compute(chisquares, false);
   m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
-  m_coarseGridParams =
-      ZGridParameters(TFloat64Range(m_redshifts), m_coarseRedshiftStep);
-  pdfz.m_postmargZResult->setZGridParams(m_coarseGridParams);
   resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
   // had to duplicate it to allow access from hdf5
   resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
@@ -640,8 +631,6 @@ void CLineModelSolve::Solve() {
 
     std::shared_ptr<PdfCandidatesZResult> candResult =
         pdfz.Compute(chisquares, false);
-
-    pdfz.m_postmargZResult->setZGridParams(m_coarseGridParams);
 
     linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
     // resultStore->StoreScopedGlobalResult( "firstpassb_pdf",

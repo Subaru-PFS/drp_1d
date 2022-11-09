@@ -43,9 +43,9 @@
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
@@ -395,20 +395,20 @@ BOOST_AUTO_TEST_CASE(GetReliabilityResult_test) {
 }
 
 //---------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(GetPdfMargZLogResult_test) {
+BOOST_AUTO_TEST_CASE(GetLogZPdfResult_test) {
   TScopeStack scopeStack = getScopeStack();
 
   TFloat64List redshifts = {1, 2, 3, 4};
-  std::shared_ptr<const CPdfMargZLogResult> result_in =
-      std::make_shared<const CPdfMargZLogResult>(redshifts);
+  TZGridListParams zparams;
+  std::shared_ptr<const CLogZPdfResult> result_in =
+      std::make_shared<const CLogZPdfResult>(redshifts, zparams);
 
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("pdfMarg", result_in);
 
-  std::shared_ptr<const CPdfMargZLogResult> result_out =
-      store.GetPdfMargZLogResult("object", "method", "pdfMarg");
-  BOOST_CHECK(result_out->getType() == "CPdfMargZLogResult");
-  BOOST_CHECK(result_out->getIndex(2) == 1);
+  std::shared_ptr<const CLogZPdfResult> result_out =
+      store.GetLogZPdfResult("object", "method", "pdfMarg");
+  BOOST_CHECK(result_out->getType() == "CLogZPdfResult");
 }
 
 //---------------------------------------------------------------
@@ -570,8 +570,9 @@ BOOST_AUTO_TEST_CASE(HasDataset_test) {
   TScopeStack scopeStack = getScopeStack();
 
   TFloat64List redshifts = {1, 2, 3, 4};
-  std::shared_ptr<const CPdfMargZLogResult> result_in =
-      std::make_shared<const CPdfMargZLogResult>(redshifts);
+  TZGridListParams zparams;
+  std::shared_ptr<const CLogZPdfResult> result_in =
+      std::make_shared<const CLogZPdfResult>(redshifts, zparams);
 
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("pdfMarg", result_in);
@@ -588,8 +589,9 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   TScopeStack scopeStack = getScopeStack();
 
   TFloat64List redshifts = {1, 2, 3, 4};
-  std::shared_ptr<CPdfMargZLogResult> result_in =
-      std::make_shared<CPdfMargZLogResult>(redshifts);
+  TZGridListParams zparams;
+  std::shared_ptr<CLogZPdfResult> result_in =
+      std::make_shared<CLogZPdfResult>(redshifts, zparams);
 
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("extrema_results", result_in);

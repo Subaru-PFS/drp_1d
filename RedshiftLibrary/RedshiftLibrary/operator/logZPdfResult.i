@@ -50,26 +50,23 @@ typedef struct ZGridParameters {
 
 typedef std::vector<ZGridParameters> TZGridListParams;
 
-class CPdfMargZLogResult : public COperatorResult {
+class CLogZPdfResult : public COperatorResult {
 public:
-  CPdfMargZLogResult();
-  ~CPdfMargZLogResult() = default;
-  CPdfMargZLogResult(const TFloat64List &redshifts/*,
-                     const ZGridParameters &zparams*/);
-  // below setters are temporary
-  void setSecondPassZGridParams(const ZGridParameters &fp_params,
-                                const TZGridListParams &paramList);
-  void setZGridParams(const ZGridParameters &params);
-  Int32 getIndex(Float64 z) const;
+  CLogZPdfResult();
+  CLogZPdfResult(
+      const TFloat64List &redshifts,
+      const TZGridListParams &zparams); // to decide if we save as a struct
 
   TFloat64List Redshifts;
   TFloat64List valProbaLog;
   Float64 valEvidenceLog = NAN;
   Float64 valMargEvidenceLog = NAN;
-  Int32 countTPL;
 
   TFloat64List zcenter;
   TFloat64List zmin;
   TFloat64List zmax;
   TFloat64List zstep;
+
+private:
+  void setZGridParams(const TZGridListParams &paramList);
 };
