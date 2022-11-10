@@ -68,8 +68,14 @@ class PdfBuilder:
         )
 
         probalog = np.array(ret.probaLog)
+        
         if extrapolate :
             probalog =  self.extrapolate_pdf_onborder(probalog)
+
+        # Temporary hack before correction of zgrid generation algorithm
+        if np.isnan(probalog[-1]):
+            probalog[-1] = pdf_proba[-1]
+
         return {
             "zgrid": np.array(ret.zgrid),
             "probaLog": probalog
