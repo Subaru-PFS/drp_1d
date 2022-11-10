@@ -52,7 +52,6 @@ FirstpassVelocityAbsorption	model_parameters	True	candidate	Alv	extrema_results	
 <ObjectType>Evidence	classification	False	root	m_evidences[object_type]	solveResult	f8
 <ObjectType>Proba	classification	False	root	m_proba[object_type]	solveResult	f8
 Type	classification	False	root	m_TypeLabel	solveResult	S1
-PDFZGrid	pdf	False	object	Redshifts	pdf	f8
 PDFProbaLog	pdf	False	object	valProbaLog	pdf	f8
 ContinuumVectAmplitude	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeList	extrema_results	f8
 ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeErrorList	extrema_results	f8
@@ -74,7 +73,6 @@ Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	
 ModelLambda	linemeas_model	False	object	ModelLambda	linemeas_model	f8
 ModelFlux	linemeas_model	False	object	ModelFlux	linemeas_model	f8
 Reliability	reliability	False	object	m_ReliabilityLabel	solveResult	f8
-FirstpassPDFZGrid	firstpass_pdf	True	object	Redshifts	firstpass_pdf	f8
 FirstpassPDFProbaLog	firstpass_pdf	True	object	valProbaLog	firstpass_pdf	f8
 ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i
 <MethodType>WarningFlags	warningFlag	False	method	flagValue	warningFlag	i

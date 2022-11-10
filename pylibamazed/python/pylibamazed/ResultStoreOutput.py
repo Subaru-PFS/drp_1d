@@ -85,7 +85,6 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["name"] == attribute]
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
-        
         return self._get_attribute_from_result_store(object_type,
                                                      method,
                                                      attribute_info,

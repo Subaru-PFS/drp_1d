@@ -22,6 +22,9 @@ class Parameters():
         if linemeas_method:
             methods.append(linemeas_method)
         return methods
+        
+    def get_redshift_sampling(self,object_type):
+        return self.parameters[object_type]["redshiftsampling"]
 
     def get_linemodel_methods(self, object_type):
         methods = []

@@ -188,6 +188,24 @@ public:
     return in;
   }
 
+  // create a centered vector
+  const std::vector<T> spanCenteredWindow(T center, bool logsampling,
+                                          T delta) const {
+    CRange<T> range_right(GetBegin(), center);
+    std::vector<T> vect = logsampling
+                              ? range_right.SpreadOverLogZplusOne(delta, true)
+                              : range_right.SpreadOver_backward(delta);
+
+    CRange<T> range_left = {center, GetEnd()};
+    std::vector<T> vect_part2 = logsampling
+                                    ? range_left.SpreadOverLogZplusOne(delta)
+                                    : range_left.SpreadOver(delta);
+
+    vect.insert(std::end(vect), std::begin(vect_part2) + 1,
+                std::end(vect_part2));
+    return vect;
+  }
+
   // enclosed refers to having i_max referring to m_End or higher and i_min
   // referring to m_Begin or lower
   bool getEnclosingIntervalIndices(const std::vector<T> &ordered_values,

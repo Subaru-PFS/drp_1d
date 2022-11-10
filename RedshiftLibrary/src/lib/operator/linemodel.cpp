@@ -68,10 +68,6 @@
 #include <boost/format.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 
-#include <gsl/gsl_interp.h>
-
-#include <algorithm> //std::sort
-
 using namespace NSEpic;
 using namespace std;
 
@@ -598,23 +594,9 @@ void COperatorLineModel::evaluateContinuumAmplitude(
 TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
 
   const Float64 halfwindowsize_z = m_secondPass_halfwindowsize * (1. + z);
-
-  TFloat64Range secondpass_window_part1 = {z - halfwindowsize_z, z};
-  TFloat64List extendedList =
-      (m_redshiftSampling == "log")
-          ? secondpass_window_part1.SpreadOverLogZplusOne(m_fineStep, true)
-          : secondpass_window_part1.SpreadOver_backward(m_fineStep);
-
-  TFloat64Range secondpass_window_part2 = {z, z + halfwindowsize_z};
-  TFloat64List extendedList_part2 =
-      (m_redshiftSampling == "log")
-          ? secondpass_window_part2.SpreadOverLogZplusOne(m_fineStep)
-          : secondpass_window_part2.SpreadOver(m_fineStep);
-
-  extendedList.insert(std::end(extendedList),
-                      std::begin(extendedList_part2) + 1,
-                      std::end(extendedList_part2));
-  return extendedList;
+  TFloat64Range windowRange(z - halfwindowsize_z, z + halfwindowsize_z);
+  return windowRange.spanCenteredWindow(z, m_redshiftSampling == "log",
+                                        m_fineStep);
 }
 
 // only for secondpass grid
@@ -623,7 +605,7 @@ TZGridListParams COperatorLineModel::getSPZGridParams() {
   TZGridListParams centeredZgrid_params(s);
   for (Int32 i = 0; i < s; i++) {
     const auto &extendedGrid = m_firstpass_extremaResult->ExtendedRedshifts[i];
-    centeredZgrid_params[i] = ZGridParameters(
+    centeredZgrid_params[i] = TZGridParameters(
         TFloat64Range(extendedGrid), m_fineStep,
         m_firstpass_extremaResult->m_ranked_candidates[i].second->Redshift);
   }
@@ -645,9 +627,8 @@ void COperatorLineModel::SetFirstPassCandidates(
     Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
                 cand->Redshift, cand->ValProba);
 
-    const Float64 &x = cand->Redshift;
-    const TFloat64List extendedList = SpanRedshiftWindow(x);
-    m_firstpass_extremaResult->ExtendedRedshifts[j] = extendedList;
+    m_firstpass_extremaResult->ExtendedRedshifts[j] =
+        SpanRedshiftWindow(cand->Redshift);
   }
 
   // now preparing the candidates extrema results
@@ -1216,9 +1197,6 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 void COperatorLineModel::updateRedshiftGridAndResults() {
 
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
-    Float64 z = m_firstpass_extremaResult->Redshift(i);
-    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
-
     TFloat64Range range(m_firstpass_extremaResult->ExtendedRedshifts[i].front(),
                         m_firstpass_extremaResult->ExtendedRedshifts[i].back());
     Int32 imin = -1, imax = -1;
@@ -1738,46 +1716,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
 std::shared_ptr<COperatorResult> COperatorLineModel::getResult() {
   return m_result;
-}
-
-void COperatorLineModel::interpolateLargeGridOnFineGrid(
-    const TFloat64List &redshiftsLargeGrid,
-    const TFloat64List &redshiftsFineGrid, const TFloat64List &meritLargeGrid,
-    TFloat64List &meritFineGrid) const {
-  //* // GSL method LIN
-  Log.LogDetail("  Operator-Linemodel: First-Pass - interp FROM large grid "
-                "z0=%f to zEnd=%f (n=%d)",
-                redshiftsLargeGrid[0],
-                redshiftsLargeGrid[redshiftsLargeGrid.size() - 1],
-                redshiftsLargeGrid.size());
-  Log.LogDetail("  Operator-Linemodel: First-Pass - interp TO fine grid "
-                "z0=%f to zEnd=%f (n=%d)",
-                redshiftsFineGrid[0],
-                redshiftsFineGrid[redshiftsFineGrid.size() - 1],
-                redshiftsFineGrid.size());
-
-  // initialise and allocate the gsl objects
-  // lin
-  gsl_interp *interpolation =
-      gsl_interp_alloc(gsl_interp_linear, meritLargeGrid.size());
-  gsl_interp_init(interpolation, &(redshiftsLargeGrid.front()),
-                  &(meritLargeGrid.front()), meritLargeGrid.size());
-  gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
-
-  for (Int32 j = 0; j < redshiftsFineGrid.size(); j++) {
-    Float64 Xrebin = redshiftsFineGrid[j];
-    if (Xrebin < redshiftsLargeGrid[0] ||
-        Xrebin > redshiftsLargeGrid[redshiftsLargeGrid.size() - 1]) {
-      continue;
-    }
-    meritFineGrid[j] =
-        gsl_interp_eval(interpolation, &redshiftsLargeGrid.front(),
-                        &meritLargeGrid.front(), Xrebin, accelerator); // lin
-  }
-
-  gsl_interp_free(interpolation);
-  gsl_interp_accel_free(accelerator);
-  //*/
 }
 
 /**

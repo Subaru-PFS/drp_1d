@@ -367,12 +367,13 @@ public:
 };
 
 %template(TMapFloat64) std::map<std::string, Float64>;
+%template(TZGridListParams) std::vector<TZGridParameters>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
-%include "operator/logZPdfResult.i"
 %include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
+%include "operator/logZPdfResult.i"
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
 %include "linemodel/linemodelextremaresult.i"
@@ -408,7 +409,6 @@ public:
   void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
   void reset();
 
-
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
@@ -419,8 +419,6 @@ public:
     ~CProcessFlowContext();
     
 };
-
-
 
 class CParameterStore : public CScopeStore
 {
@@ -475,7 +473,7 @@ class COperatorResultStore
   std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								 const std::string& method,
 								 const std::string& name,
-								     const int& rank 
+								 const int& rank 
 								 ) const  ;
 
     std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,

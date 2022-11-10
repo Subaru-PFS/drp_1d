@@ -40,8 +40,8 @@
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 import numpy as np
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import (ErrorCode)
-
+from pylibamazed.redshift import (CLogZPdfResult, ErrorCode)
+from pylibamazed.PdfBuilder import PdfBuilder
 
 class Reliability:
     def __init__(self, object_type,parameters, calibration):
@@ -50,26 +50,30 @@ class Reliability:
         self.calibration_library = calibration
         
     def Compute(self, context):
-        output = ResultStoreOutput(context.GetResultStore(),
-                                   self.parameters,
-                                   auto_load=False,
-                                   extended_results=False)
-        pdf = output.get_attribute_from_source(self.object_type,
-                                               self.parameters.get_solve_method(self.object_type),
-                                               "pdf",
-                                               "PDFProbaLog")
-        zgrid = output.get_attribute_from_source(self.object_type,
-                                                 self.parameters.get_solve_method(self.object_type),
-                                                 "pdf",
-                                                 "PDFZGrid")        
+        # context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
+        output = ResultStoreOutput(
+            context.GetResultStore(),
+            self.parameters,
+            auto_load=False,
+            extended_results=False,
+        )
+
+        calib_parameters = self.calibration_library.reliability_parameters[self.object_type]
+        c_zgrid_zend = calib_parameters["zgrid_end"]
+
+        logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
+        output.load_object_level(self.object_type)
+        builder = PdfBuilder(output)
+        extendedPDF = builder.interpolate_pdf_on_regular_grid(self.object_type,
+                                                              logsampling, c_zgrid_zend)
+        zgrid = extendedPDF["zgrid"]
+        pdf = extendedPDF["probaLog"]
         model = self.calibration_library.reliability_models[self.object_type]
 
         zgrid_end = zgrid[-1]
         if pdf.shape[0] != model.input_shape[1]:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,"PDF and model shapes are not compatible")
-                # The model needs a PDF, not LogPDF
-        calib_parameters = self.calibration_library.reliability_parameters[self.object_type]
-        c_zgrid_zend = calib_parameters["zgrid_end"]
+        # The model needs a PDF, not LogPDF        
         zend_diff = (zgrid_end - c_zgrid_zend)/zgrid_end
         if zend_diff > 1e-6:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {zgrid_end} != {c_zgrid_zend}")

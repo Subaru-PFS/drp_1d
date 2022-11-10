@@ -115,8 +115,8 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
     THROWG(INTERNAL_ERROR, Formatter() << "chisquarearray is empty");
   }
   TZGridListParams zparams(chisquarearray.zgridParams.size() + 1);
-  zparams[0] = ZGridParameters(TFloat64Range(chisquarearray.redshifts),
-                               chisquarearray.zstep);
+  zparams[0] = TZGridParameters(TFloat64Range(chisquarearray.redshifts),
+                                chisquarearray.zstep);
 
   std::copy(chisquarearray.zgridParams.cbegin(),
             chisquarearray.zgridParams.cend(), zparams.begin() + 1);
