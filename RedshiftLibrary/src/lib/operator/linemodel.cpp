@@ -790,13 +790,6 @@ void COperatorLineModel::ComputeSecondPass(
   Log.LogInfo(
       "  Operator-Linemodel: ---------- ---------- ---------- ----------");
 
-  // init lmfit variables
-  mlmfit_modelInfoSave = false;
-  mlmfit_savedModelSpectrumResults_lmfit.clear();
-  mlmfit_savedModelFittingResults_lmfit.clear();
-  mlmfit_savedModelRulesResults_lmfit.clear();
-  mlmfit_savedBaselineResult_lmfit.clear();
-
   std::string opt_continuumfit_method =
       ps->GetScoped<std::string>("linemodel.secondpass.continuumfit");
   std::string opt_continuumreest =
@@ -1055,27 +1048,25 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_result->LineModelSolutions[idx].AbsorptionVelocity);
     }
 
-    if (!mlmfit_modelInfoSave) {
-      m_result->ChiSquare[idx] = m_fittingManager->fit(
-          m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
-          m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
-      m_result->ScaleMargCorrection[idx] =
-          m_fittingManager->getScaleMargCorrection();
-      if (m_fittingManager->getLineRatioType() == "tplratio")
-        m_result->SetChisquareTplratioResult(
-            idx, std::dynamic_pointer_cast<CTplratioManager>(
-                     m_fittingManager->m_lineRatioManager));
-      if (!m_estimateLeastSquareFast) {
-        m_result->ChiSquareContinuum[idx] =
-            m_fittingManager->getLeastSquareContinuumMerit();
-      } else {
-        m_result->ChiSquareContinuum[idx] =
-            m_fittingManager->getLeastSquareContinuumMeritFast();
-      }
-      m_result->ScaleMargCorrectionContinuum[idx] =
-          m_fittingManager->m_continuumManager
-              ->getContinuumScaleMargCorrection();
-    }
+    m_result->ChiSquare[idx] = m_fittingManager->fit(
+        m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
+        m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
+    m_result->ScaleMargCorrection[idx] =
+        m_fittingManager->getScaleMargCorrection();
+    if (m_fittingManager->getLineRatioType() == "tplratio")
+      m_result->SetChisquareTplratioResult(
+          idx, std::dynamic_pointer_cast<CTplratioManager>(
+                   m_fittingManager->m_lineRatioManager));
+    if (!m_estimateLeastSquareFast)
+      m_result->ChiSquareContinuum[idx] =
+          m_fittingManager->getLeastSquareContinuumMerit();
+    else
+      m_result->ChiSquareContinuum[idx] =
+          m_fittingManager->getLeastSquareContinuumMeritFast();
+
+    m_result->ScaleMargCorrectionContinuum[idx] =
+        m_fittingManager->m_continuumManager->getContinuumScaleMargCorrection();
+
     if (m != m_result->ChiSquare[idx] &&
         m_fittingManager->getFittingMethod() != "random")
       THROWG(INTERNAL_ERROR, Formatter() << "COperatorLineModel::" << __func__
@@ -1083,8 +1074,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
                                          << ") !=chi2 ("
                                          << m_result->ChiSquare[idx] << ")");
 
-    m = m_result->ChiSquare[idx]; // m_result->ChiSquare[idx];
-
+    m = m_result->ChiSquare[idx];
     // save the model result
     // WARNING: saving results TODO: this is currently wrong !! the model
     // saved corresponds to the bestchi2 model. PDFs should be combined
@@ -1092,78 +1082,62 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
     Int32 maxSaveNLinemodelContinua = maxModelSave;
     if (savedModels < maxModelSave) {
-      if (mlmfit_modelInfoSave) {
-
-        Log.LogInfo("Save model store during lm_fit");
-        ExtremaResult->m_savedModelSpectrumResults[i] =
-            mlmfit_savedModelSpectrumResults_lmfit[i_2pass];
-        ExtremaResult->m_savedModelFittingResults[i] =
-            mlmfit_savedModelFittingResults_lmfit[i_2pass];
-        ExtremaResult->m_savedModelRulesResults[i] =
-            mlmfit_savedModelRulesResults_lmfit[i_2pass];
-        if (savedModels < maxSaveNLinemodelContinua &&
-            contreest_iterations > 0) {
-          ExtremaResult->m_savedModelContinuumSpectrumResults[i] =
-              mlmfit_savedBaselineResult_lmfit[i_2pass];
+      // CModelSpectrumResult
+      std::shared_ptr<CModelSpectrumResult> resultspcmodel;
+      Int32 overrideModelSavedType = 0;
+      // 0=save model, (DEFAULT)
+      // 1=save model with lines removed,
+      // 2=save model with only Em. lines removed.
+      if (overrideModelSavedType == 0) {
+        resultspcmodel = std::make_shared<CModelSpectrumResult>(
+            m_fittingManager->getSpectrumModel()->GetModelSpectrum());
+      } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
+        Int32 lineTypeFilter = -1;
+        if (overrideModelSavedType == 1) {
+          lineTypeFilter = -1;
+        } else if (overrideModelSavedType == 2) {
+          lineTypeFilter = CLine::nType_Emission;
         }
-
-      } else {
-        // CModelSpectrumResult
-        std::shared_ptr<CModelSpectrumResult> resultspcmodel;
-        Int32 overrideModelSavedType = 0;
-        // 0=save model, (DEFAULT)
-        // 1=save model with lines removed,
-        // 2=save model with only Em. lines removed.
-        if (overrideModelSavedType == 0) {
-          resultspcmodel = std::make_shared<CModelSpectrumResult>(
-              m_fittingManager->getSpectrumModel()->GetModelSpectrum());
-        } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
-          Int32 lineTypeFilter = -1;
-          if (overrideModelSavedType == 1) {
-            lineTypeFilter = -1;
-          } else if (overrideModelSavedType == 2) {
-            lineTypeFilter = CLine::nType_Emission;
-          }
-          resultspcmodel = std::make_shared<CModelSpectrumResult>(
-              m_fittingManager->getSpectrumModel()
-                  ->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
-        }
-        // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
-        // std::shared_ptr<CModelSpectrumResult>( new
-        // CModelSpectrumResult(m_fittingManager->GetSpectrumModelContinuum())
-        // );
-
-        ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
-
-        ExtremaResult->m_savedModelFittingResults[i] =
-            std::make_shared<CLineModelSolution>(
-                m_result->LineModelSolutions[idx]);
-
-        // CModelRulesResult
-        if (m_fittingManager->getLineRatioType() == "rules") {
-          ExtremaResult->m_savedModelRulesResults[i] =
-              std::make_shared<CModelRulesResult>(
-                  std::dynamic_pointer_cast<CRulesManager>(
-                      m_fittingManager->m_lineRatioManager)
-                      ->GetModelRulesLog());
-        }
-
-        // Save the reestimated continuum, only the first
-        // n=maxSaveNLinemodelContinua extrema
-        std::shared_ptr<CSpectraFluxResult> baselineResult =
-            (std::shared_ptr<CSpectraFluxResult>)new CSpectraFluxResult();
-        const CSpectrumFluxAxis &modelContinuumFluxAxis =
-            m_fittingManager->getSpectrumModel()->GetModelContinuum();
-        Int32 len = modelContinuumFluxAxis.GetSamplesCount();
-
-        baselineResult->fluxes.resize(len);
-        baselineResult->wavel.resize(len);
-        for (Int32 k = 0; k < len; k++) {
-          baselineResult->fluxes[k] = modelContinuumFluxAxis[k];
-          baselineResult->wavel[k] = (spectrum.GetSpectralAxis())[k];
-        }
-        ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
+        resultspcmodel = std::make_shared<CModelSpectrumResult>(
+            m_fittingManager->getSpectrumModel()
+                ->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
       }
+      // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
+      // std::shared_ptr<CModelSpectrumResult>( new
+      // CModelSpectrumResult(m_fittingManager->GetSpectrumModelContinuum())
+      // );
+
+      ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
+
+      ExtremaResult->m_savedModelFittingResults[i] =
+          std::make_shared<CLineModelSolution>(
+              m_result->LineModelSolutions[idx]);
+
+      // CModelRulesResult
+      if (m_fittingManager->getLineRatioType() == "rules") {
+        ExtremaResult->m_savedModelRulesResults[i] =
+            std::make_shared<CModelRulesResult>(
+                std::dynamic_pointer_cast<CRulesManager>(
+                    m_fittingManager->m_lineRatioManager)
+                    ->GetModelRulesLog());
+      }
+
+      // Save the reestimated continuum, only the first
+      // n=maxSaveNLinemodelContinua extrema
+      std::shared_ptr<CSpectraFluxResult> baselineResult =
+          (std::shared_ptr<CSpectraFluxResult>)new CSpectraFluxResult();
+      const CSpectrumFluxAxis &modelContinuumFluxAxis =
+          m_fittingManager->getSpectrumModel()->GetModelContinuum();
+      Int32 len = modelContinuumFluxAxis.GetSamplesCount();
+
+      baselineResult->fluxes.resize(len);
+      baselineResult->wavel.resize(len);
+      for (Int32 k = 0; k < len; k++) {
+        baselineResult->fluxes[k] = modelContinuumFluxAxis[k];
+        baselineResult->wavel[k] = (spectrum.GetSpectralAxis())[k];
+      }
+      ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
+
       savedModels++;
     }
 
