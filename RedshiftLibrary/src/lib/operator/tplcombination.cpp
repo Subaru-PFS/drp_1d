@@ -107,13 +107,12 @@ void COperatorTplcombination::BasicFit(
   const CSpectrumFluxAxis &spcFluxAxis = spectrum.GetFluxAxis();
   const CSpectrumNoiseAxis &spcError = spcFluxAxis.GetError();
 
-  if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount()) {
+  if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount())
     THROWG(INTERNAL_ERROR,
            Formatter() << "spcMaskAdditional does not "
                           "have the same size as the spectrum flux vector... ("
                        << spcMaskAdditional.GetMasksCount() << " vs "
                        << spcFluxAxis.GetSamplesCount() << ")");
-  }
 
   TFloat64Range currentRange;
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
@@ -122,22 +121,21 @@ void COperatorTplcombination::BasicFit(
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
   // I consider here that all templates share the same spectralAxis
   bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
-      m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
-      kEnd);
-  if (!kStartEnd_ok) {
+      m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
+      kStart, kEnd);
+  if (!kStartEnd_ok)
     THROWG(INTERNAL_ERROR, "Impossible to "
                            "get valid kstart or kend");
-  }
+
   Int32 kStart_model =
       kStart; // mainly used at high redshifts, when desextincting spectrum is
               // happenning with null coeffs
-  Int32 nddl = tplList.size();
-  if (opt_extinction || opt_dustFitting) {
-    for (Int32 iddl = 0; iddl < nddl; iddl++)
-      m_templatesRebined_bf[iddl].InitIsmIgmConfig(kStart, kEnd, redshift);
-  }
+  if (opt_extinction || opt_dustFitting)
+    for (auto &tpl : m_templatesRebined_bf)
+      tpl.InitIsmIgmConfig(kStart, kEnd, redshift);
+
   if (opt_extinction)
-    kIgmEnd = m_templatesRebined_bf[0].GetIgmEndIndex();
+    kIgmEnd = m_templatesRebined_bf.front().GetIgmEndIndex();
 
   // determine min and max value of ebmv coeff
   Int32 nISM = EbmvList.size();
@@ -156,6 +154,7 @@ void COperatorTplcombination::BasicFit(
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
 
+  Int32 nddl = tplList.size();
   X = gsl_matrix_alloc(n, nddl);
   y = gsl_vector_alloc(n);
   w = gsl_vector_alloc(n);
@@ -188,12 +187,13 @@ void COperatorTplcombination::BasicFit(
   // create a template with cte flux = 1, to be used only when disextincting
   // data and noise
   CTemplate identityTemplate(
-      "identity", "idle", m_templatesRebined_bf[0].GetSpectralAxis(),
-      std::move(
-          CSpectrumFluxAxis(m_templatesRebined_bf[0].GetSampleCount(), 1)));
+      "identity", "idle", m_templatesRebined_bf.front().GetSpectralAxis(),
+      std::move(CSpectrumFluxAxis(
+          m_templatesRebined_bf.front().GetSampleCount(), 1)));
   // Prepare the fit data, once for all
   if (!DisextinctData) {
-    Float64 yi, ei;
+    Float64 yi;
+    Float64 ei;
     for (Int32 i = 0; i < n; i++) {
       yi = spcFluxAxis[i + kStart] / normFactor;
       ei = spcError[i + kStart] / normFactor;
@@ -205,18 +205,12 @@ void COperatorTplcombination::BasicFit(
   for (Int32 kigm = 0; kigm < nIGM; kigm++) {
     if (igmLoopUseless_WavelengthRange) {
       // Now copy from the already calculated k>0 igm values
-      for (Int32 kism = 0; kism < fittingResults.ChiSquareInterm.size();
-           kism++) {
-        for (Int32 kigm = 1; kigm < fittingResults.ChiSquareInterm[kism].size();
-             kigm++) {
-          fittingResults.ChiSquareInterm[kism][kigm] =
-              fittingResults.ChiSquareInterm[kism][0];
-          fittingResults.IsmCalzettiCoeffInterm[kism][kigm] =
-              fittingResults.IsmCalzettiCoeffInterm[kism][0];
-          fittingResults.IgmMeiksinIdxInterm[kism][kigm] =
-              fittingResults.IgmMeiksinIdxInterm[kism][0];
-        }
-      }
+      for (auto &Xi2 : fittingResults.ChiSquareInterm)
+        Xi2 = TFloat64List(nIGM, Xi2.front());
+      for (auto &ismCoeffs : fittingResults.IsmCalzettiCoeffInterm)
+        ismCoeffs = TFloat64List(nIGM, ismCoeffs.front());
+      for (auto &igmCoeffs : fittingResults.IgmMeiksinIdxInterm)
+        igmCoeffs = TInt32List(nIGM, igmCoeffs.front());
       break;
     }
     Int32 meiksinIdx = MeiksinList[kigm];
@@ -247,7 +241,7 @@ void COperatorTplcombination::BasicFit(
       // apply ism on all templates, once for all
       if (opt_dustFitting && !DisextinctData) {
         coeffEBMV =
-            m_templatesRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvValue(
+            m_templatesRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvValue(
                 kEbmv);
         for (Int32 iddl = 0; iddl < nddl; iddl++)
           m_templatesRebined_bf[iddl].ApplyDustCoeff(kEbmv);
@@ -264,9 +258,8 @@ void COperatorTplcombination::BasicFit(
             igmLoopUseless_WavelengthRange = true;
         }
         if (opt_dustFitting) {
-          coeffEBMV =
-              m_templatesRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvValue(
-                  kEbmv);
+          coeffEBMV = m_templatesRebined_bf.front()
+                          .m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
           identityTemplate.ApplyDustCoeff(kEbmv);
         }
         const CSpectrumFluxAxis &extinction = identityTemplate.GetFluxAxis();
@@ -735,8 +728,8 @@ COperatorTplcombination::ComputeSpectrumModel(
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
 
   bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
-      m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
-      kEnd);
+      m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
+      kStart, kEnd);
   if (!kStartEnd_ok) {
     THROWG(INTERNAL_ERROR, "impossible to get valid kstart or kend");
   }
@@ -744,8 +737,8 @@ COperatorTplcombination::ComputeSpectrumModel(
   // create identityTemplate on which we apply meiksin and ism, once for all
   // tpllist
   CTemplate identityTemplate(
-      "identity", "idle", m_templatesRebined_bf[0].GetSpectralAxis(),
-      CSpectrumFluxAxis(m_templatesRebined_bf[0].GetSampleCount(), 1));
+      "identity", "idle", m_templatesRebined_bf.front().GetSpectralAxis(),
+      CSpectrumFluxAxis(m_templatesRebined_bf.front().GetSampleCount(), 1));
 
   if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
     identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift,

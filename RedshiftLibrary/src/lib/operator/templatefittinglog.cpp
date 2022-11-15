@@ -175,39 +175,20 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
                "with n=%d, padded to n=%d",
                nSpc, nPadded);
 
-  //    for(Int32 k=0; k<nSpc; k++)
-  //    {
-  //        inSpc[k][0] = X[k];
-  //        inSpc[k][1] = 0.0;
-  //    }
-  //    for(Int32 k=nSpc; k<nPadded; k++)
-  //    {
-  //        inSpc[k][0] = 0.0;
-  //        inSpc[k][1] = 0.0;
-  //    }
-
   bool computeSpcFFT = true;
-  if (precomputedFFT == 0 && precomputedFFT_spcFluxOverErr2 != 0) {
+  if ((precomputedFFT == 0 && precomputedFFT_spcFluxOverErr2 != 0) ||
+      (precomputedFFT == 1 && precomputedFFT_spcOneOverErr2 != 0))
     computeSpcFFT = false;
-  }
-  if (precomputedFFT == 1 && precomputedFFT_spcOneOverErr2 != 0) {
-    computeSpcFFT = false;
-  }
 
   if (computeSpcFFT) {
-
-    Log.LogDebug("FitAllz: Processing spc-fft "
-                 "with nPadBeforeSpc=%d",
+    Log.LogDebug("FitAllz: Processing spc-fft with nPadBeforeSpc=%d",
                  nPadBeforeSpc);
-    for (Int32 k = 0; k < nPadBeforeSpc; k++) {
+    for (Int32 k = 0; k < nPadBeforeSpc; k++)
       inSpc[k] = 0.0;
-    }
-    for (Int32 k = nPadBeforeSpc; k < nPadBeforeSpc + nSpc; k++) {
+    for (Int32 k = nPadBeforeSpc; k < nPadBeforeSpc + nSpc; k++)
       inSpc[k] = X[nSpc - 1 - (k - nPadBeforeSpc)]; // X[k-nPadBeforeSpc];
-    }
-    for (Int32 k = nPadBeforeSpc + nSpc; k < nPadded; k++) {
+    for (Int32 k = nPadBeforeSpc + nSpc; k < nPadded; k++)
       inSpc[k] = 0.0;
-    }
 
     fftw_execute(pSpc);
     Log.LogDebug("FitAllz: spc-fft done");
@@ -225,7 +206,6 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
       }
     }
     if (precomputedFFT == 1) {
-
       precomputedFFT_spcOneOverErr2 =
           (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
       if (precomputedFFT_spcOneOverErr2 == 0)
@@ -238,33 +218,21 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
     }
 
   } else {
-    if (precomputedFFT == 0) {
+    if (precomputedFFT == 0)
       for (Int32 k = 0; k < nPadded; k++) {
         outSpc[k][0] = precomputedFFT_spcFluxOverErr2[k][0];
         outSpc[k][1] = precomputedFFT_spcFluxOverErr2[k][1];
       }
-    }
-    if (precomputedFFT == 1) {
+    if (precomputedFFT == 1)
       for (Int32 k = 0; k < nPadded; k++) {
         outSpc[k][0] = precomputedFFT_spcOneOverErr2[k][0];
         outSpc[k][1] = precomputedFFT_spcOneOverErr2[k][1];
       }
-    }
   }
 
-  Log.LogDebug("FitAllz: Processing tpl-fft "
-               "with n=%d, padded to n=%d",
-               nTpl, nPadded);
-  //    for(Int32 k=0; k<nTpl; k++)
-  //    {
-  //        inTpl_padded[k][0] = Y[k];//Y[nTpl-1-k];//
-  //        //inTpl_padded[k][1] = 0.0;
-  //    }
-  //    for(Int32 k=nTpl; k<nPadded; k++)
-  //    {
-  //        inTpl_padded[k][0] = 0.0;
-  //        //inTpl_padded[k][1] = 0.0;
-  //    }
+  Log.LogDebug("FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl,
+               nPadded);
+
   for (Int32 k = 0; k < nPadBeforeTpl; k++) {
     inTpl_padded[k] = 0.0;
   }
@@ -303,11 +271,10 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
   for (Int32 k = 0; k < nshifts; k++) {
     // XtY[k] = inCombined[k+(Int32)(nPadded/2.0)][0]/nPadded;
     Int32 IndexCyclic = k + offsetSamples;
-    if (IndexCyclic < 0) {
+    if (IndexCyclic < 0)
       IndexCyclic += nPadded;
-    } else if (IndexCyclic >= nPadded) {
+    else if (IndexCyclic >= nPadded)
       IndexCyclic -= nPadded;
-    }
 
     XtY[k] = inCombined[IndexCyclic] / (Float64)nPadded;
   }
@@ -955,85 +922,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   return 0;
 }
 
-Int32 COperatorTemplateFittingLog::InterpolateResult(
-    const TFloat64List &in, TFloat64List &inGrid, const TFloat64List &tgtGrid,
-    TFloat64List &out, Float64 defaultValue) {
-  bool debug = 0;
-  Int32 n = inGrid.size();
-  Int32 tgtn = tgtGrid.size();
-  out.resize(tgtn);
-  for (Int32 j = 0; j < tgtn; j++) {
-    out[j] = defaultValue;
-  }
-
-  //* // GSL method spline
-  // initialise and allocate the gsl objects
-  // lin
-  gsl_interp *interpolation = gsl_interp_alloc(gsl_interp_linear, n);
-  gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
-  Int32 status;
-  // spline
-  // gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-  // gsl_spline_init (spline, inGrid, in, n);
-  // gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-  gsl_error_handler_t *gsl_error_handler_old = gsl_set_error_handler_off();
-
-  // Deal with exp/log accuracy
-  Float64 epsilon = 1E-8;
-
-  if (tgtGrid[0] < inGrid[0]) {
-    if ((inGrid[0] - tgtGrid[0]) < epsilon) {
-      inGrid[0] = tgtGrid[0] - epsilon;
-    } else {
-      THROWG(INTERNAL_ERROR,
-             Formatter()
-                 << "Error while interpolating loglambda chi2 result : xrebin("
-                 << tgtGrid[0] << ") < x[0](" << inGrid[0] << ")");
-    }
-  }
-  if (tgtGrid[tgtn - 1] > inGrid[n - 1]) {
-    if ((tgtGrid[tgtn - 1] - inGrid[n - 1]) < epsilon) {
-      inGrid[n - 1] = tgtGrid[tgtn - 1] + epsilon;
-    } else {
-      THROWG(INTERNAL_ERROR,
-             Formatter()
-                 << "Error while interpolating loglambda chi2 result : xrebin("
-                 << tgtGrid[tgtn - 1] << ") > x[n-1](" << inGrid[n - 1] << ")");
-    }
-  }
-
-  gsl_interp_init(interpolation, &inGrid.at(0), &in.at(0), n);
-
-  for (Int32 j = 0; j < tgtn; j++) {
-    Float64 Xrebin = tgtGrid[j];
-    if (debug) {
-      Log.LogDebug("InterpolateResult, j=%d, xrebin=%f", j, Xrebin);
-    }
-
-    status = gsl_interp_eval_e(interpolation, &inGrid.at(0), &in.at(0), Xrebin,
-                               accelerator,
-                               &out[j]); // lin
-
-    if (status != GSL_SUCCESS) {
-      THROWG(EXTERNAL_LIB_ERROR,
-             Formatter() << "GSL Error : " << status
-                         << " (Errtype: " << gsl_strerror(status) << ")");
-    }
-    // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
-    // Log.LogInfo(FitAllz: interpolating
-    // gsl-spline z result, , ztgt=%f, rebinY=%f", tgtGrid[j], out[j]);
-  }
-
-  // TODO why should there be an old gsl_error_handler ?
-  gsl_set_error_handler(gsl_error_handler_old);
-
-  gsl_interp_free(interpolation);
-  // gsl_spline_free (spline);
-  gsl_interp_accel_free(accelerator);
-
-  return 0;
-}
 // find indexes in templateSpectra for which Z falls into the redshift range
 /**
  * Method logic:

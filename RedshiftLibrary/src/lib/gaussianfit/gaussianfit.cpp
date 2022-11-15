@@ -95,21 +95,18 @@ TFloat64List CGaussianFit::ComputeFirstGuess(const CSpectrum &spectrum,
   const Float64 *y =
       spectrum.GetFluxAxis().GetSamples() + studyRange.GetBegin();
 
-  Int32 i;
   // Copy flux axis to v
   TFloat64List v(n);
-  for (i = 0; i < n; i++) {
+  for (Int32 i = 0; i < n; i++)
     v[i] = y[i];
-  }
 
   // Sort v
   gsl_sort(v.data(), 1, n);
   // Extract median
   Float64 y_median = gsl_stats_median_from_sorted_data(v.data(), 1, n);
 
-  for (i = 0; i < n; i++) {
+  for (Int32 i = 0; i < n; i++)
     v[i] = y[i] - y_median;
-  }
 
   Float64 max = gsl_stats_max(v.data(), 1, n);
   Float64 min = gsl_stats_min(v.data(), 1, n);
@@ -132,23 +129,20 @@ TFloat64List CGaussianFit::ComputeFirstGuess(const CSpectrum &spectrum,
 
   // Gaussian amplitude
   Float64 std = 0;
-  for (i = 0; i < n; i++) {
+  for (Int32 i = 0; i < n; i++) {
     std += (y[i] - std) * (y[i] - std);
   }
   std /= (n - 1);
 
   Int32 count = 0;
-  for (i = 0; i < n; i++) {
-    if (y[i] > y_median + 3. * std) {
+  for (Int32 i = 0; i < n; i++)
+    if (y[i] > y_median + 3. * std)
       count++;
-    }
-  }
 
-  if (count > 2) {
+  if (count > 2)
     firstGuessData[2] = (x[count] - x[0]) / 6.;
-  } else {
+  else
     firstGuessData[2] = (x[n - 1] - x[1]) / 6.;
-  }
 
   return firstGuessData;
 }
@@ -304,11 +298,8 @@ int CGaussianFit::GaussF(const gsl_vector *param, void *data, gsl_vector *f) {
   // userData->studyRange->GetBegin();
   TFloat64List err(n);
   if (true) // WARNING: Hardcoded disable the use of err vect. = 1.0
-  {
-    for (Int32 i = 0; i < n; i++) {
+    for (Int32 i = 0; i < n; i++)
       err[i] = 1.0;
-    }
-  }
 
   Float64 A = gsl_vector_get(param, 0);
   Float64 mu = gsl_vector_get(param, 1);
@@ -320,9 +311,8 @@ int CGaussianFit::GaussF(const gsl_vector *param, void *data, gsl_vector *f) {
   for (Int32 i = 0; i < n; i++) {
     /* Polynomial term */
     Float64 Pi = 0;
-    for (Int32 k = 0; k <= order; k++) {
+    for (Int32 k = 0; k <= order; k++)
       Pi += gsl_vector_get(param, 3 + k) * pow(x[i] - mu, k);
-    }
 
     // Add gaussian term to polynomial term
     Float64 Yi = A * exp(-1. * (x[i] - mu) * (x[i] - mu) / (c * c)) + Pi;
@@ -344,11 +334,8 @@ int CGaussianFit::GaussDF(const gsl_vector *param, void *data, gsl_matrix *J) {
   // userData->studyRange->GetBegin();
   TFloat64List err(n);
   if (true) // WARNING: Hardcoded disable the use of err vect. = 1.0
-  {
-    for (Int32 i = 0; i < n; i++) {
+    for (Int32 i = 0; i < n; i++)
       err[i] = 1.0;
-    }
-  }
 
   Float64 A = gsl_vector_get(param, 0);
   Float64 mu = gsl_vector_get(param, 1);
@@ -371,10 +358,9 @@ int CGaussianFit::GaussDF(const gsl_vector *param, void *data, gsl_matrix *J) {
     // Gaussian term
     gsl_matrix_set(J, i, 0, e);
     Float64 P_mu = 0;
-    for (Int32 k = 1; k <= order; k++) {
+    for (Int32 k = 1; k <= order; k++)
       P_mu +=
           (-1. * (k * pow(x[i] - mu, k - 1) * gsl_vector_get(param, 3 + k)));
-    }
 
     gsl_matrix_set(J, i, 1, A_d * (x[i] - mu) * e + P_mu / err[i]);
     gsl_matrix_set(J, i, 2, A_d * (x[i] - mu) * (x[i] - mu) * e / c);

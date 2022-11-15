@@ -52,14 +52,11 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                       const TAxisSampleList &Xtgt, const TFloat64List &Error,
                       Int32 &cursor) {
 
-  TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
-  TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
-
-  CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
+  CSpectrumNoiseAxis &ErrorRebin = rebinedFluxAxis.GetError();
 
   // nearest sample, lookup
   Int32 k = 0;
-  Int32 n = spectralAxis.GetSamplesCount();
+  Int32 n = m_spectrum.GetSampleCount();
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {
     // k = gsl_interp_bsearch
@@ -73,7 +70,7 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       xSrcStep = Xsrc[k + 1] - Xsrc[k];
 
     // closest value
-    Yrebin[cursor] = Ysrc[k];
+    rebinedFluxAxis[cursor] = Ysrc[k];
 
     if (opt_error_interp != "no") {
 
