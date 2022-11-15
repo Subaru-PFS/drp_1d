@@ -45,6 +45,4 @@ using namespace NSEpic;
 /**
  * \brief Empty constructor.
  **/
-CReliabilityResult::CReliabilityResult() : CSolveResult() {
-  this->m_type = "CReliabilityResult";
-}
+CReliabilityResult::CReliabilityResult() : CSolveResult("CReliabilityResult") {}

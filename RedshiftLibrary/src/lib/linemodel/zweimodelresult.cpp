@@ -51,17 +51,13 @@ using namespace NSEpic;
 /**
  * \brief Empty constructor.
  **/
-CZweiModelResult::CZweiModelResult() {}
+CZweiModelResult::CZweiModelResult() : COperatorResult("CZweiModelResult") {}
 
 CZweiModelResult::CZweiModelResult(TFloat64List redshifts_s1,
                                    TFloat64List redshifts_s2,
-                                   std::vector<TFloat64List> combined_merits) {
+                                   std::vector<TFloat64List> combined_merits)
+    : COperatorResult("CZweiModelResult") {
   m_redshifts_s1 = redshifts_s1;
   m_redshifts_s2 = redshifts_s2;
   m_combined_merits = combined_merits;
 }
-
-/**
- * \brief Empty destructor.
- **/
-CZweiModelResult::~CZweiModelResult() {}

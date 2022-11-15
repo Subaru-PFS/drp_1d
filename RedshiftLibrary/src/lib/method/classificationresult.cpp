@@ -42,17 +42,8 @@
 
 using namespace NSEpic;
 
-/**
- * \brief Empty constructor.
- **/
-CClassificationResult::CClassificationResult() : CSolveResult() {
-  this->m_type = "CClassificationResult";
-}
-
-/**
- * \brief Empty destructor.
- **/
-
+CClassificationResult::CClassificationResult()
+    : CSolveResult("CClassificationResult") {}
 void CClassificationResult::SetTypeLabel(std::string lbl) { m_TypeLabel = lbl; }
 
 void CClassificationResult::SetEvidence(const std::string &object_type,

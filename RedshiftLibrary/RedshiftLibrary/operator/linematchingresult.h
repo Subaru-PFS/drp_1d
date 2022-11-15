@@ -36,8 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATOR_RAYMATCHINGRESULT_
-#define _REDSHIFT_OPERATOR_RAYMATCHINGRESULT_
+#ifndef _REDSHIFT_OPERATOR_LINEMATCHINGRESULT_
+#define _REDSHIFT_OPERATOR_LINEMATCHINGRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
@@ -54,6 +54,8 @@ namespace NSEpic {
  */
 class CLineMatchingResult : public COperatorResult {
 public:
+  CLineMatchingResult() : COperatorResult("CLineMatchingResult"){};
+
   struct SSolution {
     CLine DetectedLine;
     CLine RestLine;
@@ -113,4 +115,4 @@ public:
 };
 } // namespace NSEpic
 
-#endif // _REDSHIFT_OPERATOR_RAYMATCHINGRESULT_
+#endif // _REDSHIFT_OPERATOR_LINEMATCHINGRESULT_

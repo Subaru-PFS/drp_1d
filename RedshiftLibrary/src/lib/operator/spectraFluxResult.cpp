@@ -39,19 +39,10 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/log/log.h"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-#include <fstream>
-#include <string>
-
-#include <iomanip>
-#include <iostream>
-
 using namespace std;
 using namespace NSEpic;
 
-CSpectraFluxResult::CSpectraFluxResult() {
-  this->m_type = "CSpectraFluxResult";
-}
+CSpectraFluxResult::CSpectraFluxResult()
+    : COperatorResult("CSpectraFluxResult") {}
 
 CSpectraFluxResult::~CSpectraFluxResult() {}

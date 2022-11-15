@@ -52,6 +52,15 @@
 using namespace std;
 using namespace NSEpic;
 
+CLogZPdfResult::CLogZPdfResult() : COperatorResult("CLogZPdfResult") {}
+
+CLogZPdfResult::CLogZPdfResult(const TFloat64List &redshifts,
+                               const TZGridListParams &zparamList)
+    : COperatorResult("CLogZPdfResult"), Redshifts(redshifts),
+      valProbaLog(redshifts.size(), -DBL_MAX) {
+  setZGridParams(zparamList); // to decide if we replace this
+}
+
 bool CZGridListParams::isZGridCoherent() const {
   if (zparams.empty())
     THROWG(INTERNAL_ERROR, "zstep is empty");
@@ -125,15 +134,6 @@ const TFloat64List CZGridListParams::getExtendedList(bool logsampling,
                                   "extended list only on second pass windows");
   return logsampling ? range.SpreadOverLogZplusOne(zparams[index].zstep)
                      : range.SpreadOver(zparams[index].zstep);
-}
-
-CLogZPdfResult::CLogZPdfResult() { this->m_type = "CLogZPdfResult"; }
-
-CLogZPdfResult::CLogZPdfResult(const TFloat64List &redshifts,
-                               const TZGridListParams &zparamList)
-    : Redshifts(redshifts), valProbaLog(redshifts.size(), -DBL_MAX) {
-  this->m_type = "CLogZPdfResult";
-  setZGridParams(zparamList); // to decide if we replace this
 }
 
 void CLogZPdfResult::setZGridParams(const TZGridListParams &paramList) {

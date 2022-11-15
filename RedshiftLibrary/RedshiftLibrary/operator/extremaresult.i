@@ -47,7 +47,7 @@ public:
   TExtremaResult &operator=(TExtremaResult &&res) = default;
   virtual ~TExtremaResult() = default;
   TExtremaResult(const TCandidateZ &candz) : TCandidateZ(candz) {
-    this->m_type = "TExtremaResult";
+    m_type = "TExtremaResult";
   }
   TExtremaResult(const CContinuumModelSolution &cms)
       : FittedTplName(cms.tplName), FittedTplAmplitude(cms.tplAmplitude),
@@ -55,7 +55,9 @@ public:
         FittedTplMerit(cms.tplMerit), FittedTplMeritPhot(cms.tplMeritPhot),
         FittedTplEbmvCoeff(cms.tplEbmvCoeff),
         FittedTplMeiksinIdx(cms.tplMeiksinIdx), FittedTplDtm(cms.tplDtm),
-        FittedTplMtm(cms.tplMtm), FittedTplLogPrior(cms.tplLogPrior) {}
+        FittedTplMtm(cms.tplMtm), FittedTplLogPrior(cms.tplLogPrior) {
+    m_type = "TExtremaResult";
+  }
 
   // Name of the best template fitted for continuum
   std::string FittedTplName = "";

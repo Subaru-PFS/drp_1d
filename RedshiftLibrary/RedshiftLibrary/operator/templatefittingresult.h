@@ -42,7 +42,6 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/result.h"
-//#include "RedshiftLibrary/operator/templatefitting.h"
 
 namespace NSEpic {
 

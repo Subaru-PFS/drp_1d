@@ -58,14 +58,10 @@ class CTemplateFittingSolveResult : public CPdfSolveResult {
 
 public:
   CTemplateFittingSolveResult(
-      const std::string &scope,
       const std::shared_ptr<const TCandidateZ> &ExtremaResult,
-      const std::string &opt_pdfcombination, Float64 evidence);
-
-  // Extrema results
-
-  const std::string m_scope;
-  // std::string m_name;
+      const std::string &opt_pdfcombination, Float64 evidence)
+      : CPdfSolveResult("CTemplateFittingSolveResult", ExtremaResult,
+                        opt_pdfcombination, evidence){};
 
   std::string m_tplName = "undefined";
   Float64 m_amplitude = NAN;
@@ -75,14 +71,6 @@ public:
 
   // Not sure it is necessary here
   Float64 m_fittingSNR = NAN;
-
-  /*    std::unordered_map<std::string, std::string> m_scope2name = {
-          {"templatefittingsolve",      "TemplateFittingSolve"},
-          {"templatefittinglogsolve",   "TemplateFittingLogSolve"},
-          {"tplcombinationsolve", "TplcombinationSolve"}
-      };*/
-
-  // const EType m_type;
 };
 
 } // namespace NSEpic

@@ -54,7 +54,8 @@ namespace NSEpic {
 class COperatorResult {
 
 public:
-  COperatorResult() = default;
+  // COperatorResult() = default;
+  COperatorResult(const std::string &type) : m_type(type){};
   virtual ~COperatorResult() = default;
 
   const std::string &getType() const { return m_type; }

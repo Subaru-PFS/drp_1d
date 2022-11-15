@@ -358,11 +358,10 @@ class COperatorResult
 {
 
 public:
+  COperatorResult(const std::string &type) : m_type(type){};
+  virtual ~COperatorResult();
 
-    COperatorResult();
-    virtual ~COperatorResult();
-
-    const std::string& getType();
+  const std::string &getType();
 
 };
 

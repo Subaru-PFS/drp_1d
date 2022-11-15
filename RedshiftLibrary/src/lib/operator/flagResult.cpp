@@ -41,9 +41,6 @@
 using namespace std;
 using namespace NSEpic;
 
-CFlagLogResult::CFlagLogResult() { this->m_type = "CFlagLogResult"; }
-
 CFlagLogResult::CFlagLogResult(Int32 _flagValue, TWarningMsgList _msgList)
-    : flagValue(_flagValue), msgList(std::move(_msgList)) {
-  this->m_type = "CFlagLogResult";
-}
+    : COperatorResult("CFlagLogResult"), flagValue(_flagValue),
+      msgList(std::move(_msgList)) {}

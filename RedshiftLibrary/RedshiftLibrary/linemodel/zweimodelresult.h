@@ -54,7 +54,7 @@ public:
   CZweiModelResult(TFloat64List redshifts_s1, TFloat64List redshifts_s2,
                    std::vector<TFloat64List> combined_merits);
   CZweiModelResult();
-  virtual ~CZweiModelResult();
+  virtual ~CZweiModelResult(){};
 
 private:
   TFloat64List m_redshifts_s1;

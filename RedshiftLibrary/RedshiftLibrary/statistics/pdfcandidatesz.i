@@ -43,7 +43,8 @@ public:
   TCandidateZ &operator=(const TCandidateZ &) = default;
   TCandidateZ &operator=(TCandidateZ &&) = default;
   virtual ~TCandidateZ() = default;
-  TCandidateZ() = default;
+  TCandidateZ(const std::string &type = "TCandidateZ")
+      : COperatorResult(type){};
 
   Float64 Redshift = NAN;
   Float64 ValProba = NAN;

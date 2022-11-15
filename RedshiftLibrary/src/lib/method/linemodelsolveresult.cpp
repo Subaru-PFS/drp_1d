@@ -47,13 +47,10 @@
 
 using namespace NSEpic;
 
-/**
- * \brief Empty constructor.
- **/
 CLineModelSolveResult::CLineModelSolveResult(const std::shared_ptr<const TCandidateZ>& BestExtremumResult,
                                              const std::string& opt_pdfcombination,
                                              Float64 evidence):
-    CPdfSolveResult( BestExtremumResult, opt_pdfcombination, evidence)
+    CPdfSolveResult( "CLineModelSolveResult", BestExtremumResult, opt_pdfcombination, evidence)
     //ExtremaResult(ExtremaResult)
     /*    tplratioName(ExtremaResult->m_ranked_candidates[0].FittedTplratioName),
     tplcontinuumName(ExtremaResult->m_ranked_candidates[0].FittedTplName),
