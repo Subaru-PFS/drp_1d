@@ -89,7 +89,7 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray, bool integ) {
   if (integ) {
     // compute pdf candidate properties (deltaz, integ, rank )
     CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-    CandidateszResult = zcand_op.Compute(m_postmargZResult->Redshifts,
+    CandidateszResult = zcand_op.Compute(m_postmargZResult->getZGrid(),
                                          m_postmargZResult->valProbaLog);
 
     // eventually truncate candidates at maxcount
@@ -148,7 +148,7 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
 void COperatorPdfz::checkPdfSum() const {
 
   // check pdf sum=1
-  Float64 sumTrapez = getSumTrapez(m_postmargZResult->Redshifts,
+  Float64 sumTrapez = getSumTrapez(m_postmargZResult->getZGrid() o,
                                    m_postmargZResult->valProbaLog);
   Log.LogDetail(
       "COperatorPdfz::checkPdfSum: Pdfz normalization - sum trapz. = %e",
@@ -174,7 +174,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
         m_maxPeakCount_per_window, m_peakSeparation, m_meritcut,
         invertForMinSearch, m_allow_extrema_at_border, redshiftsRange);
     bool findok =
-        extremum_op.Find(m_postmargZResult->Redshifts,
+        extremum_op.Find(m_postmargZResult->getZGrid(),
                          m_postmargZResult->valProbaLog, extremumList);
     if (!findok) {
       if (m_candidatesZRanges.size() == 1)
@@ -469,7 +469,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
         LogEvidencesWPriorM[km] - m_postmargZResult->valMargEvidenceLog;
 
     // check if the redshift bins are the same
-    if (m_postmargZResult->Redshifts != redshifts)
+    if (m_postmargZResult->getZGrid() != redshifts)
       THROWG(INTERNAL_ERROR, "z-bins comparison failed");
 
     for (Int32 k = 0; k < zsize; k++) {
@@ -519,7 +519,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
 
     // check if the redshift bins are the same
     for (Int32 k = 0; k < redshifts.size(); k++)
-      if (m_postmargZResult->Redshifts[k] != redshifts[k])
+      if (m_postmargZResult->getZGrid()[k] != redshifts[k])
         THROWG(INTERNAL_ERROR,
                Formatter() << "z-bins comparison failed for result km=" << km);
 
@@ -650,7 +650,7 @@ void COperatorPdfz::isPdfValid() const {
   if (!m_postmargZResult)
     THROWG(INTERNAL_ERROR, " PDF ptr is null");
 
-  if (m_postmargZResult->Redshifts.size() < 2)
+  if (m_postmargZResult->getZGrid().size() < 2)
     THROWG(INTERNAL_ERROR, "PDF has size less than 2");
 
   // is it completely flat ?

@@ -57,24 +57,26 @@ struct TPdf {
   TFloat64List probaLog;
 };
 
-typedef enum { COARSE = 0, FINE, MIXED } ZGridType;
-
 typedef std::vector<TZGridParameters> TZGridListParams;
 
 class CZGridListParams {
 public:
   CZGridListParams() = default;
-  CZGridListParams(const TZGridListParams &params) : zparams(params) {}
+ CZGridListParams(const TZGridListParams& params):zparams(params){}
+  CZGridListParams(const TFloat64List& zcenter,
+		   const TFloat64List& zmin,
+		   const TFloat64List& zmax,
+		   const TFloat64List& zstep);
 
-  bool isZGridCoherent() const;
-  const TFloat64List buildLogZGrid(bool logsampling,
-                                   ZGridType zgrid_type) const;
-  const TFloat64List buildLogMixedZGrid(bool logsampling) const;
+  const TFloat64List getZGrid(bool logsampling) const;
+  
+  const Int32 size() const {return zparams.size();}
 
-  const Int32 size() const { return zparams.size(); }
-
-private:
-  const TFloat64List getExtendedList(bool logsampling, Int32 index) const;
+ private:
+  const TFloat64List buildZGrid(bool logsampling,
+				Int32 index) const;
+  const TFloat64List
+  buildLogMixedZGrid(bool logsampling) const;
 
   TZGridListParams zparams;
 };
@@ -86,6 +88,9 @@ public:
   CLogZPdfResult(const TFloat64List &redshifts,
                  const TZGridListParams &zparams);
 
+  const TFloat64List getZGrid(bool logsampling) const;
+
+  void convertToRegular(bool logsampling);
   static const TPdf getLogZPdf_fine(bool logsampling,
                                     const CZGridListParams &zparams,
                                     const TFloat64List &valProbaLog);
@@ -94,7 +99,7 @@ public:
                                              const TFloat64List &originValues,
                                              TFloat64List &outputValues);
 
-  TFloat64List Redshifts;
+  //bool isZGridCoherent() const;
   TFloat64List valProbaLog;
   Float64 valEvidenceLog = NAN;
   Float64 valMargEvidenceLog = NAN;
@@ -105,5 +110,6 @@ public:
   TFloat64List zstep;
 
 private:
+  TFloat64List Redshifts;
   void setZGridParams(const TZGridListParams &paramList);
 };
