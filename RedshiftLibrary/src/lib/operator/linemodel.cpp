@@ -1348,17 +1348,18 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
       lineTypeStr = "EMISSION";
       lineTypeInt = CLine::nType_Emission;
     }
-    Log.LogDetail("  Operator-Linemodel: manualStep velocity fit "
-                  "%s, for z = %.6f",
-                  lineTypeStr, m_result->Redshifts[Zidx]);
+    Log.LogDetail(Formatter()
+                  << "  Operator-Linemodel: manualStep velocity fit "
+                  << lineTypeStr << ", for z = " << m_result->Redshifts[Zidx]);
     if (m_enableWidthFitByGroups) {
       // Note: this option requires that prepareSupport is called prior to
       // calling GetModelVelFitGroups,which is the case here (through a prior
       // call to ::fit)
       idxVelfitGroups =
           m_fittingManager->m_Elements.GetModelVelfitGroups(lineTypeInt);
-      Log.LogDetail("  Operator-Linemodel: VelfitGroups %s - n = %d",
-                    lineTypeStr, idxVelfitGroups.size());
+      Log.LogDetail(Formatter()
+                    << "  Operator-Linemodel: VelfitGroups " << lineTypeStr
+                    << " - n = " << idxVelfitGroups.size());
       if (m_firstpass_extremaResult->size() > 1 && idxVelfitGroups.size() > 1)
         THROWG(INTERNAL_ERROR,
                "  Operator-Linemodel: not allowed to use more than 1 "
