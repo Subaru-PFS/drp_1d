@@ -401,6 +401,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
     bool opt_extinction, bool opt_dustFitting,
+    Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
   Log.LogDetail(

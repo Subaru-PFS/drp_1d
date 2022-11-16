@@ -289,8 +289,9 @@ void COperatorLineModel::fitContinuumTemplates(
         std::dynamic_pointer_cast<CTemplateFittingResult>(
             m_templateFittingOperator->Compute(
                 tplList[i], overlapThreshold, maskList, opt_interp,
-                m_opt_tplfit_extinction, m_opt_tplfit_dustFit, zePriorData,
-                ebmvIndices[i], meiksinIndices[i]));
+                m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
+                m_opt_continuum_null_amp_threshold, zePriorData, ebmvIndices[i],
+                meiksinIndices[i]));
 
     if (!templatefittingResult) {
       THROWG(INTERNAL_ERROR, Formatter()

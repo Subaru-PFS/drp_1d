@@ -573,7 +573,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           // check negative amplitude
           ampl_sigma = ampl / ampl_err;
 
-          // force positivity
+          // force positivity: m_amplForcePositive
           ampl = max(0., ampl);
 
           result->FitAmplitude[fullResultIdx] = ampl;
@@ -1002,6 +1002,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     const std::shared_ptr<const CTemplate> &logSampledTpl,
     Float64 overlapThreshold, const std::vector<CMask> &additional_spcMasks,
     std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+    Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
   Log.LogDetail("starting computation for template: %s",
