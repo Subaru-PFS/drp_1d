@@ -190,3 +190,8 @@ void CLogZPdfResult::convertToRegular(bool logsampling) {
   interpolateLargeGridOnFineGrid(origin_zgrid, Redshifts, origin_valProbaLog,
                                  valProbaLog);
 }
+
+const TFloat64List CLogZPdfResult::getZGrid(bool logsampling) const {
+  CZGridListParams zparams(zcenter, zmin, zmax, zstep);
+  return zparams.getZGrid(logsampling);
+}

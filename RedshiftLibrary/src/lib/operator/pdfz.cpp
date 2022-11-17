@@ -89,8 +89,8 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray, bool integ) {
   if (integ) {
     // compute pdf candidate properties (deltaz, integ, rank )
     CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-    CandidateszResult = zcand_op.Compute(m_postmargZResult->getZGrid(),
-                                         m_postmargZResult->valProbaLog);
+    const TFloat64List zgrid = m_postmargZResult->getZGrid(true);
+    CandidateszResult = zcand_op.Compute(zgrid, m_postmargZResult->valProbaLog);
 
     // eventually truncate candidates at maxcount
     size_t newsize = std::min(CandidateszResult->m_ranked_candidates.size(),
@@ -114,6 +114,7 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
   if (!chisquarearray.chisquares.size()) {
     THROWG(INTERNAL_ERROR, Formatter() << "chisquarearray is empty");
   }
+  // what shall we do here to build CLogZPdfResult ?
   TZGridListParams zparams(chisquarearray.zgridParams.size() + 1);
   zparams[0] = TZGridParameters(TFloat64Range(chisquarearray.redshifts),
                                 chisquarearray.zstep);
@@ -148,8 +149,8 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
 void COperatorPdfz::checkPdfSum() const {
 
   // check pdf sum=1
-  Float64 sumTrapez = getSumTrapez(m_postmargZResult->getZGrid() o,
-                                   m_postmargZResult->valProbaLog);
+  const TFloat64List zgrid = m_postmargZResult->getZGrid(true);
+  Float64 sumTrapez = getSumTrapez(zgrid, m_postmargZResult->valProbaLog);
   Log.LogDetail(
       "COperatorPdfz::checkPdfSum: Pdfz normalization - sum trapz. = %e",
       sumTrapez);
@@ -163,6 +164,7 @@ void COperatorPdfz::checkPdfSum() const {
 
 TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   TCandidateZbyID candidates;
+  const TFloat64List zgrid = m_postmargZResult->getZGrid(true);
   for (const auto &cand : m_candidatesZRanges) {
     TPointList extremumList;
     const TFloat64Range &redshiftsRange = cand.second;
@@ -174,8 +176,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
         m_maxPeakCount_per_window, m_peakSeparation, m_meritcut,
         invertForMinSearch, m_allow_extrema_at_border, redshiftsRange);
     bool findok =
-        extremum_op.Find(m_postmargZResult->getZGrid(),
-                         m_postmargZResult->valProbaLog, extremumList);
+        extremum_op.Find(zgrid, m_postmargZResult->valProbaLog, extremumList);
     if (!findok) {
       if (m_candidatesZRanges.size() == 1)
         THROWG(INTERNAL_ERROR, " Failed to identify pdf candidates");
@@ -440,6 +441,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   const auto nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
   const auto zsize = redshifts.size();
+  const TFloat64List zgrid = m_postmargZResult->getZGrid(true);
 
   std::vector<TFloat64List> logProbaList;
   TFloat64List LogEvidencesWPriorM;
@@ -469,7 +471,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
         LogEvidencesWPriorM[km] - m_postmargZResult->valMargEvidenceLog;
 
     // check if the redshift bins are the same
-    if (m_postmargZResult->getZGrid() != redshifts)
+    if (zgrid != redshifts)
       THROWG(INTERNAL_ERROR, "z-bins comparison failed");
 
     for (Int32 k = 0; k < zsize; k++) {
@@ -505,6 +507,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
   const Float64 &cstLog = chisquarearray.cstLog;
+  const TFloat64List zgrid = m_postmargZResult->getZGrid(true);
 
   for (Int32 km = 0; km < meritResults.size(); km++) {
     Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d", km);
@@ -519,7 +522,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
 
     // check if the redshift bins are the same
     for (Int32 k = 0; k < redshifts.size(); k++)
-      if (m_postmargZResult->getZGrid()[k] != redshifts[k])
+      if (zgrid[k] != redshifts[k])
         THROWG(INTERNAL_ERROR,
                Formatter() << "z-bins comparison failed for result km=" << km);
 
@@ -649,8 +652,9 @@ void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
 void COperatorPdfz::isPdfValid() const {
   if (!m_postmargZResult)
     THROWG(INTERNAL_ERROR, " PDF ptr is null");
+  const TFloat64List zgrid = m_postmargZResult->getZGrid(true);
 
-  if (m_postmargZResult->getZGrid().size() < 2)
+  if (zgrid.size() < 2)
     THROWG(INTERNAL_ERROR, "PDF has size less than 2");
 
   // is it completely flat ?

@@ -49,8 +49,7 @@ BOOST_AUTO_TEST_CASE(mixedGrid_test) {
   TZGridListParams zparams(2);
   zparams[0] = TZGridParameters(TFloat64Range(0, 10), 3, NAN);
   zparams[1] = TZGridParameters(TFloat64Range(2, 5), 1, 3);
-  const TFloat64List mixedGrid =
-      CZGridListParams(zparams).buildLogMixedZGrid(false);
+  const TFloat64List mixedGrid = CZGridListParams(zparams).getZGrid(false);
 
   TFloat64List resultingVect{0, 2, 3, 4, 5, 6, 9};
   BOOST_CHECK(mixedGrid.size() == resultingVect.size());
@@ -62,8 +61,7 @@ BOOST_AUTO_TEST_CASE(mixedGrid_test_zcenterNotincluded) {
   TZGridListParams zparams(2);
   zparams[0] = TZGridParameters(TFloat64Range(0, 10), 3, NAN); // 0, 3, 6, 9
   zparams[1] = TZGridParameters(TFloat64Range(2, 5), 1, 4);
-  const TFloat64List mixedGrid =
-      CZGridListParams(zparams).buildLogMixedZGrid(false);
+  const TFloat64List mixedGrid = CZGridListParams(zparams).getZGrid(false);
 
   TFloat64List resultingVect{0, 2, 3, 4, 5, 6, 9};
   BOOST_CHECK(mixedGrid.size() == resultingVect.size());
@@ -75,8 +73,7 @@ BOOST_AUTO_TEST_CASE(mixedGrid_test_zcenterNotincluded2) {
   TZGridListParams zparams(2);
   zparams[0] = TZGridParameters(TFloat64Range(1, 10), 3, NAN); // 1, 4, 7, 10
   zparams[1] = TZGridParameters(TFloat64Range(2, 5), 0.8, 4);
-  const TFloat64List mixedGrid =
-      CZGridListParams(zparams).buildLogMixedZGrid(false);
+  const TFloat64List mixedGrid = CZGridListParams(zparams).getZGrid(false);
 
   TFloat64List resultingVect{1, 2.4, 3.2, 4, 4.8, 7, 10};
   BOOST_CHECK(mixedGrid.size() == resultingVect.size());
@@ -92,6 +89,7 @@ BOOST_AUTO_TEST_CASE(finegrid) {
   TFloat64List valproba = {10, 15, 20, 30, 40};
   TFloat64List resulting_zgridFine = {1, 2.5, 4, 5.5, 7, 8.5, 10};
   TFloat64List resulting_proba = {10, 15, 20, 25, 30, 35, 40};
+  CLogZPdfResult zfine(valproba,
   const TPdf _pdf = CLogZPdfResult::getLogZPdf_fine(
       false, CZGridListParams(zparams), valproba);
   BOOST_CHECK(_pdf.zgrid.size() == _pdf.probaLog.size());
@@ -102,7 +100,7 @@ BOOST_AUTO_TEST_CASE(finegrid) {
   BOOST_CHECK(_pdf.probaLog.size() == resulting_proba.size());
   BOOST_CHECK(_pdf.probaLog == resulting_proba);
 }
-
+/*
 BOOST_AUTO_TEST_CASE(iscoherent) {
   TZGridListParams zparams(2);
   zparams[0] = TZGridParameters(TFloat64Range(1, 10), 0.01, NAN); // 1, 4, 7, 10
@@ -117,26 +115,23 @@ BOOST_AUTO_TEST_CASE(iscoherent) {
   zparam[0] = TZGridParameters(TFloat64Range(1, 10), 0.001, NAN); // 1, 4, 7, 10
   BOOST_CHECK(CZGridListParams(zparam).isZGridCoherent() == true);
 }
-
+*/
 BOOST_AUTO_TEST_CASE(genericBuildZPDFGrid) {
   TZGridListParams zparams(2);
   zparams[0] = TZGridParameters(TFloat64Range(0, 10), 3, NAN); // 0, 3, 6, 9
   zparams[1] = TZGridParameters(TFloat64Range(2, 5), 1, 4);
-  const TFloat64List coarseGrid =
-      CZGridListParams(zparams).buildLogZGrid(false, COARSE);
+  const TFloat64List coarseGrid = CZGridListParams(zparams).getZGrid(false);
 
   TFloat64List resultingCoarseVect{0, 3, 6, 9};
   BOOST_CHECK(coarseGrid.size() == resultingCoarseVect.size());
   BOOST_CHECK(coarseGrid == resultingCoarseVect);
 
-  const TFloat64List fineGrid =
-      CZGridListParams(zparams).buildLogZGrid(false, FINE);
+  const TFloat64List fineGrid = CZGridListParams(zparams).getZGrid(false);
   TFloat64List resultingFineVect{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   BOOST_CHECK(fineGrid.size() == resultingFineVect.size());
   BOOST_CHECK(fineGrid == resultingFineVect);
 
-  const TFloat64List mixedGrid =
-      CZGridListParams(zparams).buildLogZGrid(false, MIXED);
+  const TFloat64List mixedGrid = CZGridListParams(zparams).getZGrid(false);
   TFloat64List resultingMixedVect{0, 2, 3, 4, 5, 6, 9};
   BOOST_CHECK(mixedGrid.size() == resultingMixedVect.size());
   BOOST_CHECK(mixedGrid == resultingMixedVect);
@@ -149,7 +144,7 @@ BOOST_AUTO_TEST_CASE(check_error_on_single_element) {
   zparams[2] = TZGridParameters(TFloat64Range(4., 5.), 0.5, 4.5);
 
   BOOST_CHECK_THROW(
-      CZGridListParams(zparams).buildLogMixedZGrid(true),
+      CZGridListParams(zparams).getZGrid(true),
       GlobalException); // log grid with single element in main grid
 }
 BOOST_AUTO_TEST_SUITE_END()
