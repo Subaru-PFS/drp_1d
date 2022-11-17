@@ -783,6 +783,41 @@ BOOST_AUTO_TEST_CASE(Clamp) {
   BOOST_CHECK(a.Clamp(2.0) == 2.0);
   BOOST_CHECK(a.Clamp(3.0) == 2.0);
 }
+
+BOOST_AUTO_TEST_CASE(spanCenteredWindow_test) {
+  TFloat64Range a(1.0, 2.0);
+  TFloat64Range b(exp(1.0), exp(2.0));
+  Float64 precision = 1e-12;
+
+  Float64 delta = 0.05;
+
+  // linear
+  //-------
+  Float64 center = 1.5;
+  bool logsampling = false;
+  TFloat64List vect = a.spanCenteredWindow(center, logsampling, delta);
+  BOOST_CHECK(vect.size() == ((a.GetEnd() - a.GetBegin()) / delta) + 1);
+  for (std::size_t i = 1; i < vect.size(); i++)
+    BOOST_CHECK_CLOSE(vect[i] - vect[i - 1], delta, precision);
+
+  center = 1.21;
+  vect = a.spanCenteredWindow(center, logsampling, delta);
+  for (std::size_t i = 1; i < vect.size(); i++)
+    BOOST_CHECK_CLOSE(vect[i] - vect[i - 1], delta, precision);
+
+  // log
+  //-------
+  center = exp(1.5);
+  logsampling = true;
+  vect = b.spanCenteredWindow(center, logsampling, delta);
+  BOOST_CHECK(vect.front() >= b.GetBegin() && vect.back() <= b.GetEnd());
+  BOOST_CHECK(std::find(vect.begin(), vect.end(), center) != vect.end());
+
+  center = exp(1.21);
+  vect = b.spanCenteredWindow(center, true, delta);
+  BOOST_CHECK(vect.front() >= b.GetBegin() && vect.back() <= b.GetEnd());
+  BOOST_CHECK(std::find(vect.begin(), vect.end(), center) != vect.end());
+}
 //-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END()
