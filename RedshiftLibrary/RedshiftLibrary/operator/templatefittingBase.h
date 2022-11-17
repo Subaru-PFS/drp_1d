@@ -106,7 +106,8 @@ protected:
   virtual Float64
   EstimateLikelihoodCstLog(const CSpectrum &spectrum,
                            const TFloat64Range &lambdaRange) const;
-
+  void applyPositiveAndNonNullConstraint(Float64 amp_sigma,
+                                         Float64 &ampl) const;
   const CSpectrum &m_spectrum;
   TFloat64Range m_lambdaRange;
   TFloat64List m_redshifts;
@@ -114,7 +115,7 @@ protected:
   CTemplate m_templateRebined_bf;
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
   CMask m_mskRebined_bf;
-  Float64 m_continuum_null_amp_threshold;
+  Float64 m_continuum_null_amp_threshold; // in SNR
 };
 
 } // namespace NSEpic

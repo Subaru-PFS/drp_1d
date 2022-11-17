@@ -78,10 +78,9 @@ using namespace std;
  */
 TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 overlapThreshold, Float64 forcedAmplitude, bool opt_extinction,
-    bool opt_dustFitting, CMask spcMaskAdditional,
-    const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
-    const TInt32List &EbmvList) {
+    Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
+    CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
+    const TInt32List &MeiksinList, const TInt32List &EbmvList) {
   bool amplForcePositive = true;
   bool status_chisquareSetAtLeastOnce = false;
 
@@ -123,8 +122,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   Int32 iEbmvCoeffMax = EbmvList.back();
 
   m_option_igmFastProcessing = (MeiksinList.size() > 1 ? true : false);
-
-  m_forcedAmplitude = forcedAmplitude;
 
   bool apply_priore =
       !logpriore.empty() && !tpl->CalzettiInitFailed() &&
@@ -360,16 +357,9 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
       ampl_err = sqrt(sumT) / (sumT + bss2);
     }
 
-    if (m_forcedAmplitude != -1) {
-      ampl = m_forcedAmplitude;
-      ampl_err = 0.;
-    }
-
     ampl_sigma = ampl / ampl_err;
 
-    if (m_amplForcePositive) {
-      ampl = max(0.0, ampl);
-    }
+    applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
 
     // Generalized method (ampl can take any value now) for chi2 estimate
     fit = sumS + sumT * ampl * ampl - 2. * ampl * sumCross;
@@ -423,6 +413,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   if (opt_extinction && tpl->MeiksinInitFailed()) {
     THROWG(INTERNAL_ERROR, "IGM is not initialized");
   }
+  m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
   // sort the redshift and keep track of the indexes
   TFloat64List sortedRedshifts(m_redshifts.size());
@@ -481,7 +472,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
                        : additional_spcMasks[sortedIndexes[i]];
 
     TFittingIsmIgmResult result_z = BasicFit(
-        tpl, redshift, overlapThreshold, -1, opt_extinction, opt_dustFitting,
+        tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
         additional_spcMask, logp, MeiksinList, EbmvList);
 
     result->set_at_redshift(i, std::move(result_z));

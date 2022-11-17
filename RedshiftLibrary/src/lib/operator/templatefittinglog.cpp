@@ -572,9 +572,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
 
           // check negative amplitude
           ampl_sigma = ampl / ampl_err;
-
-          // force positivity: m_amplForcePositive
-          ampl = max(0., ampl);
+          applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
 
           result->FitAmplitude[fullResultIdx] = ampl;
           result->FitAmplitudeError[fullResultIdx] = ampl_err;
@@ -840,8 +838,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
           amp[k] = dtm_vec[k] / mtm_vec[k];
           amp_err[k] = sqrt(1. / mtm_vec[k]);
           amp_sigma[k] = amp[k] / amp_err[k];
-          amp[k] = max(0.0, amp[k]);
-
+          applyPositiveAndNonNullConstraint(amp_sigma[k], amp[k]);
           chi2[k] =
               dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
         }
@@ -1029,12 +1026,13 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   if (!logSampledTpl->GetSpectralAxis().IsLogSampled()) {
     THROWG(INTERNAL_ERROR, "template is not log sampled");
   }
-
   // check if spc and tpl have same step
   const Float64 epsilon = 1E-8;
   if (std::abs(m_logSampledSpectrum.GetSpectralAxis().GetlogGridStep() -
                logSampledTpl->GetSpectralAxis().GetlogGridStep()) > epsilon)
     THROWG(INTERNAL_ERROR, "tpl and spc are not sampled with the same step");
+
+  m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
   // subsample template if necessary
   if (m_ssRatio == 1) { // no required subsampling

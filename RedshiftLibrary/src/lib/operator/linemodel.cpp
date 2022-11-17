@@ -568,21 +568,18 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                      << " & error = " << fitValues.fitAmplitudeError);
     m_opt_continuumcomponent = "fromspectrum";
     m_fittingManager->setContinuumComponent("fromspectrum");
-    return;
-  }
-
-  // check if continuum is too weak comparing to the preset threshold, or falls
-  // within [thres_neg; thresh_null], at all z
-  if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold) {
-    Flag.warning(
-        WarningCode::FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
-        Formatter()
-            << ": Switching to nocontinuum since close"
-               "to null or not enough negative continuum amplitude found at z="
-            << max_fitamplitudeSigma_z << ": best continuum tpl "
-            << fitValues.tplName
-            << ", amplitude/error = " << max_fitamplitudeSigma
-            << " & error = " << fitValues.fitAmplitudeError);
+  } else if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold) {
+    // check if continuum is too weak comparing to the preset threshold, or
+    // falls within [thres_neg; thresh_null], at all z
+    Flag.warning(WarningCode::FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
+                 Formatter()
+                     << ": Switching to nocontinuum since close"
+                        "to null or not enough negative continuum amplitude "
+                        "found at z="
+                     << max_fitamplitudeSigma_z << ": best continuum tpl "
+                     << fitValues.tplName
+                     << ", amplitude/error = " << max_fitamplitudeSigma
+                     << " & error = " << fitValues.fitAmplitudeError);
     m_opt_continuumcomponent = "nocontinuum";
     m_fittingManager->setContinuumComponent("nocontinuum");
   }

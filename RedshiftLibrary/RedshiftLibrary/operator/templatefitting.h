@@ -110,13 +110,11 @@ public:
           Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
 
 protected:
-  TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
-                                Float64 redshift, Float64 overlapThreshold,
-                                Float64 forcedAmplitude, bool opt_extinction,
-                                bool opt_dustFitting, CMask spcMaskAdditional,
-                                const CPriorHelper::TPriorEList &logpriore,
-                                const TInt32List &MeiksinList,
-                                const TInt32List &EbmvList);
+  TFittingIsmIgmResult
+  BasicFit(const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
+           Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
+           CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
+           const TInt32List &MeiksinList, const TInt32List &EbmvList);
 
   virtual void
   InitIsmIgmConfig(Float64 redshift,
@@ -152,13 +150,10 @@ protected:
 
   bool m_option_igmFastProcessing;
   Int32 m_kStart, m_kEnd;
-  Float64 m_forcedAmplitude;
 
   TFloat64List m_sumCross_outsideIGM;
   TFloat64List m_sumT_outsideIGM;
   TFloat64List m_sumS_outsideIGM;
-
-  bool m_amplForcePositive = true;
 };
 
 } // namespace NSEpic
