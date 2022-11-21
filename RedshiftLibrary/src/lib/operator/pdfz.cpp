@@ -114,10 +114,15 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
   if (!chisquarearray.chisquares.size()) {
     THROWG(INTERNAL_ERROR, Formatter() << "chisquarearray is empty");
   }
+  TZGridListParams zparams(chisquarearray.zgridParams.size() + 1);
+  zparams[0] = TZGridParameters(TFloat64Range(chisquarearray.redshifts),
+                                chisquarearray.zstep);
 
+  std::copy(chisquarearray.zgridParams.cbegin(),
+            chisquarearray.zgridParams.cend(), zparams.begin() + 1);
   // initialize m_postmargZResult
   m_postmargZResult =
-      std::make_shared<CPdfMargZLogResult>(chisquarearray.redshifts);
+      std::make_shared<CLogZPdfResult>(chisquarearray.redshifts, zparams);
 
   if (m_opt_combine == "marg") {
     Log.LogInfo("COperatorPdfz::CombinePDF: Marginalization");
@@ -140,8 +145,7 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
   isPdfValid(); // will throw an error if not
 }
 
-bool COperatorPdfz::checkPdfSum() const {
-  bool ret = true;
+void COperatorPdfz::checkPdfSum() const {
 
   // check pdf sum=1
   Float64 sumTrapez = getSumTrapez(m_postmargZResult->Redshifts,
@@ -149,14 +153,12 @@ bool COperatorPdfz::checkPdfSum() const {
   Log.LogDetail(
       "COperatorPdfz::checkPdfSum: Pdfz normalization - sum trapz. = %e",
       sumTrapez);
-  if (abs(sumTrapez - 1.0) > 1e-1) {
-    Log.LogError("COperatorPdfz::checkPdfSum: Pdfz normalization failed "
-                 "(trapzesum = %f)",
-                 sumTrapez);
-    ret = false;
-  }
-
-  return ret;
+  if (abs(sumTrapez - 1.0) > 1e-1)
+    THROWG(
+        INTERNAL_ERROR,
+        Formatter() << "COperatorPdfz::checkPdfSum: Pdfz normalization failed, "
+                       "trapzesum = "
+                    << sumTrapez);
 }
 
 TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
@@ -211,22 +213,6 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   return candidates;
 }
 
-const std::shared_ptr<const CPdfMargZLogResult>
-COperatorPdfz::compressFirstpassPDF(Int32 ratio) {
-  std::shared_ptr<CPdfMargZLogResult> compressed_postmargZResult =
-      std::make_shared<CPdfMargZLogResult>();
-  Int32 s = (Int32)m_postmargZResult->Redshifts.size() / ratio;
-  compressed_postmargZResult->Redshifts.reserve(s);
-  compressed_postmargZResult->valProbaLog.reserve(s);
-  for (Int32 i = 0; i < m_postmargZResult->Redshifts.size(); i += ratio) {
-    compressed_postmargZResult->Redshifts.push_back(
-        m_postmargZResult->Redshifts[i]);
-    compressed_postmargZResult->valProbaLog.push_back(
-        m_postmargZResult->valProbaLog[i]);
-  }
-  return compressed_postmargZResult;
-}
-
 /**
  * Use the log sum exp trick to sum up small numbers while avoiding underflows
  *   * ----------------------------------------------------------------------
@@ -258,10 +244,10 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
                                     // when summing exponential of small values
     }
   }
-
-  Log.LogDebug("COperatorPdfz::logSumExpTrick: using common factor value for "
-               "log-sum-exp trick=%e",
-               logfactor);
+  /*
+    Log.LogDebug("COperatorPdfz::logSumExpTrick: using common factor value for "
+                 "log-sum-exp trick=%e",
+                 logfactor);*/
 
   Float64 sumModifiedExp = 0.0;
   Float64 modifiedEXPO_previous = exp(valproba[0] - logfactor);
@@ -272,7 +258,8 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
     sumModifiedExp += trapezArea;
     modifiedEXPO_previous = modifiedEXPO;
   }
-
+  if (sumModifiedExp == 0.0)
+    THROWG(INTERNAL_ERROR, "sumModifiedExp cannot be null");
   Float64 sum = logfactor + log(sumModifiedExp);
 
   return sum;
@@ -293,7 +280,8 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
                                const TFloat64List &logZPrior,
                                TFloat64List &logPdf, Float64 &logEvidence) {
   logPdf.clear();
-
+  if (redshifts.size() < 1)
+    THROWG(INTERNAL_ERROR, "redshifts is empty");
   // check if there is at least 1 redshift value
   if (redshifts.size() == 1) // consider this as a success
   {
@@ -301,43 +289,37 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
     logPdf[0] = 1.0;
     logEvidence = 1.0;
     return;
-  } else if (redshifts.size() < 1) {
-    THROWG(INTERNAL_ERROR, "redshifts is empty");
   }
 
   // check that the zPrior is size-compatible
-  if (logZPrior.size() != redshifts.size()) {
+  if (logZPrior.size() != redshifts.size())
     THROWG(INTERNAL_ERROR, "Size do not match between redshifts and logZPrior");
-  }
 
   // renormalize zprior to 1
   Float64 logsumZPrior = logSumExpTrick(logZPrior, redshifts);
 
   logPdf.resize(redshifts.size());
   TFloat64List Xi2_2withPrior;
-  for (Int32 i = 0; i < merits.size(); i++) {
+  for (Int32 i = 0; i < merits.size(); i++)
     Xi2_2withPrior.push_back(-0.5 * merits[i] + logZPrior[i] - logsumZPrior);
-  }
+
   // prepare logLikelihood and LogEvidence
   Float64 logsumexp = logSumExpTrick(Xi2_2withPrior, redshifts);
   logEvidence = cstLog + logsumexp;
 
-  for (Int32 k = 0; k < redshifts.size(); k++) {
+  for (Int32 k = 0; k < redshifts.size(); k++)
     logPdf[k] = Xi2_2withPrior[k] + cstLog - logEvidence;
-  }
 }
 
 Float64 COperatorPdfz::getSumTrapez(const TRedshiftList &redshifts,
                                     const TFloat64List &valprobalog) {
   Float64 sum = 0.0;
-  if (redshifts.size() == 0) {
+  if (redshifts.size() == 0)
     return sum;
-  }
+
   if (redshifts.size() != valprobalog.size()) // this should raise an exception
                                               // ? or return some error values ?
-  {
     return sum;
-  }
 
   // prepare LogEvidence
   Int32 sumMethod = 1;
@@ -349,12 +331,11 @@ Float64 COperatorPdfz::getSumTrapez(const TRedshiftList &redshifts,
 
 Int32 COperatorPdfz::getIndex(const TFloat64List &redshifts, Float64 z) {
   Int32 solutionIdx = -1;
-  for (Int32 i2 = 0; i2 < redshifts.size(); i2++) {
+  for (Int32 i2 = 0; i2 < redshifts.size(); i2++)
     if (redshifts[i2] == z) {
       solutionIdx = i2;
       break;
     }
-  }
   return solutionIdx;
 }
 
@@ -478,8 +459,8 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   // marginalize: ie sum all PDFS
   TInt32List nSum(zsize, 0);
   for (Int32 km = 0; km < nmodel; km++) {
-    Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
-                 km);
+    /*Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
+                 km);*/
 
     // Todo: Check if the status is OK ?
     // meritResult->Status[i] == COperator::nStatus_OK
@@ -504,15 +485,9 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 
   // THIS DOES NOT ALLOW Marginalization with coverage<100% for ALL templates
   for (Int32 k = 0; k < zsize; k++) {
-    if (nSum[k] != nmodel) {
-      m_postmargZResult->valProbaLog[k] = NAN;
-      Log.LogError("Pdfz: Pdfz computation failed at z=%f: nSum(%d) !="
-                   "meritResults.size()(% d) ",
-                   m_postmargZResult->Redshifts[k], nSum[k], nmodel);
-
+    if (nSum[k] != nmodel)
       THROWG(INTERNAL_ERROR, "Computation failed. Not all templates "
                              "have 100 percent coverage for all redshifts");
-    }
   }
 }
 
@@ -523,8 +498,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 // TODO: this method should be replaced/modified to correspond to the MaxPDF
 // technique.
 void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
-  Log.LogError("Pdfz: Pdfz-bestproba computation ! This method is currently "
-               "not working !! It will produce bad results as is....");
+
   validateChisquareArray(chisquarearray);
 
   const TFloat64List &redshifts = chisquarearray.redshifts;
@@ -549,7 +523,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
         THROWG(INTERNAL_ERROR,
                Formatter() << "z-bins comparison failed for result km=" << km);
 
-    for (Int32 k = 0; k < redshifts.size(); k++) {
+    for (Int32 k = 0; k < redshifts.size(); k++)
       if (true /*meritResult->Status[k]== COperator::nStatus_OK*/) // todo:
                                                                    // check
                                                                    // (temporarily
@@ -559,11 +533,9 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
                                                                    // for
                                                                    // linemodel
                                                                    // tplratio)
-      {
+
         m_postmargZResult->valProbaLog[k] =
             std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
-      }
-    }
   }
 
   // normalize: sum_z P = 1
@@ -675,39 +647,30 @@ void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
  * @return
  */
 void COperatorPdfz::isPdfValid() const {
-  if (!m_postmargZResult) {
+  if (!m_postmargZResult)
     THROWG(INTERNAL_ERROR, " PDF ptr is null");
-  }
 
-  if (m_postmargZResult->Redshifts.size() < 2) {
+  if (m_postmargZResult->Redshifts.size() < 2)
     THROWG(INTERNAL_ERROR, "PDF has size less than 2");
-  }
 
   // is it completely flat ?
   Float64 minVal = DBL_MAX;
   Float64 maxVal = -DBL_MAX;
   for (Int32 k = 0; k < m_postmargZResult->valProbaLog.size(); k++) {
-    if (m_postmargZResult->valProbaLog[k] < minVal) {
+    if (m_postmargZResult->valProbaLog[k] < minVal)
       minVal = m_postmargZResult->valProbaLog[k];
-    }
-    if (m_postmargZResult->valProbaLog[k] > maxVal) {
+
+    if (m_postmargZResult->valProbaLog[k] > maxVal)
       maxVal = m_postmargZResult->valProbaLog[k];
-    }
   }
-  if (minVal == maxVal) {
+  if (minVal == maxVal)
     THROWG(INTERNAL_ERROR, "PDF is flat");
-  }
 
   // is pdf any value nan ?
-  for (Int32 k = 0; k < m_postmargZResult->valProbaLog.size(); k++) {
-    if (m_postmargZResult->valProbaLog[k] !=
-        m_postmargZResult->valProbaLog[k]) {
+  for (Int32 k = 0; k < m_postmargZResult->valProbaLog.size(); k++)
+    if (m_postmargZResult->valProbaLog[k] != m_postmargZResult->valProbaLog[k])
       THROWG(INTERNAL_ERROR, "PDF has nan or invalid values");
-    }
-  }
 
   // is sum equal to 1
-  if (!checkPdfSum()) {
-    THROWG(INTERNAL_ERROR, "Pdfz normalization failed");
-  };
+  checkPdfSum();
 }

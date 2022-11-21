@@ -41,12 +41,9 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include <boost/filesystem.hpp>
 
-#include <boost/format.hpp>
-#include <cfloat>
-#include <string>
-#include <vector>
-
+namespace bfs = boost::filesystem;
 namespace NSEpic {
 
 /**
@@ -71,39 +68,45 @@ public:
   typedef std::vector<TPriorEList> TPriorZEList;
   typedef std::vector<TPriorZEList> TPriorTZEList;
 
-  CPriorHelper();
-  ~CPriorHelper();
+  void Init(std::string priorDirPath, Int32 type);
 
-  bool Init(std::string priorDirPath, Int32 type);
-
-  bool GetTplPriorData(const std::string &tplname,
+  void GetTplPriorData(const std::string &tplname,
                        const TRedshiftList &redshifts,
                        TPriorZEList &zePriorData,
                        Int32 outsideZRangeExtensionMode = 0) const;
 
-  bool GetTZEPriorData(const std::string &tplname, Int32 EBVIndexfilter,
-                       Float64 redshift, SPriorTZE &tzePrioData,
-                       Int32 outsideZRangeExtensionMode = 0) const;
+  SPriorTZE GetTZEPriorData(const std::string &tplname, Int32 EBVIndexfilter,
+                            Float64 redshift,
+                            Int32 outsideZRangeExtensionMode = 0) const;
 
-  bool SetBetaA(Float64 beta);
-  bool SetBetaTE(Float64 beta);
-  bool SetBetaZ(Float64 beta);
-
+  void SetBetaA(Float64 beta);
+  void SetBetaTE(Float64 beta);
+  void SetBetaZ(Float64 beta);
   bool mInitFailed = false;
+  bool isValidFloat(Float64 val) const;
 
 private:
-  bool LoadFileEZ(const char *filePath, std::vector<TFloat64List> &data);
-  bool LoadFileZ(const char *filePath, TFloat64List &data);
+  void loadFileEZ(const char *filePath, std::vector<TFloat64List> &data);
+  void loadFileZ(const char *filePath, TFloat64List &data);
 
-  bool SetSize(Int32 size);
-  bool SetTNameData(Int32 k, std::string tname);
-  bool SetEZTData(Int32 k, const std::vector<TFloat64List> &ezt_data);
-  bool SetAGaussmeanData(Int32 k,
+  void setSize(Int32 size);
+  void setTNameData(Int32 k, std::string tname);
+  void setEZTData(Int32 k, const std::vector<TFloat64List> &ezt_data);
+  void setAGaussmeanData(Int32 k,
                          const std::vector<TFloat64List> &agaussmean_data);
-  bool SetAGausssigmaData(Int32 k,
+  void setAGausssigmaData(Int32 k,
                           const std::vector<TFloat64List> &agausssigma_data);
-  bool SetPzData(const TFloat64List &z_data);
-
+  void setPzData(const TFloat64List &z_data);
+  const TStringList loadfilesPathList(const TStringList &EZTfilesPathList,
+                                      const bfs::path &rootFolder,
+                                      const std::string &part,
+                                      const std::string &sigma_mean) const;
+  void loadFromFileList(const std::string &sigma_mean,
+                        const TStringList &filePathList);
+  Int32 getRedshiftIndex(Float64 redshift,
+                         Int32 outsideZRangeExtensionMode) const;
+  Int32 getTemplateIndex(const std::string &tplname) const;
+  void fillPriorDataPerZ(TPriorEList &dataz, Int32 idz) const;
   Int32 m_type; // 0=Continuum, 1=Lines
 
   TPriorTZEList m_data;
@@ -118,9 +121,9 @@ private:
 
   Float64 m_deltaA = (1e-13 - 1e-20);
 
-  Float64 m_betaTE = -1;
-  Float64 m_betaA = -1;
-  Float64 m_betaZ = -1;
+  Float64 m_betaTE = -1.;
+  Float64 m_betaA = -1.;
+  Float64 m_betaZ = -1.;
 
   Float64 m_priorminval = 0.0; // DBL_MIN;
 };

@@ -88,10 +88,21 @@ public:
   }
 
 private:
-  Float64 GetFit(const TFloat64List &ampsLM, const TFloat64List &errLM,
-                 const TFloat64List &ampsTPL,
-                 TFloat64List &ampsCorrected) const;
-
+  Float64 computeFitValue(const TFloat64List &ampsLM, const TFloat64List &errLM,
+                          const TFloat64List &ampsTPL,
+                          TFloat64List &ampsCorrected) const;
+  Float64 getFitForOneCatalog(const CLineCatalog::TLineVector &restLineList,
+                              const TFloat64List &fittedAmplitudes,
+                              const TFloat64List &fittedErrors,
+                              const CLineRatioCatalog &catalog,
+                              TFloat64List &ampsCorrected) const;
+  void
+  logLineNominalAmp(const CLineModelElementList &LineModelElementList,
+                    bool enableISMCalzetti,
+                    const std::vector<std::vector<TFloat64List>>
+                        &lineCatalogLinesCorrespondingNominalAmp,
+                    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+                        &ismCorrectionCalzetti) const;
   std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
 };
 

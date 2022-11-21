@@ -40,15 +40,18 @@
 #define _REDSHIFT_SPECTRUM_FLUXCORRECTIONCALZETTI_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
 
 namespace NSEpic {
 typedef struct CalzettiCorrection {
-  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr)
-      : lbda(_lbda), fluxcorr(_fluxcorr){};
+  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr);
+
   TFloat64List lbda;
   TFloat64List fluxcorr;
+  Float64 step;
 } CalzettiCorrection;
+
 /**
  * \ingroup Redshift
  */
@@ -78,6 +81,7 @@ public:
 private:
   Float64 m_LambdaMin;
   Float64 m_LambdaMax;
+  Float64 m_step;
 };
 
 } // namespace NSEpic

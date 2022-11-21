@@ -58,14 +58,12 @@ public:
                    const CLineCatalog::TLineVector &restLineList);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
-  CTplratioManager(CTplratioManager const& other) = default;
-  CTplratioManager& operator=(CTplratioManager const& other) = default;
-   
-  CTplratioManager(CTplratioManager&& other) = default;
-  CTplratioManager& operator=(CTplratioManager&& other) = default;
+  CTplratioManager(CTplratioManager const &other) = default;
+  CTplratioManager &operator=(CTplratioManager const &other) = default;
 
+  CTplratioManager(CTplratioManager &&other) = default;
+  CTplratioManager &operator=(CTplratioManager &&other) = default;
 
-  
   int prepareFit(Float64 redshift) override;
   bool init(Float64 redshift, Int32 itratio) override;
 
@@ -75,7 +73,7 @@ public:
   void saveResults(Int32 itratio) override;
   Int32 getTplratio_count() const override;
   TFloat64List getTplratio_priors() override;
-  
+
   void logParameters() override;
   const std::string &getTplratio_bestTplName() const;
   Float64 getTplratio_bestTplIsmCoeff() const;
@@ -95,12 +93,9 @@ public:
   void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
   void SetForcedisableTplratioISMfit(bool opt);
-  void duplicateTplratioResult(Int32 ifitting, TFloat64List &bestTplratioMerit,
-                               TFloat64List &bestTplratioMeritPrior);
+  void duplicateTplratioResult(Int32 ifitting);
   void updateTplratioResults(Int32 ifitting, Float64 _merit,
-                             Float64 _meritprior,
-                             TFloat64List &bestTplratioMerit,
-                             TFloat64List &bestTplratioMeritPrior);
+                             Float64 _meritprior);
   Float64 computelogLinePriorMerit(
       Int32 itratio,
       const std::vector<CPriorHelper::SPriorTZE> &logPriorDataTplRatio);
@@ -115,18 +110,17 @@ protected:
   void initMerit(Int32 ntplratio);
   void SetTplratio_PriorHelper();
   void initTplratioCatalogs(Int32 opt_tplratio_ismFit);
-  bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
+  void SetMultilineNominalAmplitudesFast(Int32 iCatalog);
 
   Float64 GetIsmCoeff(Int32 idx) const;
 
   std::vector<std::vector<TFloat64List>>
       m_LineCatalogLinesCorrespondingNominalAmp;
   Int32 m_savedIdxFitted = -1; // for rigidity=tplratio
-  TFloat64List m_bestTplratioMerit;
-  TFloat64List m_bestTplratioMeritPrior;
+  TFloat64List m_MeritTplratio;
+  TFloat64List m_PriorMeritTplratio;
   std::vector<CPriorHelper::SPriorTZE> m_logPriorDataTplRatio;
 
-  TFloat64List m_ChisquareTplratio;
   std::vector<TFloat64List> m_FittedAmpTplratio;
   std::vector<TFloat64List> m_FittedErrorTplratio;
   std::vector<TFloat64List> m_MtmTplratio;
@@ -157,6 +151,9 @@ protected:
   Float64 m_NSigmaSupport;
   Float64 m_opt_haprior = -1.;
   bool m_opt_dust_calzetti;
+
+private:
+  void fillHalphaArray(Int32 idx);
 };
 
 } // namespace NSEpic

@@ -37,21 +37,14 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/method/linemodelsolve.h"
-
 #include "RedshiftLibrary/log/log.h"
-
-#include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 
 #include "RedshiftLibrary/operator/pdfz.h"
-#include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/statistics/zprior.h"
-
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -73,7 +66,8 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope, string objectType)
 bool CLineModelSolve::PopulateParameters(
     std::shared_ptr<const CParameterStore> parameterStore) {
 
-  m_opt_lineratiotype = parameterStore->GetScoped<std::string>("linemodel.lineRatioType");
+  m_opt_lineratiotype =
+      parameterStore->GetScoped<std::string>("linemodel.lineRatioType");
   m_opt_continuumreest =
       parameterStore->GetScoped<std::string>("linemodel.continuumreestimation");
   m_opt_continuumcomponent =
@@ -120,23 +114,20 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   PopulateParameters(inputContext->GetParameterStore());
 
-  bool retSolve = Solve();
-
-  if (!retSolve) {
-    return NULL;
-  }
+  Solve();
 
   auto results = resultStore->GetScopedGlobalResult("linemodel");
-  if (results.expired()) {
-    Log.LogError("linemodelsolve: Unable to retrieve linemodel results");
-    return NULL;
-  }
+  if (results.expired())
+    THROWG(INTERNAL_ERROR,
+           "linemodelsolve: Unable to retrieve linemodel results");
+
   std::shared_ptr<const CLineModelResult> result =
       std::dynamic_pointer_cast<const CLineModelResult>(results.lock());
 
   //  suggestion : CSolve::GetCurrentScopeName(TScopeStack)
   //  prepare the linemodel chisquares and prior results for pdf computation
-  ChisquareArray chisquares = BuildChisquareArray(result);
+  ChisquareArray chisquares =
+      BuildChisquareArray(result, m_linemodel.getSPZGridParams());
 
   /*
   Log.LogDetail("    linemodelsolve: Storing priors (size=%d)",
@@ -165,8 +156,9 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   // store PDF results
   Log.LogInfo("%s: Storing PDF results", __func__);
-
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
+  // TODO: clean below line once #7646 is solved
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
@@ -307,12 +299,20 @@ TFloat64List CLineModelSolve::BuildZpriors(
 }
 
 ChisquareArray CLineModelSolve::BuildChisquareArray(
-    const std::shared_ptr<const CLineModelResult> &result) const {
+    const std::shared_ptr<const CLineModelResult> &result,
+    const TZGridListParams &spZgridParams) const {
   Log.LogDetail("LinemodelSolve: building chisquare array");
+
+  if (m_opt_pdfcombination != "bestchi2" &&
+      m_opt_pdfcombination != "bestproba" && m_opt_pdfcombination != "marg")
+    THROWG(BAD_PARAMETER_VALUE,
+           "PdfCombination can only be {bestchi2, bestproba, marg");
 
   ChisquareArray chisquarearray;
   std::vector<TFloat64List> &chisquares = chisquarearray.chisquares;
   std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
+  chisquarearray.zstep = m_coarseRedshiftStep;
+  chisquarearray.zgridParams = spZgridParams;
 
   chisquarearray.cstLog = result->cstLog;
   Log.LogDetail("%s: using cstLog = %f", __func__, chisquarearray.cstLog);
@@ -324,123 +324,132 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   if (m_opt_pdfcombination == "bestchi2") {
     zpriors.push_back(BuildZpriors(result));
     chisquares.push_back(result->ChiSquare);
+    return chisquarearray;
+  }
 
-  } else if (m_opt_pdfcombination == "bestproba" ||
-             m_opt_pdfcombination == "marg") {
-
-    if (m_opt_lineratiotype != "tplratio") {
-      zpriors.push_back(BuildZpriors(result));
-      chisquares.push_back(result->ChiSquare);
-    } else {
-
-      const Int32 ntplratios = result->ChiSquareTplratios.size();
-
-      bool zPriorLines = false;
-      Log.LogDetail("%s: PriorLinesTplratios.size()=%d", __func__,
-                    result->PriorLinesTplratios.size());
-      if (result->PriorLinesTplratios.size() == ntplratios) {
-        zPriorLines = true;
-        Log.LogDetail("%s: Lines Prior enabled", __func__);
-      } else {
-        Log.LogDetail("%s: Lines Prior disabled", __func__);
-      }
-
-      chisquares.reserve(ntplratios);
-      zpriors.reserve(ntplratios);
-
-      for (Int32 k = 0; k < ntplratios; ++k) {
-        zpriors.push_back(BuildZpriors(result, k));
-        chisquares.push_back(result->ChiSquareTplratios[k]);
-
-        // correct chi2 if necessary
-        TFloat64List &logLikelihoodCorrected = chisquares.back();
-        /*
-        if(m_opt_pdf_margAmpCorrection) //nb: this is experimental.
-        {
-            //find max scalemargcorr
-            Float64 maxscalemargcorr=-DBL_MAX;
-            for ( Int32 kz=0; kz<zsize; kz++ )
-                if(maxscalemargcorr <
-        result->ScaleMargCorrectionTplratios[k][kz]) maxscalemargcorr =
-        result->ScaleMargCorrectionTplratios[k][kz];
-
-            Log.LogDetail("%s: maxscalemargcorr= %e", __func__,
-        maxscalemargcorr); for ( Int32 kz=0; kz<zsize; kz++ )
-                if(result->ScaleMargCorrectionTplratios[k][kz]!=0) //warning,
-        this is experimental. logLikelihoodCorrected[kz] +=
-        result->ScaleMargCorrectionTplratios[k][kz] - maxscalemargcorr;
-
-            // need to add maxscalemargcorr ?
-        }*/
-
-        if (zPriorLines && result->PriorLinesTplratios[k].size() == zsize)
-          for (Int32 kz = 0; kz < zsize; kz++)
-            logLikelihoodCorrected[kz] += result->PriorLinesTplratios[k][kz];
-      }
-
-      chisquarearray.modelpriors = result->PriorTplratios;
-    }
-
-    if (!result->ChiSquareTplContinuum.empty()) {
-
-      // Fullmodel (ie with continuum template fitting): store all continuum tpl
-      // fitting chisquares (ChiSquareTplContinuum size will be null if not
-      // tplfit)
-
-      //  note: the continuum xi2 are computed on continuum ~orthogonal to the
-      //  linemodel, ie corresponding
-      //        to a fullmodel with perfect linemodel fit (null Xi2 under the
-      //        lines). They are thus better (smaller) than the fullmodel Xi2
-      //        with which they will be summed in the marginalization. To
-      //        mitigate this, for each continuum Xi2, we have to add the Xi2
-      //        part of the linemodel alone. The latter can be obtained by
-      //        subtracting the corresponding continuum Xi2 of the fullmodel.
-
-      const auto newsize =
-          chisquares.size() * result->ChiSquareTplContinuum.size();
-      chisquares.reserve(newsize);
-      zpriors.reserve(newsize);
-      chisquarearray.modelpriors.reserve(newsize);
-
-      // divide model prior by the number of continuum templates
-      // TODO: need to add/handle tpl continuum priors
-      // (note: in the case of ATEZ, which is exclusive of zpriors and
-      // Tplratios, priors are included already in the chisquares of both
-      // tplcontinuum chi2 and tplratio chi2)
-      for (auto &prior : chisquarearray.modelpriors)
-        prior /= result->ChiSquareTplContinuum.size();
-
-      // loop on all tplratios (or 1 linemodel free)
-      // TFloat64List linemodel_alone_chi2(zsize);
-      for (Int32 k = 0, ke = chisquares.size(); k < ke; ++k) {
-
-        // loop on all continuum templates, skiping 1st one, already used with
-        // linemodel
-        for (auto it = result->ChiSquareTplContinuum.cbegin() + 1,
-                  itend = result->ChiSquareTplContinuum.cend();
-             it != itend; ++it) {
-
-          zpriors.push_back(zpriors[k]); // duplicate zpriors
-          chisquares.emplace_back(zsize);
-          TFloat64List &fullmodel_chi2 = chisquares.back();
-          for (Int32 iz = 0; iz < zsize;
-               ++iz) { // estimate chi2 of fullmodel with other continuum
-            fullmodel_chi2[iz] =
-                chisquares[k][iz] +
-                std::max(0., (*it)[iz] - result->ChiSquareTplContinuum[0][iz]);
-          }
-          if (!chisquarearray.modelpriors.empty())
-            chisquarearray.modelpriors.push_back(
-                chisquarearray.modelpriors[k]); // duplicate modelpriors
-        }
-      }
-    }
-
+  if (m_opt_lineratiotype != "tplratio") {
+    zpriors.push_back(BuildZpriors(result));
+    chisquares.push_back(result->ChiSquare);
   } else {
-    Log.LogError("Linemodel: Unable to parse pdf combination method option");
+    fillChisquareArrayForTplRatio(result, chisquarearray);
+  }
+
+  if (result->ChiSquareTplContinuum.empty())
+    return chisquarearray;
+
+  // Fullmodel (ie with continuum template fitting): store all continuum
+  // tpl fitting chisquares (ChiSquareTplContinuum size will be null if
+  // not tplfit)
+
+  //  note: the continuum xi2 are computed on continuum ~orthogonal to the
+  //  linemodel, ie corresponding
+  //        to a fullmodel with perfect linemodel fit (null Xi2 under the
+  //        lines). They are thus better (smaller) than the fullmodel Xi2
+  //        with which they will be summed in the marginalization. To
+  //        mitigate this, for each continuum Xi2, we have to add the Xi2
+  //        part of the linemodel alone. The latter can be obtained by
+  //        subtracting the corresponding continuum Xi2 of the fullmodel.
+
+  const auto newsize = chisquares.size() * result->ChiSquareTplContinuum.size();
+  chisquares.reserve(newsize);
+  zpriors.reserve(newsize);
+  chisquarearray.modelpriors.reserve(newsize);
+
+  // divide model prior by the number of continuum templates
+  // TODO: need to add/handle tpl continuum priors
+  // (note: in the case of ATEZ, which is exclusive of zpriors and
+  // Tplratios, priors are included already in the chisquares of both
+  // tplcontinuum chi2 and tplratio chi2)
+  Int32 n = result->ChiSquareTplContinuum.size();
+  std::transform(chisquarearray.modelpriors.begin(),
+                 chisquarearray.modelpriors.end(),
+                 chisquarearray.modelpriors.begin(),
+                 [n](Float64 prior) { return prior / n; });
+
+  // loop on all tplratios (or 1 linemodel free)
+  // TFloat64List linemodel_alone_chi2(zsize);
+  for (Int32 k = 0, ke = chisquares.size(); k < ke; ++k) {
+    // loop on all continuum templates, skiping 1st one, already used with
+    // linemodel
+    for (auto it = result->ChiSquareTplContinuum.cbegin() + 1,
+              itend = result->ChiSquareTplContinuum.cend();
+         it != itend; ++it) {
+
+      zpriors.push_back(zpriors[k]); // duplicate zpriors
+      chisquares.emplace_back(zsize);
+      TFloat64List &fullmodel_chi2 = chisquares.back();
+      for (Int32 iz = 0; iz < zsize; ++iz) {
+        // estimate chi2 of fullmodel with other continuum
+        fullmodel_chi2[iz] =
+            chisquares[k][iz] +
+            std::max(0., (*it)[iz] - result->ChiSquareTplContinuum[0][iz]);
+      }
+      if (!chisquarearray.modelpriors.empty())
+        chisquarearray.modelpriors.push_back(
+            chisquarearray.modelpriors[k]); // duplicate modelpriors
+    }
   }
 
   return chisquarearray;
+}
+
+void CLineModelSolve::fillChisquareArrayForTplRatio(
+    const std::shared_ptr<const CLineModelResult> &result,
+    ChisquareArray &chisquarearray) const {
+
+  std::vector<TFloat64List> &chisquares = chisquarearray.chisquares;
+  std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
+
+  const Int32 zsize = result->Redshifts.size();
+
+  const Int32 ntplratios = result->ChiSquareTplratios.size();
+
+  bool zPriorLines = false;
+  Log.LogDetail("%s: PriorLinesTplratios.size()=%d", __func__,
+                result->PriorLinesTplratios.size());
+  if (result->PriorLinesTplratios.size() == ntplratios) {
+    zPriorLines = true;
+    Log.LogDetail("%s: Lines Prior enabled", __func__);
+  } else {
+    Log.LogDetail("%s: Lines Prior disabled", __func__);
+  }
+
+  chisquares.reserve(ntplratios);
+  zpriors.reserve(ntplratios);
+
+  for (Int32 k = 0; k < ntplratios; ++k) {
+    zpriors.push_back(BuildZpriors(result, k));
+    chisquares.push_back(result->ChiSquareTplratios[k]);
+
+    // correct chi2 if necessary
+    TFloat64List &logLikelihoodCorrected = chisquares.back();
+    /*
+    if(m_opt_pdf_margAmpCorrection) //nb: this is experimental.
+    {
+        //find max scalemargcorr
+        Float64 maxscalemargcorr=-DBL_MAX;
+        for ( Int32 kz=0; kz<zsize; kz++ )
+            if(maxscalemargcorr <
+    result->ScaleMargCorrectionTplratios[k][kz]) maxscalemargcorr =
+    result->ScaleMargCorrectionTplratios[k][kz];
+
+        Log.LogDetail("%s: maxscalemargcorr= %e", __func__,
+    maxscalemargcorr); for ( Int32 kz=0; kz<zsize; kz++ )
+            if(result->ScaleMargCorrectionTplratios[k][kz]!=0) //warning,
+    this is experimental. logLikelihoodCorrected[kz] +=
+    result->ScaleMargCorrectionTplratios[k][kz] - maxscalemargcorr;
+
+        // need to add maxscalemargcorr ?
+    }*/
+    if (!zPriorLines || result->PriorLinesTplratios[k].size() != zsize)
+      continue;
+
+    for (Int32 kz = 0; kz < zsize; kz++)
+      logLikelihoodCorrected[kz] += result->PriorLinesTplratios[k][kz];
+  }
+
+  chisquarearray.modelpriors = result->PriorTplratios;
+  return;
 }
 
 ///
@@ -489,11 +498,10 @@ void CLineModelSolve::StoreChisquareTplRatioResults(
           result->ScaleMargCorrectionTplratios[km][kz];
     }
 
-    std::string resname =
-        (boost::format(
-             "linemodel_chisquaretplratio/linemodel_scalemargcorrtplratio_%d") %
-         km)
-            .str();
+    std::string resname = (boost::format("linemodel_chisquaretplratio/"
+                                         "linemodel_scalemargcorrtplratio_%d") %
+                           km)
+                              .str();
     resultStore->StoreScopedGlobalResult(resname.c_str(),
                                          result_chisquaretplratio);
   }
@@ -545,26 +553,20 @@ void CLineModelSolve::StoreChisquareTplRatioResults(
  * If that returned true, store results.
  **/
 
-bool CLineModelSolve::Solve() {
+void CLineModelSolve::Solve() {
   std::string scopeStr = "linemodel";
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
+
   // Compute with linemodel operator
-  Int32 retInit = m_linemodel.Init(m_redshifts);
-  if (retInit != 0) {
-    THROWG(INTERNAL_ERROR, "Linemodel, init failed");
-  }
+  m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 
   // logstep from redshift
 
   //**************************************************
   // FIRST PASS
   //**************************************************
-  Int32 retFirstPass = m_linemodel.ComputeFirstPass();
-  if (retFirstPass != 0) {
-    THROWG(INTERNAL_ERROR, "Linemodel, first pass failed");
-    return false;
-  }
+  m_linemodel.ComputeFirstPass();
 
   //**************************************************
   // Compute z-candidates
@@ -585,11 +587,10 @@ bool CLineModelSolve::Solve() {
       pdfz.Compute(chisquares, false);
   m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
-  // save firstpass pdf
-  // do the necessary to pass a pdf with 1E-3 precision only
-  const std::shared_ptr<const CPdfMargZLogResult> coarsePDFZ =
-      pdfz.compressFirstpassPDF(m_opt_firstpass_largegridstepRatio);
-  resultStore->StoreScopedGlobalResult("firstpass_pdf", coarsePDFZ);
+  resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
+  // had to duplicate it to allow access from hdf5
+  resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
+                                       pdfz.m_postmargZResult);
 
   //**************************************************
   // FIRST PASS + CANDIDATES - B
@@ -600,24 +601,17 @@ bool CLineModelSolve::Solve() {
                            (m_opt_extremacountB > 1);
   COperatorLineModel linemodel_fpb;
   std::string fpb_opt_continuumcomponent =
-      "fromspectrum"; // Note: this is hardocoded! given that condition for FPB
-                      // relies on having "tplfit"
-  Int32 retInitB = linemodel_fpb.Init(m_redshifts);
-  if (retInitB != 0) {
-    Log.LogError("Linemodel fpB, init failed");
-    return false;
-  }
+      "fromspectrum"; // Note: this is hardocoded! given that condition for
+                      // FPB relies on having "tplfit"
+  linemodel_fpb.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
+
   if (enableFirstpass_B) {
     Log.LogInfo("Linemodel FIRST PASS B enabled. Computing now.");
 
     //**************************************************
     // FIRST PASS B
     //**************************************************
-    Int32 retFirstPass = linemodel_fpb.ComputeFirstPass();
-    if (retFirstPass != 0) {
-      Log.LogError("Linemodel, first pass failed");
-      return false;
-    }
+    linemodel_fpb.ComputeFirstPass();
 
     //**************************************************
     // Compute z-candidates B
@@ -663,11 +657,7 @@ bool CLineModelSolve::Solve() {
   // SECOND PASS
   //**************************************************
   if (!m_opt_skipsecondpass) {
-    Int32 retSecondPass = m_linemodel.ComputeSecondPass(fpExtremaResult);
-    if (retSecondPass != 0) {
-      Log.LogError("Linemodel, second pass failed.");
-      return false;
-    }
+    m_linemodel.ComputeSecondPass(fpExtremaResult);
   } else {
     m_linemodel.m_secondpass_parameters_extremaResult =
         *m_linemodel.m_firstpass_extremaResult;
@@ -686,6 +676,32 @@ bool CLineModelSolve::Solve() {
 
   // don't save linemodel extrema results, since will change with pdf
   // computation
+}
 
-  return true;
+void CLineModelSolve::createRedshiftGrid(
+    const std::shared_ptr<const CInputContext> &inputContext,
+    const TFloat64Range &redshiftRange) {
+
+  Int32 opt_twosteplargegridstep_ratio =
+      inputContext->GetParameterStore()->GetScoped<Int32>(
+          "LineModelSolve.linemodel.firstpass.largegridstepratio");
+
+  m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
+  m_redshifts.clear();
+
+  m_redshifts = m_redshiftSampling == "log"
+                    ? redshiftRange.SpreadOverLogZplusOne(m_coarseRedshiftStep)
+                    : redshiftRange.SpreadOver(m_coarseRedshiftStep);
+
+  if (m_redshifts.size() < MIN_GRID_COUNT) {
+    CObjectSolve::createRedshiftGrid(
+        inputContext, redshiftRange); // fall back to creating fine grid
+    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
+                "raw %d redshifts will be calculated",
+                m_redshifts.size());
+  } else {
+    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
+                "will be calculated on the large grid",
+                m_redshifts.size());
+  }
 }

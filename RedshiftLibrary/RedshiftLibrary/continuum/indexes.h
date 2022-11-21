@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
+
 #include <boost/format.hpp>
 #include <gsl/gsl_vector.h>
 

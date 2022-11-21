@@ -41,14 +41,32 @@
 
 using namespace NSEpic;
 
+CalzettiCorrection::CalzettiCorrection(TFloat64List _lbda,
+                                       TFloat64List _fluxcorr)
+    : lbda(_lbda), fluxcorr(_fluxcorr) {
+  Float64 lbdaGridStep = lbda[1] - lbda[0];
+  Float64 relativeLbdaGridStepTol = 1e-8;
+  for (std::size_t t = 2; t < lbda.size(); t++) {
+    Float64 lbda1 = lbda[t - 1];
+    Float64 lbda2 = lbda[t];
+    Float64 _lbdaGridStep;
+    _lbdaGridStep = lbda2 - lbda1;
+    Float64 relativeErrAbs =
+        std::abs((_lbdaGridStep - lbdaGridStep) / lbdaGridStep);
+
+    if (relativeErrAbs > relativeLbdaGridStepTol)
+      THROWG(BAD_CALZETTICORR, "lambdas are not regular sampled");
+  }
+  step = lbdaGridStep;
+}
+
 CSpectrumFluxCorrectionCalzetti::CSpectrumFluxCorrectionCalzetti(
     CalzettiCorrection _calzettiCorr, Float64 ebmv_start, Float64 ebmv_step,
     Float64 ebmv_n)
     : m_dataCalzetti(std::move(_calzettiCorr.fluxcorr)), m_nEbmvCoeff(ebmv_n),
-      m_EbmvCoeffStep(ebmv_step), m_EbmvCoeffStart(ebmv_start) {
-  m_LambdaMin = _calzettiCorr.lbda.front();
-  m_LambdaMax = _calzettiCorr.lbda.back();
-
+      m_EbmvCoeffStep(ebmv_step), m_EbmvCoeffStart(ebmv_start),
+      m_LambdaMin(_calzettiCorr.lbda.front()),
+      m_LambdaMax(_calzettiCorr.lbda.back()), m_step(_calzettiCorr.step) {
   m_dataDustCoeff.resize(m_nEbmvCoeff * m_dataCalzetti.size());
   for (Int32 kDust = 0; kDust < m_nEbmvCoeff; kDust++) {
     Float64 coeffEBMV = GetEbmvValue(kDust);
@@ -72,9 +90,11 @@ Int32 CSpectrumFluxCorrectionCalzetti::GetEbmvIndex(Float64 value) const {
 Float64
 CSpectrumFluxCorrectionCalzetti::GetDustCoeff(Int32 kDust,
                                               Float64 restLambda) const {
+  if (kDust >= m_nEbmvCoeff)
+    THROWG(INTERNAL_ERROR, "ebmv index > nbEbmv ");
   Float64 coeffDust = 1.0;
   if (restLambda >= m_LambdaMin && restLambda < m_LambdaMax) {
-    Int32 kCalzetti = Int32(restLambda - 100.0);
+    Int32 kCalzetti = Int32(round((restLambda - m_LambdaMin) / m_step));
     coeffDust = m_dataDustCoeff[kDust * m_dataCalzetti.size() + kCalzetti];
   }
   return coeffDust;

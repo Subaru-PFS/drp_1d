@@ -36,38 +36,37 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/operator/flagResult.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-#include <fstream>
-#include <string>
-
-#include "RedshiftLibrary/log/log.h"
-#include <boost/algorithm/string/predicate.hpp>
-#include <iomanip>
-#include <iostream>
-
-using namespace std;
 using namespace NSEpic;
 
-CPdfMargZLogResult::CPdfMargZLogResult() {
-  this->m_type = "CPdfMargZLogResult";
-}
+GlobalException::GlobalException(ErrorCode ec, const std::string &message,
+                                 const char *filename_, const char *method_,
+                                 int line_) noexcept
+    : AmzException(ec, message, filename_, method_, line_) {
 
-CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List &redshifts)
-    : Redshifts(redshifts), countTPL(redshifts.size()), // assumed 1 model per z
-      valProbaLog(redshifts.size(), -DBL_MAX) {
-  this->m_type = "CPdfMargZLogResult";
-}
+  std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
 
-Int32 CPdfMargZLogResult::getIndex(Float64 z) const {
-  Int32 solutionIdx = -1;
-  for (Int32 i2 = 0; i2 < Redshifts.size(); i2++) {
-    if (Redshifts[i2] == z) {
-      solutionIdx = i2;
-      break;
-    }
+  if (resultStore->getScopeDepth() > 2) {
+    if (!resultStore->hasCurrentMethodWarningFlag()) {
+      resultStore->StoreGlobalResult(
+          resultStore->GetScopedNameAt("warningFlag", 2),
+          std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
+                                                 Flag.getListMessages()));
+    } else
+      LogError(Formatter() << "Warning flag already exists for "
+                           << resultStore->getCurrentScopeNameAt(2));
+  } else {
+    if (!resultStore->hasContextWarningFlag()) {
+      resultStore->StoreScopedGlobalResult(
+          "warningFlag", std::make_shared<const CFlagLogResult>(
+                             Flag.getBitMask(), Flag.getListMessages()));
+    } else
+      LogError("Context warning flag already exists");
   }
-  return solutionIdx;
+  Flag.resetFlag();
 }

@@ -41,14 +41,10 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/objectSolve.h"
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 
@@ -76,7 +72,7 @@ private:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope) override;
 
-  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+  void Solve(std::shared_ptr<COperatorResultStore> resultStore,
              const CSpectrum &spc, const std::shared_ptr<const CTemplate> &tpl,
              Float64 overlapThreshold, std::vector<CMask> maskList,
              EType spctype = nType_raw, std::string opt_interp = "lin",
@@ -86,12 +82,10 @@ private:
   BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store,
                       const std::string &scopeStr) const;
 
-  std::shared_ptr<const ExtremaResult>
-  buildExtremaResults(shared_ptr<const COperatorResultStore> store,
-                      const std::string &scopeStr,
-                      const TCandidateZbyRank &ranked_zCandidates,
-                      const CTemplateCatalog &tplCatalog,
-                      Float64 overlapThreshold, std::string opt_interp);
+  std::shared_ptr<const ExtremaResult> buildExtremaResults(
+      shared_ptr<const COperatorResultStore> store, const std::string &scopeStr,
+      const TCandidateZbyRank &ranked_zCandidates,
+      const CTemplateCatalog &tplCatalog, Float64 overlapThreshold);
 
   void StoreExtremaResults(
       std::shared_ptr<COperatorResultStore> dataStore,

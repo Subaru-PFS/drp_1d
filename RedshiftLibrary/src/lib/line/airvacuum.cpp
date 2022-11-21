@@ -116,7 +116,7 @@ TFloat64List CAirVacuum::AirToVac(const TFloat64List &waveAir) const {
   } while (++iter < maxiter);
 
   if (iter == maxiter) {
-    Flag.warning(Flag.AIR_VACCUM_REACHED_MAX_ITERATIONS,
+    Flag.warning(WarningCode::AIR_VACCUM_REACHED_MAX_ITERATIONS,
                  Formatter()
                      << "CAirVacuum::" << __func__
                      << " reach max iteration, with precision: " << precision);

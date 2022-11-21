@@ -54,22 +54,25 @@ CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(
   IsValid();
 }
 
-Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda) const {
-  Int32 idx = -1;
-  if (!checkAvailability(lambda)) {
-    THROWG(INTERNAL_ERROR, " lambda outside spectralAxis range");
-  }
+Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
+                                            bool cliplambda) const {
 
+  if (cliplambda)
+    lambda = getSpectralRange().Clamp(lambda);
+
+  if (!checkAvailability(lambda))
+    THROWG(INTERNAL_ERROR, " lambda outside spectralAxis range");
+
+  Int32 idx = undefIdx;
   TFloat64Index::getClosestLowerIndex(m_spcAxis.GetSamplesVector(), lambda,
                                       idx);
 
-  if (m_spcAxis[idx] != lambda) { // interpolation
-    Float64 t =
-        (lambda - m_spcAxis[idx]) / (m_spcAxis[idx + 1] - m_spcAxis[idx]);
-    Float64 width_interp = m_width[idx] + (m_width[idx + 1] - m_width[idx]) * t;
-    return width_interp;
-  }
-  return m_width[idx];
+  if (m_spcAxis[idx] == lambda)
+    return m_width[idx];
+
+  // interpolation
+  Float64 t = (lambda - m_spcAxis[idx]) / (m_spcAxis[idx + 1] - m_spcAxis[idx]);
+  return m_width[idx] * (1 - t) + m_width[idx + 1] * t;
 }
 
 bool CLSFGaussianVariableWidth::IsValid() const {
@@ -84,11 +87,4 @@ bool CLSFGaussianVariableWidth::IsValid() const {
     if (w <= 0.)
       return false;
   return true;
-}
-
-bool CLSFGaussianVariableWidth::checkAvailability(Float64 lambda) const {
-  bool available = true;
-  if (lambda < m_spcAxis[0] || lambda > m_spcAxis[m_width.size() - 1])
-    available = false;
-  return available;
 }

@@ -56,22 +56,20 @@
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
-
-#include <float.h>
-#include <gsl/gsl_blas.h>
-#include <memory>
-
-#include <gsl/gsl_interp.h>
-
-#include <gsl/gsl_spline.h>
-#include <math.h>
-
 #include <boost/numeric/conversion/bounds.hpp>
 
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_vector.h>
+
+#include <climits>
+#include <cmath>
+#include <memory>
+
 using namespace NSEpic;
 using namespace std;
 
@@ -95,8 +93,7 @@ CLineModelFitting::CLineModelFitting()
   initMembers();
   setLineRatioType(m_lineRatioType);
   if (m_lineRatioType == "rules")
-    dynamic_cast<CRulesManager *>(m_lineRatioManager.get())
-        ->setRulesOption();
+    dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
 }
 
 CLineModelFitting::CLineModelFitting(
@@ -107,7 +104,6 @@ CLineModelFitting::CLineModelFitting(
   m_lambdaRange = std::make_shared<const TLambdaRange>(lambdaRange);
   initParameters();
   // override ortho specific parameters
-  m_ContinuumComponent = "fromspectrum";
   m_fittingmethod = "hybrid";
   // temporary options override to be removed when full tpl ortho is implemented
   m_lineRatioType = "rules";
@@ -115,9 +111,8 @@ CLineModelFitting::CLineModelFitting(
   initMembers();
   setLineRatioType(m_lineRatioType);
 
-  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())
-      ->setRulesOption("no");
-  m_lineRatioManager->m_ContinuumComponent = "fromspectrum";
+  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
+  setContinuumComponent("fromspectrum");
 }
 
 void CLineModelFitting::initParameters() {
@@ -125,8 +120,6 @@ void CLineModelFitting::initParameters() {
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
-  m_ContinuumComponent = ps->GetScoped<std::string>("continuumcomponent");
-
   m_LineWidthType = ps->GetScoped<std::string>("linewidthtype");
 
   m_velocityEmission = ps->GetScoped<Float64>("velocityemission");
@@ -142,11 +135,11 @@ void CLineModelFitting::initParameters() {
     m_opt_secondpass_fittingmethod = m_fittingmethod;
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
-    // TODO dedicated function ?
-
-    SetSecondpassContinuumFitPrms();
   }
-  if (isContinuumComponentTplfitxx()) {
+
+  std::string continuumComponent =
+      ps->GetScoped<std::string>("continuumcomponent");
+  if (continuumComponent == "tplfit" || continuumComponent == "tplfitauto") {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
     // useloglambdasampling param is relevant only if linemodel.continuumfit is
@@ -157,14 +150,8 @@ void CLineModelFitting::initParameters() {
 }
 
 void CLineModelFitting::initMembers() {
-  // m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
-  m_nominalWidthDefaultEmission = 13.4; // euclid 1 px
-  m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
 
-  m_enableLambdaOffsetsFit =
-      true; // enable lambdaOffsetFit. Once enabled, the offset fixed value or
-  // the fitting on/off switch is done through the offset calibration
-  // file.
+  m_nominalWidthDefault = 13.4; // euclid 1 px
 
   Log.LogDetail("    model: Continuum winsize found is %.2f A",
                 m_inputSpc->GetMedianWinsize());
@@ -185,7 +172,6 @@ void CLineModelFitting::initMembers() {
       CSpectrumModel(m_Elements, m_inputSpc, m_RestLineList));
   m_continuumManager = std::make_shared<CContinuumManager>(
       CContinuumManager(m_inputSpc, m_model, *(m_lambdaRange)));
-  SetContinuumComponent(m_ContinuumComponent);
 
   SetFittingMethod(m_fittingmethod);
   SetLSF();
@@ -197,34 +183,29 @@ void CLineModelFitting::initMembers() {
 
 void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << "m_pass" << m_pass);
-  Log.LogDetail(Formatter() << " m_enableAmplitudeOffsets"
-                          << m_enableAmplitudeOffsets);
+  Log.LogDetail(Formatter()
+                << " m_enableAmplitudeOffsets" << m_enableAmplitudeOffsets);
   Log.LogDetail(Formatter() << " m_LambdaOffsetMin" << m_LambdaOffsetMin);
   Log.LogDetail(Formatter() << " m_LambdaOffsetMax" << m_LambdaOffsetMax);
   Log.LogDetail(Formatter() << " m_LambdaOffsetStep" << m_LambdaOffsetStep);
-  Log.LogDetail(Formatter() << " m_enableLambdaOffsetsFit"
-                          << m_enableLambdaOffsetsFit);
-
-  Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableMultipleContinuumfit"
-                          << m_opt_firstpass_forcedisableMultipleContinuumfit);
+  Log.LogDetail(Formatter()
+                << " m_opt_firstpass_forcedisableMultipleContinuumfit"
+                << m_opt_firstpass_forcedisableMultipleContinuumfit);
   Log.LogDetail(Formatter() << "m_opt_firstpass_fittingmethod "
-                          << m_opt_firstpass_fittingmethod);
+                            << m_opt_firstpass_fittingmethod);
   Log.LogDetail(Formatter() << "m_opt_secondpass_fittingmethod"
-                          << m_opt_secondpass_fittingmethod);
+                            << m_opt_secondpass_fittingmethod);
 
-  Log.LogDetail(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
   Log.LogDetail(Formatter() << "LineWidthType=" << m_LineWidthType);
 
   Log.LogDetail(Formatter() << "velocityEmission=" << m_velocityEmission);
   Log.LogDetail(Formatter() << "velocityAbsorption=" << m_velocityAbsorption);
-  Log.LogDetail(Formatter() << "velocityEmissionInit=" << m_velocityEmissionInit);
-  Log.LogDetail(Formatter() << "velocityAbsorptionInit="
-                          << m_velocityAbsorptionInit);
+  Log.LogDetail(Formatter()
+                << "velocityEmissionInit=" << m_velocityEmissionInit);
+  Log.LogDetail(Formatter()
+                << "velocityAbsorptionInit=" << m_velocityAbsorptionInit);
 
-  Log.LogDetail(Formatter() << "nominalWidthDefaultEmission="
-                          << m_nominalWidthDefaultEmission);
-  Log.LogDetail(Formatter() << "nominalWidthDefaultAbsorption="
-                          << m_nominalWidthDefaultAbsorption);
+  Log.LogDetail(Formatter() << "nominalWidthDefault=" << m_nominalWidthDefault);
 
   Log.LogDetail(Formatter() << "fittingmethod=" << m_fittingmethod);
 
@@ -233,16 +214,11 @@ void CLineModelFitting::logParameters() {
   // Log.LogDetail(Formatter()<<"tplCatalog="<<m_tplCatalog);
   // Log.LogDetail(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
 
-  Log.LogDetail(Formatter() << "secondpass_fitContinuum_dustfit="
-                          << m_secondpass_fitContinuum_dustfit);
-  Log.LogDetail(Formatter() << "secondpass_fitContinuum_igm="
-                          << m_secondpass_fitContinuum_igm);
-
   //  Log.LogDetail(Formatter()<<"fitContinuum_tplFitPolyCoeffs="<<m_fitContinuum_tplFitPolyCoeffs);
   //  // only used with
   // m_fitContinuum_option==2 for now
   Log.LogDetail(Formatter() << "forcedisableMultipleContinuumfit="
-                          << m_forcedisableMultipleContinuumfit);
+                            << m_forcedisableMultipleContinuumfit);
 }
 
 /**
@@ -306,7 +282,7 @@ void CLineModelFitting::LoadCatalog(
       m_Elements.push_back(std::shared_ptr<CLineModelElement>(
           new CLineModelElement(lines, m_LineWidthType, m_velocityEmission,
                                 m_velocityAbsorption, amps,
-                                m_nominalWidthDefaultAbsorption, inds)));
+                                m_nominalWidthDefault, inds)));
     }
   }
 }
@@ -326,8 +302,8 @@ void CLineModelFitting::LoadCatalogOneMultiline(
   if (lines.size() > 0) {
     m_Elements.push_back(std::shared_ptr<CLineModelElement>(
         new CLineModelElement(lines, m_LineWidthType, m_velocityEmission,
-                              m_velocityAbsorption, amps,
-                              m_nominalWidthDefaultAbsorption, inds)));
+                              m_velocityAbsorption, amps, m_nominalWidthDefault,
+                              inds)));
   }
 }
 
@@ -352,7 +328,7 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
       m_Elements.push_back(std::shared_ptr<CLineModelElement>(
           new CLineModelElement(lines, m_LineWidthType, m_velocityEmission,
                                 m_velocityAbsorption, amps,
-                                m_nominalWidthDefaultAbsorption, inds)));
+                                m_nominalWidthDefault, inds)));
     }
   }
 }
@@ -423,30 +399,30 @@ bool CLineModelFitting::initModelAtZ(
 bool CLineModelFitting::initDtd() {
   //  m_dTransposeDLambdaRange = TLambdaRange(*(m_lambdaRange));
   m_dTransposeDLambdaRange = *(m_lambdaRange);
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
+  if (isContinuumComponentTplfitxx())
     m_dTransposeD = EstimateDTransposeD("raw");
-  } else {
+  else
     m_dTransposeD = EstimateDTransposeD("nocontinuum");
-  }
+
   m_likelihood_cstLog = EstimateLikelihoodCstLog();
   return true;
 }
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
-  if (m_ContinuumComponent == "nocontinuum")
+  if (getContinuumComponent() == "nocontinuum")
     return;
 
-  m_model->PrepareContinuum();
-
-  if (isContinuumComponentTplfitxx()) // the support has to be already computed
-                                      // when LoadFitContinuum() is called
-  {
-    m_continuumManager->initObserveGridContinuumFlux(
-        m_inputSpc->GetSampleCount());
-    Int32 autoselect = m_ContinuumComponent == "tplfitauto";
-    m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
+  if (!isContinuumComponentTplfitxx()) {
+    m_model->setContinuumToInputSpc();
+    return;
   }
+
+  // the support has to be already computed
+  // when LoadFitContinuum() is called
+  m_continuumManager->initObserveGridContinuumFlux(
+      m_inputSpc->GetSampleCount());
+  Int32 autoselect = getContinuumComponent() == "tplfitauto";
+  m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
@@ -478,7 +454,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   Int32 ntplratio = m_lineRatioManager->prepareFit(
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
-
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
@@ -492,7 +467,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     Float64 _merit = INFINITY;
     Float64 _meritprior = 0.; // only relevant for "tplratio"
     prepareAndLoadContinuum(k, redshift);
-    if (m_ContinuumComponent != "nocontinuum")
+    if (getContinuumComponent() != "nocontinuum")
       computeSpectrumFluxWithoutContinuum();
 
     if (m_enableAmplitudeOffsets)
@@ -500,7 +475,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
-      if(m_lineRatioManager->init(redshift, itratio)) continue;
+      if (m_lineRatioManager->init(redshift, itratio))
+        continue;
 
       m_fitter->fit(redshift);
 
@@ -520,7 +496,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         m_lineRatioManager->saveResults(itratio);
       }
-      if (m_ContinuumComponent == "nocontinuum")
+      if (getContinuumComponent() == "nocontinuum")
         m_model->reinitModel();
     }
   }
@@ -530,12 +506,14 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   if (isContinuumComponentTplfitxx()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
-      Int32 autoselect = m_ContinuumComponent == "tplfitauto";
+      Int32 autoselect =
+          m_continuumManager->getContinuumComponent() == "tplfitauto";
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, autoselect,
                                            redshift);
     }
-    /*    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
+    /*
+    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
                   "ebmv=%.3f), and A=%e",
                   savedIdxContinuumFitted, m_fitContinuum_tplName.c_str(),
                   m_fitContinuum_tplFitEbmvCoeff,
@@ -551,37 +529,17 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   return bestMerit;
 }
 
-void CLineModelFitting::SetSecondpassContinuumFitPrms() {
-
-  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-
-  Int32 dustfit = -1;
-  if (ps->GetScoped<bool>("continuumfit.ismfit"))
-    dustfit = -10;
-
-  Int32 meiksinfit = ps->GetScoped<bool>("continuumfit.igmfit");
-  m_ignoreLinesSupport = ps->GetScoped<bool>("continuumfit.ignorelinesupport");
-  m_secondpass_fitContinuum_dustfit = dustfit;
-  m_secondpass_fitContinuum_igm = meiksinfit;
-
-  Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
-                "fitContinuum_dustfit = %d",
-                m_secondpass_fitContinuum_dustfit);
-  Log.LogDetail(
-      "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d",
-      m_secondpass_fitContinuum_igm);
-}
-
 void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
   m_fittingmethod = fitMethod;
-  m_fitter =
-      CAbstractFitter::makeFitter(fitMethod, m_Elements, m_inputSpc,
-                                  m_lambdaRange, m_model, m_RestLineList, m_continuumManager);
+  m_fitter = CAbstractFitter::makeFitter(fitMethod, m_Elements, m_inputSpc,
+                                         m_lambdaRange, m_model, m_RestLineList,
+                                         m_continuumManager);
 }
 
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
-  m_lineRatioManager = CLineRatioManager::makeLineRatioManager(lineRatioType, m_Elements, m_model, m_inputSpc,
-							    m_lambdaRange, m_continuumManager,  m_RestLineList);
+  m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
+      lineRatioType, m_Elements, m_model, m_inputSpc, m_lambdaRange,
+      m_continuumManager, m_RestLineList);
 }
 
 void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
@@ -619,11 +577,9 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
  *STD input: which = 2: uses the spectrum error to compute STD
  **/
 Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
-  if (which != 1 && which != 2) {
-    Log.LogError("    model: getOutsideLinesSTD - Failed to parse input "
-                 "argument, which");
-    return -1;
-  }
+  if (which != 1 && which != 2)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "wrong argument, which (1 or 2): " << which);
 
   CMask _mask = getOutsideLinesMask();
 
@@ -649,7 +605,6 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
     return NAN;
   return sqrt(sum2 / nsum);
 }
-
 
 Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
@@ -1010,6 +965,9 @@ void CLineModelFitting::LoadModelSolution(
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue;
+    Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
+    if (subeIdx == undefIdx || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+      continue;
     if (m_enableAmplitudeOffsets) {
       TPolynomCoeffs contPolynomCoeffs = {
           modelSolution.continuum_pCoeff0[iRestLine],
@@ -1017,8 +975,6 @@ void CLineModelFitting::LoadModelSolution(
           modelSolution.continuum_pCoeff2[iRestLine]};
       applyPolynomCoeffs(eIdx, contPolynomCoeffs);
     }
-
-    Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
 
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
@@ -1051,7 +1007,7 @@ void CLineModelFitting::LoadModelSolution(
  * \brief Returns a CLineModelSolution object populated with the current
  *solutions.
  **/
-CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
+CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
   modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
@@ -1067,11 +1023,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     Int32 subeIdx = undefIdx;
     Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
     modelSolution.ElementId[iRestLine] = eIdx;
-
     if (eIdx == undefIdx || subeIdx == undefIdx ||
         m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx)) {
       continue; // data already set to its default values
     }
+
     Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
     modelSolution.Amplitudes[iRestLine] = amp;
     Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
@@ -1087,7 +1043,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
                    // and high level line properties
     {
       modelSolution.FittingError[iRestLine] =
-          m_model->getModelErrorUnderElement(eIdx);
+          m_model->getModelErrorUnderElement(eIdx, m_model->getSpcFluxAxis());
       TPolynomCoeffs polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
       // save polynom info to output them in hdf5, mainly to recontruct
       // linemeas model
@@ -1202,7 +1158,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.LyaIgm = params_igm.m_igmidx;
   }
 
-  TStringList strongELSNRAboveCut = TStringList(); // getLinesAboveSNR(3.5);
+  std::unordered_set<std::string>
+      strongELSNRAboveCut; // = getLinesAboveSNR(3.5);
   modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
   return modelSolution;
@@ -1290,12 +1247,11 @@ void CLineModelFitting::setVelocity(Float64 vel, Int32 idxElt, Int32 lineType) {
            Formatter() << "Wrong index for line model element " << idxElt);
 }
 
-void CLineModelFitting::SetVelocityEmissionOneElement(Float64 vel,
-                                                      Int32 idxElt) {
+void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
+                                                   const TInt32List &inds) {
   m_velocityEmission = vel;
-  if (idxElt < m_Elements.size()) {
+  for (auto idxElt : inds)
     m_Elements[idxElt]->SetVelocityEmission(vel);
-  }
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
@@ -1305,14 +1261,12 @@ void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
   }
 }
 
-void CLineModelFitting::SetVelocityAbsorptionOneElement(Float64 vel,
-                                                        Int32 idxElt) {
+void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
+                                                     const TInt32List &inds) {
   m_velocityAbsorption = vel;
-  if (idxElt < m_Elements.size()) {
+  for (auto idxElt : inds)
     m_Elements[idxElt]->SetVelocityAbsorption(vel);
-  }
 }
-
 Float64 CLineModelFitting::GetVelocityEmission() const {
   return m_velocityEmission;
 }
@@ -1440,10 +1394,8 @@ Float64 CLineModelFitting::EstimateMTransposeM()
   return mtm;
 }
 
-void CLineModelFitting::SetContinuumComponent(std::string component) {
-  m_ContinuumComponent = component;
-  m_model->SetContinuumComponent(component);
-  m_continuumManager->setContinuumComponent(component);
+void CLineModelFitting::setContinuumComponent(std::string component) {
+  m_continuumManager->setContinuumComponent(std::move(component));
 }
 /**
  * \brief this function estimates the likelihood_cstLog term withing the

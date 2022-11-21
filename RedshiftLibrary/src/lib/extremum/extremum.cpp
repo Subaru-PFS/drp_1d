@@ -44,7 +44,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/log/log.h"
-#include <float.h>
+#include <climits>
 #include <numeric>
 
 using namespace NSEpic;
@@ -114,8 +114,6 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   }
 
   if (n != yAxis.size()) {
-    Log.LogError(
-        "CExtremum::Find, input X and Y vector do not have the same size");
     THROWG(INTERNAL_ERROR, "input X and Y vector do not have the same size");
   }
 
@@ -126,12 +124,11 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   if (!m_XRange.GetIsEmpty()) {
     bool rangeok;
     rangeok = m_XRange.getClosedIntervalIndices(xAxis, BeginIndex, EndIndex);
-    if (!rangeok) {
-      Log.LogError("CExtremum::Find, bad range [%f, %f] for Xaxis: [%f,%f]",
-                   m_XRange.GetBegin(), m_XRange.GetEnd(), xAxis.front(),
-                   xAxis.back());
-      THROWG(INTERNAL_ERROR, "bad range");
-    }
+    if (!rangeok)
+      THROWG(INTERNAL_ERROR, Formatter() << "bad range [" << m_XRange.GetBegin()
+                                         << ", " << m_XRange.GetEnd()
+                                         << "] for Xaxis: [" << xAxis.front()
+                                         << ", " << xAxis.back() << "]");
   }
 
   TFloat64List maxX, minX;
@@ -142,7 +139,7 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
     // we should not raise an exception here
     // (we can accept a missing candidate in second pass window)
     // The boolean return has to be tested by the caller
-    Flag.warning(Flag.FINDER_NO_PEAKS,
+    Flag.warning(WarningCode::FINDER_NO_PEAKS,
                  Formatter() << "          CExtremum::" << __func__
                              << ": FindAllPeaks returned empty MaxX");
     return false;

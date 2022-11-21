@@ -47,9 +47,10 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
-#include <float.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+
+#include <climits>
 
 using namespace NSEpic;
 using namespace std;
@@ -158,10 +159,10 @@ Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
   return 0;
 }
 
-Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
-                                               const TFloat64List &Y,
-                                               Int32 nshifts, TFloat64List &XtY,
-                                               Int32 precomputedFFT) {
+void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
+                                              const TFloat64List &Y,
+                                              Int32 nshifts, TFloat64List &XtY,
+                                              Int32 precomputedFFT) {
   // Processing the FFT
   Int32 nSpc = X.size();
   Int32 nTpl = Y.size();
@@ -215,11 +216,9 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
     if (precomputedFFT == 0) {
       precomputedFFT_spcFluxOverErr2 =
           (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-      if (precomputedFFT_spcFluxOverErr2 == 0) {
-        Log.LogError("Unable to "
-                     "allocate precomputedFFT_spcFluxOverErr2");
-        return -1;
-      }
+      if (precomputedFFT_spcFluxOverErr2 == 0)
+        THROWG(INTERNAL_ERROR, "Unable to "
+                               "allocate precomputedFFT_spcFluxOverErr2");
       for (Int32 k = 0; k < nPadded; k++) {
         precomputedFFT_spcFluxOverErr2[k][0] = outSpc[k][0];
         precomputedFFT_spcFluxOverErr2[k][1] = outSpc[k][1];
@@ -229,11 +228,9 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
 
       precomputedFFT_spcOneOverErr2 =
           (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-      if (precomputedFFT_spcOneOverErr2 == 0) {
-        Log.LogError("Unable to "
-                     "allocate precomputedFFT_spcOneOverErr2");
-        return -1;
-      }
+      if (precomputedFFT_spcOneOverErr2 == 0)
+        THROWG(INTERNAL_ERROR, "Unable to "
+                               "allocate precomputedFFT_spcOneOverErr2");
       for (Int32 k = 0; k < nPadded; k++) {
         precomputedFFT_spcOneOverErr2[k][0] = outSpc[k][0];
         precomputedFFT_spcOneOverErr2[k][1] = outSpc[k][1];
@@ -314,8 +311,6 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
 
     XtY[k] = inCombined[IndexCyclic] / (Float64)nPadded;
   }
-
-  return 0;
 }
 
 Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
@@ -514,8 +509,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
 
   for (Int32 k = 0; k < nzranges; k++) {
     // prepare the zrange-result container
-    std::shared_ptr<CTemplateFittingResult> subresult =
-        std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
+    std::shared_ptr<CTemplateFittingResult> subresult;
     TFloat64Range zrange =
         TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()],
                       result->Redshifts[izrangelist[k].GetEnd()]);
@@ -525,14 +519,17 @@ Int32 COperatorTemplateFittingLog::FitAllz(
                                    last = result->Redshifts.begin() +
                                           izrangelist[k].GetEnd() + 1;
       TFloat64List subRedshifts(first, last);
-      subresult->Init(subRedshifts.size(), EbmvList.size(), MeiksinList.size());
+      subresult = std::make_shared<CTemplateFittingResult>(
+          subRedshifts.size(), EbmvList.size(), MeiksinList.size());
+
       subresult->Redshifts = subRedshifts;
-      // slice the template
+
     } else {
-      subresult->Init(result->Redshifts.size(), EbmvList.size(),
-                      MeiksinList.size());
+      subresult = std::make_shared<CTemplateFittingResult>(
+          result->Redshifts.size(), EbmvList.size(), MeiksinList.size());
       subresult->Redshifts = result->Redshifts;
     }
+
     TInt32Range ilbda = FindTplSpectralIndex(zrange);
     Log.LogDebug("FitAllz: zrange min=%f, max=%f", zrange.GetBegin(),
                  zrange.GetEnd());
@@ -568,14 +565,11 @@ Int32 COperatorTemplateFittingLog::FitAllz(
 
       Float64 logprior = 0.;
       if (logpriorze.size() > 0) {
-        Int32 kism_best = -1;
-        if (subresult->FitEbmvCoeff[isubz] == -1) {
-          kism_best = 0;
-        } else {
+        Int32 kism_best = 0;
+        if (subresult->FitEbmvCoeff[isubz] != -1.0)
           kism_best =
               m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvIndex(
                   subresult->FitEbmvCoeff[isubz]);
-        }
 
         const CPriorHelper::SPriorTZE &pTZE =
             logpriorze[fullResultIdx][kism_best];
@@ -778,13 +772,13 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
   // prepare best fit data buffer
   TFloat64List bestChi2(nshifts, DBL_MAX);
-  TFloat64List bestFitAmp(nshifts, -1.0);
-  TFloat64List bestFitAmpErr(nshifts, -1.0);
-  TFloat64List bestFitAmpSigma(nshifts);
-  TFloat64List bestFitDtm(nshifts, -1.0);
-  TFloat64List bestFitMtm(nshifts, -1.0);
-  TFloat64List bestISMCoeff(nshifts, -1.0);
-  TInt32List bestIGMIdx(nshifts, -1);
+  TFloat64List bestFitAmp(nshifts, NAN);
+  TFloat64List bestFitAmpErr(nshifts, NAN);
+  TFloat64List bestFitAmpSigma(nshifts, NAN);
+  TFloat64List bestFitDtm(nshifts, NAN);
+  TFloat64List bestFitMtm(nshifts, NAN);
+  TFloat64List bestISMCoeff(nshifts, NAN);
+  TInt32List bestIGMIdx(nshifts, undefIdx);
 
   // prepare intermediate fit data buffer
   std::vector<std::vector<TFloat64List>> intermediateChi2;
@@ -909,7 +903,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
               m_enableISM
                   ? m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvValue(
                         EbmvList[kISM])
-                  : -1;
+                  : -1.0;
           bestIGMIdx[k] = enableIGM ? MeiksinList[kIGM] : -1;
         }
       }
@@ -1114,30 +1108,26 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
  *spectrum grid) 2. input: if additional_spcMasks size is 0, no additional mask
  *will be used, otherwise its size should match the redshifts list size
  *
- * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes,
- *positive integer 0, 1 or ... will be used as ism-calzetti index as initialized
- *in constructor lambdaRange is not clamped
+ * lambdaRange is not clamped
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     const std::shared_ptr<const CTemplate> &logSampledTpl,
     Float64 overlapThreshold, const std::vector<CMask> &additional_spcMasks,
-    std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting,
-    const CPriorHelper::TPriorZEList &logpriorze, bool keepigmism,
-    Float64 FitEbmvCoeff, Int32 FitMeiksinIdx) {
+    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx) {
   Log.LogDetail("starting computation for template: %s",
                 logSampledTpl->GetName().c_str());
 
-  if ((opt_dustFitting == -10 || opt_dustFitting > -1) &&
-      logSampledTpl->CalzettiInitFailed()) {
+  if (opt_dustFitting && logSampledTpl->CalzettiInitFailed())
     THROWG(INTERNAL_ERROR, "ISM is no initialized");
-  }
-  if (opt_dustFitting > -1 &&
-      opt_dustFitting >
-          logSampledTpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs() -
-              1) {
+
+  if (opt_dustFitting &&
+      FitEbmvIdx >=
+          logSampledTpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()) {
     THROWG(INTERNAL_ERROR,
-           Formatter() << " Invalidcalzetti index: (dustfitting="
-                       << opt_dustFitting << ",while NPrecomputedEbmvCoeffs="
+           Formatter() << " Invalid calzetti index: (FitEbmvIdx=" << FitEbmvIdx
+                       << ",while NPrecomputedEbmvCoeffs="
                        << logSampledTpl->m_ismCorrectionCalzetti
                               ->GetNPrecomputedEbmvCoeffs()
                        << ")");
@@ -1182,25 +1172,25 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   TInt32List MeiksinList;
   TInt32List EbmvList;
   m_templateRebined_bf.GetIsmIgmIdxList(opt_extinction, opt_dustFitting,
-                                        MeiksinList, EbmvList, keepigmism,
-                                        FitEbmvCoeff, FitMeiksinIdx);
+                                        MeiksinList, EbmvList, FitEbmvIdx,
+                                        FitMeiksinIdx);
   Int32 nIGMCoeffs = MeiksinList.size();
   Int32 nISMCoeffs = EbmvList.size();
 
-  m_enableIGM = (MeiksinList[0] == -1) ? 0 : 1;
-  m_enableISM = (EbmvList[0] == -1) ? 0 : 1;
+  m_enableIGM = opt_extinction;
+  m_enableISM = opt_dustFitting;
   std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>();
-  result->Init(m_redshifts.size(), nISMCoeffs, nIGMCoeffs);
+      std::make_shared<CTemplateFittingResult>(m_redshifts.size(), nISMCoeffs,
+                                               nIGMCoeffs);
   result->Redshifts = m_redshifts;
 
   // WARNING: no additional masks coded for use as of 2017-06-13
-  if (additional_spcMasks.size() != 0) {
-    Log.LogError("No additional masks used. "
-                 "Feature not coded for this log-lambda operator!)");
-    /*throw std::runtime_error(No additional
-       masks used. " "Feature not coded for this log-lambda operator!)");*/
-  }
+  if (additional_spcMasks.size() != 0)
+    Flag.warning(WarningCode::TEMPLATEFITTINGLOG_NO_MASK,
+                 Formatter()
+                     << "COperatorTemplateFittingLog::" << __func__
+                     << "No additional masks used. "
+                        "Feature not coded for this log-lambda operator");
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {
     THROWG(INTERNAL_ERROR,

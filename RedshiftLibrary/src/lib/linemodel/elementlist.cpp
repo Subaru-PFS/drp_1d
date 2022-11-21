@@ -39,10 +39,12 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
+
 #include <cfloat>
+#include <cmath>
 
 using namespace NSEpic;
-
+using namespace std;
 /**
  * \brief Returns the number of m_Elements that fail IsOutsideLambdaRange().
  **/
@@ -139,8 +141,8 @@ void CLineModelElementList::ResetElementIndexesDisabled() {
 
 /**
  * \brief Returns the list of groups, with each group being a set of line
- *indexes with the velcocity to be jointly TEMPORARY-DEV: return all the indexes
- *individually as  agroup
+ *indexes with the velcocity to be jointly TEMPORARY-DEV: return all the
+ *indexes individually as  agroup
  **/
 std::vector<TInt32List>
 CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
@@ -148,21 +150,15 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
   TInt32List nonGroupedLines;
 
   TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
-  for (Int32 i = 0; i < nonZeroIndexes.size(); i++) {
-    Int32 iElts = nonZeroIndexes[i];
-    Int32 nLines = m_Elements[iElts]->GetSize();
-    for (Int32 iSubElts = 0; iSubElts < nLines; iSubElts++) {
-      if (lineType == m_Elements[iElts]->m_Lines[iSubElts].GetType()) {
-        std::string _tag =
-            m_Elements[iElts]->m_Lines[iSubElts].GetVelGroupName();
-        if (_tag != "-1") {
+  for (auto iElts : nonZeroIndexes)
+    for (const auto &line : m_Elements[iElts]->m_Lines)
+      if (lineType == line.GetType()) {
+        std::string _tag = line.GetVelGroupName();
+        if (_tag != "-1")
           tags.push_back(_tag);
-        } else {
+        else
           nonGroupedLines.push_back(iElts);
-        }
       }
-    }
-  }
 
   // create the group tag set by removing duplicates
   std::sort(tags.begin(), tags.end());
@@ -173,19 +169,12 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
   TStringList groupsTags;
   for (Int32 itag = 0; itag < tags.size(); itag++) {
     TInt32List _group;
-    for (Int32 i = 0; i < nonZeroIndexes.size(); i++) {
-      Int32 iElts = nonZeroIndexes[i];
-      Int32 nLines = m_Elements[iElts]->GetSize();
-      for (Int32 iSubElts = 0; iSubElts < nLines; iSubElts++) {
-        if (lineType == m_Elements[iElts]->m_Lines[iSubElts].GetType()) {
-          std::string _tag =
-              m_Elements[iElts]->m_Lines[iSubElts].GetVelGroupName();
-          if (_tag == tags[itag]) {
+    for (auto iElts : nonZeroIndexes)
+      for (const auto &line : m_Elements[iElts]->m_Lines)
+        if (lineType == line.GetType())
+          if (tags[itag] == line.GetVelGroupName())
             _group.push_back(iElts);
-          }
-        }
-      }
-    }
+
     // add the grouped lines, no duplicates
     std::sort(_group.begin(), _group.end());
     _group.erase(std::unique(_group.begin(), _group.end()), _group.end());
@@ -198,10 +187,8 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
   nonGroupedLines.erase(
       std::unique(nonGroupedLines.begin(), nonGroupedLines.end()),
       nonGroupedLines.end());
-  for (Int32 i = 0; i < nonGroupedLines.size(); i++) {
-    TInt32List _group;
-    _group.push_back(nonGroupedLines[i]);
-    groups.push_back(_group);
+  for (const auto lIdx : nonGroupedLines) {
+    groups.push_back({lIdx});
     groupsTags.push_back("-1");
   }
 
@@ -418,6 +405,29 @@ Float64 CLineModelElementList::GetElementAmplitude(Int32 j) const {
 }
 
 /**
+ * @brief: get all valid elements based on whether the amplitude is null
+ *
+ * @param lineTypeFilter
+ * @return TFloat64List
+ */
+TInt32List
+CLineModelElementList::getValidElementIndices(Int32 lineTypeFilter) const {
+
+  const TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  TInt32List nonZeroValidEltsIdx;
+  for (const Int32 eIdx : validEltsIdx) {
+    const Int32 lineType = m_Elements[eIdx]->m_Lines[0].GetType();
+    if (lineTypeFilter != -1 && lineTypeFilter != lineType)
+      continue;
+
+    if (!std::isnan(m_Elements[eIdx]->GetElementAmplitude()) &&
+        m_Elements[eIdx]->GetElementAmplitude() > 0.0)
+      nonZeroValidEltsIdx.push_back(eIdx);
+  }
+  return nonZeroValidEltsIdx;
+}
+
+/**
  * \brief Returns the first index of m_Elements where calling the element's
  *findElementIndex method with LineCatalogIndex argument does not return -1.
  * Returns also the line index
@@ -488,6 +498,8 @@ TInt32List
 CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
   TInt32List indexes;
 
+  if (!EltsIdx.size())
+    return indexes;
   TInt32RangeList support;
   for (Int32 i = 0; i < EltsIdx.size(); i++) {
     Int32 iElts = EltsIdx[i];
@@ -545,6 +557,8 @@ bool CLineModelElementList::addToSpectrumAmplitudeOffset(
     x0 = m_ampOffsetsCoeffs[i].x0;
     x1 = m_ampOffsetsCoeffs[i].x1;
     x2 = m_ampOffsetsCoeffs[i].x2;
+    if (std::isnan(x0) || std::isnan(x1) || std::isnan(x2))
+      THROWG(INTERNAL_ERROR, "Polynom coefficients cannot be NaN");
     for (Int32 k = m_ampOffsetsIdxStart[i]; k <= m_ampOffsetsIdxStop[i]; k++) {
       modelfluxAxis[k] +=
           x0 + x1 * spectralAxis[k] + x2 * spectralAxis[k] * spectralAxis[k];
@@ -780,4 +794,18 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
       TInt32Range::joinIntersections(std::move(indexRangeList));
 
   return nonOverlappingIndexRangeList;
+}
+
+void CLineModelElementList::dumpElement(std::string pre) {
+  std::string fname = "ElementList_" + pre + "_" + to_string(m__count) + ".txt";
+  m__count++;
+  std::ofstream os(fname);
+
+  os << "CLineModelElementList::m_Elements \n";
+  Int32 count = 0;
+  for (const auto &el : m_Elements) {
+    os << count++ << "\n";
+    el->dumpElement(os);
+  }
+  os.close();
 }

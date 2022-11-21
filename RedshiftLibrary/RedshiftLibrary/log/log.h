@@ -40,6 +40,7 @@
 #define _REDSHIFT_LOG_LOG_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/mutex.h"
 #include "RedshiftLibrary/common/singleton.h"
 
@@ -50,9 +51,15 @@
 
 #define Log (CLog::GetInstance())
 
+namespace Log_test {
+class consoleHandler_test;
+class fileHandler_test;
+} // namespace Log_test
+
 namespace NSEpic {
 
 class CLogHandler;
+class AmzException;
 
 /**
  * \ingroup Redshift
@@ -73,14 +80,16 @@ public:
     nLevel_None = 0
   };
 
-  void LogError(const char *format, ...);
-  void LogWarning(const char *format, ...);
+  friend class AmzException; // for calling private LogError
+
+  // friend functions for calling private LogWarning :
+  friend void CFlagWarning::warning(WarningCode c, std::string message);
+  friend void CFlagWarning::warning(WarningCode c, const char *format, ...);
+
   void LogInfo(const char *format, ...);
   void LogDetail(const char *format, ...);
   void LogDebug(const char *format, ...);
 
-  void LogError(const std::string &s);
-  void LogWarning(const std::string &s);
   void LogInfo(const std::string &s);
   void LogDetail(const std::string &s);
   void LogDebug(const std::string &s);
@@ -93,11 +102,21 @@ public:
 
 private:
   friend class CSingleton<CLog>;
-
   friend class CLogHandler;
+
+  friend class Log_test::consoleHandler_test;
+  friend class Log_test::fileHandler_test;
 
   CLog();
   ~CLog();
+
+  // LogError and LogWarning are private to be called from friend classes only
+  // (CFlagWarning and AmzException)
+  void LogError(const char *format, ...);
+  void LogWarning(const char *format, ...);
+
+  void LogError(const std::string &s);
+  void LogWarning(const std::string &s);
 
   void LogEntry(ELevel lvl, const char *format, va_list &args);
   void AddHandler(CLogHandler &handler);

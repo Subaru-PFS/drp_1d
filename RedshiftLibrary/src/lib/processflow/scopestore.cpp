@@ -37,6 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/processflow/scopestore.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 std::string CScopeStore::GetCurrentScopeName() const {
@@ -50,9 +53,9 @@ std::string CScopeStore::GetCurrentScopeName() const {
 
   n = m_ScopeStack[0];
   it = m_ScopeStack.begin();
-  it++;
+  ++it;
 
-  for (; it != m_ScopeStack.end(); it++) {
+  for (; it != m_ScopeStack.end(); ++it) {
     n.append(".");
     n.append((*it));
   }
@@ -60,8 +63,36 @@ std::string CScopeStore::GetCurrentScopeName() const {
   return n;
 }
 
+std::string CScopeStore::getCurrentScopeNameAt(int depth) const {
+  // TODO ugly, more elegant ways to do this
+  std::string n;
+  if (m_ScopeStack.size() < depth)
+    THROWG(INTERNAL_ERROR, Formatter() << "Scope smaller than" << depth);
+
+  n = m_ScopeStack[0];
+  for (UInt8 i = 1; i < depth; i++) {
+    n.append(".");
+    n.append(m_ScopeStack[i]);
+  }
+
+  return n;
+}
+
 std::string CScopeStore::GetScopedName(const std::string &name) const {
   std::string scopedName = GetCurrentScopeName();
+
+  if (!scopedName.empty()) {
+    scopedName.append(".");
+  }
+
+  scopedName.append(name);
+
+  return scopedName;
+}
+
+std::string CScopeStore::GetScopedNameAt(const std::string &name,
+                                         int depth) const {
+  std::string scopedName = getCurrentScopeNameAt(depth);
 
   if (!scopedName.empty()) {
     scopedName.append(".");

@@ -48,6 +48,14 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+
+namespace Template { // boost_test_suite
+// all boost_auto_test_case that use private method
+class Constructor_test;
+class InitIsmIgmConfig_test;
+class ApplyDustCoeff_test;
+} // namespace Template
+
 namespace NSEpic {
 class CTemplateCatalog;
 class CTemplate : public CSpectrum {
@@ -122,19 +130,20 @@ public:
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  void GetIsmIgmIdxList(Int32 opt_extinction, Int32 opt_dustFitting,
-                        TInt32List &MeiksinList, // return
-                        TInt32List &EbmvList,    // return
-                        bool keepigmism = 0, Float64 FitEbmvCoeff = NAN,
-                        Int32 FitMeiksinIdx = -1) const;
-  void GetIsmIdxList(Int32 opt_dustFitting,
-                     TInt32List &EbmvList, // return
-                     bool keepigmism, Float64 FitEbmvCoeff) const;
-  void GetIgmIdxList(Int32 opt_extinction,
-                     TInt32List &MeiksinList, // return
-                     bool keepigmism, Int32 FitMeiksinIdx) const;
+  void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
+                        TInt32List &MeiksinList, TInt32List &EbmvList,
+                        Int32 FitEbmvIdx = undefIdx,
+                        Int32 FitMeiksinIdx = undefIdx) const;
+  TInt32List GetIsmIdxList(bool opt_dustFitting,
+                           Int32 FitEbmvIdx = undefIdx) const;
+  TInt32List GetIgmIdxList(bool opt_extinction,
+                           Int32 FitMeiksinIdx = undefIdx) const;
 
 private:
+  friend class Template::Constructor_test;
+  friend class Template::InitIsmIgmConfig_test;
+  friend class Template::ApplyDustCoeff_test;
+
   std::string m_Category;
 
   Int32 m_kDust = -1;

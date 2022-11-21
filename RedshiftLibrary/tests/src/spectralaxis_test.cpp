@@ -41,8 +41,10 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-#include <algorithm>
+
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
 #include <cmath>
 #include <iterator>
 
@@ -69,19 +71,12 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   CSpectrumSpectralAxis n6Axisb(CSpectrumAxis(TFloat64List{1, 2}));
   BOOST_CHECK(n6Axisb.GetSamplesCount() == 2);
 
-  // constructor with logScale arg
+  // constructor with size arg
   // -----------------------------
 
-  // One element initialized to 0. linear scale
   const CSpectrumSpectralAxis n21Axis(1);
   BOOST_CHECK(n21Axis.GetSamplesCount() == 1);
   BOOST_CHECK(n21Axis[0] == 0.0);
-  BOOST_CHECK(n21Axis.IsInLinearScale() == 1);
-  // One element initialized to 0. log scale
-  const CSpectrumSpectralAxis n22Axis(1, true);
-  BOOST_CHECK(n22Axis.GetSamplesCount() == 1);
-  BOOST_CHECK(n22Axis[0] == 0.0);
-  BOOST_CHECK(n22Axis.IsInLogScale() == 1);
 
   // constructor with size and value args
   // ------------------------------------
@@ -90,27 +85,25 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   BOOST_CHECK(n23Axis.GetSamplesCount() == 2);
   BOOST_CHECK(n23Axis[0] == 0.5);
   BOOST_CHECK(n23Axis[1] == 0.5);
-  BOOST_CHECK(n23Axis.IsInLinearScale() == 1);
 
-  // constructor with logScale ans airvaccum args
+  // constructor with airvaccum args
   // --------------------------------------------
 
   // without AirVacuum conversion
   TFloat64List n3Array{12500.};
-  const CSpectrumSpectralAxis n31Axis(n3Array, true);
+  const CSpectrumSpectralAxis n31Axis(n3Array);
   BOOST_CHECK(n31Axis.GetSamplesCount() == 1);
   BOOST_CHECK(n31Axis[0] == 12500.);
 
   // with AirVacuum conversion
-  const CSpectrumSpectralAxis n32Axis(n3Array, false, "Morton2000");
+  const CSpectrumSpectralAxis n32Axis(n3Array, "Morton2000");
   BOOST_CHECK(n32Axis.GetSamplesCount() == 1);
   auto converter1 = CAirVacuumConverter::Get("Morton2000");
   TFloat64List lambdaAir = converter1->VacToAir(n32Axis.GetSamplesVector());
   BOOST_CHECK_CLOSE(lambdaAir[0], n3Array[0], precision);
 
   // with move sample_in
-  const CSpectrumSpectralAxis n33Axis(TFloat64List{15000.}, false,
-                                      "Morton2000");
+  const CSpectrumSpectralAxis n33Axis(TFloat64List{15000.}, "Morton2000");
   BOOST_CHECK(n33Axis.GetSamplesCount() == 1);
   lambdaAir = converter1->VacToAir(n33Axis.GetSamplesVector());
   BOOST_CHECK_CLOSE(lambdaAir[0], 15000., precision);
@@ -127,7 +120,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
   // ShiftByWaveLength linear forward
   const TFloat64List n7Array{2., 3.};
-  const CSpectrumSpectralAxis n7Axis(n7Array, false);
+  const CSpectrumSpectralAxis n7Axis(n7Array);
   const CSpectrumSpectralAxis n7ShiftForward(
       n7Axis, 10.1, CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(n7ShiftForward.GetSamplesCount() == 2);
@@ -137,8 +130,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
 BOOST_AUTO_TEST_CASE(ShiftByWaveLength_test) {
   const TFloat64List sample_ref{2., 3.};
-  const CSpectrumSpectralAxis spcAxisOrigin(sample_ref, false);
-  const CSpectrumSpectralAxis spcAxisOriginLog(sample_ref, true);
+  const CSpectrumSpectralAxis spcAxisOrigin(sample_ref);
   CSpectrumSpectralAxis spcAxisShifted;
 
   // test wavelengthOffset < 0.
@@ -163,22 +155,6 @@ BOOST_AUTO_TEST_CASE(ShiftByWaveLength_test) {
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 3. / 2, 1.e-12);
   spcAxisShifted.clear();
 
-  // ShiftByWaveLength log forward
-  spcAxisShifted.ShiftByWaveLength(spcAxisOriginLog, exp(10.1),
-                                   CSpectrumSpectralAxis::nShiftForward);
-  BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
-  BOOST_CHECK_CLOSE(spcAxisShifted[0], 12.1, 1.e-12);
-  BOOST_CHECK_CLOSE(spcAxisShifted[1], 13.1, 1.e-12);
-  spcAxisShifted.clear();
-
-  // ShiftByWaveLength log backward
-  spcAxisShifted.ShiftByWaveLength(spcAxisOriginLog, exp(0.5),
-                                   CSpectrumSpectralAxis::nShiftBackward);
-  BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
-  BOOST_CHECK_CLOSE(spcAxisShifted[0], 1.5, 1.e-12);
-  BOOST_CHECK_CLOSE(spcAxisShifted[1], 2.5, 1.e-12);
-  spcAxisShifted.clear();
-
   // ShiftByWaveLength zero shift
   spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 0.,
                                    CSpectrumSpectralAxis::nShiftForward);
@@ -187,12 +163,11 @@ BOOST_AUTO_TEST_CASE(ShiftByWaveLength_test) {
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 3., 1.e-12);
 
   // ShiftByWaveLength
-  CSpectrumSpectralAxis spcAxisShifted2(spcAxisOriginLog);
-  spcAxisShifted2.ShiftByWaveLength(exp(10.),
-                                    CSpectrumSpectralAxis::nShiftForward);
+  CSpectrumSpectralAxis spcAxisShifted2(spcAxisOrigin);
+  spcAxisShifted2.ShiftByWaveLength(8., CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(spcAxisShifted2.GetSamplesCount() == 2);
-  BOOST_CHECK_CLOSE(spcAxisShifted2[0], 12., 1.e-12);
-  BOOST_CHECK_CLOSE(spcAxisShifted2[1], 13., 1.e-12);
+  BOOST_CHECK_CLOSE(spcAxisShifted2[0], 16., 1.e-12);
+  BOOST_CHECK_CLOSE(spcAxisShifted2[1], 24., 1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(basic_functions_test) {
@@ -224,38 +199,26 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   spcAxis_2 *= 0;
   BOOST_ASSERT(spcAxis_2.m_isSorted == false);
 
-  //
-  CSpectrumSpectralAxis spcAxis_3(sample_in, true);
-  BOOST_CHECK(spcAxis_3.m_isLogScale == true);
-  spcAxis_3 *= 2;
-  BOOST_ASSERT(indeterminate(spcAxis_3.m_isLogSampled));
-
   // SetSize
   //--------
 
   // s < 2
   sample_in = {1., 2., 3.};
-  CSpectrumSpectralAxis spcAxis_4(sample_in, true);
+  CSpectrumSpectralAxis spcAxis_4(sample_in);
   BOOST_ASSERT(indeterminate(spcAxis_4.m_isSorted));
   spcAxis_4.SetSize(1);
   BOOST_ASSERT(spcAxis_4.m_isSorted == true);
 
-  // s > sample size
-  spcAxis_4.SetSize(3);
-  BOOST_ASSERT(indeterminate(spcAxis_4.m_isSorted));
   BOOST_ASSERT(indeterminate(spcAxis_4.m_isLogSampled));
-
   // extract
   // -------
 
   sample_in = {1., 2., 3., 4.};
-  CSpectrumSpectralAxis spcAxis_5(sample_in, true);
-  BOOST_CHECK(spcAxis_5.m_isLogScale == true);
+  CSpectrumSpectralAxis spcAxis_5(sample_in);
   spcAxis_5.m_isLogSampled = true;
   spcAxis_5.m_isSorted = false;
   spcAxis_5.m_regularLogSamplingStep = 2.;
   CSpectrumSpectralAxis spcAxis_6 = spcAxis_5.extract(0, 2);
-  BOOST_CHECK(spcAxis_6.m_isLogScale == true);
   BOOST_ASSERT(spcAxis_6.m_isLogSampled == true);
   BOOST_ASSERT(spcAxis_6.m_isSorted == false);
   BOOST_CHECK(spcAxis_6.m_regularLogSamplingStep == 2.);
@@ -283,7 +246,7 @@ BOOST_AUTO_TEST_CASE(MaskAxis_test) {
 
 BOOST_AUTO_TEST_CASE(ApplyOffset) {
   const TFloat64List array{1., 2., 3.};
-  CSpectrumSpectralAxis axis(array, false);
+  CSpectrumSpectralAxis axis(array);
   axis.ApplyOffset(1.);
 
   const CSpectrumSpectralAxis &const_Axis = axis;
@@ -299,14 +262,14 @@ BOOST_AUTO_TEST_CASE(ApplyOffset) {
 
 BOOST_AUTO_TEST_CASE(Operator) {
   const TFloat64List n7Array{1.};
-  const CSpectrumSpectralAxis n72Axis(n7Array, false);
+  const CSpectrumSpectralAxis n72Axis(n7Array);
   const CSpectrumSpectralAxis n71Axis = n72Axis;
   BOOST_CHECK_CLOSE(n71Axis[0], n72Axis[0], 1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(Resolution) {
   const TFloat64List arr{1., 3., 4., 10., 15., 16.};
-  const CSpectrumSpectralAxis axis(arr, false);
+  const CSpectrumSpectralAxis axis(arr);
   BOOST_CHECK_CLOSE(axis.GetResolution(), 2.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetMeanResolution(), 3.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(-1.0), 2.0, 1.e-12);
@@ -327,7 +290,7 @@ BOOST_AUTO_TEST_CASE(Resolution) {
 
   // not enough samples
   const TFloat64List array{10.};
-  const CSpectrumSpectralAxis axis2(array, false);
+  const CSpectrumSpectralAxis axis2(array);
   BOOST_CHECK_CLOSE(axis2.GetResolution(), 0.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis2.GetMeanResolution(), 0.0, 1.e-12);
 }
@@ -338,16 +301,9 @@ BOOST_AUTO_TEST_CASE(GetMask) {
   const TFloat64Range range(0.5, 5.);
   Mask result[] = {1, 1, 1, 0};
 
-  // linear
-  const CSpectrumSpectralAxis axis(array, false);
+  const CSpectrumSpectralAxis axis(array);
   axis.GetMask(range, mask);
   BOOST_CHECK(std::equal(result, result + 4, mask.GetMasks()));
-
-  // log
-  const CSpectrumSpectralAxis axislog(array, true);
-  Mask resultlog[] = {1, 0, 0, 0};
-  axislog.GetMask(range, mask);
-  BOOST_CHECK(std::equal(resultlog, resultlog + 4, mask.GetMasks()));
 }
 
 BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate) {
@@ -360,15 +316,9 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate) {
   mask[2] = 0;
   mask[3] = 0;
 
-  // linear
-  const CSpectrumSpectralAxis axis(array, false);
+  const CSpectrumSpectralAxis axis(array);
   BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(range, mask),
                     2. / 3, 1e-18);
-
-  // log
-  const CSpectrumSpectralAxis axislog(array, true);
-  BOOST_CHECK_CLOSE(axislog.IntersectMaskAndComputeOverlapRate(range, mask), 1.,
-                    1e-18);
 
   const TFloat64Range outrange(-5, 0.);
   BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(outrange, mask), 0.,
@@ -378,7 +328,7 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate) {
 BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange) {
   // GetIndexAtWaveLength tests
   const TFloat64List arr{0.0, 2.0, 3.0, 6.0};
-  const CSpectrumSpectralAxis axis(arr, false);
+  const CSpectrumSpectralAxis axis(arr);
   BOOST_CHECK(axis.GetIndexAtWaveLength(-1.0) == 0);
   BOOST_CHECK(axis.GetIndexAtWaveLength(0.0) == 0);
   BOOST_CHECK(axis.GetIndexAtWaveLength(1.0) == 1);
@@ -428,40 +378,9 @@ BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange) {
   BOOST_CHECK(irange5.GetEnd() == 3);
 }
 
-BOOST_AUTO_TEST_CASE(Scale) {
-  const TFloat64List arr{1., 1.};
-  CSpectrumSpectralAxis axis(arr, false);
-
-  BOOST_CHECK(axis.IsInLinearScale() == true);
-  BOOST_CHECK(axis.IsInLogScale() == false);
-  axis.ConvertToLinearScale();
-  BOOST_CHECK(axis.IsInLinearScale() == true);
-  BOOST_CHECK(axis.IsInLogScale() == false);
-  axis.ConvertToLogScale();
-  BOOST_CHECK(axis.IsInLinearScale() == false);
-  BOOST_CHECK(axis.IsInLogScale() == true);
-  BOOST_CHECK_CLOSE(axis[0], 0., 1e-12);
-
-  CSpectrumSpectralAxis axis2(2, false);
-
-  BOOST_CHECK(axis2.IsInLinearScale() == true);
-  BOOST_CHECK(axis2.IsInLogScale() == false);
-  axis2.SetLogScale();
-  BOOST_CHECK(axis2.IsInLinearScale() == false);
-  BOOST_CHECK(axis2.IsInLogScale() == true);
-  axis2.ConvertToLogScale();
-  BOOST_CHECK(axis2.IsInLinearScale() == false);
-  BOOST_CHECK(axis2.IsInLogScale() == true);
-  axis2.ConvertToLinearScale();
-  BOOST_CHECK(axis2.IsInLinearScale() == true);
-  BOOST_CHECK(axis2.IsInLogScale() == false);
-  BOOST_CHECK_CLOSE(axis2[0], 1., 1e-12);
-}
-
 BOOST_AUTO_TEST_CASE(LambdaRange) {
-  // linear
   const TFloat64List arr{0., 1.};
-  const CSpectrumSpectralAxis axis(arr, false);
+  const CSpectrumSpectralAxis axis(arr);
   const TLambdaRange irange6 = axis.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange6.GetBegin(), arr[0], 1.e-12);
   BOOST_CHECK_CLOSE(irange6.GetEnd(), arr[1], 1.e-12);
@@ -473,20 +392,12 @@ BOOST_AUTO_TEST_CASE(LambdaRange) {
   const TLambdaRange irange8 = axis2.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange8.GetBegin(), 0., 1.e-12);
   BOOST_CHECK_CLOSE(irange8.GetEnd(), 0., 1.e-12);
-
-  // log
-  const TFloat64List arr3{0., 1., 2.};
-  const CSpectrumSpectralAxis axis3(arr3, true);
-  BOOST_CHECK(axis3.IsInLogScale() == true);
-  const TLambdaRange irange9 = axis3.GetLambdaRange();
-  BOOST_CHECK_CLOSE(irange9.GetBegin(), exp(0.), 1.e-12);
-  BOOST_CHECK_CLOSE(irange9.GetEnd(), exp(2.), 1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(ClampLambdaRange) {
   // Axis from [0. ... 1.]
   TFloat64List n131Array{0., 1.};
-  const CSpectrumSpectralAxis axis(n131Array, false);
+  const CSpectrumSpectralAxis axis(n131Array);
   TFloat64Range crange;
   // Range [0.1 ... 0.9] inside axis range
   TFloat64Range irange10(0.1, 0.9);
@@ -524,17 +435,19 @@ BOOST_AUTO_TEST_CASE(ClampLambdaRange) {
 
 BOOST_AUTO_TEST_CASE(isSorted) {
   const TFloat64List arr{0., 1., 4., 3.};
-  const CSpectrumSpectralAxis axis(arr, false);
+  const CSpectrumSpectralAxis axis(arr);
+  BOOST_CHECK(axis.isSorted() == false);
+  // m_isSorted known -> return value without checking
   BOOST_CHECK(axis.isSorted() == false);
   // m_isSorted known -> return value without checking
   BOOST_CHECK(axis.isSorted() == false);
 
   const TFloat64List arr2{0., 0.};
-  const CSpectrumSpectralAxis axis2(arr2, false);
+  const CSpectrumSpectralAxis axis2(arr2);
   BOOST_CHECK(axis2.isSorted() == false);
 
   const TFloat64List arr3;
-  const CSpectrumSpectralAxis axis3(arr3, false);
+  const CSpectrumSpectralAxis axis3(arr3);
   BOOST_CHECK(axis3.isSorted() == true);
 }
 
@@ -543,7 +456,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   //------------------------------------------------
 
   TFloat64List arr{0., 1., 2.};
-  CSpectrumSpectralAxis spcAxis(arr, true);
+  CSpectrumSpectralAxis spcAxis(arr);
   spcAxis.m_isLogSampled = true;
   spcAxis.m_regularLogSamplingStep = 1;
 
@@ -555,24 +468,11 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   // tests with checking
   //--------------------
 
-  // linear scale
-  CSpectrumSpectralAxis spcAxisLinear({exp(1.), exp(2.), exp(3.)}, false);
+  CSpectrumSpectralAxis spcAxisLinear({exp(1.), exp(2.), exp(3.)});
   bool result = spcAxisLinear.CheckLoglambdaSampling();
   BOOST_CHECK(result == true);
   BOOST_ASSERT(spcAxisLinear.m_isLogSampled == true);
   BOOST_CHECK_CLOSE(spcAxisLinear.m_regularLogSamplingStep, 1., 1e-12);
-
-  // log scale
-  CSpectrumSpectralAxis spcAxisLog({1., 2., 3.}, true);
-  result = spcAxisLog.CheckLoglambdaSampling();
-  BOOST_CHECK(result == true);
-  BOOST_ASSERT(spcAxisLog.m_isLogSampled == true);
-  BOOST_CHECK_CLOSE(spcAxisLog.m_regularLogSamplingStep, 1., 1e-12);
-
-  // error > 1e-1
-  spcAxisLog[2] = 3.5;
-  result = spcAxisLog.CheckLoglambdaSampling();
-  BOOST_CHECK(result == false);
 
   // tests IsLogSampled
   //-------------------
@@ -649,7 +549,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
 BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   Int32 ssratio;
   TInt32Range range(1., 3.);
-  CSpectrumSpectralAxis spcAxis({1., 2., 3., 4., 5.}, true);
+  CSpectrumSpectralAxis spcAxis({exp(1.), exp(2.), exp(3.), exp(4.), exp(5.)});
 
   // not LogSampled
   spcAxis[2] = 3.5;
@@ -658,7 +558,7 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
                     GlobalException);
 
   // range bound KO
-  spcAxis[2] = 3.;
+  spcAxis[2] = exp(3.);
   TInt32Range range2(-5., 2.);
   BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range2),
                     GlobalException);
@@ -679,7 +579,7 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   mask_ref = {0., 1., 0., 1., 0.};
   BOOST_CHECK(mask == mask_ref);
 
-  TFloat64Range lambdarange(1.9, 4.2);
+  TFloat64Range lambdarange(exp(1.9), exp(4.2));
   mask = spcAxis.GetSubSamplingMask(ssratio, lambdarange);
   BOOST_CHECK(mask.size() == 5);
   BOOST_CHECK(mask == mask_ref);
@@ -693,7 +593,7 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
 BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
   // axis not logSampled
   TFloat64List wrong_samples = {exp(1), exp(2.2), exp(3)};
-  CSpectrumSpectralAxis wrong_spcAxis(wrong_samples, false);
+  CSpectrumSpectralAxis wrong_spcAxis(wrong_samples);
   BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), GlobalException);
 
   // not enough points
@@ -718,46 +618,13 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
     maxAbsRelativeError = std::max(relativeErrAbs, maxAbsRelativeError);
   }
 
-  CSpectrumSpectralAxis spcAxis(samples_truncated, false);
+  CSpectrumSpectralAxis spcAxis(samples_truncated);
   spcAxis.RecomputePreciseLoglambda();
   TFloat64List samples_out = spcAxis.GetSamplesVector();
   Float64 maxAbsRelativeError_out = 0.0;
   logGridStep = log(samples_out[1] / samples_out[0]);
   for (Int32 i = 1; i < samples_out.size(); i++) {
     Float64 _logGridStep = log(samples_out[i] / samples_out[i - 1]);
-    Float64 relativeErrAbs =
-        std::abs((_logGridStep - logGridStep) / logGridStep);
-    maxAbsRelativeError_out = std::max(relativeErrAbs, maxAbsRelativeError_out);
-  }
-
-  BOOST_CHECK(maxAbsRelativeError_out < maxAbsRelativeError);
-
-  TFloat64List samples_2(500, 0.);
-  for (Int32 i = 0; i < 500; i++) {
-    samples_2[i] = (i + 1) * log(2);
-  }
-
-  TFloat64List samples_truncated_2(samples_2.size(), 0.);
-  for (Int32 i = 0; i < samples_2.size(); i++) {
-    samples_truncated_2[i] = (int)(100 * samples_2[i]) / 100.0;
-  }
-
-  maxAbsRelativeError = 0.0;
-  logGridStep = samples_truncated_2[1] - samples_truncated_2[0];
-  for (Int32 i = 1; i < samples_truncated_2.size(); i++) {
-    Float64 _logGridStep = samples_truncated_2[i] - samples_truncated_2[i - 1];
-    Float64 relativeErrAbs =
-        std::abs((_logGridStep - logGridStep) / logGridStep);
-    maxAbsRelativeError = std::max(relativeErrAbs, maxAbsRelativeError);
-  }
-
-  CSpectrumSpectralAxis spcAxis_2(samples_truncated_2, true);
-  spcAxis_2.RecomputePreciseLoglambda();
-  samples_out = spcAxis_2.GetSamplesVector();
-  maxAbsRelativeError_out = 0.0;
-  logGridStep = samples_out[1] - samples_out[0];
-  for (Int32 i = 1; i < samples_out.size(); i++) {
-    Float64 _logGridStep = samples_out[i] - samples_out[i - 1];
     Float64 relativeErrAbs =
         std::abs((_logGridStep - logGridStep) / logGridStep);
     maxAbsRelativeError_out = std::max(relativeErrAbs, maxAbsRelativeError_out);

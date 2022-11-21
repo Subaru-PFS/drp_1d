@@ -90,6 +90,9 @@ BOOST_AUTO_TEST_CASE(photometricbands) {
 
   const TFloat64List flux = {2., 2., 2., 3., 3., 3.};
   BOOST_CHECK_CLOSE(band.IntegrateFlux(flux), 4.4202843563e-12, 1e-6);
+
+  const TFloat64List flux_tmp = {2., 2., 2., 3., 3.};
+  BOOST_CHECK_THROW(band.IntegrateFlux(flux_tmp), GlobalException);
 }
 
 BOOST_AUTO_TEST_CASE(photometricbandcatalog) {

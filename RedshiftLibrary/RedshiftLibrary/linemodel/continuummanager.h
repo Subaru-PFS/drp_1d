@@ -25,15 +25,6 @@ public:
                     const std::shared_ptr<CSpectrumModel> &model,
                     const TLambdaRange &lambdaRange);
 
-  bool SolveContinuum(const std::shared_ptr<const CTemplate> &tpl,
-                      const TFloat64List &redshifts, Float64 overlapThreshold,
-                      std::vector<CMask> maskList, std::string opt_interp,
-                      Int32 opt_extinction, Int32 opt_dustFit, Float64 &merit,
-                      Float64 &fitAmplitude, Float64 &fitAmplitudeError,
-                      Float64 &fitAmplitudeSigma, Float64 &fitEbmvCoeff,
-                      Int32 &fitMeiksinIdx, Float64 &fitDtM, Float64 &fitMtM,
-                      Float64 &fitLogprior);
-
   const std::string &getFitContinuum_tplName() const;
   Float64 getFitContinuum_tplAmplitude() const;
   Float64 getFitContinuum_tplAmplitudeError() const;
@@ -72,18 +63,25 @@ public:
   }
   CContinuumModelSolution GetContinuumModelSolution() const;
   void setContinuumComponent(std::string component);
+  const std::string &getContinuumComponent() const {
+    return m_ContinuumComponent;
+  };
 
   // new methods
   void logParameters();
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
   getIsmCorrectionFromTpl();
   void reinterpolateContinuum(Float64 redshift);
-  void reinterpolateContinuum();
+  void reinterpolateContinuumResetAmp();
   void initObserveGridContinuumFlux(Int32 size);
   bool isContFittedToNull();
   Int32 getFittedMeiksinIndex() { return m_fitContinuum_tplFitMeiksinIdx; }
   Float64 getFitSum() {
-    return m_fitContinuum_tplFitMerit_phot + m_fitContinuum_tplFitLogprior;
+    if (!isContinuumComponentTplfitxx())
+      return 0.0;
+    return m_fitContinuum_tplFitMerit_phot +
+           m_fitContinuum_tplFitLogprior; // unconditionnal sum (if photometry
+                                          // disabled, will sum 0.0)
   }
   Float64 getTerm1() {
     return m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitAmplitude *

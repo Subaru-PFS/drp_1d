@@ -56,6 +56,9 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+namespace Linemodel {
+class spanRedshift_test;
+}
 
 namespace NSEpic {
 
@@ -68,31 +71,21 @@ class COperatorTemplateFittingBase;
 class COperatorLineModel {
 
 public:
-  Int32 Init(const TFloat64List &redshifts);
+  void Init(const TFloat64List &redshifts, Float64 finestep,
+            const std::string &redshiftSampling);
 
   std::shared_ptr<COperatorResult> getResult();
 
-  std::shared_ptr<CTemplatesFitStore>
-  PrecomputeContinuumFit(const TFloat64List &redshifts,
-                         Int32 candidateIdx = -1);
+  void ComputeFirstPass();
 
-  Int32 ComputeFirstPass();
-
-  void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List &largeGridRedshifts);
-  Int32 SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
+  void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
   void Combine_firstpass_candidates(
       std::shared_ptr<const CLineModelPassExtremaResult> results_b);
 
-  Int32 ComputeSecondPass(
+  void ComputeSecondPass(
       const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
 
-  Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
-                                     const TFloat64Range &lambdaRange);
-
-  Int32 RecomputeAroundCandidates(
-      const std::string &opt_continuumreest, const Int32 tplfit_option,
-      const bool overrideRecomputeOnlyOnTheCandidate = false);
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
@@ -105,31 +98,21 @@ public:
                       const TCandidateZbyRank &zCandidates,
                       const std::string &opt_continuumreest = "no");
 
-  void InitTplratioPriors();
-  void evaluateContinuumAmplitude(
-      const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
-  bool m_enableWidthFitByGroups = false;
+  const bool m_enableWidthFitByGroups = false;
+  // m_enableWidthFitByGroups: enable/disable fit by groups. Once enabled, the
+  // velocity fitting groups are defined in the line catalog from v4.0 on.
 
   Int32 m_maxModelSaveCount = 20;
   Float64 m_secondPass_halfwindowsize; // = 0.005;
   TStringList m_tplCategoryList;
-
-  bool m_enableLoadContTemplate = false;
-  Int32 m_iRollContaminated = -1;
-  Float64 m_contLambdaOffset = 0;
-  std::shared_ptr<CTemplate> m_tplContaminant = NULL;
-  Int32 initContaminant(std::shared_ptr<CModelSpectrumResult> contModelSpectrum,
-                        Int32 iRollContaminated, Float64 contLambdaOffset);
-  std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
-  std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
   bool m_opt_tplfit_fftprocessing =
       false; // we cant set it as the default since not taken into account when
              // deciding on rebinning
   bool m_opt_tplfit_fftprocessing_secondpass = false; // true;
   bool m_opt_tplfit_use_photometry = false;
-  Int32 m_opt_tplfit_dustFit = 1;
-  Int32 m_opt_tplfit_extinction = 1;
+  bool m_opt_tplfit_dustFit = true;
+  bool m_opt_tplfit_extinction = true;
   Int32 m_opt_fitcontinuum_maxN = 2;
   bool m_opt_tplfit_ignoreLinesSupport =
       false; // default: false, as ortho templates store makes this un-necessary
@@ -148,20 +131,33 @@ public:
   CLineModelSolution
   fitWidthByGroups(std::shared_ptr<const CInputContext> context,
                    Float64 redshift);
-  void fitVelocityByGroups(TFloat64List velfitlist, TFloat64List zfitlist,
-                           Int32 lineType);
 
   void setHapriorOption(Int32 opt);
   const CSpectrum &
   getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
+  TZGridListParams getSPZGridParams();
 
 private:
+  friend class Linemodel::spanRedshift_test;
+
+  std::shared_ptr<CTemplatesFitStore>
+  PrecomputeContinuumFit(const TFloat64List &redshifts,
+                         Int32 candidateIdx = -1);
+  void EstimateSecondPassParameters(const CSpectrum &spectrum,
+                                    const TFloat64Range &lambdaRange);
+
+  void RecomputeAroundCandidates(
+      const std::string &opt_continuumreest, const Int32 tplfit_option,
+      const bool overrideRecomputeOnlyOnTheCandidate = false);
+  void evaluateContinuumAmplitude(
+      const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
-  TFloat64List m_sortedRedshifts;
-  Int32 m_enableFastFitLargeGrid = 0;
+  TFloat64List m_Redshifts; // coarse grid
+  Float64 m_fineStep = NAN;
+  std::string m_redshiftSampling = "undefined";
   Int32 m_estimateLeastSquareFast = 0;
-
+  void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
   TFloat64List SpanRedshiftWindow(Float64 z) const;
 
   Float64 FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,
@@ -170,10 +166,6 @@ private:
 
   bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
 
-  Int32 interpolateLargeGridOnFineGrid(const TFloat64List &redshiftsLargeGrid,
-                                       const TFloat64List &redshiftsFineGrid,
-                                       const TFloat64List &meritLargeGrid,
-                                       TFloat64List &meritFineGrid) const;
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
   void
   fitContinuumTemplates(Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
@@ -181,9 +173,10 @@ private:
                         std::vector<std::shared_ptr<CTemplateFittingResult>>
                             &chisquareResultsAllTpl,
                         TStringList &chisquareResultsTplName);
-  bool getContinuumInfoFromFirstpassFitStore(
-      Int32 candidateIdx, TInt32List &meiksinIndices, TFloat64List &EbmvCoeffs,
-      TInt32List &ebmvIndices, TTemplateConstRefList &tplList) const;
+  void getContinuumInfoFromFirstpassFitStore(
+      Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
+      TTemplateConstRefList &tplList) const;
+  void updateRedshiftGridAndResults();
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
   // lmfit

@@ -113,6 +113,11 @@ BOOST_AUTO_TEST_CASE(operator_test) {
   n2Axis *= 2;
   BOOST_CHECK(n2Axis[0] == n2Array[0] * 2);
   BOOST_CHECK(n2Axis[1] == n2Array[1] * 2);
+
+  // operator /
+  n2Axis /= 2;
+  BOOST_CHECK(n2Axis[0] == n2Array[0]);
+  BOOST_CHECK(n2Axis[1] == n2Array[1]);
 }
 
 BOOST_AUTO_TEST_CASE(SampleCount_test) {

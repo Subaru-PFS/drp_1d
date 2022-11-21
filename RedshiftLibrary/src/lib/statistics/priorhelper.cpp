@@ -40,127 +40,56 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
-
-#include <algorithm> // std::sort
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-#include <fstream>
-#include <iostream>
-#include <string>
 
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/log/log.h"
-
-namespace bfs = boost::filesystem;
+#include <fstream>
 using namespace NSEpic;
 using namespace std;
 using namespace boost;
 
-CPriorHelper::CPriorHelper() {}
-
-CPriorHelper::~CPriorHelper() {}
-
-bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
-  m_type = type;
-
+void CPriorHelper::Init(std::string priorDirPath, Int32 type) {
   bfs::path rootFolder(priorDirPath.c_str());
   if (!bfs::exists(rootFolder)) {
     if (!rootFolder.string().empty()) {
-      Flag.warning(Flag.INVALID_FOLDER_PATH,
+      Flag.warning(WarningCode::INVALID_FOLDER_PATH,
                    Formatter() << "    CPriorHelper::" << __func__
                                << ": rootFolder path does not exist: "
                                << rootFolder.string().c_str());
       Log.LogDetail("    CPriorHelper: priors won't be used");
     }
     mInitFailed = true;
-    return false;
+    return;
   }
-
+  m_type = type;
+  std::string part;
+  if (m_type == 0)
+    part = "continuum";
+  else if (m_type == 1)
+    part = "lines";
   TStringList EZTfilesPathList;
   bfs::directory_iterator end_itr;
-  std::string ezt_path = "";
-  if (m_type == 0) {
-    ezt_path = "prior_continuum_hist_Ebmvc_Z";
-  } else if (m_type == 1) {
-    ezt_path = "prior_lines_hist_Ebmvr_Z";
-  }
+  std::string ezt_path = "prior_" + part + "_hist_Ebmvr_Z";
   for (bfs::directory_iterator itr(rootFolder / ezt_path.c_str());
-       itr != end_itr; ++itr) {
-    if (!is_directory(itr->status())) {
+       itr != end_itr; ++itr)
+    if (!is_directory(itr->status()))
       EZTfilesPathList.push_back(itr->path().c_str());
-    }
-  }
 
-  TStringList AGaussMeanfilesPathList;
-  for (Int32 k = 0; k < EZTfilesPathList.size(); k++) {
-    bfs::path fPath = EZTfilesPathList[k];
-    std::string fNameStr = fPath.filename().c_str();
-
-    std::string ezt_tag = "";
-    std::string a_tag = "";
-    std::string a_dirpath = "";
-    if (m_type == 0) {
-      ezt_tag = "prior_continuum_hist_Ebmvc_Z_Tplc_";
-      a_tag = "prior_continuum_gaussmean_Ac_Z_Tplc_";
-      a_dirpath = "prior_continuum_gaussmean_Ac_Z";
-    } else if (m_type == 1) {
-      ezt_tag = "prior_lines_hist_Ebmvr_Z_Tplr_";
-      a_tag = "prior_lines_gaussmean_Ar_Z_Tplr_";
-      a_dirpath = "prior_lines_gaussmean_Ar_Z";
-    }
-
-    boost::replace_all(fNameStr, ezt_tag.c_str(), a_tag.c_str());
-
-    bfs::path agaussfpath =
-        rootFolder / a_dirpath.c_str() / bfs::path(fNameStr);
-    if (!bfs::exists(agaussfpath)) {
-      THROWG(INVALID_FILEPATH,
-             Formatter() << "path does not exist: " << agaussfpath.string());
-    }
-    AGaussMeanfilesPathList.push_back(agaussfpath.string());
-  }
-
-  TStringList AGaussSigmafilesPathList;
-  for (Int32 k = 0; k < EZTfilesPathList.size(); k++) {
-    bfs::path fPath = EZTfilesPathList[k];
-    std::string fNameStr = fPath.filename().c_str();
-
-    std::string ezt_tag = "";
-    std::string a_tag = "";
-    std::string a_dirpath = "";
-    if (m_type == 0) {
-      ezt_tag = "prior_continuum_hist_Ebmvc_Z_Tplc_";
-      a_tag = "prior_continuum_gausssigma_Ac_Z_Tplc_";
-      a_dirpath = "prior_continuum_gausssigma_Ac_Z";
-    } else if (m_type == 1) {
-      ezt_tag = "prior_lines_hist_Ebmvr_Z_Tplr_";
-      a_tag = "prior_lines_gausssigma_Ar_Z_Tplr_";
-      a_dirpath = "prior_lines_gausssigma_Ar_Z";
-    }
-
-    boost::replace_all(fNameStr, ezt_tag.c_str(), a_tag.c_str());
-
-    bfs::path agaussfpath =
-        rootFolder / a_dirpath.c_str() / bfs::path(fNameStr);
-    if (!bfs::exists(agaussfpath)) {
-      THROWG(INVALID_FILEPATH,
-             Formatter() << "path does not exist: " << agaussfpath.string());
-    }
-    AGaussSigmafilesPathList.push_back(agaussfpath.string());
-  }
+  TStringList AGaussMeanfilesPathList =
+      loadfilesPathList(EZTfilesPathList, rootFolder, part, "mean");
+  TStringList AGaussSigmafilesPathList =
+      loadfilesPathList(EZTfilesPathList, rootFolder, part, "sigma");
 
   // allocate the data buffer
-  SetSize(EZTfilesPathList.size());
+  setSize(EZTfilesPathList.size());
 
   // set the template names
   for (Int32 k = 0; k < EZTfilesPathList.size(); k++) {
     bfs::path fPath = EZTfilesPathList[k];
     std::string fNameStr = fPath.filename().c_str();
-    SetTNameData(k, fNameStr);
+    setTNameData(k, fNameStr);
   }
 
   // read the EZT data from files
@@ -169,256 +98,208 @@ bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
     std::string fPathStr = (fPath).string();
 
     std::vector<TFloat64List> read_buffer;
-    bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
-    if (!ret) {
-      Log.LogError("Unable to load the EZT continuum prior data.");
-      mInitFailed = true;
-      return false;
-    }
-    SetEZTData(k, read_buffer);
+    loadFileEZ(fPathStr.c_str(), read_buffer);
+    if (mInitFailed)
+      return;
+    setEZTData(k, read_buffer);
     mInitFailed = false;
   }
 
   // read the AGaussMean data from files
-  for (Int32 k = 0; k < AGaussMeanfilesPathList.size(); k++) {
-    bfs::path fPath = AGaussMeanfilesPathList[k];
-    std::string fPathStr = (fPath).string();
-
-    std::vector<TFloat64List> read_buffer;
-    bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
-    if (!ret) {
-      Log.LogError("Unable to load the A-gaussmean continuum prior data.");
-      mInitFailed = true;
-      return false;
-    }
-    SetAGaussmeanData(k, read_buffer);
-    mInitFailed = false;
-  }
-
+  loadFromFileList("mean", AGaussMeanfilesPathList);
   // read the AGaussSigma data from files
-  for (Int32 k = 0; k < AGaussSigmafilesPathList.size(); k++) {
-    bfs::path fPath = AGaussSigmafilesPathList[k];
-    std::string fPathStr = (fPath).string();
+  loadFromFileList("sigma", AGaussSigmafilesPathList);
 
-    std::vector<TFloat64List> read_buffer;
-    bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
-    if (!ret) {
-      Log.LogError("Unable to load the A-gausssigma continuum prior data.");
-      mInitFailed = true;
-      return false;
-    }
-    SetAGausssigmaData(k, read_buffer);
-    mInitFailed = false;
-  }
-
-  std::string z_dirpath = "";
-  std::string z_filepath = "";
-  if (m_type == 0) {
-    z_dirpath = "prior_continuum_hist_Z";
-    z_filepath = "prior_continuum_hist_Z.txt";
-  } else if (m_type == 1) {
-    z_dirpath = "prior_lines_hist_Z";
-    z_filepath = "prior_lines_hist_Z.txt";
-  }
+  std::string z_dirpath = "prior_" + part + "_hist_Z";
+  std::string z_filepath = "prior_" + part + "_hist_Z.txt";
   bfs::path pz_fpath = rootFolder / z_dirpath.c_str() / z_filepath.c_str();
-  if (!bfs::exists(pz_fpath)) {
+  if (!bfs::exists(pz_fpath))
     THROWG(INVALID_FILEPATH,
            Formatter() << "Pz path does not exist: " << pz_fpath.string());
-  } else {
-    TFloat64List read_buffer;
-    bool ret = LoadFileZ(pz_fpath.string().c_str(), read_buffer);
-    if (!ret) {
-      Log.LogError("Unable to load the Pz prior data.");
-      mInitFailed = true;
-      return false;
-    }
-    SetPzData(read_buffer);
-    mInitFailed = false;
-  }
 
-  return true;
+  TFloat64List read_buffer;
+  loadFileZ(pz_fpath.string().c_str(), read_buffer);
+  if (mInitFailed)
+    return;
+  setPzData(read_buffer);
+  mInitFailed = false;
 }
 
-bool CPriorHelper::SetBetaA(Float64 beta) {
-  m_betaA = beta;
-  return true;
-}
+void CPriorHelper::SetBetaA(Float64 beta) { m_betaA = beta; }
+void CPriorHelper::SetBetaTE(Float64 beta) { m_betaTE = beta; }
+void CPriorHelper::SetBetaZ(Float64 beta) { m_betaZ = beta; }
 
-bool CPriorHelper::SetBetaTE(Float64 beta) {
-  m_betaTE = beta;
-  return true;
-}
-
-bool CPriorHelper::SetBetaZ(Float64 beta) {
-  m_betaZ = beta;
-  return true;
-}
-
-bool CPriorHelper::SetSize(Int32 size) {
+void CPriorHelper::setSize(Int32 size) {
   m_data.clear();
-  for (Int32 k = 0; k < size; k++) {
-    TPriorZEList _zelist;
-    for (Int32 kz = 0; kz < m_nZ; kz++) {
-      std::vector<SPriorTZE> _elist;
-      for (Int32 ke = 0; ke < m_nEbv; ke++) {
-        SPriorTZE _tze;
-        _elist.push_back(_tze);
-      }
-      _zelist.push_back(_elist);
-    }
-    m_data.push_back(_zelist);
-  }
-
+  SPriorTZE _tze;
+  std::vector<SPriorTZE> _elist(m_nEbv, _tze);
+  TPriorZEList _zelist(m_nZ, _elist);
+  m_data.resize(size, _zelist);
   m_data_pz.clear();
-  for (Int32 kz = 0; kz < m_nZ; kz++) {
-    m_data_pz.push_back(0.0);
-  }
+  m_data_pz.resize(m_nZ, 0.0);
 
   m_tplnames.clear();
-  m_tplnames.resize(size);
-  return true;
+  m_tplnames.resize(size, "undefined");
+  return;
 }
 
-bool CPriorHelper::SetTNameData(Int32 k, std::string tname) {
-  if (k >= m_tplnames.size()) {
-    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
+const TStringList CPriorHelper::loadfilesPathList(
+    const TStringList &EZTfilesPathList, const bfs::path &rootFolder,
+    const std::string &part, const std::string &sigma_mean) const {
+  if (sigma_mean != "mean" && sigma_mean != "sigma")
+    THROWG(INTERNAL_ERROR, "Invalid argument");
+  if (part != "continuum" && part != "lines")
+    THROWG(INTERNAL_ERROR, "Invalid argument");
+
+  std::string ezt_tag = "prior_" + part + "_hist_Ebmvc_Z_Tplc_";
+  std::string a_tag = "prior_" + part + "_gauss" + sigma_mean + "_Ac_Z_Tplc_";
+  std::string a_dirpath = "prior_" + part + "_gauss" + sigma_mean + "_Ac_Z";
+
+  TStringList AGaussfilesPathList;
+  AGaussfilesPathList.reserve(EZTfilesPathList.size());
+  for (bfs::path fPath : EZTfilesPathList) {
+    std::string fNameStr = fPath.filename().c_str();
+
+    boost::replace_all(fNameStr, ezt_tag.c_str(), a_tag.c_str());
+
+    bfs::path agaussfpath =
+        rootFolder / a_dirpath.c_str() / bfs::path(fNameStr);
+    if (!bfs::exists(agaussfpath)) {
+      THROWG(INVALID_FILEPATH,
+             Formatter() << "path does not exist: " << agaussfpath.string());
+    }
+    AGaussfilesPathList.push_back(agaussfpath.string());
   }
+  return AGaussfilesPathList;
+}
+
+void CPriorHelper::loadFromFileList(const std::string &sigma_mean,
+                                    const TStringList &filePathList) {
+  // read the AGaussSigma data from files
+  for (Int32 k = 0; k < filePathList.size(); k++) {
+    bfs::path fPath = filePathList[k];
+    std::string fPathStr = (fPath).string();
+
+    std::vector<TFloat64List> read_buffer;
+    loadFileEZ(fPathStr.c_str(), read_buffer);
+    if (mInitFailed)
+      return;
+    if (sigma_mean == "sigma")
+      setAGausssigmaData(k, read_buffer);
+    else if (sigma_mean == "mean")
+      setAGaussmeanData(k, read_buffer);
+
+    mInitFailed = false;
+  }
+  return;
+}
+
+void CPriorHelper::setTNameData(Int32 k, std::string tname) {
+  if (k >= m_tplnames.size())
+    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
+
   m_tplnames[k] = tname;
-  return true;
 }
 
-bool CPriorHelper::SetEZTData(Int32 k,
+void CPriorHelper::setEZTData(Int32 k,
                               const std::vector<TFloat64List> &ezt_data) {
-  if (k >= m_data.size()) {
+  if (k >= m_data.size())
     THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
-  }
 
-  for (Int32 kz = 0; kz < m_nZ; kz++) {
-    for (Int32 ke = 0; ke < m_nEbv; ke++) {
+  for (Int32 kz = 0; kz < m_nZ; kz++)
+    for (Int32 ke = 0; ke < m_nEbv; ke++)
       m_data[k][kz][ke].priorTZE = ezt_data[kz][ke];
-    }
-  }
-
-  return true;
 }
 
-bool CPriorHelper::SetAGaussmeanData(
+void CPriorHelper::setAGaussmeanData(
     Int32 k, const std::vector<TFloat64List> &agaussmean_data) {
-  if (k >= m_data.size()) {
+  if (k >= m_data.size())
     THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
-  }
 
-  for (Int32 kz = 0; kz < m_nZ; kz++) {
-    for (Int32 ke = 0; ke < m_nEbv; ke++) {
+  for (Int32 kz = 0; kz < m_nZ; kz++)
+    for (Int32 ke = 0; ke < m_nEbv; ke++)
       m_data[k][kz][ke].A_mean = agaussmean_data[kz][ke];
-    }
-  }
-
-  return true;
 }
 
-bool CPriorHelper::SetAGausssigmaData(
+void CPriorHelper::setAGausssigmaData(
     Int32 k, const std::vector<TFloat64List> &agausssigma_data) {
-  if (k >= m_data.size()) {
+  if (k >= m_data.size())
     THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
-  }
 
-  for (Int32 kz = 0; kz < m_nZ; kz++) {
-    for (Int32 ke = 0; ke < m_nEbv; ke++) {
+  for (Int32 kz = 0; kz < m_nZ; kz++)
+    for (Int32 ke = 0; ke < m_nEbv; ke++)
       m_data[k][kz][ke].A_sigma = agausssigma_data[kz][ke];
-    }
-  }
-
-  return true;
 }
 
-bool CPriorHelper::SetPzData(const TFloat64List &z_data) {
-  if (z_data.size() != m_data_pz.size()) {
+void CPriorHelper::setPzData(const TFloat64List &z_data) {
+  if (z_data.size() != m_data_pz.size())
     THROWG(INTERNAL_ERROR, " Data and prior sizes do not match");
-  }
 
-  for (Int32 kz = 0; kz < m_nZ; kz++) {
-    m_data_pz[kz] = z_data[kz];
-  }
-
-  return true;
+  std::copy(z_data.cbegin(), z_data.cbegin() + m_nZ, m_data_pz.begin());
 }
 
-bool CPriorHelper::LoadFileEZ(const char *filePath,
+void CPriorHelper::loadFileEZ(const char *filePath,
                               std::vector<TFloat64List> &data) {
   Log.LogDetail(Formatter()
                 << "CPriorHelper: start load prior file: " << filePath);
-  bool loadSuccess = true;
   std::ifstream file;
   file.open(filePath, std::ifstream::in);
   bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
-  if (fileOpenFailed) {
-    loadSuccess = false;
-  } else {
-    Int32 nlinesRead = 0;
-    std::string line;
-    // Read file line by line
-    while (getline(file, line)) {
-      if (!boost::starts_with(line, "#")) {
+  if (fileOpenFailed)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Unable to load the prior data from file: "
+                               << filePath);
 
-        TFloat64List lineVals;
-        std::istringstream iss(line);
-        for (Int32 icol = 0; icol < m_nEbv; icol++) {
-          Float64 x;
-          iss >> x;
-          if (std::isnan(x) || std::isinf(x) || x != x || x <= 0.) {
-            x = m_priorminval;
-          }
-          lineVals.push_back(x);
-        }
-        if (lineVals.size() != m_nEbv) {
-          THROWG(INTERNAL_ERROR, Formatter() << "read n=" << lineVals.size()
-                                             << " cols, instead of " << m_nEbv);
-        }
-        nlinesRead++;
-        data.push_back(lineVals);
-      }
+  Int32 nlinesRead = 0;
+  std::string line;
+  // Read file line by line
+  while (getline(file, line)) {
+    if (boost::starts_with(line, "#"))
+      continue;
+
+    TFloat64List lineVals(m_nEbv);
+    std::istringstream iss(line);
+    for (auto &x : lineVals) {
+      iss >> x;
+      if (!isValidFloat(x) || x <= 0.)
+        x = m_priorminval;
     }
-    file.close();
-  }
 
-  return loadSuccess;
+    nlinesRead++;
+    data.push_back(lineVals);
+  }
+  file.close();
 }
 
-bool CPriorHelper::LoadFileZ(const char *filePath, TFloat64List &data) {
+void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
   Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
-  bool loadSuccess = true;
   std::ifstream file;
   file.open(filePath, std::ifstream::in);
   bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
-  if (fileOpenFailed) {
-    loadSuccess = false;
-  } else {
-    Int32 nlinesRead = 0;
-    std::string line;
-    // Read file line by line
-    while (getline(file, line)) {
-      if (!boost::starts_with(line, "#")) {
-
-        std::istringstream iss(line);
-        Float64 x;
-        iss >> x;
-        if (std::isnan(x) || std::isinf(x) || x != x || x < 0.) {
-          x = m_priorminval;
-        }
-
-        nlinesRead++;
-        data.push_back(x);
+  if (fileOpenFailed)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Unable to load the prior data from file: "
+                               << filePath);
+  Int32 nlinesRead = 0;
+  std::string line;
+  // Read file line by line
+  while (getline(file, line)) {
+    if (!boost::starts_with(line, "#")) {
+      std::istringstream iss(line);
+      Float64 x;
+      iss >> x;
+      if (!isValidFloat(x) || x < 0.) {
+        x = m_priorminval;
       }
-    }
-    file.close();
 
-    if (nlinesRead != m_nZ) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "read n=" << nlinesRead << " lines");
+      nlinesRead++;
+      data.push_back(x);
     }
   }
-  return loadSuccess;
+  file.close();
+
+  if (nlinesRead != m_nZ)
+    THROWG(INTERNAL_ERROR, Formatter() << "read n=" << nlinesRead << " lines");
 }
 
 /**
@@ -426,124 +307,109 @@ bool CPriorHelper::LoadFileZ(const char *filePath, TFloat64List &data) {
  * @param tplname
  * @param redshifts
  * @param zePriorData
- * @param outsideZRangeExtensionMode: 0=extend 0 value for z<m_z0, and n-1 value
- * for z>m_z0+m_dZ*m_nZ, 1=return error if z outside prior range
+ * @param outsideZRangeExtensionMode: 0=extend 0 value for z<m_z0, and n-1
+ * value for z>m_z0+m_dZ*m_nZ, 1=return error if z outside prior range
  * @return
  */
-bool CPriorHelper::GetTplPriorData(const std::string &tplname,
+void CPriorHelper::GetTplPriorData(const std::string &tplname,
                                    const TRedshiftList &redshifts,
                                    TPriorZEList &zePriorData,
                                    Int32 outsideZRangeExtensionMode) const {
-  if (m_betaA <= 0.0 && m_betaTE <= 0.0 && m_betaZ <= 0.0) {
-    Log.LogError(
-        "    CPriorHelper: beta coeff all zero (betaA=%e, betaTE=%e, betaZ=%e)",
-        m_betaA, m_betaTE, m_betaZ);
-    zePriorData.clear();
-    return false;
-  }
+  if (m_betaA <= 0.0 && m_betaTE <= 0.0 && m_betaZ <= 0.0)
+    THROWG(INTERNAL_ERROR, Formatter() << "beta coeffs are all zero (betaA="
+                                       << m_betaA << ", betaTE=" << m_betaTE
+                                       << ", betaZ=" << m_betaZ << ")");
 
   if (mInitFailed) {
-    Log.LogDetail("    CPriorHelper: init. failed, unable to provide priors. "
-                  "Priors won't be used.");
+    Log.LogDetail(
+        "CPriorHelper::GetTplPriorData: failed, unable to provide priors. "
+        "Priors won't be used.");
     zePriorData.clear();
-    return true;
+    return;
   }
 
   // find idx for tplname
-  Int32 idx = -1;
-  for (Int32 k = 0; k < m_tplnames.size(); k++) {
-    std::size_t foundstra = m_tplnames[k].find(tplname.c_str());
-    if (foundstra != std::string::npos) {
-      idx = k;
-      break;
-    }
-  }
-  if (idx < 0 || idx >= m_tplnames.size()) {
-    Log.LogError("    CPriorHelper: unable to match this tplname in priors "
-                 "names list : %s",
-                 tplname.c_str());
-    return false;
-  }
+  Int32 idx = getTemplateIndex(tplname);
 
   zePriorData.clear();
-  Int32 idz = -1;
-  for (Int32 kz = 0; kz < redshifts.size(); kz++) {
-
-    idz = Int32((redshifts[kz] - m_z0) / m_dz);
-    if (outsideZRangeExtensionMode == 1) {
-      if (idz < 0 || idz >= m_nZ) {
-        Log.LogError("    CPriorHelper: unable to match this redshift in prior "
-                     "list : %e",
-                     redshifts[kz]);
-        return false;
-      }
-    }
-    if (outsideZRangeExtensionMode == 0) {
-      if (idz < 0) {
-        idz = 0;
-      }
-      if (idz >= m_nZ) {
-        idz = m_nZ;
-      }
-    }
+  zePriorData.reserve(redshifts.size());
+  for (Float64 z : redshifts) {
+    Int32 idz = getRedshiftIndex(z, outsideZRangeExtensionMode);
     TPriorEList dataz = m_data[idx][idz];
-    for (Int32 icol = 0; icol < m_nEbv; icol++) {
-
-      Float64 logPTE = 0.;
-      Float64 logPA = 0.;
-      Float64 logPZ = 0.;
-      if (dataz[icol].A_sigma > 0.0) {
-        logPA = -0.5 * log(2 * M_PI) - log(dataz[icol].A_sigma);
-      } else {
-        Float64 p_flat = 1. / m_deltaA;
-        logPA = log(p_flat);
-      }
-      if (dataz[icol].priorTZE > 0.0) {
-        logPTE = log(dataz[icol].priorTZE);
-
-        if (std::isnan(logPTE) || logPTE != logPTE || std::isinf(logPTE)) {
-          Log.LogError(
-              "    CPriorHelper: logP_TZE is NAN (priorTZE=%e, logP_TZE=%e)",
-              dataz[icol].priorTZE, logPTE);
-          THROWG(INTERNAL_ERROR, "logP_TZE is NAN or inf, or invalid");
-        }
-      } else {
-        Log.LogError(
-            "    CPriorHelper: P_TZE is 0 (priorTZE=%e) which is forbidden",
-            dataz[icol].priorTZE);
-        THROWG(INTERNAL_ERROR, "P_TZE cannot be null");
-      }
-
-      if (m_data_pz[idz] > 0.0) {
-        logPZ = log(m_data_pz[idz] / m_dz);
-      }
-
-      dataz[icol].logprior_precompA = logPA;
-      dataz[icol].logprior_precompTE = logPTE;
-      dataz[icol].logprior_precompZ = logPZ;
-      dataz[icol].betaA = m_betaA;
-      dataz[icol].betaTE = m_betaTE;
-      dataz[icol].betaZ = m_betaZ;
-    }
-    zePriorData.push_back(dataz);
+    fillPriorDataPerZ(dataz, idz);
+    zePriorData.push_back(std::move(dataz));
   }
-
-  return true;
 }
 
-bool CPriorHelper::GetTZEPriorData(const std::string &tplname,
-                                   Int32 EBVIndexfilter, Float64 redshift,
-                                   SPriorTZE &tzePrioData,
-                                   Int32 outsideZRangeExtensionMode) const {
-  if (EBVIndexfilter < 0 || EBVIndexfilter > m_nEbv - 1) {
+void CPriorHelper::fillPriorDataPerZ(TPriorEList &dataz, Int32 idz) const {
+
+  for (auto &dataz_i : dataz) {
+    if (dataz_i.priorTZE <= 0.0)
+      THROWG(INTERNAL_ERROR, "P_TZE cannot be null");
+
+    Float64 logPA = dataz_i.A_sigma > 0.0
+                        ? -0.5 * log(2 * M_PI) - log(dataz_i.A_sigma)
+                        : log(1. / m_deltaA);
+
+    Float64 logPTE = log(dataz_i.priorTZE);
+
+    if (!isValidFloat(logPTE))
+      THROWG(INTERNAL_ERROR, "logP_TZE is NAN or inf, or invalid");
+
+    Float64 logPZ = m_data_pz[idz] > 0.0 ? log(m_data_pz[idz] / m_dz) : 0.;
+
+    dataz_i.logprior_precompA = logPA;
+    dataz_i.logprior_precompTE = logPTE;
+    dataz_i.logprior_precompZ = logPZ;
+    dataz_i.betaA = m_betaA;
+    dataz_i.betaTE = m_betaTE;
+    dataz_i.betaZ = m_betaZ;
+  }
+}
+
+CPriorHelper::SPriorTZE
+CPriorHelper::GetTZEPriorData(const std::string &tplname, Int32 EBVIndexfilter,
+                              Float64 redshift,
+                              Int32 outsideZRangeExtensionMode) const {
+  if (EBVIndexfilter < 0 || EBVIndexfilter > m_nEbv - 1)
     THROWG(INTERNAL_ERROR, Formatter() << "Bad EBV index requested ="
                                        << EBVIndexfilter << " nEBV=" << m_nEbv);
-  }
+
   TFloat64List redshifts(1, redshift);
   TPriorZEList zePriorData;
   GetTplPriorData(tplname, redshifts, zePriorData, outsideZRangeExtensionMode);
 
-  tzePrioData = zePriorData[0][EBVIndexfilter];
+  return zePriorData[0][EBVIndexfilter];
+}
 
-  return true;
+Int32 CPriorHelper::getTemplateIndex(const std::string &tplname) const {
+
+  auto itr = std::find(m_tplnames.begin(), m_tplnames.end(), tplname);
+  if (itr == m_tplnames.end())
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "unable to match this tplname in prior names list : "
+                       << tplname);
+
+  return itr - m_tplnames.begin();
+}
+
+Int32 CPriorHelper::getRedshiftIndex(Float64 redshift,
+                                     Int32 outsideZRangeExtensionMode) const {
+  Int32 idz = Int32((redshift - m_z0) / m_dz);
+  if (outsideZRangeExtensionMode == 1) {
+    if (idz < 0 || idz >= m_nZ)
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "unable to match this redshift in prior list:"
+                         << redshift);
+  }
+  if (outsideZRangeExtensionMode == 0) {
+    idz = std::max(idz, 0);
+    idz = std::min(idz, m_nZ);
+  }
+  return idz;
+}
+
+bool CPriorHelper::isValidFloat(Float64 val) const {
+  bool invalid = std::isnan(val) || val != val || std::isinf(val);
+  return !invalid;
 }

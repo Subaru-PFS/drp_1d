@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
-#include <math.h>
+#include <cmath>
 #include <string>
 
 namespace NSEpic {
@@ -76,7 +76,7 @@ private:
     return new CLineProfileSYMIGM(*this);
   }
   void CheckMeiksinInit() const;
-  Int32 getIGMCorrection(Float64 x) const;
+  Float64 getIGMCorrection(Float64 x) const;
 
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   Float64 m_redshift = NAN;

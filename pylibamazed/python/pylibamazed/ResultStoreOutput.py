@@ -57,7 +57,6 @@ class ResultStoreOutput(AbstractOutput):
         AbstractOutput.__init__(self, parameters, extended_results=extended_results)
         self.results_store = result_store
         self.parameters = parameters
-        
         if auto_load:
             self.load_all()
         
@@ -86,7 +85,6 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["name"] == attribute]
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
-        
         return self._get_attribute_from_result_store(object_type,
                                                      method,
                                                      attribute_info,
@@ -124,9 +122,14 @@ class ResultStoreOutput(AbstractOutput):
             return hasattr(operator_result, attribute_info.OperatorResult_name)
 
     def has_dataset_in_source(self, object_type, method, dataset):
-        return self.results_store.HasDataset(object_type,
-                                             method,
-                                             dataset)
+        if object_type:
+            return self.results_store.HasDataset(object_type,
+                                                 method,
+                                                 dataset)
+        else:
+            return self.results_store.HasDataset(dataset,
+                                                 dataset,
+                                                 "solveResult")
 
     def has_candidate_dataset_in_source(self, object_type, method, dataset):
         rs = self.results_specifications
@@ -140,6 +143,7 @@ class ResultStoreOutput(AbstractOutput):
     
     def get_nb_candidates_in_source(self, object_type, method):
         return self.results_store.getNbRedshiftCandidates(object_type, method)
+
 
     def _get_operator_result(self, object_type, method, attribute_info, rank=None):
         if attribute_info.level == "root":
@@ -156,7 +160,7 @@ class ResultStoreOutput(AbstractOutput):
                                                                     attribute_info.dataset,
                                                                     attribute_info.ResultStore_key)
                 else:
-                    raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+                    raise APIException(ErrorCode.OUTPUT_READER_ERROR,"Unknown OperatorResult type {}".format(str(or_type)))
         elif attribute_info.level == "object" or attribute_info.level == "method":
             or_type = self.results_store.GetGlobalResultType(object_type,
                                                              method,
@@ -183,6 +187,6 @@ class ResultStoreOutput(AbstractOutput):
                               attribute_info.ResultStore_key,
                               rank)
         else:
-            raise APIException(ErrorCode.OutputReaderError,
+            raise APIException(ErrorCode.OUTPUT_READER_ERROR,
                                "Unknown level {}".format(attribute_info.level))
 

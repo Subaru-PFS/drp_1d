@@ -49,31 +49,6 @@ using namespace NSEpic;
 CSolve::CSolve(std::string name, TScopeStack &scope, std::string objectType)
     : m_categoryList({objectType}), m_objectTypeScope(scope, objectType),
       m_objectType(objectType), m_name(name) {}
-void CSolve::GetRedshiftSampling(
-    std::shared_ptr<const CInputContext> inputContext,
-    TFloat64Range &redshiftRange, Float64 &redshiftStep) {
-  auto searchLogRebin = inputContext->m_logRebin.find(m_objectType);
-  if (searchLogRebin != inputContext->m_logRebin.end()) {
-    redshiftRange = searchLogRebin->second.zrange;
-
-    redshiftStep = inputContext->m_logGridStep;
-    if (m_redshiftSampling == "lin") {
-      m_redshiftSampling = "log";
-      Flag.warning(Flag.FORCE_LOGSAMPLING_FFT,
-                   Formatter() << "CSolve::" << __func__
-                               << ": m_redshift sampling value is forced to "
-                                  "log since FFTprocessing is used");
-    }
-  } else {
-    // default is to read from the scoped paramStore
-    redshiftRange = inputContext->GetParameterStore()->GetScoped<TFloat64Range>(
-        "redshiftrange");
-    redshiftStep =
-        inputContext->GetParameterStore()->GetScoped<Float64>("redshiftstep");
-  }
-  return;
-}
-
 void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext) {}
 
 void CSolve::Compute() {

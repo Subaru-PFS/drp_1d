@@ -66,21 +66,19 @@ public:
   // value[index] can be equal or smaller than Z
   static bool getClosestLowerIndex(const std::vector<T> &ordered_values,
                                    const T &value, Int32 &i_min) {
-    if (value < ordered_values.front()) {
+    if (value < ordered_values.front())
       return false;
-    }
+
     typename std::vector<T>::const_iterator it_min =
         std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
-    if (it_min == ordered_values.end())
-      it_min--;
-    if (*it_min > value)
-      it_min = it_min - 1;
+    if (it_min == ordered_values.end() || *it_min != value)
+      --it_min;
 
     i_min = it_min - ordered_values.begin();
     return true;
   }
 
-  // the closest at left or right, at epsilon
+  // the closest at left or right
   static Int32 getCloserIndex(const std::vector<T> &ordered_values,
                               const T &value) {
     typename std::vector<T>::const_iterator it =
@@ -88,18 +86,19 @@ public:
 
     // check if referring to the last element
     if (it == ordered_values.end())
-      it = it - 1;
+      --it;
 
     else if (it != ordered_values.begin()) {
       // compare diff between value and it and it-1 --> select the it that gives
       // the minimal difference
       if (std::abs(*it - value) > std::abs(*(it - 1) - value))
-        it = it - 1;
+        --it;
     }
 
     Int32 i_min = it - ordered_values.begin();
     return i_min;
   }
+
   // value[index] can be equal or higher than Z
   static bool getClosestUpperIndex(const std::vector<T> &ordered_values,
                                    const T &value, Int32 &i) {

@@ -37,10 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/filehandler.h"
-
 #include "RedshiftLibrary/log/handler.h"
-
-#include <stdio.h>
 
 using namespace NSEpic;
 

@@ -55,9 +55,6 @@ protected:
           TScopeStack &scope) = 0;
 
   virtual void InitRanges(std::shared_ptr<const CInputContext> inputContext);
-  virtual void GetRedshiftSampling(std::shared_ptr<const CInputContext>,
-                                   TFloat64Range &redshiftRange,
-                                   Float64 &redshiftStep);
 
   virtual void
   saveToResultStore(std::shared_ptr<CSolveResult>,
@@ -71,11 +68,9 @@ protected:
 
   const TStringList m_categoryList;
   TFloat64Range m_lambdaRange;
-  TFloat64List m_redshifts;
   CAutoScope m_objectTypeScope;
   const std::string m_name;
   const std::string m_objectType;
-  std::string m_redshiftSampling;
 
 public:
   CSolve(std::string name, TScopeStack &scope, std::string objectType);

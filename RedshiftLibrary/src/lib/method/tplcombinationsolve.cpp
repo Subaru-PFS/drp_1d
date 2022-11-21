@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/tplcombinationresult.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -128,11 +129,8 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
   // save in resultstore pdf results
-  resultStore->StoreScopedGlobalResult(
-      "pdf", pdfz.m_postmargZResult); // need to store this pdf with this exact
-                                      // same name so that zqual can load it.
-                                      // see zqual.cpp/ExtractFeaturesPDF
-
+  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
   // save in resultstore candidates results
   resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
@@ -144,7 +142,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   std::shared_ptr<const TplCombinationExtremaResult> extremaResult =
       buildExtremaResults(resultStore, scopeStr,
                           candidateResult->m_ranked_candidates, spc, tplCatalog,
-                          clampedLbdaRange, overlapThreshold, opt_interp);
+                          clampedLbdaRange, overlapThreshold);
   // store extrema results
   StoreExtremaResults(resultStore, extremaResult);
 
@@ -209,10 +207,12 @@ bool CTplcombinationSolve::Solve(
       _spctype = static_cast<CSpectrum::EType>(spctype);
 
     spc.SetType(_spctype);
-    std::for_each(tplList.begin(), tplList.end(),
-                  [&_spctype](std::shared_ptr<const NSEpic::CTemplate> tpl) {
-                    tpl->SetType(_spctype);
-                  });
+    std::for_each(
+        tplList.begin(), tplList.end(),
+        [&_spctype, &opt_interp](std::shared_ptr<const NSEpic::CTemplate> tpl) {
+          tpl->SetType(_spctype);
+          tpl->setRebinInterpMethod(opt_interp);
+        });
 
     scopeStr = getSpecBasedScope(_spctype);
     if (_spctype == CSpectrum::nType_noContinuum)
@@ -298,11 +298,11 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 
   ChisquareArray chisquarearray;
   chisquarearray.cstLog = -1;
-
+  chisquarearray.zstep = m_redshiftStep;
   Int32 retPdfz = -1;
 
-  Int32 nISM = result->getISMCount();
-  Int32 nIGM = result->getIGMCount();
+  Int32 nISM = result->nISM;
+  Int32 nIGM = result->nIGM;
 
   if (chisquarearray.cstLog == -1) {
     chisquarearray.cstLog = result->CstLog;
@@ -352,8 +352,7 @@ CTplcombinationSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
-    const TFloat64Range &lambdaRange, Float64 overlapThreshold,
-    std::string opt_interp) {
+    const TFloat64Range &lambdaRange, Float64 overlapThreshold) {
 
   Log.LogDetail("CTplCombinationSolve::buildExtremaResults: building "
                 "chisquare array");
@@ -426,7 +425,7 @@ CTplcombinationSolve::buildExtremaResults(
         m_tplcombinationOperator.ComputeSpectrumModel(
             spc, tplList, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-            opt_interp, lambdaRange, overlapThreshold);
+            lambdaRange, overlapThreshold);
     tplCatalog.m_logsampling = currentSampling;
     if (spcmodelPtr == nullptr)
       THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");

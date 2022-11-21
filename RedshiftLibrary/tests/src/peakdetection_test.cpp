@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(FindPossiblePeaks_test) {
 
   TFloat64List inc(10);
   std::iota(inc.begin(), inc.end(), 0.0);
-  CSpectrumSpectralAxis spectralAxis(std::move(inc), false);
+  CSpectrumSpectralAxis spectralAxis(std::move(inc));
 
   CSpectrumFluxAxis modelfluxAxis(
       TFloat64List{1., 1., 1., 10., 20., 10., 1., 1., 1., 1.});
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(RedefineBorders_test) {
 
   TFloat64List inc(10);
   std::iota(inc.begin(), inc.end(), 0.0);
-  CSpectrumSpectralAxis spectralAxis(std::move(inc), false);
+  CSpectrumSpectralAxis spectralAxis(std::move(inc));
 
   CSpectrumFluxAxis modelfluxAxis(
       TFloat64List{1., 1., 1., 10., 20., 10., 1., 1., 1., 1.});
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
 
   TFloat64List inc(10);
   std::iota(inc.begin(), inc.end(), 0.0);
-  CSpectrumSpectralAxis spectralAxis(std::move(inc), false);
+  CSpectrumSpectralAxis spectralAxis(std::move(inc));
 
   CSpectrumFluxAxis modelfluxAxis(
       TFloat64List{1., 1., 1., 10., 20., 10., 1., 1., 1., 1.});

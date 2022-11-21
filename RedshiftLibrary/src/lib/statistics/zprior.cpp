@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/operator/pdfz.h"
 
 #include "RedshiftLibrary/log/log.h"
-#include <float.h>
+#include <climits>
 
 using namespace NSEpic;
 using namespace std;

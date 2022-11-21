@@ -109,66 +109,80 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti,
     Float64 nsigmasupport) const {
+
   std::vector<std::vector<TFloat64List>>
       lineCatalogLinesCorrespondingNominalAmp;
-  // first set all corresponding amplitudes to 0.0;
 
-  for (Int32 iElts = 0; iElts < LineModelElementList.size(); iElts++) {
-    Int32 nLines = LineModelElementList[iElts]->GetSize();
-    TFloat64List thisCatLinesCorresp(nLines, 0.0); // is nLines cte among Elts?
-    std::vector<TFloat64List> thisElementLinesCorresp(GetCatalogsCount(),
-                                                      thisCatLinesCorresp);
-
-    lineCatalogLinesCorrespondingNominalAmp.push_back(thisElementLinesCorresp);
+  lineCatalogLinesCorrespondingNominalAmp.reserve(LineModelElementList.size());
+  const Int32 catalogCount = GetCatalogsCount();
+  for (const auto &elt : LineModelElementList) {
+    // first set all corresponding amplitudes to 0.0;
+    lineCatalogLinesCorrespondingNominalAmp.push_back(std::vector<TFloat64List>(
+        catalogCount, TFloat64List(elt->GetSize(), 0.0)));
 
     // now set the non-zero amp correspondences
-    for (Int32 iCatalog = 0; iCatalog < GetCatalogsCount(); iCatalog++) {
-      CLineCatalog::TLineVector currentCatalogLineList =
+    for (Int32 iCatalog = 0; iCatalog < catalogCount; iCatalog++) {
+      const CLineCatalog::TLineVector lineList =
           m_lineRatioCatalogs[iCatalog].GetList();
-      for (Int32 kL = 0; kL < currentCatalogLineList.size(); kL++) {
-        Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
-        Float64 restLambda = currentCatalogLineList[kL].GetPosition();
+
+      for (const auto &currentline : lineList) {
+        const std::string &currentLineName = currentline.GetName();
+        Float64 nominalAmp = currentline.GetNominalAmplitude();
+        Float64 restLambda = currentline.GetPosition();
         if (enableISMCalzetti) {
           Float64 dustCoeff = ismCorrectionCalzetti->GetDustCoeff(
               GetIsmIndex(iCatalog), restLambda);
           nominalAmp *= dustCoeff;
         }
-        // find line in the elementList
-        Int32 nLines = LineModelElementList[iElts]->GetSize();
-        for (Int32 j = 0; j < nLines; j++) {
-
-          if (LineModelElementList[iElts]->m_Lines[j].GetName() ==
-              currentCatalogLineList[kL].GetName()) {
-            lineCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j] =
-                nominalAmp;
-          }
+        // find line in the elementList and fill with nominalAmp
+        auto it = std::find_if(elt->m_Lines.cbegin(), elt->m_Lines.cend(),
+                               [&currentLineName](const CLine &line) {
+                                 return line.GetName() == currentLineName;
+                               });
+        if (it != elt->m_Lines.end()) {
+          Int32 idx = it - elt->m_Lines.begin();
+          lineCatalogLinesCorrespondingNominalAmp.back()[iCatalog][idx] =
+              nominalAmp;
         }
       }
     }
   }
-
   // Now log the linesCorrespondingNominalAmp
-  for (Int32 iElts = 0; iElts < LineModelElementList.size(); iElts++) {
+  logLineNominalAmp(LineModelElementList, enableISMCalzetti,
+                    lineCatalogLinesCorrespondingNominalAmp,
+                    ismCorrectionCalzetti);
+
+  return lineCatalogLinesCorrespondingNominalAmp;
+}
+
+// only logging
+void CLineCatalogsTplRatio::logLineNominalAmp(
+    const CLineModelElementList &LineModelElementList, bool enableISMCalzetti,
+    const std::vector<std::vector<TFloat64List>>
+        &lineCatalogLinesCorrespondingNominalAmp,
+    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+        &ismCorrectionCalzetti) const {
+
+  for (Int32 iElt = 0; iElt < LineModelElementList.size(); iElt++) {
     for (Int32 k = 0; k < GetCatalogsCount(); k++) {
-      Log.LogDebug(Formatter() << "log linesCorrespondingNominalAmp for "
-                               << m_lineRatioCatalogs[k].getName());
-      Int32 nLines = LineModelElementList[iElts]->GetSize();
+      /*Log.LogDebug(Formatter() << "log linesCorrespondingNominalAmp for "
+                               << m_lineRatioCatalogs[k].getName());*/
+      Int32 nLines = LineModelElementList[iElt]->GetSize();
       for (Int32 j = 0; j < nLines; j++) {
         Float64 ebv = enableISMCalzetti
                           ? ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
                           : NAN;
-        Float64 nomAmp = lineCatalogLinesCorrespondingNominalAmp[iElts][k][j];
-        std::string lineName =
-            LineModelElementList[iElts]->m_Lines[j].GetName();
-        Log.LogDebug(
-            "    CatalogsTplRatio - linesCorrespondingNominalAmp iElt=%d, "
-            "iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e",
-            iElts, k, j, lineName.c_str(), ebv, nomAmp);
+        Float64 nomAmp = lineCatalogLinesCorrespondingNominalAmp[iElt][k][j];
+        std::string lineName = LineModelElementList[iElt]->m_Lines[j].GetName();
+        /*Log.LogDebug("    CatalogsTplRatio - "
+                     "linesCorrespondingNominalAmp iElt=%d, "
+                     "iCatalog=%d, iLine=%d with name=%s, ebv=%f: "
+                     "NominalAmpFound = "
+                     "%e",
+                     iElt, k, j, lineName.c_str(), ebv, nomAmp);*/
       }
     }
   }
-
-  return lineCatalogLinesCorrespondingNominalAmp;
 }
 
 const CLineCatalog &CLineCatalogsTplRatio::GetCatalog(Int32 iCatalog) const {
@@ -176,94 +190,105 @@ const CLineCatalog &CLineCatalogsTplRatio::GetCatalog(Int32 iCatalog) const {
 }
 
 /**
- * \brief Calculates the best fit between the linemodel fitted amplitudes and
- *the tplRatio catalogs: (for lm-rigidity=tplcorr)
+ * \brief Calculates the best fit between the linemodel fitted amplitudes
+ *and the tplRatio catalogs: (for lm-rigidity=tplcorr)
  *
  **/
 Float64 CLineCatalogsTplRatio::GetBestFit(
     const CLineCatalog::TLineVector &restLineList,
     const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors,
     TFloat64List &amplitudesCorrected, std::string &bestTplName) const {
-  Float64 coeffMin = -1;
-  TInt32List mask;
+
+  Float64 coeffMin = -1.0;
   TFloat64List bestFitAmplitudes;
-  // bestFitAmplitudes.resize(restLineList.size());
-  for (Int32 iCatalogs = 0; iCatalogs < m_lineRatioCatalogs.size();
-       iCatalogs++) {
-    CLineCatalog::TLineVector currentCatalogLineList =
-        m_lineRatioCatalogs[iCatalogs].GetList();
 
-    // create the amplitude float vectors
-    TFloat64List tplratioAmplitudes;
-    TFloat64List linemodelAmplitudes;
-    TFloat64List linemodelErrors;
+  auto negativefittedValues = [&fittedAmplitudes, &fittedErrors](Int32 idx) {
+    return (fittedAmplitudes[idx] < 0 || fittedErrors[idx] <= 0);
+  };
 
-    mask.resize(fittedAmplitudes.size());
-
-    for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
-      if (fittedAmplitudes[iRestLine] >= 0 && fittedErrors[iRestLine] > 0) {
-        mask[iRestLine] = 1;
-        Int32 iTplratioLineFound = -1;
-        for (Int32 itplratioLine = 0;
-             itplratioLine < currentCatalogLineList.size(); itplratioLine++) {
-          std::string tplratioLineName =
-              currentCatalogLineList[itplratioLine].GetName();
-          std::string restLineName = restLineList[iRestLine].GetName();
-          if (restLineName == tplratioLineName) {
-            iTplratioLineFound = itplratioLine;
-            break;
-          }
-        }
-
-        if (iTplratioLineFound < 0) {
-          tplratioAmplitudes.push_back(0.0);
-        } else {
-          Float64 amp =
-              currentCatalogLineList[iTplratioLineFound].GetNominalAmplitude();
-          tplratioAmplitudes.push_back(amp);
-        }
-        linemodelAmplitudes.push_back(fittedAmplitudes[iRestLine]);
-        linemodelErrors.push_back(fittedErrors[iRestLine]);
-      } else {
-        mask[iRestLine] = 0;
-      }
+  // mask is unique and independent from catalogs
+  TInt32List mask(fittedAmplitudes.size());
+  for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
+    if (negativefittedValues(iRestLine)) {
+      mask[iRestLine] = 0;
+      continue;
     }
+    mask[iRestLine] = 1;
+  }
 
-    if (linemodelAmplitudes.size() > 1 &&
-        linemodelAmplitudes.size() == tplratioAmplitudes.size()) {
-      TFloat64List ampsCorrected;
-      ampsCorrected.resize(linemodelAmplitudes.size());
-      Float64 fit = GetFit(linemodelAmplitudes, linemodelErrors,
-                           tplratioAmplitudes, ampsCorrected);
-      if (fit > 0.0 && !std::isnan(fit) && (fit < coeffMin || coeffMin == -1)) {
-        coeffMin = fit;
-        bestFitAmplitudes = ampsCorrected;
-        bestTplName = GetCatalogName(iCatalogs);
-      }
+  // bestFitAmplitudes.resize(restLineList.size());
+  for (const auto &catalog : m_lineRatioCatalogs) {
+
+    TFloat64List ampsCorrected;
+    Float64 fit = getFitForOneCatalog(restLineList, fittedAmplitudes,
+                                      fittedErrors, catalog, ampsCorrected);
+
+    if (fit > 0.0 && !std::isnan(fit) && (fit < coeffMin || coeffMin == -1.)) {
+      coeffMin = fit;
+      bestFitAmplitudes = std::move(ampsCorrected);
+      bestTplName = catalog.getName();
     }
   }
   // coeff min normalization
   // coeffMin = sqrt(coeffMin);
   // coeffMin /= 1.0;
+  amplitudesCorrected =
+      TFloat64List(restLineList.size(), -1.); // NAN plutot que -1?
+  if (coeffMin < 0.)                          // no need to check mask value
+    return coeffMin;
 
   // fill the corrected amplitudes vector
   Int32 iTplAmps = 0;
   for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
-    if (mask[iRestLine] > 0 && coeffMin >= 0) {
+    if (mask[iRestLine] == 1) {
       amplitudesCorrected[iRestLine] = bestFitAmplitudes[iTplAmps];
       iTplAmps++;
-    } else {
-      amplitudesCorrected[iRestLine] = -1.0;
     }
   }
 
   return coeffMin;
 }
 
-Float64 CLineCatalogsTplRatio::GetFit(const TFloat64List &ampsLM,
-                                      const TFloat64List &errLM,
-                                      const TFloat64List &ampsTPL,
-                                      TFloat64List &ampsCorrected) const {
+Float64 CLineCatalogsTplRatio::getFitForOneCatalog(
+    const CLineCatalog::TLineVector &restLineList,
+    const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors,
+    const CLineRatioCatalog &catalog, TFloat64List &ampsCorrected) const {
+
+  CLineCatalog::TLineVector lineList = catalog.GetList();
+  // create the amplitude float vectors
+  TFloat64List tplratioAmplitudes;
+  TFloat64List linemodelAmplitudes;
+  TFloat64List linemodelErrors;
+  for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
+    std::string restLineName = restLineList[iRestLine].GetName();
+
+    auto it = std::find_if(lineList.cbegin(), lineList.cend(),
+                           [restLineName](const CLine &line) {
+                             return line.GetName() == restLineName;
+                           });
+    if (it == lineList.end())
+      tplratioAmplitudes.push_back(0.0);
+    else {
+      Int32 tplRatioIdx = it - lineList.begin();
+      Float64 amp = lineList[tplRatioIdx].GetNominalAmplitude();
+      tplratioAmplitudes.push_back(amp);
+    }
+    linemodelAmplitudes.push_back(fittedAmplitudes[iRestLine]);
+    linemodelErrors.push_back(fittedErrors[iRestLine]);
+  }
+
+  if (!linemodelAmplitudes.size())
+    return NAN;
+
+  ampsCorrected = TFloat64List(linemodelAmplitudes.size());
+  Float64 fit = computeFitValue(linemodelAmplitudes, linemodelErrors,
+                                tplratioAmplitudes, ampsCorrected);
+  return fit;
+}
+
+Float64 CLineCatalogsTplRatio::computeFitValue(
+    const TFloat64List &ampsLM, const TFloat64List &errLM,
+    const TFloat64List &ampsTPL, TFloat64List &ampsCorrected) const {
 
   Float64 N = ampsLM.size();
   //    // Normalize AmpsLM first

@@ -39,12 +39,6 @@
 #ifndef _REDSHIFT_OPERATOR_OPERATOR_
 #define _REDSHIFT_OPERATOR_OPERATOR_
 
-//#include <RedshiftLibrary/common/datatypes.h>
-//#include <RedshiftLibrary/common/range.h>
-//#include <RedshiftLibrary/processflow/result.h>
-//#include <RedshiftLibrary/common/mask.h>
-//#include <RedshiftLibrary/statistics/priorhelper.h>
-
 #include <vector>
 
 namespace NSEpic {
@@ -60,7 +54,8 @@ public:
     nStatus_DataError,
     nStatus_LoopError,
     nStatus_InvalidProductsError,
-    nStatus_NoOverlap
+    nStatus_NoOverlap,
+    nStatus_UnSet
   };
 
   typedef std::vector<EStatus> TStatusList;

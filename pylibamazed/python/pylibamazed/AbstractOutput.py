@@ -40,6 +40,13 @@ import pandas as pd
 from pylibamazed.r_specifications import rspecifications
 from pylibamazed.Parameters import Parameters
 import numpy as np
+from pylibamazed.redshift import CLog, ErrorCode, WarningCode
+from pylibamazed.Exception import APIException
+
+RootStages = ["init","classification","result_store_fill"]
+ObjectStages = ["redshift_solver","linemeas_catalog_load","linemeas_solver","reliability_solver","sub_classif_solver"]
+
+zlog = CLog.GetInstance()
 
 
 class AbstractOutput:
@@ -57,9 +64,11 @@ class AbstractOutput:
                                                   sep='\t'
                                                   )
         self.object_types = self.parameters.get_objects()
-
+        self.errors = dict()        
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
+
+        #TODO find another emplacement for these informations
 
     def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None):
         raise NotImplementedError("Implement in derived class")
@@ -75,7 +84,55 @@ class AbstractOutput:
 
     def get_nb_candidates_in_source(self, object_type, method):
         raise NotImplementedError("Implement in derived class")
+
+    def has_error_in_source(self, object_type, stage):
+        raise NotImplementedError("Implement in derived class")
+
+    def has_error(self, object_type, stage):
+        return self.get_error_full_name(object_type, stage) in self.errors
         
+    def get_error(self, object_type, stage):
+            return self.errors[self.get_error_full_name(object_type,stage)]
+
+    def get_error_full_name(self, object_type, stage):
+        if object_type:
+            return f"{stage}_{object_type}"
+        else:
+            return stage
+        
+    def store_error(self, amz_exception, object_type, stage):
+        full_name = self.get_error_full_name(object_type, stage)
+        self.errors[full_name] = dict()
+        self.errors[full_name]["code"]=ErrorCode(amz_exception.getErrorCode()).name
+        self.errors[full_name]["message"]=amz_exception.getMessage()
+        self.errors[full_name]["line"]=amz_exception.getLine()
+        self.errors[full_name]["filename"]=amz_exception.getFileName()
+        self.errors[full_name]["method"]=amz_exception.getMethod()
+
+        if not object_type and stage != "classification":
+            for ot in self.object_types:
+                for o_stage in ObjectStages:
+                    if self.parameters.stage_enabled(ot,o_stage):
+                        self.store_consequent_error(ot, o_stage, stage)
+        else:
+            for i in range(len(ObjectStages)):
+                if stage == ObjectStages[i]:
+                    for j in range(i+1,len(ObjectStages)):
+                        o_stage = ObjectStages[j]
+                        if self.parameters.stage_enabled(object_type,o_stage):
+                            self.store_consequent_error(object_type, o_stage, stage)                
+
+    def store_consequent_error(self, object_type, stage, causing_stage):
+
+        full_name = self.get_error_full_name(object_type, stage)
+        self.errors[full_name] = dict()
+        self.errors[full_name]["code"]=causing_stage
+        self.errors[full_name]["message"]=f"not run because {causing_stage} failed"
+        self.errors[full_name]["line"]=-1
+        self.errors[full_name]["filename"]=""
+        self.errors[full_name]["method"]=""
+        
+    
     def load_all(self):
         self.load_root()
         for object_type in self.object_types:
@@ -99,17 +156,30 @@ class AbstractOutput:
             return False
 
     def has_attribute(self,object_type, dataset,attribute,rank=None):
-        if object_type in self.object_results and dataset in self.object_results[object_type]:
+        if not object_type:
+            if dataset in self.root_results:
+                return attribute in self.root_results[dataset]
+            else:
+                return False
+        elif object_type in self.object_results and dataset in self.object_results[object_type]:
             if rank is None:
                 return attribute in self.object_results[object_type][dataset]
             else:
-                return attribute in self.object_results[object_type][dataset][rank]
+                if type(self.object_results[object_type][dataset]) == list:
+                    if len(self.object_results[object_type][dataset]) > rank:
+                        return attribute in self.object_results[object_type][dataset][rank]
+                    else:
+                        return False
+                else:
+                    return False
         else:
             return False
 
     def get_dataset_size(self, object_type, dataset, rank = None):
         if rank is None:
             if dataset in self.object_results[object_type]:
+                if not self.object_results[object_type][dataset]:
+                    return 0
                 first_attr = next(iter(self.object_results[object_type][dataset].values()))
             else:
                 raise APIException("Dataset " + dataset + " does not exist")
@@ -142,7 +212,7 @@ class AbstractOutput:
         mp = self.object_results[object_type]["model_parameters"][rank][data_name]
         return mp
 
-    def get_dataset(self, dataset, object_type=None, rank=None):
+    def get_dataset(self,object_type, dataset,  rank=None):
         if object_type:
             if rank is not None:
                 return self.object_results[object_type][dataset][rank]
@@ -153,8 +223,10 @@ class AbstractOutput:
         
     # TODO more robust version, should iterate over candidate datasets and check existence
     def get_nb_candidates(self,object_type):
-        return len(self.object_results[object_type]["model"])
-            
+        if "model" in self.object_results[object_type]:
+            return len(self.object_results[object_type]["model"])
+        else:
+            return 0
 
     def get_level(self, dataset):
         rs = self.results_specifications
@@ -207,6 +279,11 @@ class AbstractOutput:
         level = "root"
         rs, root_datasets = self.filter_datasets(level)
         for ds in root_datasets:
+            skip = not self.has_dataset_in_source(None, None, ds)
+            skip = skip and not "warning" in ds
+            if skip:
+                zlog.LogInfo("skipping " + ds)
+                continue
             ds_attributes = self.filter_dataset_attributes(ds)
             self.root_results[ds] = dict()
             for index, ds_row in ds_attributes.iterrows():
@@ -223,7 +300,7 @@ class AbstractOutput:
                             attr_name = ds_row["name"].replace("<ObjectType>", object_type)
                             self.root_results[ds][attr_name] = attr
                 else:
-                    if self.has_attribute_in_source(object_type,
+                    if self.has_attribute_in_source(None,
                                                     None,
                                                     ds_row.dataset,
                                                     ds_row["name"]):
@@ -288,7 +365,9 @@ class AbstractOutput:
 
             nb_candidates = self.get_nb_candidates_in_source(object_type,
                                                              method)
-            candidates = []
+            if ds not in self.object_results[object_type]:
+                self.object_results[object_type][ds] = []
+            candidates = self.object_results[object_type][ds]
             for rank in range(nb_candidates):
                 candidates.append(dict())
                 for index, ds_row in ds_attributes.iterrows():
@@ -304,11 +383,57 @@ class AbstractOutput:
                                                               attr_name,
                                                               rank)
                         candidates[rank][attr_name] = attr
-            self.object_results[object_type][ds] = candidates
-
-                
                     
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
 
+    def get_attributes(self, attributes, lines_ids):
+        ret = dict()
+        ret["ProcessingID"] = self.spectrum_id
+        for attribute in attributes:
+            attr_parts = attribute.split(".")
+            root = attr_parts[0]
+            data = attr_parts[-1]
+            rank = None
+#            dataset = "model_parameters"
+            if root == "classification":
+                if self.has_attribute(None,"classification",data,None):
+                    ret[attribute]=self.get_attribute(None,"classification",data,None)
+                continue
+            elif root == "error":
+                if self.has_error(attr_parts[1], attr_parts[2]):
+                    ret[attribute] = self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
+                elif self.has_error(None,attr_parts[1]):
+                    ret[attribute] = self.get_error(None,attr_parts[1])[attr_parts[2]]
+                continue
+            elif root == "ContextWarningFlags":
+                return self.root_results["context_warningFlag"]["ContextWarningFlags"]
+            elif "WarningFlags" in data:
+                return self.object_results[root]["warningFlag"][data]
+            else:
+                category = root
+                if len(attr_parts) == 2:
+                    rank = 0
+                elif len(attr_parts) == 3:
+                    rank = int(attr_parts[1]) 
+            if len(attr_parts) < 4:
+                if self.has_attribute(category,"model_parameters", data, rank):
+                    ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
+                else:
+                    rank = None
+                    for dataset in ["linemeas_parameters", "reliability"]:
+                        if self.has_attribute(category,dataset, data, rank):
+                            ret[attribute] = self.get_attribute(category, dataset, data, rank)
+            else:
+                dataset = attr_parts[1]
+                if not self.has_dataset(category, dataset):
+                    continue
+                line_name = attr_parts[2]
+                col_name = attr_parts[3]
+                if line_name not in lines_ids:
+                    raise Exception("Line {}  not found in {}".format(line_name,lines_ids))
+                fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
+                fitted_lines.set_index("LinemeasLineID", inplace=True)
+                ret[attribute] = fitted_lines.at[lines_ids[line_name], col_name]
+        return ret
 

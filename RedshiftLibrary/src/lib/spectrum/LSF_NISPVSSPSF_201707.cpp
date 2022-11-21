@@ -48,7 +48,11 @@ CLSFGaussianNISPVSSPSF201707::CLSFGaussianNISPVSSPSF201707(Float64 sourcesize)
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
       m_SourceSizeDispersion(sourcesize) {}
 
-Float64 CLSFGaussianNISPVSSPSF201707::GetWidth(Float64 lambda) const {
+Float64 CLSFGaussianNISPVSSPSF201707::GetWidth(Float64 lambda,
+                                               bool cliplambda) const {
+  if (cliplambda)
+    lambda = getSpectralRange().Clamp(lambda);
+
   const Float64 arcsecPix = 0.355;
   const Float64 angstromPix = 13.4;
   //+ considers Instrument PSF=f_linearregression(lambda) from MDB-EE50:

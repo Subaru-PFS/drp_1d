@@ -41,21 +41,17 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
-
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/operator/templatefitting.h"
-#include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include "RedshiftLibrary/linemodel/element.h"
-#include "RedshiftLibrary/operator/linemodelresult.h"
-
-#include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include <boost/shared_ptr.hpp>
 
 #include <memory>
 
@@ -75,6 +71,13 @@ private:
   std::shared_ptr<const CLSF> m_LSF = nullptr;
   std::shared_ptr<CTemplate>
   OrthogonalizeTemplate(const CTemplate &inputTemplate);
+  bool prepareTplCatForOrthogonalization(
+      std::shared_ptr<CTemplateCatalog> &tplCatalog,
+      CInputContext &inputContext, const std::string category,
+      TBoolList &samplingList) const;
+  bool
+  hasLogRebinnedTemplatesChanged(std::shared_ptr<CTemplateCatalog> &tplCatalog,
+                                 std::string category) const;
 };
 
 } // namespace NSEpic

@@ -36,25 +36,43 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
-#include "RedshiftLibrary/line/lineprofileSYM.h"
-#include "RedshiftLibrary/log/log.h"
+#ifndef _REDSHIFT_SPECTRUM_REBIN_REBINFINEGRID_
+#define _REDSHIFT_SPECTRUM_REBIN_REBINFINEGRID_
 
-using namespace NSEpic;
-using namespace std;
+#include "RedshiftLibrary/spectrum/rebin/rebin.h"
+
+namespace Rebin {
+class rebinFineGrid_test;
+} // namespace Rebin
+namespace NSEpic {
 
 /**
- * Constructor.
+ * \ingroup Redshift
  */
-CLSFGaussianConstantWidth::CLSFGaussianConstantWidth(const Float64 width)
-    : CLSF(GaussianConstantWidth,
-           std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
-      m_width(width) {
-  IsValid();
-}
+class CRebinFineGrid : public CRebin {
 
-Float64 CLSFGaussianConstantWidth::GetWidth(Float64 lambda) const {
-  return m_width;
-}
+public:
+  using CRebin::CRebin;
+  CRebinFineGrid(CRebin &&other) : CRebin(std::move(other)){};
 
-bool CLSFGaussianConstantWidth::IsValid() const { return (m_width > 0.0); }
+  void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
+             const CSpectrumSpectralAxis &targetSpectralAxis,
+             CSpectrum &rebinedSpectrum, CMask &rebinedMask,
+             const std::string opt_error_interp, const TAxisSampleList &Xsrc,
+             const TAxisSampleList &Ysrc, const TAxisSampleList &Xtgt,
+             const TFloat64List &Error, Int32 &cursor) override;
+  void reset() override { clearFineGrid(); };
+
+  const std::string &getType() override { return m_type; };
+
+protected:
+  friend class Rebin::rebinFineGrid_test;
+  void rebinFineGrid();
+  void clearFineGrid();
+
+  const std::string m_type = "precomputedfinegrid";
+};
+
+} // namespace NSEpic
+
+#endif

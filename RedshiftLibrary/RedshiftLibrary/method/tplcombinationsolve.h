@@ -40,15 +40,10 @@
 #define _REDSHIFT_METHOD_TPLCOMBINATIONSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
-#include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 
 #include "RedshiftLibrary/method/objectSolve.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/tplcombination.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
 
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 namespace NSEpic {
@@ -93,13 +88,11 @@ private:
   void StoreExtremaResults(
       std::shared_ptr<COperatorResultStore> resultStore,
       std::shared_ptr<const TplCombinationExtremaResult> &extremaResult) const;
-  std::shared_ptr<const TplCombinationExtremaResult>
-  buildExtremaResults(std::shared_ptr<const COperatorResultStore> store,
-                      const std::string &scopeStr,
-                      const TCandidateZbyRank &ranked_zCandidates,
-                      const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
-                      const TFloat64Range &lambdaRange,
-                      Float64 overlapThreshold, std::string opt_interp);
+  std::shared_ptr<const TplCombinationExtremaResult> buildExtremaResults(
+      std::shared_ptr<const COperatorResultStore> store,
+      const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
+      const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
+      const TFloat64Range &lambdaRange, Float64 overlapThreshold);
   std::string getSpecBasedScope(CSpectrum::EType _spctype);
   void checkTemplates(const TTemplateConstRefList &tplList) const;
   COperatorTplcombination m_tplcombinationOperator;

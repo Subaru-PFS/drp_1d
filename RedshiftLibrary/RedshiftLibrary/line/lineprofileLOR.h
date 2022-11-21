@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/log/log.h"
-#include <math.h>
+#include <cmath>
 #include <string>
 namespace NSEpic {
 /**

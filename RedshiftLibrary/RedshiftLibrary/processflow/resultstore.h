@@ -44,11 +44,6 @@
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/processflow/scopestore.h"
 
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <ostream>
-#include <vector>
-
 namespace ResultStore { // boost_test_suite
 // all boost_auto_test_case that use private method
 class CreateResultStorage_test;
@@ -62,7 +57,7 @@ namespace NSEpic {
 class CTemplate;
 class CClassificationResult;
 class CReliabilityResult;
-class CPdfMargZLogResult;
+class CLogZPdfResult;
 class TLineModelResult;
 class TTplCombinationResult;
 class TExtremaResult;
@@ -113,6 +108,8 @@ public:
 
   bool HasDataset(const std::string &objectType, const std::string &method,
                   const std::string &name) const;
+  bool hasContextWarningFlag() const;
+  bool hasCurrentMethodWarningFlag() const;
 
   std::shared_ptr<const CClassificationResult>
   GetClassificationResult(const std::string &objectType,
@@ -123,9 +120,9 @@ public:
   GetReliabilityResult(const std::string &objectType, const std::string &method,
                        const std::string &name) const;
 
-  std::shared_ptr<const CPdfMargZLogResult>
-  GetPdfMargZLogResult(const std::string &objectType, const std::string &method,
-                       const std::string &name) const;
+  std::shared_ptr<const CLogZPdfResult>
+  GetLogZPdfResult(const std::string &objectType, const std::string &method,
+                   const std::string &name) const;
 
   std::shared_ptr<const CFlagLogResult>
   GetFlagLogResult(const std::string &objectType, const std::string &method,

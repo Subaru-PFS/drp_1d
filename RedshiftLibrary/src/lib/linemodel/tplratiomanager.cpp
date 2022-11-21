@@ -53,8 +53,8 @@ CTplratioManager::CTplratioManager(
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineCatalog::TLineVector &restLineList)
-    : CLineRatioManager(elements, model, inputSpc, lambdaRange, continuumManager,
-                       restLineList) {
+    : CLineRatioManager(elements, model, inputSpc, lambdaRange,
+                        continuumManager, restLineList) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
@@ -71,10 +71,8 @@ CTplratioManager::CTplratioManager(
 }
 
 void CTplratioManager::initMerit(Int32 ntplratio) {
-  m_bestTplratioMerit.clear();
-  m_bestTplratioMeritPrior.clear();
-  m_bestTplratioMerit.resize(ntplratio, INFINITY);
-  m_bestTplratioMeritPrior.resize(ntplratio, 0.0);
+  m_MeritTplratio.assign(ntplratio, INFINITY);
+  m_PriorMeritTplratio.assign(ntplratio, 0.0);
 }
 
 void CTplratioManager::SetTplratio_PriorHelper() {
@@ -84,7 +82,7 @@ void CTplratioManager::SetTplratio_PriorHelper() {
 
   m_tplratio_priorhelper = std::make_shared<CPriorHelper>();
   m_tplratio_priorhelper->Init(ps->GetScoped<std::string>("catalog_dirpath"),
-                               0);
+                               1);
   m_tplratio_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_tplratio_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
   m_tplratio_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
@@ -93,15 +91,14 @@ void CTplratioManager::SetTplratio_PriorHelper() {
 Int32 CTplratioManager::getLineIndexInCatalog(
     Int32 iElts, Int32 idxLine,
     const CLineCatalog::TLineVector &catalog) const {
-  Int32 lineIndex = undefIdx;
 
   // get index of line inside tplratio catalog
   const std::string &strID = m_Elements[iElts]->m_Lines[idxLine].GetStrID();
-  lineIndex = std::find_if(catalog.begin(), catalog.end(),
-                           [strID](const CLine &line) {
-                             return line.GetStrID() == strID;
-                           }) -
-              catalog.begin();
+  Int32 lineIndex = std::find_if(catalog.begin(), catalog.end(),
+                                 [strID](const CLine &line) {
+                                   return line.GetStrID() == strID;
+                                 }) -
+                    catalog.begin();
   if (lineIndex >= catalog.size())
     lineIndex = undefIdx;
 
@@ -125,15 +122,10 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
       // prepare the lines prior data
       Int32 ebvfilter = m_CatalogTplRatio->GetIsmIndex(itratio);
-      CPriorHelper::SPriorTZE logPriorData;
+
       std::string tplrationame = m_CatalogTplRatio->GetCatalogName(itratio);
-      bool retGetPrior = m_tplratio_priorhelper->GetTZEPriorData(
-          tplrationame, ebvfilter, redshift, logPriorData);
-      if (retGetPrior == false)
-        THROWG(INTERNAL_ERROR,
-               "model: Failed to get prior for chi2 solvecontinuum.");
-      else
-        m_logPriorDataTplRatio.push_back(logPriorData);
+      m_logPriorDataTplRatio.push_back(m_tplratio_priorhelper->GetTZEPriorData(
+          tplrationame, ebvfilter, redshift));
     }
   }
   return ntplratio;
@@ -142,8 +134,7 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
 bool CTplratioManager::init(Float64 redshift, Int32 itratio) {
   if (m_forcedisableTplratioISMfit && itratio > 0 &&
       m_CatalogTplRatio->GetIsmIndex(itratio) > 0) {
-    duplicateTplratioResult(itratio, m_bestTplratioMerit,
-                            m_bestTplratioMeritPrior);
+    duplicateTplratioResult(itratio);
     return true;
   }
   setTplratioModel(itratio, false);
@@ -160,12 +151,9 @@ bool CTplratioManager::init(Float64 redshift, Int32 itratio) {
  *
  * @param idx
  */
-void CTplratioManager::duplicateTplratioResult(
-    Int32 idx, TFloat64List &bestTplratioMerit,
-    TFloat64List &bestTplratioMeritPrior) {
-  bestTplratioMerit[idx] = bestTplratioMerit[idx - 1];
-  bestTplratioMeritPrior[idx] = bestTplratioMeritPrior[idx - 1];
-  m_ChisquareTplratio[idx] = m_ChisquareTplratio[idx - 1];
+void CTplratioManager::duplicateTplratioResult(Int32 idx) {
+  m_PriorMeritTplratio[idx] = m_PriorMeritTplratio[idx - 1];
+  m_MeritTplratio[idx] = m_MeritTplratio[idx - 1];
   m_ScaleMargCorrTplratio[idx] = m_ScaleMargCorrTplratio[idx - 1];
   m_StrongELPresentTplratio[idx] = m_StrongELPresentTplratio[idx - 1];
   m_StrongHalphaELPresentTplratio[idx] =
@@ -186,7 +174,6 @@ void CTplratioManager::duplicateTplratioResult(
   return;
 }
 
-
 void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: use the passed tplRatioCatalog
   // TODO: check if m_CatalogTplRatio changes between iterations
@@ -200,34 +187,24 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // m_RestLineList = m_CatalogTplRatio->GetRestLinesList(0);
   // LoadCatalog(m_RestLineList);
   // LogCatalogInfos();
-
+  m_tplratioBestTplName = "undefined";
+  Int32 s = m_CatalogTplRatio->GetCatalogsCount();
+  Int32 elCount = m_Elements.size();
   // Resize tplratio buffers
-  m_ChisquareTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_ScaleMargCorrTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_StrongELPresentTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_StrongHalphaELPresentTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_NLinesAboveSNRTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_FittedAmpTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_LyaAsymCoeffTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_LyaWidthCoeffTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_LyaDeltaCoeffTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_LyaIgmIdxTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_FittedErrorTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_MtmTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_DtmTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  m_LinesLogPriorTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
-  for (Int32 ktplratio = 0; ktplratio < m_CatalogTplRatio->GetCatalogsCount();
-       ktplratio++) {
-    m_FittedAmpTplratio[ktplratio].resize(m_Elements.size());
-    m_FittedErrorTplratio[ktplratio].resize(m_Elements.size());
-    m_MtmTplratio[ktplratio].resize(m_Elements.size());
-    m_DtmTplratio[ktplratio].resize(m_Elements.size());
-    m_LyaAsymCoeffTplratio[ktplratio].resize(m_Elements.size());
-    m_LyaWidthCoeffTplratio[ktplratio].resize(m_Elements.size());
-    m_LyaDeltaCoeffTplratio[ktplratio].resize(m_Elements.size());
-    m_LyaIgmIdxTplratio[ktplratio].resize(m_Elements.size());
-    m_LinesLogPriorTplratio[ktplratio].resize(m_Elements.size());
-  }
+  m_MeritTplratio.assign(s, NAN);
+  m_ScaleMargCorrTplratio.assign(s, NAN);
+  m_StrongELPresentTplratio.assign(s, false);
+  m_StrongHalphaELPresentTplratio.assign(s, false);
+  m_NLinesAboveSNRTplratio.assign(s, -1);
+  m_FittedAmpTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaAsymCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaWidthCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaDeltaCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LyaIgmIdxTplratio.assign(s, TInt32List(elCount, -1));
+  m_FittedErrorTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_MtmTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_DtmTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_LinesLogPriorTplratio.assign(s, TFloat64List(elCount, 0.));
 
   m_tplratioLeastSquareFast = false;
 }
@@ -241,10 +218,11 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
  * @param iCatalog
  * @return
  */
-bool CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
-  if (iCatalog < 0) {
-    return false;
-  }
+void CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
+  if (iCatalog < 0)
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "wrong line catalog index: " << iCatalog);
+
   Float64 nominalAmp = 0.0;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
     Int32 nLines = m_Elements[iElts]->GetSize();
@@ -254,7 +232,6 @@ bool CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
       m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
     }
   }
-  return true;
 }
 
 const std::string &CTplratioManager::getTplratio_bestTplName() const {
@@ -281,31 +258,30 @@ void CTplratioManager::logParameters() {
   Log.LogDetail(Formatter() << " m_opt_haprior" << m_opt_haprior);
   Log.LogDetail(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
   Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
-                          << m_opt_firstpass_forcedisableTplratioISMfit);
+                            << m_opt_firstpass_forcedisableTplratioISMfit);
   Log.LogDetail(Formatter() << "forcedisableTplratioISMfit="
-                          << m_forcedisableTplratioISMfit);
+                            << m_forcedisableTplratioISMfit);
   Log.LogDetail(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
-  Log.LogDetail(Formatter() << "tplratioBestTplIsmCoeff="
-                          << m_tplratioBestTplIsmCoeff);
-  Log.LogDetail(Formatter() << "tplratioBestTplAmplitude="
-                          << m_tplratioBestTplAmplitude);
+  Log.LogDetail(Formatter()
+                << "tplratioBestTplIsmCoeff=" << m_tplratioBestTplIsmCoeff);
+  Log.LogDetail(Formatter()
+                << "tplratioBestTplAmplitude=" << m_tplratioBestTplAmplitude);
   Log.LogDetail(Formatter() << "tplratioBestTplDtm=" << m_tplratioBestTplDtm);
   Log.LogDetail(Formatter() << "tplratioBestTplMtm=" << m_tplratioBestTplMtm);
-  Log.LogDetail(Formatter()
-              << "tplratioLeastSquareFast="
-              << m_tplratioLeastSquareFast); // for rigidity=tplratio: switch to
-                                             // use fast least square estimation
+  Log.LogDetail(
+      Formatter()
+      << "tplratioLeastSquareFast="
+      << m_tplratioLeastSquareFast); // for rigidity=tplratio: switch to
+                                     // use fast least square estimation
 }
 
 void CTplratioManager::setPassMode(Int32 iPass) {
   CLineRatioManager::setPassMode(iPass);
-  if (iPass == 1) {
+  if (iPass == 1)
     m_forcedisableTplratioISMfit = m_opt_firstpass_forcedisableTplratioISMfit;
-  }
-  if (iPass == 2) {
 
+  if (iPass == 2)
     m_forcedisableTplratioISMfit = false;
-  }
 }
 
 void CTplratioManager::SetForcedisableTplratioISMfit(bool opt) {
@@ -320,7 +296,7 @@ TFloat64List CTplratioManager::getTplratio_priors() {
 }
 
 const TFloat64List &CTplratioManager::GetChisquareTplratio() const {
-  return m_ChisquareTplratio;
+  return m_MeritTplratio;
 }
 
 /**
@@ -366,7 +342,15 @@ bool CTplratioManager::setTplratioAmplitude(const TFloat64List &ampsElts,
 void CTplratioManager::SetLeastSquareFastEstimationEnabled(Int32 enabled) {
   m_tplratioLeastSquareFast = enabled;
 }
-
+// moved into a fct to reduce cognitive complexity of updateTplratioResults
+void CTplratioManager::fillHalphaArray(Int32 idx) {
+  // check first that haprior is activated
+  if (m_opt_haprior <= 0.)
+    return;
+  m_StrongHalphaELPresentTplratio[idx] = m_StrongELPresentTplratio[idx]
+                                             ? m_Elements.GetModelHaStrongest()
+                                             : false; // result per tplratio
+}
 /**
  * @brief
  *
@@ -374,74 +358,66 @@ void CTplratioManager::SetLeastSquareFastEstimationEnabled(Int32 enabled) {
  * @param _merit
  * @param _meritprior
  */
-void CTplratioManager::updateTplratioResults(
-    Int32 idx, Float64 _merit, Float64 _meritprior,
-    TFloat64List &bestTplratioMerit, TFloat64List &bestTplratioMeritPrior) {
-  bestTplratioMerit[idx] = _merit;
-  bestTplratioMeritPrior[idx] = _meritprior;
-  m_ChisquareTplratio[idx] = _merit;
+void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
+                                             Float64 _meritprior) {
+  m_PriorMeritTplratio[idx] = _meritprior;
+  m_MeritTplratio[idx] = _merit;
   m_ScaleMargCorrTplratio[idx] = m_Elements.getScaleMargCorrection(idx);
   m_StrongELPresentTplratio[idx] =
       m_Elements.GetModelStrongEmissionLinePresent();
   // given that Ha is a strong emission line,
-  if (m_opt_haprior > 0.) // check first that haprior is activated
-    m_StrongHalphaELPresentTplratio[idx] =
-        m_StrongELPresentTplratio[idx] ? m_Elements.GetModelHaStrongest()
-                                       : false; // result per tplratio
+  fillHalphaArray(idx);
 
   TStringList strongELSNRAboveCut; // = getLinesAboveSNR(3.5); //this
                                    // is costing a lot of processing
                                    // time, so deactivated for now.
   m_NLinesAboveSNRTplratio[idx] = strongELSNRAboveCut.size();
 
+  Int32 s = m_Elements.size();
+  // reinit
+  m_FittedAmpTplratio[idx].assign(s, NAN);
+  m_FittedErrorTplratio[idx].assign(s, NAN);
+  m_DtmTplratio[idx].assign(s, NAN);
+  m_MtmTplratio[idx].assign(s, NAN);
+  m_LyaAsymCoeffTplratio[idx].assign(s, NAN);
+  m_LyaWidthCoeffTplratio[idx].assign(s, NAN);
+  m_LyaDeltaCoeffTplratio[idx].assign(s, NAN);
+  m_LyaIgmIdxTplratio[idx].assign(s, undefIdx);
+  m_LinesLogPriorTplratio[idx].assign(s, _meritprior);
   // Saving the model A, errorA, and dtm, mtm, ... (for all tplratios,
   // needed ?) NB: this is only needed for the index=savedIdxFitted
   // ultimately
-  for (Int32 iElt = 0; iElt < m_Elements.size(); iElt++) {
+  for (Int32 iElt = 0; iElt < s; iElt++) {
     bool savedAmp = false;
     bool allampzero = true;
-    m_FittedAmpTplratio[idx][iElt] = NAN;
-    m_FittedErrorTplratio[idx][iElt] = NAN;
-    m_DtmTplratio[idx][iElt] = NAN;
-    m_MtmTplratio[idx][iElt] = NAN;
-    m_LyaAsymCoeffTplratio[idx][iElt] = NAN;
-    m_LyaWidthCoeffTplratio[idx][iElt] = NAN;
-    m_LyaDeltaCoeffTplratio[idx][iElt] = NAN;
-    m_LyaIgmIdxTplratio[idx][iElt] = undefIdx;
-    m_LinesLogPriorTplratio[idx][iElt] = _meritprior;
     Int32 nLines = m_Elements[iElt]->GetSize();
-
     for (Int32 j = 0; j < nLines; j++) {
-      if (savedAmp) {
-        break;
-      }
       Float64 amp = m_Elements[iElt]->GetFittedAmplitude(j);
-      if (amp > 0) {
-        allampzero = false;
-      }
-      if (amp > 0 && !m_Elements[iElt]->IsOutsideLambdaRange(j)) {
+      // we need to take into case where lineratioAmplitude is NAN
+      if (isnan(amp) || amp <= 0. || m_Elements[iElt]->IsOutsideLambdaRange(j))
+        continue;
+      allampzero = false;
 
-        Float64 amp_error = m_Elements[iElt]->GetFittedAmplitudeErrorSigma(j);
-        Float64 nominal_amp = m_Elements[iElt]->GetNominalAmplitude(j);
-        m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
-        Log.LogDebug("    model : fit tplratio mode, tplratio_fittedamp: %e",
-                     m_FittedAmpTplratio[idx][iElt]);
+      Float64 amp_error = m_Elements[iElt]->GetFittedAmplitudeErrorSigma(j);
+      Float64 nominal_amp = m_Elements[iElt]->GetNominalAmplitude(j);
+      m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
+      Log.LogDebug("    model : fit tplratio mode, tplratio_fittedamp: %e",
+                   m_FittedAmpTplratio[idx][iElt]);
 
-        m_FittedErrorTplratio[idx][iElt] = amp_error / nominal_amp;
-        m_DtmTplratio[idx][iElt] = m_Elements[iElt]->GetSumCross();
-        m_MtmTplratio[idx][iElt] = m_Elements[iElt]->GetSumGauss();
+      m_FittedErrorTplratio[idx][iElt] = amp_error / nominal_amp;
+      m_DtmTplratio[idx][iElt] = m_Elements[iElt]->GetSumCross();
+      m_MtmTplratio[idx][iElt] = m_Elements[iElt]->GetSumGauss();
 
-        TAsymParams params = m_Elements[iElt]->GetAsymfitParams(0);
-        m_LyaAsymCoeffTplratio[idx][iElt] = params.alpha;
-        m_LyaWidthCoeffTplratio[idx][iElt] = params.sigma;
-        m_LyaDeltaCoeffTplratio[idx][iElt] = params.delta;
+      TAsymParams params = m_Elements[iElt]->GetAsymfitParams(0);
+      m_LyaAsymCoeffTplratio[idx][iElt] = params.alpha;
+      m_LyaWidthCoeffTplratio[idx][iElt] = params.sigma;
+      m_LyaDeltaCoeffTplratio[idx][iElt] = params.delta;
 
-        TSymIgmParams params_igm = m_Elements[iElt]->GetSymIgmParams(0);
-        m_LyaIgmIdxTplratio[idx][iElt] = params_igm.m_igmidx;
+      TSymIgmParams params_igm = m_Elements[iElt]->GetSymIgmParams(0);
+      m_LyaIgmIdxTplratio[idx][iElt] = params_igm.m_igmidx;
 
-        savedAmp = true;
-        break;
-      }
+      savedAmp = true;
+      break;
     }
     // TODO: this case should be treated more
     // carefully, save dtm, mtm, and more...
@@ -469,17 +445,17 @@ Float64 CTplratioManager::computelogLinePriorMerit(
     return _meritprior;
 
   Float64 ampl = 0.0;
-  for (Int32 iElt = 0; iElt < m_Elements.size(); iElt++) {
+  for (const auto &elt : m_Elements) {
     bool foundAmp = false;
-    Int32 nLines = m_Elements[iElt]->GetSize();
+    Int32 nLines = elt->GetSize();
     for (Int32 j = 0; j < nLines; j++) {
-      Float64 amp = m_Elements[iElt]->GetFittedAmplitude(j);
-      if (amp > 0 && !m_Elements[iElt]->IsOutsideLambdaRange(j)) {
-        Float64 nominal_amp = m_Elements[iElt]->GetNominalAmplitude(j);
-        ampl = amp / nominal_amp;
-        foundAmp = true;
-        break;
-      }
+      Float64 amp = elt->GetFittedAmplitude(j);
+      if (amp <= 0. || elt->IsOutsideLambdaRange(j))
+        continue;
+      Float64 nominal_amp = elt->GetNominalAmplitude(j);
+      ampl = amp / nominal_amp;
+      foundAmp = true;
+      break;
     }
     /*if (foundAmp)
       break;
@@ -497,37 +473,27 @@ Float64 CTplratioManager::computelogLinePriorMerit(
 }
 
 Float64 CTplratioManager::computeMerit(Int32 itratio) {
-  // TODO enableLogging should be renamed and be a CRigidityManager member,
-  // initialized with parameter store
-  bool enableLogging = true;
   Float64 _merit;
-  if (!enableLogging && m_tplratioLeastSquareFast)
+  /*if (!enableLogging && m_tplratioLeastSquareFast)
     _merit = getLeastSquareMeritFast();
-  else {
-    m_model->refreshModel();
-    _merit = getLeastSquareMerit();
-  }
+  else */
+
+  m_model->refreshModel();
+  _merit = getLeastSquareMerit();
 
   Float64 _meritprior =
       computelogLinePriorMerit(itratio, m_logPriorDataTplRatio);
 
   if (_merit + _meritprior <
-      m_bestTplratioMerit[itratio] + m_bestTplratioMeritPrior[itratio]) {
+      m_MeritTplratio[itratio] + m_PriorMeritTplratio[itratio]) {
     // update result variables
-    updateTplratioResults(itratio, _merit, _meritprior, m_bestTplratioMerit,
-                          m_bestTplratioMeritPrior);
+    updateTplratioResults(itratio, _merit, _meritprior);
   }
   return _merit;
 }
 
 void CTplratioManager::finish(Float64 redshift) {
-  bool retSetMultiAmplFast =
-      SetMultilineNominalAmplitudesFast(m_savedIdxFitted);
-  if (!retSetMultiAmplFast) {
-    Log.LogError("Linemodel: tplratio, Unable to set Multiline "
-                 "NominalAmplitudes from Tplratio !");
-  }
-
+  SetMultilineNominalAmplitudesFast(m_savedIdxFitted);
   // Set the velocities from templates: todo auto switch when velfit is ON
   // m_CatalogTplRatio->GetCatalogVelocities(savedIdxFitted,
   // m_velocityEmission, m_velocityAbsorption);
@@ -576,9 +542,8 @@ void CTplratioManager::saveResults(Int32 itratio) {
 Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {
   if (m_continuumManager->getIsmCorrectionFromTpl() == nullptr &&
       m_opt_dust_calzetti)
-    THROWG(
-        INTERNAL_ERROR,
-        "ismCorrectionCalzetti is not loaded while tplratio_ism is activated");
+    THROWG(INTERNAL_ERROR, "ismCorrectionCalzetti is not loaded while "
+                           "tplratio_ism is activated");
   if (!m_opt_dust_calzetti)
     return NAN;
   return m_continuumManager->getIsmCorrectionFromTpl()->GetEbmvValue(
@@ -595,9 +560,9 @@ bool CTplratioManager::setTplratioModel(Int32 itplratio,
     m_CatalogTplRatio.GetCatalogVelocities(itplratio, m_velocityEmission,
                                            m_velocityAbsorption);
   }
-  */
+
 
   Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
-               m_CatalogTplRatio->GetCatalogName(itplratio).c_str());
+               m_CatalogTplRatio->GetCatalogName(itplratio).c_str());*/
   return true;
 }

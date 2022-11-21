@@ -40,6 +40,7 @@
 #define _REDSHIFT_COMMON_RANGE_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
@@ -90,54 +91,89 @@ public:
 
   T GetLength() const { return m_End - m_Begin; }
 
+  bool isSameSign(T offset) const {
+    return (m_Begin + offset) * (m_End + offset) >= 0;
+  }
+
+  T Clamp(T v) const { return v < m_Begin ? m_Begin : (m_End < v ? m_End : v); }
+
   std::vector<T> SpreadOver(T delta) const {
-    std::vector<T> v;
+    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+      return {m_Begin};
 
-    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta) {
-      v.resize(1);
-      v[0] = m_Begin;
-      return v;
-    }
+    Int32 count = (GetLength() + epsilon) / delta + 1;
 
-    Int32 count = (GetLength() + epsilon) / delta;
-
-    v.resize(count + 1);
-    for (Int32 i = 0; i < v.size(); i++) {
+    std::vector<T> v(count);
+    for (Int32 i = 0; i < v.size(); i++)
       v[i] = GetBegin() + delta * i;
-    }
 
     return v;
   }
+  std::vector<T> SpreadOver_backward(T delta) const {
+    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+      return {m_End};
 
+    Int32 count = (GetLength() + epsilon) / delta + 1;
+
+    std::vector<T> v(count);
+    for (Int32 i = 0; i < count; i++)
+      v[i] = GetEnd() - delta * (count - i - 1);
+
+    return v;
+  }
   std::vector<T> SpreadOverLog(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
-
-    std::vector<T> v;
+    if (!isSameSign(offset))
+      THROWG(INTERNAL_ERROR, "borders should be of same sign");
     if (GetIsEmpty() || delta == 0.0 ||
         GetLength() < (GetBegin() + offset) * exp(delta) -
-                          (GetBegin() + offset) + epsilon) {
-      v.resize(1);
-      v[0] = m_Begin;
-      return v;
-    }
+                          (GetBegin() + offset) + epsilon)
+      return {m_Begin};
 
     T x = m_Begin + offset;
     T edelta = exp(delta);
-    Int32 count = 0;
-    Int32 maxCount = 1e8;
-    while (x < (m_End + offset + epsilon) && count < maxCount) {
-      v.push_back(x - offset);
-      count++;
+
+    Int32 count =
+        (log(GetEnd() + offset + epsilon) - log(GetBegin() + offset)) / delta +
+        1;
+    std::vector<T> v(count);
+    for (Int32 i = 0; i < count; i++) {
+      v[i] = x - offset;
+      x *= edelta;
+    }
+    return v;
+  }
+
+  std::vector<T> SpreadOverLog_backward(T delta, T offset = 0.) const {
+    static_assert(std::is_same<T, Float64>::value,
+                  "not implemented"); // compile time check
+    if (!isSameSign(offset))
+      THROWG(INTERNAL_ERROR, "borders should be of same sign");
+    if (GetIsEmpty() || delta == 0.0 ||
+        GetLength() < (GetBegin() + offset) * exp(delta) -
+                          (GetBegin() + offset) + epsilon)
+      return {m_End};
+
+    T x = m_End + offset;
+    T edelta = exp(-delta);
+    Int32 count =
+        (log(GetEnd() + offset) - log(GetBegin() + offset - epsilon)) / delta +
+        1;
+
+    std::vector<T> v(count);
+    for (Int32 i = count - 1; i >= 0; i--) {
+      v[i] = x - offset;
       x *= edelta;
     }
     return v;
   }
   // spread over log (z+1)
-  std::vector<T> SpreadOverLogZplusOne(T delta) const {
+  std::vector<T> SpreadOverLogZplusOne(T delta, bool backward = false) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
-    return SpreadOverLog(delta, 1.);
+    return backward ? SpreadOverLog_backward(delta, 1.)
+                    : SpreadOverLog(delta, 1.);
   }
   //  template<typename T>
   friend std::ostream &operator<<(std::ostream &out, const CRange<T> &range) {
@@ -152,6 +188,24 @@ public:
     return in;
   }
 
+  // create a centered vector
+  const std::vector<T> spanCenteredWindow(T center, bool logsampling,
+                                          T delta) const {
+    CRange<T> range_right(GetBegin(), center);
+    std::vector<T> vect = logsampling
+                              ? range_right.SpreadOverLogZplusOne(delta, true)
+                              : range_right.SpreadOver_backward(delta);
+
+    CRange<T> range_left = {center, GetEnd()};
+    std::vector<T> vect_part2 = logsampling
+                                    ? range_left.SpreadOverLogZplusOne(delta)
+                                    : range_left.SpreadOver(delta);
+
+    vect.insert(std::end(vect), std::begin(vect_part2) + 1,
+                std::end(vect_part2));
+    return vect;
+  }
+
   // enclosed refers to having i_max referring to m_End or higher and i_min
   // referring to m_Begin or lower
   bool getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
@@ -159,7 +213,7 @@ public:
                                    bool warning = true) const {
     if (value < m_Begin || value > m_End) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VALUE_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VALUE_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": value " << value
                          << " not inside ]" << m_Begin << "," << m_End << "[");
@@ -167,7 +221,7 @@ public:
     } else if (m_Begin < ordered_values.front() ||
                m_End > ordered_values.back()) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": ]" << m_Begin << ","
                          << m_End << "[ not inside ordered_values");
@@ -193,7 +247,7 @@ public:
                                    bool warning = true) const {
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": ]" << m_Begin << ","
                          << m_End << "[ not inside ordered_values");
@@ -220,7 +274,7 @@ public:
                                 bool warning = true) const {
     if (m_End < ordered_values.front() || m_Begin > ordered_values.back()) {
       if (warning)
-        Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE,
+        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
                      Formatter()
                          << "CRange::" << __func__ << ": ]" << m_Begin << ","
                          << m_End << "[ not inside ordered_values");
@@ -242,7 +296,7 @@ public:
     if (i_min > i_max) {
       if (warning)
         Flag.warning(
-            Flag.CRANGE_NO_INTERSECTION,
+            WarningCode::CRANGE_NO_INTERSECTION,
             Formatter()
                 << "CRange::" << __func__
                 << ": There is no sample inside range (min,max indices=["

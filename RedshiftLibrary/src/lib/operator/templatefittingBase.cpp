@@ -79,15 +79,14 @@ std::shared_ptr<CModelSpectrumResult>
 COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
-    std::string opt_interp, const Float64 overlapThreshold) {
+    const Float64 overlapThreshold) {
   Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model "
                 "templateFitting for candidate Zcand=%f",
                 redshift);
 
   Float64 overlapRate = 0.0;
   TFloat64Range currentRange;
-  RebinTemplate(tpl, redshift, opt_interp, currentRange, overlapRate,
-                overlapThreshold);
+  RebinTemplate(tpl, redshift, currentRange, overlapRate, overlapThreshold);
 
   const TAxisSampleList &Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
 
@@ -129,8 +128,8 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
 void COperatorTemplateFittingBase::RebinTemplate(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    const std::string &opt_interp, TFloat64Range &currentRange,
-    Float64 &overlapRate, const Float64 overlapThreshold) {
+    TFloat64Range &currentRange, Float64 &overlapRate,
+    const Float64 overlapThreshold) {
   Float64 onePlusRedshift = 1.0 + redshift;
 
   // shift lambdaRange backward to be in restframe
@@ -148,12 +147,6 @@ void COperatorTemplateFittingBase::RebinTemplate(
 
   // the spectral and tpl axis should be in the same scale
   const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
-  if (m_spcSpectralAxis_restframe.IsInLinearScale() !=
-      tplSpectralAxis.IsInLinearScale()) {
-    // status = nStatus_DataError;
-    THROWG(INTERNAL_ERROR, "data "
-                           "and tpl not in the same scale (lin/log)");
-  }
 
   // Compute clamped lambda range over template in restframe
   TFloat64Range tplLambdaRange;
@@ -163,10 +156,8 @@ void COperatorTemplateFittingBase::RebinTemplate(
   TFloat64Range::Intersect(tplLambdaRange, spcLambdaRange_restframe,
                            intersectedLambdaRange);
 
-  bool b = tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
-                      m_templateRebined_bf, m_mskRebined_bf, opt_interp);
-  if (!b)
-    THROWG(INTERNAL_ERROR, "Template rebinning failed");
+  tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
+             m_templateRebined_bf, m_mskRebined_bf);
 
   // overlapRate
   overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(
@@ -181,10 +172,6 @@ void COperatorTemplateFittingBase::RebinTemplate(
 
   // the spectral axis should be in the same scale
   currentRange = intersectedLambdaRange;
-  if (m_spcSpectralAxis_restframe.IsInLogScale()) {
-    currentRange = TFloat64Range(log(intersectedLambdaRange.GetBegin()),
-                                 log(intersectedLambdaRange.GetEnd()));
-  }
 }
 
 // get z at which igm starts given that LyA starts at lbda_rest=1216

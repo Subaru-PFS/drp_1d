@@ -54,6 +54,15 @@ public:
 
 protected:
   void InitRanges(std::shared_ptr<const CInputContext> inputContext) override;
+  virtual void
+  createRedshiftGrid(const std::shared_ptr<const CInputContext> &inputContext,
+                     const TFloat64Range &redshiftRange);
+  virtual void
+  GetRedshiftSampling(const std::shared_ptr<const CInputContext> &inputContext,
+                      TFloat64Range &redshiftRange, Float64 &redshiftStep);
+  Float64 m_redshiftStep = NAN;
+  std::string m_redshiftSampling;
+  TFloat64List m_redshifts;
 };
 } // namespace NSEpic
 

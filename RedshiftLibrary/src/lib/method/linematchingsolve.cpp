@@ -204,8 +204,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
                  peakDetectionResult->PeakList.size());
     resultStore.StoreScopedGlobalResult("peakdetection", peakDetectionResult);
   } else {
-    Log.LogError("No peak detected - returning NULL.");
-    return NULL;
+    THROWG(INTERNAL_ERROR, "No peak detected");
   }
 
   // Since we detected at least one peak, try to detect lines related to those
@@ -303,50 +302,48 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
         strongcutBest = strongcutCurrent;
         winsizeBest = winsizeCurrent;
       }
-      if (currentNumberOfPeaks < previousNumberOfPeaks && !newValues) {
-        Log.LogError("Dynamic logic failed - number of peaks is falling.");
-        return NULL;
-      } else {
-        previousNumberOfPeaks = currentNumberOfPeaks;
-        if (!m_dynamicLinematching) {
-          Log.LogError("No result found - returning NULL.");
-          return NULL;
-        }
-        newValues = false;
-        if (minimumFwhhCurrent > minimumFwhhMinimum) {
-          minimumFwhhCurrent = std::max(minimumFwhhMinimum,
-                                        minimumFwhhCurrent - minimumFwhhStep);
-          continue;
-        }
-        newValues = true;
-        minimumFwhhCurrent = minimumFwhhMaximum;
-        if (cutCurrent >= cutMinimum) {
-          cutCurrent -= cutStep;
-          continue;
-        }
-        cutCurrent = strongcutCurrent;
-        if (strongcutCurrent > strongcutMinimum) {
-          strongcutCurrent =
-              std::max(strongcutMinimum, strongcutCurrent - strongcutStep);
-          continue;
-        }
-        strongcutCurrent = strongcutMaximum;
-        if (winsizeCurrent <= winsizeMaximum) {
-          winsizeCurrent += winsizeStep;
-          continue;
-        }
-        winsizeCurrent = winsizeMinimum;
-        // if all checks failed, dynamic system failed.
-        Log.LogDebug(
-            "Dynamic logic: all parameters searched. Using best values.");
-        {
-          cutCurrent = cutBest;
-          minimumFwhhCurrent = minimumFwhhBest;
-          strongcutCurrent = strongcutBest;
-          winsizeCurrent = winsizeBest;
-          numberOfPeaksBestBypass = true;
-          continue;
-        }
+      if (currentNumberOfPeaks < previousNumberOfPeaks && !newValues)
+        THROWG(INTERNAL_ERROR,
+               "Dynamic logic failed - number of peaks is falling.");
+
+      previousNumberOfPeaks = currentNumberOfPeaks;
+      if (!m_dynamicLinematching)
+        THROWG(INTERNAL_ERROR, "No result found");
+
+      newValues = false;
+      if (minimumFwhhCurrent > minimumFwhhMinimum) {
+        minimumFwhhCurrent =
+            std::max(minimumFwhhMinimum, minimumFwhhCurrent - minimumFwhhStep);
+        continue;
+      }
+      newValues = true;
+      minimumFwhhCurrent = minimumFwhhMaximum;
+      if (cutCurrent >= cutMinimum) {
+        cutCurrent -= cutStep;
+        continue;
+      }
+      cutCurrent = strongcutCurrent;
+      if (strongcutCurrent > strongcutMinimum) {
+        strongcutCurrent =
+            std::max(strongcutMinimum, strongcutCurrent - strongcutStep);
+        continue;
+      }
+      strongcutCurrent = strongcutMaximum;
+      if (winsizeCurrent <= winsizeMaximum) {
+        winsizeCurrent += winsizeStep;
+        continue;
+      }
+      winsizeCurrent = winsizeMinimum;
+      // if all checks failed, dynamic system failed.
+      Log.LogDebug(
+          "Dynamic logic: all parameters searched. Using best values.");
+      {
+        cutCurrent = cutBest;
+        minimumFwhhCurrent = minimumFwhhBest;
+        strongcutCurrent = strongcutBest;
+        winsizeCurrent = winsizeBest;
+        numberOfPeaksBestBypass = true;
+        continue;
       }
     }
     Log.LogDebug("Dynamically retrying linematching.");
@@ -355,7 +352,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
 
   if (iCmpt == cmptMax) {
     Flag.warning(
-        Flag.LINEMATCHING_REACHED_ENDLOOP,
+        WarningCode::LINEMATCHING_REACHED_ENDLOOP,
         Formatter()
             << "CMethodLineMatchingSolve::" << __func__
             << ": Warning. Stopped the linematching dynamic cut loop...");

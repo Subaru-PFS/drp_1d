@@ -54,14 +54,43 @@ void CObjectSolve::InitRanges(
           "redshiftsampling");
 
   TFloat64Range redshiftRange;
-  Float64 redshiftStep;
-  GetRedshiftSampling(inputContext, redshiftRange, redshiftStep);
+  // below is to be reviewed
+  GetRedshiftSampling(inputContext, redshiftRange, m_redshiftStep);
+
   Log.LogInfo(Formatter() << "Init redshift range with " << redshiftRange
-                          << " and" << redshiftStep);
+                          << " and" << m_redshiftStep);
+  createRedshiftGrid(inputContext, redshiftRange);
+}
+
+// common for all except linemodelsolve
+void CObjectSolve::createRedshiftGrid(
+    const std::shared_ptr<const CInputContext> &inputContext,
+    const TFloat64Range &redshiftRange) {
   if (m_redshiftSampling == "log")
-    m_redshifts = redshiftRange.SpreadOverLogZplusOne(
-        redshiftStep); // experimental: spreadover a grid at delta/(1+z),
-                       // unusable because PDF needs regular z-step
+    m_redshifts = redshiftRange.SpreadOverLogZplusOne(m_redshiftStep);
   else
-    m_redshifts = redshiftRange.SpreadOver(redshiftStep);
+    m_redshifts = redshiftRange.SpreadOver(m_redshiftStep);
+}
+
+void CObjectSolve::GetRedshiftSampling(
+    const std::shared_ptr<const CInputContext> &inputContext,
+    TFloat64Range &redshiftRange, Float64 &redshiftStep) {
+  auto searchLogRebin = inputContext->m_logRebin.find(m_objectType);
+  if (searchLogRebin != inputContext->m_logRebin.end()) {
+    redshiftRange = searchLogRebin->second.zrange;
+    redshiftStep = inputContext->m_logGridStep;
+    if (m_redshiftSampling == "lin")
+      THROWG(BAD_PARAMETER_VALUE,
+             Formatter() << "CSolve::" << __func__
+                         << ": redshiftsampling param should be set to log "
+                            "since FFTprocessing is used");
+
+  } else {
+    // default is to read from the scoped paramStore
+    redshiftRange = inputContext->GetParameterStore()->GetScoped<TFloat64Range>(
+        "redshiftrange");
+    redshiftStep =
+        inputContext->GetParameterStore()->GetScoped<Float64>("redshiftstep");
+  }
+  return;
 }

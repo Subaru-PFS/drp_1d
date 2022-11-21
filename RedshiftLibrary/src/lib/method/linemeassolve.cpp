@@ -36,9 +36,9 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include "RedshiftLibrary/method/linemeassolve.h"
+#include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/method/linemeassolve.h>
 
 namespace NSEpic {
 
@@ -46,7 +46,7 @@ CLineMeasSolve::CLineMeasSolve(TScopeStack &scope, string objectType)
     : CObjectSolve("LineMeasSolve", scope, objectType) {}
 
 void CLineMeasSolve::GetRedshiftSampling(
-    std::shared_ptr<const CInputContext> inputContext,
+    const std::shared_ptr<const CInputContext> &inputContext,
     TFloat64Range &redshiftRange, Float64 &redshiftStep) {
   // default is to read from the scoped paramStore
   Float64 rangeCenter =
@@ -79,7 +79,7 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const std::string &opt_continuumcomponent =
       "nocontinuum"; // params->GetScoped<std::string>("continuumcomponent");
 
-  m_linemodel.Init(m_redshifts);
+  m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 
   CLineModelSolution bestModelSolution;
   Float64 bestz = NAN;
