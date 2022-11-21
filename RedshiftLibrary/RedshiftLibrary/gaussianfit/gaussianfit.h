@@ -83,10 +83,8 @@ private:
   static int GaussFDF(const gsl_vector *param, void *data, gsl_vector *f,
                       gsl_matrix *J);
 
-  void ComputeFirstGuess(const CSpectrum &spectrum,
-                         const TInt32Range &studyRange, Int32 polyOrder,
-                         Float64 &peakValue, Float64 &peakPos,
-                         Float64 &gaussAmp);
+  TFloat64List ComputeFirstGuess(const CSpectrum &spectrum,
+                                 const TInt32Range &studyRange);
   EStatus getReturnCode(int status) const;
   struct SUserData {
     const CSpectrum *spectrum;

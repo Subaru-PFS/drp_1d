@@ -39,13 +39,13 @@
 #ifndef _LINEMEAS_SOLVE_H
 #define _LINEMEAS_SOLVE_H
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
-#include <RedshiftLibrary/method/linemeassolveresult.h>
-#include <RedshiftLibrary/method/objectSolve.h>
-#include <RedshiftLibrary/operator/linemodel.h>
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/method/linemeassolveresult.h"
+#include "RedshiftLibrary/method/objectSolve.h"
+#include "RedshiftLibrary/operator/linemodel.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 
@@ -66,8 +66,10 @@ public:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope);
 
-  void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext,
-                           TFloat64Range &redshiftRange, Float64 &redshiftStep);
+  void
+  GetRedshiftSampling(const std::shared_ptr<const CInputContext> &inputContext,
+                      TFloat64Range &redshiftRange,
+                      Float64 &redshiftStep) override;
 
 protected:
   COperatorLineModel m_linemodel;

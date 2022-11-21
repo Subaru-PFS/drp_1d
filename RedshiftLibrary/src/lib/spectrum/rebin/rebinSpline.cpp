@@ -36,57 +36,54 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/tests/test-tools.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinSpline.h"
+#include "RedshiftLibrary/log/log.h"
 
-#include <boost/test/unit_test.hpp>
+#include <gsl/gsl_fit.h>
+#include <gsl/gsl_interp.h>
+#include <gsl/gsl_spline.h>
 
 using namespace NSEpic;
-using namespace CPFTest;
+using namespace std;
 
-BOOST_AUTO_TEST_SUITE(TemplateCatalog)
+void CRebinSpline::rebin(
+    CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
+    const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
+    CMask &rebinedMask, const std::string opt_error_interp,
+    const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
+    const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
-BOOST_AUTO_TEST_CASE(LoadCatalog) {
-  CTemplateCatalog catalog_w;
-  CTemplateCatalog catalog_r;
-  TStringList categories;
+  TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
+  TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
 
-  boost::filesystem::path _path =
-      boost::filesystem::unique_path("tst_%%%%%%%%%%");
+  CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
 
-  BOOST_REQUIRE(boost::filesystem::create_directories(_path));
+  // GSL method spline
+  // Initialize and allocate the gsl
+  // objects
+  Int32 n = spectralAxis.GetSamplesCount();
+  gsl_spline *spline = gsl_spline_alloc(gsl_interp_cspline, n);
+  gsl_spline_init(spline, Xsrc.data(), Ysrc.data(), n);
+  gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
 
-  generate_template_catalog(catalog_r, 100, 3500., 12500.);
+  // For each sample in the valid
+  // lambda range interval.
+  while (cursor < targetSpectralAxis.GetSamplesCount() &&
+         Xtgt[cursor] <= range.GetEnd()) {
+    Yrebin[cursor] = gsl_spline_eval(spline, Xtgt[cursor], accelerator);
+    rebinedMask[cursor] = 1;
 
-  BOOST_CHECK(catalog_r.GetTemplateCount("galaxy") == 3);
-  BOOST_CHECK(catalog_r.GetTemplateCount("emission") == 2);
-  BOOST_CHECK(catalog_r.GetTemplateCount("qso") == 1);
-  BOOST_CHECK(catalog_r.GetTemplateCount("star") == 2);
-
-  categories.push_back("galaxy");
-  categories.push_back("star");
-  TStringList expected = {
-      "galaxy_test_template_2.txt", "galaxy_test_template_1.txt",
-      "galaxy_test_template_0.txt", "star_test_template_0.txt",
-      "star_test_template_1.txt"};
-  bool found;
-  const TTemplateRefList tplRef = catalog_r.GetTemplateList(categories);
-
-  // BOOST_CHECK(expected.size() == tplRef.size());
-
-  // look up expected template names in catalog
-  for (Int32 i = 0; i < expected.size(); i++) {
-    found = false;
-    for (Int32 j = 0; j < tplRef.size(); j++) {
-      if (tplRef[j]->GetName() == expected[i]) {
-        found = true;
-        break;
-      }
+    // note: error rebin not
+    // implemented for spline interp
+    if (opt_error_interp != "no") {
+      gsl_spline_free(spline);
+      gsl_interp_accel_free(accelerator);
+      THROWG(INTERNAL_ERROR,
+             "noise rebining not implemented for spline interp");
     }
-    // BOOST_CHECK(found);
+
+    cursor++;
   }
-
-  boost::filesystem::remove_all(_path);
+  gsl_spline_free(spline);
+  gsl_interp_accel_free(accelerator);
 }
-
-BOOST_AUTO_TEST_SUITE_END()

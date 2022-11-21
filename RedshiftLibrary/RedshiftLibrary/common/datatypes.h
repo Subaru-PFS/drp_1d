@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_COMMON_DATATYPES_
 #define _REDSHIFT_COMMON_DATATYPES_
 
+#include <cfloat>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -105,6 +106,7 @@ typedef struct {
 } TPolynomCoeffs;
 
 #include "RedshiftLibrary/common/errorcodes.i"
+#include "RedshiftLibrary/common/warningcodes.i"
 
 } // namespace NSEpic
 

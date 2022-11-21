@@ -36,70 +36,61 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_STATISTICS_PRIORHELPERCONTINUUM_
-#define _REDSHIFT_STATISTICS_PRIORHELPERCONTINUUM_
+#ifndef _REDSHIFT_SPECTRUM_REBIN_REBIN_
+#define _REDSHIFT_SPECTRUM_REBIN_REBIN_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
-
-#include <boost/format.hpp>
-#include <cfloat>
-#include <string>
-#include <vector>
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
-
 /**
  * \ingroup Redshift
  */
-class CPriorHelperContinuum {
+
+class CRebin {
 
 public:
-  struct SPriorTZE {
-    Float64 logpriorTZE;
-    Float64 A_sigma;
-    Float64 A_mean;
-  };
-  typedef std::vector<SPriorTZE> TPriorEList;
-  typedef std::vector<TPriorEList> TPriorZEList;
-  typedef std::vector<TPriorZEList> TPriorTZEList;
+  CRebin() = default;
+  CRebin(const CSpectrum &spectrum) : m_spectrum(spectrum){};
+  virtual ~CRebin() = default;
 
-  CPriorHelperContinuum();
-  ~CPriorHelperContinuum();
+  CRebin(CRebin &&other) = default;
 
-  bool Init(std::string priorDirPath);
-  bool LoadFileEZ(const char *filePath, std::vector<TFloat64List> &data);
+  std::unique_ptr<CRebin> convert(const std::string opt_interp) &&;
+  static std::unique_ptr<CRebin> create(const std::string &opt_interp,
+                                        const CSpectrum &spectrum);
+  void compute(const TFloat64Range &range,
+               const CSpectrumSpectralAxis &targetSpectralAxis,
+               CSpectrum &rebinedSpectrum, CMask &rebinedMask,
+               const std::string opt_error_interp);
 
-  bool SetSize(Int32 size);
-  bool SetTNameData(Int32 k, std::string tname);
-  bool SetEZTData(Int32 k, std::vector<TFloat64List> ezt_data);
-  bool SetAGaussmeanData(Int32 k, std::vector<TFloat64List> agaussmean_data);
-  bool SetAGausssigmaData(Int32 k, std::vector<TFloat64List> agausssigma_data);
+  virtual void rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+                     const TFloat64Range &range,
+                     const CSpectrumSpectralAxis &targetSpectralAxis,
+                     CSpectrum &rebinedSpectrum, CMask &rebinedMask,
+                     const std::string opt_error_interp,
+                     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
+                     const TAxisSampleList &Xtgt, const TFloat64List &Error,
+                     Int32 &cursor) = 0;
 
-  bool GetTplPriorData(std::string tplname, TFloat64List redshifts,
-                       TPriorZEList &zePriorData,
-                       Int32 outsideZRangeExtensionMode = 0);
+  virtual void reset(){};
+  virtual const std::string &getType() = 0;
 
-  bool SetBeta(Float64 beta);
+protected:
+  Float64
+  computeXStepCompensation(const CSpectrumSpectralAxis &targetSpectralAxis,
+                           const TAxisSampleList &Xtgt, Int32 cursor,
+                           Float64 xSrcStep);
+  const CSpectrum &m_spectrum;
 
-  bool mInitFailed = false;
-
-private:
-  TPriorTZEList m_data;
-  TStringList m_tplnames;
-
-  Int32 m_nZ = 24;
-  Float64 m_dz = 0.25;
-  Float64 m_z0 = 0.0;
-
-  Int32 m_nEbv = 10;
-  Float64 m_ebv0 = 0.0;
-
-  Float64 m_beta = -1;
-
-  Float64 m_priorminval = DBL_MIN;
+  TFloat64List m_pfgFlux;
+  bool m_FineGridInterpolated = false;
+  const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
+                                         // check if enough to be private
 };
 
 } // namespace NSEpic
-
 #endif

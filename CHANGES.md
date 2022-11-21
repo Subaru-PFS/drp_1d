@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.38.0 (2022-11-14)
+### Added
+* [7460] : Wrap warning codes enum
+### Changed
+* [6181] : Spectrum processing continues if one solver processing among (galaxy/qso/star) fails
+* [7511] : Prevent direct call to `Log.LogError` (raise an error instead) or `Log.LogWarning` (issue a warning flag instead)
+* [7532] : PDF compact storage: store linemodel PDF with coarse grid outside 2nd pass windows + parameters to be able to rebuild regular zgrid
+### Fixed
+* [7481] : Fix incoherence in `continuumComponent` members between `lineRatioManager` and `ContinuumManager`/`linemodelfitting`
+* [7510] : Fix side effect bug: chi2 recomputed with same model was different
+* [7460] : Check z grid compatibility with neural network learned for reliability
+* [7345] : Fix Lya profile using high resolution Meiksin extinction convolved by LSF
+
 ## 0.36.0 (2022-09-02)
 ### Changed
 * [7470] : Correct bug on lines selected for amplitude fitting (has impact on qso and linemeas results)

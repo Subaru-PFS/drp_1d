@@ -47,7 +47,8 @@
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_vector.h>
-#include <math.h>
+
+#include <cmath>
 
 using namespace NSEpic;
 
@@ -86,10 +87,8 @@ void CGaussianFit::GetResultsError(Float64 &amplitude, Float64 &position,
  * Calculate a first approximate value for the gaussian fit, and set the
  * referenced parameters to these values.
  */
-void CGaussianFit::ComputeFirstGuess(const CSpectrum &spectrum,
-                                     const TInt32Range &studyRange,
-                                     Int32 polyOrder, Float64 &peakValue,
-                                     Float64 &peakPos, Float64 &gaussAmp) {
+TFloat64List CGaussianFit::ComputeFirstGuess(const CSpectrum &spectrum,
+                                             const TInt32Range &studyRange) {
   Int32 n = studyRange.GetLength();
   const Float64 *x =
       spectrum.GetSpectralAxis().GetSamples() + studyRange.GetBegin();
@@ -98,35 +97,37 @@ void CGaussianFit::ComputeFirstGuess(const CSpectrum &spectrum,
 
   Int32 i;
   // Copy flux axis to v
-  Float64 *v = (Float64 *)calloc(n, sizeof(Float64));
+  TFloat64List v(n);
   for (i = 0; i < n; i++) {
     v[i] = y[i];
   }
 
   // Sort v
-  gsl_sort(v, 1, n);
+  gsl_sort(v.data(), 1, n);
   // Extract median
-  Float64 y_median = gsl_stats_median_from_sorted_data(v, 1, n);
+  Float64 y_median = gsl_stats_median_from_sorted_data(v.data(), 1, n);
 
   for (i = 0; i < n; i++) {
     v[i] = y[i] - y_median;
   }
 
-  Float64 max = gsl_stats_max(v, 1, n);
-  Float64 min = gsl_stats_min(v, 1, n);
+  Float64 max = gsl_stats_max(v.data(), 1, n);
+  Float64 min = gsl_stats_min(v.data(), 1, n);
 
+  Int32 np = (3 + m_PolyOrder + 1);
+  TFloat64List firstGuessData(np);
   // if (fabs(max) > fabs(min)) // TODO, WARNING, Gaussian fit forced to
   // positive amplitudes, aschmitt, 20150827
   if (max > min) {
     // Peak value
-    peakValue = max;
+    firstGuessData[0] = max;
     // Peak position: mu
-    peakPos = x[(Int32)gsl_stats_max_index(v, 1, n)];
+    firstGuessData[1] = x[(Int32)gsl_stats_max_index(v.data(), 1, n)];
   } else {
     // Peak value
-    peakValue = min;
+    firstGuessData[0] = min;
     // Peak position: mu
-    peakPos = x[(Int32)gsl_stats_min_index(v, 1, n)];
+    firstGuessData[1] = x[(Int32)gsl_stats_min_index(v.data(), 1, n)];
   }
 
   // Gaussian amplitude
@@ -144,12 +145,12 @@ void CGaussianFit::ComputeFirstGuess(const CSpectrum &spectrum,
   }
 
   if (count > 2) {
-    gaussAmp = (x[count] - x[0]) / 6.;
+    firstGuessData[2] = (x[count] - x[0]) / 6.;
   } else {
-    gaussAmp = (x[n - 1] - x[1]) / 6.;
+    firstGuessData[2] = (x[n - 1] - x[1]) / 6.;
   }
 
-  free(v);
+  return firstGuessData;
 }
 
 /**
@@ -165,19 +166,10 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
 
   // Create suitable first guess
   // To BE improved, trivial version now
-  Float64 firstGuessData[np];
-  gsl_vector_view firstGuessView = gsl_vector_view_array(firstGuessData, np);
+  TFloat64List firstGuessData = ComputeFirstGuess(spectrum, studyRange);
 
-  Float64 peakValue;
-  Float64 peakPos;
-  Float64 gaussAmp;
-
-  ComputeFirstGuess(spectrum, studyRange, m_PolyOrder, peakValue, peakPos,
-                    gaussAmp);
-
-  firstGuessData[0] = peakValue;
-  firstGuessData[1] = peakPos;
-  firstGuessData[2] = gaussAmp;
+  gsl_vector_view firstGuessView =
+      gsl_vector_view_array(firstGuessData.data(), np);
 
   SUserData userData;
   userData.spectrum = &spectrum;
@@ -249,8 +241,8 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
   Float64 dof = n - np;
   Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
-  Float64 *output = (Float64 *)calloc(n, sizeof(Float64));
-  Float64 *outputError = (Float64 *)calloc(n, sizeof(Float64));
+  TFloat64List output(n);
+  TFloat64List outputError(n);
 
   for (Int32 i = 0; i < np; i++) {
     output[i] = gsl_vector_get(multifitSolver->x, i);
@@ -276,8 +268,6 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
   gsl_matrix_free(covarMatrix);
   gsl_matrix_free(J);
 
-  free(output);
-  free(outputError);
   return getReturnCode(status);
 }
 

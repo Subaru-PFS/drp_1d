@@ -43,7 +43,8 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <algorithm>
-#include <float.h>
+#include <cfloat>
+#include <climits>
 
 using namespace NSEpic;
 
@@ -68,10 +69,9 @@ CLineModelElement::CLineModelElement(
                  // the spectrum with the line still considered inside the
                  // lambda range
 
-      m_ElementType("CLineModelElement"),
-
-      m_dataExtinctionFlux(NULL), m_SignFactors(rs.size()),
-      m_FittedAmplitudes(rs.size()), m_FittedAmplitudeErrorSigmas(rs.size()),
+      m_ElementType("CLineModelElement"), m_SignFactors(rs.size()),
+      m_fitAmplitude(NAN), m_FittedAmplitudes(rs.size(), NAN),
+      m_FittedAmplitudeErrorSigmas(rs.size(), NAN),
       m_NominalAmplitudes(nominalAmplitudes),
       m_absLinesLimit(
           1.0) //-1: disable the ABS lines amplitude cut, any other value is
@@ -443,12 +443,12 @@ void CLineModelElement::prepareSupport(
     const TFloat64Range &lambdaRange) {
   Int32 nLines = m_Lines.size();
   m_OutsideLambdaRange = true;
-  m_LineIsActiveOnSupport.resize(nLines, TInt32List(nLines, 0.0));
-  m_StartNoOverlap.resize(nLines, -1);
-  m_EndNoOverlap.resize(nLines, -1);
-  m_StartTheoretical.resize(nLines, -1);
-  m_EndTheoretical.resize(nLines, -1);
-  m_OutsideLambdaRangeList.resize(nLines);
+  m_LineIsActiveOnSupport.assign(nLines, TInt32List(nLines, 0));
+  m_StartNoOverlap.assign(nLines, -1);
+  m_EndNoOverlap.assign(nLines, -1);
+  m_StartTheoretical.assign(nLines, -1);
+  m_EndTheoretical.assign(nLines, -1);
+  m_OutsideLambdaRangeList.assign(nLines, true);
   for (Int32 i = 0; i < nLines; i++) {
     EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
 
@@ -566,12 +566,13 @@ void CLineModelElement::prepareSupport(
     }
   }
 
-  // init the fitted amplitude values
-  for (Int32 k = 0; k < nLines; k++) {
-    if (m_OutsideLambdaRangeList[k]) {
-      m_FittedAmplitudes[k] = NAN;
-    }
-  }
+  // init the fitted amplitude values and related variables
+  m_FittedAmplitudes.assign(nLines, NAN);
+  m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+  m_fitAmplitude = NAN;
+  m_sumGauss = NAN;
+  m_sumCross = NAN;
+  m_dtmFree = NAN;
 }
 
 /**
@@ -723,7 +724,7 @@ Float64 CLineModelElement::GetFittedAmplitudeErrorSigma(Int32 subeIdx) const {
 }
 
 /**
- * \brief Returns -1.0 if m_OutsideLambdaRange, and the fitted amplitude /
+ * \brief Returns NAN if m_OutsideLambdaRange, and the fitted amplitude /
  *nominal amplitude of the first element otherwise.
  **/
 Float64 CLineModelElement::GetElementAmplitude() const {
@@ -776,8 +777,10 @@ void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
   if (subeIdx == undefIdx || subeIdx >= m_FittedAmplitudes.size())
     THROWG(INTERNAL_ERROR, "out-of-bound index");
 
-  if (m_OutsideLambdaRangeList[subeIdx]) {
+  if (m_OutsideLambdaRangeList[subeIdx] || std::isnan(A)) {
     m_FittedAmplitudes[subeIdx] = NAN;
+    m_FittedAmplitudeErrorSigmas[subeIdx] = NAN;
+    return;
   }
   m_FittedAmplitudes[subeIdx] = A * m_NominalAmplitudes[subeIdx];
   // limit the absorption to 0.0-1.0, so that it's never <0
@@ -799,9 +802,10 @@ void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
  *amplitude.
  **/
 void CLineModelElement::SetFittedAmplitude(Float64 A, Float64 SNR) {
-  if (isnan(A) || m_OutsideLambdaRange) {
-    m_FittedAmplitudes.resize(m_Lines.size(), NAN);
-    m_FittedAmplitudeErrorSigmas.resize(m_Lines.size(), NAN);
+  if (std::isnan(A) || m_OutsideLambdaRange) {
+    m_fitAmplitude = NAN;
+    m_FittedAmplitudes.assign(m_Lines.size(), NAN);
+    m_FittedAmplitudeErrorSigmas.assign(m_Lines.size(), NAN);
     return;
   }
 
@@ -923,21 +927,24 @@ void CLineModelElement::fitAmplitude(
     Int32 lineIdx) {
   Int32 nLines = m_Lines.size();
 
+  m_FittedAmplitudes.assign(nLines, NAN);
+  m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+
+  if (m_OutsideLambdaRange) {
+    m_fitAmplitude = NAN;
+    m_sumCross = NAN;
+    m_sumGauss = NAN;
+    m_dtmFree = NAN;
+    return;
+  }
+
   m_sumCross = 0.0;
   m_sumGauss = 0.0;
   m_dtmFree = 0.0;
 
-  m_FittedAmplitudes = TFloat64List(nLines, NAN);
-  m_FittedAmplitudeErrorSigmas = TFloat64List(nLines, NAN);
-
-  if (m_OutsideLambdaRange) {
-    return;
-  }
   const Float64 *fluxNoContinuum = noContinuumfluxAxis.GetSamples();
   const Float64 *spectral = spectralAxis.GetSamples();
   const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
-
-  Log.LogDebug("    error[0]:%e", error[0]);
   const Float64 *fluxContinuum = continuumfluxAxis.GetSamples();
 
   Float64 y = 0.0;
@@ -947,7 +954,7 @@ void CLineModelElement::fitAmplitude(
 
   Float64 err2 = 0.0;
   Int32 num = 0;
-  Log.LogDebug("    multiline: nLines=%d", nLines);
+  // Log.LogDebug("    multiline: nLines=%d", nLines);
 
   for (Int32 k = 0; k < nLines; k++) { // loop for the intervals
     if (m_OutsideLambdaRangeList[k]) {
@@ -990,10 +997,14 @@ void CLineModelElement::fitAmplitude(
     Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
                  " num=%d, mtm=%f",
                  num, m_sumGauss);
-    for (Int32 k2 = 0; k2 < nLines; k2++) {
+    /*for (Int32 k2 = 0; k2 < nLines; k2++) {
       Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2,
                    m_NominalAmplitudes[k2]);
-    }
+    }*/
+    m_fitAmplitude = NAN;
+    m_sumCross = NAN;
+    m_sumGauss = NAN;
+    m_dtmFree = NAN;
     return;
   }
 
@@ -1045,7 +1056,7 @@ void CLineModelElement::addToSpectrumModel(
   }
 
   const Float64 *spectral = modelspectralAxis.GetSamples();
-  Float64 *flux = modelfluxAxis.GetSamples();
+  TFloat64List &flux = modelfluxAxis.GetSamplesVector();
   Int32 nLines = m_Lines.size();
   for (Int32 k = 0; k < nLines; k++) { // loop on the interval
     if (m_OutsideLambdaRangeList[k]) {
@@ -1060,7 +1071,7 @@ void CLineModelElement::addToSpectrumModel(
       Float64 lambda = spectral[i];
       Float64 Yi = getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
       flux[i] += Yi;
-      if (isnan(flux[i])) {
+      if (std::isnan(flux[i])) {
         THROWG(INTERNAL_ERROR,
                Formatter() << "addToSpectrumModel has a NaN flux Line" << k
                            << ": ContinuumFlux " << continuumfluxAxis[i]
@@ -1092,7 +1103,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(
       continue;
     }
     Float64 A = m_FittedAmplitudes[k];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");//to be uncommented
@@ -1143,7 +1154,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
     }
 
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
@@ -1154,10 +1165,11 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
         m_SignFactors[k2] * A * GetLineProfileAtRedshift(k2, redshift, x);
     Yi += m_SignFactors[k2] == -1 ? continuumFlux * fluxval : fluxval;
 
-    if (isnan(Yi)) {
-      Log.LogError("Line nb: %d and GetLineProfileAtRedshift: %f", k2,
-                   GetLineProfileAtRedshift(k2, redshift, x));
-    }
+    if (std::isnan(Yi))
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "NaN fluxval for Line nb: " << k2
+                                 << " and GetLineProfileAtRedshift: "
+                                 << GetLineProfileAtRedshift(k2, redshift, x));
   }
   return Yi;
 }
@@ -1204,7 +1216,7 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
     }
 
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
@@ -1233,7 +1245,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(
       continue;
     }
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
@@ -1275,7 +1287,7 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
       continue;
     }
     Float64 A = m_FittedAmplitudes[k2];
-    if (isnan(A))
+    if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
@@ -1311,11 +1323,12 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
 void CLineModelElement::initSpectrumModel(
     CSpectrumFluxAxis &modelfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx) const {
-  if (m_OutsideLambdaRange) {
-    return;
-  }
 
-  Float64 *flux = modelfluxAxis.GetSamples();
+  if (m_OutsideLambdaRange)
+    return;
+
+  TFloat64List &flux = modelfluxAxis.GetSamplesVector();
+
   for (Int32 k = 0; k < m_Lines.size(); k++) { // loop on the interval
     if (m_OutsideLambdaRangeList[k])
       continue;
@@ -1389,4 +1402,49 @@ void CLineModelElement::debug(std::ostream &os) const {
   getLineProfile(i).GetName()<<"\t"<< GetSignFactor(i)<< "\n";
     }
   */
+}
+
+void CLineModelElement::dumpElement(std::ostream &os) const {
+  debug(os); // to dump lines info
+  os << "m_OutsideLambdaRange\t" << m_OutsideLambdaRange << "\n";
+  os << "m_fittingGroupInfo\t" << m_fittingGroupInfo << "\n";
+  os << "m_ElementType\t" << m_ElementType << "\n";
+  os << "m_NominalWidth\t" << m_NominalWidth << "\n";
+  os << "m_VelocityEmission\t" << m_VelocityEmission << "\n";
+  os << "m_VelocityAbsorption\t" << m_VelocityAbsorption << "\n";
+  os << "m_OutsideLambdaRangeOverlapThreshold\t"
+     << m_OutsideLambdaRangeOverlapThreshold << "\n";
+  os << "m_sumCross\t" << m_sumCross << "\n";
+  os << "m_sumGauss\t" << m_sumGauss << "\n";
+  os << "m_dtmFree\t" << m_dtmFree << "\n";
+  os << "m_fitAmplitude\t" << m_fitAmplitude << "\n";
+  os << "m_absLinesLimit\t" << m_absLinesLimit << "\n";
+
+  os << "m_LineIsActiveOnSupport \n";
+
+  for (Int32 i = 0; i < m_LineIsActiveOnSupport.size(); i++)
+    for (Int32 j = 0; j < m_LineIsActiveOnSupport.size(); j++)
+      os << i << "\t" << j << "\t" << m_LineIsActiveOnSupport[i][j] << "\n";
+
+  os << "\n";
+  os << "Line \t OutsideLR\t Sign \t Amp \t AmpErrSigma \t NomAmp \t StartNO "
+        "\t EndNO \t "
+        "StartTheo \t EndTheo\n";
+
+  for (Int32 i = 0; i < m_Lines.size(); i++) {
+    os << i << "\t " << m_OutsideLambdaRangeList[i] << "\t " << m_SignFactors[i]
+       << "\t " << m_FittedAmplitudes[i] << "\t"
+       << m_FittedAmplitudeErrorSigmas[i] << "\t" << m_NominalAmplitudes[i]
+       << "\t" << m_StartNoOverlap[i] << "\t" << m_EndNoOverlap[i] << "\t"
+       << m_StartTheoretical[i] << "\t" << m_EndTheoretical[i] << "\n";
+  }
+  os << "\n";
+  os << "m_LineCatalogIndexes \n";
+  for (Int32 i = 0; i < m_LineCatalogIndexes.size(); i++)
+    os << i << "\t" << m_LineCatalogIndexes[i] << "\n";
+
+  os << "\n";
+  os << "m_asymLineIndices \n";
+  for (Int32 i = 0; i < m_asymLineIndices.size(); i++)
+    os << i << "\t" << m_asymLineIndices[i] << "\n";
 }

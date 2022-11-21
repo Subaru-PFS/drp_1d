@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <boost/test/unit_test.hpp>
+
 #include <cmath>
 #include <iostream>
 

@@ -42,13 +42,12 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineprofile.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
-
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
 
@@ -197,13 +196,14 @@ public:
                               // be moved elsewhere ?
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
+  void dumpElement(std::ostream &os) const;
 
 protected:
   TLineWidthType m_LineWidthType;
   Float64 m_NominalWidth; // relevant only for LSF GaussianConstantWidth
 
-  Float64 m_VelocityEmission;
-  Float64 m_VelocityAbsorption;
+  Float64 m_VelocityEmission = NAN;
+  Float64 m_VelocityAbsorption = NAN;
 
   Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;
@@ -213,15 +213,11 @@ protected:
                                 // mainly LyA. Currently max 1 asymfit is found
                                 // per linecatalog
 
-  Float64 *m_dataExtinctionFlux = NULL;
-  Float64 m_dataStepLambda = 0.1;
-  Float64 m_dataN = 3000.0;
-
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;
   Float64 m_dtmFree =
       0.0; // dtmFree is the non-positive-constrained version of sumCross
-  Float64 m_fitAmplitude = 0.0;
+  Float64 m_fitAmplitude = NAN;
   const Float64 m_speedOfLightInVacuum = SPEED_OF_LIGHT_IN_VACCUM;
   std::shared_ptr<const CLSF> m_LSF;
 

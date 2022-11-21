@@ -208,14 +208,15 @@ BOOST_AUTO_TEST_CASE(SpreadOver_Int32_test1) {
   Float64 delta = 3.0;
 
   // Known vector
-  TInt32List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TInt32List myVector = {1};
 
   TInt32Range myRange(1, 1);
   BOOST_CHECK(myRange.GetIsEmpty() == true);
 
   TInt32List functionResult = myRange.SpreadOver(delta);
+  BOOST_CHECK(myVector == functionResult);
+
+  functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(myVector == functionResult);
 }
 
@@ -228,13 +229,14 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test2) {
   Float64 delta = 0.0;
 
   // Known vector
-  TInt32List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TInt32List myVector = {1};
+  TInt32List myVector2 = {10};
 
   TInt32Range myRange(1, 10);
   TInt32List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver_backward(delta);
+  BOOST_CHECK(myVector2 == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -246,15 +248,16 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test3) {
   Float64 delta = 7.0;
 
   // Known vector
-  TInt32List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TInt32List myVector = {1};
+  TInt32List myVector2 = {3};
 
   TInt32Range myRange(1, 3);
   BOOST_CHECK(myRange.GetIsEmpty() == false);
 
   TInt32List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver_backward(delta);
+  BOOST_CHECK(myVector2 == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -271,10 +274,17 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test4) {
 
   TInt32List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(functionResult.front() == myRange.GetBegin());
+  for (int i = 1; i < functionResult.size(); i++) {
+    BOOST_CHECK(functionResult[i] - functionResult[i - 1] == delta);
+  }
+  BOOST_CHECK(myRange.GetEnd() - functionResult.back() < delta);
+
+  functionResult = myRange.SpreadOver_backward(delta);
+  BOOST_CHECK(functionResult.back() == myRange.GetEnd());
   for (int i = 0; i < functionResult.size() - 1; i++) {
     BOOST_CHECK(functionResult[i + 1] - functionResult[i] == delta);
   }
-  BOOST_CHECK(myRange.GetEnd() - functionResult.back() < delta);
+  BOOST_CHECK(functionResult.front() - myRange.GetBegin() < delta);
 }
 
 //-----------------------------------------------------------------------------
@@ -286,14 +296,14 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test1) {
   Float64 delta = 3.0;
 
   // Known vector
-  TFloat64List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TFloat64List myVector = {1};
 
   TFloat64Range myRange(1, 1);
   BOOST_CHECK(myRange.GetIsEmpty() == true);
 
   TFloat64List functionResult = myRange.SpreadOver(delta);
+  BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(myVector == functionResult);
 }
 
@@ -306,13 +316,14 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test2) {
   Float64 delta = 0.0;
 
   // Known vector
-  TFloat64List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TFloat64List myVector = {1};
+  TFloat64List myVector2 = {10};
 
   TFloat64Range myRange(1, 10);
   TFloat64List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver_backward(delta);
+  BOOST_CHECK(myVector2 == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -324,15 +335,16 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test3) {
   Float64 delta = 7.0;
 
   // Known vector
-  TFloat64List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TFloat64List myVector = {1};
+  TFloat64List myVector2 = {3};
 
   TFloat64Range myRange(1, 3);
   BOOST_CHECK(myRange.GetIsEmpty() == false);
 
   TFloat64List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver_backward(delta);
+  BOOST_CHECK(myVector2 == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -349,11 +361,19 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test4) {
 
   TFloat64List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK_CLOSE(functionResult.front(), myRange.GetBegin(), precision);
-  for (int i = 0; i < functionResult.size() - 1; i++) {
-    BOOST_CHECK_CLOSE(functionResult[i + 1] - functionResult[i], delta,
+  for (int i = 1; i < functionResult.size(); i++) {
+    BOOST_CHECK_CLOSE(functionResult[i] - functionResult[i - 1], delta,
                       precision);
   }
   BOOST_CHECK(myRange.GetEnd() - functionResult.back() < delta);
+
+  functionResult = myRange.SpreadOver_backward(delta);
+  BOOST_CHECK_CLOSE(functionResult.back(), myRange.GetEnd(), precision);
+  for (int i = 1; i < functionResult.size(); i++) {
+    BOOST_CHECK_CLOSE(functionResult[i] - functionResult[i - 1], delta,
+                      precision);
+  }
+  BOOST_CHECK(functionResult.front() - myRange.GetBegin() < delta);
 }
 //-----------------------------------------------------------------------------
 
@@ -366,15 +386,16 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test1) {
   Float64 offset = 0.1;
 
   // reference
-  TFloat64List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TFloat64List myVector = {1};
 
   // test
   TFloat64Range myRange(1, 1);
   BOOST_CHECK(myRange.GetIsEmpty() == true);
 
   TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
+  BOOST_CHECK(myVector == functionResult);
+
+  functionResult = myRange.SpreadOverLog_backward(delta, offset);
   BOOST_CHECK(myVector == functionResult);
 }
 //-----------------------------------------------------------------------------
@@ -388,13 +409,15 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test2) {
   Float64 offset = 0.1;
 
   // Known vector
-  TFloat64List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TFloat64List myVector = {1};
+  TFloat64List myVector2 = {3};
 
   TFloat64Range myRange(1, 3);
   TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
   BOOST_CHECK(myVector == functionResult);
+
+  functionResult = myRange.SpreadOverLog_backward(delta, offset);
+  BOOST_CHECK(myVector2 == functionResult);
 }
 //-----------------------------------------------------------------------------
 
@@ -407,13 +430,15 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test3) {
   Float64 offset = 0.1;
 
   // Known vector
-  TFloat64List myVector;
-  myVector.resize(1);
-  myVector[0] = 1;
+  TFloat64List myVector = {1};
+  TFloat64List myVector2 = {3};
 
   TFloat64Range myRange(1, 3);
   TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
   BOOST_CHECK(myVector == functionResult);
+
+  functionResult = myRange.SpreadOverLog_backward(delta, offset);
+  BOOST_CHECK(myVector2 == functionResult);
 }
 //-----------------------------------------------------------------------------
 
@@ -432,14 +457,26 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4) {
 
   TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
   BOOST_CHECK_CLOSE(functionResult.front(), myRange.GetBegin(), precision);
-  for (int i = 0; i < functionResult.size() - 1; i++) {
-    BOOST_CHECK_CLOSE((functionResult[i + 1] + offset) /
-                          (functionResult[i] + offset),
+  for (int i = 1; i < functionResult.size(); i++) {
+    BOOST_CHECK_CLOSE((functionResult[i] + offset) /
+                          (functionResult[i - 1] + offset),
                       exp(delta), precision);
   }
   BOOST_CHECK((myRange.GetEnd() + offset) / (functionResult.back() + offset) <
               exp(delta));
+
+  functionResult = myRange.SpreadOverLog_backward(delta, offset);
+  BOOST_CHECK_CLOSE(functionResult.back(), myRange.GetEnd(), precision);
+  for (int i = 1; i < functionResult.size(); i++) {
+    BOOST_CHECK_CLOSE((functionResult[i] + offset) /
+                          (functionResult[i - 1] + offset),
+                      exp(delta), precision);
+  }
+  BOOST_CHECK((functionResult.front() + offset) /
+                  (myRange.GetBegin() + offset) <
+              exp(delta));
 }
+
 //-----------------------------------------------------------------------------
 
 // TEST SpreadOverLogZplusOne --> offset is locked to one
@@ -723,6 +760,28 @@ BOOST_AUTO_TEST_CASE(Union) {
   ret = TInt32Range::getUnion(b, c, resultUnion);
   BOOST_CHECK(ret == true);
   BOOST_CHECK(resultUnion == TInt32Range(1, 4));
+}
+
+BOOST_AUTO_TEST_CASE(signCheck) {
+  TFloat64Range a(-3, 5);
+  TFloat64Range b(3, 5);
+  Float64 offset = 1;
+  Float64 delta = 1;
+  BOOST_CHECK(a.isSameSign(offset) == false);
+  BOOST_CHECK_THROW(a.SpreadOverLog(delta), GlobalException);
+  BOOST_CHECK_THROW(a.SpreadOverLog_backward(delta), GlobalException);
+
+  BOOST_CHECK(b.isSameSign(offset) == true);
+}
+
+BOOST_AUTO_TEST_CASE(Clamp) {
+  TFloat64Range a(1.0, 2.0);
+
+  BOOST_CHECK(a.Clamp(1.5) == 1.5);
+  BOOST_CHECK(a.Clamp(1.0) == 1.0);
+  BOOST_CHECK(a.Clamp(0.1) == 1.0);
+  BOOST_CHECK(a.Clamp(2.0) == 2.0);
+  BOOST_CHECK(a.Clamp(3.0) == 2.0);
 }
 //-----------------------------------------------------------------------------
 

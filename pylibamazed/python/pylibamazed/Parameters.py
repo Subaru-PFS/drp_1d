@@ -1,6 +1,9 @@
 import pandas as pd
 import json
-
+import h5py
+import os
+from pylibamazed.Exception import APIException
+from pylibamazed.redshift import ErrorCode
 
 class Parameters():
 
@@ -19,6 +22,9 @@ class Parameters():
         if linemeas_method:
             methods.append(linemeas_method)
         return methods
+        
+    def get_redshift_sampling(self,object_type):
+        return self.parameters[object_type]["redshiftsampling"]
 
     def get_linemodel_methods(self, object_type):
         methods = []
@@ -35,6 +41,7 @@ class Parameters():
             else:
                 return self.parameters[object_type][self.parameters[object_type]["method"]]["linemodel"]["skipsecondpass"]
         return False
+
     def get_solve_method(self, object_type):
         return self.parameters[object_type]["method"]
 
@@ -56,6 +63,7 @@ class Parameters():
             self.parameters[object_type]["redshiftref"] = redshift_ref
             self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
             self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em
+
     def load_linemeas_parameters_from_result_store(self, output, object_type):
 
         redshift = output.get_attribute_from_source(object_type,
@@ -89,4 +97,17 @@ class Parameters():
         else:
             return False
         
-
+    def stage_enabled(self, object_type, stage):
+        if stage == "redshift_solver":
+            return self.get_solve_method(object_type) is not None
+        elif stage == "linemeas_solver":
+            return self.get_linemeas_method(object_type) is not None
+        elif stage == "linemeas_catalog_load":
+            return self.get_linemeas_method(object_type) is not None and self.get_solve_method(object_type) is None
+        elif stage == "reliability_solver":
+            return self.reliability_enabled(object_type)
+        elif stage == "sub_classif_solver":
+            return self.lineratio_catalog_enabled(object_type)
+        else:
+            raise Exception("Unknown stage {stage}") 
+       

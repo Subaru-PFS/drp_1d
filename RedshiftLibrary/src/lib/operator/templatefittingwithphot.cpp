@@ -96,18 +96,17 @@ void COperatorTemplateFittingPhot::checkInputPhotometry() const {
 
 void COperatorTemplateFittingPhot::RebinTemplate(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    const std::string &opt_interp, TFloat64Range &currentRange,
-    Float64 &overlapRate, const Float64 overlapThreshold) {
+    TFloat64Range &currentRange, Float64 &overlapRate,
+    const Float64 overlapThreshold) {
 
-  COperatorTemplateFittingBase::RebinTemplate(
-      tpl, redshift, opt_interp, currentRange, overlapRate, overlapThreshold);
+  COperatorTemplateFittingBase::RebinTemplate(tpl, redshift, currentRange,
+                                              overlapRate, overlapThreshold);
 
-  RebinTemplateOnPhotBand(tpl, redshift, opt_interp);
+  RebinTemplateOnPhotBand(tpl, redshift);
 }
 
 void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    const std::string &opt_interp) {
+    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift) {
 
   Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -120,8 +119,6 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CTemplate &templateRebined_phot = m_templateRebined_phot[bandName];
 
     CSpectrumSpectralAxis photSpectralaxis = bandLambda;
-    if (tpl->GetSpectralAxis().IsInLogScale())
-      photSpectralaxis.ConvertToLogScale();
 
     photSpectralAxis_restframe.ShiftByWaveLength(
         photSpectralaxis, onePlusRedshift,
@@ -130,11 +127,8 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CMask mskRebined;
     const TFloat64Range lambdaRange_restframe =
         photSpectralAxis_restframe.GetLambdaRange();
-    bool b = tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
-                        templateRebined_phot, mskRebined, opt_interp);
-
-    if (!b)
-      THROWG(INTERNAL_ERROR, "error in rebinning tpl");
+    tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
+               templateRebined_phot, mskRebined);
 
     const Float64 overlapRate =
         photSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(

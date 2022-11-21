@@ -187,7 +187,8 @@ void CTemplateCatalog::ClearTemplates(const std::string &category,
     tplList.at(category).clear();
     if (opt_ortho) { // reset LSFWidth if the 2 ortho list are empty
       auto &otherOrthoList = GetList(opt_ortho, !opt_logsampling);
-      if (otherOrthoList.find(category) == otherOrthoList.end())
+      if (otherOrthoList.find(category) == otherOrthoList.end() ||
+          otherOrthoList.at(category).empty())
         m_ortho_LSFWidth = NAN;
     }
   } else {

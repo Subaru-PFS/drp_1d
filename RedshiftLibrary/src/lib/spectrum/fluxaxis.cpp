@@ -44,7 +44,7 @@
 #include "RedshiftLibrary/common/median.h"
 
 #include "RedshiftLibrary/log/log.h"
-#include <math.h>
+#include <cmath>
 
 using namespace NSEpic;
 using namespace std;
@@ -138,6 +138,15 @@ bool CSpectrumFluxAxis::ApplyMeanSmooth(Int32 kernelHalfWidth) {
   m_Samples = std::move(tmp);
 
   return true;
+}
+
+Float64 CSpectrumFluxAxis::computeMaxAbsValue(Int32 imin, Int32 imax) const {
+
+  Float64 maxabsval = std::abs(*std::max_element(
+      m_Samples.begin() + imin, m_Samples.begin() + imax + 1,
+      [](Float64 a, Float64 b) { return std::abs(a) < std::abs(b); }));
+
+  return maxabsval;
 }
 
 bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,

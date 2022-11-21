@@ -36,19 +36,20 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/taus88.hpp>
-#include <cmath>
-#include <ctime>
-#include <fitsio.h>
-#include <fstream>
-
+#include "RedshiftLibrary/tests/test-tools.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
-#include "RedshiftLibrary/tests/test-tools.h"
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/taus88.hpp>
+
+#include <fitsio.h>
+
+#include <cmath>
+#include <ctime>
+#include <fstream>
 
 namespace bfs = boost::filesystem;
 using namespace std;

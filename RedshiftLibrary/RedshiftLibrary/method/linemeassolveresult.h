@@ -39,7 +39,7 @@
 #ifndef _REDSHIFT_METHOD_LINEMEASSOLVERESULT_
 #define _REDSHIFT_METHOD_LINEMEASSOLVERESULT_
 
-#include <RedshiftLibrary/method/solveresult.h>
+#include "RedshiftLibrary/method/solveresult.h"
 namespace NSEpic {
 
 /**

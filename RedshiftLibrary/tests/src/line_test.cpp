@@ -42,16 +42,16 @@
 #include "RedshiftLibrary/line/lineRatioCatalog.h"
 #include "RedshiftLibrary/operator/linematching.h"
 #include "RedshiftLibrary/operator/linematchingresult.h"
+#include "test-config.h"
 
 #include <boost/lexical_cast.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/tokenizer.hpp>
+
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <string>
-
-#include "test-config.h"
-#include <boost/test/unit_test.hpp>
-#include <math.h>
 
 using namespace NSEpic;
 

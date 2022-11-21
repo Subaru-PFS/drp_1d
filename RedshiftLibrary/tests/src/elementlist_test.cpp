@@ -40,19 +40,18 @@
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/tests/test-tools.h"
-
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
+#include "RedshiftLibrary/tests/test-tools.h"
 #include "test-config.h"
+
 #include <boost/test/unit_test.hpp>
+
 #include <iostream>
-#include <stdlib.h>
-#include <time.h>
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;

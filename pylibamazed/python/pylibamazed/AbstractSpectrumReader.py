@@ -51,7 +51,8 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CPhotometricData,
                                   CLog,
                                   CFlagWarning,
-                                  ErrorCode
+                                  ErrorCode,
+                                  WarningCode
                                  )
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
@@ -212,16 +213,16 @@ class AbstractSpectrumReader:
 
     def init(self):
         if len(self.waves) != len(self.fluxes) or len(self.waves) != len(self.errors):
-            raise  APIException(ErrorCode.INVALID_SPECTRUM,"Numbers of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves), str(len(self.errors)), str(len(self.fluxes)))))
+            raise  APIException(ErrorCode.INVALID_SPECTRUM,"Number of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves)), str(len(self.errors)), str(len(self.fluxes))))
         if len(self.lsf_data) > 1:
-            raise  APIException(ErrorCode.MULTILSF_NOT_HANDELED,"Multiple LSF not handled")
+            raise  APIException(ErrorCode.MULTILSF_NOT_HANDLED,"Multiple LSF not handled")
         airvacuum_method = self.parameters.get("airvacuum_method", "")
         if airvacuum_method == "default":
             airvacuum_method = "Morton2000"
         if airvacuum_method == "" and self.w_frame == "air":
             airvacuum_method = "Morton2000"
         elif airvacuum_method != "" and self.w_frame == "vacuum":
-            zflag.warning(zflag.AIR_VACCUM_CONVERSION_IGNORED, "Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
+            zflag.warning(WarningCode.AIR_VACCUM_CONVERSION_IGNORED.value, f"Air vaccum method {airvacuum_method} ignored, spectrum already in vacuum")
             airvacuum_method = ""
 
         if len(self.waves) == 1:

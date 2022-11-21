@@ -49,19 +49,20 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
-#include <algorithm> // std::sort
-#include <assert.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <float.h>
+
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
-#include <math.h>
+
+#include <algorithm> // std::sort
+#include <climits>
+#include <cmath>
 #include <numeric>
 #include <sstream>
 
@@ -92,10 +93,9 @@ void COperatorTplcombination::BasicFit(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     const TFloat64Range &lambdaRange, Float64 redshift,
     Float64 overlapThreshold, STplcombination_basicfitresult &fittingResults,
-    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction,
-    Int32 opt_dustFitting, CMask spcMaskAdditional,
-    const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
-    const TInt32List &EbmvList) {
+    Float64 forcedAmplitude, bool opt_extinction, bool opt_dustFitting,
+    CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
+    const TInt32List &MeiksinList, const TInt32List &EbmvList) {
   Log.LogDebug(" BasicFit - for z=%f", redshift);
 
   boost::chrono::thread_clock::time_point start_prep =
@@ -116,8 +116,8 @@ void COperatorTplcombination::BasicFit(
   }
 
   TFloat64Range currentRange;
-  RebinTemplate(spectrum, tplList, redshift, lambdaRange, opt_interp,
-                currentRange, fittingResults.overlapRate, overlapThreshold);
+  RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
+                fittingResults.overlapRate, overlapThreshold);
 
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
   // I consider here that all templates share the same spectralAxis
@@ -143,8 +143,8 @@ void COperatorTplcombination::BasicFit(
   Int32 nISM = EbmvList.size();
   Int32 nIGM = MeiksinList.size();
 
-  Int32 iEbmvCoeffMin = EbmvList[0];
-  Int32 iEbmvCoeffMax = EbmvList[nISM - 1];
+  Int32 iEbmvCoeffMin = EbmvList.front();
+  Int32 iEbmvCoeffMax = EbmvList.back();
 
   // Linear fit
   Int32 n = kEnd - kStart + 1;
@@ -172,7 +172,7 @@ void COperatorTplcombination::BasicFit(
   bool option_igmFastProcessing =
       (MeiksinList.size() == 1 ? false : true); // TODO
   bool igmLoopUseless_WavelengthRange = false;
-  fittingResults.chisquare = INFINITY; // final best Xi2 value
+  fittingResults.chiSquare = INFINITY; // final best Xi2 value
   Float64 chisq, SNR;
   Float64 dtd_complement =
       0.; // value mainly relevant with DisextinctData method
@@ -223,7 +223,7 @@ void COperatorTplcombination::BasicFit(
 
     bool igmCorrectionAppliedOnce = false;
     // applyMeiksin on all templates
-    if (opt_extinction == 1 && !DisextinctData) {
+    if (opt_extinction && !DisextinctData) {
       if (currentRange.GetBegin() / (1 + redshift) >
           RESTLAMBDA_LYA) // bug??: why dividing by (1+z) if currentRange is
                           // already in restframe??
@@ -241,11 +241,11 @@ void COperatorTplcombination::BasicFit(
         igmLoopUseless_WavelengthRange = true;
     }
 
-    for (Int32 kEbmv = iEbmvCoeffMin; kEbmv <= iEbmvCoeffMax; kEbmv++) {
-      Int32 kEbmv_ = kEbmv - iEbmvCoeffMin; // index used to fill some arrays
-      Float64 coeffEBMV = -1.; // no ism by default (ie DustCoeff=1.)
+    for (Int32 kEbmv_ = 0; kEbmv_ < nISM; kEbmv_++) {
+      Int32 kEbmv = EbmvList[kEbmv_];
+      Float64 coeffEBMV = -1.0; // no ism by default
       // apply ism on all templates, once for all
-      if (opt_dustFitting == 1 && !DisextinctData) {
+      if (opt_dustFitting && !DisextinctData) {
         coeffEBMV =
             m_templatesRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvValue(
                 kEbmv);
@@ -390,19 +390,20 @@ void COperatorTplcombination::BasicFit(
                      fittingResults.fittingAmplitudes.size(), nddl);
       }
 
-      if (chisq < fittingResults.chisquare) {
-        fittingResults.chisquare = chisq;
+      if (chisq < fittingResults.chiSquare) {
+        fittingResults.chiSquare = chisq;
         fittingResults.SNR = SNR;
-        fittingResults.IGMIdx = igmCorrectionAppliedOnce ? meiksinIdx : -1;
+        fittingResults.MeiksinIdx =
+            igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
         fittingResults.EbmvCoeff = coeffEBMV;
         status_chisquareSetAtLeastOnce = true;
       }
 
       // save the interm chisquares in the intermediate vector
-      fittingResults.ChiSquareInterm[kEbmv_][kigm] = fittingResults.chisquare;
+      fittingResults.ChiSquareInterm[kEbmv_][kigm] = chisq;
       fittingResults.IsmCalzettiCoeffInterm[kEbmv_][kigm] = coeffEBMV;
       fittingResults.IgmMeiksinIdxInterm[kEbmv_][kigm] =
-          igmCorrectionAppliedOnce ? meiksinIdx : -1;
+          igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
 
       boost::chrono::thread_clock::time_point stop_postprocess =
           boost::chrono::thread_clock::now();
@@ -453,7 +454,7 @@ Float64 COperatorTplcombination::ComputeXi2_bruteForce(
 
 void COperatorTplcombination::RebinTemplate(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
-    Float64 redshift, const TFloat64Range &lambdaRange, std::string opt_interp,
+    Float64 redshift, const TFloat64Range &lambdaRange,
     TFloat64Range &currentRange, Float64 &overlapRate,
     const Float64 overlapThreshold) {
   Float64 onePlusRedshift = 1.0 + redshift;
@@ -496,7 +497,7 @@ void COperatorTplcombination::RebinTemplate(
     CMask &itplMask = m_masksRebined_bf[ktpl];
 
     tplList[ktpl]->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
-                         itplTplSpectrum, itplMask, opt_interp);
+                         itplTplSpectrum, itplMask);
 
     const CSpectrumSpectralAxis &itplTplSpectralAxis =
         itplTplSpectrum.GetSpectralAxis();
@@ -531,21 +532,13 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
     Float64 overlapThreshold, const std::vector<CMask> &additional_spcMasks,
-    const std::string &opt_interp, Int32 opt_extinction, Int32 opt_dustFitting,
-    const CPriorHelper::TPriorZEList &logpriorze, bool keepigmism,
-    Float64 FitEbmvCoeff, Int32 FitMeiksinIdx) {
+    const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting,
+    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx) {
   Int32 componentCount = tplList.size();
   Log.LogInfo(" starting computation with N-template = %d", componentCount);
 
-  if (spectrum.GetSpectralAxis().IsInLinearScale() == false) {
-    THROWG(INTERNAL_ERROR, " input spectrum is not in log scale");
-  }
-
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
-    if (tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false) {
-      THROWG(INTERNAL_ERROR, Formatter() << "Input template k=" << ktpl
-                                         << " is not in log scale");
-    }
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
       THROWG(INTERNAL_ERROR, "ISM is not initialized");
     }
@@ -574,21 +567,19 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   }
 
   Log.LogDebug(" prepare the results");
-  std::shared_ptr<CTplCombinationResult> result =
-      make_shared<CTplCombinationResult>();
 
   TInt32List MeiksinList;
   TInt32List EbmvList;
   m_templatesRebined_bf.front().GetIsmIgmIdxList(
-      opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism,
-      FitEbmvCoeff, FitMeiksinIdx);
+      opt_extinction, opt_dustFitting, MeiksinList, EbmvList, FitEbmvIdx,
+      FitMeiksinIdx);
   Int32 MeiksinListSize = MeiksinList.size();
   Int32 EbmvListSize = EbmvList.size();
   Log.LogDebug(" prepare N ism coeffs = %d", EbmvListSize);
   Log.LogDebug(" prepare N igm coeffs = %d", MeiksinListSize);
-
-  result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize,
-               componentCount);
+  std::shared_ptr<CTplCombinationResult> result =
+      make_shared<CTplCombinationResult>(sortedRedshifts.size(), EbmvListSize,
+                                         MeiksinListSize, componentCount);
   result->Redshifts = sortedRedshifts;
 
   // default mask
@@ -609,7 +600,6 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
 
-  TFloat64List _ampList(componentCount, NAN);
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
     const CMask &additional_spcMask =
         useDefaultMask ? default_spcMask
@@ -622,39 +612,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
     Float64 redshift = result->Redshifts[i];
 
-    // initializing fittingResults: could be moved to another function
-    STplcombination_basicfitresult fittingResults;
-    if (keepigmism && opt_dustFitting && opt_extinction) {
-      fittingResults.IGMIdx = FitMeiksinIdx;
-      fittingResults.EbmvCoeff = FitEbmvCoeff;
-    }
-    // init fittingResult intermediate values before passing to ::BasicFit
-    fittingResults.fittingAmplitudesInterm.resize(EbmvListSize);
-
-    fittingResults.ChiSquareInterm = std::vector<TFloat64List>(
-        EbmvListSize, TFloat64List(MeiksinListSize, INFINITY));
-    fittingResults.IsmCalzettiCoeffInterm = std::vector<TFloat64List>(
-        EbmvListSize, TFloat64List(MeiksinListSize, NAN));
-    fittingResults.IgmMeiksinIdxInterm =
-        std::vector<TInt32List>(EbmvListSize, TInt32List(MeiksinListSize, -1));
-
-    fittingResults.fittingAmplitudesInterm =
-        std::vector<std::vector<TFloat64List>>(
-            EbmvListSize, std::vector<TFloat64List>(MeiksinListSize, _ampList));
-
-    fittingResults.chisquare = INFINITY;
-    fittingResults.fittingAmplitudes = TFloat64List(componentCount, NAN);
-    fittingResults.fittingAmplitudeErrors = TFloat64List(componentCount, NAN);
-    fittingResults.fittingAmplitudeSigmas = TFloat64List(componentCount, NAN);
-    fittingResults.overlapRate = 0.0;
-    fittingResults.status = COperator::nStatus_DataError;
-    fittingResults.COV.resize(componentCount); // MtM = COV-1
-
-    fittingResults.COV = std::vector<TFloat64List>(
-        componentCount, TFloat64List(componentCount, NAN));
+    STplcombination_basicfitresult fittingResults(EbmvListSize, MeiksinListSize,
+                                                  componentCount);
 
     BasicFit(spectrum, tplList, clampedlambdaRange, redshift, overlapThreshold,
-             fittingResults, opt_interp, -1, opt_extinction, opt_dustFitting,
+             fittingResults, -1, opt_extinction, opt_dustFitting,
              additional_spcMask, logp, MeiksinList, EbmvList);
 
     if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
@@ -663,9 +625,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
                                  << redshift);
     }
 
-    result->ChiSquare[i] = fittingResults.chisquare;
+    result->ChiSquare[i] = fittingResults.chiSquare;
     result->Overlap[i] = fittingResults.overlapRate;
-    result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
     result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
     result->FitAmplitudeSigma[i] = fittingResults.fittingAmplitudeSigmas;
     result->FitAmplitudeError[i] = fittingResults.fittingAmplitudeErrors;
@@ -673,7 +634,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     result->FitCOV[i] = fittingResults.COV;
     // result->LogPrior[i]=NAN: //not yet calculated
     result->FitEbmvCoeff[i] = fittingResults.EbmvCoeff;
-    result->FitMeiksinIdx[i] = fittingResults.IGMIdx;
+    result->FitMeiksinIdx[i] = fittingResults.MeiksinIdx;
     result->Status[i] = fittingResults.status;
     result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
     result->IsmEbmvCoeffIntermediate[i] = fittingResults.IsmCalzettiCoeffInterm;
@@ -711,7 +672,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     }
   }
   if (oneValidStatusFoundIndex == -1) {
-    Flag.warning(Flag.INVALID_MERIT_VALUES,
+    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
                  Formatter() << "  COperatorTplcombination::" << __func__
                              << ": STATUS WARNING: Not even one single valid "
                                 "fit/merit value found");
@@ -729,7 +690,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     }
   }
   if (loopErrorStatusFoundIndex != -1) {
-    Flag.warning(Flag.INVALID_MERIT_VALUES,
+    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
                  Formatter()
                      << "    COperatorTplcombination::" << __func__
                      << ": Loop Error - lst-square values not set even once");
@@ -749,8 +710,8 @@ std::shared_ptr<CModelSpectrumResult>
 COperatorTplcombination::ComputeSpectrumModel(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
-    const TFloat64List &amplitudes, std::string opt_interp,
-    const TFloat64Range &lambdaRange, const Float64 overlapThreshold) {
+    const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
+    const Float64 overlapThreshold) {
   Log.LogDetail("  Operator-COperatorTplCombination: building spectrum model "
                 "tptCombination for candidate Zcand=%f",
                 redshift);
@@ -761,8 +722,8 @@ COperatorTplcombination::ComputeSpectrumModel(
   // Estatus status;
   Float64 overlapRate = 0.0;
   TFloat64Range currentRange;
-  RebinTemplate(spectrum, tplList, redshift, lambdaRange, opt_interp,
-                currentRange, overlapRate, overlapThreshold);
+  RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
+                overlapRate, overlapThreshold);
   /*if( ret == -1 ){
       //status = nStatus_NoOverlap;
       return -1;

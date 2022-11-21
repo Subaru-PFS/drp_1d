@@ -42,10 +42,10 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
+
 #include <boost/test/unit_test.hpp>
+
 #include <iostream>
-#include <stdlib.h>
-#include <time.h>
 
 using namespace NSEpic;
 

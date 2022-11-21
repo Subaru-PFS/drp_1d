@@ -40,7 +40,7 @@
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"

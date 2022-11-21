@@ -48,10 +48,11 @@ CSvdlcFitter::CSvdlcFitter(CLineModelElementList &elements,
                            std::shared_ptr<const CSpectrum> inputSpectrum,
                            std::shared_ptr<const TLambdaRange> lambdaRange,
                            std::shared_ptr<CSpectrumModel> spectrumModel,
-			   const CLineCatalog::TLineVector &restLineList,
+                           const CLineCatalog::TLineVector &restLineList,
                            std::shared_ptr<CContinuumManager> continuumManager,
                            Int32 polyOrder)
-  : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList),
+    : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                      restLineList),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
       m_spectralAxis(inputSpectrum->GetSpectralAxis())
 
@@ -69,7 +70,7 @@ void CSvdlcFitter::fit(Float64 redshift) {
 
   // re-interpolate the continuum on the grid
 
-  m_continuumManager->reinterpolateContinuum();
+  m_continuumManager->reinterpolateContinuumResetAmp();
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
@@ -77,7 +78,7 @@ void CSvdlcFitter::fit(Float64 redshift) {
 
   fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx, m_spectralAxis,
                                          ampsfitted, errorsfitted, chi2_cl,
-                                         redshift, m_fitc_polyOrder);
+                                         redshift);
 
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
   m_model->initModelWithContinuum();
@@ -102,105 +103,53 @@ void CSvdlcFitter::fit(Float64 redshift) {
 Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
     TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
-    Float64 redshift, Int32 polyOrder) {
+    Float64 redshift) {
   // boost::chrono::thread_clock::time_point start_prep =
   // boost::chrono::thread_clock::now();
   const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
-  Int32 idx = 0;
-
-  Int32 nddl =
-      EltsIdx.size() + 1; // number of param to be fitted=nlines+continuum
-  if (nddl < 2) {
-    return -1;
-  }
-
-  if (polyOrder >= 0) {
-    nddl += polyOrder + 1;
-  }
-
-  TInt32List xInds;
-  for (Int32 i = 0; i < spectralAxis.GetSamplesCount(); i++) {
-    if (spectralAxis[i] >= m_lambdaRange.GetBegin() &&
-        spectralAxis[i] <= m_lambdaRange.GetEnd()) {
-      xInds.push_back(i);
-    }
-  }
-  if (xInds.size() < 1) {
-    return -1;
-  }
-
-  for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
-    m_Elements.SetElementAmplitude(EltsIdx[iddl], 1.0, 0.0);
-  }
-
-  const Float64 *spectral = spectralAxis.GetSamples();
-  const Float64 *flux = fluxAxis.GetSamples();
   const auto &ErrorNoContinuum = m_inputSpc.GetFluxAxis().GetError();
 
-  // Linear fit
-  int i, n;
-  Float64 fval;
-  double chisq;
-  gsl_matrix *X, *cov;
-  gsl_vector *y, *w, *c;
-
-  n = xInds.size();
-  if (n < nddl) {
-    ampsfitted.resize(nddl);
-    errorsfitted.resize(nddl);
-    for (Int32 iddl = 0; iddl < nddl; iddl++) {
-      ampsfitted[iddl] = 0.0;
-      errorsfitted[iddl] = 1e12; // some high number
-    }
+  if (EltsIdx.size() < 1)
     return -1;
-  }
+  Int32 nddl = EltsIdx.size() + 1 +
+               std ::max(m_fitc_polyOrder + 1,
+                         0); // number of param to be fitted=nlines+continuum
 
-  X = gsl_matrix_alloc(n, nddl);
-  y = gsl_vector_alloc(n);
-  w = gsl_vector_alloc(n);
-  c = gsl_vector_alloc(nddl);
-  cov = gsl_matrix_alloc(nddl, nddl);
+  Int32 imin = -1, imax = -1;
+  bool b = m_lambdaRange.getClosedIntervalIndices(
+      spectralAxis.GetSamplesVector(), imin, imax);
+  if (!b)
+    return -1;
+
+  ampsfitted.resize(nddl, 0.0);
+  errorsfitted.resize(nddl, 1e12);
+
+  Int32 n = imax - imin + 1;
+  if (n < nddl)
+    return -1;
+
+  for (Int32 eltIdx : EltsIdx)
+    m_Elements.SetElementAmplitude(eltIdx, 1.0, 0.0);
+
+  // Linear fit
+  double chisq;
+  gsl_matrix *X = gsl_matrix_alloc(n, nddl);
+  gsl_matrix *cov = gsl_matrix_alloc(nddl, nddl);
+  gsl_vector *y = gsl_vector_alloc(n);
+  gsl_vector *w = gsl_vector_alloc(n);
+  gsl_vector *c = gsl_vector_alloc(nddl);
 
   // Normalize
-  Float64 maxabsval = DBL_MIN;
-  for (i = 0; i < n; i++) {
-    idx = xInds[i];
-    if (maxabsval < std::abs(flux[idx])) {
-      maxabsval = std::abs(flux[idx]);
-    }
-  }
-  Float64 normFactor = 1.0 / maxabsval;
-  Log.LogDetail("normFactor = '%.3e'\n", normFactor);
+  Float64 normFactor = 1.0 / fluxAxis.computeMaxAbsValue(imin, imax);
 
   // Prepare the fit data
-  for (i = 0; i < n; i++) {
-    double xi, yi, ei, ci;
-    idx = xInds[i];
-    xi = spectral[idx];
-    yi = flux[idx] * normFactor;
-    ei = ErrorNoContinuum[idx] * normFactor;
-    ci = continuumfluxAxis[idx];
+  fillMatrix(imin, imax, redshift, EltsIdx, spectralAxis, continuumfluxAxis, X);
 
-    for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
-      fval = m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, redshift, ci);
-      gsl_matrix_set(X, i, iddl, fval);
-
-      Log.LogDebug("fval = '%.3e'", fval);
-    }
-
-    gsl_matrix_set(X, i, EltsIdx.size(), ci);
-
-    if (polyOrder >= 0) {
-      for (Int32 kCoeff = 0; kCoeff < polyOrder + 1; kCoeff++) {
-        Float64 vect = 1.0;
-        for (Int32 kt = 0; kt < kCoeff; kt++) {
-          vect *= xi;
-        }
-        gsl_matrix_set(X, i, EltsIdx.size() + 1 + kCoeff, vect);
-      }
-    }
-
+  for (Int32 i = 0, idx = imin; idx <= imax; ++i, ++idx) {
+    Float64 yi = fluxAxis[idx] * normFactor;
+    Float64 ei = ErrorNoContinuum[idx] * normFactor;
+    Float64 ci = continuumfluxAxis[idx];
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, 1.0 / (ei * ei));
   }
@@ -230,18 +179,9 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
   Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
   Log.LogDebug("# covariance matrix:");
-  Log.LogDebug("[");
-  Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-  Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
-
-  //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1),
-  //        COV(0,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0),
-  //        COV(1,1), COV(1,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n",
-  //        COV(2,0), COV(2,1), COV(2,2));
-
-  Log.LogDebug("]");
-  Log.LogDebug("# chisq = %g", chisq);
-  Log.LogDebug("# chisq/n = %g", chisq / n);
+  Log.LogDebug("[ %+.5e, %+.5e", COV(0, 0), COV(0, 1));
+  Log.LogDebug("  %+.5e, %+.5e ]", COV(1, 0), COV(1, 1));
+  Log.LogDebug("# chisq = %g, chisq/n = %g", chisq, chisq / n);
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     Float64 a = gsl_vector_get(c, iddl) / normFactor;
@@ -252,30 +192,23 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   Float64 a0 = gsl_vector_get(c, 0) / normFactor;
   for (Int32 iddl = 1; iddl < EltsIdx.size(); iddl++) {
     Float64 a = gsl_vector_get(c, iddl) / normFactor;
-    Float64 product = a0 * a;
-    if (product < 0) {
-      sameSign = 0;
-    }
+    sameSign &= std::signbit(a0 * a);
   }
 
   Log.LogDetail("# Found n=%d amplitudes with sameSign=%d", EltsIdx.size(),
                 sameSign);
 
-  ampsfitted.resize(nddl);
-  errorsfitted.resize(nddl);
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
-    Float64 a = gsl_vector_get(c, iddl) / normFactor;
     Float64 cova = gsl_matrix_get(cov, iddl, iddl);
-    Float64 sigma = sqrt(cova) / normFactor;
-    if (iddl < EltsIdx.size()) {
-      m_Elements.SetElementAmplitude(EltsIdx[iddl], a, sigma);
-    }
-    ampsfitted[iddl] = (a);
-    errorsfitted[iddl] = (sigma);
+    errorsfitted[iddl] = sqrt(cova) / normFactor;
+    ampsfitted[iddl] = gsl_vector_get(c, iddl) / normFactor;
+    if (iddl < EltsIdx.size())
+      m_Elements.SetElementAmplitude(EltsIdx[iddl], ampsfitted[iddl],
+                                     errorsfitted[iddl]);
   }
 
-  if (polyOrder >= 0) {
-    for (Int32 kCoeff = 0; kCoeff < polyOrder + 1; kCoeff++) {
+  if (m_fitc_polyOrder >= 0) {
+    for (Int32 kCoeff = 0; kCoeff < m_fitc_polyOrder + 1; kCoeff++) {
       Float64 p = gsl_vector_get(c, EltsIdx.size() + 1 + kCoeff) / normFactor;
       Log.LogDetail("# Found p%d poly amplitude = %+.5e", kCoeff, p);
     }
@@ -291,4 +224,30 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
   chisquare = chisq;
   return sameSign;
+}
+
+void CSvdlcFitter::fillMatrix(Int32 imin, Int32 imax, Float64 redshift,
+                              const TInt32List &EltsIdx,
+                              const CSpectrumSpectralAxis &spectralAxis,
+                              const CSpectrumFluxAxis &continuumfluxAxis,
+                              gsl_matrix *X) const {
+  Int32 n = imax - imin + 1;
+
+  for (Int32 i = 0, idx = imin; idx <= imax; ++i, ++idx) {
+    Float64 xi = spectralAxis[idx];
+    Float64 ci = continuumfluxAxis[idx];
+    for (Int32 iddl = 0, e = EltsIdx.size(); iddl < e; iddl++) {
+      Float64 fval =
+          m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, redshift, ci);
+      gsl_matrix_set(X, i, iddl, fval);
+    }
+
+    gsl_matrix_set(X, i, EltsIdx.size(), ci);
+
+    for (Int32 kCoeff = 0; kCoeff < m_fitc_polyOrder + 1; kCoeff++) {
+      Float64 vect = std::pow(xi, kCoeff);
+      gsl_matrix_set(X, i, EltsIdx.size() + 1 + kCoeff, vect);
+    }
+  }
+  return;
 }

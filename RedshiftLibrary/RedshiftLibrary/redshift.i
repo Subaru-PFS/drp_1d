@@ -65,7 +65,7 @@
 %shared_ptr(CTemplateCatalog)
 %shared_ptr(CClassificationResult)
 %shared_ptr(CReliabilityResult)
-%shared_ptr(CPdfMargZLogResult)
+%shared_ptr(CLogZPdfResult)
 %shared_ptr(TCandidateZ)
 %shared_ptr(TExtremaResult)
 %shared_ptr(TTplCombinationResult)
@@ -117,7 +117,7 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -213,8 +213,6 @@ public:
 
   static CLog& GetInstance();
 
-  void LogError( const char* format, ... );
-  void LogWarning( const char* format, ... );
   void LogInfo( const char* format, ... );
   void LogDetail( const char* format, ... );
   void LogDebug( const char* format, ... );
@@ -228,29 +226,6 @@ private:
 
 class CFlagWarning {
 public:
-  typedef enum WarningCode
-    {
-      WARNING_NONE=0,
-      AIR_VACCUM_CONVERSION_IGNORED, //1
-      CRANGE_VALUE_OUTSIDERANGE, //2
-      CRANGE_VECTBORDERS_OUTSIDERANGE, //3
-      CRANGE_NO_INTERSECTION, //4
-      FINDER_NO_PEAKS, //5
-      STDESTIMATION_NO_MATCHING, //6
-      STDESTIMATION_FAILED, //7
-      MULTIROLL_STRTAG_NOTFOUND, //8
-      LINEMATCHING_REACHED_ENDLOOP, //9
-      FORCE_LOGSAMPLING_FFT,//10
-      IGNORELINESSUPPORT_DISABLED_FFT,//11
-      FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,//12
-      INVALID_MERIT_VALUES,//13
-      AIR_VACCUM_REACHED_MAX_ITERATIONS, //14
-      ASYMFIT_NAN_PARAMS,//15
-      DELTAZ_COMPUTATION_FAILED, //16
-      INVALID_FOLDER_PATH,//17
-      TPL_NAME_EMPTY,//18
-      RELIABILITY_NEEDS_TENSORFLOW//19
-    }WarningCode;
 
   static CFlagWarning& GetInstance();
 
@@ -298,7 +273,7 @@ typedef std::vector<std::string> TStringList;
 %template(TInt32List) std::vector<Int32>;
 %template(TStringList) std::vector<std::string>;
 %template(VecTFloat64List) std::vector<  std::vector<Float64> >;
-
+%template(TBoolList) std::vector<bool>;
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
 %apply Int64 &OUTPUT { Int64& out_long };
@@ -392,12 +367,13 @@ public:
 };
 
 %template(TMapFloat64) std::map<std::string, Float64>;
+%template(TZGridListParams) std::vector<TZGridParameters>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
-%include "operator/pdfMargZLogResult.i"
 %include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
+%include "operator/logZPdfResult.i"
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
 %include "linemodel/linemodelextremaresult.i"
@@ -433,7 +409,6 @@ public:
   void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
   void reset();
 
-
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
@@ -444,8 +419,6 @@ public:
     ~CProcessFlowContext();
     
 };
-
-
 
 class CParameterStore : public CScopeStore
 {
@@ -471,7 +444,7 @@ class COperatorResultStore
 									 const std::string& method,
                                                                        const std::string& name ) const;
 
-  std::shared_ptr<const CPdfMargZLogResult> GetPdfMargZLogResult(const std::string& objectType,
+  std::shared_ptr<const CLogZPdfResult> GetLogZPdfResult(const std::string& objectType,
 								    const std::string& method,
 								    const std::string& name ) const;
 
@@ -500,7 +473,7 @@ class COperatorResultStore
   std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								 const std::string& method,
 								 const std::string& name,
-								     const int& rank 
+								 const int& rank 
 								 ) const  ;
 
     std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
@@ -652,7 +625,7 @@ class CLSF
     };
  public:
   virtual ~CLSF();
-  virtual Float64 GetWidth(Float64 lambda) const=0;
+  virtual Float64 GetWidth(Float64 lambda, bool cliplambda = false) const=0;
   virtual bool IsValid() const=0;
 protected:
   CLSF();
@@ -759,6 +732,7 @@ public:
 };
 
 %include "common/errorcodes.i"
+%include "common/warningcodes.i"
 
 class AmzException : public std::exception
 {
@@ -770,13 +744,15 @@ class AmzException : public std::exception
 
   virtual ~AmzException();
  
-  ErrorCode getErrorCode();
+  ErrorCode getErrorCode() const;
   virtual const char* what() ;
-  const std::string &getMessage();
+  const std::string &getMessage() const;
 
-  const std::string &getFileName();
-  const std::string &getMethod();
-  int getLine();
+  const std::string &getFileName() const;
+  const std::string &getMethod() const;
+  int getLine() const;
+
+  void LogError(const std::string &msg) const;
 
 };
 
@@ -885,6 +861,7 @@ def redo(prefix):
     # globals()[prefix] = type(prefix,(),tmpD) # pre-Enum support
     globals()[prefix] = Enum(prefix,tmpD)
 redo('ErrorCode')
+redo('WarningCode')
 del redo  # cleaning up the namespace
 del Enum
 %}

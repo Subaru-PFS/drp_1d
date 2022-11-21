@@ -105,6 +105,7 @@ public:
 
   void Init();
   void reset();
+
   std::shared_ptr<const CParameterStore>
   LoadParameterStore(const std::string &paramsJSONString);
 

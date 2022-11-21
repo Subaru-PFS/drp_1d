@@ -36,18 +36,34 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATOR_PDFMARGZLOGRESULT_
-#define _REDSHIFT_OPERATOR_PDFMARGZLOGRESULT_
+#ifndef _REDSHIFT_SPECTRUM_REBIN_REBINSPLINE_
+#define _REDSHIFT_SPECTRUM_REBIN_REBINSPLINE_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/processflow/result.h"
-
-using namespace std;
+#include "RedshiftLibrary/spectrum/rebin/rebin.h"
 namespace NSEpic {
 
-#include "RedshiftLibrary/operator/pdfMargZLogResult.i"
+/**
+ * \ingroup Redshift
+ */
+class CRebinSpline : public CRebin {
 
-}
+public:
+  using CRebin::CRebin;
+  CRebinSpline(CRebin &&other) : CRebin(std::move(other)){};
+
+  void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
+             const CSpectrumSpectralAxis &targetSpectralAxis,
+             CSpectrum &rebinedSpectrum, CMask &rebinedMask,
+             const std::string opt_error_interp, const TAxisSampleList &Xsrc,
+             const TAxisSampleList &Ysrc, const TAxisSampleList &Xtgt,
+             const TFloat64List &Error, Int32 &cursor) override;
+
+  const std::string &getType() override { return m_type; };
+
+protected:
+  const std::string m_type = "spline";
+};
+
+} // namespace NSEpic
 
 #endif

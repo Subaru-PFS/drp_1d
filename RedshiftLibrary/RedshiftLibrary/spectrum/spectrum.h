@@ -62,6 +62,8 @@ class rebin_test;
 } // namespace Spectrum
 
 namespace NSEpic {
+
+class CRebin;
 /**
  * \ingroup Redshift
  */
@@ -134,9 +136,6 @@ public:
                                 Float64 &std) const;
   bool GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const;
 
-  bool ConvertToLogScale();
-  bool ConvertToLinearScale();
-
   bool RemoveContinuum(CContinuum &remover) const;
   const bool checkFlux(Float64 flux, Int32 index) const;
   const bool checkNoise(Float64 error, Int32 index) const;
@@ -158,14 +157,16 @@ public:
 
   void ScaleFluxAxis(Float64 scale);
 
-  bool Rebin(const TFloat64Range &range,
+  void Rebin(const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-             const std::string &opt_interp = "lin",
              const std::string &opt_error_interp = "no") const;
   CSpectrum extract(Int32 startIdx, Int32 endIdx) const;
 
+  void setRebinInterpMethod(const std::string &opt_interp) const;
+
 protected:
+  friend CRebin;
   friend class Spectrum::constructor_test;
   friend class Spectrum::setXXX_test;
   friend class Spectrum::continuum_test;
@@ -181,16 +182,10 @@ protected:
   CSpectrumSpectralAxis m_SpectralAxis;
   std::shared_ptr<const CLSF> m_LSF;
   std::shared_ptr<const CPhotometricData> m_photData;
+  mutable std::unique_ptr<CRebin> m_rebin;
 
   void EstimateContinuum() const;
   void ResetContinuum() const;
-  bool RebinFineGrid() const;
-  void ClearFineGrid() const;
-
-  const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
-                                         // check if enough to be private
-  mutable TFloat64List m_pfgFlux;
-  mutable bool m_FineGridInterpolated = false;
 
   std::string m_Name;
   std::string m_FullPath;

@@ -49,15 +49,14 @@ CFlagWarning::CFlagWarning() {
 
 CFlagWarning::~CFlagWarning() { delete[] m_WorkingBuffer; }
 
-void CFlagWarning::warning(CFlagWarning::WarningCode c, std::string message) {
-  m_flags |= (1 << c);
+void CFlagWarning::warning(WarningCode c, std::string message) {
+  m_flags |= (1 << (int)c);
   m_messageList.push_back(make_pair(c, message));
   Log.LogWarning(message);
 }
 
-void CFlagWarning::warning(CFlagWarning::WarningCode c, const char *format,
-                           ...) {
-  m_flags |= (1 << c);
+void CFlagWarning::warning(WarningCode c, const char *format, ...) {
+  m_flags |= (1 << (int)c);
 
   va_list args;
   va_start(args, format);

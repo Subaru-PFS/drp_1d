@@ -116,10 +116,13 @@ public:
   CLSF &operator=(const CLSF &other) = default;
   CLSF &operator=(CLSF &&other) = default;
   // GetWidth requires observed wavelength, not restframe
-  virtual Float64 GetWidth(Float64 lambda) const = 0;
+  virtual Float64 GetWidth(Float64 lambda, bool cliplambda = false) const = 0;
   virtual bool checkAvailability(Float64 lambda) const {
     return true;
   }; // default to true
+  virtual TFloat64Range getSpectralRange() const {
+    return TFloat64Range(LSF_MIN_LAMBDA, LSF_MAX_LAMBDA);
+  };
   virtual bool IsValid() const = 0;
   Float64 GetProfileVal(Float64 lambda, Float64 lambda0 = 0.) const;
   TFloat64List getNormalizedProfileVector(TFloat64List lambda,

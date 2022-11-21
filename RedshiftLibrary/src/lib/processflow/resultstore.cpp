@@ -43,26 +43,18 @@
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <fstream>
-#include <sstream>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
-
-namespace bfs = boost::filesystem;
 
 COperatorResultStore::COperatorResultStore(const TScopeStack &scope)
     : CScopeStore(scope) {}
@@ -81,7 +73,6 @@ void COperatorResultStore::StoreResult(
   if (it != map.end()) {
     THROWG(INTERNAL_ERROR, "Can not store results: result already exists");
   }
-
   map[scopedName] = result;
 }
 
@@ -205,15 +196,14 @@ COperatorResultStore::GetReliabilityResult(const std::string &objectType,
       GetGlobalResult(oss.str()).lock());
 }
 
-std::shared_ptr<const CPdfMargZLogResult>
-COperatorResultStore::GetPdfMargZLogResult(const std::string &objectType,
-                                           const std::string &method,
-                                           const std::string &name) const {
+std::shared_ptr<const CLogZPdfResult>
+COperatorResultStore::GetLogZPdfResult(const std::string &objectType,
+                                       const std::string &method,
+                                       const std::string &name) const {
   std::ostringstream oss;
   oss << objectType << "." << method << "." << name;
-  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
-  return std::dynamic_pointer_cast<const CPdfMargZLogResult>(
+  return std::dynamic_pointer_cast<const CLogZPdfResult>(
       GetGlobalResult(oss.str()).lock());
 }
 
@@ -377,6 +367,18 @@ bool COperatorResultStore::HasDataset(const std::string &objectType,
   std::ostringstream oss;
   oss << objectType << "." << method << "." << name;
   TResultsMap::const_iterator it = m_GlobalResults.find(oss.str());
+  return (it != m_GlobalResults.end());
+}
+
+bool COperatorResultStore::hasContextWarningFlag() const {
+
+  TResultsMap::const_iterator it = m_GlobalResults.find("warningFlag");
+  return (it != m_GlobalResults.end());
+}
+
+bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
+  TResultsMap::const_iterator it =
+      m_GlobalResults.find(GetScopedNameAt("warningFlag", 2));
   return (it != m_GlobalResults.end());
 }
 

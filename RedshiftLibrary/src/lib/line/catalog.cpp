@@ -39,18 +39,19 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/log/log.h"
-#include <algorithm> // std::sort
+
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
+
+#include <algorithm> // std::sort
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <string>
-
-#include "RedshiftLibrary/line/lineprofile.h"
 
 using namespace NSEpic;
 using namespace std;

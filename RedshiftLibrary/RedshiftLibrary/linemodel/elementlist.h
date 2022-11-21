@@ -55,7 +55,7 @@ public:
   TInt32List m_elementsDisabledIndexes;
 
   TInt32List GetModelValidElementsIndexes() const;
-
+  TInt32List getValidElementIndices(Int32 lineTypeFilter) const;
   void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
   Float64 GetElementAmplitude(Int32 j) const;
 
@@ -102,21 +102,32 @@ public:
   bool GetModelStrongEmissionLinePresent() const;
   bool GetModelHaStrongest() const;
 
-  CLineModelSolution
-  GetModelSolution(Int32 opt_level,
-                   const CLineCatalog::TLineVector &restLineList,
-                   Float64 redshift);
-
   TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
 
   void debug(std::ostream &os) const;
-
+  Int32 m__count = 0;
+  void dumpElement(std::string pre = "");
   const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {
     return m_Elements[i];
   }
   std::shared_ptr<CLineModelElement> &operator[](Int32 i) {
     return m_Elements[i];
   }
+
+  // for range looping over elements
+  std::vector<std::shared_ptr<CLineModelElement>>::iterator begin() {
+    return m_Elements.begin();
+  };
+  std::vector<std::shared_ptr<CLineModelElement>>::iterator end() {
+    return m_Elements.end();
+  };
+  std::vector<std::shared_ptr<CLineModelElement>>::const_iterator
+  begin() const {
+    return m_Elements.begin();
+  };
+  std::vector<std::shared_ptr<CLineModelElement>>::const_iterator end() const {
+    return m_Elements.end();
+  };
 
   Int32 size() const { return m_Elements.size(); }
   void push_back(const std::shared_ptr<CLineModelElement> &elt) {

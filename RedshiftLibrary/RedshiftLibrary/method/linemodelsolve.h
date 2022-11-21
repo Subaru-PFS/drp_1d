@@ -40,15 +40,11 @@
 #define _REDSHIFT_METHOD_LINEMODELSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/operator/linemodel.h"
-#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
-#include "RedshiftLibrary/operator/pdfz.h"
+
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 
@@ -70,11 +66,15 @@ public:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope) override;
 
-  bool Solve();
+  void Solve();
+  void
+  createRedshiftGrid(const std::shared_ptr<const CInputContext> &inputContext,
+                     const TFloat64Range &redshiftRange) override;
 
 private:
-  ChisquareArray BuildChisquareArray(
-      const std::shared_ptr<const CLineModelResult> &result) const;
+  ChisquareArray
+  BuildChisquareArray(const std::shared_ptr<const CLineModelResult> &result,
+                      const TZGridListParams &zgridParams = {}) const;
 
   void GetZpriorsOptions(bool &zPriorStrongLinePresence,
                          bool &zPriorHaStrongestLine, bool &zPriorNLineSNR,
@@ -94,7 +94,9 @@ private:
       std::shared_ptr<const CLineModelResult> result) const;
   const CLineCatalog::TLineVector
   FilterRestLineCatalog(const CLineCatalog &restlinecatalog);
-
+  void fillChisquareArrayForTplRatio(
+      const std::shared_ptr<const CLineModelResult> &result,
+      ChisquareArray &chisquarearray) const;
   COperatorLineModel m_linemodel;
 
   std::string m_opt_lineratiotype;
@@ -114,6 +116,7 @@ private:
 
   Int32 m_opt_firstpass_largegridstepRatio;
   bool m_opt_skipsecondpass = false;
+  Float64 m_coarseRedshiftStep = NAN;
 };
 
 } // namespace NSEpic

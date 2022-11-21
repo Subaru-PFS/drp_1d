@@ -76,7 +76,6 @@ public:
 
   Float64 getMinChiSquare() const;
   Float64 getMaxChiSquare() const;
-  Int32 ResizeChisquareTplRatios(Int32 nTplratios, Int32 nRedshifts);
   void SetChisquareTplContinuumResult(
       Int32 index,
       const std::shared_ptr<const CTemplatesFitStore> &tplFitStore);
@@ -84,8 +83,7 @@ public:
   void
   SetChisquareTplratioResult(Int32 index,
                              std::shared_ptr<CTplratioManager> tplratioManager);
-  void
-  SetChisquareTplratioResultFromPrevious(Int32 index);
+  void SetChisquareTplratioResultFromPrevious(Int32 index);
 
   TFloat64List getChisquareTplContinuumResult(Int32 index_z);
   TFloat64List getChisquareTplratioResult(Int32 index_z);
@@ -94,6 +92,7 @@ public:
   TBoolList getHaELPresentTplratioResult(Int32 index_z);
   TInt32List getNLinesAboveSNRTplratioResult(Int32 index_z);
   TFloat64List getPriorLinesTplratioResult(Int32 index_z);
+  void updateVectors(Int32 idx, Int32 ndup, Int32 count);
 
   // Merit results
   TFloat64List Redshifts;           // z axis
@@ -119,8 +118,8 @@ public:
                                    // tplratio)
   TFloat64List ChiSquareContinuum; // chi2 result for the continuum
   TFloat64List
-      ScaleMargCorrectionContinuum; //  scale marginalization correction result
-                                    //  for the continuum
+      ScaleMargCorrectionContinuum; //  scale marginalization correction
+                                    //  result for the continuum
   std::vector<TFloat64List>
       ChiSquareTplContinuum; // chi2 for all continuum templates fited
 

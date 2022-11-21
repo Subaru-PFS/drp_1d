@@ -40,23 +40,50 @@
 #define _REDSHIFT_OPERATOR_TPLCOMBINATION_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/operator/operator.h"
-
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
+
 #include <gsl/gsl_matrix_double.h>
+
 namespace NSEpic {
 class CSpectrum;
 class COperatorResult;
 class CModelSpectrumResult;
+
+struct STplcombination_basicfitresult : TFittingIsmIgmResult {
+  STplcombination_basicfitresult(Int32 EbmvListSize, Int32 MeiksinListSize,
+                                 Int32 componentCount)
+      : TFittingIsmIgmResult(EbmvListSize, MeiksinListSize),
+        fittingAmplitudes(componentCount, NAN),
+        fittingAmplitudeErrors(componentCount, NAN),
+        fittingAmplitudeSigmas(componentCount, NAN),
+        fittingAmplitudesInterm(
+            EbmvListSize,
+            std::vector<TFloat64List>(MeiksinListSize,
+                                      TFloat64List(componentCount, NAN))),
+        tplNames(componentCount),
+        COV(componentCount, TFloat64List(componentCount, NAN)){};
+
+  TFloat64List fittingAmplitudes;
+  TFloat64List fittingAmplitudeErrors;
+  TFloat64List fittingAmplitudeSigmas;
+
+  std::vector<std::vector<TFloat64List>>
+      fittingAmplitudesInterm; // intermediate amplitudes
+  TStringList tplNames;        // cause combination of templates
+
+  Float64 SNR = NAN;
+  std::vector<TFloat64List> COV;
+};
 
 class COperatorTplcombination {
 public:
@@ -65,41 +92,21 @@ public:
           const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
           Float64 overlapThreshold,
           const std::vector<CMask> &additional_spcMasks,
-          const std::string &opt_interp, Int32 opt_extinction = 0,
-          Int32 opt_dustFitting = 0,
+          const std::string &opt_interp, bool opt_extinction = false,
+          bool opt_dustFitting = false,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
-          bool keepigmism = false, Float64 FitEbmvCoeff = -1.,
-          Int32 FitMeiksinIdx = -1);
+          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx);
 
   Float64 ComputeDtD(const CSpectrumFluxAxis &spcFluxAxis,
                      const TInt32Range &range); // could be also made static
   std::shared_ptr<CModelSpectrumResult> ComputeSpectrumModel(
       const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
       Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
-      const TFloat64List &amplitudes, std::string opt_interp,
-      const TFloat64Range &lambdaRange, const Float64 overlapThreshold);
+      const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
+      const Float64 overlapThreshold);
 
 private:
-  struct STplcombination_basicfitresult {
-    COperator::EStatus status;
-    Float64 overlapRate;
-    Float64 chisquare;
-    TFloat64List fittingAmplitudes;
-    TFloat64List fittingAmplitudeErrors;
-    TFloat64List fittingAmplitudeSigmas;
-    std::vector<TFloat64List> ChiSquareInterm;
-    std::vector<TFloat64List> IsmCalzettiCoeffInterm;
-    std::vector<TInt32List> IgmMeiksinIdxInterm;
-    std::vector<std::vector<TFloat64List>>
-        fittingAmplitudesInterm; // intermediate amplitudes
-    TStringList tplNames;        // cause combination of templates
-    Int32 IGMIdx;
-    Float64 EbmvCoeff;
-    Float64 SNR;
-    std::vector<TFloat64List> COV;
-  };
-
   void BasicFit_preallocateBuffers(const CSpectrum &spectrum,
                                    const TTemplateConstRefList &tplList);
 
@@ -107,14 +114,13 @@ private:
                 const TFloat64Range &lambdaRange, Float64 redshift,
                 Float64 overlapThreshold,
                 STplcombination_basicfitresult &fittingResults,
-                std::string opt_interp, Float64 forcedAmplitude,
-                Int32 opt_extinction, Int32 opt_dustFitting,
-                CMask spcMaskAdditional,
+                Float64 forcedAmplitude, bool opt_extinction,
+                bool opt_dustFitting, CMask spcMaskAdditional,
                 const CPriorHelper::TPriorEList &logpriore,
                 const TInt32List &MeiksinList, const TInt32List &EbmvList);
   void RebinTemplate(const CSpectrum &spectrum,
                      const TTemplateConstRefList &tplList, Float64 redshift,
-                     const TFloat64Range &lambdaRange, std::string opt_interp,
+                     const TFloat64Range &lambdaRange,
                      TFloat64Range &currentRange, Float64 &overlapRate,
                      const Float64 overlapThreshold);
   // buffers for the interpolated axis (templates & spectrum)

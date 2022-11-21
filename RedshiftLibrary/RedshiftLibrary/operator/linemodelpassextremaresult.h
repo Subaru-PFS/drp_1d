@@ -44,6 +44,8 @@
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 
+#include <unordered_set>
+
 namespace NSEpic {
 
 class CLineModelPassExtremaResult {
@@ -57,7 +59,8 @@ public:
   TInt32List getUniqueCandidates(
       std::shared_ptr<const CLineModelPassExtremaResult> results_b);
   TFloat64List GetRedshifts() const;
-
+  void fillWithContinuumModelSolutionAtIndex(
+      Int32 i, const CContinuumModelSolution &contModelSol);
   Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
 
   TCandidateZbyRank m_ranked_candidates;
@@ -100,7 +103,7 @@ public:
   TFloat64List SigmaZ;                  // sigmaz for each extrema
 
   TFloat64List StrongELSNR;
-  std::vector<TStringList> StrongELSNRAboveCut;
+  std::vector<std::unordered_set<std::string>> StrongELSNRAboveCut;
   TFloat64List bic; // bayesian information criterion for each extrema
   std::vector<CContinuumIndexes::TContinuumIndexList>
       ContinuumIndexes; // continuum indexes for each extrema

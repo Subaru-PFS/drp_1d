@@ -57,11 +57,11 @@ public:
                   std::shared_ptr<CContinuumManager> continuumManager,
                   const CLineCatalog::TLineVector &restLineList);
   CTplCorrManager() = delete;
-  CTplCorrManager(CTplCorrManager const& other) = default;
-  CTplCorrManager& operator=(CTplCorrManager const& other) = default;
-   
-  CTplCorrManager(CTplCorrManager&& other) = default;
-  CTplCorrManager& operator=(CTplCorrManager&& other) = default;
+  CTplCorrManager(CTplCorrManager const &other) = default;
+  CTplCorrManager &operator=(CTplCorrManager const &other) = default;
+
+  CTplCorrManager(CTplCorrManager &&other) = default;
+  CTplCorrManager &operator=(CTplCorrManager &&other) = default;
 
   Float64 computeMerit(Int32 itratio) override;
   void saveResults(Int32 itratio) override;
