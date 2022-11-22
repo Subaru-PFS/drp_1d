@@ -108,12 +108,14 @@ class Context:
         self.process_flow_context.setfluxCorrectionCalzetti(self.calibration_library.calzetti)
 
     def run(self, spectrum_reader):
-        resultStore = CProcessFlowContext.GetInstance().GetResultStore()
-        rso = ResultStoreOutput(resultStore,
-                                self.parameters,
-                                auto_load = False,
-                                extended_results = self.extended_results)
-        
+        try:
+            resultStore = CProcessFlowContext.GetInstance().GetResultStore()
+            rso = ResultStoreOutput(resultStore,
+                                    self.parameters,
+                                    auto_load = False,
+                                    extended_results = self.extended_results)
+        except Exception as e:
+            rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)),None,"init")
         context_warningFlagRecorded=False
         try:
             self.init_context()
