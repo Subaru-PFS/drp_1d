@@ -71,7 +71,6 @@
 %shared_ptr(TTplCombinationResult)
 %shared_ptr(TLineModelResult)
 %shared_ptr(CModelSpectrumResult)
-%shared_ptr(CSpectraFluxResult)
 %shared_ptr(TLSFArguments)
 %shared_ptr(TLSFGaussianVarWidthArgs)
 %shared_ptr(TLSFGaussianConstantWidthArgs)
@@ -125,7 +124,6 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
@@ -379,20 +377,6 @@ public:
 %include "operator/modelspectrumresult.i"
 %include "linemodel/linemodelsolution.i"
 
-
-class CSpectraFluxResult : public COperatorResult
-{
-
-public:
-
-    CSpectraFluxResult();
-    virtual ~CSpectraFluxResult();
-
-    TFloat64List   fluxes;
-    TFloat64List   wavel;
-
-};
-
 class CProcessFlowContext {
 public:
 
@@ -490,12 +474,6 @@ class COperatorResultStore
 								     const std::string& method,
 								     const std::string& name 
 								     ) const  ;
-
-  std::shared_ptr<const CSpectraFluxResult> GetSpectraFluxResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name ,
-								   const int& rank
-								   ) const  ;
   
   const std::string&  GetGlobalResultType(const std::string& objectType,
                                           const std::string& method,

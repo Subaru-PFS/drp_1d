@@ -42,9 +42,6 @@ public:
   TLineModelResult(const TCandidateZ &candz) : TExtremaResult(candz) {
     m_type = "TLineModelResult";
   }
-  TLineModelResult(const CContinuumModelSolution &cms)
-      : TExtremaResult(cms), FittedTplRedshift(cms.tplRedshift),
-        FittedTplpCoeffs(cms.pCoeffs){};
 
   void updateFromContinuumModelSolution(const CContinuumModelSolution &cms,
                                         bool all);

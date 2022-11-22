@@ -53,6 +53,12 @@ public:
   CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
   void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
 
+  virtual ~CTemplateFittingResult() = default;
+  CTemplateFittingResult(const CTemplateFittingResult &) = default;
+  CTemplateFittingResult(CTemplateFittingResult &&) = default;
+  CTemplateFittingResult &operator=(const CTemplateFittingResult &) = default;
+  CTemplateFittingResult &operator=(CTemplateFittingResult &&) = default;
+
   TFloat64List Redshifts;
 
   // best fit results

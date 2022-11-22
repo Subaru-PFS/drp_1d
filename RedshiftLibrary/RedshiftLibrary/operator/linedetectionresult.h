@@ -39,8 +39,6 @@
 #ifndef _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
 #define _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 #include <vector>
@@ -55,7 +53,6 @@ class CLineDetectionResult : public COperatorResult {
 
 public:
   CLineDetectionResult() : COperatorResult("CLineDetectionResult"){};
-  virtual ~CLineDetectionResult(){};
 
   CLineCatalog LineCatalog;
   TStringList PeakListDetectionStatus;

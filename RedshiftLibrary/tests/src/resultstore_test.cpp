@@ -46,7 +46,6 @@
 #include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
@@ -108,20 +107,13 @@ std::shared_ptr<CModelSpectrumResult> getModelSpectrumResult() {
   return result_in;
 }
 
-// create Spectra Flux result
-std::shared_ptr<CSpectraFluxResult> getSpectraFluxresult() {
-  std::shared_ptr<CSpectraFluxResult> result_in =
-      (std::shared_ptr<CSpectraFluxResult>)new CSpectraFluxResult();
-  return result_in;
-}
-
 // Create LineModel Extrema Result
 std::shared_ptr<LineModelExtremaResult> getLineModelExtremaResult() {
 
   std::shared_ptr<LineModelExtremaResult> result_in =
       make_shared<LineModelExtremaResult>(getZCandidates());
 
-  result_in->m_savedModelContinuumSpectrumResults[0] = getSpectraFluxresult();
+  result_in->m_savedModelContinuumSpectrumResults[0] = getModelSpectrumResult();
 
   std::vector<std::shared_ptr<CModelSpectrumResult>> modelSpectrimResultList;
   std::shared_ptr<CModelSpectrumResult> modelSpectrimResult =
@@ -467,21 +459,6 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test) {
   std::shared_ptr<const CLineModelSolution> result_out =
       store.GetLineModelSolution("object", "method", "lineModel");
   BOOST_CHECK(result_out->getType() == "CLineModelSolution");
-}
-
-//---------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(GetSpectraFluxResult_test) {
-  TScopeStack scopeStack = getScopeStack();
-
-  std::shared_ptr<LineModelExtremaResult> result_in =
-      getLineModelExtremaResult();
-
-  COperatorResultStore store(scopeStack);
-  store.StoreScopedGlobalResult("spectraFlux", result_in);
-
-  std::shared_ptr<const CSpectraFluxResult> result_out =
-      store.GetSpectraFluxResult("object", "method", "spectraFlux", 0);
-  BOOST_CHECK(result_out->getType() == "CSpectraFluxResult");
 }
 
 //---------------------------------------------------------------v

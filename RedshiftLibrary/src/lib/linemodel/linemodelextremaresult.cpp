@@ -43,7 +43,6 @@
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(

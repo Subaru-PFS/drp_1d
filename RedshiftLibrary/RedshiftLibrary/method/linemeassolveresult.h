@@ -49,8 +49,6 @@ class CLineMeasSolveResult : public CSolveResult {
 
 public:
   CLineMeasSolveResult() : CSolveResult("CLineMeasSolveResult"){};
-
-  virtual ~CLineMeasSolveResult() {}
 };
 
 } // namespace NSEpic

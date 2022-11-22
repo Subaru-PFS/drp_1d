@@ -54,7 +54,6 @@ class CPeakDetectionResult : public COperatorResult {
 
 public:
   CPeakDetectionResult() : COperatorResult("CPeakDetectionResult"){};
-  virtual ~CPeakDetectionResult(){};
 
   TInt32RangeList PeakList;
   TInt32RangeList EnlargedPeakList;

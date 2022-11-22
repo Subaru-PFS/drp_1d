@@ -39,10 +39,9 @@
 class CFlagLogResult : public COperatorResult {
 
 public:
-  CFlagLogResult() : COperatorResult("CFlagLogResult"){};
-
-  ~CFlagLogResult() = default;
-  CFlagLogResult(Int32 flagValue, TWarningMsgList msgList);
+  CFlagLogResult(Int32 _flagValue, TWarningMsgList _msgList)
+      : COperatorResult("CFlagLogResult"), flagValue(_flagValue),
+        msgList(std::move(_msgList)){};
 
   Int32 flagValue;
   TWarningMsgList msgList;

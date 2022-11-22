@@ -41,10 +41,9 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/operator/linedetectionresult.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-//#include "RedshiftLibrary/line/lineprofile.h"
 
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 

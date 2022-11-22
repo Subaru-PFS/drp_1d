@@ -43,8 +43,7 @@ public:
   TCandidateZ &operator=(const TCandidateZ &) = default;
   TCandidateZ &operator=(TCandidateZ &&) = default;
   virtual ~TCandidateZ() = default;
-  TCandidateZ(const std::string &type = "TCandidateZ")
-      : COperatorResult(type){};
+  TCandidateZ() : COperatorResult("TCandidateZ"){};
 
   Float64 Redshift = NAN;
   Float64 ValProba = NAN;
@@ -54,7 +53,7 @@ public:
   Float64 ValSumProbaZmax = NAN;
 
   std::string ParentId = "";
-  std::shared_ptr<const TCandidateZ> ParentObject = nullptr;
+  std::shared_ptr<const TCandidateZ> ParentObject;
   // opt 1: direct integration
   //
   // opt 2: gaussian fit

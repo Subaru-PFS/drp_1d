@@ -40,22 +40,12 @@
 class TExtremaResult : public TCandidateZ {
 
 public:
-  TExtremaResult() = default;
   TExtremaResult(const TExtremaResult &res) = default;
   TExtremaResult(TExtremaResult &&res) = default;
   TExtremaResult &operator=(const TExtremaResult &res) = default;
   TExtremaResult &operator=(TExtremaResult &&res) = default;
   virtual ~TExtremaResult() = default;
   TExtremaResult(const TCandidateZ &candz) : TCandidateZ(candz) {
-    m_type = "TExtremaResult";
-  }
-  TExtremaResult(const CContinuumModelSolution &cms)
-      : FittedTplName(cms.tplName), FittedTplAmplitude(cms.tplAmplitude),
-        FittedTplAmplitudeError(cms.tplAmplitudeError),
-        FittedTplMerit(cms.tplMerit), FittedTplMeritPhot(cms.tplMeritPhot),
-        FittedTplEbmvCoeff(cms.tplEbmvCoeff),
-        FittedTplMeiksinIdx(cms.tplMeiksinIdx), FittedTplDtm(cms.tplDtm),
-        FittedTplMtm(cms.tplMtm), FittedTplLogPrior(cms.tplLogPrior) {
     m_type = "TExtremaResult";
   }
 

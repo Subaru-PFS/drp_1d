@@ -62,8 +62,6 @@ public:
       const std::string &opt_pdfcombination, Float64 evidence)
       : CPdfSolveResult("CTplCombinationSolveResult", ExtremaResult,
                         opt_pdfcombination, evidence){};
-
-  ~CTplCombinationSolveResult(){};
 };
 
 } // namespace NSEpic

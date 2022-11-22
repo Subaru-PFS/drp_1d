@@ -62,7 +62,6 @@ class TLineModelResult;
 class TTplCombinationResult;
 class TExtremaResult;
 class CModelSpectrumResult;
-class CSpectraFluxResult;
 class CLineModelSolution;
 class CFlagLogResult;
 template <class T = TLineModelResult> class CLineModelExtremaResult;
@@ -157,10 +156,6 @@ public:
   GetModelSpectrumResult(const std::string &objectType,
                          const std::string &method,
                          const std::string &name) const;
-
-  std::shared_ptr<const CSpectraFluxResult>
-  GetSpectraFluxResult(const std::string &objectType, const std::string &method,
-                       const std::string &name, const int &rank) const;
 
   int getNbRedshiftCandidates(const std::string &objectType,
                               const std::string &method) const;

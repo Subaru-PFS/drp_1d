@@ -51,6 +51,10 @@ class CSolveResult : public COperatorResult {
 public:
   CSolveResult(const std::string &type) : COperatorResult(type){};
   virtual ~CSolveResult() = 0;
+  CSolveResult(const CSolveResult &) = default;
+  CSolveResult(CSolveResult &&) = default;
+  CSolveResult &operator=(const CSolveResult &) = default;
+  CSolveResult &operator=(CSolveResult &&) = default;
 };
 
 class CPdfSolveResult : public CSolveResult {
@@ -59,10 +63,11 @@ public:
   CPdfSolveResult(const std::string &type,
                   const std::shared_ptr<const TCandidateZ> &ExtremaResult,
                   const std::string &opt_pdfcombination, Float64 evidence);
-  /*CPdfSolveResult(CPdfSolveResult const &other) = default;
+  virtual ~CPdfSolveResult() = default;
+  CPdfSolveResult(CPdfSolveResult const &other) = default;
   CPdfSolveResult &operator=(CPdfSolveResult const &other) = default;
   CPdfSolveResult(CPdfSolveResult &&other) = default;
-  CPdfSolveResult &operator=(CPdfSolveResult &&other) = default;*/
+  CPdfSolveResult &operator=(CPdfSolveResult &&other) = default;
 
   Int32 m_bestRedshiftMethod = 2; // 0:best chi2 or proba, 2: best marg proba
 

@@ -53,7 +53,6 @@ class CModelRulesResult : public COperatorResult {
 public:
   CModelRulesResult(const TStringList &logStrings)
       : COperatorResult("CModelRulesResult"), LogStrings(logStrings){};
-  CModelRulesResult() : COperatorResult("CModelRulesResult"){};
 
 private:
   TStringList LogStrings;

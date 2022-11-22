@@ -45,7 +45,6 @@
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -286,17 +285,6 @@ COperatorResultStore::GetLineModelSolution(const std::string &objectType,
                                            const std::string &name) const {
   return std::dynamic_pointer_cast<const CLineModelSolution>(
       GetGlobalResult(objectType, method, name).lock());
-}
-
-std::shared_ptr<const CSpectraFluxResult>
-COperatorResultStore::GetSpectraFluxResult(const std::string &objectType,
-                                           const std::string &method,
-                                           const std::string &name,
-                                           const int &rank) const {
-  return std::dynamic_pointer_cast<const CSpectraFluxResult>(
-      GetGlobalResult(objectType, method, name)
-          .lock()
-          ->getCandidate(rank, "continuum"));
 }
 
 std::shared_ptr<const CModelSpectrumResult>

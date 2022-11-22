@@ -51,7 +51,6 @@ namespace NSEpic {
 class CModelSpectrumResult;
 class CLineModelSolution;
 class CModelRulesResult;
-class CSpectraFluxResult;
 class CLineModelFitting;
 class CTplratioManager;
 class CLineModelResult;
@@ -67,7 +66,7 @@ public:
       m_savedModelFittingResults;
   std::vector<std::shared_ptr<const CModelRulesResult>>
       m_savedModelRulesResults;
-  std::vector<std::shared_ptr<const CSpectraFluxResult>>
+  std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelContinuumSpectrumResults;
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
@@ -85,11 +84,6 @@ public:
               std::make_shared<TLineModelResult>(*cand.second)));
     }
   };
-
-  void setCandidateFromContinuumSolution(int rank,
-                                         CContinuumModelSolution cms) {
-    m_ranked_candidates[rank].second = std::make_shared<TLineModelResult>(cms);
-  }
 
   std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,
