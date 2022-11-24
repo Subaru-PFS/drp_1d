@@ -91,55 +91,62 @@ void CInputContext::RebinInputs() {
   if (!m_use_LogLambaSpectrum)
     return;
 
-  if (m_Spectrum->GetSpectralAxis().IsLogSampled()) {
-    m_rebinnedSpectrum = std::make_shared<CSpectrum>(m_Spectrum->GetName());
-    CSpectrumSpectralAxis spcWav = m_Spectrum->GetSpectralAxis();
-    spcWav.RecomputePreciseLoglambda(); // in case input spectral values have
-                                        // been rounded
+  for (std::shared_ptr<CSpectrum> spectrum : m_spectra) {
+    if (spectrum->GetSpectralAxis().IsLogSampled()) {
+      m_rebinnedSpectra.push_back(
+          std::make_shared<CSpectrum>(spectrum->GetName()));
+      CSpectrumSpectralAxis spcWav = spectrum->GetSpectralAxis();
+      spcWav.RecomputePreciseLoglambda(); // in case input spectral values have
+      // been rounded
 
-    // Intersect with input lambdaRange and get indexes
-    Int32 kstart = -1;
-    Int32 kend = -1;
-    bool ret = m_lambdaRange->getClosedIntervalIndices(
-        spcWav.GetSamplesVector(), kstart, kend);
-    if (!ret)
-      THROWG(INTERNAL_ERROR,
-             "LambdaRange borders are outside the spectralAxis range");
-    // save into the rebinnedSpectrum
-    m_rebinnedSpectrum->SetSpectralAndFluxAxes(
-        spcWav.extract(kstart, kend),
-        m_Spectrum->GetFluxAxis().extract(kstart, kend));
-    m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
-  } else {
-    m_logGridStep =
-        m_ParameterStore->getMinZStepForFFTProcessing(fft_processing);
+      // Intersect with input lambdaRange and get indexes
+      Int32 kstart = -1;
+      Int32 kend = -1;
+      bool ret = m_lambdaRange->getClosedIntervalIndices(
+          spcWav.GetSamplesVector(), kstart, kend);
+      if (!ret)
+        THROWG(INTERNAL_ERROR,
+               "LambdaRange borders are outside the spectralAxis range");
+      // save into the rebinnedSpectrum
+      m_rebinnedSpectra.back()->SetSpectralAndFluxAxes(
+          spcWav.extract(kstart, kend),
+          spectrum->GetFluxAxis().extract(kstart, kend));
+      m_logGridStep =
+          m_rebinnedSpectra.back()->GetSpectralAxis().GetlogGridStep();
+    } else {
+      m_logGridStep =
+          m_ParameterStore->getMinZStepForFFTProcessing(fft_processing);
+    }
   }
   Log.LogInfo(Formatter() << "loggrid step=" << m_logGridStep);
   std::string category;
   std::string errorRebinMethod = "rebinVariance";
   CSpectrumLogRebinning logReb(*this);
 
-  if (!m_Spectrum->GetSpectralAxis().IsLogSampled())
-    m_rebinnedSpectrum =
-        logReb.loglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
+  for (std::shared_ptr<CSpectrum> spectrum : m_spectra) {
 
-  TFloat64Range zrange;
-  for (std::string cat : m_categories) {
-    if (fft_processing[cat]) {
-      zrange = logReb.logRebinTemplateCatalog(cat);
-      m_logRebin.insert({cat, SRebinResults{zrange}});
+    if (!spectrum->GetSpectralAxis().IsLogSampled())
+      m_rebinnedSpectra.push_back(
+          logReb.loglambdaRebinSpectrum(spectrum, errorRebinMethod));
+
+    TFloat64Range zrange;
+    for (std::string cat : m_categories) {
+      if (fft_processing[cat]) {
+        zrange = logReb.logRebinTemplateCatalog(cat);
+        m_logRebin.insert({cat, SRebinResults{zrange}});
+      }
     }
+    // Initialize rebinned clamped lambda range
+    spectrum->GetSpectralAxis().ClampLambdaRange(
+        *(m_lambdaRange), *(m_rebinnedClampedLambdaRange));
   }
-  // Initialize rebinned clamped lambda range
-  m_Spectrum->GetSpectralAxis().ClampLambdaRange(
-      *(m_lambdaRange), *(m_rebinnedClampedLambdaRange));
   return;
 }
 
 void CInputContext::OrthogonalizeTemplates() {
   Float64 lambda = (m_lambdaRange->GetBegin() + m_lambdaRange->GetEnd()) / 2;
   Float64 resolution = CLSFGaussianConstantResolution::computeResolution(
-      lambda, m_Spectrum->GetLSF()->GetWidth(lambda));
+      lambda, m_spectra[0]->GetLSF()->GetWidth(lambda));
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantResolutionArgs>(resolution);
   std::shared_ptr<const CLSF> lsf =
@@ -175,18 +182,21 @@ void CInputContext::Init() {
   m_lambdaRange = std::make_shared<TFloat64Range>(
       m_ParameterStore->Get<TFloat64Range>("lambdarange"));
 
-  m_Spectrum->ValidateSpectrum(*(m_lambdaRange), enableInputSpcCorrect);
-  m_Spectrum->InitSpectrum(*m_ParameterStore);
-
+  for (std::shared_ptr<CSpectrum> spectrum : m_spectra) {
+    spectrum->ValidateSpectrum(*(m_lambdaRange), enableInputSpcCorrect);
+    spectrum->InitSpectrum(*m_ParameterStore);
+  }
   // set template continuum removal parameters
   m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
 
   // convolve IGM by LSF
-  if (!m_igmcorrectionMeiksin->isConvolved() ||
-      m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA")
-    m_igmcorrectionMeiksin->convolveByLSF(m_Spectrum->GetLSF(),
-                                          *(m_lambdaRange));
+  for (std::shared_ptr<CSpectrum> spectrum : m_spectra) {
 
+    if (!m_igmcorrectionMeiksin->isConvolved() ||
+        m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA")
+      m_igmcorrectionMeiksin->convolveByLSF(spectrum->GetLSF(),
+                                            *(m_lambdaRange));
+  }
   // insert extinction correction objects if needed
   m_TemplateCatalog->m_logsampling = 0;
   m_TemplateCatalog->m_orthogonal = 0;
@@ -197,19 +207,23 @@ void CInputContext::Init() {
   RebinInputs();
 
   if (m_use_LogLambaSpectrum) {
-    m_rebinnedSpectrum->ValidateSpectrum(*(m_lambdaRange),
-                                         enableInputSpcCorrect);
-    m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
+    for (auto rspectrum = m_rebinnedSpectra.begin(),
+              spectrum = m_spectra.begin();
+         rspectrum != m_rebinnedSpectra.end() && spectrum != m_spectra.end();
+         ++rspectrum, ++spectrum) {
+      (*rspectrum)->ValidateSpectrum(*(m_lambdaRange), enableInputSpcCorrect);
+      (*rspectrum)->SetLSF((*spectrum)->GetLSF());
+    }
   }
   OrthogonalizeTemplates();
-
-  m_Spectrum->GetSpectralAxis().ClampLambdaRange(*(m_lambdaRange),
+  for (auto spectrum : m_spectra)
+    spectrum->GetSpectralAxis().ClampLambdaRange(*(m_lambdaRange),
                                                  *(m_clampedLambdaRange));
 }
 
 void CInputContext::resetSpectrumSpecific() {
-  m_Spectrum.reset();
-  m_rebinnedSpectrum.reset();
+  m_spectra.clear();
+  m_rebinnedSpectra.clear();
   // not always spectrum specific
   m_TemplateCatalog.reset();
   // those one should not be here, they stay until api modification (only load

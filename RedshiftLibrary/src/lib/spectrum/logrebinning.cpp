@@ -46,7 +46,7 @@ using namespace std;
 
 CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
     : m_inputContext(inputContext) {
-  m_logGridStep = m_inputContext.m_logGridStep;
+  m_logGridStep = m_inputContext.getLogGridStep();
   std::shared_ptr<CSpectrum> spc;
   if (inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()) {
     spc =

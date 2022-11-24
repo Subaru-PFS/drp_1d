@@ -77,7 +77,7 @@ void CObjectSolve::GetRedshiftSampling(
   auto searchLogRebin = inputContext->m_logRebin.find(m_objectType);
   if (searchLogRebin != inputContext->m_logRebin.end()) {
     redshiftRange = searchLogRebin->second.zrange;
-    redshiftStep = inputContext->m_logGridStep;
+    redshiftStep = inputContext->getLogGridStep();
     if (m_redshiftSampling == "lin")
       THROWG(BAD_PARAMETER_VALUE,
              Formatter() << "CSolve::" << __func__

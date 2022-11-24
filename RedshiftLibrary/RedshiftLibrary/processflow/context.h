@@ -77,8 +77,8 @@ class CLineCatalogsTplRatio;
 class CProcessFlowContext : public CSingleton<CProcessFlowContext> {
 
 public:
-  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
-    m_inputContext->setSpectrum(spectrum);
+  void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
+    m_inputContext->addSpectrum(spectrum);
   }
   void
   setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog) {

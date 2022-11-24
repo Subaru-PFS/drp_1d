@@ -253,7 +253,7 @@ class AbstractSpectrumReader:
         self._spectra[0].SetName(self.source_id)
 
         ctx = CProcessFlowContext.GetInstance()
-        ctx.setSpectrum(self._spectra[0])
+        ctx.addSpectrum(self._spectra[0])
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
         if parameter_lsf_type == "FROMSPECTRUMDATA":
             self.parameters["LSF"]["LSFType"] = self.lsf_type

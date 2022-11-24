@@ -60,9 +60,11 @@ public:
   CInputContext(std::shared_ptr<CParameterStore> paramStore);
 
   // const getters
-  std::shared_ptr<const CSpectrum> GetSpectrum() const { return m_Spectrum; }
-  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
-    return m_rebinnedSpectrum;
+  std::shared_ptr<const CSpectrum> GetSpectrum(int i = 0) const {
+    return m_spectra[i];
+  }
+  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
+    return m_rebinnedSpectra[i];
   }
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_TemplateCatalog;
@@ -80,9 +82,11 @@ public:
   }
 
   // mutable getters
-  const std::shared_ptr<CSpectrum> &GetSpectrum() { return m_Spectrum; }
-  const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum() {
-    return m_rebinnedSpectrum;
+  const std::shared_ptr<CSpectrum> &GetSpectrum(int i = 0) {
+    return m_spectra[i];
+  }
+  const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum(int i = 0) {
+    return m_rebinnedSpectra[i];
   }
   const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     return m_TemplateCatalog;
@@ -102,9 +106,6 @@ public:
     return m_ParameterStore;
   }
 
-  void SetRebinnedSpectrum(const std::shared_ptr<CSpectrum> &rebinnedSpc) {
-    m_rebinnedSpectrum = rebinnedSpc;
-  }
   std::shared_ptr<TFloat64Range> m_lambdaRange;
   std::shared_ptr<TFloat64Range> m_clampedLambdaRange;
   std::shared_ptr<TFloat64Range> m_rebinnedClampedLambdaRange;
@@ -135,8 +136,8 @@ public:
   setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog) {
     m_photBandCatalog = photBandCatalog;
   }
-  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
-    m_Spectrum = spectrum;
+  void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
+    m_spectra.push_back(spectrum);
   }
   void
   setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
@@ -152,9 +153,11 @@ public:
 
   void resetSpectrumSpecific();
 
+  const Float64 &getLogGridStep(int i = 0) const { return m_logGridStep; }
+
 private:
-  std::shared_ptr<CSpectrum> m_Spectrum;
-  std::shared_ptr<CSpectrum> m_rebinnedSpectrum;
+  std::vector<std::shared_ptr<CSpectrum>> m_spectra;
+  std::vector<std::shared_ptr<CSpectrum>> m_rebinnedSpectra;
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::map<std::string, std::map<std::string, std::shared_ptr<CLineCatalog>>>
       m_lineCatalogs;
@@ -164,6 +167,7 @@ private:
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismcorrectionCalzetti;
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
+
   void OrthogonalizeTemplates();
   void RebinInputs();
 };
