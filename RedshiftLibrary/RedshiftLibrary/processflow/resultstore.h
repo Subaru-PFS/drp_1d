@@ -129,16 +129,18 @@ public:
 
   std::shared_ptr<const TLineModelResult>
   GetLineModelResult(const std::string &objectType, const std::string &method,
-                     const std::string &name, const int &rank,
+                     const std::string &name, const std::string &dataset,
+                     const int &rank,
                      bool firstpassCorrespondingResult = false) const;
 
   std::shared_ptr<const TTplCombinationResult>
   GetTplCombinationResult(const std::string &objectType,
                           const std::string &method, const std::string &name,
-                          const int &rank) const;
+                          const std::string &dataset, const int &rank) const;
   std::shared_ptr<const TExtremaResult>
   GetExtremaResult(const std::string &objectType, const std::string &method,
-                   const std::string &name, const int &rank) const;
+                   const std::string &name, const std::string &dataset,
+                   const int &rank) const;
 
   std::shared_ptr<const CLineModelSolution>
   GetLineModelSolution(const std::string &objectType, const std::string &method,
@@ -146,12 +148,13 @@ public:
 
   std::shared_ptr<const CLineModelSolution>
   GetLineModelSolution(const std::string &objectType, const std::string &method,
-                       const std::string &name, const int &rank) const;
+                       const std::string &name, const std::string &dataset,
+                       const int &rank) const;
 
   std::shared_ptr<const CModelSpectrumResult>
   GetModelSpectrumResult(const std::string &objectType,
                          const std::string &method, const std::string &name,
-                         const int &rank) const;
+                         const std::string &dataset, const int &rank) const;
   std::shared_ptr<const CModelSpectrumResult>
   GetModelSpectrumResult(const std::string &objectType,
                          const std::string &method,

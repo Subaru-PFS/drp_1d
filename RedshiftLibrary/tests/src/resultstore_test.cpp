@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK(store_1.GetScopedName("extremaResult") ==
               "object.method.extremaResult");
 
-  std::shared_ptr<const TExtremaResult> result_out =
-      store_1.GetExtremaResult("object", "method", "extremaResult", 0);
+  std::shared_ptr<const TExtremaResult> result_out = store_1.GetExtremaResult(
+      "object", "method", "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
   // test store outside context
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
   BOOST_CHECK(store_1.GetScopedName("extremaResult") ==
               "object.method.extremaResult");
 
-  std::shared_ptr<const TExtremaResult> result_out =
-      store_1.GetExtremaResult("object", "method", "extremaResult", 0);
+  std::shared_ptr<const TExtremaResult> result_out = store_1.GetExtremaResult(
+      "object", "method", "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
   // test store outside context
@@ -413,8 +413,8 @@ BOOST_AUTO_TEST_CASE(GetLineModelResult_test) {
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("lineModel", result_in);
 
-  std::shared_ptr<const TLineModelResult> result_out =
-      store.GetLineModelResult("object", "method", "lineModel", 0);
+  std::shared_ptr<const TLineModelResult> result_out = store.GetLineModelResult(
+      "object", "method", "lineModel", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TLineModelResult");
 }
 
@@ -429,7 +429,8 @@ BOOST_AUTO_TEST_CASE(GetTplCombinationResult_test) {
   store.StoreScopedGlobalResult("tplCombination", result_in);
 
   std::shared_ptr<const TTplCombinationResult> result_out =
-      store.GetTplCombinationResult("object", "method", "tplCombination", 0);
+      store.GetTplCombinationResult("object", "method", "tplCombination",
+                                    "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TTplCombinationResult");
 }
 
@@ -442,8 +443,8 @@ BOOST_AUTO_TEST_CASE(GetExtremaResult_test) {
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("extremaResult", result_in);
 
-  std::shared_ptr<const TExtremaResult> result_out =
-      store.GetExtremaResult("object", "method", "extremaResult", 0);
+  std::shared_ptr<const TExtremaResult> result_out = store.GetExtremaResult(
+      "object", "method", "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 }
 
@@ -472,7 +473,8 @@ BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test) {
   store.StoreScopedGlobalResult("modelSpectrum", result_in);
 
   std::shared_ptr<const CModelSpectrumResult> result_out =
-      store.GetModelSpectrumResult("object", "method", "modelSpectrum", 0);
+      store.GetModelSpectrumResult("object", "method", "modelSpectrum", "model",
+                                   0);
   BOOST_CHECK(result_out->getType() == "CModelSpectrumResult");
 }
 
@@ -487,7 +489,8 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test_2) {
   store.StoreScopedGlobalResult("lineModel", result_in);
 
   std::shared_ptr<const CLineModelSolution> result_out =
-      store.GetLineModelSolution("object", "method", "lineModel", 0);
+      store.GetLineModelSolution("object", "method", "lineModel",
+                                 "fitted_lines", 0);
 
   BOOST_CHECK(result_out->getType() == "CLineModelSolution");
 }

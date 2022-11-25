@@ -231,15 +231,14 @@ COperatorResultStore::GetFlagLogResult(const std::string &objectType,
 std::shared_ptr<const TLineModelResult>
 COperatorResultStore::GetLineModelResult(
     const std::string &objectType, const std::string &method,
-    const std::string &name, const int &rank,
+    const std::string &name, const std::string &dataset, const int &rank,
     bool firstpassCorrespondingResult) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(objectType, method, name)
           .lock()
-          ->getCandidate(rank, "model_parameters",
-                         firstpassCorrespondingResult);
+          ->getCandidate(rank, dataset, firstpassCorrespondingResult);
 
   std::shared_ptr<const TLineModelResult> tlm =
       std::dynamic_pointer_cast<const TLineModelResult>(cop);
@@ -253,13 +252,14 @@ std::shared_ptr<const TTplCombinationResult>
 COperatorResultStore::GetTplCombinationResult(const std::string &objectType,
                                               const std::string &method,
                                               const std::string &name,
+                                              const std::string &dataset,
                                               const int &rank) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(objectType, method, name)
           .lock()
-          ->getCandidate(rank, "model_parameters");
+          ->getCandidate(rank, dataset);
   std::shared_ptr<const TTplCombinationResult> ttc =
       std::dynamic_pointer_cast<const TTplCombinationResult>(cop);
   return ttc;
@@ -267,13 +267,13 @@ COperatorResultStore::GetTplCombinationResult(const std::string &objectType,
 
 std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
     const std::string &objectType, const std::string &method,
-    const std::string &name, const int &rank) const
+    const std::string &name, const std::string &dataset, const int &rank) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(objectType, method, name)
           .lock()
-          ->getCandidate(rank, "model_parameters");
+          ->getCandidate(rank, dataset);
   std::shared_ptr<const TExtremaResult> tlm =
       std::dynamic_pointer_cast<const TExtremaResult>(cop);
   return tlm;
@@ -291,26 +291,28 @@ std::shared_ptr<const CModelSpectrumResult>
 COperatorResultStore::GetModelSpectrumResult(const std::string &objectType,
                                              const std::string &method,
                                              const std::string &name,
+                                             const std::string &dataset,
                                              const int &rank) const
 
 {
   return std::dynamic_pointer_cast<const CModelSpectrumResult>(
       GetGlobalResult(objectType, method, name)
           .lock()
-          ->getCandidate(rank, "model"));
+          ->getCandidate(rank, dataset));
 }
 
 std::shared_ptr<const CLineModelSolution>
 COperatorResultStore::GetLineModelSolution(const std::string &objectType,
                                            const std::string &method,
                                            const std::string &name,
+                                           const std::string &dataset,
                                            const int &rank) const
 
 {
   return std::dynamic_pointer_cast<const CLineModelSolution>(
       GetGlobalResult(objectType, method, name)
           .lock()
-          ->getCandidate(rank, "fitted_lines"));
+          ->getCandidate(rank, dataset));
 }
 
 std::shared_ptr<const CModelSpectrumResult>
