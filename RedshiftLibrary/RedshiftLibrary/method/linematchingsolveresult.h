@@ -52,7 +52,9 @@ class CProcessFlowContext;
  * \ingroup Redshift
  */
 class CLineMatchingSolveResult : public CSolveResult {
+public:
   // rule of five zeros
+  CLineMatchingSolveResult() : CSolveResult("CLineMatchingSolveResult"){};
 };
 
 } // namespace NSEpic

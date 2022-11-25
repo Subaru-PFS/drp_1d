@@ -148,7 +148,6 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   std::shared_ptr<CTplCombinationSolveResult> solveResult =
       std::make_shared<CTplCombinationSolveResult>(
-          resultStore->GetCurrentScopeName(),
           extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
           pdfz.m_postmargZResult->valMargEvidenceLog);
 

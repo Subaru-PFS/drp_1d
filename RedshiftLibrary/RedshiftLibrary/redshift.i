@@ -71,7 +71,6 @@
 %shared_ptr(TTplCombinationResult)
 %shared_ptr(TLineModelResult)
 %shared_ptr(CModelSpectrumResult)
-%shared_ptr(CSpectraFluxResult)
 %shared_ptr(TLSFArguments)
 %shared_ptr(TLSFGaussianVarWidthArgs)
 %shared_ptr(TLSFGaussianConstantWidthArgs)
@@ -125,7 +124,6 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
@@ -358,11 +356,10 @@ class COperatorResult
 {
 
 public:
+  COperatorResult(const std::string &type) : m_type(type){};
+  virtual ~COperatorResult();
 
-    COperatorResult();
-    virtual ~COperatorResult();
-
-    const std::string& getType();
+  const std::string &getType();
 
 };
 
@@ -379,20 +376,6 @@ public:
 %include "linemodel/linemodelextremaresult.i"
 %include "operator/modelspectrumresult.i"
 %include "linemodel/linemodelsolution.i"
-
-
-class CSpectraFluxResult : public COperatorResult
-{
-
-public:
-
-    CSpectraFluxResult();
-    virtual ~CSpectraFluxResult();
-
-    TFloat64List   fluxes;
-    TFloat64List   wavel;
-
-};
 
 class CProcessFlowContext {
 public:
@@ -455,17 +438,20 @@ class COperatorResultStore
   std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
 							     const std::string& method,
 							     const std::string& name ,
+							     const std::string &dataset,
 							     const int& rank,
                    bool firstpassResults
 							     ) const;
   std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
 										 const std::string& method,
 										 const std::string& name ,
+								                 const std::string &dataset,
 										 const int& rank
 										 ) const;
   std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType,
 										 const std::string& method,
 										 const std::string& name ,
+                         							 const std::string &dataset,
 										 const int& rank
 									       ) const;
 
@@ -473,6 +459,7 @@ class COperatorResultStore
   std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								 const std::string& method,
 								 const std::string& name,
+								 const std::string &dataset,
 								 const int& rank 
 								 ) const  ;
 
@@ -484,6 +471,7 @@ class COperatorResultStore
   std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
 								     const std::string& method,
 								     const std::string& name ,
+								     const std::string &dataset,
 								     const int& rank
 								     ) const  ;
 
@@ -491,12 +479,6 @@ class COperatorResultStore
 								     const std::string& method,
 								     const std::string& name 
 								     ) const  ;
-
-  std::shared_ptr<const CSpectraFluxResult> GetSpectraFluxResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name ,
-								   const int& rank
-								   ) const  ;
   
   const std::string&  GetGlobalResultType(const std::string& objectType,
                                           const std::string& method,

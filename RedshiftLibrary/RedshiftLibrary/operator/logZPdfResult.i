@@ -38,7 +38,7 @@
 // ============================================================================
 struct TZGridParameters {
   TZGridParameters(const TFloat64Range &range, Float64 step,
-                  Float64 center = NAN)
+                   Float64 center = NAN)
       : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
         zcenter(center){};
 
@@ -61,24 +61,20 @@ typedef enum { COARSE = 0, FINE, MIXED } ZGridType;
 
 typedef std::vector<TZGridParameters> TZGridListParams;
 
-
-class CZGridListParams
-{
- public:
+class CZGridListParams {
+public:
   CZGridListParams() = default;
- CZGridListParams(const TZGridListParams& params):zparams(params){}
-  
+  CZGridListParams(const TZGridListParams &params) : zparams(params) {}
+
   bool isZGridCoherent() const;
   const TFloat64List buildLogZGrid(bool logsampling,
-				   ZGridType zgrid_type) const;
-  const TFloat64List
-  buildLogMixedZGrid(bool logsampling) const;
-  
-  const Int32 size() const {return zparams.size();}
+                                   ZGridType zgrid_type) const;
+  const TFloat64List buildLogMixedZGrid(bool logsampling) const;
 
- private:
-  const TFloat64List getExtendedList(bool logsampling,
-				     Int32 index) const;
+  const Int32 size() const { return zparams.size(); }
+
+private:
+  const TFloat64List getExtendedList(bool logsampling, Int32 index) const;
 
   TZGridListParams zparams;
 };
@@ -103,7 +99,6 @@ public:
   Float64 valEvidenceLog = NAN;
   Float64 valMargEvidenceLog = NAN;
 
-  
   TFloat64List zcenter;
   TFloat64List zmin;
   TFloat64List zmax;

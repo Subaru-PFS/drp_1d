@@ -50,7 +50,6 @@
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
@@ -1124,18 +1123,13 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
       // Save the reestimated continuum, only the first
       // n=maxSaveNLinemodelContinua extrema
-      std::shared_ptr<CSpectraFluxResult> baselineResult =
-          (std::shared_ptr<CSpectraFluxResult>)new CSpectraFluxResult();
       const CSpectrumFluxAxis &modelContinuumFluxAxis =
           m_fittingManager->getSpectrumModel()->GetModelContinuum();
-      Int32 len = modelContinuumFluxAxis.GetSamplesCount();
 
-      baselineResult->fluxes.resize(len);
-      baselineResult->wavel.resize(len);
-      for (Int32 k = 0; k < len; k++) {
-        baselineResult->fluxes[k] = modelContinuumFluxAxis[k];
-        baselineResult->wavel[k] = (spectrum.GetSpectralAxis())[k];
-      }
+      std::shared_ptr<CModelSpectrumResult> baselineResult =
+          std::make_shared<CModelSpectrumResult>(
+              CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis));
+
       ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
 
       savedModels++;

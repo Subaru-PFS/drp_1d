@@ -42,7 +42,6 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/result.h"
-//#include "RedshiftLibrary/operator/templatefitting.h"
 
 namespace NSEpic {
 
@@ -53,6 +52,12 @@ public:
   CTemplateFittingResult(Int32 n);
   CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
   void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
+
+  virtual ~CTemplateFittingResult() = default;
+  CTemplateFittingResult(const CTemplateFittingResult &) = default;
+  CTemplateFittingResult(CTemplateFittingResult &&) = default;
+  CTemplateFittingResult &operator=(const CTemplateFittingResult &) = default;
+  CTemplateFittingResult &operator=(CTemplateFittingResult &&) = default;
 
   TFloat64List Redshifts;
 

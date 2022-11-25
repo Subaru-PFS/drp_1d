@@ -39,7 +39,7 @@
 
 class CLineModelSolution : public COperatorResult {
 public:
-  CLineModelSolution();
+  CLineModelSolution() : COperatorResult("CLineModelSolution"){};
   CLineModelSolution(const CLineCatalog::TLineVector &restLineList);
   bool isLineValid(Int32 lineIdx) const;
   TInt32List ElementId; // id of the linemodel element it is part of

@@ -48,7 +48,6 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 

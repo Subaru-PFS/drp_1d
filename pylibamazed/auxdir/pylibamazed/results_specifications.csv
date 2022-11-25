@@ -26,8 +26,8 @@ FittedLineID	fitted_lines	False	candidate	lineId	extrema_results	i
 FittedLineFlux	fitted_lines	False	candidate	Fluxs	extrema_results	f8
 ModelLambda	model	False	candidate	ModelLambda	extrema_results	f8
 ModelFlux	model	False	candidate	ModelFlux	extrema_results	f8
-BestContinuumLambda	continuum	False	candidate	wavel	extrema_results	f8
-BestContinuumFlux	continuum	False	candidate	fluxes	extrema_results	f8
+BestContinuumLambda	continuum	False	candidate	ModelLambda	extrema_results	f8
+BestContinuumFlux	continuum	False	candidate	ModelFlux	extrema_results	f8
 GaussianPDFAmp	model_parameters	True	candidate	GaussAmp	extrema_results	f8
 GaussianPDFAmpErr	model_parameters	True	candidate	GaussAmpErr	extrema_results	f8
 GaussianPDFSigma	model_parameters	True	candidate	GaussSigma	extrema_results	f8

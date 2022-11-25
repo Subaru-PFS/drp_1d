@@ -179,12 +179,14 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetLineModelResult(object_type,
                                                              method,
                                                              attribute_info.ResultStore_key,
+                                                             attribute_info.dataset,
                                                              rank, firstpass_result)
             else:
                 getter = getattr(self.results_store,"Get"+or_type[1:])
                 return getter(object_type,
                               method,
                               attribute_info.ResultStore_key,
+                              attribute_info.dataset,
                               rank)
         else:
             raise APIException(ErrorCode.OUTPUT_READER_ERROR,
