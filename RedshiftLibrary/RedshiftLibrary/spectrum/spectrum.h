@@ -137,8 +137,8 @@ public:
   bool GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const;
 
   bool RemoveContinuum(CContinuum &remover) const;
-  const bool checkFlux(Float64 flux, Int32 index) const;
-  const bool checkNoise(Float64 error, Int32 index) const;
+  const bool checkFlux(Float64 flux) const;
+  const bool checkNoise(Float64 error) const;
   const bool IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
   const bool IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const;
   bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,

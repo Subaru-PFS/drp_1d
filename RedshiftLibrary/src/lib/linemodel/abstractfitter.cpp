@@ -117,16 +117,13 @@ Int32 CAbstractFitter::fitAmplitudesLinSolve(
   bool useAmpOffset = m_enableAmplitudeOffsets;
   Int32 idxAmpOffset = -1;
 
-  Int32 idx = 0;
-
   Int32 nddl = EltsIdx.size();
-  if (nddl < 1) {
+  if (nddl < 1)
     return -1;
-  }
+
   TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
-  if (xInds.size() < 1) {
+  if (xInds.size() < 1)
     return -1;
-  }
 
   if (useAmpOffset) {
     nddl += m_AmplitudeOffsetsDegree + 1;
@@ -134,22 +131,18 @@ Int32 CAbstractFitter::fitAmplitudesLinSolve(
     idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
   }
 
-  for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
+  for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
     m_Elements.SetElementAmplitude(EltsIdx[iddl], 1.0, 0.0);
-  }
 
-  const Float64 *spectral = spectralAxis.GetSamples();
-  const Float64 *flux = fluxAxis.GetSamples();
-  const auto &ErrorNoContinuum = m_inputSpc.GetFluxAxis().GetError();
+  const auto &ErrorNoContinuum = m_inputSpc.GetErrorAxis();
 
   // Linear fit
-  int i, n;
   Float64 fval;
   double chisq;
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
 
-  n = xInds.size();
+  Int32 n = xInds.size();
   if (n < nddl) {
     ampsfitted.resize(nddl);
     errorsfitted.resize(nddl);
@@ -168,21 +161,19 @@ Int32 CAbstractFitter::fitAmplitudesLinSolve(
 
   // Normalize
   Float64 maxabsval = DBL_MIN;
-  for (i = 0; i < n; i++) {
-    idx = xInds[i];
-    if (maxabsval < std::abs(flux[idx])) {
-      maxabsval = std::abs(flux[idx]);
-    }
+  for (auto idx : xInds) {
+    if (maxabsval < std::abs(fluxAxis[idx]))
+      maxabsval = std::abs(fluxAxis[idx]);
   }
   Float64 normFactor = 1.0 / maxabsval;
   Log.LogDetail("normFactor = '%.3e'\n", normFactor);
 
   // Prepare the fit data
-  for (i = 0; i < n; i++) {
+  for (Int32 i = 0; i < n; i++) {
     double xi, yi, ei;
-    idx = xInds[i];
-    xi = spectral[idx];
-    yi = flux[idx] * normFactor;
+    Int32 idx = xInds[i];
+    xi = spectralAxis[idx];
+    yi = fluxAxis[idx] * normFactor;
     ei = ErrorNoContinuum[idx] * normFactor;
 
     gsl_vector_set(y, i, yi);
@@ -222,9 +213,8 @@ Int32 CAbstractFitter::fitAmplitudesLinSolve(
   for (Int32 iddl = 1; iddl < EltsIdx.size(); iddl++) {
     Float64 a = gsl_vector_get(c, iddl) / normFactor;
     Float64 product = a0 * a;
-    if (product < 0) {
+    if (product < 0)
       sameSign = 0;
-    }
   }
 
   Log.LogDetail("# Found amplitudes with sameSign=%d", sameSign);

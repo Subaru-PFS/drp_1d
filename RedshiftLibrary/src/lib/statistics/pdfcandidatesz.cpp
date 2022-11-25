@@ -381,17 +381,15 @@ void CPdfCandidatesZ::getCandidateGaussFit(
 
   gsl_matrix *J = gsl_matrix_alloc(n, p);
   gsl_matrix *covar = gsl_matrix_alloc(p, p);
-  double y[n], weights[n], z[n];
-  const Float64 &zc = candidate->Redshift;
-  gsl_multifit_function_fdf f;
 
-  Float64 x_init[p];
+  const Float64 &zc = candidate->Redshift;
 
   // initialize lmfit with previously estimated values ?
   Float64 maxP = 0.0;
   std::for_each(valprobalog.begin() + kmin, valprobalog.begin() + kmin + n,
                 [&maxP](const Float64 &vp) { maxP = std::max(maxP, exp(vp)); });
 
+  TFloat64List x_init(p);
   Float64 normFactor = (maxP <= 0.0) ? 1. : maxP;
   x_init[0] = (maxP > 0.0) ? maxP / normFactor : 1.0;
   x_init[1] = std::max(candidate->Redshift - zrange.GetBegin(),
@@ -401,23 +399,20 @@ void CPdfCandidatesZ::getCandidateGaussFit(
       "    CPdfCandidatesZ::getCandidateSumGaussFit - init a=%e, sigma=%e",
       x_init[0], x_init[1]);
 
-  gsl_vector_view x = gsl_vector_view_array(x_init, p);
-  gsl_vector_view w = gsl_vector_view_array(weights, n);
-
-  const double xtol = 1e-8;
-  const double gtol = 1e-8;
-  const double ftol = 1e-8;
-  Int32 maxIterations = 500;
+  TFloat64List weights(n, 1.0); // no weights
+  gsl_vector_view x = gsl_vector_view_array(x_init.data(), p);
+  gsl_vector_view w = gsl_vector_view_array(weights.data(), n);
 
   // This is the data to be fitted;
+  double y[n], z[n];
   for (Int32 i = 0; i < n; i++) {
     Float64 idx = i + kmin;
-    weights[i] = 1.0; // no weights
     y[i] = exp(valprobalog[idx]) / normFactor;
     z[i] = redshifts[idx];
   }
 
   struct pdfz_lmfitdata d = {n, y, z, zc};
+  gsl_multifit_function_fdf f;
   f.f = &pdfz_lmfit_f;
   f.df = &pdfz_lmfit_df;
   f.n = n;
@@ -443,6 +438,10 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   double chi0 = gsl_blas_dnrm2(res_f);
 
   /* solve the system with a maximum of maxIterations iterations */
+  const double xtol = 1e-8;
+  const double gtol = 1e-8;
+  const double ftol = 1e-8;
+  Int32 maxIterations = 500;
   Int32 info;
   Int32 status =
       gsl_multifit_fdfsolver_driver(s, maxIterations, xtol, gtol, ftol, &info);

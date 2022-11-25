@@ -121,10 +121,6 @@ private:
   Int32 EstimateMtMFast(const TFloat64List &X, const TFloat64List &Y,
                         Int32 nShifts, TFloat64List &XtY);
 
-  Int32 InterpolateResult(const TFloat64List &in, TFloat64List &inGrid,
-                          const TFloat64List &tgtGrid, TFloat64List &out,
-                          Float64 defaultValue);
-
   void freeFFTPlans();
   void freeFFTPrecomputedBuffers();
 

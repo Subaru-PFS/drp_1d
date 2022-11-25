@@ -553,20 +553,18 @@ void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
  *lines
  **/
 CMask CLineModelFitting::getOutsideLinesMask() const {
-  CMask _mask;
+
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-  _mask.SetSize(spectralAxis.GetSamplesCount());
+  CMask _mask(spectralAxis.GetSamplesCount(), 1);
 
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TInt32List supportIdxes = m_Elements.getSupportIndexes(validEltsIdx);
-  for (Int32 i = 0; i < spectralAxis.GetSamplesCount(); i++) {
-    _mask[i] = 1;
-  }
+
   // setting masks
-  for (Int32 i = 0; i < supportIdxes.size(); i++) {
-    _mask[supportIdxes[i]] = 0;
-  }
+  for (auto i : supportIdxes)
+    _mask[i] = 0;
+
   return _mask;
 }
 
@@ -589,7 +587,7 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
   Int32 imin = spectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Int32 imax = spectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
   const auto &spcFluxAxisNoContinuum = m_model->getSpcFluxAxisNoContinuum();
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
+  const auto &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
   for (Int32 i = imin; i < imax; i++) {
     if (!_mask[i])
       continue;
@@ -608,20 +606,17 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
 
 Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
-  const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
+  const CSpectrumFluxAxis &Yspc = m_model->getSpcFluxAxis();
+  const auto &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
 
-  Int32 numDevs = 0;
   Float64 fit = 0.0;
-  const Float64 *YCont = m_model->getContinuumFluxAxis().GetSamples();
-  const Float64 *Yspc = spcFluxAxis.GetSamples();
+  const CSpectrumFluxAxis &YCont = m_model->getContinuumFluxAxis();
   Float64 diff = 0.0;
 
   Float64 imin =
       spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
   for (Int32 j = imin; j < imax; j++) {
-    numDevs++;
     diff = (Yspc[j] - YCont[j]);
     fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
   }
@@ -657,17 +652,11 @@ Float64 CLineModelFitting::getLeastSquareContinuumMeritFast() const {
 Int32 CLineModelFitting::getSpcNSamples() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
 
-  Int32 numDevs = 0;
-
   Float64 imin =
       spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
 
-  for (Int32 j = imin; j < imax; j++) {
-    numDevs++;
-  }
-
-  return numDevs;
+  return abs(imax - imin);
 }
 
 /**
@@ -676,32 +665,25 @@ Int32 CLineModelFitting::getSpcNSamples() const {
  **/
 
 Float64 CLineModelFitting::getLeastSquareMeritUnderElements() const {
-  const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
-  const CSpectrumFluxAxis &modelFluxAxis =
-      m_model->GetModelSpectrum().GetFluxAxis();
-  const CSpectrumNoiseAxis &ErrorNoContinuum =
-      m_inputSpc->GetFluxAxis().GetError();
+  const CSpectrumFluxAxis &Yspc = m_model->getSpcFluxAxis();
+  const CSpectrumFluxAxis &Ymodel = m_model->GetModelSpectrum().GetFluxAxis();
+  const CSpectrumNoiseAxis &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
 
-  Int32 numDevs = 0;
   Float64 fit = 0;
-  const Float64 *Ymodel = modelFluxAxis.GetSamples();
-  const Float64 *Yspc = spcFluxAxis.GetSamples();
   Float64 diff = 0.0;
 
   TInt32RangeList support;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
+    if (m_Elements[iElts]->IsOutsideLambdaRange())
       continue;
-    }
+
     TInt32RangeList s = m_Elements[iElts]->getSupport();
-    for (Int32 iS = 0; iS < s.size(); iS++) {
+    for (Int32 iS = 0; iS < s.size(); iS++)
       support.push_back(s[iS]);
-    }
   }
 
   for (Int32 iS = 0; iS < support.size(); iS++) {
     for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
-      numDevs++;
       diff = (Yspc[j] - Ymodel[j]);
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     }
@@ -868,14 +850,11 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
  **/
 Float64 CLineModelFitting::getCumulSNROnRange(TInt32Range idxRange) const {
   Int32 n = idxRange.GetEnd() - idxRange.GetBegin() + 1;
-  if (n < 2) {
+  if (n < 2)
     return -1;
-  }
 
-  const CSpectrumFluxAxis &modelFluxAxis =
-      m_model->GetModelSpectrum().GetFluxAxis();
-  const Float64 *Ymodel = modelFluxAxis.GetSamples();
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
+  const CSpectrumFluxAxis &Ymodel = m_model->GetModelSpectrum().GetFluxAxis();
+  const auto &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
   const auto &ContinuumFluxAxis = m_model->getContinuumFluxAxis();
 
   Int32 idx = 0;
@@ -1337,27 +1316,23 @@ Float64 CLineModelFitting::getLikelihood_cstLog() {
 Float64
 CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
-  const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
-  const CSpectrumFluxAxis &spcFluxAxisNoContinuum =
+  const CSpectrumFluxAxis &Yspc = m_model->getSpcFluxAxis();
+  const CSpectrumFluxAxis &YspcNoContinuum =
       m_model->getSpcFluxAxisNoContinuum();
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
+  const auto &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
 
-  Int32 numDevs = 0;
   Float64 dtd = 0.0;
-  const Float64 *Yspc = spcFluxAxis.GetSamples();
-  const Float64 *YspcNoContinuum = spcFluxAxisNoContinuum.GetSamples();
   Float64 flux = 0.0;
 
   Float64 imin =
       spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
   for (Int32 j = imin; j < imax; j++) {
-    numDevs++;
-    if (spcComponent == "nocontinuum") {
+    if (spcComponent == "nocontinuum")
       flux = YspcNoContinuum[j];
-    } else {
+    else
       flux = Yspc[j];
-    }
+
     dtd += (flux * flux) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
   }
   Log.LogDebug("CLineModelFitting::EstimateDTransposeD val = %f", dtd);
@@ -1374,19 +1349,16 @@ Float64 CLineModelFitting::EstimateMTransposeM()
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
   const CSpectrumFluxAxis &spcFluxAxis =
       m_model->GetModelSpectrum().GetFluxAxis();
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
+  const auto &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
 
-  Int32 numDevs = 0;
   Float64 mtm = 0.0;
-  const Float64 *Yspc = spcFluxAxis.GetSamples();
   Float64 diff = 0.0;
 
   Float64 imin =
       spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
   for (Int32 j = imin; j < imax; j++) {
-    numDevs++;
-    { diff = Yspc[j]; }
+    diff = spcFluxAxis[j];
     mtm += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
   }
   // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
@@ -1403,19 +1375,18 @@ void CLineModelFitting::setContinuumComponent(std::string component) {
  **/
 Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
+  const auto &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
 
-  Int32 numDevs = 0;
   Float64 cstLog = 0.0;
   Float64 sumLogNoise = 0.0;
 
   Float64 imin =
       spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
-  for (Int32 j = imin; j < imax; j++) {
-    numDevs++;
+  Int32 numDevs = std::abs(imax - imin);
+  for (Int32 j = imin; j < imax; j++)
     sumLogNoise += log(ErrorNoContinuum[j]);
-  }
+
   // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
 
   cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;

@@ -52,7 +52,7 @@ void CRebinFineGrid::rebinFineGrid() {
   if (!n)
     THROWG(INVALID_SPECTRUM, "Invalid spectrum : spectral axis is empty");
 
-  CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
+  const CSpectrumSpectralAxis &spectralAxis = m_spectrum.GetSpectralAxis();
 
   Float64 lmin = spectralAxis[0]; // template wavelength never starts at 0
   Float64 lmax = spectralAxis[n - 1];
@@ -103,19 +103,16 @@ void CRebinFineGrid::rebin(
            "Problem finegrid interpolatted buffer couldnt be computed");
   }
 
-  TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
-  CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
-
   // Precomputed FINE GRID nearest
   // sample, 20150801
   Int32 k = 0;
-  Float64 lmin = spectralAxis[0];
+  Float64 lmin = m_spectrum.GetSpectralAxis()[0];
   // For each sample in the target
   // spectrum
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {
     k = int((Xtgt[cursor] - lmin) / m_dLambdaFineGrid + 0.5);
-    Yrebin[cursor] = m_pfgFlux[k];
+    rebinedFluxAxis[cursor] = m_pfgFlux[k];
     rebinedMask[cursor] = 1;
 
     // note: error rebin not

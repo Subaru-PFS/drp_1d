@@ -50,14 +50,12 @@ void CRebinLinear::rebin(
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
     const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
-  TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
-  TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
-
-  CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
+  CSpectrumNoiseAxis &ErrorRebin = rebinedFluxAxis.GetError();
+  Int32 n = m_spectrum.GetSampleCount();
 
   Int32 k = 0;
   // For each sample in the valid lambda range interval.
-  while (k < spectralAxis.GetSamplesCount() - 1 && Xsrc[k] <= range.GetEnd()) {
+  while (k < n - 1 && Xsrc[k] <= range.GetEnd()) {
     // For each sample in the target spectrum that are in between two
     // continous source sample
     while (cursor < targetSpectralAxis.GetSamplesCount() &&
@@ -65,7 +63,7 @@ void CRebinLinear::rebin(
       // perform linear interpolation of the flux
       Float64 xSrcStep = (Xsrc[k + 1] - Xsrc[k]);
       Float64 t = (Xtgt[cursor] - Xsrc[k]) / xSrcStep;
-      Yrebin[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
+      rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
       rebinedMask[cursor] = 1;
 
       if (opt_error_interp == "rebin")

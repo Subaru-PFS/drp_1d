@@ -1731,22 +1731,13 @@ Float64
 COperatorLineModel::FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,
                                   const CSpectrumFluxAxis &fluxAxis, Float64 z,
                                   Int32 start, Int32 end) {
-  Float64 A = boost::numeric::bounds<float>::lowest();
-  const Float64 *flux = fluxAxis.GetSamples();
-  const Float64 *spectral = spectralAxis.GetSamples();
-  // const Float64* error = fluxAxis.GetError();
 
-  // A = max, good value ?
-  for (Int32 i = start; i < end; i++) {
-    Float64 y = flux[i];
-    if (y > A) {
-      A = y;
-    }
-  }
+  Float64 A = *std::max_element(fluxAxis.GetSamplesVector().begin() + start,
+                                fluxAxis.GetSamplesVector().begin() + end);
 
-  if (A <= 0) {
+  if (A <= 0)
     return 0.0;
-  }
+
   // c fitting iteration loop
   Float64 mu = z;
   Float64 c = 0.0001;
@@ -1760,9 +1751,9 @@ COperatorLineModel::FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,
   while (icmpt < maxIteration) {
     sum2 = 0.0;
     for (Int32 i = start; i < end; i++) {
-      Float64 x = spectral[i];
+      Float64 x = spectralAxis[i];
       Float64 Yi = A * exp(-1. * (x - mu) * (x - mu) / (2 * c * c));
-      sum2 += pow(Yi - flux[i], 2.0);
+      sum2 += pow(Yi - fluxAxis[i], 2.0);
       // sum2 += pow( Yi - flux[i] , 2.0 ) / pow( error[i], 2.0 );
     }
     if (sum2 < minsum2) {
@@ -1773,9 +1764,9 @@ COperatorLineModel::FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,
     c = c + cstepup;
   }
 
-  if (minc < 0) {
+  if (minc < 0)
     minc = 0;
-  }
+
   return minc;
 }
 

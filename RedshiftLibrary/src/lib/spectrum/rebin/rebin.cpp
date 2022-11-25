@@ -51,7 +51,7 @@ void CRebin::compute(const TFloat64Range &range,
                      const std::string opt_error_interp) {
 
   Int32 s = targetSpectralAxis.GetSamplesCount();
-  CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
+  const CSpectrumSpectralAxis &spectralAxis = m_spectrum.GetSpectralAxis();
 
   // find start/end indexs for both axes
   if (spectralAxis[0] > range.GetBegin() ||
@@ -68,17 +68,15 @@ void CRebin::compute(const TFloat64Range &range,
   const TAxisSampleList &Xsrc = spectralAxis.GetSamplesVector();
   const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
   const TAxisSampleList &Xtgt = targetSpectralAxis.GetSamplesVector();
-  TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
-  const TFloat64List &Error =
-      m_spectrum.GetFluxAxis().GetError().GetSamplesVector();
-  TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
+  const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
+  CSpectrumNoiseAxis &ErrorRebin = rebinedFluxAxis.GetError();
 
   // Move cursors up to lambda range start
   Int32 cursor = 0;
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] < range.GetBegin()) {
     rebinedMask[cursor] = 0;
-    Yrebin[cursor] = 0.0;
+    rebinedFluxAxis[cursor] = 0.0;
     if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
       ErrorRebin[cursor] = INFINITY;
     cursor++;
@@ -89,7 +87,7 @@ void CRebin::compute(const TFloat64Range &range,
 
   while (cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[cursor] = 0;
-    Yrebin[cursor] = 0.0;
+    rebinedFluxAxis[cursor] = 0.0;
     if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
       ErrorRebin[cursor] = INFINITY;
     cursor++;
@@ -119,30 +117,30 @@ Float64 CRebin::computeXStepCompensation(
 std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
   if (opt_interp == "lin")
     return std::unique_ptr<CRebin>(new CRebinLinear(std::move(*this)));
-  else if (opt_interp == "precomputedfinegrid")
+  if (opt_interp == "precomputedfinegrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(std::move(*this)));
-  else if (opt_interp == "spline")
+  if (opt_interp == "spline")
     return std::unique_ptr<CRebin>(new CRebinSpline(std::move(*this)));
-  else if (opt_interp == "ngp")
+  if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(std::move(*this)));
-  else
-    THROWG(INVALID_PARAMETER,
-           "Only {lin, precomputedfinegrid, ngp, spline} values are "
-           "supported for TemplateFittingSolve.interpolation");
+
+  THROWG(INVALID_PARAMETER,
+         "Only {lin, precomputedfinegrid, ngp, spline} values are "
+         "supported for TemplateFittingSolve.interpolation");
 }
 
 std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
                                        const CSpectrum &spectrum) {
   if (opt_interp == "lin")
     return std::unique_ptr<CRebin>(new CRebinLinear(spectrum));
-  else if (opt_interp == "precomputedfinegrid")
+  if (opt_interp == "precomputedfinegrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(spectrum));
-  else if (opt_interp == "spline")
+  if (opt_interp == "spline")
     return std::unique_ptr<CRebin>(new CRebinSpline(spectrum));
-  else if (opt_interp == "ngp")
+  if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(spectrum));
-  else
-    THROWG(INVALID_PARAMETER,
-           "Only {lin, precomputedfinegrid, ngp, spline} values are "
-           "supported for TemplateFittingSolve.interpolation");
+
+  THROWG(INVALID_PARAMETER,
+         "Only {lin, precomputedfinegrid, ngp, spline} values are "
+         "supported for TemplateFittingSolve.interpolation");
 }
