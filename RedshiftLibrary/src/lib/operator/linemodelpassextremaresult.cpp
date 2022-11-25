@@ -68,7 +68,6 @@ void CLineModelPassExtremaResult::Resize(
   mTransposeM.resize(size, NAN);
   CorrScaleMarg.resize(size, NAN);
   NDof.resize(size, -1);
-  Redshift_lmfit.resize(size, NAN);
   snrHa.resize(size, NAN);
   lfHa.resize(size, NAN);
   snrOII.resize(size, NAN);

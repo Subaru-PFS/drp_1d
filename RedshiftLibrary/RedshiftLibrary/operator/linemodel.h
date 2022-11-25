@@ -179,18 +179,6 @@ private:
   void updateRedshiftGridAndResults();
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
-  // lmfit
-
-  bool mlmfit_modelInfoSave = false;
-  std::vector<std::shared_ptr<CModelSpectrumResult>>
-      mlmfit_savedModelSpectrumResults_lmfit;
-  std::vector<std::shared_ptr<CLineModelSolution>>
-      mlmfit_savedModelFittingResults_lmfit;
-  std::vector<std::shared_ptr<CModelRulesResult>>
-      mlmfit_savedModelRulesResults_lmfit;
-  std::vector<std::shared_ptr<CSpectraFluxResult>>
-      mlmfit_savedBaselineResult_lmfit;
-
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
   std::shared_ptr<CTemplatesFitStore> m_tplfitStore_firstpass;
   std::vector<std::shared_ptr<CTemplatesFitStore>> m_tplfitStore_secondpass;
