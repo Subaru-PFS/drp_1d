@@ -116,6 +116,23 @@ public:
   }
 
   template <typename T>
+  std::vector<std::vector<T>> GetListOfList(const std::string &name) const {
+    boost::optional<bpt::ptree &> property =
+        m_PropertyTree.get_child_optional(name);
+    if (!property.is_initialized())
+      THROWG(MISSING_PARAMETER, Formatter() << "Missing parameter " << name);
+    std::vector<std::vector<T>> ret =
+        std::vector<std::vector<T>>((*property).size());
+
+    bpt::ptree::const_iterator it;
+    Int32 i = 0;
+    for (it = property->begin(); it != property->end(); it++) {
+      ret[i++] = GetList<T>(name);
+    }
+    return ret;
+  }
+
+  template <typename T>
   std::vector<T> GetListScoped(const std::string &name) const {
     if (HasScoped<T>(name))
       return GetList<T>(GetScopedName(name));
@@ -145,6 +162,19 @@ inline TFloat64Range
 CParameterStore::Get<TFloat64Range>(const std::string &name) const {
   TFloat64List fl = GetList<Float64>(name);
   return TFloat64Range(fl[0], fl[1]);
+}
+
+template <>
+inline std::vector<TFloat64Range>
+CParameterStore::Get<std::vector<TFloat64Range>>(
+    const std::string &name) const {
+
+  std::vector<TFloat64List> fll = GetListOfList<Float64>(name);
+  std::vector<TFloat64Range> res;
+  for (auto fl : fll)
+    //  TFloat64List fl = GetList<Float64>(name);
+    res.push_back(TFloat64Range(fl[0], fl[1]));
+  return res;
 }
 
 } // namespace NSEpic

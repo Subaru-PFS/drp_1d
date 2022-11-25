@@ -106,10 +106,6 @@ public:
     return m_ParameterStore;
   }
 
-  std::shared_ptr<TFloat64Range> m_lambdaRange;
-  std::shared_ptr<TFloat64Range> m_clampedLambdaRange;
-  std::shared_ptr<TFloat64Range> m_rebinnedClampedLambdaRange;
-
   bool m_use_LogLambaSpectrum = 0;
   Float64 m_logGridStep;
   typedef struct {
@@ -118,8 +114,7 @@ public:
   std::map<std::string, SRebinResults> m_logRebin;
 
   // fill this from api, based on a new parameter in parameters.json we call
-  // object_types, it's a list consisting of the object types to process, it
-  // replaces enable<object_type>solve
+  // object_types, it's a list consisting of the object types to process
   TStringList
       m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
@@ -155,9 +150,24 @@ public:
 
   const Float64 &getLogGridStep(int i = 0) const { return m_logGridStep; }
 
+  std::shared_ptr<const TFloat64Range> getLambdaRange(int i = 0) const {
+    return m_lambdaRanges[i];
+  }
+  std::shared_ptr<const TFloat64Range> getClampedLambdaRange(int i = 0) const {
+    return m_clampedLambdaRanges[i];
+  }
+  std::shared_ptr<const TFloat64Range>
+  getRebinnedClampedLambdaRange(int i = 0) const {
+    return m_rebinnedClampedLambdaRanges[i];
+  }
+
 private:
   std::vector<std::shared_ptr<CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<CSpectrum>> m_rebinnedSpectra;
+  std::vector<std::shared_ptr<TFloat64Range>> m_lambdaRanges;
+  std::vector<std::shared_ptr<TFloat64Range>> m_clampedLambdaRanges;
+  std::vector<std::shared_ptr<TFloat64Range>> m_rebinnedClampedLambdaRanges;
+
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::map<std::string, std::map<std::string, std::shared_ptr<CLineCatalog>>>
       m_lineCatalogs;

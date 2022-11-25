@@ -139,16 +139,17 @@ public:
     return m_ResultStore;
   }
 
-  std::shared_ptr<const TFloat64Range> GetLambdaRange() const {
-    return m_inputContext->m_lambdaRange;
+  std::shared_ptr<const TFloat64Range> GetLambdaRange(int i = 0) const {
+    return m_inputContext->getLambdaRange(i);
   }
 
-  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange() const {
-    return m_inputContext->m_clampedLambdaRange;
+  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange(int i = 0) const {
+    return m_inputContext->getClampedLambdaRange(i);
   }
 
-  std::shared_ptr<const TFloat64Range> GetRebinnedClampedLambdaRange() const {
-    return m_inputContext->m_rebinnedClampedLambdaRange;
+  std::shared_ptr<const TFloat64Range>
+  GetRebinnedClampedLambdaRange(int i = 0) const {
+    return m_inputContext->getRebinnedClampedLambdaRange(i);
   }
 
   const std::string &GetCurrentCategory() const {
