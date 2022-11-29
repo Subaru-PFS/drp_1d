@@ -73,6 +73,7 @@ public:
           Float64 overlapThreshold,
           const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
           bool opt_extinction = false, bool opt_dustFitting = false,
+          Float64 opt_continuum_null_amp_threshold = 0.,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;

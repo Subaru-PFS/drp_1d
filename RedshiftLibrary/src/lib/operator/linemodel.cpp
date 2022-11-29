@@ -289,8 +289,9 @@ void COperatorLineModel::fitContinuumTemplates(
         std::dynamic_pointer_cast<CTemplateFittingResult>(
             m_templateFittingOperator->Compute(
                 tplList[i], overlapThreshold, maskList, opt_interp,
-                m_opt_tplfit_extinction, m_opt_tplfit_dustFit, zePriorData,
-                ebmvIndices[i], meiksinIndices[i]));
+                m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
+                m_opt_continuum_null_amp_threshold, zePriorData, ebmvIndices[i],
+                meiksinIndices[i]));
 
     if (!templatefittingResult) {
       THROWG(INTERNAL_ERROR, Formatter()
@@ -548,37 +549,36 @@ void COperatorLineModel::evaluateContinuumAmplitude(
   Float64 max_fitamplitudeSigma =
       tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
   if (max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
-    if (m_opt_continuumcomponent != "tplfitauto") {
+    if (m_opt_continuumcomponent != "tplfitauto")
       THROWG(INTERNAL_ERROR,
              Formatter() << "Negative "
                             "continuum amplitude found at z="
                          << max_fitamplitudeSigma_z << ": best continuum tpl "
-                         << fitValues.tplName << ", amplitude/error = "
-                         << fitValues.fitAmplitudeSigma
+                         << fitValues.tplName
+                         << ", amplitude/error = " << max_fitamplitudeSigma
                          << " & error = " << fitValues.fitAmplitudeError);
-    } else {
-      Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
-                   Formatter()
-                       << ": Switching to spectrum continuum since Negative "
-                          "continuum amplitude found at z="
-                       << max_fitamplitudeSigma_z << ": best continuum tpl "
-                       << fitValues.tplName
-                       << ", amplitude/error = " << fitValues.fitAmplitudeSigma
-                       << " & error = " << fitValues.fitAmplitudeError);
-      m_opt_continuumcomponent = "fromspectrum";
-      m_fittingManager->setContinuumComponent("fromspectrum");
-    }
-  }
-  // check if continuum is too weak comparing to the preset threshold
-  if (std::abs(fitValues.fitAmplitudeSigma) <
-      m_opt_continuum_null_amp_threshold) {
-    Flag.warning(WarningCode::FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
+
+    Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
                  Formatter()
-                     << ": Switching to nocontinuum since close to null "
+                     << ": Switching to spectrum continuum since Negative "
                         "continuum amplitude found at z="
                      << max_fitamplitudeSigma_z << ": best continuum tpl "
                      << fitValues.tplName
-                     << ", amplitude/error = " << fitValues.fitAmplitudeSigma
+                     << ", amplitude/error = " << max_fitamplitudeSigma
+                     << " & error = " << fitValues.fitAmplitudeError);
+    m_opt_continuumcomponent = "fromspectrum";
+    m_fittingManager->setContinuumComponent("fromspectrum");
+  } else if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold) {
+    // check if continuum is too weak comparing to the preset threshold, or
+    // falls within [thres_neg; thresh_null], at all z
+    Flag.warning(WarningCode::FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
+                 Formatter()
+                     << ": Switching to nocontinuum since close"
+                        "to null or not enough negative continuum amplitude "
+                        "found at z="
+                     << max_fitamplitudeSigma_z << ": best continuum tpl "
+                     << fitValues.tplName
+                     << ", amplitude/error = " << max_fitamplitudeSigma
                      << " & error = " << fitValues.fitAmplitudeError);
     m_opt_continuumcomponent = "nocontinuum";
     m_fittingManager->setContinuumComponent("nocontinuum");
