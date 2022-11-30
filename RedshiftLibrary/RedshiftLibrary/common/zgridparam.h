@@ -36,36 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#ifndef _REDSHIFT_COMMON_ZGRIDPARAM_
+#define _REDSHIFT_COMMON_ZGRIDPARAM_
 
-class CLogZPdfResult : public COperatorResult {
-public:
-  CLogZPdfResult(const TZGridListParams &zparams, bool logsampling, TFloat64List valProbaLog = {});
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
-  CZGridListParams getZGridParams() const;
+#include <tuple>
 
-  // regular means logarithmic or arithmetic (with constant step)
-  bool isRegular() const { return zcenter.size() == 1; };
-  void convertToRegular(bool fine=true);
-  void extrapolate_on_right_border(Float64 zend);
-  void isPdfValid() const;
-  Float64 getSumTrapez() const;
+using namespace std;
+namespace NSEpic {
 
-  TFloat64List redshifts;
-  TFloat64List valProbaLog;
-  Float64 valEvidenceLog = NAN;
-  Float64 valMargEvidenceLog = NAN;
+#include "RedshiftLibrary/common/zgridparam.i"
 
-  // kept public for python binding
-  TFloat64List zcenter;
-  TFloat64List zmin;
-  TFloat64List zmax;
-  TFloat64List zstep;
-  bool logsampling;
+}
 
-private:
-  void setZGridParams(const TZGridListParams &paramList);
-  void setZGrid();
-  void interpolateOnGrid(TFloat64List targetGrid);
-  void check_sizes() const;
-  void checkPdfSum() const;
-};
+#endif

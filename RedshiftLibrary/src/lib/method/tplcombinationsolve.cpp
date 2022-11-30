@@ -123,7 +123,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
         opt_dustFit);
 
   COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
-                     m_opt_maxCandidate);
+                     m_opt_maxCandidate, m_redshiftSampling == "log");
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));

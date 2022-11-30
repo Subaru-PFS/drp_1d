@@ -38,90 +38,31 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
-
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-#include <fstream>
-#include <string>
-
 #include "RedshiftLibrary/log/log.h"
-#include <boost/algorithm/string/predicate.hpp>
+#include "RedshiftLibrary/operator/pdfz.h"
+
 #include <gsl/gsl_interp.h>
-#include <iomanip>
-#include <iostream>
-using namespace std;
+
 using namespace NSEpic;
 
-CLogZPdfResult::CLogZPdfResult() : COperatorResult("CLogZPdfResult") {}
-
-CLogZPdfResult::CLogZPdfResult(const TFloat64List &redshifts,
-                               const TZGridListParams &zparamList)
-    : COperatorResult("CLogZPdfResult"), Redshifts(redshifts),
-      valProbaLog(redshifts.size(), -DBL_MAX) {
-  setZGridParams(zparamList); // to decide if we replace this
+CLogZPdfResult::CLogZPdfResult(const TZGridListParams &zparamList,
+                               bool logsampling_, TFloat64List valProbaLog_)
+    : COperatorResult("CLogZPdfResult"), valProbaLog(std::move(valProbaLog_)),
+      logsampling(logsampling_) {
+  setZGridParams(zparamList);
+  if (valProbaLog.empty())
+    valProbaLog.assign(redshifts.size(), -DBL_MAX);
+  check_sizes();
 }
 
-CZGridListParams::CZGridListParams(const TFloat64List &zcenter,
-                                   const TFloat64List &zmin,
-                                   const TFloat64List &zmax,
-                                   const TFloat64List &zstep)
-    : zparams(zcenter.size()) {
-  for (int i = 0; i < zcenter.size(); i++) {
-    zparams.push_back(TZGridParameters(TFloat64Range(zmin[i], zmax[i]),
-                                       zstep[i], zcenter[i]));
-  }
+void CLogZPdfResult::check_sizes() const {
+  if (valProbaLog.size() != redshifts.size())
+    THROWG(INTERNAL_ERROR, Formatter() << "redshifts size (" << redshifts.size()
+                                       << ") is different from pdf size ("
+                                       << valProbaLog.size() << ")");
 }
-
-// common function to create either coarse or fine grid, default to coarse
-const TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
-
-  if (size() > 1)
-    return buildLogMixedZGrid(logsampling);
-
-  Float64 zgridStep = zparams.front().zstep;
-  TFloat64Range zrange(zparams.front().zmin, zparams.front().zmax);
-
-  return logsampling ? zrange.SpreadOverLogZplusOne(zgridStep)
-                     : zrange.SpreadOver(zgridStep);
-}
-
-// mixed pdf
-const TFloat64List
-CZGridListParams::buildLogMixedZGrid(bool logsampling) const {
-
-  TFloat64List mixedGrid = buildZGrid(logsampling, 0);
-  // insert fineGrid intervals
-  for (Int32 i = 1; i < zparams.size(); i++) {
-    TFloat64Range range(zparams[i].zmin, zparams[i].zmax);
-    Int32 imin = -1;
-    Int32 imax = -1;
-    bool b = range.getClosedIntervalIndices(mixedGrid, imin, imax, false);
-    if (imin == -1 && imax == -1) // range not included in the main range
-      THROWG(INTERNAL_ERROR, "range not inside base grid ");
-    Int32 ndup = imax - imin + 1;
-    // create a centered extended List around Zcand
-    const TFloat64List &extendedZ = buildZGrid(logsampling, i);
-    insertWithDuplicates(mixedGrid, imin, extendedZ, ndup);
-  }
-  return mixedGrid;
-}
-
-// keep an option to create a mixed grid while ensuring zcand is present inside
-// or not
-const TFloat64List CZGridListParams::buildZGrid(bool logsampling,
-                                                Int32 index) const {
-
-  TFloat64Range range(zparams[index].zmin, zparams[index].zmax);
-  if (!isnan(zparams[index].zcenter))
-    return range.spanCenteredWindow(zparams[index].zcenter, logsampling,
-                                    zparams[index].zstep);
-  else
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "GridParam at index " << index
-                               << " is not second pass window, can get "
-                                  "extended list only on second pass windows");
-  return logsampling ? range.SpreadOverLogZplusOne(zparams[index].zstep)
-                     : range.SpreadOver(zparams[index].zstep);
+void CLogZPdfResult::CLogZPdfResult::setZGrid() {
+  redshifts = getZGridParams().getZGrid(logsampling);
 }
 
 void CLogZPdfResult::setZGridParams(const TZGridListParams &paramList) {
@@ -132,66 +73,150 @@ void CLogZPdfResult::setZGridParams(const TZGridListParams &paramList) {
   zstep.resize(s, NAN);
 
   std::transform(paramList.begin(), paramList.end(), zcenter.begin(),
-                 [](const TZGridParameters &params) { return params.zcenter; });
+                 [](const CZGridParam &param) { return param.zcenter; });
   std::transform(paramList.begin(), paramList.end(), zmin.begin(),
-                 [](const TZGridParameters &params) { return params.zmin; });
+                 [](const CZGridParam &param) { return param.zmin; });
   std::transform(paramList.begin(), paramList.end(), zmax.begin(),
-                 [](const TZGridParameters &params) { return params.zmax; });
+                 [](const CZGridParam &param) { return param.zmax; });
   std::transform(paramList.begin(), paramList.end(), zstep.begin(),
-                 [](const TZGridParameters &params) { return params.zstep; });
+                 [](const CZGridParam &param) { return param.zstep; });
+  setZGrid();
 }
 
-void CLogZPdfResult::interpolateLargeGridOnFineGrid(
-    const TFloat64List &originGrid, const TFloat64List &targetGrid,
-    const TFloat64List &originValues, TFloat64List &outputValues) {
-  Log.LogDetail("interp FROM large grid z0=%f to zEnd=%f (n=%d)",
-                originGrid.front(), originGrid.back(), originGrid.size());
-  Log.LogDetail("interp TO fine grid z0=%f to zEnd=%f (n=%d)",
+CZGridListParams CLogZPdfResult::getZGridParams() const {
+  TZGridListParams zparams(zmin.size());
+  for (int i = 0; i < zcenter.size(); i++)
+    zparams[i] =
+        CZGridParam(TFloat64Range(zmin[i], zmax[i]), zstep[i], zcenter[i]);
+  return CZGridListParams(std::move(zparams));
+}
+
+void CLogZPdfResult::interpolateOnGrid(TFloat64List targetGrid) {
+  Log.LogDetail("interp FROM initial grid z0=%f to zEnd=%f (n=%d)",
+                redshifts.front(), redshifts.back(), redshifts.size());
+  Log.LogDetail("interp TO final grid z0=%f to zEnd=%f (n=%d)",
                 targetGrid.front(), targetGrid.back(), targetGrid.size());
 
-  outputValues.resize(targetGrid.size(), NAN);
+  TFloat64List outputValues(targetGrid.size(), NAN);
+
   // initialise and allocate the gsl objects
   // lin
   gsl_interp *interpolation =
-      gsl_interp_alloc(gsl_interp_linear, originValues.size());
-  gsl_interp_init(interpolation, &(originGrid.front()), &(originValues.front()),
-                  originValues.size());
+      gsl_interp_alloc(gsl_interp_linear, valProbaLog.size());
+  gsl_interp_init(interpolation, &(redshifts.front()), &(valProbaLog.front()),
+                  valProbaLog.size());
   gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
 
   for (Int32 j = 0; j < targetGrid.size(); j++) {
     Float64 Xrebin = targetGrid[j];
-    if (Xrebin < originGrid.front() || Xrebin > originGrid.back()) {
+    if (Xrebin < redshifts.front() || Xrebin > redshifts.back()) {
       continue;
     }
     outputValues[j] =
-        gsl_interp_eval(interpolation, &originGrid.front(),
-                        &originValues.front(), Xrebin, accelerator); // lin
+        gsl_interp_eval(interpolation, &redshifts.front(), &valProbaLog.front(),
+                        Xrebin, accelerator); // lin
   }
 
   gsl_interp_free(interpolation);
   gsl_interp_accel_free(accelerator);
+
+  // update members
+  redshifts = std::move(targetGrid);
+  valProbaLog = std::move(outputValues);
+
+  check_sizes();
 }
 
-void CLogZPdfResult::convertToRegular(bool logsampling) {
-  CZGridListParams origin_zparams(zcenter, zmin, zmax, zstep);
+void CLogZPdfResult::convertToRegular(bool fine) {
 
-  TFloat64List origin_zgrid = origin_zparams.getZGrid(logsampling);
-  TFloat64List origin_valProbaLog = TFloat64List(valProbaLog);
-  zstep[0] = zstep[1];
+  if (isRegular())
+    return;
+
+  // set new zgrid params
+  if (fine) {
+    for (Int32 i = 2; i < zstep.size(); ++i)
+      if (zstep[1] != zstep[i])
+        THROWG(INTERNAL_ERROR, "cannot convert to regular with different steps "
+                               "in 2nd pass subgrids");
+    zstep[0] = zstep[1];
+  }
   zcenter.resize(1);
   zmin.resize(1);
   zmax.resize(1);
   zstep.resize(1);
 
-  CZGridListParams zparams(zcenter, zmin, zmax, zstep);
+  auto param = getZGridParams()[0];
+  if (fine)
+    param.zstep = zstep[1];
+  auto target_redshifts = CZGridListParams({param}).getZGrid(logsampling);
 
-  Redshifts = zparams.getZGrid(logsampling);
-
-  interpolateLargeGridOnFineGrid(origin_zgrid, Redshifts, origin_valProbaLog,
-                                 valProbaLog);
+  interpolateOnGrid(target_redshifts);
 }
 
-const TFloat64List CLogZPdfResult::getZGrid(bool logsampling) const {
-  CZGridListParams zparams(zcenter, zmin, zmax, zstep);
-  return zparams.getZGrid(logsampling);
+void CLogZPdfResult::extrapolate_on_right_border(Float64 zend) {
+  if (zend <= zmax[0])
+    return;
+
+  zmax[0] = zend;
+  setZGrid();
+  valProbaLog.resize(redshifts.size(), valProbaLog.back());
+  check_sizes();
+}
+
+Float64 CLogZPdfResult::getSumTrapez() const {
+
+  check_sizes();
+
+  Float64 sum = 0.0;
+  if (redshifts.size() < 2)
+    return sum;
+
+  // prepare LogEvidence
+  Int32 sumMethod = 1;
+  Float64 logSum = COperatorPdfz::logSumExpTrick(valProbaLog, redshifts);
+  sum = exp(logSum);
+
+  return sum;
+}
+
+void CLogZPdfResult::checkPdfSum() const {
+
+  // check pdf sum=1
+  Float64 sumTrapez = getSumTrapez();
+  Log.LogDetail(
+      "CLogZPdfResult::checkPdfSum: Pdfz normalization - sum trapz. = %e",
+      sumTrapez);
+  if (abs(sumTrapez - 1.0) > 1e-1)
+    THROWG(INTERNAL_ERROR,
+           Formatter()
+               << "CLogZPdfResult::checkPdfSum: Pdfz normalization failed, "
+                  "trapzesum = "
+               << sumTrapez);
+}
+
+void CLogZPdfResult::isPdfValid() const {
+
+  if (redshifts.size() < 2)
+    THROWG(INTERNAL_ERROR, "PDF has size less than 2");
+
+  // is it completely flat ?
+  Float64 minVal = DBL_MAX;
+  Float64 maxVal = -DBL_MAX;
+  for (Int32 k = 0; k < valProbaLog.size(); k++) {
+    if (valProbaLog[k] < minVal)
+      minVal = valProbaLog[k];
+
+    if (valProbaLog[k] > maxVal)
+      maxVal = valProbaLog[k];
+  }
+  if (minVal == maxVal)
+    THROWG(INTERNAL_ERROR, "PDF is flat");
+
+  // is pdf any value nan ?
+  for (Int32 k = 0; k < valProbaLog.size(); k++)
+    if (valProbaLog[k] != valProbaLog[k])
+      THROWG(INTERNAL_ERROR, "PDF has nan or invalid values");
+
+  // is sum equal to 1
+  checkPdfSum();
 }

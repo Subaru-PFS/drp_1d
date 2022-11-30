@@ -364,13 +364,14 @@ public:
 };
 
 %template(TMapFloat64) std::map<std::string, Float64>;
-%template(TZGridListParams) std::vector<TZGridParameters>;
+%template(TZGridListParams) std::vector<CZGridParam>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
 %include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/logZPdfResult.i"
+%include "common/zgridparam.i"
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
 %include "linemodel/linemodelextremaresult.i"

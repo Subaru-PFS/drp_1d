@@ -37,35 +37,41 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-class CLogZPdfResult : public COperatorResult {
+class CZGridParam {
 public:
-  CLogZPdfResult(const TZGridListParams &zparams, bool logsampling, TFloat64List valProbaLog = {});
+  CZGridParam() = default;
+  CZGridParam(const TFloat64Range &range, Float64 step, Float64 center = NAN)
+      : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
+        zcenter(center){};
 
-  CZGridListParams getZGridParams() const;
+  TFloat64List getZGrid(bool logsampling) const;
 
-  // regular means logarithmic or arithmetic (with constant step)
-  bool isRegular() const { return zcenter.size() == 1; };
-  void convertToRegular(bool fine=true);
-  void extrapolate_on_right_border(Float64 zend);
-  void isPdfValid() const;
-  Float64 getSumTrapez() const;
+  Float64 zmin = NAN;
+  Float64 zmax = NAN;
+  Float64 zstep = NAN;
+  Float64 zcenter = NAN;
+};
 
-  TFloat64List redshifts;
-  TFloat64List valProbaLog;
-  Float64 valEvidenceLog = NAN;
-  Float64 valMargEvidenceLog = NAN;
+typedef std::vector<CZGridParam> TZGridListParams;
 
-  // kept public for python binding
-  TFloat64List zcenter;
-  TFloat64List zmin;
-  TFloat64List zmax;
-  TFloat64List zstep;
-  bool logsampling;
+class CZGridListParams {
+public:
+  //  CZGridListParams() = default;
+  CZGridListParams(const TZGridListParams &params)
+      : m_zparams(params){};
+  CZGridListParams(TZGridListParams &&params)
+      : m_zparams(std::move(params)){};
+
+  CZGridParam &operator[](const Int32 i) { return m_zparams[i]; };
+  const CZGridParam &operator[](const Int32 i) const { return m_zparams[i]; };
+  Int32 size() const { return m_zparams.size(); }
+
+  TFloat64List getZGrid(bool logsampling) const;
+
+  // returns insertion index & mumber of overlapped indices
+  static std::tuple<Int32, Int32> insertSubgrid(const TFloat64List &subgrid,
+                                                TFloat64List &zgrid);
 
 private:
-  void setZGridParams(const TZGridListParams &paramList);
-  void setZGrid();
-  void interpolateOnGrid(TFloat64List targetGrid);
-  void check_sizes() const;
-  void checkPdfSum() const;
+  TZGridListParams m_zparams;
 };

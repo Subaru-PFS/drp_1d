@@ -188,7 +188,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     THROWG(INTERNAL_ERROR, "no result for any template");
 
   COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
-                     m_opt_maxCandidate);
+                     m_opt_maxCandidate, m_redshiftSampling == "log");
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));

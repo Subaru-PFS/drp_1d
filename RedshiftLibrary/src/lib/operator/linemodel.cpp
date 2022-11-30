@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
+#include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
@@ -594,8 +595,9 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
 
   const Float64 halfwindowsize_z = m_secondPass_halfwindowsize * (1. + z);
   TFloat64Range windowRange(z - halfwindowsize_z, z + halfwindowsize_z);
-  return windowRange.spanCenteredWindow(z, m_redshiftSampling == "log",
-                                        m_fineStep);
+
+  CZGridParam zparam(windowRange, m_fineStep, z);
+  return zparam.getZGrid(m_redshiftSampling == "log");
 }
 
 // only for secondpass grid
@@ -604,7 +606,7 @@ TZGridListParams COperatorLineModel::getSPZGridParams() {
   TZGridListParams centeredZgrid_params(s);
   for (Int32 i = 0; i < s; i++) {
     const auto &extendedGrid = m_firstpass_extremaResult->ExtendedRedshifts[i];
-    centeredZgrid_params[i] = TZGridParameters(
+    centeredZgrid_params[i] = CZGridParam(
         TFloat64Range(extendedGrid), m_fineStep,
         m_firstpass_extremaResult->m_ranked_candidates[i].second->Redshift);
   }
@@ -1165,21 +1167,16 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 void COperatorLineModel::updateRedshiftGridAndResults() {
 
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
-    TFloat64Range range(m_firstpass_extremaResult->ExtendedRedshifts[i].front(),
-                        m_firstpass_extremaResult->ExtendedRedshifts[i].back());
-    Int32 imin = -1, imax = -1;
-    bool b = range.getClosedIntervalIndices(m_Redshifts, imin, imax, false);
-    if (!b)
-      THROWG(INTERNAL_ERROR, "No intersection between vector and entity");
-    Int32 ndup = imax - imin + 1; // nb of duplicates
-    insertWithDuplicates(m_Redshifts, imin,
-                         m_firstpass_extremaResult->ExtendedRedshifts[i], ndup);
+    Int32 imin, ndup;
+    std::tie(imin, ndup) = CZGridListParams::insertSubgrid(
+        m_firstpass_extremaResult->ExtendedRedshifts[i], m_Redshifts);
 
     m_result->updateVectors(
         imin, ndup, m_firstpass_extremaResult->ExtendedRedshifts[i].size());
   }
   m_result->Redshifts = m_Redshifts;
 }
+
 /**
  * @brief COperatorLineModel::estimateSecondPassParameters
  * - Estimates best parameters: elv and alv

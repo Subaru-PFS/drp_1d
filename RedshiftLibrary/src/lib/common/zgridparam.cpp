@@ -35,37 +35,51 @@
 //
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
-// ============================================================================
+// ============================================================================using
+// namespace std;
+#include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 
-class CLogZPdfResult : public COperatorResult {
-public:
-  CLogZPdfResult(const TZGridListParams &zparams, bool logsampling, TFloat64List valProbaLog = {});
+using namespace NSEpic;
 
-  CZGridListParams getZGridParams() const;
+TFloat64List CZGridParam::getZGrid(bool logsampling) const {
 
-  // regular means logarithmic or arithmetic (with constant step)
-  bool isRegular() const { return zcenter.size() == 1; };
-  void convertToRegular(bool fine=true);
-  void extrapolate_on_right_border(Float64 zend);
-  void isPdfValid() const;
-  Float64 getSumTrapez() const;
+  TFloat64Range range(zmin, zmax);
+  if (!isnan(zcenter))
+    return range.spanCenteredWindow(zcenter, logsampling, zstep);
 
-  TFloat64List redshifts;
-  TFloat64List valProbaLog;
-  Float64 valEvidenceLog = NAN;
-  Float64 valMargEvidenceLog = NAN;
+  return logsampling ? range.SpreadOverLogZplusOne(zstep)
+                     : range.SpreadOver(zstep);
+}
 
-  // kept public for python binding
-  TFloat64List zcenter;
-  TFloat64List zmin;
-  TFloat64List zmax;
-  TFloat64List zstep;
-  bool logsampling;
+TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
 
-private:
-  void setZGridParams(const TZGridListParams &paramList);
-  void setZGrid();
-  void interpolateOnGrid(TFloat64List targetGrid);
-  void check_sizes() const;
-  void checkPdfSum() const;
-};
+  if (m_zparams.empty())
+    return TFloat64List();
+
+  TFloat64List zgrid = m_zparams.front().getZGrid(logsampling);
+
+  // if needed create and insert 2nd pass subgrids into main grid
+  for (Int32 i = 1; i < m_zparams.size(); i++) {
+    // create a centered sub grid around Zcand
+    TFloat64List subgrid = m_zparams[i].getZGrid(logsampling);
+    // insert it into main gridgetZGrid
+    insertSubgrid(subgrid, zgrid);
+  }
+  return zgrid;
+}
+
+std::tuple<Int32, Int32>
+CZGridListParams::insertSubgrid(const TFloat64List &subgrid,
+                                TFloat64List &zgrid) {
+  TFloat64Range range(subgrid);
+  Int32 imin = -1;
+  Int32 imax = -1;
+  bool b = range.getClosedIntervalIndices(zgrid, imin, imax, false);
+  if (!b) // range not included in the main range
+    THROWG(INTERNAL_ERROR, "range not inside base grid ");
+  Int32 ndup = imax - imin + 1;
+  insertWithDuplicates(zgrid, imin, subgrid, ndup);
+
+  return std::make_tuple(imin, ndup);
+}
