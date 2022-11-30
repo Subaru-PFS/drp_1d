@@ -82,6 +82,9 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray,
     m_candidatesZRanges[parentCandidates[i].first] =
         candidatesRedshiftsRanges[i];
 
+  // create ClogZPdfResult
+  createPdfResult(chisquarearray);
+
   // build PDF from chisquares and priors
   CombinePDF(chisquarearray);
 
@@ -114,11 +117,7 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray,
   return CandidateszResult;
 }
 
-void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
-  Log.LogInfo("COperatorPdfz::CombinePDF: Pdfz combination");
-  if (!chisquarearray.chisquares.size()) {
-    THROWG(INTERNAL_ERROR, Formatter() << "chisquarearray is empty");
-  }
+void COperatorPdfz::createPdfResult(const ChisquareArray &chisquarearray) {
 
   // initialize m_postmargZResult
   TZGridListParams zparams(chisquarearray.zgridParams.size() + 1);
@@ -128,8 +127,20 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
             chisquarearray.zgridParams.cend(), zparams.begin() + 1);
   m_postmargZResult =
       std::make_shared<CLogZPdfResult>(zparams, m_redshiftLogSampling);
+
+  // check if the redshift grids are the same
+  if (m_postmargZResult->redshifts != chisquarearray.redshifts)
+    THROWG(INTERNAL_ERROR, "z-grid comparison failed");
+
   m_postmargZResult->valProbaLog =
       TFloat64List(chisquarearray.redshifts.size(), -DBL_MAX);
+}
+
+void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
+  Log.LogInfo("COperatorPdfz::CombinePDF: Pdfz combination");
+  if (!chisquarearray.chisquares.size()) {
+    THROWG(INTERNAL_ERROR, Formatter() << "chisquarearray is empty");
+  }
 
   if (m_opt_combine == "marg") {
     Log.LogInfo("COperatorPdfz::CombinePDF: Marginalization");
@@ -443,10 +454,6 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
     const TFloat64List &logProba = logProbaList[km];
     const Float64 logWeight =
         LogEvidencesWPriorM[km] - m_postmargZResult->valMargEvidenceLog;
-
-    // check if the redshift bins are the same
-    if (m_postmargZResult->redshifts != redshifts)
-      THROWG(INTERNAL_ERROR, "z-bins comparison failed");
 
     for (Int32 k = 0; k < zsize; k++) {
       Float64 &logValProba = m_postmargZResult->valProbaLog[k];

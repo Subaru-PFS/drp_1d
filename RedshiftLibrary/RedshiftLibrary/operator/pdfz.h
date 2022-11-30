@@ -84,8 +84,6 @@ public:
       const TFloat64RangeList &candidatesRedshiftsRanges = TFloat64RangeList(1),
       const TCandidateZbyRank &parentCand = TCandidateZbyRank(1));
 
-  void CombinePDF(const ChisquareArray &chisquares);
-
   std::shared_ptr<CLogZPdfResult> m_postmargZResult;
 
   // static member function to do calculation on pdfs
@@ -109,6 +107,10 @@ private:
                       std::vector<TFloat64List> &logProbaList,
                       TFloat64List &LogEvidencesWPriorM,
                       TFloat64List &logPriorModel, Float64 &MaxiLogEvidence);
+
+  void CombinePDF(const ChisquareArray &chisquares);
+
+  void createPdfResult(const ChisquareArray &chisquarearray);
 
   void Marginalize(const ChisquareArray &chisquarearray);
   void BestProba(const ChisquareArray &chisquarearray);

@@ -48,8 +48,12 @@ TFloat64List CZGridParam::getZGrid(bool logsampling) const {
   if (!isnan(zcenter))
     return range.spanCenteredWindow(zcenter, logsampling, zstep);
 
-  return logsampling ? range.SpreadOverLogZplusOne(zstep)
-                     : range.SpreadOver(zstep);
+  auto grid = logsampling ? range.SpreadOverLogZplusOne(zstep)
+                          : range.SpreadOver(zstep);
+
+  grid.back() = std::min(grid.back(), zmax); // cope with rounding errors
+
+  return grid;
 }
 
 TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
@@ -69,17 +73,34 @@ TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
   return zgrid;
 }
 
-std::tuple<Int32, Int32>
-CZGridListParams::insertSubgrid(const TFloat64List &subgrid,
-                                TFloat64List &zgrid) {
-  TFloat64Range range(subgrid);
+std::tuple<Int32, Int32> CZGridListParams::insertSubgrid(TFloat64List &subgrid,
+                                                         TFloat64List &zgrid) {
+  const Float64 epsilon = 1E-8;
+  TFloat64Range range_epsilon = {subgrid.front() - epsilon,
+                                 subgrid.back() + epsilon};
+  range_epsilon.IntersectWith(zgrid);
   Int32 imin = -1;
   Int32 imax = -1;
-  bool b = range.getClosedIntervalIndices(zgrid, imin, imax, false);
+  bool b = range_epsilon.getClosedIntervalIndices(zgrid, imin, imax, false);
   if (!b) // range not included in the main range
     THROWG(INTERNAL_ERROR, "range not inside base grid ");
+
+  // deal with subgrid front or end samples when equal to coarse grid samples
+  auto subgrid_start = subgrid.cbegin();
+  auto subgrid_end = subgrid.cend();
+  if (range_epsilon.GetBegin() == zgrid.front()) {
+    ++imin;
+    ++subgrid_start;
+    subgrid.front() = zgrid.front();
+  }
+  if (range_epsilon.GetEnd() == zgrid.back()) {
+    --imax;
+    --subgrid_end;
+    subgrid.back() = zgrid.back();
+  }
+
   Int32 ndup = imax - imin + 1;
-  insertWithDuplicates(zgrid, imin, subgrid, ndup);
+  insertWithDuplicates(zgrid, imin, subgrid_start, subgrid_end, ndup);
 
   return std::make_tuple(imin, ndup);
 }

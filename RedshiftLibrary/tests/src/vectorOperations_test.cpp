@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE(insertWithDuplicates_mid) {
   const TFloat64List extendedVect{18, 20, 22};
   Int32 idx = 1;
   Int32 ndup = 1;
-  insertWithDuplicates(vect, idx, extendedVect, ndup);
+  insertWithDuplicates(vect, idx, extendedVect.cbegin(), extendedVect.cend(),
+                       ndup);
 
   TFloat64List resultingVect{10, 18, 20, 22, 30};
 
@@ -107,7 +108,8 @@ BOOST_AUTO_TEST_CASE(insertWithDuplicates_begin) {
   const TFloat64List extendedVect{8, 10, 12};
   Int32 idx = 0;
   Int32 ndup = 1;
-  insertWithDuplicates(vect, idx, extendedVect, ndup);
+  insertWithDuplicates(vect, idx, extendedVect.cbegin(), extendedVect.cend(),
+                       ndup);
 
   TFloat64List resultingVect{8, 10, 12, 20, 30};
 
@@ -121,7 +123,8 @@ BOOST_AUTO_TEST_CASE(insertWithDuplicates_end) {
   const TFloat64List extendedVect{28, 30, 32};
   Int32 idx = 2;
   Int32 ndup = 1;
-  insertWithDuplicates(vect, idx, extendedVect, ndup);
+  insertWithDuplicates(vect, idx, extendedVect.cbegin(), extendedVect.cend(),
+                       ndup);
 
   TFloat64List resultingVect{10, 20, 28, 30, 32};
 
@@ -133,7 +136,8 @@ BOOST_AUTO_TEST_CASE(insertWithDuplicates_commononborder1) {
   const TFloat64List extendedVect{10, 12, 15, 16};
   Int32 idx = 0;
   Int32 ndup = 2;
-  insertWithDuplicates(vect, idx, extendedVect, ndup);
+  insertWithDuplicates(vect, idx, extendedVect.cbegin(), extendedVect.cend(),
+                       ndup);
 
   TFloat64List resultingVect{10, 12, 15, 16, 20};
   BOOST_CHECK(vect.size() == resultingVect.size());
@@ -145,7 +149,8 @@ BOOST_AUTO_TEST_CASE(insertWithDuplicates_commononborder) {
   const TFloat64List extendedVect{15, 16, 18, 20, 22, 25, 26, 30};
   Int32 idx = 1;
   Int32 ndup = 4;
-  insertWithDuplicates(vect, idx, extendedVect, ndup);
+  insertWithDuplicates(vect, idx, extendedVect.cbegin(), extendedVect.cend(),
+                       ndup);
 
   TFloat64List resultingVect{10, 15, 16, 18, 20, 22, 25, 26, 30};
   BOOST_CHECK(vect.size() == resultingVect.size());

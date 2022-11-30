@@ -41,11 +41,12 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 
+#include <algorithm>
 #include <gsl/gsl_interp.h>
 
 using namespace NSEpic;
 
-CLogZPdfResult::CLogZPdfResult(const TZGridListParams &zparamList,
+CLogZPdfResult::CLogZPdfResult(const CZGridListParams &zparamList,
                                bool logsampling_, TFloat64List valProbaLog_)
     : COperatorResult("CLogZPdfResult"), valProbaLog(std::move(valProbaLog_)),
       logsampling(logsampling_) {
@@ -65,20 +66,21 @@ void CLogZPdfResult::CLogZPdfResult::setZGrid() {
   redshifts = getZGridParams().getZGrid(logsampling);
 }
 
-void CLogZPdfResult::setZGridParams(const TZGridListParams &paramList) {
+void CLogZPdfResult::setZGridParams(const CZGridListParams &paramList) {
   Int32 s = paramList.size();
   zcenter.resize(s, NAN);
+
   zmin.resize(s, NAN);
   zmax.resize(s, NAN);
   zstep.resize(s, NAN);
 
-  std::transform(paramList.begin(), paramList.end(), zcenter.begin(),
+  std::transform(paramList.cbegin(), paramList.cend(), zcenter.begin(),
                  [](const CZGridParam &param) { return param.zcenter; });
-  std::transform(paramList.begin(), paramList.end(), zmin.begin(),
+  std::transform(paramList.cbegin(), paramList.cend(), zmin.begin(),
                  [](const CZGridParam &param) { return param.zmin; });
-  std::transform(paramList.begin(), paramList.end(), zmax.begin(),
+  std::transform(paramList.cbegin(), paramList.cend(), zmax.begin(),
                  [](const CZGridParam &param) { return param.zmax; });
-  std::transform(paramList.begin(), paramList.end(), zstep.begin(),
+  std::transform(paramList.cbegin(), paramList.cend(), zstep.begin(),
                  [](const CZGridParam &param) { return param.zstep; });
   setZGrid();
 }
@@ -148,7 +150,7 @@ void CLogZPdfResult::convertToRegular(bool fine) {
   auto param = getZGridParams()[0];
   if (fine)
     param.zstep = zstep[1];
-  auto target_redshifts = CZGridListParams({param}).getZGrid(logsampling);
+  auto target_redshifts = param.getZGrid(logsampling);
 
   interpolateOnGrid(target_redshifts);
 }
@@ -200,15 +202,11 @@ void CLogZPdfResult::isPdfValid() const {
     THROWG(INTERNAL_ERROR, "PDF has size less than 2");
 
   // is it completely flat ?
-  Float64 minVal = DBL_MAX;
-  Float64 maxVal = -DBL_MAX;
-  for (Int32 k = 0; k < valProbaLog.size(); k++) {
-    if (valProbaLog[k] < minVal)
-      minVal = valProbaLog[k];
+  const auto minmax_it =
+      std::minmax_element(valProbaLog.cbegin(), valProbaLog.cend());
+  const Float64 minVal = *minmax_it.first;
+  const Float64 maxVal = *minmax_it.second;
 
-    if (valProbaLog[k] > maxVal)
-      maxVal = valProbaLog[k];
-  }
   if (minVal == maxVal)
     THROWG(INTERNAL_ERROR, "PDF is flat");
 

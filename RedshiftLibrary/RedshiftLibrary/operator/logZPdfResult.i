@@ -39,7 +39,7 @@
 
 class CLogZPdfResult : public COperatorResult {
 public:
-  CLogZPdfResult(const TZGridListParams &zparams, bool logsampling, TFloat64List valProbaLog = {});
+  CLogZPdfResult(const CZGridListParams &zparams, bool logsampling, TFloat64List valProbaLog = {});
 
   CZGridListParams getZGridParams() const;
 
@@ -63,7 +63,7 @@ public:
   bool logsampling;
 
 private:
-  void setZGridParams(const TZGridListParams &paramList);
+  void setZGridParams(const CZGridListParams &paramList);
   void setZGrid();
   void interpolateOnGrid(TFloat64List targetGrid);
   void check_sizes() const;

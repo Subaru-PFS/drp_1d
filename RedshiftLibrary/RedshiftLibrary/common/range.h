@@ -109,6 +109,7 @@ public:
 
     return v;
   }
+
   std::vector<T> SpreadOver_backward(T delta) const {
     if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
       return {m_End};
@@ -121,6 +122,7 @@ public:
 
     return v;
   }
+
   std::vector<T> SpreadOverLog(T delta, T offset = 0.) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
@@ -191,15 +193,15 @@ public:
   // create a centered vector
   const std::vector<T> spanCenteredWindow(T center, bool logsampling,
                                           T delta) const {
-    CRange<T> range_right(GetBegin(), center);
+    CRange<T> range_left(GetBegin(), center);
     std::vector<T> vect = logsampling
-                              ? range_right.SpreadOverLogZplusOne(delta, true)
-                              : range_right.SpreadOver_backward(delta);
+                              ? range_left.SpreadOverLogZplusOne(delta, true)
+                              : range_left.SpreadOver_backward(delta);
 
-    CRange<T> range_left = {center, GetEnd()};
+    CRange<T> range_right = {center, GetEnd()};
     std::vector<T> vect_part2 = logsampling
-                                    ? range_left.SpreadOverLogZplusOne(delta)
-                                    : range_left.SpreadOver(delta);
+                                    ? range_right.SpreadOverLogZplusOne(delta)
+                                    : range_right.SpreadOver(delta);
 
     vect.insert(std::end(vect), std::begin(vect_part2) + 1,
                 std::end(vect_part2));
@@ -360,7 +362,7 @@ public:
 private:
   T m_Begin;
   T m_End;
-  Float64 epsilon = 1E-6;
+  Float64 epsilon = 1E-8;
 };
 
 template <typename T>

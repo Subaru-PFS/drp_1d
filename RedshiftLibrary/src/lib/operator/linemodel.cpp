@@ -593,22 +593,26 @@ void COperatorLineModel::evaluateContinuumAmplitude(
  */
 TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
 
-  const Float64 halfwindowsize_z = m_secondPass_halfwindowsize * (1. + z);
-  TFloat64Range windowRange(z - halfwindowsize_z, z + halfwindowsize_z);
+  const Float64 half_r = (exp(m_secondPass_halfwindowsize) - 1.0) * (1. + z);
+  const Float64 half_l = (1.0 - exp(-m_secondPass_halfwindowsize)) * (1. + z);
 
+  TFloat64Range windowRange(z - half_l, z + half_r);
+  windowRange.IntersectWith(m_Redshifts);
   CZGridParam zparam(windowRange, m_fineStep, z);
   return zparam.getZGrid(m_redshiftSampling == "log");
 }
 
 // only for secondpass grid
 TZGridListParams COperatorLineModel::getSPZGridParams() {
-  Int32 s = m_firstpass_extremaResult->m_ranked_candidates.size();
+  Int32 s = m_secondpass_parameters_extremaResult.m_ranked_candidates.size();
   TZGridListParams centeredZgrid_params(s);
   for (Int32 i = 0; i < s; i++) {
-    const auto &extendedGrid = m_firstpass_extremaResult->ExtendedRedshifts[i];
-    centeredZgrid_params[i] = CZGridParam(
-        TFloat64Range(extendedGrid), m_fineStep,
-        m_firstpass_extremaResult->m_ranked_candidates[i].second->Redshift);
+    const auto &extendedGrid =
+        m_secondpass_parameters_extremaResult.ExtendedRedshifts[i];
+    centeredZgrid_params[i] =
+        CZGridParam(TFloat64Range(extendedGrid), m_fineStep,
+                    m_secondpass_parameters_extremaResult.m_ranked_candidates[i]
+                        .second->Redshift);
   }
   return centeredZgrid_params;
 }
@@ -810,6 +814,13 @@ void COperatorLineModel::ComputeSecondPass(
     THROWG(INTERNAL_ERROR, Formatter() << "Invalid continnuum_fit_option: "
                                        << m_continnuum_fit_option);
   }
+
+  // insert extendedRedshifts into m_Redshifts
+  m_secondpass_parameters_extremaResult.ExtendedRedshifts =
+      m_firstpass_extremaResult->ExtendedRedshifts;
+  updateRedshiftGridAndResults();
+
+  // Deal with continuum, either recompute it or keep from first pass
   if (m_opt_continuumcomponent == "tplfit" ||
       m_opt_continuumcomponent == "tplfitauto") {
     // precompute only whenever required and whenever the result can be a
@@ -879,8 +890,6 @@ void COperatorLineModel::ComputeSecondPass(
       firstpassResults->m_ranked_candidates.cbegin(),
       firstpassResults->m_ranked_candidates.cend());
 
-  // insert extendedRedshifts into m_Redshifts
-  updateRedshiftGridAndResults();
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
   //  estimate second pass parameters (mainly elv, alv...)
@@ -1166,13 +1175,15 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
 void COperatorLineModel::updateRedshiftGridAndResults() {
 
-  for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
+  for (Int32 i = 0; i < m_secondpass_parameters_extremaResult.size(); i++) {
     Int32 imin, ndup;
     std::tie(imin, ndup) = CZGridListParams::insertSubgrid(
-        m_firstpass_extremaResult->ExtendedRedshifts[i], m_Redshifts);
+        m_secondpass_parameters_extremaResult.ExtendedRedshifts[i],
+        m_Redshifts);
 
     m_result->updateVectors(
-        imin, ndup, m_firstpass_extremaResult->ExtendedRedshifts[i].size());
+        imin, ndup,
+        m_secondpass_parameters_extremaResult.ExtendedRedshifts[i].size());
   }
   m_result->Redshifts = m_Redshifts;
 }
@@ -1205,8 +1216,6 @@ void COperatorLineModel::EstimateSecondPassParameters(
     Float64 m = m_firstpass_extremaResult->ValProba(i);
     Log.LogInfo("  Operator-Linemodel: redshift=%.2f proba=%2f", z, m);
 
-    m_secondpass_parameters_extremaResult.ExtendedRedshifts[i] =
-        m_firstpass_extremaResult->ExtendedRedshifts[i];
     if (m_opt_continuumcomponent == "tplfit" ||
         m_opt_continuumcomponent == "tplfitauto") {
       // inject continuumFitValues of current candidate

@@ -56,20 +56,22 @@ typedef std::vector<CZGridParam> TZGridListParams;
 
 class CZGridListParams {
 public:
-  //  CZGridListParams() = default;
-  CZGridListParams(const TZGridListParams &params)
-      : m_zparams(params){};
-  CZGridListParams(TZGridListParams &&params)
+  CZGridListParams(TZGridListParams params)
       : m_zparams(std::move(params)){};
 
   CZGridParam &operator[](const Int32 i) { return m_zparams[i]; };
   const CZGridParam &operator[](const Int32 i) const { return m_zparams[i]; };
   Int32 size() const { return m_zparams.size(); }
 
+  TZGridListParams::iterator begin() { return m_zparams.begin();};
+  TZGridListParams::iterator end() { return m_zparams.end();};
+  TZGridListParams::const_iterator cbegin() const { return m_zparams.cbegin();};
+  TZGridListParams::const_iterator cend() const { return m_zparams.cend();};
+
   TFloat64List getZGrid(bool logsampling) const;
 
   // returns insertion index & mumber of overlapped indices
-  static std::tuple<Int32, Int32> insertSubgrid(const TFloat64List &subgrid,
+  static std::tuple<Int32, Int32> insertSubgrid(TFloat64List &subgrid,
                                                 TFloat64List &zgrid);
 
 private:

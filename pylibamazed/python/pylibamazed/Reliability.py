@@ -68,7 +68,7 @@ class Reliability:
         pdf.convertToRegular(True, c_zgrid_zend)
 
         zgrid = pdf.redshifts
-        pdfval = pdf.ValProbaLog
+        pdfval = pdf.valProbaLog
         model = self.calibration_library.reliability_models[self.object_type]
 
         zgrid_end = zgrid[-1]

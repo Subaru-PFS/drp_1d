@@ -87,6 +87,7 @@
 %shared_ptr(CFlagWarning)
 %shared_ptr(CSpectrumFluxCorrectionMeiksin)
 %shared_ptr(CSpectrumFluxCorrectionCalzetti) 
+%shared_ptr(TZgridListParams)
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 
@@ -95,6 +96,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/pyconv.h"
+#include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/log/log.h"

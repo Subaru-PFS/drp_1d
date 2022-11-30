@@ -695,21 +695,21 @@ void CLineModelSolve::createRedshiftGrid(
           "LineModelSolve.linemodel.firstpass.largegridstepratio");
 
   m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
-  m_redshifts.clear();
 
-  m_redshifts = m_redshiftSampling == "log"
-                    ? redshiftRange.SpreadOverLogZplusOne(m_coarseRedshiftStep)
-                    : redshiftRange.SpreadOver(m_coarseRedshiftStep);
+  CZGridParam zp(redshiftRange, m_coarseRedshiftStep);
+  m_redshifts = zp.getZGrid(m_redshiftSampling == "log");
 
   if (m_redshifts.size() < MIN_GRID_COUNT) {
+    m_coarseRedshiftStep = m_redshiftStep;
     CObjectSolve::createRedshiftGrid(
         inputContext, redshiftRange); // fall back to creating fine grid
-    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
+    Log.LogInfo("Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
                 "raw %d redshifts will be calculated",
                 m_redshifts.size());
   } else {
-    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
-                "will be calculated on the large grid",
-                m_redshifts.size());
+    Log.LogInfo(
+        "Operator-Linemodel: 1st pass coarse zgrid enabled: %d redshifts "
+        "will be calculated on the coarse grid",
+        m_redshifts.size());
   }
 }
