@@ -417,6 +417,10 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
 
 const std::string &CSpectrum::GetName() const { return m_Name; }
 
+const std::string &CSpectrum::getObsID() const { return m_obsId; }
+
+void CSpectrum::setObsID(const std::string &obsID) { m_obsId = obsID; }
+
 void CSpectrum::SetName(std::string name) { m_Name = std::move(name); }
 
 const CSpectrum::EType CSpectrum::GetType() const { return m_spcType; }

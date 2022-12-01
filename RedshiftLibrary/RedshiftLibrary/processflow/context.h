@@ -169,6 +169,22 @@ public:
   std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
 
+  std::vector<std::shared_ptr<const TFloat64Range>>
+  getClampedLambdaRanges() const {
+    return m_inputContext->getClampedLambdaRanges();
+  }
+  std::vector<std::shared_ptr<const TFloat64Range>>
+  getRebinnedClampedLambdaRanges() const {
+    return m_inputContext->getRebinnedClampedLambdaRanges();
+  }
+  std::vector<std::shared_ptr<const CSpectrum>> getSpectra() const {
+    return m_inputContext->getSpectra();
+  }
+
+  std::vector<std::shared_ptr<const CSpectrum>> getRebinnedSpectra() const {
+    return m_inputContext->getRebinnedSpectra();
+  }
+
   TScopeStack m_ScopeStack;
 
 private:

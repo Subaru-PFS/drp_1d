@@ -56,6 +56,24 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                  )
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
+class NumpyContainer:
+
+    def __init__(self):
+        self.data = dict()
+
+    def append(self, np_array, name=""):
+        self.data[name] = np_array
+    
+    def get(self, name=""):
+        return self.data[name]
+
+    def keys(self):
+        return self.data.keys()
+
+    def size(self):
+        return len(self.data)
+
+    
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
 from pylibamazed.Exception import APIException
@@ -81,9 +99,9 @@ class AbstractSpectrumReader:
         """Constructor method
         """
         self.observation_id = observation_id
-        self.waves = []
-        self.fluxes = []
-        self.errors = []
+        self.waves = NumpyContainer()
+        self.fluxes = NumpyContainer()
+        self.errors = NumpyContainer()
         self.lsf_type = None
         self.lsf_data = []
         self.photometric_data = []
@@ -93,7 +111,7 @@ class AbstractSpectrumReader:
         self.calibration_library = calibration_library
         self.source_id = source_id
 
-    def load_wave(self, resource):
+    def load_wave(self, resource, obs_id=""):
         """Append the spectral axis in self.wave , units are in Angstrom by default
 
         :param resource: resource where the wave can be found, no restriction for type (can be a path,
@@ -102,7 +120,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_flux(self, resource):
+    def load_flux(self, resource, obs_id=""):
         """Append the flux in self.flux , units are in erg.cm-2 by default
 
         :param resource: resource where the flux can be found, no restriction for type (can be a path, a file handler,
@@ -111,7 +129,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_error(self, resource):
+    def load_error(self, resource, obs_id=""):
         """Append the variance in self.error , units are in erg.cm-2 by default
 
         :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
@@ -120,7 +138,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_lsf(self, resource):
+    def load_lsf(self, resource, obs_id=""):
         """Append the spectral axis in self.flux , units are in erg.cm-2 by default
 
          :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
@@ -129,7 +147,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_photometry(self, resource):
+    def load_photometry(self, resource, obs_id=""):
         """Append the photometric data in self.photometric_data , units are in erg.cm-2 by default
 
         :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
@@ -150,7 +168,6 @@ class AbstractSpectrumReader:
         self.load_lsf(resource)
         self.load_photometry(resource)
 
-
     def get_spectrum(self):
         """
         Get spectrum c++ object
@@ -161,6 +178,7 @@ class AbstractSpectrumReader:
             return self._spectra[0]
         else:
             raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+        
     def get_wave(self):
         """
 
@@ -212,7 +230,7 @@ class AbstractSpectrumReader:
         self.w_frame = "air"
 
     def init(self):
-        if len(self.waves) != len(self.fluxes) or len(self.waves) != len(self.errors):
+        if self.waves.size() != self.fluxes.size() or self.waves.size() != self.errors.size():
             raise  APIException(ErrorCode.INVALID_SPECTRUM,"Number of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves)), str(len(self.errors)), str(len(self.fluxes))))
         if len(self.lsf_data) > 1:
             raise  APIException(ErrorCode.MULTILSF_NOT_HANDLED,"Multiple LSF not handled")
@@ -225,16 +243,18 @@ class AbstractSpectrumReader:
             zflag.warning(WarningCode.AIR_VACCUM_CONVERSION_IGNORED.value, f"Air vaccum method {airvacuum_method} ignored, spectrum already in vacuum")
             airvacuum_method = ""
 
-        if len(self.waves) == 1:
-            spectralaxis = CSpectrumSpectralAxis(self.waves[0], airvacuum_method)
-            signal = CSpectrumFluxAxis_withError(self.fluxes[0], self.errors[0])
-        else:
+        multiobs_type = self.parameters["multiobsmethod"]
+        if not multiobs_type:
+            spectralaxis = CSpectrumSpectralAxis(self.waves.get(), airvacuum_method)
+            signal = CSpectrumFluxAxis_withError(self.fluxes.get(), self.errors[0])
+            self._add_cspectrum(spectralaxis,signal)
+        elif multiobs_type == "merge":
             wses = []
-            for i in range(len(self.waves)):
+            for i in self.waves.keys():
                 wse_ = pd.DataFrame()
-                wse_["wave"] = self.waves[i]
-                wse_["flux"] = self.fluxes[i]
-                wse_["error"] = self.errors[i]
+                wse_["wave"] = self.waves.get(i)
+                wse_["flux"] = self.fluxes.get(i)
+                wse_["error"] = self.errors.get(i)
                 wses.append(wse_)
             wse = pd.concat(wses)
             wse.sort_values(["wave"], inplace=True)
@@ -248,12 +268,17 @@ class AbstractSpectrumReader:
             spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
                                                  np.array(wse["error"]))
-
-        self._spectra.append(CSpectrum(spectralaxis, signal))
-        self._spectra[0].SetName(self.source_id)
+            self._add_cspectrum(spectralaxis,signal)
+        elif multiobs_type == "full":
+            for obs_id in self.waves.keys():
+                spectralaxis = CSpectrumSpectralAxis(self.waves.get(obs_id),
+                                                     airvacuum_method)
+                signal = CSpectrumFluxAxis_withError(self.fluxes.get(obs_id),
+                                                     self.errors.get(obs_id))
+                self._add_cspectrum(spectralaxis,signal,obs_id)
 
         ctx = CProcessFlowContext.GetInstance()
-        ctx.addSpectrum(self._spectra[0])
+            
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
         if parameter_lsf_type == "FROMSPECTRUMDATA":
             self.parameters["LSF"]["LSFType"] = self.lsf_type
@@ -280,3 +305,10 @@ class AbstractSpectrumReader:
             fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
             self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
+    def _add_cspectrum(self,spectralaxis, signal, obs_id=""):
+        self._spectra.append(CSpectrum(spectralaxis, signal))
+        self._spectra[-1].SetName(self.source_id)
+        self._spectra[-1].setObsID(obs_id)
+
+        ctx = CProcessFlowContext.GetInstance()
+        ctx.addSpectrum(self._spectra[-1])

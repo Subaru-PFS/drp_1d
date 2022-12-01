@@ -190,12 +190,16 @@ void CInputContext::Init() {
 
   bool enableInputSpcCorrect = m_ParameterStore->Get<bool>("autocorrectinput");
   // non clamped lambdaRange: to be clamped depending on used spectra
-  auto lambdaRanges =
-      m_ParameterStore->Get<std::vector<TFloat64Range>>("lambdarange");
 
-  for (auto lambdaRange : lambdaRanges)
+  for (auto spectrum : m_spectra) {
+    auto lambdaRange = m_ParameterStore->Get<TFloat64Range>(
+        Formatter() << "lambdarange." << spectrum->getObsID());
     m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(lambdaRange));
-
+    m_clampedLambdaRanges.push_back(
+        std::make_shared<TFloat64Range>(TFloat64Range()));
+    m_rebinnedClampedLambdaRanges.push_back(
+        std::make_shared<TFloat64Range>(TFloat64Range()));
+  }
   for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
                                  m_rebinnedClampedLambdaRanges.begin());
        std::get<0>(it) != m_spectra.end();
@@ -235,12 +239,12 @@ void CInputContext::Init() {
   OrthogonalizeTemplates();
 
   for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
-                                 m_rebinnedClampedLambdaRanges.begin());
+                                 m_clampedLambdaRanges.begin());
        std::get<0>(it) != m_spectra.end();
        ++std::get<0>(it), ++std::get<1>(it), ++std::get<2>(it)) {
     auto spectrum = *std::get<0>(it);
     auto lambdaRange = *std::get<1>(it);
-    auto clampedLambdaRange = *std::get<1>(it);
+    auto clampedLambdaRange = *std::get<2>(it);
 
     spectrum->GetSpectralAxis().ClampLambdaRange(*(lambdaRange),
                                                  *(clampedLambdaRange));

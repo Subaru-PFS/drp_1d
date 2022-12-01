@@ -63,7 +63,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     std::shared_ptr<COperatorResultStore> resultStore, TScopeStack &scope) {
 
   const CSpectrum &spc = *(inputContext->GetSpectrum());
-  const CSpectrum &rebinnedSpc = *(inputContext->GetRebinnedSpectrum());
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
@@ -100,18 +99,18 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
                            "implemented with photometry enabled");
 
   if (fft_processing) {
-    m_templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(
-        spc, rebinnedSpc, m_lambdaRange, m_redshifts);
+    m_templateFittingOperator =
+        std::make_shared<COperatorTemplateFittingLog>(m_redshifts);
     tplCatalog.m_logsampling = true;
   } else {
     if (use_photometry) {
       m_templateFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
-              spc, m_lambdaRange, inputContext->GetPhotBandCatalog(),
-              photometry_weight, m_redshifts);
+              inputContext->GetPhotBandCatalog(), photometry_weight,
+              m_redshifts);
     } else {
-      m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(
-          spc, m_lambdaRange, m_redshifts);
+      m_templateFittingOperator =
+          std::make_shared<COperatorTemplateFitting>(m_redshifts);
     }
     tplCatalog.m_logsampling = false;
   }
@@ -176,9 +175,8 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       std::shared_ptr<const CTemplate> tpl =
           tplCatalog.GetTemplate(category, j);
 
-      Solve(resultStore, fft_processing ? rebinnedSpc : spc, tpl,
-            overlapThreshold, maskList, _type, opt_interp, opt_extinction,
-            opt_dustFit);
+      Solve(resultStore, tpl, overlapThreshold, maskList, _type, opt_interp,
+            opt_extinction, opt_dustFit);
 
       storeResult = true;
     }
@@ -221,7 +219,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
 }
 
 void CTemplateFittingSolve::Solve(
-    std::shared_ptr<COperatorResultStore> resultStore, const CSpectrum &spc,
+    std::shared_ptr<COperatorResultStore> resultStore,
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     std::vector<CMask> maskList, EType spctype, std::string opt_interp,
     bool opt_extinction, bool opt_dustFitting) {
@@ -238,7 +236,9 @@ void CTemplateFittingSolve::Solve(
     _ntype = 3;
   }
 
-  const CSpectrum::EType save_spcType = spc.GetType();
+  std::vector<CSpectrum::EType> save_spcTypes;
+  for (auto spc : Context.getSpectra())
+    save_spcTypes.push_back(spc->GetType());
   const CSpectrum::EType save_tplType = tpl->GetType();
 
   for (Int32 i = 0; i < _ntype; i++) {
@@ -247,7 +247,8 @@ void CTemplateFittingSolve::Solve(
     } else {
       _spctype = static_cast<CSpectrum::EType>(spctype);
     }
-    spc.SetType(_spctype);
+    for (auto spc : Context.getSpectra())
+      spc->SetType(_spctype);
     tpl->SetType(_spctype);
     tpl->setRebinInterpMethod(opt_interp);
 
@@ -316,7 +317,9 @@ void CTemplateFittingSolve::Solve(
     }
   }
 
-  spc.SetType(save_spcType);
+  int i = 0;
+  for (auto spc : Context.getSpectra())
+    spc->SetType(save_spcTypes[i++]);
   tpl->SetType(save_tplType);
 }
 

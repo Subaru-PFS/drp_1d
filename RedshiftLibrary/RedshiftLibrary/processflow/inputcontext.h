@@ -63,6 +63,28 @@ public:
   std::shared_ptr<const CSpectrum> GetSpectrum(int i = 0) const {
     return m_spectra[i];
   }
+
+  /*
+  std::vector<const CSpectrum&> getSpectra() const {
+    std::vector<const CSpectrum&> res;
+    for (spectrum:m_spectra)res.push_back(*spectrum);
+    return res;
+  }
+  */
+  std::vector<std::shared_ptr<const CSpectrum>> getSpectra() const {
+    std::vector<std::shared_ptr<const CSpectrum>> res;
+    for (auto spectrum : m_spectra)
+      res.push_back(spectrum);
+    return res;
+  }
+
+  std::vector<std::shared_ptr<const CSpectrum>> getRebinnedSpectra() const {
+    std::vector<std::shared_ptr<const CSpectrum>> res;
+    for (auto spectrum : m_rebinnedSpectra)
+      res.push_back(spectrum);
+    return res;
+  }
+
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
     return m_rebinnedSpectra[i];
   }
@@ -159,6 +181,22 @@ public:
   std::shared_ptr<const TFloat64Range>
   getRebinnedClampedLambdaRange(int i = 0) const {
     return m_rebinnedClampedLambdaRanges[i];
+  }
+
+  std::vector<std::shared_ptr<const TFloat64Range>>
+  getClampedLambdaRanges() const {
+    std::vector<std::shared_ptr<const TFloat64Range>> res;
+    for (auto r : m_clampedLambdaRanges)
+      res.push_back(r);
+    return res;
+  }
+
+  std::vector<std::shared_ptr<const TFloat64Range>>
+  getRebinnedClampedLambdaRanges() const {
+    std::vector<std::shared_ptr<const TFloat64Range>> res;
+    for (auto r : m_rebinnedClampedLambdaRanges)
+      res.push_back(r);
+    return res;
   }
 
 private:

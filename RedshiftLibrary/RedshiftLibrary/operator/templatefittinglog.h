@@ -59,10 +59,7 @@ namespace NSEpic {
 class COperatorTemplateFittingLog : public COperatorTemplateFittingBase {
 
 public:
-  COperatorTemplateFittingLog(const CSpectrum &spectrum,
-                              const CSpectrum &logSampledSpectrum,
-                              const TFloat64Range &lambdaRange,
-                              const TFloat64List &redshifts);
+  COperatorTemplateFittingLog(const TFloat64List &redshifts);
   ~COperatorTemplateFittingLog();
 
   void SetRedshifts(TFloat64List redshifts) override;
@@ -82,17 +79,17 @@ public:
 
   // made public for unit-testing
   TInt32Range FindTplSpectralIndex(const TFloat64Range &redshiftrange) const;
-  TInt32Range
-  FindTplSpectralIndex(const CSpectrumSpectralAxis &spcSpectrailAxis,
-                       const CSpectrumSpectralAxis &tplSpectralAxis,
-                       const TFloat64Range &redshiftrange) const;
+  TInt32Range FindTplSpectralIndex(const CSpectrumSpectralAxis &spcSpectralAxis,
+                                   const CSpectrumSpectralAxis &tplSpectralAxis,
+                                   const TFloat64Range &redshiftrange) const;
 
 private:
   // log grid data
-  CSpectrum m_logSampledSpectrum;
+  /*  CSpectrum m_logSampledSpectrum;
   TFloat64Range m_logSampledLambdaRange;
   CSpectrum m_ssSpectrum;
   TFloat64Range m_ssLambdaRange;
+  */
 
   Float64 m_logstep;
   Int32 m_ssRatio;
@@ -112,7 +109,7 @@ private:
                   const TInt32List &MeiksinList, const TInt32List &EbmvList,
                   const Float64 &dtd);
 
-  TInt32RangeList FindZRanges(const TFloat64List &redshifts);
+  TInt32RangeList FindZRanges(const TFloat64List &redshifts, Int32 spcIndex);
 
   void EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
                    TFloat64List &XtY, Int32 precomputedFFT = -1);

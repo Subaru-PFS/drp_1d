@@ -67,9 +67,7 @@ std::string jsonString =
     "99, -100 ],\"TBoolList\" : [ true, true, false ],\"TStringList\" : [ "
     "\"foo\", \"bar\", \"baz\" ],\"TFloat64Range\" : [ 0.01, "
     "0.010999999999999999 ],\"string\" : \"string\",\"Float64\" : "
-    "12.300000000000001,\"Int64\" : 12,\"bool\" : true,\"TFloat64Ranges\" : [[ "
-    "0.01, "
-    "0.02],[2,3]]}";
+    "12.300000000000001,\"Int64\" : 12,\"bool\" : true}";
 
 // set json file
 boost::filesystem::path _path =
@@ -201,8 +199,6 @@ BOOST_AUTO_TEST_CASE(ParameterStore_ReadJsonTest) {
   Int64 int64_ = store.Get<Int64>("Int64");
   bool bool_ = store.Get<bool>("bool");
 
-  std::vector<TFloat64Range> float64ranges_ =
-      store.Get<std::vector<TFloat64Range>>("TFloat64Ranges");
   Float64 f, f_;
   BOOST_FOREACH (boost::tie(f, f_),
                  boost::combine(float64_list, float64_list_)) {

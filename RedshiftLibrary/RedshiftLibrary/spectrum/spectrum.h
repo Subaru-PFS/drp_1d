@@ -98,6 +98,8 @@ public:
   }; // non const version needed for the virtualization
 
   const std::string &GetName() const;
+  const std::string &getObsID() const;
+  void setObsID(const std::string &obsID);
   const EType GetType() const;
 
   bool InvertFlux();
@@ -188,6 +190,7 @@ protected:
   void ResetContinuum() const;
 
   std::string m_Name;
+  std::string m_obsId = "";
   std::string m_FullPath;
 
   // Continuum removal parameters

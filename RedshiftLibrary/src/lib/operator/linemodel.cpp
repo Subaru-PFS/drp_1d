@@ -412,9 +412,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     if (m_templateFittingOperator == nullptr ||
         !m_templateFittingOperator->IsFFTProcessing()) // else reuse the shared
                                                        // pointer for secondpass
-      m_templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(
-          spectrum, logSampledSpectrum, *(Context.GetLambdaRange()),
-          redshiftsTplFit);
+      m_templateFittingOperator =
+          std::make_shared<COperatorTemplateFittingLog>(redshiftsTplFit);
     tplCatalog->m_logsampling = true;
 
   } else {
@@ -425,12 +424,12 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       if (m_opt_tplfit_use_photometry)
         m_templateFittingOperator =
             std::make_shared<COperatorTemplateFittingPhot>(
-                spectrum, *(Context.GetLambdaRange()), photBandCat,
+                photBandCat,
                 ps->GetScoped<Float64>("linemodel.photometry.weight"),
                 redshiftsTplFit);
       else
-        m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(
-            spectrum, *(Context.GetLambdaRange()), redshiftsTplFit);
+        m_templateFittingOperator =
+            std::make_shared<COperatorTemplateFitting>(redshiftsTplFit);
     }
 
     tplCatalog->m_logsampling = false;

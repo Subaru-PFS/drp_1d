@@ -16,8 +16,7 @@ CContinuumManager::CContinuumManager(
     const TLambdaRange &lambdaRange)
     : m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategoryList({Context.GetCurrentCategory()}), m_model(model) {
-  m_templateFittingOperator =
-      std::make_shared<COperatorTemplateFitting>(*(spc), lambdaRange);
+  m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
