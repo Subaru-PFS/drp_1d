@@ -48,10 +48,8 @@ TFloat64List CZGridParam::getZGrid(bool logsampling) const {
   if (!isnan(zcenter))
     return range.spanCenteredWindow(zcenter, logsampling, zstep);
 
-  auto grid = logsampling ? range.SpreadOverLogZplusOne(zstep)
-                          : range.SpreadOver(zstep);
-
-  grid.back() = std::min(grid.back(), zmax); // cope with rounding errors
+  auto grid = logsampling ? range.SpreadOverLogZplusOneEpsilon(zstep)
+                          : range.SpreadOverEpsilon(zstep);
 
   return grid;
 }
@@ -85,22 +83,15 @@ std::tuple<Int32, Int32> CZGridListParams::insertSubgrid(TFloat64List &subgrid,
   if (!b) // range not included in the main range
     THROWG(INTERNAL_ERROR, "range not inside base grid ");
 
-  // deal with subgrid front or end samples when equal to coarse grid samples
-  auto subgrid_start = subgrid.cbegin();
-  auto subgrid_end = subgrid.cend();
-  if (range_epsilon.GetBegin() == zgrid.front()) {
-    ++imin;
-    ++subgrid_start;
+  // deal with subgrid front or end
+  // if truncated by intersection with zgrid
+  if (range_epsilon.GetBegin() == zgrid.front())
     subgrid.front() = zgrid.front();
-  }
-  if (range_epsilon.GetEnd() == zgrid.back()) {
-    --imax;
-    --subgrid_end;
+  if (range_epsilon.GetEnd() == zgrid.back())
     subgrid.back() = zgrid.back();
-  }
 
   Int32 ndup = imax - imin + 1;
-  insertWithDuplicates(zgrid, imin, subgrid_start, subgrid_end, ndup);
+  insertWithDuplicates(zgrid, imin, subgrid, ndup);
 
   return std::make_tuple(imin, ndup);
 }

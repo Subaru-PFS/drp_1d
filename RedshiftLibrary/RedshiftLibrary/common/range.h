@@ -78,12 +78,44 @@ public:
 
   void SetEnd(const T &v) { m_End = v; }
 
-  CRange<T> operator-(const T &t) { return CRange<T>(m_Begin - t, m_End - t); }
-  CRange<T> operator+(const T &t) { return CRange<T>(m_Begin + t, m_End + t); }
-  CRange<T> operator*(const T &t) { return CRange<T>(m_Begin * t, m_End * t); }
-  CRange<T> operator/(const T &t) { return CRange<T>(m_Begin / t, m_End / t); }
+  CRange<T> operator-(const T &t) const {
+    return CRange<T>(m_Begin - t, m_End - t);
+  }
+  CRange<T> operator+(const T &t) const {
+    return CRange<T>(m_Begin + t, m_End + t);
+  }
+  CRange<T> operator*(const T &t) const {
+    return CRange<T>(m_Begin * t, m_End * t);
+  }
+  CRange<T> operator/(const T &t) const {
+    return CRange<T>(m_Begin / t, m_End / t);
+  }
 
-  T Interpolate(Float64 t) { return m_Begin + (m_End - m_Begin) * t; }
+  CRange<T> operator+(const CRange<T> &rhs) const {
+    return CRange<T>(m_Begin + rhs.m_Begin, m_End + rhs.m_End);
+  }
+
+  bool operator==(const CRange<T> &rhs) const {
+    if (m_Begin == rhs.m_Begin && m_End == rhs.m_End)
+      return true;
+    return false;
+  }
+
+  bool operator!=(const CRange<T> &rhs) const {
+    if (m_Begin != rhs.m_Begin || m_End != rhs.m_End)
+      return true;
+    return false;
+  }
+
+  bool operator<(const CRange<T> &rhs) const {
+    if (m_Begin == rhs.m_Begin)
+      return (m_End < rhs.m_End);
+    return (m_Begin < rhs.m_Begin);
+  }
+
+  Float64 Interpolate(Float64 t) const {
+    return m_Begin + (m_End - m_Begin) * t;
+  }
 
   const T &GetBegin() const { return m_Begin; }
 
@@ -97,54 +129,46 @@ public:
 
   T Clamp(T v) const { return v < m_Begin ? m_Begin : (m_End < v ? m_End : v); }
 
-  std::vector<T> SpreadOver(T delta) const {
-    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
-      return {m_Begin};
-
-    Int32 count = (GetLength() + epsilon) / delta + 1;
-
-    std::vector<T> v(count);
-    for (Int32 i = 0; i < v.size(); i++)
-      v[i] = GetBegin() + delta * i;
-
-    return v;
-  }
-
   std::vector<T> SpreadOver_backward(T delta) const {
     if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
       return {m_End};
 
-    Int32 count = (GetLength() + epsilon) / delta + 1;
+    Int32 count = GetLength() / delta + 1;
 
     std::vector<T> v(count);
     for (Int32 i = 0; i < count; i++)
-      v[i] = GetEnd() - delta * (count - i - 1);
+      v[i] = m_End - delta * (count - 1 - i);
 
     return v;
   }
 
-  std::vector<T> SpreadOverLog(T delta, T offset = 0.) const {
-    static_assert(std::is_same<T, Float64>::value,
-                  "not implemented"); // compile time check
-    if (!isSameSign(offset))
-      THROWG(INTERNAL_ERROR, "borders should be of same sign");
-    if (GetIsEmpty() || delta == 0.0 ||
-        GetLength() < (GetBegin() + offset) * exp(delta) -
-                          (GetBegin() + offset) + epsilon)
+  std::vector<T> SpreadOver(T delta, bool backward = false) const {
+    if (backward)
+      return SpreadOver_backward(delta);
+
+    if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
       return {m_Begin};
 
-    T x = m_Begin + offset;
-    T edelta = exp(delta);
+    Int32 count = GetLength() / delta + 1;
 
-    Int32 count =
-        (log(GetEnd() + offset + epsilon) - log(GetBegin() + offset)) / delta +
-        1;
     std::vector<T> v(count);
-    for (Int32 i = 0; i < count; i++) {
-      v[i] = x - offset;
-      x *= edelta;
-    }
+    for (Int32 i = 0; i < count; i++)
+      v[i] = m_Begin + delta * i;
+
     return v;
+  }
+
+  std::vector<T> SpreadOverEpsilon(T delta, bool backward = false,
+                                   Float64 epsilon = 1e-8) const {
+    static_assert(std::is_same<T, Float64>::value,
+                  "not implemented"); // compile time check
+    CRange<T> range_epsilon =
+        backward ? CRange<T>{-epsilon, 0.0} : CRange<T>{0.0, epsilon};
+    CRange<T> range_ = *this + range_epsilon;
+    auto ret = range_.SpreadOver(delta, backward);
+    ret.front() = std::max(ret.front(), m_Begin);
+    ret.back() = std::min(ret.back(), m_End);
+    return ret;
   }
 
   std::vector<T> SpreadOverLog_backward(T delta, T offset = 0.) const {
@@ -153,15 +177,14 @@ public:
     if (!isSameSign(offset))
       THROWG(INTERNAL_ERROR, "borders should be of same sign");
     if (GetIsEmpty() || delta == 0.0 ||
-        GetLength() < (GetBegin() + offset) * exp(delta) -
-                          (GetBegin() + offset) + epsilon)
+        GetLength() <
+            (GetBegin() + offset) * exp(delta) - (GetBegin() + offset))
       return {m_End};
 
     T x = m_End + offset;
     T edelta = exp(-delta);
     Int32 count =
-        (log(GetEnd() + offset) - log(GetBegin() + offset - epsilon)) / delta +
-        1;
+        (log(GetEnd() + offset) - log(GetBegin() + offset)) / delta + 1;
 
     std::vector<T> v(count);
     for (Int32 i = count - 1; i >= 0; i--) {
@@ -170,13 +193,69 @@ public:
     }
     return v;
   }
+
+  std::vector<T> SpreadOverLog(T delta, T offset = 0.,
+                               bool backward = false) const {
+    static_assert(std::is_same<T, Float64>::value,
+                  "not implemented"); // compile time check
+    if (!isSameSign(offset))
+      THROWG(INTERNAL_ERROR, "borders should be of same sign");
+
+    if (backward)
+      return SpreadOverLog_backward(delta, offset);
+
+    if (GetIsEmpty() || delta == 0.0 ||
+        GetLength() <
+            (GetBegin() + offset) * exp(delta) - (GetBegin() + offset))
+      return {m_Begin};
+
+    T x = m_Begin + offset;
+    T edelta = exp(delta);
+
+    Int32 count =
+        (log(GetEnd() + offset) - log(GetBegin() + offset)) / delta + 1;
+    std::vector<T> v(count);
+    for (Int32 i = 0; i < count; i++) {
+      v[i] = x - offset;
+      x *= edelta;
+    }
+    return v;
+  }
+
+  std::vector<T> SpreadOverLogEpsilon(T delta, T offset = 0.,
+                                      bool backward = false,
+                                      Float64 epsilon = 1e-8) const {
+    static_assert(std::is_same<T, Float64>::value,
+                  "not implemented"); // compile time check
+    CRange<T> range_epsilon =
+        backward ? CRange<T>{-epsilon, 0.0} : CRange<T>{0.0, epsilon};
+    CRange<T> range_ = *this + range_epsilon;
+    auto ret = range_.SpreadOverLog(delta, offset, backward);
+    ret.front() = std::max(ret.front(), m_Begin);
+    ret.back() = std::min(ret.back(), m_End);
+    return ret;
+  }
+
   // spread over log (z+1)
   std::vector<T> SpreadOverLogZplusOne(T delta, bool backward = false) const {
     static_assert(std::is_same<T, Float64>::value,
                   "not implemented"); // compile time check
-    return backward ? SpreadOverLog_backward(delta, 1.)
-                    : SpreadOverLog(delta, 1.);
+    return SpreadOverLog(delta, 1., backward);
   }
+
+  std::vector<T> SpreadOverLogZplusOneEpsilon(T delta, bool backward = false,
+                                              Float64 epsilon = 1e-8) const {
+    static_assert(std::is_same<T, Float64>::value,
+                  "not implemented"); // compile time check
+    CRange<T> range_epsilon =
+        backward ? CRange<T>{-epsilon, 0.0} : CRange<T>{0.0, epsilon};
+    CRange<T> range_ = *this + range_epsilon;
+    auto ret = range_.SpreadOverLogZplusOne(delta, backward);
+    ret.front() = std::max(ret.front(), m_Begin);
+    ret.back() = std::min(ret.back(), m_End);
+    return ret;
+  }
+
   //  template<typename T>
   friend std::ostream &operator<<(std::ostream &out, const CRange<T> &range) {
     out << "[" << range.m_Begin << "," << range.m_End << "]";
@@ -194,14 +273,14 @@ public:
   const std::vector<T> spanCenteredWindow(T center, bool logsampling,
                                           T delta) const {
     CRange<T> range_left(GetBegin(), center);
-    std::vector<T> vect = logsampling
-                              ? range_left.SpreadOverLogZplusOne(delta, true)
-                              : range_left.SpreadOver_backward(delta);
+    std::vector<T> vect =
+        logsampling ? range_left.SpreadOverLogZplusOneEpsilon(delta, true)
+                    : range_left.SpreadOverEpsilon(delta, true);
 
     CRange<T> range_right = {center, GetEnd()};
-    std::vector<T> vect_part2 = logsampling
-                                    ? range_right.SpreadOverLogZplusOne(delta)
-                                    : range_right.SpreadOver(delta);
+    std::vector<T> vect_part2 =
+        logsampling ? range_right.SpreadOverLogZplusOneEpsilon(delta)
+                    : range_right.SpreadOverEpsilon(delta);
 
     vect.insert(std::end(vect), std::begin(vect_part2) + 1,
                 std::end(vect_part2));
@@ -362,29 +441,8 @@ public:
 private:
   T m_Begin;
   T m_End;
-  Float64 epsilon = 1E-8;
 };
 
-template <typename T>
-bool operator==(const CRange<T> &lhs, const CRange<T> &rhs) {
-  if (lhs.GetBegin() == rhs.GetBegin() && lhs.GetEnd() == rhs.GetEnd())
-    return true;
-  return false;
-}
-
-template <typename T>
-bool operator!=(const CRange<T> &lhs, const CRange<T> &rhs) {
-  if (lhs.GetBegin() != rhs.GetBegin() || lhs.GetEnd() != rhs.GetEnd())
-    return true;
-  return false;
-}
-
-template <typename T>
-bool operator<(const CRange<T> &lhs, const CRange<T> &rhs) {
-  if (lhs.GetBegin() == rhs.GetBegin())
-    return (lhs.GetEnd() < rhs.GetEnd());
-  return (lhs.GetBegin() < rhs.GetBegin());
-}
 typedef CRange<Int32> TInt32Range;
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range TLambdaRange;

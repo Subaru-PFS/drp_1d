@@ -815,6 +815,15 @@ void COperatorLineModel::ComputeSecondPass(
                                        << m_continnuum_fit_option);
   }
 
+  // initialize second pass parameters
+  m_secondpass_parameters_extremaResult =
+      CLineModelPassExtremaResult(m_firstpass_extremaResult->size());
+
+  // upcast LineModelExtremaResult to TCandidateZ
+  m_secondpass_parameters_extremaResult.m_ranked_candidates.assign(
+      firstpassResults->m_ranked_candidates.cbegin(),
+      firstpassResults->m_ranked_candidates.cend());
+
   // insert extendedRedshifts into m_Redshifts
   m_secondpass_parameters_extremaResult.ExtendedRedshifts =
       m_firstpass_extremaResult->ExtendedRedshifts;
@@ -826,11 +835,12 @@ void COperatorLineModel::ComputeSecondPass(
     // precompute only whenever required and whenever the result can be a
     // tplfitStore
     if (m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3) {
-      m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
+      m_tplfitStore_secondpass.resize(
+          m_secondpass_parameters_extremaResult.size());
       tplCatalog->m_orthogonal = 1;
-      for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
+      for (Int32 i = 0; i < m_secondpass_parameters_extremaResult.size(); i++) {
         m_tplfitStore_secondpass[i] = PrecomputeContinuumFit(
-            m_firstpass_extremaResult->ExtendedRedshifts[i], i);
+            m_secondpass_parameters_extremaResult.ExtendedRedshifts[i], i);
         if (m_opt_continuumcomponent == "fromspectrum")
           break; // when set to "fromspectrum" by PrecomputeContinuumFit
                  // because negative continuum with tplfitauto
@@ -854,8 +864,6 @@ void COperatorLineModel::ComputeSecondPass(
     }
   }
 
-  m_secondpass_parameters_extremaResult =
-      CLineModelPassExtremaResult(m_firstpass_extremaResult->size());
   if (m_continnuum_fit_option == 2) {
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
       m_secondpass_parameters_extremaResult.FittedTplName[i] =
@@ -884,11 +892,6 @@ void COperatorLineModel::ComputeSecondPass(
           m_firstpass_extremaResult->FittedTplMeritPhot[i];
     }
   }
-
-  // upcast LineModelExtremaResult to TCandidateZ
-  m_secondpass_parameters_extremaResult.m_ranked_candidates.assign(
-      firstpassResults->m_ranked_candidates.cbegin(),
-      firstpassResults->m_ranked_candidates.cend());
 
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
@@ -1800,8 +1803,9 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(
   roundf(10000*opt_manvelfit_dzmax)/10000;
 
   TFloat64List velFitEList =
-  TFloat64Range(velfitMinE,velfitMaxE).SpreadOver(velfitStepE); TFloat64List
-  velFitAList = TFloat64Range(velfitMinA,velfitMaxA).SpreadOver(velfitStepA);
+  TFloat64Range(velfitMinE,velfitMaxE).SpreadOverEpsilon(velfitStepE);
+  TFloat64List velFitAList =
+  TFloat64Range(velfitMinA,velfitMaxA).SpreadOverEpsilon(velfitStepA);
 
   // Prepare velocity grid to be checked
   // TODO log grid ?
@@ -1815,7 +1819,7 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(
       dzSupLim = redshift_max - redshift;
     }
   TFloat64List zList =
-  TFloat64Range(redshift-opt_manvelfit_dzmin,redshift+opt_manvelfit_dzmax).SpreadOver(opt_manvelfit_dzstep);
+  TFloat64Range(redshift-opt_manvelfit_dzmin,redshift+opt_manvelfit_dzmax).SpreadOverEpsilon(opt_manvelfit_dzstep);
 
   fitVelocityByGroups(velFitEList,zList,CLine::nType_Emission);
   fitVelocityByGroups(velFitAList,zList,CLine::nType_Absorption);

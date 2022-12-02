@@ -43,14 +43,13 @@
 namespace NSEpic {
 
 template <typename T>
-inline void
-insertWithDuplicates(std::vector<T> &dest, Int32 pos,
-                     const typename std::vector<T>::const_iterator &src_begin,
-                     const typename std::vector<T>::const_iterator &src_end,
-                     Int32 ndup) {
-  const auto src_last_insert = src_end - ndup;
-  Int32 ninsert = src_last_insert - src_begin;
-  dest.insert(dest.begin() + pos, src_begin, src_last_insert);
+inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
+                                 std::vector<T> src, Int32 ndup) {
+  const auto src_first = src.cbegin();
+  const auto src_end = src.cend();
+  const auto src_last_insert = src.cend() - ndup;
+  Int32 ninsert = src_last_insert - src_first;
+  dest.insert(dest.begin() + pos, src_first, src_last_insert);
   std::copy(src_last_insert, src_end, dest.begin() + pos + ninsert);
 }
 

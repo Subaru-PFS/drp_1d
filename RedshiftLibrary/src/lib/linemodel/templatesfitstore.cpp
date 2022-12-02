@@ -200,7 +200,7 @@ CTemplatesFitStore::GetFitValues(Float64 redshiftVal,
   if (redshiftVal < redshiftgrid.front() || redshiftVal > redshiftgrid.back())
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Looking for redshiftVal=" << redshiftVal
-                               << "outside range [" << redshiftgrid.front()
+                               << " outside range [" << redshiftgrid.front()
                                << ", " << redshiftgrid.back() << "]");
 
   // find the idxz

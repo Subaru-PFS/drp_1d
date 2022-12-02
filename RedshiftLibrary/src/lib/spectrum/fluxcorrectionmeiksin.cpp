@@ -203,7 +203,7 @@ void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
   m_convolRange = convolRange;
 
   TFloat64Range range(m_LambdaMin, m_rawCorrections[0].lbda.back());
-  TFloat64List finelbdaGrid = range.SpreadOver(m_finegridstep);
+  TFloat64List finelbdaGrid = range.SpreadOverEpsilon(m_finegridstep);
   m_fineLambdaSize = finelbdaGrid.size();
 
   // std::vector<MeiksinCorrection> corrections(m_rawCorrections.size());
