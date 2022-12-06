@@ -197,6 +197,11 @@ BOOST_AUTO_TEST_CASE(Operator_test) {
   range1.Set(1, 3);
   range2 = range1 / 2;
   BOOST_CHECK((range2 == TFloat64Range(0.5, 1.5)));
+
+  range1.Set(1, 3);
+  range2.Set(0.5, 1.5);
+  range2 = range1 + range2;
+  BOOST_CHECK((range2 == TFloat64Range(1.5, 4.5)));
 }
 
 //-----------------------------------------------------------------------------
@@ -214,6 +219,9 @@ BOOST_AUTO_TEST_CASE(SpreadOver_Int32_test1) {
   BOOST_CHECK(myRange.GetIsEmpty() == true);
 
   TInt32List functionResult = myRange.SpreadOver(delta);
+  BOOST_CHECK(myVector == functionResult);
+
+  functionResult = myRange.SpreadOver(delta, true);
   BOOST_CHECK(myVector == functionResult);
 
   functionResult = myRange.SpreadOver_backward(delta);
@@ -235,6 +243,8 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test2) {
   TInt32Range myRange(1, 10);
   TInt32List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver(delta, true);
+  BOOST_CHECK(myVector2 == functionResult);
   functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(myVector2 == functionResult);
 }
@@ -256,6 +266,8 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test3) {
 
   TInt32List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver(delta, true);
+  BOOST_CHECK(myVector2 == functionResult);
   functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(myVector2 == functionResult);
 }
@@ -285,6 +297,9 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test4) {
     BOOST_CHECK(functionResult[i + 1] - functionResult[i] == delta);
   }
   BOOST_CHECK(functionResult.front() - myRange.GetBegin() < delta);
+
+  auto functionResult2 = myRange.SpreadOver(delta, true);
+  BOOST_CHECK(functionResult2 == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -302,6 +317,8 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test1) {
   BOOST_CHECK(myRange.GetIsEmpty() == true);
 
   TFloat64List functionResult = myRange.SpreadOver(delta);
+  BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver(delta, true);
   BOOST_CHECK(myVector == functionResult);
   functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(myVector == functionResult);
@@ -322,6 +339,8 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test2) {
   TFloat64Range myRange(1, 10);
   TFloat64List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver(delta, true);
+  BOOST_CHECK(myVector2 == functionResult);
   functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(myVector2 == functionResult);
 }
@@ -343,6 +362,8 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test3) {
 
   TFloat64List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
+  functionResult = myRange.SpreadOver(delta, true);
+  BOOST_CHECK(myVector2 == functionResult);
   functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(myVector2 == functionResult);
 }
@@ -374,6 +395,9 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test4) {
                       precision);
   }
   BOOST_CHECK(functionResult.front() - myRange.GetBegin() < delta);
+
+  auto functionResult2 = myRange.SpreadOver(delta, true);
+  BOOST_CHECK(functionResult == functionResult2);
 }
 //-----------------------------------------------------------------------------
 
@@ -397,6 +421,9 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test1) {
 
   functionResult = myRange.SpreadOverLog_backward(delta, offset);
   BOOST_CHECK(myVector == functionResult);
+
+  functionResult = myRange.SpreadOverLog(delta, offset, true);
+  BOOST_CHECK(myVector == functionResult);
 }
 //-----------------------------------------------------------------------------
 
@@ -418,6 +445,9 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test2) {
 
   functionResult = myRange.SpreadOverLog_backward(delta, offset);
   BOOST_CHECK(myVector2 == functionResult);
+
+  functionResult = myRange.SpreadOverLog(delta, offset, true);
+  BOOST_CHECK(myVector2 == functionResult);
 }
 //-----------------------------------------------------------------------------
 
@@ -438,6 +468,9 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test3) {
   BOOST_CHECK(myVector == functionResult);
 
   functionResult = myRange.SpreadOverLog_backward(delta, offset);
+  BOOST_CHECK(myVector2 == functionResult);
+
+  functionResult = myRange.SpreadOverLog(delta, offset, true);
   BOOST_CHECK(myVector2 == functionResult);
 }
 //-----------------------------------------------------------------------------
@@ -475,6 +508,9 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4) {
   BOOST_CHECK((functionResult.front() + offset) /
                   (myRange.GetBegin() + offset) <
               exp(delta));
+
+  auto functionResult2 = myRange.SpreadOverLog(delta, offset, true);
+  BOOST_CHECK(functionResult == functionResult2);
 }
 
 //-----------------------------------------------------------------------------
@@ -494,8 +530,106 @@ BOOST_AUTO_TEST_CASE(SpreadOverLogZPlusOne_test) {
   TFloat64List functionResult = myRange.SpreadOverLogZplusOne(delta);
   TFloat64List functionResult2 = myRange.SpreadOverLog(delta, 1.);
   BOOST_CHECK(functionResult2 == functionResult);
+
+  functionResult = myRange.SpreadOverLogZplusOne(delta, true);
+  functionResult2 = myRange.SpreadOverLog(delta, 1., true);
+  BOOST_CHECK(functionResult2 == functionResult);
 }
 //-----------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(SpreadOverEpsilon) {
+  Float64 delta = 2.0;
+  Float64 epsilon = 1e-6;
+
+  TFloat64Range myRange(1, 11 + epsilon / 2.);
+  TFloat64List refResult{1., 3., 5., 7., 9., 11.};
+  TFloat64List functionResult =
+      myRange.SpreadOverEpsilon(delta, false, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(1, 11 - epsilon / 2.);
+  refResult = {1., 3., 5., 7., 9., 11. - epsilon / 2.};
+  functionResult = myRange.SpreadOverEpsilon(delta, false, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(1 - epsilon / 2., 11);
+  refResult = {1., 3., 5., 7., 9., 11.};
+  functionResult = myRange.SpreadOverEpsilon(delta, true, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = {1 + epsilon / 2.0, 11};
+  refResult = {1. + epsilon / 2.0, 3., 5., 7., 9., 11.};
+  functionResult = myRange.SpreadOverEpsilon(delta, true, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+}
+
+BOOST_AUTO_TEST_CASE(SpreadOverLogEpsilon) {
+
+  Float64 delta = 0.5;
+  Float64 epsilon = 1e-6;
+
+  // test
+  TFloat64Range myRange(1, 11);
+  auto refResult = myRange.SpreadOverLog(delta);
+  myRange = TFloat64Range(1., refResult.back());
+  auto functionResult = myRange.SpreadOverLogEpsilon(delta);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(1., refResult.back() + epsilon / 2.);
+  functionResult = myRange.SpreadOverLogEpsilon(delta, 0.0, false, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(1., refResult.back() - epsilon / 2.);
+  auto refResult2 = refResult;
+  refResult2.back() = refResult.back() - epsilon / 2.;
+  functionResult = myRange.SpreadOverLogEpsilon(delta, 0.0, false, epsilon);
+  BOOST_CHECK(functionResult == refResult2);
+
+  myRange = TFloat64Range(1, 11);
+  refResult = myRange.SpreadOverLog(delta, 0.0, true); // backward
+  myRange = TFloat64Range(refResult.front() - epsilon / 2., 11);
+  functionResult = myRange.SpreadOverLogEpsilon(delta, 0.0, true, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(refResult.front() + epsilon / 2., 11);
+  refResult2 = refResult;
+  refResult2.front() = refResult.front() + epsilon / 2.;
+  functionResult = myRange.SpreadOverLogEpsilon(delta, 0.0, true, epsilon);
+  BOOST_CHECK(functionResult == refResult2);
+}
+
+BOOST_AUTO_TEST_CASE(SpreadOverLogZplusOneEpsilon) {
+  Float64 delta = 0.5;
+  Float64 epsilon = 1e-6;
+
+  // test
+  TFloat64Range myRange(1, 11);
+  auto refResult = myRange.SpreadOverLogZplusOne(delta);
+  myRange = TFloat64Range(1., refResult.back());
+  auto functionResult = myRange.SpreadOverLogZplusOneEpsilon(delta);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(1., refResult.back() + epsilon / 2.);
+  functionResult = myRange.SpreadOverLogZplusOneEpsilon(delta, false, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(1., refResult.back() - epsilon / 2.);
+  auto refResult2 = refResult;
+  refResult2.back() = refResult.back() - epsilon / 2.;
+  functionResult = myRange.SpreadOverLogZplusOneEpsilon(delta, false, epsilon);
+  BOOST_CHECK(functionResult == refResult2);
+
+  myRange = TFloat64Range(1, 11);
+  refResult = myRange.SpreadOverLogZplusOne(delta, true); // backward
+  myRange = TFloat64Range(refResult.front() - epsilon / 2., 11);
+  functionResult = myRange.SpreadOverLogZplusOneEpsilon(delta, true, epsilon);
+  BOOST_CHECK(functionResult == refResult);
+
+  myRange = TFloat64Range(refResult.front() + epsilon / 2., 11);
+  refResult2 = refResult;
+  refResult2.front() = refResult.front() + epsilon / 2.;
+  functionResult = myRange.SpreadOverLogZplusOneEpsilon(delta, true, epsilon);
+  BOOST_CHECK(functionResult == refResult2);
+}
 
 BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   Float64 delta = 1.0;

@@ -51,7 +51,7 @@ class CMask {
 
 public:
   CMask() = default;
-  CMask(Int32 weightsCount, Int32 defaultValue = 0)
+  explicit CMask(Int32 weightsCount, Int32 defaultValue = 0)
       : m_Mask(weightsCount, defaultValue){};
   const Mask *GetMasks() const;
   CMask &operator&=(const CMask &other);
