@@ -47,14 +47,17 @@ def buildPdfParams(pdf_params, first_pass = False):
     return CZGridListParams([CZGridParam(TFloat64Range(p["zmin"], p["zmax"]), p["zstep"], p["zcenter"]) for p in v])
 
 def buildPdfHandler(abstract_output, object_type, logsampling, first_pass=False):
-        if first_pass:
-            pdf_params = abstract_output.get_dataset(object_type,"firstpass_pdf_params")
-        else:
-            pdf_params = abstract_output.get_dataset(object_type,"pdf_params")
-        c_pdf_params = buildPdfParams(pdf_params, first_pass)
-        pdf_proba = abstract_output.get_dataset(object_type, "pdf")["PDFProbaLog"]
+    dataset_prefix = ""
+    name_prefix = ""
+    if first_pass:
+        dataset_prefix = "firstpass_"
+        name_prefix = "Firstpass"
 
-        return PdfHandler(c_pdf_params, logsampling, pdf_proba)
+    pdf_params = abstract_output.get_dataset(object_type, dataset_prefix + "pdf_params")
+    c_pdf_params = buildPdfParams(pdf_params, first_pass)
+    pdf_proba = abstract_output.get_dataset(object_type, dataset_prefix + "pdf")[name_prefix + "PDFProbaLog"]
+
+    return PdfHandler(c_pdf_params, logsampling, pdf_proba)
 
 class PdfHandler:
     def __init__(self, pdf_params, logsampling, pdf_proba):
