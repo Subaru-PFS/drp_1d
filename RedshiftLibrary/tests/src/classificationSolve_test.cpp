@@ -53,8 +53,10 @@ Float64 precision = 1e-12;
 
 // JsonFile in string format
 std::string jsonString = "{\"galaxy\" : { \"method\" : \"LineModelSolve\" }, "
-                         "\"star\" : { \"method\" : \"LineModelSolve\" }}";
+                         "\"star\" : { \"method\" : \"LineModelSolve\" }, "
+                         "\"qso\" : { \"method\" : \"LineModelSolve\"}}";
 std::string type = "test";
+
 BOOST_AUTO_TEST_CASE(compute_test) {
   // Create scopeStack for tests
   TScopeStack scopeStack = {"param"};
@@ -66,7 +68,7 @@ BOOST_AUTO_TEST_CASE(compute_test) {
   // create InputContext
   std::shared_ptr<CInputContext> inputContext =
       std::make_shared<CInputContext>(paramStore);
-  inputContext.get()->m_categories = {"galaxy", "star"};
+  inputContext.get()->m_categories = {"galaxy", "star", "qso"};
 
   // create candidateZ
   std::shared_ptr<TCandidateZ> candidateZ = std::make_shared<TCandidateZ>();
@@ -86,6 +88,8 @@ BOOST_AUTO_TEST_CASE(compute_test) {
   resultStore->StoreGlobalResult("star.LineModelSolve", "solveResult",
                                  result_in);
 
+  // qso has no results : compute function catch this and does not take count of
+  // qso objects in classification
   // create Classification solve
   std::string objectType = "galaxy";
   CClassificationSolve cSolve(scopeStack, objectType);

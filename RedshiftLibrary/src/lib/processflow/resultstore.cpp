@@ -68,7 +68,7 @@ void COperatorResultStore::StoreResult(
   }
   scopedName.append(name);
 
-  TResultsMap::iterator it = map.find(name);
+  TResultsMap::iterator it = map.find(scopedName);
   if (it != map.end()) {
     THROWG(INTERNAL_ERROR, "Can not store results: result already exists");
   }
@@ -362,7 +362,7 @@ bool COperatorResultStore::HasDataset(const std::string &objectType,
 
 bool COperatorResultStore::hasContextWarningFlag() const {
 
-  TResultsMap::const_iterator it = m_GlobalResults.find("warningFlag");
+  TResultsMap::const_iterator it = m_GlobalResults.find("context_warningFlag");
   return (it != m_GlobalResults.end());
 }
 

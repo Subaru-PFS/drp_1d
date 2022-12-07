@@ -36,6 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/processflow/scopestore.h"
 
 #include <boost/test/unit_test.hpp>
@@ -57,6 +58,8 @@ BOOST_AUTO_TEST_CASE(ScopeStore_test) {
   BOOST_CHECK_NO_THROW(CScopeStore store = CScopeStore(scopeStack));
 
   CScopeStore store = CScopeStore(scopeStack);
+  BOOST_CHECK(store.GetCurrentScopeName() == "");
+
   scopeStack.push_back("scope_1");
 
   // Test copy constructor
@@ -75,10 +78,16 @@ BOOST_AUTO_TEST_CASE(ScopeStore_test) {
   CScopeStore store_5 = std::move(store);
   testConstructor(store, store_5);
 
+  // Methods
   scopeStack.push_back("scope_2");
   BOOST_CHECK(store.GetCurrentScopeName() == "scope_1.scope_2");
   BOOST_CHECK(store.GetScopedName("last_level") ==
               "scope_1.scope_2.last_level");
+  BOOST_CHECK(store.getCurrentScopeNameAt(2) == "scope_1.scope_2");
+  BOOST_CHECK_THROW(store.getCurrentScopeNameAt(3), GlobalException);
+  BOOST_CHECK(store.GetScopedNameAt("new_last_level", 2) ==
+              "scope_1.scope_2.new_last_level");
+  BOOST_CHECK(store.getScopeDepth() == 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
