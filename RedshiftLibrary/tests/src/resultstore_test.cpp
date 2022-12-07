@@ -245,11 +245,13 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   COperatorResultStore store_2(scopeStack_2);
 
   BOOST_CHECK(store_2.hasContextWarningFlag() == false);
-  store_2.StoreFlagResult("warningFlag", Flag.getBitMask());
-  BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
+  store_2.StoreFlagResult("context_warningFlag", Flag.getBitMask());
+  BOOST_CHECK(store_2.GetScopedName("context_warningFlag") ==
+              "context_warningFlag");
   BOOST_CHECK(store_2.hasContextWarningFlag() == true);
 
-  result_out = store_2.GetFlagLogResult("warningFlag", "", "warningFlag");
+  result_out = store_2.GetFlagLogResult("context_warningFlag", "",
+                                        "context_warningFlag");
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
 }
 

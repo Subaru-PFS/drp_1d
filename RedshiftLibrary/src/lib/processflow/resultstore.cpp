@@ -362,7 +362,7 @@ bool COperatorResultStore::HasDataset(const std::string &objectType,
 
 bool COperatorResultStore::hasContextWarningFlag() const {
 
-  TResultsMap::const_iterator it = m_GlobalResults.find("warningFlag");
+  TResultsMap::const_iterator it = m_GlobalResults.find("context_warningFlag");
   return (it != m_GlobalResults.end());
 }
 
