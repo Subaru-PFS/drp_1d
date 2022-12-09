@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
 
   //
   TFloat64Range range(10, 10000);
-  TFloat64List samples = range.SpreadOverLog(0.01);
+  TFloat64List samples = range.SpreadOverLogEpsilon(0.01);
 
   TFloat64List samples_truncated(samples.size(), 0.);
   for (Int32 i = 0; i < samples.size(); i++) {

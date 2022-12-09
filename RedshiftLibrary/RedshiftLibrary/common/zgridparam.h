@@ -36,32 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_COMMON_VECTOROPERATIONS_
-#define _REDSHIFT_COMMON_VECTOROPERATIONS_
-#include "RedshiftLibrary/common/defaults.h"
-#include <vector>
+#ifndef _REDSHIFT_COMMON_ZGRIDPARAM_
+#define _REDSHIFT_COMMON_ZGRIDPARAM_
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+
+#include <tuple>
+
+using namespace std;
 namespace NSEpic {
 
-template <typename T>
-inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
-                                 std::vector<T> src, Int32 ndup) {
-  const auto src_first = src.cbegin();
-  const auto src_end = src.cend();
-  const auto src_last_insert = src.cend() - ndup;
-  Int32 ninsert = src_last_insert - src_first;
-  dest.insert(dest.begin() + pos, src_first, src_last_insert);
-  std::copy(src_last_insert, src_end, dest.begin() + pos + ninsert);
+#include "RedshiftLibrary/common/zgridparam.i"
+
 }
 
-template <typename T>
-inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
-                                 std::size_t count, const T &value,
-                                 Int32 ndup) {
-  Int32 ninsert = count - ndup;
-  dest.insert(dest.begin() + pos, ninsert, value);
-  std::fill(dest.begin() + pos + ninsert, dest.begin() + pos + count,
-            value); // replace existing values with the defaultV
-}
-
-} // namespace NSEpic
 #endif

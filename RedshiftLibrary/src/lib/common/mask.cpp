@@ -45,11 +45,6 @@ using namespace NSEpic;
 /**
  *
  */
-CMask::CMask(Int32 weightsCount) : m_Mask(weightsCount) {}
-
-/**
- *
- */
 CMask &CMask::operator&=(const CMask &other) {
   if (GetMasksCount() != other.GetMasksCount())
     return *this;

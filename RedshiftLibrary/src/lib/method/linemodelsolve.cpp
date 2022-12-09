@@ -145,14 +145,22 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       0.0,                // no peak Separation in 2nd pass
       0.0,                // cut threshold
       m_opt_extremacount, // max nb of final (2nd pass) candidates
-      "SPE",              // Id_prefix
-      false,              // do not allow extrema at border
-      1,                  // one peak/window only
-      m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts,
-      m_linemodel.m_secondpass_parameters_extremaResult.m_ranked_candidates);
+      m_redshiftSampling == "log",
+      "SPE", // Id_prefix
+      false, // do not allow extrema at border
+      1,     // one peak/window only
+      true   // integrate under peaks
+  );
 
-  std::shared_ptr<PdfCandidatesZResult> candidateResult =
-      pdfz.Compute(chisquares);
+  TFloat64RangeList ExtendedRedshiftsRange(
+      m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts
+          .cbegin(),
+      m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts
+          .cend());
+
+  std::shared_ptr<PdfCandidatesZResult> candidateResult = pdfz.Compute(
+      chisquares, ExtendedRedshiftsRange,
+      m_linemodel.m_secondpass_parameters_extremaResult.m_ranked_candidates);
 
   // store PDF results
   Log.LogInfo("%s: Storing PDF results", __func__);
@@ -581,10 +589,11 @@ void CLineModelSolve::Solve() {
   Int32 extremacount = 5;
   COperatorPdfz pdfz(m_opt_pdfcombination,
                      2 * m_opt_secondpass_halfwindowsize, // peak separation
-                     m_opt_candidatesLogprobaCutThreshold, extremacount, "FPE");
+                     m_opt_candidatesLogprobaCutThreshold, extremacount,
+                     m_redshiftSampling == "log", "FPE", true, 0, false);
 
   std::shared_ptr<PdfCandidatesZResult> candResult_fp =
-      pdfz.Compute(chisquares, false);
+      pdfz.Compute(chisquares);
   m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
   resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
@@ -627,10 +636,9 @@ void CLineModelSolve::Solve() {
     COperatorPdfz pdfz(m_opt_pdfcombination,
                        2 * m_opt_secondpass_halfwindowsize, // peak separation
                        m_opt_candidatesLogprobaCutThreshold, extremacount,
-                       "FPB");
+                       m_redshiftSampling == "log", "FPB", true, 0, false);
 
-    std::shared_ptr<PdfCandidatesZResult> candResult =
-        pdfz.Compute(chisquares, false);
+    std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares);
 
     linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
     // resultStore->StoreScopedGlobalResult( "firstpassb_pdf",
@@ -687,21 +695,21 @@ void CLineModelSolve::createRedshiftGrid(
           "LineModelSolve.linemodel.firstpass.largegridstepratio");
 
   m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
-  m_redshifts.clear();
 
-  m_redshifts = m_redshiftSampling == "log"
-                    ? redshiftRange.SpreadOverLogZplusOne(m_coarseRedshiftStep)
-                    : redshiftRange.SpreadOver(m_coarseRedshiftStep);
+  CZGridParam zp(redshiftRange, m_coarseRedshiftStep);
+  m_redshifts = zp.getZGrid(m_redshiftSampling == "log");
 
   if (m_redshifts.size() < MIN_GRID_COUNT) {
+    m_coarseRedshiftStep = m_redshiftStep;
     CObjectSolve::createRedshiftGrid(
         inputContext, redshiftRange); // fall back to creating fine grid
-    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
+    Log.LogInfo("Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
                 "raw %d redshifts will be calculated",
                 m_redshifts.size());
   } else {
-    Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
-                "will be calculated on the large grid",
-                m_redshifts.size());
+    Log.LogInfo(
+        "Operator-Linemodel: 1st pass coarse zgrid enabled: %d redshifts "
+        "will be calculated on the coarse grid",
+        m_redshifts.size());
   }
 }

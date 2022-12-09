@@ -36,32 +36,44 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_COMMON_VECTOROPERATIONS_
-#define _REDSHIFT_COMMON_VECTOROPERATIONS_
-#include "RedshiftLibrary/common/defaults.h"
-#include <vector>
-namespace NSEpic {
 
-template <typename T>
-inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
-                                 std::vector<T> src, Int32 ndup) {
-  const auto src_first = src.cbegin();
-  const auto src_end = src.cend();
-  const auto src_last_insert = src.cend() - ndup;
-  Int32 ninsert = src_last_insert - src_first;
-  dest.insert(dest.begin() + pos, src_first, src_last_insert);
-  std::copy(src_last_insert, src_end, dest.begin() + pos + ninsert);
-}
+class CZGridParam {
+public:
+  CZGridParam() = default;
+  CZGridParam(const TFloat64Range &range, Float64 step, Float64 center = NAN)
+      : zmin(range.GetBegin()), zmax(range.GetEnd()), zstep(step),
+        zcenter(center){};
 
-template <typename T>
-inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
-                                 std::size_t count, const T &value,
-                                 Int32 ndup) {
-  Int32 ninsert = count - ndup;
-  dest.insert(dest.begin() + pos, ninsert, value);
-  std::fill(dest.begin() + pos + ninsert, dest.begin() + pos + count,
-            value); // replace existing values with the defaultV
-}
+  TFloat64List getZGrid(bool logsampling) const;
 
-} // namespace NSEpic
-#endif
+  Float64 zmin = NAN;
+  Float64 zmax = NAN;
+  Float64 zstep = NAN;
+  Float64 zcenter = NAN;
+};
+
+typedef std::vector<CZGridParam> TZGridListParams;
+
+class CZGridListParams {
+public:
+  CZGridListParams(TZGridListParams params)
+      : m_zparams(std::move(params)){};
+
+  CZGridParam &operator[](const Int32 i) { return m_zparams[i]; };
+  const CZGridParam &operator[](const Int32 i) const { return m_zparams[i]; };
+  Int32 size() const { return m_zparams.size(); }
+
+  TZGridListParams::iterator begin() { return m_zparams.begin();};
+  TZGridListParams::iterator end() { return m_zparams.end();};
+  TZGridListParams::const_iterator cbegin() const { return m_zparams.cbegin();};
+  TZGridListParams::const_iterator cend() const { return m_zparams.cend();};
+
+  TFloat64List getZGrid(bool logsampling) const;
+
+  // returns insertion index & mumber of overlapped indices
+  static std::tuple<Int32, Int32> insertSubgrid(TFloat64List &subgrid,
+                                                TFloat64List &zgrid);
+
+private:
+  TZGridListParams m_zparams;
+};

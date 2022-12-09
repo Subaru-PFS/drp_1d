@@ -40,10 +40,9 @@
 #define _REDSHIFT_OPERATOR_ZLOGPDFRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/result.h"
-
-using namespace std;
 namespace NSEpic {
 
 #include "RedshiftLibrary/operator/logZPdfResult.i"

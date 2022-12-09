@@ -480,7 +480,8 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
     THROWG(INTERNAL_ERROR, "axis is not logsampled");
   }
   TFloat64Range lrange = GetLambdaRange();
-  TFloat64List new_Samples = lrange.SpreadOverLog(m_regularLogSamplingStep);
+  TFloat64List new_Samples =
+      lrange.SpreadOverLogEpsilon(m_regularLogSamplingStep);
 
   // gain one more decimal
   Int32 bs;
@@ -507,7 +508,7 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
   new_lrange.Set(exp(new_lstart), exp(new_lend));
 
   Float64 new_regularLogSamplingStep = (new_lend - new_lstart) / nm1;
-  m_Samples = new_lrange.SpreadOverLog(new_regularLogSamplingStep);
+  m_Samples = new_lrange.SpreadOverLogEpsilon(new_regularLogSamplingStep);
   m_regularLogSamplingStep = new_regularLogSamplingStep;
 }
 

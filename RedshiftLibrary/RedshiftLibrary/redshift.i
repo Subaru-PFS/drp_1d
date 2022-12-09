@@ -87,6 +87,7 @@
 %shared_ptr(CFlagWarning)
 %shared_ptr(CSpectrumFluxCorrectionMeiksin)
 %shared_ptr(CSpectrumFluxCorrectionCalzetti) 
+%shared_ptr(TZgridListParams)
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 
@@ -95,6 +96,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/pyconv.h"
+#include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/log/log.h"
@@ -364,13 +366,14 @@ public:
 };
 
 %template(TMapFloat64) std::map<std::string, Float64>;
-%template(TZGridListParams) std::vector<TZGridParameters>;
+%template(TZGridListParams) std::vector<CZGridParam>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
 %include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/logZPdfResult.i"
+%include "common/zgridparam.i"
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
 %include "linemodel/linemodelextremaresult.i"

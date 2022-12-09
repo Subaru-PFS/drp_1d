@@ -70,22 +70,19 @@ class COperatorPdfz : public COperator {
 public:
   COperatorPdfz(
       const std::string &opt_combine,
-      Float64 peakSeparation = 0.0, // no minimal separation
-      Float64 meritcut = 0.0,       // no cut
-      Int32 maxCandidate = 10,      // max number of candidate at the end
+      Float64 peakSeparation = 0.0,    // no minimal separation
+      Float64 meritcut = 0.0,          // no cut
+      Int32 maxCandidate = 10,         // max number of candidate at the end
+      bool redshiftLogSampling = true, //
       const std::string &Id_prefix = "EXT", bool allow_extrema_at_border = true,
       Int32 maxPeakCount_per_window =
           0, // <=0 will be set to maxCandidate (default to one window)
-      const std::vector<TFloat64List> &candidatesRedshifts =
-          std::vector<TFloat64List>(1),
+      bool integ = true);
+
+  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> Compute(
+      const ChisquareArray &chisquares,
+      const TFloat64RangeList &candidatesRedshiftsRanges = TFloat64RangeList(1),
       const TCandidateZbyRank &parentCand = TCandidateZbyRank(1));
-
-  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>>
-  Compute(const ChisquareArray &chisquares, bool integ = true);
-
-  void CombinePDF(const ChisquareArray &chisquares);
-
-  void checkPdfSum() const;
 
   std::shared_ptr<CLogZPdfResult> m_postmargZResult;
 
@@ -99,9 +96,6 @@ public:
                          const TFloat64List &zPrior, TFloat64List &logPdf,
                          Float64 &logEvidence);
 
-  static Float64 getSumTrapez(const TRedshiftList &redshifts,
-                              const TFloat64List &valprobalog);
-
   static Float64 logSumExpTrick(const TFloat64List &valproba,
                                 const TFloat64List &redshifts);
 
@@ -114,11 +108,14 @@ private:
                       TFloat64List &LogEvidencesWPriorM,
                       TFloat64List &logPriorModel, Float64 &MaxiLogEvidence);
 
+  void CombinePDF(const ChisquareArray &chisquares);
+
+  void createPdfResult(const ChisquareArray &chisquarearray);
+
   void Marginalize(const ChisquareArray &chisquarearray);
   void BestProba(const ChisquareArray &chisquarearray);
   void BestChi2(const ChisquareArray &chisquarearray);
 
-  void isPdfValid() const;
   void validateChisquareArray(const ChisquareArray &chisquarearray) const;
   TCandidateZbyID searchMaxPDFcandidates() const;
 
@@ -126,12 +123,14 @@ private:
   TCandidateZRangebyID m_candidatesZRanges;
   const Int32 m_maxPeakCount_per_window;
   const Int32 m_maxCandidate;
+  const bool m_redshiftLogSampling;
   const Float64 m_peakSeparation;
   const bool m_allow_extrema_at_border;
   const Float64 m_meritcut;
   const std::string m_Id_prefix; // =  "EXT"; // for "extrema"
+  const bool m_integ;
 
-  const TCandidateZbyID m_parentCandidates;
+  TCandidateZbyID m_parentCandidates;
 };
 
 } // namespace NSEpic
