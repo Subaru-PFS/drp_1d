@@ -1,3 +1,4 @@
+
 // ============================================================================
 //
 // This file is part of: AMAZED
@@ -40,7 +41,7 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "test-config.h"
+#include "tests/src/tool/inputContextLight.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -49,7 +50,34 @@
 
 using namespace NSEpic;
 
-BOOST_AUTO_TEST_SUITE(TemplateCatalog)
+const std::string jsonString =
+    "{\"galaxy\" : {\"method\" : \"TemplateFittingSolve\", "
+    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"star\" : {\"method\" : \"TemplateFittingSolve\", "
+    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"templateCatalog\" : {\"continuumRemoval\" : "
+    "{ \"medianKernelWidth\" : 40.0, "
+    "\"medianEvenReflection\" : false, "
+    "\"method\" : \"IrregularSamplingMedian\"}} }";
+
+class fixture_TemplateCatalogTest {
+public:
+  fixture_TemplateCatalogTest() {
+    igmCorrectionMeiksin->convolveByLSF(LSF,
+                                        fixture_MeiskinCorrection().lbdaRange);
+  }
+  TScopeStack scopeStack;
+  CTemplateCatalog catalog = fixture_TemplateCatalog().catalog;
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
+      fixture_CalzettiCorrection().ismCorrectionCalzetti;
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      fixture_MeiskinCorrection().igmCorrectionMeiksin;
+  std::shared_ptr<CParameterStore> paramStore =
+      fixture_ParamStore(jsonString, scopeStack).paramStore;
+  std::shared_ptr<CLSF> LSF = fixture_LSFGaussianConstantWidth(scopeStack).LSF;
+};
+
+BOOST_FIXTURE_TEST_SUITE(TemplateCatalog, fixture_TemplateCatalogTest)
 
 std::shared_ptr<CTemplate> CreateTemplate(std::string name,
                                           std::string category) {
@@ -202,8 +230,8 @@ BOOST_AUTO_TEST_CASE(SetTemplate_afterChangingOriginalTemplates) {
   bool logSampling = 1, ortho = 0; // no ortho in catalog
   CTemplateCatalog catalog = CreateCatalog(logSampling, ortho);
 
-  // change originalTemplates --> this should empty the correspondant rebinned
-  // template
+  // change originalTemplates --> this should empty the correspondant
+  // rebinned template
   catalog.m_logsampling = 0;
   catalog.m_orthogonal = 0;
   std::string category = "galaxy";
@@ -229,8 +257,8 @@ BOOST_AUTO_TEST_CASE(SetTemplate_OrthogonalnRebinnedCase) {
   bool logSampling = 1, ortho = 1; // create a full catalog
   CTemplateCatalog catalog = CreateCatalog(logSampling, ortho);
 
-  // change originalTemplates --> this should empty the correspondant rebinned
-  // template
+  // change originalTemplates --> this should empty the correspondant
+  // rebinned template
   catalog.m_logsampling = 0;
   catalog.m_orthogonal = 0;
   std::string category = "galaxy";
@@ -505,77 +533,9 @@ BOOST_AUTO_TEST_CASE(ClearOneTemplate_test_Case4) {
   BOOST_CHECK(catalog.GetNonNullTemplateCount("qso") == 0);
 }
 
-TFloat64List spectralList = {1213, 1214, 1215, 1216, 1217, 1218};
-TFloat64List fluxList = {1e-2, 1.5e-2, 1e-2, 1.2e-2, 1e-2, 1.1e-2};
-TFloat64List noiseList = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4};
-TFloat64List maskList = {0, 1, 1, 1, 1, 1};
-
-const std::string jsonString =
-    "{\"galaxy\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}},"
-    "\"qso\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}},"
-    "\"templateCatalog\" : {\"continuumRemoval\" : "
-    "{ \"medianKernelWidth\" : 40.0, "
-    "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}}";
-
-class MyInputContext {
-public:
-  std::shared_ptr<CParameterStore> paramStore;
-  std::shared_ptr<CLSF> LSF;
-  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti;
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin;
-
-  void InitContext() {
-    TScopeStack scopeStack;
-    paramStore = std::make_shared<CParameterStore>(scopeStack);
-    paramStore->FromString(jsonString);
-
-    // create LSF
-    std::string lsfType = "GaussianConstantWidth";
-    paramStore->Set("LSF.width", 1.09);
-    std::shared_ptr<TLSFArguments> args =
-        std::make_shared<TLSFGaussianConstantWidthArgs>(paramStore);
-    LSF = LSFFactory.Create(lsfType, args);
-
-    // create Calzetti correction
-    TFloat64List lbda = {1214., 1215., 1216., 1217., 1218.};
-    TFloat64List flux = {0.1, 0.2, 0.5, 0.3, 0.8};
-    CalzettiCorrection calzettiCorr(lbda, flux);
-    ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>(
-        calzettiCorr, 0., 0.1, 10);
-
-    // create Meiksin correction
-    std::vector<MeiksinCorrection> meiskinCorr;
-    meiskinCorr.push_back(MeiksinCorrection(lbda, {flux, flux, flux}));
-    meiskinCorr.push_back(MeiksinCorrection(lbda, {flux, flux, flux}));
-    TFloat64List z_bins = {1, 2, 3};
-    igmCorrectionMeiksin =
-        std::make_shared<CSpectrumFluxCorrectionMeiksin>(meiskinCorr, z_bins);
-    TFloat64Range lbdaRange(1214, 1216);
-    igmCorrectionMeiksin->convolveByLSF(LSF, lbdaRange);
-  }
-
-  std::shared_ptr<CParameterStore> GetParameterStore() { return paramStore; }
-  std::shared_ptr<CLSF> GetLSF() { return LSF; }
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> GetMeiskinCorr() {
-    return igmCorrectionMeiksin;
-  }
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-  GetCalzettiCorr() {
-    return ismCorrectionCalzetti;
-  }
-};
-
 BOOST_AUTO_TEST_CASE(InitContinuumRemoval_test) {
-  MyInputContext ctx;
-  ctx.InitContext();
-
-  bool logSampling = 0, ortho = 0;
-  CTemplateCatalog catalog = CreateCatalog(logSampling, ortho);
-  std::shared_ptr<CParameterStore> paramStore = ctx.GetParameterStore();
-  catalog.InitContinuumRemoval(paramStore);
+  catalog.InitContinuumRemoval(
+      fixture_ParamStore(jsonString, scopeStack).paramStore);
 
   TStringList categories = catalog.GetCategoryList();
   TTemplateRefList tplList = catalog.GetTemplateList(categories);
@@ -588,17 +548,6 @@ BOOST_AUTO_TEST_CASE(InitContinuumRemoval_test) {
 }
 
 BOOST_AUTO_TEST_CASE(SetIsmIgmCorrection_test) {
-  MyInputContext ctx;
-  ctx.InitContext();
-
-  bool logSampling = 0, ortho = 0;
-  CTemplateCatalog catalog = CreateCatalog(logSampling, ortho);
-  std::shared_ptr<CParameterStore> paramStore = ctx.GetParameterStore();
-  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-      ismCorrectionCalzetti = ctx.GetCalzettiCorr();
-  const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-      igmCorrectionMeiksin = ctx.GetMeiskinCorr();
-
   TStringList categories = catalog.GetCategoryList();
   TTemplateRefList tplList = catalog.GetTemplateList(categories);
   for (auto tpl : tplList) {
