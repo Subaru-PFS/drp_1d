@@ -229,17 +229,14 @@ class AbstractSpectrumReader:
             spectralaxis = CSpectrumSpectralAxis(self.waves[0], airvacuum_method)
             signal = CSpectrumFluxAxis_withError(self.fluxes[0], self.errors[0])
         else:
-            wse = pd.DataFrame()
-            wse["wave"] = self.waves[0]
-            wse["flux"] = self.fluxes[0]
-            wse["error"] = self.errors[0]
-
-            for i in range(1, len(self.waves)):
+            wses = []
+            for i in range(len(self.waves)):
                 wse_ = pd.DataFrame()
                 wse_["wave"] = self.waves[i]
                 wse_["flux"] = self.fluxes[i]
                 wse_["error"] = self.errors[i]
-                wse = wse.append(wse_)
+                wses.append(wse_)
+            wse = pd.concat(wses)
             wse.sort_values(["wave"], inplace=True)
             codes, uniques = pd.factorize(wse["wave"])
             epsilon = np.concatenate([i for i in map(np.arange, np.bincount(codes))]) * 1e-10

@@ -108,12 +108,14 @@ class Context:
         self.process_flow_context.setfluxCorrectionCalzetti(self.calibration_library.calzetti)
 
     def run(self, spectrum_reader):
-        resultStore = CProcessFlowContext.GetInstance().GetResultStore()
-        rso = ResultStoreOutput(resultStore,
-                                self.parameters,
-                                auto_load = False,
-                                extended_results = self.extended_results)
-        
+        try:
+            resultStore = CProcessFlowContext.GetInstance().GetResultStore()
+            rso = ResultStoreOutput(resultStore,
+                                    self.parameters,
+                                    auto_load = False,
+                                    extended_results = self.extended_results)
+        except Exception as e:
+            rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)),None,"init")
         context_warningFlagRecorded=False
         try:
             self.init_context()
@@ -159,12 +161,12 @@ class Context:
                     self.run_load_linemeas_params(rso,object_type,"linemeas_catalog_load")
                 if not rso.has_error(object_type, "linemeas_catalog_load"):
                     self.run_linemeas_solver(rso, object_type, "linemeas_solver") 
-            
-            if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models and not rso.has_error(object_type, "redshift_solver"):
-                self.run_reliability(rso, object_type, "reliability_solver")
 
             if self.parameters.lineratio_catalog_enabled(object_type) and not rso.has_error(object_type, "redshift_solver"):
                 self.run_sub_classification(rso, object_type, "sub_classif_solver")
+
+            if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models and not rso.has_error(object_type, "redshift_solver"):
+                self.run_reliability(rso, object_type, "reliability_solver")
 
         enable_classification = False
         for object_type in self.parameters.get_objects():
@@ -246,7 +248,6 @@ class Context:
         solver.Compute()
 
         
-
 def _check_config(config):
     if "calibration_dir" not in config:
         raise APIException(ErrorCode.MISSING_CONFIG_OPTION,"Config must contain 'calibration_dir' key")
