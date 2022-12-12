@@ -60,7 +60,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
 {
 
-  const CSpectrum &spc = *(inputContext->GetSpectrum());
+  const CSpectrum &spc = *(inputContext->GetSpectrum(false));
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   bool storeResult = false;

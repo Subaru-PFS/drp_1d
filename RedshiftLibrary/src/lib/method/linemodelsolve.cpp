@@ -111,7 +111,7 @@ std::shared_ptr<CSolveResult>
 CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                          std::shared_ptr<COperatorResultStore> resultStore,
                          TScopeStack &scope) {
-  const CSpectrum &spc = *(inputContext->GetSpectrum());
+  const CSpectrum &spc = *(inputContext->GetSpectrum(false));
   PopulateParameters(inputContext->GetParameterStore());
 
   Solve();

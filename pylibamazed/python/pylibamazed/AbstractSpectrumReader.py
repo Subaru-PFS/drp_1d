@@ -246,7 +246,7 @@ class AbstractSpectrumReader:
         multiobs_type = self.parameters["multiobsmethod"]
         if not multiobs_type:
             spectralaxis = CSpectrumSpectralAxis(self.waves.get(), airvacuum_method)
-            signal = CSpectrumFluxAxis_withError(self.fluxes.get(), self.errors[0])
+            signal = CSpectrumFluxAxis_withError(self.fluxes.get(), self.errors.get())
             self._add_cspectrum(spectralaxis,signal)
         elif multiobs_type == "merge":
             wses = []

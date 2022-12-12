@@ -77,8 +77,7 @@ using namespace std;
  */
 void COperatorLineModel::ComputeFirstPass() {
   const CSpectrum &spectrum = *(Context.GetSpectrum());
-  const CSpectrum &logSampledSpectrum =
-      *(Context.GetRebinnedSpectrum()); // this is temporary
+
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
   const CLineCatalogsTplRatio &tplRatioCatalog =
@@ -364,9 +363,17 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
 std::shared_ptr<CTemplatesFitStore>
 COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                                            Int32 candidateIdx) {
-  const CSpectrum &spectrum = *(Context.GetSpectrum());
-  const CSpectrum &logSampledSpectrum =
-      *(Context.GetRebinnedSpectrum()); // this is temporary
+  std::shared_ptr<CTemplatesFitStore> tplfitStore =
+      make_shared<CTemplatesFitStore>(redshifts);
+  const TFloat64List &redshiftsTplFit = tplfitStore->GetRedshiftList();
+  Log.LogInfo("COperatorLineModel::PrecomputeContinuumFit: continuum tpl "
+              "redshift list n=%d",
+              redshiftsTplFit.size());
+
+  bool fftprocessing = isfftprocessingActive(redshiftsTplFit.size());
+
+  const CSpectrum &spectrum = *(Context.GetSpectrum(fftprocessing));
+
   const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
       Context.GetPhotBandCatalog();
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -382,20 +389,11 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
               "fitting: min=%.5e, max=%.5e",
               redshifts.front(), redshifts.back());
 
-  std::shared_ptr<CTemplatesFitStore> tplfitStore =
-      make_shared<CTemplatesFitStore>(redshifts);
-  const TFloat64List &redshiftsTplFit = tplfitStore->GetRedshiftList();
-  Log.LogInfo("COperatorLineModel::PrecomputeContinuumFit: continuum tpl "
-              "redshift list n=%d",
-              redshiftsTplFit.size());
-
   Int32 n_tplfit = std::min(Int32(redshiftsTplFit.size()), 10);
   for (Int32 i = 0; i < n_tplfit; i++)
     Log.LogDebug("COperatorLineModel::PrecomputeContinuumFit: continuum tpl "
                  "redshift list[%d] = %f",
                  i, redshiftsTplFit[i]);
-
-  bool fftprocessing = isfftprocessingActive(redshiftsTplFit.size());
 
   bool currentSampling = tplCatalog->m_logsampling;
 
@@ -450,9 +448,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     maskList.resize(redshiftsTplFit.size());
     for (Int32 i = 0; i < redshiftsTplFit.size(); i++) {
       m_fittingManager->initModelAtZ(redshiftsTplFit[i],
-                                     fftprocessing
-                                         ? logSampledSpectrum.GetSpectralAxis()
-                                         : spectrum.GetSpectralAxis());
+                                     spectrum.GetSpectralAxis());
       maskList[i] = m_fittingManager->getOutsideLinesMask();
     }
 
@@ -770,8 +766,7 @@ void COperatorLineModel::ComputeSecondPass(
     const std::shared_ptr<const LineModelExtremaResult> &firstpassResults) {
 
   const CSpectrum &spectrum = *(Context.GetSpectrum());
-  const CSpectrum &logSampledSpectrum =
-      *(Context.GetRebinnedSpectrum()); // this is temporary
+
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
   const CLineCatalogsTplRatio &tplRatioCatalog =

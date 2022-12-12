@@ -62,7 +62,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     std::shared_ptr<const CInputContext> inputContext,
     std::shared_ptr<COperatorResultStore> resultStore, TScopeStack &scope) {
 
-  const CSpectrum &spc = *(inputContext->GetSpectrum());
+  const CSpectrum &spc = *(inputContext->GetSpectrum(false));
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(

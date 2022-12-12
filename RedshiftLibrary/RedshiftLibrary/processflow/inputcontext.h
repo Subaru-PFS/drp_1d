@@ -60,8 +60,11 @@ public:
   CInputContext(std::shared_ptr<CParameterStore> paramStore);
 
   // const getters
-  std::shared_ptr<const CSpectrum> GetSpectrum(int i = 0) const {
-    return m_spectra[i];
+  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned, int i = 0) const {
+    if (rebinned)
+      return m_rebinnedSpectra[i];
+    else
+      return m_spectra[i];
   }
 
   /*
@@ -104,8 +107,11 @@ public:
   }
 
   // mutable getters
-  const std::shared_ptr<CSpectrum> &GetSpectrum(int i = 0) {
-    return m_spectra[i];
+  const std::shared_ptr<CSpectrum> &GetSpectrum(bool rebinned, int i = 0) {
+    if (rebinned)
+      return m_rebinnedSpectra[i];
+    else
+      return m_spectra[i];
   }
   const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum(int i = 0) {
     return m_rebinnedSpectra[i];

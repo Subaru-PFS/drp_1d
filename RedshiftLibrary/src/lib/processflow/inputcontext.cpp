@@ -131,7 +131,7 @@ void CInputContext::RebinInputs() {
        ++std::get<0>(it), ++std::get<1>(it), ++std::get<2>(it)) {
     auto spectrum = *std::get<0>(it);
     auto lambdaRange = *std::get<1>(it);
-    auto rebinnedClampedLambdaRange = *std::get<1>(it);
+    auto rebinnedClampedLambdaRange = *std::get<2>(it);
     if (!spectrum->GetSpectralAxis().IsLogSampled())
       m_rebinnedSpectra.push_back(
           logReb.loglambdaRebinSpectrum(spectrum, errorRebinMethod));
@@ -192,8 +192,12 @@ void CInputContext::Init() {
   // non clamped lambdaRange: to be clamped depending on used spectra
 
   for (auto spectrum : m_spectra) {
-    auto lambdaRange = m_ParameterStore->Get<TFloat64Range>(
-        Formatter() << "lambdarange." << spectrum->getObsID());
+    TFloat64Range lambdaRange;
+    if (m_spectra.size() > 1)
+      lambdaRange = m_ParameterStore->Get<TFloat64Range>(
+          Formatter() << "lambdarange." << spectrum->getObsID());
+    else
+      lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(lambdaRange));
     m_clampedLambdaRanges.push_back(
         std::make_shared<TFloat64Range>(TFloat64Range()));
