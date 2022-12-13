@@ -129,9 +129,6 @@ class Context:
             context_warningFlagRecorded = True
             zflag.resetFlag()
         except GlobalException as e:
-            if not context_warningFlagRecorded:
-                resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
-                zflag.resetFlag()
             rso.store_error(AmazedErrorFromGlobalException(e),None,"init")
             rso.load_root()
             return rso
