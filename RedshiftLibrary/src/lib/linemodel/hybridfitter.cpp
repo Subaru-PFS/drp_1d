@@ -48,8 +48,8 @@ CHybridFitter::CHybridFitter(CLineModelElementList &elements,
                              std::shared_ptr<const TLambdaRange> lambdaRange,
                              std::shared_ptr<CSpectrumModel> spectrumModel,
                              const CLineCatalog::TLineVector &restLineList)
-    : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList)
+    : CSvdFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                 restLineList)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();

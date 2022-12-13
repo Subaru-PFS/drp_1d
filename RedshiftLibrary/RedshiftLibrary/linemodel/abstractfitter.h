@@ -85,22 +85,6 @@ protected:
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
-
-  Int32 fitAmplitudesLinSolveAndLambdaOffset(
-      TInt32List EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-      std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted,
-      bool enableOffsetFitting, Float64 redshift);
-
-  Int32 fitAmplitudesLinSolve(const TInt32List &EltsIdx,
-                              const CSpectrumSpectralAxis &spectralAxis,
-                              const CSpectrumFluxAxis &fluxAxis,
-                              const CSpectrumFluxAxis &continuumfluxAxis,
-                              std::vector<Float64> &ampsfitted,
-                              std::vector<Float64> &errorsfitted,
-                              Float64 redshift);
-
-private:
-  void setOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
 };
 } // namespace NSEpic
 
