@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.40.0 (2022-12-14)
+### Changes
+* [7648] : Clean IGM extinction curves and rebuild hires curves
+* [7500] : Changed continuum positivity constraint ( amplitude_snr > null_threshold instead of amplitude > 0)
+### Fixed
+* [7658] : Refactor compressed pdf format and zgrid computation + bug fix
+* [7678] : Extend python exceptions handling
+* [7717] : Fix error handling at context initialization
+
 ## 0.38.0 (2022-11-14)
 ### Added
 * [7460] : Wrap warning codes enum
