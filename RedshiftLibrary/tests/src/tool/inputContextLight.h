@@ -54,6 +54,7 @@
 #include "tests/src/tool/SB_calzetti_dl1.h"
 
 using namespace NSEpic;
+// #define fixture_Context (CProcessFlowContext::GetInstance())
 
 static TFloat64List mySpectralListLight = {1213, 1214, 1215, 1216, 1217, 1218};
 static TFloat64List myFluxListLight = {1e-2, 2e-2, 3e-2, 4e-2, 5e-2, 6e-2};
@@ -85,7 +86,7 @@ public:
 
 std::string jsonString_LSFConstantRes =
     "{\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\" , \"resolution\" "
-    ": 0.1}}";
+    ": 4300}}";
 class fixture_LSFGaussianConstantResolution {
 public:
   fixture_LSFGaussianConstantResolution(TScopeStack scopeStack) {
@@ -215,8 +216,11 @@ public:
 class fixture_MeiskinCorrection {
 public:
   std::vector<MeiksinCorrection> meiskinCorr = {
-      MeiksinCorrection(lbdaCorr, {fluxCorr1, fluxCorr2}),
-      MeiksinCorrection(lbdaCorr, {fluxCorr3, fluxCorr4})};
+      MeiksinCorrection(lbdaCorr, {fluxCorr1, fluxCorr2, fluxCorr3, fluxCorr4,
+                                   fluxCorr5, fluxCorr6, fluxCorr7}),
+      MeiksinCorrection(lbdaCorr,
+                        {fluxCorr1b, fluxCorr2b, fluxCorr3b, fluxCorr4b,
+                         fluxCorr5b, fluxCorr6b, fluxCorr7b})};
   TFloat64List z_bins = {2.0, 2.5, 3.0};
   TFloat64Range lbdaRange = TFloat64Range(4680., 4713.);
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
@@ -229,22 +233,21 @@ public:
 class fixture_SharedStarTemplate {
 public:
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
-      "star", "star", myStarLambdaList, myStarFluxList);
+      "star", "star", myGalaxyLambdaList, myGalaxyFluxList);
 };
-
 class fixture_SharedGalaxyTemplate {
 public:
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
-      "galaxy", "galaxy", myStarLambdaList, myStarFluxList);
+      "galaxy", "galaxy", myGalaxyLambdaList, myGalaxyFluxList);
 };
 
 class fixture_TemplateStar {
 public:
   CTemplate tplStar =
-      CTemplate("tpl_star", "star", myStarLambdaList, myStarFluxList);
-  Int32 spcAxisSize = myStarLambdaList.size();
-  TFloat64List spcAxisList = myStarLambdaList;
-  TFloat64List fluxAxisList = myStarFluxList;
+      CTemplate("tpl_star", "star", myGalaxyLambdaList, myGalaxyFluxList);
+  Int32 spcAxisSize = myGalaxyLambdaList.size();
+  TFloat64List spcAxisList = myGalaxyLambdaList;
+  TFloat64List fluxAxisList = myGalaxyFluxList;
 };
 
 class fixture_TemplateGalaxy {
@@ -271,10 +274,17 @@ public:
       std::make_shared<CTemplateCatalog>(0);
 };
 
-class fixture_TemplateFittingSolve {
+class fixture_InputContext {
 public:
-  CTemplateFittingSolve Init(TScopeStack &scopeStack, std::string category) {
-    CTemplateFittingSolve templateFittingSolve(scopeStack, category);
-    return templateFittingSolve;
+  fixture_InputContext(std::string jsonString,
+                       std::shared_ptr<CParameterStore> paramStore) {
+
+    std::shared_ptr<CSpectrum> spc;
+    std::shared_ptr<CSpectrum> rebinedSpectrum;
+    ctx = std::make_shared<CInputContext>(paramStore);
+
+    spc = fixture_SharedSpectrum().spc;
+    ctx->setSpectrum(spc);
   }
+  std::shared_ptr<CInputContext> ctx;
 };

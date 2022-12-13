@@ -9806,3 +9806,10 @@ static TFloat64List fluxCorr2 = {0.619713087866829,
                                  1,
                                  1,
                                  1};
+
+// we need 7 flux vector (list size hard-coded)
+static TFloat64List fluxCorr3 = fluxCorr2;
+static TFloat64List fluxCorr4 = fluxCorr2;
+static TFloat64List fluxCorr5 = fluxCorr2;
+static TFloat64List fluxCorr6 = fluxCorr2;
+static TFloat64List fluxCorr7 = fluxCorr2;
