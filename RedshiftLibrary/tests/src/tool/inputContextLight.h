@@ -120,14 +120,16 @@ public:
 };
 
 std::string jsonString_LSFConstantWidth =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantWidth\" , \"width\" : 1.09}}";
+    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantWidth\" , \"width\" : "
+    "1.09}}";
 class fixture_LSFGaussianConstantWidth {
 public:
-  fixture_LSFGaussianConstantWidth(TScopeStack scopeStack) {
+  fixture_LSFGaussianConstantWidth(
+      TScopeStack scopeStack,
+      std::string jsonStr = jsonString_LSFConstantWidth) {
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianConstantWidthArgs>(
-            fixture_ParamStore(jsonString_LSFConstantWidth, scopeStack)
-                .paramStore);
+            fixture_ParamStore(jsonStr, scopeStack).paramStore);
     LSF = LSFFactory.Create("GaussianConstantWidth", args);
   }
   std::shared_ptr<CLSF> LSF;
