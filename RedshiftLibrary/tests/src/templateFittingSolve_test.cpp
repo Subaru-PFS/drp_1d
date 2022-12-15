@@ -73,15 +73,6 @@ const std::string jsonString =
     "\"method\" : \"TemplateFittingSolve\","
     "\"template_dir\" : \"templates/BC03_sdss_tremonti21\","
     "\"linemeas_method\" : null,"
-    "\"extremacount\" : 5,"
-    "\"overlapThreshold\" : 1,"
-    "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : false,"
-    "\"interpolation\" : \"precomputedfinegrid\","
-    "\"extinction\" : true,"
-    "\"dustfit\" : true,"
-    "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : false,"
     "\"TemplateFittingSolve\" : {"
     "\"extremacount\" : 5,"
     "\"overlapThreshold\" : 1,"
@@ -96,6 +87,16 @@ const std::string jsonString =
 
 class fixture_TemplateFittingSolveTest {
 public:
+  fixture_Context ctx;
+  fixture_TemplateFittingSolveTest() {
+    fillCatalog();
+    ctx.loadParameterStore(jsonString);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setSpectrum(spc, LSF);
+    ctx.initContext();
+  }
+
   TScopeStack scopeStack;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
@@ -103,13 +104,7 @@ public:
       fixture_CalzettiCorrection().ismCorrectionCalzetti;
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  std::shared_ptr<CParameterStore> paramStore =
-      fixture_ParamStore(jsonString, scopeStack).paramStore;
-  std::shared_ptr<CInputContext> ctx_logSampled =
-      fixture_InputContext(jsonString, paramStore).ctx;
-  std::shared_ptr<COperatorResultStore> resultStore;
-  std::shared_ptr<CTemplate> tplStar_logSampled =
-      fixture_SharedStarTemplate().tpl;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
 
@@ -124,18 +119,7 @@ BOOST_FIXTURE_TEST_SUITE(templateFittingSolve_test,
                          fixture_TemplateFittingSolveTest)
 
 BOOST_AUTO_TEST_CASE(Constructor_test) {
-  fillCatalog();
-  ctx_logSampled->setTemplateCatalog(catalog);
-  ctx_logSampled->setfluxCorrectionMeiksin(igmCorrectionMeiksin);
-  ctx_logSampled->setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-  ctx_logSampled->GetSpectrum()->SetLSF(LSF);
-  ctx_logSampled->Init();
-
-  Context.m_parameterStore = paramStore;
-  Context.m_inputContext = ctx_logSampled;
-  Context.m_ScopeStack = scopeStack;
-
-  CTemplateFittingSolve templateFittingSolve(scopeStack, "galaxy");
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
   BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
 }
 

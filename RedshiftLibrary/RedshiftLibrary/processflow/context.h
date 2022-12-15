@@ -54,10 +54,6 @@
 
 #define Context (CProcessFlowContext::GetInstance())
 
-namespace templateFittingSolve_test { // boost_test_suite
-// all boost_auto_test_case that use private method
-class Constructor_test;
-} // namespace templateFittingSolve_test
 namespace NSEpic {
 
 class CSpectrum;
@@ -186,7 +182,6 @@ public:
 
 private:
   friend class CSingleton<CProcessFlowContext>;
-  friend class templateFittingSolve_test::Constructor_test;
 
   CProcessFlowContext();
   ~CProcessFlowContext() = default;
