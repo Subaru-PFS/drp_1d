@@ -284,7 +284,7 @@ public:
     ctx = std::make_shared<CInputContext>(paramStore);
 
     spc = fixture_SharedSpectrum().spc;
-    ctx->setSpectrum(spc);
+    ctx->addSpectrum(spc);
   }
   std::shared_ptr<CInputContext> ctx;
 };

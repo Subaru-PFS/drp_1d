@@ -94,8 +94,7 @@ void CInputContext::RebinInputs() {
 
     auto spectrum = *spectrum_it;
     if (spectrum->GetSpectralAxis().IsLogSampled()) {
-      m_rebinnedSpectra.push_back(
-          std::make_shared<CSpectrum>(spectrum->GetName()));
+      addRebinSpectrum(std::make_shared<CSpectrum>(spectrum->GetName()));
       CSpectrumSpectralAxis spcWav = spectrum->GetSpectralAxis();
       spcWav.RecomputePreciseLoglambda(); // in case input spectral values have
       // been rounded
@@ -133,7 +132,7 @@ void CInputContext::RebinInputs() {
     auto lambdaRange = *std::get<1>(it);
     auto rebinnedClampedLambdaRange = *std::get<2>(it);
     if (!spectrum->GetSpectralAxis().IsLogSampled())
-      m_rebinnedSpectra.push_back(
+      addRebinSpectrum(
           logReb.loglambdaRebinSpectrum(spectrum, errorRebinMethod));
 
     TFloat64Range zrange;
@@ -144,8 +143,8 @@ void CInputContext::RebinInputs() {
       }
     }
     // Initialize rebinned clamped lambda range
-    spectrum->GetSpectralAxis().ClampLambdaRange(*(lambdaRange),
-                                                 *(rebinnedClampedLambdaRange));
+    m_rebinnedSpectra.back()->GetSpectralAxis().ClampLambdaRange(
+        *(lambdaRange), *(rebinnedClampedLambdaRange));
   }
   return;
 }
@@ -199,10 +198,14 @@ void CInputContext::Init() {
     else
       lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(lambdaRange));
-    m_clampedLambdaRanges.push_back(
-        std::make_shared<TFloat64Range>(TFloat64Range()));
-    m_rebinnedClampedLambdaRanges.push_back(
-        std::make_shared<TFloat64Range>(TFloat64Range()));
+    std::shared_ptr<TFloat64Range> clr =
+        std::make_shared<TFloat64Range>(TFloat64Range());
+    std::shared_ptr<TFloat64Range> rclr =
+        std::make_shared<TFloat64Range>(TFloat64Range());
+    m_clampedLambdaRanges.push_back(clr);
+    m_rebinnedClampedLambdaRanges.push_back(rclr);
+    m_constClampedLambdaRanges.push_back(clr);
+    m_constRebinnedClampedLambdaRanges.push_back(rclr);
   }
   for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
                                  m_rebinnedClampedLambdaRanges.begin());
@@ -258,6 +261,9 @@ void CInputContext::Init() {
 void CInputContext::resetSpectrumSpecific() {
   m_spectra.clear();
   m_rebinnedSpectra.clear();
+  m_lambdaRanges.clear();
+  m_rebinnedClampedLambdaRanges.clear();
+  m_clampedLambdaRanges.clear();
   // not always spectrum specific
   m_TemplateCatalog.reset();
   // those one should not be here, they stay until api modification (only load

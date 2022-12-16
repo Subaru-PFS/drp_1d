@@ -74,18 +74,13 @@ public:
     return res;
   }
   */
-  std::vector<std::shared_ptr<const CSpectrum>> getSpectra() const {
-    std::vector<std::shared_ptr<const CSpectrum>> res;
-    for (auto spectrum : m_spectra)
-      res.push_back(spectrum);
-    return res;
+  const std::vector<std::shared_ptr<const CSpectrum>> &getSpectra() const {
+    return m_constSpectra;
   }
 
-  std::vector<std::shared_ptr<const CSpectrum>> getRebinnedSpectra() const {
-    std::vector<std::shared_ptr<const CSpectrum>> res;
-    for (auto spectrum : m_rebinnedSpectra)
-      res.push_back(spectrum);
-    return res;
+  const std::vector<std::shared_ptr<const CSpectrum>> &
+  getRebinnedSpectra() const {
+    return m_constRebinnedSpectra;
   }
 
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
@@ -161,6 +156,7 @@ public:
   }
   void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
     m_spectra.push_back(spectrum);
+    m_constSpectra.push_back(spectrum);
   }
   void
   setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
@@ -184,33 +180,35 @@ public:
   std::shared_ptr<const TFloat64Range> getClampedLambdaRange(int i = 0) const {
     return m_clampedLambdaRanges[i];
   }
+
   std::shared_ptr<const TFloat64Range>
   getRebinnedClampedLambdaRange(int i = 0) const {
     return m_rebinnedClampedLambdaRanges[i];
   }
 
-  std::vector<std::shared_ptr<const TFloat64Range>>
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
   getClampedLambdaRanges() const {
-    std::vector<std::shared_ptr<const TFloat64Range>> res;
-    for (auto r : m_clampedLambdaRanges)
-      res.push_back(r);
-    return res;
+    return m_constClampedLambdaRanges;
   }
 
-  std::vector<std::shared_ptr<const TFloat64Range>>
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
   getRebinnedClampedLambdaRanges() const {
-    std::vector<std::shared_ptr<const TFloat64Range>> res;
-    for (auto r : m_rebinnedClampedLambdaRanges)
-      res.push_back(r);
-    return res;
+    return m_constRebinnedClampedLambdaRanges;
   }
 
 private:
   std::vector<std::shared_ptr<CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<CSpectrum>> m_rebinnedSpectra;
+  std::vector<std::shared_ptr<const CSpectrum>> m_constSpectra;
+  std::vector<std::shared_ptr<const CSpectrum>> m_constRebinnedSpectra;
+
   std::vector<std::shared_ptr<TFloat64Range>> m_lambdaRanges;
   std::vector<std::shared_ptr<TFloat64Range>> m_clampedLambdaRanges;
   std::vector<std::shared_ptr<TFloat64Range>> m_rebinnedClampedLambdaRanges;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_constLambdaRanges;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_constClampedLambdaRanges;
+  std::vector<std::shared_ptr<const TFloat64Range>>
+      m_constRebinnedClampedLambdaRanges;
 
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::map<std::string, std::map<std::string, std::shared_ptr<CLineCatalog>>>
@@ -224,6 +222,10 @@ private:
 
   void OrthogonalizeTemplates();
   void RebinInputs();
+  void addRebinSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
+    m_rebinnedSpectra.push_back(spectrum);
+    m_constRebinnedSpectra.push_back(spectrum);
+  }
 };
 
 inline std::shared_ptr<const CLineCatalog>
