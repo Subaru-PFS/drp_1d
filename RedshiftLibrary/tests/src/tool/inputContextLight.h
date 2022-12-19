@@ -38,8 +38,11 @@
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/processflow/scopestore.h"
@@ -52,6 +55,7 @@
 #include "tests/src/tool/Meiksin_Var_curves_2.5.h"
 #include "tests/src/tool/Meiksin_Var_curves_3.0.h"
 #include "tests/src/tool/SB_calzetti_dl1.h"
+#include "tests/src/tool/linecatalogamazedvacuum_H0.h"
 #include "tests/src/tool/stars_templates_munari-lowt_20170105.h"
 
 using namespace NSEpic;
@@ -302,6 +306,61 @@ public:
       std::make_shared<CTemplateCatalog>(0);
 };
 
+// Creation of photoBandCatalog
+//-----------------------------
+
+class fixture_PhotoBand {
+public:
+  fixture_PhotoBand() {
+    const Float64 trans[] = {.2, .5, .99, .99, .4, .1};
+    const Float64 lambda[] = {2000., 2200., 2321., 2430., 2554., 2603.};
+    const Int32 n = sizeof(trans) / sizeof(trans[0]);
+    photoBand = CPhotometricBand(trans, n, lambda, n);
+  }
+  CPhotometricBand photoBand;
+};
+
+class fixture_PhotoBandCatalog {
+public:
+  fixture_PhotoBandCatalog() {
+    TStringList names = {"band1", "band2"};
+    photoBandCatalog->Add(names[0], fixture_PhotoBand().photoBand);
+    photoBandCatalog->Add(names[1], fixture_PhotoBand().photoBand);
+  }
+  std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
+      std::make_shared<CPhotBandCatalog>();
+};
+
+// Creation of line catalog
+//-------------------------
+
+class fixture_LineCatalog {
+public:
+  fixture_LineCatalog() {
+    for (std::size_t i = 0; i < waveLength.size(); i++) {
+      lineCatalog->AddLineFromParams(
+          name[i], waveLength[i], type[i], force[i], profile[i],
+          TAsymParams(0, 0, 0), amplitudeGroupName[i], amplitudeGroupValue[i],
+          dispersionVelocityGroupName[i], waveLengthOffset[i],
+          enableFitWaveLengthOffset[i], 0, "lineCatalog",
+          fixture_MeiskinCorrection().igmCorrectionMeiksin);
+    }
+  }
+  Int32 nsigmasupport = 8;
+  std::shared_ptr<CLineCatalog> lineCatalog =
+      std::make_shared<CLineCatalog>(nsigmasupport);
+  Int32 lineCatalogSize = waveLength.size();
+};
+
+// Creation of line ratio catalog
+//-------------------------------
+
+class fixture_LineRatioTplCatalog {
+public:
+  std::shared_ptr<CLineCatalogsTplRatio> lineRatioTplCatalog =
+      std::make_shared<CLineCatalogsTplRatio>();
+};
+
 class fixture_InputContext {
 public:
   fixture_InputContext(std::string jsonString,
@@ -342,7 +401,6 @@ public:
   }
   std::shared_ptr<CInputContext> ctx;
 };
-
 class fixture_Context {
 public:
   void loadParameterStore(std::string jsonString) {
