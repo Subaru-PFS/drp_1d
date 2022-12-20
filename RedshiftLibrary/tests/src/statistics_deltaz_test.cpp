@@ -118,12 +118,12 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   // Compute : c0 <= 0
   merits = {0., 0., 0., 0., 0., 0., 0.};
   BOOST_CHECK_THROW(deltaz.Compute(merits, Redshifts_easy, iz, izmin, izmax),
-                    GlobalException);
+                    InternalException);
 
   // Compute3ddl : c2 <= 0;
   BOOST_CHECK_THROW(
       deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax),
-      GlobalException);
+      InternalException);
 
   // Compute3ddl : (izmax - izmin +1) < 3
   merits = {1., 1., 1., 5., 1., 1., 1.};
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   izmax = 3;
   BOOST_CHECK_THROW(
       deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax),
-      GlobalException);
+      InternalException);
 }
 
 BOOST_AUTO_TEST_CASE(GetDeltaz_test) {
