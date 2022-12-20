@@ -260,10 +260,15 @@ void CInputContext::Init() {
 
 void CInputContext::resetSpectrumSpecific() {
   m_spectra.clear();
+  m_constSpectra.clear();
   m_rebinnedSpectra.clear();
+  m_constRebinnedSpectra.clear();
   m_lambdaRanges.clear();
   m_rebinnedClampedLambdaRanges.clear();
   m_clampedLambdaRanges.clear();
+  m_constLambdaRanges.clear();
+  m_constClampedLambdaRanges.clear();
+  m_constRebinnedClampedLambdaRanges.clear();
   // not always spectrum specific
   m_TemplateCatalog.reset();
   // those one should not be here, they stay until api modification (only load
