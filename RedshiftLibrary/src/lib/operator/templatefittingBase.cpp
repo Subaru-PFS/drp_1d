@@ -65,8 +65,8 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
   for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin());
        std::get<0>(it) != m_spectra.end();
        ++std::get<0>(it), ++std::get<1>(it)) {
-    auto spectrum = **std::get<0>(it);
-    auto lambdaRange = **std::get<1>(it);
+    const auto &spectrum = **std::get<0>(it);
+    const auto &lambdaRange = **std::get<1>(it);
     const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
     const TFloat64List &error =
         spectrum.GetFluxAxis().GetError().GetSamplesVector();
