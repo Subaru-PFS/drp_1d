@@ -152,13 +152,13 @@ void COperatorTemplateFittingBase::RebinTemplate(
   // shift lambdaRange backward to be in restframe
   TFloat64Range spcLambdaRange_restframe;
   TFloat64Range lambdaRange_restframe(
-      m_lambdaRanges[spcIndex]->GetBegin() / onePlusRedshift,
-      m_lambdaRanges[spcIndex]->GetEnd() / onePlusRedshift);
+      Context.GetLambdaRange(spcIndex)->GetBegin() / onePlusRedshift,
+      Context.GetLambdaRange(spcIndex)->GetEnd() / onePlusRedshift);
 
   // redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
   // Shouldn't ShiftByWaveLength be static ?
   m_spcSpectralAxis_restframe[spcIndex].ShiftByWaveLength(
-      m_spectra[spcIndex]->GetSpectralAxis(), onePlusRedshift,
+      Context.getSpectra()[spcIndex]->GetSpectralAxis(), onePlusRedshift,
       CSpectrumSpectralAxis::nShiftBackward);
   m_spcSpectralAxis_restframe[spcIndex].ClampLambdaRange(
       lambdaRange_restframe, spcLambdaRange_restframe);
