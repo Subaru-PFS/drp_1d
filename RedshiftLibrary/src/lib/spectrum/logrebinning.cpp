@@ -49,9 +49,8 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
   m_logGridStep = m_inputContext.getLogGridStep();
   std::shared_ptr<CSpectrum> spc;
   if (inputContext.GetSpectrum(false)->GetSpectralAxis().IsLogSampled()) {
-    spc =
-        m_inputContext
-            .GetRebinnedSpectrum(); // retrieve the corrected rebinned spectrum
+    spc = m_inputContext.GetSpectrum(
+        true); // retrieve the corrected rebinned spectrum
   } else {
     spc = m_inputContext.GetSpectrum(false);
   }

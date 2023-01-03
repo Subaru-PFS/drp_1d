@@ -890,7 +890,8 @@ void COperatorLineModel::ComputeSecondPass(
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
   //  estimate second pass parameters (mainly elv, alv...)
-  EstimateSecondPassParameters(spectrum, *(Context.GetClampedLambdaRange()));
+  EstimateSecondPassParameters(spectrum,
+                               *(Context.GetClampedLambdaRange(false)));
 
   // recompute the fine grid results around the extrema
   RecomputeAroundCandidates(

@@ -83,9 +83,6 @@ public:
     return m_constRebinnedSpectra;
   }
 
-  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
-    return m_rebinnedSpectra[i];
-  }
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_TemplateCatalog;
   }
@@ -107,9 +104,6 @@ public:
       return m_rebinnedSpectra[i];
     else
       return m_spectra[i];
-  }
-  const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum(int i = 0) {
-    return m_rebinnedSpectra[i];
   }
   const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     return m_TemplateCatalog;
@@ -177,13 +171,12 @@ public:
   std::shared_ptr<const TFloat64Range> getLambdaRange(int i = 0) const {
     return m_lambdaRanges[i];
   }
-  std::shared_ptr<const TFloat64Range> getClampedLambdaRange(int i = 0) const {
-    return m_clampedLambdaRanges[i];
-  }
-
-  std::shared_ptr<const TFloat64Range>
-  getRebinnedClampedLambdaRange(int i = 0) const {
-    return m_rebinnedClampedLambdaRanges[i];
+  std::shared_ptr<const TFloat64Range> getClampedLambdaRange(bool rebinned,
+                                                             int i = 0) const {
+    if (rebinned)
+      return m_rebinnedClampedLambdaRanges[i];
+    else
+      return m_clampedLambdaRanges[i];
   }
 
   const std::vector<std::shared_ptr<const TFloat64Range>> &

@@ -114,9 +114,6 @@ public:
   std::shared_ptr<const CParameterStore>
   LoadParameterStore(const std::string &paramsJSONString);
 
-  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
-    return m_inputContext->GetRebinnedSpectrum();
-  }
   std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false) const {
     return m_inputContext->GetSpectrum(rebinned, 0);
   }
@@ -143,13 +140,9 @@ public:
     return m_inputContext->getLambdaRange(i);
   }
 
-  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange(int i = 0) const {
-    return m_inputContext->getClampedLambdaRange(i);
-  }
-
-  std::shared_ptr<const TFloat64Range>
-  GetRebinnedClampedLambdaRange(int i = 0) const {
-    return m_inputContext->getRebinnedClampedLambdaRange(i);
+  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange(bool rebinned,
+                                                             int i = 0) const {
+    return m_inputContext->getClampedLambdaRange(rebinned, i);
   }
 
   const std::string &GetCurrentCategory() const {

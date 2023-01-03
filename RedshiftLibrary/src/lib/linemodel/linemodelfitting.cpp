@@ -82,13 +82,9 @@ using namespace std;
 CLineModelFitting::CLineModelFitting()
     : m_RestLineList(Context.getLineVector()), m_enableAmplitudeOffsets(false) {
   initParameters();
-  if (m_useloglambdasampling) {
-    m_inputSpc = Context.GetRebinnedSpectrum();
-    m_lambdaRange = Context.GetRebinnedClampedLambdaRange();
-  } else {
-    m_inputSpc = Context.GetSpectrum();
-    m_lambdaRange = Context.GetClampedLambdaRange();
-  }
+
+  m_inputSpc = Context.GetSpectrum(m_useloglambdasampling);
+  m_lambdaRange = Context.GetClampedLambdaRange(m_useloglambdasampling);
 
   initMembers();
   setLineRatioType(m_lineRatioType);
