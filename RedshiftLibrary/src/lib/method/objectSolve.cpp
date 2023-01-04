@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/method/objectSolve.h"
+#include "RedshiftLibrary/common/zgridparam.h"
 
 using namespace NSEpic;
 
@@ -66,10 +67,8 @@ void CObjectSolve::InitRanges(
 void CObjectSolve::createRedshiftGrid(
     const std::shared_ptr<const CInputContext> &inputContext,
     const TFloat64Range &redshiftRange) {
-  if (m_redshiftSampling == "log")
-    m_redshifts = redshiftRange.SpreadOverLogZplusOne(m_redshiftStep);
-  else
-    m_redshifts = redshiftRange.SpreadOver(m_redshiftStep);
+  CZGridParam zp(redshiftRange, m_redshiftStep);
+  m_redshifts = zp.getZGrid(m_redshiftSampling == "log");
 }
 
 void CObjectSolve::GetRedshiftSampling(

@@ -73,6 +73,7 @@ public:
           Float64 overlapThreshold,
           const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
           bool opt_extinction = false, bool opt_dustFitting = false,
+          Float64 opt_continuum_null_amp_threshold = 0.,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
@@ -120,10 +121,6 @@ private:
                         Int32 nShifts, TFloat64List &XtY);
   Int32 EstimateMtMFast(const TFloat64List &X, const TFloat64List &Y,
                         Int32 nShifts, TFloat64List &XtY);
-
-  Int32 InterpolateResult(const TFloat64List &in, TFloat64List &inGrid,
-                          const TFloat64List &tgtGrid, TFloat64List &out,
-                          Float64 defaultValue);
 
   void freeFFTPlans();
   void freeFFTPrecomputedBuffers();

@@ -36,20 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#ifndef _REDSHIFT_COMMON_ZGRIDPARAM_
+#define _REDSHIFT_COMMON_ZGRIDPARAM_
 
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/method/solveresult.h"
-#include "RedshiftLibrary/operator/logZPdfResult.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
-using namespace NSEpic;
+#include <tuple>
 
-CTemplateFittingSolveResult::CTemplateFittingSolveResult(
-    const std::string &scope,
-    const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
-    const std::string &opt_pdfcombination, Float64 evidence)
-    : CPdfSolveResult(BestExtremumResult, opt_pdfcombination, evidence),
-      m_scope(scope) {}
+using namespace std;
+namespace NSEpic {
+
+#include "RedshiftLibrary/common/zgridparam.i"
+
+}
+
+#endif

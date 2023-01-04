@@ -42,9 +42,6 @@ public:
   TLineModelResult(const TCandidateZ &candz) : TExtremaResult(candz) {
     m_type = "TLineModelResult";
   }
-  TLineModelResult(const CContinuumModelSolution &cms)
-      : TExtremaResult(cms), FittedTplRedshift(cms.tplRedshift),
-        FittedTplpCoeffs(cms.pCoeffs){};
 
   void updateFromContinuumModelSolution(const CContinuumModelSolution &cms,
                                         bool all);
@@ -63,10 +60,9 @@ public:
   Float64 MeritContinuum; // best continum  chi2
   Float64 Merit;          // fullmodel best chi2
 
-  Float64 mTransposeM;    // extrema model norm
-  Float64 CorrScaleMarg;  // extrema scale marg. correction
-  Int32 NDof;             // non zero elements in the lambdarange
-  Float64 Redshift_lmfit; // z found with lmfit
+  Float64 mTransposeM;   // extrema model norm
+  Float64 CorrScaleMarg; // extrema scale marg. correction
+  Int32 NDof;            // non zero elements in the lambdarange
   Float64 snrHa;
   Float64 lfHa;
   Float64 snrOII;
@@ -101,14 +97,14 @@ public:
                                  // continuum
 
   // template ratio
-  std::string FittedTplratioName = "undefined";  // Name of the best template fitted for
-                                   // tplcorr/tplratio
+  std::string FittedTplratioName = "undefined"; // Name of the best template
+                                                // fitted for tplcorr/tplratio
   Float64 FittedTplratioAmplitude = NAN; // amp of the best template fitted for
-                                   // tplcorr/tplratio
-  Float64
-      FittedTplratioDtm = NAN; // dtm of the best template fitted for tplcorr/tplratio
-  Float64
-      FittedTplratioMtm = NAN; // mtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template fitted
-                                  // for tplcorr/tplratio
+                                         // tplcorr/tplratio
+  Float64 FittedTplratioDtm =
+      NAN; // dtm of the best template fitted for tplcorr/tplratio
+  Float64 FittedTplratioMtm =
+      NAN; // mtm of the best template fitted for tplcorr/tplratio
+  Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
+                                        // fitted for tplcorr/tplratio
 };

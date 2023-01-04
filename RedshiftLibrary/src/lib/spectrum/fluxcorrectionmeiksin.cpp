@@ -111,7 +111,7 @@ CSpectrumFluxCorrectionMeiksin::getWaveVector(const TFloat64Range &wrange,
   if (indices.GetLength() < 0)
     return waves;
   waves.resize(indices.GetLength() + 1);
-  for (Int32 i = 0; i < waves.size(); ++i)
+  for (std::size_t i = 0; i < waves.size(); ++i)
     waves[i] = getLambdaMin() + step * (indices.GetBegin() + i);
 
   return waves;
@@ -141,8 +141,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     const TFloat64List &fineLambdas, const TFloat64Range &zbin,
     const std::shared_ptr<const CLSF> &lsf) const {
   if (!arr.size()) {
-    THROWG(INTERNAL_ERROR,
-           "Cannot convolve: either kernel or array is empty. ");
+    THROWG(INTERNAL_ERROR, "Cannot convolve: array is empty. ");
   }
 
   Int32 n = arr.size();
@@ -159,7 +158,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
   Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
   Float64 sigmaSupport =
       lsf->GetProfile().GetNSigmaSupport() / 2. / (1.0 + z_center);
-  for (Int32 i = indices.GetBegin(); i <= indices.GetEnd(); i++) {
+  for (std::size_t i = indices.GetBegin(); i <= indices.GetEnd(); i++) {
     Float64 lambda0 = fineLambdas[i]; // lambda restframe
 
     // compute the LSF kernel centered at lambda0 (restframe)
@@ -183,12 +182,8 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
                    [z_center](Float64 v) { return v * (1.0 + z_center); });
     TFloat64List kernel =
         lsf->getNormalizedProfileVector(lambdas_obs, lambda0_obs);
-    if (!kernel.size()) {
-      THROWG(INTERNAL_ERROR,
-             "Cannot convolve: either kernel or array is empty. ");
-    }
 
-    for (Int32 j = 0; j < kernel.size(); ++j)
+    for (std::size_t j = 0; j < kernel.size(); ++j)
       convolvedArr[i] += kernel[j] * arr[lsf_indices.GetBegin() + j];
   }
   return convolvedArr;
@@ -203,18 +198,18 @@ void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
   m_convolRange = convolRange;
 
   TFloat64Range range(m_LambdaMin, m_rawCorrections[0].lbda.back());
-  TFloat64List finelbdaGrid = range.SpreadOver(m_finegridstep);
+  TFloat64List finelbdaGrid = range.SpreadOverEpsilon(m_finegridstep);
   m_fineLambdaSize = finelbdaGrid.size();
 
   // std::vector<MeiksinCorrection> corrections(m_rawCorrections.size());
   m_corrections.resize(m_rawCorrections.size());
 
-  for (Int32 i = 0; i < m_rawCorrections.size(); i++) {
+  for (std::size_t i = 0; i < m_rawCorrections.size(); i++) {
     // z_center = (m_zbins[i + 1] + m_zbins[i]) / 2.;
     TFloat64Range zbin(m_zbins[i], m_zbins[i + 1]);
     m_corrections[i].lbda = finelbdaGrid;
 
-    for (Int32 j = 0; j < m_rawCorrections[i].fluxcorr.size(); j++) {
+    for (std::size_t j = 0; j < m_rawCorrections[i].fluxcorr.size(); j++) {
       TFloat64List interpolatedConvolvedArr = ConvolveByLSFOneCurve(
           m_rawCorrections[i].fluxcorr[j], m_rawCorrections[i].lbda,
           finelbdaGrid, zbin, lsf);

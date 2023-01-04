@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
 std::shared_ptr<const COperatorResult>

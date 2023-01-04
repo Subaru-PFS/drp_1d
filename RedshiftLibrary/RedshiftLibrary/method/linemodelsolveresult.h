@@ -57,9 +57,9 @@ class CLineModelSolveResult : public CPdfSolveResult {
 public:
   CLineModelSolveResult(
       const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
-      const std::string &opt_pdfcombination, Float64 evidence);
-
-  virtual ~CLineModelSolveResult();
+      const std::string &opt_pdfcombination, Float64 evidence)
+      : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
+                        opt_pdfcombination, evidence){};
 
 private:
   std::string tplratioName = "undefined";

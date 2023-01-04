@@ -58,14 +58,10 @@ class CTplCombinationSolveResult : public CPdfSolveResult {
 
 public:
   CTplCombinationSolveResult(
-      const std::string &scope,
       const std::shared_ptr<const TCandidateZ> &ExtremaResult,
-      const std::string &opt_pdfcombination, Float64 evidence);
-
-  ~CTplCombinationSolveResult();
-
-private:
-  const std::string m_scope;
+      const std::string &opt_pdfcombination, Float64 evidence)
+      : CPdfSolveResult("CTplCombinationSolveResult", ExtremaResult,
+                        opt_pdfcombination, evidence){};
 };
 
 } // namespace NSEpic

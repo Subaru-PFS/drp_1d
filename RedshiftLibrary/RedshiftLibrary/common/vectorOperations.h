@@ -42,14 +42,15 @@
 #include <vector>
 namespace NSEpic {
 
-inline void insertWithDuplicates(TFloat64List &dest, Int32 pos,
-                                 const TFloat64List &src, Int32 ndup) {
-  auto first = src.begin();
-  auto last = src.end() - ndup;
-  Int32 ninsert = last - first;
-  dest.insert(dest.begin() + pos, first, last);
-  std::copy(last, src.end(), dest.begin() + pos + ninsert);
-  // copy into dest the missing values from src
+template <typename T>
+inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
+                                 std::vector<T> src, Int32 ndup) {
+  const auto src_first = src.cbegin();
+  const auto src_end = src.cend();
+  const auto src_last_insert = src.cend() - ndup;
+  Int32 ninsert = src_last_insert - src_first;
+  dest.insert(dest.begin() + pos, src_first, src_last_insert);
+  std::copy(src_last_insert, src_end, dest.begin() + pos + ninsert);
 }
 
 template <typename T>

@@ -49,9 +49,9 @@ BOOST_AUTO_TEST_CASE(spanRedshift_test) {
   Float64 step = 1;
   TFloat64List redshifts{0, 5, 9};
   std::string redshiftSampling = "lin";
-  Float64 secondPass_halfwindowsize = 0.5;
-  Int32 ref_idx = 3; // todo
-  TFloat64List extendedRedshifts_ref{2, 3, 4, 5, 6, 7, 8};
+  Float64 secondPass_halfwindowsize = log(1 + 0.5);
+  Int32 ref_idx = 2; // todo
+  TFloat64List extendedRedshifts_ref{3, 4, 5, 6, 7, 8};
 
   // prepare object
   COperatorLineModel op;

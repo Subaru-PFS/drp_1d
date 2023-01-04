@@ -50,6 +50,23 @@ public:
   using CAbstractFitter::CAbstractFitter;
 
   void fit(Float64 redshift) override;
+
+protected:
+  Int32 fitAmplitudesLinSolveAndLambdaOffset(
+      TInt32List EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
+      std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted,
+      bool enableOffsetFitting, Float64 redshift);
+
+  Int32 fitAmplitudesLinSolve(const TInt32List &EltsIdx,
+                              const CSpectrumSpectralAxis &spectralAxis,
+                              const CSpectrumFluxAxis &fluxAxis,
+                              const CSpectrumFluxAxis &continuumfluxAxis,
+                              std::vector<Float64> &ampsfitted,
+                              std::vector<Float64> &errorsfitted,
+                              Float64 redshift);
+
+private:
+  void setOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
 };
 } // namespace NSEpic
 #endif

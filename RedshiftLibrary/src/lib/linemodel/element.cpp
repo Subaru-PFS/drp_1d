@@ -942,10 +942,7 @@ void CLineModelElement::fitAmplitude(
   m_sumGauss = 0.0;
   m_dtmFree = 0.0;
 
-  const Float64 *fluxNoContinuum = noContinuumfluxAxis.GetSamples();
-  const Float64 *spectral = spectralAxis.GetSamples();
   const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
-  const Float64 *fluxContinuum = continuumfluxAxis.GetSamples();
 
   Float64 y = 0.0;
   Float64 x = 0.0;
@@ -967,9 +964,9 @@ void CLineModelElement::fitAmplitude(
     // A estimation
     //#pragma omp parallel for
     for (Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++) {
-      c = fluxContinuum[i];
-      y = fluxNoContinuum[i];
-      x = spectral[i];
+      c = continuumfluxAxis[i];
+      y = noContinuumfluxAxis[i];
+      x = spectralAxis[i];
 
       yg = 0.0;
 
@@ -1051,34 +1048,28 @@ void CLineModelElement::addToSpectrumModel(
     CSpectrumFluxAxis &modelfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
     Int32 lineIdx) const {
-  if (m_OutsideLambdaRange) {
+  if (m_OutsideLambdaRange)
     return;
-  }
 
-  const Float64 *spectral = modelspectralAxis.GetSamples();
-  TFloat64List &flux = modelfluxAxis.GetSamplesVector();
   Int32 nLines = m_Lines.size();
   for (Int32 k = 0; k < nLines; k++) { // loop on the interval
-    if (m_OutsideLambdaRangeList[k]) {
+    if (m_OutsideLambdaRangeList[k])
       continue;
-    }
 
-    if (lineIdx != undefIdx && !(m_LineIsActiveOnSupport[k][lineIdx])) {
+    if (lineIdx != undefIdx && !(m_LineIsActiveOnSupport[k][lineIdx]))
       continue;
-    }
 
     for (Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++) {
-      Float64 lambda = spectral[i];
+      Float64 lambda = modelspectralAxis[i];
       Float64 Yi = getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
-      flux[i] += Yi;
-      if (std::isnan(flux[i])) {
+      modelfluxAxis[i] += Yi;
+      if (std::isnan(modelfluxAxis[i]))
         THROWG(INTERNAL_ERROR,
                Formatter() << "addToSpectrumModel has a NaN flux Line" << k
                            << ": ContinuumFlux " << continuumfluxAxis[i]
                            << ", ModelAtLambda Yi = " << Yi << " for range ["
                            << m_StartNoOverlap[k] << ", " << m_EndNoOverlap[k]
                            << "]");
-      }
     }
   }
   return;
@@ -1089,19 +1080,16 @@ void CLineModelElement::addToSpectrumModelDerivVel(
     CSpectrumFluxAxis &modelfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
     bool emissionLine) const {
-  if (m_OutsideLambdaRange) {
+  if (m_OutsideLambdaRange)
     return;
-  }
 
-  const Float64 *spectral = modelspectralAxis.GetSamples();
-  Float64 *flux = modelfluxAxis.GetSamples();
   for (Int32 k = 0; k < m_Lines.size(); k++) { // loop on the interval
-    if (m_OutsideLambdaRangeList[k]) {
+    if (m_OutsideLambdaRangeList[k])
       continue;
-    }
-    if ((emissionLine ^ m_Lines[k].GetIsEmission())) {
+
+    if ((emissionLine ^ m_Lines[k].GetIsEmission()))
       continue;
-    }
+
     Float64 A = m_FittedAmplitudes[k];
     if (std::isnan(A))
       continue;
@@ -1110,21 +1098,21 @@ void CLineModelElement::addToSpectrumModelDerivVel(
 
     for (Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++) {
 
-      Float64 x = spectral[i];
-
+      Float64 x = modelspectralAxis[i];
       Float64 mu = NAN;
       Float64 sigma = NAN;
       getObservedPositionAndLineWidth(k, redshift, mu, sigma, false);
 
-      if (m_SignFactors[k] == -1) {
-        flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] *
-                   GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma,
-                                          m_Lines[k].GetIsEmission());
-      } else {
-        flux[i] += m_SignFactors[k] * A *
-                   GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma,
-                                          m_Lines[k].GetIsEmission());
-      }
+      if (m_SignFactors[k] == -1)
+        modelfluxAxis[i] +=
+            m_SignFactors[k] * A * continuumfluxAxis[i] *
+            GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma,
+                                   m_Lines[k].GetIsEmission());
+      else
+        modelfluxAxis[i] +=
+            m_SignFactors[k] * A *
+            GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma,
+                                   m_Lines[k].GetIsEmission());
     }
   }
   return;
@@ -1327,8 +1315,6 @@ void CLineModelElement::initSpectrumModel(
   if (m_OutsideLambdaRange)
     return;
 
-  TFloat64List &flux = modelfluxAxis.GetSamplesVector();
-
   for (Int32 k = 0; k < m_Lines.size(); k++) { // loop on the interval
     if (m_OutsideLambdaRangeList[k])
       continue;
@@ -1337,7 +1323,7 @@ void CLineModelElement::initSpectrumModel(
       continue;
 
     for (Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
-      flux[i] = continuumfluxAxis[i];
+      modelfluxAxis[i] = continuumfluxAxis[i];
   }
   return;
 }

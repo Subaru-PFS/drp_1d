@@ -326,21 +326,17 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
  **/
 Float64 CLineRatioManager::getLeastSquareMerit() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
-  const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
-  const CSpectrumFluxAxis &modelFluxAxis =
-      m_model->GetModelSpectrum().GetFluxAxis();
+  const auto &ErrorNoContinuum = m_inputSpc->GetErrorAxis();
 
-  // Int32 numDevs = 0;
+  const CSpectrumFluxAxis &Yspc = m_model->getSpcFluxAxis();
+  const CSpectrumFluxAxis &Ymodel = m_model->GetModelSpectrum().GetFluxAxis();
+
   Float64 fit = 0.0;
-  const Float64 *Ymodel = modelFluxAxis.GetSamples();
-  const Float64 *Yspc = spcFluxAxis.GetSamples();
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   Float64 diff = 0.0;
 
   Int32 imin = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Int32 imax = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
   for (Int32 j = imin; j < imax; j++) {
-    // numDevs++;
     diff = (Yspc[j] - Ymodel[j]);
     fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     //        if ( 1E6 * diff < ErrorNoContinuum[j] )
@@ -355,7 +351,6 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
 
   fit += m_continuumManager->getFitSum();
 
-  //  Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit = %f", fit);
   if (std::isnan(fit)) {
     Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found on "
                   "the lambdarange = (%f, %f)",

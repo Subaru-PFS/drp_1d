@@ -87,10 +87,9 @@ public:
   // Extrema results
   TFloat64List MeritContinuum; // extrema merit for continuum
 
-  TFloat64List mTransposeM;    // extrema model norm
-  TFloat64List CorrScaleMarg;  // extrema scale marg. correction
-  TInt32List NDof;             // non zero elements in the lambdarange
-  TFloat64List Redshift_lmfit; // z found with lmfit
+  TFloat64List mTransposeM;   // extrema model norm
+  TFloat64List CorrScaleMarg; // extrema scale marg. correction
+  TInt32List NDof;            // non zero elements in the lambdarange
   TFloat64List snrHa;
   TFloat64List lfHa;
   TFloat64List snrOII;

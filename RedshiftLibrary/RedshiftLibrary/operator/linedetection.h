@@ -41,10 +41,9 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/operator/linedetectionresult.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-//#include "RedshiftLibrary/line/lineprofile.h"
 
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 
@@ -89,7 +88,7 @@ public:
                  Float64 strongcut = 2.0, Float64 winsize = 250,
                  Float64 minsize = 3, Float64 maxsize = 70,
                  bool disableFitQualityCheck = false);
-  virtual ~CLineDetection();
+  virtual ~CLineDetection(){};
 
   std::shared_ptr<const CLineDetectionResult>
   Compute(const CSpectrum &spectrum, const TLambdaRange &lambdaRange,

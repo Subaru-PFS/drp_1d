@@ -46,7 +46,6 @@
 #include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
@@ -108,20 +107,13 @@ std::shared_ptr<CModelSpectrumResult> getModelSpectrumResult() {
   return result_in;
 }
 
-// create Spectra Flux result
-std::shared_ptr<CSpectraFluxResult> getSpectraFluxresult() {
-  std::shared_ptr<CSpectraFluxResult> result_in =
-      (std::shared_ptr<CSpectraFluxResult>)new CSpectraFluxResult();
-  return result_in;
-}
-
 // Create LineModel Extrema Result
 std::shared_ptr<LineModelExtremaResult> getLineModelExtremaResult() {
 
   std::shared_ptr<LineModelExtremaResult> result_in =
       make_shared<LineModelExtremaResult>(getZCandidates());
 
-  result_in->m_savedModelContinuumSpectrumResults[0] = getSpectraFluxresult();
+  result_in->m_savedModelContinuumSpectrumResults[0] = getModelSpectrumResult();
 
   std::vector<std::shared_ptr<CModelSpectrumResult>> modelSpectrimResultList;
   std::shared_ptr<CModelSpectrumResult> modelSpectrimResult =
@@ -169,9 +161,14 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK(store_1.GetScopedName("extremaResult") ==
               "object.method.extremaResult");
 
-  std::shared_ptr<const TExtremaResult> result_out =
-      store_1.GetExtremaResult("object", "method", "extremaResult", 0);
+  std::shared_ptr<const TExtremaResult> result_out = store_1.GetExtremaResult(
+      "object", "method", "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
+
+  BOOST_CHECK_THROW(store_1.StoreResult(store_1.m_GlobalResults,
+                                        store_1.GetCurrentScopeName(),
+                                        "extremaResult", result_in),
+                    GlobalException);
 
   // test store outside context
   Flag.warning(WarningCode::CRANGE_NO_INTERSECTION, "Test code 4");
@@ -203,8 +200,8 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
   BOOST_CHECK(store_1.GetScopedName("extremaResult") ==
               "object.method.extremaResult");
 
-  std::shared_ptr<const TExtremaResult> result_out =
-      store_1.GetExtremaResult("object", "method", "extremaResult", 0);
+  std::shared_ptr<const TExtremaResult> result_out = store_1.GetExtremaResult(
+      "object", "method", "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
   // test store outside context
@@ -233,9 +230,11 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   COperatorResultStore store_1(scopeStack_1);
 
   // test store flag in context
+  BOOST_CHECK(store_1.hasCurrentMethodWarningFlag() == false);
   store_1.StoreScopedGlobalResult("warningFlag", result_in);
   BOOST_CHECK(store_1.GetScopedName("warningFlag") ==
               "object.method.warningFlag");
+  BOOST_CHECK(store_1.hasCurrentMethodWarningFlag() == true);
 
   std::shared_ptr<const COperatorResult> result_out =
       store_1.GetFlagLogResult("object", "method", "warningFlag");
@@ -245,10 +244,14 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   TScopeStack scopeStack_2;
   COperatorResultStore store_2(scopeStack_2);
 
-  store_2.StoreFlagResult("warningFlag", Flag.getBitMask());
-  BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
+  BOOST_CHECK(store_2.hasContextWarningFlag() == false);
+  store_2.StoreFlagResult("context_warningFlag", Flag.getBitMask());
+  BOOST_CHECK(store_2.GetScopedName("context_warningFlag") ==
+              "context_warningFlag");
+  BOOST_CHECK(store_2.hasContextWarningFlag() == true);
 
-  result_out = store_2.GetFlagLogResult("warningFlag", "", "warningFlag");
+  result_out = store_2.GetFlagLogResult("context_warningFlag", "",
+                                        "context_warningFlag");
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
 }
 
@@ -398,10 +401,9 @@ BOOST_AUTO_TEST_CASE(GetReliabilityResult_test) {
 BOOST_AUTO_TEST_CASE(GetLogZPdfResult_test) {
   TScopeStack scopeStack = getScopeStack();
 
-  TFloat64List redshifts = {1, 2, 3, 4};
   TZGridListParams zparams;
   std::shared_ptr<const CLogZPdfResult> result_in =
-      std::make_shared<const CLogZPdfResult>(redshifts, zparams);
+      std::make_shared<const CLogZPdfResult>(zparams, false);
 
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("pdfMarg", result_in);
@@ -421,8 +423,8 @@ BOOST_AUTO_TEST_CASE(GetLineModelResult_test) {
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("lineModel", result_in);
 
-  std::shared_ptr<const TLineModelResult> result_out =
-      store.GetLineModelResult("object", "method", "lineModel", 0);
+  std::shared_ptr<const TLineModelResult> result_out = store.GetLineModelResult(
+      "object", "method", "lineModel", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TLineModelResult");
 }
 
@@ -437,7 +439,8 @@ BOOST_AUTO_TEST_CASE(GetTplCombinationResult_test) {
   store.StoreScopedGlobalResult("tplCombination", result_in);
 
   std::shared_ptr<const TTplCombinationResult> result_out =
-      store.GetTplCombinationResult("object", "method", "tplCombination", 0);
+      store.GetTplCombinationResult("object", "method", "tplCombination",
+                                    "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TTplCombinationResult");
 }
 
@@ -450,8 +453,8 @@ BOOST_AUTO_TEST_CASE(GetExtremaResult_test) {
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("extremaResult", result_in);
 
-  std::shared_ptr<const TExtremaResult> result_out =
-      store.GetExtremaResult("object", "method", "extremaResult", 0);
+  std::shared_ptr<const TExtremaResult> result_out = store.GetExtremaResult(
+      "object", "method", "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 }
 
@@ -469,21 +472,6 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test) {
   BOOST_CHECK(result_out->getType() == "CLineModelSolution");
 }
 
-//---------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(GetSpectraFluxResult_test) {
-  TScopeStack scopeStack = getScopeStack();
-
-  std::shared_ptr<LineModelExtremaResult> result_in =
-      getLineModelExtremaResult();
-
-  COperatorResultStore store(scopeStack);
-  store.StoreScopedGlobalResult("spectraFlux", result_in);
-
-  std::shared_ptr<const CSpectraFluxResult> result_out =
-      store.GetSpectraFluxResult("object", "method", "spectraFlux", 0);
-  BOOST_CHECK(result_out->getType() == "CSpectraFluxResult");
-}
-
 //---------------------------------------------------------------v
 BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test) {
   TScopeStack scopeStack = getScopeStack();
@@ -495,7 +483,8 @@ BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test) {
   store.StoreScopedGlobalResult("modelSpectrum", result_in);
 
   std::shared_ptr<const CModelSpectrumResult> result_out =
-      store.GetModelSpectrumResult("object", "method", "modelSpectrum", 0);
+      store.GetModelSpectrumResult("object", "method", "modelSpectrum", "model",
+                                   0);
   BOOST_CHECK(result_out->getType() == "CModelSpectrumResult");
 }
 
@@ -510,7 +499,8 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test_2) {
   store.StoreScopedGlobalResult("lineModel", result_in);
 
   std::shared_ptr<const CLineModelSolution> result_out =
-      store.GetLineModelSolution("object", "method", "lineModel", 0);
+      store.GetLineModelSolution("object", "method", "lineModel",
+                                 "fitted_lines", 0);
 
   BOOST_CHECK(result_out->getType() == "CLineModelSolution");
 }
@@ -569,10 +559,9 @@ BOOST_AUTO_TEST_CASE(HasCandidateDataset_test) {
 BOOST_AUTO_TEST_CASE(HasDataset_test) {
   TScopeStack scopeStack = getScopeStack();
 
-  TFloat64List redshifts = {1, 2, 3, 4};
   TZGridListParams zparams;
   std::shared_ptr<const CLogZPdfResult> result_in =
-      std::make_shared<const CLogZPdfResult>(redshifts, zparams);
+      std::make_shared<const CLogZPdfResult>(zparams, false);
 
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("pdfMarg", result_in);
@@ -588,10 +577,9 @@ BOOST_AUTO_TEST_CASE(HasDataset_test) {
 BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   TScopeStack scopeStack = getScopeStack();
 
-  TFloat64List redshifts = {1, 2, 3, 4};
   TZGridListParams zparams;
   std::shared_ptr<CLogZPdfResult> result_in =
-      std::make_shared<CLogZPdfResult>(redshifts, zparams);
+      std::make_shared<CLogZPdfResult>(zparams, false);
 
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("extrema_results", result_in);
@@ -603,6 +591,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
       make_shared<PdfCandidatesZResult>();
   result_in_2->m_ranked_candidates = getZCandidates();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_2);
 
   result_out = store.getNbRedshiftCandidates("object", "method");
@@ -610,6 +599,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
 
   std::shared_ptr<ExtremaResult> result_in_3 = getExtremaResult();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_3);
   result_out = store.getNbRedshiftCandidates("object", "method");
   BOOST_CHECK(result_out == 1);
@@ -617,6 +607,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   std::shared_ptr<LineModelExtremaResult> result_in_4 =
       getLineModelExtremaResult();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_4);
   result_out = store.getNbRedshiftCandidates("object", "method");
   BOOST_CHECK(result_out == 1);
@@ -624,6 +615,7 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   std::shared_ptr<TplCombinationExtremaResult> result_in_5 =
       getTplCombinationExtremaResult();
 
+  store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_5);
   result_out = store.getNbRedshiftCandidates("object", "method");
   BOOST_CHECK(result_out == 1);

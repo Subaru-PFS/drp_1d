@@ -45,7 +45,7 @@ using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(operatorResult)
 
 BOOST_AUTO_TEST_CASE(operatorResult_test) {
-  COperatorResult result;
+  COperatorResult result("COperatorResult");
   std::string type = result.getType();
 
   BOOST_CHECK(type == "COperatorResult");

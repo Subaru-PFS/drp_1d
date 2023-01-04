@@ -48,7 +48,6 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
@@ -178,18 +177,6 @@ private:
       TTemplateConstRefList &tplList) const;
   void updateRedshiftGridAndResults();
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
-
-  // lmfit
-
-  bool mlmfit_modelInfoSave = false;
-  std::vector<std::shared_ptr<CModelSpectrumResult>>
-      mlmfit_savedModelSpectrumResults_lmfit;
-  std::vector<std::shared_ptr<CLineModelSolution>>
-      mlmfit_savedModelFittingResults_lmfit;
-  std::vector<std::shared_ptr<CModelRulesResult>>
-      mlmfit_savedModelRulesResults_lmfit;
-  std::vector<std::shared_ptr<CSpectraFluxResult>>
-      mlmfit_savedBaselineResult_lmfit;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
   std::shared_ptr<CTemplatesFitStore> m_tplfitStore_firstpass;

@@ -50,9 +50,8 @@ namespace NSEpic {
 template <class T> class CPdfCandidateszResult : public COperatorResult {
 
 public:
-  CPdfCandidateszResult(Int32 optMethod = 0) : m_optMethod(optMethod) {
-    this->m_type = "PdfCandidatesZResult";
-  };
+  CPdfCandidateszResult(Int32 optMethod = 0)
+      : COperatorResult("PdfCandidatesZResult"), m_optMethod(optMethod){};
 
   // rule of 5 defaults
   CPdfCandidateszResult(const CPdfCandidateszResult &) = default;

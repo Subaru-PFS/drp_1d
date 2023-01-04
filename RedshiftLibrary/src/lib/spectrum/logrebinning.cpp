@@ -277,7 +277,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
 CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(
     const TFloat64Range &lambdarange,
     Int32 count) const { // spreadoverlog expects m_Begin to be non-log value
-  TFloat64List axis = lambdarange.SpreadOverLog(m_logGridStep);
+  TFloat64List axis = lambdarange.SpreadOverLogEpsilon(m_logGridStep);
   if (axis.size() != count) {
     THROWG(INTERNAL_ERROR,
            "computed axis does not have the expected samples number");

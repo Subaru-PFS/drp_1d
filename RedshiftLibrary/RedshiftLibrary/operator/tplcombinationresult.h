@@ -56,7 +56,9 @@ public:
         FitAmplitude(n, TFloat64List(componentSize, NAN)),
         FitAmplitudeError(n, TFloat64List(componentSize, NAN)),
         FitAmplitudeSigma(n, TFloat64List(componentSize, NAN)), FitCOV(n),
-        nISM(EbmvListSize), nIGM(MeiksinListSize) {}
+        nISM(EbmvListSize), nIGM(MeiksinListSize) {
+    m_type = "CTplCombinationResult";
+  }
 
   // best fit results
   std::vector<TFloat64List> FitAmplitude;

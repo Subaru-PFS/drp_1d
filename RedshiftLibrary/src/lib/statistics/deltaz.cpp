@@ -67,10 +67,8 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
     ret = GetIndices(redshifts, z, half_samples_nb, iz, izmin, izmax);
 
     try {
-      if (gslfit)
-        dz = Compute3ddl(pdf, redshifts, iz, izmin, izmax);
-      else
-        dz = Compute(pdf, redshifts, iz, izmin, izmax);
+      dz = gslfit ? Compute3ddl(pdf, redshifts, iz, izmin, izmax)
+                  : Compute(pdf, redshifts, iz, izmin, izmax);
       break;
     } catch (GlobalException &e) {
       if (e.getErrorCode() != ErrorCode::DZ_NOT_COMPUTABLE) {
@@ -145,12 +143,11 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   Float64 sigma = -1.0; // default value
 
   // quadratic fit
-  Int32 i, n;
   Float64 xi, yi, ei, chisq;
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
 
-  n = izmax - izmin + 1;
+  Int32 n = izmax - izmin + 1;
   if (n < 3)
     THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
 
@@ -163,7 +160,7 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
 
   double x0 = redshifts[iz];
   double y0 = merits[iz];
-  for (i = 0; i < n; i++) {
+  for (Int32 i = 0; i < n; i++) {
     xi = redshifts[i + izmin];
     yi = merits[i + izmin];
     Log.LogDebug("  y = %+.5e ]\n", yi);
@@ -177,11 +174,9 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
     gsl_vector_set(w, i, 1.0 / (ei * ei));
   }
 
-  {
-    gsl_multifit_linear_workspace *work = gsl_multifit_linear_alloc(n, 3);
-    gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
-    gsl_multifit_linear_free(work);
-  }
+  gsl_multifit_linear_workspace *work = gsl_multifit_linear_alloc(n, 3);
+  gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
+  gsl_multifit_linear_free(work);
 
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))

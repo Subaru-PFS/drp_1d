@@ -62,9 +62,10 @@ GlobalException::GlobalException(ErrorCode ec, const std::string &message,
                            << resultStore->getCurrentScopeNameAt(2));
   } else {
     if (!resultStore->hasContextWarningFlag()) {
-      resultStore->StoreScopedGlobalResult(
-          "warningFlag", std::make_shared<const CFlagLogResult>(
-                             Flag.getBitMask(), Flag.getListMessages()));
+      resultStore->StoreGlobalResult(
+          "context_warningFlag",
+          std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
+                                                 Flag.getListMessages()));
     } else
       LogError("Context warning flag already exists");
   }
