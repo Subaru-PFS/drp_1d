@@ -58,7 +58,7 @@ class CTemplatesFitStore;
 
 class CLineModelResult : public COperatorResult {
 public:
-  CLineModelResult() = default;
+  CLineModelResult() : COperatorResult("CLineModelResult"){};
 
   void Init(TFloat64List redshifts, CLineCatalog::TLineVector restLines,
             Int32 nTplContinuum, Int32 nTplratios,

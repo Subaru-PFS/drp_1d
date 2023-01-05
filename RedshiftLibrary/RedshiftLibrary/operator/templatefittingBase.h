@@ -84,6 +84,7 @@ public:
       const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
       const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
       bool opt_extinction, bool opt_dustFitting,
+      Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
 
@@ -105,7 +106,8 @@ protected:
   virtual Float64
   EstimateLikelihoodCstLog(const CSpectrum &spectrum,
                            const TFloat64Range &lambdaRange) const;
-
+  void applyPositiveAndNonNullConstraint(Float64 amp_sigma,
+                                         Float64 &ampl) const;
   const CSpectrum &m_spectrum;
   TFloat64Range m_lambdaRange;
   TFloat64List m_redshifts;
@@ -113,6 +115,7 @@ protected:
   CTemplate m_templateRebined_bf;
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
   CMask m_mskRebined_bf;
+  Float64 m_continuum_null_amp_threshold; // in SNR
 };
 
 } // namespace NSEpic

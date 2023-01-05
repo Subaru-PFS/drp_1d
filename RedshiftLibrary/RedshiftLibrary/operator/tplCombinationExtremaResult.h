@@ -44,7 +44,6 @@
 
 namespace NSEpic {
 class CModelSpectrumResult;
-class CSpectraFluxResult;
 
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.i"
 

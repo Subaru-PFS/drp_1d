@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
 std::shared_ptr<const COperatorResult>

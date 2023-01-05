@@ -70,11 +70,6 @@ CLineDetection::CLineDetection(Int32 type, Float64 cut, Float64 strongcut,
 }
 
 /**
- * Empty destructor.
- */
-CLineDetection::~CLineDetection() {}
-
-/**
  * Produce a CLineDetectionResult object containing the lines detected in the
  * input peaks lists.
  */
@@ -342,61 +337,54 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
                                       Float64 *maxFluxnoContinuum,
                                       Float64 *noise) {
   const CSpectrum &spc = spectrum;
-  const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
-  const CSpectrumSpectralAxis specAxis = spc.GetSpectralAxis();
-
-  // if no mask, then set it to 1
-  if (mask.size() == 0) {
-    mask.resize(spc.GetSampleCount());
-    for (Int32 k = 0; k < spc.GetSampleCount(); k++) {
-      mask[k] = 1;
-    }
-  }
-
+  const CSpectrumFluxAxis &fluxAxis = spc.GetFluxAxis();
+  const CSpectrumSpectralAxis &specAxis = spc.GetSpectralAxis();
   // Range must be included in fluxAxis
-  if (range.GetEnd() >= fluxAxis.GetSamplesCount()) {
+  if (range.GetEnd() >= fluxAxis.GetSamplesCount())
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Upper bound of range " << range.GetEnd()
                                << " is >= to fluxAxis length "
                                << fluxAxis.GetSamplesCount());
-  }
-  if (range.GetBegin() < 0) {
+
+  if (range.GetBegin() < 0)
     THROWG(INTERNAL_ERROR, Formatter() << "Lower bound of range "
                                        << range.GetEnd() << " is < 0");
-  }
+
+  // if no mask, then set it to 1
+  if (!mask.size())
+    mask.resize(spc.GetSampleCount(), 1);
 
   Float64 maxValue = -DBL_MAX;
   Int32 maxIndex = -1;
-  for (Int32 k = range.GetBegin(); k <= range.GetEnd(); k++) {
+  for (Int32 k = range.GetBegin(); k <= range.GetEnd(); k++)
     if (maxValue < fluxAxis[k] && mask[k] != 0) {
       maxValue = fluxAxis[k];
       maxIndex = k;
     }
-  }
-
+  if (maxIndex == -1)
+    THROWG(INTERNAL_ERROR, "maxIndex is not valid");
   // strong/weak test to do
-  const Float64 *fluxData = fluxAxis.GetSamples();
   CMedian<Float64> medianProcessor;
   // reg. sampling, TAG: IRREGULAR_SAMPLING
   // Int32 windowSampleCount = winsize / spc.GetResolution();
   // int left = max(0, (Int32)(maxIndex-windowSampleCount/2.0+0.5) ) ;
   // int right = min((Int32)fluxAxis.GetSamplesCount()-1, (Int32)(maxIndex +
   // windowSampleCount/2.0) )+1; irreg. sampling
-  int left =
-      max(0, specAxis.GetIndexAtWaveLength(specAxis[maxIndex] - winsize / 2.0));
-  int right = min(
-      (Int32)fluxAxis.GetSamplesCount(),
-      specAxis.GetIndexAtWaveLength(specAxis[maxIndex] + winsize / 2.0) + 1);
-
-  left = max(range.GetBegin(), left);
-  right = min(range.GetEnd() + 1, right);
+  Int32 left = std::max(range.GetBegin(),
+                        max(0, specAxis.GetIndexAtWaveLength(
+                                   specAxis[maxIndex] - winsize / 2.0)));
+  Int32 right = std::min(
+      range.GetEnd() + 1,
+      min((Int32)fluxAxis.GetSamplesCount(),
+          specAxis.GetIndexAtWaveLength(specAxis[maxIndex] + winsize / 2.0) +
+              1));
 
   TFloat64List fluxMasked;
   fluxMasked.reserve(fluxAxis.GetSamplesCount());
   int n = 0;
   for (int i = left; i < right; i++) {
     if (mask[i] != 0) {
-      fluxMasked.push_back(fluxData[i]);
+      fluxMasked.push_back(fluxAxis[i]);
       n++;
     }
   }
@@ -410,29 +398,28 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
   if (!error.empty()) {
     // check if noise file has been loaded
     bool isNoiseOnes = true;
-    for (Int32 i = left; i < right; i++) {
+    for (Int32 i = left; i < right; i++)
       if (error[i] != 1.0) {
         isNoiseOnes = false;
         break;
       }
-    }
 
     if (!isNoiseOnes) {
       Float64 mean_noise = 0.0;
       Int32 n_mean_noise = 0;
-      for (Int32 i = left; i < right; i++) {
+      for (Int32 i = left; i < right; i++)
         if (mask[i] != 0) {
           mean_noise += error[i];
           n_mean_noise++;
         }
-      }
-      if (n_mean_noise > 0) {
+
+      if (n_mean_noise > 0)
         mean_noise /= n_mean_noise;
-      }
+
       // choose between noise mean or xmad
-      if (mean_noise > xmad) {
+      if (mean_noise > xmad)
         noise_win = mean_noise;
-      }
+
       // noise_win = mean_noise; //debug
     }
   }
@@ -443,9 +430,8 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
   if (maxFluxnoContinuum != NULL) {
     *maxFluxnoContinuum = maxValue_no_continuum;
   }
-  if (noise != NULL) {
+  if (noise != NULL)
     *noise = xmad;
-  }
 
   return ratioAmp;
 }

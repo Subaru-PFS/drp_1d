@@ -40,22 +40,15 @@
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-
-#include <fstream>
-#include <iomanip> // std::setprecision
-#include <string>
-
 using namespace NSEpic;
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n)
-    : Redshifts(n), ChiSquare(n), ChiSquarePhot(n), FitAmplitude(n),
-      FitAmplitudeError(n), FitAmplitudeSigma(n), FitEbmvCoeff(n),
-      FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n),
-      ChiSquareIntermediate(n), IsmEbmvCoeffIntermediate(n),
-      IgmMeiksinIdxIntermediate(n), SNR(n), Overlap(n), Status(n) {}
+    : COperatorResult("CTemplateFittingResult"), Redshifts(n), ChiSquare(n),
+      ChiSquarePhot(n), FitAmplitude(n), FitAmplitudeError(n),
+      FitAmplitudeSigma(n), FitEbmvCoeff(n), FitMeiksinIdx(n), FitDtM(n),
+      FitMtM(n), LogPrior(n), ChiSquareIntermediate(n),
+      IsmEbmvCoeffIntermediate(n), IgmMeiksinIdxIntermediate(n), SNR(n),
+      Overlap(n), Status(n) {}
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
                                                Int32 MeiksinListSize)

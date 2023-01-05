@@ -43,7 +43,6 @@
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
-#include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
@@ -73,8 +72,9 @@ void TLineModelResult::updateFromLineModelSolution(
 void TLineModelResult::updateContinuumFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel) {
   std::shared_ptr<const CContinuumManager> ccm = lmel->m_continuumManager;
-  FittedTplName = ccm->getFitContinuum_tplName();
   FittedTplAmplitude = ccm->getFitContinuum_tplAmplitude();
+  FittedTplName =
+      FittedTplAmplitude ? ccm->getFitContinuum_tplName() : "nocontinuum";
   FittedTplAmplitudeError = ccm->getFitContinuum_tplAmplitudeError();
   FittedTplMerit = ccm->getFitContinuum_tplMerit();
   FittedTplMeritPhot = ccm->getFitContinuum_tplMeritPhot();

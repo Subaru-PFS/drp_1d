@@ -41,7 +41,7 @@ from pylibamazed.ResultStoreOutput import ResultStoreOutput
 import numpy as np
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import (CLogZPdfResult, ErrorCode)
-from pylibamazed.PdfBuilder import PdfBuilder
+from pylibamazed.PdfHandler import buildPdfHandler
 
 class Reliability:
     def __init__(self, object_type,parameters, calibration):
@@ -63,15 +63,16 @@ class Reliability:
 
         logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
         output.load_object_level(self.object_type)
-        builder = PdfBuilder(output)
-        extendedPDF = builder.interpolate_pdf_on_regular_grid(self.object_type,
-                                                              logsampling, c_zgrid_zend)
-        zgrid = extendedPDF["zgrid"]
-        pdf = extendedPDF["probaLog"]
+        
+        pdf = buildPdfHandler(output, self.object_type, logsampling)
+        pdf.convertToRegular(True, c_zgrid_zend)
+
+        zgrid = pdf.redshifts
+        pdfval = pdf.valProbaLog
         model = self.calibration_library.reliability_models[self.object_type]
 
         zgrid_end = zgrid[-1]
-        if pdf.shape[0] != model.input_shape[1]:
+        if pdfval.shape[0] != model.input_shape[1]:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,"PDF and model shapes are not compatible")
         # The model needs a PDF, not LogPDF        
         zend_diff = (zgrid_end - c_zgrid_zend)/zgrid_end
@@ -83,5 +84,5 @@ class Reliability:
         if step_diff > 1e-6:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {z_step} != {np.exp(c_zrange_step)}")
 
-        return  model.predict(np.exp(pdf[None, :, None]))[0, 1]
+        return  model.predict(np.exp(pdfval[None, :, None]))[0, 1]
 

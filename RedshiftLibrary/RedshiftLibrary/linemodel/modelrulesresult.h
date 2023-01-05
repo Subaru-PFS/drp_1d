@@ -51,8 +51,8 @@ namespace NSEpic {
 class CModelRulesResult : public COperatorResult {
 
 public:
-  CModelRulesResult(const TStringList &logStrings) : LogStrings(logStrings){};
-  CModelRulesResult() = default;
+  CModelRulesResult(const TStringList &logStrings)
+      : COperatorResult("CModelRulesResult"), LogStrings(logStrings){};
 
 private:
   TStringList LogStrings;

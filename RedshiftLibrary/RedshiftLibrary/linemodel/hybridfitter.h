@@ -39,14 +39,14 @@
 #ifndef _REDSHIFT_HYBRID_FITTER_
 #define _REDSHIFT_HYBRID_FITTER_
 
-#include "RedshiftLibrary/linemodel/abstractfitter.h"
+#include "RedshiftLibrary/linemodel/svdfitter.h"
 
 namespace NSEpic
 
 {
 
 // class CRegulament;
-class CHybridFitter : public CAbstractFitter {
+class CHybridFitter : public CSvdFitter {
 public:
   CHybridFitter(CLineModelElementList &elements,
                 std::shared_ptr<const CSpectrum> inputSpectrum,

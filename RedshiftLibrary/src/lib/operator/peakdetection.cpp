@@ -147,8 +147,6 @@ void CPeakDetection::RedefineBorders(TInt32RangeList &peakList,
                                      const CSpectrumAxis &waves,
                                      const CSpectrumAxis &smoothFluxAxis,
                                      const CSpectrumAxis &fluxAxis) {
-  const Float64 *smoothFluxData = smoothFluxAxis.GetSamples();
-
   Int32 nPeaksInitial = peakList.size();
   for (Int32 iPeak = nPeaksInitial - 1; iPeak >= 0; iPeak--) {
     int centerPos = -1;
@@ -157,12 +155,11 @@ void CPeakDetection::RedefineBorders(TInt32RangeList &peakList,
     Int32 start = peakList[iPeak].GetBegin();
     Int32 stop = peakList[iPeak].GetEnd() + 1;
 
-    for (Int32 i = start; i < stop; i++) {
-      if (centerVal < smoothFluxData[i]) {
-        centerVal = smoothFluxData[i];
+    for (Int32 i = start; i < stop; i++)
+      if (centerVal < smoothFluxAxis[i]) {
+        centerVal = smoothFluxAxis[i];
         centerPos = i;
       }
-    }
 
     int old_left = centerPos;
     int old_right = centerPos;
@@ -170,17 +167,16 @@ void CPeakDetection::RedefineBorders(TInt32RangeList &peakList,
     int new_right =
         std::min((int)smoothFluxAxis.GetSamplesCount(), centerPos + 1);
 
-    if (new_left == 0 || new_right == smoothFluxAxis.GetSamplesCount()) {
+    if (new_left == 0 || new_right == smoothFluxAxis.GetSamplesCount())
       // if the max is found on the border, then erase this range
       peakList.erase(peakList.begin() + iPeak);
-    } else {
+    else {
       GetNewBorder(smoothFluxAxis.GetSamplesVector(), new_left, old_left,
                    false);
       GetNewBorder(smoothFluxAxis.GetSamplesVector(), new_right, old_right,
                    true);
-      if (new_right == new_left) {
+      if (new_right == new_left)
         peakList.erase(peakList.begin() + iPeak);
-      }
     }
   }
 }
@@ -189,18 +185,15 @@ void CPeakDetection::FindPossiblePeaks(
     const CSpectrumAxis &fluxAxis, const CSpectrumSpectralAxis &spectralAxis,
     TInt32RangeList &peakList) {
   peakList.clear();
-
-  TFloat64List med;
-  TFloat64List xmad;
-
-  med.reserve(fluxAxis.GetSamplesCount());
-  xmad.reserve(fluxAxis.GetSamplesCount());
+  Int32 s = fluxAxis.GetSamplesCount();
+  TFloat64List med(s);
+  TFloat64List xmad(s);
 
   // Compute median value for each sample over a window of size
   // windowSampleCount
-  TFloat64List fluxVector = fluxAxis.GetSamplesVector();
+  const TFloat64List &fluxVector = fluxAxis.GetSamplesVector();
   CMedian<Float64> medianFilter;
-  for (Int32 i = 0; i < fluxAxis.GetSamplesCount(); i++) {
+  for (Int32 i = 0; i < s; i++) {
     // old: regular sampling hypthesis
     // Int32 halfWindowSampleCount = windowSampleCount / 2;
     // Int32 start = std::max( 0, i - halfWindowSampleCount );
@@ -208,9 +201,8 @@ void CPeakDetection::FindPossiblePeaks(
     // halfWindowSampleCount ); irregular sampling compatible
     Int32 start = std::max(0, spectralAxis.GetIndexAtWaveLength(
                                   spectralAxis[i] - m_winsize / 2.0));
-    Int32 stop = std::min(
-        (Int32)fluxAxis.GetSamplesCount(),
-        spectralAxis.GetIndexAtWaveLength(spectralAxis[i] + m_winsize / 2.0));
+    Int32 stop = std::min(s, spectralAxis.GetIndexAtWaveLength(
+                                 spectralAxis[i] + m_winsize / 2.0));
 
     med[i] = medianFilter.Find(fluxVector.begin() + start,
                                fluxVector.begin() + stop);
@@ -235,20 +227,16 @@ void CPeakDetection::FindPossiblePeaks(
   //*/
 
   // Detect each point whose value is over the median precomputed median
-  TInt32List points;
-  points.resize(fluxAxis.GetSamplesCount() + 1);
+  TInt32List points(s + 1);
   Int32 j = 0;
 
-  for (Int32 i = 0; i < fluxAxis.GetSamplesCount(); i++) {
-    if (fluxVector[i] > med[i] + 0.5 * m_cut * xmad[i]) {
+  for (Int32 i = 0; i < s; i++)
+    if (fluxVector[i] > med[i] + 0.5 * m_cut * xmad[i])
       points[j++] = i;
-    }
-  }
 
   // No potential peak detected , exit
-  if (j == 0) {
+  if (j == 0)
     return;
-  }
 
   // Find contiguous sample
   Int32 start = points[0];
@@ -257,9 +245,9 @@ void CPeakDetection::FindPossiblePeaks(
 
   for (Int32 i = 1; i < j + 1; i++) {
     // Index stored in points[] are contiguous (i.e: 4,5,6)
-    if (points[i] - 1 == current) {
+    if (points[i] - 1 == current)
       current = points[i];
-    }
+
     // if we hit a discontinuity, store the previous range of contiguous points
     // representing a potential peak
     else {

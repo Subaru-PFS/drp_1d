@@ -53,15 +53,10 @@ void CRebinSpline::rebin(
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
     const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
-  TAxisSampleList &Yrebin = rebinedFluxAxis.GetSamplesVector();
-  TFloat64List &ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
-
-  CSpectrumSpectralAxis spectralAxis = m_spectrum.GetSpectralAxis();
-
   // GSL method spline
   // Initialize and allocate the gsl
   // objects
-  Int32 n = spectralAxis.GetSamplesCount();
+  Int32 n = m_spectrum.GetSampleCount();
   gsl_spline *spline = gsl_spline_alloc(gsl_interp_cspline, n);
   gsl_spline_init(spline, Xsrc.data(), Ysrc.data(), n);
   gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
@@ -70,7 +65,8 @@ void CRebinSpline::rebin(
   // lambda range interval.
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {
-    Yrebin[cursor] = gsl_spline_eval(spline, Xtgt[cursor], accelerator);
+    rebinedFluxAxis[cursor] =
+        gsl_spline_eval(spline, Xtgt[cursor], accelerator);
     rebinedMask[cursor] = 1;
 
     // note: error rebin not

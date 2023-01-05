@@ -49,14 +49,21 @@ class TCandidateZ;
 
 class CSolveResult : public COperatorResult {
 public:
+  CSolveResult(const std::string &type) : COperatorResult(type){};
   virtual ~CSolveResult() = 0;
+  CSolveResult(const CSolveResult &) = default;
+  CSolveResult(CSolveResult &&) = default;
+  CSolveResult &operator=(const CSolveResult &) = default;
+  CSolveResult &operator=(CSolveResult &&) = default;
 };
 
 class CPdfSolveResult : public CSolveResult {
 
 public:
-  CPdfSolveResult(const std::shared_ptr<const TCandidateZ> &ExtremaResult,
+  CPdfSolveResult(const std::string &type,
+                  const std::shared_ptr<const TCandidateZ> &ExtremaResult,
                   const std::string &opt_pdfcombination, Float64 evidence);
+  virtual ~CPdfSolveResult() = default;
   CPdfSolveResult(CPdfSolveResult const &other) = default;
   CPdfSolveResult &operator=(CPdfSolveResult const &other) = default;
   CPdfSolveResult(CPdfSolveResult &&other) = default;

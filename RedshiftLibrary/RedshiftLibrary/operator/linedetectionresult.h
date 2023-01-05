@@ -36,11 +36,9 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
-#define _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
+#ifndef _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
+#define _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 #include <vector>
@@ -54,8 +52,7 @@ namespace NSEpic {
 class CLineDetectionResult : public COperatorResult {
 
 public:
-  CLineDetectionResult();
-  virtual ~CLineDetectionResult();
+  CLineDetectionResult() : COperatorResult("CLineDetectionResult"){};
 
   CLineCatalog LineCatalog;
   TStringList PeakListDetectionStatus;
@@ -63,4 +60,4 @@ public:
 
 } // namespace NSEpic
 
-#endif // _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
+#endif // _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_

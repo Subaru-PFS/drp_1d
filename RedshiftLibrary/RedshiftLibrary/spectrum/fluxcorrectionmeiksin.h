@@ -45,11 +45,8 @@
 #include "RedshiftLibrary/common/range.h"
 namespace fluxcorrectionmeiksin_test { // boost test suite
 // all boost_auto_test_case that use private method
-class correction_multiply_test;
-class correction_multiply_test_CteResolution;
-class correction_multiply_test_CteResolution25_4;
-class correction_multiply_test_CteResolution25_4_incontext;
-class correction_test;
+class overall_test;
+class convolveByLSF_test;
 } // namespace fluxcorrectionmeiksin_test
 namespace NSEpic {
 class CLSF;
@@ -92,14 +89,8 @@ public:
                         Float64 lambda) const;
 
 private:
-  friend class fluxcorrectionmeiksin_test::correction_multiply_test;
-  friend class fluxcorrectionmeiksin_test::
-      correction_multiply_test_CteResolution;
-  friend class fluxcorrectionmeiksin_test::
-      correction_multiply_test_CteResolution25_4;
-  friend class fluxcorrectionmeiksin_test::
-      correction_multiply_test_CteResolution25_4_incontext;
-  friend class fluxcorrectionmeiksin_test::correction_test;
+  friend class fluxcorrectionmeiksin_test::overall_test;
+  friend class fluxcorrectionmeiksin_test::convolveByLSF_test;
 
   TFloat64List
   ConvolveByLSFOneCurve(const TFloat64List &arr, const TFloat64List &lambdas,
