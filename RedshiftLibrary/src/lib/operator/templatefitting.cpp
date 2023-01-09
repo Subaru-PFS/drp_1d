@@ -129,6 +129,10 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     if (m_kStart == -1 || m_kEnd == -1)
       THROWG(INTERNAL_ERROR,
              Formatter() << "kStart=" << m_kStart << ", kEnd=" << m_kEnd);
+    if (opt_dustFitting || opt_extinction) {
+      InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
+                       tpl->m_igmCorrectionMeiksin, EbmvListSize, spcIndex);
+    }
   }
   CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
@@ -179,16 +183,13 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
       const CPriorHelper::SPriorTZE &logpriorTZE =
           apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
-      TFittingResult fitRes;
+      TCrossProductResult crossRes;
       for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
 
-        if (opt_dustFitting || opt_extinction) {
-          InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
-                           tpl->m_igmCorrectionMeiksin, EbmvListSize, spcIndex);
-        }
-
-        fitRes += ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
+        crossRes += ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
       }
+      TFittingResult fitRes;
+      fitRes.cross_result = crossRes;
       ComputeAmplitudeAndChi2(fitRes, logpriorTZE);
       Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
                                << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
@@ -248,10 +249,8 @@ TFittingResult COperatorTemplateFitting::ComputeLeastSquare(
 }
 */
 
-TFittingResult COperatorTemplateFitting::ComputeCrossProducts(Int32 kM,
-                                                              Int32 kEbmv_,
-                                                              Float64 redshift,
-                                                              Int32 spcIndex) {
+TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
+    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
   const CSpectrumFluxAxis &spcFluxAxis = m_spectra[spcIndex]->GetFluxAxis();
   const TAxisSampleList &Yspc = spcFluxAxis.GetSamplesVector();
   const TAxisSampleList &Ytpl =
@@ -262,7 +261,7 @@ TFittingResult COperatorTemplateFitting::ComputeCrossProducts(Int32 kM,
   const CMask &spcMaskAdditional =
       m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
                              *m_lambdaRanges[spcIndex], redshift);
-  TFittingResult fitResult;
+  TCrossProductResult fitResult;
 
   Float64 &sumCross = fitResult.sumCross;
   Float64 &sumT = fitResult.sumT;
@@ -347,9 +346,9 @@ TFittingResult COperatorTemplateFitting::ComputeCrossProducts(Int32 kM,
 void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
     TFittingResult &fitResult,
     const CPriorHelper::SPriorTZE &logpriorTZE) const {
-  const Float64 &sumCross = fitResult.sumCross;
-  const Float64 &sumT = fitResult.sumT;
-  const Float64 &sumS = fitResult.sumS;
+  const Float64 &sumCross = fitResult.cross_result.sumCross;
+  const Float64 &sumT = fitResult.cross_result.sumT;
+  const Float64 &sumS = fitResult.cross_result.sumS;
 
   Float64 &ampl = fitResult.ampl;
   Float64 &ampl_err = fitResult.ampl_err;

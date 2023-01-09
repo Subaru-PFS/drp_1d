@@ -91,10 +91,11 @@ private:
                                     Int32 spcIndex=0) override;
   */
   void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
-                                TFittingResult &fitResult);
+                                TCrossProductResult &fitResult);
 
-  TFittingResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_, Float64 redshift,
-                                      Int32 spcIndex = 0) override;
+  TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
+                                           Float64 redshift,
+                                           Int32 spcIndex = 0) override;
 
   void ComputeAmplitudeAndChi2(
       TFittingResult &fitres,

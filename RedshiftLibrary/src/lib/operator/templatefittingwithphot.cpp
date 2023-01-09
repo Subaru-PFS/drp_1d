@@ -221,25 +221,28 @@ TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
 }
 */
 
-TFittingResult COperatorTemplateFittingPhot::ComputeCrossProducts(
+TCrossProductResult COperatorTemplateFittingPhot::ComputeCrossProducts(
     Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
-  TFittingResult fitResult = COperatorTemplateFitting::ComputeCrossProducts(
-      kM, kEbmv_, redshift, spcIndex);
-  ComputePhotCrossProducts(kM, kEbmv_, fitResult);
-  return fitResult;
+  TCrossProductResult crossResult =
+      COperatorTemplateFitting::ComputeCrossProducts(kM, kEbmv_, redshift,
+                                                     spcIndex);
+  ComputePhotCrossProducts(kM, kEbmv_, crossResult);
+  return crossResult;
 }
 
 void COperatorTemplateFittingPhot::ComputeAmplitudeAndChi2(
-    TFittingResult &fitres, const CPriorHelper::SPriorTZE &logpriorTZ) const {
-  COperatorTemplateFitting::ComputeAmplitudeAndChi2(fitres, logpriorTZ);
+    TFittingResult &fitResult,
+    const CPriorHelper::SPriorTZE &logpriorTZ) const {
+  COperatorTemplateFitting::ComputeAmplitudeAndChi2(fitResult, logpriorTZ);
   // save photometric chi2 part
-  const Float64 &ampl = fitres.ampl;
-  //  fitResult.chiSquare_phot =
-  //    sumS_phot + sumT_phot * ampl * ampl - 2. * ampl * sumCross_phot;
+  const Float64 &ampl = fitResult.ampl;
+  fitResult.chiSquare_phot = fitResult.cross_result.sumS_phot +
+                             fitResult.cross_result.sumT_phot * ampl * ampl -
+                             2. * ampl * fitResult.cross_result.sumCross_phot;
 }
 
 void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
-    Int32 kM, Int32 kEbmv_, TFittingResult &fitResult) {
+    Int32 kM, Int32 kEbmv_, TCrossProductResult &fitResult) {
 
   Float64 sumCross_phot = 0.0;
   Float64 sumT_phot = 0.0;
@@ -268,9 +271,9 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
 
     if (m_option_igmFastProcessing && !sumsIgmSaved && it > IgmEnd) {
       // store intermediate sums for IGM range
-      sumCross_IGM = sumCross_phot;
-      sumT_IGM = sumT_phot;
-      sumS_IGM = sumS_phot;
+      sumCross_IGM = fitResult.sumCross_phot;
+      sumT_IGM = fitResult.sumT_phot;
+      sumS_IGM = fitResult.sumS_phot;
       sumsIgmSaved = true;
     }
 
@@ -294,9 +297,9 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
                                  << "found invalid inverse variance : err2="
                                  << oneOverErr2 << ", for band=" << bandName);
 
-    sumCross_phot += d * integ_flux * oneOverErr2;
-    sumT_phot += integ_flux * integ_flux * oneOverErr2;
-    sumS_phot += fluxOverErr2;
+    fitResult.sumCross_phot += d * integ_flux * oneOverErr2;
+    fitResult.sumT_phot += integ_flux * integ_flux * oneOverErr2;
+    fitResult.sumS_phot += fluxOverErr2;
   }
 
   if (m_option_igmFastProcessing) {
@@ -305,14 +308,14 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
       m_sumT_outsideIGM_phot[kEbmv_] = sumT_phot - sumT_IGM;
       m_sumS_outsideIGM_phot[kEbmv_] = sumS_phot - sumS_IGM;
     } else {
-      sumCross_phot += m_sumCross_outsideIGM_phot[kEbmv_];
-      sumT_phot += m_sumT_outsideIGM_phot[kEbmv_];
-      sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
+      fitResult.sumCross_phot += m_sumCross_outsideIGM_phot[kEbmv_];
+      fitResult.sumT_phot += m_sumT_outsideIGM_phot[kEbmv_];
+      fitResult.sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
     }
   }
-  fitResult.sumCross += sumCross_phot;
-  fitResult.sumT += sumT_phot;
-  fitResult.sumS += sumS_phot;
+  fitResult.sumCross += fitResult.sumCross_phot;
+  fitResult.sumT += fitResult.sumT_phot;
+  fitResult.sumS += fitResult.sumS_phot;
 }
 
 Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {

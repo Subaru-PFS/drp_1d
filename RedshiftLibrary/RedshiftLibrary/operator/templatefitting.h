@@ -58,6 +58,22 @@
 #include <numeric>
 
 namespace NSEpic {
+
+struct TCrossProductResult {
+  Float64 sumCross = 0.;
+  Float64 sumT = 0.;
+  Float64 sumS = 0.;
+  Float64 sumCross_phot = 0.0;
+  Float64 sumT_phot = 0.0;
+  Float64 sumS_phot = 0.0;
+
+  TCrossProductResult &operator+=(const TCrossProductResult &other) {
+    sumT += other.sumT;
+    sumS += other.sumS;
+    sumCross += other.sumCross;
+    return *this;
+  }
+};
 struct TFittingResult {
   Float64 chiSquare = INFINITY;
   Float64 chiSquare_phot =
@@ -65,17 +81,8 @@ struct TFittingResult {
   Float64 ampl = NAN;
   Float64 ampl_err = NAN;
   Float64 ampl_sigma = NAN;
-  Float64 sumCross = 0.;
-  Float64 sumT = 0.;
-  Float64 sumS = 0.;
   Float64 logprior = 0.;
-
-  TFittingResult &operator+=(const TFittingResult &other) {
-    sumT += other.sumT;
-    sumS += other.sumS;
-    sumCross += other.sumCross;
-    return *this;
-  }
+  TCrossProductResult cross_result;
 };
 
 struct TFittingIsmIgmResult : TFittingResult {
@@ -145,9 +152,9 @@ protected:
                      const CPriorHelper::SPriorTZE &logprior,
                      Int32 spcIndex=0);
   */
-  virtual TFittingResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
-                                              Float64 redshift,
-                                              Int32 spcIndex = 0);
+  virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
+                                                   Float64 redshift,
+                                                   Int32 spcIndex = 0);
 
   virtual void
   ComputeAmplitudeAndChi2(TFittingResult &fitres,
