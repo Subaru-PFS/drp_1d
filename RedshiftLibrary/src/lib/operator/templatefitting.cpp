@@ -112,12 +112,14 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     }
   }
 
+  std::vector<TFloat64Range> currentRanges(m_spectra.size()); // restframe
+  std::vector<Float64> overlapRates(m_spectra.size());
   for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-    TFloat64Range currentRange; // restframe
-    RebinTemplate(tpl, redshift, currentRange, result.overlapRate,
-                  overlapThreshold, spcIndex);
 
-    bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
+    RebinTemplate(tpl, redshift, currentRanges[spcIndex],
+                  overlapRates[spcIndex], overlapThreshold, spcIndex);
+
+    bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart, m_kEnd);
     if (!kStartEnd_ok)
@@ -126,79 +128,84 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     if (m_kStart == -1 || m_kEnd == -1)
       THROWG(INTERNAL_ERROR,
              Formatter() << "kStart=" << m_kStart << ", kEnd=" << m_kEnd);
+  }
+  CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
-    if (opt_dustFitting || opt_extinction) {
-      InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
-                       tpl->m_igmCorrectionMeiksin, EbmvListSize, spcIndex);
-    }
-
-    CPriorHelper::SPriorTZE logpriorTZEempty = {};
-
-    // Loop on the meiksin Idx
-    bool igmLoopUseless_WavelengthRange = false;
-    for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
-      if (igmLoopUseless_WavelengthRange) {
-        // Now copy from the already calculated k>0 igm values
-        for (Int32 kism = 0; kism < result.ChiSquareInterm.size(); kism++) {
-          for (Int32 kigm = 1; kigm < result.ChiSquareInterm[kism].size();
-               kigm++) {
-            result.ChiSquareInterm[kism][kigm] =
-                result.ChiSquareInterm[kism][0];
-            result.IsmCalzettiCoeffInterm[kism][kigm] =
-                result.IsmCalzettiCoeffInterm[kism][0];
-            result.IgmMeiksinIdxInterm[kism][kigm] =
-                result.IgmMeiksinIdxInterm[kism][0];
-          }
+  // Loop on the meiksin Idx
+  bool igmLoopUseless_WavelengthRange = false;
+  for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
+    if (igmLoopUseless_WavelengthRange) {
+      // Now copy from the already calculated k>0 igm values
+      for (Int32 kism = 0; kism < result.ChiSquareInterm.size(); kism++) {
+        for (Int32 kigm = 1; kigm < result.ChiSquareInterm[kism].size();
+             kigm++) {
+          result.ChiSquareInterm[kism][kigm] = result.ChiSquareInterm[kism][0];
+          result.IsmCalzettiCoeffInterm[kism][kigm] =
+              result.IsmCalzettiCoeffInterm[kism][0];
+          result.IgmMeiksinIdxInterm[kism][kigm] =
+              result.IgmMeiksinIdxInterm[kism][0];
         }
-        break;
       }
-      Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
-      // being the median extinction value)
+      break;
+    }
+    Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
+    // being the median extinction value)
 
-      bool igmCorrectionAppliedOnce = false;
-      // Meiksin IGM extinction
-      if (opt_extinction) {
+    bool igmCorrectionAppliedOnce = false;
+    // Meiksin IGM extinction
+    if (opt_extinction) {
+      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+
         // check if lya belongs to current range.
-        if (CheckLyaIsInCurrentRange(currentRange))
+        if (CheckLyaIsInCurrentRange(currentRanges[spcIndex]))
           igmCorrectionAppliedOnce = false;
         else
-          igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx);
+          igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx, spcIndex);
         if (!igmCorrectionAppliedOnce)
           igmLoopUseless_WavelengthRange = true;
       }
-      // Loop on the EBMV dust coeff
-      for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
-        Int32 kEbmv = EbmvList[kEbmv_];
-        Float64 coeffEBMV = -1.0; // no ism by default
+    }
+    // Loop on the EBMV dust coeff
+    for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
+      Int32 kEbmv = EbmvList[kEbmv_];
+      Float64 coeffEBMV = -1.0; // no ism by default
 
-        if (opt_dustFitting) {
-          coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
-          ApplyDustCoeff(kEbmv);
+      if (opt_dustFitting) {
+        coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
+        for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+          ApplyDustCoeff(kEbmv, spcIndex);
+      }
+
+      const CPriorHelper::SPriorTZE &logpriorTZE =
+          apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
+      TFittingResult fitRes;
+      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+
+        if (opt_dustFitting || opt_extinction) {
+          InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
+                           tpl->m_igmCorrectionMeiksin, EbmvListSize, spcIndex);
         }
 
-        const CPriorHelper::SPriorTZE &logpriorTZE =
-            apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
-        TFittingResult fitRes =
+        fitRes +=
             ComputeLeastSquare(kM, kEbmv_, logpriorTZE, spcMaskAdditional);
+      }
+      Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
+                               << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
+                               << " meiksinIdx=" << meiksinIdx);
 
-        Log.LogDebug(Formatter() << "BasicFit: z=" << redshift
-                                 << " fit=" << fitRes.chiSquare << " coeffEBMV="
-                                 << coeffEBMV << " meiksinIdx=" << meiksinIdx);
+      result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
+      result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
+      result.IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
 
-        result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
-        result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
-        result.IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
+      if (fitRes.chiSquare < result.chiSquare) {
+        TFittingResult &result_base = result; // upcasting (slicing)
+        result_base = fitRes;                 // slicing, preserving specific
+        // TFittingIsmIGmResult members
 
-        if (fitRes.chiSquare < result.chiSquare) {
-          TFittingResult &result_base = result; // upcasting (slicing)
-          result_base = fitRes;                 // slicing, preserving specific
-                                                // TFittingIsmIGmResult members
-
-          result.EbmvCoeff = coeffEBMV;
-          result.MeiksinIdx =
-              igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
-          status_chisquareSetAtLeastOnce = true;
-        }
+        result.EbmvCoeff = coeffEBMV;
+        result.MeiksinIdx =
+            igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
+        status_chisquareSetAtLeastOnce = true;
       }
     }
   }
@@ -447,11 +454,15 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   // default mask
   bool useDefaultMask =
       additional_spcMasks.size() != sortedRedshifts.size() ? true : false;
-  CMask default_spcMask(m_spectra[0]->GetSampleCount());
-  if (useDefaultMask)
-    for (Int32 km = 0; km < default_spcMask.GetMasksCount(); km++)
-      default_spcMask[km] = 1.0;
+  std::vector<CMask> default_spcMasks;
 
+  if (useDefaultMask) {
+    for (int i = 0; i < m_spectra.size(); i++) {
+      default_spcMasks.push_back(CMask(m_spectra[0]->GetSampleCount()));
+      for (Int32 km = 0; km < default_spcMasks.back().GetMasksCount(); km++)
+        default_spcMasks.back()[km] = 1.0;
+    }
+  }
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
     THROWG(INTERNAL_ERROR,
@@ -473,8 +484,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
     Float64 redshift = result->Redshifts[i];
 
-    const CMask &additional_spcMask =
-        useDefaultMask ? default_spcMask
+    std::vector<const CMask &> additional_spcMask =
+        useDefaultMask ? default_spcMasks
                        : additional_spcMasks[sortedIndexes[i]];
 
     TFittingIsmIgmResult result_z = BasicFit(

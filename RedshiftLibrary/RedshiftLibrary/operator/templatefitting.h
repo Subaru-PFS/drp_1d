@@ -69,6 +69,13 @@ struct TFittingResult {
   Float64 sumT = 0.;
   Float64 sumS = 0.;
   Float64 logprior = 0.;
+
+  TFittingResult &operator+=(const TFittingResult &other) {
+    sumT += other.sumT;
+    sumS += other.sumS;
+    sumCross += other.sumCross;
+    return *this;
+  }
 };
 
 struct TFittingIsmIgmResult : TFittingResult {
