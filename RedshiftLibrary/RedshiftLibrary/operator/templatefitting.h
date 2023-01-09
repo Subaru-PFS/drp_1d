@@ -104,19 +104,20 @@ public:
 
   std::shared_ptr<COperatorResult>
   Compute(const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-          const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-          bool opt_extinction = false, bool opt_dustFitting = false,
+          std::string opt_interp, bool opt_extinction = false,
+          bool opt_dustFitting = false,
           Float64 opt_continuum_null_amp_threshold = 0.,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
 
 protected:
-  TFittingIsmIgmResult
-  BasicFit(const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-           Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
-           CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
-           const TInt32List &MeiksinList, const TInt32List &EbmvList);
+  TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
+                                Float64 redshift, Float64 overlapThreshold,
+                                bool opt_extinction, bool opt_dustFitting,
+                                const CPriorHelper::TPriorEList &logpriore,
+                                const TInt32List &MeiksinList,
+                                const TInt32List &EbmvList);
 
   virtual void
   InitIsmIgmConfig(Float64 redshift,
@@ -139,17 +140,18 @@ protected:
     return m_templateRebined_bf[spcIndex].ApplyDustCoeff(kEbmv);
   };
 
-  virtual TFittingResult
+  /*  virtual TFittingResult
   ComputeLeastSquare(Int32 kM, Int32 kEbmv,
                      const CPriorHelper::SPriorTZE &logprior,
-                     const CMask &spcMaskAdditional);
+                     Int32 spcIndex=0);
+  */
+  virtual TFittingResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
+                                              Float64 redshift,
+                                              Int32 spcIndex = 0);
 
-  TFittingResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
-                                      const CMask &spcMaskAdditional,
-                                      Int32 spcIndex = 0);
-
-  void ComputeAmplitudeAndChi2(TFittingResult &fitres,
-                               const CPriorHelper::SPriorTZE &logpriorTZ) const;
+  virtual void
+  ComputeAmplitudeAndChi2(TFittingResult &fitres,
+                          const CPriorHelper::SPriorTZE &logpriorTZ) const;
 
   bool m_option_igmFastProcessing;
   Int32 m_kStart, m_kEnd;

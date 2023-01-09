@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
+#include "RedshiftLibrary/linemodel/outsideLineMaskBuilder.h"
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/templatesortho.h"
@@ -288,7 +289,7 @@ void COperatorLineModel::fitContinuumTemplates(
     auto templatefittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
             m_templateFittingOperator->Compute(
-                tplList[i], overlapThreshold, maskList, opt_interp,
+                tplList[i], overlapThreshold, opt_interp,
                 m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
                 m_opt_continuum_null_amp_threshold, zePriorData, ebmvIndices[i],
                 meiksinIndices[i]));
@@ -442,6 +443,9 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   }
   std::vector<CMask> maskList;
   if (ignoreLinesSupport) {
+    m_templateFittingOperator->setMaskBuilder(
+        std::make_shared<COutsideLineMaskBuilder>(
+            m_fittingManager->m_Elements));
     boost::chrono::thread_clock::time_point start_tplfitmaskprep =
         boost::chrono::thread_clock::now();
 

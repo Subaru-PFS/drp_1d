@@ -273,7 +273,7 @@ void CTemplateFittingSolve::Solve(
     // Compute merit function
     auto templateFittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
-            m_templateFittingOperator->Compute(tpl, overlapThreshold, maskList,
+            m_templateFittingOperator->Compute(tpl, overlapThreshold,
                                                opt_interp, opt_extinction,
                                                opt_dustFitting));
 

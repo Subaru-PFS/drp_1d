@@ -67,8 +67,7 @@ public:
 
   std::shared_ptr<COperatorResult>
   Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
-          Float64 overlapThreshold,
-          const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
+          Float64 overlapThreshold, std::string opt_interp,
           bool opt_extinction = false, bool opt_dustFitting = false,
           Float64 opt_continuum_null_amp_threshold = 0.,
           const CPriorHelper::TPriorZEList &logpriorze =

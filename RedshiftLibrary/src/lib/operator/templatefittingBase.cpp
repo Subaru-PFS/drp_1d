@@ -53,6 +53,7 @@ COperatorTemplateFittingBase::COperatorTemplateFittingBase(
   m_spcSpectralAxis_restframe =
       std::vector<CSpectrumSpectralAxis>(m_spectra.size());
   m_mskRebined_bf = std::vector<CMask>(m_spectra.size());
+  m_maskBuilder = std::make_shared<CMaskBuilder>();
 }
 
 /**

@@ -192,16 +192,12 @@ bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
     ret = ret || band.second.ApplyDustCoeff(kEbmv);
   return ret;
 }
-
+/*
 TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
     Int32 kM, Int32 kEbmv, const CPriorHelper::SPriorTZE &logpriorTZE,
-    const CMask &spcMaskAdditional) {
+    Int32 spcIndex) {
 
-  TFittingResult fitResult = ComputeCrossProducts(kM, kEbmv, spcMaskAdditional);
-
-  Float64 sumCross_phot = 0.0;
-  Float64 sumT_phot = 0.0;
-  Float64 sumS_phot = 0.0;
+  TFittingResult fitResult = ComputeCrossProducts(kM, kEbmv, spcIndex);
 
   ComputePhotCrossProducts(kM, kEbmv, fitResult, sumCross_phot, sumT_phot,
                            sumS_phot);
@@ -223,14 +219,31 @@ TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
 
   return fitResult;
 }
+*/
+
+TFittingResult COperatorTemplateFittingPhot::ComputeCrossProducts(
+    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
+  TFittingResult fitResult = COperatorTemplateFitting::ComputeCrossProducts(
+      kM, kEbmv_, redshift, spcIndex);
+  ComputePhotCrossProducts(kM, kEbmv_, fitResult);
+  return fitResult;
+}
+
+void COperatorTemplateFittingPhot::ComputeAmplitudeAndChi2(
+    TFittingResult &fitres, const CPriorHelper::SPriorTZE &logpriorTZ) const {
+  COperatorTemplateFitting::ComputeAmplitudeAndChi2(fitres, logpriorTZ);
+  // save photometric chi2 part
+  const Float64 &ampl = fitres.ampl;
+  //  fitResult.chiSquare_phot =
+  //    sumS_phot + sumT_phot * ampl * ampl - 2. * ampl * sumCross_phot;
+}
 
 void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
-    Int32 kM, Int32 kEbmv_, TFittingResult &fitResult, Float64 &sumCross_phot,
-    Float64 &sumT_phot, Float64 &sumS_phot) {
+    Int32 kM, Int32 kEbmv_, TFittingResult &fitResult) {
 
-  sumCross_phot = 0.0;
-  sumT_phot = 0.0;
-  sumS_phot = 0.0;
+  Float64 sumCross_phot = 0.0;
+  Float64 sumT_phot = 0.0;
+  Float64 sumS_phot = 0.0;
 
   Float64 sumCross_IGM = 0.0;
   Float64 sumT_IGM = 0.0;
@@ -297,6 +310,9 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
       sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
     }
   }
+  fitResult.sumCross += sumCross_phot;
+  fitResult.sumT += sumT_phot;
+  fitResult.sumS += sumS_phot;
 }
 
 Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {

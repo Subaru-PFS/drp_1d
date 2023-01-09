@@ -86,14 +86,19 @@ private:
   bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
   bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
 
-  TFittingResult ComputeLeastSquare(Int32 kM, Int32 kEbmv,
+  /*  TFittingResult ComputeLeastSquare(Int32 kM, Int32 kEbmv,
                                     const CPriorHelper::SPriorTZE &logprior,
-                                    const CMask &spcMaskAdditional) override;
-
+                                    Int32 spcIndex=0) override;
+  */
   void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
-                                TFittingResult &fitResult,
-                                Float64 &sumCross_phot, Float64 &sumT_phot,
-                                Float64 &sumS_phot);
+                                TFittingResult &fitResult);
+
+  TFittingResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_, Float64 redshift,
+                                      Int32 spcIndex = 0) override;
+
+  void ComputeAmplitudeAndChi2(
+      TFittingResult &fitres,
+      const CPriorHelper::SPriorTZE &logpriorTZ) const override;
 
   Float64 EstimateLikelihoodCstLog() const override;
 

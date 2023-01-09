@@ -1017,16 +1017,14 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
  *      - is the overlap always >100% in the given redshift range ?
  * 1. resample the input spectrum/tpl on a loglambda regular grid (always
  *resampling as of 2017-06-13, option todo: use the already log-sampled input
- *spectrum grid) 2. input: if additional_spcMasks size is 0, no additional mask
- *will be used, otherwise its size should match the redshifts list size
+ *spectrum grid)
  *
  * lambdaRange is not clamped
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     const std::shared_ptr<const CTemplate> &logSampledTpl,
-    Float64 overlapThreshold, const std::vector<CMask> &additional_spcMasks,
-    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
-    Float64 opt_continuum_null_amp_threshold,
+    Float64 overlapThreshold, std::string opt_interp, bool opt_extinction,
+    bool opt_dustFitting, Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
   Log.LogDetail("starting computation for template: %s",
@@ -1097,14 +1095,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
       std::make_shared<CTemplateFittingResult>(m_redshifts.size(), nISMCoeffs,
                                                nIGMCoeffs);
   result->Redshifts = m_redshifts;
-
-  // WARNING: no additional masks coded for use as of 2017-06-13
-  if (additional_spcMasks.size() != 0)
-    Flag.warning(WarningCode::TEMPLATEFITTINGLOG_NO_MASK,
-                 Formatter()
-                     << "COperatorTemplateFittingLog::" << __func__
-                     << "No additional masks used. "
-                        "Feature not coded for this log-lambda operator");
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {
     THROWG(INTERNAL_ERROR,
