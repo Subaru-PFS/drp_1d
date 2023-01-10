@@ -71,6 +71,9 @@ struct TCrossProductResult {
     sumT += other.sumT;
     sumS += other.sumS;
     sumCross += other.sumCross;
+    sumCross_phot += other.sumCross_phot;
+    sumT_phot += other.sumT_phot;
+    sumS_phot += other.sumS_phot;
     return *this;
   }
 };
