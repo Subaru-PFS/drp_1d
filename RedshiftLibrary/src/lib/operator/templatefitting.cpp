@@ -122,13 +122,13 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
     bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
-        m_kStart, m_kEnd);
+        m_kStart[spcIndex], m_kEnd[spcIndex]);
     if (!kStartEnd_ok)
       THROWG(INTERNAL_ERROR, "Impossible to "
                              "get valid kstart or kend");
-    if (m_kStart == -1 || m_kEnd == -1)
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "kStart=" << m_kStart << ", kEnd=" << m_kEnd);
+    if (m_kStart[spcIndex] == -1 || m_kEnd[spcIndex] == -1)
+      THROWG(INTERNAL_ERROR, Formatter() << "kStart=" << m_kStart[spcIndex]
+                                         << ", kEnd=" << m_kEnd[spcIndex]);
     if (opt_dustFitting || opt_extinction) {
       InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
                        tpl->m_igmCorrectionMeiksin, EbmvListSize, spcIndex);
@@ -229,7 +229,8 @@ void COperatorTemplateFitting::InitIsmIgmConfig(
         &igmCorrectionMeiksin,
     Int32 EbmvListSize, Int32 spcIndex) {
   m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-      m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+      m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
+      igmCorrectionMeiksin);
 
   m_sumCross_outsideIGM = TFloat64List(EbmvListSize, 0.0);
   m_sumT_outsideIGM = TFloat64List(EbmvListSize, 0.0);
@@ -280,8 +281,9 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   Int32 kIgmEnd = m_option_igmFastProcessing
                       ? m_templateRebined_bf[spcIndex].GetIgmEndIndex()
                       : -1;
-  Int32 kEndloop = m_option_igmFastProcessing && kM > 0 ? kIgmEnd : m_kEnd;
-  for (Int32 j = m_kStart; j <= kEndloop; j++) {
+  Int32 kEndloop =
+      m_option_igmFastProcessing && kM > 0 ? kIgmEnd : m_kEnd[spcIndex];
+  for (Int32 j = m_kStart[spcIndex]; j <= kEndloop; j++) {
     if (m_option_igmFastProcessing && sumsIgmSaved == 0 && j > kIgmEnd) {
       // store intermediate sums for IGM range
       sumCross_IGM = sumCross;

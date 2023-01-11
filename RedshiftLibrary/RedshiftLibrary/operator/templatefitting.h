@@ -109,7 +109,10 @@ class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
   COperatorTemplateFitting(const TFloat64List &redshifts = TFloat64List())
-      : COperatorTemplateFittingBase(redshifts){};
+      : COperatorTemplateFittingBase(redshifts), m_kStart(m_spectra.size()),
+        m_kEnd(m_spectra.size()){
+
+        };
   virtual ~COperatorTemplateFitting() = default;
 
   std::shared_ptr<COperatorResult>
@@ -164,7 +167,7 @@ protected:
                           const CPriorHelper::SPriorTZE &logpriorTZ) const;
 
   bool m_option_igmFastProcessing;
-  Int32 m_kStart, m_kEnd;
+  TInt32List m_kStart, m_kEnd;
 
   TFloat64List m_sumCross_outsideIGM;
   TFloat64List m_sumT_outsideIGM;
