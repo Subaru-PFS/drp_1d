@@ -85,7 +85,7 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
       numDevs++;
       sumLogNoise += log(error[j]);
     }
-    cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
   }
   return cstLog;
 }
