@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   ctx_logSampled->setTemplateCatalog(catalog);
   ctx_logSampled->setfluxCorrectionMeiksin(igmCorrectionMeiksin);
   ctx_logSampled->setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-  ctx_logSampled->GetSpectrum()->SetLSF(LSF);
+  ctx_logSampled->GetSpectrum(false)->SetLSF(LSF);
   ctx_logSampled->Init();
 
   Context.m_parameterStore = paramStore;

@@ -388,11 +388,11 @@ public:
   void Init();
   void setLineCatalog(const std::string& objectType, const std::string& method, const std::shared_ptr<CLineCatalog> &catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplRatio> &catalog); 
-  void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
-  void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}
-  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum){ m_Spectrum = spectrum;}
-  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
-  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
+  void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog);
+  void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog);
+  void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum);
+  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin);
+  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti);
   void reset();
 
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
@@ -527,6 +527,8 @@ class CSpectrum
 
   void  SetName( const char* name );
   const std::string GetName() const;
+
+  void setObsID(const std::string& obsID);
 
   const bool IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const;
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;

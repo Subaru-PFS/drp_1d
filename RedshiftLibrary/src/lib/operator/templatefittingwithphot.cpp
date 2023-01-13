@@ -44,19 +44,20 @@ using namespace NSEpic;
 using namespace std;
 
 COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
-    const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
     const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
     const Float64 weight, const TFloat64List &redshifts)
-    : COperatorTemplateFitting(spectrum, lambdaRange, redshifts),
-      m_photBandCat(photbandcat), m_weight(weight) {
+    : COperatorTemplateFitting(redshifts), m_photBandCat(photbandcat),
+      m_weight(weight) {
 
-  // check availabality and coherence of photometric bands & data
+  if (m_spectra.size() > 1)
+    THROWG(INTERNAL_ERROR, "Photometry not supported with multiobs");
+  // check availability and coherence of photometric bands & data
   checkInputPhotometry();
 
   // clamp spectral axis at lambdaRange
   Int32 kstart, kend;
-  bool b = m_lambdaRange.getClosedIntervalIndices(
-      m_spectrum.GetSpectralAxis().GetSamplesVector(), kstart, kend);
+  bool b = m_lambdaRanges[0]->getClosedIntervalIndices(
+      m_spectra[0]->GetSpectralAxis().GetSamplesVector(), kstart, kend);
   if (!b) {
     THROWG(INTERNAL_ERROR,
            "No intersecton between spectral axis and lambda range");
@@ -81,10 +82,10 @@ void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat->empty())
     THROWG(INTERNAL_ERROR, "Empty photometric band transmission");
 
-  if (m_spectrum.GetPhotData() == nullptr)
+  if (m_spectra[0]->GetPhotData() == nullptr)
     THROWG(INTERNAL_ERROR, "photometric data not available in spectrum");
 
-  const auto &dataNames = m_spectrum.GetPhotData()->GetNameList();
+  const auto &dataNames = m_spectra[0]->GetPhotData()->GetNameList();
   for (const auto &bandName : m_photBandCat->GetNameList())
     if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
         dataNames.cend())
@@ -97,10 +98,10 @@ void COperatorTemplateFittingPhot::checkInputPhotometry() const {
 void COperatorTemplateFittingPhot::RebinTemplate(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     TFloat64Range &currentRange, Float64 &overlapRate,
-    const Float64 overlapThreshold) {
+    const Float64 overlapThreshold, Int32 spcIndex) {
 
-  COperatorTemplateFittingBase::RebinTemplate(tpl, redshift, currentRange,
-                                              overlapRate, overlapThreshold);
+  COperatorTemplateFittingBase::RebinTemplate(
+      tpl, redshift, currentRange, overlapRate, overlapThreshold, spcIndex);
 
   RebinTemplateOnPhotBand(tpl, redshift);
 }
@@ -149,10 +150,11 @@ void COperatorTemplateFittingPhot::InitIsmIgmConfig(
         &ismCorrectionCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
-    Int32 EbmvListSize) {
+    Int32 EbmvListSize, Int32 spcIndex) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(
-      redshift, ismCorrectionCalzetti, igmCorrectionMeiksin, EbmvListSize);
+  COperatorTemplateFitting::InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
+                                             igmCorrectionMeiksin, EbmvListSize,
+                                             spcIndex);
 
   // init ism on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
@@ -174,8 +176,9 @@ bool COperatorTemplateFittingPhot::CheckLyaIsInCurrentRange(
   return ret;
 }
 
-bool COperatorTemplateFittingPhot::ApplyMeiksinCoeff(Int32 meiksinIdx) {
-  bool ret = COperatorTemplateFitting::ApplyMeiksinCoeff(meiksinIdx);
+bool COperatorTemplateFittingPhot::ApplyMeiksinCoeff(Int32 meiksinIdx,
+                                                     Int32 spcIndex) {
+  bool ret = COperatorTemplateFitting::ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   for (auto &band : m_templateRebined_phot)
     ret = ret || band.second.ApplyMeiksinCoeff(
                      meiksinIdx); // will return true if at list igm is applied
@@ -183,8 +186,8 @@ bool COperatorTemplateFittingPhot::ApplyMeiksinCoeff(Int32 meiksinIdx) {
   return ret;
 }
 
-bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv) {
-  bool ret = COperatorTemplateFitting::ApplyDustCoeff(kEbmv);
+bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
+  bool ret = COperatorTemplateFitting::ApplyDustCoeff(kEbmv, spcIndex);
   for (auto &band : m_templateRebined_phot)
     ret = ret || band.second.ApplyDustCoeff(kEbmv);
   return ret;
@@ -234,7 +237,7 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
   Float64 sumS_IGM = 0.0;
   bool sumsIgmSaved = false;
 
-  const auto &photData = m_spectrum.GetPhotData();
+  const auto &photData = m_spectra[0]->GetPhotData();
 
   // determine bands impacted by IGM
   const auto &Start = m_sortedBandNames.cbegin();
@@ -296,19 +299,17 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
   }
 }
 
-Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog(
-    const CSpectrum &spectrum, const TFloat64Range &lambdaRange) const {
+Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {
 
-  Float64 cstlog =
-      COperatorTemplateFitting::EstimateLikelihoodCstLog(spectrum, lambdaRange);
-
-  Float64 sumLogNoise = 0.0;
-  const auto &photData = m_spectrum.GetPhotData();
-  for (const auto &b : *m_photBandCat) {
-    const std::string &bandName = b.first;
-    sumLogNoise += log(photData->GetFluxErr(bandName) * m_weight);
+  Float64 cstlog = COperatorTemplateFitting::EstimateLikelihoodCstLog();
+  for (auto spectrum : m_spectra) {
+    Float64 sumLogNoise = 0.0;
+    const auto &photData = spectrum->GetPhotData();
+    for (const auto &b : *m_photBandCat) {
+      const std::string &bandName = b.first;
+      sumLogNoise += log(photData->GetFluxErr(bandName) * m_weight);
+    }
+    cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) - sumLogNoise;
   }
-  cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) - sumLogNoise;
-
   return cstlog;
 }

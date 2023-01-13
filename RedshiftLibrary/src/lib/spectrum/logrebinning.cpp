@@ -46,17 +46,16 @@ using namespace std;
 
 CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
     : m_inputContext(inputContext) {
-  m_logGridStep = m_inputContext.m_logGridStep;
+  m_logGridStep = m_inputContext.getLogGridStep();
   std::shared_ptr<CSpectrum> spc;
-  if (inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()) {
-    spc =
-        m_inputContext
-            .GetRebinnedSpectrum(); // retrieve the corrected rebinned spectrum
+  if (inputContext.GetSpectrum(false)->GetSpectralAxis().IsLogSampled()) {
+    spc = m_inputContext.GetSpectrum(
+        true); // retrieve the corrected rebinned spectrum
   } else {
-    spc = m_inputContext.GetSpectrum();
+    spc = m_inputContext.GetSpectrum(false);
   }
 
-  setupRebinning(*spc, *(m_inputContext.m_lambdaRange));
+  setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
 }
 
 /**

@@ -63,17 +63,8 @@ class CModelSpectrumResult;
 class COperatorTemplateFittingBase : public COperator {
 
 public:
-  COperatorTemplateFittingBase(const CSpectrum &spectrum,
-                               const TFloat64Range &lambdaRange,
-                               const TFloat64List &redshifts = TFloat64List());
-  COperatorTemplateFittingBase(const CSpectrum &&spectrum,
-                               const TFloat64Range &lambdaRange,
-                               const TFloat64List &redshifts) = delete;
+  COperatorTemplateFittingBase(const TFloat64List &redshifts = TFloat64List());
 
-  COperatorTemplateFittingBase(COperatorTemplateFittingBase const &other) =
-      delete; // ref member inside
-  COperatorTemplateFittingBase &
-  operator=(COperatorTemplateFittingBase const &other) = delete;
   virtual ~COperatorTemplateFittingBase() = default;
 
   virtual void SetRedshifts(TFloat64List redshifts) {
@@ -91,7 +82,8 @@ public:
   std::shared_ptr<CModelSpectrumResult>
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
-                       Float64 amplitude, const Float64 overlapThreshold);
+                       Float64 amplitude, const Float64 overlapThreshold,
+                       Int32 index = 0);
 
   inline virtual bool IsFFTProcessing() { return false; };
 
@@ -101,20 +93,24 @@ protected:
   virtual void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
                              Float64 redshift, TFloat64Range &currentRange,
                              Float64 &overlaprate,
-                             const Float64 overlapThreshold);
+                             const Float64 overlapThreshold,
+                             Int32 spcIndex = 0);
+
+  void RebinTemplateFAS(const std::shared_ptr<const CTemplate> &tpl,
+                        Float64 redshift, TFloat64Range &currentRange,
+                        Float64 &overlaprate, const Float64 overlapThreshold);
   // Likelihood
-  virtual Float64
-  EstimateLikelihoodCstLog(const CSpectrum &spectrum,
-                           const TFloat64Range &lambdaRange) const;
+  virtual Float64 EstimateLikelihoodCstLog() const;
   void applyPositiveAndNonNullConstraint(Float64 amp_sigma,
                                          Float64 &ampl) const;
-  const CSpectrum &m_spectrum;
-  TFloat64Range m_lambdaRange;
+
+  std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
   TFloat64List m_redshifts;
 
-  CTemplate m_templateRebined_bf;
-  CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
-  CMask m_mskRebined_bf;
+  std::vector<CTemplate> m_templateRebined_bf;
+  std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
+  std::vector<CMask> m_mskRebined_bf;
   Float64 m_continuum_null_amp_threshold; // in SNR
 };
 

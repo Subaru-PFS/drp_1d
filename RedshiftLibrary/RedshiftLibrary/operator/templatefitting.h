@@ -91,13 +91,8 @@ struct TFittingIsmIgmResult : TFittingResult {
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
-  COperatorTemplateFitting(const CSpectrum &spectrum,
-                           const TFloat64Range &lambdaRange,
-                           const TFloat64List &redshifts = TFloat64List())
-      : COperatorTemplateFittingBase(spectrum, lambdaRange, redshifts){};
-  COperatorTemplateFitting(const CSpectrum &&spectrum,
-                           const TFloat64Range &lambdaRange,
-                           const TFloat64List &redshifts) = delete;
+  COperatorTemplateFitting(const TFloat64List &redshifts = TFloat64List())
+      : COperatorTemplateFittingBase(redshifts){};
   virtual ~COperatorTemplateFitting() = default;
 
   std::shared_ptr<COperatorResult>
@@ -122,19 +117,19 @@ protected:
                        &ismCorrectionCalzetti,
                    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
                        &igmCorrectionMeiksin,
-                   Int32 EbmvListSize);
+                   Int32 EbmvListSize, Int32 spcIndex);
 
   virtual bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const {
     return currentRange.GetBegin() > RESTLAMBDA_LYA;
   };
 
-  virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx) {
-    return m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
+  virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);
   };
 
-  virtual bool ApplyDustCoeff(Int32 kEbmv) {
-    return m_templateRebined_bf.ApplyDustCoeff(kEbmv);
+  virtual bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyDustCoeff(kEbmv);
   };
 
   virtual TFittingResult
@@ -143,7 +138,8 @@ protected:
                      const CMask &spcMaskAdditional);
 
   TFittingResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
-                                      const CMask &spcMaskAdditional);
+                                      const CMask &spcMaskAdditional,
+                                      Int32 spcIndex = 0);
 
   void ComputeAmplitudeAndChi2(TFittingResult &fitres,
                                const CPriorHelper::SPriorTZE &logpriorTZ) const;

@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   izmax = 3;
   BOOST_CHECK_THROW(
       deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax),
-      InternalException);
+      GlobalException);
 }
 
 BOOST_AUTO_TEST_CASE(GetDeltaz_test) {

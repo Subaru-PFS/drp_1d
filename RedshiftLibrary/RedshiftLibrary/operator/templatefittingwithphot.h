@@ -57,7 +57,6 @@ class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
 
 public:
   explicit COperatorTemplateFittingPhot(
-      const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
       const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
       const Float64 weight = 1.0,
       const TFloat64List &redshifts = TFloat64List());
@@ -67,8 +66,8 @@ private:
 
   void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
                      Float64 redshift, TFloat64Range &currentRange,
-                     Float64 &overlaprate,
-                     const Float64 overlapThreshold) override;
+                     Float64 &overlaprate, const Float64 overlapThreshold,
+                     Int32 spcIndex = 0) override;
 
   void RebinTemplateOnPhotBand(const std::shared_ptr<const CTemplate> &tpl,
                                Float64 redshift);
@@ -79,13 +78,13 @@ private:
                        &ismCorrectionCalzetti,
                    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
                        &igmCorrectionMeiksin,
-                   Int32 EbmvListSize) override;
+                   Int32 EbmvListSize, Int32 spcIndex = 0) override;
 
   bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const override;
 
-  bool ApplyMeiksinCoeff(Int32 meiksinIdx) override;
-  bool ApplyDustCoeff(Int32 kEbmv) override;
+  bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
+  bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
 
   TFittingResult ComputeLeastSquare(Int32 kM, Int32 kEbmv,
                                     const CPriorHelper::SPriorTZE &logprior,
@@ -96,9 +95,7 @@ private:
                                 Float64 &sumCross_phot, Float64 &sumT_phot,
                                 Float64 &sumS_phot);
 
-  Float64
-  EstimateLikelihoodCstLog(const CSpectrum &spectrum,
-                           const TFloat64Range &lambdaRange) const override;
+  Float64 EstimateLikelihoodCstLog() const override;
 
   std::map<std::string, CSpectrumSpectralAxis> m_photSpectralAxis_restframe;
   std::map<std::string, CTemplate> m_templateRebined_phot;

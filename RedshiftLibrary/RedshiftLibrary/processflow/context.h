@@ -77,8 +77,8 @@ class CLineCatalogsTplRatio;
 class CProcessFlowContext : public CSingleton<CProcessFlowContext> {
 
 public:
-  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
-    m_inputContext->setSpectrum(spectrum);
+  void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
+    m_inputContext->addSpectrum(spectrum);
   }
   void
   setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog) {
@@ -114,11 +114,8 @@ public:
   std::shared_ptr<const CParameterStore>
   LoadParameterStore(const std::string &paramsJSONString);
 
-  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
-    return m_inputContext->GetRebinnedSpectrum();
-  }
-  std::shared_ptr<const CSpectrum> GetSpectrum() const {
-    return m_inputContext->GetSpectrum();
+  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false) const {
+    return m_inputContext->GetSpectrum(rebinned, 0);
   }
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_inputContext->GetTemplateCatalog();
@@ -139,16 +136,13 @@ public:
     return m_ResultStore;
   }
 
-  std::shared_ptr<const TFloat64Range> GetLambdaRange() const {
-    return m_inputContext->m_lambdaRange;
+  std::shared_ptr<const TFloat64Range> GetLambdaRange(int i = 0) const {
+    return m_inputContext->getLambdaRange(i);
   }
 
-  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange() const {
-    return m_inputContext->m_clampedLambdaRange;
-  }
-
-  std::shared_ptr<const TFloat64Range> GetRebinnedClampedLambdaRange() const {
-    return m_inputContext->m_rebinnedClampedLambdaRange;
+  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange(bool rebinned,
+                                                             int i = 0) const {
+    return m_inputContext->getClampedLambdaRange(rebinned, i);
   }
 
   const std::string &GetCurrentCategory() const {
@@ -167,6 +161,23 @@ public:
   const CLineCatalog::TLineVector getLineVector();
   std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
+
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
+  getClampedLambdaRanges() const {
+    return m_inputContext->getClampedLambdaRanges();
+  }
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
+  getRebinnedClampedLambdaRanges() const {
+    return m_inputContext->getRebinnedClampedLambdaRanges();
+  }
+  const std::vector<std::shared_ptr<const CSpectrum>> &getSpectra() const {
+    return m_inputContext->getSpectra();
+  }
+
+  const std::vector<std::shared_ptr<const CSpectrum>> &
+  getRebinnedSpectra() const {
+    return m_inputContext->getRebinnedSpectra();
+  }
 
   TScopeStack m_ScopeStack;
 
