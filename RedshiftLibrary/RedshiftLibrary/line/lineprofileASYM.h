@@ -84,6 +84,7 @@ public:
   std::unique_ptr<CLineProfile> cloneToASYMFIT() const;
 
 private:
+  friend class lineProfile_test::lineprofileASYM_test;
   virtual CLineProfile *CloneImplementation() const override {
     return new CLineProfileASYM(*this);
   }

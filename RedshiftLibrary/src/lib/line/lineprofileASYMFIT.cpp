@@ -49,8 +49,8 @@ CLineProfileASYMFIT::CLineProfileASYMFIT(Float64 nsigmasupport,
     : CLineProfileASYM(ASYMFIT, nsigmasupport, params, centeringMethod) {}
 
 CLineProfileASYMFIT::CLineProfileASYMFIT(const CLineProfileASYM &other)
-    : CLineProfileASYMFIT(other.GetNSigmaSupport(), other.GetAsymParams(),
-                          other.GetCenteringMethod()) {}
+    : CLineProfileASYMFIT(other.CLineProfile::GetNSigmaSupport(),
+                          other.GetAsymParams(), other.GetCenteringMethod()) {}
 
 std::unique_ptr<CLineProfile> CLineProfileASYMFIT::cloneToASYM() const {
   return std::unique_ptr<CLineProfile>(new CLineProfileASYM(*this));
