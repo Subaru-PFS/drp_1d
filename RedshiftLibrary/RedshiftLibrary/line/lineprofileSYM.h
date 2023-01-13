@@ -43,6 +43,11 @@
 #include "RedshiftLibrary/line/lineprofile.h"
 #include <cmath>
 #include <string>
+
+namespace lineProfile_test {
+class lineprofileSYM_test;
+} // namespace lineProfile_test
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -63,6 +68,7 @@ protected:
   CLineProfileSYM(const Float64 nsigmasupport, const TProfile pltype);
 
 private:
+  friend class lineProfile_test::lineprofileSYM_test;
   CLineProfile *CloneImplementation() const override {
     return new CLineProfileSYM(*this);
   }

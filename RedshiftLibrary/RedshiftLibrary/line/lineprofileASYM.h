@@ -43,6 +43,11 @@
 #include "RedshiftLibrary/line/lineprofile.h"
 #include <cmath>
 #include <string>
+
+namespace lineProfile_test {
+class lineprofileASYM_test;
+} // namespace lineProfile_test
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
