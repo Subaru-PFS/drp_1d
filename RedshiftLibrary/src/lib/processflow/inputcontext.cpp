@@ -198,14 +198,19 @@ void CInputContext::Init() {
     else
       lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(lambdaRange));
-    std::shared_ptr<TFloat64Range> clr =
-        std::make_shared<TFloat64Range>(TFloat64Range());
-    std::shared_ptr<TFloat64Range> rclr =
-        std::make_shared<TFloat64Range>(TFloat64Range());
-    m_clampedLambdaRanges.push_back(clr);
-    m_rebinnedClampedLambdaRanges.push_back(rclr);
-    m_constClampedLambdaRanges.push_back(clr);
-    m_constRebinnedClampedLambdaRanges.push_back(rclr);
+    m_clampedLambdaRanges.emplace_back(new TFloat64Range());
+    m_rebinnedClampedLambdaRanges.emplace_back(new TFloat64Range());
+    m_constClampedLambdaRanges.push_back(m_clampedLambdaRanges.back());
+    m_constRebinnedClampedLambdaRanges.push_back(
+        m_rebinnedClampedLambdaRanges.back());
+    // std::shared_ptr<TFloat64Range> clr =
+    //     std::make_shared<TFloat64Range>(TFloat64Range());
+    // std::shared_ptr<TFloat64Range> rclr =
+    //     std::make_shared<TFloat64Range>(TFloat64Range());
+    // m_clampedLambdaRanges.push_back(clr);
+    // m_rebinnedClampedLambdaRanges.push_back(rclr);
+    // m_constClampedLambdaRanges.push_back(clr);
+    // m_constRebinnedClampedLambdaRanges.push_back(rclr);
   }
   for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
                                  m_rebinnedClampedLambdaRanges.begin());
