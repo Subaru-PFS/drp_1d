@@ -78,7 +78,7 @@ private:
                        &ismCorrectionCalzetti,
                    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
                        &igmCorrectionMeiksin,
-                   Int32 EbmvListSize, Int32 spcIndex = 0) override;
+                   Int32 EbmvListSize) override;
 
   bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const override;
@@ -86,10 +86,6 @@ private:
   bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
   bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
 
-  /*  TFittingResult ComputeLeastSquare(Int32 kM, Int32 kEbmv,
-                                    const CPriorHelper::SPriorTZE &logprior,
-                                    Int32 spcIndex=0) override;
-  */
   void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
                                 TCrossProductResult &fitResult);
 

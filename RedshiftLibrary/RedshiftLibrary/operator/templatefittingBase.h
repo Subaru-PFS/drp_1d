@@ -88,7 +88,7 @@ public:
   inline virtual bool IsFFTProcessing() { return false; };
 
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
-  void setMaskBuilder(std::shared_ptr<CMaskBuilder> maskBuilder) {
+  void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
     m_maskBuilder = maskBuilder;
   }
 
@@ -99,9 +99,6 @@ protected:
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);
 
-  void RebinTemplateFAS(const std::shared_ptr<const CTemplate> &tpl,
-                        Float64 redshift, TFloat64Range &currentRange,
-                        Float64 &overlaprate, const Float64 overlapThreshold);
   // Likelihood
   virtual Float64 EstimateLikelihoodCstLog() const;
   void applyPositiveAndNonNullConstraint(Float64 amp_sigma,

@@ -146,7 +146,8 @@ CSpectrum::CSpectrum(CSpectrum &&other)
       m_spcType(other.m_spcType), m_LSF(std::move(other.m_LSF)),
       m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved),
       m_rebin(CRebin::create(other.m_rebin->getType(), *this)),
-      m_photData(std::move(other.m_photData)), m_obsId(other.m_obsId) {
+      m_photData(std::move(other.m_photData)),
+      m_obsId(std::move(other.m_obsId)) {
   if (!IsValid()) {
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -258,7 +259,7 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
   SetFluxAxis(std::move(fluxaxis));
 }
 
-void CSpectrum::InitSpectrum(CParameterStore &parameterStore) {
+void CSpectrum::InitSpectrumContinuum(CParameterStore &parameterStore) {
   if (!IsValid())
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "

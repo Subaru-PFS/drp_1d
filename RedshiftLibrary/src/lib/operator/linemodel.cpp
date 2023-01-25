@@ -77,14 +77,8 @@ using namespace std;
  * @return 0=no errors, -1=error
  */
 void COperatorLineModel::ComputeFirstPass() {
-  const CSpectrum &spectrum = *(Context.GetSpectrum());
-
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
-  const CLineCatalogsTplRatio &tplRatioCatalog =
-      *(Context.GetTplRatioCatalog());
-  const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
-      Context.GetPhotBandCatalog();
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_opt_continuumcomponent =
       ps->GetScoped<std::string>("linemodel.continuumcomponent");
@@ -769,14 +763,8 @@ void COperatorLineModel::Combine_firstpass_candidates(
 void COperatorLineModel::ComputeSecondPass(
     const std::shared_ptr<const LineModelExtremaResult> &firstpassResults) {
 
-  const CSpectrum &spectrum = *(Context.GetSpectrum());
-
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
-  const CLineCatalogsTplRatio &tplRatioCatalog =
-      *(Context.GetTplRatioCatalog());
-  const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
-      Context.GetPhotBandCatalog();
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   boost::chrono::thread_clock::time_point start_secondpass =
@@ -894,8 +882,7 @@ void COperatorLineModel::ComputeSecondPass(
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
   //  estimate second pass parameters (mainly elv, alv...)
-  EstimateSecondPassParameters(spectrum,
-                               *(Context.GetClampedLambdaRange(false)));
+  EstimateSecondPassParameters();
 
   // recompute the fine grid results around the extrema
   RecomputeAroundCandidates(
@@ -1198,8 +1185,7 @@ void COperatorLineModel::updateRedshiftGridAndResults() {
  *
  * @return
  */
-void COperatorLineModel::EstimateSecondPassParameters(
-    const CSpectrum &spectrum, const TFloat64Range &lambdaRange) {
+void COperatorLineModel::EstimateSecondPassParameters() {
   // setup velocity fitting
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();

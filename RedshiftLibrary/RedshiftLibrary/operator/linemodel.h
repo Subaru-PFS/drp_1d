@@ -142,8 +142,7 @@ private:
   std::shared_ptr<CTemplatesFitStore>
   PrecomputeContinuumFit(const TFloat64List &redshifts,
                          Int32 candidateIdx = -1);
-  void EstimateSecondPassParameters(const CSpectrum &spectrum,
-                                    const TFloat64Range &lambdaRange);
+  void EstimateSecondPassParameters();
 
   void RecomputeAroundCandidates(
       const std::string &opt_continuumreest, const Int32 tplfit_option,

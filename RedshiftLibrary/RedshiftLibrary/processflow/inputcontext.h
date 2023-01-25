@@ -60,20 +60,14 @@ public:
   CInputContext(std::shared_ptr<CParameterStore> paramStore);
 
   // const getters
-  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned, int i = 0) const {
-    if (rebinned)
-      return m_rebinnedSpectra[i];
-    else
-      return m_spectra[i];
+  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false,
+                                               int i = 0) const {
+    return const_cast<CInputContext *>(this)->GetSpectrum(rebinned, i);
+  }
+  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
+    return const_cast<CInputContext *>(this)->GetRebinnedSpectrum(i);
   }
 
-  /*
-  std::vector<const CSpectrum&> getSpectra() const {
-    std::vector<const CSpectrum&> res;
-    for (spectrum:m_spectra)res.push_back(*spectrum);
-    return res;
-  }
-  */
   const std::vector<std::shared_ptr<const CSpectrum>> &getSpectra() const {
     return m_constSpectra;
   }
@@ -99,11 +93,15 @@ public:
   }
 
   // mutable getters
-  const std::shared_ptr<CSpectrum> &GetSpectrum(bool rebinned, int i = 0) {
+  const std::shared_ptr<CSpectrum> &GetSpectrum(bool rebinned = false,
+                                                int i = 0) {
     if (rebinned)
       return m_rebinnedSpectra[i];
     else
       return m_spectra[i];
+  }
+  const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum(int i = 0) {
+    return m_rebinnedSpectra[i];
   }
   const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     return m_TemplateCatalog;

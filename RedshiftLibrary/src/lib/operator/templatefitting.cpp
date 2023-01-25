@@ -96,29 +96,13 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   Int32 iEbmvCoeffMin = EbmvList.front();
   Int32 iEbmvCoeffMax = EbmvList.back();
 
-  TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize);
+  TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize, m_spectra.size());
 
-  /*
-  for (auto spectrum : m_spectra) {
-    if (spcMaskAdditional.GetMasksCount() != spectrum->GetSampleCount()) {
-      Log.LogInfo(
-          "COperatorTemplateFitting::BasicFit: spcMaskAdditional does not have "
-          "the same size as the spectrum flux vector... (%d vs %d)",
-          spcMaskAdditional.GetMasksCount(),
-          spectrum->GetFluxAxis().GetSamplesCount());
-      result.status = nStatus_DataError;
-      return result; // should we diversify statuses and not return result here
-                     // (only return
-      // if all spectra have different size thant spcMaskAdditional ?)
-    }
-    }*/
-
-  std::vector<TFloat64Range> currentRanges(m_spectra.size()); // restframe
-  std::vector<Float64> overlapRates(m_spectra.size());
+  TFloat64RangeList currentRanges(m_spectra.size()); // restframe
   for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
 
     RebinTemplate(tpl, redshift, currentRanges[spcIndex],
-                  overlapRates[spcIndex], overlapThreshold, spcIndex);
+                  result.overlapRate[spcIndex], overlapThreshold, spcIndex);
 
     bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
@@ -129,11 +113,11 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     if (m_kStart[spcIndex] == -1 || m_kEnd[spcIndex] == -1)
       THROWG(INTERNAL_ERROR, Formatter() << "kStart=" << m_kStart[spcIndex]
                                          << ", kEnd=" << m_kEnd[spcIndex]);
-    if (opt_dustFitting || opt_extinction) {
-      InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
-                       tpl->m_igmCorrectionMeiksin, EbmvListSize, spcIndex);
-    }
   }
+  if (opt_dustFitting || opt_extinction)
+    InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
+                     tpl->m_igmCorrectionMeiksin, EbmvListSize);
+
   CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
   // Loop on the meiksin Idx
@@ -166,9 +150,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
           igmCorrectionAppliedOnce = false;
         else
           igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx, spcIndex);
-        if (!igmCorrectionAppliedOnce)
-          igmLoopUseless_WavelengthRange = true;
       }
+      if (!igmCorrectionAppliedOnce)
+        igmLoopUseless_WavelengthRange = true;
     }
     // Loop on the EBMV dust coeff
     for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
@@ -183,13 +167,11 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
       const CPriorHelper::SPriorTZE &logpriorTZE =
           apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
-      TCrossProductResult crossRes;
-      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-
-        crossRes += ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
-      }
       TFittingResult fitRes;
-      fitRes.cross_result = crossRes;
+      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+        fitRes.cross_result +=
+            ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
+      }
       ComputeAmplitudeAndChi2(fitRes, logpriorTZE);
       Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
                                << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
@@ -227,28 +209,18 @@ void COperatorTemplateFitting::InitIsmIgmConfig(
         &ismCorrectionCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
-    Int32 EbmvListSize, Int32 spcIndex) {
-  m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-      m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
-      igmCorrectionMeiksin);
+    Int32 EbmvListSize) {
 
-  m_sumCross_outsideIGM = TFloat64List(EbmvListSize, 0.0);
-  m_sumT_outsideIGM = TFloat64List(EbmvListSize, 0.0);
-  m_sumS_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
+        m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
+        igmCorrectionMeiksin);
+
+  m_sumCross_outsideIGM.assign(m_spectra.size(),
+                               TFloat64List(EbmvListSize, 0.0));
+  m_sumT_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
+  m_sumS_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
 }
-
-/*
-TFittingResult COperatorTemplateFitting::ComputeLeastSquare(
-    Int32 kM, Int32 kEbmv_, const CPriorHelper::SPriorTZE &logpriorTZE,
-    Int32 spcIndex) {
-  TFittingResult fitResult =
-      ComputeCrossProducts(kM, kEbmv_, spcIndex);
-
-  ComputeAmplitudeAndChi2(fitResult, logpriorTZE);
-
-  return fitResult;
-}
-*/
 
 TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
     Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
@@ -328,13 +300,13 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
 
   if (m_option_igmFastProcessing) {
     if (kM == 0) {
-      m_sumCross_outsideIGM[kEbmv_] = sumCross - sumCross_IGM;
-      m_sumT_outsideIGM[kEbmv_] = sumT - sumT_IGM;
-      m_sumS_outsideIGM[kEbmv_] = sumS - sumS_IGM;
+      m_sumCross_outsideIGM[spcIndex][kEbmv_] = sumCross - sumCross_IGM;
+      m_sumT_outsideIGM[spcIndex][kEbmv_] = sumT - sumT_IGM;
+      m_sumS_outsideIGM[spcIndex][kEbmv_] = sumS - sumS_IGM;
     } else {
-      sumCross += m_sumCross_outsideIGM[kEbmv_];
-      sumT += m_sumT_outsideIGM[kEbmv_];
-      sumS += m_sumS_outsideIGM[kEbmv_];
+      sumCross += m_sumCross_outsideIGM[spcIndex][kEbmv_];
+      sumT += m_sumT_outsideIGM[spcIndex][kEbmv_];
+      sumS += m_sumS_outsideIGM[spcIndex][kEbmv_];
     }
   }
 
@@ -488,14 +460,20 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidInfZ == -1) {
+    bool ok = true;
+    for (auto ov : result->Overlap[i])
+      ok &= (ov >= overlapThreshold);
+    if (ok) {
       overlapValidInfZ = sortedRedshifts[i];
       break;
     }
   }
   Float64 overlapValidSupZ = -1;
   for (Int32 i = sortedRedshifts.size() - 1; i >= 0; i--) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidSupZ == -1) {
+    bool ok = true;
+    for (auto ov : result->Overlap[i])
+      ok &= (ov >= overlapThreshold);
+    if (ok) {
       overlapValidSupZ = sortedRedshifts[i];
       break;
     }

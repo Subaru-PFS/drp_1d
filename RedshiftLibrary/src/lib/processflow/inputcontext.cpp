@@ -188,8 +188,8 @@ void CInputContext::Init() {
   m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
 
   bool enableInputSpcCorrect = m_ParameterStore->Get<bool>("autocorrectinput");
-  // non clamped lambdaRange: to be clamped depending on used spectra
 
+  // non clamped lambdaRange: to be clamped depending on used spectra
   for (auto spectrum : m_spectra) {
     TFloat64Range lambdaRange;
     if (m_spectra.size() > 1)
@@ -203,23 +203,16 @@ void CInputContext::Init() {
     m_constClampedLambdaRanges.push_back(m_clampedLambdaRanges.back());
     m_constRebinnedClampedLambdaRanges.push_back(
         m_rebinnedClampedLambdaRanges.back());
-    // std::shared_ptr<TFloat64Range> clr =
-    //     std::make_shared<TFloat64Range>(TFloat64Range());
-    // std::shared_ptr<TFloat64Range> rclr =
-    //     std::make_shared<TFloat64Range>(TFloat64Range());
-    // m_clampedLambdaRanges.push_back(clr);
-    // m_rebinnedClampedLambdaRanges.push_back(rclr);
-    // m_constClampedLambdaRanges.push_back(clr);
-    // m_constRebinnedClampedLambdaRanges.push_back(rclr);
   }
-  for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
-                                 m_rebinnedClampedLambdaRanges.begin());
+
+  // validate spectra and initialize spectra continuum removal
+  for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin());
        std::get<0>(it) != m_spectra.end();
-       ++std::get<0>(it), ++std::get<1>(it), ++std::get<2>(it)) {
+       ++std::get<0>(it), ++std::get<1>(it)) {
     auto spectrum = *std::get<0>(it);
     auto lambdaRange = *std::get<1>(it);
     spectrum->ValidateSpectrum(*(lambdaRange), enableInputSpcCorrect);
-    spectrum->InitSpectrum(*m_ParameterStore);
+    spectrum->InitSpectrumContinuum(*m_ParameterStore);
     // convolve IGM by LSF
 
     if (!m_igmcorrectionMeiksin->isConvolved() ||
@@ -235,6 +228,7 @@ void CInputContext::Init() {
   // log-lambda resampling if needed
   RebinInputs();
 
+  // validate log-lambda resampled spectra
   if (m_use_LogLambaSpectrum) {
     for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
                                    m_rebinnedSpectra.begin());
@@ -248,8 +242,11 @@ void CInputContext::Init() {
       rspectrum->SetLSF(spectrum->GetLSF());
     }
   }
+
+  // template orthogonalisation with linemodel
   OrthogonalizeTemplates();
 
+  // clamp spectral axis at lambdaRange
   for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
                                  m_clampedLambdaRanges.begin());
        std::get<0>(it) != m_spectra.end();
@@ -260,6 +257,13 @@ void CInputContext::Init() {
 
     spectrum->GetSpectralAxis().ClampLambdaRange(*(lambdaRange),
                                                  *(clampedLambdaRange));
+
+    Int32 kstart, kend;
+    bool b = clampedLambdaRange->getClosedIntervalIndices(
+        spectrum->GetSpectralAxis().GetSamplesVector(), kstart, kend);
+    if (!b)
+      THROWG(INTERNAL_ERROR,
+             "No intersecton between spectral axis and lambda range");
   }
 }
 

@@ -60,7 +60,7 @@ COperatorTemplateFittingLog::COperatorTemplateFittingLog(
     const TFloat64List &redshifts)
     : COperatorTemplateFittingBase(redshifts) {
 
-  CheckRedshifts(true);
+  CheckRedshifts();
 }
 
 void COperatorTemplateFittingLog::SetRedshifts(TFloat64List redshifts) {
@@ -68,75 +68,79 @@ void COperatorTemplateFittingLog::SetRedshifts(TFloat64List redshifts) {
   CheckRedshifts();
 }
 
-void COperatorTemplateFittingLog::CheckRedshifts(bool init) {
+void COperatorTemplateFittingLog::CheckRedshifts() {
   if (m_redshifts.size() < 2) {
     THROWG(INTERNAL_ERROR, Formatter() << "Invalid redshift array: "
                                        << m_redshifts.size() << " <2");
   }
 
-  if (!init) {
-    m_spectra.clear();
-    m_lambdaRanges.clear();
-  }
   // check if spectrum sampling is a multiple of redshift step
   m_logstep = log((m_redshifts[1] + 1) / (m_redshifts[0] + 1));
 
   Float64 modulo;
-  m_ssRatio =
-      Context.GetSpectrum(true)->GetSpectralAxis().GetLogSamplingIntegerRatio(
-          m_logstep, modulo);
 
-  if (m_ssRatio == 1) {
-    if (!init)
-      return;
-    else {
-      m_spectra = Context.getRebinnedSpectra();
-      m_lambdaRanges = Context.getRebinnedClampedLambdaRanges();
-    }
-  }
-
-  // else subsampling required, subsample each spectrum :
-  //  (coarse redshift grid)
-
-  for (auto it =
-           std::make_tuple(Context.getRebinnedSpectra().begin(),
-                           Context.getRebinnedClampedLambdaRanges().begin());
-       std::get<0>(it) != Context.getRebinnedSpectra().end();
-       ++std::get<0>(it), ++std::get<1>(it)) {
-
-    std::shared_ptr<const CSpectrum> logSampledSpectrumPtr = *(std::get<0>(it));
-    const CSpectrum &logSampledSpectrum = **(std::get<0>(it));
-    const TFloat64Range &logSampledLambdaRange = **(std::get<1>(it));
-
-    if (logSampledSpectrum.GetSpectralAxis().GetLogSamplingIntegerRatio(
+  m_ssRatio = Context.GetRebinnedSpectrum()
+                  ->GetSpectralAxis()
+                  .GetLogSamplingIntegerRatio(m_logstep, modulo);
+  if (std::abs(modulo) > 1E-12)
+    THROWG(INTERNAL_ERROR, "spc and tpl do not have a lambdastep "
+                           "multiple of redshift step");
+  for (auto it = Context.getRebinnedSpectra().cbegin() + 1,
+            end = Context.getRebinnedSpectra().cend();
+       it != end; ++it) {
+    if ((*it)->GetSpectralAxis().GetLogSamplingIntegerRatio(
             m_logstep, modulo) != m_ssRatio)
       THROWG(INTERNAL_ERROR, "spc multiobs do not share same lambda step");
     if (std::abs(modulo) > 1E-12)
       THROWG(INTERNAL_ERROR, "spc and tpl do not have a lambdastep "
                              "multiple of redshift step");
+  }
+
+  if (m_ssRatio == 1) {
+    m_spectra = Context.getRebinnedSpectra();
+    m_lambdaRanges = Context.getRebinnedClampedLambdaRanges();
+    return;
+  }
+
+  // else subsampling required, subsample each spectrum :
+  //  (coarse redshift grid)
+  m_spectra.clear();
+  m_lambdaRanges.clear();
+  m_spectra.reserve(Context.getSpectra().size());
+  m_lambdaRanges.reserve(Context.getSpectra().size());
+  for (auto it =
+           std::make_tuple(Context.getRebinnedSpectra().cbegin(),
+                           Context.getRebinnedClampedLambdaRanges().cbegin());
+       std::get<0>(it) != Context.getRebinnedSpectra().cend();
+       ++std::get<0>(it), ++std::get<1>(it)) {
+
+    const CSpectrum &logSampledSpectrum = **(std::get<0>(it));
+    const TFloat64Range &logSampledLambdaRange = **(std::get<1>(it));
 
     TFloat64List mask_spc =
         logSampledSpectrum.GetSpectralAxis().GetSubSamplingMask(
             m_ssRatio, logSampledLambdaRange);
-    CSpectrum ssSpectrum = CSpectrum(logSampledSpectrum, mask_spc);
+    std::shared_ptr<CSpectrum> ssSpectrum =
+        std::make_shared<CSpectrum>(logSampledSpectrum, mask_spc);
     // scale the variance by ssratio
-    CSpectrumNoiseAxis scaledNoise = ssSpectrum.GetErrorAxis();
+    CSpectrumNoiseAxis scaledNoise = ssSpectrum->GetErrorAxis();
     scaledNoise *= 1. / sqrt(m_ssRatio);
-    ssSpectrum.SetErrorAxis(std::move(scaledNoise));
+    ssSpectrum->SetErrorAxis(std::move(scaledNoise));
 
     // double make sure that subsampled spectrum is well sampled
-    if (!ssSpectrum.GetSpectralAxis().IsLogSampled(m_logstep)) {
+    if (!ssSpectrum->GetSpectralAxis().IsLogSampled(m_logstep)) {
       THROWG(INTERNAL_ERROR, "subsampled spectrum is not correctly log sampled "
                              "at the redshift step");
     }
 
-    TFloat64Range ssLambdaRange;
     // set the lambda range to the clamped subsampled spectrum
-    ssSpectrum.GetSpectralAxis().ClampLambdaRange(logSampledLambdaRange,
-                                                  ssLambdaRange);
+    std::shared_ptr<TFloat64Range> ssLambdaRange =
+        std::make_shared<TFloat64Range>();
+    ssSpectrum->GetSpectralAxis().ClampLambdaRange(logSampledLambdaRange,
+                                                   *ssLambdaRange);
 
-    m_spectra.push_back(std::make_shared<CSpectrum>(ssSpectrum));
-    m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(ssLambdaRange));
+    m_spectra.push_back(std::move(ssSpectrum));
+    m_lambdaRanges.push_back(std::move(ssLambdaRange));
   }
 }
 
@@ -409,8 +413,7 @@ void COperatorTemplateFittingLog::freeFFTPlans() {
 }
 
 TInt32RangeList
-COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts,
-                                         Int32 spcIndex = 0) {
+COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
   TInt32RangeList izrangelist;
   TInt32List zsplit;
   if (m_enableIGM) {
@@ -930,7 +933,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     }
   }
   for (Int32 k = 0; k < result->Redshifts.size(); k++) {
-    result->Overlap[k] = 1.0;
+    result->Overlap[k] = TFloat64List(1, 1.0);
     result->Status[k] = nStatus_OK;
   }
   result->ChiSquare = bestChi2;
@@ -1052,11 +1055,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     THROWG(INTERNAL_ERROR, "template is not log sampled");
   }
   // check if spc and tpl have same step
-  /*  const Float64 epsilon = 1E-8;
+  const Float64 epsilon = 1E-8;
   if (std::abs(m_spectra[0]->GetSpectralAxis().GetlogGridStep() -
-               logSampledTpl->GetSpectralAxis().GetlogGridStep()) > epsilon)
+               logSampledTpl->GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
+      epsilon)
     THROWG(INTERNAL_ERROR, "tpl and spc are not sampled with the same step");
-  */
+
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
   // subsample template if necessary
@@ -1115,14 +1119,14 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidInfZ == -1) {
+    if (result->Overlap[i].front() >= overlapThreshold) {
       overlapValidInfZ = m_redshifts[i];
       break;
     }
   }
   Float64 overlapValidSupZ = -1;
   for (Int32 i = m_redshifts.size() - 1; i >= 0; i--) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidSupZ == -1) {
+    if (result->Overlap[i].front() >= overlapThreshold) {
       overlapValidSupZ = m_redshifts[i];
       break;
     }
@@ -1137,8 +1141,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
 
   // estimate CstLog for PDF estimation
   result->CstLog = EstimateLikelihoodCstLog();
-  //      m_spectra[0], m_ssLambdaRange); // 0.0;//Todo: check how to estimate
-  // that value for loglambda//
 
   return result;
 }

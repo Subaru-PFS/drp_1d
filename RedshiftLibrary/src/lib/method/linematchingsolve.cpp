@@ -90,7 +90,7 @@ CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                             std::shared_ptr<COperatorResultStore> resultStore,
                             TScopeStack &scope) {
   return Compute(*(resultStore.get()), inputContext->GetParameterStore(),
-                 *(inputContext->GetSpectrum(false).get()), m_lambdaRange,
+                 *(inputContext->GetSpectrum().get()), m_lambdaRange,
                  m_redshifts,
                  *(inputContext->GetLineCatalog(m_objectType, m_name).get()));
 }

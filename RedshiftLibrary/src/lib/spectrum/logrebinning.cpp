@@ -48,11 +48,12 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
     : m_inputContext(inputContext) {
   m_logGridStep = m_inputContext.getLogGridStep();
   std::shared_ptr<CSpectrum> spc;
-  if (inputContext.GetSpectrum(false)->GetSpectralAxis().IsLogSampled()) {
-    spc = m_inputContext.GetSpectrum(
-        true); // retrieve the corrected rebinned spectrum
+  if (inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()) {
+    spc =
+        m_inputContext
+            .GetRebinnedSpectrum(); // retrieve the corrected rebinned spectrum
   } else {
-    spc = m_inputContext.GetSpectrum(false);
+    spc = m_inputContext.GetSpectrum();
   }
 
   setupRebinning(*spc, *(m_inputContext.getLambdaRange()));

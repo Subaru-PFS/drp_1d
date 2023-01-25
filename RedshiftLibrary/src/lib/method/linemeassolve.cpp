@@ -67,12 +67,6 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                         std::shared_ptr<COperatorResultStore> resultStore,
                         TScopeStack &scope) {
 
-  const CSpectrum &spc = *(inputContext->GetSpectrum(false));
-  const CLineCatalog &restlinecatalog =
-      *(inputContext->GetLineCatalog(m_objectType, m_name));
-  // We keep only emission lines, absorption lines are not handled yet (need to
-  // manage continuum appropriately)
-
   Float64 opt_nsigmasupport =
       inputContext->GetParameterStore()->GetScoped<Float64>(
           "linemodel.nsigmasupport"); // try with 16 (-> parameters.json)

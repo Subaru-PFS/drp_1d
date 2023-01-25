@@ -262,7 +262,6 @@ void CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange,
  */
 Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate(
     const TFloat64Range &lambdaRange, const CMask &omask) const {
-  TFloat64Range range = lambdaRange;
 
   Int32 selfRate = 0;
   Int32 otherRate = 0;
@@ -271,7 +270,8 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate(
   // weight = Spectrum over lambdarange flag
   for (Int32 i = 0; i < nSamples; i++) {
     // If this sample is somewhere in a valid lambdaRande, tag weight with 1
-    if (m_Samples[i] >= range.GetBegin() && m_Samples[i] <= range.GetEnd()) {
+    if (m_Samples[i] >= lambdaRange.GetBegin() &&
+        m_Samples[i] <= lambdaRange.GetEnd()) {
       if (omask[i]) {
         otherRate++;
       }

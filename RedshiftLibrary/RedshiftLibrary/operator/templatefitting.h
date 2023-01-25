@@ -89,14 +89,16 @@ struct TFittingResult {
 };
 
 struct TFittingIsmIgmResult : TFittingResult {
-  TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize)
-      : ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
+  TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize,
+                       Int32 spcsize = 1)
+      : overlapRate(spcsize, NAN),
+        ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
         IsmCalzettiCoeffInterm(EbmvListSize,
                                TFloat64List(MeiksinListSize, NAN)),
         IgmMeiksinIdxInterm(EbmvListSize,
                             TInt32List(MeiksinListSize, undefIdx)) {}
 
-  Float64 overlapRate = NAN;
+  TFloat64List overlapRate;
   Float64 EbmvCoeff = NAN;
   Int32 MeiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
@@ -138,7 +140,7 @@ protected:
                        &ismCorrectionCalzetti,
                    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
                        &igmCorrectionMeiksin,
-                   Int32 EbmvListSize, Int32 spcIndex);
+                   Int32 EbmvListSize);
 
   virtual bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const {
@@ -153,11 +155,6 @@ protected:
     return m_templateRebined_bf[spcIndex].ApplyDustCoeff(kEbmv);
   };
 
-  /*  virtual TFittingResult
-  ComputeLeastSquare(Int32 kM, Int32 kEbmv,
-                     const CPriorHelper::SPriorTZE &logprior,
-                     Int32 spcIndex=0);
-  */
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                                                    Float64 redshift,
                                                    Int32 spcIndex = 0);
@@ -169,9 +166,9 @@ protected:
   bool m_option_igmFastProcessing;
   TInt32List m_kStart, m_kEnd;
 
-  TFloat64List m_sumCross_outsideIGM;
-  TFloat64List m_sumT_outsideIGM;
-  TFloat64List m_sumS_outsideIGM;
+  std::vector<TFloat64List> m_sumCross_outsideIGM;
+  std::vector<TFloat64List> m_sumT_outsideIGM;
+  std::vector<TFloat64List> m_sumS_outsideIGM;
 };
 
 } // namespace NSEpic

@@ -63,7 +63,7 @@ public:
   ~COperatorTemplateFittingLog();
 
   void SetRedshifts(TFloat64List redshifts) override;
-  void CheckRedshifts(bool init = false);
+  void CheckRedshifts();
 
   std::shared_ptr<COperatorResult>
   Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
@@ -83,13 +83,6 @@ public:
                                    const TFloat64Range &redshiftrange) const;
 
 private:
-  // log grid data
-  /*  CSpectrum m_logSampledSpectrum;
-  TFloat64Range m_logSampledLambdaRange;
-  CSpectrum m_ssSpectrum;
-  TFloat64Range m_ssLambdaRange;
-  */
-
   Float64 m_logstep;
   Int32 m_ssRatio;
 
@@ -108,7 +101,7 @@ private:
                   const TInt32List &MeiksinList, const TInt32List &EbmvList,
                   const Float64 &dtd);
 
-  TInt32RangeList FindZRanges(const TFloat64List &redshifts, Int32 spcIndex);
+  TInt32RangeList FindZRanges(const TFloat64List &redshifts);
 
   void EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
                    TFloat64List &XtY, Int32 precomputedFFT = -1);

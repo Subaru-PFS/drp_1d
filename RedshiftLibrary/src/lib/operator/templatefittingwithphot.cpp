@@ -54,15 +54,6 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
   // check availability and coherence of photometric bands & data
   checkInputPhotometry();
 
-  // clamp spectral axis at lambdaRange
-  Int32 kstart, kend;
-  bool b = m_lambdaRanges[0]->getClosedIntervalIndices(
-      m_spectra[0]->GetSpectralAxis().GetSamplesVector(), kstart, kend);
-  if (!b) {
-    THROWG(INTERNAL_ERROR,
-           "No intersecton between spectral axis and lambda range");
-  }
-
   // initialize restframe photometric axis and rebined photmetric template
   for (auto const &band : *m_photBandCat) {
     const string &bandName = band.first;
@@ -150,11 +141,10 @@ void COperatorTemplateFittingPhot::InitIsmIgmConfig(
         &ismCorrectionCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
-    Int32 EbmvListSize, Int32 spcIndex) {
+    Int32 EbmvListSize) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
-                                             igmCorrectionMeiksin, EbmvListSize,
-                                             spcIndex);
+  COperatorTemplateFitting::InitIsmIgmConfig(
+      redshift, ismCorrectionCalzetti, igmCorrectionMeiksin, EbmvListSize);
 
   // init ism on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
@@ -192,41 +182,15 @@ bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
     ret = ret || band.second.ApplyDustCoeff(kEbmv);
   return ret;
 }
-/*
-TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
-    Int32 kM, Int32 kEbmv, const CPriorHelper::SPriorTZE &logpriorTZE,
-    Int32 spcIndex) {
-
-  TFittingResult fitResult = ComputeCrossProducts(kM, kEbmv, spcIndex);
-
-  ComputePhotCrossProducts(kM, kEbmv, fitResult, sumCross_phot, sumT_phot,
-                           sumS_phot);
-
-  Float64 &sumCross = fitResult.sumCross;
-  Float64 &sumT = fitResult.sumT;
-  Float64 &sumS = fitResult.sumS;
-
-  sumCross += sumCross_phot;
-  sumT += sumT_phot;
-  sumS += sumS_phot;
-
-  ComputeAmplitudeAndChi2(fitResult, logpriorTZE);
-
-  // save photometric chi2 part
-  const Float64 &ampl = fitResult.ampl;
-  fitResult.chiSquare_phot =
-      sumS_phot + sumT_phot * ampl * ampl - 2. * ampl * sumCross_phot;
-
-  return fitResult;
-}
-*/
 
 TCrossProductResult COperatorTemplateFittingPhot::ComputeCrossProducts(
     Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
   TCrossProductResult crossResult =
       COperatorTemplateFitting::ComputeCrossProducts(kM, kEbmv_, redshift,
                                                      spcIndex);
-  ComputePhotCrossProducts(kM, kEbmv_, crossResult);
+  if (spcIndex == 0)
+    ComputePhotCrossProducts(kM, kEbmv_, crossResult);
+
   return crossResult;
 }
 
@@ -321,14 +285,14 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
 Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {
 
   Float64 cstlog = COperatorTemplateFitting::EstimateLikelihoodCstLog();
-  for (auto spectrum : m_spectra) {
-    Float64 sumLogNoise = 0.0;
-    const auto &photData = spectrum->GetPhotData();
-    for (const auto &b : *m_photBandCat) {
-      const std::string &bandName = b.first;
-      sumLogNoise += log(photData->GetFluxErr(bandName) * m_weight);
-    }
-    cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) - sumLogNoise;
+  auto spectrum = m_spectra[0];
+  Float64 sumLogNoise = 0.0;
+  const auto &photData = spectrum->GetPhotData();
+  for (const auto &b : *m_photBandCat) {
+    const std::string &bandName = b.first;
+    sumLogNoise += log(photData->GetFluxErr(bandName) * m_weight);
   }
+  cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) - sumLogNoise;
+
   return cstlog;
 }
