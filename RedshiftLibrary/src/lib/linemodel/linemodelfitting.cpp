@@ -1376,11 +1376,13 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
   Float64 cstLog = 0.0;
   Float64 sumLogNoise = 0.0;
 
-  Float64 imin =
-      spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
-  Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
-  Int32 numDevs = std::abs(imax - imin);
-  for (Int32 j = imin; j < imax; j++)
+  Int32 imin;
+  Int32 imax;
+  m_lambdaRange->getClosedIntervalIndices(spcSpectralAxis.GetSamplesVector(),
+                                          imin, imax);
+
+  Int32 numDevs = std::abs(imax - imin + 1);
+  for (Int32 j = imin; j <= imax; j++)
     sumLogNoise += log(ErrorNoContinuum[j]);
 
   // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );

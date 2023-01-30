@@ -76,9 +76,11 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
 
     Float64 sumLogNoise = 0.0;
 
-    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for (Int32 j = imin; j < imax; j++) {
+    Int32 imin;
+    Int32 imax;
+    lambdaRange.getClosedIntervalIndices(spcSpectralAxis.GetSamplesVector(),
+                                         imin, imax);
+    for (Int32 j = imin; j <= imax; j++) {
       numDevs++;
       sumLogNoise += log(error[j]);
     }
