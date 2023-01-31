@@ -115,7 +115,10 @@ public:
   LoadParameterStore(const std::string &paramsJSONString);
 
   std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false) const {
-    return m_inputContext->GetSpectrum(rebinned, 0);
+    return m_inputContext->GetSpectrum(rebinned);
+  }
+  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
+    return m_inputContext->GetRebinnedSpectrum();
   }
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_inputContext->GetTemplateCatalog();

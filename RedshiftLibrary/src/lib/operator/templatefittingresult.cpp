@@ -73,8 +73,8 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
   FitAmplitudeSigma[i] = val.ampl_sigma;
   FitEbmvCoeff[i] = val.EbmvCoeff;
   FitMeiksinIdx[i] = val.MeiksinIdx;
-  FitDtM[i] = val.sumCross;
-  FitMtM[i] = val.sumT;
+  FitDtM[i] = val.cross_result.sumCross;
+  FitMtM[i] = val.cross_result.sumT;
   LogPrior[i] = val.logprior;
   Overlap[i] = val.overlapRate;
   Status[i] = val.status;

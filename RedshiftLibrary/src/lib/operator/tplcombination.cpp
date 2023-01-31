@@ -116,7 +116,7 @@ void COperatorTplcombination::BasicFit(
 
   TFloat64Range currentRange;
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
-                fittingResults.overlapRate, overlapThreshold);
+                fittingResults.overlapRate.front(), overlapThreshold);
 
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
   // I consider here that all templates share the same spectralAxis
@@ -637,14 +637,14 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidInfZ == -1) {
+    if (result->Overlap[i].front() >= overlapThreshold) {
       overlapValidInfZ = sortedRedshifts[i];
       break;
     }
   }
   Float64 overlapValidSupZ = -1;
   for (Int32 i = sortedRedshifts.size() - 1; i >= 0; i--) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidSupZ == -1) {
+    if (result->Overlap[i].front() >= overlapThreshold) {
       overlapValidSupZ = sortedRedshifts[i];
       break;
     }

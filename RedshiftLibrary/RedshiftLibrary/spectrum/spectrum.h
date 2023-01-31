@@ -90,7 +90,7 @@ public:
   CSpectrum &operator=(const CSpectrum &other);
   CSpectrum &operator=(CSpectrum &&other);
 
-  void InitSpectrum(CParameterStore &parameterStore);
+  void InitSpectrumContinuum(CParameterStore &parameterStore);
   void SetName(const std::string name);
   virtual void SetType(const EType type) const;
   virtual void SetType(const EType type) {

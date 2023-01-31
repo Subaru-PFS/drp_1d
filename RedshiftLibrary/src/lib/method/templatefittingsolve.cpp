@@ -62,7 +62,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     std::shared_ptr<const CInputContext> inputContext,
     std::shared_ptr<COperatorResultStore> resultStore, TScopeStack &scope) {
 
-  const CSpectrum &spc = *(inputContext->GetSpectrum(false));
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
@@ -273,7 +272,7 @@ void CTemplateFittingSolve::Solve(
     // Compute merit function
     auto templateFittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
-            m_templateFittingOperator->Compute(tpl, overlapThreshold, maskList,
+            m_templateFittingOperator->Compute(tpl, overlapThreshold,
                                                opt_interp, opt_extinction,
                                                opt_dustFitting));
 

@@ -79,8 +79,8 @@ using namespace std;
 TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
-    CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
-    const TInt32List &MeiksinList, const TInt32List &EbmvList) {
+    const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
+    const TInt32List &EbmvList) {
   bool amplForcePositive = true;
   bool status_chisquareSetAtLeastOnce = false;
 
@@ -96,109 +96,100 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   Int32 iEbmvCoeffMin = EbmvList.front();
   Int32 iEbmvCoeffMax = EbmvList.back();
 
-  TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize);
+  TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize, m_spectra.size());
 
-  for (auto spectrum : m_spectra) {
-    if (spcMaskAdditional.GetMasksCount() != spectrum->GetSampleCount()) {
-      Log.LogInfo(
-          "COperatorTemplateFitting::BasicFit: spcMaskAdditional does not have "
-          "the same size as the spectrum flux vector... (%d vs %d)",
-          spcMaskAdditional.GetMasksCount(),
-          spectrum->GetFluxAxis().GetSamplesCount());
-      result.status = nStatus_DataError;
-      return result; // should we diversify statuses and not return result here
-                     // (only return
-      // if all spectra have different size thant spcMaskAdditional ?)
-    }
-  }
-
+  TFloat64RangeList currentRanges(m_spectra.size()); // restframe
   for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-    TFloat64Range currentRange; // restframe
-    RebinTemplate(tpl, redshift, currentRange, result.overlapRate,
-                  overlapThreshold, spcIndex);
 
-    bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
+    RebinTemplate(tpl, redshift, currentRanges[spcIndex],
+                  result.overlapRate[spcIndex], overlapThreshold, spcIndex);
+
+    bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
-        m_kStart, m_kEnd);
+        m_kStart[spcIndex], m_kEnd[spcIndex]);
     if (!kStartEnd_ok)
       THROWG(INTERNAL_ERROR, "Impossible to "
                              "get valid kstart or kend");
-    if (m_kStart == -1 || m_kEnd == -1)
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "kStart=" << m_kStart << ", kEnd=" << m_kEnd);
+    if (m_kStart[spcIndex] == -1 || m_kEnd[spcIndex] == -1)
+      THROWG(INTERNAL_ERROR, Formatter() << "kStart=" << m_kStart[spcIndex]
+                                         << ", kEnd=" << m_kEnd[spcIndex]);
+  }
+  if (opt_dustFitting || opt_extinction)
+    InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
+                     tpl->m_igmCorrectionMeiksin, EbmvListSize);
 
-    if (opt_dustFitting || opt_extinction) {
-      InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
-                       tpl->m_igmCorrectionMeiksin, EbmvListSize, spcIndex);
-    }
+  CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
-    CPriorHelper::SPriorTZE logpriorTZEempty = {};
-
-    // Loop on the meiksin Idx
-    bool igmLoopUseless_WavelengthRange = false;
-    for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
-      if (igmLoopUseless_WavelengthRange) {
-        // Now copy from the already calculated k>0 igm values
-        for (Int32 kism = 0; kism < result.ChiSquareInterm.size(); kism++) {
-          for (Int32 kigm = 1; kigm < result.ChiSquareInterm[kism].size();
-               kigm++) {
-            result.ChiSquareInterm[kism][kigm] =
-                result.ChiSquareInterm[kism][0];
-            result.IsmCalzettiCoeffInterm[kism][kigm] =
-                result.IsmCalzettiCoeffInterm[kism][0];
-            result.IgmMeiksinIdxInterm[kism][kigm] =
-                result.IgmMeiksinIdxInterm[kism][0];
-          }
+  // Loop on the meiksin Idx
+  bool igmLoopUseless_WavelengthRange = false;
+  for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
+    if (igmLoopUseless_WavelengthRange) {
+      // Now copy from the already calculated k>0 igm values
+      for (Int32 kism = 0; kism < result.ChiSquareInterm.size(); kism++) {
+        for (Int32 kigm = 1; kigm < result.ChiSquareInterm[kism].size();
+             kigm++) {
+          result.ChiSquareInterm[kism][kigm] = result.ChiSquareInterm[kism][0];
+          result.IsmCalzettiCoeffInterm[kism][kigm] =
+              result.IsmCalzettiCoeffInterm[kism][0];
+          result.IgmMeiksinIdxInterm[kism][kigm] =
+              result.IgmMeiksinIdxInterm[kism][0];
         }
-        break;
       }
-      Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
-      // being the median extinction value)
+      break;
+    }
+    Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
+    // being the median extinction value)
 
-      bool igmCorrectionAppliedOnce = false;
-      // Meiksin IGM extinction
-      if (opt_extinction) {
+    bool igmCorrectionAppliedOnce = false;
+    // Meiksin IGM extinction
+    if (opt_extinction) {
+      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+
         // check if lya belongs to current range.
-        if (CheckLyaIsInCurrentRange(currentRange))
+        if (CheckLyaIsInCurrentRange(currentRanges[spcIndex]))
           igmCorrectionAppliedOnce = false;
         else
-          igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx);
-        if (!igmCorrectionAppliedOnce)
-          igmLoopUseless_WavelengthRange = true;
+          igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx, spcIndex);
       }
-      // Loop on the EBMV dust coeff
-      for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
-        Int32 kEbmv = EbmvList[kEbmv_];
-        Float64 coeffEBMV = -1.0; // no ism by default
+      if (!igmCorrectionAppliedOnce)
+        igmLoopUseless_WavelengthRange = true;
+    }
+    // Loop on the EBMV dust coeff
+    for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
+      Int32 kEbmv = EbmvList[kEbmv_];
+      Float64 coeffEBMV = -1.0; // no ism by default
 
-        if (opt_dustFitting) {
-          coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
-          ApplyDustCoeff(kEbmv);
-        }
+      if (opt_dustFitting) {
+        coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
+        for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+          ApplyDustCoeff(kEbmv, spcIndex);
+      }
 
-        const CPriorHelper::SPriorTZE &logpriorTZE =
-            apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
-        TFittingResult fitRes =
-            ComputeLeastSquare(kM, kEbmv_, logpriorTZE, spcMaskAdditional);
+      const CPriorHelper::SPriorTZE &logpriorTZE =
+          apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
+      TFittingResult fitRes;
+      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+        fitRes.cross_result +=
+            ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
+      }
+      ComputeAmplitudeAndChi2(fitRes, logpriorTZE);
+      Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
+                               << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
+                               << " meiksinIdx=" << meiksinIdx);
 
-        Log.LogDebug(Formatter() << "BasicFit: z=" << redshift
-                                 << " fit=" << fitRes.chiSquare << " coeffEBMV="
-                                 << coeffEBMV << " meiksinIdx=" << meiksinIdx);
+      result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
+      result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
+      result.IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
 
-        result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
-        result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
-        result.IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
+      if (fitRes.chiSquare < result.chiSquare) {
+        TFittingResult &result_base = result; // upcasting (slicing)
+        result_base = fitRes;                 // slicing, preserving specific
+        // TFittingIsmIGmResult members
 
-        if (fitRes.chiSquare < result.chiSquare) {
-          TFittingResult &result_base = result; // upcasting (slicing)
-          result_base = fitRes;                 // slicing, preserving specific
-                                                // TFittingIsmIGmResult members
-
-          result.EbmvCoeff = coeffEBMV;
-          result.MeiksinIdx =
-              igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
-          status_chisquareSetAtLeastOnce = true;
-        }
+        result.EbmvCoeff = coeffEBMV;
+        result.MeiksinIdx =
+            igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
+        status_chisquareSetAtLeastOnce = true;
       }
     }
   }
@@ -218,28 +209,21 @@ void COperatorTemplateFitting::InitIsmIgmConfig(
         &ismCorrectionCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
-    Int32 EbmvListSize, Int32 spcIndex) {
-  m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-      m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+    Int32 EbmvListSize) {
 
-  m_sumCross_outsideIGM = TFloat64List(EbmvListSize, 0.0);
-  m_sumT_outsideIGM = TFloat64List(EbmvListSize, 0.0);
-  m_sumS_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
+        m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
+        igmCorrectionMeiksin);
+
+  m_sumCross_outsideIGM.assign(m_spectra.size(),
+                               TFloat64List(EbmvListSize, 0.0));
+  m_sumT_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
+  m_sumS_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
 }
 
-TFittingResult COperatorTemplateFitting::ComputeLeastSquare(
-    Int32 kM, Int32 kEbmv_, const CPriorHelper::SPriorTZE &logpriorTZE,
-    const CMask &spcMaskAdditional) {
-  TFittingResult fitResult =
-      ComputeCrossProducts(kM, kEbmv_, spcMaskAdditional);
-
-  ComputeAmplitudeAndChi2(fitResult, logpriorTZE);
-
-  return fitResult;
-}
-
-TFittingResult COperatorTemplateFitting::ComputeCrossProducts(
-    Int32 kM, Int32 kEbmv_, const CMask &spcMaskAdditional, Int32 spcIndex) {
+TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
+    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
   const CSpectrumFluxAxis &spcFluxAxis = m_spectra[spcIndex]->GetFluxAxis();
   const TAxisSampleList &Yspc = spcFluxAxis.GetSamplesVector();
   const TAxisSampleList &Ytpl =
@@ -247,7 +231,10 @@ TFittingResult COperatorTemplateFitting::ComputeCrossProducts(
   const TAxisSampleList &Xtpl =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector();
 
-  TFittingResult fitResult;
+  const CMask &spcMaskAdditional =
+      m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
+                             *m_lambdaRanges[spcIndex], redshift);
+  TCrossProductResult fitResult;
 
   Float64 &sumCross = fitResult.sumCross;
   Float64 &sumT = fitResult.sumT;
@@ -266,8 +253,9 @@ TFittingResult COperatorTemplateFitting::ComputeCrossProducts(
   Int32 kIgmEnd = m_option_igmFastProcessing
                       ? m_templateRebined_bf[spcIndex].GetIgmEndIndex()
                       : -1;
-  Int32 kEndloop = m_option_igmFastProcessing && kM > 0 ? kIgmEnd : m_kEnd;
-  for (Int32 j = m_kStart; j <= kEndloop; j++) {
+  Int32 kEndloop =
+      m_option_igmFastProcessing && kM > 0 ? kIgmEnd : m_kEnd[spcIndex];
+  for (Int32 j = m_kStart[spcIndex]; j <= kEndloop; j++) {
     if (m_option_igmFastProcessing && sumsIgmSaved == 0 && j > kIgmEnd) {
       // store intermediate sums for IGM range
       sumCross_IGM = sumCross;
@@ -312,13 +300,13 @@ TFittingResult COperatorTemplateFitting::ComputeCrossProducts(
 
   if (m_option_igmFastProcessing) {
     if (kM == 0) {
-      m_sumCross_outsideIGM[kEbmv_] = sumCross - sumCross_IGM;
-      m_sumT_outsideIGM[kEbmv_] = sumT - sumT_IGM;
-      m_sumS_outsideIGM[kEbmv_] = sumS - sumS_IGM;
+      m_sumCross_outsideIGM[spcIndex][kEbmv_] = sumCross - sumCross_IGM;
+      m_sumT_outsideIGM[spcIndex][kEbmv_] = sumT - sumT_IGM;
+      m_sumS_outsideIGM[spcIndex][kEbmv_] = sumS - sumS_IGM;
     } else {
-      sumCross += m_sumCross_outsideIGM[kEbmv_];
-      sumT += m_sumT_outsideIGM[kEbmv_];
-      sumS += m_sumS_outsideIGM[kEbmv_];
+      sumCross += m_sumCross_outsideIGM[spcIndex][kEbmv_];
+      sumT += m_sumT_outsideIGM[spcIndex][kEbmv_];
+      sumS += m_sumS_outsideIGM[spcIndex][kEbmv_];
     }
   }
 
@@ -332,9 +320,9 @@ TFittingResult COperatorTemplateFitting::ComputeCrossProducts(
 void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
     TFittingResult &fitResult,
     const CPriorHelper::SPriorTZE &logpriorTZE) const {
-  const Float64 &sumCross = fitResult.sumCross;
-  const Float64 &sumT = fitResult.sumT;
-  const Float64 &sumS = fitResult.sumS;
+  const Float64 &sumCross = fitResult.cross_result.sumCross;
+  const Float64 &sumT = fitResult.cross_result.sumT;
+  const Float64 &sumS = fitResult.cross_result.sumS;
 
   Float64 &ampl = fitResult.ampl;
   Float64 &ampl_err = fitResult.ampl_err;
@@ -395,8 +383,7 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-    const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-    bool opt_extinction, bool opt_dustFitting,
+    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
@@ -444,21 +431,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   result->Redshifts = sortedRedshifts;
 
-  // default mask
-  bool useDefaultMask =
-      additional_spcMasks.size() != sortedRedshifts.size() ? true : false;
-  CMask default_spcMask(m_spectra[0]->GetSampleCount());
-  if (useDefaultMask)
-    for (Int32 km = 0; km < default_spcMask.GetMasksCount(); km++)
-      default_spcMask[km] = 1.0;
-
-  if (additional_spcMasks.size() != sortedRedshifts.size() &&
-      additional_spcMasks.size() != 0)
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "masks-list size (" << additional_spcMasks.size()
-                       << ") does not match the input redshift-list ("
-                       << sortedRedshifts.size() << ") !)");
-
   if (logpriorze.size() > 0 && logpriorze.size() != sortedRedshifts.size())
     THROWG(INTERNAL_ERROR,
            Formatter() << "prior list size(" << logpriorze.size()
@@ -473,13 +445,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
     Float64 redshift = result->Redshifts[i];
 
-    const CMask &additional_spcMask =
-        useDefaultMask ? default_spcMask
-                       : additional_spcMasks[sortedIndexes[i]];
-
-    TFittingIsmIgmResult result_z = BasicFit(
-        tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
-        additional_spcMask, logp, MeiksinList, EbmvList);
+    TFittingIsmIgmResult result_z =
+        BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
+                 opt_dustFitting, logp, MeiksinList, EbmvList);
 
     result->set_at_redshift(i, std::move(result_z));
 
@@ -492,14 +460,20 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidInfZ == -1) {
+    bool ok = true;
+    for (auto ov : result->Overlap[i])
+      ok &= (ov >= overlapThreshold);
+    if (ok) {
       overlapValidInfZ = sortedRedshifts[i];
       break;
     }
   }
   Float64 overlapValidSupZ = -1;
   for (Int32 i = sortedRedshifts.size() - 1; i >= 0; i--) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidSupZ == -1) {
+    bool ok = true;
+    for (auto ov : result->Overlap[i])
+      ok &= (ov >= overlapThreshold);
+    if (ok) {
       overlapValidSupZ = sortedRedshifts[i];
       break;
     }

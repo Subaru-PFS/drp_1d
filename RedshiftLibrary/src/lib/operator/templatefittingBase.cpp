@@ -47,13 +47,11 @@ using namespace std;
 COperatorTemplateFittingBase::COperatorTemplateFittingBase(
     const TFloat64List &redshifts)
     : m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()), m_redshifts(redshifts) {
-
-  m_templateRebined_bf = std::vector<CTemplate>(m_spectra.size());
-  m_spcSpectralAxis_restframe =
-      std::vector<CSpectrumSpectralAxis>(m_spectra.size());
-  m_mskRebined_bf = std::vector<CMask>(m_spectra.size());
-}
+      m_lambdaRanges(Context.getClampedLambdaRanges()), m_redshifts(redshifts),
+      m_templateRebined_bf(m_spectra.size()),
+      m_spcSpectralAxis_restframe(m_spectra.size()),
+      m_mskRebined_bf(m_spectra.size()),
+      m_maskBuilder(std::make_shared<CMaskBuilder>()){};
 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the
@@ -84,7 +82,7 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
       numDevs++;
       sumLogNoise += log(error[j]);
     }
-    cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
   }
   return cstLog;
 }
@@ -154,8 +152,8 @@ void COperatorTemplateFittingBase::RebinTemplate(
   // shift lambdaRange backward to be in restframe
   TFloat64Range spcLambdaRange_restframe;
   TFloat64Range lambdaRange_restframe(
-      Context.GetLambdaRange(spcIndex)->GetBegin() / onePlusRedshift,
-      Context.GetLambdaRange(spcIndex)->GetEnd() / onePlusRedshift);
+      m_lambdaRanges[spcIndex]->GetBegin() / onePlusRedshift,
+      m_lambdaRanges[spcIndex]->GetEnd() / onePlusRedshift);
 
   // redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
   // Shouldn't ShiftByWaveLength be static ?
@@ -206,13 +204,4 @@ void COperatorTemplateFittingBase::applyPositiveAndNonNullConstraint(
   if (amp_sigma < m_continuum_null_amp_threshold)
     ampl = 0.;
   return;
-}
-
-void COperatorTemplateFittingBase::RebinTemplateFAS(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    TFloat64Range &currentRange, Float64 &overlaprate,
-    const Float64 overlapThreshold) {
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); ++spcIndex)
-    RebinTemplate(tpl, redshift, currentRange, overlaprate, overlapThreshold,
-                  spcIndex);
 }

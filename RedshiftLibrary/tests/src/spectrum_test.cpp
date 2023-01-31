@@ -101,7 +101,7 @@ BOOST_FIXTURE_TEST_SUITE(Spectrum, fixture_SpectrumTest)
 
 BOOST_AUTO_TEST_CASE(constructor_test) {
   // create spectrum
-  spc.InitSpectrum(*paramStore);
+  spc.InitSpectrumContinuum(*paramStore);
   spc.EstimateContinuum();
   TFloat64List maskList(spcAxisSize, 1);
 
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   // SetType
   reinitializeAxis();
   spc.SetSpectralAndFluxAxes(spcAxis, fluxAxis);
-  spc.InitSpectrum(*paramStore);
+  spc.InitSpectrumContinuum(*paramStore);
   spc.SetContinuumEstimationMethod("raw");
   spc.EstimateContinuum();
   CSpectrumFluxAxis flux_out;
@@ -294,8 +294,8 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   TFloat64List fluxList_2 = {1, 2, 1};
   CSpectrum spc_2(spectralList_2, fluxList_2);
   spc_2.GetRawFluxAxis_().GetSamplesVector().pop_back();
-  BOOST_CHECK_THROW(spc_2.InitSpectrum(*paramStore), GlobalException);
-  spc.InitSpectrum(*paramStore);
+  BOOST_CHECK_THROW(spc_2.InitSpectrumContinuum(*paramStore), GlobalException);
+  spc.InitSpectrumContinuum(*paramStore);
   BOOST_CHECK(spc.GetContinuumEstimationMethod() == "IrregularSamplingMedian");
   BOOST_CHECK(spc.GetMedianWinsize() == 74.);
   BOOST_CHECK(spc.GetMedianEvenReflection() == false);

@@ -58,6 +58,25 @@
 #include <numeric>
 
 namespace NSEpic {
+
+struct TCrossProductResult {
+  Float64 sumCross = 0.;
+  Float64 sumT = 0.;
+  Float64 sumS = 0.;
+  Float64 sumCross_phot = 0.0;
+  Float64 sumT_phot = 0.0;
+  Float64 sumS_phot = 0.0;
+
+  TCrossProductResult &operator+=(const TCrossProductResult &other) {
+    sumT += other.sumT;
+    sumS += other.sumS;
+    sumCross += other.sumCross;
+    sumCross_phot += other.sumCross_phot;
+    sumT_phot += other.sumT_phot;
+    sumS_phot += other.sumS_phot;
+    return *this;
+  }
+};
 struct TFittingResult {
   Float64 chiSquare = INFINITY;
   Float64 chiSquare_phot =
@@ -65,21 +84,21 @@ struct TFittingResult {
   Float64 ampl = NAN;
   Float64 ampl_err = NAN;
   Float64 ampl_sigma = NAN;
-  Float64 sumCross = 0.;
-  Float64 sumT = 0.;
-  Float64 sumS = 0.;
   Float64 logprior = 0.;
+  TCrossProductResult cross_result;
 };
 
 struct TFittingIsmIgmResult : TFittingResult {
-  TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize)
-      : ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
+  TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize,
+                       Int32 spcsize = 1)
+      : overlapRate(spcsize, NAN),
+        ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
         IsmCalzettiCoeffInterm(EbmvListSize,
                                TFloat64List(MeiksinListSize, NAN)),
         IgmMeiksinIdxInterm(EbmvListSize,
                             TInt32List(MeiksinListSize, undefIdx)) {}
 
-  Float64 overlapRate = NAN;
+  TFloat64List overlapRate;
   Float64 EbmvCoeff = NAN;
   Int32 MeiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
@@ -92,24 +111,28 @@ class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
   COperatorTemplateFitting(const TFloat64List &redshifts = TFloat64List())
-      : COperatorTemplateFittingBase(redshifts){};
+      : COperatorTemplateFittingBase(redshifts), m_kStart(m_spectra.size()),
+        m_kEnd(m_spectra.size()){
+
+        };
   virtual ~COperatorTemplateFitting() = default;
 
   std::shared_ptr<COperatorResult>
   Compute(const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-          const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-          bool opt_extinction = false, bool opt_dustFitting = false,
+          std::string opt_interp, bool opt_extinction = false,
+          bool opt_dustFitting = false,
           Float64 opt_continuum_null_amp_threshold = 0.,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
 
 protected:
-  TFittingIsmIgmResult
-  BasicFit(const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-           Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
-           CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
-           const TInt32List &MeiksinList, const TInt32List &EbmvList);
+  TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
+                                Float64 redshift, Float64 overlapThreshold,
+                                bool opt_extinction, bool opt_dustFitting,
+                                const CPriorHelper::TPriorEList &logpriore,
+                                const TInt32List &MeiksinList,
+                                const TInt32List &EbmvList);
 
   virtual void
   InitIsmIgmConfig(Float64 redshift,
@@ -117,7 +140,7 @@ protected:
                        &ismCorrectionCalzetti,
                    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
                        &igmCorrectionMeiksin,
-                   Int32 EbmvListSize, Int32 spcIndex);
+                   Int32 EbmvListSize);
 
   virtual bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const {
@@ -132,24 +155,20 @@ protected:
     return m_templateRebined_bf[spcIndex].ApplyDustCoeff(kEbmv);
   };
 
-  virtual TFittingResult
-  ComputeLeastSquare(Int32 kM, Int32 kEbmv,
-                     const CPriorHelper::SPriorTZE &logprior,
-                     const CMask &spcMaskAdditional);
+  virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
+                                                   Float64 redshift,
+                                                   Int32 spcIndex = 0);
 
-  TFittingResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
-                                      const CMask &spcMaskAdditional,
-                                      Int32 spcIndex = 0);
-
-  void ComputeAmplitudeAndChi2(TFittingResult &fitres,
-                               const CPriorHelper::SPriorTZE &logpriorTZ) const;
+  virtual void
+  ComputeAmplitudeAndChi2(TFittingResult &fitres,
+                          const CPriorHelper::SPriorTZE &logpriorTZ) const;
 
   bool m_option_igmFastProcessing;
-  Int32 m_kStart, m_kEnd;
+  TInt32List m_kStart, m_kEnd;
 
-  TFloat64List m_sumCross_outsideIGM;
-  TFloat64List m_sumT_outsideIGM;
-  TFloat64List m_sumS_outsideIGM;
+  std::vector<TFloat64List> m_sumCross_outsideIGM;
+  std::vector<TFloat64List> m_sumT_outsideIGM;
+  std::vector<TFloat64List> m_sumS_outsideIGM;
 };
 
 } // namespace NSEpic
