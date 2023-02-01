@@ -295,7 +295,6 @@ public:
                        std::shared_ptr<CParameterStore> paramStore) {
 
     std::shared_ptr<CSpectrum> spc;
-    std::shared_ptr<CSpectrum> rebinedSpectrum;
     ctx = std::make_shared<CInputContext>(paramStore);
 
     spc = fixture_SharedSpectrum().spc;
@@ -303,11 +302,7 @@ public:
     ctx->m_lambdaRange = std::make_shared<TFloat64Range>(
         paramStore->Get<TFloat64Range>("lambdarange"));
     ctx->setSpectrum(spc);
-    rebinedSpectrum = std::make_shared<CSpectrum>(spc->GetName());
-    rebinedSpectrum->SetSpectralAndFluxAxes(spc->GetSpectralAxis(),
-                                            spc->GetRawFluxAxis());
-    ctx->m_logGridStep = rebinedSpectrum->GetSpectralAxis().GetlogGridStep();
-    ctx->SetRebinnedSpectrum(rebinedSpectrum);
+    ctx->m_logGridStep = spc->GetSpectralAxis().GetlogGridStep();
   }
   std::shared_ptr<CInputContext> ctx;
 };
@@ -316,7 +311,6 @@ public:
   fixture_InputContext2(std::string jsonString,
                         std::shared_ptr<CParameterStore> paramStore) {
     std::shared_ptr<CSpectrum> spc;
-    std::shared_ptr<CSpectrum> rebinedSpectrum;
     ctx = std::make_shared<CInputContext>(paramStore);
     ctx->m_lambdaRange = std::make_shared<TFloat64Range>(
         paramStore->Get<TFloat64Range>("lambdarange"));
@@ -327,10 +321,10 @@ public:
     spcAxis[1] = 4.681000E+03;
     spc->SetSpectralAxis(spcAxis);
     ctx->setSpectrum(spc);
-    ctx->m_logGridStep = 1e-5;
-    CSpectrumLogRebinning logReb(*ctx);
-    rebinedSpectrum = logReb.loglambdaRebinSpectrum(spc, "rebinVariance");
-    ctx->SetRebinnedSpectrum(rebinedSpectrum);
+    std::map<std::string, bool> fft_processing;
+    paramStore->hasToLogRebin({"galaxy"}, fft_processing);
+    ctx->m_logGridStep =
+        paramStore->getMinZStepForFFTProcessing(fft_processing);
   }
   std::shared_ptr<CInputContext> ctx;
 };

@@ -46,17 +46,9 @@ using namespace std;
 
 CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
     : m_inputContext(inputContext) {
-  m_logGridStep = m_inputContext.getLogGridStep();
-  std::shared_ptr<CSpectrum> spc;
-  if (inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()) {
-    spc =
-        m_inputContext
-            .GetRebinnedSpectrum(); // retrieve the corrected rebinned spectrum
-  } else {
-    spc = m_inputContext.GetSpectrum();
-  }
-
-  setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
+  m_logGridStep = m_inputContext.m_logGridStep;
+  std::shared_ptr<CSpectrum> spc = m_inputContext.GetSpectrum();
+  setupRebinning(*spc, *(m_inputContext.m_lambdaRange));
 }
 
 /**
@@ -72,7 +64,7 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
 */
 void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
                                            const TFloat64Range &lambdaRange) {
-  if (spectrum.GetSpectralAxis().IsLogSampled()) {
+  if (spectrum.GetSpectralAxis().IsLogSampled(m_logGridStep)) {
     // compute reference lambda range
     // (the effective lambda range of log-sampled spectrum when initial spectrum
     // overlaps lambdaRange assuming all spectra are aligned (this to avoid
@@ -94,7 +86,7 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
         exp(loglambda_start_ref),
         exp(loglambda_end_ref)); // this is the effective lambda range, to be
                                  // used in inferTemplateRebinningSetup
-  } else {
+  } else if (!spectrum.GetSpectralAxis().IsLogSampled()) {
     // compute reference lambda range (the effective lambda range of rebinned
     // spectrum when initial spectrum overlaps lambdaRange)
     Int32 loglambda_count_ref;
@@ -109,6 +101,10 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
         lambdaRange.GetBegin(),
         exp(loglambda_end_ref)); // this is the effective lambda range, to be
                                  // used in inferTemplateRebinningSetup
+  } else {
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Log-sampled spectrum has wrong logGridStep : "
+                       << m_logGridStep);
   }
   Log.LogDetail("  Log-Rebin: logGridStep = %f", m_logGridStep);
   return;

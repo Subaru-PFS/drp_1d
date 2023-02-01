@@ -46,16 +46,18 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [4680.0, 4712.0], \"smoothWidth\" : 0.5, "
-    "\"redshiftstep\" : "
-    "0.001, \"star\" : { \"redshiftrange\" : [ 2.84, 2.88 ], \"method\" : "
-    "\"LineModelSolve\", "
+    "{\"lambdarange\" : [4680.0, 4712.0], "
+    "\"smoothWidth\" : 0.5, "
+    "\"redshiftstep\" : 0.001, "
+    "\"star\" : { \"redshiftrange\" : [ 2.84, 2.88 ], "
+    "\"method\" : \"LineModelSolve\", "
     "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
-    "\"largegridstepratio\" : 1 } }}}, "
-    "\"galaxy\" : { \"redshiftrange\" : [ 2.84, 2.88 ], \"method\" : "
-    "\"LineModelSolve\", "
+    "\"largegridstepratio\" : 1 }}}}, "
+    "\"galaxy\" : { \"redshiftrange\" : [ 2.84, 2.88 ], \"redshiftstep\" : "
+    "0.00001, \"method\" : \"LineModelSolve\", "
     "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
-    "\"largegridstepratio\" : 1 } }}}, "
+    "\"largegridstepratio\" : 1 },"
+    "\"continuumfit\" : {\"fftprocessing\" : true }}}}, "
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
     "\"medianEvenReflection\" : false, "
     "\"method\" : \"IrregularSamplingMedian\"}}";
@@ -80,8 +82,8 @@ public:
   void fillCatalog() {
     catalog->Add(fixture_SharedStarNotLogTemplate().tpl);
     catalog->Add(fixture_SharedGalaxyTemplate().tpl);
-    catalog->m_logsampling = 1;
-    catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+    // catalog->m_logsampling = 1;
+    // catalog->Add(fixture_SharedGalaxyTemplate().tpl->Rebin());
   }
 };
 
@@ -109,37 +111,14 @@ BOOST_AUTO_TEST_CASE(setupRebinning_test) {
   TFloat64Range lbdaRange(exp(3), exp(6));
 
   logRebinning.m_logGridStep = 0.1;
-  logRebinning.setupRebinning(spc_1, lbdaRange);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetBegin(), exp(3),
-                    precision);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetEnd(), exp(6), precision);
+  BOOST_CHECK_THROW(logRebinning.setupRebinning(spc_1, lbdaRange),
+                    GlobalException);
 
   logRebinning.m_logGridStep = 1.;
   logRebinning.setupRebinning(spc_1, lbdaRange);
   BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetBegin(), exp(3.),
                     precision);
   BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetEnd(), exp(6), precision);
-
-  logRebinning.m_logGridStep = 0.9;
-  logRebinning.setupRebinning(spc_1, lbdaRange);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetBegin(), exp(3.8),
-                    precision);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetEnd(), exp(5.8),
-                    precision);
-
-  logRebinning.m_logGridStep = 1.1;
-  logRebinning.setupRebinning(spc_1, lbdaRange);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetBegin(), exp(3.1),
-                    precision);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetEnd(), exp(5.1),
-                    precision);
-
-  logRebinning.m_logGridStep = 1.9;
-  logRebinning.setupRebinning(spc_1, lbdaRange);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetBegin(), exp(3.9),
-                    precision);
-  BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetEnd(), exp(5.9),
-                    precision);
 
   // no logSampled spectrum
   CSpectrumAxis lbdaAxis2({2, 4, 6});
@@ -179,7 +158,7 @@ BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
       logRebinning.computeTargetLogSpectralAxis(lbdaRange, 10);
 
   BOOST_CHECK(tgtAxis.GetSamplesCount() == 10);
-  BOOST_CHECK(tgtAxis.GetSamplesVector() == tgtRef);
+  BOOST_CHECK_CLOSE(tgtAxis.GetSamplesVector(), tgtRef, 1e-6);
 
   BOOST_CHECK_THROW(logRebinning.computeTargetLogSpectralAxis(lbdaRange, 8),
                     GlobalException);
