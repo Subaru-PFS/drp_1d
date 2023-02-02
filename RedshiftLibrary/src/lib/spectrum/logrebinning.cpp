@@ -48,7 +48,7 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
     : m_inputContext(inputContext) {
   m_logGridStep = m_inputContext.m_logGridStep;
   std::shared_ptr<CSpectrum> spc = m_inputContext.GetSpectrum();
-  setupRebinning(*spc, *(m_inputContext.m_lambdaRange));
+  setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
 }
 
 /**

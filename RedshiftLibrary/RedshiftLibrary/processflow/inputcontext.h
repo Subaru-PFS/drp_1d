@@ -44,6 +44,9 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 #include <memory>
+
+class fixture_InputContext;
+class fixture_InputContext2;
 namespace NSEpic {
 class CSpectrumLogRebinning; // forward declaration
 class CSpectrum;
@@ -188,6 +191,8 @@ public:
   }
 
 private:
+  friend class ::fixture_InputContext;
+  friend class ::fixture_InputContext2;
   std::vector<std::shared_ptr<CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<CSpectrum>> m_rebinnedSpectra;
   std::vector<std::shared_ptr<const CSpectrum>> m_constSpectra;
