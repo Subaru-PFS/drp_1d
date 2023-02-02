@@ -308,9 +308,9 @@ public:
     Context.setTemplateCatalog(catalog);
   }
 
-  void setSpectrum(std::shared_ptr<CSpectrum> spc, std::shared_ptr<CLSF> LSF) {
+  void addSpectrum(std::shared_ptr<CSpectrum> spc, std::shared_ptr<CLSF> LSF) {
     spc->SetLSF(LSF);
-    Context.setSpectrum(spc);
+    Context.addSpectrum(spc);
   }
   void initContext() { Context.Init(); }
 };

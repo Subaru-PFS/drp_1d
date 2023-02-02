@@ -93,7 +93,7 @@ public:
     ctx.loadParameterStore(jsonString);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
-    ctx.setSpectrum(spc, LSF);
+    ctx.addSpectrum(spc, LSF);
     ctx.initContext();
   }
 
