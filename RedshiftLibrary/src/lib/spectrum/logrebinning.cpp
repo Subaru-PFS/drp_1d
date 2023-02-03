@@ -120,7 +120,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
   TFloat64Range lambdaRange_spc;
   Int32 loglambda_count_spc;
   if (spectrum->GetSpectralAxis().IsLogSampled()) {
-    return make_shared<CSpectrum>(*spectrum); // copy the spectrum
+    THROWG(INTERNAL_ERROR, Formatter() << "spectrum is already log-sampled");
   } else {
     // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on
     // reference grid) to be passed to computeTargetLogSpectralAxis in
