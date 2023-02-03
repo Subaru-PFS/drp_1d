@@ -148,6 +148,13 @@ public:
   TFloat64List spcAxisList = mySpectralList;
 };
 
+class fixture_SpectralAxisLog {
+public:
+  CSpectrumSpectralAxis spcAxis = mySpectralListLog;
+  Int32 spcAxisSize = mySpectralListLog.size();
+  TFloat64List spcAxisList = mySpectralListLog;
+};
+
 class fixture_SpectralAxisLight {
 public:
   CSpectrumSpectralAxis spcAxisLight = mySpectralListLight;
@@ -201,6 +208,12 @@ class fixture_SharedSpectrum {
 public:
   std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(
       fixture_SpectralAxis().spcAxis, fixture_FluxAxis().fluxAxis);
+};
+
+class fixture_SharedSpectrumLog {
+public:
+  std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(
+      fixture_SpectralAxisLog().spcAxis, fixture_FluxAxis().fluxAxis);
 };
 
 // Creation of Calzetti corrections
@@ -297,7 +310,7 @@ public:
     std::shared_ptr<CSpectrum> spc;
     ctx = std::make_shared<CInputContext>(paramStore);
 
-    spc = fixture_SharedSpectrum().spc;
+    spc = fixture_SharedSpectrumLog().spc;
 
     ctx->m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
         paramStore->Get<TFloat64Range>("lambdarange")));
