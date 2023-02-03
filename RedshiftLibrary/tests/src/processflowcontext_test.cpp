@@ -122,18 +122,17 @@ BOOST_AUTO_TEST_CASE(context_test) {
               TFloat64Range(4680, 4712));
 
   std::shared_ptr<const CInputContext> inputCtx = Context.GetInputContext();
-  BOOST_CHECK(inputCtx->GetSpectrum() == nullptr);
+  BOOST_CHECK(inputCtx->getSpectra().size() == 0);
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
   BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
                                       "solveResult") == false);
 
   spc->SetLSF(LSF);
-  Context.setSpectrum(spc);
+  Context.addSpectrum(spc);
   BOOST_CHECK(Context.GetSpectrum() == spc);
 
-  std::shared_ptr<const CSpectrum> spcRebinned = Context.GetRebinnedSpectrum();
-  BOOST_CHECK(spcRebinned == nullptr);
+  BOOST_CHECK(Context.getRebinnedSpectra().size() == 0);
 
   catalog->Add(fixture_SharedGalaxyTemplate().tpl);
   catalog->m_logsampling = 1;
@@ -159,6 +158,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Context.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
 
   Context.Init();
+  BOOST_CHECK(Context.GetRebinnedSpectrum() = spc);
 
   std::shared_ptr<const TFloat64Range> lbdaRange =
       std::make_shared<const TFloat64Range>(4680, 4712);
@@ -166,14 +166,19 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.GetLambdaRange()->GetEnd() == lbdaRange->GetEnd());
 
   lbdaRange = std::make_shared<const TFloat64Range>(4680.282, 4712);
-  BOOST_CHECK(Context.GetClampedLambdaRange()->GetBegin() ==
+  BOOST_CHECK(Context.GetClampedLambdaRange(false)->GetBegin() ==
               lbdaRange->GetBegin());
-  BOOST_CHECK(Context.GetClampedLambdaRange()->GetEnd() == lbdaRange->GetEnd());
+  BOOST_CHECK(Context.GetClampedLambdaRange(false)->GetEnd() ==
+              lbdaRange->GetEnd());
 
   lbdaRange = std::make_shared<const TFloat64Range>(0, 0);
-  BOOST_CHECK(Context.GetRebinnedClampedLambdaRange()->GetBegin() ==
+  BOOST_CHECK(Context.GetClampedLambdaRange(true)->GetBegin() ==
               lbdaRange->GetBegin());
-  BOOST_CHECK(Context.GetRebinnedClampedLambdaRange()->GetEnd() ==
+  BOOST_CHECK(Context.GetClampedLambdaRange(true)->GetEnd() ==
+              lbdaRange->GetEnd());
+  BOOST_CHECK(Context.getRebinnedClampedLambdaRanges()[0]->GetBegin() ==
+              lbdaRange->GetBegin());
+  BOOST_CHECK(Context.getRebinnedClampedLambdaRanges()[0]->GetEnd() ==
               lbdaRange->GetEnd());
 
   Context.m_ScopeStack.pop_back();
@@ -188,7 +193,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
                                       "solveResult") == true);
   Context.reset();
-  BOOST_CHECK(Context.GetSpectrum() == nullptr);
+  BOOST_CHECK(Context.getSpectra().size() == 0);
   BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
                                       "solveResult") == false);
 }
