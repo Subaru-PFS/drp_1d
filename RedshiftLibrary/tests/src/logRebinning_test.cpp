@@ -54,7 +54,7 @@ const std::string jsonString =
     "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
     "\"largegridstepratio\" : 1 }}}}, "
     "\"galaxy\" : { \"redshiftrange\" : [ 2.84, 2.88 ], \"redshiftstep\" : "
-    "0.00001, \"method\" : \"LineModelSolve\", "
+    "0.0001, \"method\" : \"LineModelSolve\", "
     "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
     "\"largegridstepratio\" : 1 },"
     "\"continuumfit\" : {\"fftprocessing\" : true }}}}, "
@@ -72,6 +72,8 @@ public:
       fixture_InputContext2(jsonString, paramStore).ctx;
   std::shared_ptr<CTemplate> tplStar_logSampled =
       fixture_SharedStarTemplate().tpl;
+  std::shared_ptr<CTemplate> tplStar_notLogSampled =
+      fixture_SharedStarNotLogTemplate().tpl;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
 
@@ -82,8 +84,8 @@ public:
   void fillCatalog() {
     catalog->Add(fixture_SharedStarNotLogTemplate().tpl);
     catalog->Add(fixture_SharedGalaxyTemplate().tpl);
-    // catalog->m_logsampling = 1;
-    // catalog->Add(fixture_SharedGalaxyTemplate().tpl->Rebin());
+    catalog->m_logsampling = 1;
+    catalog->Add(tplStar_logSampled);
   }
 };
 
@@ -152,13 +154,14 @@ BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
   CSpectrumLogRebinning logRebinning(*ctx_logSampled);
 
   TFloat64Range lbdaRange(1, 10000);
-  TFloat64List tgtRef = lbdaRange.SpreadOverLog(1.);
+  TFloat64List tgtRef = lbdaRange.SpreadOverLogEpsilon(1.);
   logRebinning.m_logGridStep = 1.;
   CSpectrumSpectralAxis tgtAxis =
       logRebinning.computeTargetLogSpectralAxis(lbdaRange, 10);
 
   BOOST_CHECK(tgtAxis.GetSamplesCount() == 10);
-  BOOST_CHECK_CLOSE(tgtAxis.GetSamplesVector(), tgtRef, 1e-6);
+  for (std::size_t i = 0; i < tgtAxis.GetSamplesCount(); i++)
+    BOOST_CHECK_CLOSE(tgtAxis.GetSamplesVector()[i], tgtRef[i], 1e-6);
 
   BOOST_CHECK_THROW(logRebinning.computeTargetLogSpectralAxis(lbdaRange, 8),
                     GlobalException);
@@ -167,27 +170,25 @@ BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
 BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
   // create logSampled spectrum
   CSpectrumLogRebinning logRebinning(*ctx_logSampled);
-  ctx_logSampled->GetSpectrum()->SetName("spc_log");
 
-  std::shared_ptr<CSpectrum> spcLogRebinning =
-      logRebinning.loglambdaRebinSpectrum(ctx_logSampled->GetSpectrum(), "no");
-  BOOST_CHECK(spcLogRebinning->GetName() == "spc_log");
-  BOOST_CHECK(
-      spcLogRebinning->GetSpectralAxis().GetSamplesVector() ==
-      fixture_SharedSpectrum().spc->GetSpectralAxis().GetSamplesVector());
-  BOOST_CHECK(
-      spcLogRebinning->GetRawFluxAxis().GetSamplesVector() ==
-      fixture_SharedSpectrum().spc->GetRawFluxAxis().GetSamplesVector());
+  BOOST_CHECK_THROW(
+      logRebinning.loglambdaRebinSpectrum(ctx_logSampled->GetSpectrum(), "no"),
+      GlobalException);
 
   // create not logSampled spectrum
   CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled);
-  BOOST_CHECK_NO_THROW(logRebinningNotLog.loglambdaRebinSpectrum(
-      ctx_notLogSampled->GetSpectrum(), "no"));
+  ctx_notLogSampled->GetSpectrum()->SetName("spc_notLog");
+
+  std::shared_ptr<CSpectrum> spcLogRebinning =
+      logRebinningNotLog.loglambdaRebinSpectrum(
+          ctx_notLogSampled->GetSpectrum(), "no");
+  BOOST_CHECK(spcLogRebinning->GetName() == "spc_notLog");
+  BOOST_CHECK(spcLogRebinning->GetSpectralAxis().IsLogSampled() == true);
 
   ctx_notLogSampled->GetSpectrum()->SetSpectralAndFluxAxes(
       CSpectrumSpectralAxis(TFloat64List{1212, 1212.4, 1213}),
       CSpectrumFluxAxis(TFloat64List{0, 0, 0}));
-  BOOST_CHECK_THROW(logRebinning.loglambdaRebinSpectrum(
+  BOOST_CHECK_THROW(logRebinningNotLog.loglambdaRebinSpectrum(
                         ctx_notLogSampled->GetSpectrum(), "no"),
                     GlobalException);
 }
@@ -245,19 +246,25 @@ BOOST_AUTO_TEST_CASE(inferTemplateRebinningSetup_test) {
   CSpectrumLogRebinning logRebinning(*ctx_notLogSampled);
 
   TFloat64Range lbdaRange;
-  TFloat64Range zrange(0, 0);
+  Float64 zmin_new = 0.01;
+  Float64 zmax_new = 0.03;
+  Float64 log_zmin_new_p1 = log(zmin_new + 1.);
+  Float64 log_zmax_new_p1 = log(zmax_new + 1.);
+  Int32 nb_z = Int32(ceil((log_zmax_new_p1 - log_zmin_new_p1) /
+                          ctx_notLogSampled->getLogGridStep()));
+  zmax_new =
+      exp(log_zmin_new_p1 + nb_z * ctx_notLogSampled->getLogGridStep()) - 1.;
+  TFloat64Range zrange(zmin_new, zmax_new);
 
-  Float64 loglbdamin = log(4680.0);
-  Float64 loglbdamax = log(4712.0);
   Int32 loglambda_count_tpl =
       logRebinning.inferTemplateRebinningSetup(zrange, lbdaRange);
 
+  Float64 loglbdamin = log(4680.0 / (1.0 + zrange.GetEnd()));
+  Float64 loglbdamax = log(4712.0 / (1.0 + zrange.GetBegin()));
   BOOST_CHECK(
       loglambda_count_tpl ==
       std::round((loglbdamax - loglbdamin) / ctx_notLogSampled->m_logGridStep) +
           1);
-  BOOST_CHECK_CLOSE(lbdaRange.GetBegin(), exp(loglbdamin), 1e-3);
-  BOOST_CHECK_CLOSE(lbdaRange.GetEnd(), exp(loglbdamax), 1e-3);
 }
 
 BOOST_AUTO_TEST_CASE(loglambdaRebinTemplate_test) {
@@ -265,14 +272,22 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinTemplate_test) {
   CSpectrumLogRebinning logRebinning(*ctx_logSampled);
 
   TFloat64Range lbdaRange;
-  TFloat64Range zrange(0., 0.);
+  Float64 zmin_new = 2.84;
+  Float64 zmax_new = 2.88;
+  Float64 log_zmin_new_p1 = log(zmin_new + 1.);
+  Float64 log_zmax_new_p1 = log(zmax_new + 1.);
+  Int32 nb_z = Int32(ceil((log_zmax_new_p1 - log_zmin_new_p1) /
+                          ctx_logSampled->getLogGridStep()));
+  zmax_new =
+      exp(log_zmin_new_p1 + nb_z * ctx_logSampled->getLogGridStep()) - 1.;
+  TFloat64Range zrange(zmin_new, zmax_new);
+
   Int32 loglambda_count_tpl =
       logRebinning.inferTemplateRebinningSetup(zrange, lbdaRange);
-  //   logRebinning.m_logGridStep = ctx_logSampled->m_logGridStep;
-  lbdaRange.SetBegin(4680.28207);
 
-  BOOST_CHECK_NO_THROW(logRebinning.loglambdaRebinTemplate(
-      tplStar_logSampled, lbdaRange, loglambda_count_tpl - 1));
+  std::shared_ptr<NSEpic::CTemplate> tpl = logRebinning.loglambdaRebinTemplate(
+      tplStar_notLogSampled, lbdaRange, loglambda_count_tpl);
+  BOOST_CHECK(tpl->GetSpectralAxis().IsLogSampled() == true);
 
   // template not overlap
   lbdaRange.Set(4679., 4712);
