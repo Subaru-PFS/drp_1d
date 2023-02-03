@@ -45,6 +45,9 @@ using namespace NSEpic;
 using namespace std;
 #include <fstream>
 
+const std::map<Int32, std::string> CLine::ETypeString = {
+    {nType_Absorption, "Abs"}, {nType_Emission, "Em"}, {nType_All, "All"}};
+
 CLine::CLine(const string &name, Float64 pos, Int32 type,
              CLineProfile_ptr &&profile, Int32 force, Float64 amp,
              Float64 width, Float64 cut, Float64 posErr, Float64 sigmaErr,

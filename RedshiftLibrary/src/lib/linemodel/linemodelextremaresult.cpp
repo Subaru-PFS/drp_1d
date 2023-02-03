@@ -86,9 +86,11 @@ void TLineModelResult::updateTplRatioFromModel(
     const std::shared_ptr<const CTplratioManager> &lmel) {
   FittedTplratioName = lmel->getTplratio_bestTplName();
   FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
-  FittedTplratioAmplitude = lmel->getTplratio_bestAmplitude();
-  FittedTplratioDtm = lmel->getTplratio_bestDtm();
-  FittedTplratioMtm = lmel->getTplratio_bestMtm();
+  FittedTplratioAmplitudeEm = lmel->getTplratio_bestAmplitudeEm();
+  FittedTplratioDtmEm = lmel->getTplratio_bestDtmEm();
+  FittedTplratioDtmAbs = lmel->getTplratio_bestDtmAbs();
+  FittedTplratioMtmEm = lmel->getTplratio_bestMtmEm();
+  FittedTplratioMtmAbs = lmel->getTplratio_bestMtmAbs();
 }
 
 void TLineModelResult::updateFromModel(
