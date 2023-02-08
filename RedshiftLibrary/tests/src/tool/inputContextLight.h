@@ -290,3 +290,27 @@ public:
   }
   std::shared_ptr<CInputContext> ctx;
 };
+
+class fixture_Context {
+public:
+  void loadParameterStore(std::string jsonString) {
+    Context.LoadParameterStore(jsonString);
+  }
+
+  void setCorrections(
+      std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin,
+      std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti) {
+    Context.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
+    Context.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
+  }
+
+  void setCatalog(std::shared_ptr<CTemplateCatalog> catalog) {
+    Context.setTemplateCatalog(catalog);
+  }
+
+  void addSpectrum(std::shared_ptr<CSpectrum> spc, std::shared_ptr<CLSF> LSF) {
+    spc->SetLSF(LSF);
+    Context.addSpectrum(spc);
+  }
+  void initContext() { Context.Init(); }
+};
