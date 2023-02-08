@@ -190,8 +190,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
   BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
 
-  // InitIsmIgmConfig with lambdarange & redshift
-  TFloat64Range lbdaRange(spcAxisList[0], spcAxisList[spcAxisSize + 1]);
+  // InitIsmIgmConfig with lambdarange & redshift -> range outside spectral axis
+  TFloat64Range lbdaRange(1, 860);
   BOOST_CHECK_THROW(tplStar.InitIsmIgmConfig(lbdaRange, 2.86,
                                              ismCorrectionCalzetti,
                                              igmCorrectionMeiksin),
