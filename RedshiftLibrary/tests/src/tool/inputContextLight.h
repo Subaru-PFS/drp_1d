@@ -316,6 +316,7 @@ public:
         paramStore->Get<TFloat64Range>("lambdarange")));
     ctx->addSpectrum(spc);
     ctx->m_logGridStep = spc->GetSpectralAxis().GetlogGridStep();
+    ctx->addRebinSpectrum(spc);
   }
   std::shared_ptr<CInputContext> ctx;
 };
