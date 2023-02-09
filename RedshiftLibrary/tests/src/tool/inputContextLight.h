@@ -312,10 +312,9 @@ public:
 class fixture_PhotoBand {
 public:
   fixture_PhotoBand() {
-    const Float64 trans[] = {.2, .5, .99, .99, .4, .1};
-    const Float64 lambda[] = {2000., 2200., 2321., 2430., 2554., 2603.};
-    const Int32 n = sizeof(trans) / sizeof(trans[0]);
-    photoBand = CPhotometricBand(trans, n, lambda, n);
+    TFloat64List trans = {.2, .5, .99, .99, .4, .1};
+    TFloat64List lambda = {2000., 2200., 2321., 2430., 2554., 2603.};
+    photoBand = CPhotometricBand(trans, lambda);
   }
   CPhotometricBand photoBand;
 };
@@ -337,19 +336,25 @@ public:
 class fixture_LineCatalog {
 public:
   fixture_LineCatalog() {
-    for (std::size_t i = 0; i < waveLength.size(); i++) {
+    for (std::size_t i = 0; i < fixture_LineCatalogData().waveLength.size();
+         i++) {
       lineCatalog->AddLineFromParams(
-          name[i], waveLength[i], type[i], force[i], profile[i],
-          TAsymParams(0, 0, 0), amplitudeGroupName[i], amplitudeGroupValue[i],
-          dispersionVelocityGroupName[i], waveLengthOffset[i],
-          enableFitWaveLengthOffset[i], 0, "lineCatalog",
-          fixture_MeiskinCorrection().igmCorrectionMeiksin);
+          fixture_LineCatalogData().name[i],
+          fixture_LineCatalogData().waveLength[i],
+          fixture_LineCatalogData().type[i], fixture_LineCatalogData().force[i],
+          fixture_LineCatalogData().profile[i], TAsymParams(0, 0, 0),
+          fixture_LineCatalogData().amplitudeGroupName[i],
+          fixture_LineCatalogData().amplitudeGroupValue[i],
+          fixture_LineCatalogData().dispersionVelocityGroupName[i],
+          fixture_LineCatalogData().waveLengthOffset[i],
+          fixture_LineCatalogData().enableFitWaveLengthOffset[i], 0,
+          "lineCatalog", fixture_MeiskinCorrection().igmCorrectionMeiksin);
     }
   }
   Int32 nsigmasupport = 8;
   std::shared_ptr<CLineCatalog> lineCatalog =
       std::make_shared<CLineCatalog>(nsigmasupport);
-  Int32 lineCatalogSize = waveLength.size();
+  Int32 lineCatalogSize = fixture_LineCatalogData().waveLength.size();
 };
 
 // Creation of line ratio catalog
