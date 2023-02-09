@@ -45,8 +45,14 @@
 
 using namespace NSEpic;
 
+const std::string jsonStringOneSpc = "{\"lambdarange\" : [ 4631, 4815 ],";
+
+const std::string jsonStringNoOverLap = "{\"lambdarange\" : [ 2631, 2815 ],";
+
+const std::string jsonStringMO =
+    "{\"lambdarange\" : {\"1\" : [ 4631, 4815], \"2\" : [ 4631, 4815 ]},";
+
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4631, 4815 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -134,11 +140,24 @@ class fixture_inputcontextTest {
 public:
   TScopeStack scopeStack;
   std::shared_ptr<CParameterStore> paramStoreNoFFT =
-      fixture_ParamStore(jsonString + jsonStringNoFFT, scopeStack).paramStore;
+      fixture_ParamStore(jsonStringOneSpc + jsonString + jsonStringNoFFT,
+                         scopeStack)
+          .paramStore;
   std::shared_ptr<CParameterStore> paramStoreFFT =
-      fixture_ParamStore(jsonString + jsonStringFFT, scopeStack).paramStore;
+      fixture_ParamStore(jsonStringOneSpc + jsonString + jsonStringFFT,
+                         scopeStack)
+          .paramStore;
+  std::shared_ptr<CParameterStore> paramStoreMO =
+      fixture_ParamStore(jsonStringMO + jsonString + jsonStringFFT, scopeStack)
+          .paramStore;
   std::shared_ptr<CParameterStore> paramStoreOrtho =
-      fixture_ParamStore(jsonString + jsonStringOrtho, scopeStack).paramStore;
+      fixture_ParamStore(jsonStringOneSpc + jsonString + jsonStringOrtho,
+                         scopeStack)
+          .paramStore;
+  std::shared_ptr<CParameterStore> paramStoreNoOverLap =
+      fixture_ParamStore(jsonStringNoOverLap + jsonString + jsonStringNoFFT,
+                         scopeStack)
+          .paramStore;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -146,6 +165,7 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CSpectrum> spc2 = fixture_SharedSpectrumExtended().spc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -156,7 +176,7 @@ public:
 
   void setInputData(CInputContext &inputCtx) {
     spc->SetLSF(LSF);
-    inputCtx.setSpectrum(spc);
+    inputCtx.addSpectrum(spc);
     catalog->Add(fixture_SharedGalaxyTemplate().tpl);
     inputCtx.setTemplateCatalog(catalog);
     inputCtx.setPhotBandCatalog(photoBandCatalog);
@@ -166,23 +186,31 @@ public:
     inputCtx.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
     inputCtx.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
   }
+
+  void setInputDataMO(CInputContext &inputCtx) {
+    setInputData(inputCtx);
+    spc->setObsID("1");
+    inputCtx.addSpectrum(spc2);
+    spc2->setObsID("2");
+  }
 };
 
 BOOST_FIXTURE_TEST_SUITE(inputContext_test, fixture_inputcontextTest)
 
 BOOST_AUTO_TEST_CASE(getterSetter_test) {
   CInputContext inputCtx(paramStoreNoFFT);
+  std::shared_ptr<CInputContext> inputCtxPtr =
+      std::make_shared<CInputContext>(paramStoreNoFFT);
 
   spc->SetLSF(LSF);
-  inputCtx.setSpectrum(spc);
+  inputCtx.addSpectrum(spc);
   BOOST_CHECK(inputCtx.GetSpectrum() == spc);
 
-  Context.setSpectrum(spc);
+  Context.addSpectrum(spc);
   std::shared_ptr<const CInputContext> inputCtx2 = Context.GetInputContext();
   const CSpectrum &spc3 = *(inputCtx2->GetSpectrum());
 
-  std::shared_ptr<const CSpectrum> spcRebinned = inputCtx.GetRebinnedSpectrum();
-  BOOST_CHECK(spcRebinned == nullptr);
+  BOOST_CHECK(inputCtx.getRebinnedSpectra().size() == 0);
 
   inputCtx.setTemplateCatalog(catalog);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() == catalog);
@@ -199,7 +227,6 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
   BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "LineModelSolve") ==
               lineCatalog);
 
-  //   scopeStack.push_back("LineModelSolve");
   BOOST_CHECK(
       inputCtx.GetFilteredLineVector("galaxy", "LineModelSolve", "no", "no")
           .size() == fixture_LineCatalog().lineCatalogSize);
@@ -211,13 +238,47 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
   BOOST_CHECK(inputCtx.m_igmcorrectionMeiksin == nullptr);
   inputCtx.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
   BOOST_CHECK(inputCtx.m_igmcorrectionMeiksin == igmCorrectionMeiksin);
+
+  // lambda range
+  BOOST_CHECK(inputCtx.m_lambdaRanges.size() == 0);
+  inputCtx.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(1, 3));
+  BOOST_CHECK(inputCtx.getLambdaRange()->GetBegin() == 1);
+  BOOST_CHECK(inputCtx.getLambdaRange()->GetEnd() == 3);
+
+  BOOST_CHECK(inputCtx.m_clampedLambdaRanges.size() == 0);
+  inputCtx.m_clampedLambdaRanges.push_back(
+      std::make_shared<TFloat64Range>(5, 6));
+  BOOST_CHECK(inputCtx.getClampedLambdaRange(0)->GetBegin() == 5);
+  BOOST_CHECK(inputCtx.getClampedLambdaRange(0)->GetEnd() == 6);
+
+  BOOST_CHECK(inputCtx.m_rebinnedClampedLambdaRanges.size() == 0);
+  inputCtx.m_rebinnedClampedLambdaRanges.push_back(
+      std::make_shared<TFloat64Range>(15, 20));
+  BOOST_CHECK(inputCtx.getClampedLambdaRange(1)->GetBegin() == 15);
+  BOOST_CHECK(inputCtx.getClampedLambdaRange(1)->GetEnd() == 20);
+
+  inputCtx.m_constClampedLambdaRanges.push_back(
+      std::make_shared<TFloat64Range>(5, 6));
+  BOOST_CHECK(inputCtx.getClampedLambdaRanges().size() == 1);
+  BOOST_CHECK(inputCtx.getClampedLambdaRanges()[0]->GetBegin() ==
+              inputCtx.getClampedLambdaRange(0)->GetBegin());
+  BOOST_CHECK(inputCtx.getClampedLambdaRanges()[0]->GetEnd() ==
+              inputCtx.getClampedLambdaRange(0)->GetEnd());
+
+  inputCtx.m_constRebinnedClampedLambdaRanges.push_back(
+      std::make_shared<TFloat64Range>(15, 20));
+  BOOST_CHECK(inputCtx.getRebinnedClampedLambdaRanges().size() == 1);
+  BOOST_CHECK(inputCtx.getRebinnedClampedLambdaRanges()[0]->GetBegin() ==
+              inputCtx.getClampedLambdaRange(1)->GetBegin());
+  BOOST_CHECK(inputCtx.getRebinnedClampedLambdaRanges()[0]->GetEnd() ==
+              inputCtx.getClampedLambdaRange(1)->GetEnd());
 }
 
 BOOST_AUTO_TEST_CASE(initAndReset_test) {
   CInputContext inputCtx(paramStoreNoFFT);
   setInputData(inputCtx);
   inputCtx.Init();
-  BOOST_CHECK(inputCtx.GetSpectrum() != nullptr);
+  BOOST_CHECK(inputCtx.GetSpectrum(0) != nullptr);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() != nullptr);
   BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "LineModelSolve") != nullptr);
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) != nullptr);
@@ -225,7 +286,7 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
 
   inputCtx.resetSpectrumSpecific();
 
-  BOOST_CHECK(inputCtx.GetSpectrum() == nullptr);
+  BOOST_CHECK(inputCtx.getSpectra().size() == 0);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() == nullptr);
   BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "LineModelSolve") == nullptr);
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) == nullptr);
@@ -235,57 +296,75 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
   CInputContext inputCtx2(paramStoreFFT);
   setInputData(inputCtx2);
   inputCtx2.Init();
-  BOOST_CHECK(inputCtx2.GetRebinnedSpectrum() != nullptr);
+  BOOST_CHECK(inputCtx2.GetRebinnedSpectrum(0) != nullptr);
   inputCtx2.resetSpectrumSpecific();
-  BOOST_CHECK(inputCtx2.GetRebinnedSpectrum() == nullptr);
+  BOOST_CHECK(inputCtx2.getRebinnedSpectra().size() == 0);
+
+  // multi-obs
+  CInputContext inputCtx3(paramStoreMO);
+  setInputDataMO(inputCtx3);
+  BOOST_CHECK(inputCtx3.GetSpectrum(0, 0)->getObsID() == "1");
+  BOOST_CHECK(inputCtx3.GetSpectrum(0, 1)->getObsID() == "2");
+  inputCtx3.Init();
+  BOOST_CHECK(inputCtx3.GetRebinnedSpectrum(0) != nullptr);
+  BOOST_CHECK(inputCtx3.GetRebinnedSpectrum(1) != nullptr);
+  inputCtx3.resetSpectrumSpecific();
+  BOOST_CHECK(inputCtx2.getRebinnedSpectra().size() == 0);
+
+  // no intersection
+  CInputContext inputCtx4(paramStoreNoOverLap);
+  setInputData(inputCtx4);
+  inputCtx4.Init();
 }
 
 BOOST_AUTO_TEST_CASE(rebinInputs_test) {
   CInputContext inputCtx(paramStoreNoFFT);
   setInputData(inputCtx);
   inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("objects");
-  inputCtx.m_lambdaRange = std::make_shared<TFloat64Range>(
-      paramStoreNoFFT->Get<TFloat64Range>("lambdarange"));
+  inputCtx.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
+      paramStoreNoFFT->Get<TFloat64Range>("lambdarange")));
 
   inputCtx.RebinInputs();
   BOOST_CHECK(inputCtx.m_use_LogLambaSpectrum == false);
-  BOOST_CHECK(inputCtx.GetRebinnedSpectrum() == nullptr);
+  BOOST_CHECK(inputCtx.getRebinnedSpectra().size() == 0);
 
   CInputContext inputCtx2(paramStoreFFT);
   setInputData(inputCtx2);
   inputCtx2.m_categories = paramStoreFFT->GetList<std::string>("objects");
-  inputCtx2.m_lambdaRange = std::make_shared<TFloat64Range>(
-      paramStoreFFT->Get<TFloat64Range>("lambdarange"));
+  inputCtx2.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
+      paramStoreFFT->Get<TFloat64Range>("lambdarange")));
+  inputCtx2.m_rebinnedClampedLambdaRanges.push_back(
+      std::make_shared<TFloat64Range>(
+          paramStoreFFT->Get<TFloat64Range>("lambdarange")));
 
   inputCtx2.RebinInputs();
   BOOST_CHECK(inputCtx2.m_use_LogLambaSpectrum == true);
   BOOST_CHECK(inputCtx2.GetRebinnedSpectrum() != nullptr);
 
-  inputCtx2.m_lambdaRange->Set(1000, 2000);
+  inputCtx2.m_lambdaRanges[0]->Set(1000, 2000);
   BOOST_CHECK_THROW(inputCtx2.RebinInputs(), GlobalException);
 
   inputCtx2.resetSpectrumSpecific();
   spc->SetSpectralAxis(CSpectrumSpectralAxis(myLinLambdaList));
   setInputData(inputCtx2);
-  inputCtx2.m_lambdaRange = std::make_shared<TFloat64Range>(
-      paramStoreFFT->Get<TFloat64Range>("lambdarange"));
+  inputCtx2.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
+      paramStoreFFT->Get<TFloat64Range>("lambdarange")));
   inputCtx2.RebinInputs();
   BOOST_CHECK(inputCtx2.m_logGridStep == 0.0001);
-  BOOST_CHECK(
-      inputCtx2.GetRebinnedSpectrum()->GetSpectralAxis().IsLogSampled() ==
-      true);
+  BOOST_CHECK(inputCtx2.GetSpectrum(1)->GetSpectralAxis().IsLogSampled() ==
+              true);
 }
 BOOST_AUTO_TEST_CASE(OrthogonalizeTemplates_test) {
   CInputContext inputCtx(paramStoreOrtho);
   setInputData(inputCtx);
 
   inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("objects");
-  inputCtx.m_lambdaRange = std::make_shared<TFloat64Range>(
-      paramStoreNoFFT->Get<TFloat64Range>("lambdarange"));
+  inputCtx.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
+      paramStoreNoFFT->Get<TFloat64Range>("lambdarange")));
   BOOST_CHECK(catalog->GetTemplateCount("galaxy", 1, 0) == 0);
 
   //
-  Context.LoadParameterStore(jsonString + jsonStringOrtho);
+  Context.LoadParameterStore(jsonStringOneSpc + jsonString + jsonStringOrtho);
   Context.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
   inputCtx.OrthogonalizeTemplates();
   BOOST_CHECK(catalog->GetTemplateCount("galaxy", 1, 0) == 1);
