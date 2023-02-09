@@ -164,6 +164,13 @@ public:
   CSpectrumSpectralAxis spcAxisLight = mySpectralListLight;
 };
 
+class fixture_SpectralAxisExtended {
+public:
+  CSpectrumSpectralAxis spcAxis = myExtendedLambdaList;
+  Int32 spcAxisSize = myExtendedLambdaList.size();
+  TFloat64List spcAxisList = myExtendedLambdaList;
+};
+
 // create Noise Axis
 class fixture_NoiseAxis {
 public:
@@ -173,6 +180,11 @@ public:
 class fixture_NoiseAxisLight {
 public:
   CSpectrumNoiseAxis noiseAxisLight = myNoiseListLight;
+};
+
+class fixture_NoiseAxisExtended {
+public:
+  CSpectrumNoiseAxis noiseAxis = myExtendedNoiseList;
 };
 
 // create Flux Axis
@@ -187,6 +199,13 @@ class fixture_FluxAxisLight {
 public:
   CSpectrumFluxAxis fluxAxisLight = CSpectrumFluxAxis(
       myFluxListLight, fixture_NoiseAxisLight().noiseAxisLight);
+};
+
+class fixture_FluxAxisExtended {
+public:
+  CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
+      myExtendedFluxList, fixture_NoiseAxisExtended().noiseAxis);
+  TFloat64List fluxAxisList = myExtendedFluxList;
 };
 
 // create Spectrum
@@ -208,6 +227,14 @@ public:
   CSpectrum spcLight = CSpectrum(fixture_SpectralAxisLight().spcAxisLight,
                                  fixture_FluxAxisLight().fluxAxisLight);
 };
+
+class fixture_SharedSpectrumExtended {
+public:
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(fixture_SpectralAxisExtended().spcAxis,
+                                  fixture_FluxAxisExtended().fluxAxis);
+};
+
 class fixture_SharedSpectrum {
 public:
   std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(
@@ -336,25 +363,25 @@ public:
 class fixture_LineCatalog {
 public:
   fixture_LineCatalog() {
-    for (std::size_t i = 0; i < fixture_LineCatalogData().waveLength.size();
-         i++) {
+
+    for (std::size_t i = 0; i < lineCatalogData.waveLength.size(); i++) {
       lineCatalog->AddLineFromParams(
-          fixture_LineCatalogData().name[i],
-          fixture_LineCatalogData().waveLength[i],
-          fixture_LineCatalogData().type[i], fixture_LineCatalogData().force[i],
-          fixture_LineCatalogData().profile[i], TAsymParams(0, 0, 0),
-          fixture_LineCatalogData().amplitudeGroupName[i],
-          fixture_LineCatalogData().amplitudeGroupValue[i],
-          fixture_LineCatalogData().dispersionVelocityGroupName[i],
-          fixture_LineCatalogData().waveLengthOffset[i],
-          fixture_LineCatalogData().enableFitWaveLengthOffset[i], 0,
-          "lineCatalog", fixture_MeiskinCorrection().igmCorrectionMeiksin);
+          lineCatalogData.name[i], lineCatalogData.waveLength[i],
+          lineCatalogData.type[i], lineCatalogData.force[i],
+          lineCatalogData.profile[i], TAsymParams(0, 0, 0),
+          lineCatalogData.amplitudeGroupName[i],
+          lineCatalogData.amplitudeGroupValue[i],
+          lineCatalogData.dispersionVelocityGroupName[i],
+          lineCatalogData.waveLengthOffset[i],
+          lineCatalogData.enableFitWaveLengthOffset[i], 0, "lineCatalog",
+          fixture_MeiskinCorrection().igmCorrectionMeiksin);
     }
   }
+  fixture_LineCatalogData lineCatalogData = fixture_LineCatalogData();
   Int32 nsigmasupport = 8;
   std::shared_ptr<CLineCatalog> lineCatalog =
       std::make_shared<CLineCatalog>(nsigmasupport);
-  Int32 lineCatalogSize = fixture_LineCatalogData().waveLength.size();
+  Int32 lineCatalogSize = lineCatalogData.waveLength.size();
 };
 
 // Creation of line ratio catalog

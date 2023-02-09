@@ -49,7 +49,7 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4680, 4712 ],"
+    "{\"lambdarange\" : [ 4630, 4815 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -83,7 +83,7 @@ const std::string jsonString =
     "\"extremacount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : false,"
+    "\"fftprocessing\" : true,"
     "\"interpolation\" : \"precomputedfinegrid\","
     "\"extinction\" : true,"
     "\"dustfit\" : true,"
@@ -100,7 +100,7 @@ public:
       fixture_CalzettiCorrection().ismCorrectionCalzetti;
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   std::shared_ptr<const CParameterStore> paramStore =
       Context.GetParameterStore();
   BOOST_CHECK(paramStore->Get<TFloat64Range>("lambdarange") ==
-              TFloat64Range(4680, 4712));
+              TFloat64Range(4630, 4815));
 
   std::shared_ptr<const CInputContext> inputCtx = Context.GetInputContext();
   BOOST_CHECK(inputCtx->getSpectra().size() == 0);
@@ -161,25 +161,26 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.GetRebinnedSpectrum() = spc);
 
   std::shared_ptr<const TFloat64Range> lbdaRange =
-      std::make_shared<const TFloat64Range>(4680, 4712);
+      std::make_shared<const TFloat64Range>(4630, 4815);
   BOOST_CHECK(Context.GetLambdaRange()->GetBegin() == lbdaRange->GetBegin());
   BOOST_CHECK(Context.GetLambdaRange()->GetEnd() == lbdaRange->GetEnd());
 
-  lbdaRange = std::make_shared<const TFloat64Range>(4680.282, 4712);
+  lbdaRange = std::make_shared<const TFloat64Range>(4630.478, 4815);
   BOOST_CHECK(Context.GetClampedLambdaRange(false)->GetBegin() ==
               lbdaRange->GetBegin());
   BOOST_CHECK(Context.GetClampedLambdaRange(false)->GetEnd() ==
               lbdaRange->GetEnd());
 
-  lbdaRange = std::make_shared<const TFloat64Range>(0, 0);
-  BOOST_CHECK(Context.GetClampedLambdaRange(true)->GetBegin() ==
-              lbdaRange->GetBegin());
-  BOOST_CHECK(Context.GetClampedLambdaRange(true)->GetEnd() ==
-              lbdaRange->GetEnd());
   BOOST_CHECK(Context.getRebinnedClampedLambdaRanges()[0]->GetBegin() ==
-              lbdaRange->GetBegin());
+              Context.GetRebinnedSpectrum()
+                  ->GetSpectralAxis()
+                  .GetSamplesVector()
+                  .front());
   BOOST_CHECK(Context.getRebinnedClampedLambdaRanges()[0]->GetEnd() ==
-              lbdaRange->GetEnd());
+              Context.GetRebinnedSpectrum()
+                  ->GetSpectralAxis()
+                  .GetSamplesVector()
+                  .back());
 
   Context.m_ScopeStack.pop_back();
   BOOST_CHECK_THROW(Context.GetCurrentMethod(), GlobalException);
@@ -196,6 +197,11 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.getSpectra().size() == 0);
   BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
                                       "solveResult") == false);
+
+  // GSL error
+  Int32 dim = 1;
+  gsl_matrix *covarMatrix = gsl_matrix_alloc(dim, dim);
+  BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), GlobalException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
