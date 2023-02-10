@@ -185,52 +185,17 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
         result->PeakListDetectionStatus.push_back(status);
       }
 
-      if (0) // check gaussPos vs position of the max.
-      {      // tolerance on the position in terms of number of samples
-        // reg. sampling, TAG: IRREGULAR_SAMPLING
-        // if(fabs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
-        //     toAdd = false;
-        // }
-        // irregular sampling
-        Int32 nsamplestol = 3;
-        Float64 error3samples = 1.0;
-        if (max_index < nsamplestol) {
-          error3samples = spc.GetSpectralAxis()[max_index + nsamplestol];
-        } else {
-          if (max_index > spc.GetSampleCount() - nsamplestol - 1) {
-            error3samples = spc.GetSpectralAxis()[max_index - nsamplestol];
-          } else {
-            error3samples = (spc.GetSpectralAxis()[max_index + nsamplestol] -
-                             spc.GetSpectralAxis()[max_index - nsamplestol]) /
-                            2.0;
-          }
-        }
-        Float64 diffPos = fabs(gaussPos - spc.GetSpectralAxis()[max_index]);
-        if (diffPos > error3samples) {
-          toAdd = false;
-          std::string status =
-              (boost::format("Peak_%1% : gaussPos far from spectrum "
-                             "max_position (samples)") %
-               j)
-                  .str();
-          Log.LogDebug(
-              "Peak_%d : gaussPos far from spectrum max_position (samples)", j);
-          result->PeakListDetectionStatus.push_back(status);
-        }
-      }      // check gaussPos vs position of the max.
-      else { // tolerance in Angstrom
-        Float64 tolAngtsrom = 6;
-        Float64 diffPos = fabs(gaussPos - spc.GetSpectralAxis()[max_index]);
-        if (diffPos > tolAngtsrom) {
-          toAdd = false;
-          std::string status = (boost::format("Peak_%1% : gaussAmp far from "
-                                              "spectrum max_value (Angstrom)") %
-                                j)
-                                   .str();
-          Log.LogDebug(
-              "Peak_%d : gaussAmp far from spectrum max_value (Angstrom)", j);
-          result->PeakListDetectionStatus.push_back(status);
-        }
+      Float64 tolAngtsrom = 6;
+      Float64 diffPos = fabs(gaussPos - spc.GetSpectralAxis()[max_index]);
+      if (diffPos > tolAngtsrom) {
+        toAdd = false;
+        std::string status = (boost::format("Peak_%1% : gaussAmp far from "
+                                            "spectrum max_value (Angstrom)") %
+                              j)
+                                 .str();
+        Log.LogDebug(
+            "Peak_%d : gaussAmp far from spectrum max_value (Angstrom)", j);
+        result->PeakListDetectionStatus.push_back(status);
       }
     } // Check if gaussian fit is very different from peak itself
 

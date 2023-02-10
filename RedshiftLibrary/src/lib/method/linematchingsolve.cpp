@@ -359,30 +359,3 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
   }
   return std::make_shared<CLineMatchingSolveResult>();
 }
-
-const std::string CLineMatchingSolve::GetDescription() {
-  std::string desc;
-  desc = "Method linematching:\n";
-  desc.append("\tparam: linematching.cut = <float value>\n");
-  desc.append("\tparam: linematching.detectioncut = <float value>\n");
-  desc.append("\tparam: linematching.detectionnoiseoffset = <float value>\n");
-  desc.append("\tparam: linematching.disablegaussianfitqualitycheck = <integer "
-              "value>\n");
-  desc.append("\tparam: linematching.dynamicLinematching = <integer value>\n");
-  desc.append("\tparam: linematching.enlargeRate = <float value>\n");
-  desc.append("\tparam: linematching.linetype = {"
-              "Emission"
-              ", "
-              "Absorption"
-              ", "
-              "All"
-              "}\n");
-  desc.append("\tparam: linematching.maxsize = <float value in Angstrom>\n");
-  desc.append("\tparam: linematching.minMatchNum = <int value>\n");
-  desc.append("\tparam: linematching.minsize = <float value in Angstrom>\n");
-  desc.append("\tparam: linematching.strongcut = <float value>\n");
-  desc.append("\tparam: linematching.tol = <float value>\n");
-  desc.append("\tparam: linematching.winsize = <float value in Angstrom>\n");
-
-  return desc;
-}

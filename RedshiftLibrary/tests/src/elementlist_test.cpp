@@ -46,7 +46,6 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
-#include "RedshiftLibrary/tests/test-tools.h"
 #include "test-config.h"
 
 #include <boost/test/unit_test.hpp>
@@ -56,7 +55,6 @@
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
-using namespace CPFTest;
 
 BOOST_AUTO_TEST_SUITE(test_elementlist)
 
@@ -76,7 +74,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
   CSpectrum spectrum;
 
-  CTemplateCatalog tplCatalog;
+  // CTemplateCatalog tplCatalog;
   TStringList tplCategories;
   CLineCatalog lineCatalog;
   TFloat64Range range(12500, 18500);
@@ -84,7 +82,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   CContinuumModelSolution c_solution;
   int iterations = 1;
 
-  generate_spectrum(spectrum, 1000, 3500, 12500);
+  // generate_spectrum(spectrum, 1000, 3500, 12500);
   /*  noisePath = generate_noise_fits(1000, 3500, 12500);
   noise.SetNoiseFilePath(noisePath.c_str(), reader);
   noise.AddNoise(spectrum);
@@ -101,7 +99,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
   spectrum.SetLSF(lsf);
 
-  generate_template_catalog(tplCatalog, 100, 3500., 12500.);
+  // generate_template_catalog(tplCatalog, 100, 3500., 12500.);
   TAsymParams asymP;
   /* //TODO restore this test , for the moment if linecatalog is not empty, test
     will fail with follogin message: fatal error: in

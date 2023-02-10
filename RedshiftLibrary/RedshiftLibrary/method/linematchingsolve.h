@@ -74,8 +74,6 @@ public:
           const TFloat64Range &redshiftsRange,
           const CLineCatalog &restLineCatalog);
 
-  const std::string GetDescription();
-
 private:
   // Peak Detection
   Float64 m_winsize;

@@ -707,55 +707,27 @@ void COperatorLineModel::Combine_firstpass_candidates(
         firstpass_results_b->Alv[i];
 
     // save the continuum fitting parameters from first pass
-    if (0) // cannot work since the fpb is linemodel without cont. tplfit...
-    {
-      m_firstpass_extremaResult->FittedTplName[startIdx + keb] =
-          firstpass_results_b->FittedTplName[i];
-      m_firstpass_extremaResult->FittedTplAmplitude[startIdx + keb] =
-          firstpass_results_b->FittedTplAmplitude[i];
-      m_firstpass_extremaResult->FittedTplAmplitudeError[startIdx + keb] =
-          firstpass_results_b->FittedTplAmplitudeError[i];
-      m_firstpass_extremaResult->FittedTplMerit[startIdx + keb] =
-          firstpass_results_b->FittedTplMerit[i];
-      m_firstpass_extremaResult->FittedTplMeritPhot[startIdx + keb] =
-          firstpass_results_b->FittedTplMeritPhot[i];
-      m_firstpass_extremaResult->FittedTplEbmvCoeff[startIdx + keb] =
-          firstpass_results_b->FittedTplEbmvCoeff[i];
-      m_firstpass_extremaResult->FittedTplMeiksinIdx[startIdx + keb] =
-          firstpass_results_b->FittedTplMeiksinIdx[i];
-      m_firstpass_extremaResult->FittedTplRedshift[startIdx + keb] =
-          firstpass_results_b->FittedTplRedshift[i];
-      m_firstpass_extremaResult->FittedTplDtm[startIdx + keb] =
-          firstpass_results_b->FittedTplDtm[i];
-      m_firstpass_extremaResult->FittedTplMtm[startIdx + keb] =
-          firstpass_results_b->FittedTplMtm[i];
-      m_firstpass_extremaResult->FittedTplLogPrior[startIdx + keb] =
-          firstpass_results_b->FittedTplLogPrior[i];
-      m_firstpass_extremaResult->FittedTplpCoeffs[startIdx + keb] =
-          firstpass_results_b->FittedTplpCoeffs[i];
-    } else {
-      // find the index in the zaxis results
 
-      Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z_fpb);
-      const auto &contModel = m_result->ContinuumModelSolutions[idx];
-      // save the continuum fitting parameters from first pass
-      m_firstpass_extremaResult->fillWithContinuumModelSolutionAtIndex(
-          startIdx + keb, contModel);
+    // find the index in the zaxis results
 
-      if (contModel.tplName == "") {
-        Flag.warning(WarningCode::TPL_NAME_EMPTY,
-                     Formatter() << "COperatorLineModel::" << __func__
-                                 << ": Saving first pass extremum w. "
-                                    "ContinuumModelSolutions tplname="
-                                 << m_result->ContinuumModelSolutions[idx]
-                                        .tplName.c_str());
-        Flag.warning(WarningCode::TPL_NAME_EMPTY,
-                     Formatter()
-                         << "COperatorLineModel::" << __func__
-                         << ": Saving first pass extremum w. result idx=" << idx
-                         << ", w. m_result->Redshifts[idx]="
-                         << m_result->Redshifts[idx]);
-      }
+    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z_fpb);
+    const auto &contModel = m_result->ContinuumModelSolutions[idx];
+    // save the continuum fitting parameters from first pass
+    m_firstpass_extremaResult->fillWithContinuumModelSolutionAtIndex(
+        startIdx + keb, contModel);
+
+    if (contModel.tplName == "") {
+      Flag.warning(WarningCode::TPL_NAME_EMPTY,
+                   Formatter() << "COperatorLineModel::" << __func__
+                               << ": Saving first pass extremum w. "
+                                  "ContinuumModelSolutions tplname="
+                               << m_result->ContinuumModelSolutions[idx]
+                                      .tplName.c_str());
+      Flag.warning(WarningCode::TPL_NAME_EMPTY,
+                   Formatter() << "COperatorLineModel::" << __func__
+                               << ": Saving first pass extremum w. result idx="
+                               << idx << ", w. m_result->Redshifts[idx]="
+                               << m_result->Redshifts[idx]);
     }
   }
 }

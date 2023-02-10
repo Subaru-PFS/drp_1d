@@ -57,7 +57,6 @@ public:
   bool m_enableAmplitudeOffsets = false;
   Float64 m_Redshift = 0.;
   // new methods
-  void dumpModel();
   Int32 m__count = 0;
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,

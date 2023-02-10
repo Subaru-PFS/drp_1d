@@ -188,13 +188,10 @@ public:
   void SetSumGauss(Float64 val);
   Float64 GetFitAmplitude() const;
 
-  void debug(std::ostream &os) const;
-
   std::vector<CLine> m_Lines; // only used in multiline for now... tbd: should
                               // be moved elsewhere ?
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
-  void dumpElement(std::ostream &os) const;
 
 protected:
   TLineWidthType m_LineWidthType;
