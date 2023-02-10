@@ -184,6 +184,13 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
           ctx_notLogSampled->GetSpectrum(), "no");
   BOOST_CHECK(spcLogRebinning->GetName() == "spc_notLog");
   BOOST_CHECK(spcLogRebinning->GetSpectralAxis().IsLogSampled() == true);
+  TFloat64Range lbdaRange(4680.4680234007774, 4711.9324472744638);
+  BOOST_CHECK_CLOSE(
+      spcLogRebinning->GetSpectralAxis().GetSamplesVector().front(),
+      lbdaRange.GetBegin(), 1e-8);
+  BOOST_CHECK_CLOSE(
+      spcLogRebinning->GetSpectralAxis().GetSamplesVector().back(),
+      lbdaRange.GetEnd(), 1e-8);
 
   ctx_notLogSampled->GetSpectrum()->SetSpectralAndFluxAxes(
       CSpectrumSpectralAxis(TFloat64List{1212, 1212.4, 1213}),
@@ -288,6 +295,10 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinTemplate_test) {
   std::shared_ptr<NSEpic::CTemplate> tpl = logRebinning.loglambdaRebinTemplate(
       tplStar_notLogSampled, lbdaRange, loglambda_count_tpl);
   BOOST_CHECK(tpl->GetSpectralAxis().IsLogSampled() == true);
+  BOOST_CHECK_CLOSE(tpl->GetSpectralAxis().GetSamplesVector().front(),
+                    lbdaRange.GetBegin(), 1e-8);
+  BOOST_CHECK_CLOSE(tpl->GetSpectralAxis().GetSamplesVector().back(),
+                    lbdaRange.GetEnd(), 1e-8);
 
   // template not overlap
   lbdaRange.Set(4679., 4712);
