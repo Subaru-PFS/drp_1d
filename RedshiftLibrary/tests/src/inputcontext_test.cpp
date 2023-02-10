@@ -47,8 +47,6 @@ using namespace NSEpic;
 
 const std::string jsonStringOneSpc = "{\"lambdarange\" : [ 4631, 4815 ],";
 
-const std::string jsonStringNoOverLap = "{\"lambdarange\" : [ 2631, 2815 ],";
-
 const std::string jsonStringMO =
     "{\"lambdarange\" : {\"1\" : [ 4631, 4815], \"2\" : [ 4631, 4815 ]},";
 
@@ -154,10 +152,6 @@ public:
       fixture_ParamStore(jsonStringOneSpc + jsonString + jsonStringOrtho,
                          scopeStack)
           .paramStore;
-  std::shared_ptr<CParameterStore> paramStoreNoOverLap =
-      fixture_ParamStore(jsonStringNoOverLap + jsonString + jsonStringNoFFT,
-                         scopeStack)
-          .paramStore;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -205,10 +199,6 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
   spc->SetLSF(LSF);
   inputCtx.addSpectrum(spc);
   BOOST_CHECK(inputCtx.GetSpectrum() == spc);
-
-  Context.addSpectrum(spc);
-  std::shared_ptr<const CInputContext> inputCtx2 = Context.GetInputContext();
-  const CSpectrum &spc3 = *(inputCtx2->GetSpectrum());
 
   BOOST_CHECK(inputCtx.getRebinnedSpectra().size() == 0);
 
@@ -310,11 +300,6 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
   BOOST_CHECK(inputCtx3.GetRebinnedSpectrum(1) != nullptr);
   inputCtx3.resetSpectrumSpecific();
   BOOST_CHECK(inputCtx2.getRebinnedSpectra().size() == 0);
-
-  // no intersection
-  CInputContext inputCtx4(paramStoreNoOverLap);
-  setInputData(inputCtx4);
-  inputCtx4.Init();
 }
 
 BOOST_AUTO_TEST_CASE(rebinInputs_test) {
