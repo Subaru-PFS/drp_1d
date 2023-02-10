@@ -55,7 +55,6 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
   } else {
     spc = m_inputContext.GetSpectrum();
   }
-
   setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
 }
 
@@ -72,7 +71,7 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
 */
 void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
                                            const TFloat64Range &lambdaRange) {
-  if (spectrum.GetSpectralAxis().IsLogSampled()) {
+  if (spectrum.GetSpectralAxis().IsLogSampled(m_logGridStep)) {
     // compute reference lambda range
     // (the effective lambda range of log-sampled spectrum when initial spectrum
     // overlaps lambdaRange assuming all spectra are aligned (this to avoid
@@ -94,7 +93,7 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
         exp(loglambda_start_ref),
         exp(loglambda_end_ref)); // this is the effective lambda range, to be
                                  // used in inferTemplateRebinningSetup
-  } else {
+  } else if (!spectrum.GetSpectralAxis().IsLogSampled()) {
     // compute reference lambda range (the effective lambda range of rebinned
     // spectrum when initial spectrum overlaps lambdaRange)
     Int32 loglambda_count_ref;
@@ -109,6 +108,10 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
         lambdaRange.GetBegin(),
         exp(loglambda_end_ref)); // this is the effective lambda range, to be
                                  // used in inferTemplateRebinningSetup
+  } else {
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Log-sampled spectrum has wrong logGridStep : "
+                       << m_logGridStep);
   }
   Log.LogDetail("  Log-Rebin: logGridStep = %f", m_logGridStep);
   return;
@@ -124,7 +127,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
   TFloat64Range lambdaRange_spc;
   Int32 loglambda_count_spc;
   if (spectrum->GetSpectralAxis().IsLogSampled()) {
-    return make_shared<CSpectrum>(*spectrum); // copy the spectrum
+    THROWG(INTERNAL_ERROR, Formatter() << "spectrum is already log-sampled");
   } else {
     // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on
     // reference grid) to be passed to computeTargetLogSpectralAxis in
