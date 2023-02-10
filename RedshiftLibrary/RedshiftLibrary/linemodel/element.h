@@ -71,9 +71,7 @@ public:
   void getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift,
                                        Float64 &mu, Float64 &sigma,
                                        bool doAsymfitdelta = true) const;
-
-  const std::string &GetElementTypeTag() const;
-
+  Int32 GetElementType() const { return m_Lines.front().GetType(); };
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange);
   TInt32RangeList getSupport() const;

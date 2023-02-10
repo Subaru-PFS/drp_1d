@@ -84,7 +84,7 @@ public:
   std::vector<TInt32List> getIgmLinesIndices() const;
 
   Int32 findElementIndex(Int32 LineCatalogIndex, Int32 &lineIdx) const;
-
+  TInt32List findElementTypeIndices(CLine::EType type) const;
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
   Int32 getIndexAmpOffset(Int32 index) const;

@@ -427,6 +427,15 @@ CLineModelElementList::getValidElementIndices(Int32 lineTypeFilter) const {
   return nonZeroValidEltsIdx;
 }
 
+TInt32List
+CLineModelElementList::findElementTypeIndices(CLine::EType type) const {
+  TInt32List idx;
+  for (size_t i = 0; i < m_Elements.size(); ++i)
+    if (m_Elements[i]->GetElementType() == type)
+      idx.push_back(i);
+  return idx;
+}
+
 /**
  * \brief Returns the first index of m_Elements where calling the element's
  *findElementIndex method with LineCatalogIndex argument does not return -1.

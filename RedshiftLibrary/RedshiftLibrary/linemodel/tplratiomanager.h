@@ -77,9 +77,12 @@ public:
   void logParameters() override;
   const std::string &getTplratio_bestTplName() const;
   Float64 getTplratio_bestTplIsmCoeff() const;
-  Float64 getTplratio_bestAmplitude() const;
-  Float64 getTplratio_bestDtm() const;
-  Float64 getTplratio_bestMtm() const;
+  Float64 getTplratio_bestAmplitudeEm() const;
+  Float64 getTplratio_bestAmplitudeAbs() const;
+  Float64 getTplratio_bestDtmEm() const;
+  Float64 getTplratio_bestDtmAbs() const;
+  Float64 getTplratio_bestMtmEm() const;
+  Float64 getTplratio_bestMtmAbs() const;
   const TFloat64List &GetChisquareTplratio() const;
   TFloat64List GetPriorLinesTplratio() const;
   const TFloat64List &GetScaleMargTplratio() const;
@@ -133,9 +136,13 @@ protected:
 
   std::string m_tplratioBestTplName = "undefined";
   Float64 m_tplratioBestTplIsmCoeff = NAN;
-  Float64 m_tplratioBestTplAmplitude = NAN;
-  Float64 m_tplratioBestTplDtm = NAN;
-  Float64 m_tplratioBestTplMtm = NAN;
+  Float64 m_tplratioBestTplAmplitudeEm = NAN;
+  Float64 m_tplratioBestTplAmplitudeAbs = NAN;
+  Float64 m_tplratioBestTplDtmEm = NAN;
+  Float64 m_tplratioBestTplDtmAbs = NAN;
+  Float64 m_tplratioBestTplMtmEm = NAN;
+  Float64 m_tplratioBestTplMtmAbs = NAN;
+
   Int32 m_tplratioLeastSquareFast =
       0; // for rigidity=tplratio: switch to use fast least square estimation
 
@@ -155,6 +162,38 @@ protected:
 private:
   void fillHalphaArray(Int32 idx);
 };
+
+inline const std::string &CTplratioManager::getTplratio_bestTplName() const {
+  return m_tplratioBestTplName;
+}
+
+inline Float64 CTplratioManager::getTplratio_bestTplIsmCoeff() const {
+  return m_tplratioBestTplIsmCoeff;
+}
+
+inline Float64 CTplratioManager::getTplratio_bestAmplitudeEm() const {
+  return m_tplratioBestTplAmplitudeEm;
+}
+
+inline Float64 CTplratioManager::getTplratio_bestAmplitudeAbs() const {
+  return m_tplratioBestTplAmplitudeAbs;
+}
+
+inline Float64 CTplratioManager::getTplratio_bestDtmEm() const {
+  return m_tplratioBestTplDtmEm;
+}
+
+inline Float64 CTplratioManager::getTplratio_bestDtmAbs() const {
+  return m_tplratioBestTplDtmAbs;
+}
+
+inline Float64 CTplratioManager::getTplratio_bestMtmEm() const {
+  return m_tplratioBestTplMtmEm;
+}
+
+inline Float64 CTplratioManager::getTplratio_bestMtmAbs() const {
+  return m_tplratioBestTplMtmAbs;
+}
 
 } // namespace NSEpic
 

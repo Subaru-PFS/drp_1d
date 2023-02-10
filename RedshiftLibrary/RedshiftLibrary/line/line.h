@@ -65,6 +65,8 @@ public:
     nType_All = 3,
   };
 
+  static const std::map<Int32, std::string> ETypeString;
+
   enum EForce {
     nForce_Weak = 1,
     nForce_Strong = 2,

@@ -20,7 +20,8 @@ VelocityEmission	model_parameters	False	candidate	Elv	extrema_results	f8
 VelocityAbsorption	model_parameters	False	candidate	Alv	extrema_results	f8
 StrongEmissionLinesSNR	model_parameters	False	candidate	StrongELSNR	extrema_results	f8
 LinesRatioIsmCoeff	model_parameters	False	candidate	FittedTplratioIsmCoeff	extrema_results	f8
-LinesRatioAmplitude	model_parameters	False	candidate	FittedTplratioAmplitude	extrema_results	f8
+LinesRatioAmplitudeEm	model_parameters	False	candidate	FittedTplratioAmplitudeEm	extrema_results	f8
+LinesRatioAmplitudeAbs	model_parameters	False	candidate	FittedTplratioAmplitudeAbs	extrema_results	f8
 FittedLineLambda	fitted_lines	False	candidate	LambdaObs	extrema_results	f8
 FittedLineID	fitted_lines	False	candidate	lineId	extrema_results	i
 FittedLineFlux	fitted_lines	False	candidate	Fluxs	extrema_results	f8

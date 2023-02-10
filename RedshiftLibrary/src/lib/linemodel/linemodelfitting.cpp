@@ -339,8 +339,9 @@ void CLineModelFitting::LogCatalogInfos() {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
     Int32 nLines = m_Elements[iElts]->GetSize();
     if (nLines < 1) {
-      Log.LogDetail("LineModel ctlg: elt %d (%s): no lines", iElts,
-                    m_Elements[iElts]->GetElementTypeTag().c_str());
+      Log.LogDetail(
+          "LineModel ctlg: elt %d (%s): no lines", iElts,
+          CLine::ETypeString.at(m_Elements[iElts]->GetElementType()).c_str());
     }
     for (Int32 j = 0; j < nLines; j++) {
       std::string nominalAmpStr = "";
@@ -348,10 +349,10 @@ void CLineModelFitting::LogCatalogInfos() {
         nominalAmpStr = boost::str(boost::format("(nominal amp = %.4e)") %
                                    m_Elements[iElts]->GetNominalAmplitude(j));
       }
-      Log.LogDetail("LineModel ctlg: elt %d (%s): line %d = %s %s", iElts,
-                    m_Elements[iElts]->GetElementTypeTag().c_str(), j,
-                    m_Elements[iElts]->GetLineName(j).c_str(),
-                    nominalAmpStr.c_str());
+      Log.LogDetail(
+          "LineModel ctlg: elt %d (%s): line %d = %s %s", iElts,
+          CLine::ETypeString.at(m_Elements[iElts]->GetElementType()).c_str(), j,
+          m_Elements[iElts]->GetLineName(j).c_str(), nominalAmpStr.c_str());
     }
   }
   Log.LogDetail("\n");

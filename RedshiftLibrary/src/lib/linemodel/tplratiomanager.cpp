@@ -234,25 +234,6 @@ void CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
   }
 }
 
-const std::string &CTplratioManager::getTplratio_bestTplName() const {
-  return m_tplratioBestTplName;
-}
-Float64 CTplratioManager::getTplratio_bestTplIsmCoeff() const {
-  return m_tplratioBestTplIsmCoeff;
-}
-
-Float64 CTplratioManager::getTplratio_bestAmplitude() const {
-  return m_tplratioBestTplAmplitude;
-}
-
-Float64 CTplratioManager::getTplratio_bestDtm() const {
-  return m_tplratioBestTplDtm;
-}
-
-Float64 CTplratioManager::getTplratio_bestMtm() const {
-  return m_tplratioBestTplMtm;
-}
-
 void CTplratioManager::logParameters() {
   CLineRatioManager::logParameters();
   Log.LogDetail(Formatter() << " m_opt_haprior" << m_opt_haprior);
@@ -264,10 +245,19 @@ void CTplratioManager::logParameters() {
   Log.LogDetail(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
   Log.LogDetail(Formatter()
                 << "tplratioBestTplIsmCoeff=" << m_tplratioBestTplIsmCoeff);
+  Log.LogDetail(Formatter() << "tplratioBestTplAmplitudeEm="
+                            << m_tplratioBestTplAmplitudeEm);
+  Log.LogDetail(Formatter() << "tplratioBestTplAmplitudeAbs="
+                            << m_tplratioBestTplAmplitudeAbs);
   Log.LogDetail(Formatter()
-                << "tplratioBestTplAmplitude=" << m_tplratioBestTplAmplitude);
-  Log.LogDetail(Formatter() << "tplratioBestTplDtm=" << m_tplratioBestTplDtm);
-  Log.LogDetail(Formatter() << "tplratioBestTplMtm=" << m_tplratioBestTplMtm);
+                << "tplratioBestTplDtmEm=" << m_tplratioBestTplDtmEm);
+  Log.LogDetail(Formatter()
+                << "tplratioBestTplDtmAbs=" << m_tplratioBestTplDtmAbs);
+
+  Log.LogDetail(Formatter()
+                << "tplratioBestTplMtmEm=" << m_tplratioBestTplMtmEm);
+  Log.LogDetail(Formatter()
+                << "tplratioBestTplMtmAbs=" << m_tplratioBestTplMtmAbs);
   Log.LogDetail(
       Formatter()
       << "tplratioLeastSquareFast="
@@ -528,15 +518,34 @@ void CTplratioManager::saveResults(Int32 itratio) {
   m_savedIdxFitted = itratio;
   m_tplratioBestTplName = m_CatalogTplRatio->GetCatalogName(m_savedIdxFitted);
   m_tplratioBestTplIsmCoeff = GetIsmCoeff(m_savedIdxFitted);
-  m_tplratioBestTplAmplitude =
-      m_FittedAmpTplratio[m_savedIdxFitted][0]; // Should be only 1 elt
-  // in tpl ratio mode...
-  m_tplratioBestTplDtm =
-      m_DtmTplratio[m_savedIdxFitted]
-                   [0]; // Should be only 1 elt in tpl ratio mode...
-  m_tplratioBestTplMtm =
-      m_MtmTplratio[m_savedIdxFitted]
-                   [0]; // Should be only 1 elt in tpl ratio mode...
+  TInt32List idx_em =
+      m_Elements.findElementTypeIndices(CLine::EType::nType_Emission);
+  if (!idx_em.empty()) {
+    m_tplratioBestTplAmplitudeEm =
+        m_FittedAmpTplratio[m_savedIdxFitted]
+                           [idx_em.front()]; // Should be only 1 elt in tpl
+                                             // ratio mode...
+    m_tplratioBestTplDtmEm =
+        m_DtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
+                                                         // in tpl ratio mode...
+    m_tplratioBestTplMtmEm =
+        m_MtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
+                                                         // in tpl ratio mode...
+  }
+  TInt32List idx_abs =
+      m_Elements.findElementTypeIndices(CLine::EType::nType_Absorption);
+  if (!idx_abs.empty()) {
+    m_tplratioBestTplAmplitudeAbs =
+        m_FittedAmpTplratio[m_savedIdxFitted]
+                           [idx_abs.front()]; // Should be only 1 elt in tpl
+                                              // ratio mode...
+    m_tplratioBestTplDtmAbs =
+        m_DtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
+                                                         // in tpl ratio mode...
+    m_tplratioBestTplMtmAbs =
+        m_MtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
+                                                         // in tpl ratio mode...
+  }
 }
 
 Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {

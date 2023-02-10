@@ -69,8 +69,8 @@ CLineModelElement::CLineModelElement(
                  // the spectrum with the line still considered inside the
                  // lambda range
 
-      m_ElementType("CLineModelElement"), m_SignFactors(rs.size()),
-      m_fitAmplitude(NAN), m_FittedAmplitudes(rs.size(), NAN),
+      m_SignFactors(rs.size()), m_fitAmplitude(NAN),
+      m_FittedAmplitudes(rs.size(), NAN),
       m_FittedAmplitudeErrorSigmas(rs.size(), NAN),
       m_NominalAmplitudes(nominalAmplitudes),
       m_absLinesLimit(
@@ -104,10 +104,6 @@ CLineModelElement::CLineModelElement(
   }
 
   SetFittedAmplitude(NAN, NAN);
-}
-
-const std::string &CLineModelElement::GetElementTypeTag() const {
-  return m_ElementType;
 }
 
 Int32 CLineModelElement::findElementIndex(Int32 LineCatalogIndex) const {
@@ -1394,7 +1390,7 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
   debug(os); // to dump lines info
   os << "m_OutsideLambdaRange\t" << m_OutsideLambdaRange << "\n";
   os << "m_fittingGroupInfo\t" << m_fittingGroupInfo << "\n";
-  os << "m_ElementType\t" << m_ElementType << "\n";
+  os << "m_ElementType\t" << CLine::ETypeString.at(GetElementType()) << "\n";
   os << "m_NominalWidth\t" << m_NominalWidth << "\n";
   os << "m_VelocityEmission\t" << m_VelocityEmission << "\n";
   os << "m_VelocityAbsorption\t" << m_VelocityAbsorption << "\n";

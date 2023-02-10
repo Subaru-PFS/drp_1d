@@ -99,12 +99,16 @@ public:
   // template ratio
   std::string FittedTplratioName = "undefined"; // Name of the best template
                                                 // fitted for tplcorr/tplratio
-  Float64 FittedTplratioAmplitude = NAN; // amp of the best template fitted for
+  Float64 FittedTplratioAmplitudeEm = NAN; // amp of the best template fitted for
                                          // tplcorr/tplratio
-  Float64 FittedTplratioDtm =
+  Float64 FittedTplratioAmplitudeAbs = NAN;
+
+  Float64 FittedTplratioDtmEm =
       NAN; // dtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioMtm =
+  Float64 FittedTplratioDtmAbs = NAN;
+  Float64 FittedTplratioMtmEm =
       NAN; // mtm of the best template fitted for tplcorr/tplratio
+  Float64 FittedTplratioMtmAbs = NAN;
   Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
                                         // fitted for tplcorr/tplratio
 };
