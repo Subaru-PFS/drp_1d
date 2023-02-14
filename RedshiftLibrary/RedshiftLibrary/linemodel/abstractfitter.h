@@ -61,7 +61,7 @@ public:
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
 
-  static std::unique_ptr<CAbstractFitter>
+  static std::shared_ptr<CAbstractFitter>
   makeFitter(std::string fittingMethod, CLineModelElementList &elements,
              std::shared_ptr<const CSpectrum> inputSpectrum,
              std::shared_ptr<const TLambdaRange> lambdaRange,
@@ -70,8 +70,26 @@ public:
              std::shared_ptr<CContinuumManager> continuumManager);
   Int32 m_cont_reestim_iterations = 0;
 
+  void fitAmplitude(Int32 eltIndex, const CSpectrumSpectralAxis &spectralAxis,
+                    const CSpectrumFluxAxis &fluxAxis,
+                    const CSpectrumFluxAxis &continuumfluxAxis,
+                    Float64 redshift, Int32 lineIdx = undefIdx);
+  void fitAmplitudeAndLambdaOffset(Int32 eltIndex,
+                                   const CSpectrumSpectralAxis &spectralAxis,
+                                   const CSpectrumFluxAxis &fluxAxis,
+                                   const CSpectrumFluxAxis &continuumfluxAxis,
+                                   Float64 redshift, Int32 lineIdx = undefIdx,
+                                   bool enableOffsetFitting = true,
+                                   Float64 step = 25., Float64 min = -400.,
+                                   Float64 max = 400.);
+
+  void setFittedData(std::vector<std::shared_ptr<TFittedData>> fittedData) {
+    m_fittedData = fittedData;
+  }
+
 protected:
   CLineModelElementList &m_Elements;
+  std::vector<std::shared_ptr<TFittedData>> m_fittedData;
   const CSpectrum &m_inputSpc;
   const CLineCatalog::TLineVector &m_RestLineList;
   const TFloat64Range &m_lambdaRange;
@@ -85,6 +103,13 @@ protected:
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
+
+  Float64 m_sumCross = 0.0;
+  Float64 m_sumGauss = 0.0;
+  Float64 m_dtmFree =
+      0.0; // dtmFree is the non-positive-constrained version of sumCross
+
+  Float64 m_absLinesLimit = 1.0;
 };
 } // namespace NSEpic
 

@@ -51,6 +51,7 @@ class CSpectrum;
 class CContinuumManager;
 class CLineModelSolution;
 class CContinuumModelSolution;
+class CAbstractFitter;
 class CLineRatioManager {
 public:
   CLineRatioManager(CLineModelElementList &elements,
@@ -85,6 +86,7 @@ public:
   } // TODO, called in computeFirstPass in the general case but only active when
     // line_ratio_type = tplratio -> should be reviewed
 
+  void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
   static std::shared_ptr<CLineRatioManager>
   makeLineRatioManager(const std::string &lineRatioType,
                        CLineModelElementList &elements,
@@ -92,7 +94,8 @@ public:
                        std::shared_ptr<const CSpectrum> inputSpc,
                        std::shared_ptr<const TFloat64Range> lambdaRange,
                        std::shared_ptr<CContinuumManager> continuumManager,
-                       const CLineCatalog::TLineVector &restLineList);
+                       const CLineCatalog::TLineVector &restLineList,
+                       std::shared_ptr<CAbstractFitter> fitter);
 
 protected:
   void setLyaProfile(Float64 redshift,
@@ -118,6 +121,7 @@ protected:
   std::shared_ptr<CSpectrumModel> m_model;
   std::shared_ptr<const CSpectrum> m_inputSpc;
   std::shared_ptr<CContinuumManager> m_continuumManager;
+  std::shared_ptr<CAbstractFitter> m_fitter;
   const CLineCatalog::TLineVector &m_RestLineList;
   std::shared_ptr<const TFloat64Range> m_lambdaRange;
 

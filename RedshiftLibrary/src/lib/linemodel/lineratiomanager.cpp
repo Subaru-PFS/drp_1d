@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
+#include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
@@ -201,9 +202,15 @@ TAsymParams CLineRatioManager::fitAsymParameters(Float64 redshift,
             {asymWidthCoeff, asymAlphaCoeff, delta});
 
         // idxLineLyaE = -1;
-        m_Elements[idxLyaE]->fitAmplitude(
-            spectralAxis, m_model->getSpcFluxAxisNoContinuum(),
+        std::ostringstream oss;
+        m_Elements.debug(oss);
+        Log.LogInfo(oss.str());
+        m_fitter->fitAmplitude(
+            idxLyaE, spectralAxis, m_model->getSpcFluxAxisNoContinuum(),
             m_model->getContinuumFluxAxis(), redshift, idxLineLyaE);
+        oss.clear();
+        m_Elements.debug(oss);
+        Log.LogInfo(oss.str());
 
         Float64 m = 0; // TODO DV why initializing to m_dTransposeD ?;
         if (1) {
@@ -211,6 +218,7 @@ TAsymParams CLineRatioManager::fitAsymParameters(Float64 redshift,
           m_model->refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
           m = m_model->getModelErrorUnderElement(idxLyaE,
                                                  m_model->getSpcFluxAxis());
+          Log.LogInfo("Fitting Lya profi: merit=%e", m);
         } else {
           m = getLeastSquareMeritFast(idxLyaE);
         }
@@ -273,9 +281,9 @@ Int32 CLineRatioManager::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
       m_Elements[iElts]->getLineProfile(idxLine.front()).getIGMIdxCount();
   for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
     m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
-    m_Elements[iElts]->fitAmplitude(spectralAxis,
-                                    m_model->getSpcFluxAxisNoContinuum(),
-                                    m_model->getContinuumFluxAxis(), redshift);
+    m_fitter->fitAmplitude(iElts, spectralAxis,
+                           m_model->getSpcFluxAxisNoContinuum(),
+                           m_model->getContinuumFluxAxis(), redshift);
 
     m_model->refreshModelUnderElements(TInt32List(1, iElts));
     Float64 m =
@@ -443,23 +451,24 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     std::shared_ptr<const CSpectrum> inputSpc,
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineCatalog::TLineVector &restLineList)
-
-{
-
+    const CLineCatalog::TLineVector &restLineList,
+    std::shared_ptr<CAbstractFitter> fitter) {
+  std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
-    return std::make_shared<CTplratioManager>(
+    ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elements, model, inputSpc, lambdaRange,
                          continuumManager, restLineList));
   else if (lineRatioType == "tplcorr")
-    return std::make_shared<CTplCorrManager>(
+    ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elements, model, inputSpc, lambdaRange,
                         continuumManager, restLineList));
   else if (lineRatioType == "rules")
-    return std::make_shared<CRulesManager>(
+    ret = std::make_shared<CRulesManager>(
         CRulesManager(elements, model, inputSpc, lambdaRange, continuumManager,
                       restLineList));
   else
     THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
                               "supported for linemodel.lineRatioType");
+  ret->setFitter(fitter);
+  return ret;
 }

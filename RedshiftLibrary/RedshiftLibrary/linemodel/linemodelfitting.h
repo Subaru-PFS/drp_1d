@@ -105,12 +105,8 @@ public:
   void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
   void setVelocityEmissionByGroup(Float64 vel, const TInt32List &inds);
 
-  void setVelocity(Float64 vel, Int32 lineType);
-  void setVelocity(Float64 vel, Int32 idxElt, Int32 lineType);
-
   Float64 GetVelocityEmission() const;
   Float64 GetVelocityAbsorption() const;
-  Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
 
   bool initModelAtZ(Float64 redshift,
                     const CSpectrumSpectralAxis &spectralAxis);
@@ -153,7 +149,7 @@ public:
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
   CLineModelElementList m_Elements;
-  std::unique_ptr<CAbstractFitter> m_fitter;
+  std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
   std::shared_ptr<const CSpectrum> m_inputSpc;
   const CLineCatalog::TLineVector m_RestLineList;
@@ -200,9 +196,6 @@ private:
                                   const std::string &strTag, Int32 type) const;
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
-  void addDoubleLine(const CLine &r1, const CLine &r2, Int32 index1,
-                     Int32 index2, Float64 nominalWidth, Float64 a1,
-                     Float64 a2);
 
   void applyRules(bool enableLogs = false);
 
@@ -217,10 +210,7 @@ private:
 
   std::string m_LineWidthType;
 
-  Float64 m_velocityEmission;
-  Float64 m_velocityAbsorption;
-  Float64 m_velocityEmissionInit;
-  Float64 m_velocityAbsorptionInit;
+  std::vector<std::shared_ptr<TFittedData>> m_fittedData;
 
   Float64 m_nominalWidthDefault;
 
