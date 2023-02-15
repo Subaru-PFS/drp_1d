@@ -40,12 +40,18 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
+<<<<<<< HEAD
 #include "RedshiftLibrary/operator/extremaresult.h"
+    == == ==
+    =
+#include "RedshiftLibrary/operator/templatefittinglog.h"
+        >>>>>>> 3f72824a(test EstimateXtY in TplFittingLog
+                         operator using EstimateXtYSlow method)
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
 #include <boost/test/unit_test.hpp>
 
-using namespace NSEpic;
+                    using namespace NSEpic;
 
 const std::string jsonString =
     "{\"lambdarange\" : [ 4680, 4712 ],"
@@ -98,7 +104,7 @@ const std::string jsonStringNoFFT = {
     "\"extremacount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : false,"
+    "\"fftprocessing\" : true,"
     "\"interpolation\" : \"precomputedfinegrid\","
     "\"extinction\" : true,"
     "\"dustfit\" : true,"
@@ -127,7 +133,7 @@ public:
       fixture_CalzettiCorrection().ismCorrectionCalzetti;
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -170,6 +176,22 @@ public:
     catalog->Add(fixture_SharedGalaxyTemplate().tpl);
   }
 };
+
+Int32 EstimateXtYSlow(const TFloat64List &X, const TFloat64List &Y,
+                      Int32 nShifts, TFloat64List &XtY) {
+  XtY.resize(nShifts);
+
+  Int32 nX = X.size();
+  Float64 xty = 0.0;
+  for (std::size_t k = 0; k < nShifts; k++) {
+    xty = 0.0;
+    for (std::size_t j = 0; j < nX; j++) {
+      xty += X[j] * Y[j + k];
+    }
+    XtY[k] = xty;
+  }
+  return 0;
+}
 
 BOOST_AUTO_TEST_SUITE(templateFittingSolve_test)
 
@@ -235,6 +257,31 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
   BOOST_CHECK_CLOSE(z, 2.8777553864462204, 1e-6);
 
   ctx.reset();
+}
+
+BOOST_AUTO_TEST_CASE(EstimateXtY_test) {
+  TFloat64Range lbdaR(1, 100);
+  TFloat64List X = lbdaR.SpreadOver(1);
+
+  lbdaR.Set(1, 10);
+  TFloat64List Y = lbdaR.SpreadOver(1);
+
+  Int32 nShifts = 4;
+
+  TFloat64List XtY;
+  EstimateXtYSlow(X, Y, nShifts, XtY);
+
+  TFloat64List XtYres;
+
+  TFloat64List redshifts = {2.8399999999999999, 2.8404879658869557,
+                            2.8409759937819086};
+  COperatorTemplateFittingLog tplFittingLog(redshifts);
+  tplFittingLog.m_nPaddedSamples = X.size();
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, nShifts, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtYres.size(); i++)
+    std::cout << XtY[i] << "\t" << XtYres[i] << "\n";
 }
 
 BOOST_AUTO_TEST_SUITE_END()

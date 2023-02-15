@@ -54,6 +54,10 @@
 
 #include <fftw3.h>
 
+namespace templateFittingSolve_test {
+class EstimateXtY_test;
+};
+
 namespace NSEpic {
 
 class COperatorTemplateFittingLog : public COperatorTemplateFittingBase {
@@ -83,6 +87,7 @@ public:
                                    const TFloat64Range &redshiftrange) const;
 
 private:
+  friend class templateFittingSolve_test::EstimateXtY_test;
   Float64 m_logstep;
   Int32 m_ssRatio;
 
