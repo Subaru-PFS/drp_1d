@@ -173,7 +173,6 @@ push-rc-38-osx:
 
 .test-manylinux:
   stage: test
-  allow_failure: true
   script:
     - cd build
     - make test
