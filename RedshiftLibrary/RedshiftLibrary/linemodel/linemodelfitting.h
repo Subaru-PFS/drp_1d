@@ -171,6 +171,14 @@ public:
     return m_model;
   }
   const std::string &getFittingMethod() const { return m_fittingmethod; }
+
+  std::shared_ptr<CContinuumManager> getContinuumManager() {
+    return m_continuumManager;
+  }
+  std::shared_ptr<const CContinuumModelSolution> getContinuumFitValues() const {
+    return m_continuumFitValues;
+  }
+
   // we keep that getters temporarily, waiting for refactoring linemodel extrema
   // result
   Int32 getTplratio_count() const;
@@ -178,6 +186,7 @@ public:
 
   std::string getLineRatioType() { return m_lineRatioType; }
 
+  void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
 
@@ -185,9 +194,10 @@ public:
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
 
+private:
+  std::shared_ptr<CContinuumModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
-private:
   void fitAmplitudesSimplex();
 
   void SetLSF();
@@ -223,7 +233,7 @@ private:
   std::shared_ptr<const TFloat64Range> m_lambdaRange;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
-
+  Int32 m_opt_fitcontinuum_maxN;
   std::string m_opt_firstpass_fittingmethod = "hybrid";
   std::string m_opt_secondpass_fittingmethod = "hybrid";
 

@@ -83,7 +83,7 @@ public:
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
                        Float64 amplitude, const Float64 overlapThreshold,
-                       Int32 index = 0);
+                       Int32 index);
 
   inline virtual bool IsFFTProcessing() { return false; };
 

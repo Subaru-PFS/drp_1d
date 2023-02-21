@@ -151,7 +151,7 @@ void CLineModelResult::SetChisquareTplContinuumResult(
   for (Int32 k = 0; k < tplFitStore->GetContinuumCount();
        k++) { // TODO: handle the use of more than one continuum in linemodel
     ChiSquareTplContinuum[k][index_z] =
-        tplFitStore->GetFitValues(index_z_in_store, k).merit;
+        tplFitStore->GetFitValues(index_z_in_store, k).tplMerit;
   }
 }
 

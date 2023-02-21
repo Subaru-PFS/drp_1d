@@ -113,8 +113,8 @@ void CLineModelPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
   FittedTplEbmvCoeff[i] = contModelSol.tplEbmvCoeff;
   FittedTplMeiksinIdx[i] = contModelSol.tplMeiksinIdx;
   FittedTplRedshift[i] = contModelSol.tplRedshift;
-  FittedTplDtm[i] = contModelSol.tplDtm;
-  FittedTplMtm[i] = contModelSol.tplMtm;
+  FittedTplDtm[i] = contModelSol.tplDtM;
+  FittedTplMtm[i] = contModelSol.tplMtM;
   FittedTplLogPrior[i] = contModelSol.tplLogPrior;
   FittedTplpCoeffs[i] = contModelSol.pCoeffs;
   return;

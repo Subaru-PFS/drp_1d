@@ -137,6 +137,7 @@ void CLineModelFitting::initParameters() {
     // set to use fftprocessing below we explicit this check on this condition
     m_useloglambdasampling = ps->GetScoped<bool>("useloglambdasampling");
     m_useloglambdasampling &= ps->GetScoped<bool>("continuumfit.fftprocessing");
+    m_opt_fitcontinuum_maxN = ps->GetScoped<Int32>("continuumfit.count");
   }
 }
 
@@ -159,10 +160,11 @@ void CLineModelFitting::initMembers() {
     LoadCatalogTwoMultilinesAE(m_RestLineList);
   }
 
+  m_continuumFitValues = std::make_shared<CContinuumModelSolution>();
   m_model = std::make_shared<CSpectrumModel>(
       CSpectrumModel(m_Elements, m_inputSpc, m_RestLineList));
   m_continuumManager = std::make_shared<CContinuumManager>(
-      CContinuumManager(m_inputSpc, m_model, *(m_lambdaRange)));
+      CContinuumManager(m_model, *(m_lambdaRange), m_continuumFitValues));
 
   SetFittingMethod(m_fittingmethod);
   SetLSF();
@@ -463,7 +465,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
-    nContinuum = m_continuumManager->m_opt_fitcontinuum_maxCount;
+    nContinuum = m_opt_fitcontinuum_maxN;
   // 'on the fly' initialization
   Float64 bestMerit = INFINITY;
   Float64 bestMeritPrior = 0.0;
@@ -498,7 +500,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             m_lineRatioType == "rules" ? Int32(enableLogging) : 0;
         modelSolution = GetModelSolution(modelSolutionLevel);
         continuumModelSolution =
-            m_continuumManager->GetContinuumModelSolution();
+            m_continuumManager->GetContinuumModelSolutionCopy();
 
         m_lineRatioManager->saveResults(itratio);
       }
@@ -530,7 +532,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     m_lineRatioManager->finish(redshift);
     Int32 modelSolutionLevel = Int32(enableLogging);
     modelSolution = GetModelSolution(modelSolutionLevel);
-    continuumModelSolution = m_continuumManager->GetContinuumModelSolution();
+    continuumModelSolution =
+        m_continuumManager->GetContinuumModelSolutionCopy();
   }
   return bestMerit;
 }

@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+
 class TExtremaResult : public TCandidateZ {
 
 public:
@@ -49,25 +51,6 @@ public:
     m_type = "TExtremaResult";
   }
 
-  // Name of the best template fitted for continuum
-  std::string FittedTplName = "";
-  // Amplitude for the best template fitted for continuum
-  Float64 FittedTplAmplitude = NAN;
-  // Amplitude error for the best template fitted for continuum
-  Float64 FittedTplAmplitudeError = NAN;
-  // Chisquare for the best template fitted for continuum
-  Float64 FittedTplMerit = NAN;
-  // extra chisquare term due to photometry (set to 0.0 if not enabled)
-  Float64 FittedTplMeritPhot = NAN;
-  // Calzetti ebmvcoeff for the best template fitted for continuum
-  Float64 FittedTplEbmvCoeff = NAN;
-  // Meiksin igm index for the best template fitted for continuum
-  Int32 FittedTplMeiksinIdx = -1;
-  // DTM for the best template fitted for continuum
-  Float64 FittedTplDtm = NAN;
-  // MTM for the best template fitted for continuum
-  Float64 FittedTplMtm = NAN;
-  // log prior for the best template fitted for continuum
-  Float64 FittedTplLogPrior = NAN;
+  CContinuumModelSolution continuum;
   Float64 FittedTplSNR = NAN;
 };

@@ -131,6 +131,11 @@ public:
   void push_back(const std::shared_ptr<CLineModelElement> &elt) {
     m_Elements.push_back(elt);
   }
+
+  void debug(std::ostream &os) const {
+    for (auto elt : m_Elements)
+      elt->debug(os);
+  }
 };
 } // namespace NSEpic
 #endif

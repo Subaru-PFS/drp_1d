@@ -46,21 +46,8 @@
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
-    const CContinuumModelSolution &cms, bool all) {
-  if (all) {
-    FittedTplName = cms.tplName;
-    FittedTplAmplitude = cms.tplAmplitude;
-    FittedTplAmplitudeError = cms.tplAmplitudeError;
-    FittedTplMerit = cms.tplMerit;
-    FittedTplMeritPhot = cms.tplMeritPhot;
-    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
-    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
-  }
-  FittedTplRedshift = cms.tplRedshift;
-  FittedTplDtm = cms.tplDtm;
-  FittedTplMtm = cms.tplMtm;
-  FittedTplLogPrior = cms.tplLogPrior;
-  FittedTplpCoeffs = cms.pCoeffs;
+    std::shared_ptr<const CContinuumModelSolution> cms) {
+  continuum = *cms;
 }
 
 void TLineModelResult::updateFromLineModelSolution(
@@ -71,15 +58,10 @@ void TLineModelResult::updateFromLineModelSolution(
 
 void TLineModelResult::updateContinuumFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel) {
-  std::shared_ptr<const CContinuumManager> ccm = lmel->m_continuumManager;
-  FittedTplAmplitude = ccm->getFitContinuum_tplAmplitude();
-  FittedTplName =
-      FittedTplAmplitude ? ccm->getFitContinuum_tplName() : "nocontinuum";
-  FittedTplAmplitudeError = ccm->getFitContinuum_tplAmplitudeError();
-  FittedTplMerit = ccm->getFitContinuum_tplMerit();
-  FittedTplMeritPhot = ccm->getFitContinuum_tplMeritPhot();
-  FittedTplEbmvCoeff = ccm->getFitContinuum_tplIsmEbmvCoeff();
-  FittedTplMeiksinIdx = ccm->getFitContinuum_tplIgmMeiksinIdx();
+  continuum = *lmel->getContinuumFitValues();
+
+  continuum.tplName =
+      continuum.tplAmplitude ? continuum.tplName : "nocontinuum";
 }
 
 void TLineModelResult::updateTplRatioFromModel(

@@ -1170,8 +1170,6 @@ bool CLineModelElement::IsOutsideLambdaRange(
 void CLineModelElement::debug(std::ostream &os) const {
   os << m_fittingGroupInfo << "\t";
   os << getVelocityAbsorption() << "\t" << getVelocityEmission() << "\n";
-  for (const CLine &line : m_Lines)
-    line.Save(os);
   /*
   for(int i=0;i<GetSize();i++)
     {

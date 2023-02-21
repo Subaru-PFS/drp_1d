@@ -452,23 +452,24 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[i].second->FittedTplMerit = ChiSquare;
-    extremaResult->m_ranked_candidates[i].second->FittedTplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplMerit =
+        ChiSquare;
+    extremaResult->m_ranked_candidates[i].second->continuum.tplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplName = tplName;
-    extremaResult->m_ranked_candidates[i].second->FittedTplMeiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplName = tplName;
+    extremaResult->m_ranked_candidates[i].second->continuum.tplMeiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplEbmvCoeff =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplEbmvCoeff =
         TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitude =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplAmplitude =
         TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeError =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplAmplitudeError =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplDtm =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplDtM =
         TplFitResult->FitDtM[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplMtm =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplMtM =
         TplFitResult->FitMtM[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplLogPrior =
+    extremaResult->m_ranked_candidates[i].second->continuum.tplLogPrior =
         TplFitResult->LogPrior[idx];
 
     Float64 FitSNR = NAN;
@@ -485,7 +486,9 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
         m_templateFittingOperator->ComputeSpectrumModel(
             tpl, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-            overlapThreshold);
+            overlapThreshold,
+            0); // TODO [multiobs] save multiple models , there should be a loop
+                // here, only model N°0 is recorded
 
     if (spcmodelPtr == nullptr)
       THROWG(INTERNAL_ERROR, "Could not "

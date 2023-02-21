@@ -201,6 +201,9 @@ public:
   Int32 getEndNoOverlap(Int32 lineIdx) { return m_EndNoOverlap[lineIdx]; }
   Int32 getSignFactor(Int32 lineIdx) { return m_SignFactors[lineIdx]; }
 
+  void debug(std::ostream &os) const;
+  void dumpElement(std::ostream &os) const;
+
 protected:
   TLineWidthType m_LineWidthType;
 

@@ -40,6 +40,7 @@
 #define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
@@ -48,24 +49,13 @@
 
 namespace NSEpic {
 
+struct fitMaxValues {
+  Float64 tplFitSNRMax = 0.0;
+  Float64 fitAmplitudeSigmaMAX = 0.0;
+};
+
 class CTemplatesFitStore {
 public:
-  struct SValues {
-    std::string tplName;
-    Float64 ismEbmvCoeff;
-    Int32 igmMeiksinIdx;
-
-    Float64 merit;
-    Float64 chiSquare_phot;
-    Float64 fitAmplitude;
-    Float64 fitAmplitudeError;
-    Float64 fitAmplitudeSigma;
-    Float64 fitDtM;
-    Float64 fitMtM;
-    Float64 logprior;
-  };
-  typedef SValues TemplateFitValues;
-
   CTemplatesFitStore(const TFloat64List &redshifts);
 
   bool Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
@@ -78,18 +68,26 @@ public:
   Int32 GetRedshiftIndex(Float64 z) const;
   Int32 getClosestLowerRedshiftIndex(Float64 z) const;
   const TFloat64List &GetRedshiftList() const;
-  TemplateFitValues GetFitValues(Int32 idxz,
-                                 Int32 continuumCandidateRank) const;
-  TemplateFitValues GetFitValues(Float64 redshiftVal,
-                                 Int32 continuumCandidateRank) const;
+  // TODO maybe we could return const ref ?
+  CContinuumModelSolution GetFitValues(Int32 idxz,
+                                       Int32 continuumCandidateRank) const;
+  CContinuumModelSolution GetFitValues(Float64 redshiftVal,
+                                       Int32 continuumCandidateRank) const;
   Int32 GetContinuumCount() const;
-  Float64 FindMaxAmplitudeSigma(Float64 &z, TemplateFitValues &fitValues);
+  Float64 FindMaxAmplitudeSigma(Float64 &z, CContinuumModelSolution &fitValues);
   // put as public on purpose to avoid the 'old-school' use of getters
-  Float64 m_fitContinuum_tplFitSNRMax = 0.0;
-  Float64 m_fitContinuum_fitAmplitudeSigmaMAX = 0.0;
-  Float64 m_opt_fitcontinuum_maxCount = 2; // default value to 2
+  void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
+  void setAmplitudeSigmaMax(Float64 ampl) {
+    m_fitMaxValues->fitAmplitudeSigmaMAX = ampl;
+  }
+  std::shared_ptr<fitMaxValues> getFitMaxValues() const {
+    return m_fitMaxValues;
+  }
+
 private:
-  std::vector<std::vector<SValues>> m_fitValues; //[nz][n_continuum_candidates]
+  std::vector<std::vector<CContinuumModelSolution>>
+      m_fitValues; //[nz][n_continuum_candidates]
+  std::shared_ptr<fitMaxValues> m_fitMaxValues;
   Int32 n_continuum_candidates = 0;
 
   TFloat64List redshiftgrid;

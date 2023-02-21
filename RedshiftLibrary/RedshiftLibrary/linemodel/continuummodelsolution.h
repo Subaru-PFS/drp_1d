@@ -55,14 +55,15 @@ struct CContinuumModelSolution {
   std::string tplName;
   Float64 tplAmplitude = NAN;
   Float64 tplAmplitudeError = NAN;
+  Float64 tplAmplitudeSigma = NAN;
   Float64 tplEbmvCoeff = NAN;
   Int32 tplMeiksinIdx = -1;
   Float64 tplRedshift = NAN;
 
   Float64 tplMerit = NAN;
   Float64 tplMeritPhot = NAN;
-  Float64 tplDtm = NAN;
-  Float64 tplMtm = NAN;
+  Float64 tplDtM = NAN;
+  Float64 tplMtM = NAN;
   Float64 tplLogPrior = NAN;
 
   // polynom
