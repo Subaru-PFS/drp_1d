@@ -40,18 +40,14 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
-<<<<<<< HEAD
 #include "RedshiftLibrary/operator/extremaresult.h"
-    == == ==
-    =
 #include "RedshiftLibrary/operator/templatefittinglog.h"
-        >>>>>>> 3f72824a(test EstimateXtY in TplFittingLog
-                         operator using EstimateXtYSlow method)
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
+
 #include <boost/test/unit_test.hpp>
 
-                    using namespace NSEpic;
+using namespace NSEpic;
 
 const std::string jsonString =
     "{\"lambdarange\" : [ 4680, 4712 ],"
@@ -104,7 +100,7 @@ const std::string jsonStringNoFFT = {
     "\"extremacount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : true,"
+    "\"fftprocessing\" : false,"
     "\"interpolation\" : \"precomputedfinegrid\","
     "\"extinction\" : true,"
     "\"dustfit\" : true,"
@@ -133,7 +129,7 @@ public:
       fixture_CalzettiCorrection().ismCorrectionCalzetti;
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -255,32 +251,78 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 2.8777553864462204, 1e-6);
+  BOOST_CHECK_CLOSE(z, 2.880219830862035, 1e-6);
 
   ctx.reset();
 }
 
-BOOST_AUTO_TEST_CASE(EstimateXtY_test) {
-  TFloat64Range lbdaR(1, 10);
-  TFloat64List X = lbdaR.SpreadOver(1);
+BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
+  // Creation of useful objects
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  templateFittingSolve.Compute();
 
-  lbdaR.Set(1, 14);
-  TFloat64List Y = lbdaR.SpreadOver(1);
+  Float64 precision = 1e-12;
 
+  TFloat64Range lbdaR;
   TFloat64List XtY;
-  EstimateXtYSlow(X, Y, XtY);
-
   TFloat64List XtYres;
-
   TFloat64List redshifts = {2.8399999999999999, 2.8404879658869557,
                             2.8409759937819086};
   COperatorTemplateFittingLog tplFittingLog(redshifts);
+
+  // X size even, Y size even
+  lbdaR.Set(1, 10);
+  TFloat64List X = lbdaR.SpreadOver(1);
+  lbdaR.Set(1, 14);
+  TFloat64List Y = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
   tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
   tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
   tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
 
-  for (std::size_t i = 0; i < XtYres.size(); i++)
-    std::cout << XtY[i] << "\t" << XtYres[i] << "\n";
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
+
+  // X size even, Y size odd
+  lbdaR.Set(1, 15);
+  Y = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
+
+  // X size odd, Y size odd
+  lbdaR.Set(1, 11);
+  X = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
+
+  // X size odd, Y size even
+  lbdaR.Set(1, 14);
+  Y = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
