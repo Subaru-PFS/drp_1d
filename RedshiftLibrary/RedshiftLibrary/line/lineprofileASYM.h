@@ -43,6 +43,11 @@
 #include "RedshiftLibrary/line/lineprofile.h"
 #include <cmath>
 #include <string>
+
+namespace lineProfile_test {
+class lineprofileASYM_test;
+} // namespace lineProfile_test
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -84,6 +89,7 @@ public:
   std::unique_ptr<CLineProfile> cloneToASYMFIT() const;
 
 private:
+  friend class lineProfile_test::lineprofileASYM_test;
   virtual CLineProfile *CloneImplementation() const override {
     return new CLineProfileASYM(*this);
   }

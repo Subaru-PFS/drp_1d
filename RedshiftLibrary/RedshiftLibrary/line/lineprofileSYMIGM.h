@@ -46,6 +46,10 @@
 #include <cmath>
 #include <string>
 
+namespace lineProfile_test {
+class lineprofileSYMIGM_test;
+} // namespace lineProfile_test
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -72,6 +76,7 @@ public:
   Int32 getIGMIdxCount() const override;
 
 private:
+  friend class lineProfile_test::lineprofileSYMIGM_test;
   CLineProfile *CloneImplementation() const override {
     return new CLineProfileSYMIGM(*this);
   }
