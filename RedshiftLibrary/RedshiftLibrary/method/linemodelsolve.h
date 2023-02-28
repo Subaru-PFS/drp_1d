@@ -89,9 +89,6 @@ private:
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
-  void StoreChisquareTplRatioResults(
-      std::shared_ptr<COperatorResultStore> dataStore,
-      std::shared_ptr<const CLineModelResult> result) const;
   const CLineCatalog::TLineVector
   FilterRestLineCatalog(const CLineCatalog &restlinecatalog);
   void fillChisquareArrayForTplRatio(

@@ -132,9 +132,6 @@ public:
 
   const std::string &GetStrID() const;
 
-  void Save(std::ostream &stream) const;
-  void SaveDescription(std::ostream &stream) const;
-
 private:
   Int32 m_id = -1;
   Int32 m_Type = 0;

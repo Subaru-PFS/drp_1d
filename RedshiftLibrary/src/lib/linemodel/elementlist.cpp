@@ -637,11 +637,6 @@ Int32 CLineModelElementList::prepareAmplitudeOffset() {
   return 0;
 }
 
-void CLineModelElementList::debug(std::ostream &os) const {
-  for (const std::shared_ptr<CLineModelElement> &elt : m_Elements)
-    elt->debug(os);
-}
-
 /**
  * \brief Get the scale marginalization correction
  *
@@ -803,18 +798,4 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
       TInt32Range::joinIntersections(std::move(indexRangeList));
 
   return nonOverlappingIndexRangeList;
-}
-
-void CLineModelElementList::dumpElement(std::string pre) {
-  std::string fname = "ElementList_" + pre + "_" + to_string(m__count) + ".txt";
-  m__count++;
-  std::ofstream os(fname);
-
-  os << "CLineModelElementList::m_Elements \n";
-  Int32 count = 0;
-  for (const auto &el : m_Elements) {
-    os << count++ << "\n";
-    el->dumpElement(os);
-  }
-  os.close();
 }

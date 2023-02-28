@@ -91,7 +91,6 @@ public:
                         const Float64 &nominalAmplitude);
   void convertLineProfiles2SYMIGM(
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
-  void debug(std::ostream &os);
 
 protected:
   TLineVector m_List;

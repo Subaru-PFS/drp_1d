@@ -250,8 +250,3 @@ void CLineCatalog::convertLineProfiles2SYMIGM(
                               igmcorrection);
   }
 }
-
-void CLineCatalog::debug(std::ostream &os) {
-  for (CLine &line : m_List)
-    line.Save(os);
-}
