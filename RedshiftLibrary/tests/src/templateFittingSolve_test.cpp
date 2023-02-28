@@ -178,7 +178,8 @@ public:
 };
 
 Int32 EstimateXtYSlow(const TFloat64List &X, const TFloat64List &Y,
-                      Int32 nShifts, TFloat64List &XtY) {
+                      TFloat64List &XtY) {
+  Int32 nShifts = Y.size() - X.size() + 1;
   XtY.resize(nShifts);
 
   Int32 nX = X.size();
@@ -260,25 +261,23 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
 }
 
 BOOST_AUTO_TEST_CASE(EstimateXtY_test) {
-  TFloat64Range lbdaR(1, 100);
+  TFloat64Range lbdaR(1, 10);
   TFloat64List X = lbdaR.SpreadOver(1);
 
-  lbdaR.Set(1, 10);
+  lbdaR.Set(1, 14);
   TFloat64List Y = lbdaR.SpreadOver(1);
 
-  Int32 nShifts = 4;
-
   TFloat64List XtY;
-  EstimateXtYSlow(X, Y, nShifts, XtY);
+  EstimateXtYSlow(X, Y, XtY);
 
   TFloat64List XtYres;
 
   TFloat64List redshifts = {2.8399999999999999, 2.8404879658869557,
                             2.8409759937819086};
   COperatorTemplateFittingLog tplFittingLog(redshifts);
-  tplFittingLog.m_nPaddedSamples = X.size();
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
   tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
-  tplFittingLog.EstimateXtY(X, Y, nShifts, XtYres, 0);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
 
   for (std::size_t i = 0; i < XtYres.size(); i++)
     std::cout << XtY[i] << "\t" << XtYres[i] << "\n";

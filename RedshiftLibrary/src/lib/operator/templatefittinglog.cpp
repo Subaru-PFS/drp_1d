@@ -172,15 +172,16 @@ Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
 
 void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
                                               const TFloat64List &Y,
-                                              Int32 nshifts, TFloat64List &XtY,
+                                              TFloat64List &XtY,
                                               Int32 precomputedFFT) {
+
   // Processing the FFT
   Int32 nSpc = X.size();
   Int32 nTpl = Y.size();
+  Int32 nshifts = nTpl - nSpc + 1;
   Int32 nPadded = m_nPaddedSamples;
 
-  Int32 nPadBeforeSpc = nPadded - nSpc; //(Int32)nPadded/2.0;
-  Int32 nPadBeforeTpl = 0;
+  Int32 nPadBeforeSpc = nPadded - nSpc;
 
   Log.LogDebug("FitAllz: Processing spc-fft "
                "with n=%d, padded to n=%d",
@@ -197,9 +198,7 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
     for (Int32 k = 0; k < nPadBeforeSpc; k++)
       inSpc[k] = 0.0;
     for (Int32 k = nPadBeforeSpc; k < nPadBeforeSpc + nSpc; k++)
-      inSpc[k] = X[nSpc - 1 - (k - nPadBeforeSpc)]; // X[k-nPadBeforeSpc];
-    for (Int32 k = nPadBeforeSpc + nSpc; k < nPadded; k++)
-      inSpc[k] = 0.0;
+      inSpc[k] = X[nSpc - 1 - (k - nPadBeforeSpc)];
 
     fftw_execute(pSpc);
     Log.LogDebug("FitAllz: spc-fft done");
@@ -244,18 +243,11 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
   Log.LogDebug("FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl,
                nPadded);
 
-  for (Int32 k = 0; k < nPadBeforeTpl; k++) {
-    inTpl_padded[k] = 0.0;
+  for (Int32 k = 0; k < nTpl; k++) {
+    inTpl[k] = Y[k];
   }
-  for (Int32 k = nPadBeforeTpl; k < nPadBeforeTpl + nTpl; k++) {
-    inTpl_padded[k] = Y[k - nPadBeforeTpl];
-  }
-  for (Int32 k = nPadBeforeTpl + nTpl; k < nPadded; k++) {
-    inTpl_padded[k] = 0.0;
-  }
-
-  for (Int32 k = 0; k < nPadded; k++) {
-    inTpl[k] = inTpl_padded[k]; // inTpl_padded[nPadded-1-k][0];//
+  for (Int32 k = nTpl; k < nPadded; k++) {
+    inTpl[k] = 0.0;
   }
 
   fftw_execute(pTpl);
@@ -267,28 +259,15 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
         (outTpl[k][0] * outSpc[k][0] - outTpl[k][1] * outSpc[k][1]);
     outCombined[k][1] =
         (outTpl[k][0] * outSpc[k][1] + outTpl[k][1] * outSpc[k][0]);
-    // Y conjugate
-    // outCombined[k][0] =
-    // (outTpl[k][0]*outSpc[k][0]+outTpl[k][1]*outSpc[k][1]);
-    // outCombined[k][1] =
-    // (outTpl[k][0]*outSpc[k][1]-outTpl[k][1]*outSpc[k][0]);
   }
 
   fftw_execute(pBackward);
   Log.LogDebug("FitAllz: backward-fft done");
 
   XtY.resize(nshifts);
-  Int32 offsetSamples = 0; // nPadded/2.0;//nSpc;//(nTpl+nSpc);
-  for (Int32 k = 0; k < nshifts; k++) {
-    // XtY[k] = inCombined[k+(Int32)(nPadded/2.0)][0]/nPadded;
-    Int32 IndexCyclic = k + offsetSamples;
-    if (IndexCyclic < 0)
-      IndexCyclic += nPadded;
-    else if (IndexCyclic >= nPadded)
-      IndexCyclic -= nPadded;
-
-    XtY[k] = inCombined[IndexCyclic] / (Float64)nPadded;
-  }
+  XtY.front() = inCombined[nPadded - 1] / (Float64)nPadded;
+  for (Int32 k = 1; k < nshifts; k++)
+    XtY[k] = inCombined[k - 1] / (Float64)nPadded;
 }
 
 Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
@@ -304,14 +283,9 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
     THROWG(INTERNAL_ERROR, "Unable to allocate outSpc");
   }
 
-  inTpl_padded = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
   inTpl = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
   outTpl = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
   pTpl = fftw_plan_dft_r2c_1d(nPadded, inTpl, outTpl, FFTW_ESTIMATE);
-  if (inTpl_padded == 0) {
-    THROWG(INTERNAL_ERROR, "Unable to "
-                           "allocate inTpl_padded");
-  }
   if (inTpl == 0) {
     THROWG(INTERNAL_ERROR, "Unable to allocate inTpl");
   }
@@ -365,10 +339,6 @@ void COperatorTemplateFittingLog::freeFFTPlans() {
   if (pTpl) {
     fftw_destroy_plan(pTpl);
     pTpl = 0;
-  }
-  if (inTpl_padded) {
-    fftw_free(inTpl_padded);
-    inTpl_padded = 0;
   }
   if (inTpl) {
     fftw_free(inTpl);
@@ -695,7 +665,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
                    (1 + result->Redshifts[0]));
 
   Int32 nshifts = nTpl - nSpc + 1;
-  m_nPaddedSamples = nTpl;
+  m_nPaddedSamples = ceil(nTpl / 2.0) * 2;
 
   Log.LogDetail("Now fitting using the FFT on "
                 "nshifts=%d values, for Meiksin redshift=%f",
@@ -816,14 +786,14 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
       // Estimate DtM: sumCross
       TFloat64List dtm_vec;
-      EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFluxcorr_cropped, nshifts,
-                  dtm_vec, 0);
+      EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFluxcorr_cropped, dtm_vec,
+                  0);
 
       Int32 dtm_vec_size = dtm_vec.size();
 
       // Estimate MtM: sumT
       TFloat64List mtm_vec;
-      EstimateXtY(inv_err2, tpl2RebinedFlux, nshifts, mtm_vec, 1);
+      EstimateXtY(inv_err2, tpl2RebinedFlux, mtm_vec, 1);
 
       Log.LogDebug("FitRangez: dtd = %e", dtd);
 
