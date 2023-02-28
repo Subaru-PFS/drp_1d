@@ -146,24 +146,6 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
 
 COperatorTemplateFittingLog::~COperatorTemplateFittingLog() { freeFFTPlans(); }
 
-Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const TFloat64List &X,
-                                                   const TFloat64List &Y,
-                                                   Int32 nShifts,
-                                                   TFloat64List &XtY) {
-  XtY.resize(nShifts);
-
-  Int32 nX = X.size();
-  Float64 xty = 0.0;
-  for (Int32 k = 0; k < nShifts; k++) {
-    xty = 0.0;
-    for (Int32 j = 0; j < nX; j++) {
-      xty += X[j] * Y[j + k];
-    }
-    XtY[k] = xty;
-  }
-  return 0;
-}
-
 // only works for mtm, Y=model^2, X=1.
 Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
                                                    const TFloat64List &Y,

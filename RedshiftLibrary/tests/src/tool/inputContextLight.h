@@ -340,7 +340,7 @@ class fixture_PhotoBand {
 public:
   fixture_PhotoBand() {
     TFloat64List trans = {.2, .5, .99, .99, .4, .1};
-    TFloat64List lambda = {2000., 2200., 2321., 2430., 2554., 2603.};
+    TFloat64List lambda = {4680., 4690., 4695., 4700., 4710., 4712.};
     photoBand = CPhotometricBand(trans, lambda);
   }
   CPhotometricBand photoBand;
@@ -355,6 +355,18 @@ public:
   }
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
       std::make_shared<CPhotBandCatalog>();
+};
+
+// Creation of photo data
+//-----------------------
+
+class fixture_PhotoData {
+public:
+  const TStringList name = {"band1", "band2"};
+  const TFloat64List flux = {1e-15, 1e-14};
+  const TFloat64List fluxErr = {1e-18, 2e-18};
+  std::shared_ptr<CPhotometricData> photoData =
+      std::make_shared<CPhotometricData>(name, flux, fluxErr);
 };
 
 // Creation of line catalog
@@ -450,9 +462,15 @@ public:
     Context.setTemplateCatalog(catalog);
   }
 
+  void setPhotoBandCatalog(std::shared_ptr<CPhotBandCatalog> photoBandCatalog) {
+    Context.setPhotBandCatalog(photoBandCatalog);
+  }
+
   void addSpectrum(std::shared_ptr<CSpectrum> spc, std::shared_ptr<CLSF> LSF) {
     spc->SetLSF(LSF);
     Context.addSpectrum(spc);
   }
   void initContext() { Context.Init(); }
+
+  void reset() { Context.reset(); }
 };

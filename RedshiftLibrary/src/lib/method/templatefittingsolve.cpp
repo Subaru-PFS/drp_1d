@@ -144,9 +144,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "pdfcombination");
 
-  // TODO totaly remove this option ?
-  m_opt_enableSaveIntermediateTemplateFittingResults = false;
-
   Log.LogInfo("Method parameters:");
   Log.LogInfo("    -overlapThreshold: %.3f", overlapThreshold);
   Log.LogInfo("    -component: %s", opt_spcComponent.c_str());
@@ -154,8 +151,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   Log.LogInfo("    -IGM extinction: %s", opt_extinction ? "true" : "false");
   Log.LogInfo("    -ISM dust-fit: %s", opt_dustFit ? "true" : "false");
   Log.LogInfo("    -pdfcombination: %s", m_opt_pdfcombination.c_str());
-  Log.LogInfo("    -saveintermediateresults: %d",
-              (int)m_opt_enableSaveIntermediateTemplateFittingResults);
   Log.LogInfo("");
 
   if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0) {
@@ -282,38 +277,6 @@ void CTemplateFittingSolve::Solve(
     // Store results
     resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
                                               templateFittingResult);
-
-    // Save intermediate templatefitting results
-    if (m_opt_enableSaveIntermediateTemplateFittingResults &&
-        templateFittingResult->ChiSquareIntermediate.size() > 0 &&
-        templateFittingResult->ChiSquareIntermediate.size() ==
-            templateFittingResult->Redshifts.size()) {
-      const Int32 nz = templateFittingResult->Redshifts.size();
-      const Int32 nISM = templateFittingResult->ChiSquareIntermediate[0].size();
-      if (nISM > 0) {
-        const Int32 nIGM =
-            templateFittingResult->ChiSquareIntermediate[0][0].size();
-        for (Int32 kism = 0; kism < nISM; kism++) {
-          for (Int32 kigm = 0; kigm < nIGM; kigm++) {
-            std::shared_ptr<CTemplateFittingResult>
-                result_chisquare_intermediate =
-                    std::make_shared<CTemplateFittingResult>(nz);
-            result_chisquare_intermediate->Redshifts =
-                templateFittingResult->Redshifts;
-            for (Int32 kz = 0; kz < nz; kz++)
-              result_chisquare_intermediate->ChiSquare[kz] =
-                  templateFittingResult->ChiSquareIntermediate[kz][kism][kigm];
-
-            std::string resname =
-                (boost::format("%s_intermediate_ism%d_igm%d") %
-                 scopeStr.c_str() % kism % kigm)
-                    .str();
-            resultStore->StoreScopedPerTemplateResult(
-                tpl, resname.c_str(), result_chisquare_intermediate);
-          }
-        }
-      }
-    }
   }
 
   int i = 0;
