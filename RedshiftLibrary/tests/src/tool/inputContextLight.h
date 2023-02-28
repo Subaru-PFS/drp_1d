@@ -292,6 +292,8 @@ class fixture_SharedGalaxyTemplate {
 public:
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
       "galaxy", "galaxy", myGalaxyLambdaList, myGalaxyFluxList);
+  std::shared_ptr<CTemplate> tpl2 = std::make_shared<CTemplate>(
+      "galaxy2", "galaxy", myGalaxyLambdaList2, myGalaxyFluxList2);
 };
 
 class fixture_TemplateStar {
@@ -357,16 +359,15 @@ public:
       std::make_shared<CPhotBandCatalog>();
 };
 
-// Creation of photo data
-//-----------------------
-
 class fixture_PhotoData {
 public:
-  const TStringList name = {"band1", "band2"};
-  const TFloat64List flux = {1e-15, 1e-14};
-  const TFloat64List fluxErr = {1e-18, 2e-18};
-  std::shared_ptr<CPhotometricData> photoData =
-      std::make_shared<CPhotometricData>(name, flux, fluxErr);
+  fixture_PhotoData() {
+    TStringList names = {"band1", "band2"};
+    TFloat64List flux = {1e-14, 2e-15};
+    TFloat64List fluxerr = {1e-18, 3e-18};
+    photoData = std::make_shared<CPhotometricData>(names, flux, fluxerr);
+  }
+  std::shared_ptr<CPhotometricData> photoData;
 };
 
 // Creation of line catalog
@@ -385,7 +386,8 @@ public:
           lineCatalogData.amplitudeGroupValue[i],
           lineCatalogData.dispersionVelocityGroupName[i],
           lineCatalogData.waveLengthOffset[i],
-          lineCatalogData.enableFitWaveLengthOffset[i], 0, "lineCatalog",
+          lineCatalogData.enableFitWaveLengthOffset[i], 0,
+          lineCatalogData.name[i],
           fixture_MeiskinCorrection().igmCorrectionMeiksin);
     }
   }
@@ -403,6 +405,29 @@ class fixture_LineRatioTplCatalog {
 public:
   std::shared_ptr<CLineCatalogsTplRatio> lineRatioTplCatalog =
       std::make_shared<CLineCatalogsTplRatio>();
+};
+
+class fixture_LineRatioCatalog {
+public:
+  fixture_LineRatioCatalog() {
+    // 3727.09	[OII]3726	E	7.65e-15
+    // 3729.88 [OII] 3729 E 7.65e-15
+    lineRatioCatalog->setLineAmplitude("[OII]3729", 3729.88);
+    lineRatioCatalog->setLineAmplitude("[OII]3726", 3727.09);
+    lineRatioCatalog->addVelocity("em_vel", 320.0);
+    lineRatioCatalog->addVelocity("abs_vel", 640.0);
+    lineRatioCatalog->setAsymProfileAndParams("ASYMFIXED",
+                                              TAsymParams(3.0, 1.5, 1.0));
+    // TODO mettre condition enableIGM
+    lineRatioCatalog->convertLineProfiles2SYMIGM(
+        fixture_MeiskinCorrection().igmCorrectionMeiksin);
+
+    lineRatioCatalog->setIsmIndex(0);
+    lineRatioCatalog->setPrior(1);
+  }
+  std::shared_ptr<CLineRatioCatalog> lineRatioCatalog =
+      std::make_shared<CLineRatioCatalog>("ratioCatalog",
+                                          *fixture_LineCatalog().lineCatalog);
 };
 
 class fixture_InputContext {
@@ -464,6 +489,17 @@ public:
 
   void setPhotoBandCatalog(std::shared_ptr<CPhotBandCatalog> photoBandCatalog) {
     Context.setPhotBandCatalog(photoBandCatalog);
+  }
+
+  void
+  setLineRatioCatalogCatalog(std::string objectType,
+                             std::shared_ptr<CLineCatalogsTplRatio> catalog) {
+    Context.setLineRatioCatalogCatalog(objectType, catalog);
+  }
+
+  void setLineCatalog(std::string objectType, std::string method,
+                      std::shared_ptr<CLineCatalog> catalog) {
+    Context.setLineCatalog(objectType, method, catalog);
   }
 
   void addSpectrum(std::shared_ptr<CSpectrum> spc, std::shared_ptr<CLSF> LSF) {

@@ -42,15 +42,14 @@ using namespace NSEpic;
 
 class fixture_LineCatalogData {
 public:
-  TFloat64List waveLength = {12821.59, 10941.09, 10052.13, 9548.59, 9231.55};
-  TStringList name = {"P5A", "P6A", "P7A", "P8A", "P9A"};
-  TStringList type = {"A", "A", "A", "A", "A"};
-  TStringList force = {"W", "W", "W", "W", "W"};
-  TStringList profile = {"SYM", "SYM", "SYM", "SYM", "SYM"};
-  TStringList amplitudeGroupName = {"-1", "-1", "-1", "-1", "-1"};
-  TFloat64List amplitudeGroupValue = {1, 1, 1, 1, 1};
-  TStringList dispersionVelocityGroupName = {"Abs1", "Abs1", "Abs1", "Abs1",
-                                             "Abs1"};
-  TFloat64List waveLengthOffset = {0, 0, 0, 0, 0};
-  TBoolList enableFitWaveLengthOffset = {false, false, false, false, false};
+  TFloat64List waveLength = {3729.88, 3727.09};
+  TStringList name = {"[OII]3729", "[OII]3726"};
+  TStringList type = {"E", "A"};
+  TStringList force = {"S", "S"};
+  TStringList profile = {"SYM", "ASYM"};
+  TStringList amplitudeGroupName = {"-1", "-1"};
+  TFloat64List amplitudeGroupValue = {1, 1};
+  TStringList dispersionVelocityGroupName = {"Em1", "Em1"};
+  TFloat64List waveLengthOffset = {0, 0};
+  TBoolList enableFitWaveLengthOffset = {false, false};
 };
