@@ -540,11 +540,13 @@ void CTplratioManager::saveResults(Int32 itratio) {
                            [idx_abs.front()]; // Should be only 1 elt in tpl
                                               // ratio mode...
     m_tplratioBestTplDtmAbs =
-        m_DtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
-                                                         // in tpl ratio mode...
+        m_DtmTplratio[m_savedIdxFitted]
+                     [idx_abs.front()]; // Should be only 1 elt
+                                        // in tpl ratio mode...
     m_tplratioBestTplMtmAbs =
-        m_MtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
-                                                         // in tpl ratio mode...
+        m_MtmTplratio[m_savedIdxFitted]
+                     [idx_abs.front()]; // Should be only 1 elt
+                                        // in tpl ratio mode...
   }
 }
 
