@@ -123,6 +123,7 @@ const std::string jsonStringOrtho =
     "\"continuumfit\" : { \"ignorelinesupport\": false,"
     "\"negativethreshold\": -5.0,"
     "\"nullthreshold\": 3,"
+    "\"count\":1,"
     "\"fftprocessing\": false} ,"
     "\"firstpass\": { \"fittingmethod\" : \"individual\", "
     "\"multiplecontinuumfit_disable\": true},"

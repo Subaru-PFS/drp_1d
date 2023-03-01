@@ -95,8 +95,6 @@ public:
   void setFitContinuumFromFittedAmps(TFloat64List &ampsfitted,
                                      TInt32List &validEltsIdx);
 
-  //  Int32 m_opt_fitcontinuum_maxCount = 2;
-
 private:
   std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
   TStringList m_tplCategoryList;

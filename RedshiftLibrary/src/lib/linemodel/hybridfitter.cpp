@@ -43,13 +43,15 @@
 using namespace NSEpic;
 using namespace std;
 
-CHybridFitter::CHybridFitter(CLineModelElementList &elements,
-                             std::shared_ptr<const CSpectrum> inputSpectrum,
-                             std::shared_ptr<const TLambdaRange> lambdaRange,
-                             std::shared_ptr<CSpectrumModel> spectrumModel,
-                             const CLineCatalog::TLineVector &restLineList)
+CHybridFitter::CHybridFitter(
+    CLineModelElementList &elements,
+    std::shared_ptr<const CSpectrum> inputSpectrum,
+    std::shared_ptr<const TLambdaRange> lambdaRange,
+    std::shared_ptr<CSpectrumModel> spectrumModel,
+    const CLineCatalog::TLineVector &restLineList,
+    const std::vector<std::shared_ptr<TFittedData>> &fittedData)
     : CSvdFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                 restLineList)
+                 restLineList, fittedData)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();

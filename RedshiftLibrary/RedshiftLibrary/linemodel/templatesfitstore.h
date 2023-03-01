@@ -69,10 +69,10 @@ public:
   Int32 getClosestLowerRedshiftIndex(Float64 z) const;
   const TFloat64List &GetRedshiftList() const;
   // TODO maybe we could return const ref ?
-  CContinuumModelSolution GetFitValues(Int32 idxz,
-                                       Int32 continuumCandidateRank) const;
-  CContinuumModelSolution GetFitValues(Float64 redshiftVal,
-                                       Int32 continuumCandidateRank) const;
+  const CContinuumModelSolution &
+  GetFitValues(Int32 idxz, Int32 continuumCandidateRank) const;
+  const CContinuumModelSolution &
+  GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
   Int32 GetContinuumCount() const;
   Float64 FindMaxAmplitudeSigma(Float64 &z, CContinuumModelSolution &fitValues);
   // put as public on purpose to avoid the 'old-school' use of getters

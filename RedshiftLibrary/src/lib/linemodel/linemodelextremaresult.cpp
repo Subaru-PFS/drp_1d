@@ -48,20 +48,14 @@ using namespace NSEpic;
 void TLineModelResult::updateFromContinuumModelSolution(
     std::shared_ptr<const CContinuumModelSolution> cms) {
   continuum = *cms;
+  continuum.tplName =
+      continuum.tplAmplitude ? continuum.tplName : "nocontinuum";
 }
 
 void TLineModelResult::updateFromLineModelSolution(
     const CLineModelSolution &cms) {
   Elv = cms.EmissionVelocity;
   Alv = cms.AbsorptionVelocity;
-}
-
-void TLineModelResult::updateContinuumFromModel(
-    const std::shared_ptr<const CLineModelFitting> &lmel) {
-  continuum = *lmel->getContinuumFitValues();
-
-  continuum.tplName =
-      continuum.tplAmplitude ? continuum.tplName : "nocontinuum";
 }
 
 void TLineModelResult::updateTplRatioFromModel(

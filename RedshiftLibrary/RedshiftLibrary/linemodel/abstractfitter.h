@@ -55,7 +55,8 @@ public:
                   std::shared_ptr<const CSpectrum> inputSpectrum,
                   std::shared_ptr<const TLambdaRange> lambdaRange,
                   std::shared_ptr<CSpectrumModel> spectrumModel,
-                  const CLineCatalog::TLineVector &restLineList);
+                  const CLineCatalog::TLineVector &restLineList,
+                  const std::vector<std::shared_ptr<TFittedData>> &fittedData);
 
   virtual void fit(Float64 redshift) = 0;
 
@@ -67,7 +68,8 @@ public:
              std::shared_ptr<const TLambdaRange> lambdaRange,
              std::shared_ptr<CSpectrumModel> spectrumModel,
              const CLineCatalog::TLineVector &restLineList,
-             std::shared_ptr<CContinuumManager> continuumManager);
+             std::shared_ptr<CContinuumManager> continuumManager,
+             const std::vector<std::shared_ptr<TFittedData>> &fittedData);
   Int32 m_cont_reestim_iterations = 0;
 
   void fitAmplitude(Int32 eltIndex, const CSpectrumSpectralAxis &spectralAxis,
@@ -82,10 +84,6 @@ public:
                                    bool enableOffsetFitting = true,
                                    Float64 step = 25., Float64 min = -400.,
                                    Float64 max = 400.);
-
-  void setFittedData(std::vector<std::shared_ptr<TFittedData>> fittedData) {
-    m_fittedData = fittedData;
-  }
 
 protected:
   CLineModelElementList &m_Elements;

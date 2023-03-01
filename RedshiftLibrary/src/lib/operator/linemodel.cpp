@@ -1061,13 +1061,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         m_fittingManager, m_result, m_estimateLeastSquareFast, idx);
 
     // save the continuum tpl fitting results
-    ExtremaResult->m_ranked_candidates[i].second->updateContinuumFromModel(
-        m_fittingManager);
-
     ExtremaResult->m_ranked_candidates[i]
         .second->updateFromContinuumModelSolution(
-            m_fittingManager->getContinuumManager()
-                ->GetContinuumModelSolution());
+            m_fittingManager->getContinuumFitValues());
+
     if (m_fittingManager->getLineRatioType() == "tplratio")
       ExtremaResult->m_ranked_candidates[i].second->updateTplRatioFromModel(
           std::dynamic_pointer_cast<CTplratioManager>(

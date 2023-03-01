@@ -52,10 +52,9 @@ using namespace NSEpic;
  * \brief Constructs the object setting members according to arguments and
  *defaults.
  **/
-CLineModelElement::CLineModelElement(std::vector<CLine> rs,
-                                     const std::string &widthType,
-                                     std::shared_ptr<TFittedData> fittedData,
-                                     TInt32List catalogIndexes)
+CLineModelElement::CLineModelElement(
+    std::vector<CLine> rs, const std::string &widthType,
+    const std::shared_ptr<TFittedData> &fittedData, TInt32List catalogIndexes)
     : m_Lines(rs), m_fittingGroupInfo("-1"), m_fittedData(fittedData),
       m_OutsideLambdaRangeOverlapThreshold(
           0.33), // 33% overlap minimum in order to keep the line

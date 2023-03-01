@@ -162,7 +162,7 @@ Int32 CTemplatesFitStore::GetContinuumCount() const {
   return n_continuum_candidates;
 }
 
-CContinuumModelSolution
+const CContinuumModelSolution &
 CTemplatesFitStore::GetFitValues(Int32 idxz,
                                  Int32 continuumCandidateRank) const {
   if (continuumCandidateRank > n_continuum_candidates - 1)
@@ -186,7 +186,7 @@ CTemplatesFitStore::GetFitValues(Int32 idxz,
   return m_fitValues[idxz][continuumCandidateRank];
 }
 
-CContinuumModelSolution
+const CContinuumModelSolution &
 CTemplatesFitStore::GetFitValues(Float64 redshiftVal,
                                  Int32 continuumCandidateRank) const {
   if (continuumCandidateRank > n_continuum_candidates - 1)

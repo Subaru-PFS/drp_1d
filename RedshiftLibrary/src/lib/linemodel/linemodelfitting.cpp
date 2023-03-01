@@ -542,8 +542,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
   m_fittingmethod = fitMethod;
   m_fitter = CAbstractFitter::makeFitter(fitMethod, m_Elements, m_inputSpc,
                                          m_lambdaRange, m_model, m_RestLineList,
-                                         m_continuumManager);
-  m_fitter->setFittedData(m_fittedData);
+                                         m_continuumManager, m_fittedData);
 }
 
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {

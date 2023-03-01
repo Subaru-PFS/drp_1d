@@ -76,7 +76,8 @@ class CLineModelElement {
 
 public:
   CLineModelElement(std::vector<CLine> rs, const std::string &widthType,
-                    std::shared_ptr<TFittedData>, TInt32List catalogIndexes);
+                    const std::shared_ptr<TFittedData> &,
+                    TInt32List catalogIndexes);
 
   Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -210,7 +211,7 @@ protected:
   Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;
 
-  std::shared_ptr<TFittedData> m_fittedData;
+  const std::shared_ptr<TFittedData> m_fittedData;
 
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;

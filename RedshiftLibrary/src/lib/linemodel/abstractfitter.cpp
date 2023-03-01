@@ -14,10 +14,11 @@ CAbstractFitter::CAbstractFitter(
     std::shared_ptr<const CSpectrum> inputSpectrum,
     std::shared_ptr<const TLambdaRange> lambdaRange,
     std::shared_ptr<CSpectrumModel> spectrumModel,
-    const CLineCatalog::TLineVector &restLineList)
+    const CLineCatalog::TLineVector &restLineList,
+    const std::vector<std::shared_ptr<TFittedData>> &fittedData)
     : m_Elements(elements), m_inputSpc(*(inputSpectrum)),
       m_RestLineList(restLineList), m_lambdaRange(*(lambdaRange)),
-      m_model(spectrumModel) {}
+      m_model(spectrumModel), m_fittedData(fittedData) {}
 
 std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::string fittingMethod, CLineModelElementList &elements,
@@ -25,31 +26,37 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::shared_ptr<const TLambdaRange> lambdaRange,
     std::shared_ptr<CSpectrumModel> spectrumModel,
     const CLineCatalog::TLineVector &restLineList,
-    std::shared_ptr<CContinuumManager> continuumManager) {
+    std::shared_ptr<CContinuumManager> continuumManager,
+    const std::vector<std::shared_ptr<TFittedData>> &fittedData) {
   if (fittingMethod == "hybrid")
-    return std::make_shared<CHybridFitter>(CHybridFitter(
-        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
+    return std::make_shared<CHybridFitter>(
+        CHybridFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                      restLineList, fittedData));
   else if (fittingMethod == "svd")
-    return std::make_shared<CSvdFitter>(CSvdFitter(
-        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
+    return std::make_shared<CSvdFitter>(CSvdFitter(elements, inputSpectrum,
+                                                   lambdaRange, spectrumModel,
+                                                   restLineList, fittedData));
   else if (fittingMethod == "svdlc")
     return std::make_shared<CSvdlcFitter>(
         CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                     restLineList, continuumManager));
+                     restLineList, fittedData, continuumManager));
   else if (fittingMethod == "svdlcp2")
     return std::make_shared<CSvdlcFitter>(
         CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                     restLineList, continuumManager, 2));
+                     restLineList, fittedData, continuumManager, 2));
 
   else if (fittingMethod == "ones")
-    return std::make_shared<COnesFitter>(COnesFitter(
-        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
+    return std::make_shared<COnesFitter>(COnesFitter(elements, inputSpectrum,
+                                                     lambdaRange, spectrumModel,
+                                                     restLineList, fittedData));
   else if (fittingMethod == "random")
-    return std::make_shared<CRandomFitter>(CRandomFitter(
-        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
+    return std::make_shared<CRandomFitter>(
+        CRandomFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                      restLineList, fittedData));
   else if (fittingMethod == "individual")
-    return std::make_shared<CIndividualFitter>(CIndividualFitter(
-        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
+    return std::make_shared<CIndividualFitter>(
+        CIndividualFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                          restLineList, fittedData));
   else
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Unknown fitting method " << fittingMethod);

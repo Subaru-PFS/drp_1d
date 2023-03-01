@@ -47,8 +47,6 @@ public:
 
   void updateFromLineModelSolution(const CLineModelSolution &cms);
 
-  void updateContinuumFromModel(
-      const std::shared_ptr<const CLineModelFitting> &lmel);
   void
   updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &lmel);
 
