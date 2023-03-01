@@ -334,6 +334,9 @@ BOOST_AUTO_TEST_CASE(rebinInputs_test) {
   setInputData(inputCtx2);
   inputCtx2.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
       paramStoreFFT->Get<TFloat64Range>("lambdarange")));
+  inputCtx2.m_rebinnedClampedLambdaRanges.push_back(
+      std::make_shared<TFloat64Range>(
+          paramStoreFFT->Get<TFloat64Range>("lambdarange")));
   inputCtx2.RebinInputs();
   BOOST_CHECK(inputCtx2.m_logGridStep == 0.0001);
   BOOST_CHECK(inputCtx2.GetSpectrum(1)->GetSpectralAxis().IsLogSampled() ==

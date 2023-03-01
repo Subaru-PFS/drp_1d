@@ -202,6 +202,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Int32 dim = 1;
   gsl_matrix *covarMatrix = gsl_matrix_alloc(dim, dim);
   BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), GlobalException);
+  gsl_matrix_free(covarMatrix);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
