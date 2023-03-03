@@ -57,9 +57,9 @@ struct TFittedData {
               TFloat64List nominalAmplitudes, const Int32 nbLines)
       : m_VelocityEmission(velocityEmission),
         m_VelocityAbsorption(velocityAbsorption),
-        m_NominalAmplitudes(nominalAmplitudes), m_fitAmplitude(NAN),
         m_FittedAmplitudes(nbLines, NAN),
-        m_FittedAmplitudeErrorSigmas(nbLines, NAN) {}
+        m_FittedAmplitudeErrorSigmas(nbLines, NAN), m_fitAmplitude(NAN),
+        m_NominalAmplitudes(nominalAmplitudes) {}
 
   Float64 m_VelocityEmission = NAN;
   Float64 m_VelocityAbsorption = NAN;
@@ -197,10 +197,12 @@ public:
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
 
-  bool isLineActiveOnSupport(Int32 line, Int32 lineIdx);
-  Int32 getStartNoOverlap(Int32 lineIdx) { return m_StartNoOverlap[lineIdx]; }
-  Int32 getEndNoOverlap(Int32 lineIdx) { return m_EndNoOverlap[lineIdx]; }
-  Int32 getSignFactor(Int32 lineIdx) { return m_SignFactors[lineIdx]; }
+  bool isLineActiveOnSupport(Int32 line, Int32 lineIdx) const;
+  Int32 getStartNoOverlap(Int32 lineIdx) const {
+    return m_StartNoOverlap[lineIdx];
+  }
+  Int32 getEndNoOverlap(Int32 lineIdx) const { return m_EndNoOverlap[lineIdx]; }
+  Int32 getSignFactor(Int32 lineIdx) const { return m_SignFactors[lineIdx]; }
 
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;

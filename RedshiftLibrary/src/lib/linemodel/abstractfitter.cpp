@@ -5,6 +5,7 @@
 #include "RedshiftLibrary/linemodel/randomfitter.h"
 #include "RedshiftLibrary/linemodel/svdfitter.h"
 #include "RedshiftLibrary/linemodel/svdlcfitter.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
@@ -18,7 +19,22 @@ CAbstractFitter::CAbstractFitter(
     const std::vector<std::shared_ptr<TFittedData>> &fittedData)
     : m_Elements(elements), m_inputSpc(*(inputSpectrum)),
       m_RestLineList(restLineList), m_lambdaRange(*(lambdaRange)),
-      m_model(spectrumModel), m_fittedData(fittedData) {}
+      m_model(spectrumModel), m_fittedData(fittedData) {
+
+  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  if (Context.GetCurrentMethod() == "LineModelSolve") {
+    std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
+    m_opt_lya_fit_asym_min = ps->GetScoped<Float64>("lyafit.asymfitmin");
+    m_opt_lya_fit_asym_max = ps->GetScoped<Float64>("lyafit.asymfitmax");
+    m_opt_lya_fit_asym_step = ps->GetScoped<Float64>("lyafit.asymfitstep");
+    m_opt_lya_fit_width_min = ps->GetScoped<Float64>("lyafit.widthfitmin");
+    m_opt_lya_fit_width_max = ps->GetScoped<Float64>("lyafit.widthfitmax");
+    m_opt_lya_fit_width_step = ps->GetScoped<Float64>("lyafit.widthfitstep");
+    m_opt_lya_fit_delta_min = ps->GetScoped<Float64>("lyafit.deltafitmin");
+    m_opt_lya_fit_delta_max = ps->GetScoped<Float64>("lyafit.deltafitmax");
+    m_opt_lya_fit_delta_step = ps->GetScoped<Float64>("lyafit.deltafitstep");
+  }
+}
 
 std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::string fittingMethod, CLineModelElementList &elements,
@@ -62,27 +78,36 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
                                << "Unknown fitting method " << fittingMethod);
 }
 
-void CAbstractFitter::fitAmplitude(Int32 eltIndex,
-                                   const CSpectrumSpectralAxis &spectralAxis,
-                                   const CSpectrumFluxAxis &noContinuumfluxAxis,
-                                   const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Float64 redshift, Int32 lineIdx) {
-  Int32 nLines = m_Elements[eltIndex]->m_Lines.size();
+void CAbstractFitter::logParameters() {
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_asym_min" << m_opt_lya_fit_asym_min);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_asym_max" << m_opt_lya_fit_asym_max);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_asym_step" << m_opt_lya_fit_asym_step);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_width_min" << m_opt_lya_fit_width_min);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_width_max" << m_opt_lya_fit_width_max);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_width_step" << m_opt_lya_fit_width_step);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_delta_min" << m_opt_lya_fit_delta_min);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_delta_max" << m_opt_lya_fit_delta_max);
+  Log.LogDetail(Formatter()
+                << " m_opt_lya_fit_delta_step" << m_opt_lya_fit_delta_step);
+}
 
-  m_fittedData[eltIndex]->m_FittedAmplitudes.assign(nLines, NAN);
-  m_fittedData[eltIndex]->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+void CAbstractFitter::computeCrossProducts(
+    CLineModelElement &elt, const CSpectrumSpectralAxis &spectralAxis,
+    const CSpectrumFluxAxis &noContinuumfluxAxis,
+    const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
+    Int32 lineIdx) {
 
-  if (m_Elements[eltIndex]->IsOutsideLambdaRange()) {
-    m_fittedData[eltIndex]->m_fitAmplitude = NAN;
-    m_sumCross = NAN;
-    m_sumGauss = NAN;
-    m_dtmFree = NAN;
-    return;
-  }
-
-  m_sumCross = 0.0;
-  m_sumGauss = 0.0;
-  m_dtmFree = 0.0;
+  Float64 sumCross = 0.0;
+  Float64 sumGauss = 0.0;
+  Float64 dtmFree = 0.0;
 
   const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
 
@@ -93,21 +118,17 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
 
   Float64 err2 = 0.0;
   Int32 num = 0;
-  // Log.LogDebug("    multiline: nLines=%d", nLines);
 
+  Int32 nLines = elt.m_Lines.size();
   for (Int32 k = 0; k < nLines; k++) { // loop for the intervals
-    if (m_Elements[eltIndex]->IsOutsideLambdaRange(k)) {
+    if (elt.IsOutsideLambdaRange(k)) {
       continue;
     }
-    if (lineIdx != undefIdx &&
-        !m_Elements[eltIndex]->isLineActiveOnSupport(k, lineIdx)) {
+    if (lineIdx != undefIdx && !elt.isLineActiveOnSupport(k, lineIdx)) {
       continue;
     }
 
-    // A estimation
-    //#pragma omp parallel for
-    for (Int32 i = m_Elements[eltIndex]->getStartNoOverlap(k);
-         i <= m_Elements[eltIndex]->getEndNoOverlap(k); i++) {
+    for (Int32 i = elt.getStartNoOverlap(k); i <= elt.getEndNoOverlap(k); i++) {
       c = continuumfluxAxis[i];
       y = noContinuumfluxAxis[i];
       x = spectralAxis[i];
@@ -115,80 +136,91 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
       yg = 0.0;
 
       for (Int32 k2 = 0; k2 < nLines; k2++) { // loop for the signal synthesis
-        if (m_Elements[eltIndex]->IsOutsideLambdaRange(k2) ||
-            !m_Elements[eltIndex]->isLineActiveOnSupport(k2, k)) {
+        if (elt.IsOutsideLambdaRange(k2) || !elt.isLineActiveOnSupport(k2, k)) {
           continue;
         }
-        Int32 sf = m_Elements[eltIndex]->getSignFactor(k2);
+        Int32 sf = elt.getSignFactor(k2);
         if (sf == -1) {
-          yg += sf * c * m_fittedData[eltIndex]->m_NominalAmplitudes[k2] *
-                m_Elements[eltIndex]->GetLineProfileAtRedshift(k2, redshift, x);
+          yg += sf * c * elt.GetNominalAmplitude(k2) *
+                elt.GetLineProfileAtRedshift(k2, redshift, x);
         } else {
-          yg += sf * m_fittedData[eltIndex]->m_NominalAmplitudes[k2] *
-                m_Elements[eltIndex]->GetLineProfileAtRedshift(k2, redshift, x);
+          yg += sf * elt.GetNominalAmplitude(k2) *
+                elt.GetLineProfileAtRedshift(k2, redshift, x);
         }
       }
       num++;
       err2 = 1.0 / (error[i] * error[i]);
-      m_dtmFree += yg * y * err2;
-      m_sumGauss += yg * yg * err2;
+      dtmFree += yg * y * err2;
+      sumGauss += yg * yg * err2;
     }
   }
 
-  if (num == 0 || m_sumGauss == 0) {
+  if (num == 0 || sumGauss == 0) {
     Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
                  " num=%d, mtm=%f",
-                 num, m_sumGauss);
-    /*for (Int32 k2 = 0; k2 < nLines; k2++) {
-      Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2,
-                   m_fittedData[eltIndex]->m_NominalAmplitudes[k2]);
-    }*/
-    m_fittedData[eltIndex]->m_fitAmplitude = NAN;
-    m_sumCross = NAN;
-    m_sumGauss = NAN;
-    m_dtmFree = NAN;
+                 num, sumGauss);
+    sumGauss = NAN;
+    dtmFree = NAN;
+  }
+
+  elt.SetSumGauss(sumGauss);
+  elt.SetDtmFree(dtmFree);
+}
+
+void CAbstractFitter::fitAmplitude(Int32 eltIndex,
+                                   const CSpectrumSpectralAxis &spectralAxis,
+                                   const CSpectrumFluxAxis &noContinuumfluxAxis,
+                                   const CSpectrumFluxAxis &continuumfluxAxis,
+                                   Float64 redshift, Int32 lineIdx) {
+  auto &elt = m_Elements[eltIndex];
+  Int32 nLines = elt->m_Lines.size();
+  auto &fittedData = m_fittedData[eltIndex];
+
+  fittedData->m_FittedAmplitudes.assign(nLines, NAN);
+  fittedData->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+
+  if (elt->IsOutsideLambdaRange()) {
+    fittedData->m_fitAmplitude = NAN;
+    elt->SetSumCross(NAN);
+    elt->SetSumGauss(NAN);
+    elt->SetDtmFree(NAN);
     return;
   }
 
-  m_sumCross = std::max(0.0, m_dtmFree);
-  Float64 A = m_sumCross / m_sumGauss;
-  m_fittedData[eltIndex]->m_fitAmplitude =
-      A; // todo: warning m_fitAmplitude should be updated when
-         // modifying sub-elements amplitudes: ex. rules.
-  // Float64 A = std::max(0.0, m_sumCross / m_sumGauss);
+  computeCrossProducts(*elt, spectralAxis, noContinuumfluxAxis,
+                       continuumfluxAxis, redshift, lineIdx);
+
+  if (std::isnan(elt->GetSumGauss())) {
+    fittedData->m_fitAmplitude = NAN;
+    elt->SetSumCross(NAN);
+    return;
+  }
+
+  elt->SetSumCross(std::max(0.0, elt->GetDtmFree()));
+  Float64 A = elt->GetSumCross() / elt->GetSumGauss();
+  fittedData->m_fitAmplitude = A;
 
   for (Int32 k = 0; k < nLines; k++) {
-    if (m_Elements[eltIndex]->IsOutsideLambdaRange(k)) {
+    if (elt->IsOutsideLambdaRange(k)) {
       continue;
     }
-    m_fittedData[eltIndex]->m_FittedAmplitudes[k] =
-        A * m_fittedData[eltIndex]->m_NominalAmplitudes[k];
+    fittedData->m_FittedAmplitudes[k] = A * fittedData->m_NominalAmplitudes[k];
 
     // limit the absorption to 0.0-1.0, so that it's never <0
     //*
-    if (m_Elements[eltIndex]->getSignFactor(k) == -1 && m_absLinesLimit > 0.0 &&
-        m_fittedData[eltIndex]->m_FittedAmplitudes[k] > m_absLinesLimit) {
-      m_fittedData[eltIndex]->m_FittedAmplitudes[k] = m_absLinesLimit;
+    if (elt->getSignFactor(k) == -1 && m_absLinesLimit > 0.0 &&
+        fittedData->m_FittedAmplitudes[k] > m_absLinesLimit) {
+      fittedData->m_FittedAmplitudes[k] = m_absLinesLimit;
     }
-    //*/
 
-    //        if(A==0)
-    //        {
-    //            m_FittedAmplitudeErrorSigmas[k] = 0.0; //why would this be
-    //            useful ?
-    //        }
-    //        else
-    {
-      m_fittedData[eltIndex]->m_FittedAmplitudeErrorSigmas[k] =
-          m_fittedData[eltIndex]->m_NominalAmplitudes[k] * 1.0 /
-          sqrt(m_sumGauss);
-    }
+    fittedData->m_FittedAmplitudeErrorSigmas[k] =
+        fittedData->m_NominalAmplitudes[k] * 1.0 / sqrt(elt->GetSumGauss());
   }
   return;
 }
 
 /**
- * @brief CLineModelElement::fitAmplitudeAndLambdaOffset
+ * @brief CAbstractFitter::fitAmplitudeAndLambdaOffset
  * Fit the amplitudes and a unique Offset for all lines by using the
  * fitAmplitude() in a loop to tabulate the offset
  * @param spectralAxis
@@ -202,14 +234,15 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
     const CSpectrumFluxAxis &noContinuumfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx,
     bool enableOffsetFitting, Float64 step, Float64 min, Float64 max) {
-  Int32 nLines = m_Elements[eltIndex]->m_Lines.size();
+  auto &elt = m_Elements[eltIndex];
+  Int32 nLines = elt->m_Lines.size();
   Int32 nSteps = int((max - min) / step + 0.5);
 
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
     for (Int32 iR = 0; iR < nLines; iR++) {
       // check if the line is to be fitted
-      if (m_Elements[eltIndex]->m_Lines[iR].GetOffsetFitEnabled()) {
+      if (elt->m_Lines[iR].GetOffsetFitEnabled()) {
         atLeastOneOffsetToFit = true;
         break;
       }
@@ -230,8 +263,8 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
     if (atLeastOneOffsetToFit) {
       Float64 offset = min + step * iO;
       for (Int32 iR = 0; iR < nLines; iR++) {
-        if (m_Elements[eltIndex]->m_Lines[iR].GetOffsetFitEnabled()) {
-          m_Elements[eltIndex]->m_Lines[iR].SetOffset(offset);
+        if (elt->m_Lines[iR].GetOffsetFitEnabled()) {
+          elt->m_Lines[iR].SetOffset(offset);
         }
       }
     }
@@ -242,12 +275,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
 
     // check fitting
     if (atLeastOneOffsetToFit) {
-      Float64 dtm = m_Elements[eltIndex]->GetSumCross();
-      Float64 mtm = m_Elements[eltIndex]->GetSumGauss();
-      Float64 a = m_Elements[eltIndex]->GetFitAmplitude();
-      Float64 term1 = a * a * mtm;
-      Float64 term2 = -2. * a * dtm;
-      Float64 fit = term1 + term2;
+      Float64 fit = getLeastSquareMeritFast(eltIndex);
       if (fit < bestMerit) {
         bestMerit = fit;
         idxBestMerit = iO;
@@ -261,8 +289,8 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
       Float64 offset = min + step * idxBestMerit;
       Log.LogDebug("    multiline: offset best found=%f", offset);
       for (Int32 iR = 0; iR < nLines; iR++) {
-        if (m_Elements[eltIndex]->m_Lines[iR].GetOffsetFitEnabled()) {
-          m_Elements[eltIndex]->m_Lines[iR].SetOffset(offset);
+        if (elt->m_Lines[iR].GetOffsetFitEnabled()) {
+          elt->m_Lines[iR].SetOffset(offset);
         }
       }
     }
@@ -270,4 +298,129 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
     fitAmplitude(eltIndex, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
                  redshift, lineIdx);
   }
+}
+
+/**
+ * \brief Get the squared difference by fast method proposed by D. Vibert
+ **/
+Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 idxLine) const {
+  Float64 fit = -1; // TODO restore getLeastSquareContinuumMeritFast();
+  Int32 istart = 0;
+  Int32 iend = m_Elements.size();
+  if (idxLine != undefIdx) {
+    istart = idxLine;
+    iend = idxLine + 1;
+  }
+  for (Int32 iElts = istart; iElts < iend; iElts++) {
+    Float64 dtm = m_Elements[iElts]->GetSumCross();
+    Float64 mtm = m_Elements[iElts]->GetSumGauss();
+    Float64 a = m_Elements[iElts]->GetFitAmplitude();
+    Float64 term1 = a * a * mtm;
+    Float64 term2 = -2. * a * dtm;
+    fit += term1 + term2;
+  }
+
+  Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit fast = %f", fit);
+  return fit;
+}
+
+TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
+                                               const Int32 &idxLineLyaE) {
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
+  // 3. find the best width and asym coeff. parameters
+  Float64 widthCoeffStep = m_opt_lya_fit_width_step;
+  Float64 widthCoeffMin = m_opt_lya_fit_width_min;
+  Float64 widthCoeffMax = m_opt_lya_fit_width_max;
+  Int32 nWidthSteps =
+      int((widthCoeffMax - widthCoeffMin) / widthCoeffStep + 1.5);
+  Float64 asymCoeffStep = m_opt_lya_fit_asym_step;
+  Float64 asymCoeffMin = m_opt_lya_fit_asym_min;
+  Float64 asymCoeffMax = m_opt_lya_fit_asym_max;
+  Int32 nAsymSteps = int((asymCoeffMax - asymCoeffMin) / asymCoeffStep + 1.5);
+  Float64 deltaStep = m_opt_lya_fit_delta_step;
+  Float64 deltaMin = m_opt_lya_fit_delta_min;
+  Float64 deltaMax = m_opt_lya_fit_delta_max;
+  Int32 nDeltaSteps = int((deltaMax - deltaMin) / deltaStep + 1.5);
+
+  TAsymParams bestparams = {widthCoeffMin, asymCoeffMin, deltaMin};
+  Float64 meritMin = DBL_MAX;
+
+  TInt32List filterEltsIdxLya(1, idxLyaE);
+
+  for (Int32 iDelta = 0; iDelta < nDeltaSteps; iDelta++) {
+    Float64 delta = deltaMin + deltaStep * iDelta;
+    for (Int32 iWidth = 0; iWidth < nWidthSteps; iWidth++) {
+      Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep * iWidth;
+      for (Int32 iAsym = 0; iAsym < nAsymSteps; iAsym++) {
+        Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep * iAsym;
+        m_Elements[idxLyaE]->SetAsymfitParams(
+            {asymWidthCoeff, asymAlphaCoeff, delta});
+
+        // idxLineLyaE = -1;
+        std::ostringstream oss;
+        m_Elements.debug(oss);
+        Log.LogInfo(oss.str());
+        fitAmplitude(idxLyaE, spectralAxis,
+                     m_model->getSpcFluxAxisNoContinuum(),
+                     m_model->getContinuumFluxAxis(), redshift, idxLineLyaE);
+        oss.clear();
+        m_Elements.debug(oss);
+        Log.LogInfo(oss.str());
+
+        Float64 m = 0; // TODO DV why initializing to m_dTransposeD ?;
+        if (1) {
+
+          m_model->refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
+          m = m_model->getModelErrorUnderElement(idxLyaE,
+                                                 m_model->getSpcFluxAxis());
+          Log.LogInfo("Fitting Lya profi: merit=%e", m);
+        } else {
+          m = getLeastSquareMeritFast(idxLyaE);
+        }
+        if (m < meritMin) {
+          meritMin = m;
+          bestparams = m_Elements[idxLyaE]->GetAsymfitParams(0);
+        }
+
+        Log.LogDebug("Fitting Lya Profile: width=%f, asym=%f, delta=%f",
+                     asymWidthCoeff, asymAlphaCoeff, delta);
+        Log.LogDebug("Fitting Lya Profile: merit=%e", m);
+        Log.LogDebug("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d", idxLyaE,
+                     idxLineLyaE);
+      }
+    }
+  }
+  Log.LogDebug("Lya Profile found: width=%f, asym=%f, delta=%f",
+               bestparams.sigma, bestparams.alpha, bestparams.delta);
+  return bestparams;
+}
+
+Int32 CAbstractFitter::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
+                                            const TInt32List &idxLine) {
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
+  if (spectralAxis[0] / (1 + redshift) > RESTLAMBDA_LYA)
+    return -1;
+
+  Float64 meritMin = DBL_MAX;
+  Int32 bestIgmIdx = -1;
+
+  Int32 igmCount =
+      m_Elements[iElts]->getLineProfile(idxLine.front()).getIGMIdxCount();
+  for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
+    m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
+    fitAmplitude(iElts, spectralAxis, m_model->getSpcFluxAxisNoContinuum(),
+                 m_model->getContinuumFluxAxis(), redshift);
+
+    m_model->refreshModelUnderElements(TInt32List(1, iElts));
+    Float64 m =
+        m_model->getModelErrorUnderElement(iElts, m_model->getSpcFluxAxis());
+
+    if (m < meritMin) {
+      meritMin = m;
+      bestIgmIdx = igmIdx;
+    }
+  }
+  return bestIgmIdx;
 }

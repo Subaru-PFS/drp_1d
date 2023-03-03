@@ -70,12 +70,29 @@ public:
              const CLineCatalog::TLineVector &restLineList,
              std::shared_ptr<CContinuumManager> continuumManager,
              const std::vector<std::shared_ptr<TFittedData>> &fittedData);
+
+  void logParameters();
+
+  TAsymParams fitAsymParameters(Float64 redshift, Int32 idxLyaE,
+                                const Int32 &idxLineLyaE);
+
+  Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
+                             const TInt32List &idxLine);
+
   Int32 m_cont_reestim_iterations = 0;
+
+protected:
+  void computeCrossProducts(CLineModelElement &elt,
+                            const CSpectrumSpectralAxis &spectralAxis,
+                            const CSpectrumFluxAxis &noContinuumfluxAxis,
+                            const CSpectrumFluxAxis &continuumfluxAxis,
+                            Float64 redshift, Int32 lineIdx);
 
   void fitAmplitude(Int32 eltIndex, const CSpectrumSpectralAxis &spectralAxis,
                     const CSpectrumFluxAxis &fluxAxis,
                     const CSpectrumFluxAxis &continuumfluxAxis,
                     Float64 redshift, Int32 lineIdx = undefIdx);
+
   void fitAmplitudeAndLambdaOffset(Int32 eltIndex,
                                    const CSpectrumSpectralAxis &spectralAxis,
                                    const CSpectrumFluxAxis &fluxAxis,
@@ -85,7 +102,8 @@ public:
                                    Float64 step = 25., Float64 min = -400.,
                                    Float64 max = 400.);
 
-protected:
+  Float64 getLeastSquareMeritFast(Int32 idxLine = -1) const;
+
   CLineModelElementList &m_Elements;
   std::vector<std::shared_ptr<TFittedData>> m_fittedData;
   const CSpectrum &m_inputSpc;
@@ -102,12 +120,17 @@ protected:
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
 
-  Float64 m_sumCross = 0.0;
-  Float64 m_sumGauss = 0.0;
-  Float64 m_dtmFree =
-      0.0; // dtmFree is the non-positive-constrained version of sumCross
-
   Float64 m_absLinesLimit = 1.0;
+
+  Float64 m_opt_lya_fit_asym_min = 0.0;
+  Float64 m_opt_lya_fit_asym_max = 4.0;
+  Float64 m_opt_lya_fit_asym_step = 1.0;
+  Float64 m_opt_lya_fit_width_min = 1.;
+  Float64 m_opt_lya_fit_width_max = 4.;
+  Float64 m_opt_lya_fit_width_step = 1.;
+  Float64 m_opt_lya_fit_delta_min = 0.;
+  Float64 m_opt_lya_fit_delta_max = 0.;
+  Float64 m_opt_lya_fit_delta_step = 1.;
 };
 } // namespace NSEpic
 

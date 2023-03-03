@@ -102,19 +102,13 @@ protected:
                      const CLineCatalog::TLineVector &lineList);
   void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
                       const CLineCatalog::TLineVector &lineList);
-  TAsymParams fitAsymParameters(Float64 redshift, Int32 idxLyaE,
-                                const Int32 &idxLineLyaE);
-
   virtual Int32
   getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
                         const CLineCatalog::TLineVector &catalog) const;
 
   void setSymIgmProfile(Int32 iElts, const TInt32List &idxLineIGM,
                         Float64 redshift);
-  Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
-                             const TInt32List &idxLine);
 
-  Float64 getLeastSquareMeritFast(Int32 idxLine = -1) const;
   Float64 getLeastSquareMerit() const;
 
   CLineModelElementList &m_Elements;
@@ -130,16 +124,6 @@ protected:
 
   bool m_opt_lya_forcefit = false;
   bool m_opt_lya_forcedisablefit = false;
-
-  Float64 m_opt_lya_fit_asym_min = 0.0;
-  Float64 m_opt_lya_fit_asym_max = 4.0;
-  Float64 m_opt_lya_fit_asym_step = 1.0;
-  Float64 m_opt_lya_fit_width_min = 1.;
-  Float64 m_opt_lya_fit_width_max = 4.;
-  Float64 m_opt_lya_fit_width_step = 1.;
-  Float64 m_opt_lya_fit_delta_min = 0.;
-  Float64 m_opt_lya_fit_delta_max = 0.;
-  Float64 m_opt_lya_fit_delta_step = 1.;
 };
 
 } // namespace NSEpic

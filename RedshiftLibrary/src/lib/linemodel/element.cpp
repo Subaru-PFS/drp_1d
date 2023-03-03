@@ -1224,6 +1224,7 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
     os << i << "\t" << m_asymLineIndices[i] << "\n";
 }
 
-bool CLineModelElement::isLineActiveOnSupport(Int32 lineIdxA, Int32 lineIdxB) {
+bool CLineModelElement::isLineActiveOnSupport(Int32 lineIdxA,
+                                              Int32 lineIdxB) const {
   return m_LineIsActiveOnSupport[lineIdxA][lineIdxB] == 1;
 }
