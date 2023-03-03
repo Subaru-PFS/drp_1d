@@ -161,8 +161,8 @@ void CLineModelFitting::initMembers() {
   }
 
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
-  m_model = std::make_shared<CSpectrumModel>(
-      CSpectrumModel(m_Elements, m_inputSpc, m_RestLineList));
+  m_model = std::make_shared<CSpectrumModel>(CSpectrumModel(
+      m_Elements, m_inputSpc, m_RestLineList, m_continuumFitValues));
   m_continuumManager = std::make_shared<CContinuumManager>(
       CContinuumManager(m_model, *(m_lambdaRange), m_continuumFitValues));
 
@@ -427,8 +427,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
 
   // the support has to be already computed
   // when LoadFitContinuum() is called
-  m_continuumManager->initObserveGridContinuumFlux(
-      m_inputSpc->GetSampleCount());
+  m_model->initObserveGridContinuumFlux(m_inputSpc->GetSampleCount());
   Int32 autoselect = getContinuumComponent() == "tplfitauto";
   m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
 }

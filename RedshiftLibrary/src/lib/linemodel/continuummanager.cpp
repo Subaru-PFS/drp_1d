@@ -16,7 +16,6 @@ CContinuumManager::CContinuumManager(
     : m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategoryList({Context.GetCurrentCategory()}), m_model(model),
       m_fitContinuum(tfv) {
-  m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
@@ -36,44 +35,6 @@ CContinuumManager::CContinuumManager(
     m_opt_fitcontinuum_null_amp_threshold =
         ps->GetScoped<Float64>("continuumfit.nullthreshold");
   }
-}
-
-/**
- * Apply the template continuum by interpolating the grid as define in Init
- * Continuum
- */
-Int32 CContinuumManager::ApplyContinuumOnGrid(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 zcontinuum) {
-  m_fitContinuum->tplName = tpl->GetName();
-  Int32 n = tpl->GetSampleCount();
-
-  Int32 idxDust = -1;
-  if (m_fitContinuum->tplEbmvCoeff > 0.) {
-    if (tpl->CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "  no calzetti calib. file in template");
-    }
-    idxDust = tpl->m_ismCorrectionCalzetti->GetEbmvIndex(
-        m_fitContinuum->tplEbmvCoeff);
-  }
-  const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
-  TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n - 1]);
-
-  std::string inter_opt = "spline";
-  tpl->setRebinInterpMethod(inter_opt);
-  Float64 overlapThreshold = 1., amplitude = 1.;
-  std::shared_ptr<CModelSpectrumResult> spcmodel =
-      m_templateFittingOperator->ComputeSpectrumModel(
-          tpl, zcontinuum, m_fitContinuum->tplEbmvCoeff,
-          m_fitContinuum->tplMeiksinIdx, amplitude, overlapThreshold,
-          m_spcIndex);
-  if (spcmodel == nullptr)
-    THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
-
-  // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not
-  // AxisSampleList
-  m_observeGridContinuumFlux = std::move((*spcmodel).ModelFlux);
-
-  return 0;
 }
 
 std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
@@ -112,10 +73,10 @@ Float64 CContinuumManager::getFitContinuum_snr() const {
 void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
                                          Float64 redshift) {
   Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
-  if (m_observeGridContinuumFlux.empty())
+  /*if (m_observeGridContinuumFlux.empty())
     THROWG(INTERNAL_ERROR,
            "Cannot loadfitcontinuum without precomputedGridTplFlux");
-
+  */
   if (m_fitContinuum_option ==
       1) { // using precomputed fit store, i.e., fitValues
     CTplModelSolution fitValues =
@@ -158,7 +119,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
       m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
   }
 
-  ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
+  m_model->ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
 
   setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                m_fitContinuum->tplAmplitudeError,
@@ -194,8 +155,7 @@ void CContinuumManager::setFitContinuum_tplAmplitude(
   m_fitContinuum->tplAmplitude = tplAmp;
   m_fitContinuum->tplAmplitudeError = tplAmpErr;
   m_fitContinuum->pCoeffs = polyCoeffs;
-  m_model->setContinuumFromTplFit(alpha, tplAmp, polyCoeffs,
-                                  m_observeGridContinuumFlux);
+  m_model->setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
 }
 
 Int32 CContinuumManager::SetFitContinuum_FitStore(
@@ -307,10 +267,6 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum_tplFitAlpha);
 }
 
-void CContinuumManager::initObserveGridContinuumFlux(Int32 size) {
-  m_observeGridContinuumFlux.resize(size);
-}
-
 bool CContinuumManager::isContFittedToNull() {
   return m_fitContinuum->tplAmplitude > m_opt_fitcontinuum_null_amp_threshold *
                                             m_fitContinuum->tplAmplitudeError;
@@ -335,7 +291,7 @@ void CContinuumManager::setContinuumComponent(std::string component) {
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
   std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
       m_tplCategoryList, m_fitContinuum->tplName);
-  ApplyContinuumOnGrid(tpl, redshift);
+  m_model->ApplyContinuumOnGrid(tpl, redshift);
 }
 
 void CContinuumManager::reinterpolateContinuumResetAmp() {

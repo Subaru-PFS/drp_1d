@@ -50,8 +50,6 @@ public:
                                  Float64 tplfit_dtm, Float64 tplfit_mtm,
                                  Float64 tplfit_logprior,
                                  const TFloat64List &polyCoeffs);
-  Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate> &tpl,
-                             Float64 zcontinuum);
   Float64 getContinuumScaleMargCorrection() const;
   bool isContinuumComponentTplfitxx() const {
     return m_ContinuumComponent == "tplfit" ||
@@ -67,13 +65,12 @@ public:
     return m_ContinuumComponent;
   };
 
-  // new methods
   void logParameters();
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
   getIsmCorrectionFromTpl();
   void reinterpolateContinuum(Float64 redshift);
   void reinterpolateContinuumResetAmp();
-  void initObserveGridContinuumFlux(Int32 size);
+
   bool isContFittedToNull();
   Int32 getFittedMeiksinIndex() { return m_fitContinuum->tplMeiksinIdx; }
   Float64 getFitSum() {
@@ -98,9 +95,7 @@ private:
   std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
   TStringList m_tplCategoryList;
 
-  Int32 m_spcIndex = 0;
   std::shared_ptr<CPriorHelper> m_fitContinuum_priorhelper;
-  std::shared_ptr<COperatorTemplateFitting> m_templateFittingOperator;
 
   std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
 
@@ -116,11 +111,6 @@ private:
 
   // m_fitContinuum_option==2 for now
   Float64 m_fitContinuum_tplFitAlpha = 0.;
-
-  TAxisSampleList
-      m_observeGridContinuumFlux; // the continuum spectre without the
-                                  // amplitude coeff; m_ContinuumFLux = amp *
-                                  // m_observeGridContinuumFlux
 
   void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr,
                                     const TFloat64List &polyCoeffs);
