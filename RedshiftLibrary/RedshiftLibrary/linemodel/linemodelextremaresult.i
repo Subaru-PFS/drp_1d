@@ -43,7 +43,7 @@ public:
     m_type = "TLineModelResult";
   }
 
-  void updateFromContinuumModelSolution(std::shared_ptr<const CContinuumModelSolution> cms);
+  void updateFromContinuumModelSolution(std::shared_ptr<const CTplModelSolution> cms);
 
   void updateFromLineModelSolution(const CLineModelSolution &cms);
 

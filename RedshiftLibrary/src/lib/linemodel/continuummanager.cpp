@@ -12,8 +12,7 @@ using namespace std;
 
 CContinuumManager::CContinuumManager(
     const std::shared_ptr<CSpectrumModel> &model,
-    const TLambdaRange &lambdaRange,
-    std::shared_ptr<CContinuumModelSolution> tfv)
+    const TLambdaRange &lambdaRange, std::shared_ptr<CTplModelSolution> tfv)
     : m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategoryList({Context.GetCurrentCategory()}), m_model(model),
       m_fitContinuum(tfv) {
@@ -119,7 +118,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
 
   if (m_fitContinuum_option ==
       1) { // using precomputed fit store, i.e., fitValues
-    CContinuumModelSolution fitValues =
+    CTplModelSolution fitValues =
         m_fitContinuum_tplfitStore->GetFitValues(redshift, icontinuum);
     if (fitValues.tplName.empty()) {
       THROWG(INTERNAL_ERROR, "Empty template name");
@@ -247,9 +246,8 @@ void CContinuumManager::SetFitContinuum_FitValues(
   m_fitContinuum->pCoeffs = polyCoeffs;
 }
 
-CContinuumModelSolution
-CContinuumManager::GetContinuumModelSolutionCopy() const {
-  CContinuumModelSolution continuumModelSolution = *m_fitContinuum;
+CTplModelSolution CContinuumManager::GetContinuumModelSolutionCopy() const {
+  CTplModelSolution continuumModelSolution = *m_fitContinuum;
 
   return continuumModelSolution;
 }

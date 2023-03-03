@@ -36,7 +36,6 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/method/classificationresult.h"
@@ -47,6 +46,7 @@
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"

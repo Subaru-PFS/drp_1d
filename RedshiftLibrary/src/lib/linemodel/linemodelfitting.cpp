@@ -160,7 +160,7 @@ void CLineModelFitting::initMembers() {
     LoadCatalogTwoMultilinesAE(m_RestLineList);
   }
 
-  m_continuumFitValues = std::make_shared<CContinuumModelSolution>();
+  m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_model = std::make_shared<CSpectrumModel>(
       CSpectrumModel(m_Elements, m_inputSpc, m_RestLineList));
   m_continuumManager = std::make_shared<CContinuumManager>(
@@ -450,7 +450,7 @@ void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
  **/
 Float64 CLineModelFitting::fit(Float64 redshift,
                                CLineModelSolution &modelSolution,
-                               CContinuumModelSolution &continuumModelSolution,
+                               CTplModelSolution &continuumModelSolution,
                                Int32 contreest_iterations, bool enableLogging) {
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();

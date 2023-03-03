@@ -328,7 +328,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
         m_firstpass_extremaResult.m_ranked_candidates[candidateIdx]
             .second->Redshift);
 
-    CContinuumModelSolution fitValue =
+    CTplModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
 
     tplList.push_back(
@@ -536,7 +536,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
     const std::shared_ptr<CTemplatesFitStore> &tplfitStore) {
   // Check if best continuum amplitudes are negative fitted amplitudes at
   // all z
-  CContinuumModelSolution fitValues;
+  CTplModelSolution fitValues;
   Float64 max_fitamplitudeSigma_z = NAN;
   Float64 max_fitamplitudeSigma =
       tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
@@ -661,8 +661,8 @@ COperatorLineModel::buildFirstPassExtremaResults() {
 
     ExtremaResult->m_savedModelFittingResults[i] =
         std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
-    std::shared_ptr<const CContinuumModelSolution> csolution =
-        std::make_shared<CContinuumModelSolution>(
+    std::shared_ptr<const CTplModelSolution> csolution =
+        std::make_shared<CTplModelSolution>(
             m_result->ContinuumModelSolutions[idx]);
     ExtremaResult->m_ranked_candidates[i]
         .second->updateFromContinuumModelSolution(csolution);
@@ -1656,7 +1656,7 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(
   = datastore.GetFloat64Range("redshiftrange").GetEnd(); CLineModelSolution
   modelSolution; CLineModelSolution bestModelSolution;
 
-  CContinuumModelSolution continuumModelSolution;
+  CTplModelSolution continuumModelSolution;
 
   m_fittingManager->SetFittingMethod("hybrid");
 
@@ -1756,7 +1756,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   m_fittingManager->initDtd();
 
   CLineModelSolution modelSolution(m_fittingManager->m_RestLineList);
-  CContinuumModelSolution continuumModelSolution;
+  CTplModelSolution continuumModelSolution;
   CLineModelSolution bestModelSolution;
 
   Float64 bestScore = DBL_MAX;

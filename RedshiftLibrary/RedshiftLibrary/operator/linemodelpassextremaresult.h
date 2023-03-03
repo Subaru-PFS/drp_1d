@@ -59,8 +59,9 @@ public:
   TInt32List
   getUniqueCandidates(const CLineModelPassExtremaResult &results_b) const;
   TFloat64List GetRedshifts() const;
-  void fillWithContinuumModelSolutionAtIndex(
-      Int32 i, const CContinuumModelSolution &contModelSol);
+  void
+  fillWithContinuumModelSolutionAtIndex(Int32 i,
+                                        const CTplModelSolution &contModelSol);
 
   TCandidateZbyRank m_ranked_candidates;
 

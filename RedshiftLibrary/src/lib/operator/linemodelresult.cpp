@@ -79,7 +79,7 @@ void CLineModelResult::Init(TFloat64List redshifts,
   Redshifts = std::move(redshifts);
   restLineList = std::move(restLines);
   LineModelSolutions.assign(nResults, CLineModelSolution());
-  ContinuumModelSolutions.assign(nResults, CContinuumModelSolution());
+  ContinuumModelSolutions.assign(nResults, CTplModelSolution());
 
   ChiSquareContinuum.assign(nResults, NAN);
   ScaleMargCorrectionContinuum.assign(nResults, NAN);
@@ -117,8 +117,8 @@ void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
   insertWithDuplicates<Float64>(ScaleMargCorrection, idx, count, NAN, ndup);
   insertWithDuplicates(LineModelSolutions, idx, count, CLineModelSolution(),
                        ndup);
-  insertWithDuplicates(ContinuumModelSolutions, idx, count,
-                       CContinuumModelSolution(), ndup);
+  insertWithDuplicates(ContinuumModelSolutions, idx, count, CTplModelSolution(),
+                       ndup);
   insertWithDuplicates<Float64>(ChiSquareContinuum, idx, count, NAN, ndup);
   insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, idx, count, NAN,
                                 ndup);

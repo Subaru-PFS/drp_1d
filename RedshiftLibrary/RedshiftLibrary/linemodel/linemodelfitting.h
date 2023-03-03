@@ -112,7 +112,7 @@ public:
                     const CSpectrumSpectralAxis &spectralAxis);
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
-              CContinuumModelSolution &continuumModelSolution,
+              CTplModelSolution &continuumModelSolution,
               Int32 contreest_iterations = 0, bool enableLogging = 0);
   TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
 
@@ -175,7 +175,7 @@ public:
   std::shared_ptr<CContinuumManager> getContinuumManager() {
     return m_continuumManager;
   }
-  std::shared_ptr<const CContinuumModelSolution> getContinuumFitValues() const {
+  std::shared_ptr<const CTplModelSolution> getContinuumFitValues() const {
     return m_continuumFitValues;
   }
 
@@ -195,7 +195,7 @@ public:
   Float64 m_LambdaOffsetStep = 25.0;
 
 private:
-  std::shared_ptr<CContinuumModelSolution> m_continuumFitValues;
+  std::shared_ptr<CTplModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
   void fitAmplitudesSimplex();

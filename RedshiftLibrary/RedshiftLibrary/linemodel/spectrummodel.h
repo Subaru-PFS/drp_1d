@@ -10,7 +10,7 @@
 namespace NSEpic {
 
 class CLineModelSolution;
-class CContinuumModelSolution;
+class CTplModelSolution;
 class CSpectrumModel {
 public:
   CSpectrumModel(CLineModelElementList &elements,

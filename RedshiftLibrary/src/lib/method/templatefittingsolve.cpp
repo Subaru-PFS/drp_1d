@@ -452,24 +452,24 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[i].second->continuum.tplMerit =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMerit =
         ChiSquare;
-    extremaResult->m_ranked_candidates[i].second->continuum.tplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->continuum.tplName = tplName;
-    extremaResult->m_ranked_candidates[i].second->continuum.tplMeiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplName = tplName;
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->continuum.tplEbmvCoeff =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplEbmvCoeff =
         TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second->continuum.tplAmplitude =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplAmplitude =
         TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second->continuum.tplAmplitudeError =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplAmplitudeError =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second->continuum.tplDtM =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplDtM =
         TplFitResult->FitDtM[idx];
-    extremaResult->m_ranked_candidates[i].second->continuum.tplMtM =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMtM =
         TplFitResult->FitMtM[idx];
-    extremaResult->m_ranked_candidates[i].second->continuum.tplLogPrior =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplLogPrior =
         TplFitResult->LogPrior[idx];
 
     Float64 FitSNR = NAN;

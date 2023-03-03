@@ -19,13 +19,13 @@ class CSpectrum;
 class CTemplateCatalog;
 class CSpectrumFluxCorrectionCalzetti;
 class CSpectrumModel;
-class CContinuumModelSolution;
+class CTplModelSolution;
 
 class CContinuumManager {
 public:
   CContinuumManager(const std::shared_ptr<CSpectrumModel> &model,
                     const TLambdaRange &lambdaRange,
-                    std::shared_ptr<CContinuumModelSolution>);
+                    std::shared_ptr<CTplModelSolution>);
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);
@@ -38,7 +38,7 @@ public:
   std::shared_ptr<CPriorHelper> SetFitContinuum_PriorHelper();
   void LoadFitContinuum(Int32 icontinuum, Int32 autoSelect, Float64 redshift);
 
-  void SetFitContinuum_FitValues(const CContinuumModelSolution &cms) {
+  void SetFitContinuum_FitValues(const CTplModelSolution &cms) {
     *m_fitContinuum = cms;
   }
 
@@ -58,9 +58,8 @@ public:
            m_ContinuumComponent == "tplfitauto";
   }
   Float64 getFitContinuum_snr() const;
-  CContinuumModelSolution GetContinuumModelSolutionCopy() const;
-  std::shared_ptr<const CContinuumModelSolution>
-  GetContinuumModelSolution() const {
+  CTplModelSolution GetContinuumModelSolutionCopy() const;
+  std::shared_ptr<const CTplModelSolution> GetContinuumModelSolution() const {
     return m_fitContinuum;
   }
   void setContinuumComponent(std::string component);
@@ -112,7 +111,7 @@ private:
   Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
 
-  std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
+  std::shared_ptr<CTplModelSolution> m_fitContinuum;
   std::shared_ptr<fitMaxValues> m_fitContinuumMaxValues;
 
   // m_fitContinuum_option==2 for now

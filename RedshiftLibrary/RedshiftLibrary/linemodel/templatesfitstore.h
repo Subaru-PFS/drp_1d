@@ -40,7 +40,7 @@
 #define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
@@ -69,12 +69,12 @@ public:
   Int32 getClosestLowerRedshiftIndex(Float64 z) const;
   const TFloat64List &GetRedshiftList() const;
   // TODO maybe we could return const ref ?
-  const CContinuumModelSolution &
-  GetFitValues(Int32 idxz, Int32 continuumCandidateRank) const;
-  const CContinuumModelSolution &
-  GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
+  const CTplModelSolution &GetFitValues(Int32 idxz,
+                                        Int32 continuumCandidateRank) const;
+  const CTplModelSolution &GetFitValues(Float64 redshiftVal,
+                                        Int32 continuumCandidateRank) const;
   Int32 GetContinuumCount() const;
-  Float64 FindMaxAmplitudeSigma(Float64 &z, CContinuumModelSolution &fitValues);
+  Float64 FindMaxAmplitudeSigma(Float64 &z, CTplModelSolution &fitValues);
   // put as public on purpose to avoid the 'old-school' use of getters
   void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
   void setAmplitudeSigmaMax(Float64 ampl) {
@@ -85,7 +85,7 @@ public:
   }
 
 private:
-  std::vector<std::vector<CContinuumModelSolution>>
+  std::vector<std::vector<CTplModelSolution>>
       m_fitValues; //[nz][n_continuum_candidates]
   std::shared_ptr<fitMaxValues> m_fitMaxValues;
   Int32 n_continuum_candidates = 0;

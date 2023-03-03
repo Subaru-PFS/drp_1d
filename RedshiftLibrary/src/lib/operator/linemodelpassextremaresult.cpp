@@ -104,7 +104,7 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
 }
 
 void CLineModelPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
-    Int32 i, const CContinuumModelSolution &contModelSol) {
+    Int32 i, const CTplModelSolution &contModelSol) {
   FittedTplName[i] = contModelSol.tplName;
   FittedTplAmplitude[i] = contModelSol.tplAmplitude;
   FittedTplAmplitudeError[i] = contModelSol.tplAmplitudeError;

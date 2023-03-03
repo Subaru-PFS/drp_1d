@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 
 class TExtremaResult : public TCandidateZ {
 
@@ -51,6 +51,6 @@ public:
     m_type = "TExtremaResult";
   }
 
-  CContinuumModelSolution continuum;
+  CTplModelSolution fittedTpl;
   Float64 FittedTplSNR = NAN;
 };
