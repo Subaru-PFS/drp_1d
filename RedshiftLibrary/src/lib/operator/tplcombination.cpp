@@ -116,7 +116,7 @@ void COperatorTplcombination::BasicFit(
 
   TFloat64Range currentRange;
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
-                fittingResults.overlapRate.front(), overlapThreshold);
+                fittingResults.overlapFraction.front(), overlapThreshold);
 
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
   // I consider here that all templates share the same spectralAxis
@@ -448,7 +448,7 @@ Float64 COperatorTplcombination::ComputeXi2_bruteForce(
 void COperatorTplcombination::RebinTemplate(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     Float64 redshift, const TFloat64Range &lambdaRange,
-    TFloat64Range &currentRange, Float64 &overlapRate,
+    TFloat64Range &currentRange, Float64 &overlapFraction,
     const Float64 overlapThreshold) {
   Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -500,14 +500,14 @@ void COperatorTplcombination::RebinTemplate(
         ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0],
         itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount() - 1]);
 
-    overlapRate =
-        m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(
+    overlapFraction =
+        m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapFraction(
             lambdaRange_restframe, itplMask);
 
     // Check for overlap rate
-    if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
-      THROWG(OVERLAPRATE_NOTACCEPTABLE,
-             Formatter() << "overlaprate of " << overlapRate);
+    if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
+      THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+             Formatter() << "overlapFraction of " << overlapFraction);
     }
   }
   currentRange = intersectedAllLambdaRange;
@@ -619,7 +619,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     }
 
     result->ChiSquare[i] = fittingResults.chiSquare;
-    result->Overlap[i] = fittingResults.overlapRate;
+    result->Overlap[i] = fittingResults.overlapFraction;
     result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
     result->FitAmplitudeSigma[i] = fittingResults.fittingAmplitudeSigmas;
     result->FitAmplitudeError[i] = fittingResults.fittingAmplitudeErrors;
@@ -713,10 +713,10 @@ COperatorTplcombination::ComputeSpectrumModel(
   Int32 nddl = tplList.size();
 
   // Estatus status;
-  Float64 overlapRate = 0.0;
+  Float64 overlapFraction = 0.0;
   TFloat64Range currentRange;
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
-                overlapRate, overlapThreshold);
+                overlapFraction, overlapThreshold);
   /*if( ret == -1 ){
       //status = nStatus_NoOverlap;
       return -1;

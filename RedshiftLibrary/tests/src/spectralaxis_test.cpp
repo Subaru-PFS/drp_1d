@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(GetMask) {
   BOOST_CHECK(std::equal(result, result + 4, mask.GetMasks()));
 }
 
-BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate) {
+BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapFraction) {
   CMask mask(4);
   TFloat64Range range(0.5, 5.);
   const TFloat64List array{1., 3., 4., 10.};
@@ -317,12 +317,12 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate) {
   mask[3] = 0;
 
   const CSpectrumSpectralAxis axis(array);
-  BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(range, mask),
+  BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapFraction(range, mask),
                     2. / 3, 1e-18);
 
   const TFloat64Range outrange(-5, 0.);
-  BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(outrange, mask), 0.,
-                    1e-18);
+  BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapFraction(outrange, mask),
+                    0., 1e-18);
 }
 
 BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange) {

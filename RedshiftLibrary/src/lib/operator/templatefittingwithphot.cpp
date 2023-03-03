@@ -88,11 +88,11 @@ void COperatorTemplateFittingPhot::checkInputPhotometry() const {
 
 void COperatorTemplateFittingPhot::RebinTemplate(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    TFloat64Range &currentRange, Float64 &overlapRate,
+    TFloat64Range &currentRange, Float64 &overlapFraction,
     const Float64 overlapThreshold, Int32 spcIndex) {
 
   COperatorTemplateFittingBase::RebinTemplate(
-      tpl, redshift, currentRange, overlapRate, overlapThreshold, spcIndex);
+      tpl, redshift, currentRange, overlapFraction, overlapThreshold, spcIndex);
 
   RebinTemplateOnPhotBand(tpl, redshift);
 }
@@ -122,15 +122,14 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
                templateRebined_phot, mskRebined);
 
-    const Float64 overlapRate =
-        photSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(
+    const Float64 overlapFraction =
+        photSpectralAxis_restframe.IntersectMaskAndComputeOverlapFraction(
             lambdaRange_restframe, mskRebined);
 
-    if (overlapRate < 1.0) {
+    if (overlapFraction < 1.0) {
       // status = nStatus_NoOverlap;
-      THROWG(OVERLAPRATE_NOTACCEPTABLE,
-             Formatter() << "tpl overlap too small, overlaprate of "
-                         << overlapRate);
+      THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+             Formatter() << "tpl overlap too small: " << overlapFraction);
     }
   }
 }

@@ -96,9 +96,9 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
                 "templateFitting for candidate Zcand=%f",
                 redshift);
 
-  Float64 overlapRate = 0.0;
+  Float64 overlapFraction = 0.0;
   TFloat64Range currentRange;
-  RebinTemplate(tpl, redshift, currentRange, overlapRate, overlapThreshold,
+  RebinTemplate(tpl, redshift, currentRange, overlapFraction, overlapThreshold,
                 spcIndex);
 
   const TAxisSampleList &Xspc =
@@ -145,7 +145,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
 void COperatorTemplateFittingBase::RebinTemplate(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    TFloat64Range &currentRange, Float64 &overlapRate,
+    TFloat64Range &currentRange, Float64 &overlapFraction,
     const Float64 overlapThreshold, Int32 spcIndex) {
   Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -177,16 +177,16 @@ void COperatorTemplateFittingBase::RebinTemplate(
   tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe[spcIndex],
              m_templateRebined_bf[spcIndex], m_mskRebined_bf[spcIndex]);
 
-  // overlapRate
-  overlapRate =
-      m_spcSpectralAxis_restframe[spcIndex].IntersectMaskAndComputeOverlapRate(
-          lambdaRange_restframe, m_mskRebined_bf[spcIndex]);
+  // overlapFraction
+  overlapFraction = m_spcSpectralAxis_restframe[spcIndex]
+                        .IntersectMaskAndComputeOverlapFraction(
+                            lambdaRange_restframe, m_mskRebined_bf[spcIndex]);
 
   // Check for overlap rate
-  if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
+  if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
     // status = nStatus_NoOverlap;
-    THROWG(OVERLAPRATE_NOTACCEPTABLE,
-           Formatter() << "tpl overlap rate is too small: " << overlapRate);
+    THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+           Formatter() << "tpl overlap rate is too small: " << overlapFraction);
   }
 
   // the spectral axis should be in the same scale
