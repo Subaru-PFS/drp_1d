@@ -63,10 +63,6 @@ void TLineModelResult::updateTplRatioFromModel(
   FittedTplratioName = lmel->getTplratio_bestTplName();
   FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
   FittedTplratioAmplitudeEm = lmel->getTplratio_bestAmplitudeEm();
-  FittedTplratioDtmEm = lmel->getTplratio_bestDtmEm();
-  FittedTplratioDtmAbs = lmel->getTplratio_bestDtmAbs();
-  FittedTplratioMtmEm = lmel->getTplratio_bestMtmEm();
-  FittedTplratioMtmAbs = lmel->getTplratio_bestMtmAbs();
 }
 
 void TLineModelResult::updateFromModel(

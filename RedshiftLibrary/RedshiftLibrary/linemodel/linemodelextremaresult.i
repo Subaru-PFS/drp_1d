@@ -100,12 +100,6 @@ public:
                                          // tplcorr/tplratio
   Float64 FittedTplratioAmplitudeAbs = NAN;
 
-  Float64 FittedTplratioDtmEm =
-      NAN; // dtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioDtmAbs = NAN;
-  Float64 FittedTplratioMtmEm =
-      NAN; // mtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioMtmAbs = NAN;
   Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
                                         // fitted for tplcorr/tplratio
 };
