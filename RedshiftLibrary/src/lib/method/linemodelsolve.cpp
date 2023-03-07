@@ -118,18 +118,18 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const CSpectrum &spc = *(inputContext->GetSpectrum(m_useloglambdasampling));
   Solve();
 
-  auto results = resultStore->GetScopedGlobalResult("linemodel");
-  if (results.expired())
+  auto result = resultStore->GetScopedGlobalResult("linemodel");
+  if (result.expired())
     THROWG(INTERNAL_ERROR,
            "linemodelsolve: Unable to retrieve linemodel results");
-
-  std::shared_ptr<const CLineModelResult> result =
-      std::dynamic_pointer_cast<const CLineModelResult>(results.lock());
+  std::shared_ptr<const CLineModelResult> lmresult =
+      std::dynamic_pointer_cast<const CLineModelResult>(result.lock());
 
   //  suggestion : CSolve::GetCurrentScopeName(TScopeStack)
   //  prepare the linemodel chisquares and prior results for pdf computation
-  ChisquareArray chisquares =
-      BuildChisquareArray(result, m_linemodel.getSPZGridParams());
+  ChisquareArray chisquares = BuildChisquareArray(
+      lmresult, m_linemodel.getSPZGridParams(),
+      m_linemodel.m_firstpass_extremaResult.m_ranked_candidates);
 
   /*
   Log.LogDetail("    linemodelsolve: Storing priors (size=%d)",
@@ -154,15 +154,8 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       true   // integrate under peaks
   );
 
-  TFloat64RangeList ExtendedRedshiftsRange(
-      m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts
-          .cbegin(),
-      m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts
-          .cend());
-
-  std::shared_ptr<PdfCandidatesZResult> candidateResult = pdfz.Compute(
-      chisquares, ExtendedRedshiftsRange,
-      m_linemodel.m_secondpass_parameters_extremaResult.m_ranked_candidates);
+  std::shared_ptr<PdfCandidatesZResult> candidateResult =
+      pdfz.Compute(chisquares);
 
   // store PDF results
   Log.LogInfo("%s: Storing PDF results", __func__);
@@ -310,7 +303,8 @@ TFloat64List CLineModelSolve::BuildZpriors(
 
 ChisquareArray CLineModelSolve::BuildChisquareArray(
     const std::shared_ptr<const CLineModelResult> &result,
-    const TZGridListParams &spZgridParams) const {
+    const TZGridListParams &spZgridParams,
+    const TCandidateZbyRank &parentZCand) const {
   Log.LogDetail("LinemodelSolve: building chisquare array");
 
   if (m_opt_pdfcombination != "bestchi2" &&
@@ -323,6 +317,8 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
   chisquarearray.zstep = m_coarseRedshiftStep;
   chisquarearray.zgridParams = spZgridParams;
+  if (!spZgridParams.empty())
+    chisquarearray.parentCandidates = parentZCand;
 
   chisquarearray.cstLog = result->cstLog;
   Log.LogDetail("%s: using cstLog = %f", __func__, chisquarearray.cstLog);
@@ -575,8 +571,7 @@ void CLineModelSolve::Solve() {
   }
 
   std::shared_ptr<const LineModelExtremaResult> fpExtremaResult =
-      m_linemodel.buildFirstPassExtremaResults(
-          m_linemodel.m_firstpass_extremaResult->m_ranked_candidates);
+      m_linemodel.buildFirstPassExtremaResults();
 
   // save linemodel firstpass extrema results
   std::string firstpassExtremaResultsStr = scopeStr;
@@ -587,12 +582,8 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // SECOND PASS
   //**************************************************
-  if (!m_opt_skipsecondpass) {
+  if (!m_opt_skipsecondpass)
     m_linemodel.ComputeSecondPass(fpExtremaResult);
-  } else {
-    m_linemodel.m_secondpass_parameters_extremaResult =
-        *m_linemodel.m_firstpass_extremaResult;
-  }
 
   // read it as constant to save it
   std::shared_ptr<const CLineModelResult> result =

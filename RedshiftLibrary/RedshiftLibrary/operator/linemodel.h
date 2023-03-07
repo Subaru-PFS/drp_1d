@@ -79,8 +79,8 @@ public:
 
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
-  void Combine_firstpass_candidates(
-      std::shared_ptr<const CLineModelPassExtremaResult> results_b);
+  void
+  Combine_firstpass_candidates(const CLineModelPassExtremaResult &results_b);
 
   void ComputeSecondPass(
       const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
@@ -89,8 +89,7 @@ public:
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
 
-  std::shared_ptr<const LineModelExtremaResult>
-  buildFirstPassExtremaResults(const TCandidateZbyRank &zCandidates);
+  std::shared_ptr<const LineModelExtremaResult> buildFirstPassExtremaResults();
   std::shared_ptr<LineModelExtremaResult>
   buildExtremaResults(const CSpectrum &spectrum,
                       const TFloat64Range &lambdaRange,
@@ -124,8 +123,7 @@ public:
 
   Int32 m_continnuum_fit_option = 0; // default to "retryall" templates
   // candidates
-  std::shared_ptr<CLineModelPassExtremaResult> m_firstpass_extremaResult;
-  CLineModelPassExtremaResult m_secondpass_parameters_extremaResult;
+  CLineModelPassExtremaResult m_firstpass_extremaResult;
 
   CLineModelSolution
   fitWidthByGroups(std::shared_ptr<const CInputContext> context,
@@ -156,6 +154,7 @@ private:
   std::string m_redshiftSampling = "undefined";
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
+  void buildExtendedRedshifts();
   TFloat64List SpanRedshiftWindow(Float64 z) const;
 
   Float64 FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,

@@ -74,7 +74,8 @@ public:
 private:
   ChisquareArray
   BuildChisquareArray(const std::shared_ptr<const CLineModelResult> &result,
-                      const TZGridListParams &zgridParams = {}) const;
+                      const TZGridListParams &zgridParams = {},
+                      const TCandidateZbyRank &parentZCand = {}) const;
 
   void GetZpriorsOptions(bool &zPriorStrongLinePresence,
                          bool &zPriorHaStrongestLine, bool &zPriorNLineSNR,
