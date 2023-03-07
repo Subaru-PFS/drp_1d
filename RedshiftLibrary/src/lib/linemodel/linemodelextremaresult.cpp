@@ -96,7 +96,7 @@ void TLineModelResult::updateTplRatioFromModel(
 void TLineModelResult::updateFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel,
     const std::shared_ptr<const CLineModelResult> &lmresult,
-    bool estimateLeastSquareFast, int idx, int i_2pass) {
+    bool estimateLeastSquareFast, int idx) {
   Merit = lmresult->ChiSquare[idx];
 
   // LineModelSolutions
@@ -126,7 +126,7 @@ void TLineModelResult::updateFromModel(
 
   static Float64 cutThres = 3.0;
   Int32 nValidLines =
-      lmresult->getNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
+      lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
   NLinesOverThreshold = nValidLines; // m/Float64(1+nValidLines);
   Float64 cumulStrongELSNR =
       lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //

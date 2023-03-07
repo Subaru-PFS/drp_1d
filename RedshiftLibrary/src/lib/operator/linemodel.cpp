@@ -1109,7 +1109,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
     // code here has been moved to TLineModelResult::updateFromModel
     ExtremaResult->m_ranked_candidates[i].second->updateFromModel(
-        m_fittingManager, m_result, m_estimateLeastSquareFast, idx, i_2pass);
+        m_fittingManager, m_result, m_estimateLeastSquareFast, idx);
 
     // save the continuum tpl fitting results
     ExtremaResult->m_ranked_candidates[i].second->updateContinuumFromModel(
