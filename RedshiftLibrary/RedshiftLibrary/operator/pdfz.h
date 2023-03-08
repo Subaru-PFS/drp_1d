@@ -59,6 +59,7 @@ struct ChisquareArray {
   Float64 cstLog = 0.;
   Float64 zstep;
   TZGridListParams zgridParams; // only used for linemodel
+  TCandidateZbyRank parentCandidates;
 };
 
 /**
@@ -79,10 +80,8 @@ public:
           0, // <=0 will be set to maxCandidate (default to one window)
       bool integ = true);
 
-  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> Compute(
-      const ChisquareArray &chisquares,
-      const TFloat64RangeList &candidatesRedshiftsRanges = TFloat64RangeList(1),
-      const TCandidateZbyRank &parentCand = TCandidateZbyRank(1));
+  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>>
+  Compute(const ChisquareArray &chisquares);
 
   std::shared_ptr<CLogZPdfResult> m_postmargZResult;
 

@@ -242,8 +242,7 @@ COperatorResultStore::GetLineModelResult(
 
   std::shared_ptr<const TLineModelResult> tlm =
       std::dynamic_pointer_cast<const TLineModelResult>(cop);
-  if (tlm == nullptr && cop != nullptr) // dynamic casting is not working for
-                                        // tlinemodelresult' parentObject
+  if (tlm == nullptr && cop != nullptr)
     THROWG(INTERNAL_ERROR, "tlm is nullptr from GetLineModelResult");
   return tlm;
 }

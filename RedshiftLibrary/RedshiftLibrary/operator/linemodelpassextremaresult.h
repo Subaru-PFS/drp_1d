@@ -56,8 +56,8 @@ public:
   CLineModelPassExtremaResult() = default;
 
   void Resize(Int32 size);
-  TInt32List getUniqueCandidates(
-      std::shared_ptr<const CLineModelPassExtremaResult> results_b);
+  TInt32List
+  getUniqueCandidates(const CLineModelPassExtremaResult &results_b) const;
   TFloat64List GetRedshifts() const;
   void fillWithContinuumModelSolutionAtIndex(
       Int32 i, const CContinuumModelSolution &contModelSol);

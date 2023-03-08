@@ -62,9 +62,6 @@ void CLineModelPassExtremaResult::Resize(
   FittedTplMtm.resize(size, NAN);
   FittedTplLogPrior.resize(size, 0.);
 
-  ExtendedRedshifts.resize(
-      size, TFloat64List()); // we dont know the range size per candidate
-
   Elv.resize(size, NAN);
   Alv.resize(size, NAN);
   GroupsELv.resize(size,
@@ -84,12 +81,12 @@ TFloat64List CLineModelPassExtremaResult::GetRedshifts() const {
 }
 
 TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
-    std::shared_ptr<const CLineModelPassExtremaResult> results_b) {
+    const CLineModelPassExtremaResult &results_b) const {
   TInt32List uniqueIndices;
   Float64 skip_thres_absdiffz =
       5e-4; // threshold to remove duplicate extrema/candidates
-  for (Int32 keb = 0; keb < results_b->m_ranked_candidates.size(); keb++) {
-    const Float64 &z_fpb = results_b->m_ranked_candidates[keb].second->Redshift;
+  for (Int32 keb = 0; keb < results_b.m_ranked_candidates.size(); keb++) {
+    const Float64 &z_fpb = results_b.m_ranked_candidates[keb].second->Redshift;
     // skip if z_fpb is nearly the same as any z_fp
     Float64 minAbsDiffz = DBL_MAX;
     bool duplicate = false;
