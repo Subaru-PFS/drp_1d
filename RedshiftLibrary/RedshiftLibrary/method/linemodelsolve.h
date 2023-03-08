@@ -114,6 +114,8 @@ private:
   Int32 m_opt_firstpass_largegridstepRatio;
   bool m_opt_skipsecondpass = false;
   Float64 m_coarseRedshiftStep = NAN;
+
+  bool m_useloglambdasampling;
 };
 
 } // namespace NSEpic

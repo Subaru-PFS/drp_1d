@@ -98,6 +98,8 @@ bool CLineModelSolve::PopulateParameters(
   m_opt_skipsecondpass =
       parameterStore->GetScoped<bool>("linemodel.skipsecondpass");
 
+  m_useloglambdasampling =
+      parameterStore->GetScoped<bool>("linemodel.useloglambdasampling");
   return true;
 }
 
@@ -111,9 +113,9 @@ std::shared_ptr<CSolveResult>
 CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                          std::shared_ptr<COperatorResultStore> resultStore,
                          TScopeStack &scope) {
-  const CSpectrum &spc = *(inputContext->GetSpectrum());
-  PopulateParameters(inputContext->GetParameterStore());
 
+  PopulateParameters(inputContext->GetParameterStore());
+  const CSpectrum &spc = *(inputContext->GetSpectrum(m_useloglambdasampling));
   Solve();
 
   auto results = resultStore->GetScopedGlobalResult("linemodel");
@@ -171,7 +173,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   // Get linemodel results at extrema (recompute spectrum model etc.)
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       m_linemodel.buildExtremaResults(
-          spc, *(Context.GetClampedLambdaRange(false)),
+          spc, *(Context.GetClampedLambdaRange(m_useloglambdasampling)),
           candidateResult->m_ranked_candidates,
           m_opt_continuumreest); // maybe its better to pass
                                  // resultStore->GetGlobalResult so that we
