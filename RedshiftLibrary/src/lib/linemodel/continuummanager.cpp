@@ -185,27 +185,6 @@ Int32 CContinuumManager::GetFitContinuum_Option() const {
   return m_fitContinuum_option;
 }
 
-void CContinuumManager::SetFitContinuum_FitValues(
-    std::string tplfit_name, Float64 tplfit_amp, Float64 tplfit_amperr,
-    Float64 tplfit_chi2, Float64 tplfit_chi2_phot, Float64 tplfit_ebmv,
-    Int32 tplfit_meiksinidx, Float64 tplfit_continuumredshift,
-    Float64 tplfit_dtm, Float64 tplfit_mtm, Float64 tplfit_logprior,
-    const TFloat64List &polyCoeffs) {
-  m_fitContinuum->tplName = tplfit_name;
-  m_fitContinuum->tplAmplitude = tplfit_amp;
-  m_fitContinuum->tplAmplitudeError = tplfit_amperr;
-  m_fitContinuum->tplMerit = tplfit_chi2;
-  m_fitContinuum->tplMeritPhot = tplfit_chi2_phot;
-  m_fitContinuum->tplEbmvCoeff = tplfit_ebmv;
-  m_fitContinuum->tplMeiksinIdx = tplfit_meiksinidx;
-  m_fitContinuum->tplRedshift = tplfit_continuumredshift;
-
-  m_fitContinuum->tplDtM = tplfit_dtm;
-  m_fitContinuum->tplMtM = tplfit_mtm;
-  m_fitContinuum->tplLogPrior = tplfit_logprior;
-  m_fitContinuum->pCoeffs = polyCoeffs;
-}
-
 CTplModelSolution CContinuumManager::GetContinuumModelSolutionCopy() const {
   CTplModelSolution continuumModelSolution = *m_fitContinuum;
 

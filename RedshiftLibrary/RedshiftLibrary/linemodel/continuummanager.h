@@ -42,14 +42,6 @@ public:
     *m_fitContinuum = cms;
   }
 
-  void SetFitContinuum_FitValues(std::string tplfit_name, Float64 tplfit_amp,
-                                 Float64 tplfit_amperr, Float64 tplfit_chi2,
-                                 Float64 tplfit_chi2_phot, Float64 tplfit_ebmv,
-                                 Int32 tplfit_meiksinidx,
-                                 Float64 tplfit_continuumredshift,
-                                 Float64 tplfit_dtm, Float64 tplfit_mtm,
-                                 Float64 tplfit_logprior,
-                                 const TFloat64List &polyCoeffs);
   Float64 getContinuumScaleMargCorrection() const;
   bool isContinuumComponentTplfitxx() const {
     return m_ContinuumComponent == "tplfit" ||

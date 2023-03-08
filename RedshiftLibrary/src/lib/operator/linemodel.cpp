@@ -828,7 +828,7 @@ void COperatorLineModel::ComputeSecondPass(
     bool useSecondPassRedshiftValue = true;
     if (useSecondPassRedshiftValue) {
       for (Int32 i = 0; i < m_firstpass_extremaResult.size(); i++) {
-        m_firstpass_extremaResult.FittedTplRedshift[i] =
+        m_firstpass_extremaResult.FittedTpl[i].tplRedshift =
             m_firstpass_extremaResult.Redshift(i);
       }
     }
@@ -1130,18 +1130,7 @@ void COperatorLineModel::EstimateSecondPassParameters() {
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             nullptr);
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
-            m_firstpass_extremaResult.FittedTplName[i],
-            m_firstpass_extremaResult.FittedTplAmplitude[i],
-            m_firstpass_extremaResult.FittedTplAmplitudeError[i],
-            m_firstpass_extremaResult.FittedTplMerit[i],
-            m_firstpass_extremaResult.FittedTplMeritPhot[i],
-            m_firstpass_extremaResult.FittedTplEbmvCoeff[i],
-            m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
-            m_firstpass_extremaResult.FittedTplRedshift[i],
-            m_firstpass_extremaResult.FittedTplDtm[i],
-            m_firstpass_extremaResult.FittedTplMtm[i],
-            m_firstpass_extremaResult.FittedTplLogPrior[i],
-            m_firstpass_extremaResult.FittedTplpCoeffs[i]);
+            m_firstpass_extremaResult.FittedTpl[i]);
         m_fittingManager->getContinuumManager()->SetFitContinuum_Option(2);
       }
     }
@@ -1446,15 +1435,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             nullptr);
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
-            extremaResult.FittedTplName[i], extremaResult.FittedTplAmplitude[i],
-            extremaResult.FittedTplAmplitudeError[i],
-            extremaResult.FittedTplMerit[i],
-            extremaResult.FittedTplMeritPhot[i],
-            extremaResult.FittedTplEbmvCoeff[i],
-            extremaResult.FittedTplMeiksinIdx[i],
-            extremaResult.FittedTplRedshift[i], extremaResult.FittedTplDtm[i],
-            extremaResult.FittedTplMtm[i], extremaResult.FittedTplLogPrior[i],
-            extremaResult.FittedTplpCoeffs[i]);
+            extremaResult.FittedTpl[i]);
         m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
             tplfit_option);
       } else if (tplfit_option == 0 ||
