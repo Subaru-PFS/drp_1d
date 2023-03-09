@@ -50,8 +50,10 @@
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
+#include "tests/src/tool/11095-58439-0081.h"
 #include "tests/src/tool/230486_spectra.h"
 #include "tests/src/tool/BC03_sdss_tremonti21.h"
+#include "tests/src/tool/ComposantesPCA4.h"
 #include "tests/src/tool/Meiksin_Var_curves_2.5.h"
 #include "tests/src/tool/Meiksin_Var_curves_3.0.h"
 #include "tests/src/tool/SB_calzetti_dl1.h"
@@ -175,6 +177,12 @@ public:
   TFloat64List spcAxisList = spectrumData.myExtendedLambdaList;
 };
 
+class fixture_SpectralAxisQso {
+public:
+  fixture_spectralQsoData spcQsoData;
+  CSpectrumSpectralAxis spcAxis = spcQsoData.mySpectralList;
+};
+
 // create Noise Axis
 class fixture_NoiseAxis {
 public:
@@ -192,6 +200,12 @@ class fixture_NoiseAxisExtended {
 public:
   fixture_SpectrumData spectrumData;
   CSpectrumNoiseAxis noiseAxis = spectrumData.myExtendedNoiseList;
+};
+
+class fixture_NoiseAxisQso {
+public:
+  fixture_spectralQsoData spcQsoData;
+  CSpectrumSpectralAxis noiseAxis = spcQsoData.myNoiseList;
 };
 
 // create Flux Axis
@@ -215,6 +229,13 @@ public:
   CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
       spectrumData.myExtendedFluxList, fixture_NoiseAxisExtended().noiseAxis);
   TFloat64List fluxAxisList = spectrumData.myExtendedFluxList;
+};
+
+class fixture_FluxAxisQso {
+public:
+  fixture_spectralQsoData spcQsoData;
+  CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
+      spcQsoData.myFluxList, fixture_NoiseAxisQso().noiseAxis);
 };
 
 // create Spectrum
@@ -254,6 +275,12 @@ class fixture_SharedSpectrumLog {
 public:
   std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(
       fixture_SpectralAxisLog().spcAxis, fixture_FluxAxis().fluxAxis);
+};
+
+class fixture_SharedSpectrumQso {
+public:
+  std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(
+      fixture_SpectralAxisQso().spcAxis, fixture_FluxAxisQso().fluxAxis);
 };
 
 // Creation of Calzetti corrections
@@ -317,6 +344,21 @@ public:
   std::shared_ptr<CTemplate> tpl2 = std::make_shared<CTemplate>(
       "galaxy2", "galaxy", galaxyTplData.myGalaxyLambdaList2,
       galaxyTplData.myGalaxyFluxList2);
+};
+
+class fixture_SharedQsoTemplate {
+public:
+  fixture_tplQsoData tplQsoData;
+  std::shared_ptr<CTemplate> tpl_c1 = std::make_shared<CTemplate>(
+      "qso_c1", "qso", tplQsoData.lbda, tplQsoData.flux_c1);
+  std::shared_ptr<CTemplate> tpl_c2 = std::make_shared<CTemplate>(
+      "qso_c2", "qso", tplQsoData.lbda, tplQsoData.flux_c2);
+  std::shared_ptr<CTemplate> tpl_c3 = std::make_shared<CTemplate>(
+      "qso_c3", "qso", tplQsoData.lbda, tplQsoData.flux_c3);
+  std::shared_ptr<CTemplate> tpl_c4 = std::make_shared<CTemplate>(
+      "qso_c4", "qso", tplQsoData.lbda, tplQsoData.flux_c4);
+  std::shared_ptr<CTemplate> tpl_mean = std::make_shared<CTemplate>(
+      "qso_mean", "qso", tplQsoData.lbda, tplQsoData.flux_mean);
 };
 
 class fixture_TemplateStar {
