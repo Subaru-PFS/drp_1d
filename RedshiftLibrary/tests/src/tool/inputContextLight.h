@@ -147,16 +147,19 @@ public:
 
 class fixture_SpectralAxis {
 public:
-  CSpectrumSpectralAxis spcAxis = mySpectralList;
-  Int32 spcAxisSize = mySpectralList.size();
-  TFloat64List spcAxisList = mySpectralList;
+  fixture_SpectrumData spectrumData;
+  CSpectrumSpectralAxis spcAxis = spectrumData.mySpectralList;
+  Int32 spcAxisSize = spectrumData.mySpectralList.size();
+  TFloat64List spcAxisList = spectrumData.mySpectralList;
+  TFloat64List linLambdaList = spectrumData.myLinLambdaList;
 };
 
 class fixture_SpectralAxisLog {
 public:
-  CSpectrumSpectralAxis spcAxis = mySpectralListLog;
-  Int32 spcAxisSize = mySpectralListLog.size();
-  TFloat64List spcAxisList = mySpectralListLog;
+  fixture_SpectrumData spectrumData;
+  CSpectrumSpectralAxis spcAxis = spectrumData.mySpectralListLog;
+  Int32 spcAxisSize = spectrumData.mySpectralListLog.size();
+  TFloat64List spcAxisList = spectrumData.mySpectralListLog;
 };
 
 class fixture_SpectralAxisLight {
@@ -166,15 +169,18 @@ public:
 
 class fixture_SpectralAxisExtended {
 public:
-  CSpectrumSpectralAxis spcAxis = myExtendedLambdaList;
-  Int32 spcAxisSize = myExtendedLambdaList.size();
-  TFloat64List spcAxisList = myExtendedLambdaList;
+  fixture_SpectrumData spectrumData;
+  CSpectrumSpectralAxis spcAxis = spectrumData.myExtendedLambdaList;
+  Int32 spcAxisSize = spectrumData.myExtendedLambdaList.size();
+  TFloat64List spcAxisList = spectrumData.myExtendedLambdaList;
 };
 
 // create Noise Axis
 class fixture_NoiseAxis {
 public:
-  CSpectrumNoiseAxis noiseAxis = myNoiseList;
+  fixture_SpectrumData spectrumData;
+  CSpectrumNoiseAxis noiseAxis = spectrumData.myNoiseList;
+  TFloat64List noiseList = spectrumData.myNoiseList;
 };
 
 class fixture_NoiseAxisLight {
@@ -184,15 +190,17 @@ public:
 
 class fixture_NoiseAxisExtended {
 public:
-  CSpectrumNoiseAxis noiseAxis = myExtendedNoiseList;
+  fixture_SpectrumData spectrumData;
+  CSpectrumNoiseAxis noiseAxis = spectrumData.myExtendedNoiseList;
 };
 
 // create Flux Axis
 class fixture_FluxAxis {
 public:
+  fixture_SpectrumData spectrumData;
   CSpectrumFluxAxis fluxAxis =
-      CSpectrumFluxAxis(myFluxList, fixture_NoiseAxis().noiseAxis);
-  TFloat64List fluxAxisList = myFluxList;
+      CSpectrumFluxAxis(spectrumData.myFluxList, fixture_NoiseAxis().noiseAxis);
+  TFloat64List fluxAxisList = spectrumData.myFluxList;
 };
 
 class fixture_FluxAxisLight {
@@ -203,9 +211,10 @@ public:
 
 class fixture_FluxAxisExtended {
 public:
+  fixture_SpectrumData spectrumData;
   CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
-      myExtendedFluxList, fixture_NoiseAxisExtended().noiseAxis);
-  TFloat64List fluxAxisList = myExtendedFluxList;
+      spectrumData.myExtendedFluxList, fixture_NoiseAxisExtended().noiseAxis);
+  TFloat64List fluxAxisList = spectrumData.myExtendedFluxList;
 };
 
 // create Spectrum
@@ -251,8 +260,9 @@ public:
 //---------------------------------
 class fixture_CalzettiCorrection {
 public:
+  fixture_CalzettiData calzettiData;
   CalzettiCorrection calzettiCorr =
-      CalzettiCorrection(lbdaCorrCal, fluxCorrCal);
+      CalzettiCorrection(calzettiData.lbdaCorrCal, calzettiData.fluxCorrCal);
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
       std::make_shared<CSpectrumFluxCorrectionCalzetti>(calzettiCorr, 0., 0.1,
                                                         10);
@@ -262,12 +272,19 @@ public:
 //--------------------------------
 class fixture_MeiskinCorrection {
 public:
+  fixture_MeiksinData25 meiksinData25;
+  fixture_MeiksinData30 meiksinData30;
   std::vector<MeiksinCorrection> meiskinCorr = {
-      MeiksinCorrection(lbdaCorr, {fluxCorr1, fluxCorr2, fluxCorr3, fluxCorr4,
-                                   fluxCorr5, fluxCorr6, fluxCorr7}),
-      MeiksinCorrection(lbdaCorr,
-                        {fluxCorr1b, fluxCorr2b, fluxCorr3b, fluxCorr4b,
-                         fluxCorr5b, fluxCorr6b, fluxCorr7b})};
+      MeiksinCorrection(meiksinData25.lbdaCorr,
+                        {meiksinData25.fluxCorr1, meiksinData25.fluxCorr2,
+                         meiksinData25.fluxCorr3, meiksinData25.fluxCorr4,
+                         meiksinData25.fluxCorr5, meiksinData25.fluxCorr6,
+                         meiksinData25.fluxCorr7}),
+      MeiksinCorrection(meiksinData25.lbdaCorr,
+                        {meiksinData30.fluxCorr1b, meiksinData30.fluxCorr2b,
+                         meiksinData30.fluxCorr3b, meiksinData30.fluxCorr4b,
+                         meiksinData30.fluxCorr5b, meiksinData30.fluxCorr6b,
+                         meiksinData30.fluxCorr7b})};
   TFloat64List z_bins = {2.0, 2.5, 3.0};
   TFloat64Range lbdaRange = TFloat64Range(4680., 4713.);
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
@@ -279,30 +296,38 @@ public:
 
 class fixture_SharedStarTemplate {
 public:
-  std::shared_ptr<CTemplate> tpl =
-      std::make_shared<CTemplate>("star", "star", mySpectralList, myFluxList);
+  fixture_SpectrumData spectrumData;
+  std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
+      "star", "star", spectrumData.mySpectralList, spectrumData.myFluxList);
 };
 
 class fixture_SharedStarNotLogTemplate {
 public:
+  fixture_GalaxyTplData galaxyTplData;
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
-      "star", "star", myGalaxyLambdaList, myGalaxyFluxList);
+      "star", "star", galaxyTplData.myGalaxyLambdaList,
+      galaxyTplData.myGalaxyFluxList);
 };
 class fixture_SharedGalaxyTemplate {
 public:
+  fixture_GalaxyTplData galaxyTplData;
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
-      "galaxy", "galaxy", myGalaxyLambdaList, myGalaxyFluxList);
+      "galaxy", "galaxy", galaxyTplData.myGalaxyLambdaList,
+      galaxyTplData.myGalaxyFluxList);
   std::shared_ptr<CTemplate> tpl2 = std::make_shared<CTemplate>(
-      "galaxy2", "galaxy", myGalaxyLambdaList2, myGalaxyFluxList2);
+      "galaxy2", "galaxy", galaxyTplData.myGalaxyLambdaList2,
+      galaxyTplData.myGalaxyFluxList2);
 };
 
 class fixture_TemplateStar {
 public:
+  fixture_GalaxyTplData galaxyTplData;
   CTemplate tplStar =
-      CTemplate("tpl_star", "star", myGalaxyLambdaList, myGalaxyFluxList);
-  Int32 spcAxisSize = myGalaxyLambdaList.size();
-  TFloat64List spcAxisList = myGalaxyLambdaList;
-  TFloat64List fluxAxisList = myGalaxyFluxList;
+      CTemplate("tpl_star", "star", galaxyTplData.myGalaxyLambdaList,
+                galaxyTplData.myGalaxyFluxList);
+  Int32 spcAxisSize = galaxyTplData.myGalaxyLambdaList.size();
+  TFloat64List spcAxisList = galaxyTplData.myGalaxyLambdaList;
+  TFloat64List fluxAxisList = galaxyTplData.myGalaxyFluxList;
 };
 
 class fixture_TemplateGalaxy {
@@ -391,7 +416,7 @@ public:
           fixture_MeiskinCorrection().igmCorrectionMeiksin);
     }
   }
-  fixture_LineCatalogData lineCatalogData = fixture_LineCatalogData();
+  fixture_LineCatalogData lineCatalogData;
   Int32 nsigmasupport = 8;
   std::shared_ptr<CLineCatalog> lineCatalog =
       std::make_shared<CLineCatalog>(nsigmasupport);

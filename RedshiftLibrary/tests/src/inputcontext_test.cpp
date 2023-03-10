@@ -169,6 +169,9 @@ public:
   std::shared_ptr<CLineCatalogsTplRatio> lineRatioTplCatalog =
       fixture_LineRatioTplCatalog().lineRatioTplCatalog;
 
+  // list
+  TFloat64List linLambdaList = fixture_SpectralAxis().linLambdaList;
+
   void setInputData(CInputContext &inputCtx) {
     spc->SetLSF(LSF);
     inputCtx.addSpectrum(spc);
@@ -331,7 +334,7 @@ BOOST_AUTO_TEST_CASE(rebinInputs_test) {
   BOOST_CHECK_THROW(inputCtx2.RebinInputs(), GlobalException);
 
   inputCtx2.resetSpectrumSpecific();
-  spc->SetSpectralAxis(CSpectrumSpectralAxis(myLinLambdaList));
+  spc->SetSpectralAxis(CSpectrumSpectralAxis(linLambdaList));
   setInputData(inputCtx2);
   inputCtx2.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
       paramStoreFFT->Get<TFloat64Range>("lambdarange")));
