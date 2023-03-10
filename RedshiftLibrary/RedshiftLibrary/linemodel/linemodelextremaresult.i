@@ -43,13 +43,10 @@ public:
     m_type = "TLineModelResult";
   }
 
-  void updateFromContinuumModelSolution(const CContinuumModelSolution &cms,
-                                        bool all);
+  void updateFromContinuumModelSolution(std::shared_ptr<const CTplModelSolution> cms);
 
   void updateFromLineModelSolution(const CLineModelSolution &cms);
 
-  void updateContinuumFromModel(
-      const std::shared_ptr<const CLineModelFitting> &lmel);
   void
   updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &lmel);
 
@@ -103,12 +100,6 @@ public:
                                          // tplcorr/tplratio
   Float64 FittedTplratioAmplitudeAbs = NAN;
 
-  Float64 FittedTplratioDtmEm =
-      NAN; // dtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioDtmAbs = NAN;
-  Float64 FittedTplratioMtmEm =
-      NAN; // mtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioMtmAbs = NAN;
   Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
                                         // fitted for tplcorr/tplratio
 };

@@ -45,10 +45,10 @@
 
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 #include <memory>
 
@@ -124,7 +124,7 @@ public:
       ChiSquareTplContinuum; // chi2 for all continuum templates fited
 
   std::vector<CLineModelSolution> LineModelSolutions;
-  std::vector<CContinuumModelSolution> ContinuumModelSolutions;
+  std::vector<CTplModelSolution> ContinuumModelSolutions;
 
   COperator::TStatusList Status;
   CLineCatalog::TLineVector restLineList;

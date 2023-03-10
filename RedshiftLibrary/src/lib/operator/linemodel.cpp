@@ -100,7 +100,7 @@ void COperatorLineModel::ComputeFirstPass() {
   // commom between firstpass and secondpass processes
   // TODO not pretty, maybe move fitcontinuum_prior help building to operator
   m_phelperContinuum =
-      m_fittingManager->m_continuumManager->SetFitContinuum_PriorHelper();
+      m_fittingManager->getContinuumManager()->SetFitContinuum_PriorHelper();
 
   Log.LogInfo("  Operator-Linemodel: start processing");
 
@@ -181,7 +181,8 @@ void COperatorLineModel::ComputeFirstPass() {
             : m_fittingManager->getLeastSquareContinuumMerit();
 
     m_result->ScaleMargCorrectionContinuum[i] =
-        m_fittingManager->m_continuumManager->getContinuumScaleMargCorrection();
+        m_fittingManager->getContinuumManager()
+            ->getContinuumScaleMargCorrection();
     Log.LogDebug(
         "  Operator-Linemodel: Z interval %d: and zvalue = %f Chi2 = %f", i,
         m_result->Redshifts[i], m_result->ChiSquare[i]);
@@ -327,20 +328,20 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
         m_firstpass_extremaResult.m_ranked_candidates[candidateIdx]
             .second->Redshift);
 
-    CTemplatesFitStore::TemplateFitValues fitValue =
+    CTplModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
 
     tplList.push_back(
         tplCatalog->GetTemplateByName(m_tplCategoryList, fitValue.tplName));
 
     if (m_opt_tplfit_extinction)
-      meiksinIndices[icontinuum] = fitValue.igmMeiksinIdx;
+      meiksinIndices[icontinuum] = fitValue.tplMeiksinIdx;
 
     // access any template and retrieve the ismcorrection object
     if (m_opt_tplfit_dustFit)
       ebmvIndices[icontinuum] =
           tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
-              ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.ismEbmvCoeff);
+              ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.tplEbmvCoeff);
   }
   return;
 }
@@ -498,7 +499,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
         bestTplFitSNR = tplfitsnr;
     }
   }
-  tplfitStore->m_fitContinuum_tplFitSNRMax = bestTplFitSNR;
+  tplfitStore->setSNRMax(bestTplFitSNR);
   Log.LogDetail("COperatorLineModel::PrecomputeContinuumFit: "
                 "fitcontinuum_snrMAX set to %f",
                 bestTplFitSNR);
@@ -509,12 +510,9 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   if (tplfitStore->GetContinuumCount() < m_opt_fitcontinuum_maxN) {
     THROWG(INTERNAL_ERROR, "Couldn't compute the required continuum count");
   }
-  tplfitStore->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
-  Log.LogInfo("COperatorLineModel::PrecomputeContinuumFit: fitStore with "
-              "fitcontinuum_maxCount set to %f",
-              tplfitStore->m_opt_fitcontinuum_maxCount);
 
-  m_fittingManager->m_continuumManager->SetFitContinuum_FitStore(tplfitStore);
+  m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
+      tplfitStore);
   tplCatalog->m_logsampling = currentSampling;
 
   boost::chrono::thread_clock::time_point stop_tplfitprecompute =
@@ -538,7 +536,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
     const std::shared_ptr<CTemplatesFitStore> &tplfitStore) {
   // Check if best continuum amplitudes are negative fitted amplitudes at
   // all z
-  CTemplatesFitStore::TemplateFitValues fitValues;
+  CTplModelSolution fitValues;
   Float64 max_fitamplitudeSigma_z = NAN;
   Float64 max_fitamplitudeSigma =
       tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
@@ -550,7 +548,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                          << max_fitamplitudeSigma_z << ": best continuum tpl "
                          << fitValues.tplName
                          << ", amplitude/error = " << max_fitamplitudeSigma
-                         << " & error = " << fitValues.fitAmplitudeError);
+                         << " & error = " << fitValues.tplAmplitudeError);
 
     Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
                  Formatter()
@@ -559,7 +557,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                      << max_fitamplitudeSigma_z << ": best continuum tpl "
                      << fitValues.tplName
                      << ", amplitude/error = " << max_fitamplitudeSigma
-                     << " & error = " << fitValues.fitAmplitudeError);
+                     << " & error = " << fitValues.tplAmplitudeError);
     m_opt_continuumcomponent = "fromspectrum";
     m_fittingManager->setContinuumComponent("fromspectrum");
   } else if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold) {
@@ -573,7 +571,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                      << max_fitamplitudeSigma_z << ": best continuum tpl "
                      << fitValues.tplName
                      << ", amplitude/error = " << max_fitamplitudeSigma
-                     << " & error = " << fitValues.fitAmplitudeError);
+                     << " & error = " << fitValues.tplAmplitudeError);
     m_opt_continuumcomponent = "nocontinuum";
     m_fittingManager->setContinuumComponent("nocontinuum");
   }
@@ -661,17 +659,18 @@ COperatorLineModel::buildFirstPassExtremaResults() {
     Int32 idx = CIndexing<Float64>::getIndex(
         m_result->Redshifts, m_firstpass_extremaResult.Redshift(i));
 
-    CContinuumModelSolution csolution = m_result->ContinuumModelSolutions[idx];
+    ExtremaResult->m_savedModelFittingResults[i] =
+        std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
+    std::shared_ptr<const CTplModelSolution> csolution =
+        std::make_shared<CTplModelSolution>(
+            m_result->ContinuumModelSolutions[idx]);
     ExtremaResult->m_ranked_candidates[i]
-        .second->updateFromContinuumModelSolution(csolution, true);
+        .second->updateFromContinuumModelSolution(csolution);
     // ExtremaResult->setCandidateFromContinuumSolution(i, csolution);
 
     // for saving velocities: use CLineModelSolution
     ExtremaResult->m_ranked_candidates[i].second->updateFromLineModelSolution(
         m_result->LineModelSolutions[idx]);
-
-    ExtremaResult->m_savedModelFittingResults[i] =
-        std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
   }
 
   return ExtremaResult;
@@ -739,7 +738,7 @@ void COperatorLineModel::ComputeSecondPass(
   // Set model parameters to SECOND-PASS
   m_fittingManager->setPassMode(2);
   Int32 savedFitContinuumOption =
-      m_fittingManager->m_continuumManager
+      m_fittingManager->getContinuumManager()
           ->GetFitContinuum_Option(); // the first time was set in
                                       // precomputeContinuumFit
   Log.LogInfo(
@@ -802,14 +801,10 @@ void COperatorLineModel::ComputeSecondPass(
       m_tplfitStore_secondpass.resize(1);
       if (m_continnuum_fit_option == 1 || m_continnuum_fit_option == 2)
         m_tplfitStore_secondpass[0] = m_tplfitStore_firstpass;
-      m_fittingManager->m_continuumManager->SetFitContinuum_FitStore(
+      m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
           m_tplfitStore_firstpass);
       // duplicated: double make sure that these info are present in the
       // modelElement
-      m_fittingManager->m_continuumManager->SetFitContinuum_SNRMax(
-          m_tplfitStore_firstpass->m_fitContinuum_tplFitSNRMax);
-      m_fittingManager->m_continuumManager->m_opt_fitcontinuum_maxCount =
-          m_tplfitStore_firstpass->m_opt_fitcontinuum_maxCount;
     }
   }
 
@@ -833,7 +828,7 @@ void COperatorLineModel::ComputeSecondPass(
     bool useSecondPassRedshiftValue = true;
     if (useSecondPassRedshiftValue) {
       for (Int32 i = 0; i < m_firstpass_extremaResult.size(); i++) {
-        m_firstpass_extremaResult.FittedTplRedshift[i] =
+        m_firstpass_extremaResult.FittedTpl[i].tplRedshift =
             m_firstpass_extremaResult.Redshift(i);
       }
     }
@@ -857,7 +852,7 @@ void COperatorLineModel::ComputeSecondPass(
               duration_secondpass_seconds);
   Log.LogInfo("<proc-lm-secondpass><%d>", (Int32)duration_secondpass_seconds);
 
-  m_fittingManager->m_continuumManager->SetFitContinuum_Option(
+  m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
       savedFitContinuumOption);
 }
 
@@ -867,7 +862,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
                                         const TCandidateZbyRank &zCandidates,
                                         const std::string &opt_continuumreest) {
   Int32 savedFitContinuumOption =
-      m_fittingManager->m_continuumManager->GetFitContinuum_Option();
+      m_fittingManager->getContinuumManager()->GetFitContinuum_Option();
   Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
 
   Int32 extremumCount = zCandidates.size();
@@ -910,21 +905,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         "  Operator-Linemodel: Saving candidate #%d, idx=%d, z=%f, m=%f", i,
         idx, m_result->Redshifts[idx], m);
 
-    m_fittingManager->m_continuumManager->SetFitContinuum_FitValues(
-        m_result->ContinuumModelSolutions[idx].tplName,
-        m_result->ContinuumModelSolutions[idx].tplAmplitude,
-        m_result->ContinuumModelSolutions[idx].tplAmplitudeError,
-        m_result->ContinuumModelSolutions[idx].tplMerit,
-        m_result->ContinuumModelSolutions[idx].tplMeritPhot,
-        m_result->ContinuumModelSolutions[idx].tplEbmvCoeff,
-        m_result->ContinuumModelSolutions[idx].tplMeiksinIdx,
-        m_result->ContinuumModelSolutions[idx].tplRedshift,
-        m_result->ContinuumModelSolutions[idx].tplDtm,
-        m_result->ContinuumModelSolutions[idx].tplMtm,
-        m_result->ContinuumModelSolutions[idx].tplLogPrior,
-        m_result->ContinuumModelSolutions[idx].pCoeffs);
+    m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
+        m_result->ContinuumModelSolutions[idx]);
 
-    m_fittingManager->m_continuumManager->SetFitContinuum_Option(2);
+    m_fittingManager->getContinuumManager()->SetFitContinuum_Option(2);
 
     // reestimate the model (eventually with continuum reestimation) on the
     // extrema selected
@@ -1000,7 +984,8 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_fittingManager->getLeastSquareContinuumMeritFast();
 
     m_result->ScaleMargCorrectionContinuum[idx] =
-        m_fittingManager->m_continuumManager->getContinuumScaleMargCorrection();
+        m_fittingManager->getContinuumManager()
+            ->getContinuumScaleMargCorrection();
 
     if (m != m_result->ChiSquare[idx] &&
         m_fittingManager->getFittingMethod() != "random")
@@ -1076,13 +1061,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         m_fittingManager, m_result, m_estimateLeastSquareFast, idx);
 
     // save the continuum tpl fitting results
-    ExtremaResult->m_ranked_candidates[i].second->updateContinuumFromModel(
-        m_fittingManager);
-
-    CContinuumModelSolution csolution =
-        m_fittingManager->m_continuumManager->GetContinuumModelSolution();
     ExtremaResult->m_ranked_candidates[i]
-        .second->updateFromContinuumModelSolution(csolution, false);
+        .second->updateFromContinuumModelSolution(
+            m_fittingManager->getContinuumFitValues());
+
     if (m_fittingManager->getLineRatioType() == "tplratio")
       ExtremaResult->m_ranked_candidates[i].second->updateTplRatioFromModel(
           std::dynamic_pointer_cast<CTplratioManager>(
@@ -1092,7 +1074,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
   // ComputeArea2(ExtremaResult);
 
-  m_fittingManager->m_continuumManager->SetFitContinuum_Option(
+  m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
       savedFitContinuumOption);
 
   return ExtremaResult;
@@ -1142,24 +1124,14 @@ void COperatorLineModel::EstimateSecondPassParameters() {
         m_opt_continuumcomponent == "tplfitauto") {
       // inject continuumFitValues of current candidate
       if (m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
-        m_fittingManager->m_continuumManager->SetFitContinuum_FitStore(
+        m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             m_tplfitStore_secondpass[i]);
       else {
-        m_fittingManager->m_continuumManager->SetFitContinuum_FitStore(nullptr);
-        m_fittingManager->m_continuumManager->SetFitContinuum_FitValues(
-            m_firstpass_extremaResult.FittedTplName[i],
-            m_firstpass_extremaResult.FittedTplAmplitude[i],
-            m_firstpass_extremaResult.FittedTplAmplitudeError[i],
-            m_firstpass_extremaResult.FittedTplMerit[i],
-            m_firstpass_extremaResult.FittedTplMeritPhot[i],
-            m_firstpass_extremaResult.FittedTplEbmvCoeff[i],
-            m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
-            m_firstpass_extremaResult.FittedTplRedshift[i],
-            m_firstpass_extremaResult.FittedTplDtm[i],
-            m_firstpass_extremaResult.FittedTplMtm[i],
-            m_firstpass_extremaResult.FittedTplLogPrior[i],
-            m_firstpass_extremaResult.FittedTplpCoeffs[i]);
-        m_fittingManager->m_continuumManager->SetFitContinuum_Option(2);
+        m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
+            nullptr);
+        m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
+            m_firstpass_extremaResult.FittedTpl[i]);
+        m_fittingManager->getContinuumManager()->SetFitContinuum_Option(2);
       }
     }
     // find the index in the zaxis results
@@ -1170,6 +1142,7 @@ void COperatorLineModel::EstimateSecondPassParameters() {
     Int32 contreest_iterations = (opt_continuumreest == "always") ? 1 : 0;
 
     // model.LoadModelSolution(m_result->LineModelSolutions[idx]);
+
     m_fittingManager->fit(
         m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
         m_result->ContinuumModelSolutions[idx], contreest_iterations, false);
@@ -1459,28 +1432,21 @@ void COperatorLineModel::RecomputeAroundCandidates(
         m_opt_continuumcomponent == "tplfitauto") {
       // fix some fitcontinuum values for this extremum
       if (tplfit_option == 2) {
-        m_fittingManager->m_continuumManager->SetFitContinuum_FitStore(nullptr);
-        m_fittingManager->m_continuumManager->SetFitContinuum_FitValues(
-            extremaResult.FittedTplName[i], extremaResult.FittedTplAmplitude[i],
-            extremaResult.FittedTplAmplitudeError[i],
-            extremaResult.FittedTplMerit[i],
-            extremaResult.FittedTplMeritPhot[i],
-            extremaResult.FittedTplEbmvCoeff[i],
-            extremaResult.FittedTplMeiksinIdx[i],
-            extremaResult.FittedTplRedshift[i], extremaResult.FittedTplDtm[i],
-            extremaResult.FittedTplMtm[i], extremaResult.FittedTplLogPrior[i],
-            extremaResult.FittedTplpCoeffs[i]);
-        m_fittingManager->m_continuumManager->SetFitContinuum_Option(
+        m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
+            nullptr);
+        m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
+            extremaResult.FittedTpl[i]);
+        m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
             tplfit_option);
       } else if (tplfit_option == 0 ||
                  tplfit_option == 3) // for these cases we called precompute
                                      // in secondpass, so we have new fitstore
-        m_fittingManager->m_continuumManager->SetFitContinuum_FitStore(
+        m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             m_tplfitStore_secondpass[i]);
       else if (tplfit_option == 1) {
         // nothing to do cause we already injected the fitStore for cases 1
         // and 2
-        m_fittingManager->m_continuumManager->SetFitContinuum_FitStore(
+        m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             m_tplfitStore_firstpass); // 1
       }
     }
@@ -1523,8 +1489,8 @@ void COperatorLineModel::RecomputeAroundCandidates(
         if (tplfit_option == 0 ||
             tplfit_option == 3) // retryall & refitfirstpass
           m_result->SetChisquareTplContinuumResult(
-              iz,
-              m_fittingManager->m_continuumManager->GetFitContinuum_FitStore());
+              iz, m_fittingManager->getContinuumManager()
+                      ->GetFitContinuum_FitStore());
         // nothing to do when fromfirstpass: keep
         // m_result->ChiSquareTplContinuum from first pass
       }
@@ -1540,7 +1506,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
             m_fittingManager->getLeastSquareContinuumMeritFast();
       }
       m_result->ScaleMargCorrectionContinuum[iz] =
-          m_fittingManager->m_continuumManager
+          m_fittingManager->getContinuumManager()
               ->getContinuumScaleMargCorrection();
     }
   }
@@ -1671,7 +1637,7 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(
   = datastore.GetFloat64Range("redshiftrange").GetEnd(); CLineModelSolution
   modelSolution; CLineModelSolution bestModelSolution;
 
-  CContinuumModelSolution continuumModelSolution;
+  CTplModelSolution continuumModelSolution;
 
   m_fittingManager->SetFittingMethod("hybrid");
 
@@ -1771,7 +1737,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   m_fittingManager->initDtd();
 
   CLineModelSolution modelSolution(m_fittingManager->m_RestLineList);
-  CContinuumModelSolution continuumModelSolution;
+  CTplModelSolution continuumModelSolution;
   CLineModelSolution bestModelSolution;
 
   Float64 bestScore = DBL_MAX;

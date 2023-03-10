@@ -46,21 +46,10 @@
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
-    const CContinuumModelSolution &cms, bool all) {
-  if (all) {
-    FittedTplName = cms.tplName;
-    FittedTplAmplitude = cms.tplAmplitude;
-    FittedTplAmplitudeError = cms.tplAmplitudeError;
-    FittedTplMerit = cms.tplMerit;
-    FittedTplMeritPhot = cms.tplMeritPhot;
-    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
-    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
-  }
-  FittedTplRedshift = cms.tplRedshift;
-  FittedTplDtm = cms.tplDtm;
-  FittedTplMtm = cms.tplMtm;
-  FittedTplLogPrior = cms.tplLogPrior;
-  FittedTplpCoeffs = cms.pCoeffs;
+    std::shared_ptr<const CTplModelSolution> cms) {
+  fittedTpl = *cms;
+  fittedTpl.tplName =
+      fittedTpl.tplAmplitude ? fittedTpl.tplName : "nocontinuum";
 }
 
 void TLineModelResult::updateFromLineModelSolution(
@@ -69,28 +58,11 @@ void TLineModelResult::updateFromLineModelSolution(
   Alv = cms.AbsorptionVelocity;
 }
 
-void TLineModelResult::updateContinuumFromModel(
-    const std::shared_ptr<const CLineModelFitting> &lmel) {
-  std::shared_ptr<const CContinuumManager> ccm = lmel->m_continuumManager;
-  FittedTplAmplitude = ccm->getFitContinuum_tplAmplitude();
-  FittedTplName =
-      FittedTplAmplitude ? ccm->getFitContinuum_tplName() : "nocontinuum";
-  FittedTplAmplitudeError = ccm->getFitContinuum_tplAmplitudeError();
-  FittedTplMerit = ccm->getFitContinuum_tplMerit();
-  FittedTplMeritPhot = ccm->getFitContinuum_tplMeritPhot();
-  FittedTplEbmvCoeff = ccm->getFitContinuum_tplIsmEbmvCoeff();
-  FittedTplMeiksinIdx = ccm->getFitContinuum_tplIgmMeiksinIdx();
-}
-
 void TLineModelResult::updateTplRatioFromModel(
     const std::shared_ptr<const CTplratioManager> &lmel) {
   FittedTplratioName = lmel->getTplratio_bestTplName();
   FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
   FittedTplratioAmplitudeEm = lmel->getTplratio_bestAmplitudeEm();
-  FittedTplratioDtmEm = lmel->getTplratio_bestDtmEm();
-  FittedTplratioDtmAbs = lmel->getTplratio_bestDtmAbs();
-  FittedTplratioMtmEm = lmel->getTplratio_bestMtmEm();
-  FittedTplratioMtmAbs = lmel->getTplratio_bestMtmAbs();
 }
 
 void TLineModelResult::updateFromModel(

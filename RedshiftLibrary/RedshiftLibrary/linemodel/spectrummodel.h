@@ -10,12 +10,15 @@
 namespace NSEpic {
 
 class CLineModelSolution;
-class CContinuumModelSolution;
+class CTplModelSolution;
+class CTemplate;
+class COperatorTemplateFitting;
 class CSpectrumModel {
 public:
   CSpectrumModel(CLineModelElementList &elements,
                  std::shared_ptr<const CSpectrum> spc,
-                 const CLineCatalog::TLineVector &m_RestLineList);
+                 const CLineCatalog::TLineVector &m_RestLineList,
+                 std::shared_ptr<CTplModelSolution> tfv);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
   void refreshModel(Int32 lineTypeFilter = -1);
@@ -58,10 +61,11 @@ public:
   Float64 m_Redshift = 0.;
   // new methods
   Int32 m__count = 0;
+  std::shared_ptr<COperatorTemplateFitting> m_templateFittingOperator;
+  Int32 m_spcIndex = 0;
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
-                              const TFloat64List &polyCoeffs,
-                              const TAxisSampleList &observeGridContinuumFlux);
+                              const TFloat64List &polyCoeffs);
   const CSpectrumFluxAxis &getSpcFluxAxis() const { return m_SpcFluxAxis; }
   const CSpectrumFluxAxis &getContinuumFluxAxis() const {
     return m_ContinuumFluxAxis;
@@ -70,12 +74,17 @@ public:
     return m_spcFluxAxisNoContinuum;
   }
 
+  Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate> &tpl,
+                             Float64 zcontinuum);
+  void initObserveGridContinuumFlux(Int32 size);
+
 private:
   CSpectrumFluxAxis getContinuum(const TInt32RangeList &indexRangeList,
                                  const TInt32List &eIdx_list,
                                  bool substract_abslinesmodel) const;
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
   const CLineCatalog::TLineVector &m_RestLineList;
+  std::shared_ptr<CTplModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
   CLineModelElementList &m_Elements;
@@ -84,6 +93,11 @@ private:
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting
+
+  TAxisSampleList
+      m_observeGridContinuumFlux; // the continuum spectre without the
+  // amplitude coeff; m_ContinuumFLux = amp *
+  // m_observeGridContinuumFlux
 };
 
 } // namespace NSEpic

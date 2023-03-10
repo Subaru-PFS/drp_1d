@@ -44,15 +44,16 @@
 using namespace NSEpic;
 using namespace std;
 
-CSvdlcFitter::CSvdlcFitter(CLineModelElementList &elements,
-                           std::shared_ptr<const CSpectrum> inputSpectrum,
-                           std::shared_ptr<const TLambdaRange> lambdaRange,
-                           std::shared_ptr<CSpectrumModel> spectrumModel,
-                           const CLineCatalog::TLineVector &restLineList,
-                           std::shared_ptr<CContinuumManager> continuumManager,
-                           Int32 polyOrder)
+CSvdlcFitter::CSvdlcFitter(
+    CLineModelElementList &elements,
+    std::shared_ptr<const CSpectrum> inputSpectrum,
+    std::shared_ptr<const TLambdaRange> lambdaRange,
+    std::shared_ptr<CSpectrumModel> spectrumModel,
+    const CLineCatalog::TLineVector &restLineList,
+    const std::vector<std::shared_ptr<TFittedData>> &fittedData,
+    std::shared_ptr<CContinuumManager> continuumManager, Int32 polyOrder)
     : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList),
+                      restLineList, fittedData),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
       m_spectralAxis(inputSpectrum->GetSpectralAxis())
 

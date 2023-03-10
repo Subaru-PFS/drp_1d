@@ -43,13 +43,15 @@
 using namespace NSEpic;
 using namespace std;
 
-CHybridFitter::CHybridFitter(CLineModelElementList &elements,
-                             std::shared_ptr<const CSpectrum> inputSpectrum,
-                             std::shared_ptr<const TLambdaRange> lambdaRange,
-                             std::shared_ptr<CSpectrumModel> spectrumModel,
-                             const CLineCatalog::TLineVector &restLineList)
+CHybridFitter::CHybridFitter(
+    CLineModelElementList &elements,
+    std::shared_ptr<const CSpectrum> inputSpectrum,
+    std::shared_ptr<const TLambdaRange> lambdaRange,
+    std::shared_ptr<CSpectrumModel> spectrumModel,
+    const CLineCatalog::TLineVector &restLineList,
+    const std::vector<std::shared_ptr<TFittedData>> &fittedData)
     : CSvdFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                 restLineList)
+                 restLineList, fittedData)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -155,18 +157,18 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     }
     if (!m_enableAmplitudeOffsets && overlappingInds.size() < 2) {
       Log.LogDebug("    model: hybrid fit:     Individual fit");
-      m_Elements[iElts]->fitAmplitudeAndLambdaOffset(
-          spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
-          undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
-          m_LambdaOffsetMin, m_LambdaOffsetMax);
+      fitAmplitudeAndLambdaOffset(iElts, spectralAxis, spcFluxAxisNoContinuum,
+                                  continuumfluxAxis, redshift, undefIdx,
+                                  m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
+                                  m_LambdaOffsetMin, m_LambdaOffsetMax);
     } else {
       Log.LogDebug("    model: hybrid fit:     SVD fit");
       // fit individually: mainly for mtm and dtm estimation
       for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-        m_Elements[overlappingInds[ifit]]->fitAmplitudeAndLambdaOffset(
-            spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
-            undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
-            m_LambdaOffsetMin, m_LambdaOffsetMax);
+        fitAmplitudeAndLambdaOffset(
+            overlappingInds[ifit], spectralAxis, spcFluxAxisNoContinuum,
+            continuumfluxAxis, redshift, undefIdx, m_enableLambdaOffsetsFit,
+            m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
       }
       TFloat64List ampsfitted;
       TFloat64List errorsfitted;
@@ -189,10 +191,10 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
         }
         // fit the rest of the overlapping elements (same sign) together
         if (!m_enableAmplitudeOffsets && overlappingIndsSameSign.size() == 1) {
-          m_Elements[overlappingIndsSameSign[0]]->fitAmplitudeAndLambdaOffset(
-              spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
-              undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
-              m_LambdaOffsetMin, m_LambdaOffsetMax);
+          fitAmplitudeAndLambdaOffset(
+              overlappingIndsSameSign[0], spectralAxis, spcFluxAxisNoContinuum,
+              continuumfluxAxis, redshift, undefIdx, m_enableLambdaOffsetsFit,
+              m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
         } else if (overlappingIndsSameSign.size() > 0) {
           Int32 retVal2 = fitAmplitudesLinSolveAndLambdaOffset(
               overlappingIndsSameSign, spectralAxis, ampsfitted, errorsfitted,
@@ -202,12 +204,11 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
             for (Int32 ifit = 0; ifit < overlappingIndsSameSign.size();
                  ifit++) {
               if (ampsfitted[ifit] > 0) {
-                m_Elements[overlappingIndsSameSign[ifit]]
-                    ->fitAmplitudeAndLambdaOffset(
-                        spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis,
-                        redshift, undefIdx, m_enableLambdaOffsetsFit,
-                        m_LambdaOffsetStep, m_LambdaOffsetMin,
-                        m_LambdaOffsetMax);
+                fitAmplitudeAndLambdaOffset(
+                    overlappingIndsSameSign[ifit], spectralAxis,
+                    spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
+                    undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
+                    m_LambdaOffsetMin, m_LambdaOffsetMax);
               } else {
                 m_Elements.SetElementAmplitude(overlappingIndsSameSign[ifit],
                                                0.0, errorsfitted[ifit]);

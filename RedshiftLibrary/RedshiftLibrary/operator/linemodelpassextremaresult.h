@@ -59,28 +59,14 @@ public:
   TInt32List
   getUniqueCandidates(const CLineModelPassExtremaResult &results_b) const;
   TFloat64List GetRedshifts() const;
-  void fillWithContinuumModelSolutionAtIndex(
-      Int32 i, const CContinuumModelSolution &contModelSol);
+  void
+  fillWithContinuumModelSolutionAtIndex(Int32 i,
+                                        const CTplModelSolution &contModelSol);
 
   TCandidateZbyRank m_ranked_candidates;
 
   // template continuum
-  TStringList FittedTplName; // Name of the best template fitted for continuum
-  TFloat64List FittedTplAmplitude; // Amplitude for the best template fitted for
-                                   // continuum
-  TFloat64List FittedTplAmplitudeError; // Amplitude error for the best template
-                                        // fitted for continuum
-  TFloat64List
-      FittedTplMerit; // Chisquare for the best template fitted for continuum
-  TFloat64List FittedTplMeritPhot; // extra chisquare term due to photometry
-  TFloat64List FittedTplEbmvCoeff; // Calzetti ebmvcoeff for the best template
-                                   // fitted for continuum
-  TInt32List FittedTplMeiksinIdx;  // Meiksin igm index for the best template
-                                   // fitted for continuum
-  TFloat64List FittedTplDtm; // DTM for the best template fitted for continuum
-  TFloat64List FittedTplMtm; // MTM for the best template fitted for continuum
-  TFloat64List
-      FittedTplLogPrior; // log prior for the best template fitted for continuum
+  std::vector<CTplModelSolution> FittedTpl;
 
   std::vector<TFloat64List> ExtendedRedshifts; // z range around extrema
 
@@ -89,12 +75,6 @@ public:
   TFloat64List Alv;                    // absorption line width
   std::vector<TFloat64List> GroupsELv; // per fitting group line width , EL
   std::vector<TFloat64List> GroupsALv; // per fitting group line width , AL
-
-  // template continuum (+ base class)
-  TFloat64List
-      FittedTplRedshift; // Redshift for the best template fitted for continuum
-  std::vector<TFloat64List> FittedTplpCoeffs; // poly coeffs for the best
-                                              // template fitted for continuum
 
   std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
   Float64 Redshift(Int32 i) const {

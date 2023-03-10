@@ -36,14 +36,40 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
+#define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-#include <fstream>
-#include <iomanip> // std::setprecision
-#include <string>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/processflow/result.h"
 
-#include <string>
+#include "RedshiftLibrary/continuum/indexes.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include <cmath>
 
-using namespace NSEpic;
+namespace NSEpic {
+
+struct CTplModelSolution {
+
+  // template continuum
+  std::string tplName = "undefined";
+  Float64 tplAmplitude = NAN;
+  Float64 tplAmplitudeError = NAN;
+  Float64 tplAmplitudeSigma = NAN;
+  Float64 tplEbmvCoeff = NAN;
+  Int32 tplMeiksinIdx = undefIdx;
+  Float64 tplRedshift = NAN;
+
+  Float64 tplMerit = NAN;
+  Float64 tplMeritPhot = NAN;
+  Float64 tplDtM = NAN;
+  Float64 tplMtM = NAN;
+  Float64 tplLogPrior = 0.;
+
+  // polynom
+  TFloat64List pCoeffs;
+};
+
+} // namespace NSEpic
+
+#endif

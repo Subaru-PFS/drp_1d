@@ -51,25 +51,14 @@ void CLineModelPassExtremaResult::Resize(
                   // create another function ::init
   m_ranked_candidates.resize(
       size, std::pair<std::string, std::shared_ptr<TCandidateZ>>());
-  FittedTplName.resize(size, "undefined");
-  FittedTplAmplitude.resize(size, NAN);
-  FittedTplAmplitudeError.resize(size, NAN);
-  FittedTplMerit.resize(size, NAN);
-  FittedTplMeritPhot.resize(size, NAN);
-  FittedTplEbmvCoeff.resize(size, NAN);
-  FittedTplMeiksinIdx.resize(size, -1);
-  FittedTplDtm.resize(size, NAN);
-  FittedTplMtm.resize(size, NAN);
-  FittedTplLogPrior.resize(size, 0.);
+
+  FittedTpl.resize(size);
 
   Elv.resize(size, NAN);
   Alv.resize(size, NAN);
   GroupsELv.resize(size,
                    TFloat64List(250, NAN)); // WARNING: hardcoded ngroups max
   GroupsALv.resize(size, TFloat64List(250, NAN));
-
-  FittedTplRedshift.resize(size, NAN);
-  FittedTplpCoeffs.resize(size, TFloat64List(3, NAN));
 }
 
 TFloat64List CLineModelPassExtremaResult::GetRedshifts() const {
@@ -104,18 +93,6 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
 }
 
 void CLineModelPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
-    Int32 i, const CContinuumModelSolution &contModelSol) {
-  FittedTplName[i] = contModelSol.tplName;
-  FittedTplAmplitude[i] = contModelSol.tplAmplitude;
-  FittedTplAmplitudeError[i] = contModelSol.tplAmplitudeError;
-  FittedTplMerit[i] = contModelSol.tplMerit;
-  FittedTplMeritPhot[i] = contModelSol.tplMeritPhot;
-  FittedTplEbmvCoeff[i] = contModelSol.tplEbmvCoeff;
-  FittedTplMeiksinIdx[i] = contModelSol.tplMeiksinIdx;
-  FittedTplRedshift[i] = contModelSol.tplRedshift;
-  FittedTplDtm[i] = contModelSol.tplDtm;
-  FittedTplMtm[i] = contModelSol.tplMtm;
-  FittedTplLogPrior[i] = contModelSol.tplLogPrior;
-  FittedTplpCoeffs[i] = contModelSol.pCoeffs;
-  return;
+    Int32 i, const CTplModelSolution &contModelSol) {
+  FittedTpl[i] = contModelSol;
 }
