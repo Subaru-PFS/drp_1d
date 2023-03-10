@@ -54,6 +54,10 @@
 
 #include <fftw3.h>
 
+namespace templateFittingSolve_test {
+class EstimateXtY_test;
+};
+
 namespace NSEpic {
 
 class COperatorTemplateFittingLog : public COperatorTemplateFittingBase {
@@ -83,6 +87,7 @@ public:
                                    const TFloat64Range &redshiftrange) const;
 
 private:
+  friend class templateFittingSolve_test::EstimateXtY_test;
   Float64 m_logstep;
   Int32 m_ssRatio;
 
@@ -103,7 +108,7 @@ private:
 
   TInt32RangeList FindZRanges(const TFloat64List &redshifts);
 
-  void EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
+  void EstimateXtY(const TFloat64List &X, const TFloat64List &Y,
                    TFloat64List &XtY, Int32 precomputedFFT = -1);
   Int32 InitFFT(Int32 n);
   Int32 EstimateMtMFast(const TFloat64List &X, const TFloat64List &Y,
@@ -121,7 +126,6 @@ private:
   fftw_complex *outSpc = nullptr;
   fftw_plan pSpc = nullptr;
   Float64 *inTpl = nullptr;
-  Float64 *inTpl_padded = nullptr;
   fftw_complex *outTpl = nullptr;
   fftw_plan pTpl = nullptr;
   fftw_complex *outCombined = nullptr;
