@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
   // TEST OK constructor 1
   Float64 resolution = 100.0;
   Float64 lambda = 7000.;
-  const Float64 instrumentResolutionEmpiricalFactor = 230.0 / 325.0 / 2.35;
+  const Float64 instrumentResolutionEmpiricalFactor = 1.0 / 2.355;
   store->Set("LSF.resolution", resolution);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantResolutionArgs>(store);

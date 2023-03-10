@@ -59,9 +59,6 @@ public:
   static Float64 computeResolution(Float64 lambda, Float64 width);
 
 private:
-  /*const Float64 m_instrumentResolutionEmpiricalFactor =
-      INSTRUMENT_RESOLUTION_EMPERICALFACTOR;*/
-
   const Float64 m_Resolution;
 };
 inline std::shared_ptr<CLSF> CLSFGaussianConstantResolution::make_LSF(

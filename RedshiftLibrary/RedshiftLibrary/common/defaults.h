@@ -20,8 +20,10 @@ static const Int32 MEDIAN_FAST_OR_BEERS_THRESHOLD = 1000;
 static const Float64 SPEED_OF_LIGHT_IN_VACCUM =
     GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
 
-static const Float64 INSTRUMENT_RESOLUTION_EMPERICALFACTOR =
-    230.0 / 325.0 / 2.35;
+// static const Float64 INSTRUMENT_RESOLUTION_FACTOR =
+//     230.0 / 325.0 / 2.35; // empirical factor set by A Schmitt
+static const Float64 INSTRUMENT_RESOLUTION_FACTOR = 1.0 / 2.355;
+
 static const Float64 RESTLAMBDA_LYA = 1216.;
 static const Int32 IGM_OVERSAMPLING = 1;
 static const Float64 IGM_RAW_STEP =

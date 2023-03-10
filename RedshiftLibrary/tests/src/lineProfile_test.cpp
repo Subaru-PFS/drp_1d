@@ -231,7 +231,7 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
 
   // GetLineFlux
   val = profileSYMIGM.GetLineFlux(x0, sigma, 1);
-  BOOST_CHECK_CLOSE(val, 297.46112598452834, 1e-12);
+  BOOST_CHECK_CLOSE(val, 297.44547483232265, 1e-12);
 
   BOOST_CHECK_THROW(profileSYMIGM.GetLineFlux(x0 - 2., 0.001, 1),
                     GlobalException);
