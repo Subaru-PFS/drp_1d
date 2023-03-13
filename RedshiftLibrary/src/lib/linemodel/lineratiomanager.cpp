@@ -100,7 +100,7 @@ void CLineRatioManager::setLyaProfile(
 
   if (!m_Elements[idxLyaE]->IsOutsideLambdaRange(idxLineLyaE)) {
     const auto &profile =
-        m_Elements[idxLyaE]->m_Lines[idxLineLyaE].GetProfile();
+        m_Elements[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
     if (profile.isAsym())
       setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
   }
@@ -111,7 +111,7 @@ void CLineRatioManager::setLyaProfile(
       TInt32List &idxLine = idxLineIGM[i];
       auto end =
           std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-            return !Elt->m_Lines[idx].GetProfile().isSymIgm();
+            return !Elt->GetLines()[idx].GetProfile().isSymIgm();
           });
       idxLine.erase(end, idxLine.end());
       if (!idxLine.empty())
@@ -144,7 +144,7 @@ void CLineRatioManager::setAsymProfile(
 
   bool doasymfit = profile->isAsymFit();
 
-  m_Elements[idxLyaE]->m_Lines[idxLineLyaE].SetProfile(std::move(profile));
+  m_Elements[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
 
   if (!doasymfit)
     return;

@@ -715,15 +715,15 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const {
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
     Int32 iElts = validEltsIdx[iValidElts];
-    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission()) {
+      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission()) {
         continue;
       }
 
       Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
       sumAmps += amp;
-      if (m_Elements[iElts]->m_Lines[lineIdx].GetIsStrong()) {
+      if (m_Elements[iElts]->GetLines()[lineIdx].GetIsStrong()) {
         AmpsStrong.push_back(amp);
       } else {
         AmpsWeak.push_back(amp);
@@ -751,12 +751,12 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
     Int32 iElts = validEltsIdx[iValidElts];
-    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsStrong()) {
+      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsStrong()) {
         continue;
       }
-      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission()) {
+      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission()) {
         continue;
       }
 
@@ -1002,7 +1002,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
         m_Elements[eIdx]->GetObservedPosition(subeIdx, modelSolution.Redshift);
     modelSolution.Velocity[iRestLine] = m_Elements[eIdx]->getVelocity();
     modelSolution.Offset[iRestLine] =
-        m_Elements[eIdx]->m_Lines[subeIdx].GetOffset();
+        m_Elements[eIdx]->GetLines()[subeIdx].GetOffset();
 
     if (opt_level) // brief, to save processing time, do not estimate fluxes
                    // and high level line properties

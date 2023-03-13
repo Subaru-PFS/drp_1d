@@ -119,7 +119,7 @@ void CAbstractFitter::computeCrossProducts(
   Float64 err2 = 0.0;
   Int32 num = 0;
 
-  Int32 nLines = elt.m_Lines.size();
+  Int32 nLines = elt.GetSize();
   for (Int32 k = 0; k < nLines; k++) { // loop for the intervals
     if (elt.IsOutsideLambdaRange(k)) {
       continue;
@@ -173,7 +173,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
                                    const CSpectrumFluxAxis &continuumfluxAxis,
                                    Float64 redshift, Int32 lineIdx) {
   auto &elt = m_Elements[eltIndex];
-  Int32 nLines = elt->m_Lines.size();
+  Int32 nLines = elt->GetSize();
   auto &fittedData = m_fittedData[eltIndex];
 
   fittedData->m_FittedAmplitudes.assign(nLines, NAN);
@@ -235,14 +235,14 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
     const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx,
     bool enableOffsetFitting, Float64 step, Float64 min, Float64 max) {
   auto &elt = m_Elements[eltIndex];
-  Int32 nLines = elt->m_Lines.size();
+  Int32 nLines = elt->GetSize();
   Int32 nSteps = int((max - min) / step + 0.5);
 
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
     for (Int32 iR = 0; iR < nLines; iR++) {
       // check if the line is to be fitted
-      if (elt->m_Lines[iR].GetOffsetFitEnabled()) {
+      if (elt->GetLines()[iR].GetOffsetFitEnabled()) {
         atLeastOneOffsetToFit = true;
         break;
       }
@@ -260,14 +260,8 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
   Int32 idxBestMerit = -1;
   for (Int32 iO = 0; iO < nSteps; iO++) {
     // set offset value
-    if (atLeastOneOffsetToFit) {
-      Float64 offset = min + step * iO;
-      for (Int32 iR = 0; iR < nLines; iR++) {
-        if (elt->m_Lines[iR].GetOffsetFitEnabled()) {
-          elt->m_Lines[iR].SetOffset(offset);
-        }
-      }
-    }
+    if (atLeastOneOffsetToFit)
+      elt->SetOffset(min + step * iO);
 
     // fit for this offset
     fitAmplitude(eltIndex, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
@@ -285,15 +279,9 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
 
   if (idxBestMerit >= 0 && atLeastOneOffsetToFit) {
     // set offset value
-    if (atLeastOneOffsetToFit) {
-      Float64 offset = min + step * idxBestMerit;
-      Log.LogDebug("    multiline: offset best found=%f", offset);
-      for (Int32 iR = 0; iR < nLines; iR++) {
-        if (elt->m_Lines[iR].GetOffsetFitEnabled()) {
-          elt->m_Lines[iR].SetOffset(offset);
-        }
-      }
-    }
+    if (atLeastOneOffsetToFit)
+      elt->SetOffset(min + step * idxBestMerit);
+
     // fit again for this offset
     fitAmplitude(eltIndex, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
                  redshift, lineIdx);

@@ -93,7 +93,7 @@ Int32 CTplratioManager::getLineIndexInCatalog(
     const CLineCatalog::TLineVector &catalog) const {
 
   // get index of line inside tplratio catalog
-  const std::string &strID = m_Elements[iElts]->m_Lines[idxLine].GetStrID();
+  const std::string &strID = m_Elements[iElts]->GetLines()[idxLine].GetStrID();
   Int32 lineIndex = std::find_if(catalog.begin(), catalog.end(),
                                  [strID](const CLine &line) {
                                    return line.GetStrID() == strID;

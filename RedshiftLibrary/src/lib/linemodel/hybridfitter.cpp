@@ -276,8 +276,8 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
       continue;
     }
     // for now only allow this process if Em and Abs line are single lines
-    if (m_Elements[ilineE]->m_Lines.size() > 1 ||
-        m_Elements[ilineA]->m_Lines.size() > 1) {
+    if (m_Elements[ilineE]->GetSize() > 1 ||
+        m_Elements[ilineA]->GetSize() > 1) {
       continue;
     }
     Int32 subeIdxE = 0;

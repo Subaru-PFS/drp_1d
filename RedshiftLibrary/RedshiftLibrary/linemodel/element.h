@@ -173,7 +173,8 @@ public:
   Float64 GetSignFactor(Int32 subeIdx) const;
 
   Int32 GetSize() const;
-  std::vector<CLine> GetLines() const;
+  const std::vector<CLine> &GetLines() const { return m_Lines; };
+
   const std::string &GetLineName(Int32 subeIdx) const;
   bool IsOutsideLambdaRange() const;
   Float64 GetLineWidth(Float64 lambda, Float64 z = 0.,
@@ -192,8 +193,9 @@ public:
   void SetSumGauss(Float64 val);
   Float64 GetFitAmplitude() const;
 
-  std::vector<CLine> m_Lines; // only used in multiline for now... tbd: should
-                              // be moved elsewhere ?
+  void SetOffset(Float64 val);
+  void SetLineProfile(Int32 lineIdx, CLineProfile_ptr &&profile);
+
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
 
@@ -208,6 +210,8 @@ public:
   void dumpElement(std::ostream &os) const;
 
 protected:
+  std::vector<CLine> m_Lines;
+
   TLineWidthType m_LineWidthType;
 
   Float64 m_OutsideLambdaRangeOverlapThreshold;

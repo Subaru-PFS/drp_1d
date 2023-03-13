@@ -285,6 +285,16 @@ Float64 CLineModelElement::GetSumGauss() const { return m_sumGauss; }
 
 void CLineModelElement::SetSumGauss(Float64 val) { m_sumGauss = val; }
 
+void CLineModelElement::SetOffset(Float64 val) {
+  for (auto &line : m_Lines)
+    line.SetOffset(val);
+}
+
+void CLineModelElement::SetLineProfile(Int32 lineIdx,
+                                       CLineProfile_ptr &&profile) {
+  m_Lines[lineIdx].SetProfile(std::move(profile));
+}
+
 Float64 CLineModelElement::GetFitAmplitude() const {
   return m_fittedData->m_fitAmplitude;
 }
@@ -686,17 +696,6 @@ Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 subeIdx,
   const CLineProfile &profile = getLineProfile(subeIdx);
 
   return profile.GetLineProfileVal(x, mu, sigma);
-}
-
-/**
- * \brief Returns a copy of m_Lines.
- **/
-std::vector<CLine> CLineModelElement::GetLines() const {
-  std::vector<CLine> lines;
-  for (Int32 k = 0; k < m_Lines.size(); k++) {
-    lines.push_back(m_Lines[k]);
-  }
-  return lines;
 }
 
 /**

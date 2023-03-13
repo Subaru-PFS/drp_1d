@@ -135,12 +135,12 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
           nominalAmp *= dustCoeff;
         }
         // find line in the elementList and fill with nominalAmp
-        auto it = std::find_if(elt->m_Lines.cbegin(), elt->m_Lines.cend(),
+        auto it = std::find_if(elt->GetLines().cbegin(), elt->GetLines().cend(),
                                [&currentLineName](const CLine &line) {
                                  return line.GetName() == currentLineName;
                                });
-        if (it != elt->m_Lines.end()) {
-          Int32 idx = it - elt->m_Lines.begin();
+        if (it != elt->GetLines().end()) {
+          Int32 idx = it - elt->GetLines().begin();
           lineCatalogLinesCorrespondingNominalAmp.back()[iCatalog][idx] =
               nominalAmp;
         }
@@ -173,7 +173,8 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
                           ? ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
                           : NAN;
         Float64 nomAmp = lineCatalogLinesCorrespondingNominalAmp[iElt][k][j];
-        std::string lineName = LineModelElementList[iElt]->m_Lines[j].GetName();
+        std::string lineName =
+            LineModelElementList[iElt]->GetLines()[j].GetName();
         /*Log.LogDebug("    CatalogsTplRatio - "
                      "linesCorrespondingNominalAmp iElt=%d, "
                      "iCatalog=%d, iLine=%d with name=%s, ebv=%f: "

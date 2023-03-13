@@ -60,11 +60,9 @@ void CSvdFitter::fit(Float64 redshift) {
 void CSvdFitter::setOffset(const TInt32List &EltsIdx, Int32 offsetCount) const {
 
   Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
-  for (Int32 iE : EltsIdx) {
-    for (auto &line : m_Elements[iE]->m_Lines)
-      if (line.GetOffsetFitEnabled())
-        line.SetOffset(offset);
-  }
+  for (Int32 iE : EltsIdx)
+    m_Elements[iE]->SetOffset(offset);
+
   return;
 }
 
@@ -236,7 +234,7 @@ Int32 CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
     for (Int32 iE : EltsIdx)
-      for (const auto &line : m_Elements[iE]->m_Lines)
+      for (const auto &line : m_Elements[iE]->GetLines())
         // check if the line is to be fitted
         if (line.GetOffsetFitEnabled()) {
           atLeastOneOffsetToFit = true;
