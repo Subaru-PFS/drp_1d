@@ -160,12 +160,7 @@ void CLineRatioManager::setAsymProfile(
 Int32 CLineRatioManager::getLineIndexInCatalog(
     Int32 iElts, Int32 idxLine,
     const CLineCatalog::TLineVector &catalog) const {
-  Int32 lineIndex = undefIdx;
-  lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[idxLine];
-  if (lineIndex < 0 || lineIndex >= catalog.size())
-    THROWG(INTERNAL_ERROR, "Lya idx out-of-bound");
-
-  return lineIndex;
+  return m_Elements[iElts]->getLineIndexInCatalog(idxLine, catalog);
 }
 
 void CLineRatioManager::setSymIgmProfile(Int32 iElts,

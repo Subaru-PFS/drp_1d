@@ -110,6 +110,16 @@ Int32 CLineModelElement::findElementIndex(Int32 LineCatalogIndex) const {
   return idx;
 }
 
+Int32 CLineModelElement::getLineIndexInCatalog(
+    Int32 idxLine, const CLineCatalog::TLineVector &catalog) const {
+  Int32 lineIndex = undefIdx;
+  lineIndex = m_LineCatalogIndexes[idxLine];
+  if (lineIndex < 0 || lineIndex >= catalog.size())
+    THROWG(INTERNAL_ERROR, "Line idx out-of-bound");
+
+  return lineIndex;
+}
+
 Int32 CLineModelElement::GetSize() const { return m_LineCatalogIndexes.size(); }
 
 bool CLineModelElement::IsOutsideLambdaRange() const {
