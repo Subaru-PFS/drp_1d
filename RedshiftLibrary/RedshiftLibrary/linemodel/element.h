@@ -195,11 +195,11 @@ public:
   Float64 GetSumGauss() const;
   void SetSumGauss(Float64 val);
   Float64 GetFitAmplitude() const;
+  const std::string &GetFittingGroupInfo() const;
+  void SetFittingGroupInfo(const std::string &val);
 
   void SetOffset(Float64 val);
   void SetLineProfile(Int32 lineIdx, CLineProfile_ptr &&profile);
-
-  std::string m_fittingGroupInfo;
 
   bool isLineActiveOnSupport(Int32 line, Int32 lineIdx) const;
   Int32 getStartNoOverlap(Int32 lineIdx) const {
@@ -214,6 +214,7 @@ public:
 protected:
   std::vector<CLine> m_Lines;
   TInt32List m_LineCatalogIndexes;
+  std::string m_fittingGroupInfo;
 
   TLineWidthType m_LineWidthType;
 

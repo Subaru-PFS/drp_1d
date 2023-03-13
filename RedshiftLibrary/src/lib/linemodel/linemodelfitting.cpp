@@ -1106,7 +1106,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
     }
 
     modelSolution.fittingGroupInfo[iRestLine] =
-        m_Elements[eIdx]->m_fittingGroupInfo;
+        m_Elements[eIdx]->GetFittingGroupInfo();
     modelSolution.OutsideLambdaRange[iRestLine] =
         m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx);
   }

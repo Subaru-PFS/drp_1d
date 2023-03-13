@@ -145,7 +145,7 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     // setting the fitting group info
     for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
       std::string fitGroupTag = boost::str(boost::format("hy%d") % iValidElts);
-      m_Elements[overlappingInds[ifit]]->m_fittingGroupInfo = fitGroupTag;
+      m_Elements[overlappingInds[ifit]]->SetFittingGroupInfo(fitGroupTag);
     }
 
     // Log.LogDebug( "Redshift: %f", redshift);

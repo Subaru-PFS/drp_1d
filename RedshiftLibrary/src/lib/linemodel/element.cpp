@@ -295,6 +295,14 @@ Float64 CLineModelElement::GetSumGauss() const { return m_sumGauss; }
 
 void CLineModelElement::SetSumGauss(Float64 val) { m_sumGauss = val; }
 
+const std::string &CLineModelElement::GetFittingGroupInfo() const {
+  return m_fittingGroupInfo;
+}
+
+void CLineModelElement::SetFittingGroupInfo(const std::string &val) {
+  m_fittingGroupInfo = val;
+}
+
 void CLineModelElement::SetOffset(Float64 val) {
   for (auto &line : m_Lines)
     line.SetOffset(val);
