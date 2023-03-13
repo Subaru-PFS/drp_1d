@@ -64,14 +64,12 @@ BOOST_AUTO_TEST_CASE(Instance) {
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
-  TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
+  TLineModelElementParam_ptr fdata = std::make_shared<TLineModelElementParam>(
+      rs, 1.0, 1.1, nominalAmplitudes, catalogIndexes);
 
-  BOOST_CHECK_THROW(CLineModelElement(rs, "foobar", fdata, catalogIndexes),
-                    GlobalException);
+  BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), GlobalException);
 
-  BOOST_CHECK_THROW(CLineModelElement(rs, "fixed", fdata, catalogIndexes),
-                    GlobalException);
+  BOOST_CHECK_THROW(CLineModelElement(fdata, "fixed"), GlobalException);
   /*
   CLineModelElement element = CLineModelElement(rs,  "fixed",  8.0,
   0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes); BOOST_CHECK_CLOSE( 1.0,
@@ -115,17 +113,14 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
+  TLineModelElementParam_ptr fdata = std::make_shared<TLineModelElementParam>(
+      rs, 1.0, 1.1, nominalAmplitudes, catalogIndexes);
 
-  CLineModelElement elementID =
-      CLineModelElement(rs, "instrumentdriven", fdata, catalogIndexes);
+  CLineModelElement elementID = CLineModelElement(fdata, "instrumentdriven");
   // CLineModelElement elementfixed = CLineModelElement(rs,  "fixed", 1.0, 1.1,
   // nominalAmplitudes, 1.2,catalogIndexes);
-  CLineModelElement elementcombined =
-      CLineModelElement(rs, "combined", fdata, catalogIndexes);
-  CLineModelElement elementVD =
-      CLineModelElement(rs, "velocitydriven", fdata, catalogIndexes);
+  CLineModelElement elementcombined = CLineModelElement(fdata, "combined");
+  CLineModelElement elementVD = CLineModelElement(fdata, "velocitydriven");
   // CLineModelElement elementNip = CLineModelElement(rs,
   // "nispsim2016", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
@@ -182,11 +177,10 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   TAsymParams _asymParams = {1., 4.5, 0.};
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
-  TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
+  TLineModelElementParam_ptr fdata = std::make_shared<TLineModelElementParam>(
+      rs, 1.0, 1.1, nominalAmplitudes, catalogIndexes);
 
-  CLineModelElement element =
-      CLineModelElement(rs, "combined", fdata, catalogIndexes);
+  CLineModelElement element = CLineModelElement(fdata, "combined");
 
   CLineProfile_ptr profilelor{
       std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(nsigmasupport))};
@@ -224,10 +218,10 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   std::shared_ptr<TLineModelElementParam> fdata =
-      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, nominalAmplitudes,
+                                               catalogIndexes);
 
-  CLineModelElement element =
-      CLineModelElement(rs, "velocitydriven", fdata, catalogIndexes);
+  CLineModelElement element = CLineModelElement(fdata, "velocitydriven");
 
   Float64 nsigmasupport = 8.;
   Float64 resolution = 0.9;

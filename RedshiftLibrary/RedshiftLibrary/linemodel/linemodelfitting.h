@@ -197,7 +197,9 @@ private:
   std::shared_ptr<CTplModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
-  void fitAmplitudesSimplex();
+  void AddElement(TLineVector &&lines, Float64 velocityEmission,
+                  Float64 velocityAbsorption, TFloat64List &&amps,
+                  TInt32List &&inds);
 
   void SetLSF();
 
@@ -205,8 +207,6 @@ private:
                                   const std::string &strTag, Int32 type) const;
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
-
-  void applyRules(bool enableLogs = false);
 
   std::shared_ptr<CSpectrumModel> m_model;
 

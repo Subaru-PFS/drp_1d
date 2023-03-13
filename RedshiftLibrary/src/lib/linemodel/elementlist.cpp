@@ -209,7 +209,7 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
   TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
   for(Int32 i=0; i<nonZeroIndexes.size(); i++)
   {
-      if(lineType == m_Elements[nonZeroIndexes[i]]->m_Lines[0].GetType())
+      if(lineType == m_Elements[nonZeroIndexes[i]]->GetElementType())
       {
           TInt32List gr;
           gr.push_back(nonZeroIndexes[i]);

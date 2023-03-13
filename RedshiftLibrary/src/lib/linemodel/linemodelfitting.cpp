@@ -239,6 +239,17 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
 }
 Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
 
+void CLineModelFitting::AddElement(TLineVector &&lines,
+                                   Float64 velocityEmission,
+                                   Float64 velocityAbsorption,
+                                   TFloat64List &&amps, TInt32List &&inds) {
+  m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
+      std::move(lines), velocityEmission, velocityAbsorption, std::move(amps),
+      std::move(inds)));
+  m_Elements.push_back(std::make_shared<CLineModelElement>(
+      m_ElementParam.back(), m_LineWidthType));
+}
+
 /**
  * \brief For each line in each group of the argument, finds the associated
  *line in the catalog and saves this information to m_Elements. Converts the
@@ -268,13 +279,9 @@ void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
       amps.push_back(groupList[ig][i].GetNominalAmplitude());
       lines.push_back(groupList[ig][i]);
     }
-    if (lines.size() > 0) {
-      m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
-          velocityEmission, velocityAbsorption, amps, lines.size()));
-      m_Elements.push_back(
-          std::shared_ptr<CLineModelElement>(new CLineModelElement(
-              lines, m_LineWidthType, m_ElementParam.back(), inds)));
-    }
+    if (lines.size() > 0)
+      AddElement(std::move(lines), velocityEmission, velocityAbsorption,
+                 std::move(amps), std::move(inds));
   }
 }
 
@@ -295,14 +302,9 @@ void CLineModelFitting::LoadCatalogOneMultiline(
     lines.push_back(restLineList[ir]);
   }
 
-  if (lines.size() > 0) {
-    m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
-        velocityEmission, velocityAbsorption, amps, lines.size()));
-
-    m_Elements.push_back(
-        std::shared_ptr<CLineModelElement>(new CLineModelElement(
-            lines, m_LineWidthType, m_ElementParam.back(), inds)));
-  }
+  if (lines.size() > 0)
+    AddElement(std::move(lines), velocityEmission, velocityAbsorption,
+               std::move(amps), std::move(inds));
 }
 
 void CLineModelFitting::LoadCatalogTwoMultilinesAE(
@@ -328,14 +330,9 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
       }
     }
 
-    if (lines.size() > 0) {
-      m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
-          velocityEmission, velocityAbsorption, amps, lines.size()));
-
-      m_Elements.push_back(
-          std::shared_ptr<CLineModelElement>(new CLineModelElement(
-              lines, m_LineWidthType, m_ElementParam.back(), inds)));
-    }
+    if (lines.size() > 0)
+      AddElement(std::move(lines), velocityEmission, velocityAbsorption,
+                 std::move(amps), std::move(inds));
   }
 }
 

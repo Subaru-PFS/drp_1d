@@ -53,14 +53,18 @@ namespace NSEpic {
 
 struct TLineModelElementParam {
 
-  TLineModelElementParam(const Float64 velocityEmission,
-                         const Float64 velocityAbsorption,
-                         TFloat64List nominalAmplitudes, const Int32 nbLines)
+  TLineModelElementParam(TLineVector lines, Float64 velocityEmission,
+                         Float64 velocityAbsorption,
+                         TFloat64List nominalAmplitudes,
+                         TInt32List lineCatalogIndexes)
       : m_VelocityEmission(velocityEmission),
         m_VelocityAbsorption(velocityAbsorption),
-        m_FittedAmplitudes(nbLines, NAN),
-        m_FittedAmplitudeErrorSigmas(nbLines, NAN), m_fitAmplitude(NAN),
-        m_NominalAmplitudes(nominalAmplitudes) {}
+        m_FittedAmplitudes(lines.size(), NAN),
+        m_FittedAmplitudeErrorSigmas(lines.size(), NAN), m_fitAmplitude(NAN),
+        m_NominalAmplitudes(std::move(nominalAmplitudes)),
+        m_Lines(std::move(lines)),
+        m_LineCatalogIndexes(std::move(lineCatalogIndexes)),
+        m_fittingGroupInfo("-1") {}
 
   Float64 m_VelocityEmission = NAN;
   Float64 m_VelocityAbsorption = NAN;
@@ -68,6 +72,9 @@ struct TLineModelElementParam {
   TFloat64List m_FittedAmplitudeErrorSigmas;
   Float64 m_fitAmplitude = NAN;
   TFloat64List m_NominalAmplitudes;
+  TLineVector m_Lines;
+  TInt32List m_LineCatalogIndexes;
+  std::string m_fittingGroupInfo;
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -79,9 +86,8 @@ class CLineModelElement {
   enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 
 public:
-  CLineModelElement(TLineVector rs, const std::string &widthType,
-                    const TLineModelElementParam_ptr &elementParam,
-                    TInt32List catalogIndexes);
+  CLineModelElement(const TLineModelElementParam_ptr elementParam,
+                    const std::string &widthType);
 
   Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -90,7 +96,12 @@ public:
   void getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift,
                                        Float64 &mu, Float64 &sigma,
                                        bool doAsymfitdelta = true) const;
-  Int32 GetElementType() const { return m_Lines.front().GetType(); };
+  Int32 GetElementType() const {
+    return m_ElementParam->m_Lines.front().GetType();
+  };
+  bool GetIsEmission() const {
+    return m_ElementParam->m_Lines.front().GetIsEmission();
+  };
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange);
   TInt32RangeList getSupport() const;
@@ -179,7 +190,7 @@ public:
   Float64 GetSignFactor(Int32 subeIdx) const;
 
   Int32 GetSize() const;
-  const TLineVector &GetLines() const { return m_Lines; };
+  const TLineVector &GetLines() const { return m_ElementParam->m_Lines; };
 
   const std::string &GetLineName(Int32 subeIdx) const;
   bool IsOutsideLambdaRange() const;
@@ -215,16 +226,12 @@ public:
   void dumpElement(std::ostream &os) const;
 
 protected:
-  TLineVector m_Lines;
-  TInt32List m_LineCatalogIndexes;
-  std::string m_fittingGroupInfo;
+  const TLineModelElementParam_ptr m_ElementParam;
 
   TLineWidthType m_LineWidthType;
 
   Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;
-
-  const TLineModelElementParam_ptr m_ElementParam;
 
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;
