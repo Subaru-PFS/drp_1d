@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
   CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult;
-  CLineCatalog::TLineVector strongLines;
+  TLineVector strongLines;
   strongLines.push_back(line1);
   strongLines.push_back(line2);
 
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(Retest) {
   CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult;
-  CLineCatalog::TLineVector strongLines;
+  TLineVector strongLines;
   strongLines.push_back(line1);
   strongLines.push_back(line2);
 

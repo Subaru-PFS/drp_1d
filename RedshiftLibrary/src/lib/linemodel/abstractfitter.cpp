@@ -15,7 +15,7 @@ CAbstractFitter::CAbstractFitter(
     std::shared_ptr<const CSpectrum> inputSpectrum,
     std::shared_ptr<const TLambdaRange> lambdaRange,
     std::shared_ptr<CSpectrumModel> spectrumModel,
-    const CLineCatalog::TLineVector &restLineList,
+    const TLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam)
     : m_Elements(elements), m_inputSpc(*(inputSpectrum)),
       m_RestLineList(restLineList), m_lambdaRange(*(lambdaRange)),
@@ -41,7 +41,7 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::shared_ptr<const CSpectrum> inputSpectrum,
     std::shared_ptr<const TLambdaRange> lambdaRange,
     std::shared_ptr<CSpectrumModel> spectrumModel,
-    const CLineCatalog::TLineVector &restLineList,
+    const TLineVector &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
     const std::vector<TLineModelElementParam_ptr> &elementParam) {
   if (fittingMethod == "hybrid")

@@ -56,7 +56,7 @@ public:
       std::shared_ptr<const CSpectrum> inputSpectrum,
       std::shared_ptr<const TLambdaRange> lambdaRange,
       std::shared_ptr<CSpectrumModel> spectrumModel,
-      const CLineCatalog::TLineVector &restLineList,
+      const TLineVector &restLineList,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam);
 
   virtual void fit(Float64 redshift) = 0;
@@ -68,7 +68,7 @@ public:
       std::shared_ptr<const CSpectrum> inputSpectrum,
       std::shared_ptr<const TLambdaRange> lambdaRange,
       std::shared_ptr<CSpectrumModel> spectrumModel,
-      const CLineCatalog::TLineVector &restLineList,
+      const TLineVector &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam);
 
@@ -108,7 +108,7 @@ protected:
   CLineModelElementList &m_Elements;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
   const CSpectrum &m_inputSpc;
-  const CLineCatalog::TLineVector &m_RestLineList;
+  const TLineVector &m_RestLineList;
   const TFloat64Range &m_lambdaRange;
   std::shared_ptr<CSpectrumModel> m_model;
 

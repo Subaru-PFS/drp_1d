@@ -238,7 +238,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
     return indexes;
   }
 
-  const std::vector<CLine> &linesRef = m_Elements[ind]->GetLines();
+  const TLineVector &linesRef = m_Elements[ind]->GetLines();
   Int32 linetypeRef = m_Elements[ind]->GetElementType();
 
   Int32 xinf = 0;
@@ -268,7 +268,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
       continue;
     }
 
-    const std::vector<CLine> &linesElt = m_Elements[iElts]->GetLines();
+    const TLineVector &linesElt = m_Elements[iElts]->GetLines();
 
     for (Int32 iLineElt = 0; iLineElt < linesElt.size(); iLineElt++) {
       for (Int32 iLineRef = 0; iLineRef < linesRef.size(); iLineRef++) {

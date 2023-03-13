@@ -47,7 +47,7 @@ using namespace std;
 
 CSpectrumModel::CSpectrumModel(CLineModelElementList &elements,
                                std::shared_ptr<const CSpectrum> spc,
-                               const CLineCatalog::TLineVector &restLineList,
+                               const TLineVector &restLineList,
                                std::shared_ptr<CTplModelSolution> tfv)
     : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
       m_SpectrumModel(*(spc)), m_RestLineList(restLineList),

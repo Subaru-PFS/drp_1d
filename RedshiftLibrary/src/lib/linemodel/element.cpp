@@ -53,7 +53,7 @@ using namespace NSEpic;
  *defaults.
  **/
 CLineModelElement::CLineModelElement(
-    std::vector<CLine> rs, const std::string &widthType,
+    TLineVector rs, const std::string &widthType,
     const TLineModelElementParam_ptr &elementParam, TInt32List catalogIndexes)
     : m_Lines(rs), m_fittingGroupInfo("-1"), m_ElementParam(elementParam),
       m_OutsideLambdaRangeOverlapThreshold(
@@ -111,7 +111,7 @@ Int32 CLineModelElement::findElementIndex(Int32 LineCatalogIndex) const {
 }
 
 Int32 CLineModelElement::getLineIndexInCatalog(
-    Int32 idxLine, const CLineCatalog::TLineVector &catalog) const {
+    Int32 idxLine, const TLineVector &catalog) const {
   Int32 lineIndex = undefIdx;
   lineIndex = m_LineCatalogIndexes[idxLine];
   if (lineIndex < 0 || lineIndex >= catalog.size())

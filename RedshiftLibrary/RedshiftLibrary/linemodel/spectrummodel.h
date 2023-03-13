@@ -17,7 +17,7 @@ class CSpectrumModel {
 public:
   CSpectrumModel(CLineModelElementList &elements,
                  std::shared_ptr<const CSpectrum> spc,
-                 const CLineCatalog::TLineVector &m_RestLineList,
+                 const TLineVector &m_RestLineList,
                  std::shared_ptr<CTplModelSolution> tfv);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
@@ -83,7 +83,7 @@ private:
                                  const TInt32List &eIdx_list,
                                  bool substract_abslinesmodel) const;
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
-  const CLineCatalog::TLineVector &m_RestLineList;
+  const TLineVector &m_RestLineList;
   std::shared_ptr<CTplModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model

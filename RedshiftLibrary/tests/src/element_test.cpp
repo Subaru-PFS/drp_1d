@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
   CLine line = CLine("O2", 0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4, 0.5,
                      0.6, 0.7, "group", 0.8);
-  std::vector<CLine> rs;
+  TLineVector rs;
   rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
   CLine line = CLine("Halpha", 6564.61, 2, std::move(profilesym), 2, 1.0, 0.5);
-  std::vector<CLine> rs;
+  TLineVector rs;
   rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
   CLine line = CLine("Halpha", 6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
-  std::vector<CLine> rs;
+  TLineVector rs;
   rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
 
   CLine line = CLine("Halpha", 6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
-  std::vector<CLine> rs;
+  TLineVector rs;
   rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport) {
 
   /*
     CLine line = CLine("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
-    std::vector<CLine> rs;
+    TLineVector rs;
     rs.push_back(line);
     TFloat64List nominalAmplitudes = TFloat64List ();
     nominalAmplitudes.push_back(0.8);

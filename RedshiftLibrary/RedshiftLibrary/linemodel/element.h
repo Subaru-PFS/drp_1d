@@ -79,7 +79,7 @@ class CLineModelElement {
   enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 
 public:
-  CLineModelElement(std::vector<CLine> rs, const std::string &widthType,
+  CLineModelElement(TLineVector rs, const std::string &widthType,
                     const TLineModelElementParam_ptr &elementParam,
                     TInt32List catalogIndexes);
 
@@ -171,8 +171,7 @@ public:
   void resetAsymfitParams();
   Int32 findElementIndex(Int32 LineCatalogIndex) const;
   Int32 findElementIndex(const std::string &LineTagStr) const;
-  Int32 getLineIndexInCatalog(Int32 idxLine,
-                              const CLineCatalog::TLineVector &catalog) const;
+  Int32 getLineIndexInCatalog(Int32 idxLine, const TLineVector &catalog) const;
 
   const TInt32List &getIgmLinesIndices() const { return m_asymLineIndices; };
   const CLineProfile &getLineProfile(Int32 lineIdx) const;
@@ -180,7 +179,7 @@ public:
   Float64 GetSignFactor(Int32 subeIdx) const;
 
   Int32 GetSize() const;
-  const std::vector<CLine> &GetLines() const { return m_Lines; };
+  const TLineVector &GetLines() const { return m_Lines; };
 
   const std::string &GetLineName(Int32 subeIdx) const;
   bool IsOutsideLambdaRange() const;
@@ -216,7 +215,7 @@ public:
   void dumpElement(std::ostream &os) const;
 
 protected:
-  std::vector<CLine> m_Lines;
+  TLineVector m_Lines;
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
 

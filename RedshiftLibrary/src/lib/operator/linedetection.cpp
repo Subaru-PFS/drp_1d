@@ -241,7 +241,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
   // retest
   bool retest_flag = false;
   if (retestPeaks.size() > 0) {
-    // CLineCatalog::TLineVector
+    // TLineVector
     retest_flag = true;
   }
   while (retest_flag) {
@@ -408,8 +408,8 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
                             CLineDetectionResult &result,
                             TInt32RangeList retestPeaks,
                             TGaussParamsList retestGaussParams,
-                            CLineCatalog::TLineVector strongLines,
-                            Int32 winsize, Float64 cut) {
+                            TLineVector strongLines, Int32 winsize,
+                            Float64 cut) {
   Log.LogDebug("Retest %d peaks, winsize = %d, strongLines.size() = %d.",
                retestPeaks.size(), winsize, strongLines.size());
 
@@ -461,7 +461,7 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
  */
 bool CLineDetection::RemoveStrongFromSpectra(
     const CSpectrum &spectrum, CLineDetectionResult &result,
-    CLineCatalog::TLineVector strongLines, TInt32RangeList selectedretestPeaks,
+    TLineVector strongLines, TInt32RangeList selectedretestPeaks,
     TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut) {
 
   const CSpectrumSpectralAxis wavesAxis = spectrum.GetSpectralAxis();

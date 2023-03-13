@@ -78,10 +78,9 @@ public:
 
   void initParameters();
   void initMembers();
-  void LoadCatalog(const CLineCatalog::TLineVector &restLineList);
-  void LoadCatalogOneMultiline(const CLineCatalog::TLineVector &restLineList);
-  void
-  LoadCatalogTwoMultilinesAE(const CLineCatalog::TLineVector &restLineList);
+  void LoadCatalog(const TLineVector &restLineList);
+  void LoadCatalogOneMultiline(const TLineVector &restLineList);
+  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList);
 
   void LogCatalogInfos();
 
@@ -152,7 +151,7 @@ public:
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
   std::shared_ptr<const CSpectrum> m_inputSpc;
-  const CLineCatalog::TLineVector m_RestLineList;
+  const TLineVector m_RestLineList;
 
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
@@ -202,7 +201,7 @@ private:
 
   void SetLSF();
 
-  TInt32List findLineIdxInCatalog(const CLineCatalog::TLineVector &restLineList,
+  TInt32List findLineIdxInCatalog(const TLineVector &restLineList,
                                   const std::string &strTag, Int32 type) const;
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);

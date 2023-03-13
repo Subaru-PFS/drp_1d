@@ -248,18 +248,17 @@ Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
  *line thusly associated to this line. If at least one line was found, save
  *this result in m_Elements.
  **/
-void CLineModelFitting::LoadCatalog(
-    const CLineCatalog::TLineVector &restLineList) {
+void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   Float64 velocityEmission = ps->GetScoped<Float64>("velocityemission");
   Float64 velocityAbsorption = ps->GetScoped<Float64>("velocityabsorption");
 
-  std::vector<CLineCatalog::TLineVector> groupList =
+  std::vector<TLineVector> groupList =
       CLineCatalog::ConvertToGroupList(restLineList);
   for (Int32 ig = 0; ig < groupList.size(); ig++) {
-    std::vector<CLine> lines;
+    TLineVector lines;
     TFloat64List amps;
     TInt32List inds;
     for (Int32 i = 0; i < groupList[ig].size(); i++) {
@@ -280,14 +279,14 @@ void CLineModelFitting::LoadCatalog(
 }
 
 void CLineModelFitting::LoadCatalogOneMultiline(
-    const CLineCatalog::TLineVector &restLineList) {
+    const TLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   Float64 velocityEmission = ps->GetScoped<Float64>("velocityemission");
   Float64 velocityAbsorption = ps->GetScoped<Float64>("velocityabsorption");
 
-  std::vector<CLine> lines;
+  TLineVector lines;
   TFloat64List amps;
   TInt32List inds;
   for (Int32 ir = 0; ir < restLineList.size(); ir++) {
@@ -307,7 +306,7 @@ void CLineModelFitting::LoadCatalogOneMultiline(
 }
 
 void CLineModelFitting::LoadCatalogTwoMultilinesAE(
-    const CLineCatalog::TLineVector &restLineList) {
+    const TLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -318,7 +317,7 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
                                      CLine::nType_Emission};
 
   for (Int32 iType = 0; iType < 2; iType++) {
-    std::vector<CLine> lines;
+    TLineVector lines;
     TFloat64List amps;
     TInt32List inds;
     for (Int32 ir = 0; ir < restLineList.size(); ir++) {
@@ -886,9 +885,10 @@ Float64 CLineModelFitting::getCumulSNROnRange(TInt32Range idxRange) const {
  * \brief Search the line catalog for lines whose name match the argument
  *strTag.
  **/
-TInt32List CLineModelFitting::findLineIdxInCatalog(
-    const CLineCatalog::TLineVector &restLineList, const std::string &strTag,
-    Int32 type) const {
+TInt32List
+CLineModelFitting::findLineIdxInCatalog(const TLineVector &restLineList,
+                                        const std::string &strTag,
+                                        Int32 type) const {
   TInt32List indexes;
   for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
     if (restLineList[iRestLine].GetType() != type) {

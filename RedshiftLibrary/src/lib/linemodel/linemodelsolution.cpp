@@ -40,8 +40,7 @@
 
 using namespace NSEpic;
 
-CLineModelSolution::CLineModelSolution(
-    const CLineCatalog::TLineVector &restLineList)
+CLineModelSolution::CLineModelSolution(const TLineVector &restLineList)
     : COperatorResult("CLineModelSolution"), lineId(restLineList.size(), -1),
       ElementId(restLineList.size(), undefIdx),
       Amplitudes(restLineList.size(), NAN),
