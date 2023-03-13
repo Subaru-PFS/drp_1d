@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(Instance) {
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
-  std::shared_ptr<TFittedData> fdata =
-      std::make_shared<TFittedData>(1.0, 1.1, nominalAmplitudes, 1);
+  TLineModelElementParam_ptr fdata =
+      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
 
   BOOST_CHECK_THROW(CLineModelElement(rs, "foobar", fdata, catalogIndexes),
                     GlobalException);
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  std::shared_ptr<TFittedData> fdata =
-      std::make_shared<TFittedData>(1.0, 1.1, nominalAmplitudes, 1);
+  TLineModelElementParam_ptr fdata =
+      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
 
   CLineModelElement elementID =
       CLineModelElement(rs, "instrumentdriven", fdata, catalogIndexes);
@@ -182,8 +182,8 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   TAsymParams _asymParams = {1., 4.5, 0.};
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
-  std::shared_ptr<TFittedData> fdata =
-      std::make_shared<TFittedData>(1.0, 1.1, nominalAmplitudes, 1);
+  TLineModelElementParam_ptr fdata =
+      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
 
   CLineModelElement element =
       CLineModelElement(rs, "combined", fdata, catalogIndexes);
@@ -223,8 +223,8 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  std::shared_ptr<TFittedData> fdata =
-      std::make_shared<TFittedData>(1.0, 1.1, nominalAmplitudes, 1);
+  std::shared_ptr<TLineModelElementParam> fdata =
+      std::make_shared<TLineModelElementParam>(1.0, 1.1, nominalAmplitudes, 1);
 
   CLineModelElement element =
       CLineModelElement(rs, "velocitydriven", fdata, catalogIndexes);

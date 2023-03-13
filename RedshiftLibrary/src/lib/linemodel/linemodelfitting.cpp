@@ -270,11 +270,11 @@ void CLineModelFitting::LoadCatalog(
       lines.push_back(groupList[ig][i]);
     }
     if (lines.size() > 0) {
-      m_fittedData.push_back(std::make_shared<TFittedData>(
+      m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
           velocityEmission, velocityAbsorption, amps, lines.size()));
       m_Elements.push_back(
           std::shared_ptr<CLineModelElement>(new CLineModelElement(
-              lines, m_LineWidthType, m_fittedData.back(), inds)));
+              lines, m_LineWidthType, m_ElementParam.back(), inds)));
     }
   }
 }
@@ -297,12 +297,12 @@ void CLineModelFitting::LoadCatalogOneMultiline(
   }
 
   if (lines.size() > 0) {
-    m_fittedData.push_back(std::make_shared<TFittedData>(
+    m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
         velocityEmission, velocityAbsorption, amps, lines.size()));
 
     m_Elements.push_back(
         std::shared_ptr<CLineModelElement>(new CLineModelElement(
-            lines, m_LineWidthType, m_fittedData.back(), inds)));
+            lines, m_LineWidthType, m_ElementParam.back(), inds)));
   }
 }
 
@@ -330,12 +330,12 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
     }
 
     if (lines.size() > 0) {
-      m_fittedData.push_back(std::make_shared<TFittedData>(
+      m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
           velocityEmission, velocityAbsorption, amps, lines.size()));
 
       m_Elements.push_back(
           std::shared_ptr<CLineModelElement>(new CLineModelElement(
-              lines, m_LineWidthType, m_fittedData.back(), inds)));
+              lines, m_LineWidthType, m_ElementParam.back(), inds)));
     }
   }
 }
@@ -541,7 +541,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
   m_fittingmethod = fitMethod;
   m_fitter = CAbstractFitter::makeFitter(fitMethod, m_Elements, m_inputSpc,
                                          m_lambdaRange, m_model, m_RestLineList,
-                                         m_continuumManager, m_fittedData);
+                                         m_continuumManager, m_ElementParam);
 }
 
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
@@ -977,8 +977,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
   CLineModelSolution modelSolution(m_RestLineList);
   modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
 
-  modelSolution.EmissionVelocity = m_fittedData[0]->m_VelocityEmission;
-  modelSolution.AbsorptionVelocity = m_fittedData[0]->m_VelocityAbsorption;
+  modelSolution.EmissionVelocity = m_ElementParam[0]->m_VelocityEmission;
+  modelSolution.AbsorptionVelocity = m_ElementParam[0]->m_VelocityAbsorption;
   modelSolution.Redshift = m_model->m_Redshift;
 
   TInt32List eIdx_oii;
@@ -1176,7 +1176,7 @@ void CLineModelFitting::SetLSF() {
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
 
   for (Int32 j = 0; j < m_Elements.size(); j++) {
-    m_fittedData[j]->m_VelocityEmission = vel;
+    m_ElementParam[j]->m_VelocityEmission = vel;
   }
 }
 
@@ -1184,13 +1184,13 @@ void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
                                                    const TInt32List &inds) {
 
   for (auto idxElt : inds)
-    m_fittedData[idxElt]->m_VelocityEmission = vel;
+    m_ElementParam[idxElt]->m_VelocityEmission = vel;
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
 
   for (Int32 j = 0; j < m_Elements.size(); j++) {
-    m_fittedData[j]->m_VelocityAbsorption = vel;
+    m_ElementParam[j]->m_VelocityAbsorption = vel;
   }
 }
 
@@ -1198,15 +1198,15 @@ void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
                                                      const TInt32List &inds) {
 
   for (auto idxElt : inds)
-    m_fittedData[idxElt]->m_VelocityAbsorption = vel;
+    m_ElementParam[idxElt]->m_VelocityAbsorption = vel;
 }
 
 Float64 CLineModelFitting::GetVelocityEmission() const {
-  return m_fittedData[0]->m_VelocityEmission;
+  return m_ElementParam[0]->m_VelocityEmission;
 }
 
 Float64 CLineModelFitting::GetVelocityAbsorption() const {
-  return m_fittedData[0]->m_VelocityAbsorption;
+  return m_ElementParam[0]->m_VelocityAbsorption;
 }
 
 Float64 CLineModelFitting::GetRedshift() const { return m_model->m_Redshift; }

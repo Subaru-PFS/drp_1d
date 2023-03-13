@@ -16,10 +16,10 @@ CAbstractFitter::CAbstractFitter(
     std::shared_ptr<const TLambdaRange> lambdaRange,
     std::shared_ptr<CSpectrumModel> spectrumModel,
     const CLineCatalog::TLineVector &restLineList,
-    const std::vector<std::shared_ptr<TFittedData>> &fittedData)
+    const std::vector<TLineModelElementParam_ptr> &elementParam)
     : m_Elements(elements), m_inputSpc(*(inputSpectrum)),
       m_RestLineList(restLineList), m_lambdaRange(*(lambdaRange)),
-      m_model(spectrumModel), m_fittedData(fittedData) {
+      m_model(spectrumModel), m_ElementParam(elementParam) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
   if (Context.GetCurrentMethod() == "LineModelSolve") {
@@ -43,36 +43,36 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::shared_ptr<CSpectrumModel> spectrumModel,
     const CLineCatalog::TLineVector &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const std::vector<std::shared_ptr<TFittedData>> &fittedData) {
+    const std::vector<TLineModelElementParam_ptr> &elementParam) {
   if (fittingMethod == "hybrid")
     return std::make_shared<CHybridFitter>(
         CHybridFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList, fittedData));
+                      restLineList, elementParam));
   else if (fittingMethod == "svd")
     return std::make_shared<CSvdFitter>(CSvdFitter(elements, inputSpectrum,
                                                    lambdaRange, spectrumModel,
-                                                   restLineList, fittedData));
+                                                   restLineList, elementParam));
   else if (fittingMethod == "svdlc")
     return std::make_shared<CSvdlcFitter>(
         CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                     restLineList, fittedData, continuumManager));
+                     restLineList, elementParam, continuumManager));
   else if (fittingMethod == "svdlcp2")
     return std::make_shared<CSvdlcFitter>(
         CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                     restLineList, fittedData, continuumManager, 2));
+                     restLineList, elementParam, continuumManager, 2));
 
   else if (fittingMethod == "ones")
-    return std::make_shared<COnesFitter>(COnesFitter(elements, inputSpectrum,
-                                                     lambdaRange, spectrumModel,
-                                                     restLineList, fittedData));
+    return std::make_shared<COnesFitter>(
+        COnesFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                    restLineList, elementParam));
   else if (fittingMethod == "random")
     return std::make_shared<CRandomFitter>(
         CRandomFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList, fittedData));
+                      restLineList, elementParam));
   else if (fittingMethod == "individual")
     return std::make_shared<CIndividualFitter>(
         CIndividualFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                          restLineList, fittedData));
+                          restLineList, elementParam));
   else
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Unknown fitting method " << fittingMethod);
@@ -174,13 +174,13 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
                                    Float64 redshift, Int32 lineIdx) {
   auto &elt = m_Elements[eltIndex];
   Int32 nLines = elt->GetSize();
-  auto &fittedData = m_fittedData[eltIndex];
+  auto &elementParam = m_ElementParam[eltIndex];
 
-  fittedData->m_FittedAmplitudes.assign(nLines, NAN);
-  fittedData->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+  elementParam->m_FittedAmplitudes.assign(nLines, NAN);
+  elementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
 
   if (elt->IsOutsideLambdaRange()) {
-    fittedData->m_fitAmplitude = NAN;
+    elementParam->m_fitAmplitude = NAN;
     elt->SetSumCross(NAN);
     elt->SetSumGauss(NAN);
     elt->SetDtmFree(NAN);
@@ -191,30 +191,31 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
                        continuumfluxAxis, redshift, lineIdx);
 
   if (std::isnan(elt->GetSumGauss())) {
-    fittedData->m_fitAmplitude = NAN;
+    elementParam->m_fitAmplitude = NAN;
     elt->SetSumCross(NAN);
     return;
   }
 
   elt->SetSumCross(std::max(0.0, elt->GetDtmFree()));
   Float64 A = elt->GetSumCross() / elt->GetSumGauss();
-  fittedData->m_fitAmplitude = A;
+  elementParam->m_fitAmplitude = A;
 
   for (Int32 k = 0; k < nLines; k++) {
     if (elt->IsOutsideLambdaRange(k)) {
       continue;
     }
-    fittedData->m_FittedAmplitudes[k] = A * fittedData->m_NominalAmplitudes[k];
+    elementParam->m_FittedAmplitudes[k] =
+        A * elementParam->m_NominalAmplitudes[k];
 
     // limit the absorption to 0.0-1.0, so that it's never <0
     //*
     if (elt->getSignFactor(k) == -1 && m_absLinesLimit > 0.0 &&
-        fittedData->m_FittedAmplitudes[k] > m_absLinesLimit) {
-      fittedData->m_FittedAmplitudes[k] = m_absLinesLimit;
+        elementParam->m_FittedAmplitudes[k] > m_absLinesLimit) {
+      elementParam->m_FittedAmplitudes[k] = m_absLinesLimit;
     }
 
-    fittedData->m_FittedAmplitudeErrorSigmas[k] =
-        fittedData->m_NominalAmplitudes[k] * 1.0 / sqrt(elt->GetSumGauss());
+    elementParam->m_FittedAmplitudeErrorSigmas[k] =
+        elementParam->m_NominalAmplitudes[k] * 1.0 / sqrt(elt->GetSumGauss());
   }
   return;
 }

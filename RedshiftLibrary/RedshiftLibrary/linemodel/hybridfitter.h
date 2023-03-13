@@ -53,7 +53,7 @@ public:
                 std::shared_ptr<const TLambdaRange> lambdaRange,
                 std::shared_ptr<CSpectrumModel> spectrumModel,
                 const CLineCatalog::TLineVector &restLineList,
-                const std::vector<std::shared_ptr<TFittedData>> &fittedData);
+                const std::vector<TLineModelElementParam_ptr> &elementParam);
 
   void fit(Float64 redshift) override;
 

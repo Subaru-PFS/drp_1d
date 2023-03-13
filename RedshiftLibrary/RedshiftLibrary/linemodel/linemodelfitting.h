@@ -220,7 +220,7 @@ private:
 
   std::string m_LineWidthType;
 
-  std::vector<std::shared_ptr<TFittedData>> m_fittedData;
+  std::vector<TLineModelElementParam_ptr> m_ElementParam;
 
   Float64 m_nominalWidthDefault;
 

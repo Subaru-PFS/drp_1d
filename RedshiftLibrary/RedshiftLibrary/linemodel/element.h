@@ -51,10 +51,11 @@
 
 namespace NSEpic {
 
-struct TFittedData {
+struct TLineModelElementParam {
 
-  TFittedData(const Float64 velocityEmission, const Float64 velocityAbsorption,
-              TFloat64List nominalAmplitudes, const Int32 nbLines)
+  TLineModelElementParam(const Float64 velocityEmission,
+                         const Float64 velocityAbsorption,
+                         TFloat64List nominalAmplitudes, const Int32 nbLines)
       : m_VelocityEmission(velocityEmission),
         m_VelocityAbsorption(velocityAbsorption),
         m_FittedAmplitudes(nbLines, NAN),
@@ -68,6 +69,9 @@ struct TFittedData {
   Float64 m_fitAmplitude = NAN;
   TFloat64List m_NominalAmplitudes;
 };
+
+using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
+
 /**
  * \ingroup Redshift
  */
@@ -76,7 +80,7 @@ class CLineModelElement {
 
 public:
   CLineModelElement(std::vector<CLine> rs, const std::string &widthType,
-                    const std::shared_ptr<TFittedData> &,
+                    const TLineModelElementParam_ptr &elementParam,
                     TInt32List catalogIndexes);
 
   Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift,
@@ -221,7 +225,7 @@ protected:
   Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;
 
-  const std::shared_ptr<TFittedData> m_fittedData;
+  const TLineModelElementParam_ptr m_ElementParam;
 
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;
