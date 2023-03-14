@@ -347,15 +347,9 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
             {asymWidthCoeff, asymAlphaCoeff, delta});
 
         // idxLineLyaE = -1;
-        std::ostringstream oss;
-        m_Elements.debug(oss);
-        Log.LogInfo(oss.str());
         fitAmplitude(idxLyaE, spectralAxis,
                      m_model->getSpcFluxAxisNoContinuum(),
                      m_model->getContinuumFluxAxis(), redshift, idxLineLyaE);
-        oss.clear();
-        m_Elements.debug(oss);
-        Log.LogInfo(oss.str());
 
         Float64 m = 0; // TODO DV why initializing to m_dTransposeD ?;
         if (1) {
@@ -363,7 +357,6 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
           m_model->refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
           m = m_model->getModelErrorUnderElement(idxLyaE,
                                                  m_model->getSpcFluxAxis());
-          Log.LogInfo("Fitting Lya profi: merit=%e", m);
         } else {
           m = getLeastSquareMeritFast(idxLyaE);
         }
