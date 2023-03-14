@@ -57,15 +57,13 @@ BOOST_AUTO_TEST_CASE(Instance) {
   CLine line = CLine("O2", 0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4, 0.5,
                      0.6, 0.7, "group", 0.8);
   TLineVector rs;
-  rs.push_back(line);
-  TFloat64List nominalAmplitudes = TFloat64List();
-  nominalAmplitudes.push_back(0.8);
+  rs.push_back(std::move(line));
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
-  TLineModelElementParam_ptr fdata = std::make_shared<TLineModelElementParam>(
-      rs, 1.0, 1.1, nominalAmplitudes, catalogIndexes);
+  TLineModelElementParam_ptr fdata =
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
 
   BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), GlobalException);
 
@@ -106,15 +104,14 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
   CLine line = CLine("Halpha", 6564.61, 2, std::move(profilesym), 2, 1.0, 0.5);
+  line.setNominalAmplitude(0.8);
   TLineVector rs;
-  rs.push_back(line);
-  TFloat64List nominalAmplitudes = TFloat64List();
-  nominalAmplitudes.push_back(0.8);
+  rs.push_back(std::move(line));
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  TLineModelElementParam_ptr fdata = std::make_shared<TLineModelElementParam>(
-      rs, 1.0, 1.1, nominalAmplitudes, catalogIndexes);
+  TLineModelElementParam_ptr fdata =
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
 
   CLineModelElement elementID = CLineModelElement(fdata, "instrumentdriven");
   // CLineModelElement elementfixed = CLineModelElement(rs,  "fixed", 1.0, 1.1,
@@ -164,10 +161,9 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
   CLine line = CLine("Halpha", 6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
+  line.setNominalAmplitude(0.8);
   TLineVector rs;
-  rs.push_back(line);
-  TFloat64List nominalAmplitudes = TFloat64List();
-  nominalAmplitudes.push_back(0.8);
+  rs.push_back(std::move(line));
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
@@ -177,8 +173,8 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   TAsymParams _asymParams = {1., 4.5, 0.};
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
-  TLineModelElementParam_ptr fdata = std::make_shared<TLineModelElementParam>(
-      rs, 1.0, 1.1, nominalAmplitudes, catalogIndexes);
+  TLineModelElementParam_ptr fdata =
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
 
   CLineModelElement element = CLineModelElement(fdata, "combined");
 
@@ -210,16 +206,16 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
 
   CLine line = CLine("Halpha", 6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
+  line.setNominalAmplitude(0.8);
   TLineVector rs;
-  rs.push_back(line);
+  rs.push_back(std::move(line));
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   std::shared_ptr<TLineModelElementParam> fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, nominalAmplitudes,
-                                               catalogIndexes);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
 
   CLineModelElement element = CLineModelElement(fdata, "velocitydriven");
 

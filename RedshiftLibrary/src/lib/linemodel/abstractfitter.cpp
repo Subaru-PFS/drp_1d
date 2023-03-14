@@ -262,7 +262,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
   for (Int32 iO = 0; iO < nSteps; iO++) {
     // set offset value
     if (atLeastOneOffsetToFit)
-      elt->SetOffset(min + step * iO);
+      elt->SetAllOffsets(min + step * iO);
 
     // fit for this offset
     fitAmplitude(eltIndex, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
@@ -281,7 +281,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
   if (idxBestMerit >= 0 && atLeastOneOffsetToFit) {
     // set offset value
     if (atLeastOneOffsetToFit)
-      elt->SetOffset(min + step * idxBestMerit);
+      elt->SetAllOffsets(min + step * idxBestMerit);
 
     // fit again for this offset
     fitAmplitude(eltIndex, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,

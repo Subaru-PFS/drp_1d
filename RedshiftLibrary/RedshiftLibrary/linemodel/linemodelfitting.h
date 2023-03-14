@@ -198,8 +198,7 @@ private:
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
   void AddElement(TLineVector &&lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, TFloat64List &&amps,
-                  TInt32List &&inds);
+                  Float64 velocityAbsorption, TInt32List &&inds);
 
   void SetLSF();
 

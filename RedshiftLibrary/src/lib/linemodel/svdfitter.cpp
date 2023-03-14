@@ -61,7 +61,7 @@ void CSvdFitter::setOffset(const TInt32List &EltsIdx, Int32 offsetCount) const {
 
   Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
   for (Int32 iE : EltsIdx)
-    m_Elements[iE]->SetOffset(offset);
+    m_Elements[iE]->SetAllOffsets(offset);
 
   return;
 }

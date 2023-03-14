@@ -48,6 +48,25 @@
 
 using namespace NSEpic;
 
+TLineModelElementParam::TLineModelElementParam(TLineVector lines,
+                                               Float64 velocityEmission,
+                                               Float64 velocityAbsorption,
+                                               TInt32List lineCatalogIndexes)
+    : m_VelocityEmission(velocityEmission),
+      m_VelocityAbsorption(velocityAbsorption),
+      m_FittedAmplitudes(lines.size(), NAN),
+      m_FittedAmplitudeErrorSigmas(lines.size(), NAN), m_fitAmplitude(NAN),
+      m_Lines(std::move(lines)),
+      m_LineCatalogIndexes(std::move(lineCatalogIndexes)),
+      m_fittingGroupInfo("-1") {
+  m_NominalAmplitudes.reserve(m_Lines.size());
+  m_Offsets.reserve(m_Lines.size());
+  for (const auto &line : m_Lines) {
+    m_NominalAmplitudes.push_back(line.GetNominalAmplitude());
+    m_Offsets.push_back(line.GetOffset());
+  }
+}
+
 /**
  * \brief Constructs the object setting members according to arguments and
  *defaults.
@@ -301,9 +320,16 @@ void CLineModelElement::SetFittingGroupInfo(const std::string &val) {
   m_ElementParam->m_fittingGroupInfo = val;
 }
 
-void CLineModelElement::SetOffset(Float64 val) {
-  for (auto &line : m_ElementParam->m_Lines)
-    line.SetOffset(val);
+void CLineModelElement::SetAllOffsets(Float64 val) {
+  for (size_t i = 0; i < GetSize(); ++i) {
+    if (m_ElementParam->m_Lines[i].GetOffsetFitEnabled())
+      m_ElementParam->m_Offsets[i] = val;
+  }
+}
+
+void CLineModelElement::SetOffset(Int32 lineIdx, Float64 val) {
+  if (m_ElementParam->m_Lines[lineIdx].GetOffsetFitEnabled())
+    m_ElementParam->m_Offsets[lineIdx] = val;
 }
 
 void CLineModelElement::SetLineProfile(Int32 lineIdx,
@@ -688,7 +714,7 @@ void CLineModelElement::getObservedPositionAndLineWidth(
 Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift,
                                                bool doAsymfitdelta) const {
   Float64 dzOffset =
-      m_ElementParam->m_Lines[subeIdx].GetOffset() / m_speedOfLightInVacuum;
+      m_ElementParam->m_Offsets[subeIdx] / m_speedOfLightInVacuum;
 
   Float64 mu = m_ElementParam->m_Lines[subeIdx].GetPosition() * (1 + redshift) *
                (1 + dzOffset);
@@ -1046,8 +1072,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
-    Float64 dzOffset =
-        m_ElementParam->m_Lines[k2].GetOffset() / m_speedOfLightInVacuum;
+    Float64 dzOffset = m_ElementParam->m_Offsets[k2] / m_speedOfLightInVacuum;
     Float64 lamdba0 =
         m_ElementParam->m_Lines[k2].GetPosition() * (1 + dzOffset);
     Float64 mu = NAN;
@@ -1090,8 +1115,7 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
-    Float64 dzOffset =
-        m_ElementParam->m_Lines[k2].GetOffset() / m_speedOfLightInVacuum;
+    Float64 dzOffset = m_ElementParam->m_Offsets[k2] / m_speedOfLightInVacuum;
     Float64 lamdba0 =
         m_ElementParam->m_Lines[k2].GetPosition() * (1 + dzOffset);
     Float64 mu = NAN;

@@ -55,16 +55,7 @@ struct TLineModelElementParam {
 
   TLineModelElementParam(TLineVector lines, Float64 velocityEmission,
                          Float64 velocityAbsorption,
-                         TFloat64List nominalAmplitudes,
-                         TInt32List lineCatalogIndexes)
-      : m_VelocityEmission(velocityEmission),
-        m_VelocityAbsorption(velocityAbsorption),
-        m_FittedAmplitudes(lines.size(), NAN),
-        m_FittedAmplitudeErrorSigmas(lines.size(), NAN), m_fitAmplitude(NAN),
-        m_NominalAmplitudes(std::move(nominalAmplitudes)),
-        m_Lines(std::move(lines)),
-        m_LineCatalogIndexes(std::move(lineCatalogIndexes)),
-        m_fittingGroupInfo("-1") {}
+                         TInt32List lineCatalogIndexes);
 
   Float64 m_VelocityEmission = NAN;
   Float64 m_VelocityAbsorption = NAN;
@@ -72,6 +63,7 @@ struct TLineModelElementParam {
   TFloat64List m_FittedAmplitudeErrorSigmas;
   Float64 m_fitAmplitude = NAN;
   TFloat64List m_NominalAmplitudes;
+  TFloat64List m_Offsets;
   TLineVector m_Lines;
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
@@ -212,7 +204,12 @@ public:
   const std::string &GetFittingGroupInfo() const;
   void SetFittingGroupInfo(const std::string &val);
 
-  void SetOffset(Float64 val);
+  void SetAllOffsets(Float64 val);
+  void SetOffset(Int32 lineIdx, Float64 val);
+  Float64 GetOffset(Int32 lineIdx) const {
+    return m_ElementParam->m_Offsets[lineIdx];
+  }
+
   void SetLineProfile(Int32 lineIdx, CLineProfile_ptr &&profile);
 
   bool isLineActiveOnSupport(Int32 line, Int32 lineIdx) const;

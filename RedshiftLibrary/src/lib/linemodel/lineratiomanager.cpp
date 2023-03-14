@@ -69,6 +69,13 @@ CLineRatioManager::CLineRatioManager(
     m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaforcedisablefit");
   }
 }
+
+void CLineRatioManager::resetLambdaOffsets() {
+  for (auto &elt : m_Elements)
+    for (size_t lineIdx = 0; lineIdx < elt->GetSize(); ++lineIdx)
+      elt->SetOffset(lineIdx, elt->GetLines()[lineIdx].GetOffset());
+}
+
 /**
  * @brief CLineModelFitting::setLyaProfile
  * If a Lya line is present with SYMIGM profile, fit igmIdx
@@ -179,6 +186,7 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
 }
 
 bool CLineRatioManager::init(Float64 redshift, Int32 itratio) {
+  resetLambdaOffsets();
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
   setLyaProfile(redshift, m_RestLineList);

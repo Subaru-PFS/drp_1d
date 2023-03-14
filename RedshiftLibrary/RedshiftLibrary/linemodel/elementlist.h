@@ -104,7 +104,6 @@ public:
 
   TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
 
-  Int32 m__count = 0;
   const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {
     return m_Elements[i];
   }
