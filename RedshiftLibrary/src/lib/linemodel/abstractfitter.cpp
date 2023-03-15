@@ -99,11 +99,13 @@ void CAbstractFitter::logParameters() {
                 << " m_opt_lya_fit_delta_step" << m_opt_lya_fit_delta_step);
 }
 
-void CAbstractFitter::computeCrossProducts(
-    CLineModelElement &elt, const CSpectrumSpectralAxis &spectralAxis,
-    const CSpectrumFluxAxis &noContinuumfluxAxis,
-    const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
-    Int32 lineIdx) {
+void CAbstractFitter::computeCrossProducts(CLineModelElement &elt,
+                                           Float64 redshift, Int32 lineIdx) {
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
+  const CSpectrumFluxAxis &noContinuumfluxAxis =
+      m_model->getSpcFluxAxisNoContinuum();
+  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
   Float64 sumCross = 0.0;
   Float64 sumGauss = 0.0;
@@ -167,11 +169,8 @@ void CAbstractFitter::computeCrossProducts(
   elt.SetDtmFree(dtmFree);
 }
 
-void CAbstractFitter::fitAmplitude(Int32 eltIndex,
-                                   const CSpectrumSpectralAxis &spectralAxis,
-                                   const CSpectrumFluxAxis &noContinuumfluxAxis,
-                                   const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Float64 redshift, Int32 lineIdx) {
+void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
+                                   Int32 lineIdx) {
   auto &elt = m_Elements[eltIndex];
   Int32 nLines = elt->GetSize();
   auto &elementParam = m_ElementParam[eltIndex];
@@ -187,8 +186,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
     return;
   }
 
-  computeCrossProducts(*elt, spectralAxis, noContinuumfluxAxis,
-                       continuumfluxAxis, redshift, lineIdx);
+  computeCrossProducts(*elt, redshift, lineIdx);
 
   if (std::isnan(elt->GetSumGauss())) {
     elementParam->m_fitAmplitude = NAN;
@@ -220,6 +218,41 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
   return;
 }
 
+void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
+                                      Int32 offsetCount) const {
+
+  Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
+  for (Int32 iE : EltsIdx)
+    m_Elements[iE]->SetAllOffsets(offset);
+
+  return;
+}
+
+bool CAbstractFitter::HasLambdaOffsetFitting(TInt32List EltsIdx,
+                                             bool enableOffsetFitting) const {
+  bool atLeastOneOffsetToFit = false;
+  if (enableOffsetFitting) {
+    for (Int32 iE : EltsIdx)
+      for (const auto &line : m_Elements[iE]->GetLines())
+        // check if the line is to be fitted
+        if (line.GetOffsetFitEnabled()) {
+          atLeastOneOffsetToFit = true;
+          break;
+        }
+  }
+  return atLeastOneOffsetToFit;
+}
+
+Int32 CAbstractFitter::GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const {
+  Int32 nSteps =
+      atLeastOneOffsetToFit
+          ? int((m_LambdaOffsetMax - m_LambdaOffsetMin) / m_LambdaOffsetStep +
+                0.5)
+          : 1;
+
+  return nSteps;
+}
+
 /**
  * @brief CAbstractFitter::fitAmplitudeAndLambdaOffset
  * Fit the amplitudes and a unique Offset for all lines by using the
@@ -230,25 +263,14 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex,
  * @param redshift
  * @param lineIdx
  */
-void CAbstractFitter::fitAmplitudeAndLambdaOffset(
-    Int32 eltIndex, const CSpectrumSpectralAxis &spectralAxis,
-    const CSpectrumFluxAxis &noContinuumfluxAxis,
-    const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx,
-    bool enableOffsetFitting, Float64 step, Float64 min, Float64 max) {
-  auto &elt = m_Elements[eltIndex];
-  Int32 nLines = elt->GetSize();
-  Int32 nSteps = int((max - min) / step + 0.5);
+void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
+                                                  Float64 redshift,
+                                                  Int32 lineIdx,
+                                                  bool enableOffsetFitting) {
 
-  bool atLeastOneOffsetToFit = false;
-  if (enableOffsetFitting) {
-    for (Int32 iR = 0; iR < nLines; iR++) {
-      // check if the line is to be fitted
-      if (elt->GetLines()[iR].GetOffsetFitEnabled()) {
-        atLeastOneOffsetToFit = true;
-        break;
-      }
-    }
-  }
+  bool atLeastOneOffsetToFit =
+      HasLambdaOffsetFitting({eltIndex}, enableOffsetFitting);
+  Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
 
   if (!atLeastOneOffsetToFit) {
     Log.LogDebug("    multiline: no offsets to fit");
@@ -262,11 +284,10 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
   for (Int32 iO = 0; iO < nSteps; iO++) {
     // set offset value
     if (atLeastOneOffsetToFit)
-      elt->SetAllOffsets(min + step * iO);
+      setLambdaOffset({eltIndex}, iO);
 
     // fit for this offset
-    fitAmplitude(eltIndex, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
-                 redshift, lineIdx);
+    fitAmplitude(eltIndex, redshift, lineIdx);
 
     // check fitting
     if (atLeastOneOffsetToFit) {
@@ -281,11 +302,10 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
   if (idxBestMerit >= 0 && atLeastOneOffsetToFit) {
     // set offset value
     if (atLeastOneOffsetToFit)
-      elt->SetAllOffsets(min + step * idxBestMerit);
+      setLambdaOffset({eltIndex}, idxBestMerit);
 
     // fit again for this offset
-    fitAmplitude(eltIndex, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
-                 redshift, lineIdx);
+    fitAmplitude(eltIndex, redshift, lineIdx);
   }
 }
 
@@ -293,7 +313,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
 Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 idxLine) const {
-  Float64 fit = -1; // TODO restore getLeastSquareContinuumMeritFast();
+  Float64 fit = 0.; // TODO restore getLeastSquareContinuumMeritFast();
   Int32 istart = 0;
   Int32 iend = m_Elements.size();
   if (idxLine != undefIdx) {
@@ -316,7 +336,6 @@ Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 idxLine) const {
 TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
                                                const Int32 &idxLineLyaE) {
 
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
   // 3. find the best width and asym coeff. parameters
   Float64 widthCoeffStep = m_opt_lya_fit_width_step;
   Float64 widthCoeffMin = m_opt_lya_fit_width_min;
@@ -347,9 +366,7 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
             {asymWidthCoeff, asymAlphaCoeff, delta});
 
         // idxLineLyaE = -1;
-        fitAmplitude(idxLyaE, spectralAxis,
-                     m_model->getSpcFluxAxisNoContinuum(),
-                     m_model->getContinuumFluxAxis(), redshift, idxLineLyaE);
+        fitAmplitude(idxLyaE, redshift, idxLineLyaE);
 
         Float64 m = 0; // TODO DV why initializing to m_dTransposeD ?;
         if (1) {
@@ -392,8 +409,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
       m_Elements[iElts]->getLineProfile(idxLine.front()).getIGMIdxCount();
   for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
     m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
-    fitAmplitude(iElts, spectralAxis, m_model->getSpcFluxAxisNoContinuum(),
-                 m_model->getContinuumFluxAxis(), redshift);
+    fitAmplitude(iElts, redshift);
 
     m_model->refreshModelUnderElements(TInt32List(1, iElts));
     Float64 m =

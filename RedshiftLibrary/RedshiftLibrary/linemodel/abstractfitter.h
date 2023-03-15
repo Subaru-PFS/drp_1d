@@ -83,27 +83,22 @@ public:
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
-  void computeCrossProducts(CLineModelElement &elt,
-                            const CSpectrumSpectralAxis &spectralAxis,
-                            const CSpectrumFluxAxis &noContinuumfluxAxis,
-                            const CSpectrumFluxAxis &continuumfluxAxis,
-                            Float64 redshift, Int32 lineIdx);
+  void computeCrossProducts(CLineModelElement &elt, Float64 redshift,
+                            Int32 lineIdx);
 
-  void fitAmplitude(Int32 eltIndex, const CSpectrumSpectralAxis &spectralAxis,
-                    const CSpectrumFluxAxis &fluxAxis,
-                    const CSpectrumFluxAxis &continuumfluxAxis,
-                    Float64 redshift, Int32 lineIdx = undefIdx);
+  void fitAmplitude(Int32 eltIndex, Float64 redshift, Int32 lineIdx = undefIdx);
 
-  void fitAmplitudeAndLambdaOffset(Int32 eltIndex,
-                                   const CSpectrumSpectralAxis &spectralAxis,
-                                   const CSpectrumFluxAxis &fluxAxis,
-                                   const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Float64 redshift, Int32 lineIdx = undefIdx,
-                                   bool enableOffsetFitting = true,
-                                   Float64 step = 25., Float64 min = -400.,
-                                   Float64 max = 400.);
+  virtual void fitAmplitudeAndLambdaOffset(Int32 eltIndex, Float64 redshift,
+                                           Int32 lineIdx = undefIdx,
+                                           bool enableOffsetFitting = true);
 
   Float64 getLeastSquareMeritFast(Int32 idxLine = -1) const;
+
+  void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
+
+  bool HasLambdaOffsetFitting(TInt32List EltsIdx,
+                              bool enableOffsetFitting) const;
+  Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
   CLineModelElementList &m_Elements;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;

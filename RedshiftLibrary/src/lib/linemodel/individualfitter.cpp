@@ -48,8 +48,6 @@ using namespace std;
 // overlap
 void CIndividualFitter::fit(Float64 redshift) {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    fitAmplitude(iElts, m_inputSpc.GetSpectralAxis(),
-                 m_model->getSpcFluxAxisNoContinuum(),
-                 m_model->getContinuumFluxAxis(), redshift);
+    fitAmplitude(iElts, redshift);
   }
 }

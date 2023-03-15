@@ -52,29 +52,22 @@ void CSvdFitter::fit(Float64 redshift) {
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
-  fitAmplitudesLinSolveAndLambdaOffset(
-      validEltsIdx, m_inputSpc.GetSpectralAxis(), ampsfitted, errorsfitted,
-      m_enableLambdaOffsetsFit, redshift);
-}
-
-void CSvdFitter::setOffset(const TInt32List &EltsIdx, Int32 offsetCount) const {
-
-  Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
-  for (Int32 iE : EltsIdx)
-    m_Elements[iE]->SetAllOffsets(offset);
-
-  return;
+  fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, ampsfitted, errorsfitted,
+                                       m_enableLambdaOffsetsFit, redshift);
 }
 
 /**
  * \brief Use GSL to fit linearly the elements listed in argument EltsIdx.
  * If size of argument EltsIdx is less than 1 return -1.
  **/
-Int32 CSvdFitter::fitAmplitudesLinSolve(
-    const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-    const CSpectrumFluxAxis &fluxAxis,
-    const CSpectrumFluxAxis &continuumfluxAxis, TFloat64List &ampsfitted,
-    TFloat64List &errorsfitted, Float64 redshift) {
+Int32 CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
+                                        TFloat64List &ampsfitted,
+                                        TFloat64List &errorsfitted,
+                                        Float64 redshift) {
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
+  const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxisNoContinuum();
+  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
   bool useAmpOffset = m_enableAmplitudeOffsets;
   Int32 idxAmpOffset = -1;
@@ -222,43 +215,27 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(
 }
 
 Int32 CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(
-    TInt32List EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-    std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted,
-    bool enableOffsetFitting, Float64 redshift) {
+    TInt32List EltsIdx, std::vector<Float64> &ampsfitted,
+    std::vector<Float64> &errorsfitted, bool enableOffsetFitting,
+    Float64 redshift) {
 
   const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxisNoContinuum();
-  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
   Int32 ret = -1;
 
-  bool atLeastOneOffsetToFit = false;
-  if (enableOffsetFitting) {
-    for (Int32 iE : EltsIdx)
-      for (const auto &line : m_Elements[iE]->GetLines())
-        // check if the line is to be fitted
-        if (line.GetOffsetFitEnabled()) {
-          atLeastOneOffsetToFit = true;
-          break;
-        }
-  }
-
-  Int32 nSteps =
-      atLeastOneOffsetToFit
-          ? int((m_LambdaOffsetMax - m_LambdaOffsetMin) / m_LambdaOffsetStep +
-                0.5)
-          : 1;
+  bool atLeastOneOffsetToFit =
+      HasLambdaOffsetFitting(EltsIdx, enableOffsetFitting);
+  Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
 
   Float64 bestMerit = DBL_MAX;
   Int32 idxBestMerit = -1;
   for (Int32 iO = 0; iO < nSteps; iO++) {
     // set offset value
     if (atLeastOneOffsetToFit)
-      setOffset(EltsIdx, iO);
+      setLambdaOffset(EltsIdx, iO);
 
     // fit for this offset
-    ret = fitAmplitudesLinSolve(EltsIdx, spectralAxis, fluxAxis,
-                                continuumfluxAxis, ampsfitted, errorsfitted,
-                                redshift);
+    ret = fitAmplitudesLinSolve(EltsIdx, ampsfitted, errorsfitted, redshift);
 
     // check fitting
     if (!atLeastOneOffsetToFit)
@@ -282,11 +259,9 @@ Int32 CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(
 
   // set offset value
   if (atLeastOneOffsetToFit)
-    setOffset(EltsIdx, idxBestMerit);
+    setLambdaOffset(EltsIdx, idxBestMerit);
   // fit again for this offset
-  ret =
-      fitAmplitudesLinSolve(EltsIdx, spectralAxis, fluxAxis, continuumfluxAxis,
-                            ampsfitted, errorsfitted, redshift);
+  ret = fitAmplitudesLinSolve(EltsIdx, ampsfitted, errorsfitted, redshift);
 
   return ret;
 }
