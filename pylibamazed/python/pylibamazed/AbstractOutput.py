@@ -407,9 +407,12 @@ class AbstractOutput:
                     ret[attribute] = self.get_error(None,attr_parts[1])[attr_parts[2]]
                 continue
             elif root == "ContextWarningFlags":
-                return self.root_results["context_warningFlag"]["ContextWarningFlags"]
+                ret[attribute] = self.root_results["context_warningFlag"]["ContextWarningFlags"]
+                continue
             elif "WarningFlags" in data:
-                return self.object_results[root]["warningFlag"][data]
+                if root in self.object_results:
+                    ret[attribute] = self.object_results[root]["warningFlag"][data]
+                continue
             else:
                 category = root
                 if len(attr_parts) == 2:
@@ -432,8 +435,14 @@ class AbstractOutput:
                 col_name = attr_parts[3]
                 if line_name not in lines_ids:
                     raise Exception("Line {}  not found in {}".format(line_name,lines_ids))
-                fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
-                fitted_lines.set_index("LinemeasLineID", inplace=True)
+                if len(attr_parts) == 4:
+                    fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
+                else:
+                    fitted_lines = pd.DataFrame(self.get_dataset(category, dataset,int(attr_parts[4])))
+                if dataset == "linemeas":
+                    fitted_lines.set_index("LinemeasLineID", inplace=True)
+                else:
+                    fitted_lines.set_index("FittedLineID", inplace=True)
                 ret[attribute] = fitted_lines.at[lines_ids[line_name], col_name]
         return ret
 
