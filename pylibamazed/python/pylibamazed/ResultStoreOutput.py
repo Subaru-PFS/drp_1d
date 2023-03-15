@@ -67,7 +67,11 @@ class ResultStoreOutput(AbstractOutput):
             operator_result_name = data_spec.OperatorResult_name.replace("[object_type]","")
         else:
             operator_result_name = data_spec.OperatorResult_name
-        attr = getattr(operator_result, operator_result_name)
+        if "." in operator_result_name:
+            o = data_spec.OperatorResult_name.split(".")
+            attr = getattr(getattr(operator_result,o[0]),o[1])
+        else:    
+            attr = getattr(operator_result, operator_result_name)
         attr_type = type(attr).__name__
         if attr_type == "TMapFloat64":
             return attr[object_type]
@@ -116,6 +120,13 @@ class ResultStoreOutput(AbstractOutput):
             or_name = attribute_info.OperatorResult_name.replace("[object_type]", "")
             if hasattr(operator_result, or_name):
                 return object_type in getattr(operator_result, or_name)
+            else:
+                return False
+        elif "." in attribute_info.OperatorResult_name:
+            o = attribute_info.OperatorResult_name.split(".")
+            has_o = hasattr(operator_result, o[0])
+            if has_o:
+                return hasattr(getattr(operator_result,o[0]),o[1])
             else:
                 return False
         else:

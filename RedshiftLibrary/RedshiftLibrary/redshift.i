@@ -126,6 +126,7 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
@@ -379,6 +380,27 @@ public:
 %include "linemodel/linemodelextremaresult.i"
 %include "operator/modelspectrumresult.i"
 %include "linemodel/linemodelsolution.i"
+
+struct CTplModelSolution {
+
+  // template continuum
+  std::string tplName = "undefined";
+  Float64 tplAmplitude = NAN;
+  Float64 tplAmplitudeError = NAN;
+  Float64 tplAmplitudeSigma = NAN;
+  Float64 tplEbmvCoeff = NAN;
+  Int32 tplMeiksinIdx = undefIdx;
+  Float64 tplRedshift = NAN;
+
+  Float64 tplMerit = NAN;
+  Float64 tplMeritPhot = NAN;
+  Float64 tplDtM = NAN;
+  Float64 tplMtM = NAN;
+  Float64 tplLogPrior = 0.;
+
+  // polynom
+  TFloat64List pCoeffs;
+};
 
 class CProcessFlowContext {
 public:
