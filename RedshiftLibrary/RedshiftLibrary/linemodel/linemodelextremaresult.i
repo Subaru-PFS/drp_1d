@@ -57,7 +57,7 @@ public:
   Float64 MeritContinuum; // best continum  chi2
   Float64 Merit;          // fullmodel best chi2
 
-  Float64 mTransposeM;
+
   Float64 CorrScaleMarg; // extrema scale marg. correction
   Int32 NDof;            // non zero elements in the lambdarange
   Float64 snrHa;
@@ -80,11 +80,6 @@ public:
   Float64 Elv;            // emission line width
   Float64 Alv;            // absorption line width
 
-  // template continuum (+ base class)
-  Float64
-      FittedTplRedshift; // Redshift for the best template fitted for continuum
-  TFloat64List FittedTplpCoeffs; // poly coeffs for the best template fitted for
-                                 // continuum
 
   // template ratio
   std::string FittedTplratioName = "undefined"; // Name of the best template

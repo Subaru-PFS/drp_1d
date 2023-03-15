@@ -87,3 +87,13 @@ zmin	pdf_params	False	object	zmin	pdf	f8
 zmax	pdf_params	False	object	zmax	pdf	f8
 zstep	pdf_params	False	object	zstep	pdf	f8
 zcenter	pdf_params	False	object	zcenter	pdf	f8
+BestChi2	model_parameters	True	candidate	Merit	extrema_results	f8
+BestContinuumChi2	model_parameters	True	candidate	MeritContinuum	extrema_results	f8
+CorrScaleMarg	model_parameters	True	candidate	CorrScaleMarg	extrema_results	f8
+NDof	model_parameters	True	candidate	NDof	extrema_results	i
+NLinesOverThreshold	model_parameters	True	candidate	NLinesOverThreshold	extrema_results	f8
+StrongELSNR	model_parameters	True	candidate	StrongELSNR	extrema_results	f8
+OutsideLinesSTDError	model_parameters	True	candidate	OutsideLinesSTDError	extrema_results	f8
+BayesianInformationCriterion	model_parameters	True	candidate	bic	extrema_results	f8
+ContinuumRedshift	model_parameters	True	candidate	fittedTpl.tplRedshift	extrema_results	f8
+Coeffs	continuum_polynom	True	candidate	fittedTpl.pCoeffs	extrema_results	f8

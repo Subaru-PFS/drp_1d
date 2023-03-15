@@ -90,7 +90,7 @@ void TLineModelResult::updateFromModel(
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
 
   // store the model norm
-  mTransposeM = lmel->EstimateMTransposeM();
+  //  mTransposeM = lmel->EstimateMTransposeM();
 
   // scale marginalization correction
   Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
