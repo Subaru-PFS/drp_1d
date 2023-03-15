@@ -131,7 +131,7 @@ void TLineModelResult::updateFromModel(
   */
 
   // save the outsideLinesMask
-  OutsideLinesMask = lmel->getOutsideLinesMask();
+  // OutsideLinesMask = lmel->getOutsideLinesMask();
 
   OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1);
   OutsideLinesSTDError = lmel->getOutsideLinesSTD(2);

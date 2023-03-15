@@ -57,7 +57,7 @@ public:
   Float64 MeritContinuum; // best continum  chi2
   Float64 Merit;          // fullmodel best chi2
 
-  Float64 mTransposeM;   // extrema model norm
+  Float64 mTransposeM;
   Float64 CorrScaleMarg; // extrema scale marg. correction
   Int32 NDof;            // non zero elements in the lambdarange
   Float64 snrHa;
@@ -66,16 +66,11 @@ public:
   Float64 lfOII;
 
   Float64 NLinesOverThreshold;
-  Float64 LogArea;                 // log area for each extrema
-  Float64 LogAreaCorrectedExtrema; // corrected z for each extrema
-  Float64 SigmaZ;                  // sigmaz for each extrema
 
   Float64 StrongELSNR;
   std::unordered_set<std::string> StrongELSNRAboveCut;
   Float64 bic; // bayesian information criterion for each extrema
-  std::vector<CContinuumIndexes::TContinuumIndexList>
-      ContinuumIndexes;   // continuum indexes for each extrema
-  CMask OutsideLinesMask; // Mask with 0 under the lines and 1 anywhere else
+
   Float64 OutsideLinesSTDFlux; // STD measured on the spectrum continuum
                                // substracted outside lines
   Float64
@@ -84,8 +79,6 @@ public:
   // line width
   Float64 Elv;            // emission line width
   Float64 Alv;            // absorption line width
-  TFloat64List GroupsELv; // per fitting group line width , EL
-  TFloat64List GroupsALv; // per fitting group line width , AL
 
   // template continuum (+ base class)
   Float64
