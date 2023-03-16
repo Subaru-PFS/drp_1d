@@ -121,6 +121,8 @@ public:
                            Int32 kLineSupport = -1) const;
   Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift,
                                          Float64 continuumFlux) const;
+  Float64 GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
+                                   Float64 continuumFlux) const;
   Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
                                             Float64 continuumFluxUnscale) const;
   Float64 GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift,
@@ -147,6 +149,7 @@ public:
                                    Int32 lineIdx) const;
 
   Float64 GetNominalAmplitude(Int32 subeIdx) const;
+  Float64 GetMaxNominalAmplitude() const;
   bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
   Float64 GetFittedAmplitude(Int32 subeIdx) const;
   Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx) const;
@@ -158,6 +161,7 @@ public:
   void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
 
   bool SetAbsLinesLimit(Float64 limit);
+  Float64 GetAbsLinesLimit() const;
 
   void SetVelocityEmission(Float64 vel);
   Float64 getVelocityEmission() const;

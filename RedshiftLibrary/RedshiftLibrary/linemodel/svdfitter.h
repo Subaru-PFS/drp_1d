@@ -58,10 +58,10 @@ protected:
   void fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                      Float64 redshift);
 
-  bool fitAmplitudesLinSolve(const TInt32List &EltsIdx,
-                             std::vector<Float64> &ampsfitted,
-                             std::vector<Float64> &errorsfitted,
-                             Float64 redshift, const TInt32List &IdxToFit = {});
+  virtual bool fitAmplitudesLinSolve(const TInt32List &EltsIdx,
+                                     std::vector<Float64> &ampsfitted,
+                                     std::vector<Float64> &errorsfitted,
+                                     Float64 redshift, const TInt32List &IdxToFit = {});
 };
 } // namespace NSEpic
 #endif

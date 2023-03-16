@@ -127,6 +127,18 @@ LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
 LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
 LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 
+# setup thirdparty directory : eigen3
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+message(STATUS "Found eigen: ${EIGEN3_ROOT_DIR}")
+message(STATUS "EIGEN3_INCLUDE_DIRS = ${EIGEN3_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS Eigen3::Eigen)
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${EIGEN3_INCLUDE_DIRS})
+
+# setup thirdparty directory : lbfgspp
+find_package (lbfgspp 0.2.0 REQUIRED NO_MODULE)
+message(STATUS "Found lbfgspp:")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS lbfgspp)
+
 # Thirdparties setup summary
 MESSAGE("Using third party libraries: " "${cpf-redshift_THIRDPARTY_LIBS}")
 

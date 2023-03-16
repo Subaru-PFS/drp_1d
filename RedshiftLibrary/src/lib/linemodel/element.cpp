@@ -393,6 +393,8 @@ bool CLineModelElement::SetAbsLinesLimit(Float64 limit) {
   return true;
 }
 
+Float64 CLineModelElement::GetAbsLinesLimit() const { return m_absLinesLimit; }
+
 /**
  * @brief GetContinuumAtCenterProfile
  * @param subeIdx
@@ -821,6 +823,12 @@ Float64 CLineModelElement::GetNominalAmplitude(Int32 subeIdx) const {
   return m_ElementParam->m_NominalAmplitudes[subeIdx];
 }
 
+Float64 CLineModelElement::GetMaxNominalAmplitude() const {
+  auto it = std::max_element(m_ElementParam->m_NominalAmplitudes.cbegin(),
+                             m_ElementParam->m_NominalAmplitudes.cend());
+  return *it;
+}
+
 /**
  * \brief Set the nominal amplitude with index subeIdx.
  **/
@@ -1032,6 +1040,49 @@ Float64 CLineModelElement::GetModelDerivAmplitudeAtLambda(
   return Yi;
 }
 
+Float64
+CLineModelElement::GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
+                                            Float64 continuumFlux) const {
+  if (m_OutsideLambdaRange) {
+    return 0.0;
+  }
+  Float64 Yi = 0.0;
+
+  Float64 x = lambda;
+
+  for (Int32 k2 = 0; k2 < GetSize(); k2++) // loop on lines
+  {
+    if (m_OutsideLambdaRangeList[k2]) {
+      continue;
+    }
+
+    Float64 A = m_ElementParam->m_FittedAmplitudes[k2];
+    if (std::isnan(A))
+      continue;
+    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
+    // be NAN");
+    if (A < 0.)
+      continue;
+
+    Float64 dzOffset = m_ElementParam->m_Offsets[k2] / m_speedOfLightInVacuum;
+    Float64 lambda0 =
+        m_ElementParam->m_Lines[k2].GetPosition() * (1 + dzOffset);
+    Float64 mu = NAN;
+    Float64 sigma = NAN;
+    getObservedPositionAndLineWidth(k2, redshift, mu, sigma,
+                                    false); // do not apply Lya asym offset
+
+    const CLineProfile &profile = getLineProfile(k2);
+    bool isEmission = GetElementType() == CLine::nType_Emission;
+    Float64 lineprofile_derivVel =
+        GetLineProfileDerivVel(profile, x, lambda0, sigma, isEmission);
+    Float64 fluxval = m_SignFactors[k2] * A * lineprofile_derivVel;
+
+    Yi += m_SignFactors[k2] == -1 ? continuumFlux * fluxval : fluxval;
+  }
+  return Yi;
+}
+
 Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
     Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale) const {
   if (m_OutsideLambdaRange) {
@@ -1087,7 +1138,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(
     // be NAN");
 
     Float64 dzOffset = m_ElementParam->m_Offsets[k2] / m_speedOfLightInVacuum;
-    Float64 lamdba0 =
+    Float64 lambda0 =
         m_ElementParam->m_Lines[k2].GetPosition() * (1 + dzOffset);
     Float64 mu = NAN;
     Float64 sigma = NAN;
@@ -1096,7 +1147,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(
 
     const auto &profile = getLineProfile(k2);
     Float64 lineprofile_derivz =
-        profile->GetLineProfileDerivZ(x, lamdba0, redshift, sigma);
+        profile->GetLineProfileDerivZ(x, lambda0, redshift, sigma);
 
     Float64 fluxval = m_SignFactors[k2] * A * lineprofile_derivz;
     Yi += m_SignFactors[k2] == -1 ? continuumFlux * fluxval : fluxval;

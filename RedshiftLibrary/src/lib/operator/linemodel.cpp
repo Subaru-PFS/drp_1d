@@ -1729,10 +1729,17 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
 
   m_fittingManager = std::make_shared<CLineModelFitting>();
 
-  m_fittingManager->setPassMode(
-      3); // does m_fittingManager->m_enableAmplitudeOffsets = true;
+  // set velocity at max value for velocityfitting (to handle set largest line
+  // overlapping)
+  const Float64 velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
+      "linemodel.emvelocityfitmax");
+  const Float64 velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
+      "linemodel.absvelocityfitmax");
+  m_fittingManager->SetVelocityEmission(velfitMaxE);
+  m_fittingManager->SetVelocityAbsorption(velfitMaxA);
 
-  // init catalog offsets
+  // does m_fittingManager->m_enableAmplitudeOffsets = true;
+  m_fittingManager->setPassMode(3);
 
   m_estimateLeastSquareFast = 0;
   m_fittingManager->m_lineRatioManager->SetLeastSquareFastEstimationEnabled(

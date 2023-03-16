@@ -55,7 +55,7 @@ public:
                 const TLineVector &restLineList,
                 const std::vector<TLineModelElementParam_ptr> &elementParam);
 
-private:
+protected:
   void doFit(Float64 redshift) override;
   bool m_opt_enable_improveBalmerFit = false;
   void fitAmplitudesHybrid(Float64 redshift);
