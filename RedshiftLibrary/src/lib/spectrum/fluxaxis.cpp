@@ -153,53 +153,6 @@ Float64 CSpectrumFluxAxis::computeMaxAbsValue(Int32 imin, Int32 imax) const {
 
 bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
                                            Float64 &sdev) const {
-  const CSpectrumNoiseAxis &error = GetError();
-
-  if (!error.isEmpty()) {
-    return ComputeMeanAndSDevWithError(mask, mean, sdev);
-  } else {
-    return ComputeMeanAndSDevWithoutError(mask, mean, sdev);
-  }
-}
-
-bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError(const CMask &mask,
-                                                       Float64 &mean,
-                                                       Float64 &sdev) const {
-  if (mask.GetMasksCount() != GetSamplesCount()) {
-    THROWG(INTERNAL_ERROR, "mask.GetMasksCount() != GetSamplesCount()");
-  }
-
-  Int32 j;
-  Float64 sum = 0.0, sum2 = 0.0;
-  Float64 ndOfSampleUsed;
-
-  ndOfSampleUsed = 0;
-  for (j = 0; j < GetSamplesCount(); j++) {
-#ifdef DEBUG_BUILD
-    if (!(mask[j] == 1 || mask[j] == 0))
-      THROWG(INTERNAL_ERROR, "bad mask");
-#endif
-
-    sum += mask[j] * m_Samples[j];
-    sum2 += mask[j] * m_Samples[j] * m_Samples[j];
-    ndOfSampleUsed += mask[j];
-  }
-
-  if (ndOfSampleUsed > 1) {
-    mean = sum / ndOfSampleUsed;
-    sdev = sqrt((sum2 - mean * mean * ndOfSampleUsed) / (ndOfSampleUsed - 1));
-  } else {
-    mean = NAN;
-    sdev = NAN;
-    return false;
-  }
-
-  return true;
-}
-
-bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError(const CMask &mask,
-                                                    Float64 &mean,
-                                                    Float64 &sdev) const {
   if (mask.GetMasksCount() != GetSamplesCount())
     THROWG(INTERNAL_ERROR, "mask.GetMasksCount() != GetSamplesCount()");
 

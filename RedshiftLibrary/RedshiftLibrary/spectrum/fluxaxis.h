@@ -89,11 +89,6 @@ public:
 private:
   friend class FluxAxis_test::ComputeMeanAndSDev_test;
 
-  bool ComputeMeanAndSDevWithoutError(const CMask &mask, Float64 &mean,
-                                      Float64 &sdev) const;
-  bool ComputeMeanAndSDevWithError(const CMask &mask, Float64 &mean,
-                                   Float64 &sdev) const;
-
   CSpectrumNoiseAxis m_StdError; // STD
 };
 

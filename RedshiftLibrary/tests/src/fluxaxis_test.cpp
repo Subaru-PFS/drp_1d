@@ -274,38 +274,12 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
   bool result;
 
   //--------------------//
-  // test ComputeMeanAndSDevWithoutError
+  // test ComputeMeanAndSDev
 
   // 1st case : size of mask != size of sample
   CMask mask(5);
   BOOST_CHECK_THROW(
-      object_CSpectrumFluxAxis.ComputeMeanAndSDevWithoutError(mask, mean, sdev),
-      GlobalException);
-
-  // 2nd case : mask = 0
-  mask.SetSize(10);
-  result =
-      object_CSpectrumFluxAxis.ComputeMeanAndSDevWithoutError(mask, mean, sdev);
-  BOOST_CHECK(result == false);
-  BOOST_CHECK(mean != mean);
-  BOOST_CHECK(sdev != sdev);
-
-  // 3rd case : mask = 1 for i=2 & i=3
-  mask[2] = 1;
-  mask[3] = 1;
-  result =
-      object_CSpectrumFluxAxis.ComputeMeanAndSDevWithoutError(mask, mean, sdev);
-  Float64 sdev_ref = sqrt((30 - 35) * (30 - 35) + (40 - 35) * (40 - 35));
-  BOOST_CHECK_CLOSE(mean, 35, precision);
-  BOOST_CHECK_CLOSE(sdev, sdev_ref, precision);
-
-  //--------------------//
-  // test ComputeMeanAndSDevWithError
-
-  // 1st case : size of mask != size of sample
-  mask.SetSize(5);
-  BOOST_CHECK_THROW(
-      object_CSpectrumFluxAxis.ComputeMeanAndSDevWithError(mask, mean, sdev),
+      object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev),
       GlobalException);
 
   // 2nd case : mask = 0
@@ -313,8 +287,7 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
   for (Int32 i = 0; i < mask.GetMasksCount(); i++) {
     mask[i] = 0;
   }
-  result =
-      object_CSpectrumFluxAxis.ComputeMeanAndSDevWithError(mask, mean, sdev);
+  result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
   BOOST_CHECK(result == false);
   BOOST_CHECK(mean != mean);
   BOOST_CHECK(sdev != sdev);
@@ -324,26 +297,9 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
   mask[3] = 1;
   error_ref = TFloat64List(10, 0.5); // weight = 4
   object_CSpectrumFluxAxis.setError(error_ref);
-  result =
-      object_CSpectrumFluxAxis.ComputeMeanAndSDevWithError(mask, mean, sdev);
-  sdev_ref = sqrt((4 * (30 - 35) * (30 - 35) + 4 * (40 - 35) * (40 - 35)) /
-                  (8 - 32 / 8));
-  BOOST_CHECK_CLOSE(mean, 35, precision);
-  BOOST_CHECK_CLOSE(sdev, sdev_ref, precision);
-
-  //--------------------//
-  // test ComputeMeanAndSDev
-
-  // With Error -> ComputeMeanAndSDevWithError
   result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
-  BOOST_CHECK_CLOSE(mean, 35, precision);
-  BOOST_CHECK_CLOSE(sdev, sdev_ref, precision);
-
-  // Without Error -> ComputeMeanAndSDevWithoutError
-  error_ref = TFloat64List(10, 0.0);
-  object_CSpectrumFluxAxis.setError(error_ref);
-  result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
-  sdev_ref = sqrt((30 - 35) * (30 - 35) + (40 - 35) * (40 - 35));
+  Float64 sdev_ref = sqrt(
+      (4 * (30 - 35) * (30 - 35) + 4 * (40 - 35) * (40 - 35)) / (8 - 32 / 8));
   BOOST_CHECK_CLOSE(mean, 35, precision);
   BOOST_CHECK_CLOSE(sdev, sdev_ref, precision);
 }
