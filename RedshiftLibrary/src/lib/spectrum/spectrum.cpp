@@ -73,26 +73,25 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
                            &otherWithoutContinuumError =
                                other.m_WithoutContinuumFluxAxis.GetError();
 
-  const CSpectrumNoiseAxis &RawError = m_RawFluxAxis.GetError(),
-                           &ContinuumError = m_ContinuumFluxAxis.GetError(),
-                           &WithoutContinuumError =
-                               m_WithoutContinuumFluxAxis.GetError();
-
-  other.m_SpectralAxis.MaskAxis(mask, m_SpectralAxis);
-  other.m_RawFluxAxis.MaskAxis(mask, m_RawFluxAxis);
+  m_SpectralAxis = other.m_SpectralAxis.MaskAxis(mask);
+  m_RawFluxAxis =
+      CSpectrumFluxAxis(other.m_RawFluxAxis.MaskAxis(mask).GetSamplesVector());
 
   if (!otherRawError.isEmpty())
-    otherRawError.MaskAxis(mask, RawError);
+    m_RawFluxAxis.setError(otherRawError.MaskAxis(mask));
 
   if (other.alreadyRemoved) {
-    other.m_ContinuumFluxAxis.MaskAxis(mask, m_ContinuumFluxAxis);
-    other.m_WithoutContinuumFluxAxis.MaskAxis(mask, m_WithoutContinuumFluxAxis);
+    m_ContinuumFluxAxis = CSpectrumFluxAxis(
+        other.m_ContinuumFluxAxis.MaskAxis(mask).GetSamplesVector());
+    m_WithoutContinuumFluxAxis = CSpectrumFluxAxis(
+        other.m_WithoutContinuumFluxAxis.MaskAxis(mask).GetSamplesVector());
 
     if (!otherContinuumError.isEmpty())
-      otherContinuumError.MaskAxis(mask, ContinuumError);
+      m_ContinuumFluxAxis.setError(otherContinuumError.MaskAxis(mask));
 
     if (!otherWithoutContinuumError.isEmpty())
-      otherWithoutContinuumError.MaskAxis(mask, WithoutContinuumError);
+      m_WithoutContinuumFluxAxis.setError(
+          otherWithoutContinuumError.MaskAxis(mask));
   }
 }
 
@@ -576,7 +575,7 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
            "or unsorted spectral axis");
 
   CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
-  TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
+  const TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
   TFloat64List &flux = fluxaxis.GetSamplesVector();
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
@@ -611,7 +610,7 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
 
     if (validSample)
       continue;
-    error[i] = maxNoise * coeffCorr;
+    fluxaxis.setErrorSample(i, maxNoise * coeffCorr);
     flux[i] = minFlux / coeffCorr;
     corrected = true;
     nCorrected++;

@@ -66,10 +66,9 @@ public:
   virtual CSpectrumAxis &operator/=(const Float64 op);
   Float64 &operator[](const Int32 i);
   const Float64 &operator[](const Int32 i) const;
-  void MaskAxis(const TFloat64List &mask, CSpectrumAxis &maskedAxis) const;
-  static void maskVector(const TFloat64List &mask,
-                         const TFloat64List &inputVector,
-                         TFloat64List &outputVector);
+  CSpectrumAxis MaskAxis(const TFloat64List &mask) const;
+  static const TFloat64List maskVector(const TFloat64List &mask,
+                                       const TFloat64List &inputVector);
 
   const Float64 *GetSamples() const;
   Float64 *GetSamples();

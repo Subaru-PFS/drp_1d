@@ -69,7 +69,6 @@ void CRebin::compute(const TFloat64Range &range,
   const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
   const TAxisSampleList &Xtgt = targetSpectralAxis.GetSamplesVector();
   const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
-  CSpectrumNoiseAxis &ErrorRebin = rebinedFluxAxis.GetError();
 
   // Move cursors up to lambda range start
   Int32 cursor = 0;
@@ -78,7 +77,7 @@ void CRebin::compute(const TFloat64Range &range,
     rebinedMask[cursor] = 0;
     rebinedFluxAxis[cursor] = 0.0;
     if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
-      ErrorRebin[cursor] = INFINITY;
+      rebinedFluxAxis.setErrorSample(cursor, INFINITY);
     cursor++;
   }
 
@@ -89,7 +88,7 @@ void CRebin::compute(const TFloat64Range &range,
     rebinedMask[cursor] = 0;
     rebinedFluxAxis[cursor] = 0.0;
     if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
-      ErrorRebin[cursor] = INFINITY;
+      rebinedFluxAxis.setErrorSample(cursor, INFINITY);
     cursor++;
   }
 

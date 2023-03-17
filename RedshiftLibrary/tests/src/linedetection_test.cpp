@@ -170,17 +170,16 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   BOOST_CHECK_CLOSE(maxFluxnoContinuum, 1.5, 1e-12);
 
   range = TInt32Range(0, 9);
-  CSpectrumNoiseAxis &error = modelfluxAxis.GetError();
-  error[0] = 0.5;
-  error[1] = 0.3;
-  error[2] = 0.8;
-  error[3] = 0.8;
-  error[4] = 0.9;
-  error[5] = 0.7;
-  error[6] = 0.6;
-  error[7] = 0.8;
-  error[8] = 0.9;
-  error[9] = 0.3;
+  modelfluxAxis.setErrorSample(0, 0.5);
+  modelfluxAxis.setErrorSample(1, 0.3);
+  modelfluxAxis.setErrorSample(2, 0.8);
+  modelfluxAxis.setErrorSample(3, 0.8);
+  modelfluxAxis.setErrorSample(4, 0.9);
+  modelfluxAxis.setErrorSample(5, 0.7);
+  modelfluxAxis.setErrorSample(6, 0.6);
+  modelfluxAxis.setErrorSample(7, 0.8);
+  modelfluxAxis.setErrorSample(8, 0.9);
+  modelfluxAxis.setErrorSample(9, 0.3);
 
   spc.SetFluxAxis(modelfluxAxis);
   ratioAmp = lineDetection.ComputeFluxes(spc, winsize, range, mask,
@@ -459,9 +458,8 @@ BOOST_AUTO_TEST_CASE(Compute) {
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = k * 0.0001;
   }
-  CSpectrumNoiseAxis &error = modelfluxAxis.GetError();
   for (Int32 k = 0; k < n; k++) {
-    error[k] = k * 0.0001;
+    modelfluxAxis.setErrorSample(k, k * 0.0001);
   }
   TInt32RangeList resPeaks;
 

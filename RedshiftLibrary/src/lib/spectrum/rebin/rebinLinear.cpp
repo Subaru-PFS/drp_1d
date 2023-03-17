@@ -50,7 +50,6 @@ void CRebinLinear::rebin(
     const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
     const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
 
-  CSpectrumNoiseAxis &ErrorRebin = rebinedFluxAxis.GetError();
   Int32 n = m_spectrum.GetSampleCount();
 
   Int32 k = 0;
@@ -67,13 +66,17 @@ void CRebinLinear::rebin(
       rebinedMask[cursor] = 1;
 
       if (opt_error_interp == "rebin")
-        ErrorRebin[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
+        rebinedFluxAxis.setErrorSample(
+            cursor, Error[k] + (Error[k + 1] - Error[k]) * t);
       else if (opt_error_interp == "rebinVariance") {
-        ErrorRebin[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
-                                  Error[k + 1] * Error[k + 1] * t * t);
+        rebinedFluxAxis.setErrorSample(
+            cursor, sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
+                         Error[k + 1] * Error[k + 1] * t * t));
         Float64 xStepCompensation = computeXStepCompensation(
             targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        ErrorRebin[cursor] *= sqrt(xStepCompensation);
+        rebinedFluxAxis.setErrorSample(cursor,
+                                       rebinedFluxAxis.GetError()[cursor] *
+                                           sqrt(xStepCompensation));
       }
       cursor++;
     }

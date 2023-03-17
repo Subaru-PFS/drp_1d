@@ -73,9 +73,8 @@ BOOST_AUTO_TEST_CASE(GaussianFit) {
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = 0;
   }
-  CSpectrumNoiseAxis &error = modelfluxAxis.GetError();
   for (Int32 k = 0; k < n; k++) {
-    error[k] = 0.5;
+    modelfluxAxis.setErrorSample(k, 0.5);
   }
 
   addLine(modelfluxAxis, 4., 40., 1.5);

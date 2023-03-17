@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
   mask[2] = 1;
   mask[3] = 1;
   error_ref = TFloat64List(10, 0.5); // weight = 4
-  object_CSpectrumFluxAxis.GetError() = error_ref;
+  object_CSpectrumFluxAxis.setError(error_ref);
   result =
       object_CSpectrumFluxAxis.ComputeMeanAndSDevWithError(mask, mean, sdev);
   sdev_ref = sqrt((4 * (30 - 35) * (30 - 35) + 4 * (40 - 35) * (40 - 35)) /
@@ -340,8 +340,8 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
   BOOST_CHECK_CLOSE(sdev, sdev_ref, precision);
 
   // Without Error -> ComputeMeanAndSDevWithoutError
-  error_ref = {};
-  object_CSpectrumFluxAxis.GetError() = error_ref;
+  error_ref = TFloat64List(10, 0.0);
+  object_CSpectrumFluxAxis.setError(error_ref);
   result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
   sdev_ref = sqrt((30 - 35) * (30 - 35) + (40 - 35) * (40 - 35));
   BOOST_CHECK_CLOSE(mean, 35, precision);

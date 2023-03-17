@@ -52,8 +52,6 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                       const TAxisSampleList &Xtgt, const TFloat64List &Error,
                       Int32 &cursor) {
 
-  CSpectrumNoiseAxis &ErrorRebin = rebinedFluxAxis.GetError();
-
   // nearest sample, lookup
   Int32 k = 0;
   Int32 n = m_spectrum.GetSampleCount();
@@ -74,11 +72,13 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
 
     if (opt_error_interp != "no") {
 
-      ErrorRebin[cursor] = Error[k];
+      rebinedFluxAxis.setErrorSample(cursor, Error[k]);
       if (opt_error_interp == "rebinVariance") {
         Float64 xStepCompensation = computeXStepCompensation(
             targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        ErrorRebin[cursor] *= sqrt(xStepCompensation);
+        rebinedFluxAxis.setErrorSample(cursor,
+                                       rebinedFluxAxis.GetError()[cursor] *
+                                           sqrt(xStepCompensation));
       }
     }
     rebinedMask[cursor] = 1;
