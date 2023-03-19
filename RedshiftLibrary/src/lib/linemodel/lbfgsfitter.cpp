@@ -157,8 +157,8 @@ Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
       }
 
       // offset derivative
-      offsetGrad += elt->GetModelDerivZAtLambdaNoContinuum(
-          xi, redshift, m_continuumFluxAxis[idx]);
+      offsetGrad +=
+          elt->GetModelDerivZAtLambda(xi, redshift, m_continuumFluxAxis[idx]);
     }
 
     TFloat64List pCoeffGrad;

@@ -125,11 +125,9 @@ public:
                                    Float64 continuumFlux) const;
   Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
                                             Float64 continuumFluxUnscale) const;
-  Float64 GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift,
-                                            Float64 continuumFlux) const;
   Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
                                  Float64 continuumFlux,
-                                 Float64 continuumFluxDerivZ) const;
+                                 Float64 continuumFluxDerivZ = 0.0) const;
 
   void addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                           CSpectrumFluxAxis &modelfluxAxis,

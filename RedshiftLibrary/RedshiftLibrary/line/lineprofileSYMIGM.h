@@ -64,8 +64,8 @@ public:
                             Float64 sigma) const override;
   Float64 GetLineFlux(Float64 x0, Float64 sigma,
                       Float64 A = 1.0) const override;
-  Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
-                               Float64 sigma) const override;
+  Float64 GetLineProfileDerivX0(Float64 x, Float64 x0,
+                                Float64 sigma) const override;
   Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                    Float64 sigma) const override;
   TSymIgmParams GetSymIgmParams() const override;
@@ -86,6 +86,8 @@ private:
   }
   void CheckMeiksinInit() const;
   Float64 getIGMCorrection(Float64 x) const;
+  std::tuple<Float64, Float64> getIGMCorrectionAndDerivX0(Float64 x,
+                                                          Float64 x0) const;
 
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   Float64 m_redshift = NAN;
