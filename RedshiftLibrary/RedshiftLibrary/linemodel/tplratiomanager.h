@@ -55,7 +55,7 @@ public:
                    std::shared_ptr<const CSpectrum> inputSpc,
                    std::shared_ptr<const TFloat64Range> lambdaRange,
                    std::shared_ptr<CContinuumManager> continuumManager,
-                   const CLineCatalog::TLineVector &restLineList);
+                   const TLineVector &restLineList);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
   CTplratioManager(CTplratioManager const &other) = default;
@@ -106,9 +106,8 @@ public:
   bool m_opt_firstpass_forcedisableTplratioISMfit = true;
 
 protected:
-  Int32 getLineIndexInCatalog(
-      Int32 iElts, Int32 idxLine,
-      const CLineCatalog::TLineVector &catalog) const override;
+  Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
+                              const TLineVector &catalog) const override;
 
   void initMerit(Int32 ntplratio);
   void SetTplratio_PriorHelper();

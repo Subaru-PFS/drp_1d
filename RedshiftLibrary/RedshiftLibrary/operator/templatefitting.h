@@ -91,14 +91,14 @@ struct TFittingResult {
 struct TFittingIsmIgmResult : TFittingResult {
   TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize,
                        Int32 spcsize = 1)
-      : overlapRate(spcsize, NAN),
+      : overlapFraction(spcsize, NAN),
         ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
         IsmCalzettiCoeffInterm(EbmvListSize,
                                TFloat64List(MeiksinListSize, NAN)),
         IgmMeiksinIdxInterm(EbmvListSize,
                             TInt32List(MeiksinListSize, undefIdx)) {}
 
-  TFloat64List overlapRate;
+  TFloat64List overlapFraction;
   Float64 EbmvCoeff = NAN;
   Int32 MeiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;

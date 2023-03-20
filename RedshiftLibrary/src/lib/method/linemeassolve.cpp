@@ -60,8 +60,6 @@ void CLineMeasSolve::GetRedshiftSampling(
       "linemeas_redshiftstep");
 }
 
-void CLineMeasSolve::Init() {}
-
 std::shared_ptr<CSolveResult>
 CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                         std::shared_ptr<COperatorResultStore> resultStore,

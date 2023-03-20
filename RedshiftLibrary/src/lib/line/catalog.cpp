@@ -61,12 +61,10 @@ using namespace boost::filesystem;
 CLineCatalog::CLineCatalog(Float64 sigmaSupport)
     : m_nSigmaSupport(sigmaSupport) {}
 
-const CLineCatalog::TLineVector &CLineCatalog::GetList() const {
-  return m_List;
-}
+const TLineVector &CLineCatalog::GetList() const { return m_List; }
 
-CLineCatalog::TLineVector
-CLineCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const {
+TLineVector CLineCatalog::GetFilteredList(Int32 typeFilter,
+                                          Int32 forceFilter) const {
 
   TLineVector filteredList;
   for (Int32 i = 0; i < m_List.size(); i++) {
@@ -79,7 +77,7 @@ CLineCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const {
   return filteredList;
 }
 
-CLineCatalog::TLineVector
+TLineVector
 CLineCatalog::GetFilteredList(const std::string &typeFilter,
                               const std::string &forceFilter) const {
   Int32 itypeFilter = -1;
@@ -95,7 +93,7 @@ CLineCatalog::GetFilteredList(const std::string &typeFilter,
   return GetFilteredList(itypeFilter, iforceFilter);
 }
 
-const std::vector<CLineCatalog::TLineVector>
+const std::vector<TLineVector>
 CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
 
   TStringList tags;

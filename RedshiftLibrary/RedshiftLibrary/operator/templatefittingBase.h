@@ -95,7 +95,7 @@ public:
 protected:
   virtual void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
                              Float64 redshift, TFloat64Range &currentRange,
-                             Float64 &overlaprate,
+                             Float64 &overlapFraction,
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);
 

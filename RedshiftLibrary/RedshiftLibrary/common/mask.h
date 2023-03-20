@@ -58,8 +58,8 @@ public:
   Int32 GetMasksCount() const;
   Mask operator[](const Int32 i) const;
   Mask &operator[](const Int32 i);
-  Float64 CompouteOverlapRate(const CMask &other) const;
-  Float64 IntersectAndComputeOverlapRate(const CMask &other) const;
+  Float64 CompouteOverlapFraction(const CMask &other) const;
+  Float64 IntersectAndComputeOverlapFraction(const CMask &other) const;
 
   bool IntersectWith(const CMask &other);
   Int32 GetMaskedSampleCount() const;

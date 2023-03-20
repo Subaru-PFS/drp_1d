@@ -47,7 +47,7 @@ using namespace std;
 
 CSpectrumModel::CSpectrumModel(CLineModelElementList &elements,
                                std::shared_ptr<const CSpectrum> spc,
-                               const CLineCatalog::TLineVector &restLineList,
+                               const TLineVector &restLineList,
                                std::shared_ptr<CTplModelSolution> tfv)
     : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
       m_SpectrumModel(*(spc)), m_RestLineList(restLineList),
@@ -110,7 +110,7 @@ void CSpectrumModel::refreshModel(Int32 lineTypeFilter) {
   // create spectrum model
   Int32 nElements = m_Elements.size();
   for (Int32 iElts = 0; iElts < nElements; iElts++) {
-    Int32 lineType = m_Elements[iElts]->m_Lines[0].GetType();
+    Int32 lineType = m_Elements[iElts]->GetElementType();
     if (lineTypeFilter == -1 || lineTypeFilter == lineType) {
       m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis,
                                             m_ContinuumFluxAxis, m_Redshift);
@@ -640,7 +640,7 @@ CSpectrumFluxAxis CSpectrumModel::getModel(Int32 lineTypeFilter) const {
   for (const auto &elt : m_Elements) {
     elt->initSpectrumModel(modelfluxAxis, getContinuumFluxAxis());
 
-    Int32 lineType = elt->m_Lines[0].GetType();
+    Int32 lineType = elt->GetElementType();
     if (lineTypeFilter == -1 || lineTypeFilter == lineType)
       elt->addToSpectrumModel(spectralAxis, modelfluxAxis,
                               getContinuumFluxAxis(), m_Redshift);

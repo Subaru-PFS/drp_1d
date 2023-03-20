@@ -163,6 +163,7 @@ private:
   std::string m_strID;
 };
 
+using TLineVector = std::vector<CLine>;
 } // namespace NSEpic
 
 #endif

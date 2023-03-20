@@ -60,8 +60,7 @@ using namespace NSEpic;
  * @param nTplratios
  * @return
  */
-void CLineModelResult::Init(TFloat64List redshifts,
-                            CLineCatalog::TLineVector restLines,
+void CLineModelResult::Init(TFloat64List redshifts, TLineVector restLines,
                             Int32 nTemplates, Int32 nTplratios,
                             TFloat64List tplratiosPriors) {
   if (tplratiosPriors.size() != nTplratios) {

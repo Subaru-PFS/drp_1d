@@ -63,12 +63,11 @@ using namespace boost;
  * @param index
  * WARNING: ismCoeff not applied on the restlines provided by that function.
  */
-CLineCatalog::TLineVector
-CLineCatalogsTplRatio::GetRestLinesList(Int32 index) const {
+TLineVector CLineCatalogsTplRatio::GetRestLinesList(Int32 index) const {
   Int32 typeFilter = -1;
   Int32 forceFilter = -1;
 
-  CLineCatalog::TLineVector restLineList =
+  TLineVector restLineList =
       m_lineRatioCatalogs[index].GetFilteredList(typeFilter, forceFilter);
   return restLineList;
 }
@@ -122,8 +121,7 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
 
     // now set the non-zero amp correspondences
     for (Int32 iCatalog = 0; iCatalog < catalogCount; iCatalog++) {
-      const CLineCatalog::TLineVector lineList =
-          m_lineRatioCatalogs[iCatalog].GetList();
+      const TLineVector lineList = m_lineRatioCatalogs[iCatalog].GetList();
 
       for (const auto &currentline : lineList) {
         const std::string &currentLineName = currentline.GetName();
@@ -135,12 +133,12 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
           nominalAmp *= dustCoeff;
         }
         // find line in the elementList and fill with nominalAmp
-        auto it = std::find_if(elt->m_Lines.cbegin(), elt->m_Lines.cend(),
+        auto it = std::find_if(elt->GetLines().cbegin(), elt->GetLines().cend(),
                                [&currentLineName](const CLine &line) {
                                  return line.GetName() == currentLineName;
                                });
-        if (it != elt->m_Lines.end()) {
-          Int32 idx = it - elt->m_Lines.begin();
+        if (it != elt->GetLines().end()) {
+          Int32 idx = it - elt->GetLines().begin();
           lineCatalogLinesCorrespondingNominalAmp.back()[iCatalog][idx] =
               nominalAmp;
         }
@@ -173,7 +171,8 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
                           ? ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
                           : NAN;
         Float64 nomAmp = lineCatalogLinesCorrespondingNominalAmp[iElt][k][j];
-        std::string lineName = LineModelElementList[iElt]->m_Lines[j].GetName();
+        std::string lineName =
+            LineModelElementList[iElt]->GetLines()[j].GetName();
         /*Log.LogDebug("    CatalogsTplRatio - "
                      "linesCorrespondingNominalAmp iElt=%d, "
                      "iCatalog=%d, iLine=%d with name=%s, ebv=%f: "
@@ -194,10 +193,11 @@ const CLineCatalog &CLineCatalogsTplRatio::GetCatalog(Int32 iCatalog) const {
  *and the tplRatio catalogs: (for lm-rigidity=tplcorr)
  *
  **/
-Float64 CLineCatalogsTplRatio::GetBestFit(
-    const CLineCatalog::TLineVector &restLineList,
-    const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors,
-    TFloat64List &amplitudesCorrected, std::string &bestTplName) const {
+Float64 CLineCatalogsTplRatio::GetBestFit(const TLineVector &restLineList,
+                                          const TFloat64List &fittedAmplitudes,
+                                          const TFloat64List &fittedErrors,
+                                          TFloat64List &amplitudesCorrected,
+                                          std::string &bestTplName) const {
 
   Float64 coeffMin = -1.0;
   TFloat64List bestFitAmplitudes;
@@ -250,11 +250,11 @@ Float64 CLineCatalogsTplRatio::GetBestFit(
 }
 
 Float64 CLineCatalogsTplRatio::getFitForOneCatalog(
-    const CLineCatalog::TLineVector &restLineList,
-    const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors,
-    const CLineRatioCatalog &catalog, TFloat64List &ampsCorrected) const {
+    const TLineVector &restLineList, const TFloat64List &fittedAmplitudes,
+    const TFloat64List &fittedErrors, const CLineRatioCatalog &catalog,
+    TFloat64List &ampsCorrected) const {
 
-  CLineCatalog::TLineVector lineList = catalog.GetList();
+  TLineVector lineList = catalog.GetList();
   // create the amplitude float vectors
   TFloat64List tplratioAmplitudes;
   TFloat64List linemodelAmplitudes;

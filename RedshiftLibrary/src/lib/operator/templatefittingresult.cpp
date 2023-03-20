@@ -76,7 +76,7 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
   FitDtM[i] = val.cross_result.sumCross;
   FitMtM[i] = val.cross_result.sumT;
   LogPrior[i] = val.logprior;
-  Overlap[i] = val.overlapRate;
+  Overlap[i] = val.overlapFraction;
   Status[i] = val.status;
 
   ChiSquareIntermediate[i] = std::move(val.ChiSquareInterm);

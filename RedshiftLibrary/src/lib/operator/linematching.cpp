@@ -61,9 +61,9 @@ CLineMatching::Compute(const CLineCatalog &detectedLineCatalog,
                        const TFloat64Range &redshiftRange, Int32 nThreshold,
                        Float64 tol, Int32 typeFilter, Int32 detectedForceFilter,
                        Int32 restForceFilter) const {
-  CLineCatalog::TLineVector detectedLineList =
+  TLineVector detectedLineList =
       detectedLineCatalog.GetFilteredList(typeFilter, detectedForceFilter);
-  CLineCatalog::TLineVector restLineList =
+  TLineVector restLineList =
       restLineCatalog.GetFilteredList(typeFilter, restForceFilter);
   auto redshiftGetter = getRedshift(detectedLineList, restLineList);
 
@@ -111,9 +111,9 @@ CLineMatching::Compute(const CLineCatalog &detectedLineCatalog,
   return result;
 }
 
-std::function<Float64(Int32, Int32)> CLineMatching::getRedshift(
-    const CLineCatalog::TLineVector &detectedLineList,
-    const CLineCatalog::TLineVector &restLineList) const {
+std::function<Float64(Int32, Int32)>
+CLineMatching::getRedshift(const TLineVector &detectedLineList,
+                           const TLineVector &restLineList) const {
   return [&detectedLineList, &restLineList](Int32 idx, Int32 iRestLine) {
     return (detectedLineList[idx].GetPosition() -
             restLineList[iRestLine].GetPosition()) /
@@ -124,8 +124,8 @@ std::function<Float64(Int32, Int32)> CLineMatching::getRedshift(
 void CLineMatching::updateSolution(
     Int32 iDetectedLine, Float64 redShift, Float64 tol,
     CLineMatchingResult::TSolutionSet &solution, // to update
-    const CLineCatalog::TLineVector &detectedLineList,
-    const CLineCatalog::TLineVector &restLineList) const {
+    const TLineVector &detectedLineList,
+    const TLineVector &restLineList) const {
   auto redshiftGetter = getRedshift(detectedLineList, restLineList);
   for (Int32 iDetectedLine2 = 0; iDetectedLine2 < detectedLineList.size();
        iDetectedLine2++) {

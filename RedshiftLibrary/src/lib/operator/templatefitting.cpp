@@ -102,7 +102,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
 
     RebinTemplate(tpl, redshift, currentRanges[spcIndex],
-                  result.overlapRate[spcIndex], overlapThreshold, spcIndex);
+                  result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
 
     bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),

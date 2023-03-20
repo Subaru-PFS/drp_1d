@@ -63,7 +63,6 @@ class CParameterStore;
 class CPhotBandCatalog;
 class CLineCatalogsTplRatio;
 class CLine;
-typedef std::vector<CLine> TLineVector;
 
 class CInputContext {
 public:
@@ -120,10 +119,10 @@ public:
   GetTemplateRatioCatalog(const std::string &objectType);
   const std::shared_ptr<CLineCatalog> &
   GetLineCatalog(const std::string &objectType, const std::string &method);
-  const CLineCatalog::TLineVector
-  GetFilteredLineVector(const std::string &objectType,
-                        const std::string &method, const std::string &type,
-                        const std::string &force);
+  const TLineVector GetFilteredLineVector(const std::string &objectType,
+                                          const std::string &method,
+                                          const std::string &type,
+                                          const std::string &force);
   const std::shared_ptr<CPhotBandCatalog> &GetPhotBandCatalog() {
     return m_photBandCatalog;
   }
@@ -251,7 +250,7 @@ CInputContext::GetLineCatalog(const std::string &objectType,
   return m_lineCatalogs[objectType][method];
 }
 
-inline const CLineCatalog::TLineVector CInputContext::GetFilteredLineVector(
+inline const TLineVector CInputContext::GetFilteredLineVector(
     const std::string &objectType, const std::string &method,
     const std::string &type, const std::string &force) {
   //  if (std::findm_categories.find(objectType))

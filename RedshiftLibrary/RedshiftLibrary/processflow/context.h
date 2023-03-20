@@ -64,7 +64,6 @@ class COperatorResultStore;
 class CClassifierStore;
 class CInputContext;
 class CLine;
-typedef std::vector<CLine> TLineVector;
 class CLineCatalogsTplRatio;
 /**
  * \ingroup Redshift
@@ -157,7 +156,7 @@ public:
     return m_ScopeStack[1];
   }
 
-  const CLineCatalog::TLineVector getLineVector();
+  const TLineVector getLineVector();
   std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
 

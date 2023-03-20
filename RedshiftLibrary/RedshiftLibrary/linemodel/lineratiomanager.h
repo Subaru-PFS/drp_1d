@@ -59,7 +59,7 @@ public:
                     std::shared_ptr<const CSpectrum> inputSpc,
                     std::shared_ptr<const TFloat64Range> lambdaRange,
                     std::shared_ptr<CContinuumManager> continuumManager,
-                    const CLineCatalog::TLineVector &restLineList);
+                    const TLineVector &restLineList);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -87,24 +87,21 @@ public:
     // line_ratio_type = tplratio -> should be reviewed
 
   void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
-  static std::shared_ptr<CLineRatioManager>
-  makeLineRatioManager(const std::string &lineRatioType,
-                       CLineModelElementList &elements,
-                       std::shared_ptr<CSpectrumModel> model,
-                       std::shared_ptr<const CSpectrum> inputSpc,
-                       std::shared_ptr<const TFloat64Range> lambdaRange,
-                       std::shared_ptr<CContinuumManager> continuumManager,
-                       const CLineCatalog::TLineVector &restLineList,
-                       std::shared_ptr<CAbstractFitter> fitter);
+  static std::shared_ptr<CLineRatioManager> makeLineRatioManager(
+      const std::string &lineRatioType, CLineModelElementList &elements,
+      std::shared_ptr<CSpectrumModel> model,
+      std::shared_ptr<const CSpectrum> inputSpc,
+      std::shared_ptr<const TFloat64Range> lambdaRange,
+      std::shared_ptr<CContinuumManager> continuumManager,
+      const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter);
 
 protected:
-  void setLyaProfile(Float64 redshift,
-                     const CLineCatalog::TLineVector &lineList);
+  void resetLambdaOffsets();
+  void setLyaProfile(Float64 redshift, const TLineVector &lineList);
   void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
-                      const CLineCatalog::TLineVector &lineList);
-  virtual Int32
-  getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
-                        const CLineCatalog::TLineVector &catalog) const;
+                      const TLineVector &lineList);
+  virtual Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
+                                      const TLineVector &catalog) const;
 
   void setSymIgmProfile(Int32 iElts, const TInt32List &idxLineIGM,
                         Float64 redshift);
@@ -116,7 +113,7 @@ protected:
   std::shared_ptr<const CSpectrum> m_inputSpc;
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;
-  const CLineCatalog::TLineVector &m_RestLineList;
+  const TLineVector &m_RestLineList;
   std::shared_ptr<const TFloat64Range> m_lambdaRange;
 
   bool m_forceDisableLyaFitting = false;

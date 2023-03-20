@@ -78,10 +78,9 @@ public:
 
   void initParameters();
   void initMembers();
-  void LoadCatalog(const CLineCatalog::TLineVector &restLineList);
-  void LoadCatalogOneMultiline(const CLineCatalog::TLineVector &restLineList);
-  void
-  LoadCatalogTwoMultilinesAE(const CLineCatalog::TLineVector &restLineList);
+  void LoadCatalog(const TLineVector &restLineList);
+  void LoadCatalogOneMultiline(const TLineVector &restLineList);
+  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList);
 
   void LogCatalogInfos();
 
@@ -152,7 +151,7 @@ public:
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
   std::shared_ptr<const CSpectrum> m_inputSpc;
-  const CLineCatalog::TLineVector m_RestLineList;
+  const TLineVector m_RestLineList;
 
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
@@ -198,16 +197,15 @@ private:
   std::shared_ptr<CTplModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
-  void fitAmplitudesSimplex();
+  void AddElement(TLineVector &&lines, Float64 velocityEmission,
+                  Float64 velocityAbsorption, TInt32List &&inds);
 
   void SetLSF();
 
-  TInt32List findLineIdxInCatalog(const CLineCatalog::TLineVector &restLineList,
+  TInt32List findLineIdxInCatalog(const TLineVector &restLineList,
                                   const std::string &strTag, Int32 type) const;
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
-
-  void applyRules(bool enableLogs = false);
 
   std::shared_ptr<CSpectrumModel> m_model;
 
@@ -220,7 +218,7 @@ private:
 
   std::string m_LineWidthType;
 
-  std::vector<std::shared_ptr<TFittedData>> m_fittedData;
+  std::vector<TLineModelElementParam_ptr> m_ElementParam;
 
   Float64 m_nominalWidthDefault;
 

@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(MatchingTest1) {
   /* TODO restore this in 7017
   CLineCatalog detectedCatalog;
   Float64 shiftLambda = 1.5;
-  CLineCatalog::TLineVector cataloglist = restFrameCatalog.GetList();
-  CLineCatalog::TLineVector ::iterator it;
+  TLineVector cataloglist = restFrameCatalog.GetList();
+  TLineVector ::iterator it;
   CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new
   CLineProfileSYM()) }; for( it = cataloglist.begin(); it != cataloglist.end();
   ++it )

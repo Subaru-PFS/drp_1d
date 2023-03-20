@@ -56,7 +56,7 @@ CLineRatioManager::CLineRatioManager(
     std::shared_ptr<const CSpectrum> inputSpc,
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineCatalog::TLineVector &restLineList)
+    const TLineVector &restLineList)
     : m_Elements(elements), m_model(model), m_inputSpc(inputSpc),
       m_lambdaRange(lambdaRange), m_continuumManager(continuumManager),
       m_RestLineList(restLineList) {
@@ -69,6 +69,13 @@ CLineRatioManager::CLineRatioManager(
     m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaforcedisablefit");
   }
 }
+
+void CLineRatioManager::resetLambdaOffsets() {
+  for (auto &elt : m_Elements)
+    for (size_t lineIdx = 0; lineIdx < elt->GetSize(); ++lineIdx)
+      elt->SetOffset(lineIdx, elt->GetLines()[lineIdx].GetOffset());
+}
+
 /**
  * @brief CLineModelFitting::setLyaProfile
  * If a Lya line is present with SYMIGM profile, fit igmIdx
@@ -83,8 +90,8 @@ CLineRatioManager::CLineRatioManager(
  * below Lya)
  */
 
-void CLineRatioManager::setLyaProfile(
-    Float64 redshift, const CLineCatalog::TLineVector &catalog) {
+void CLineRatioManager::setLyaProfile(Float64 redshift,
+                                      const TLineVector &catalog) {
   auto idxLineIGM_ = m_Elements.getIgmLinesIndices();
   auto const idxEltIGM = std::move(idxLineIGM_.front());
   std::vector<TInt32List> idxLineIGM(
@@ -100,7 +107,7 @@ void CLineRatioManager::setLyaProfile(
 
   if (!m_Elements[idxLyaE]->IsOutsideLambdaRange(idxLineLyaE)) {
     const auto &profile =
-        m_Elements[idxLyaE]->m_Lines[idxLineLyaE].GetProfile();
+        m_Elements[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
     if (profile.isAsym())
       setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
   }
@@ -111,7 +118,7 @@ void CLineRatioManager::setLyaProfile(
       TInt32List &idxLine = idxLineIGM[i];
       auto end =
           std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-            return !Elt->m_Lines[idx].GetProfile().isSymIgm();
+            return !Elt->GetLines()[idx].GetProfile().isSymIgm();
           });
       idxLine.erase(end, idxLine.end());
       if (!idxLine.empty())
@@ -120,9 +127,9 @@ void CLineRatioManager::setLyaProfile(
   }
 }
 
-void CLineRatioManager::setAsymProfile(
-    Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
-    const CLineCatalog::TLineVector &catalog) {
+void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
+                                       Float64 redshift,
+                                       const TLineVector &catalog) {
   Int32 lineIndex = getLineIndexInCatalog(idxLyaE, idxLineLyaE, catalog);
   if (lineIndex == undefIdx)
     return;
@@ -144,7 +151,7 @@ void CLineRatioManager::setAsymProfile(
 
   bool doasymfit = profile->isAsymFit();
 
-  m_Elements[idxLyaE]->m_Lines[idxLineLyaE].SetProfile(std::move(profile));
+  m_Elements[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
 
   if (!doasymfit)
     return;
@@ -158,14 +165,8 @@ void CLineRatioManager::setAsymProfile(
 }
 
 Int32 CLineRatioManager::getLineIndexInCatalog(
-    Int32 iElts, Int32 idxLine,
-    const CLineCatalog::TLineVector &catalog) const {
-  Int32 lineIndex = undefIdx;
-  lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[idxLine];
-  if (lineIndex < 0 || lineIndex >= catalog.size())
-    THROWG(INTERNAL_ERROR, "Lya idx out-of-bound");
-
-  return lineIndex;
+    Int32 iElts, Int32 idxLine, const TLineVector &catalog) const {
+  return m_Elements[iElts]->getLineIndexInCatalog(idxLine, catalog);
 }
 
 void CLineRatioManager::setSymIgmProfile(Int32 iElts,
@@ -185,6 +186,7 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
 }
 
 bool CLineRatioManager::init(Float64 redshift, Int32 itratio) {
+  resetLambdaOffsets();
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
   setLyaProfile(redshift, m_RestLineList);
@@ -298,8 +300,7 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     std::shared_ptr<const CSpectrum> inputSpc,
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineCatalog::TLineVector &restLineList,
-    std::shared_ptr<CAbstractFitter> fitter) {
+    const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
   std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
     ret = std::make_shared<CTplratioManager>(

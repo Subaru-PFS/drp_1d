@@ -260,7 +260,7 @@ void CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange,
 /**
  *
  */
-Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate(
+Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapFraction(
     const TFloat64Range &lambdaRange, const CMask &omask) const {
 
   Int32 selfRate = 0;

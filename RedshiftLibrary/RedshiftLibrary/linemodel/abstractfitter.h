@@ -51,25 +51,26 @@ namespace NSEpic
 class CContinuumManager;
 class CAbstractFitter {
 public:
-  CAbstractFitter(CLineModelElementList &elements,
-                  std::shared_ptr<const CSpectrum> inputSpectrum,
-                  std::shared_ptr<const TLambdaRange> lambdaRange,
-                  std::shared_ptr<CSpectrumModel> spectrumModel,
-                  const CLineCatalog::TLineVector &restLineList,
-                  const std::vector<std::shared_ptr<TFittedData>> &fittedData);
+  CAbstractFitter(
+      CLineModelElementList &elements,
+      std::shared_ptr<const CSpectrum> inputSpectrum,
+      std::shared_ptr<const TLambdaRange> lambdaRange,
+      std::shared_ptr<CSpectrumModel> spectrumModel,
+      const TLineVector &restLineList,
+      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam);
 
   virtual void fit(Float64 redshift) = 0;
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
 
-  static std::shared_ptr<CAbstractFitter>
-  makeFitter(std::string fittingMethod, CLineModelElementList &elements,
-             std::shared_ptr<const CSpectrum> inputSpectrum,
-             std::shared_ptr<const TLambdaRange> lambdaRange,
-             std::shared_ptr<CSpectrumModel> spectrumModel,
-             const CLineCatalog::TLineVector &restLineList,
-             std::shared_ptr<CContinuumManager> continuumManager,
-             const std::vector<std::shared_ptr<TFittedData>> &fittedData);
+  static std::shared_ptr<CAbstractFitter> makeFitter(
+      std::string fittingMethod, CLineModelElementList &elements,
+      std::shared_ptr<const CSpectrum> inputSpectrum,
+      std::shared_ptr<const TLambdaRange> lambdaRange,
+      std::shared_ptr<CSpectrumModel> spectrumModel,
+      const TLineVector &restLineList,
+      std::shared_ptr<CContinuumManager> continuumManager,
+      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam);
 
   void logParameters();
 
@@ -82,32 +83,27 @@ public:
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
-  void computeCrossProducts(CLineModelElement &elt,
-                            const CSpectrumSpectralAxis &spectralAxis,
-                            const CSpectrumFluxAxis &noContinuumfluxAxis,
-                            const CSpectrumFluxAxis &continuumfluxAxis,
-                            Float64 redshift, Int32 lineIdx);
+  void computeCrossProducts(CLineModelElement &elt, Float64 redshift,
+                            Int32 lineIdx);
 
-  void fitAmplitude(Int32 eltIndex, const CSpectrumSpectralAxis &spectralAxis,
-                    const CSpectrumFluxAxis &fluxAxis,
-                    const CSpectrumFluxAxis &continuumfluxAxis,
-                    Float64 redshift, Int32 lineIdx = undefIdx);
+  void fitAmplitude(Int32 eltIndex, Float64 redshift, Int32 lineIdx = undefIdx);
 
-  void fitAmplitudeAndLambdaOffset(Int32 eltIndex,
-                                   const CSpectrumSpectralAxis &spectralAxis,
-                                   const CSpectrumFluxAxis &fluxAxis,
-                                   const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Float64 redshift, Int32 lineIdx = undefIdx,
-                                   bool enableOffsetFitting = true,
-                                   Float64 step = 25., Float64 min = -400.,
-                                   Float64 max = 400.);
+  virtual void fitAmplitudeAndLambdaOffset(Int32 eltIndex, Float64 redshift,
+                                           Int32 lineIdx = undefIdx,
+                                           bool enableOffsetFitting = true);
 
   Float64 getLeastSquareMeritFast(Int32 idxLine = -1) const;
 
+  void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
+
+  bool HasLambdaOffsetFitting(TInt32List EltsIdx,
+                              bool enableOffsetFitting) const;
+  Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
+
   CLineModelElementList &m_Elements;
-  std::vector<std::shared_ptr<TFittedData>> m_fittedData;
+  std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
   const CSpectrum &m_inputSpc;
-  const CLineCatalog::TLineVector &m_RestLineList;
+  const TLineVector &m_RestLineList;
   const TFloat64Range &m_lambdaRange;
   std::shared_ptr<CSpectrumModel> m_model;
 
