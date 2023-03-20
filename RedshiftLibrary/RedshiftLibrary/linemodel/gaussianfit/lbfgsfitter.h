@@ -54,22 +54,28 @@ public:
   class CLeastSquare {
   public:
     CLeastSquare(CLbfgsFitter &fitter, const TInt32List &EltsIdx,
-                 Int32 lineType, Float64 redshift, TInt32List xInds,
-                 Int32 idxAmpOffset);
+                 Int32 lineType, Float64 redshift, const TInt32List &xInds,
+                 Int32 velA_idx, Int32 velE_idx, Int32 lbdaOffset_idx,
+                 Float64 normFactor);
     Float64 operator()(const VectorXd &x, VectorXd &grad);
 
   private:
+    Float64 ComputeLeastSquare(const TFloat64List &amps, Float64 redshift,
+                               TFloat64List pCoeffs, VectorXd &grad);
+
     CLbfgsFitter &m_fitter;
     const TInt32List &m_EltsIdx;
     const Int32 m_lineType;
     const Float64 m_redshift;
     const TInt32List &m_xInds;
-    const Int32 m_idxAmpOffset;
+    const Int32 m_velA_idx;
+    const Int32 m_velE_idx;
+    const Int32 m_lbdaOffset_idx;
+    const Float64 m_normFactor;
     const CSpectrumSpectralAxis &m_spectralAxis;
     const CSpectrumFluxAxis &m_noContinuumFluxAxis;
     const CSpectrumFluxAxis &m_continuumFluxAxis;
     const CSpectrumNoiseAxis &m_ErrorNoContinuum;
-    Float64 m_normFactor;
   };
 
   using CHybridFitter::CHybridFitter;

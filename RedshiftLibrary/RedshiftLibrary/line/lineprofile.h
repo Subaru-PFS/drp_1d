@@ -76,7 +76,7 @@ typedef struct TSymIgmParams {
   TSymIgmParams(Int32 igmidx, Float64 redshift)
       : m_igmidx(igmidx), m_redshift(redshift){};
 
-  Int32 m_igmidx = -1;
+  Int32 m_igmidx = undefIdx;
   Float64 m_redshift = NAN;
 } TSymIgmParams;
 

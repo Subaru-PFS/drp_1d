@@ -36,33 +36,25 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/lbfgsfitter.h"
+#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsfitter.h"
 
 using namespace std;
 using Eigen::VectorXd;
 using namespace LBFGSpp;
 using namespace NSEpic;
 
-CLbfgsFitter::CLeastSquare::CLeastSquare(CLbfgsFitter &fitter,
-                                         const TInt32List &EltsIdx,
-                                         Int32 lineType, Float64 redshift,
-                                         TInt32List xInds, Int32 idxAmpOffset)
+CLbfgsFitter::CLeastSquare::CLeastSquare(
+    CLbfgsFitter &fitter, const TInt32List &EltsIdx, Int32 lineType,
+    Float64 redshift, const TInt32List &xInds, Int32 velA_idx, Int32 velE_idx,
+    Int32 lbdaOffset_idx, Float64 normFactor)
     : m_fitter(fitter), m_EltsIdx(EltsIdx), m_lineType(lineType),
-      m_redshift(redshift), m_xInds(xInds), m_idxAmpOffset(idxAmpOffset),
+      m_redshift(redshift), m_xInds(xInds), m_velA_idx(velA_idx),
+      m_velE_idx(velE_idx), m_lbdaOffset_idx(lbdaOffset_idx),
+      m_normFactor(normFactor),
       m_spectralAxis(fitter.m_inputSpc.GetSpectralAxis()),
       m_noContinuumFluxAxis(fitter.m_model->getSpcFluxAxisNoContinuum()),
       m_continuumFluxAxis(fitter.m_model->getContinuumFluxAxis()),
-      m_ErrorNoContinuum(fitter.m_inputSpc.GetErrorAxis()) {
-
-  // Normalize
-  // Float64 maxabsval = DBL_MIN;
-  Int32 maxabsval_idx =
-      *std::max_element(xInds.cbegin(), xInds.cend(), [this](Int32 l, Int32 r) {
-        return std::abs(m_noContinuumFluxAxis[l]) <
-               std::abs(m_noContinuumFluxAxis[r]);
-      });
-  m_normFactor = 1.0 / std::abs(m_noContinuumFluxAxis[maxabsval_idx]);
-}
+      m_ErrorNoContinuum(fitter.m_inputSpc.GetErrorAxis()) {}
 
 // compute Sum Squared diff and gradient
 Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
@@ -79,13 +71,9 @@ Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
 
   Float64 velocityA = NAN;
   Float64 velocityE = NAN;
-  Int32 velA_idx = undefIdx;
-  Int32 velE_idx = undefIdx;
   if (m_lineType == CLine::nType_All) {
-    velA_idx = m_EltsIdx.size();
-    velocityA = x[velA_idx];
-    velE_idx = m_EltsIdx.size() + 1;
-    velocityE = x[velE_idx];
+    velocityA = x[m_velA_idx];
+    velocityE = x[m_velE_idx];
     lambdaOffset_idx++;
     for (Int32 eltIndex : m_EltsIdx) {
       auto &elt = m_fitter.m_Elements[eltIndex];
@@ -96,15 +84,13 @@ Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
       }
     }
   } else if (m_lineType == CLine::nType_Absorption) {
-    velA_idx = m_EltsIdx.size();
-    velocityA = x[velA_idx];
+    velocityA = x[m_velA_idx];
     for (Int32 eltIndex : m_EltsIdx) {
       auto &elt = m_fitter.m_Elements[eltIndex];
       elt->SetVelocityAbsorption(velocityA);
     }
   } else {
-    velE_idx = m_EltsIdx.size();
-    velocityE = x[velE_idx];
+    velocityE = x[m_velE_idx];
     for (Int32 eltIndex : m_EltsIdx) {
       auto &elt = m_fitter.m_Elements[eltIndex];
       elt->SetVelocityEmission(velocityE);
@@ -112,6 +98,17 @@ Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
   }
 
   Float64 redshift = m_redshift + (1.0 + m_redshift) * x[lambdaOffset_idx];
+
+  // set redshift in SYMIGM profiles
+  for (Int32 eltIndex : m_EltsIdx) {
+    auto &elt = m_fitter.m_Elements[eltIndex];
+    const TInt32List &igm_indices = elt->getIgmLinesIndices();
+    for (Int32 idx : igm_indices) {
+      auto igmp = elt->GetSymIgmParams();
+      igmp.m_redshift = redshift;
+      elt->SetSymIgmParams(igmp, idx);
+    }
+  }
 
   TFloat64List pCoeffs;
   size_t ncoeff = 0;
@@ -121,8 +118,16 @@ Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
     pCoeffs = TFloat64List(ibegin, ibegin + ncoeff);
   }
 
+  return ComputeLeastSquare(amps, redshift, pCoeffs, grad);
+}
+
+Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(const TFloat64List &amps,
+                                                       Float64 redshift,
+                                                       TFloat64List pCoeffs,
+                                                       VectorXd &grad) {
+
   // compute least square term
-  double sumSquare = 0.;
+  Float64 sumSquare = 0.;
   for (Int32 i = 0; i < m_xInds.size(); i++) {
     Float64 xi, yi, ei, ei2;
     Int32 idx = m_xInds[i];
@@ -163,7 +168,7 @@ Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
 
     TFloat64List pCoeffGrad;
     if (m_fitter.m_enableAmplitudeOffsets) {
-      pCoeffGrad.reserve(ncoeff);
+      pCoeffGrad.reserve(pCoeffs.size());
       // polynome value
       Float64 polynome = 0.;
       Float64 xipower = 1.;
@@ -185,19 +190,19 @@ Float64 CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
       // squared diff derivative wrt velocity
       if (m_fitter.m_Elements[eltIndex]->GetElementType() ==
           CLine::nType_Absorption) {
-        grad[velA_idx] += residual * velocityAGrad;
+        grad[m_velA_idx] += residual * velocityAGrad;
       } else {
-        grad[velE_idx] += residual * velocityEGrad;
+        grad[m_velE_idx] += residual * velocityEGrad;
       }
 
       // squared diff derivative wrt offset
-      grad[lambdaOffset_idx] += residual * offsetGrad;
+      grad[m_lbdaOffset_idx] += residual * offsetGrad;
     }
 
     // squared diff derivative wrt polynome coeffs
     if (m_fitter.m_enableAmplitudeOffsets) {
-      for (size_t i = 0; i != ncoeff; ++i)
-        grad[lambdaOffset_idx + i + 1] += residual * pCoeffGrad[i];
+      for (size_t i = 0; i != pCoeffs.size(); ++i)
+        grad[m_lbdaOffset_idx + i + 1] += residual * pCoeffGrad[i];
     }
   }
 
@@ -234,11 +239,19 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       EltsIdx.size() + 1; // position of lambda offset in the param vector
 
   // check if mixed types (Abs & Em)
+  Int32 velA_idx = undefIdx;
+  Int32 velE_idx = undefIdx;
   auto lineType = m_Elements[EltsIdx.front()]->GetElementType();
+  if (lineType = CLine::nType_Absorption)
+    velA_idx = EltsIdx.size();
+  else
+    velE_idx = EltsIdx.size();
   for (Int32 eltIndex = 1; eltIndex < EltsIdx.size(); ++eltIndex)
     if (lineType != m_Elements[eltIndex]->GetElementType()) {
       lineType = CLine::nType_All;
       nddl++; // 2 velocity parameter
+      velA_idx = EltsIdx.size();
+      velE_idx = velA_idx + 1;
       lbdaOffset_idx++;
     }
 
@@ -264,14 +277,15 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
   }
 
-  // Set up parameters
-  LBFGSBParam<Float64> param; // New parameter class
-  param.epsilon = 1e-6;
-  param.max_iterations = 100;
-
-  // Create solver and function object
-  LBFGSBSolver<Float64> solver(param); // New solver class
-  CLeastSquare fun(*this, EltsIdx, lineType, redshift, xInds, idxAmpOffset);
+  // Normalize
+  // Float64 maxabsval = DBL_MIN;
+  const auto &noContinuumFluxAxis = m_model->getSpcFluxAxisNoContinuum();
+  Int32 maxabsval_idx =
+      *std::max_element(xInds.cbegin(), xInds.cend(), [&](Int32 l, Int32 r) {
+        return std::abs(noContinuumFluxAxis[l]) <
+               std::abs(noContinuumFluxAxis[r]);
+      });
+  Float64 normFactor = 1.0 / std::abs(noContinuumFluxAxis[maxabsval_idx]);
 
   // velocity bounds
   VectorXd v_velocityMin;
@@ -334,7 +348,7 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       elt->SetVelocityEmission(m_velIniGuessE);
     }
     fitAmplitude(eltIndex, redshift);
-    ampsGuess.push_back(elt->GetElementAmplitude());
+    ampsGuess.push_back(elt->GetElementAmplitude() * normFactor);
     if (std::isnan(ampsGuess.back()))
       return -1;
   }
@@ -355,6 +369,16 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   if (m_enableAmplitudeOffsets)
     v_xGuess << VectorXd::Zero(m_AmplitudeOffsetsDegree + 1);
 
+  // Set up solver parameters
+  LBFGSBParam<Float64> param; // New parameter class
+  param.epsilon = 1e-6;
+  param.max_iterations = 100;
+
+  // Create solver and function object
+  LBFGSBSolver<Float64> solver(param); // New solver class
+  CLeastSquare fun(*this, EltsIdx, lineType, redshift, xInds, velA_idx,
+                   velE_idx, lbdaOffset_idx, normFactor);
+
   // v_xGuess will be overwritten to be the best point found
   Float64 fx;
   int niter = solver.minimize(fun, v_xGuess, fx, lb, ub);
@@ -364,14 +388,14 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   Float64 snr = NAN;
   ampsfitted.assign(EltsIdx.size(), NAN);
   for (Int32 i = 0; i < EltsIdx.size(); ++i) {
-    ampsfitted[i] = v_xGuess[i];
+    ampsfitted[i] = v_xGuess[i] / normFactor;
     m_Elements[EltsIdx[i]]->SetFittedAmplitude(ampsfitted[i], snr);
   }
 
-  // store fitted velocity
+  // store fitted velocity dispersion (line width)
   if (lineType == CLine::nType_All) {
-    Float64 velocityA = v_xGuess[EltsIdx.size()];
-    Float64 velocityE = v_xGuess[EltsIdx.size() + 1];
+    Float64 velocityA = v_xGuess[velA_idx];
+    Float64 velocityE = v_xGuess[velE_idx];
     for (Int32 i = 0; i < EltsIdx.size(); ++i) {
       auto &elt = m_Elements[EltsIdx[i]];
       if (elt->GetElementType() == CLine::nType_Absorption)
@@ -380,16 +404,16 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
         elt->SetVelocityEmission(velocityE);
     }
   } else if (lineType == CLine::nType_Absorption) {
-    Float64 velocity = v_xGuess[EltsIdx.size()];
+    Float64 velocity = v_xGuess[velA_idx];
     for (Int32 i = 0; i < EltsIdx.size(); ++i)
       m_Elements[EltsIdx[i]]->SetVelocityAbsorption(velocity);
   } else {
-    Float64 velocity = v_xGuess[EltsIdx.size()];
+    Float64 velocity = v_xGuess[velE_idx];
     for (Int32 i = 0; i < EltsIdx.size(); ++i)
       m_Elements[EltsIdx[i]]->SetVelocityEmission(velocity);
   }
 
-  // store velocity offset
+  // store velocity offset (line offset)
   for (Int32 eltIndex : EltsIdx) {
     auto &elt = m_Elements[eltIndex];
     for (Int32 i = 0; i < elt->GetSize(); ++i) {
@@ -401,7 +425,17 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     }
   }
 
-  // TODO store polynome coeffs
+  // TODO store polynome coeffs (continuum under line)
+  if (m_enableAmplitudeOffsets) {
+    Float64 x0 = v_xGuess[lbdaOffset_idx + 1] / normFactor;
+    Float64 x1 = 0.0;
+    Float64 x2 = 0.0;
+    if (m_AmplitudeOffsetsDegree > 0)
+      x1 = v_xGuess[lbdaOffset_idx + 2] / normFactor;
+    if (m_AmplitudeOffsetsDegree > 1)
+      x2 = v_xGuess[lbdaOffset_idx + 3] / normFactor;
+    m_Elements.setAmplitudeOffsetsCoeffsAt(idxAmpOffset, {x0, x1, x2});
+  }
 
-  return EltsIdx.size();
+  return EltsIdx.size(); // nb of amplitudes of same sign (all >0)
 }

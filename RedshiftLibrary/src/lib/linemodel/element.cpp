@@ -1136,23 +1136,23 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
-    Float64 x0 = NAN;
+    Float64 mu = NAN;
     Float64 sigma = NAN;
-    getObservedPositionAndLineWidth(k2, redshift, x0, sigma,
+    getObservedPositionAndLineWidth(k2, redshift, mu, sigma,
                                     false); // do not apply Lya asym offset
-    Float64 x0_rest =
+    Float64 lambda_rest =
         GetObservedPosition(k2, 0.0, false); // get restframe wavelentgh
     const auto &profile = getLineProfile(k2);
 
     Float64 profile_derivz_val =
-        x0_rest * profile->GetLineProfileDerivX0(x, x0, sigma);
+        lambda_rest * profile->GetLineProfileDerivX0(x, mu, sigma);
 
     Float64 fluxval = m_SignFactors[k2] * A * profile_derivz_val;
 
     Yi += m_SignFactors[k2] == -1
               ? continuumFlux * fluxval -
                     A * continuumFluxDerivZ *
-                        profile->GetLineProfileVal(x, x0, sigma)
+                        profile->GetLineProfileVal(x, mu, sigma)
               : fluxval;
   }
   return Yi;
