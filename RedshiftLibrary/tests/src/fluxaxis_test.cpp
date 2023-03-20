@@ -133,9 +133,19 @@ BOOST_AUTO_TEST_CASE(basic_function_test) {
   CSpectrumNoiseAxis spectrumNoiseAxis(Array2);
   object_FluxAxis.setError(spectrumNoiseAxis);
   BOOST_CHECK(object_FluxAxis.GetError().GetSamplesVector() == Array2);
+  spectrumNoiseAxis.GetSamplesVector().pop_back();
+  BOOST_CHECK_THROW(object_FluxAxis.setError(spectrumNoiseAxis),
+                    GlobalException);
+  spectrumNoiseAxis.GetSamplesVector().push_back(20);
+
+  //-------------//
+  // test setErrorSample
+  object_FluxAxis.setErrorSample(0, 0.);
+  BOOST_CHECK(object_FluxAxis.GetError().GetSamplesVector()[0] == 0.);
 
   //-------------//
   // test extract
+  object_FluxAxis.setErrorSample(0, 2);
   CSpectrumFluxAxis object_FluxAxis2 = object_FluxAxis.extract(0, 4);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == 5);
   BOOST_CHECK(object_FluxAxis2.GetSamplesVector() == sample_ref);
