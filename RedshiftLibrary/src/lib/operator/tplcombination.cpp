@@ -175,15 +175,7 @@ void COperatorTplcombination::BasicFit(
   Float64 chisq, SNR;
   Float64 dtd_complement =
       0.; // value mainly relevant with DisextinctData method
-  /**
-   * there are two ways to apply extinction:
-   * 1. apply the inverse of extinction on both spcFlux and error on flux
-   * 2. apply extinction on all templates, using original spcFlux an error
-   *
-   * TODO: keep the first method once we completely validate the equivalence of
-   * both method
-   */
-  bool DisextinctData = false; // true = option 1; false = option 2
+
   // create a template with cte flux = 1, to be used only when disextincting
   // data and noise
   CTemplate identityTemplate(
@@ -191,16 +183,14 @@ void COperatorTplcombination::BasicFit(
       std::move(CSpectrumFluxAxis(
           m_templatesRebined_bf.front().GetSampleCount(), 1)));
   // Prepare the fit data, once for all
-  if (!DisextinctData) {
-    Float64 yi;
-    Float64 ei;
-    for (Int32 i = 0; i < n; i++) {
-      yi = spcFluxAxis[i + kStart] / normFactor;
-      ei = spcError[i + kStart] / normFactor;
+  Float64 yi;
+  Float64 ei;
+  for (Int32 i = 0; i < n; i++) {
+    yi = spcFluxAxis[i + kStart] / normFactor;
+    ei = spcError[i + kStart] / normFactor;
 
-      gsl_vector_set(y, i, yi);              // y[i] = yi
-      gsl_vector_set(w, i, 1.0 / (ei * ei)); // w[i] = 1/(ei*ei)
-    }
+    gsl_vector_set(y, i, yi);              // y[i] = yi
+    gsl_vector_set(w, i, 1.0 / (ei * ei)); // w[i] = 1/(ei*ei)
   }
   for (Int32 kigm = 0; kigm < nIGM; kigm++) {
     if (igmLoopUseless_WavelengthRange) {
@@ -217,7 +207,7 @@ void COperatorTplcombination::BasicFit(
 
     bool igmCorrectionAppliedOnce = false;
     // applyMeiksin on all templates
-    if (opt_extinction && !DisextinctData) {
+    if (opt_extinction) {
       if (currentRange.GetBegin() / (1 + redshift) >
           RESTLAMBDA_LYA) // bug??: why dividing by (1+z) if currentRange is
                           // already in restframe??
@@ -239,63 +229,12 @@ void COperatorTplcombination::BasicFit(
       Int32 kEbmv = EbmvList[kEbmv_];
       Float64 coeffEBMV = -1.0; // no ism by default
       // apply ism on all templates, once for all
-      if (opt_dustFitting && !DisextinctData) {
+      if (opt_dustFitting) {
         coeffEBMV =
             m_templatesRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvValue(
                 kEbmv);
         for (Int32 iddl = 0; iddl < nddl; iddl++)
           m_templatesRebined_bf[iddl].ApplyDustCoeff(kEbmv);
-      }
-
-      if ((opt_extinction || opt_dustFitting) && DisextinctData) {
-        identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift,
-                                          tplList[0]->m_ismCorrectionCalzetti,
-                                          tplList[0]->m_igmCorrectionMeiksin);
-        if (opt_extinction) {
-          igmCorrectionAppliedOnce =
-              identityTemplate.ApplyMeiksinCoeff(meiksinIdx);
-          if (!igmCorrectionAppliedOnce)
-            igmLoopUseless_WavelengthRange = true;
-        }
-        if (opt_dustFitting) {
-          coeffEBMV = m_templatesRebined_bf.front()
-                          .m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
-          identityTemplate.ApplyDustCoeff(kEbmv);
-        }
-        const CSpectrumFluxAxis &extinction = identityTemplate.GetFluxAxis();
-        Float64 yi, ei;
-        // Important: hereinafter we assume that kStart_up can only be equal or
-        // higher than kStart when moving throw the igm curves this is valid
-        // only iif igm curves are loaded in the increasing ordre,i.e., from the
-        // least extinction curve to the highest extinction curve
-        Int32 kStart_up = kStart;
-        for (Int32 i = 0; i < n; i++) {
-          if (!extinction[i]) {
-            kStart_up++; // find the first non-null value and update kStart
-                         // accordingly
-            continue;
-          }
-          if (kStart_up > kStart) {
-            // compute the dtd part than wont be computed using gsl
-            dtd_complement += ComputeDtD(
-                spcFluxAxis, TInt32Range(kStart_model, kStart_up - 1));
-            n = kEnd - kStart_up + 1; // update the length value
-            kStart = kStart_up;
-            // free previously allocated buffers
-            gsl_matrix_free(X);
-            gsl_vector_free(y);
-            gsl_vector_free(w);
-            // reallocate buffers with the newly calculated value
-            X = gsl_matrix_alloc(n, nddl);
-            y = gsl_vector_alloc(n);
-            w = gsl_vector_alloc(n);
-          }
-          yi = spcFluxAxis[i + kStart] / extinction[i] / normFactor;
-          ei = spcError[i + kStart] / extinction[i] / normFactor;
-
-          gsl_vector_set(y, i, yi);              // y[i] = yi
-          gsl_vector_set(w, i, 1.0 / (ei * ei)); // w[i] = 1/(ei*ei)
-        }
       }
 
       // preparing the template matrix for computing the Xi2 value
@@ -426,23 +365,6 @@ void COperatorTplcombination::BasicFit(
   } else {
     fittingResults.status = COperator::nStatus_LoopError;
   }
-}
-
-// estimate the lst-square brute force
-Float64 COperatorTplcombination::ComputeXi2_bruteForce(
-    const CSpectrumFluxAxis &correctedFlux,
-    const CSpectrumFluxAxis &spcFluxAxis, const Int32 kStart) {
-  const CSpectrumNoiseAxis &spcError = spcFluxAxis.GetError();
-
-  Float64 diff, err2;
-  Float64 chi2Value = .0;
-  for (Int32 k = 0; k < correctedFlux.GetSamplesCount(); k++) {
-    diff = correctedFlux[k] -
-           spcFluxAxis[k + kStart]; // indeces should be verified
-    err2 = spcError[k + kStart] * spcError[k + kStart];
-    chi2Value += diff * diff / err2;
-  }
-  return chi2Value;
 }
 
 void COperatorTplcombination::RebinTemplate(
@@ -819,18 +741,4 @@ COperatorTplcombination::GetNormFactor(const CSpectrumFluxAxis spcFluxAxis,
     }
   }
   return maxabsval;
-}
-// compute dtd on a specific range
-Float64
-COperatorTplcombination::ComputeDtD(const CSpectrumFluxAxis &spcFluxAxis,
-                                    const TInt32Range &range) {
-  const CSpectrumNoiseAxis &spcError = spcFluxAxis.GetError();
-
-  Float64 err2;
-  Float64 dtd = .0;
-  for (Int32 k = range.GetBegin(); k <= range.GetEnd(); k++) {
-    err2 = spcError[k] * spcError[k];
-    dtd += spcFluxAxis[k] * spcFluxAxis[k] / err2;
-  }
-  return dtd;
 }
