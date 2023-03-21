@@ -280,7 +280,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
           "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.25886608043741388, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
 
   ctx.reset();
 }
@@ -311,7 +311,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
           "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.2591178788325017, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
 
   ctx.reset();
 }
@@ -342,7 +342,7 @@ BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
           "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.25905236255797504, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1e-6);
 
   ctx.reset();
 }

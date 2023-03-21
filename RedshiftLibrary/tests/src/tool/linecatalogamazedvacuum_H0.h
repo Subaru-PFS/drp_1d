@@ -42,14 +42,14 @@ using namespace NSEpic;
 
 class fixture_LineCatalogData {
 public:
-  TFloat64List waveLength = {3729.88, 3727.09};
-  TStringList name = {"[OII]3729", "[OII]3726"};
-  TStringList type = {"E", "A"};
-  TStringList force = {"S", "S"};
-  TStringList profile = {"SYM", "ASYM"};
-  TStringList amplitudeGroupName = {"-1", "-1"};
-  TFloat64List amplitudeGroupValue = {1, 1};
-  TStringList dispersionVelocityGroupName = {"Em1", "Em1"};
-  TFloat64List waveLengthOffset = {0, 0};
-  TBoolList enableFitWaveLengthOffset = {false, false};
+  TFloat64List waveLength = {3729.88, 3727.09, 3610.0, 3771.65};
+  TStringList name = {"[OII]3729", "[OII]3726", "LyAE", "H11A"};
+  TStringList type = {"E", "E", "E", "A"};
+  TStringList force = {"S", "S", "S", "W"};
+  TStringList profile = {"SYM", "SYM", "ASYM", "SYM"};
+  TStringList amplitudeGroupName = {"-1", "-1", "-1", "-1"};
+  TFloat64List amplitudeGroupValue = {1, 1, 1, 1};
+  TStringList dispersionVelocityGroupName = {"Em1", "Em1", "Em1", "Abs1"};
+  TFloat64List waveLengthOffset = {0, 0, 0, 0};
+  TBoolList enableFitWaveLengthOffset = {false, false, false, false};
 };
