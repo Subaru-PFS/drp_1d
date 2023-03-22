@@ -7,11 +7,9 @@ from pylibamazed.redshift import ErrorCode
 
 class Parameters():
 
-    def __init__(self, parameters, config):
+    def __init__(self, parameters, config=None):
         self.parameters = parameters
         self.config = config
-        self.calibration_dir = config["calibration_dir"]
-        self.parameters["calibrationDir"]=config["calibration_dir"]
         
     def get_solve_methods(self,object_type):
         method = self.parameters[object_type]["method"]
