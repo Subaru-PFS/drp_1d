@@ -160,7 +160,7 @@ bool CLineModelElement::IsOutsideLambdaRange() const {
  * combine quadratically with the instrinsic width of the Line itself. The line
  * width in this case represents to the velocity
  * */
-Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z,
+Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda,
                                         bool isEmission) const {
   const Float64 c = m_speedOfLightInVacuum;
   Float64 v = isEmission ? getVelocityEmission() : getVelocityAbsorption();
@@ -438,7 +438,7 @@ void CLineModelElement::EstimateTheoreticalSupport(
     m_OutsideLambdaRangeList[subeIdx] = true;
     return;
   }
-  Float64 sigma = GetLineWidth(mu, redshift, GetIsEmission());
+  Float64 sigma = GetLineWidth(mu, GetIsEmission());
   Float64 winsize = getLineProfile(subeIdx)->GetNSigmaSupport() * sigma;
   TInt32Range supportRange =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
@@ -726,7 +726,7 @@ void CLineModelElement::getObservedPositionAndLineWidth(
   if (!m_LSF->checkAvailability(mu)) {
     THROWG(INTERNAL_ERROR, "Line position does not belong to LSF range");
   } else
-    sigma = GetLineWidth(mu, redshift, GetIsEmission());
+    sigma = GetLineWidth(mu, GetIsEmission());
   return;
 }
 

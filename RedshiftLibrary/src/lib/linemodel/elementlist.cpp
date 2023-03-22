@@ -275,7 +275,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
       for (Int32 iLineRef = 0; iLineRef < linesRef.size(); iLineRef++) {
         Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
         Float64 cRef = m_Elements[ind]->GetLineWidth(
-            muRef, redshift, linesRef[iLineRef].GetIsEmission());
+            muRef, linesRef[iLineRef].GetIsEmission());
         Float64 winsizeRef =
             linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * cRef;
         Float64 overlapSizeMin = winsizeRef * overlapThres;
@@ -284,7 +284,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
 
         Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
         Float64 cElt = m_Elements[iElts]->GetLineWidth(
-            muElt, redshift, linesElt[iLineElt].GetIsEmission());
+            muElt, linesElt[iLineElt].GetIsEmission());
         Float64 winsizeElt =
             linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * cElt;
         yinf = muElt - winsizeElt / 2.0;
@@ -332,7 +332,7 @@ TInt32List CLineModelElementList::getOverlappingElementsBySupport(
   const CLine &line = m_Elements[ind]->GetLines().front();
   Int32 linetype = line.GetType();
   Float64 mu = line.GetPosition() * (1 + redshift);
-  Float64 c = m_Elements[ind]->GetLineWidth(mu, redshift, line.GetIsEmission());
+  Float64 c = m_Elements[ind]->GetLineWidth(mu, line.GetIsEmission());
   Float64 winsize = line.GetProfile()->GetNSigmaSupport() * c;
   Float64 overlapThresholdMin = winsize * overlapThres;
   // overlapThresholdMin = 0.0;

@@ -195,8 +195,7 @@ public:
 
   const std::string &GetLineName(Int32 subeIdx) const;
   bool IsOutsideLambdaRange() const;
-  Float64 GetLineWidth(Float64 lambda, Float64 z = 0.,
-                       bool isEmission = 0) const;
+  Float64 GetLineWidth(Float64 lambda, bool isEmission = 0) const;
   bool IsOutsideLambdaRange(Int32 subeIdx) const;
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,

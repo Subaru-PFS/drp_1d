@@ -135,19 +135,17 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   elementcombined.SetLSF(lsf);
   elementVD.SetLSF(lsf);
 
-  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., 1., true), 0.001);
-  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., 1., false), 0.001);
+  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., true), 0.001);
+  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., false), 0.001);
   /*
-  BOOST_CHECK_CLOSE( 1.2,  elementfixed.GetLineWidth(10000., 1., true),0.001);
-  BOOST_CHECK_CLOSE( 1.2, elementfixed.GetLineWidth(10000., 1., false),0.001);
+  BOOST_CHECK_CLOSE( 1.2,  elementfixed.GetLineWidth(10000., true),0.001);
+  BOOST_CHECK_CLOSE( 1.2, elementfixed.GetLineWidth(10000., false),0.001);
   */
-  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., 1., true),
+  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., true), 0.001);
+  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., false),
                     0.001);
-  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., 1., false),
-                    0.001);
-  BOOST_CHECK_CLOSE(0.0333564, elementVD.GetLineWidth(10000., 1., true), 0.001);
-  BOOST_CHECK_CLOSE(0.0366920, elementVD.GetLineWidth(10000., 1., false),
-                    0.001);
+  BOOST_CHECK_CLOSE(0.0333564, elementVD.GetLineWidth(10000., true), 0.001);
+  BOOST_CHECK_CLOSE(0.0366920, elementVD.GetLineWidth(10000., false), 0.001);
   /*
    BOOST_CHECK_CLOSE( 6.61532, elementNip.GetLineWidth(10000., 1., true),
    0.001); BOOST_CHECK_CLOSE( 6.61534, elementNip.GetLineWidth(10000., 1.,
