@@ -242,12 +242,12 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   Int32 velA_idx = undefIdx;
   Int32 velE_idx = undefIdx;
   auto lineType = m_Elements[EltsIdx.front()]->GetElementType();
-  if (lineType = CLine::nType_Absorption)
+  if (lineType == CLine::nType_Absorption)
     velA_idx = EltsIdx.size();
   else
     velE_idx = EltsIdx.size();
-  for (Int32 eltIndex = 1; eltIndex < EltsIdx.size(); ++eltIndex)
-    if (lineType != m_Elements[eltIndex]->GetElementType()) {
+  for (Int32 i = 1; i < EltsIdx.size(); ++i)
+    if (lineType != m_Elements[EltsIdx[i]]->GetElementType()) {
       lineType = CLine::nType_All;
       nddl++; // 2 velocity parameter
       velA_idx = EltsIdx.size();
@@ -288,9 +288,11 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   Float64 normFactor = 1.0 / std::abs(noContinuumFluxAxis[maxabsval_idx]);
 
   // velocity bounds
-  VectorXd v_velocityMin;
-  VectorXd v_velocityMax;
+  VectorXd v_velocityMin(1);
+  VectorXd v_velocityMax(1);
   if (lineType == CLine::nType_All) {
+    v_velocityMin.resize(2);
+    v_velocityMax.resize(2);
     v_velocityMin << m_velfitMinA, m_velfitMinE;
     v_velocityMax << m_velfitMaxA, m_velfitMaxE;
   } else if (lineType == CLine::nType_Absorption) {
@@ -304,24 +306,22 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   // amplitude bounds
   VectorXd v_ampsMax(EltsIdx.size());
   VectorXd v_ampsMin = VectorXd::Zero(EltsIdx.size());
-  for (Int32 eltIndex = 1; eltIndex < EltsIdx.size(); ++eltIndex) {
+  for (size_t i = 0; i < EltsIdx.size(); ++i) {
     Float64 ampMax = INFINITY;
-    auto &elt = m_Elements[eltIndex];
+    auto &elt = m_Elements[EltsIdx[i]];
     if (elt->GetElementType() == CLine::nType_Absorption &&
         elt->GetAbsLinesLimit() > 0.0)
       ampMax = elt->GetAbsLinesLimit() / elt->GetMaxNominalAmplitude();
-    v_ampsMax << ampMax;
+    v_ampsMax[i] = ampMax;
   }
 
   // offset bounds
-  Float64 offsetMin = m_LambdaOffsetMin * SPEED_OF_LIGHT_IN_VACCUM;
-  Float64 offsetMax = m_LambdaOffsetMax * SPEED_OF_LIGHT_IN_VACCUM;
+  Float64 offsetMin = m_LambdaOffsetMin / SPEED_OF_LIGHT_IN_VACCUM;
+  Float64 offsetMax = m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM;
 
   // all bounds
   VectorXd lb(nddl);
   VectorXd ub(nddl);
-  lb << v_ampsMin, v_velocityMin, offsetMin;
-  ub << v_ampsMax, v_velocityMax, offsetMax;
 
   // polynome bounds
   if (m_enableAmplitudeOffsets) {
@@ -329,11 +329,14 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     VectorXd v_pCoeffMin(ncoeff);
     VectorXd v_pCoeffMax(ncoeff);
     for (size_t i = 0; i < ncoeff; ++i) {
-      v_pCoeffMin << -INFINITY;
-      v_pCoeffMax << INFINITY;
+      v_pCoeffMin[i] = -INFINITY;
+      v_pCoeffMax[i] = INFINITY;
     }
-    lb << v_pCoeffMin;
-    ub << v_pCoeffMax;
+    lb << v_ampsMin, v_velocityMin, offsetMin, v_pCoeffMin;
+    ub << v_ampsMax, v_velocityMax, offsetMax, v_pCoeffMax;
+  } else {
+    lb << v_ampsMin, v_velocityMin, offsetMin;
+    ub << v_ampsMax, v_velocityMax, offsetMax;
   }
 
   // amplitudes initial guess
@@ -355,19 +358,21 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
   // velocity initial guess
   VectorXd v_ampsGuess = VectorXd::Map(ampsGuess.data(), ampsGuess.size());
-  VectorXd v_velocityGuess;
-  if (lineType == CLine::nType_All)
+  VectorXd v_velocityGuess(1);
+  if (lineType == CLine::nType_All) {
+    v_velocityGuess.resize(2);
     v_velocityGuess << m_velIniGuessA, m_velIniGuessE;
-  else if (lineType == CLine::nType_Absorption)
+  } else if (lineType == CLine::nType_Absorption)
     v_velocityGuess << m_velIniGuessA;
   else
     v_velocityGuess << m_velIniGuessE;
 
   VectorXd v_xGuess(nddl);
-  v_xGuess << v_ampsGuess, v_velocityGuess, 0.;
-
   if (m_enableAmplitudeOffsets)
-    v_xGuess << VectorXd::Zero(m_AmplitudeOffsetsDegree + 1);
+    v_xGuess << v_ampsGuess, v_velocityGuess, 0.,
+        VectorXd::Zero(m_AmplitudeOffsetsDegree + 1);
+  else
+    v_xGuess << v_ampsGuess, v_velocityGuess, 0.;
 
   // Set up solver parameters
   LBFGSBParam<Float64> param; // New parameter class
@@ -418,9 +423,9 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     auto &elt = m_Elements[eltIndex];
     for (Int32 i = 0; i < elt->GetSize(); ++i) {
       Float64 offset = elt->GetOffset(i);
-      offset *= SPEED_OF_LIGHT_IN_VACCUM;
-      offset += (1 + offset) * v_xGuess[lbdaOffset_idx];
       offset /= SPEED_OF_LIGHT_IN_VACCUM;
+      offset += (1 + offset) * v_xGuess[lbdaOffset_idx];
+      offset *= SPEED_OF_LIGHT_IN_VACCUM;
       elt->SetAllOffsets(offset);
     }
   }

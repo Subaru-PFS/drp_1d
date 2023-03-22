@@ -518,10 +518,10 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
   if (fitMethod == "lbfgs") {
     // set velocity at max value for lbfgs fitter velocityfitting (to set
     // largest line overlapping)
-    const Float64 velfitMaxE =
-        Context.GetParameterStore()->GetScoped<Float64>("emvelocityfitmax");
-    const Float64 velfitMaxA =
-        Context.GetParameterStore()->GetScoped<Float64>("absvelocityfitmax");
+    const Float64 velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
+        "linemodel.emvelocityfitmax");
+    const Float64 velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
+        "linemodel.absvelocityfitmax");
     SetVelocityEmission(velfitMaxE);
     SetVelocityAbsorption(velfitMaxA);
   }
