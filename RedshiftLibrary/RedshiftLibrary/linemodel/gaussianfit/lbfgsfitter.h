@@ -49,33 +49,77 @@ using Eigen::VectorXd;
 
 namespace NSEpic {
 
+// Generic functor
+// See http://eigen.tuxfamily.org/index.php?title=Functors
+// C++ version of a function pointer that stores meta-data about the function
+template <typename _Scalar, int NX = Eigen::Dynamic, int NY = Eigen::Dynamic>
+struct Functor {
+
+  // Information that tells the caller the numeric type (eg. double) and size
+  // (input / output dim)
+  typedef _Scalar Scalar;
+  enum { // Required by numerical differentiation module
+    InputsAtCompileTime = NX,
+    ValuesAtCompileTime = NY
+  };
+
+  // Tell the caller the matrix sizes associated with the input, output, and
+  // jacobian
+  typedef Eigen::Matrix<Scalar, InputsAtCompileTime, 1> InputType;
+  typedef Eigen::Matrix<Scalar, ValuesAtCompileTime, 1> ValueType;
+  typedef Eigen::Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime>
+      JacobianType;
+
+  // Local copy of the number of inputs
+  int m_inputs, m_values;
+
+  // Two constructors:
+  Functor() : m_inputs(InputsAtCompileTime), m_values(ValuesAtCompileTime) {}
+  Functor(int inputs, int values) : m_inputs(inputs), m_values(values) {}
+
+  // Get methods for users to determine function input and output dimensions
+  int inputs() const { return m_inputs; }
+  int values() const { return m_values; }
+};
+
 class CLbfgsFitter : public CHybridFitter {
 public:
-  class CLeastSquare {
+  class CLeastSquare : public Functor<Float64, Eigen::Dynamic, 1> {
+
   public:
     CLeastSquare(CLbfgsFitter &fitter, const TInt32List &EltsIdx,
                  Int32 lineType, Float64 redshift, const TInt32List &xInds,
                  Int32 velA_idx, Int32 velE_idx, Int32 lbdaOffset_idx,
-                 Float64 normFactor);
-    Float64 operator()(const VectorXd &x, VectorXd &grad);
+                 Int32 pCoeff_indx, Float64 normFactor);
+
+    // Float64 operator()(const VectorXd &x, VectorXd &grad);
+    void operator()(const VectorXd &x, ValueType &retvalue) const;
 
   private:
+    std::tuple<TFloat64List, Float64, TFloat64List>
+    unpack(const VectorXd &x) const;
     Float64 ComputeLeastSquare(const TFloat64List &amps, Float64 redshift,
-                               TFloat64List pCoeffs, VectorXd &grad);
+                               TFloat64List pCoeffs) const;
 
-    CLbfgsFitter &m_fitter;
-    const TInt32List &m_EltsIdx;
+    Float64 ComputeLeastSquareAndGrad(const TFloat64List &amps,
+                                      Float64 redshift, TFloat64List pCoeffs,
+                                      VectorXd &grad) const;
+
+    CLbfgsFitter *m_fitter;
+    const TInt32List *m_EltsIdx;
     const Int32 m_lineType;
     const Float64 m_redshift;
-    const TInt32List &m_xInds;
+    const TInt32List *m_xInds;
     const Int32 m_velA_idx;
     const Int32 m_velE_idx;
     const Int32 m_lbdaOffset_idx;
+    const Int32 m_pCoeff_idx;
     const Float64 m_normFactor;
-    const CSpectrumSpectralAxis &m_spectralAxis;
-    const CSpectrumFluxAxis &m_noContinuumFluxAxis;
-    const CSpectrumFluxAxis &m_continuumFluxAxis;
-    const CSpectrumNoiseAxis &m_ErrorNoContinuum;
+    const CSpectrumSpectralAxis *m_spectralAxis;
+    const CSpectrumFluxAxis *m_noContinuumFluxAxis;
+    const CSpectrumFluxAxis *m_continuumFluxAxis;
+    const CSpectrumNoiseAxis *m_ErrorNoContinuum;
+    Float64 m_sumSquareData;
   };
 
   using CHybridFitter::CHybridFitter;
@@ -94,6 +138,9 @@ public:
                               Float64 redshift) override;
 
 private:
+  const bool m_enableVelocityFitting =
+      Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit");
+
   const Float64 m_velfitMinE = Context.GetParameterStore()->GetScoped<Float64>(
       "linemodel.emvelocityfitmin");
   const Float64 m_velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(

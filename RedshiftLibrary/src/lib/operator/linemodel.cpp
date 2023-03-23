@@ -1718,8 +1718,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
     const TFloat64List &redshiftsGrid, Float64 &bestz) {
   std::shared_ptr<const CParameterStore> params =
       inputContext->GetParameterStore();
-  if (params->GetScoped<bool>("linemodel.velocityfit"))
-    THROWG(INTERNAL_ERROR, "velocityfit not implemented yet");
+  if (params->GetScoped<bool>("linemodel.velocityfit") &&
+      params->GetScoped<std::string>("linemodel.fittingmethod") != "lbfgs")
+    THROWG(INTERNAL_ERROR,
+           "velocityfit implemented only for lbfgs ftting method");
 
   Int32 amplitudeOffsetsDegree =
       params->GetScoped<Int32>("linemodel.polynomialdegree");

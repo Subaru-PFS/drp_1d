@@ -175,7 +175,7 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
 // return error: 1=can't find element index, 2=Abs_width not high enough
 // compared to Em_width
-Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
+void CHybridFitter::improveBalmerFit(Float64 redshift) {
 
   // Emission Balmer lines
   TStringList linetagsE;
@@ -203,7 +203,7 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
 
   if (linetagsE.size() != linetagsA.size() ||
       linetagsE.size() != linetagsMore.size()) {
-    return -1;
+    return;
   }
 
   for (Int32 itag = 0; itag < linetagsE.size(); itag++) {
@@ -316,6 +316,4 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
       }
     }
   }
-
-  return 0;
 }
