@@ -410,7 +410,7 @@ class AbstractOutput:
                 ret[attribute] = self.root_results["context_warningFlag"]["ContextWarningFlags"]
                 continue
             elif "WarningFlags" in data:
-                if root in self.object_results:
+                if root in self.object_results and data in self.object_results[root]["warningFlag"]:
                     ret[attribute] = self.object_results[root]["warningFlag"][data]
                 continue
             else:
