@@ -97,3 +97,11 @@ OutsideLinesSTDError	model_parameters	True	candidate	OutsideLinesSTDError	extrem
 BayesianInformationCriterion	model_parameters	True	candidate	bic	extrema_results	f8
 ContinuumRedshift	model_parameters	True	candidate	fittedTpl.tplRedshift	extrema_results	f8
 Coeffs	continuum_polynom	True	candidate	fittedTpl.pCoeffs	extrema_results	f8
+LinemeasAmplitude	linemeas	True	object	Amplitudes	linemeas	f8
+LinemeasAmplitudeUncertainties	linemeas	True	object	AmplitudesUncertainties	linemeas	f8
+LinemeasContinuumError	linemeas	True	object	ContinuumError	linemeas	f8
+LinemeasCenterContinuumFlux	linemeas	True	object	CenterContinuumFlux	linemeas	f8
+LineMeasVelocity	linemeas	True	object	Velocity	linemeas	f8
+LineMeasOffset	linemeas	True	object	Offset	linemeas	f8
+LineMeasOutsideRange	linemeas	True	object	OutsideLambdaRange	linemeas	i
+LineMeasFittingGroupInfo	linemeas	True	object	fittingGroupInfo	linemeas	S10
