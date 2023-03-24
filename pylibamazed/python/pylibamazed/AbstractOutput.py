@@ -135,6 +135,8 @@ class AbstractOutput:
     
     def load_all(self):
         self.load_root()
+        if self.has_error(None,"init"):
+            return
         for object_type in self.object_types:
             self.load_object_level(object_type)
             self.load_method_level(object_type)
