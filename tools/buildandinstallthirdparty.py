@@ -129,6 +129,14 @@ def _openblas_build(path, prefix, options, extra_flags=''):
                   shared=1 if options.shared else 0,    
                   extra_flags=extra_flags))
 
+def _eigen_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix}; make install".format(
+                  path=path, prefix=prefix))
+
+def _lbfgspp_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix}; make install".format(
+                  path=path, prefix=prefix))
+
 libDict = {
     "boost": {
         "path":  "boost-1.57.0",
@@ -167,6 +175,22 @@ libDict = {
         "check_file": "libopenblas",
         "build": _openblas_build,
         "extra_flags": "NO_LAPACK=1"
+    },
+    "eigen": {
+        "path": "eigen-3.4.0",
+        "src": "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/"
+        "eigen-3.4.0.tar.gz",
+        "check_file": "",
+        "build": _eigen_build,
+        "extra_flags": ""
+    },
+    "lbfgspp" : {
+        "path": "lbfgspp-0.2.0-13",
+        "src": "https://github.com/yixuan/LBFGSpp/tarball/master/"
+        "yixuan-LBFGSpp-v0.2.0-13-g563106b.tar.gz",
+        "check_file": "",
+        "build": _lbfgspp_build,
+        "extra_flags": ""
     }
 
 }

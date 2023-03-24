@@ -26,6 +26,8 @@ Required third parties:
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
 * [openblas](https://www.openblas.net/) >= 0.3.19
+* [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.0
+* [lbfgspp](https://lbfgspp.statr.me) == 0.2.0-13-g563106b
 
 Required python packages:
 * [numpy](https://www.numpy.org/) >=1.16.0
@@ -103,7 +105,7 @@ As stated earlier pylibamazed depends on several third parties (refer to [this s
 
     buildandinstallthirdparty.py [-h] [--workdir WORKDIR] [--prefix PREFIX] [-j PARALLEL] [--extra_flags EXTRA_FLAGS] [--force] [name1 ...]
 
-Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas`].
+Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas` | `eigen` | `lbfgspp`].
 
 For instance, to install the fftw and cfitsio third parties into the `thirdparty` directory, execute:
 
