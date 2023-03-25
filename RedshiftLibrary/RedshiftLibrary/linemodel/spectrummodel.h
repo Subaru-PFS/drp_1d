@@ -23,11 +23,11 @@ public:
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
   void refreshModel(Int32 lineTypeFilter = -1);
   void reinitModelUnderElements(const TInt32List &filterEltsIdx, Int32 lineIdx);
-  void refreshModelInitAllGrid();
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
                                  Int32 lineIdx = -1);
 
-  CSpectrumFluxAxis getModel(Int32 lineTypeFilter = -1) const;
+  CSpectrumFluxAxis getModel(const TInt32List &eIdx_list,
+                             Int32 lineTypeFilter = -1) const;
   void setContinuumToInputSpc();
   void setContinuumComponent(const std::string &component);
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
@@ -79,9 +79,10 @@ public:
   void initObserveGridContinuumFlux(Int32 size);
 
 private:
-  CSpectrumFluxAxis getContinuum(const TInt32RangeList &indexRangeList,
-                                 const TInt32List &eIdx_list,
-                                 bool substract_abslinesmodel) const;
+  CSpectrumFluxAxis
+  getContinuumUnderLines(const TInt32RangeList &indexRangeList,
+                         const TInt32List &eIdx_list,
+                         bool substract_abslinesmodel) const;
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
   const TLineVector &m_RestLineList;
   std::shared_ptr<CTplModelSolution> m_fitContinuum;

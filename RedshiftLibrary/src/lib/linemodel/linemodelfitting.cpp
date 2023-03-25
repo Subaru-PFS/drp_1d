@@ -379,7 +379,7 @@ TFloat64List CLineModelFitting::getTplratio_priors() {
   return m_lineRatioManager->getTplratio_priors();
 }
 
-bool CLineModelFitting::initModelAtZ(
+void CLineModelFitting::initModelAtZ(
     Float64 redshift, const CSpectrumSpectralAxis &spectralAxis) {
 
   m_model->m_Redshift = redshift;
@@ -389,8 +389,14 @@ bool CLineModelFitting::initModelAtZ(
     m_Elements[iElts]->resetAsymfitParams();
     m_Elements[iElts]->prepareSupport(spectralAxis, redshift, *(m_lambdaRange));
   }
+}
 
-  return true;
+void CLineModelFitting::resetElementsFittingParam() {
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    m_Elements[iElts]->reset();
+  }
+  if (m_enableAmplitudeOffsets)
+    m_Elements.resetAmplitudeOffset();
 }
 
 bool CLineModelFitting::initDtd() {
@@ -466,8 +472,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     if (getContinuumComponent() != "nocontinuum")
       computeSpectrumFluxWithoutContinuum();
 
-    if (m_enableAmplitudeOffsets)
-      m_Elements.prepareAmplitudeOffset();
+    resetElementsFittingParam();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
@@ -900,6 +905,8 @@ return 0 if every was ok; else -1
 void CLineModelFitting::LoadModelSolution(
     const CLineModelSolution &modelSolution) {
 
+  setRedshift(modelSolution.Redshift, false);
+
   SetVelocityEmission(modelSolution.EmissionVelocity);
   SetVelocityAbsorption(modelSolution.AbsorptionVelocity);
 
@@ -914,7 +921,7 @@ void CLineModelFitting::LoadModelSolution(
   }
 
   if (m_enableAmplitudeOffsets)
-    m_Elements.prepareAmplitudeOffset();
+    m_Elements.resetAmplitudeOffset();
 
   for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
@@ -923,12 +930,16 @@ void CLineModelFitting::LoadModelSolution(
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
     if (subeIdx == undefIdx || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
       continue;
+    m_Elements[eIdx]->SetFittingGroupInfo(
+        modelSolution.fittingGroupInfo[iRestLine]);
     if (m_enableAmplitudeOffsets) {
       TPolynomCoeffs contPolynomCoeffs = {
           modelSolution.continuum_pCoeff0[iRestLine],
           modelSolution.continuum_pCoeff1[iRestLine],
           modelSolution.continuum_pCoeff2[iRestLine]};
-      applyPolynomCoeffs(eIdx, contPolynomCoeffs);
+      m_Elements[eIdx]->SetPolynomCoeffs(std::move(contPolynomCoeffs));
+      m_Elements[eIdx]->SetFittingGroupInfo(
+          modelSolution.fittingGroupInfo[iRestLine]);
     }
 
     m_Elements[eIdx]->SetFittedAmplitude(
@@ -998,16 +1009,16 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
     {
       modelSolution.FittingError[iRestLine] =
           m_model->getModelErrorUnderElement(eIdx, m_model->getSpcFluxAxis());
-      TPolynomCoeffs polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
-      // save polynom info to output them in hdf5, mainly to recontruct
-      // linemeas model
-      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.x0;
-      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.x1;
-      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.x2;
+      if (m_enableAmplitudeOffsets) {
+        TPolynomCoeffs polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
+        modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.x0;
+        modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.x1;
+        modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.x2;
+      }
 
       Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(
           subeIdx, m_inputSpc->GetSpectralAxis(), modelSolution.Redshift,
-          m_model->getContinuumFluxAxis(), polynom_coeffs);
+          m_model->getContinuumFluxAxis(), m_enableAmplitudeOffsets);
       modelSolution.CenterContinuumFlux[iRestLine] = cont;
       modelSolution.ContinuumError[iRestLine] =
           m_model->GetContinuumError(eIdx, subeIdx);
@@ -1117,24 +1128,6 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
   modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
   return modelSolution;
-}
-
-/**
- * @brief Add polynom coeffs into the class variables, for all correctly in
- * m_ampOffsetCoeffs
- *
- * @param eIdx
- * @param polynom_coeffs
- * @return
- */
-void CLineModelFitting::applyPolynomCoeffs(
-    Int32 eIdx, const TPolynomCoeffs &polynom_coeffs) {
-  TInt32List xInds = m_Elements.getSupportIndexes({Int32(eIdx)});
-  if (xInds.size() && m_Elements.m_ampOffsetsCoeffs.size()) {
-    Int32 idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
-    m_Elements.m_ampOffsetsCoeffs[idxAmpOffset] = polynom_coeffs;
-  }
-  return;
 }
 
 /**

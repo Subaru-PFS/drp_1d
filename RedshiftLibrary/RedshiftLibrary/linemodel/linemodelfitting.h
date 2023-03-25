@@ -107,8 +107,9 @@ public:
   Float64 GetVelocityEmission() const;
   Float64 GetVelocityAbsorption() const;
 
-  bool initModelAtZ(Float64 redshift,
+  void initModelAtZ(Float64 redshift,
                     const CSpectrumSpectralAxis &spectralAxis);
+  void resetElementsFittingParam();
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
               CTplModelSolution &continuumModelSolution,
