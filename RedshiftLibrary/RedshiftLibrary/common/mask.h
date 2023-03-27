@@ -65,10 +65,13 @@ public:
   Int32 GetMaskedSampleCount() const;
   Int32 GetUnMaskedSampleCount() const;
   void SetSize(Int32 s);
+  const TMaskList &getMaskList() const;
 
 private:
   TMaskList m_Mask;
 };
+
+inline const TMaskList &CMask::getMaskList() const { return m_Mask; }
 
 inline Mask CMask::operator[](const Int32 i) const { return m_Mask[i]; }
 

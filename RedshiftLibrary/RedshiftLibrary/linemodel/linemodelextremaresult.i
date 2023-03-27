@@ -80,7 +80,7 @@ public:
   Float64 Elv;            // emission line width
   Float64 Alv;            // absorption line width
 
-
+  CMask OutsideLinesMask;
   // template ratio
   std::string FittedTplratioName = "undefined"; // Name of the best template
                                                 // fitted for tplcorr/tplratio

@@ -187,6 +187,8 @@ class AbstractOutput:
                 raise APIException("Dataset " + dataset + " does not exist")
         else:
             first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
+        if first_attr is None:
+            return 0
         if type(first_attr) == np.ndarray:
             return len(first_attr)
         else:

@@ -45,6 +45,8 @@ from collections import defaultdict
 from pylibamazed.redshift import (PC_Get_Float64Array,
                                   PC_Get_Float32Array,
                                   PC_Get_Int32Array,
+                                  PC_Get_BoolArray,
+                                  PC_Get_MaskArray,
                                   CLog, ErrorCode)
 from pylibamazed.Exception import AmazedError,APIException
 
@@ -81,6 +83,10 @@ class ResultStoreOutput(AbstractOutput):
             return PC_Get_Float32Array(attr)
         elif attr_type == "TInt32List":
             return PC_Get_Int32Array(attr)
+        elif attr_type == "TBoolList":
+            return PC_Get_BoolArray(attr)
+        elif attr_type == "CMask":
+            ret = PC_Get_MaskArray(attr.getMaskList())
         else:
             return attr
 

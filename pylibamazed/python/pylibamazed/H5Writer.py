@@ -45,6 +45,8 @@ import pandas as pd
 
 def _create_dataset_from_dict(h5_node, name, source, compress=False):
     df = pd.DataFrame(source)
+    if df.empty:
+        return
     records = df.to_records(index=False)
     h5_node.create_dataset(name,
                            len(records),
@@ -98,14 +100,20 @@ class H5Writer():
                                                       ds,
                                                       rank)
                     ds_dim = self.output.get_dataset_size(object_type, ds, rank)
-                    if ds_dim == 1:
+                    if ds_dim == 0:
+                        continue
+                    elif ds_dim == 1:
                         candidate.create_group(ds)
                         for attr_name, attr in dataset.items():
                             candidate.get(ds).attrs[attr_name] = attr
                     else:
-                        _create_dataset_from_dict(candidate,
-                                                  ds,
-                                                  dataset)
+                        try:
+                            _create_dataset_from_dict(candidate,
+                                                      ds,
+                                                      dataset)
+                        except Exception as e:
+                            zlog.LogError(f"failed to create dataset {ds} : {e}")
+
         
     def write_hdf5(self,hdf5_root,spectrum_id):
         try:

@@ -99,6 +99,7 @@
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/singleton.h"
 #include "RedshiftLibrary/log/consolehandler.h"
@@ -260,6 +261,11 @@ class CRange
   const T& GetEnd() const;
   const T& GetBegin() const;
 };
+
+class CMask {
+ public:
+  const TMaskList& getMaskList() const;
+};
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
@@ -267,6 +273,8 @@ typedef std::vector<Float64> TFloat64List;
 typedef std::vector<Float32> TFloat32List;
 typedef std::vector<Int32> TInt32List;
 typedef std::vector<std::string> TStringList;
+typedef std::vector<Mask> TMaskList;
+typedef std::vector<bool> TBoolList;
 
 
 %template(TFloat64Range) CRange<Float64>;
@@ -275,10 +283,12 @@ typedef std::vector<std::string> TStringList;
 %template(TStringList) std::vector<std::string>;
 %template(VecTFloat64List) std::vector<  std::vector<Float64> >;
 %template(TBoolList) std::vector<bool>;
+%template(TMaskList) std::vector<Mask>;
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
 %apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
+%apply bool &OUTPUT { bool& out_bool };
 
 class PC
 {
@@ -291,6 +301,10 @@ class PC
   static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_Float32Array) get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  %rename(Get_BoolArray) get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
+ %rename(Get_MaskArray) get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
+  static void get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
 
 };
 
