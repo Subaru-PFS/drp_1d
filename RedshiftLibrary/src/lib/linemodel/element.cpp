@@ -114,6 +114,17 @@ CLineModelElement::CLineModelElement(
   SetFittedAmplitude(NAN, NAN);
 }
 
+void CLineModelElement::reset() {
+  Int32 nLines = GetSize();
+  // init the fitted amplitude values and related variables
+  m_ElementParam->m_FittedAmplitudes.assign(nLines, NAN);
+  m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+  m_ElementParam->m_fitAmplitude = NAN;
+  m_sumGauss = NAN;
+  m_sumCross = NAN;
+  m_dtmFree = NAN;
+}
+
 Int32 CLineModelElement::findElementIndex(Int32 LineCatalogIndex) const {
   Int32 idx = undefIdx;
   for (Int32 iElts = 0; iElts < GetSize(); iElts++) {
@@ -320,6 +331,14 @@ void CLineModelElement::SetFittingGroupInfo(const std::string &val) {
   m_ElementParam->m_fittingGroupInfo = val;
 }
 
+TPolynomCoeffs CLineModelElement::GetPolynomCoeffs() const {
+  return m_ElementParam->m_ampOffsetsCoeffs;
+}
+
+void CLineModelElement::SetPolynomCoeffs(TPolynomCoeffs pCoeffs) {
+  m_ElementParam->m_ampOffsetsCoeffs = std::move(pCoeffs);
+}
+
 void CLineModelElement::SetAllOffsets(Float64 val) {
   for (size_t i = 0; i < GetSize(); ++i) {
     if (m_ElementParam->m_Lines[i].GetOffsetFitEnabled())
@@ -381,7 +400,7 @@ bool CLineModelElement::SetAbsLinesLimit(Float64 limit) {
 Float64 CLineModelElement::GetContinuumAtCenterProfile(
     Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
     const CSpectrumFluxAxis &continuumfluxAxis,
-    const TPolynomCoeffs &line_polynomCoeffs) const {
+    bool enableAmplitudeOffsets) const {
   Float64 mu = GetObservedPosition(subeIdx, redshift);
 
   Int32 IdxCenterProfile = spectralAxis.GetIndexAtWaveLength(mu);
@@ -390,10 +409,11 @@ Float64 CLineModelElement::GetContinuumAtCenterProfile(
     return NAN;
   }
 
-  Float64 cont = continuumfluxAxis[IdxCenterProfile] + line_polynomCoeffs.x0 +
-                 line_polynomCoeffs.x1 * spectralAxis[IdxCenterProfile] +
-                 line_polynomCoeffs.x2 * spectralAxis[IdxCenterProfile] *
-                     spectralAxis[IdxCenterProfile];
+  Float64 cont = continuumfluxAxis[IdxCenterProfile];
+
+  if (enableAmplitudeOffsets)
+    cont += GetPolynomCoeffs().getValue(spectralAxis[IdxCenterProfile]);
+
   return cont;
 }
 
@@ -492,6 +512,7 @@ void CLineModelElement::prepareSupport(
   m_StartTheoretical.assign(nLines, -1);
   m_EndTheoretical.assign(nLines, -1);
   m_OutsideLambdaRangeList.assign(nLines, true);
+  m_ElementParam->m_fittingGroupInfo = "-1";
   for (Int32 i = 0; i < nLines; i++) {
     EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
 
@@ -608,14 +629,6 @@ void CLineModelElement::prepareSupport(
       }
     }
   }
-
-  // init the fitted amplitude values and related variables
-  m_ElementParam->m_FittedAmplitudes.assign(nLines, NAN);
-  m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
-  m_ElementParam->m_fitAmplitude = NAN;
-  m_sumGauss = NAN;
-  m_sumCross = NAN;
-  m_dtmFree = NAN;
 }
 
 /**
@@ -1160,6 +1173,30 @@ void CLineModelElement::initSpectrumModel(
 
     for (Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
       modelfluxAxis[i] = continuumfluxAxis[i];
+  }
+  return;
+}
+
+/**
+ * \brief For lines inside lambda range, sets the flux to the polynomial.
+ **/
+void CLineModelElement::initSpectrumModelPolynomial(
+    CSpectrumFluxAxis &modelfluxAxis, const CSpectrumSpectralAxis &spcAxis,
+    Int32 lineIdx) const {
+
+  if (m_OutsideLambdaRange)
+    return;
+
+  for (Int32 k = 0; k < GetSize(); k++) { // loop on the interval
+    if (m_OutsideLambdaRangeList[k])
+      continue;
+
+    if (lineIdx != undefIdx && !(m_LineIsActiveOnSupport[k][lineIdx]))
+      continue;
+
+    for (Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
+      modelfluxAxis[i] =
+          m_ElementParam->m_ampOffsetsCoeffs.getValue(spcAxis[i]);
   }
   return;
 }

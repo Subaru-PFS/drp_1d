@@ -111,7 +111,6 @@ protected:
   bool m_enableAmplitudeOffsets = false;
   bool m_enableLambdaOffsetsFit = true;
 
-  Int32 m_AmplitudeOffsetsDegree = 2;
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;

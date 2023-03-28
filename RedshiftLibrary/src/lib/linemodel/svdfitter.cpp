@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/svdfitter.h"
+#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -52,6 +53,17 @@ void CSvdFitter::fit(Float64 redshift) {
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
+
+  if (validEltsIdx.empty())
+    return;
+
+  std::string fitGroupTag = "svd";
+  for (Int32 idx : validEltsIdx)
+    m_Elements[idx]->SetFittingGroupInfo(fitGroupTag);
+
+  if (m_enableAmplitudeOffsets)
+    m_Elements.resetAmplitudeOffset();
+
   fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, ampsfitted, errorsfitted,
                                        m_enableLambdaOffsetsFit, redshift);
 }
@@ -70,20 +82,33 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
   bool useAmpOffset = m_enableAmplitudeOffsets;
-  Int32 idxAmpOffset = -1;
 
   Int32 nddl = EltsIdx.size();
   if (nddl < 1)
-    return -1;
+    THROWG(INTERNAL_ERROR, "empty Line element list to fit");
 
   TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
-  if (xInds.size() < 1)
-    return -1;
+  Int32 n = xInds.size();
+  if (n < 1)
+    THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
 
-  if (useAmpOffset) {
-    nddl += m_AmplitudeOffsetsDegree + 1;
-    // find the amplitudeOffset Support that corresponds to these elts
-    idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
+  if (useAmpOffset)
+    nddl += TPolynomCoeffs::degree + 1;
+
+  if (n < nddl) {
+    Flag.warning(WarningCode::LINEARFIT_RANK_DEFICIENT,
+                 Formatter() << __func__ << " SVD ill ranked:"
+                             << " number of samples = " << n
+                             << ", number of parameters to fit = " << nddl);
+    ampsfitted.assign(EltsIdx.size(), 0.0);
+    errorsfitted.assign(EltsIdx.size(), INFINITY);
+    for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
+      m_Elements.SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
+    if (useAmpOffset) {
+      for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
+        m_Elements[EltsIdx[iddl]]->SetPolynomCoeffs({0., 0., 0.});
+    }
+    return EltsIdx.size();
   }
 
   for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
@@ -96,17 +121,6 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   double chisq;
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
-
-  Int32 n = xInds.size();
-  if (n < nddl) {
-    ampsfitted.resize(nddl);
-    errorsfitted.resize(nddl);
-    for (Int32 iddl = 0; iddl < nddl; iddl++) {
-      ampsfitted[iddl] = 0.0;
-      errorsfitted[iddl] = 1e12; // some high number
-    }
-    return -1;
-  }
 
   X = gsl_matrix_alloc(n, nddl);
   y = gsl_vector_alloc(n);
@@ -143,10 +157,10 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
     if (useAmpOffset) {
       gsl_matrix_set(X, i, EltsIdx.size(), 1.0);
-      if (m_AmplitudeOffsetsDegree == 0)
+      if (TPolynomCoeffs::degree == 0)
         continue;
       gsl_matrix_set(X, i, EltsIdx.size() + 1, xi);
-      if (m_AmplitudeOffsetsDegree == 1)
+      if (TPolynomCoeffs::degree == 1)
         continue;
       gsl_matrix_set(X, i, EltsIdx.size() + 2, xi * xi);
     }
@@ -198,11 +212,12 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     Float64 x0 = gsl_vector_get(c, EltsIdx.size()) / normFactor;
     Float64 x1 = 0.0;
     Float64 x2 = 0.0;
-    if (m_AmplitudeOffsetsDegree > 0)
+    if (TPolynomCoeffs::degree > 0)
       x1 = gsl_vector_get(c, EltsIdx.size() + 1) / normFactor;
-    if (m_AmplitudeOffsetsDegree > 1)
+    if (TPolynomCoeffs::degree > 1)
       x2 = gsl_vector_get(c, EltsIdx.size() + 2) / normFactor;
-    m_Elements.setAmplitudeOffsetsCoeffsAt(idxAmpOffset, {x0, x1, x2});
+    for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
+      m_Elements[EltsIdx[iddl]]->SetPolynomCoeffs({x0, x1, x2});
   }
 
   gsl_matrix_free(X);

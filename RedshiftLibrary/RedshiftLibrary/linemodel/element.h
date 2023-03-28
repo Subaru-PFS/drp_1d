@@ -67,6 +67,7 @@ struct TLineModelElementParam {
   TLineVector m_Lines;
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
+  TPolynomCoeffs m_ampOffsetsCoeffs;
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -80,6 +81,8 @@ class CLineModelElement {
 public:
   CLineModelElement(const TLineModelElementParam_ptr elementParam,
                     const std::string &widthType);
+
+  void reset();
 
   Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -112,7 +115,7 @@ public:
   Float64 GetContinuumAtCenterProfile(
       Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
       Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
-      const TPolynomCoeffs &line_polynomCoeffs) const;
+      bool enableAmplitudeOffsets = false) const;
 
   Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                            Float64 continuumFlux,
@@ -140,6 +143,9 @@ public:
   void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                          const CSpectrumFluxAxis &continuumfluxAxis,
                          Int32 lineIdx = undefIdx) const;
+  void initSpectrumModelPolynomial(CSpectrumFluxAxis &modelfluxAxis,
+                                   const CSpectrumSpectralAxis &spcAxis,
+                                   Int32 lineIdx) const;
 
   Float64 GetNominalAmplitude(Int32 subeIdx) const;
   bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
@@ -203,6 +209,9 @@ public:
   Float64 GetFitAmplitude() const;
   const std::string &GetFittingGroupInfo() const;
   void SetFittingGroupInfo(const std::string &val);
+
+  TPolynomCoeffs GetPolynomCoeffs() const;
+  void SetPolynomCoeffs(TPolynomCoeffs pCoeffs);
 
   void SetAllOffsets(Float64 val);
   void SetOffset(Int32 lineIdx, Float64 val);

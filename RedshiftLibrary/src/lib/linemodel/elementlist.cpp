@@ -42,6 +42,7 @@
 
 #include <cfloat>
 #include <cmath>
+#include <numeric>
 
 using namespace NSEpic;
 using namespace std;
@@ -531,109 +532,29 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
   return indexes;
 }
 
-Int32 CLineModelElementList::getIndexAmpOffset(Int32 xIndex) const {
-  Int32 idxAmpOffset = undefIdx;
+void CLineModelElementList::addToSpectrumAmplitudeOffset(
+    const CSpectrumSpectralAxis &spectralAxis, CSpectrumFluxAxis &modelfluxAxis,
+    const TInt32List &eIdx_list, Int32 lineTypeFilter) const {
 
-  for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-    if (xIndex >= m_ampOffsetsIdxStart[i] && xIndex <= m_ampOffsetsIdxStop[i]) {
-      idxAmpOffset = i;
-      break;
+  const auto ampOffsetGroups = getFittingGroups(eIdx_list, lineTypeFilter);
+
+  Log.LogDetail("Elementlist: Adding n=%d ampOffsets", ampOffsetGroups.size());
+
+  for (const auto &g : ampOffsetGroups) {
+    const auto &group_eIdx_list = g.second;
+    auto samples = getSupportIndexes(group_eIdx_list);
+    const auto &pCoeffs =
+        m_Elements[group_eIdx_list.front()]->GetPolynomCoeffs();
+    for (Int32 s : samples) {
+      modelfluxAxis[s] += pCoeffs.getValue(spectralAxis[s]);
     }
   }
-  if (idxAmpOffset == undefIdx)
-    THROWG(INTERNAL_ERROR, "spectral sample has no associated polynomial");
-
-  Log.LogDetail("AmplitudeOffset enabled: idx offset = %d", idxAmpOffset);
-  return idxAmpOffset;
 }
 
-void CLineModelElementList::setAmplitudeOffsetsCoeffsAt(
-    Int32 index, const TPolynomCoeffs &line_polynomCoeffs) {
-  m_ampOffsetsCoeffs[index] = line_polynomCoeffs;
-}
-
-bool CLineModelElementList::addToSpectrumAmplitudeOffset(
-    const CSpectrumSpectralAxis &spectralAxis,
-    CSpectrumFluxAxis &modelfluxAxis) const {
-
-  Log.LogDetail("Elementlist: Adding n=%d ampOffsets",
-                m_ampOffsetsIdxStart.size());
-  Float64 x0 = NAN;
-  Float64 x1 = NAN;
-  Float64 x2 = NAN;
-  for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-    x0 = m_ampOffsetsCoeffs[i].x0;
-    x1 = m_ampOffsetsCoeffs[i].x1;
-    x2 = m_ampOffsetsCoeffs[i].x2;
-    if (std::isnan(x0) || std::isnan(x1) || std::isnan(x2))
-      THROWG(INTERNAL_ERROR, "Polynom coefficients cannot be NaN");
-    for (Int32 k = m_ampOffsetsIdxStart[i]; k <= m_ampOffsetsIdxStop[i]; k++) {
-      modelfluxAxis[k] +=
-          x0 + x1 * spectralAxis[k] + x2 * spectralAxis[k] * spectralAxis[k];
-    }
+void CLineModelElementList::resetAmplitudeOffset() {
+  for (auto &elt : m_Elements) {
+    elt->SetPolynomCoeffs(TPolynomCoeffs());
   }
-  return true;
-}
-
-Int32 CLineModelElementList::prepareAmplitudeOffset() {
-  m_ampOffsetsCoeffs.clear();
-  m_ampOffsetsIdxStart.clear();
-  m_ampOffsetsIdxStop.clear();
-
-  TInt32List validEltsIdx = GetModelValidElementsIndexes();
-  if (validEltsIdx.size() < 1) {
-    return -1;
-  }
-  TInt32List supportIdxes = getSupportIndexes(validEltsIdx);
-  if (supportIdxes.size() < 1) {
-    return -1;
-  }
-
-  Int32 idxPrevious = supportIdxes[0];
-  m_ampOffsetsIdxStart.push_back(supportIdxes[0]);
-  for (Int32 i = 1; i < supportIdxes.size(); i++) {
-    Int32 idxCurrent = supportIdxes[i];
-    if (idxCurrent > idxPrevious + 1) {
-      m_ampOffsetsIdxStop.push_back(idxPrevious);
-      m_ampOffsetsIdxStart.push_back(idxCurrent);
-    }
-    idxPrevious = idxCurrent;
-  }
-  m_ampOffsetsIdxStop.push_back(supportIdxes[supportIdxes.size() - 1]);
-
-  /*
-  //estimate mean fluxNoCOnt in each support
-  for( Int32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
-  {
-      Float64 sum = 0.0;
-      Int32 count = 0;
-
-      for( Int32 k=m_ampOffsetsIdxStart[i]; k<=m_ampOffsetsIdxStop[i]; k++ )
-      {
-          sum +=spcFlux[k];
-          count +=1;
-      }
-      Float64 mean = 0.0;
-      if(count>0)
-      {
-          mean = sum/(Float64)count;
-      }
-
-      m_ampOffsetsA.push_back(mean);
-  }
-  //*/
-  for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-    m_ampOffsetsCoeffs.push_back({0., 0., 0.});
-  }
-
-  if (1) {
-    for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-      Log.LogDebug("Elementlist: i=%d, m_ampOffsetsIdxStart: %d, "
-                   "m_ampOffsetsIdxStop: %d",
-                   i, m_ampOffsetsIdxStart[i], m_ampOffsetsIdxStop[i]);
-    }
-  }
-  return 0;
 }
 
 /**
@@ -743,24 +664,46 @@ bool CLineModelElementList::GetModelHaStrongest() const {
   return isHaStrongest;
 }
 
+std::map<std::string, TInt32List>
+CLineModelElementList::getFittingGroups(TInt32List EltsIdx,
+                                        Int32 lineTypeFilter) const {
+  std::map<std::string, TInt32List> fittingGroups;
+
+  // if not elments list do with all
+  if (EltsIdx.empty()) {
+    EltsIdx.resize(size());
+    std::iota(EltsIdx.begin(), EltsIdx.end(), 0);
+  }
+
+  for (auto idx : EltsIdx) {
+    const auto &elt = m_Elements[idx];
+
+    Int32 lineType = elt->GetElementType();
+    if (lineTypeFilter != undefIdx && lineTypeFilter != lineType)
+      continue;
+
+    const auto &info = elt->GetFittingGroupInfo();
+    if (info == "-1")
+      continue;
+    if (fittingGroups.find(info) == fittingGroups.end()) {
+      fittingGroups[info] = {idx};
+      continue;
+    }
+
+    fittingGroups[info].push_back(idx);
+  }
+
+  return fittingGroups;
+}
+
 /**
  * @brief Look for polynom coeffs corresponding to one specific Line
- * Here,we assume that we already fitted one line at a time, which is not
- * really the case
- * TODO: take into consideration lines fitted together for the element in
- * question
  *
  * @param eIdx
  * @return TPolynomCoeffs
  */
 TPolynomCoeffs CLineModelElementList::getPolynomCoeffs(Int32 eIdx) const {
-  TInt32List xInds = getSupportIndexes({Int32(eIdx)});
-  TPolynomCoeffs polynom_coeffs = {0., 0., 0.};
-  if (xInds.size() && m_ampOffsetsCoeffs.size()) {
-    Int32 idxAmpOffset = getIndexAmpOffset(xInds[0]);
-    polynom_coeffs = m_ampOffsetsCoeffs[idxAmpOffset];
-  }
-  return polynom_coeffs;
+  return m_Elements[eIdx]->GetPolynomCoeffs();
 }
 
 /**

@@ -48,10 +48,6 @@ private:
   std::vector<std::shared_ptr<CLineModelElement>> m_Elements;
 
 public:
-  std::vector<TPolynomCoeffs> m_ampOffsetsCoeffs;
-  TInt32List m_ampOffsetsIdxStart;
-  TInt32List m_ampOffsetsIdxStop;
-
   TInt32List m_elementsDisabledIndexes;
 
   TInt32List GetModelValidElementsIndexes() const;
@@ -87,12 +83,12 @@ public:
   TInt32List findElementTypeIndices(CLine::EType type) const;
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
-  Int32 getIndexAmpOffset(Int32 index) const;
-  void setAmplitudeOffsetsCoeffsAt(Int32 index,
-                                   const TPolynomCoeffs &line_polynomCoeffs);
-  Int32 prepareAmplitudeOffset();
-  bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis &spectralAxis,
-                                    CSpectrumFluxAxis &modelfluxAxis) const;
+  void resetAmplitudeOffset();
+
+  void addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis &spectralAxis,
+                                    CSpectrumFluxAxis &modelfluxAxis,
+                                    const TInt32List &eIdx_list = {},
+                                    Int32 lineTypeFilter = undefIdx) const;
 
   bool IsElementIndexInDisabledList(Int32 index) const;
   void SetElementIndexesDisabledAuto();
@@ -103,6 +99,9 @@ public:
   bool GetModelHaStrongest() const;
 
   TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
+  std::map<std::string, TInt32List>
+  getFittingGroups(TInt32List EltsIdx = {},
+                   Int32 lineTypeFilter = undefIdx) const;
 
   const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {
     return m_Elements[i];

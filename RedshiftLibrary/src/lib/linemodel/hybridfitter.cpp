@@ -64,7 +64,6 @@ CHybridFitter::CHybridFitter(
 void CHybridFitter::fit(Float64 redshift) {
 
   // fit the amplitudes of each element independently, unless there is overlap
-
   fitAmplitudesHybrid(redshift);
 
   // apply a continuum iterative re-estimation with lines removed from the
@@ -117,6 +116,9 @@ void CHybridFitter::fit(Float64 redshift) {
  *already-fitted subelements.
  **/
 Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
+
+  if (m_enableAmplitudeOffsets)
+    m_Elements.resetAmplitudeOffset();
 
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TInt32List indexesFitted;
@@ -264,6 +266,10 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
     Int32 subeIdxE = 0;
     Int32 subeIdxA = 0;
+
+    // check if line is visible:
+    if (m_Elements[ilineE]->IsOutsideLambdaRange())
+      continue;
 
     // find the linesMore unique elements indexes
     TInt32List ilinesMore;
