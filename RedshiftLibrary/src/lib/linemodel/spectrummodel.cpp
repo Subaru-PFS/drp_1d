@@ -364,7 +364,7 @@ Float64 CSpectrumModel::getModelErrorUnderElement(
 
   Float64 w = 0.0;
   for (const auto &s : support) {
-    for (Int32 j = s.GetBegin(), e = s.GetEnd(); j < e; j++) {
+    for (Int32 j = s.GetBegin(), e = s.GetEnd(); j <= e; j++) {
       numDevs++;
       diff = (Yspc[j] - Ymodel[j]);
       w = 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]);

@@ -685,7 +685,7 @@ Float64 CLineModelFitting::getLeastSquareMeritUnderElements() const {
   }
 
   for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
+    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
       diff = (Yspc[j] - Ymodel[j]);
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     }
