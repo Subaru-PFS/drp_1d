@@ -139,13 +139,7 @@ BOOST_AUTO_TEST_CASE(basic_function_test) {
   spectrumNoiseAxis.GetSamplesVector().push_back(20);
 
   //-------------//
-  // test setErrorSample
-  object_FluxAxis.setErrorSample(0, 0.);
-  BOOST_CHECK(object_FluxAxis.GetError().GetSamplesVector()[0] == 0.);
-
-  //-------------//
   // test extract
-  object_FluxAxis.setErrorSample(0, 2);
   CSpectrumFluxAxis object_FluxAxis2 = object_FluxAxis.extract(0, 4);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == 5);
   BOOST_CHECK(object_FluxAxis2.GetSamplesVector() == sample_ref);
@@ -306,7 +300,7 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
   mask[2] = 1;
   mask[3] = 1;
   error_ref = TFloat64List(10, 0.5); // weight = 4
-  object_CSpectrumFluxAxis.setError(error_ref);
+  object_CSpectrumFluxAxis.setError(CSpectrumNoiseAxis(error_ref));
   result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
   Float64 sdev_ref = sqrt(
       (4 * (30 - 35) * (30 - 35) + 4 * (40 - 35) * (40 - 35)) / (8 - 32 / 8));

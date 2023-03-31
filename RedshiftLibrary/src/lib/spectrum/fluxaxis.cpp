@@ -56,6 +56,10 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(CSpectrumAxis otherFlux,
                                      CSpectrumNoiseAxis otherError)
     : CSpectrumAxis(std::move(otherFlux)), m_StdError(std::move(otherError)) {}
 
+CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis otherFlux)
+    : CSpectrumAxis(std::move(otherFlux)), m_StdError(this->GetSamplesCount()) {
+}
+
 CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n)
     : CSpectrumAxis(samples, n), m_StdError(n) {}
 
@@ -76,10 +80,10 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
   }
 }
 
-void CSpectrumFluxAxis::setError(const CSpectrumNoiseAxis &otherError) {
+void CSpectrumFluxAxis::setError(const CSpectrumNoiseAxis otherError) {
   if (otherError.GetSamplesCount() != m_StdError.GetSamplesCount())
     THROWG(INTERNAL_ERROR, "FluxAxis and NoiseAxis sizes do not match");
-  m_StdError = CSpectrumNoiseAxis(otherError);
+  m_StdError = std::move(otherError);
 }
 
 void CSpectrumFluxAxis::SetSize(Int32 s) {

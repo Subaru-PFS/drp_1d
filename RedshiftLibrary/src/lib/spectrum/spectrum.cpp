@@ -74,8 +74,7 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
                                other.m_WithoutContinuumFluxAxis.GetError();
 
   m_SpectralAxis = other.m_SpectralAxis.MaskAxis(mask);
-  m_RawFluxAxis =
-      CSpectrumFluxAxis(other.m_RawFluxAxis.MaskAxis(mask).GetSamplesVector());
+  m_RawFluxAxis = other.m_RawFluxAxis.MaskAxis(mask);
 
   if (!otherRawError.isEmpty())
     m_RawFluxAxis.setError(otherRawError.MaskAxis(mask));
@@ -604,18 +603,20 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
   if (maxNoise == -DBL_MAX)
     THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
 
+  TFloat64List error_tmp = error;
   for (Int32 i = iMin; i < iMax; i++) {
     // check noise & flux
     bool validSample = checkNoise(error[i]) && checkFlux(flux[i]);
 
     if (validSample)
       continue;
-    fluxaxis.setErrorSample(i, maxNoise * coeffCorr);
+    error_tmp[i] = maxNoise * coeffCorr;
     flux[i] = minFlux / coeffCorr;
     corrected = true;
     nCorrected++;
   }
 
+  fluxaxis.setError(CSpectrumNoiseAxis(error_tmp));
   SetFluxAxis(std::move(fluxaxis));
 
   if (corrected) {

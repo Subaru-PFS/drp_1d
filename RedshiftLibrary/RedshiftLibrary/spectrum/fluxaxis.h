@@ -62,6 +62,7 @@ public:
   // value =0. is a default value for flux and not for error.
   explicit CSpectrumFluxAxis(Int32 n, Float64 value = 0.0);
   CSpectrumFluxAxis(CSpectrumAxis otherFlux, CSpectrumNoiseAxis otherError);
+  CSpectrumFluxAxis(CSpectrumAxis otherFlux);
   CSpectrumFluxAxis(const Float64 *samples, Int32 n);
   CSpectrumFluxAxis(const TFloat64List &samples);
   CSpectrumFluxAxis(TFloat64List &&samples);
@@ -70,8 +71,7 @@ public:
 
   const CSpectrumNoiseAxis &GetError() const;
 
-  void setError(const CSpectrumNoiseAxis &otherError);
-  void setErrorSample(Int32 idx, Float64 s);
+  void setError(const CSpectrumNoiseAxis otherError);
   void SetSize(Int32 s);
   void clear();
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);
@@ -100,10 +100,6 @@ inline CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx,
                                                     Int32 endIdx) const {
   return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx),
                            m_StdError.extract(startIdx, endIdx));
-}
-
-inline void CSpectrumFluxAxis::setErrorSample(Int32 idx, Float64 s) {
-  m_StdError[idx] = s;
 }
 
 } // namespace NSEpic

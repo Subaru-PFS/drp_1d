@@ -46,15 +46,15 @@ using namespace std;
 void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                       const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
-                      CSpectrum &rebinedSpectrum, CMask &rebinedMask,
-                      const std::string opt_error_interp,
+                      CMask &rebinedMask, const std::string opt_error_interp,
                       const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-                      const TAxisSampleList &Xtgt, const TFloat64List &Error,
+                      const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
                       Int32 &cursor) {
 
   // nearest sample, lookup
   Int32 k = 0;
   Int32 n = m_spectrum.GetSampleCount();
+  const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {
     // k = gsl_interp_bsearch
@@ -72,13 +72,11 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
 
     if (opt_error_interp != "no") {
 
-      rebinedFluxAxis.setErrorSample(cursor, Error[k]);
+      error_tmp[cursor] = Error[k];
       if (opt_error_interp == "rebinVariance") {
         Float64 xStepCompensation = computeXStepCompensation(
             targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        rebinedFluxAxis.setErrorSample(cursor,
-                                       rebinedFluxAxis.GetError()[cursor] *
-                                           sqrt(xStepCompensation));
+        error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
       }
     }
     rebinedMask[cursor] = 1;

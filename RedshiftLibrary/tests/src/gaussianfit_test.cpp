@@ -73,9 +73,8 @@ BOOST_AUTO_TEST_CASE(GaussianFit) {
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = 0;
   }
-  for (Int32 k = 0; k < n; k++) {
-    modelfluxAxis.setErrorSample(k, 0.5);
-  }
+  TFloat64List error(n, 0.5);
+  modelfluxAxis.setError(CSpectrumNoiseAxis(error));
 
   addLine(modelfluxAxis, 4., 40., 1.5);
   addLine(modelfluxAxis, 4., 80., 4.5);

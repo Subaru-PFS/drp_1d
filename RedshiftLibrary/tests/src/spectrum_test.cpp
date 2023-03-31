@@ -357,10 +357,12 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false), GlobalException);
   spc.GetRawFluxAxis_().GetSamplesVector()[1] = fluxList[1];
   // not ValidateNoise
-  spc.GetRawFluxAxis_().setErrorSample(1,
-                                       std::numeric_limits<double>::infinity());
+  TFloat64List error = spc.GetRawFluxAxis_().GetError().GetSamplesVector();
+  error[1] = std::numeric_limits<double>::infinity();
+  spc.GetRawFluxAxis_().setError(CSpectrumNoiseAxis(error));
   BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false), GlobalException);
-  spc.GetRawFluxAxis_().setErrorSample(1, noiseList[1]);
+  error[1] = noiseList[1];
+  spc.GetRawFluxAxis_().setError(CSpectrumNoiseAxis(error));
   // LSF spectralAxis don't cover lambdaRange
   spc.SetLSF(LSF);
   TFloat64Range lambdaRange2(4680, 4712);
@@ -466,25 +468,28 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   CSpectrumFluxAxis m_FluxAxis(nbmax);
   CSpectrumSpectralAxis m_SpectralAxis(nbmax, false);
 
+  TFloat64List error;
+  error.resize(nbmax);
   for (int i = nbmin; i < nbmax; ++i) {
     m_SpectralAxis[i] = i + 1;
 
     if (i < 5) {
       m_FluxAxis[i] = 0.0;
-      m_FluxAxis.setErrorSample(i, 0.0);
+      error[i] = 0.0;
     } else if (i == 7) {
       m_FluxAxis[i] = std::nan("1");
-      m_FluxAxis.setErrorSample(i, std::nan("2"));
+      error[i] = std::nan("2");
     } else if (i == 9) {
       m_FluxAxis[i] = std::numeric_limits<double>::infinity();
-      m_FluxAxis.setErrorSample(i, std::numeric_limits<double>::infinity());
+      error[i] = std::numeric_limits<double>::infinity();
     } else {
       m_FluxAxis[i] = i + 2;
-      m_FluxAxis.setErrorSample(i, 1e-12);
+      error[i] = 1e-12;
     }
 
     BOOST_TEST_MESSAGE("m_SpectralAxis[i]:" << as_const(m_SpectralAxis)[i]);
   }
+  m_FluxAxis.setError(CSpectrumNoiseAxis(error));
 
   BOOST_TEST_MESSAGE("index1:" << m_SpectralAxis.GetSamplesCount());
   BOOST_TEST_MESSAGE("index2:" << m_FluxAxis.GetSamplesCount());
@@ -504,28 +509,36 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   CSpectrumFluxAxis _FluxAxis6(nbmax);
   CSpectrumFluxAxis _FluxAxis7(nbmax);
 
+  TFloat64List error2(nbmax, 0.0);
+  TFloat64List error3(nbmax, 0.0);
+  TFloat64List error6(nbmax, 0.0);
+
   for (int i = nbmin; i < nbmax; ++i) {
     _FluxAxis2[i] = (i + 2) * 1e+3;
     _FluxAxis3[i] = _FluxAxis2[i];
     _FluxAxis4[i] = 0.0;
     _FluxAxis6[i] = _FluxAxis2[i];
     _FluxAxis7[i] = _FluxAxis2[i];
-    _FluxAxis2.setErrorSample(i, 1e-5);
-    _FluxAxis3.setErrorSample(i, 0.0);
-    _FluxAxis4.setErrorSample(i, _FluxAxis2.GetError().GetSamplesVector()[i]);
-    _FluxAxis5.setErrorSample(i, _FluxAxis2.GetError().GetSamplesVector()[i]);
+    error2[i] = 1e-5;
+    error3[i] = 0.0;
 
     if (i < 5) {
       _FluxAxis5[i] = std::nan("5");
-      _FluxAxis6.setErrorSample(i, std::nan("6"));
+      error6[i] = std::nan("6");
     } else if (i == 5) {
       _FluxAxis5[i] = 1e+3;
-      _FluxAxis6.setErrorSample(i, 1e-9);
+      error6[i] = 1e-9;
     } else {
       _FluxAxis5[i] = std::numeric_limits<double>::infinity();
-      _FluxAxis6.setErrorSample(i, std::numeric_limits<double>::infinity());
+      error6[i] = std::numeric_limits<double>::infinity();
     }
   }
+
+  _FluxAxis2.setError(CSpectrumNoiseAxis(error2));
+  _FluxAxis3.setError(CSpectrumNoiseAxis(error3));
+  _FluxAxis4.setError(CSpectrumNoiseAxis(error2));
+  _FluxAxis5.setError(CSpectrumNoiseAxis(error2));
+  _FluxAxis6.setError(CSpectrumNoiseAxis(error6));
 
   CSpectrum object_CSpectrum4(m_SpectralAxis, _FluxAxis2);
   CSpectrum object_CSpectrum5(m_SpectralAxis, _FluxAxis3);

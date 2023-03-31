@@ -43,14 +43,17 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinLinear::rebin(
-    CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
-    const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
-    CMask &rebinedMask, const std::string opt_error_interp,
-    const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-    const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
+void CRebinLinear::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+                         const TFloat64Range &range,
+                         const CSpectrumSpectralAxis &targetSpectralAxis,
+                         CMask &rebinedMask, const std::string opt_error_interp,
+                         const TAxisSampleList &Xsrc,
+                         const TAxisSampleList &Ysrc,
+                         const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
+                         Int32 &cursor) {
 
   Int32 n = m_spectrum.GetSampleCount();
+  const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
 
   Int32 k = 0;
   // For each sample in the valid lambda range interval.
@@ -66,17 +69,13 @@ void CRebinLinear::rebin(
       rebinedMask[cursor] = 1;
 
       if (opt_error_interp == "rebin")
-        rebinedFluxAxis.setErrorSample(
-            cursor, Error[k] + (Error[k + 1] - Error[k]) * t);
+        error_tmp[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
       else if (opt_error_interp == "rebinVariance") {
-        rebinedFluxAxis.setErrorSample(
-            cursor, sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
-                         Error[k + 1] * Error[k + 1] * t * t));
+        error_tmp[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
+                                 Error[k + 1] * Error[k + 1] * t * t);
         Float64 xStepCompensation = computeXStepCompensation(
             targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        rebinedFluxAxis.setErrorSample(cursor,
-                                       rebinedFluxAxis.GetError()[cursor] *
-                                           sqrt(xStepCompensation));
+        error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
       }
       cursor++;
     }
