@@ -540,13 +540,20 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
 
   Log.LogDetail("Elementlist: Adding n=%d ampOffsets", ampOffsetGroups.size());
 
+  // need to avoid overlapping polynomes since the ovelapping condition is
+  // computed unsing the lambda range support of the lines that intersect with a
+  // bigger fraction than OVERLAP_THRES_HYBRID_FIT. It can lead to shared pixels
+  // between elements considered not overlapped. In this case we should not add
+  // the overlapped polynomes, but choose one of them.
+  TInt32List mask(modelfluxAxis.GetSamplesCount(), 1);
   for (const auto &g : ampOffsetGroups) {
     const auto &group_eIdx_list = g.second;
     auto samples = getSupportIndexes(group_eIdx_list);
     const auto &pCoeffs =
         m_Elements[group_eIdx_list.front()]->GetPolynomCoeffs();
     for (Int32 s : samples) {
-      modelfluxAxis[s] += pCoeffs.getValue(spectralAxis[s]);
+      modelfluxAxis[s] += pCoeffs.getValue(spectralAxis[s]) * mask[s];
+      mask[s] = 0; // one sample can only be written once
     }
   }
 }
