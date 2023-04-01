@@ -326,7 +326,7 @@ const TInt32List &CTplratioManager::GetNLinesAboveSNRTplratio() const {
 bool CTplratioManager::setTplratioAmplitude(const TFloat64List &ampsElts,
                                             const TFloat64List &errorsElts) {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    m_Elements[iElts]->SetFittedAmplitude(ampsElts[iElts], errorsElts[iElts]);
+    m_Elements[iElts]->SetElementAmplitude(ampsElts[iElts], errorsElts[iElts]);
   }
   return true;
 }
@@ -495,7 +495,7 @@ void CTplratioManager::finish(Float64 redshift) {
                   m_savedIdxFitted, m_tplratioBestTplName.c_str(),
                   m_tplratioBestTplIsmCoeff,
                   m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
-    m_Elements[iElts]->SetFittedAmplitude(
+    m_Elements[iElts]->SetElementAmplitude(
         m_FittedAmpTplratio[m_savedIdxFitted][iElts],
         m_FittedErrorTplratio[m_savedIdxFitted][iElts]);
     m_Elements[iElts]->SetSumCross(m_DtmTplratio[m_savedIdxFitted][iElts]);

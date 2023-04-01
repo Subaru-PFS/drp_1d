@@ -346,14 +346,14 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
     if (modelErr_withfit > modelErr_init) {
       Float64 nominal_ampA = m_Elements[ilineA]->GetNominalAmplitude(0);
       Float64 nominal_ampE = m_Elements[ilineE]->GetNominalAmplitude(0);
-      m_Elements[ilineA]->SetFittedAmplitude(ampA / nominal_ampA,
-                                             amp_errorA / nominal_ampA);
-      m_Elements[ilineE]->SetFittedAmplitude(ampE / nominal_ampE,
-                                             amp_errorE / nominal_ampE);
+      m_Elements[ilineA]->SetElementAmplitude(ampA / nominal_ampA,
+                                              amp_errorA / nominal_ampA);
+      m_Elements[ilineE]->SetElementAmplitude(ampE / nominal_ampE,
+                                              amp_errorE / nominal_ampE);
       for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
         Float64 nominal_ampMore =
             m_Elements[ilinesMore[imore]]->GetNominalAmplitude(0);
-        m_Elements[ilinesMore[imore]]->SetFittedAmplitude(
+        m_Elements[ilinesMore[imore]]->SetElementAmplitude(
             ampsMore[imore] / nominal_ampMore,
             ampErrorsMore[imore] / nominal_ampMore);
       }

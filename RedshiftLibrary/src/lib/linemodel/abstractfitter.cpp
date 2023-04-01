@@ -179,7 +179,6 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   elementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
 
   if (elt->IsOutsideLambdaRange()) {
-    elementParam->m_fitAmplitude = NAN;
     elt->SetSumCross(NAN);
     elt->SetSumGauss(NAN);
     elt->SetDtmFree(NAN);
@@ -189,32 +188,15 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   computeCrossProducts(*elt, redshift, lineIdx);
 
   if (std::isnan(elt->GetSumGauss())) {
-    elementParam->m_fitAmplitude = NAN;
     elt->SetSumCross(NAN);
     return;
   }
 
   elt->SetSumCross(std::max(0.0, elt->GetDtmFree()));
   Float64 A = elt->GetSumCross() / elt->GetSumGauss();
-  elementParam->m_fitAmplitude = A;
 
-  for (Int32 k = 0; k < nLines; k++) {
-    if (elt->IsOutsideLambdaRange(k)) {
-      continue;
-    }
-    elementParam->m_FittedAmplitudes[k] =
-        A * elementParam->m_NominalAmplitudes[k];
+  elt->SetElementAmplitude(A, 1.0 / sqrt(elt->GetSumGauss()));
 
-    // limit the absorption to 0.0-1.0, so that it's never <0
-    //*
-    if (elt->getSignFactor(k) == -1 && m_absLinesLimit > 0.0 &&
-        elementParam->m_FittedAmplitudes[k] > m_absLinesLimit) {
-      elementParam->m_FittedAmplitudes[k] = m_absLinesLimit;
-    }
-
-    elementParam->m_FittedAmplitudeErrorSigmas[k] =
-        elementParam->m_NominalAmplitudes[k] * 1.0 / sqrt(elt->GetSumGauss());
-  }
   return;
 }
 
@@ -323,7 +305,8 @@ Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 idxLine) const {
   for (Int32 iElts = istart; iElts < iend; iElts++) {
     Float64 dtm = m_Elements[iElts]->GetSumCross();
     Float64 mtm = m_Elements[iElts]->GetSumGauss();
-    Float64 a = m_Elements[iElts]->GetFitAmplitude();
+    Float64 a =
+        m_Elements.GetElementAmplitude(iElts); //[iElts]->GetFitAmplitude();
     Float64 term1 = a * a * mtm;
     Float64 term2 = -2. * a * dtm;
     fit += term1 + term2;

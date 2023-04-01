@@ -84,7 +84,7 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
     Float64 er = AmplitudesUncertainties[subeIdx]; // not modifying the
     // fitting error for now
     Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
-    m_Elements[eIdx]->SetFittedAmplitude(
+    m_Elements[eIdx]->SetElementAmplitude(
         correctedAmplitudes[iRestLine] / nominalAmp, er);
   }
   m_model->refreshModel();

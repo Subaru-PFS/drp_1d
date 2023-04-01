@@ -923,6 +923,7 @@ void CLineModelFitting::LoadModelSolution(
   if (m_enableAmplitudeOffsets)
     m_Elements.resetAmplitudeOffset();
 
+  TBoolList element_done(m_Elements.size(), false);
   for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
@@ -930,6 +931,14 @@ void CLineModelFitting::LoadModelSolution(
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
     if (subeIdx == undefIdx || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
       continue;
+
+    m_Elements[eIdx]->SetFittedAmplitude(
+        subeIdx, modelSolution.Amplitudes[iRestLine],
+        modelSolution.AmplitudesUncertainties[iRestLine]);
+
+    if (element_done[eIdx])
+      continue;
+
     m_Elements[eIdx]->SetFittingGroupInfo(
         modelSolution.fittingGroupInfo[iRestLine]);
     if (m_enableAmplitudeOffsets) {
@@ -938,13 +947,9 @@ void CLineModelFitting::LoadModelSolution(
           modelSolution.continuum_pCoeff1[iRestLine],
           modelSolution.continuum_pCoeff2[iRestLine]};
       m_Elements[eIdx]->SetPolynomCoeffs(std::move(contPolynomCoeffs));
-      m_Elements[eIdx]->SetFittingGroupInfo(
-          modelSolution.fittingGroupInfo[iRestLine]);
     }
 
-    m_Elements[eIdx]->SetFittedAmplitude(
-        subeIdx, modelSolution.Amplitudes[iRestLine],
-        modelSolution.AmplitudesUncertainties[iRestLine]);
+    element_done[eIdx] = true;
   }
 
   if (!std::isnan(modelSolution.LyaWidthCoeff) or

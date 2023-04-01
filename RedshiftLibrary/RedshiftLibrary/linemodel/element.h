@@ -61,7 +61,6 @@ struct TLineModelElementParam {
   Float64 m_VelocityAbsorption = NAN;
   TFloat64List m_FittedAmplitudes;
   TFloat64List m_FittedAmplitudeErrorSigmas;
-  Float64 m_fitAmplitude = NAN;
   TFloat64List m_NominalAmplitudes;
   TFloat64List m_Offsets;
   TLineVector m_Lines;
@@ -155,7 +154,7 @@ public:
   Float64 GetElementError() const;
 
   void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR);
-  void SetFittedAmplitude(Float64 A, Float64 SNR);
+  void SetElementAmplitude(Float64 A, Float64 SNR);
   void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
 
   bool SetAbsLinesLimit(Float64 limit);
@@ -206,7 +205,6 @@ public:
   void SetDtmFree(Float64 val);
   Float64 GetSumGauss() const;
   void SetSumGauss(Float64 val);
-  Float64 GetFitAmplitude() const;
   const std::string &GetFittingGroupInfo() const;
   void SetFittingGroupInfo(const std::string &val);
 
