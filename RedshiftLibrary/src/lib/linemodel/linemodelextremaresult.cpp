@@ -89,9 +89,6 @@ void TLineModelResult::updateFromModel(
   snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
 
-  // store the model norm
-  mTransposeM = lmel->EstimateMTransposeM();
-
   // scale marginalization correction
   Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
   CorrScaleMarg = corrScaleMarg;
@@ -164,7 +161,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   if (firstpassResult) {
     return getCandidateParent(rank, dataset);
   }
-  if (dataset == "model_parameters") {
+  if (dataset == "model_parameters" || dataset == "line_mask" ||
+      dataset == "continuum_polynom") {
     return this->m_ranked_candidates[rank].second;
   } else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
     return m_savedModelFittingResults[rank];
@@ -179,7 +177,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
     const std::string &dataset) const {
-  if (dataset == "model_parameters")
+  if (dataset == "model_parameters" || dataset == "line_mask" ||
+      dataset == "continuum_polynom")
     return this->m_ranked_candidates[0].second->getType();
   else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines")
     return this->m_savedModelFittingResults[0]->getType();
@@ -195,7 +194,8 @@ bool LineModelExtremaResult::HasCandidateDataset(
     const std::string &dataset) const {
   return (dataset == "model_parameters" || dataset == "model" ||
           dataset == "fp_model_parameters" || dataset == "continuum" ||
-          dataset == "fitted_lines" || dataset == "fp_fitted_lines");
+          dataset == "fitted_lines" || dataset == "fp_fitted_lines" ||
+          dataset == "line_mask" || dataset == "continuum_polynom");
 }
 
 std::shared_ptr<const COperatorResult>

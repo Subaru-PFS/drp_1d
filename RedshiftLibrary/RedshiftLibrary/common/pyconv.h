@@ -39,6 +39,8 @@
 #ifndef PYCONV_H
 #define PYCONV_H
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/mask.h"
+
 namespace NSEpic {
 class PC {
 public:
@@ -58,6 +60,27 @@ public:
   static void get(const TFloat32List &vec, float **data, int *size) {
     *data = const_cast<float *>(vec.data());
     *size = vec.size();
+  }
+
+  static void get(const TBoolList &vec, short **data, int *size) {
+    *data = (short *)malloc(sizeof(short) * vec.size());
+
+    for (int i = 0; i < vec.size(); i++)
+      (*data)[i] = vec[i];
+    *size = vec.size();
+  }
+
+  static void get(const TMaskList &vec, unsigned char **data,
+                  long unsigned int *size) {
+    *data = const_cast<unsigned char *>(vec.data());
+    *size = vec.size();
+  }
+
+  static void get(const TMaskList &vec, short **data, int *size) {
+    *data = (short *)malloc(sizeof(short) * vec.size());
+    *size = (int)vec.size();
+    for (int i = 0; i < vec.size(); i++)
+      (*data)[i] = (short)vec[i];
   }
 };
 } // namespace NSEpic
