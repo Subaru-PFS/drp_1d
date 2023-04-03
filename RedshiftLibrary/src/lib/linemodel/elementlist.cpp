@@ -521,7 +521,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
   }
 
   for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
+    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
       indexes.push_back(j);
     }
   }

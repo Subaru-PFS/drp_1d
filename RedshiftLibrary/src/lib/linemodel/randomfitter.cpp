@@ -102,7 +102,7 @@ Float64 CRandomFitter::getContinuumMeanUnderElement(Int32 eltId) const {
   const auto &ContinuumFluxAxis = m_model->getContinuumFluxAxis();
   // const auto & ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
+    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
       n++;
       // w = 1.0 / ErrorNoContinuum[j];
       // sumErr += w;
