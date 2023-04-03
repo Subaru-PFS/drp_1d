@@ -53,11 +53,18 @@ void CLineMeasSolve::GetRedshiftSampling(
       inputContext->GetParameterStore()->GetScoped<Float64>("redshiftref");
   Float64 halfRange =
       inputContext->GetParameterStore()->GetScoped<Float64>("linemeas_dzhalf");
-
-  redshiftRange =
-      TFloat64Range(rangeCenter - halfRange, rangeCenter + halfRange);
   redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>(
       "linemeas_redshiftstep");
+
+  halfRange = std::ceil(halfRange / redshiftStep) * redshiftStep;
+
+  Float64 half_r = halfRange;
+  Float64 half_l = halfRange;
+  if (m_redshiftSampling == "log") {
+    half_r = (exp(halfRange) - 1.0) * (1. + rangeCenter);
+    half_l = (1.0 - exp(-halfRange)) * (1. + rangeCenter);
+  }
+  redshiftRange = TFloat64Range(rangeCenter - half_l, rangeCenter + half_r);
 }
 
 std::shared_ptr<CSolveResult>

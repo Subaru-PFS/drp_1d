@@ -601,8 +601,12 @@ void COperatorLineModel::buildExtendedRedshifts() {
  */
 TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
 
-  const Float64 half_r = (exp(m_secondPass_halfwindowsize) - 1.0) * (1. + z);
-  const Float64 half_l = (1.0 - exp(-m_secondPass_halfwindowsize)) * (1. + z);
+  Float64 half_r = m_secondPass_halfwindowsize;
+  Float64 half_l = m_secondPass_halfwindowsize;
+  if (m_redshiftSampling == "log") {
+    half_r = (exp(m_secondPass_halfwindowsize) - 1.0) * (1. + z);
+    half_l = (1.0 - exp(-m_secondPass_halfwindowsize)) * (1. + z);
+  }
 
   TFloat64Range windowRange(z - half_l, z + half_r);
   windowRange.IntersectWith(m_Redshifts);
