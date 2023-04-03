@@ -94,13 +94,14 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
       CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
   CSpectrum spc = CSpectrum();
   CSpectrumSpectralAxis spectralAxis(10, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < spectralAxis.GetSamplesCount(); k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
 
   CSpectrumFluxAxis modelfluxAxis(10);
-  Float64 *modelSamples = modelfluxAxis.GetSamples();
+  TAxisSampleList modelSamples = modelfluxAxis.GetSamplesVector();
   modelSamples[0] = 1.;
   modelSamples[1] = 1.;
   modelSamples[2] = 2.;
@@ -111,6 +112,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   modelSamples[7] = 1.;
   modelSamples[8] = 1.;
   modelSamples[9] = 1.;
+  modelfluxAxis.setSamplesVector(modelSamples);
 
   spc.SetSpectralAndFluxAxes(std::move(spectralAxis), modelfluxAxis);
   Float64 winsize = 10000.;
@@ -152,6 +154,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
 
   modelSamples[8] = 1.2;
   modelSamples[9] = 1.1;
+  modelfluxAxis.setSamplesVector(modelSamples);
   spc.SetFluxAxis(modelfluxAxis);
 
   ratioAmp = lineDetection.ComputeFluxes(spc, winsize, range, mask,
@@ -196,10 +199,11 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
       CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = k;
@@ -279,10 +283,11 @@ BOOST_AUTO_TEST_CASE(Retest) {
       CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = k;
@@ -394,10 +399,11 @@ BOOST_AUTO_TEST_CASE(Retest) {
 BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop) {
   Int32 n = 250;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *fluxAxis = spectralAxis.GetSamples();
+  TAxisSampleList fluxAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     fluxAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(fluxAxis);
 
   TInt32RangeList peak;
   peak.push_back(TInt32Range(-5, 35));
@@ -442,10 +448,11 @@ BOOST_AUTO_TEST_CASE(Compute) {
 
   Int32 n = 2000;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = k * 0.0001;

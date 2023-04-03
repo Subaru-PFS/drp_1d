@@ -133,10 +133,13 @@ BOOST_AUTO_TEST_CASE(basic_function_test) {
   CSpectrumNoiseAxis spectrumNoiseAxis(Array2);
   object_FluxAxis.setError(spectrumNoiseAxis);
   BOOST_CHECK(object_FluxAxis.GetError().GetSamplesVector() == Array2);
-  spectrumNoiseAxis.GetSamplesVector().pop_back();
+  TAxisSampleList noise = spectrumNoiseAxis.GetSamplesVector();
+  noise.pop_back();
+  spectrumNoiseAxis.setSamplesVector(noise);
   BOOST_CHECK_THROW(object_FluxAxis.setError(spectrumNoiseAxis),
                     GlobalException);
-  spectrumNoiseAxis.GetSamplesVector().push_back(20);
+  noise.push_back(20);
+  spectrumNoiseAxis.setSamplesVector(noise);
 
   //-------------//
   // test extract

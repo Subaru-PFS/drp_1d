@@ -71,8 +71,6 @@ void CSpectrumAxis::clear() {
   m_Samples.clear();
 }
 
-Int32 CSpectrumAxis::GetSamplesCount() { return m_Samples.size(); }
-
 /*
     maskedAxis is the output axis after applying the mask on the current object
 */

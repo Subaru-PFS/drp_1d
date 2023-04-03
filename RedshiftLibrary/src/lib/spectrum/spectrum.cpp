@@ -575,7 +575,7 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
 
   CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
   const TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
-  TFloat64List &flux = fluxaxis.GetSamplesVector();
+  TFloat64List flux = fluxaxis.GetSamplesVector();
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
@@ -616,6 +616,7 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
     nCorrected++;
   }
 
+  fluxaxis.setSamplesVector(flux);
   fluxaxis.setError(CSpectrumNoiseAxis(error_tmp));
   SetFluxAxis(std::move(fluxaxis));
 

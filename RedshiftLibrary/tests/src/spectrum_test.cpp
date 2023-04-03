@@ -142,7 +142,10 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(spc_6.GetSampleCount() == spcAxisSize);
   BOOST_CHECK(spc_6.GetFluxAxis().GetSamplesVector() == fluxList);
 
-  spcWithVariableWidthLSF.GetRawFluxAxis_().GetSamplesVector().pop_back();
+  TAxisSampleList rawFlux =
+      spcWithVariableWidthLSF.GetRawFluxAxis_().GetSamplesVector();
+  rawFlux.pop_back();
+  spcWithVariableWidthLSF.GetRawFluxAxis_().setSamplesVector(rawFlux);
   BOOST_CHECK_THROW(CSpectrum spc_6b(spcWithVariableWidthLSF), GlobalException);
 
   CSpectrum spc_7;
@@ -298,7 +301,9 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   TFloat64List spectralList_2 = {0, 1, 2};
   TFloat64List fluxList_2 = {1, 2, 1};
   CSpectrum spc_2(spectralList_2, fluxList_2);
-  spc_2.GetRawFluxAxis_().GetSamplesVector().pop_back();
+  TAxisSampleList rawFlux2 = spc_2.GetRawFluxAxis_().GetSamplesVector();
+  rawFlux2.pop_back();
+  spc_2.GetRawFluxAxis_().setSamplesVector(rawFlux2);
   BOOST_CHECK_THROW(spc_2.InitSpectrumContinuum(*paramStore), GlobalException);
   spc.InitSpectrumContinuum(*paramStore);
   BOOST_CHECK(spc.GetContinuumEstimationMethod() == "IrregularSamplingMedian");
@@ -343,19 +348,23 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   TFloat64Range lambdaRange(spectralList[0], spectralList[spcAxisSize - 1]);
   BOOST_CHECK_NO_THROW(spc.ValidateSpectrum(lambdaRange, true));
   // not IsValid
-  spc.GetRawFluxAxis_().GetSamplesVector().push_back(5592.);
+  TAxisSampleList rawFlux3 = spc.GetRawFluxAxis_().GetSamplesVector();
+  rawFlux3.push_back(5592.);
+  spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
   BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, true), GlobalException);
-  spc.GetRawFluxAxis_().GetSamplesVector().pop_back();
+  rawFlux3.pop_back();
+  spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
   // correct flux
-  spc.GetRawFluxAxis_().GetSamplesVector()[1] =
-      std::numeric_limits<double>::infinity();
+  rawFlux3[1] = fluxList[1];
+  spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
   spc.ValidateSpectrum(lambdaRange, true);
-  BOOST_CHECK(spc.GetRawFluxAxis_().GetSamplesVector()[1] = fluxList[1]);
+  BOOST_CHECK(spc.GetRawFluxAxis_().GetSamplesVector()[1] == fluxList[1]);
   // not ValidateFlux
-  spc.GetRawFluxAxis_().GetSamplesVector()[1] =
-      std::numeric_limits<double>::infinity();
+  rawFlux3[1] = std::numeric_limits<double>::infinity();
+  spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
   BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false), GlobalException);
-  spc.GetRawFluxAxis_().GetSamplesVector()[1] = fluxList[1];
+  rawFlux3[1] = fluxList[1];
+  spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
   // not ValidateNoise
   TFloat64List error = spc.GetRawFluxAxis_().GetError().GetSamplesVector();
   error[1] = std::numeric_limits<double>::infinity();
@@ -396,7 +405,10 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
                 rawFlux[i]);
   }
 
-  spc_3.GetContinuumFluxAxis_().GetSamplesVector().push_back(1.);
+  TAxisSampleList continuumFlux =
+      spc_3.GetContinuumFluxAxis_().GetSamplesVector();
+  continuumFlux.push_back(1.);
+  spc_3.GetContinuumFluxAxis_().setSamplesVector(continuumFlux);
   spc_3.SetContinuumEstimationMethod("zero");
   BOOST_CHECK_THROW(
       spc.SetContinuumEstimationMethod(spc_3.GetContinuumFluxAxis()),
@@ -579,11 +591,21 @@ BOOST_AUTO_TEST_CASE(Calcul) {
                     GlobalException); // cas dans l'intervalle 9 à 11 avec inf
   BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(10, 10.1),
                     GlobalException); // cas où l'intervalle est un point inf
-  object_CSpectrum.GetFluxAxis_().GetSamplesVector().pop_back();
-  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(1, 11.1), GlobalException);
-  object_CSpectrum.GetFluxAxis_().GetSamplesVector().push_back(13.);
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(11, 14.1),
+                    GlobalException); // cas où l'intervalle est à l'extérieur
+  TAxisSampleList fluxAxis2 =
+      object_CSpectrum.GetFluxAxis_().GetSamplesVector();
+  fluxAxis2.pop_back();
+  object_CSpectrum.GetFluxAxis_().setSamplesVector(fluxAxis2);
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(1, 11.1),
+                    GlobalException); // cas où les tailles sont différentes
+
+  fluxAxis2.push_back(13.);
+  object_CSpectrum.GetFluxAxis_().setSamplesVector(fluxAxis2);
   CSpectrumNoiseAxis err = object_CSpectrum.GetFluxAxis_().GetError();
-  err.GetSamplesVector().push_back(1e-12);
+  TAxisSampleList errAxisList = err.GetSamplesVector();
+  errAxisList.push_back(1e-12);
+  err.setSamplesVector(errAxisList);
   BOOST_CHECK_THROW(object_CSpectrum.GetFluxAxis_().setError(err),
                     GlobalException);
 
@@ -619,9 +641,11 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   // test correctSpectrum
 
   // check throw : spectrum is not valid
-  object_CSpectrum.GetFluxAxis_().GetSamplesVector().pop_back();
+  fluxAxis2.pop_back();
+  object_CSpectrum.GetFluxAxis_().setSamplesVector(fluxAxis2);
   BOOST_CHECK_THROW(object_CSpectrum.correctSpectrum(1, 11.2), GlobalException);
-  object_CSpectrum.GetFluxAxis_().GetSamplesVector().push_back(13.);
+  fluxAxis2.push_back(13.);
+  object_CSpectrum.GetFluxAxis_().setSamplesVector(fluxAxis2);
 
   // cas où toutes les valeurs du flux et de l'erreur sont valides
   BOOST_CHECK(object_CSpectrum4.correctSpectrum(1, 11.2) == false);
@@ -883,11 +907,14 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   spcLight.setRebinInterpMethod("lin");
 
   // check throw : spectrum is not valid
-  spcLight.GetFluxAxis_().GetSamplesVector().pop_back();
+  TAxisSampleList fluxAxis2 = spcLight.GetFluxAxis_().GetSamplesVector();
+  fluxAxis2.pop_back();
+  spcLight.GetFluxAxis_().setSamplesVector(fluxAxis2);
   BOOST_CHECK_THROW(
       spcLight.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask),
       GlobalException);
-  spcLight.GetFluxAxis_().GetSamplesVector().push_back(6e-2);
+  fluxAxis2.push_back(6e-2);
+  spcLight.GetFluxAxis_().setSamplesVector(fluxAxis2);
 
   // interp = "lin" et errorRebinMethod = "rebin"
   spcLight.Rebin(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
