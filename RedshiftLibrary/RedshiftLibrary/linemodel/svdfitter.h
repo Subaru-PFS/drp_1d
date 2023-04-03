@@ -52,15 +52,17 @@ public:
   void fit(Float64 redshift) override;
 
 protected:
-  virtual Int32 fitAmplitudesLinSolveAndLambdaOffset(
-      TInt32List EltsIdx, std::vector<Float64> &ampsfitted,
-      std::vector<Float64> &errorsfitted, bool enableOffsetFitting,
-      Float64 redshift);
+  virtual void fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
+                                                    bool enableOffsetFitting,
+                                                    Float64 redshift);
 
-  Int32 fitAmplitudesLinSolve(const TInt32List &EltsIdx,
-                              std::vector<Float64> &ampsfitted,
-                              std::vector<Float64> &errorsfitted,
-                              Float64 redshift);
+  void fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+                                     Float64 redshift);
+
+  bool fitAmplitudesLinSolve(const TInt32List &EltsIdx,
+                             std::vector<Float64> &ampsfitted,
+                             std::vector<Float64> &errorsfitted,
+                             Float64 redshift, const TInt32List &IdxToFit = {});
 };
 } // namespace NSEpic
 #endif

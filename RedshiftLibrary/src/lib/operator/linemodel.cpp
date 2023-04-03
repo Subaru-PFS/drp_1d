@@ -1736,7 +1736,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
 
   m_fittingManager->initDtd();
 
-  CLineModelSolution modelSolution(m_fittingManager->m_RestLineList);
+  CLineModelSolution modelSolution;
   CTplModelSolution continuumModelSolution;
   CLineModelSolution bestModelSolution;
 
@@ -1750,7 +1750,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
 
     if (score < bestScore) {
       bestScore = score;
-      bestModelSolution = modelSolution;
+      bestModelSolution = std::move(modelSolution);
       bestz = z;
     }
   }

@@ -115,7 +115,7 @@ void CHybridFitter::fit(Float64 redshift) {
  *fitAmplitude on its entry. Else, SetElementAmplitude to 0. Update the index of
  *already-fitted subelements.
  **/
-Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
+void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
   if (m_enableAmplitudeOffsets)
     m_Elements.resetAmplitudeOffset();
@@ -158,49 +158,8 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
                                   m_enableLambdaOffsetsFit);
     } else {
       Log.LogDebug("    model: hybrid fit:     Joint fit");
-      TFloat64List ampsfitted;
-      TFloat64List errorsfitted;
-      Int32 retVal = fitAmplitudesLinSolveAndLambdaOffset(
-          overlappingInds, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit,
-          redshift);
-      // if all the amplitudes fitted don't have the same sign, do it
-      // separately
-      TInt32List overlappingIndsSameSign;
-      if (retVal != 1 && ampsfitted.size() > 0) {
-        for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-          if (ampsfitted[ifit] > 0) {
-            overlappingIndsSameSign.push_back(overlappingInds[ifit]);
-            // m_Elements[overlappingInds[ifit]]->fitAmplitude(spectralAxis,
-            // spcFluxAxisNoContinuum, redshift);
-          } else {
-            m_Elements.SetElementAmplitude(overlappingInds[ifit], 0.0,
-                                           errorsfitted[ifit]);
-          }
-        }
-        // fit the rest of the overlapping elements (same sign) together
-        if (!m_enableAmplitudeOffsets && overlappingIndsSameSign.size() == 1) {
-          fitAmplitudeAndLambdaOffset(overlappingIndsSameSign[0], redshift,
-                                      undefIdx, m_enableLambdaOffsetsFit);
-        } else if (overlappingIndsSameSign.size() > 0) {
-          Int32 retVal2 = fitAmplitudesLinSolveAndLambdaOffset(
-              overlappingIndsSameSign, ampsfitted, errorsfitted,
-              m_enableLambdaOffsetsFit, redshift);
-
-          if (retVal2 != 1) {
-            for (Int32 ifit = 0; ifit < overlappingIndsSameSign.size();
-                 ifit++) {
-              if (ampsfitted[ifit] > 0) {
-                fitAmplitudeAndLambdaOffset(overlappingIndsSameSign[ifit],
-                                            redshift, undefIdx,
-                                            m_enableLambdaOffsetsFit);
-              } else {
-                m_Elements.SetElementAmplitude(overlappingIndsSameSign[ifit],
-                                               0.0, errorsfitted[ifit]);
-              }
-            }
-          }
-        }
-      }
+      fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
+                                           m_enableLambdaOffsetsFit, redshift);
     }
 
     // update the already fitted list
@@ -212,8 +171,6 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
   if (m_opt_enable_improveBalmerFit) {
     improveBalmerFit(redshift);
   }
-
-  return 0;
 }
 
 // return error: 1=can't find element index, 2=Abs_width not high enough
