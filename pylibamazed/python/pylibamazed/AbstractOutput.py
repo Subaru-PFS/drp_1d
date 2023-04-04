@@ -286,7 +286,7 @@ class AbstractOutput:
             skip = not self.has_dataset_in_source(None, None, ds)
             skip = skip and not "warning" in ds
             if skip:
-                zlog.LogInfo("skipping " + ds)
+                zlog.LogDebug("skipping " + ds)
                 continue
             ds_attributes = self.filter_dataset_attributes(ds)
             self.root_results[ds] = dict()

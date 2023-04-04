@@ -53,10 +53,12 @@ class Parameters():
         for object_type in self.config["linemeascatalog"].keys():
             lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
             lm = lm[lm.ProcessingID == source_id]
+            if lm.empty:
+                raise APIException(ErrorCode.INVALID_PARAMETER,f"Uncomplete linemeas catalog, {source_id} missing")
             columns = self.config["linemeas_catalog_columns"][object_type]
-            redshift_ref = lm[columns["Redshift"]].iloc[0]
-            velocity_abs = lm[columns["VelocityAbsorption"]].iloc[0]
-            velocity_em = lm[columns["VelocityEmission"]].iloc[0]
+            redshift_ref = float(lm[columns["Redshift"]].iloc[0])
+            velocity_abs = float(lm[columns["VelocityAbsorption"]].iloc[0])
+            velocity_em = float(lm[columns["VelocityEmission"]].iloc[0])
             #            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
             self.parameters[object_type]["redshiftref"] = redshift_ref
             self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
