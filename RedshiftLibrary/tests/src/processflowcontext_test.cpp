@@ -85,8 +85,8 @@ const std::string jsonString =
     "\"spectrum\" : {\"component\" : \"raw\"},"
     "\"fftprocessing\" : true,"
     "\"interpolation\" : \"precomputedfinegrid\","
-    "\"extinction\" : true,"
-    "\"dustfit\" : true,"
+    "\"igmfit\" : true,"
+    "\"ismfit\" : true,"
     "\"pdfcombination\" : \"marg\","
     "\"enablephotometry\" : false}},"
     "\"airvacuum_method\" : \"default\"}";

@@ -75,11 +75,11 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
   bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("ismfit");
   Float64 overlapThreshold =
       inputContext->GetParameterStore()->GetScoped<Float64>("overlapThreshold");
   bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("extinction");
+      inputContext->GetParameterStore()->GetScoped<bool>("igmfit");
 
   std::string opt_spcComponent =
       inputContext->GetParameterStore()->GetScoped<std::string>(

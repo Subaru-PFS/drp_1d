@@ -84,8 +84,8 @@ const std::string jsonStringFFT = {
     "\"spectrum\" : {\"component\" : \"raw\"},"
     "\"fftprocessing\" : true,"
     "\"interpolation\" : \"precomputedfinegrid\","
-    "\"extinction\" : true,"
-    "\"dustfit\" : true,"
+    "\"igmfit\" : true,"
+    "\"ismfit\" : true,"
     "\"pdfcombination\" : \"marg\","
     "\"enablephotometry\" : false}}}"};
 
@@ -102,8 +102,8 @@ const std::string jsonStringNoFFT = {
     "\"spectrum\" : {\"component\" : \"raw\"},"
     "\"fftprocessing\" : false,"
     "\"interpolation\" : \"precomputedfinegrid\","
-    "\"extinction\" : true,"
-    "\"dustfit\" : true,"
+    "\"igmfit\" : true,"
+    "\"ismfit\" : true,"
     "\"pdfcombination\" : \"marg\","
     "\"enablephotometry\" : true,"
     "\"photometry\": {\"weight\" : 1.0}}}}"};
