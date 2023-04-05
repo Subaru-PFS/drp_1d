@@ -255,6 +255,8 @@ void CContinuumManager::setContinuumComponent(std::string component) {
   m_ContinuumComponent = std::move(component);
   m_model->setContinuumComponent(m_ContinuumComponent);
 
+  *m_fitContinuum = {};
+
   if (m_ContinuumComponent == "nocontinuum") {
     m_fitContinuum->tplName = "nocontinuum"; // to keep track in resultstore
     // the continuum is set to zero and the observed spectrum is the spectrum
