@@ -419,3 +419,8 @@ COperatorResultStore::GetSolveResult(const std::string &objectType,
                                      const std::string &method) const {
   return GetGlobalResult(objectType, method, "solveResult");
 }
+
+bool COperatorResultStore::hasSolveResult(const std::string &objectType,
+                                          const std::string &method) const {
+  return HasDataset(objectType, method, "solveResult");
+}

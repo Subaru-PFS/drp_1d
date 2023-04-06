@@ -166,7 +166,8 @@ public:
   std::weak_ptr<const COperatorResult>
   GetSolveResult(const std::string &objectType,
                  const std::string &method) const;
-
+  bool hasSolveResult(const std::string &objectType,
+                      const std::string &method) const;
   // From DataStore, above should be removed and integrated into these
   void StoreGlobalResult(const std::string &name,
                          std::shared_ptr<const COperatorResult> result);
