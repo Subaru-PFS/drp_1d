@@ -286,7 +286,7 @@ class AbstractOutput:
             skip = not self.has_dataset_in_source(None, None, ds)
             skip = skip and not "warning" in ds
             if skip:
-                zlog.LogInfo("skipping " + ds)
+                zlog.LogDebug("skipping " + ds)
                 continue
             ds_attributes = self.filter_dataset_attributes(ds)
             self.root_results[ds] = dict()
@@ -399,54 +399,54 @@ class AbstractOutput:
             root = attr_parts[0]
             data = attr_parts[-1]
             rank = None
-#            dataset = "model_parameters"
-            if root == "classification":
-                if self.has_attribute(None,"classification",data,None):
+            try:
+                if root == "classification":
                     ret[attribute]=self.get_attribute(None,"classification",data,None)
-                continue
-            elif root == "error":
-                if self.has_error(attr_parts[1], attr_parts[2]):
-                    ret[attribute] = self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
-                elif self.has_error(None,attr_parts[1]):
-                    ret[attribute] = self.get_error(None,attr_parts[1])[attr_parts[2]]
-                continue
-            elif root == "ContextWarningFlags":
-                ret[attribute] = self.root_results["context_warningFlag"]["ContextWarningFlags"]
-                continue
-            elif "WarningFlags" in data:
-                if root in self.object_results and data in self.object_results[root]["warningFlag"]:
-                    ret[attribute] = self.object_results[root]["warningFlag"][data]
-                continue
-            else:
-                category = root
-                if len(attr_parts) == 2:
-                    rank = 0
-                elif len(attr_parts) == 3:
-                    rank = int(attr_parts[1]) 
-            if len(attr_parts) < 4:
-                if self.has_attribute(category,"model_parameters", data, rank):
-                    ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
-                else:
-                    rank = None
-                    for dataset in ["linemeas_parameters", "reliability"]:
-                        if self.has_attribute(category,dataset, data, rank):
-                            ret[attribute] = self.get_attribute(category, dataset, data, rank)
-            else:
-                dataset = attr_parts[1]
-                if not self.has_dataset(category, dataset):
                     continue
-                line_name = attr_parts[2]
-                col_name = attr_parts[3]
-                if line_name not in lines_ids:
-                    raise Exception("Line {}  not found in {}".format(line_name,lines_ids))
-                if len(attr_parts) == 4:
-                    fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
+                elif root == "error":
+                    if self.has_error(attr_parts[1], attr_parts[2]):
+                        ret[attribute] = self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
+                    elif self.has_error(None,attr_parts[1]):
+                        ret[attribute] = self.get_error(None,attr_parts[1])[attr_parts[2]]
+                    continue
+                elif root == "ContextWarningFlags":
+                    ret[attribute] = self.root_results["context_warningFlag"]["ContextWarningFlags"]
+                    continue
+                elif "WarningFlags" in data:
+                    ret[attribute] = self.object_results[root]["warningFlag"][data]
+                    continue
                 else:
-                    fitted_lines = pd.DataFrame(self.get_dataset(category, dataset,int(attr_parts[4])))
-                if dataset == "linemeas":
-                    fitted_lines.set_index("LinemeasLineID", inplace=True)
+                    category = root
+                    if len(attr_parts) == 2:
+                        rank = 0
+                    elif len(attr_parts) == 3:
+                        rank = int(attr_parts[1]) 
+                if len(attr_parts) < 4:
+                    if self.has_attribute(category,"model_parameters", data, rank):
+                        ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
+                    else:
+                        rank = None
+                        for dataset in ["linemeas_parameters", "reliability"]:
+                            if self.has_attribute(category,dataset, data, rank):
+                                ret[attribute] = self.get_attribute(category, dataset, data, rank)
                 else:
-                    fitted_lines.set_index("FittedLineID", inplace=True)
-                ret[attribute] = fitted_lines.at[lines_ids[line_name], col_name]
+                    dataset = attr_parts[1]
+                    if not self.has_dataset(category, dataset):
+                        continue
+                    line_name = attr_parts[2]
+                    col_name = attr_parts[3]
+                    if line_name not in lines_ids:
+                        raise Exception("Line {}  not found in {}".format(line_name,lines_ids))
+                    if len(attr_parts) == 4:
+                        fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
+                    else:
+                        fitted_lines = pd.DataFrame(self.get_dataset(category, dataset,int(attr_parts[4])))
+                    if dataset == "linemeas":
+                        fitted_lines.set_index("LinemeasLineID", inplace=True)
+                    else:
+                        fitted_lines.set_index("FittedLineID", inplace=True)
+                    ret[attribute] = fitted_lines.at[lines_ids[line_name], col_name]
+            except Exception as e:
+                zlog.LogDebug(f"could not extract {attribute}") 
         return ret
 
