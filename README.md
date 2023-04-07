@@ -13,7 +13,7 @@ pylibamazed is a Python package wrapping numerical algorithms for the analysis o
 * Estimate radial velocity
 * Measure fluxes of emission lines
 
-##Playing pylibamazed
+## Playing pylibamazed
 pylibamazed should work on Linux and OS X.
 
 ### Dependencies
@@ -102,6 +102,23 @@ Then open in your web browser:
 ## Third parties installation guide
 
 As stated earlier pylibamazed depends on several third parties (refer to [this section](#dependencies) for the complete list). It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install theses thirdparties.
+
+
+### Installing with package manager
+
+On ubuntu :
+```sh
+sudo apt install -y \
+libboost-dev libboost-filesystem-dev libboost-thread-dev libboost-timer-dev libboost-program-options-dev libboost-test-dev \
+libcfitsio-dev \
+libgsl-dev \
+libfftw3-dev \
+libopenblas-dev \
+libeigen3-dev \
+liblbfgspp-dev
+```
+
+### Installing from source
 
     buildandinstallthirdparty.py [-h] [--workdir WORKDIR] [--prefix PREFIX] [-j PARALLEL] [--extra_flags EXTRA_FLAGS] [--force] [name1 ...]
 
