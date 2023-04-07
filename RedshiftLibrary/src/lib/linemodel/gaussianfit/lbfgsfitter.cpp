@@ -126,7 +126,7 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
   for (Int32 i = 0; i < m_EltsIdx->size(); ++i) {
     Log.LogDebug(Formatter() << "amplitude[" << i << "]= " << amps[i]);
     auto &elt = m_fitter->m_Elements[(*m_EltsIdx)[i]];
-    elt->SetFittedAmplitude(amps[i], 0.0);
+    elt->SetElementAmplitude(amps[i], 0.0);
   }
 
   if (m_fitter->m_enableVelocityFitting) {
@@ -317,22 +317,15 @@ void CLbfgsFitter::fit(Float64 redshift) {
 
 // since fitAmplitudesLinSolve is already fitting lambda offsets,
 // this is a simple wrapper
-Int32 CLbfgsFitter::fitAmplitudesLinSolveAndLambdaOffset(
-    TInt32List EltsIdx, std::vector<Float64> &ampsfitted,
-    std::vector<Float64> &errorsfitted, bool enableOffsetFitting,
-    Float64 redshift) {
+void CLbfgsFitter::fitAmplitudesLinSolveAndLambdaOffset(
+    TInt32List EltsIdx, bool enableOffsetFitting, Float64 redshift) {
 
-  Int32 ret =
-      fitAmplitudesLinSolve(EltsIdx, ampsfitted, errorsfitted, redshift);
-
-  return ret;
+  fitAmplitudesLinSolvePositive(EltsIdx, redshift);
 }
 
 // overriding the SVD linear fitting, but here it is not linear inversion
-Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
-                                          TFloat64List &ampsfitted,
-                                          TFloat64List &errorsfitted,
-                                          Float64 redshift) {
+void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+                                                 Float64 redshift) {
 
   if (EltsIdx.size() < 1)
     THROWG(INTERNAL_ERROR, "empty Line element list to fit");
@@ -389,15 +382,13 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                  Formatter() << __func__ << " LBFGS ill ranked:"
                              << " number of samples = " << n
                              << ", number of parameters to fit = " << nddl);
-    ampsfitted.assign(EltsIdx.size(), 0.0);
-    errorsfitted.assign(EltsIdx.size(), INFINITY);
     for (Int32 eltIndex : EltsIdx)
       m_Elements.SetElementAmplitude(eltIndex, 0., INFINITY);
     if (m_enableAmplitudeOffsets) {
       for (Int32 eltIndex : EltsIdx)
         m_Elements[eltIndex]->SetPolynomCoeffs({0., 0., 0.});
     }
-    return EltsIdx.size();
+    return;
   }
 
   // Normalize
@@ -467,15 +458,14 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   // amplitudes initial guess
   for (auto eltIndex : EltsIdx) {
     auto &elt = m_Elements[eltIndex];
-    // set guess velocity
+    // set velocity guess
     if (elt->GetElementType() == CLine::nType_Absorption) {
       elt->SetVelocityAbsorption(m_velIniGuessA);
     } else {
       elt->SetVelocityEmission(m_velIniGuessE);
     }
   }
-  CSvdFitter::fitAmplitudesLinSolve(EltsIdx, ampsfitted, errorsfitted,
-                                    redshift);
+  CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
     // fitAmplitude(EltsIdx[i], redshift);
     auto &elt = m_Elements[EltsIdx[i]];
@@ -559,12 +549,8 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   // store fitted amplitude
   // TODO SNR computation
   Float64 snr = NAN;
-  ampsfitted.assign(EltsIdx.size(), NAN);
-  errorsfitted.assign(EltsIdx.size(), NAN);
-  for (Int32 i = 0; i < EltsIdx.size(); ++i) {
-    ampsfitted[i] = v_xGuess[i] / normFactor;
-    m_Elements[EltsIdx[i]]->SetFittedAmplitude(ampsfitted[i], snr);
-  }
+  for (Int32 i = 0; i < EltsIdx.size(); ++i)
+    m_Elements[EltsIdx[i]]->SetElementAmplitude(v_xGuess[i] / normFactor, snr);
 
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {
@@ -615,6 +601,4 @@ Int32 CLbfgsFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     for (Int32 eltIndex : EltsIdx)
       m_Elements[eltIndex]->SetPolynomCoeffs({x0, x1, x2});
   }
-
-  return 1; // assume same sign for all amps (all >0)
 }

@@ -126,16 +126,12 @@ public:
 
   void fit(Float64 redshift) override;
 
-  Int32 fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
-                                             std::vector<Float64> &ampsfitted,
-                                             std::vector<Float64> &errorsfitted,
-                                             bool enableOffsetFitting,
-                                             Float64 redshift) override;
+  void fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
+                                            bool enableOffsetFitting,
+                                            Float64 redshift) override;
 
-  Int32 fitAmplitudesLinSolve(const TInt32List &EltsIdx,
-                              std::vector<Float64> &ampsfitted,
-                              std::vector<Float64> &errorsfitted,
-                              Float64 redshift) override;
+  void fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+                                     Float64 redshift) override;
 
 private:
   const bool m_enableVelocityFitting =

@@ -119,11 +119,11 @@ const std::string jsonString_lbfgs =
     "\"continuumcomponent\" : \"nocontinuum\","
     "\"linetypefilter\" : \"E\","
     "\"lineforcefilter\" : \"no\","
-    "\"nsigmasupport\" : 8,"
+    "\"nsigmasupport\" : 14,"
     "\"linewidthtype\" : \"combined\","
     "\"fittingmethod\" : \"lbfgs\","
     "\"polynomialdegree\" : 2,"
-    "\"velocityfit\" : false,"
+    "\"velocityfit\" : true,"
     "\"emvelocityfitmin\" : 10,"
     "\"emvelocityfitmax\" : 400,"
     "\"absvelocityfitmin\" : 150,"
@@ -257,10 +257,10 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsTest) {
                                                      "linemeas");
 
   Float64 snrOII = res->snrOII;
-  BOOST_CHECK_CLOSE(snrOII, 28.111736427035133, 1e-6);
+  BOOST_CHECK_CLOSE(snrOII, 22.70229240409672, 1e-6);
 
   Float64 lfOII = res->lfOII;
-  BOOST_CHECK_CLOSE(lfOII, -15.658509502399042, 1e-6);
+  BOOST_CHECK_CLOSE(lfOII, -15.751327461605428, 1e-6);
 
   ctx.reset();
 }
