@@ -84,7 +84,7 @@ public:
 
   void LogCatalogInfos();
 
-  void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
+  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
   void setContinuumComponent(std::string component);
   const std::string &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
@@ -106,10 +106,6 @@ public:
 
   Float64 GetVelocityEmission() const;
   Float64 GetVelocityAbsorption() const;
-
-  void initModelAtZ(Float64 redshift,
-                    const CSpectrumSpectralAxis &spectralAxis);
-  void resetElementsFittingParam();
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
               CTplModelSolution &continuumModelSolution,

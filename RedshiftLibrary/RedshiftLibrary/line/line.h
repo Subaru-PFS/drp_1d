@@ -117,6 +117,7 @@ public:
   TSymIgmParams GetSymIgmParams() const;
   void SetAsymParams(const TAsymParams &asymParams);
   void SetSymIgmParams(const TSymIgmParams &params);
+  void SetSymIgmFit(bool val = true);
   void setProfileAndParams(const std::string &profileName,
                            const TAsymParams &asymParams, Float64 nSigmaSupport,
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>

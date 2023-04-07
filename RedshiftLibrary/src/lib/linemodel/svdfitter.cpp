@@ -49,7 +49,7 @@ using namespace NSEpic;
 using namespace std;
 
 // set all the amplitudes to 1.0
-void CSvdFitter::fit(Float64 redshift) {
+void CSvdFitter::doFit(Float64 redshift) {
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
 
   if (validEltsIdx.empty())

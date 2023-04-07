@@ -173,6 +173,8 @@ public:
                    Int32 indx = undefIdx); // undefIdx means setting for all
   void SetSymIgmParams(const TSymIgmParams &params,
                        Int32 indx = undefIdx); // undefIdx means setting for all
+  void SetSymIgmFit(bool val = true,
+                    Int32 indx = undefIdx); // undefIdx means setting for all
   TAsymParams GetAsymfitParams(Int32 asymIdx = 0) const;
   TSymIgmParams GetSymIgmParams(Int32 asymIdx = 0) const;
 

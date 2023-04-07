@@ -485,16 +485,18 @@ Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
 
 // first element returned is the list of element indices, then all remaining
 // elts are the list of line indices, for each element listed.
-std::vector<TInt32List> CLineModelElementList::getIgmLinesIndices() const {
-  std::vector<TInt32List> lineIdxList(1);
+std::tuple<TInt32List, std::vector<TInt32List>>
+CLineModelElementList::getIgmLinesIndices() const {
+  TInt32List EltsIdxList;
+  std::vector<TInt32List> lineIdxList;
   for (Int32 iElts = 0; iElts < m_Elements.size(); ++iElts) {
     TInt32List lineIdx = m_Elements[iElts]->getIgmLinesIndices();
     if (!lineIdx.empty()) {
-      lineIdxList.front().push_back(iElts);
+      EltsIdxList.push_back(iElts);
       lineIdxList.push_back(std::move(lineIdx));
     }
   }
-  return lineIdxList;
+  return std::make_tuple(std::move(EltsIdxList), std::move(lineIdxList));
 }
 
 /**

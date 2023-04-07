@@ -138,8 +138,6 @@ bool CTplratioManager::init(Float64 redshift, Int32 itratio) {
   }
   setTplratioModel(itratio, false);
 
-  resetLambdaOffsets();
-
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
   // catalog files, for the lyaE profile, as of 2016-01-11 INFO:

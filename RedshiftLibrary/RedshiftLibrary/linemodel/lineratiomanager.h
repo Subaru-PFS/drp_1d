@@ -96,7 +96,6 @@ public:
       const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter);
 
 protected:
-  void resetLambdaOffsets();
   void setLyaProfile(Float64 redshift, const TLineVector &lineList);
   void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
                       const TLineVector &lineList);

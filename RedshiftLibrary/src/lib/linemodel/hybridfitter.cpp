@@ -61,7 +61,7 @@ CHybridFitter::CHybridFitter(
         ps->GetScoped<bool>("linemodel.improveBalmerFit");
 }
 
-void CHybridFitter::fit(Float64 redshift) {
+void CHybridFitter::doFit(Float64 redshift) {
 
   // fit the amplitudes of each element independently, unless there is overlap
   fitAmplitudesHybrid(redshift);

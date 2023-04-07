@@ -446,8 +446,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
     maskList.resize(redshiftsTplFit.size());
     for (Int32 i = 0; i < redshiftsTplFit.size(); i++) {
-      m_fittingManager->initModelAtZ(redshiftsTplFit[i],
-                                     spectrum.GetSpectralAxis());
+      m_fittingManager->setRedshift(redshiftsTplFit[i]);
+      m_fittingManager->m_fitter->resetSupport(redshiftsTplFit[i]);
       maskList[i] = m_fittingManager->getOutsideLinesMask();
     }
 

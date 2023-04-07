@@ -379,26 +379,6 @@ TFloat64List CLineModelFitting::getTplratio_priors() {
   return m_lineRatioManager->getTplratio_priors();
 }
 
-void CLineModelFitting::initModelAtZ(
-    Float64 redshift, const CSpectrumSpectralAxis &spectralAxis) {
-
-  m_model->m_Redshift = redshift;
-
-  // prepare the elements support
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    m_Elements[iElts]->resetAsymfitParams();
-    m_Elements[iElts]->prepareSupport(spectralAxis, redshift, *(m_lambdaRange));
-  }
-}
-
-void CLineModelFitting::resetElementsFittingParam() {
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    m_Elements[iElts]->reset();
-  }
-  if (m_enableAmplitudeOffsets)
-    m_Elements.resetAmplitudeOffset();
-}
-
 bool CLineModelFitting::initDtd() {
   //  m_dTransposeDLambdaRange = TLambdaRange(*(m_lambdaRange));
   m_dTransposeDLambdaRange = *(m_lambdaRange);
@@ -447,9 +427,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                                CTplModelSolution &continuumModelSolution,
                                Int32 contreest_iterations, bool enableLogging) {
   // initialize the model spectrum
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
   m_fitter->m_cont_reestim_iterations = contreest_iterations;
-  initModelAtZ(redshift, spectralAxis);
+
+  setRedshift(redshift);
 
   if (m_dTransposeDLambdaRange != *(m_lambdaRange))
     initDtd();
@@ -471,8 +451,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     prepareAndLoadContinuum(k, redshift);
     if (getContinuumComponent() != "nocontinuum")
       computeSpectrumFluxWithoutContinuum();
-
-    resetElementsFittingParam();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
@@ -965,7 +943,8 @@ void CLineModelFitting::LoadModelSolution(
   }
 
   if (modelSolution.LyaIgm != undefIdx) {
-    auto const idxEltIGM = m_Elements.getIgmLinesIndices().front();
+    TInt32List idxEltIGM;
+    std::tie(idxEltIGM, std::ignore) = m_Elements.getIgmLinesIndices();
     if (!idxEltIGM.empty())
       for (auto const iElt : idxEltIGM)
         m_Elements[iElt]->SetSymIgmParams(

@@ -59,7 +59,9 @@ public:
       const TLineVector &restLineList,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam);
 
-  virtual void fit(Float64 redshift) = 0;
+  void fit(Float64 redshift);
+
+  void resetSupport(Float64 redshift);
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
 
@@ -83,6 +85,16 @@ public:
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
+  virtual void doFit(Float64 redshift) = 0;
+
+  void initFit(Float64 redshift);
+
+  void resetElementsFittingParam();
+
+  void resetLambdaOffsets();
+
+  void fitLyaProfile(Float64 redshift);
+
   void computeCrossProducts(CLineModelElement &elt, Float64 redshift,
                             Int32 lineIdx);
 

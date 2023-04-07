@@ -247,7 +247,7 @@ void CContinuumManager::logParameters() {
 }
 
 bool CContinuumManager::isContFittedToNull() {
-  return m_fitContinuum->tplAmplitude > m_opt_fitcontinuum_null_amp_threshold *
+  return m_fitContinuum->tplAmplitude < m_opt_fitcontinuum_null_amp_threshold *
                                             m_fitContinuum->tplAmplitudeError;
 }
 

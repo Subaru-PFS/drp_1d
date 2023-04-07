@@ -140,6 +140,12 @@ void CLine::SetSymIgmParams(const TSymIgmParams &params) {
   m_Profile->SetSymIgmParams(params);
 }
 
+void CLine::SetSymIgmFit(bool val) {
+  if (!m_Profile)
+    THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
+  m_Profile->SetSymIgmFit(val);
+}
+
 void CLine::setProfileAndParams(
     const std::string &profileName, const TAsymParams &asymParams,
     Float64 nSigmaSupport,

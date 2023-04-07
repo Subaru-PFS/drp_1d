@@ -49,7 +49,8 @@ class COnesFitter : public CAbstractFitter {
 public:
   using CAbstractFitter::CAbstractFitter;
 
-  void fit(Float64 redshift) override;
+private:
+  void doFit(Float64 redshift) override;
 };
 } // namespace NSEpic
 #endif

@@ -118,6 +118,9 @@ public:
   virtual bool isAsymFit() const { return false; };
   virtual bool isAsymFixed() const { return false; };
   virtual bool isSymIgm() const { return false; };
+  virtual bool isSymIgmFit() const { return false; };
+  virtual void SetSymIgmFit(bool val = true){};
+  virtual void SetSymIgmFixed(){};
   virtual void SetAsymParams(const TAsymParams &params){};
   virtual void SetSymIgmParams(const TSymIgmParams &params){};
   virtual void resetParams(){};

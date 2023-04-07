@@ -189,8 +189,15 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
 
   profileSYMIGM.resetParams();
   res = profileSYMIGM.GetSymIgmParams();
+  BOOST_CHECK(res.m_igmidx == 1);
+  BOOST_CHECK(res.m_redshift == 2.1);
+
+  profileSYMIGM.SetSymIgmFit();
+  profileSYMIGM.resetParams();
+  res = profileSYMIGM.GetSymIgmParams();
   BOOST_CHECK(res.m_igmidx == -1);
   BOOST_CHECK(std::isnan(res.m_redshift));
+  profileSYMIGM.SetSymIgmFit(false);
 
   Float64 x0 = 3769.7; //
   Float64 sigma = 2.;

@@ -58,9 +58,8 @@ public:
                std::shared_ptr<CContinuumManager> continuumManager,
                Int32 polyOrder = -1);
 
-  void fit(Float64 redshift) override;
-
 private:
+  void doFit(Float64 redshift) override;
   Int32 fitAmplitudesLinesAndContinuumLinSolve(
       const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
       TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,

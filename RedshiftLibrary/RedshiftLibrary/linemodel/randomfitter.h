@@ -49,9 +49,8 @@ class CRandomFitter : public CAbstractFitter {
 public:
   using CAbstractFitter::CAbstractFitter;
 
-  void fit(Float64 redshift) override;
-
 private:
+  void doFit(Float64 redshift) override;
   Float64 getContinuumMeanUnderElement(Int32 eltId) const;
 };
 } // namespace NSEpic
