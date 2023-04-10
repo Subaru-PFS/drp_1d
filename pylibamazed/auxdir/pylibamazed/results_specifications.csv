@@ -90,12 +90,12 @@ LinemeasOutsideRange	linemeas	True	object	OutsideLambdaRange	linemeas	i
 LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	i
 LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	i
 LinemeasContinuumPCoeff2	linemeas	True	object	continuum_pCoeff2	linemeas	i
+LinemeasRedshift	linemeas_parameters	False	object	Redshift	linemeas	f8
 Linemeas_snrOII	linemeas_parameters	False	object	snrOII	linemeas	f8
 Linemeas_snrHa	linemeas_parameters	False	object	snrHa	linemeas	f8
 LinemeasLfOII	linemeas_parameters	False	object	lfOII	linemeas	f8
 LinemeasLfHa	linemeas_parameters	False	object	lfHa	linemeas	f8
 Linemeas_VelocityEmission	linemeas_parameters	False	object	EmissionVelocity	linemeas	f8
-Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	linemeas	f8
 Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	linemeas	f8
 LinemeasLyaIgm	linemeas_parameters	False	object	LyaIgm	linemeas	f8
 ModelLambda	linemeas_model	False	object	ModelLambda	linemeas_model	f8
