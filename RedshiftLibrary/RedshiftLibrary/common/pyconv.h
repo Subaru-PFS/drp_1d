@@ -70,8 +70,7 @@ public:
     *size = vec.size();
   }
 
-  static void get(const TMaskList &vec, unsigned char **data,
-                  long unsigned int *size) {
+  static void get(const TMaskList &vec, unsigned char **data, int *size) {
     *data = const_cast<unsigned char *>(vec.data());
     *size = vec.size();
   }

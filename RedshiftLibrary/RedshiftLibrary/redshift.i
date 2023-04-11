@@ -307,9 +307,8 @@ class PC
   static void get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_BoolArray) get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
- %rename(Get_MaskArray) get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
-  static void get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
-
+  %rename(Get_MaskArray) get(const TMaskList& vec,unsigned char ** ARGOUTVIEW_ARRAY1,int * DIM1);
+  static void get(const TMaskList &vec, unsigned char **ARGOUTVIEW_ARRAY1, int * DIM1);
 };
 
 class CLineCatalog : public CLineCatalogBase<>
