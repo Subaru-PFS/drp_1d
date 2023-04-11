@@ -46,6 +46,6 @@ using namespace std;
 // set all the amplitudes to 1.0
 void COnesFitter::fit(Float64 redshift) {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    m_Elements[iElts]->SetFittedAmplitude(1.0, 1.0);
+    m_Elements[iElts]->SetElementAmplitude(1.0, 1.0);
   }
 }

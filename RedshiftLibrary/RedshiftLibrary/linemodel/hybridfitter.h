@@ -59,7 +59,7 @@ public:
 
 private:
   bool m_opt_enable_improveBalmerFit = false;
-  Int32 fitAmplitudesHybrid(Float64 redshift);
+  void fitAmplitudesHybrid(Float64 redshift);
   Int32 improveBalmerFit(Float64 redshift);
 };
 } // namespace NSEpic
