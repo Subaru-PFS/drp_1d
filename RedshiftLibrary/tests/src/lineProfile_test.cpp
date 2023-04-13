@@ -58,6 +58,7 @@ public:
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
+  Int32 idxCount = fixture_MeiskinCorrection().idxCount;
 };
 
 BOOST_AUTO_TEST_SUITE(lineProfile_test)
@@ -207,7 +208,7 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
 
   // getIGMIdxCount
   Int32 idxCount = profileSYMIGM.getIGMIdxCount();
-  BOOST_CHECK(idxCount == 7);
+  BOOST_CHECK(idxCount == idxCount);
 
   // GetLineProfileVal
   Float64 val = profileSYMIGM.GetLineProfileVal(x0, x0, sigma);

@@ -75,6 +75,7 @@ public:
   std::shared_ptr<CLSF> LSFConstantResol =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   TFloat64List z_bins = fixture_MeiskinCorrection().z_bins;
+  Int32 idxCount = fixture_MeiskinCorrection().idxCount;
 };
 
 BOOST_FIXTURE_TEST_SUITE(fluxcorrectionmeiksin_test,
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(overall_test) {
 
   // test .h methods
   BOOST_CHECK(igmCorrectionMeiksin->isConvolved() == false);
-  BOOST_CHECK(igmCorrectionMeiksin->getIdxCount() == 7);
+  BOOST_CHECK(igmCorrectionMeiksin->getIdxCount() == idxCount);
   BOOST_CHECK(igmCorrectionMeiksin->getLambdaMin() ==
               igmCorrectionMeiksin->m_rawCorrections[0].lbda.front());
   BOOST_CHECK(igmCorrectionMeiksin->getLambdaMax() == RESTLAMBDA_LYA);
