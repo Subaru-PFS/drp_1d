@@ -1,0 +1,108 @@
+# ============================================================================
+#
+# This file is part of: AMAZED
+#
+# Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+#
+# https://www.lam.fr/
+#
+# This software is a computer program whose purpose is to estimate the
+# spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+# from there 1D spectrum.
+#
+# This software is governed by the CeCILL-C license under French law and
+# abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL-C
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# "http://www.cecill.info".
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-C license and that you accept its terms.
+# ============================================================================
+
+from pylibamazed.CalibrationLibrary import CalibrationLibrary
+from pylibamazed.redshift import GlobalException
+from pylibamazed.Parameters import Parameters
+from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
+from pylibamazed.Context import Context
+from pylibamazed.H5Writer import H5Writer
+
+import os
+import json
+import h5py
+import pandas as pd
+import tempfile
+
+module_root_dir = os.path.split(__file__)[0]
+test_dir = os.path.join(
+        module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
+    )
+
+def test_ITLikeTest():
+    config_path = os.path.join(
+        test_dir,
+        "config.json",
+    )
+
+    with open(os.path.expanduser(config_path), "r") as f:
+        config = json.load(f)
+
+    config["calibration_dir"] = os.path.join(test_dir, config["calibration_dir"])
+
+    parameters_json_path = os.path.join(
+        test_dir,
+        config["parameters_file"],
+    )
+    with open(parameters_json_path) as f:
+        param = json.load(f)
+
+    context = Context(config, param)  # vars returns the dict version of config
+
+    input_spectra_path = os.path.join(test_dir, config["input_file"])
+    observation = pd.read_table(input_spectra_path, delimiter=" ", names=["ProcessingID"])
+    s_filename = (
+        config["spectrum_prefix"]
+        + str(observation.ProcessingID[0])  # only one spectra
+        + config["spectrum_suffix"]
+    )
+    s_filename = os.path.join(test_dir, config["spectrum_dir"], s_filename)
+
+    # read and load spectra using spectra reader
+    spectra = pd.read_table(s_filename, delimiter="\t")
+
+    reader = ASCIISpectrumReader(
+        observation_id=observation.ProcessingID[0],
+        parameters=param,
+        calibration_library=context.calibration_library,
+        source_id=observation.ProcessingID[0],
+    )
+    reader.load_all(spectra)
+
+    output = context.run(reader)  # passing spectra reader to launch amazed
+
+    #save in temporary file
+    tf = tempfile.TemporaryFile()
+    output_file = h5py.File(tf, 'w')
+    writer = H5Writer(output)
+    writer.excluded_datasets = config['excluded_datasets']
+    writer.write_hdf5(output_file, str(observation.ProcessingID[0]))
+    output_file.close()
+
+#test_ITLikeTest()

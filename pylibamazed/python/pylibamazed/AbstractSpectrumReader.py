@@ -109,7 +109,7 @@ class AbstractSpectrumReader:
         self.w_frame = 'vacuum'
         self.parameters = parameters.copy()
         self.calibration_library = calibration_library
-        self.source_id = source_id
+        self.source_id = str(source_id)
 
     def load_wave(self, resource, obs_id=""):
         """Append the spectral axis in self.wave , units are in Angstrom by default
