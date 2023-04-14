@@ -78,3 +78,6 @@ lib/*.so
 
 # Sonarqube
 .scannerwork
+
+# Generated python coverage files
+.coverage
