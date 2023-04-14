@@ -303,16 +303,11 @@ public:
   fixture_MeiksinData30 meiksinData30;
   std::vector<MeiksinCorrection> meiskinCorr = {
       MeiksinCorrection(meiksinData25.lbdaCorr,
-                        {meiksinData25.fluxCorr1, meiksinData25.fluxCorr2,
-                         meiksinData25.fluxCorr3, meiksinData25.fluxCorr4,
-                         meiksinData25.fluxCorr5, meiksinData25.fluxCorr6,
-                         meiksinData25.fluxCorr7}),
+                        {meiksinData25.fluxCorr1, meiksinData25.fluxCorr2}),
       MeiksinCorrection(meiksinData25.lbdaCorr,
-                        {meiksinData30.fluxCorr1b, meiksinData30.fluxCorr2b,
-                         meiksinData30.fluxCorr3b, meiksinData30.fluxCorr4b,
-                         meiksinData30.fluxCorr5b, meiksinData30.fluxCorr6b,
-                         meiksinData30.fluxCorr7b})};
+                        {meiksinData30.fluxCorr1b, meiksinData30.fluxCorr2b})};
   TFloat64List z_bins = {2.0, 2.5, 3.0};
+  Int32 idxCount = meiskinCorr[0].fluxcorr.size();
   TFloat64Range lbdaRange = TFloat64Range(4680., 4713.);
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       std::make_shared<CSpectrumFluxCorrectionMeiksin>(meiskinCorr, z_bins);

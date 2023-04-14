@@ -4381,11 +4381,5 @@ public:
                              1,
                              1};
 
-  // we need 7 flux vector (list size hard-coded)
   TFloat64List fluxCorr2b = fluxCorr1b;
-  TFloat64List fluxCorr3b = fluxCorr1b;
-  TFloat64List fluxCorr4b = fluxCorr1b;
-  TFloat64List fluxCorr5b = fluxCorr1b;
-  TFloat64List fluxCorr6b = fluxCorr1b;
-  TFloat64List fluxCorr7b = fluxCorr1b;
 };

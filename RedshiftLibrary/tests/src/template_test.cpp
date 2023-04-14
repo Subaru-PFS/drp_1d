@@ -78,6 +78,7 @@ public:
 
   // size
   Int32 spcAxisSize = fixture_TemplateStar().spcAxisSize;
+  Int32 idxCount = fixture_MeiskinCorrection().idxCount;
 };
 
 BOOST_FIXTURE_TEST_SUITE(Template, fixture_TemplateTest)
@@ -373,8 +374,8 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   BOOST_CHECK(meiksinList[0] == -1);
 
   meiksinList = tpl5.GetIgmIdxList(1, -1);
-  BOOST_CHECK(meiksinList.size() == 7);
-  ref_list = {0, 1, 2, 3, 4, 5, 6};
+  BOOST_CHECK(meiksinList.size() == idxCount);
+  ref_list = {0, 1};
   BOOST_CHECK(meiksinList == ref_list);
 
   meiksinList = tpl5.GetIgmIdxList(1, 3);

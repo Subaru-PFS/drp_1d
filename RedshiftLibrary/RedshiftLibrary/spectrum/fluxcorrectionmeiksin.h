@@ -72,7 +72,7 @@ public:
                      const TFloat64Range &lambdaRange);
   bool isConvolved() { return m_convolved; };
   Int32 getIdxCount() const {
-    return 7;
+    return m_rawCorrections[0].fluxcorr.size();
   }; // harcoded value from the number of cols in the ascii files
   Int32 getRedshiftIndex(Float64 z) const;
   Int32 getWaveIndex(Float64 w) const;
