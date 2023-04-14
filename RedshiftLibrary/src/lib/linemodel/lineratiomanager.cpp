@@ -99,14 +99,14 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
 
   const auto &profile =
       m_Elements[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
-  if (profile.isAsym())
+  if (profile->isAsym())
     setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
 
   for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
     const auto &Elt = m_Elements[idxEltIGM[i]];
     TInt32List &idxLine = idxLineIGM[i];
     auto end = std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-      return !Elt->GetLines()[idx].GetProfile().isSymIgm();
+      return !Elt->GetLines()[idx].GetProfile()->isSymIgm();
     });
     idxLine.erase(end, idxLine.end());
     if (!idxLine.empty())
@@ -123,18 +123,18 @@ void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
 
   // finding or setting the correct profile
   CLineProfile_ptr profile;
-  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile().isAsymFit())
+  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile()->isAsymFit())
     // convert asymfit to asymfixed profile
     profile = dynamic_cast<const CLineProfileASYMFIT *>(
-                  &catalog[lineIndex].GetProfile())
+                  catalog[lineIndex].GetProfile().get())
                   ->cloneToASYM();
-  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
+  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile()->isAsymFixed())
     // convert asymfixed to asymfit
-    profile =
-        dynamic_cast<const CLineProfileASYM *>(&catalog[lineIndex].GetProfile())
-            ->cloneToASYMFIT();
+    profile = dynamic_cast<const CLineProfileASYM *>(
+                  catalog[lineIndex].GetProfile().get())
+                  ->cloneToASYMFIT();
   else
-    profile = catalog[lineIndex].GetProfile().Clone();
+    profile = catalog[lineIndex].GetProfile()->Clone();
 
   m_Elements[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
 }

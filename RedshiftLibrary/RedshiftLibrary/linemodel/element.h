@@ -184,7 +184,7 @@ public:
   Int32 getLineIndexInCatalog(Int32 idxLine, const TLineVector &catalog) const;
 
   const TInt32List &getIgmLinesIndices() const { return m_asymLineIndices; };
-  const CLineProfile &getLineProfile(Int32 lineIdx) const;
+  const CLineProfile_ptr &getLineProfile(Int32 lineIdx) const;
 
   Float64 GetSignFactor(Int32 subeIdx) const;
 

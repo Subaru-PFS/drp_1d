@@ -1032,9 +1032,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
           amp *= cont;
           ampError *= cont;
         }
-        const CLineProfile &profile = m_Elements[eIdx]->getLineProfile(subeIdx);
+        const auto &profile = m_Elements[eIdx]->getLineProfile(subeIdx);
 
-        Float64 lineFlux = profile.GetLineFlux(mu, sigma);
+        Float64 lineFlux = profile->GetLineFlux(mu, sigma);
         flux = amp * lineFlux;
         fluxError = ampError * lineFlux;
 

@@ -98,7 +98,7 @@ public:
   bool GetIsEmission() const;
   Int32 GetForce() const;
   Int32 GetType() const;
-  const CLineProfile &GetProfile() const;
+  const CLineProfile_ptr &GetProfile() const;
   void SetProfile(CLineProfile_ptr &&profile);
   Float64 GetPosition() const;
   Float64 GetOffset() const;
