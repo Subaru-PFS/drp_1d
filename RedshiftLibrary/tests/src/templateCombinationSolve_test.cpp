@@ -73,8 +73,8 @@ const std::string jsonString = "{\"lambdarange\" : [ 7200, 7800 ],"
                                "\"interpolation\" : \"lin\","
                                "\"pdfcombination\" : \"marg\","
                                "\"extremacount\" : 5,"
-                               "\"dustfit\" : true,"
-                               "\"extinction\" : true,";
+                               "\"ismfit\" : true,"
+                               "\"igmfit\" : true,";
 
 const std::string jsonStringSpcComponentRaw =
     "\"spectrum\" : {\"component\" : \"raw\"}}}}";

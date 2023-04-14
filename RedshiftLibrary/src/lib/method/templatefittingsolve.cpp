@@ -77,9 +77,9 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
   const bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("extinction");
+      inputContext->GetParameterStore()->GetScoped<bool>("igmfit");
   bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("ismfit");
 
   bool fft_processing =
       inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");

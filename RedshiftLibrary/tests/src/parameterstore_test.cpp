@@ -242,20 +242,20 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
 
   // HasTplIsmExtinction
   store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
-  store.Set(object_type + ".TemplateFittingSolve.dustfit", true);
+  store.Set(object_type + ".TemplateFittingSolve.ismfit", true);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TemplateFittingSolve.dustfit", false);
+  store.Set(object_type + ".TemplateFittingSolve.ismfit", false);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
   store.Set(object_type + ".method", std::string("TplcombinationSolve"));
-  store.Set(object_type + ".TplcombinationSolve.dustfit", true);
+  store.Set(object_type + ".TplcombinationSolve.ismfit", true);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TplcombinationSolve.dustfit", false);
+  store.Set(object_type + ".TplcombinationSolve.ismfit", false);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
@@ -272,20 +272,20 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
 
   // HasTplIgmExtinction
   store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
-  store.Set(object_type + ".TemplateFittingSolve.extinction", true);
+  store.Set(object_type + ".TemplateFittingSolve.igmfit", true);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TemplateFittingSolve.extinction", false);
+  store.Set(object_type + ".TemplateFittingSolve.igmfit", false);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
   store.Set(object_type + ".method", std::string("TplcombinationSolve"));
-  store.Set(object_type + ".TplcombinationSolve.extinction", true);
+  store.Set(object_type + ".TplcombinationSolve.igmfit", true);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TplcombinationSolve.extinction", false);
+  store.Set(object_type + ".TplcombinationSolve.igmfit", false);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
