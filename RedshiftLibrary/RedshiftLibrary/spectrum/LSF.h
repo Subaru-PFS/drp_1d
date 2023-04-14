@@ -128,7 +128,7 @@ public:
   TFloat64List getNormalizedProfileVector(TFloat64List lambda,
                                           Float64 lambda0) const;
 
-  const CLineProfile &GetProfile() const;
+  const CLineProfile_ptr &GetProfile() const;
   const TLSFType m_name = TLSFType::NONE;
 
 protected:

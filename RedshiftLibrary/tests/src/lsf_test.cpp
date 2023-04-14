@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   Float64 const lambda0_rest = 7200.0;
   Float64 const lambda0_obs = lambda0_rest * (1.0 + z);
   Float64 const sigma_obs = LSF->GetWidth(lambda0_obs);
-  Float64 const sigmaSupport = LSF->GetProfile().GetNSigmaSupport();
+  Float64 const sigmaSupport = LSF->GetProfile()->GetNSigmaSupport();
   Float64 lbdastep_rest = 1.; // value in angstrom based on calibration-igm
                               // files
   Int32 Nhalf =

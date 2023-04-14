@@ -157,7 +157,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
   TInt32Range indices = getWaveRangeIndices(convRange_rest, false);
   Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
   Float64 sigmaSupport =
-      lsf->GetProfile().GetNSigmaSupport() / 2. / (1.0 + z_center);
+      lsf->GetProfile()->GetNSigmaSupport() / 2. / (1.0 + z_center);
   for (std::size_t i = indices.GetBegin(); i <= indices.GetEnd(); i++) {
     Float64 lambda0 = fineLambdas[i]; // lambda restframe
 
