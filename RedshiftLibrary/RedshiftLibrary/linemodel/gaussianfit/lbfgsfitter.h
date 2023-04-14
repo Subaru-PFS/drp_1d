@@ -124,8 +124,6 @@ public:
 
   using CHybridFitter::CHybridFitter;
 
-  void fit(Float64 redshift) override;
-
   void fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
                                             bool enableOffsetFitting,
                                             Float64 redshift) override;
@@ -134,6 +132,8 @@ public:
                                      Float64 redshift) override;
 
 private:
+  void doFit(Float64 redshift) override;
+
   const bool m_enableVelocityFitting =
       Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit");
 

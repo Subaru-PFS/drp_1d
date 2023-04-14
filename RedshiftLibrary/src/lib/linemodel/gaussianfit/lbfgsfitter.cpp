@@ -309,7 +309,7 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
   return sumSquare;
 }
 
-void CLbfgsFitter::fit(Float64 redshift) {
+void CLbfgsFitter::doFit(Float64 redshift) {
 
   // fit the amplitudes of each element independently, unless there is overlap
   CHybridFitter::fitAmplitudesHybrid(redshift);
