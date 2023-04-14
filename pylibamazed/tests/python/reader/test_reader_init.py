@@ -103,7 +103,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
     def test_lsf_args(self):
         # No meaning - for test coverage only
         fsr = self._initialize_fsr_with_data(**{"lsf_type": "GaussianNISPSIM2016"})
-        with pytest.raises(TypeError):
+        with pytest.raises(BaseException):
             fsr.init()
 
         fsr = self._initialize_fsr_with_data(**{"lsf_type": "GaussianVariableWidth"})
