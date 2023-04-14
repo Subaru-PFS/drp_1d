@@ -131,8 +131,8 @@ void CLineProfileSYMIGM::SetSymIgmParams(const TSymIgmParams &params) {
 }
 
 void CLineProfileSYMIGM::resetParams() {
-  m_redshift = NAN;
-  m_igmidx = -1;
+  if (m_igmFit)
+    SetSymIgmParams({});
 }
 
 Int32 CLineProfileSYMIGM::getIGMIdxCount() const {

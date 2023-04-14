@@ -62,7 +62,7 @@ CSvdlcFitter::CSvdlcFitter(
 // fit the amplitude of all elements AND continuum amplitude together
 // with linear solver: gsl_multifit_wlinear
 
-void CSvdlcFitter::fit(Float64 redshift) {
+void CSvdlcFitter::doFit(Float64 redshift) {
 
   // 1. fit only the current continuum
   // prepare continuum on the observed grid

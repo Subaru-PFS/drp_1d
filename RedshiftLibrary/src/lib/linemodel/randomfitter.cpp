@@ -43,7 +43,7 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRandomFitter::fit(Float64 redshift) {
+void CRandomFitter::doFit(Float64 redshift) {
   srand(time(0));
   Float64 randNumFloat = (Float64)rand() / (Float64)(RAND_MAX);
 

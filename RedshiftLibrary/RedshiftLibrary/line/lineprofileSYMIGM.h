@@ -70,8 +70,12 @@ public:
                                    Float64 sigma) const override;
   TSymIgmParams GetSymIgmParams() const override;
   bool isSymIgm() const override { return true; };
+  bool isSymIgmFit() const override { return m_igmFit; };
 
   void SetSymIgmParams(const TSymIgmParams &params) override;
+  void SetSymIgmFit(bool val = true) override { m_igmFit = val; };
+  void SetSymIgmFixed() override { m_igmFit = false; };
+
   void resetParams() override;
   Int32 getIGMIdxCount() const override;
 
@@ -86,6 +90,7 @@ private:
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   Float64 m_redshift = NAN;
   Int32 m_igmidx = -1;
+  bool m_igmFit = false;
 };
 } // namespace NSEpic
 #endif

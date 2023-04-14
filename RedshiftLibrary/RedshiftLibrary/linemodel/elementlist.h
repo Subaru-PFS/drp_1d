@@ -77,7 +77,7 @@ public:
                          Int32 linetype = -1) const;
   Int32 findElementIndex(const std::string &LineTagStr, Int32 linetype,
                          Int32 &lineIdx) const;
-  std::vector<TInt32List> getIgmLinesIndices() const;
+  std::tuple<TInt32List, std::vector<TInt32List>> getIgmLinesIndices() const;
 
   Int32 findElementIndex(Int32 LineCatalogIndex, Int32 &lineIdx) const;
   TInt32List findElementTypeIndices(CLine::EType type) const;

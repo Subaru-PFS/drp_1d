@@ -70,12 +70,6 @@ CLineRatioManager::CLineRatioManager(
   }
 }
 
-void CLineRatioManager::resetLambdaOffsets() {
-  for (auto &elt : m_Elements)
-    for (size_t lineIdx = 0; lineIdx < elt->GetSize(); ++lineIdx)
-      elt->SetOffset(lineIdx, elt->GetLines()[lineIdx].GetOffset());
-}
-
 /**
  * @brief CLineModelFitting::setLyaProfile
  * If a Lya line is present with SYMIGM profile, fit igmIdx
@@ -92,11 +86,9 @@ void CLineRatioManager::resetLambdaOffsets() {
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
                                       const TLineVector &catalog) {
-  auto idxLineIGM_ = m_Elements.getIgmLinesIndices();
-  auto const idxEltIGM = std::move(idxLineIGM_.front());
-  std::vector<TInt32List> idxLineIGM(
-      std::make_move_iterator(idxLineIGM_.begin() + 1),
-      std::make_move_iterator(idxLineIGM_.end()));
+  TInt32List idxEltIGM;
+  std::vector<TInt32List> idxLineIGM;
+  std::tie(idxEltIGM, idxLineIGM) = m_Elements.getIgmLinesIndices();
 
   if (idxEltIGM.empty())
     return;
@@ -105,25 +97,20 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
   Int32 idxLyaE = idxEltIGM.front();
   Int32 idxLineLyaE = idxLineIGM.front().front();
 
-  if (!m_Elements[idxLyaE]->IsOutsideLambdaRange(idxLineLyaE)) {
-    const auto &profile =
-        m_Elements[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
-    if (profile.isAsym())
-      setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
-  }
+  const auto &profile =
+      m_Elements[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
+  if (profile.isAsym())
+    setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
 
   for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
     const auto &Elt = m_Elements[idxEltIGM[i]];
-    if (!Elt->IsOutsideLambdaRange()) {
-      TInt32List &idxLine = idxLineIGM[i];
-      auto end =
-          std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-            return !Elt->GetLines()[idx].GetProfile().isSymIgm();
-          });
-      idxLine.erase(end, idxLine.end());
-      if (!idxLine.empty())
-        setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
-    }
+    TInt32List &idxLine = idxLineIGM[i];
+    auto end = std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
+      return !Elt->GetLines()[idx].GetProfile().isSymIgm();
+    });
+    idxLine.erase(end, idxLine.end());
+    if (!idxLine.empty())
+      setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
   }
 }
 
@@ -149,19 +136,7 @@ void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
   else
     profile = catalog[lineIndex].GetProfile().Clone();
 
-  bool doasymfit = profile->isAsymFit();
-
   m_Elements[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
-
-  if (!doasymfit)
-    return;
-
-  // find the best width and asym coeff. parameters
-  TAsymParams bestfitParams =
-      m_fitter->fitAsymParameters(redshift, idxLyaE, idxLineLyaE);
-
-  // set the associated Lya members in the element definition
-  m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
 }
 
 Int32 CLineRatioManager::getLineIndexInCatalog(
@@ -173,23 +148,25 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
                                          const TInt32List &idxLineIGM,
                                          Float64 redshift) {
 
-  bool fixedIGM = m_continuumManager->isContinuumComponentTplfitxx();
+  bool fixedIGM =
+      m_continuumManager->isContinuumComponentTplfitxx() &&
+      !m_continuumManager->isContFittedToNull(); // set to false when continuum
+                                                 // is fitted to null
 
-  // set to false when continuum is fitted to null
-  fixedIGM &= m_continuumManager->isContFittedToNull();
-
-  Int32 bestigmidx =
-      fixedIGM ? m_continuumManager->getFittedMeiksinIndex()
-               : m_fitter->fitAsymIGMCorrection(redshift, iElts, idxLineIGM);
-
-  m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
+  if (fixedIGM) {
+    Int32 igmidx = m_continuumManager->getFittedMeiksinIndex();
+    m_Elements[iElts]->SetSymIgmFit(false);
+    m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmidx, redshift));
+  } else {
+    m_Elements[iElts]->SetSymIgmFit(true);
+  }
 }
 
 bool CLineRatioManager::init(Float64 redshift, Int32 itratio) {
-  resetLambdaOffsets();
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
   setLyaProfile(redshift, m_RestLineList);
+
   return false;
 }
 

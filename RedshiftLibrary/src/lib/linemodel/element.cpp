@@ -291,6 +291,19 @@ void CLineModelElement::SetSymIgmParams(const TSymIgmParams &params,
 }
 
 // wrapper function
+void CLineModelElement::SetSymIgmFit(bool val, Int32 idx) {
+  if (!m_asymLineIndices.size())
+    return;
+  if (idx >= 0)
+    m_ElementParam->m_Lines[idx].SetSymIgmFit(val);
+  else
+    for (auto i : m_asymLineIndices)
+      m_ElementParam->m_Lines[i].SetSymIgmFit(val);
+
+  return;
+}
+
+// wrapper function
 void CLineModelElement::resetAsymfitParams() {
   for (auto i : m_asymLineIndices)
     m_ElementParam->m_Lines[i].resetAsymFitParams();

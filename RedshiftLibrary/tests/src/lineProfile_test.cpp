@@ -94,6 +94,14 @@ BOOST_FIXTURE_TEST_CASE(lineprofile_test, fixture_LineProfileTest) {
   res = profileLOR.isSymIgm();
   BOOST_CHECK(res == false);
 
+  BOOST_CHECK(profileLOR.isSymIgmFit() == false);
+  BOOST_CHECK_NO_THROW(profileLOR.SetSymIgmFit());
+  BOOST_CHECK(profileLOR.isSymIgmFit() == false);
+  BOOST_CHECK_NO_THROW(profileLOR.SetSymIgmFit(false));
+  BOOST_CHECK(profileLOR.isSymIgmFit() == false);
+  BOOST_CHECK_NO_THROW(profileLOR.SetSymIgmFixed());
+  BOOST_CHECK(profileLOR.isSymIgmFit() == false);
+
   profileLOR.SetAsymParams(params);
   profileLOR.SetSymIgmParams(igmParams);
   profileLOR.resetParams();
@@ -175,6 +183,16 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
   // isSymIgm
   BOOST_CHECK(profileSYMIGM.isSymIgm() == true);
 
+  // isSymIgmFit
+  BOOST_CHECK(profileSYMIGM.isSymIgmFit() == false);
+  BOOST_CHECK_NO_THROW(profileSYMIGM.SetSymIgmFit());
+  BOOST_CHECK(profileSYMIGM.isSymIgmFit() == true);
+  BOOST_CHECK_NO_THROW(profileSYMIGM.SetSymIgmFit(false));
+  BOOST_CHECK(profileSYMIGM.isSymIgmFit() == false);
+  BOOST_CHECK_NO_THROW(profileSYMIGM.SetSymIgmFit());
+  BOOST_CHECK_NO_THROW(profileSYMIGM.SetSymIgmFixed());
+  BOOST_CHECK(profileSYMIGM.isSymIgmFit() == false);
+
   // CheckMeiksinInit
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> nullIgm;
   CLineProfileSYMIGM profileSYMIGM_badIgm = CLineProfileSYMIGM(nullIgm, 4.0);
@@ -189,8 +207,15 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
 
   profileSYMIGM.resetParams();
   res = profileSYMIGM.GetSymIgmParams();
+  BOOST_CHECK(res.m_igmidx == 1);
+  BOOST_CHECK(res.m_redshift == 2.1);
+
+  profileSYMIGM.SetSymIgmFit();
+  profileSYMIGM.resetParams();
+  res = profileSYMIGM.GetSymIgmParams();
   BOOST_CHECK(res.m_igmidx == -1);
   BOOST_CHECK(std::isnan(res.m_redshift));
+  profileSYMIGM.SetSymIgmFit(false);
 
   Float64 x0 = 3769.7; //
   Float64 sigma = 2.;

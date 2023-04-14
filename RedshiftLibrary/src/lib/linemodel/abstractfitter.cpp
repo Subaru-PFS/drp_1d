@@ -99,6 +99,90 @@ void CAbstractFitter::logParameters() {
                 << " m_opt_lya_fit_delta_step" << m_opt_lya_fit_delta_step);
 }
 
+void CAbstractFitter::fit(Float64 redshift) {
+  initFit(redshift);
+  doFit(redshift);
+};
+
+void CAbstractFitter::initFit(Float64 redshift) {
+  resetSupport(redshift);
+
+  // prepare the Lya width and asym coefficients if the asymfit profile
+  // option is met
+  fitLyaProfile(redshift);
+
+  resetElementsFittingParam();
+}
+
+void CAbstractFitter::resetSupport(Float64 redshift) {
+
+  resetLambdaOffsets();
+
+  // prepare the elements support
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    m_Elements[iElts]->resetAsymfitParams();
+    m_Elements[iElts]->prepareSupport(spectralAxis, redshift, m_lambdaRange);
+  }
+}
+
+void CAbstractFitter::resetElementsFittingParam() {
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    m_Elements[iElts]->reset();
+  }
+  if (m_enableAmplitudeOffsets)
+    m_Elements.resetAmplitudeOffset();
+}
+
+void CAbstractFitter::resetLambdaOffsets() {
+  for (auto &elt : m_Elements)
+    for (size_t lineIdx = 0; lineIdx < elt->GetSize(); ++lineIdx)
+      elt->SetOffset(lineIdx, elt->GetLines()[lineIdx].GetOffset());
+}
+
+void CAbstractFitter::fitLyaProfile(Float64 redshift) {
+  TInt32List idxEltIGM;
+  std::vector<TInt32List> idxLineIGM;
+  std::tie(idxEltIGM, idxLineIGM) = m_Elements.getIgmLinesIndices();
+
+  if (idxEltIGM.empty())
+    return;
+
+  // assuming only one asymfit/fixed profile
+  Int32 idxLyaE = idxEltIGM.front();
+  Int32 idxLineLyaE = idxLineIGM.front().front();
+
+  const auto &profile = m_Elements[idxLyaE]->getLineProfile(idxLineLyaE);
+
+  if (profile.isAsymFit()) {
+    // find the best width and asym coeff. parameters
+    TAsymParams bestfitParams =
+        fitAsymParameters(redshift, idxLyaE, idxLineLyaE);
+
+    // set the associated Lya members in the element definition
+    m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
+  }
+
+  // deal with symIgm profiles
+  for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
+    const auto &Elt = m_Elements[idxEltIGM[i]];
+    if (!Elt->IsOutsideLambdaRange()) {
+      TInt32List &idxLine = idxLineIGM[i];
+      auto end =
+          std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
+            return !Elt->GetLines()[idx].GetProfile().isSymIgmFit();
+          });
+      idxLine.erase(end, idxLine.end());
+      if (!idxLine.empty()) {
+        // setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
+        auto bestigmidx = fitAsymIGMCorrection(redshift, idxEltIGM[i], idxLine);
+        m_Elements[idxEltIGM[i]]->SetSymIgmParams(
+            TSymIgmParams(bestigmidx, redshift));
+      }
+    }
+  }
+}
+
 void CAbstractFitter::computeCrossProducts(CLineModelElement &elt,
                                            Float64 redshift, Int32 lineIdx) {
 

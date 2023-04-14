@@ -49,9 +49,8 @@ class CSvdFitter : public CAbstractFitter {
 public:
   using CAbstractFitter::CAbstractFitter;
 
-  void fit(Float64 redshift) override;
-
 protected:
+  void doFit(Float64 redshift) override;
   virtual void fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
                                                     bool enableOffsetFitting,
                                                     Float64 redshift);
