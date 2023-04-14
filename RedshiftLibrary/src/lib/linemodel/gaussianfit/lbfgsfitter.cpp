@@ -309,6 +309,24 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
   return sumSquare;
 }
 
+void CLbfgsFitter::resetSupport(Float64 redshift) {
+
+  // set velocity at max value (to set largest line overlapping)
+  if (Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit")) {
+    const Float64 velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
+        "linemodel.emvelocityfitmax");
+    const Float64 velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
+        "linemodel.absvelocityfitmax");
+
+    for (Int32 j = 0; j < m_Elements.size(); j++) {
+      m_ElementParam[j]->m_VelocityEmission = velfitMaxE;
+      m_ElementParam[j]->m_VelocityAbsorption = velfitMaxA;
+    }
+  }
+
+  CAbstractFitter::resetSupport(redshift);
+}
+
 void CLbfgsFitter::doFit(Float64 redshift) {
 
   // fit the amplitudes of each element independently, unless there is overlap
