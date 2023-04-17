@@ -1,7 +1,7 @@
 import pytest
 from pylibamazed.PdfHandler import PdfHandler
 from pylibamazed.PdfHandler import buildPdfParams, buildPdfHandler
-from .pdf_handler_utils import PdfHandlerTestUtils
+from .test_pdf_handler_utils import PdfHandlerTestUtils
 
 class TestBuildPdfParams:
     def test_first_pass(self):
