@@ -150,6 +150,17 @@ Other command line options:
 
     python tools/buildandinstallthirdparty.py fftw cfitsio --force
 
+## Tests
+
+In order to launch tests and see coverage, **in pylibamazed folder**
+```
+coverage run --source=pylibamazed -m pytest
+coverage report
+coverage html
+```
+Drag and drop the created index.js in your web navigator
+
+
 ## Contacts
 
 Please send your bug reports or questions to amazed-support@lam.fr
