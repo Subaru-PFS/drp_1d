@@ -193,10 +193,10 @@ bool CLine::GetIsEmission() const { return m_Type == nType_Emission; }
 
 Int32 CLine::GetType() const { return m_Type; }
 
-const CLineProfile &CLine::GetProfile() const {
+const CLineProfile_ptr &CLine::GetProfile() const {
   if (!m_Profile)
     THROWG(INTERNAL_ERROR, "Current line does not have a profile");
-  return *m_Profile;
+  return m_Profile;
 }
 
 void CLine::SetProfile(CLineProfile_ptr &&profile) {

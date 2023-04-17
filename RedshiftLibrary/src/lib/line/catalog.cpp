@@ -231,7 +231,7 @@ void CLineCatalog::setAsymProfileAndParams(const std::string &profile,
                                            TAsymParams params) {
   TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
-    if (it->GetProfile().isAsymFit() || it->GetProfile().isAsymFixed())
+    if (it->GetProfile()->isAsymFit() || it->GetProfile()->isAsymFixed())
       return it->setProfileAndParams(profile, params, m_nSigmaSupport);
   }
 }

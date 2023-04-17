@@ -154,7 +154,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
 
   const auto &profile = m_Elements[idxLyaE]->getLineProfile(idxLineLyaE);
 
-  if (profile.isAsymFit()) {
+  if (profile->isAsymFit()) {
     // find the best width and asym coeff. parameters
     TAsymParams bestfitParams =
         fitAsymParameters(redshift, idxLyaE, idxLineLyaE);
@@ -170,7 +170,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
       TInt32List &idxLine = idxLineIGM[i];
       auto end =
           std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-            return !Elt->GetLines()[idx].GetProfile().isSymIgmFit();
+            return !Elt->GetLines()[idx].GetProfile()->isSymIgmFit();
           });
       idxLine.erase(end, idxLine.end());
       if (!idxLine.empty()) {
@@ -473,7 +473,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
   Int32 bestIgmIdx = -1;
 
   Int32 igmCount =
-      m_Elements[iElts]->getLineProfile(idxLine.front()).getIGMIdxCount();
+      m_Elements[iElts]->getLineProfile(idxLine.front())->getIGMIdxCount();
   for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
     m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
     fitAmplitude(iElts, redshift);

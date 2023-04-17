@@ -107,7 +107,7 @@ CLineModelElement::CLineModelElement(
   }
 
   for (Int32 k2 = 0; k2 < nLines; k2++) {
-    if (getLineProfile(k2).isAsym() || getLineProfile(k2).isSymIgm())
+    if (getLineProfile(k2)->isAsym() || getLineProfile(k2)->isSymIgm())
       m_asymLineIndices.push_back(k2);
   }
 
@@ -257,7 +257,7 @@ void CLineModelElement::setVelocity(Float64 vel) {
   }
 }
 
-const CLineProfile &CLineModelElement::getLineProfile(Int32 lineIdx) const {
+const CLineProfile_ptr &CLineModelElement::getLineProfile(Int32 lineIdx) const {
   if (lineIdx > GetSize() - 1)
     THROWG(INTERNAL_ERROR, "out-of-bound index");
   return m_ElementParam->m_Lines[lineIdx].GetProfile();
@@ -437,7 +437,7 @@ void CLineModelElement::EstimateTheoreticalSupport(
     return;
   }
   Float64 sigma = GetLineWidth(mu, redshift, GetIsEmission());
-  Float64 winsize = getLineProfile(subeIdx).GetNSigmaSupport() * sigma;
+  Float64 winsize = getLineProfile(subeIdx)->GetNSigmaSupport() * sigma;
   TInt32Range supportRange =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
@@ -742,7 +742,7 @@ Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift,
 
   // deals with delta of asym profile
   if (doAsymfitdelta) {
-    mu -= m_ElementParam->m_Lines[subeIdx].GetProfile().GetDelta();
+    mu -= m_ElementParam->m_Lines[subeIdx].GetProfile()->GetDelta();
   }
   return mu;
 }
@@ -758,10 +758,10 @@ Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 subeIdx,
   Float64 sigma = NAN;
   getObservedPositionAndLineWidth(subeIdx, redshift, mu, sigma,
                                   false); // do not apply Lya asym offset
-  // check if lineprofile is SYMIGM
-  const CLineProfile &profile = getLineProfile(subeIdx);
 
-  return profile.GetLineProfileVal(x, mu, sigma);
+  const auto &profile = getLineProfile(subeIdx);
+
+  return profile->GetLineProfileVal(x, mu, sigma);
 }
 
 /**
@@ -953,12 +953,12 @@ void CLineModelElement::addToSpectrumModelDerivVel(
 
       if (m_SignFactors[k] == -1)
         modelfluxAxis[i] += m_SignFactors[k] * A * continuumfluxAxis[i] *
-                            GetLineProfileDerivVel(getLineProfile(k), x, mu,
+                            GetLineProfileDerivVel(*getLineProfile(k), x, mu,
                                                    sigma, GetIsEmission());
       else
         modelfluxAxis[i] +=
             m_SignFactors[k] * A *
-            GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma,
+            GetLineProfileDerivVel(*getLineProfile(k), x, mu, sigma,
                                    m_ElementParam->m_Lines[k].GetIsEmission());
     }
   }
@@ -1094,9 +1094,9 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(
     getObservedPositionAndLineWidth(k2, redshift, mu, sigma,
                                     false); // do not apply Lya asym offset
 
-    const CLineProfile &profile = getLineProfile(k2);
+    const auto &profile = getLineProfile(k2);
     Float64 lineprofile_derivz =
-        profile.GetLineProfileDerivZ(x, lamdba0, redshift, sigma);
+        profile->GetLineProfileDerivZ(x, lamdba0, redshift, sigma);
 
     Float64 fluxval = m_SignFactors[k2] * A * lineprofile_derivz;
     Yi += m_SignFactors[k2] == -1 ? continuumFlux * fluxval : fluxval;
@@ -1137,12 +1137,12 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
     getObservedPositionAndLineWidth(k2, redshift, mu, sigma,
                                     false); // do not apply Lya asym offset
 
-    const CLineProfile &profile = getLineProfile(k2);
+    const auto &profile = getLineProfile(k2);
     Float64 lineprofile_derivz = NAN;
     Float64 lineprofile = NAN;
-    lineprofile = profile.GetLineProfileVal(x, mu, sigma);
+    lineprofile = profile->GetLineProfileVal(x, mu, sigma);
     lineprofile_derivz =
-        profile.GetLineProfileDerivZ(x, lamdba0, redshift, sigma);
+        profile->GetLineProfileDerivZ(x, lamdba0, redshift, sigma);
 
     Float64 fluxval = m_SignFactors[k2] * A * lineprofile_derivz;
     if (m_SignFactors[k2] == 1) {
