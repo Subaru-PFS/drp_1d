@@ -80,6 +80,8 @@ public:
   Float64 getCorrection(Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
     return m_corrections[zIdx].fluxcorr[meiksinIdx].at(lbdaIdx);
   };
+  Float64 getCorrectionDerivLbdaRest(Int32 zIdx, Int32 meiksinIdx,
+                                     Int32 lbdaIdx) const;
 
   const TFloat64List &getRedshiftBins() const { return m_zbins; };
 
@@ -87,6 +89,9 @@ public:
   Float64 getLambdaMax() const { return m_LambdaMax; };
   Float64 getCorrection(Float64 redshift, Int32 meiksinIdx,
                         Float64 lambda) const;
+  std::tuple<Float64, Float64>
+  getCorrectionAndDerivLbdaRest(Float64 redshift, Int32 meiksinIdx,
+                                Float64 lambda) const;
 
 private:
   friend class fluxcorrectionmeiksin_test::overall_test;

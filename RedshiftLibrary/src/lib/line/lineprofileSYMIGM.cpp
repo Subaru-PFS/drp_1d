@@ -108,17 +108,31 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
 }
 
 // we should derive the IgmCorrection  at z_binwith respect to Z
-Float64 CLineProfileSYMIGM::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
-                                                 Float64 redshift,
-                                                 Float64 sigma) const {
-  THROWG(INTERNAL_ERROR,
-         "GetLineProfileDerivZ is not yet defined for SYMIGM lineprofile");
+Float64 CLineProfileSYMIGM::GetLineProfileDerivX0(Float64 x, Float64 x0,
+                                                  Float64 sigma) const {
+  CheckMeiksinInit();
+
+  Float64 igm_fluxcorr = NAN;
+  Float64 igm_fluxcorr_derivX0 = NAN;
+  std::tie(igm_fluxcorr, igm_fluxcorr_derivX0) =
+      getIGMCorrectionAndDerivX0(x, x0);
+
+  Float64 val =
+      CLineProfileSYM::GetLineProfileDerivX0(x, x0, sigma) * igm_fluxcorr;
+  val +=
+      CLineProfileSYM::GetLineProfileVal(x, x0, sigma) * igm_fluxcorr_derivX0;
+  return val;
 }
 
 Float64 CLineProfileSYMIGM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                                      Float64 sigma) const {
-  THROWG(INTERNAL_ERROR,
-         "CLineProfileSYMIGM::GetLineProfileDerivSigma not yet implemented");
+  CheckMeiksinInit();
+
+  Float64 igm_fluxcorr_lbda = getIGMCorrection(x);
+
+  Float64 val = CLineProfileSYM::GetLineProfileDerivSigma(x, x0, sigma) *
+                igm_fluxcorr_lbda;
+  return val;
 }
 
 TSymIgmParams CLineProfileSYMIGM::GetSymIgmParams() const {
@@ -144,4 +158,19 @@ Float64 CLineProfileSYMIGM::getIGMCorrection(Float64 x) const {
     return 1.0;
   return m_igmCorrectionMeiksin->getCorrection(m_redshift, m_igmidx,
                                                x / (1 + m_redshift));
+}
+
+std::tuple<Float64, Float64>
+CLineProfileSYMIGM::getIGMCorrectionAndDerivX0(Float64 x, Float64 x0) const {
+  if (m_igmidx < 0)
+    return std::make_tuple(1.0, 0.0);
+
+  Float64 xRest = x / (1 + m_redshift);
+  Float64 derivLbdaRest = NAN;
+  Float64 corr = NAN;
+  std::tie(corr, derivLbdaRest) =
+      m_igmCorrectionMeiksin->getCorrectionAndDerivLbdaRest(m_redshift,
+                                                            m_igmidx, xRest);
+  Float64 derivX0 = -xRest / x0 * derivLbdaRest;
+  return std::make_tuple(corr, derivX0);
 }

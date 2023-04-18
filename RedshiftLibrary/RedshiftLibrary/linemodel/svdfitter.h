@@ -55,8 +55,8 @@ protected:
                                                     bool enableOffsetFitting,
                                                     Float64 redshift);
 
-  void fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
-                                     Float64 redshift);
+  virtual void fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+                                             Float64 redshift);
 
   bool fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                              std::vector<Float64> &ampsfitted,

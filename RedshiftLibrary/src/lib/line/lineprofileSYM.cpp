@@ -64,15 +64,14 @@ Float64 CLineProfileSYM::GetLineFlux(Float64 x0, Float64 sigma,
   return A * sigma * sqrt(2 * M_PI);
 }
 
-Float64 CLineProfileSYM::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
-                                              Float64 redshift,
-                                              Float64 sigma) const {
-  Float64 xc = x - lambda0 * (1 + redshift);
+Float64 CLineProfileSYM::GetLineProfileDerivX0(Float64 x, Float64 x0,
+                                               Float64 sigma) const {
+  Float64 xc = x - x0;
   Float64 val = 0.0;
   Float64 xsurc;
 
   xsurc = xc / sigma;
-  val = lambda0 / sigma * xsurc * exp(-0.5 * xsurc * xsurc);
+  val = xsurc / sigma * exp(-0.5 * xsurc * xsurc);
   return val;
 }
 

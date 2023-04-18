@@ -188,7 +188,6 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
   bool allPositive = true;
 
-  Log.LogDetail("# Found negative amplitudes with sameSign");
   ampsfitted.resize(EltsIdxToFit.size());
   errorsfitted.resize(EltsIdxToFit.size());
   for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++) {

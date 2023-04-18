@@ -1,5 +1,8 @@
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
+#ifdef LBFGSFITTER
+#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsfitter.h"
+#endif
 #include "RedshiftLibrary/linemodel/individualfitter.h"
 #include "RedshiftLibrary/linemodel/onesfitter.h"
 #include "RedshiftLibrary/linemodel/randomfitter.h"
@@ -45,34 +48,40 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::shared_ptr<CContinuumManager> continuumManager,
     const std::vector<TLineModelElementParam_ptr> &elementParam) {
   if (fittingMethod == "hybrid")
-    return std::make_shared<CHybridFitter>(
-        CHybridFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList, elementParam));
+    return std::make_shared<CHybridFitter>(elements, inputSpectrum, lambdaRange,
+                                           spectrumModel, restLineList,
+                                           elementParam);
+#ifdef LBFGSFITTER
+  else if (fittingMethod == "lbfgs")
+    return std::make_shared<CLbfgsFitter>(elements, inputSpectrum, lambdaRange,
+                                          spectrumModel, restLineList,
+                                          elementParam);
+#endif
   else if (fittingMethod == "svd")
-    return std::make_shared<CSvdFitter>(CSvdFitter(elements, inputSpectrum,
-                                                   lambdaRange, spectrumModel,
-                                                   restLineList, elementParam));
+    return std::make_shared<CSvdFitter>(elements, inputSpectrum, lambdaRange,
+                                        spectrumModel, restLineList,
+                                        elementParam);
   else if (fittingMethod == "svdlc")
-    return std::make_shared<CSvdlcFitter>(
-        CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                     restLineList, elementParam, continuumManager));
+    return std::make_shared<CSvdlcFitter>(elements, inputSpectrum, lambdaRange,
+                                          spectrumModel, restLineList,
+                                          elementParam, continuumManager);
   else if (fittingMethod == "svdlcp2")
-    return std::make_shared<CSvdlcFitter>(
-        CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                     restLineList, elementParam, continuumManager, 2));
+    return std::make_shared<CSvdlcFitter>(elements, inputSpectrum, lambdaRange,
+                                          spectrumModel, restLineList,
+                                          elementParam, continuumManager, 2);
 
   else if (fittingMethod == "ones")
-    return std::make_shared<COnesFitter>(
-        COnesFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                    restLineList, elementParam));
+    return std::make_shared<COnesFitter>(elements, inputSpectrum, lambdaRange,
+                                         spectrumModel, restLineList,
+                                         elementParam);
   else if (fittingMethod == "random")
-    return std::make_shared<CRandomFitter>(
-        CRandomFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList, elementParam));
+    return std::make_shared<CRandomFitter>(elements, inputSpectrum, lambdaRange,
+                                           spectrumModel, restLineList,
+                                           elementParam);
   else if (fittingMethod == "individual")
-    return std::make_shared<CIndividualFitter>(
-        CIndividualFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                          restLineList, elementParam));
+    return std::make_shared<CIndividualFitter>(elements, inputSpectrum,
+                                               lambdaRange, spectrumModel,
+                                               restLineList, elementParam);
   else
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Unknown fitting method " << fittingMethod);

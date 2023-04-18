@@ -87,6 +87,53 @@ const std::string jsonString =
     "\"lyaforcedisablefit\" : false "
     "}}}}";
 
+const std::string jsonString_lbfgs =
+    "{\"lambdarange\" : [ 4680, 4712 ],"
+    "\"smoothWidth\" : 0.0,"
+    "\"templateCatalog\" : {"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"zero\","
+    "\"medianKernelWidth\" : 75,"
+    "\"medianEvenReflection\" : true}},"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"IrregularSamplingMedian\","
+    "\"medianKernelWidth\" : 400,"
+    "\"medianEvenReflection\" : true,"
+    "\"decompScales\" : 9},"
+    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", "
+    "\"resolution\" : "
+    "4300},"
+    "\"objects\" : [\"galaxy\"],"
+    "\"autocorrectinput\" : false,"
+    "\"galaxy\" : {"
+    "\"redshiftsampling\" : \"log\","
+    "\"method\" : null ,"
+    "\"linemeas_method\" : \"LineMeasSolve\","
+    "\"linemeas_dzhalf\" : 0.0,"
+    "\"linemeas_redshiftstep\" : 0.0001,"
+    "\"redshiftref\" : 0.25969245809934272,"
+    "\"LineMeasSolve\" : {"
+    "\"linemodel\" : {"
+    "\"velocityemission\" : 30.0,"
+    "\"velocityabsorption\" : 150.0,"
+    "\"continuumcomponent\" : \"nocontinuum\","
+    "\"linetypefilter\" : \"E\","
+    "\"lineforcefilter\" : \"no\","
+    "\"nsigmasupport\" : 14,"
+    "\"linewidthtype\" : \"combined\","
+    "\"fittingmethod\" : \"lbfgs\","
+    "\"polynomialdegree\" : 2,"
+    "\"velocityfit\" : true,"
+    "\"emvelocityfitmin\" : 10,"
+    "\"emvelocityfitmax\" : 400,"
+    "\"absvelocityfitmin\" : 150,"
+    "\"absvelocityfitmax\" : 500,"
+    "\"lineRatioType\" : \"rules\","
+    "\"rules\" : \"no\","
+    "\"improveBalmerFit\" : true,"
+    "\"lyaforcedisablefit\" : false "
+    "}}}}";
+
 class fixture_LinemeasSolveTest {
 public:
   fixture_Context ctx;
@@ -94,6 +141,49 @@ public:
   fixture_LinemeasSolveTest() {
     fillCatalog();
     ctx.loadParameterStore(jsonString);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "LineMeasSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+
+  TScopeStack scopeStack;
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      fixture_MeiskinCorrection().igmCorrectionMeiksin;
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
+      fixture_CalzettiCorrection().ismCorrectionCalzetti;
+  std::shared_ptr<CLSF> LSF =
+      fixture_LSFGaussianConstantResolution(scopeStack).LSF;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CTemplateCatalog> catalog =
+      fixture_sharedTemplateCatalog().catalog;
+  std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
+      fixture_PhotoBandCatalog().photoBandCatalog;
+  std::shared_ptr<CPhotometricData> photoData = fixture_PhotoData().photoData;
+  std::shared_ptr<CLineCatalogsTplRatio> lineRatioTplCatalog =
+      fixture_LineRatioTplCatalog().lineRatioTplCatalog;
+  std::shared_ptr<CLineRatioCatalog> lineRatioCatalog =
+      fixture_LineRatioCatalog().lineRatioCatalog;
+  std::shared_ptr<CLineCatalog> lineCatalog = fixture_LineCatalog().lineCatalog;
+
+  void fillCatalog() {
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl2);
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl2);
+  }
+};
+
+class fixture_LinemeasSolveLbfgsTest {
+public:
+  fixture_Context ctx;
+
+  fixture_LinemeasSolveLbfgsTest() {
+    fillCatalog();
+    ctx.loadParameterStore(jsonString_lbfgs);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -149,6 +239,28 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
 
   Float64 lfOII = res->lfOII;
   BOOST_CHECK_CLOSE(lfOII, -15.658705018780491, 1e-6);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsTest) {
+
+  CLineMeasSolve lineMeasSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "LineMeasSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
+
+  std::shared_ptr<const CLineModelSolution> res =
+      Context.GetResultStore()->GetLineModelSolution("galaxy", "LineMeasSolve",
+                                                     "linemeas");
+
+  Float64 snrOII = res->snrOII;
+  BOOST_CHECK_CLOSE(snrOII, 22.70229240409672, 1e-6);
+
+  Float64 lfOII = res->lfOII;
+  BOOST_CHECK_CLOSE(lfOII, -15.751327461605428, 1e-6);
 
   ctx.reset();
 }

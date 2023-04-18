@@ -136,15 +136,12 @@ BOOST_AUTO_TEST_CASE(lineprofileSYM_test) {
   Float64 val = profileSYM.GetLineProfileVal(10.0, x0, sigma);
   BOOST_CHECK(val == 1.0);
 
-  // GetLineProfileDerivZ
-  val = profileSYM.GetLineProfileDerivZ(10.0, x0, 0., sigma);
+  // GetLineProfileDerivX0
+  val = profileSYM.GetLineProfileDerivX0(10.0, x0, sigma);
   BOOST_CHECK(val == 0.0);
 
-  val = profileSYM.GetLineProfileDerivZ(20.0, x0, 1., sigma);
-  BOOST_CHECK(val == 0.0);
-
-  val = profileSYM.GetLineProfileDerivZ(20.0 - sigma, x0, 1., sigma);
-  Float64 val2 = profileSYM.GetLineProfileDerivZ(20.0 + sigma, x0, 1., sigma);
+  val = profileSYM.GetLineProfileDerivX0(10.0 - sigma, x0, sigma);
+  Float64 val2 = profileSYM.GetLineProfileDerivX0(10.0 + sigma, x0, sigma);
   BOOST_CHECK(val == -val2);
 
   // GetLineProfileDerivSigma
@@ -247,13 +244,13 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
   val2 = profileSYM.GetLineProfileVal(x0 - 2., x0, sigma);
   BOOST_CHECK(val != val2);
 
-  // GetLineProfileDerivZ
-  BOOST_CHECK_THROW(profileSYMIGM.GetLineProfileDerivZ(10.0, x0, 0., sigma),
-                    GlobalException);
+  // GetLineProfileDerivX0
+  val = profileSYMIGM.GetLineProfileDerivX0(x0, x0, sigma);
+  BOOST_CHECK(val == 0.0);
 
   // GetLineProfileDerivSigma
-  BOOST_CHECK_THROW(profileSYMIGM.GetLineProfileDerivSigma(10.0, x0, sigma),
-                    GlobalException);
+  val = profileSYMIGM.GetLineProfileDerivSigma(x0, x0, sigma);
+  BOOST_CHECK(val == 0.0);
 
   // GetLineFlux
   val = profileSYMIGM.GetLineFlux(x0, sigma, 1);
@@ -285,8 +282,8 @@ BOOST_AUTO_TEST_CASE(lineprofileLOR_test) {
   Float64 val = profileLOR.GetLineProfileVal(10.0, x0, sigma);
   BOOST_CHECK(val == 1.0);
 
-  // GetLineProfileDerivZ
-  BOOST_CHECK_THROW(profileLOR.GetLineProfileDerivZ(10.0, x0, 0., sigma),
+  // GetLineProfileDerivX0
+  BOOST_CHECK_THROW(profileLOR.GetLineProfileDerivX0(10.0, x0, sigma),
                     GlobalException);
 
   // GetLineProfileDerivSigma
@@ -439,20 +436,16 @@ BOOST_AUTO_TEST_CASE(lineprofileASYM_test) {
   BOOST_CHECK_THROW(profileASYM_badParam.GetLineProfileVal(10.0, x0, sigma),
                     GlobalException);
 
-  // GetLineProfileDerivZ
-  val = profileSYM.GetLineProfileDerivZ(10.0, x0, 0., sigma);
+  // GetLineProfileDerivX0
+  val = profileSYM.GetLineProfileDerivX0(10.0, x0, sigma);
   BOOST_CHECK(val == 0.0);
 
-  val = profileSYM.GetLineProfileDerivZ(20.0, x0, 1., sigma);
-  BOOST_CHECK(val == 0.0);
-
-  val = profileSYM.GetLineProfileDerivZ(20.0 - sigma, x0, 1., sigma);
-  Float64 val2 = profileSYM.GetLineProfileDerivZ(20.0 + sigma, x0, 1., sigma);
+  val = profileSYM.GetLineProfileDerivX0(10.0 - sigma, x0, sigma);
+  Float64 val2 = profileSYM.GetLineProfileDerivX0(10.0 + sigma, x0, sigma);
   BOOST_CHECK(val == -val2);
 
-  BOOST_CHECK_THROW(
-      profileASYM_badParam.GetLineProfileDerivZ(10.0, x0, 0., sigma),
-      GlobalException);
+  BOOST_CHECK_THROW(profileASYM_badParam.GetLineProfileDerivX0(10.0, x0, sigma),
+                    GlobalException);
 
   // GetLineProfileDerivSigma
   val = profileSYM.GetLineProfileDerivSigma(10.0, x0, sigma);

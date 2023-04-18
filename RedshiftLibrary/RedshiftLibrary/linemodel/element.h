@@ -121,13 +121,13 @@ public:
                            Int32 kLineSupport = -1) const;
   Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift,
                                          Float64 continuumFlux) const;
+  Float64 GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
+                                   Float64 continuumFlux) const;
   Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
                                             Float64 continuumFluxUnscale) const;
-  Float64 GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift,
-                                            Float64 continuumFlux) const;
   Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
                                  Float64 continuumFlux,
-                                 Float64 continuumFluxDerivZ) const;
+                                 Float64 continuumFluxDerivZ = 0.0) const;
 
   void addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                           CSpectrumFluxAxis &modelfluxAxis,
@@ -147,6 +147,7 @@ public:
                                    Int32 lineIdx) const;
 
   Float64 GetNominalAmplitude(Int32 subeIdx) const;
+  Float64 GetMaxNominalAmplitude() const;
   bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
   Float64 GetFittedAmplitude(Int32 subeIdx) const;
   Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx) const;
@@ -158,6 +159,7 @@ public:
   void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
 
   bool SetAbsLinesLimit(Float64 limit);
+  Float64 GetAbsLinesLimit() const;
 
   void SetVelocityEmission(Float64 vel);
   Float64 getVelocityEmission() const;
@@ -193,8 +195,7 @@ public:
 
   const std::string &GetLineName(Int32 subeIdx) const;
   bool IsOutsideLambdaRange() const;
-  Float64 GetLineWidth(Float64 lambda, Float64 z = 0.,
-                       bool isEmission = 0) const;
+  Float64 GetLineWidth(Float64 lambda, bool isEmission = 0) const;
   bool IsOutsideLambdaRange(Int32 subeIdx) const;
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,

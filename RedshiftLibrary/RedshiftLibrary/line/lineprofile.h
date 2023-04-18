@@ -76,7 +76,7 @@ typedef struct TSymIgmParams {
   TSymIgmParams(Int32 igmidx, Float64 redshift)
       : m_igmidx(igmidx), m_redshift(redshift){};
 
-  Int32 m_igmidx = -1;
+  Int32 m_igmidx = undefIdx;
   Float64 m_redshift = NAN;
 } TSymIgmParams;
 
@@ -101,9 +101,8 @@ public:
   virtual Float64 GetLineFlux(Float64 x0, Float64 sigma,
                               Float64 A = 1.0) const = 0;
 
-  virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0,
-                                       Float64 redshift,
-                                       Float64 sigma) const = 0;
+  virtual Float64 GetLineProfileDerivX0(Float64 x, Float64 x0,
+                                        Float64 sigma) const = 0;
 
   virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                            Float64 sigma) const = 0;

@@ -161,10 +161,10 @@ void CLineModelFitting::initMembers() {
   }
 
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
-  m_model = std::make_shared<CSpectrumModel>(CSpectrumModel(
-      m_Elements, m_inputSpc, m_RestLineList, m_continuumFitValues));
+  m_model = std::make_shared<CSpectrumModel>(
+      m_Elements, m_inputSpc, m_RestLineList, m_continuumFitValues);
   m_continuumManager = std::make_shared<CContinuumManager>(
-      CContinuumManager(m_model, *(m_lambdaRange), m_continuumFitValues));
+      m_model, *(m_lambdaRange), m_continuumFitValues);
 
   SetFittingMethod(m_fittingmethod);
   SetLSF();

@@ -61,7 +61,7 @@ public:
 
   void fit(Float64 redshift);
 
-  void resetSupport(Float64 redshift);
+  virtual void resetSupport(Float64 redshift);
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
 
