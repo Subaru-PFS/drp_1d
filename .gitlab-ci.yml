@@ -142,7 +142,7 @@ push-rc-38-osx:
 .build-manylinux:
   stage: build
   script:
-    - source /venv/p36/bin/activate
+    - source /venv/p39/bin/activate
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
@@ -156,7 +156,7 @@ push-rc-38-osx:
   stage: build-coverage
   when: manual
   script:
-    - source /venv/p36/bin/activate
+    - source /venv/p39/bin/activate
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
@@ -266,6 +266,7 @@ test-manylinux2014:
 wheel36-manylinux2014:
   variables:
     PYTHON_VERSION: "36"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux
@@ -286,9 +287,17 @@ wheel38-manylinux2014:
     - .manylinux2014
     - .wheel-manylinux
 
+wheel39-manylinux2014:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .wheel-manylinux
+
 pytest36-manylinux2014:
   variables:
     PYTHON_VERSION: "36"
+  when: manual
   extends:
     - .manylinux2014
     - .pytest-manylinux
@@ -309,9 +318,17 @@ pytest38-manylinux2014:
     - .manylinux2014
     - .pytest-manylinux
 
+pytest39-manylinux2014:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .pytest-manylinux
+
 push-rc-36-manylinux2014:
   variables:
     PYTHON_VERSION: "36"
+  when: manual
   extends:
     - .manylinux2014
     - .push-rc-manylinux
@@ -335,6 +352,15 @@ push-rc-38-manylinux2014:
     - .push-rc-manylinux
   dependencies:
     - wheel38-manylinux2014
+
+push-rc-39-manylinux2014:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .push-rc-manylinux
+  dependencies:
+    - wheel39-manylinux2014
 
 coverage-manylinux2014:
   extends:
