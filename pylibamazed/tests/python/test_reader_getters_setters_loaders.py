@@ -6,36 +6,36 @@ from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader
 class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
 
     def test_get_wave(self):
-        fsr = self._initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data()
         fsr.init()
         fsr.get_wave()
 
     def test_get_flux(self):
-        fsr = self._initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data()
         fsr.init()
         fsr.get_flux()
 
     def test_get_error(self):
-        fsr = self._initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data()
         fsr.init()
         fsr.get_error()
     
     def test_get_lsf(self):
-        fsr = self._initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data()
         fsr.init()
         fsr.get_lsf()
     
     def test_get_spectrum(self):
-        fsr = self._initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data()
         fsr.init()
         fsr.get_spectrum()
     
     def test_set_air(self):
-        fsr = self._initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data()
         fsr.set_air()
     
     def test_load_all(self):
-        fsr = self._initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data()
         fsr.load_all([1,10])
 
 class SpectrumReader(AbstractSpectrumReader):

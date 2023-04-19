@@ -37,6 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
+from typing import Dict, Generic, TypeVar
 import numpy as np
 import json
 
@@ -56,24 +57,34 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                  )
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
-class NumpyContainer:
+T = TypeVar("T")
+class Container(Generic[T]):
 
-    def __init__(self):
-        self.data = dict()
+    def __init__(self, **kwargs):
+        self.data: dict[str, T] = dict()
+        if(kwargs):
+            for key in kwargs:
+                self.append(kwargs[key], key)
 
-    def append(self, np_array, name=""):
-        self.data[name] = np_array
+    def __repr__(self):
+        repr = ''
+        for key in self.data:
+            repr += f"\n{key}: {self.data[key]}"
+        return repr
+
+    def append(self, dataToAppend: T, obs_id=""):
+        self.data[obs_id] = dataToAppend
     
-    def get(self, name=""):
-        return self.data[name]
+    def get(self, obs_id="") -> T:
+        return self.data[obs_id]
 
     def keys(self):
         return self.data.keys()
 
-    def size(self):
+    def size(self) -> int:
         return len(self.data)
 
-    
+   
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
 from pylibamazed.Exception import APIException
@@ -99,9 +110,10 @@ class AbstractSpectrumReader:
         """Constructor method
         """
         self.observation_id = observation_id
-        self.waves = NumpyContainer()
-        self.fluxes = NumpyContainer()
-        self.errors = NumpyContainer()
+        self.waves = Container[np.ndarray]()
+        self.fluxes = Container[np.ndarray]()
+        self.errors = Container[np.ndarray]()
+        self.others: Dict[str, Container[np.ndarray]] = dict()
         self.lsf_type = None
         self.lsf_data = []
         self.photometric_data = []
@@ -110,6 +122,7 @@ class AbstractSpectrumReader:
         self.parameters = parameters.copy()
         self.calibration_library = calibration_library
         self.source_id = str(source_id)
+        self.full_spectra = Container[pd.DataFrame]()
 
     def load_wave(self, resource, obs_id=""):
         """Append the spectral axis in self.wave , units are in Angstrom by default
@@ -156,6 +169,14 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
+    def load_others(self, resource, data_name: str, obs_id=""):
+        """Appends other data in self.others
+
+        :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
+            an hdf5 node,...)
+        """
+        pass
+    
     def load_all(self, resource):
         """
         Load all components of the spectrum. Reimplement this if resources are different
@@ -220,14 +241,19 @@ class AbstractSpectrumReader:
         self.w_frame = "air"
 
     def init(self):
-        if self._inconsistent_sizes():
-            raise  APIException(
+        if not self._sizes_are_consistent():
+            sizes: str = ', '.join([str(container.size()) for container in self._all_containers()])
+            raise APIException(
                 ErrorCode.INVALID_SPECTRUM,
-                "Number of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(
-                    str(self.waves.size()), str(self.errors.size()), str(self.fluxes.size())
-                )
+                f"Number of error, wavelength, flux and other arrays should be the same: {sizes}"
             )
         
+        if not self._obs_ids_are_consistent():
+            raise APIException(
+                ErrorCode.INVALID_SPECTRUM,
+                f"Names of error, wavelength, flux and other arrays should be the same"
+            )
+
         if len(self.lsf_data) > 1:
             raise APIException(ErrorCode.MULTILSF_NOT_HANDLED, "Multiple LSF not handled")
         
@@ -245,9 +271,25 @@ class AbstractSpectrumReader:
             fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
             self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
-    def _inconsistent_sizes(self):
-        return self.waves.size() != self.fluxes.size() or self.waves.size() != self.errors.size()
+    def _all_containers(self):
+        return [container for container in self.others.values()] \
+            + [self.waves, self.fluxes, self.errors]
 
+    def _sizes_are_consistent(self) -> bool:
+        expected_size = self.waves.size()
+        return all(container.size() == expected_size for container in self._all_containers())
+
+    def _obs_ids_are_consistent(self) -> bool:
+        """Checks that all keys from waves conatiner are present in all other containers.
+        Must be combined with size test to be sure that all keys are equal
+        """
+        expected_keys = self.waves.keys()
+        for obs_id in expected_keys:
+            for container in self._all_containers():
+                if obs_id not in container.keys():
+                    return False
+        return True
+        
     def _add_cspectra(self):
         airvacuum_method = self._corrected_airvacuum_method()
         multiobs_type = self.parameters["multiobsmethod"]
@@ -350,3 +392,27 @@ class AbstractSpectrumReader:
                 ErrorCode.SPECTRUM_NOT_LOADED,
                 "Spectrum not loaded, launch init first"
             )
+
+    def _merge_spectrum_in_dataframe(self):
+        for obs_id in self.waves.keys():
+            # Creates dataframe with mandatory columns
+            full_spectrum = pd.DataFrame({
+                "waves": self.waves.get(obs_id),
+                "fluxes": self.fluxes.get(obs_id),
+                "errors": self.errors.get(obs_id),
+            })
+
+            # Adds lsf_data and photometric_data if are present
+            # Will be present only if container contains only 1 element ? 
+            if(self.lsf_data):
+                full_spectrum["lsf_data"] = self.lsf_data[0]
+            if(self.photometric_data):
+                full_spectrum["photometric_data"] = self.photometric_data[0]
+            
+            # Adds other columns
+            for col_key in self.others:
+                obs_others = self.others[col_key].get(obs_id)
+                if obs_others is not None:
+                    full_spectrum[col_key] = obs_others
+
+            self.full_spectra.append(full_spectrum, obs_id)
