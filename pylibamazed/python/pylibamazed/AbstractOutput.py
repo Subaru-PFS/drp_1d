@@ -52,7 +52,7 @@ zlog = CLog.GetInstance()
 class AbstractOutput:
 
     def __init__(self,
-                 parameters,
+                 parameters: Parameters,
                  results_specifications=rspecifications,
                  extended_results = True):
         self.parameters = parameters
@@ -216,7 +216,7 @@ class AbstractOutput:
         mp = self.object_results[object_type]["model_parameters"][rank][data_name]
         return mp
 
-    def get_dataset(self,object_type, dataset,  rank=None):
+    def get_dataset(self, object_type, dataset,  rank=None):
         if object_type:
             if rank is not None:
                 return self.object_results[object_type][dataset][rank]

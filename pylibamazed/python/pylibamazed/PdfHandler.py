@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import json
+from pylibamazed import AbstractOutput
 from pylibamazed.redshift import CLogZPdfResult, CZGridParam, CZGridListParams, TFloat64Range
 import numpy as np
 
@@ -46,9 +46,15 @@ def buildPdfParams(pdf_params, first_pass = False):
         return CZGridListParams([CZGridParam(TFloat64Range(p["FPZmin"], p["FPZmax"]), p["FPZstep"], np.nan) for p in v])
     return CZGridListParams([CZGridParam(TFloat64Range(p["zmin"], p["zmax"]), p["zstep"], p["zcenter"]) for p in v])
 
-def buildPdfHandler(abstract_output, object_type, logsampling, first_pass=False):
+def buildPdfHandler(
+        abstract_output: AbstractOutput,
+        object_type,
+        logsampling,
+        first_pass=False
+    ):
     dataset_prefix = ""
     name_prefix = ""
+
     if first_pass:
         dataset_prefix = "firstpass_"
         name_prefix = "Firstpass"
@@ -60,7 +66,7 @@ def buildPdfHandler(abstract_output, object_type, logsampling, first_pass=False)
     return PdfHandler(c_pdf_params, logsampling, pdf_proba)
 
 class PdfHandler:
-    def __init__(self, pdf_params, logsampling, pdf_proba):
+    def __init__(self, pdf_params, logsampling: bool, pdf_proba):
         self._pdf = CLogZPdfResult(pdf_params, logsampling, pdf_proba)
 
     @property
