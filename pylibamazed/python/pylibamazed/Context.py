@@ -67,10 +67,10 @@ zlog = CLog.GetInstance()
 
 class Context:
 
-    def __init__(self, config, parameters):
+    def __init__(self, config, parameters: Parameters):
         try:
             _check_config(config)
-            self.parameters = Parameters(parameters,config)
+            self.parameters = parameters
             self.calibration_library = CalibrationLibrary(parameters,
                                                           config["calibration_dir"])
             self.calibration_library.load_all()
@@ -121,7 +121,7 @@ class Context:
             self.init_context()
             spectrum_reader.init()
             if self.config.get("linemeascatalog"):
-                self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id)
+                self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id, self.config)
             self.process_flow_context.LoadParameterStore(self.parameters.get_json())
             self.process_flow_context.Init()
             #store flag in root object
@@ -159,7 +159,7 @@ class Context:
                 if not rso.has_error(object_type, "linemeas_catalog_load"):
                     self.run_linemeas_solver(rso, object_type, "linemeas_solver") 
 
-            if self.parameters.lineratio_catalog_enabled(object_type) and not rso.has_error(object_type, "redshift_solver"):
+            if self.parameters.is_tplratio_catalog_needed(object_type) and not rso.has_error(object_type, "redshift_solver"):
                 self.run_sub_classification(rso, object_type, "sub_classif_solver")
 
             if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models and not rso.has_error(object_type, "redshift_solver"):
@@ -265,8 +265,4 @@ def _check_config(config):
 def _check_LinemeasValidity(config, parameters):
     if not config["linemeascatalog"]:
         return
-    for object_type in parameters["objects"]:
-        method = parameters[object_type]["method"]
-        if method == "LineModelSolve":
-            if "linemeas_method" in parameters[object_type] and parameters[object_type]["linemeas_method"]:
-                raise APIException(ErrorCode.INCOHERENT_CONFIG_OPTION, "Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")
+    parameters.check_lineameas_validity()

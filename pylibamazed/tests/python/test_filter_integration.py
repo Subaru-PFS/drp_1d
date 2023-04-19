@@ -39,6 +39,7 @@
 
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Context import Context
+from pylibamazed.Parameters import Parameters
 
 from tests.python.test_ITlike import (
     make_config,
@@ -54,7 +55,7 @@ class TestFilterIntegration:
 
         # Creates a "real" configuration
         config = make_config(**{"config_filename": "config_filters.json"})
-        param = get_parameters(config["parameters_file"])
+        param = Parameters(get_parameters(config["parameters_file"]))
         context = Context(config, param)  # vars returns the dict version of config
         observation = get_observation(config["input_file"])
 

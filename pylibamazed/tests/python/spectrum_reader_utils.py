@@ -39,21 +39,22 @@
 import random
 import numpy as np
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
+from pylibamazed.Parameters import Parameters
 import tempfile
 from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader, Container
 
 class TestSpectrumReaderUtils:
 
-    def make_parameters(self, **kwargs):
-        parameters = dict()
-        parameters["LSF"] = dict()
-        parameters["LSF"]["LSFType"] = kwargs.get("lsf_type", "FROMSPECTRUMDATA")
-        parameters["airvacuum_method"] = kwargs.get("airvacuum_method", "")
-        parameters["objects"]=[]
-        parameters["multiobsmethod"] = kwargs.get("multiobsmethod", "")
+    def make_parameters_dict(self, **kwargs):
+        params_dict = dict()
+        params_dict["LSF"] = dict()
+        params_dict["LSF"]["LSFType"] = kwargs.get("lsf_type", "FROMSPECTRUMDATA")
+        params_dict["airvacuum_method"] = kwargs.get("airvacuum_method", "")
+        params_dict["objects"]=[]
+        params_dict["multiobsmethod"]=kwargs.get("multiobsmethod", "")
         if kwargs.get("filters"):
-            parameters["filters"] = kwargs.get("filters")
-        return parameters
+            params_dict["filters"] = kwargs.get("filters")
+        return params_dict
 
     def full_load(self, fsr, **kwargs):
         fsr.load_wave([0,10], kwargs.get('obs_id', ''))
@@ -61,16 +62,18 @@ class TestSpectrumReaderUtils:
         fsr.load_error([0,10], kwargs.get('obs_id', ''))
 
     def initialize_fsr_with_data(self, **kwargs):
-        parameters = self.make_parameters(**kwargs)
-        cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
-        fsr = FakeSpectrumReader("000", parameters, cl, "000", "range")
+        params_dict = self.make_parameters_dict(**kwargs)
+        params = Parameters(params_dict)
+        cl = CalibrationLibrary(params, tempfile.mkdtemp())
+        fsr = FakeSpectrumReader("000", params, cl, "000","range")
         self.full_load(fsr, **kwargs)
         fsr.load_lsf(None)
         return fsr
 
 class FakeSpectrumReader(AbstractSpectrumReader):
 
-    def __init__(self, observation_id, parameters, calibration_library, source_id, lambda_type):
+    def __init__(self, observation_id, parameters: Parameters, calibration_library, source_id, lambda_type):
+        AbstractSpectrumReader.__init__(self, observation_id,parameters,calibration_library,source_id)
         self.lambda_type = lambda_type
         super().__init__(observation_id, parameters, calibration_library, source_id)
 

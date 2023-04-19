@@ -39,6 +39,7 @@
 import json
 from typing import List
 from pylibamazed.Filter import SpectrumFilterItem, FilterItem, FilterList
+from pylibamazed.Parameters import Parameters
 from abc import abstractmethod
 
 class AbstractFilterLoader:
@@ -81,9 +82,9 @@ class ParamJsonFilterLoader(AbstractFilterLoader):
     ):
         super().__init__(json_keys_to_filter_attrs, FitlerItemClass)
 
-    def get_filters(self, params: dict) -> FilterList:
+    def get_filters(self, params: Parameters) -> FilterList:
         filters: List[FilterItem] = []
-        json_filters = params.get("filters", None)
+        json_filters = params.get_filters()
         if json_filters is None:
             return None
         self._check_json_format(json_filters)

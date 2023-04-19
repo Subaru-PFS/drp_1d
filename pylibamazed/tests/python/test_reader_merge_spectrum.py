@@ -39,6 +39,7 @@
 
 from pylibamazed.AbstractSpectrumReader import Container
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
+from pylibamazed.Parameters import Parameters
 
 from tests.python.spectrum_reader_utils import FakeSpectrumReader, TestSpectrumReaderUtils
 import numpy as np
@@ -62,7 +63,7 @@ class TestMergeSpectrumInDataframe(TestSpectrumReaderUtils):
 
     def _initialize_fsr(self):
         # Initializes empty fake spectrum reader
-        parameters = self.make_parameters()
+        parameters = Parameters(self.make_parameters_dict())
         cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
         fsr = FakeSpectrumReader("000", parameters, cl, "000","range")
 
