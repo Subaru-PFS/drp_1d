@@ -1,0 +1,4 @@
+[coverage:run]
+omit =
+    **/redshift.py
+    **/__main__.py

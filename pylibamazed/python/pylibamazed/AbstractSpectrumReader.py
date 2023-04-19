@@ -38,7 +38,7 @@
 # ============================================================================
 
 import numpy as np
-import os,json
+import json
 
 import pandas as pd
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
@@ -167,53 +167,42 @@ class AbstractSpectrumReader:
         self.load_error(resource)
         self.load_lsf(resource)
         self.load_photometry(resource)
-
+        
     def get_spectrum(self):
         """
         Get spectrum c++ object
 
         :return: CSpectrum object, fully loaded
         """
-        if self._spectra[0] is not None:
-            return self._spectra[0]
-        else:
-            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+        self._check_spectrum_is_loaded()
+        return self._spectra[0]
         
     def get_wave(self):
         """
-
         :raises: Spectrum not loaded
         :return: wavelength
         :rtype: np.array
         """
-        if self._spectra[0] is not None:
-            return PC_Get_AxisSampleList(self._spectra[0].GetSpectralAxis().GetSamplesVector())
-        else:
-            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+        self._check_spectrum_is_loaded()
+        return PC_Get_AxisSampleList(self._spectra[0].GetSpectralAxis().GetSamplesVector())
 
     def get_flux(self):
         """
-
         :raises: Spectrum not loaded
         :return: wavelength
         :rtype: np.array
         """
-        if self._spectra[0] is not None:
-            return PC_Get_AxisSampleList( self._spectra[0].GetFluxAxis().GetSamplesVector())
-        else:
-            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+        self._check_spectrum_is_loaded()
+        return PC_Get_AxisSampleList(self._spectra[0].GetFluxAxis().GetSamplesVector())
 
     def get_error(self):
         """
-
         :raises: Spectrum not loaded
         :return: error
         :rtype: np.array
         """
-        if self._spectra[0] is not None:
-            return PC_Get_AxisSampleList(self._spectra[0].GetErrorAxis().GetSamplesVector())
-        else:
-            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+        self._check_spectrum_is_loaded()
+        return PC_Get_AxisSampleList(self._spectra[0].GetErrorAxis().GetSamplesVector())
 
     def get_lsf(self):
         """
@@ -221,6 +210,7 @@ class AbstractSpectrumReader:
         :return: lsf
         :rtype: np.array
         """
+        self._check_spectrum_is_loaded()
         return self.lsf_data[0]
 
     def set_air(self):
@@ -230,25 +220,52 @@ class AbstractSpectrumReader:
         self.w_frame = "air"
 
     def init(self):
-        if self.waves.size() != self.fluxes.size() or self.waves.size() != self.errors.size():
-            raise  APIException(ErrorCode.INVALID_SPECTRUM,"Number of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves)), str(len(self.errors)), str(len(self.fluxes))))
+        if self._inconsistent_sizes():
+            raise  APIException(
+                ErrorCode.INVALID_SPECTRUM,
+                "Number of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(
+                    str(self.waves.size()), str(self.errors.size()), str(self.fluxes.size())
+                )
+            )
+        
         if len(self.lsf_data) > 1:
-            raise  APIException(ErrorCode.MULTILSF_NOT_HANDLED,"Multiple LSF not handled")
-        airvacuum_method = self.parameters.get("airvacuum_method", "")
-        if airvacuum_method == "default":
-            airvacuum_method = "Morton2000"
-        if airvacuum_method == "" and self.w_frame == "air":
-            airvacuum_method = "Morton2000"
-        elif airvacuum_method != "" and self.w_frame == "vacuum":
-            zflag.warning(WarningCode.AIR_VACCUM_CONVERSION_IGNORED.value, f"Air vaccum method {airvacuum_method} ignored, spectrum already in vacuum")
-            airvacuum_method = ""
+            raise APIException(ErrorCode.MULTILSF_NOT_HANDLED, "Multiple LSF not handled")
+        
+        self._add_cspectra()
+        lsf_factory = CLSFFactory.GetInstance()
+        lsf_args = self._lsf_args()
+        lsf = lsf_factory.Create(self.parameters["LSF"]["LSFType"], lsf_args)
+        self._spectra[0].SetLSF(lsf)
+        self._add_photometric_data()
 
+    def _add_photometric_data(self):
+        if len(self.photometric_data) > 0 and len(self.photometric_data[0]) > 0:
+            names = tuple(self.photometric_data[0].Name)
+            flux = tuple([float(f) for f in self.photometric_data[0].Flux])
+            fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
+            self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
+
+    def _inconsistent_sizes(self):
+        return self.waves.size() != self.fluxes.size() or self.waves.size() != self.errors.size()
+
+    def _add_cspectra(self):
+        airvacuum_method = self._corrected_airvacuum_method()
         multiobs_type = self.parameters["multiobsmethod"]
         if not multiobs_type:
+
+            # Add check names if multiobs type is null
+            if list(self.waves.keys()) != ['']:
+                raise APIException(
+                    ErrorCode.INVALID_NAME,
+                    "Non multi obs observations cannot be named"
+                )
+
             spectralaxis = CSpectrumSpectralAxis(self.waves.get(), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(self.fluxes.get(), self.errors.get())
             self._add_cspectrum(spectralaxis,signal)
+
         elif multiobs_type == "merge":
+            print('i am here !!!')
             wses = []
             for i in self.waves.keys():
                 wse_ = pd.DataFrame()
@@ -261,14 +278,18 @@ class AbstractSpectrumReader:
             codes, uniques = pd.factorize(wse["wave"])
             epsilon = np.concatenate([i for i in map(np.arange, np.bincount(codes))]) * 1e-10
             wse["wave"] = wse["wave"] + epsilon
+                
             if len(wse["wave"].unique()) != wse.index.size:
-                raise  APIException(ErrorCode.UNALLOWED_DUPLICATES,"Duplicates in wavelengths")
+                raise  APIException(ErrorCode.UNALLOWED_DUPLICATES, "Duplicates in wavelengths")
+            
             if not (np.diff(wse["wave"]) > 0).all():
                 raise  APIException(ErrorCode.UNSORTED_ARRAY,"Wavelenghts are not sorted")
+                
             spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
                                                  np.array(wse["error"]))
             self._add_cspectrum(spectralaxis,signal)
+
         elif multiobs_type == "full":
             for obs_id in self.waves.keys():
                 spectralaxis = CSpectrumSpectralAxis(self.waves.get(obs_id),
@@ -277,9 +298,36 @@ class AbstractSpectrumReader:
                                                      self.errors.get(obs_id))
                 self._add_cspectrum(spectralaxis,signal,obs_id)
 
+    def _add_cspectrum(self,spectralaxis, signal, obs_id=""):
+        self._spectra.append(CSpectrum(spectralaxis, signal))
+        self._spectra[-1].SetName(self.source_id)
+        self._spectra[-1].setObsID(obs_id)
+
         ctx = CProcessFlowContext.GetInstance()
-            
+        ctx.addSpectrum(self._spectra[-1])
+
+    def _corrected_airvacuum_method(self):
+        airvacuum_method = self.parameters.get("airvacuum_method", "")
+        
+        if airvacuum_method == "default":
+            airvacuum_method = "Morton2000"
+        
+        if airvacuum_method == "" and self.w_frame == "air":
+            airvacuum_method = "Morton2000"
+        
+        elif airvacuum_method != "" and self.w_frame == "vacuum":
+            zflag.warning(
+                WarningCode.AIR_VACCUM_CONVERSION_IGNORED.value,
+                f"Air vaccum method {airvacuum_method} ignored, spectrum already in vacuum"
+            )
+            airvacuum_method = ""
+        
+        return airvacuum_method
+
+    def _lsf_args(self):
+        ctx = CProcessFlowContext.GetInstance()
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
+
         if parameter_lsf_type == "FROMSPECTRUMDATA":
             self.parameters["LSF"]["LSFType"] = self.lsf_type
             if self.lsf_type != "GaussianVariableWidth":
@@ -295,20 +343,11 @@ class AbstractSpectrumReader:
             else:
                 lsf_args = TLSFGaussianVarWidthArgs(self.calibration_library.lsf["wave"],
                                                     self.calibration_library.lsf["width"])
+        return lsf_args
 
-        lsf_factory = CLSFFactory.GetInstance()
-        lsf = lsf_factory.Create(self.parameters["LSF"]["LSFType"], lsf_args)
-        self._spectra[0].SetLSF(lsf)
-        if len(self.photometric_data) > 0 and len(self.photometric_data[0]) > 0:
-            names = tuple(self.photometric_data[0].Name)
-            flux = tuple([float(f) for f in self.photometric_data[0].Flux])
-            fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
-            self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
-
-    def _add_cspectrum(self,spectralaxis, signal, obs_id=""):
-        self._spectra.append(CSpectrum(spectralaxis, signal))
-        self._spectra[-1].SetName(self.source_id)
-        self._spectra[-1].setObsID(obs_id)
-
-        ctx = CProcessFlowContext.GetInstance()
-        ctx.addSpectrum(self._spectra[-1])
+    def _check_spectrum_is_loaded(self):
+        if not self._spectra :
+            raise APIException(
+                ErrorCode.SPECTRUM_NOT_LOADED,
+                "Spectrum not loaded, launch init first"
+            )
