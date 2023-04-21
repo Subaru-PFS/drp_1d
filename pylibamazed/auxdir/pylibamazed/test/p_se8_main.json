@@ -129,7 +129,11 @@
                     }
                 },
                 "nsigmasupport": 8,
-                "enablephotometry": false
+                "enablephotometry": true,
+                "photometry": {
+                    "weight": 1.0
+                }
+
             }
         },
         "linemeas_method": "LineMeasSolve",
@@ -154,19 +158,13 @@
             }
         },
         "enable_reliability": false,
-        "reliability_model": "reliability/NNmodels/tagged/NN04181302_25_WholeModel.h5",
-        "TemplateFittingSolve": {
-            "extremacount": 5,
-            "overlapThreshold": 1,
-            "spectrum": {
-                "component": "raw"
-            },
-            "fftprocessing": false,
-            "interpolation": "precomputedfinegrid",
-            "extinction": true,
-            "dustfit": true,
-            "pdfcombination": "marg",
-            "enablephotometry": false
-        }
-    }
+        "reliability_model": "reliability/NNmodels/tagged/NN04181302_25_WholeModel.h5"
+    },
+        "photometryTransmissionDir": "photometric_transmission/EL-COSMOSv2/",
+	"photometryBand": [
+		"H",
+		"J",
+		"Y",
+		"riz"
+	 ]
 }

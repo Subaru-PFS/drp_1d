@@ -265,7 +265,6 @@ class AbstractSpectrumReader:
             self._add_cspectrum(spectralaxis,signal)
 
         elif multiobs_type == "merge":
-            print('i am here !!!')
             wses = []
             for i in self.waves.keys():
                 wse_ = pd.DataFrame()

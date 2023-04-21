@@ -95,6 +95,9 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
         pass
         #self.lsf_type = "no_lsf"
 
+    def load_photometry(self, phot):
+        self.photometric_data.append(phot)
+
     # spectrum here is a CSpectrum
     def load_all(self, spectrum):
         self.load_wave(spectrum)

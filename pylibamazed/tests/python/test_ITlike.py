@@ -52,8 +52,37 @@ import tempfile
 
 module_root_dir = os.path.split(__file__)[0]
 test_dir = os.path.join(
-        module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
+    module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
+)
+
+
+def read_photometry_fromfile(fname):
+    columns = ["Name", "Flux", "Error"]  # obligatory names
+    # df = pd.read_table(fname, delim_whitespace=True, names=columns)
+    df = pd.DataFrame(
+        [
+            ["riz", 2e-29, 3e-31],
+            ["Y", 3e-29, 4e-31],
+            ["J", 4e-29, 5e-31],
+            ["H", 5e-29, 3e-31],
+        ],
+        columns=["Name", "Flux", "Error"],
     )
+    return df
+
+
+def accessOutputData(output):
+    return output.get_attributes(
+        [
+            "classification",
+            "error",
+            "ContextWarningFlags",
+            "WarningFlags",
+            "test.WarningFlags",
+        ],
+        None,
+    )
+
 
 def test_ITLikeTest():
     config_path = os.path.join(
@@ -76,7 +105,9 @@ def test_ITLikeTest():
     context = Context(config, param)  # vars returns the dict version of config
 
     input_spectra_path = os.path.join(test_dir, config["input_file"])
-    observation = pd.read_table(input_spectra_path, delimiter=" ", names=["ProcessingID"])
+    observation = pd.read_table(
+        input_spectra_path, delimiter=" ", names=["ProcessingID"]
+    )
     s_filename = (
         config["spectrum_prefix"]
         + str(observation.ProcessingID[0])  # only one spectra
@@ -95,14 +126,28 @@ def test_ITLikeTest():
     )
     reader.load_all(spectra)
 
+    # access and read phot from file, then load into reader
+    phot_fname = (
+        os.path.join(test_dir, config["spectrum_dir"])
+        + "/"
+        + str(observation.ProcessingID[0])
+        + "_phot.txt"
+    )
+    if os.path.exists(phot_fname):
+        phot = read_photometry_fromfile(phot_fname)
+        reader.load_photometry(phot)
+
     output = context.run(reader)  # passing spectra reader to launch amazed
 
-    #save in temporary file
+    # add calls to output
+    accessOutputData(output)
+    # save in temporary file
     tf = tempfile.TemporaryFile()
-    output_file = h5py.File(tf, 'w')
+    output_file = h5py.File(tf, "w")
     writer = H5Writer(output)
-    writer.excluded_datasets = config['excluded_datasets']
+    writer.excluded_datasets = config["excluded_datasets"]
     writer.write_hdf5(output_file, str(observation.ProcessingID[0]))
     output_file.close()
+
 
 #test_ITLikeTest()

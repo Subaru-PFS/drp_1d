@@ -110,7 +110,6 @@ class Context:
     def run(self, spectrum_reader):
         try:
             resultStore = CProcessFlowContext.GetInstance().GetResultStore()
-            print(resultStore)
             rso = ResultStoreOutput(resultStore,
                                     self.parameters,
                                     auto_load = False,

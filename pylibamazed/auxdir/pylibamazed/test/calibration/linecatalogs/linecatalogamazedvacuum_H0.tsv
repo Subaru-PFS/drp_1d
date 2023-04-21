@@ -3,5 +3,5 @@ WaveLength	Name	Type	Force	Profile	AmplitudeGroupName	AmplitudeGroupValue	Disper
 3727.09	[OII]3726	E	S	SYM	-1	1	Em1	0.0	FALSE
 1216.03	LyAE	E	S	ASYM	-1	1	Em1	0.0	FALSE
 3771.65	H11A	A	S	SYM	-1	1	Abs1	0.0	FALSE
-
+99999.00	H99A	A	S	ASYMFIT	-1	1	Abs1	0.0	FALSE
 
