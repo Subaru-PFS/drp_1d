@@ -41,26 +41,16 @@ import numpy as np
 import os, json
 
 import pandas as pd
+from pylibamazed.Container import Container
 from pylibamazed.redshift import (
-    CSpectrumSpectralAxis,
-    CSpectrumFluxAxis_withError,
-    CSpectrum,
-    PC_Get_AxisSampleList,
-    CProcessFlowContext,
-    TLSFGaussianVarWidthArgs,
-    CLSFFactory,
-    CPhotometricData,
     CLog,
     CFlagWarning,
-    ErrorCode,
 )
-from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
+
 from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader
-from pylibamazed.redshift import PC_Get_AxisSampleList
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
-from pylibamazed.Exception import APIException
 
 
 class ASCIISpectrumReader(AbstractSpectrumReader):
@@ -98,11 +88,24 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
     def load_photometry(self, phot, obs_id=""):
         self.photometric_data.append(phot)
 
+    def load_others(self, spectrum, obs_id: str=""):
+        # TODO add additional cols in parameters
+        additional_cols = self.parameters.get("additional_cols")
+        if additional_cols is None:
+            return
+        
+        for col_name in additional_cols:
+            col_data = spectrum[col_name]
+            if self.others.get(col_name) is None:
+                self.others[col_name] = Container(**{obs_id: col_data})
+            else:
+                self.others[col_name].append(col_data, obs_id)
+
     # spectrum here is a CSpectrum
     def load_all(self, spectrum):
         self.load_wave(spectrum)
         self.load_flux(spectrum)
         self.load_error(spectrum)
         self.load_lsf(spectrum)
-        # self.load_photometry(spectrum)
+        self.load_others(spectrum)
 

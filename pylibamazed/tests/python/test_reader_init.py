@@ -1,8 +1,48 @@
+# ============================================================================
+# 
+# This file is part of: AMAZED
+# 
+# Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+# 
+# https://www.lam.fr/
+# 
+# This software is a computer program whose purpose is to estimate the
+# spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+# from there 1D spectrum.
+# 
+# This software is governed by the CeCILL-C license under French law and
+# abiding by the rules of distribution of free software.  You can  use, 
+# modify and/ or redistribute the software under the terms of the CeCILL-C
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# "http://www.cecill.info". 
+# 
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability. 
+# 
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or 
+# data to be ensured and,  more generally, to use and operate it in the 
+# same conditions as regards security. 
+# 
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-C license and that you accept its terms.
+# ============================================================================
+
 from pylibamazed.Exception import APIException
 import pytest
 
-from pylibamazed.redshift import GlobalException
-from .spectrum_reader_utils import TestSpectrumReaderUtils
+from pylibamazed.redshift import GlobalException, PC_Get_AxisSampleList
+from pylibamazed.Filter import FilterList, SpectrumFilterItem
+from tests.python.spectrum_reader_utils import TestSpectrumReaderUtils
 import numpy as np
 import pandas as pd
 
@@ -89,6 +129,11 @@ class TestReaderInit(TestSpectrumReaderUtils):
         fsr = self.initialize_fsr_with_data(**{"multiobsmethod": "full"})
         fsr.init()
 
+    def test_error_unknown_multiobsmethod(self):
+        fsr = self.initialize_fsr_with_data(**{"multiobsmethod": "something unexpected"})
+        with pytest.raises(APIException, match=r"INVALID_PARAMETER"):
+            fsr.init()
+
     def test_add_photometric_data(self):
         fsr = self.initialize_fsr_with_data()
         fsr.photometric_data = [pd.DataFrame([["a",2,3]], columns=['Name', 'Flux', 'Error'])]
@@ -174,3 +219,26 @@ class TestReaderInit(TestSpectrumReaderUtils):
         TestSpectrumReaderUtils().full_load(fsr, **{"obs_id": "3"})
         fsr.load_others("lambdas", "other")
         assert fsr._obs_ids_are_consistent() == False
+    
+    def test_input_output_size_coherence_with_filtering(self):
+        fsr = self.initialize_fsr_with_data(**{
+            "multiobsmethod": "full",
+            "filters": [{"key": "waves", "instruction": "<=", "value": 3}]
+        })
+        TestSpectrumReaderUtils().full_load(fsr, **{"obs_id": "2"})
+
+        # Default data: 0 -> 9 => 4 items correspond to the filter
+        fsr.init()
+        
+        # Check size is correct for spectrum first obs
+        spectrum = fsr.get_spectrum()
+       
+        assert spectrum.GetSpectralAxis().GetSamplesCount() == 4
+        assert spectrum.GetFluxAxis().GetSamplesCount() == 4
+        assert spectrum.GetErrorAxis().GetSamplesCount() == 4
+
+        # Check size is correct for second obs
+        spectrum = fsr.get_spectrum(1)
+        assert spectrum.GetSpectralAxis().GetSamplesCount() == 4
+        assert spectrum.GetFluxAxis().GetSamplesCount() == 4
+        assert spectrum.GetErrorAxis().GetSamplesCount() == 4

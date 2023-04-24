@@ -77,10 +77,10 @@ def accessOutputData(output):
         None,
     )
 
-def make_config():
+def make_config(**kwargs):
     config_path = os.path.join(
         test_dir,
-        "config.json",
+        kwargs.get("config_filename", "config.json"),
     )
 
     with open(os.path.expanduser(config_path), "r") as f:
@@ -117,6 +117,7 @@ def get_spectra(config, observation):
 
     # read and load spectra using spectra reader
     spectra = pd.read_table(s_filename, delimiter="\t")
+    print('spectra', spectra)
     return spectra
 
 def add_photometry_to_reader(config, observation, reader):
