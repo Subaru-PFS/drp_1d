@@ -927,6 +927,8 @@ void CLineModelFitting::LoadModelSolution(
       m_Elements[eIdx]->SetPolynomCoeffs(std::move(contPolynomCoeffs));
     }
 
+    m_Elements[eIdx]->SetAllOffsets(modelSolution.Offset[iRestLine]);
+
     element_done[eIdx] = true;
   }
 
