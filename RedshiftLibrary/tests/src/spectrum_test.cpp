@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   }
   result = spc.InvertFlux();
 
-  // ScaleFluxAxis
-  spc.ScaleFluxAxis(2.);
+  // ApplyAmplitude
+  spc.ApplyAmplitude(2.);
   for (Int32 i = 0; i < rawFlux.size(); i++) {
     BOOST_CHECK(spc.GetRawFluxAxis().GetSamplesVector()[i] == 2 * rawFlux[i]);
     BOOST_CHECK(spc.GetContinuumFluxAxis().GetSamplesVector()[i] ==
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   }
 
   // ValidateSpectrum
-  spc.ScaleFluxAxis(0.5);
+  spc.ApplyAmplitude(0.5);
   TFloat64Range lambdaRange(spectralList[0], spectralList[spcAxisSize - 1]);
   BOOST_CHECK_NO_THROW(spc.ValidateSpectrum(lambdaRange, true));
   // not IsValid

@@ -87,6 +87,20 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
+void COperatorTemplateFittingBase::InitIsmIgmConfig(
+    const TInt32List kStart, const TInt32List kEnd, Float64 redshift,
+    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+        &ismCorrectionCalzetti,
+    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
+        &igmCorrectionMeiksin) {
+
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
+        kStart[spcIndex], kEnd[spcIndex], redshift, ismCorrectionCalzetti,
+        igmCorrectionMeiksin);
+}
+
+// return tuple with photmetric values
 std::shared_ptr<CModelSpectrumResult>
 COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
@@ -105,14 +119,20 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
       m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
 
   if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
-    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-        currentRange, redshift, tpl->m_ismCorrectionCalzetti,
-        tpl->m_igmCorrectionMeiksin);
+    TInt32List kstart(1);
+    TInt32List kend(1);
+    bool ret = currentRange.getClosedIntervalIndices(
+        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
+        kstart[0], kend[0]);
+    if (!ret)
+      THROWG(INTERNAL_ERROR, "Impossible to get valid kstart or kend");
+    InitIsmIgmConfig(kstart, kend, redshift, tpl->m_ismCorrectionCalzetti,
+                     tpl->m_igmCorrectionMeiksin);
   }
 
   if (EbmvCoeff > 0.) {
     if (m_templateRebined_bf[spcIndex].CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "ISM in not initialized");
+      THROWG(INTERNAL_ERROR, "ISM is not initialized");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
@@ -120,16 +140,17 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
             EbmvCoeff);
 
     if (idxEbmv != -1)
-      m_templateRebined_bf[spcIndex].ApplyDustCoeff(idxEbmv);
+      ApplyDustCoeff(idxEbmv, spcIndex);
   }
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf[spcIndex].MeiksinInitFailed()) {
       THROWG(INTERNAL_ERROR, "IGM in not initialized");
     }
-    m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);
+    ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   }
-  m_templateRebined_bf[spcIndex].ScaleFluxAxis(amplitude);
+  ApplyAmplitude(amplitude, spcIndex);
+
   // shift the spectralaxis to sync with the spectrum lambdaAxis
   const CSpectrumFluxAxis &modelflux =
       m_templateRebined_bf[spcIndex].GetFluxAxis();

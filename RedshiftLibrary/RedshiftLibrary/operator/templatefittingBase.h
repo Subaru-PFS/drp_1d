@@ -102,6 +102,25 @@ protected:
                              Float64 &overlapFraction,
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);
+  void
+  InitIsmIgmConfig(const TInt32List kStart, const TInt32List kEnd,
+                   Float64 redshift,
+                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+                       &ismCorrectionCalzetti = nullptr,
+                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
+                       &igmCorrectionMeiksin = nullptr);
+
+  virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);
+  };
+
+  virtual bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyDustCoeff(kEbmv);
+  };
+
+  virtual void ApplyAmplitude(Float64 amplitude, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyAmplitude(amplitude);
+  };
 
   // Likelihood
   virtual Float64 EstimateLikelihoodCstLog() const;

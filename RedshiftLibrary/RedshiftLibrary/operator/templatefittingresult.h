@@ -63,7 +63,8 @@ public:
 
   // best fit results
   TFloat64List ChiSquare;
-  TFloat64List ChiSquarePhot;
+  TFloat64List ChiSquarePhot; // maybe we will need to save here intermediate
+                              // results for photValues
   TFloat64List FitAmplitude;
   TFloat64List FitAmplitudeError;
   TFloat64List FitAmplitudeSigma;

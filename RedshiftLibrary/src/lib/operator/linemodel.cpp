@@ -1025,10 +1025,6 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
             m_fittingManager->getSpectrumModel()
                 ->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
       }
-      // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
-      // std::shared_ptr<CModelSpectrumResult>( new
-      // CModelSpectrumResult(m_fittingManager->GetSpectrumModelContinuum())
-      // );
 
       ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 

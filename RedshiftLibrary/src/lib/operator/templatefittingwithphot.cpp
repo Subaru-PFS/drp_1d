@@ -182,6 +182,14 @@ bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
   return ret;
 }
 
+void COperatorTemplateFittingPhot::ApplyAmplitude(Float64 amplitude,
+                                                  Int32 spcIndex) {
+  COperatorTemplateFitting::ApplyAmplitude(amplitude, spcIndex);
+  for (auto &band : m_templateRebined_phot)
+    band.second.ApplyAmplitude(amplitude);
+  return;
+}
+
 TCrossProductResult COperatorTemplateFittingPhot::ComputeCrossProducts(
     Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
   TCrossProductResult crossResult =

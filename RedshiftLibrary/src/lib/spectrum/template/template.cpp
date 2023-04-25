@@ -372,9 +372,9 @@ Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const {
              : it - 1 - m_SpectralAxis.GetSamplesVector().begin();
 }
 
-void CTemplate::ScaleFluxAxis(Float64 amplitude) {
+void CTemplate::ApplyAmplitude(Float64 amplitude) {
 
-  CSpectrum::ScaleFluxAxis(amplitude);
+  CSpectrum::ApplyAmplitude(amplitude);
   if (CheckIsmIgmEnabled())
     m_NoIsmIgmFluxAxis *= amplitude;
 }
