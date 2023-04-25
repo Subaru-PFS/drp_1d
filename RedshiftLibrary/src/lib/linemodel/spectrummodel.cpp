@@ -685,7 +685,9 @@ Int32 CSpectrumModel::ApplyContinuumOnGrid(
   std::string inter_opt = "spline";
   tpl->setRebinInterpMethod(inter_opt);
   Float64 overlapThreshold = 1., amplitude = 1.;
-  std::shared_ptr<CModelSpectrumResult> spcmodel =
+  std::shared_ptr<CModelSpectrumResult> spcmodel;
+  TPhotVal modelPhotValues; // decide on where to save modelPhotValues
+  std::tie(spcmodel, modelPhotValues) =
       m_templateFittingOperator->ComputeSpectrumModel(
           tpl, zcontinuum, m_fitContinuum->tplEbmvCoeff,
           m_fitContinuum->tplMeiksinIdx, amplitude, overlapThreshold,

@@ -482,23 +482,22 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     tplCatalog.m_logsampling = false;
     std::shared_ptr<const CTemplate> tpl =
         tplCatalog.GetTemplateByName(m_categoryList, tplName);
-    std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
+
+    std::shared_ptr<CModelSpectrumResult> spcmodelPtr;
+
+    std::tie(spcmodelPtr, extremaResult->m_modelPhotValue[i]) =
         m_templateFittingOperator->ComputeSpectrumModel(
             tpl, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
             overlapThreshold,
-            0); // TODO [multiobs] save multiple models , there should be a loop
-                // here, only model N°0 is recorded
+            0); // TODO [multiobs] save multiple models , there should be a
+                // loop here, only model N°0 is recorded
 
     if (spcmodelPtr == nullptr)
       THROWG(INTERNAL_ERROR, "Could not "
                              "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
-    if (m_use_photometry) {
-      extremaResult->m_modelPhotValue[i] =
-          m_templateFittingOperator->getIntegratedFluxes();
-    }
   }
 
   return extremaResult;

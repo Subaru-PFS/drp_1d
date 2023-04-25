@@ -101,7 +101,7 @@ void COperatorTemplateFittingBase::InitIsmIgmConfig(
 }
 
 // return tuple with photmetric values
-std::shared_ptr<CModelSpectrumResult>
+std::tuple<std::shared_ptr<CModelSpectrumResult>, const TPhotVal>
 COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
@@ -160,8 +160,9 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
   modelwav.ShiftByWaveLength((1.0 + redshift),
                              CSpectrumSpectralAxis::nShiftForward);
 
-  return std::make_shared<CModelSpectrumResult>(
-      CSpectrum(std::move(modelwav), modelflux));
+  return std::make_tuple(std::make_shared<CModelSpectrumResult>(
+                             CSpectrum(std::move(modelwav), modelflux)),
+                         getIntegratedFluxes());
 }
 
 void COperatorTemplateFittingBase::RebinTemplate(
