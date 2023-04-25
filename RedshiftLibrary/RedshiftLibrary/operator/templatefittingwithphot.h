@@ -98,7 +98,7 @@ private:
       const CPriorHelper::SPriorTZE &logpriorTZ) const override;
 
   Float64 EstimateLikelihoodCstLog() const override;
-
+  const TPhotVal getIntegratedFluxes() override;
   std::map<std::string, CSpectrumSpectralAxis> m_photSpectralAxis_restframe;
   std::map<std::string, CTemplate> m_templateRebined_phot;
 

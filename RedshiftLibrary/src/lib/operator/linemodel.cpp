@@ -1018,11 +1018,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
             m_fittingManager->getSpectrumModel()->GetModelSpectrum());
       } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
         Int32 lineTypeFilter = -1;
-        if (overrideModelSavedType == 1) {
-          lineTypeFilter = -1;
-        } else if (overrideModelSavedType == 2) {
+        if (overrideModelSavedType == 2)
           lineTypeFilter = CLine::nType_Emission;
-        }
+
         resultspcmodel = std::make_shared<CModelSpectrumResult>(
             m_fittingManager->getSpectrumModel()
                 ->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));

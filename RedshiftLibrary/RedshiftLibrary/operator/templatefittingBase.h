@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
@@ -84,6 +85,9 @@ public:
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
                        Float64 amplitude, const Float64 overlapThreshold,
                        Int32 index);
+  inline virtual const TPhotVal getIntegratedFluxes() {
+    THROWG(INTERNAL_ERROR, "getIntegratedFluxes is specific to TFwithphot");
+  };
 
   inline virtual bool IsFFTProcessing() { return false; };
 

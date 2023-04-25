@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/operator/templatefittingwithphot.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -84,16 +85,15 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   bool fft_processing =
       inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
 
-  bool use_photometry = false;
   Float64 photometry_weight = NAN;
   if (inputContext->GetParameterStore()->HasScoped<bool>("enablephotometry")) {
-    use_photometry =
+    m_use_photometry =
         inputContext->GetParameterStore()->GetScoped<bool>("enablephotometry");
-    if (use_photometry)
+    if (m_use_photometry)
       photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>(
           "photometry.weight");
   }
-  if (fft_processing && use_photometry)
+  if (fft_processing && m_use_photometry)
     THROWG(INTERNAL_ERROR, "fftprocessing not "
                            "implemented with photometry enabled");
 
@@ -102,7 +102,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
         std::make_shared<COperatorTemplateFittingLog>(m_redshifts);
     tplCatalog.m_logsampling = true;
   } else {
-    if (use_photometry) {
+    if (m_use_photometry) {
       m_templateFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
               inputContext->GetPhotBandCatalog(), photometry_weight,
@@ -495,6 +495,10 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
                              "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
+    if (m_use_photometry) {
+      extremaResult->m_modelPhotValue[i] =
+          m_templateFittingOperator->getIntegratedFluxes();
+    }
   }
 
   return extremaResult;
