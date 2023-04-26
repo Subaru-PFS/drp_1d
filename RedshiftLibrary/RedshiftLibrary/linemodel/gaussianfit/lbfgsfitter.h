@@ -138,6 +138,11 @@ public:
 private:
   void doFit(Float64 redshift) override;
 
+  bool isIndividualFitEnabled() const override {
+    return !(m_enableAmplitudeOffsets || m_enableVelocityFitting ||
+             m_enableLambdaOffsetsFit);
+  };
+
   const bool m_enableVelocityFitting =
       Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit");
 

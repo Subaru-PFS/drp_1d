@@ -152,7 +152,7 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
       Log.LogDebug("    model: hybrid fit:     overlapping #%d - eltIdx=%d",
                    ifit, overlappingInds[ifit]);
     }
-    if (!m_enableAmplitudeOffsets && overlappingInds.size() < 2) {
+    if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
       Log.LogDebug("    model: hybrid fit:     Individual fit");
       fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
