@@ -634,7 +634,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     const TInt32List &MeiksinList, const TInt32List &EbmvList,
     const Float64 &dtd) {
 
-  Int32 spcIdx = 0; // related to multi-obs
   const TAxisSampleList &spectrumRebinedLambda =
       m_spectra[0]->GetSpectralAxis().GetSamplesVector();
   const TAxisSampleList &spectrumRebinedFluxRaw =
@@ -746,8 +745,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // note that there is no need to copy the ism/igm cause they already exist in
   // the rebinned template
   if (m_enableIGM || m_enableISM) {
-    COperatorTemplateFittingBase::InitIsmIgmConfig({kstart}, {kend},
-                                                   redshiftValueMeiksin);
+    m_templateRebined_bf[0].InitIsmIgmConfig(kstart, kend,
+                                             redshiftValueMeiksin);
   }
   for (Int32 kIGM = 0; kIGM < nIGM; kIGM++) {
     if (enableIGM) {
@@ -756,7 +755,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
     if (enableIGM) {
       Int32 meiksinIdx = MeiksinList[kIGM];
-      ApplyMeiksinCoeff(meiksinIdx, spcIdx);
+      ApplyMeiksinCoeff(meiksinIdx);
     }
 
     for (Int32 kISM = 0; kISM < nISM; kISM++) {
@@ -766,7 +765,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
       if (m_enableISM) {
         Int32 kDust = EbmvList[kISM];
-        ApplyDustCoeff(kDust, spcIdx);
+        ApplyDustCoeff(kDust);
       }
 
       const TAxisSampleList &tplRebinedFluxcorr =

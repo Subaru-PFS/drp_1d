@@ -80,17 +80,16 @@ public:
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
 
-  std::tuple<std::shared_ptr<CModelSpectrumResult>, const TPhotVal>
+  std::tuple<std::shared_ptr<CModelSpectrumResult>, TPhotVal>
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
                        Float64 amplitude, const Float64 overlapThreshold,
                        Int32 index);
-  inline virtual const TPhotVal getIntegratedFluxes() {
-    TPhotVal values;
-    return values;
+  virtual TPhotVal getIntegratedFluxes(Float64 ampl = 1.0) const {
+    return TPhotVal();
   };
 
-  inline virtual bool IsFFTProcessing() { return false; };
+  virtual bool IsFFTProcessing() { return false; };
 
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
   void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
@@ -103,13 +102,6 @@ protected:
                              Float64 &overlapFraction,
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);
-  void
-  InitIsmIgmConfig(const TInt32List kStart, const TInt32List kEnd,
-                   Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti = nullptr,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin = nullptr);
 
   virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) {
     return m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);

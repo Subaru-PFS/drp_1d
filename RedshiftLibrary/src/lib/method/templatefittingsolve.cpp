@@ -85,15 +85,16 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   bool fft_processing =
       inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
 
+  bool use_photometry = false;
   Float64 photometry_weight = NAN;
   if (inputContext->GetParameterStore()->HasScoped<bool>("enablephotometry")) {
-    m_use_photometry =
+    use_photometry =
         inputContext->GetParameterStore()->GetScoped<bool>("enablephotometry");
-    if (m_use_photometry)
+    if (use_photometry)
       photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>(
           "photometry.weight");
   }
-  if (fft_processing && m_use_photometry)
+  if (fft_processing && use_photometry)
     THROWG(INTERNAL_ERROR, "fftprocessing not "
                            "implemented with photometry enabled");
 
@@ -102,7 +103,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
         std::make_shared<COperatorTemplateFittingLog>(m_redshifts);
     tplCatalog.m_logsampling = true;
   } else {
-    if (m_use_photometry) {
+    if (use_photometry) {
       m_templateFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
               inputContext->GetPhotBandCatalog(), photometry_weight,

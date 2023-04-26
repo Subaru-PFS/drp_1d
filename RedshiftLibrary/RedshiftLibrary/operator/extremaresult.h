@@ -61,7 +61,7 @@ class CExtremaResult<TExtremaResult>
 public:
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
-  std::vector<TPhotVal> m_modelPhotValue; // only when photometry is activated
+  std::vector<TPhotVal> m_modelPhotValue;
   CExtremaResult<TExtremaResult>(const TCandidateZbyRank &zCandidates) {
     m_type = "ExtremaResult";
     for (const auto &cand : zCandidates) {

@@ -1018,15 +1018,26 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
             m_fittingManager->getSpectrumModel()->GetModelSpectrum());
       } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
         Int32 lineTypeFilter = -1;
-        if (overrideModelSavedType == 2)
+        if (overrideModelSavedType == 1)
+          lineTypeFilter = -1;
+        else if (overrideModelSavedType == 2)
           lineTypeFilter = CLine::nType_Emission;
 
         resultspcmodel = std::make_shared<CModelSpectrumResult>(
             m_fittingManager->getSpectrumModel()
                 ->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
       }
-
       ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
+
+      // below spectrumModel doesnt include identified lines
+      auto &cont = m_result->ContinuumModelSolutions[idx];
+      if (cont.tplName == "nocontinuum" ||
+          m_opt_continuumcomponent == "fromspectrum") { // no photometry
+        Log.LogInfo(
+            "photometry cannot be applied for fromspectrum or nocontinuum");
+      } else
+        ExtremaResult->m_modelPhotValue[i] =
+            m_fittingManager->getSpectrumModel()->getPhotValues();
 
       ExtremaResult->m_savedModelFittingResults[i] =
           std::make_shared<CLineModelSolution>(

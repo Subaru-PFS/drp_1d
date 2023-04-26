@@ -85,7 +85,6 @@ private:
 
   bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
   bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
-  void ApplyAmplitude(Float64 amplitude, Int32 spcIndex = 0) override;
   void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
                                 TCrossProductResult &fitResult);
 
@@ -98,7 +97,7 @@ private:
       const CPriorHelper::SPriorTZE &logpriorTZ) const override;
 
   Float64 EstimateLikelihoodCstLog() const override;
-  const TPhotVal getIntegratedFluxes() override;
+  TPhotVal getIntegratedFluxes(Float64 ampl = 1.0) const override;
   std::map<std::string, CSpectrumSpectralAxis> m_photSpectralAxis_restframe;
   std::map<std::string, CTemplate> m_templateRebined_phot;
 

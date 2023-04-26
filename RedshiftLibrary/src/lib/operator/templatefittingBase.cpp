@@ -87,21 +87,8 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
-void COperatorTemplateFittingBase::InitIsmIgmConfig(
-    const TInt32List kStart, const TInt32List kEnd, Float64 redshift,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin) {
-
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
-    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-        kStart[spcIndex], kEnd[spcIndex], redshift, ismCorrectionCalzetti,
-        igmCorrectionMeiksin);
-}
-
 // return tuple with photmetric values
-std::tuple<std::shared_ptr<CModelSpectrumResult>, const TPhotVal>
+std::tuple<std::shared_ptr<CModelSpectrumResult>, TPhotVal>
 COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
@@ -119,15 +106,9 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
       m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
 
   if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
-    TInt32List kstart(1);
-    TInt32List kend(1);
-    bool ret = currentRange.getClosedIntervalIndices(
-        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
-        kstart[0], kend[0]);
-    if (!ret)
-      THROWG(INTERNAL_ERROR, "Impossible to get valid kstart or kend");
-    InitIsmIgmConfig(kstart, kend, redshift, tpl->m_ismCorrectionCalzetti,
-                     tpl->m_igmCorrectionMeiksin);
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
+        currentRange, redshift, tpl->m_ismCorrectionCalzetti,
+        tpl->m_igmCorrectionMeiksin);
   }
 
   if (EbmvCoeff > 0.) {

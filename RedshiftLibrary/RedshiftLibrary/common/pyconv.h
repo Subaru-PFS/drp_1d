@@ -65,7 +65,7 @@ public:
   static void get(const TBoolList &vec, short **data, int *size) {
     *data = (short *)malloc(sizeof(short) * vec.size());
 
-    for (int i = 0; i < vec.size(); i++)
+    for (std::size_t i = 0; i < vec.size(); i++)
       (*data)[i] = vec[i];
     *size = vec.size();
   }
@@ -79,7 +79,7 @@ public:
   static void get(const TMaskList &vec, short **data, int *size) {
     *data = (short *)malloc(sizeof(short) * vec.size());
     *size = (int)vec.size();
-    for (int i = 0; i < vec.size(); i++)
+    for (std::size_t i = 0; i < vec.size(); i++)
       (*data)[i] = (short)vec[i];
   }
 };

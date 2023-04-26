@@ -77,6 +77,7 @@ public:
   Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate> &tpl,
                              Float64 zcontinuum);
   void initObserveGridContinuumFlux(Int32 size);
+  const TPhotVal &getPhotValues() const { return m_photValues; };
 
 private:
   CSpectrumFluxAxis
@@ -99,6 +100,7 @@ private:
       m_observeGridContinuumFlux; // the continuum spectre without the
   // amplitude coeff; m_ContinuumFLux = amp *
   // m_observeGridContinuumFlux
+  TPhotVal m_photValues;
 };
 
 } // namespace NSEpic

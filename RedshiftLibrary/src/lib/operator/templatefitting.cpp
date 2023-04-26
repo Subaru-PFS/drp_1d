@@ -211,8 +211,10 @@ void COperatorTemplateFitting::InitIsmIgmConfig(
         &igmCorrectionMeiksin,
     Int32 EbmvListSize) {
 
-  COperatorTemplateFittingBase::InitIsmIgmConfig(
-      m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
+        m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
+        igmCorrectionMeiksin);
 
   m_sumCross_outsideIGM.assign(m_spectra.size(),
                                TFloat64List(EbmvListSize, 0.0));

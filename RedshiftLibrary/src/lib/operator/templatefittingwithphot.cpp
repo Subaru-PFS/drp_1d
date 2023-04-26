@@ -182,14 +182,6 @@ bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
   return ret;
 }
 
-void COperatorTemplateFittingPhot::ApplyAmplitude(Float64 amplitude,
-                                                  Int32 spcIndex) {
-  COperatorTemplateFitting::ApplyAmplitude(amplitude, spcIndex);
-  for (auto &band : m_templateRebined_phot)
-    band.second.ApplyAmplitude(amplitude);
-  return;
-}
-
 TCrossProductResult COperatorTemplateFittingPhot::ComputeCrossProducts(
     Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
   TCrossProductResult crossResult =
@@ -305,7 +297,7 @@ Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {
 }
 
 // used to output the model photometric values
-const TPhotVal COperatorTemplateFittingPhot::getIntegratedFluxes() {
+TPhotVal COperatorTemplateFittingPhot::getIntegratedFluxes(Float64 amp) const {
 
   TPhotVal modelPhotValue;
 
@@ -316,7 +308,7 @@ const TPhotVal COperatorTemplateFittingPhot::getIntegratedFluxes() {
         m_templateRebined_phot.at(bandName).GetFluxAxis().GetSamplesVector();
 
     // integrate flux
-    modelPhotValue[bandName] = photBand.IntegrateFlux(flux);
+    modelPhotValue[bandName] = photBand.IntegrateFlux(flux) * amp;
   }
   return modelPhotValue;
 }

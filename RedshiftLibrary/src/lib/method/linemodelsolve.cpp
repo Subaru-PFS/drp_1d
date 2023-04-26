@@ -167,7 +167,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       m_linemodel.buildExtremaResults(
           spc, *(Context.GetClampedLambdaRange(m_useloglambdasampling)),
           candidateResult->m_ranked_candidates,
-          m_opt_continuumreest); // maybe its better to pass
+          m_opt_continuumreest); // maybe it's better to pass
                                  // resultStore->GetGlobalResult so that we
                                  // constuct extremaResult all at once in
                                  // linemodel operator
