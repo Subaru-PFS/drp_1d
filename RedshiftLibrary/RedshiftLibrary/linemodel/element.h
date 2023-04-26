@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineprofile.h"

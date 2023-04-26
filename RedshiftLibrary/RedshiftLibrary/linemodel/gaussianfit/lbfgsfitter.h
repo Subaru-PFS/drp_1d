@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_LBFGS_FITTER_
 #define _REDSHIFT_LBFGS_FITTER_
 
+#include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -96,13 +97,14 @@ public:
     void operator()(const VectorXd &x, ValueType &retvalue) const;
 
   private:
-    std::tuple<TFloat64List, Float64, TFloat64List>
+    std::tuple<TFloat64List, Float64, TPolynomCoeffs>
     unpack(const VectorXd &x) const;
     Float64 ComputeLeastSquare(const TFloat64List &amps, Float64 redshift,
-                               TFloat64List pCoeffs) const;
+                               const TPolynomCoeffs &pCoeffs) const;
 
     Float64 ComputeLeastSquareAndGrad(const TFloat64List &amps,
-                                      Float64 redshift, TFloat64List pCoeffs,
+                                      Float64 redshift,
+                                      const TPolynomCoeffs &pCoeffs,
                                       VectorXd &grad) const;
 
     CLbfgsFitter *m_fitter;

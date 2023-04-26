@@ -79,7 +79,7 @@ void CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
 
   TFloat64List amps;
   Float64 redshift;
-  TFloat64List pCoeffs;
+  TPolynomCoeffs pCoeffs;
   std::tie(amps, redshift, pCoeffs) = unpack(x);
 
   val(0, 0) = ComputeLeastSquare(amps, redshift, pCoeffs);
@@ -118,7 +118,7 @@ coeffs= "
 }
 */
 
-std::tuple<TFloat64List, Float64, TFloat64List>
+std::tuple<TFloat64List, Float64, TPolynomCoeffs>
 CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
   // unpack param vector
@@ -162,21 +162,22 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
     }
   }
 
-  TFloat64List pCoeffs;
+  TPolynomCoeffs pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
     size_t ncoeff = 0;
     ncoeff = TPolynomCoeffs::degree + 1;
     auto ibegin = x.begin() + m_pCoeff_idx;
-    pCoeffs = TFloat64List(ibegin, ibegin + ncoeff);
-    Log.LogDebug(Formatter() << "p coeffs  = " << pCoeffs[0] << " "
-                             << pCoeffs[1] << " " << pCoeffs[2]);
+    pCoeffs = TPolynomCoeffs(TFloat64List(ibegin, ibegin + ncoeff));
+    Log.LogDebug(Formatter() << "p coeffs  = " << pCoeffs.a0 << " "
+                             << pCoeffs.a1 << " " << pCoeffs.a2);
   }
 
   return std::make_tuple(std::move(amps), redshift, std::move(pCoeffs));
 }
 
 Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
-    const TFloat64List &amps, Float64 redshift, TFloat64List pCoeffs) const {
+    const TFloat64List &amps, Float64 redshift,
+    const TPolynomCoeffs &pCoeffs) const {
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
   for (Int32 i = 0; i < m_xInds->size(); i++) {
@@ -197,16 +198,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
       fval += mval;
     }
 
-    if (m_fitter->m_enableAmplitudeOffsets) {
-      // polynome value
-      Float64 polynome = 0.;
-      Float64 xipower = 1.;
-      for (auto coeff : pCoeffs) {
-        polynome += coeff * xipower;
-        xipower *= xi;
-      }
-      fval += polynome;
-    }
+    if (m_fitter->m_enableAmplitudeOffsets)
+      fval += pCoeffs.getValue(xi);
 
     // add squared diff
     sumSquare += (fval * fval - 2.0 * yi * fval) / ei2;
@@ -216,7 +209,7 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
 }
 
 Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
-    const TFloat64List &amps, Float64 redshift, TFloat64List pCoeffs,
+    const TFloat64List &amps, Float64 redshift, const TPolynomCoeffs &pCoeffs,
     VectorXd &grad) const {
 
   // compute least square term
@@ -265,18 +258,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
                                                   (*m_continuumFluxAxis)[idx]);
     }
 
-    if (m_fitter->m_enableAmplitudeOffsets) {
-      pCoeffGrad.reserve(pCoeffs.size());
-      // polynome value
-      Float64 polynome = 0.;
-      Float64 xipower = 1.;
-      for (auto coeff : pCoeffs) {
-        polynome += coeff * xipower;
-        pCoeffGrad.push_back(xipower); // polynome derivative
-        xipower *= xi;
-      }
-      fval += polynome;
-    }
+    if (m_fitter->m_enableAmplitudeOffsets)
+      fval += pCoeffs.getValueAndGrad(xi, pCoeffGrad);
 
     // add squared diff
     sumSquare += (fval * fval - 2.0 * yi * fval) / ei2;
@@ -301,8 +284,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
     // squared diff derivative wrt polynome coeffs
     if (m_fitter->m_enableAmplitudeOffsets) {
-      for (size_t i = 0; i != pCoeffs.size(); ++i)
-        grad[m_lbdaOffset_idx + i + 1] += residual * pCoeffGrad[i];
+      for (size_t i = 0; i <= pCoeffs.degree; ++i)
+        grad[m_pCoeff_idx + i] += residual * pCoeffGrad[i];
     }
   }
 

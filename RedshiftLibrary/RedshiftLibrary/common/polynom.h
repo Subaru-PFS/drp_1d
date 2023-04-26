@@ -36,73 +36,29 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_COMMON_DATATYPES_
-#define _REDSHIFT_COMMON_DATATYPES_
+#ifndef _REDSHIFT_COMMON_POLYNOM_
+#define _REDSHIFT_COMMON_POLYNOM_
 
-#include <cfloat>
-#include <cmath>
-#include <memory>
-#include <string>
-#include <type_traits>
-#include <vector>
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
-#ifndef NULL
-#define NULL (0)
-#endif
 
-typedef long long Int64;
-typedef int Int32;
-typedef short Int16;
-typedef unsigned char UInt8;
-typedef float Float32;
-typedef double Float64;
-typedef char Char;
-typedef unsigned char Byte;
-typedef const char *String;
+struct TPolynomCoeffs {
+  TPolynomCoeffs() = default;
+  TPolynomCoeffs(Float64 a0_, Float64 a1_ = 0.0, Float64 a2_ = 0.0)
+      : a0(a0_), a1(a1_), a2(a2_){};
+  TPolynomCoeffs(const TFloat64List &coeffs);
 
-typedef std::vector<Float64> TFloat64List;
-typedef std::vector<Float32> TFloat32List;
-typedef std::vector<Int64> TInt64List;
-typedef std::vector<bool> TBoolList;
-typedef std::vector<Int32> TInt32List;
-typedef std::vector<std::string> TStringList;
-typedef TStringList TScopeStack;
+  Float64 getValue(Float64 x) const;
 
-struct SPoint {
-  SPoint() {
-    X = 0.0;
-    Y = 0.0;
-  }
+  Float64 getValueAndGrad(Float64 x, TFloat64List &grad) const;
 
-  SPoint(Float64 x, Float64 y) {
-    X = x;
-    Y = y;
-  }
-  Float64 X;
-  Float64 Y;
+  static constexpr Int32 degree = 2;
+
+  Float64 a0 = NAN;
+  Float64 a1 = NAN;
+  Float64 a2 = NAN;
 };
-
-typedef std::vector<SPoint> TPointList;
-
-typedef UInt8 Mask;
-typedef Float64 Redshift;
-typedef Float64 Sample;
-typedef std::vector<Mask> TMaskList;
-typedef std::vector<Redshift> TRedshiftList;
-typedef std::vector<Sample> TAxisSampleList;
-
-// for C++11, defined since C++17,
-template <class T>
-constexpr typename std::add_const<T>::type &as_const(T &t) noexcept {
-  return t;
-};
-
-template <class T> void as_const(const T &&) = delete;
-
-#include "RedshiftLibrary/common/errorcodes.i"
-#include "RedshiftLibrary/common/warningcodes.i"
 
 } // namespace NSEpic
-
 #endif
