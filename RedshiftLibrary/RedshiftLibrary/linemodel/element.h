@@ -212,7 +212,7 @@ public:
   const std::string &GetFittingGroupInfo() const;
   void SetFittingGroupInfo(const std::string &val);
 
-  TPolynomCoeffs GetPolynomCoeffs() const;
+  const TPolynomCoeffs &GetPolynomCoeffs() const;
   void SetPolynomCoeffs(TPolynomCoeffs pCoeffs);
 
   void SetAllOffsets(Float64 val);

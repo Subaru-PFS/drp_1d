@@ -98,7 +98,7 @@ public:
   bool GetModelStrongEmissionLinePresent() const;
   bool GetModelHaStrongest() const;
 
-  TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
+  const TPolynomCoeffs &getPolynomCoeffs(Int32 eIdx) const;
   std::map<std::string, TInt32List>
   getFittingGroups(TInt32List EltsIdx = {},
                    Int32 lineTypeFilter = undefIdx) const;

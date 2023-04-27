@@ -996,7 +996,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
       modelSolution.FittingError[iRestLine] =
           m_model->getModelErrorUnderElement(eIdx, m_model->getSpcFluxAxis());
       if (m_enableAmplitudeOffsets) {
-        TPolynomCoeffs polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
+        const auto &polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
         modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
         modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
         modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;

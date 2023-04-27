@@ -343,7 +343,7 @@ void CLineModelElement::SetFittingGroupInfo(const std::string &val) {
   m_ElementParam->m_fittingGroupInfo = val;
 }
 
-TPolynomCoeffs CLineModelElement::GetPolynomCoeffs() const {
+const TPolynomCoeffs &CLineModelElement::GetPolynomCoeffs() const {
   return m_ElementParam->m_ampOffsetsCoeffs;
 }
 

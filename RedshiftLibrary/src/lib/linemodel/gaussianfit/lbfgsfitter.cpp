@@ -369,7 +369,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
 
   Int32 pCoeff_param_idx =
-      undefIdx; // position of polynom coeffs in the param vector
+      undefIdx; // position of polynomial coeffs in the param vector
   if (m_enableAmplitudeOffsets) {
     nddl += TPolynomCoeffs::degree + 1;
     pCoeff_param_idx = param_idx;
@@ -440,7 +440,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     ub[lbdaOffset_param_idx] = m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM;
   }
 
-  // polynome bounds
+  // polynomial bounds
   if (m_enableAmplitudeOffsets) {
     constexpr size_t ncoeff = TPolynomCoeffs::degree + 1;
     auto pCoeff_indices = seq(pCoeff_param_idx, pCoeff_param_idx + ncoeff - 1);
@@ -474,6 +474,13 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     if (std::isnan(v_xGuess[i]))
       THROWG(INTERNAL_ERROR, "NAN amplitude");
   }
+  // polynomial coeffs initial guess
+  if (m_enableAmplitudeOffsets) {
+    const auto &pCoeffs = m_Elements[EltsIdx.front()]->GetPolynomCoeffs();
+    v_xGuess[pCoeff_param_idx] = pCoeffs.a0 * normFactor;
+    v_xGuess[pCoeff_param_idx + 1] = pCoeffs.a1 * normFactor;
+    v_xGuess[pCoeff_param_idx + 2] = pCoeffs.a2 * normFactor;
+  }
 
   // velocity initial guess
   if (m_enableVelocityFitting) {
@@ -487,15 +494,9 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     // v_xGuess[velE_idx] =  50.0;// DEBUGGING
   }
 
+  // lambda offset inital guess
   if (m_enableLambdaOffsetsFit)
     v_xGuess[lbdaOffset_param_idx] = 0.;
-
-  if (m_enableAmplitudeOffsets) {
-    const auto nCoeff = TPolynomCoeffs::degree + 1;
-    const auto pCoeff_indices =
-        seq(pCoeff_param_idx, pCoeff_param_idx + nCoeff - 1);
-    v_xGuess(pCoeff_indices) = VectorXd::Zero(nCoeff);
-  }
 
   // Set up solver parameters
   LBFGSBParam<Float64> param; // New parameter class

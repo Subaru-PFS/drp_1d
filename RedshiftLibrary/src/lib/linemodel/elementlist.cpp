@@ -711,7 +711,8 @@ CLineModelElementList::getFittingGroups(TInt32List EltsIdx,
  * @param eIdx
  * @return TPolynomCoeffs
  */
-TPolynomCoeffs CLineModelElementList::getPolynomCoeffs(Int32 eIdx) const {
+const TPolynomCoeffs &
+CLineModelElementList::getPolynomCoeffs(Int32 eIdx) const {
   return m_Elements[eIdx]->GetPolynomCoeffs();
 }
 

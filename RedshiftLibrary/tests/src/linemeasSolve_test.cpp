@@ -257,10 +257,10 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsTest) {
                                                      "linemeas");
 
   Float64 snrOII = res->snrOII;
-  BOOST_CHECK_CLOSE(snrOII, 22.70229240409672, 1e-6);
+  BOOST_CHECK_CLOSE(snrOII, 22.100708450684159, 1e-6);
 
   Float64 lfOII = res->lfOII;
-  BOOST_CHECK_CLOSE(lfOII, -15.751327461605428, 1e-6);
+  BOOST_CHECK_CLOSE(lfOII, -15.762990979202625, 1e-6);
 
   ctx.reset();
 }
