@@ -59,6 +59,15 @@ CLbfgsFitter::CLeastSquare::CLeastSquare(
       m_continuumFluxAxis(&fitter.m_model->getContinuumFluxAxis()),
       m_ErrorNoContinuum(&fitter.m_inputSpc.GetErrorAxis()) {
 
+  // init normalized polynomial
+  if (m_fitter->m_enableAmplitudeOffsets) {
+    Float64 x_center = 0.5 * ((*m_spectralAxis)[m_xInds->back()] +
+                              (*m_spectralAxis)[m_xInds->front()]);
+    Float64 scale = 0.5 * ((*m_spectralAxis)[m_xInds->back()] -
+                           (*m_spectralAxis)[m_xInds->front()]);
+    m_pCoeffs = CPolynomCoeffsNormalized(x_center, scale);
+  }
+
   // precompute data sum square
   Float64 sumSquare = 0.;
   for (Int32 i = 0; i < m_xInds->size(); i++) {
@@ -79,7 +88,7 @@ void CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
 
   TFloat64List amps;
   Float64 redshift;
-  TPolynomCoeffs pCoeffs;
+  CPolynomCoeffsNormalized pCoeffs;
   std::tie(amps, redshift, pCoeffs) = unpack(x);
 
   val(0, 0) = ComputeLeastSquare(amps, redshift, pCoeffs);
@@ -118,7 +127,7 @@ coeffs= "
 }
 */
 
-std::tuple<TFloat64List, Float64, TPolynomCoeffs>
+std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
 CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
   // unpack param vector
@@ -162,12 +171,11 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
     }
   }
 
-  TPolynomCoeffs pCoeffs;
+  CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
-    size_t ncoeff = 0;
-    ncoeff = TPolynomCoeffs::degree + 1;
-    auto ibegin = x.begin() + m_pCoeff_idx;
-    pCoeffs = TPolynomCoeffs(TFloat64List(ibegin, ibegin + ncoeff));
+    pCoeffs.a0 = x[m_pCoeff_idx];
+    pCoeffs.a1 = x[m_pCoeff_idx + 1];
+    pCoeffs.a2 = x[m_pCoeff_idx + 2];
     Log.LogDebug(Formatter() << "p coeffs  = " << pCoeffs.a0 << " "
                              << pCoeffs.a1 << " " << pCoeffs.a2);
   }
@@ -177,7 +185,7 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
 Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
     const TFloat64List &amps, Float64 redshift,
-    const TPolynomCoeffs &pCoeffs) const {
+    const CPolynomCoeffsNormalized &pCoeffs) const {
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
   for (Int32 i = 0; i < m_xInds->size(); i++) {
@@ -209,8 +217,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
 }
 
 Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
-    const TFloat64List &amps, Float64 redshift, const TPolynomCoeffs &pCoeffs,
-    VectorXd &grad) const {
+    const TFloat64List &amps, Float64 redshift,
+    const CPolynomCoeffsNormalized &pCoeffs, VectorXd &grad) const {
 
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
@@ -284,7 +292,7 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
     // squared diff derivative wrt polynome coeffs
     if (m_fitter->m_enableAmplitudeOffsets) {
-      for (size_t i = 0; i <= pCoeffs.degree; ++i)
+      for (size_t i = 0; i <= TPolynomCoeffs::degree; ++i)
         grad[m_pCoeff_idx + i] += residual * pCoeffGrad[i];
     }
   }
@@ -402,6 +410,10 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       });
   Float64 normFactor = 1.0 / std::abs(noContinuumFluxAxis[maxabsval_idx]);
 
+  CLeastSquare func(*this, EltsIdx, lineType, redshift, xInds, velA_idx,
+                    velE_idx, lbdaOffset_param_idx, pCoeff_param_idx,
+                    normFactor);
+
   // bounds for all params
   /////////////////////////
   VectorXd lb(nddl);
@@ -477,9 +489,13 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // polynomial coeffs initial guess
   if (m_enableAmplitudeOffsets) {
     const auto &pCoeffs = m_Elements[EltsIdx.front()]->GetPolynomCoeffs();
-    v_xGuess[pCoeff_param_idx] = pCoeffs.a0 * normFactor;
-    v_xGuess[pCoeff_param_idx + 1] = pCoeffs.a1 * normFactor;
-    v_xGuess[pCoeff_param_idx + 2] = pCoeffs.a2 * normFactor;
+    auto pCoeffsNormalized = func.getPcoeffs();
+    pCoeffsNormalized.setCoeffs(pCoeffs.a0 * normFactor,
+                                pCoeffs.a1 * normFactor,
+                                pCoeffs.a2 * normFactor);
+    v_xGuess[pCoeff_param_idx] = pCoeffsNormalized.a0;
+    v_xGuess[pCoeff_param_idx + 1] = pCoeffsNormalized.a1;
+    v_xGuess[pCoeff_param_idx + 2] = pCoeffsNormalized.a2;
   }
 
   // velocity initial guess
@@ -491,7 +507,6 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       v_xGuess[velA_idx] = m_velIniGuessA;
     else
       v_xGuess[velE_idx] = m_velIniGuessE;
-    // v_xGuess[velE_idx] =  50.0;// DEBUGGING
   }
 
   // lambda offset inital guess
@@ -528,10 +543,6 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   // Create solver and function object
   LBFGSBSolver<Float64, LineSearchMoreThuenteFork> solver(param);
-
-  CLeastSquare func(*this, EltsIdx, lineType, redshift, xInds, velA_idx,
-                    velE_idx, lbdaOffset_param_idx, pCoeff_param_idx,
-                    normFactor);
 
   NumericalDiff<CLeastSquare> func_with_num_diff(func, 1e-12);
 
@@ -591,16 +602,22 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
 
-  // store polynome coeffs (continuum under line)
+  // store polynomial coeffs (continuum under line)
   if (m_enableAmplitudeOffsets) {
-    Float64 x0 = v_xGuess[pCoeff_param_idx] / normFactor;
-    Float64 x1 = 0.0;
-    Float64 x2 = 0.0;
+    auto pCoeffsNormalized = func.getPcoeffs();
+    pCoeffsNormalized.a0 = v_xGuess[pCoeff_param_idx];
+    pCoeffsNormalized.a1 = 0.0;
+    pCoeffsNormalized.a2 = 0.0;
     if (TPolynomCoeffs::degree > 0)
-      x1 = v_xGuess[pCoeff_param_idx + 1] / normFactor;
+      pCoeffsNormalized.a1 = v_xGuess[pCoeff_param_idx + 1];
     if (TPolynomCoeffs::degree > 1)
-      x2 = v_xGuess[pCoeff_param_idx + 2] / normFactor;
+      pCoeffsNormalized.a2 = v_xGuess[pCoeff_param_idx + 2];
+    Float64 a0 = 0.0;
+    Float64 a1 = 0.0;
+    Float64 a2 = 0.0;
+    pCoeffsNormalized.getCoeffs(a0, a1, a2);
     for (Int32 eltIndex : EltsIdx)
-      m_Elements[eltIndex]->SetPolynomCoeffs({x0, x1, x2});
+      m_Elements[eltIndex]->SetPolynomCoeffs(
+          {a0 / normFactor, a1 / normFactor, a2 / normFactor});
   }
 }

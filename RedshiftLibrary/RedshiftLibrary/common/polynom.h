@@ -60,5 +60,27 @@ struct TPolynomCoeffs {
   Float64 a2 = NAN;
 };
 
+class CPolynomCoeffsNormalized {
+public:
+  CPolynomCoeffsNormalized() = default;
+  CPolynomCoeffsNormalized(Float64 x0_, Float64 scale_ = 1.0)
+      : x0red(-x0_ / scale_), scale(scale_){};
+
+  void getCoeffs(Float64 &a0_, Float64 &a1_, Float64 &a2_) const;
+  void setCoeffs(Float64 a0_, Float64 a1_, Float64 a2_);
+  Float64 getValue(Float64 x) const;
+  Float64 getValueAndGrad(Float64 x, TFloat64List &grad) const;
+
+  static constexpr Int32 degree = 2;
+
+  Float64 a0 = NAN;
+  Float64 a1 = NAN;
+  Float64 a2 = NAN;
+
+private:
+  Float64 x0red = 0.0;
+  Float64 scale = 1.0;
+};
+
 } // namespace NSEpic
 #endif

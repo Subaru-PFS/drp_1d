@@ -70,3 +70,35 @@ Float64 TPolynomCoeffs::getValueAndGrad(Float64 x, TFloat64List &grad) const {
 }
 
 constexpr Int32 TPolynomCoeffs::degree;
+
+void CPolynomCoeffsNormalized::getCoeffs(Float64 &a0_, Float64 &a1_,
+                                         Float64 &a2_) const {
+  a0_ = a0 + a1 * x0red + a2 * x0red * x0red;
+  a1_ = (a1 + 2 * a2 * x0red) / scale;
+  a2_ = a2 / (scale * scale);
+}
+
+void CPolynomCoeffsNormalized::setCoeffs(Float64 a0_, Float64 a1_,
+                                         Float64 a2_) {
+  a2 = a2_ * scale * scale;
+  a1 = a1_ * scale - 2 * a2 * x0red;
+  a0 = a0_ - a1 * x0red - a2 * x0red * x0red;
+}
+
+Float64 CPolynomCoeffsNormalized::getValue(Float64 x) const {
+  Float64 xred = x / scale + x0red;
+  Float64 val = a0;
+  val += a1 * xred;
+  val += a2 * xred * xred;
+  return val;
+}
+
+Float64 CPolynomCoeffsNormalized::getValueAndGrad(Float64 x,
+                                                  TFloat64List &grad) const {
+  Float64 xred = x / scale + x0red;
+  grad.resize(degree + 1);
+  grad[0] = 1.0;
+  grad[1] = xred;
+  grad[2] = xred * xred;
+  return grad[0] * a0 + grad[1] * a1 + grad[2] * a2;
+}

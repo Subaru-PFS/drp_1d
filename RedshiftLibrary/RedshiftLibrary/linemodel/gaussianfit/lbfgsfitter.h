@@ -95,16 +95,17 @@ public:
 
     // Float64 operator()(const VectorXd &x, VectorXd &grad);
     void operator()(const VectorXd &x, ValueType &retvalue) const;
+    const CPolynomCoeffsNormalized &getPcoeffs() const { return m_pCoeffs; };
 
   private:
-    std::tuple<TFloat64List, Float64, TPolynomCoeffs>
+    std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
     unpack(const VectorXd &x) const;
     Float64 ComputeLeastSquare(const TFloat64List &amps, Float64 redshift,
-                               const TPolynomCoeffs &pCoeffs) const;
+                               const CPolynomCoeffsNormalized &pCoeffs) const;
 
     Float64 ComputeLeastSquareAndGrad(const TFloat64List &amps,
                                       Float64 redshift,
-                                      const TPolynomCoeffs &pCoeffs,
+                                      const CPolynomCoeffsNormalized &pCoeffs,
                                       VectorXd &grad) const;
 
     CLbfgsFitter *m_fitter;
@@ -121,6 +122,7 @@ public:
     const CSpectrumFluxAxis *m_noContinuumFluxAxis;
     const CSpectrumFluxAxis *m_continuumFluxAxis;
     const CSpectrumNoiseAxis *m_ErrorNoContinuum;
+    CPolynomCoeffsNormalized m_pCoeffs;
     Float64 m_sumSquareData;
   };
 
