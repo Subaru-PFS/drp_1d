@@ -177,6 +177,7 @@ public:
   }
 };
 
+#ifdef LBFGSFITTER
 class fixture_LinemeasSolveLbfgsTest {
 public:
   fixture_Context ctx;
@@ -219,6 +220,7 @@ public:
     catalog->Add(fixture_SharedGalaxyTemplate().tpl2);
   }
 };
+#endif
 
 BOOST_AUTO_TEST_SUITE(linemeasSolve_test)
 
@@ -243,6 +245,7 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
   ctx.reset();
 }
 
+#ifdef LBFGSFITTER
 BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsTest) {
 
   CLineMeasSolve lineMeasSolve(Context.m_ScopeStack, "galaxy");
@@ -264,5 +267,6 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsTest) {
 
   ctx.reset();
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
