@@ -49,7 +49,7 @@ def _create_dataset_from_dict(h5_node, name, source, compress=False):
         return
     records = df.to_records(index=False)
     h5_node.create_dataset(name,
-                           len(records),
+                           records.shape,
                            records.dtype,
                            records,
                            compression="lzf")
