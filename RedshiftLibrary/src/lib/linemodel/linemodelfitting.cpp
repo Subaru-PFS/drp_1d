@@ -885,19 +885,6 @@ void CLineModelFitting::LoadModelSolution(
 
   setRedshift(modelSolution.Redshift, false);
 
-  SetVelocityEmission(modelSolution.EmissionVelocity);
-  SetVelocityAbsorption(modelSolution.AbsorptionVelocity);
-
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-  for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
-    Int32 eIdx = modelSolution.ElementId[iRestLine];
-    if (eIdx == undefIdx)
-      continue;
-
-    m_Elements[eIdx]->prepareSupport(spectralAxis, modelSolution.Redshift,
-                                     *(m_lambdaRange));
-  }
-
   if (m_enableAmplitudeOffsets)
     m_Elements.resetAmplitudeOffset();
 
@@ -907,16 +894,18 @@ void CLineModelFitting::LoadModelSolution(
     if (eIdx == undefIdx)
       continue;
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
-    if (subeIdx == undefIdx || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+    if (subeIdx == undefIdx)
       continue;
 
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
         modelSolution.AmplitudesUncertainties[iRestLine]);
+    m_Elements[eIdx]->SetOffset(subeIdx, modelSolution.Offset[iRestLine]);
 
     if (element_done[eIdx])
       continue;
 
+    m_Elements[eIdx]->setVelocity(modelSolution.Velocity[iRestLine]);
     m_Elements[eIdx]->SetFittingGroupInfo(
         modelSolution.fittingGroupInfo[iRestLine]);
     if (m_enableAmplitudeOffsets) {
@@ -926,8 +915,6 @@ void CLineModelFitting::LoadModelSolution(
           modelSolution.continuum_pCoeff2[iRestLine]};
       m_Elements[eIdx]->SetPolynomCoeffs(std::move(contPolynomCoeffs));
     }
-
-    m_Elements[eIdx]->SetAllOffsets(modelSolution.Offset[iRestLine]);
 
     element_done[eIdx] = true;
   }
@@ -952,6 +939,12 @@ void CLineModelFitting::LoadModelSolution(
         m_Elements[iElt]->SetSymIgmParams(
             {modelSolution.LyaIgm, modelSolution.Redshift});
   }
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++)
+    m_Elements[iElts]->prepareSupport(spectralAxis, modelSolution.Redshift,
+                                      *m_lambdaRange);
+
   return;
 }
 

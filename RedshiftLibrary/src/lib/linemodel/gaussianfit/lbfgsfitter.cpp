@@ -586,7 +586,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
         offset += (1 + offset) * v_xGuess[lbdaOffset_param_idx];
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
-        elt->SetAllOffsets(offset);
+        elt->SetOffset(i, offset);
       }
     }
   }
