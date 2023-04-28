@@ -479,13 +479,25 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
+  Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
     // fitAmplitude(EltsIdx[i], redshift);
     auto &elt = m_Elements[EltsIdx[i]];
     v_xGuess[i] = elt->GetElementAmplitude() * normFactor;
     if (std::isnan(v_xGuess[i]))
       THROWG(INTERNAL_ERROR, "NAN amplitude");
+    // retrive max SNR amplitude:
+    auto sigma = (elt->GetElementError() * normFactor);
+    auto snr = v_xGuess[i] / sigma;
+    max_snr = std::max(max_snr, snr);
   }
+
+  // if all amplitudes SNR are too small, keep the guess values
+  // since the precise fit may fail because of too noisy least-square
+  Float64 min_snr_threshold = 1.0;
+  if (max_snr < min_snr_threshold)
+    return;
+
   // polynomial coeffs initial guess
   if (m_enableAmplitudeOffsets) {
     const auto &pCoeffs = m_Elements[EltsIdx.front()]->GetPolynomCoeffs();
