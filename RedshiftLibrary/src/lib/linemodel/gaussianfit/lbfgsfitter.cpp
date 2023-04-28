@@ -567,21 +567,28 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     return val(0, 0);
   };
 
-  // v_xGuess will be overwritten to be the best point found
   Float64 fx;
-  int niter = solver.minimize(myfunc, v_xGuess, fx, lb, ub);
+  VectorXd v_xResult = v_xGuess;
+  try {
+    // v_xResult will be overwritten to be the best point found
+    int niter = solver.minimize(myfunc, v_xResult, fx, lb, ub);
+  } catch (const std::exception &e) {
+    Flag.warning(WarningCode::LBFGSPP_ERROR, Formatter() << e.what());
+    // reset the result to the initial guess
+    v_xResult = v_xGuess;
+  }
 
   // store fitted amplitude
   // TODO SNR computation
   Float64 snr = NAN;
   for (Int32 i = 0; i < EltsIdx.size(); ++i)
-    m_Elements[EltsIdx[i]]->SetElementAmplitude(v_xGuess[i] / normFactor, snr);
+    m_Elements[EltsIdx[i]]->SetElementAmplitude(v_xResult[i] / normFactor, snr);
 
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {
     if (lineType == CLine::nType_All) {
-      Float64 velocityA = v_xGuess[velA_idx];
-      Float64 velocityE = v_xGuess[velE_idx];
+      Float64 velocityA = v_xResult[velA_idx];
+      Float64 velocityE = v_xResult[velE_idx];
       for (Int32 eltIndex : EltsIdx) {
         auto &elt = m_Elements[eltIndex];
         if (elt->GetElementType() == CLine::nType_Absorption)
@@ -590,11 +597,11 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
           elt->SetVelocityEmission(velocityE);
       }
     } else if (lineType == CLine::nType_Absorption) {
-      Float64 velocity = v_xGuess[velA_idx];
+      Float64 velocity = v_xResult[velA_idx];
       for (Int32 eltIndex : EltsIdx)
         m_Elements[eltIndex]->SetVelocityAbsorption(velocity);
     } else {
-      Float64 velocity = v_xGuess[velE_idx];
+      Float64 velocity = v_xResult[velE_idx];
       for (Int32 eltIndex : EltsIdx)
         m_Elements[eltIndex]->SetVelocityEmission(velocity);
     }
@@ -607,7 +614,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       for (Int32 i = 0; i < elt->GetSize(); ++i) {
         Float64 offset = elt->GetOffset(i);
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
-        offset += (1 + offset) * v_xGuess[lbdaOffset_param_idx];
+        offset += (1 + offset) * v_xResult[lbdaOffset_param_idx];
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
         elt->SetOffset(i, offset);
       }
@@ -617,13 +624,13 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // store polynomial coeffs (continuum under line)
   if (m_enableAmplitudeOffsets) {
     auto pCoeffsNormalized = func.getPcoeffs();
-    pCoeffsNormalized.a0 = v_xGuess[pCoeff_param_idx];
+    pCoeffsNormalized.a0 = v_xResult[pCoeff_param_idx];
     pCoeffsNormalized.a1 = 0.0;
     pCoeffsNormalized.a2 = 0.0;
     if (TPolynomCoeffs::degree > 0)
-      pCoeffsNormalized.a1 = v_xGuess[pCoeff_param_idx + 1];
+      pCoeffsNormalized.a1 = v_xResult[pCoeff_param_idx + 1];
     if (TPolynomCoeffs::degree > 1)
-      pCoeffsNormalized.a2 = v_xGuess[pCoeff_param_idx + 2];
+      pCoeffsNormalized.a2 = v_xResult[pCoeff_param_idx + 2];
     Float64 a0 = 0.0;
     Float64 a1 = 0.0;
     Float64 a2 = 0.0;
