@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
   CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   1.2, catalogIndexes);
   BOOST_CHECK("Abs" == element.GetLineName(0));
-  BOOST_CHECK("-1" == element.GetLineName(2));
+  BOOST_CHECK(undefStr == element.GetLineName(2));
   BOOST_CHECK_CLOSE(-1.0, element.GetSignFactor(0), precision);
   BOOST_CHECK_CLOSE(1.0, element.GetSignFactor(1), precision);
   BOOST_CHECK_CLOSE(0.0, element.GetWidth(0, 2.), precision);

@@ -133,7 +133,7 @@ protected:
   std::vector<TInt32List> m_LyaIgmIdxTplratio;
   std::vector<TFloat64List> m_LinesLogPriorTplratio;
 
-  std::string m_tplratioBestTplName = "undefined";
+  std::string m_tplratioBestTplName = undefStr;
   Float64 m_tplratioBestTplIsmCoeff = NAN;
   Float64 m_tplratioBestTplAmplitudeEm = NAN;
   Float64 m_tplratioBestTplAmplitudeAbs = NAN;

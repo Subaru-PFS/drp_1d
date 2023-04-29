@@ -40,14 +40,14 @@
 #define _REDSHIFT_RAY_AIRVACUUM_
 
 #include "RedshiftLibrary/common/datatypes.h"
-
+#include "RedshiftLibrary/common/defaults.h"
 #include <vector>
 
 namespace NSEpic {
 class CAirVacuum {
 public:
   CAirVacuum(Float64 a, Float64 b1, Float64 b2, Float64 c1, Float64 c2,
-             const std::string &name = "Undefined")
+             const std::string &name = undefStr)
       : m_a(a), m_b1(b1), m_b2(b2), m_c1(c1), m_c2(c2), m_name(name){};
 
   // rule of 5 defaults

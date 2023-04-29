@@ -155,7 +155,7 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
     for (const auto &line : m_Elements[iElts]->GetLines())
       if (lineType == line.GetType()) {
         std::string _tag = line.GetVelGroupName();
-        if (_tag != "-1")
+        if (_tag != undefStr)
           tags.push_back(_tag);
         else
           nonGroupedLines.push_back(iElts);
@@ -190,7 +190,7 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
       nonGroupedLines.end());
   for (const auto lIdx : nonGroupedLines) {
     groups.push_back({lIdx});
-    groupsTags.push_back("-1");
+    groupsTags.push_back(undefStr);
   }
 
   if (true) {
@@ -692,7 +692,7 @@ CLineModelElementList::getFittingGroups(TInt32List EltsIdx,
       continue;
 
     const auto &info = elt->GetFittingGroupInfo();
-    if (info == "-1")
+    if (info == undefStr)
       continue;
     if (fittingGroups.find(info) == fittingGroups.end()) {
       fittingGroups[info] = {idx};

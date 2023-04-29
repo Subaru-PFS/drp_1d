@@ -1,7 +1,7 @@
 struct CTplModelSolution {
 
   // template continuum
-  std::string tplName = "undefined";
+  std::string tplName = undefStr;
   Float64 tplAmplitude = NAN;
   Float64 tplAmplitudeError = NAN;
   Float64 tplAmplitudeSigma = NAN;

@@ -58,7 +58,7 @@ TLineModelElementParam::TLineModelElementParam(TLineVector lines,
       m_FittedAmplitudeErrorSigmas(lines.size(), NAN),
       m_Lines(std::move(lines)),
       m_LineCatalogIndexes(std::move(lineCatalogIndexes)),
-      m_fittingGroupInfo("-1") {
+      m_fittingGroupInfo(undefStr) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
   for (const auto &line : m_Lines) {
@@ -369,9 +369,7 @@ void CLineModelElement::SetLineProfile(Int32 lineIdx,
 }
 
 /**
- * \brief If the argument is greater than or equal to the size of
- *m_ElementParam->m_Lines, returns the string "-1". Otherwise returns a call to
- *the m_Lines GetName.
+ * \brief  returns a call to the m_Lines GetName.
  **/
 const std::string &CLineModelElement::GetLineName(Int32 subeIdx) const {
   if (subeIdx >= GetSize())
@@ -522,7 +520,7 @@ void CLineModelElement::prepareSupport(
   m_StartTheoretical.assign(nLines, -1);
   m_EndTheoretical.assign(nLines, -1);
   m_OutsideLambdaRangeList.assign(nLines, true);
-  m_ElementParam->m_fittingGroupInfo = "-1";
+  m_ElementParam->m_fittingGroupInfo = undefStr;
   for (Int32 i = 0; i < nLines; i++) {
     EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
 

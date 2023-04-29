@@ -55,7 +55,7 @@ CLineModelSolution::CLineModelSolution(const TLineVector &restLineList)
       FluxDirectIntegration(restLineList.size(), NAN),
       FluxDirectIntegrationError(restLineList.size(), NAN),
       OutsideLambdaRange(restLineList.size(), true),
-      fittingGroupInfo(restLineList.size(), "undefined"),
+      fittingGroupInfo(restLineList.size(), undefStr),
       continuum_pCoeff0(restLineList.size(), NAN),
       continuum_pCoeff1(restLineList.size(), NAN),
       continuum_pCoeff2(restLineList.size(), NAN) {

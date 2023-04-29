@@ -15,6 +15,7 @@ static const Int32 NOT_OVERLAP_VALUE = 20;
 static const Int32 PEAKS_MIN_THRESHOLD = 3;
 static const Int32 PEAKS_SMOOTH_LIMIT = 20;
 static const Int32 undefIdx = -1;
+static const std::string undefStr = "undefined";
 
 static const Int32 MEDIAN_FAST_OR_BEERS_THRESHOLD = 1000;
 static const Float64 SPEED_OF_LIGHT_IN_VACCUM =

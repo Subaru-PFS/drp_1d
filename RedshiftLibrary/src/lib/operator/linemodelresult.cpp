@@ -397,11 +397,11 @@ TInt32List CLineModelResult::getNLinesAboveSnrcut(
 TBoolList CLineModelResult::getStrongestLineIsHa(
     const std::vector<CLineModelSolution> &linemodelsols) const {
   TBoolList isHaStrongest(linemodelsols.size(), false);
-  std::string ampMaxLineTag = "undefined";
+  std::string ampMaxLineTag = undefStr;
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
        solutionIdx++) {
     Float64 ampMax = -DBL_MAX;
-    ampMaxLineTag = "undefined";
+    ampMaxLineTag = undefStr;
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
       if (!restLineList[j].GetIsEmission() ||
           linemodelsols[solutionIdx].OutsideLambdaRange[j])

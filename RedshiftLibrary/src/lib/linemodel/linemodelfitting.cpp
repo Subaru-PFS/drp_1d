@@ -459,7 +459,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
       m_fitter->fit(redshift);
 
-      std::string bestTplratioName = "undefined";
+      std::string bestTplratioName = undefStr;
 
       _merit = m_lineRatioManager->computeMerit(itratio);
 

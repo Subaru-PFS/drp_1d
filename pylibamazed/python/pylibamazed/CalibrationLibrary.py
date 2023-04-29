@@ -52,7 +52,8 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxCorrectionMeiksin,
                                   VecTFloat64List, VecMeiksinCorrection,
                                   CSpectrumFluxCorrectionCalzetti, CalzettiCorrection,
-                                  GlobalException, ErrorCode)
+                                  GlobalException, ErrorCode, undefStr)
+
 import numpy as np
 from astropy.io import fits, ascii
 import glob
@@ -216,6 +217,9 @@ class CalibrationLibrary:
         except Exception as e:
             raise Exception("bad line catalog " + line_catalog_file + " cause :" + "{}".format(e))
         
+        # force "-1" to undefStr (for compatibility)
+        line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName" ] = undefStr
+
         enableIGM = self.parameters[object_type][method]["linemodel"]["igmfit"]
 
         #here should go the change of profiles if igm is applied

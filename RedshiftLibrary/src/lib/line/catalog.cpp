@@ -98,7 +98,7 @@ CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
 
   TStringList tags;
   for (int i = 0; i < filteredList.size(); i++) {
-    if (filteredList[i].GetGroupName() != "-1") {
+    if (filteredList[i].GetGroupName() != undefStr) {
       tags.push_back(filteredList[i].GetGroupName());
     }
   }
@@ -122,7 +122,7 @@ CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
   // add the non grouped lines
   for (int i = 0; i < filteredList.size(); i++) {
     std::string group = filteredList[i].GetGroupName();
-    if (group == "-1") {
+    if (group == undefStr) {
       TLineVector taggedGroupList;
       taggedGroupList.push_back(filteredList[i]);
       fullList.push_back(taggedGroupList);

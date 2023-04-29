@@ -116,7 +116,7 @@ public:
       false; // default: false, as ortho templates store makes this un-necessary
   bool m_opt_firstpass_multiplecontinuumfit_disable = true;
   std::string m_opt_firstpass_fittingmethod;
-  std::string m_opt_secondpasslcfittingmethod = "-1";
+  std::string m_opt_secondpasslcfittingmethod = undefStr;
   std::string m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
@@ -151,7 +151,7 @@ private:
   std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_Redshifts; // coarse grid
   Float64 m_fineStep = NAN;
-  std::string m_redshiftSampling = "undefined";
+  std::string m_redshiftSampling = undefStr;
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
   void buildExtendedRedshifts();
