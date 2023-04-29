@@ -105,6 +105,8 @@ public:
                                   const CSpectrumSpectralAxis &spectralAxis,
                                   Float64 redshift,
                                   const TFloat64Range &lambdaRange);
+  void SetOutsideLambdaRange();
+
   TInt32Range getSupportSubElt(Int32 subeIdx) const;
   TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx) const;
 
@@ -198,6 +200,7 @@ public:
   bool IsOutsideLambdaRange() const;
   Float64 GetLineWidth(Float64 lambda, bool isEmission = 0) const;
   bool IsOutsideLambdaRange(Int32 subeIdx) const;
+  void SetOutsideLambdaRangeList(Int32 subeIdx);
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,
                                  Float64 x0, Float64 sigma,

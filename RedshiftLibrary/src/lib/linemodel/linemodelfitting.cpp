@@ -897,6 +897,11 @@ void CLineModelFitting::LoadModelSolution(
     if (subeIdx == undefIdx)
       continue;
 
+    if (modelSolution.OutsideLambdaRange[iRestLine]) {
+      m_Elements[eIdx]->SetOutsideLambdaRangeList(subeIdx);
+      continue;
+    }
+
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
         modelSolution.AmplitudesUncertainties[iRestLine]);
@@ -941,9 +946,13 @@ void CLineModelFitting::LoadModelSolution(
   }
 
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++)
-    m_Elements[iElts]->prepareSupport(spectralAxis, modelSolution.Redshift,
-                                      *m_lambdaRange);
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    m_Elements[iElts]->SetOutsideLambdaRange();
+
+    if (!m_Elements[iElts]->IsOutsideLambdaRange())
+      m_Elements[iElts]->prepareSupport(spectralAxis, modelSolution.Redshift,
+                                        *m_lambdaRange);
+  }
 
   return;
 }
