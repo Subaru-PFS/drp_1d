@@ -119,6 +119,7 @@ void CLineModelElement::reset() {
   // init the fitted amplitude values and related variables
   m_ElementParam->m_FittedAmplitudes.assign(nLines, NAN);
   m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+  SetFittingGroupInfo(undefStr);
   m_sumGauss = NAN;
   m_sumCross = NAN;
   m_dtmFree = NAN;
@@ -520,7 +521,6 @@ void CLineModelElement::prepareSupport(
   m_StartTheoretical.assign(nLines, -1);
   m_EndTheoretical.assign(nLines, -1);
   m_OutsideLambdaRangeList.assign(nLines, true);
-  m_ElementParam->m_fittingGroupInfo = undefStr;
   for (Int32 i = 0; i < nLines; i++) {
     EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
 
