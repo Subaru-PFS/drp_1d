@@ -36,56 +36,18 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATOR_EXTREMARESULT_
-#define _REDSHIFT_OPERATOR_EXTREMARESULT_
+#ifndef _REDSHIFT_LINEMODEL_MODELPHOTVALUERESULT_
+#define _REDSHIFT_LINEMODEL_MODELPHOTVALUERESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/tplmodelsolution.h"
+#include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/result.h"
-#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
-#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
-
-#include <memory>
-#include <vector>
-
 namespace NSEpic {
-class CModelSpectrumResult;
-class CModelPhotValueResult;
 
-#include "RedshiftLibrary/operator/extremaresult.i"
-
-template <class T> class CExtremaResult : public CPdfCandidateszResult<T> {};
-
-template <>
-class CExtremaResult<TExtremaResult>
-    : public CPdfCandidateszResult<TExtremaResult> {
-public:
-  std::vector<std::shared_ptr<const CModelSpectrumResult>>
-      m_savedModelSpectrumResults;
-  std::vector<std::shared_ptr<const CModelPhotValueResult>> m_modelPhotValue;
-  CExtremaResult<TExtremaResult>(const TCandidateZbyRank &zCandidates) {
-    m_type = "ExtremaResult";
-    for (const auto &cand : zCandidates) {
-      m_ranked_candidates.push_back(
-          std::make_pair<std::string, std::shared_ptr<TExtremaResult>>(
-              std::string(cand.first),
-              std::make_shared<TExtremaResult>(*cand.second)));
-    }
-    m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
-    m_modelPhotValue.resize(this->m_ranked_candidates.size());
-  }
-
-  std::shared_ptr<const COperatorResult>
-  getCandidate(const int &rank, const std::string &dataset,
-               bool firstpassResults = false) const override;
-
-  const std::string &
-  getCandidateDatasetType(const std::string &dataset) const override;
-
-  bool HasCandidateDataset(const std::string &dataset) const override;
-};
-
-typedef CExtremaResult<TExtremaResult> ExtremaResult;
+/**
+ * \ingroup Redshift
+ */
+#include "RedshiftLibrary/operator/modelphotvalueresult.i"
 
 } // namespace NSEpic
 

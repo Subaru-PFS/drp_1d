@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
+#include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 
@@ -51,6 +52,7 @@ namespace NSEpic {
 class CModelSpectrumResult;
 class CLineModelSolution;
 class CModelRulesResult;
+class CModelPhotValueResult;
 class CLineModelFitting;
 class CTplratioManager;
 class CLineModelResult;
@@ -70,7 +72,7 @@ public:
       m_savedModelContinuumSpectrumResults;
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
-  std::vector<TPhotVal> m_modelPhotValue;
+  std::vector<std::shared_ptr<const CModelPhotValueResult>> m_modelPhotValue;
 
   CExtremaResult<TLineModelResult>(const TCandidateZbyRank &zCandidates)
       : m_savedModelFittingResults(zCandidates.size()),

@@ -52,6 +52,7 @@
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
@@ -1035,9 +1036,27 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_opt_continuumcomponent == "fromspectrum") { // no photometry
         Log.LogInfo(
             "photometry cannot be applied for fromspectrum or nocontinuum");
-      } else
+      } /*else
         ExtremaResult->m_modelPhotValue[i] =
-            m_fittingManager->getSpectrumModel()->getPhotValues();
+            std::make_shared<const CModelPhotValueResult>(
+                m_fittingManager->getSpectrumModel()->getPhotValues()); //doesnt
+        work cause TF is used in spectrummodel
+      */
+      else {
+        const auto &tpl = Context.GetTemplateCatalog()->GetTemplateByName(
+            m_tplCategoryList, cont.tplName);
+        // reconstruct model spectrum using ::fit output in order to
+        // get FitValues, instead of saving this for all z, all tpls
+        std::shared_ptr<CModelSpectrumResult> spcmodelPtr;
+        TPhotVal values;
+        std::tie(spcmodelPtr, values) =
+            m_templateFittingOperator->ComputeSpectrumModel(
+                tpl, z, cont.tplEbmvCoeff, cont.tplMeiksinIdx,
+                cont.tplAmplitude, 1., 0);
+        ExtremaResult->m_modelPhotValue[i] =
+            std::make_shared<CModelPhotValueResult>(
+                values); // temporary for test
+      }
 
       ExtremaResult->m_savedModelFittingResults[i] =
           std::make_shared<CLineModelSolution>(

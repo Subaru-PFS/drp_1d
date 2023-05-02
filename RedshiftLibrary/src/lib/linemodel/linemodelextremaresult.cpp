@@ -162,15 +162,16 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
     return getCandidateParent(rank, dataset);
   }
   if (dataset == "model_parameters" || dataset == "line_mask" ||
-      dataset == "continuum_polynom") {
+      dataset == "continuum_polynom")
     return this->m_ranked_candidates[rank].second;
-  } else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
+  else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines")
     return m_savedModelFittingResults[rank];
-  } else if (dataset == "model")
+  else if (dataset == "model")
     return this->m_savedModelSpectrumResults[rank];
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[rank];
-
+  else if (dataset == "phot_values")
+    return this->m_modelPhotValue[rank];
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
@@ -186,6 +187,8 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
     return this->m_savedModelSpectrumResults[0]->getType();
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[0]->getType();
+  else if (dataset == "phot_values")
+    return this->m_modelPhotValue[0]->getType();
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
@@ -195,7 +198,8 @@ bool LineModelExtremaResult::HasCandidateDataset(
   return (dataset == "model_parameters" || dataset == "model" ||
           dataset == "fp_model_parameters" || dataset == "continuum" ||
           dataset == "fitted_lines" || dataset == "fp_fitted_lines" ||
-          dataset == "line_mask" || dataset == "continuum_polynom");
+          dataset == "line_mask" || dataset == "continuum_polynom" ||
+          dataset == "phot_values");
 }
 
 std::shared_ptr<const COperatorResult>

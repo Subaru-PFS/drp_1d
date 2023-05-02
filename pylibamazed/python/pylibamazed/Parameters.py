@@ -307,3 +307,30 @@ class Parameters:
                         ErrorCode.INCOHERENT_CONFIG_OPTION,
                         "Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously."
                     )
+    def get_photometry_bands(self, object_type, method):
+        if not self.is_photometry_activated(object_type, method):
+            return [None]
+        param_name = "photometryBand"
+        if param_name not in self.parameters:
+             return [None]
+        return  self.parameters[param_name]
+
+    # photometry is only activated for TFSolve and LinemodelSolve+TF.
+    # photometry is not yet implemented for TplcombinationSolve 
+    # photometry has no sens for LineMeasSolve, since "nocontinuum"
+    def is_photometry_activated(self, object_type, method):
+        if method == "TplcombinationSolve" or self.isfftprocessingActive(object_type):
+            return False
+        if method == "LineModelSolve":
+            return self.parameters[object_type][method]["linemodel"]["enablephotometry"]
+        return self.parameters[object_type][method]["enablephotometry"]
+
+    #a simple check 
+    def isfftprocessingActive(self, object_type):
+        method = self.parameters[object_type]["method"]
+        if method == "TplcombinationSolve":
+             return False
+        if method == "LineModelSolve":
+            return self.parameters[object_type][method]["linemodel"]["continuumfit"]["fftprocessing"]
+            
+        return self.parameters[object_type][method]["fftprocessing"]

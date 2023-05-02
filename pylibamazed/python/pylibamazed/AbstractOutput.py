@@ -70,10 +70,10 @@ class AbstractOutput:
 
         #TODO find another emplacement for these informations
 
-    def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None):
+    def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None, band_name=None):
         raise NotImplementedError("Implement in derived class")
 
-    def has_attribute_in_source(self,object_type, method, dataset, attribute,rank=None):
+    def has_attribute_in_source(self,object_type, method, dataset, attribute,rank=None, band_name=None):
         raise NotImplementedError("Implement in derived class")    
 
     def has_dataset_in_source(self, object_type, method, dataset):
@@ -178,15 +178,17 @@ class AbstractOutput:
             return False
 
     def get_dataset_size(self, object_type, dataset, rank = None):
+        first_attr = None
         if rank is None:
             if dataset in self.object_results[object_type]:
                 if not self.object_results[object_type][dataset]:
                     return 0
                 first_attr = next(iter(self.object_results[object_type][dataset].values()))
             else:
-                raise APIException("Dataset " + dataset + " does not exist")
+                raise APIException(ErrorCode.INTERNAL_ERROR, "Dataset " + dataset + " does not exist")
         else:
-            first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
+            if len(self.object_results[object_type][dataset][rank]):
+                first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
         if first_attr is None:
             return 0
         if type(first_attr) == np.ndarray:
@@ -210,7 +212,7 @@ class AbstractOutput:
                     l.append(d)
             return l
         else:
-            raise APIException("Unknown level " + level)
+            raise APIException(ErrorCode.INTERNAL_ERROR,"Unknown level " + level)
 
     def get_candidate_data(self, object_type, rank, data_name):
         mp = self.object_results[object_type]["model_parameters"][rank][data_name]
@@ -359,6 +361,9 @@ class AbstractOutput:
         if not method:
             return
         level = "candidate"
+
+        #get phot bands from params
+        bands = self.parameters.get_photometry_bands(object_type, method)
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
             ds_attributes = self.filter_dataset_attributes(ds, object_type).copy()
@@ -376,18 +381,43 @@ class AbstractOutput:
                 candidates.append(dict())
                 for index, ds_row in ds_attributes.iterrows():
                     attr_name = ds_row["name"]
-                    if self.has_attribute_in_source(object_type,
+                    if "<BandName>" in attr_name: 
+                        for band in bands:
+                            attr = self.get_attribute_wrapper(object_type,
                                                     method,
                                                     ds,
                                                     attr_name,
-                                                    rank):
-                        attr = self.get_attribute_from_source(object_type,
-                                                              method,
-                                                              ds,
-                                                              attr_name,
-                                                              rank)
-                        candidates[rank][attr_name] = attr
-                    
+                                                    rank=rank,
+                                                    band_name=band) 
+                            if attr is not None:
+                                attr_name_ = band
+                                candidates[rank][attr_name_] = attr
+    
+                    else:
+                        attr = self.get_attribute_wrapper(object_type,
+                                                    method,
+                                                    ds,
+                                                    attr_name,
+                                                    rank=rank) 
+                        if attr is not None:
+                            candidates[rank][attr_name] = attr
+    
+    def get_attribute_wrapper(self, object_type, method,ds, attr_name,rank=None, band_name=None):
+        attr = None
+        if self.has_attribute_in_source(object_type,
+                                        method,
+                                        ds,
+                                        attr_name,
+                                        rank=rank,
+                                        band_name=band_name):
+            attr = self.get_attribute_from_source(object_type,
+                                                method,
+                                                ds,
+                                                attr_name,
+                                                rank,
+                                                band_name=band_name)
+        return attr
+
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
 
@@ -436,7 +466,7 @@ class AbstractOutput:
                     line_name = attr_parts[2]
                     col_name = attr_parts[3]
                     if line_name not in lines_ids:
-                        raise Exception("Line {}  not found in {}".format(line_name,lines_ids))
+                        raise APIException(ErrorCode.INTERNAL_ERROR, f"Line {line_name}  not found in {lines_ids}")
                     if len(attr_parts) == 4:
                         fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
                     else:

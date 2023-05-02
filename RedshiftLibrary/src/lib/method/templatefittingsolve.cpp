@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
@@ -485,8 +486,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
         tplCatalog.GetTemplateByName(m_categoryList, tplName);
 
     std::shared_ptr<CModelSpectrumResult> spcmodelPtr;
-
-    std::tie(spcmodelPtr, extremaResult->m_modelPhotValue[i]) =
+    TPhotVal values;
+    std::tie(spcmodelPtr, values) =
         m_templateFittingOperator->ComputeSpectrumModel(
             tpl, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
@@ -499,6 +500,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
                              "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
+    extremaResult->m_modelPhotValue[i] =
+        std::make_shared<const CModelPhotValueResult>(values);
   }
 
   return extremaResult;
