@@ -37,9 +37,6 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.CalibrationLibrary import CalibrationLibrary
-from pylibamazed.redshift import GlobalException
-from pylibamazed.Parameters import Parameters
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
@@ -55,10 +52,7 @@ test_dir = os.path.join(
     module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
 )
 
-
 def read_photometry_fromfile(fname):
-    columns = ["Name", "Flux", "Error"]  # obligatory names
-    # df = pd.read_table(fname, delim_whitespace=True, names=columns)
     df = pd.DataFrame(
         [
             ["riz", 2e-29, 3e-31],
@@ -83,8 +77,7 @@ def accessOutputData(output):
         None,
     )
 
-
-def test_ITLikeTest():
+def make_config():
     config_path = os.path.join(
         test_dir,
         "config.json",
@@ -95,19 +88,26 @@ def test_ITLikeTest():
 
     config["calibration_dir"] = os.path.join(test_dir, config["calibration_dir"])
 
+    return config
+
+def get_parameters(parameters_file_path):
     parameters_json_path = os.path.join(
         test_dir,
-        config["parameters_file"],
+        parameters_file_path,
     )
     with open(parameters_json_path) as f:
         param = json.load(f)
+    
+    return param
 
-    context = Context(config, param)  # vars returns the dict version of config
-
-    input_spectra_path = os.path.join(test_dir, config["input_file"])
+def get_observation(input_file_path):
+    input_spectra_path = os.path.join(test_dir, input_file_path)
     observation = pd.read_table(
         input_spectra_path, delimiter=" ", names=["ProcessingID"]
     )
+    return observation
+
+def get_spectra(config, observation):
     s_filename = (
         config["spectrum_prefix"]
         + str(observation.ProcessingID[0])  # only one spectra
@@ -117,30 +117,20 @@ def test_ITLikeTest():
 
     # read and load spectra using spectra reader
     spectra = pd.read_table(s_filename, delimiter="\t")
+    return spectra
 
-    reader = ASCIISpectrumReader(
-        observation_id=observation.ProcessingID[0],
-        parameters=param,
-        calibration_library=context.calibration_library,
-        source_id=observation.ProcessingID[0],
-    )
-    reader.load_all(spectra)
-
-    # access and read phot from file, then load into reader
+def add_photometry_to_reader(config, observation, reader):
     phot_fname = (
-        os.path.join(test_dir, config["spectrum_dir"])
-        + "/"
-        + str(observation.ProcessingID[0])
-        + "_phot.txt"
+    os.path.join(test_dir, config["spectrum_dir"])
+    + "/"
+    + str(observation.ProcessingID[0])
+    + "_phot.txt"
     )
     if os.path.exists(phot_fname):
         phot = read_photometry_fromfile(phot_fname)
         reader.load_photometry(phot)
 
-    output = context.run(reader)  # passing spectra reader to launch amazed
-
-    # add calls to output
-    accessOutputData(output)
+def save_output(output, config, observation):
     # save in temporary file
     tf = tempfile.TemporaryFile()
     output_file = h5py.File(tf, "w")
@@ -149,5 +139,28 @@ def test_ITLikeTest():
     writer.write_hdf5(output_file, str(observation.ProcessingID[0]))
     output_file.close()
 
+def test_ITLikeTest():
+    config = make_config()
+    param = get_parameters(config["parameters_file"])
+    context = Context(config, param)  # vars returns the dict version of config
+    observation = get_observation(config["input_file"])
 
-#test_ITLikeTest()
+    # read and load spectra using spectra reader
+    spectra = get_spectra(config, observation)
+
+    reader = ASCIISpectrumReader(
+        observation_id=observation.ProcessingID[0],
+        parameters=param,
+        calibration_library=context,
+        source_id=observation.ProcessingID[0],
+    )
+
+    reader.load_all(spectra)
+    add_photometry_to_reader(config, observation, reader)
+    
+    output = context.run(reader)  # passing spectra reader to launch amazed
+
+    # add calls to output
+    accessOutputData(output)
+
+    save_output(output, config, observation)
