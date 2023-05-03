@@ -13,6 +13,7 @@ else:
 import argparse
 import os
 import tarfile
+import zipfile
 from platform import platform
 
 
@@ -30,6 +31,24 @@ def ExtractTarGZ(tarPath, destPath):
         tfile.extractall(extractDir)
         extractedPath = os.path.normpath(os.path.join(extractDir,
                                                       tfile.getmembers()[0].name))
+
+        os.rename(extractedPath, destPath)
+
+        return True
+
+def ExtractZip(zipPath, destPath):
+    if os.path.exists(destPath):
+        print("File or folder: " + os.path.normpath(destPath) +
+              " already exist, extraction skipped...")
+        return False
+    else:
+        with zipfile.ZipFile(zipPath, 'r') as zfile :
+            print("Extracting: \n\tFrom: " + zipPath + " to: " + destPath)
+
+            extractDir = os.path.dirname(destPath) + "/"
+            zfile.extractall(extractDir)
+            extractedPath = os.path.normpath(os.path.join(extractDir,
+                                                          zfile.namelist()[0]))
 
         os.rename(extractedPath, destPath)
 
@@ -185,9 +204,9 @@ libDict = {
         "extra_flags": ""
     },
     "lbfgspp" : {
-        "path": "lbfgspp-0.2.0-13",
-        "src": "https://github.com/yixuan/LBFGSpp/tarball/master/"
-        "yixuan-LBFGSpp-v0.2.0-13-g563106b.tar.gz",
+        "path": "LBFGSpp-v0.2.0+git001b7ee",
+        "src": "https://github.com/yixuan/LBFGSpp/archive/"
+        "001b7eeea2126b6955751a19555b89bbd4f5ef51.zip",
         "check_file": "",
         "build": _lbfgspp_build,
         "extra_flags": ""
@@ -253,8 +272,12 @@ def Main(argv):
         if not _check_lib(module, prefix, args) or args.force:
             if args.force:
                 print("Build force by user.")
-            DownloadHTTPFile(libSrc, libPath + ".tar.gz")
-            ExtractTarGZ(libPath + ".tar.gz", libPath)
+            if module == "lbfgspp" :
+                DownloadHTTPFile(libSrc, libPath + ".zip")
+                ExtractZip(libPath + ".zip", libPath)
+            else :
+                DownloadHTTPFile(libSrc, libPath + ".tar.gz")
+                ExtractTarGZ(libPath + ".tar.gz", libPath)
             build_method(libPath, prefix, args, extra_flags)
 
 
