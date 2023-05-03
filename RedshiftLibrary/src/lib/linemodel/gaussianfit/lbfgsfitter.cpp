@@ -48,12 +48,14 @@ using namespace NSEpic;
 CLbfgsFitter::CLeastSquare::CLeastSquare(
     CLbfgsFitter &fitter, const TInt32List &EltsIdx, Int32 lineType,
     Float64 redshift, const TInt32List &xInds, Int32 velA_idx, Int32 velE_idx,
-    Int32 lbdaOffset_idx, Int32 pCoeff_idx, Float64 normFactor)
+    Int32 lbdaOffset_idx, Int32 pCoeff_idx, Float64 normFactor, Float64 normVel,
+    Float64 normLbdaOffset)
     : Functor<Float64, Dynamic, 1>(), m_fitter(&fitter), m_EltsIdx(&EltsIdx),
       m_lineType(lineType), m_redshift(redshift), m_xInds(&xInds),
       m_velA_idx(velA_idx), m_velE_idx(velE_idx),
       m_lbdaOffset_idx(lbdaOffset_idx), m_pCoeff_idx(pCoeff_idx),
-      m_normFactor(normFactor),
+      m_normFactor(normFactor), m_normVel(normVel),
+      m_normLbdaOffset(normLbdaOffset),
       m_spectralAxis(&fitter.m_inputSpc.GetSpectralAxis()),
       m_noContinuumFluxAxis(&fitter.m_model->getSpcFluxAxisNoContinuum()),
       m_continuumFluxAxis(&fitter.m_model->getContinuumFluxAxis()),
@@ -141,22 +143,24 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
   if (m_fitter->m_enableVelocityFitting) {
 
     if (m_velA_idx != undefIdx)
-      Log.LogDebug(Formatter() << "velocity Abs = " << x[m_velA_idx]);
+      Log.LogDebug(Formatter()
+                   << "velocity Abs = " << x[m_velA_idx] * m_normVel);
     if (m_velE_idx != undefIdx)
-      Log.LogDebug(Formatter() << "velocity Em  = " << x[m_velE_idx]);
+      Log.LogDebug(Formatter()
+                   << "velocity Em  = " << x[m_velE_idx] * m_normVel);
 
     for (Int32 eltIndex : *m_EltsIdx) {
       auto &elt = m_fitter->m_Elements[eltIndex];
       if (elt->GetIsEmission())
-        elt->SetVelocityEmission(x[m_velE_idx]);
+        elt->SetVelocityEmission(x[m_velE_idx] * m_normVel);
       else
-        elt->SetVelocityAbsorption(x[m_velA_idx]);
+        elt->SetVelocityAbsorption(x[m_velA_idx] * m_normVel);
     }
   }
 
   Float64 redshift = m_redshift;
   if (m_fitter->m_enableLambdaOffsetsFit) {
-    redshift += (1.0 + m_redshift) * x[m_lbdaOffset_idx];
+    redshift += (1.0 + m_redshift) * x[m_lbdaOffset_idx] * m_normLbdaOffset;
     Log.LogDebug(Formatter() << "redshift=" << redshift);
   }
 
@@ -408,11 +412,14 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
         return std::abs(noContinuumFluxAxis[l]) <
                std::abs(noContinuumFluxAxis[r]);
       });
+
   Float64 normFactor = 1.0 / std::abs(noContinuumFluxAxis[maxabsval_idx]);
+  Float64 normVel = m_velfitMaxE;
+  Float64 normLbdaOffset = m_LambdaOffsetMax;
 
   CLeastSquare func(*this, EltsIdx, lineType, redshift, xInds, velA_idx,
                     velE_idx, lbdaOffset_param_idx, pCoeff_param_idx,
-                    normFactor);
+                    normFactor, normVel, normLbdaOffset);
 
   // bounds for all params
   /////////////////////////
@@ -435,21 +442,23 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   if (m_enableVelocityFitting) {
     if (lineType == CLine::nType_All) {
       const auto vel_indices = seq(velA_idx, velE_idx);
-      lb(vel_indices) << m_velfitMinA, m_velfitMinE;
-      ub(vel_indices) << m_velfitMaxA, m_velfitMaxE;
+      lb(vel_indices) << m_velfitMinA / normVel, m_velfitMinE / normVel;
+      ub(vel_indices) << m_velfitMaxA / normVel, m_velfitMaxE / normVel;
     } else if (lineType == CLine::nType_Absorption) {
-      lb[velA_idx] = m_velfitMinA;
-      ub[velA_idx] = m_velfitMaxA;
+      lb[velA_idx] = m_velfitMinA / normVel;
+      ub[velA_idx] = m_velfitMaxA / normVel;
     } else {
-      lb[velE_idx] = m_velfitMinE;
-      ub[velE_idx] = m_velfitMaxE;
+      lb[velE_idx] = m_velfitMinE / normVel;
+      ub[velE_idx] = m_velfitMaxE / normVel;
     }
   }
 
   if (m_enableLambdaOffsetsFit) {
     // offset bounds
-    lb[lbdaOffset_param_idx] = m_LambdaOffsetMin / SPEED_OF_LIGHT_IN_VACCUM;
-    ub[lbdaOffset_param_idx] = m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM;
+    lb[lbdaOffset_param_idx] =
+        m_LambdaOffsetMin / SPEED_OF_LIGHT_IN_VACCUM / normLbdaOffset;
+    ub[lbdaOffset_param_idx] =
+        m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM / normLbdaOffset;
   }
 
   // polynomial bounds
@@ -514,11 +523,12 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   if (m_enableVelocityFitting) {
     if (lineType == CLine::nType_All) {
       const auto vel_indices = seq(velA_idx, velE_idx);
-      v_xGuess(vel_indices) << m_velIniGuessA, m_velIniGuessE;
+      v_xGuess(vel_indices) << m_velIniGuessA / normVel,
+          m_velIniGuessE / normVel;
     } else if (lineType == CLine::nType_Absorption)
-      v_xGuess[velA_idx] = m_velIniGuessA;
+      v_xGuess[velA_idx] = m_velIniGuessA / normVel;
     else
-      v_xGuess[velE_idx] = m_velIniGuessE;
+      v_xGuess[velE_idx] = m_velIniGuessE / normVel;
   }
 
   // lambda offset inital guess
@@ -587,8 +597,8 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {
     if (lineType == CLine::nType_All) {
-      Float64 velocityA = v_xResult[velA_idx];
-      Float64 velocityE = v_xResult[velE_idx];
+      Float64 velocityA = v_xResult[velA_idx] * normVel;
+      Float64 velocityE = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx) {
         auto &elt = m_Elements[eltIndex];
         if (elt->GetElementType() == CLine::nType_Absorption)
@@ -597,11 +607,11 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
           elt->SetVelocityEmission(velocityE);
       }
     } else if (lineType == CLine::nType_Absorption) {
-      Float64 velocity = v_xResult[velA_idx];
+      Float64 velocity = v_xResult[velA_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
         m_Elements[eltIndex]->SetVelocityAbsorption(velocity);
     } else {
-      Float64 velocity = v_xResult[velE_idx];
+      Float64 velocity = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
         m_Elements[eltIndex]->SetVelocityEmission(velocity);
     }
@@ -614,7 +624,8 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       for (Int32 i = 0; i < elt->GetSize(); ++i) {
         Float64 offset = elt->GetOffset(i);
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
-        offset += (1 + offset) * v_xResult[lbdaOffset_param_idx];
+        offset +=
+            (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
         elt->SetOffset(i, offset);
       }

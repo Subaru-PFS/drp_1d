@@ -91,7 +91,8 @@ public:
     CLeastSquare(CLbfgsFitter &fitter, const TInt32List &EltsIdx,
                  Int32 lineType, Float64 redshift, const TInt32List &xInds,
                  Int32 velA_idx, Int32 velE_idx, Int32 lbdaOffset_idx,
-                 Int32 pCoeff_indx, Float64 normFactor);
+                 Int32 pCoeff_indx, Float64 normFactor, Float64 normVel,
+                 Float64 normLbdaOffset);
 
     // Float64 operator()(const VectorXd &x, VectorXd &grad);
     void operator()(const VectorXd &x, ValueType &retvalue) const;
@@ -118,6 +119,8 @@ public:
     const Int32 m_lbdaOffset_idx;
     const Int32 m_pCoeff_idx;
     const Float64 m_normFactor;
+    const Float64 m_normVel;
+    const Float64 m_normLbdaOffset;
     const CSpectrumSpectralAxis *m_spectralAxis;
     const CSpectrumFluxAxis *m_noContinuumFluxAxis;
     const CSpectrumFluxAxis *m_continuumFluxAxis;
