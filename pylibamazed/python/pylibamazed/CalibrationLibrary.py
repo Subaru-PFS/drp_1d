@@ -347,9 +347,9 @@ class CalibrationLibrary:
             file_path = os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename)
             if not os.path.isfile(file_path):#mainly for unit tests
                 continue
-            meiksin_df = pd.read_csv(file_path, sep='\t')
+            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename))
             columns = columns[:len(meiksin_df.columns)]
-            meiksin_df.columns = columns
+            meiksin_df.rename_columns(tuple(meiksin_df.columns), tuple(columns))
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)
