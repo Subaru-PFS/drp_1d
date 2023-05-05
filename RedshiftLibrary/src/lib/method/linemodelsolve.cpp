@@ -48,7 +48,6 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-
 using namespace NSEpic;
 using namespace std;
 using namespace boost;

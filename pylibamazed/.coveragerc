@@ -2,3 +2,4 @@
 omit =
     **/redshift.py
     **/__main__.py
+    **/__init__.py

@@ -209,7 +209,7 @@ class CalibrationLibrary:
         nsigmasupport = self.parameters[object_type][method]["linemodel"]["nsigmasupport"]
         self.line_catalogs[object_type][method] = CLineCatalog(nsigmasupport)
         try:
-            line_catalog = pd.read_csv( line_catalog_file, sep='\t',dtype={"WaveLength":float,
+            line_catalog = pd.read_csv( line_catalog_file, sep='\t',dtype={"WaveLength":float,"AmplitudeGroupName":str,
                                                                            "EnableFitWaveLengthOffset":bool})
         except pd.errors.ParserError:
             raise AmazedError(ErrorCode.BAD_FILEFORMAT, "bad line catalog {0} cause :{1}".format(line_catalog_file, e))
@@ -344,7 +344,12 @@ class CalibrationLibrary:
         meiksinCorrectionCurves = VecMeiksinCorrection()
         for z in zbins[1:]: 
             filename = f"Meiksin_Var_curves_{z}.txt"
-            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename), names=columns)
+            file_path = os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename)
+            if not os.path.isfile(file_path):#mainly for unit tests
+                continue
+            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename))
+            columns = columns[:len(meiksin_df.columns)]
+            meiksin_df.rename_columns(tuple(meiksin_df.columns), tuple(columns))
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)

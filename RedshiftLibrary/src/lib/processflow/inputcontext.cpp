@@ -152,6 +152,8 @@ void CInputContext::RebinInputs() {
 void CInputContext::OrthogonalizeTemplates() {
   Float64 lambda =
       (m_lambdaRanges[0]->GetBegin() + m_lambdaRanges[0]->GetEnd()) / 2;
+  if (m_spectra[0]->GetLSF() == nullptr)
+    THROWG(INTERNAL_ERROR, "No defined LSF");
   Float64 resolution = CLSFGaussianConstantResolution::computeResolution(
       lambda, m_spectra[0]->GetLSF()->GetWidth(lambda));
   std::shared_ptr<TLSFArguments> args =
@@ -242,7 +244,6 @@ void CInputContext::Init() {
       rspectrum->SetLSF(spectrum->GetLSF());
     }
   }
-
   // template orthogonalisation with linemodel
   OrthogonalizeTemplates();
 
@@ -252,6 +253,7 @@ void CInputContext::Init() {
        std::get<0>(it) != m_spectra.end();
        ++std::get<0>(it), ++std::get<1>(it), ++std::get<2>(it)) {
     auto spectrum = *std::get<0>(it);
+
     auto lambdaRange = *std::get<1>(it);
     auto clampedLambdaRange = *std::get<2>(it);
 
