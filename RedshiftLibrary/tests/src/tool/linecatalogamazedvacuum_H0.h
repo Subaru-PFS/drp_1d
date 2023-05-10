@@ -47,7 +47,7 @@ public:
   TStringList type = {"E", "E", "E", "A"};
   TStringList force = {"S", "S", "S", "W"};
   TStringList profile = {"SYM", "SYM", "ASYM", "SYM"};
-  TStringList amplitudeGroupName = {"-1", "-1", "-1", "-1"};
+  TStringList amplitudeGroupName = {undefStr, undefStr, undefStr, undefStr};
   TFloat64List amplitudeGroupValue = {1, 1, 1, 1};
   TStringList dispersionVelocityGroupName = {"Em1", "Em1", "Em1", "Abs1"};
   TFloat64List waveLengthOffset = {0, 0, 0, 0};

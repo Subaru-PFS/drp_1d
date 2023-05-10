@@ -84,8 +84,8 @@ LinemeasLineWidth	linemeas	False	object	Sigmas	linemeas	f8
 LinemeasAmplitude	linemeas	True	object	Amplitudes	linemeas	f8
 LinemeasAmplitudeUncertainties	linemeas	True	object	AmplitudesUncertainties	linemeas	f8
 LinemeasContinuumError	linemeas	True	object	ContinuumError	linemeas	f8
-LinemeasVelocity	linemeas	True	object	Velocity	linemeas	f8
-LinemeasOffset	linemeas	True	object	Offset	linemeas	f8
+LinemeasVelocity	linemeas	False	object	Velocity	linemeas	f8
+LinemeasOffset	linemeas	False	object	Offset	linemeas	f8
 LinemeasOutsideRange	linemeas	True	object	OutsideLambdaRange	linemeas	i
 LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	i
 LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	i

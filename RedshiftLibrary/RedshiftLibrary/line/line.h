@@ -77,8 +77,8 @@ public:
         CLineProfile_ptr &&profile, Int32 force, Float64 amp = -1.0,
         Float64 width = -1.0, Float64 cut = -1.0, Float64 posErr = -1.0,
         Float64 sigmaErr = -1.0, Float64 ampErr = -1.0,
-        const std::string &groupName = "-1", Float64 nominalAmp = 1.0,
-        const std::string &velGroupName = "-1", Int32 id = -1);
+        const std::string &groupName = undefStr, Float64 nominalAmp = 1.0,
+        const std::string &velGroupName = undefStr, Int32 id = -1);
   CLine(const std::string &name, Float64 pos, Int32 type,
         CLineProfile_ptr &&profile, Int32 force, Float64 velocityOffset,
         bool enableVelocityOffsetFitting, const std::string &groupName,

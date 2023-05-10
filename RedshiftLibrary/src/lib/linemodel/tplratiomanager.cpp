@@ -187,7 +187,7 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // m_RestLineList = m_CatalogTplRatio->GetRestLinesList(0);
   // LoadCatalog(m_RestLineList);
   // LogCatalogInfos();
-  m_tplratioBestTplName = "undefined";
+  m_tplratioBestTplName = undefStr;
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
   Int32 elCount = m_Elements.size();
   // Resize tplratio buffers

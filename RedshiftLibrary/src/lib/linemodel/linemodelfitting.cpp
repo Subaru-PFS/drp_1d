@@ -459,7 +459,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
       m_fitter->fit(redshift);
 
-      std::string bestTplratioName = "undefined";
+      std::string bestTplratioName = undefStr;
 
       _merit = m_lineRatioManager->computeMerit(itratio);
 
@@ -885,19 +885,6 @@ void CLineModelFitting::LoadModelSolution(
 
   setRedshift(modelSolution.Redshift, false);
 
-  SetVelocityEmission(modelSolution.EmissionVelocity);
-  SetVelocityAbsorption(modelSolution.AbsorptionVelocity);
-
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-  for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
-    Int32 eIdx = modelSolution.ElementId[iRestLine];
-    if (eIdx == undefIdx)
-      continue;
-
-    m_Elements[eIdx]->prepareSupport(spectralAxis, modelSolution.Redshift,
-                                     *(m_lambdaRange));
-  }
-
   if (m_enableAmplitudeOffsets)
     m_Elements.resetAmplitudeOffset();
 
@@ -907,16 +894,23 @@ void CLineModelFitting::LoadModelSolution(
     if (eIdx == undefIdx)
       continue;
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
-    if (subeIdx == undefIdx || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+    if (subeIdx == undefIdx)
       continue;
+
+    if (modelSolution.OutsideLambdaRange[iRestLine]) {
+      m_Elements[eIdx]->SetOutsideLambdaRangeList(subeIdx);
+      continue;
+    }
 
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
         modelSolution.AmplitudesUncertainties[iRestLine]);
+    m_Elements[eIdx]->SetOffset(subeIdx, modelSolution.Offset[iRestLine]);
 
     if (element_done[eIdx])
       continue;
 
+    m_Elements[eIdx]->setVelocity(modelSolution.Velocity[iRestLine]);
     m_Elements[eIdx]->SetFittingGroupInfo(
         modelSolution.fittingGroupInfo[iRestLine]);
     if (m_enableAmplitudeOffsets) {
@@ -950,6 +944,16 @@ void CLineModelFitting::LoadModelSolution(
         m_Elements[iElt]->SetSymIgmParams(
             {modelSolution.LyaIgm, modelSolution.Redshift});
   }
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    m_Elements[iElts]->SetOutsideLambdaRange();
+
+    if (!m_Elements[iElts]->IsOutsideLambdaRange())
+      m_Elements[iElts]->prepareSupport(spectralAxis, modelSolution.Redshift,
+                                        *m_lambdaRange);
+  }
+
   return;
 }
 
@@ -994,10 +998,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
       modelSolution.FittingError[iRestLine] =
           m_model->getModelErrorUnderElement(eIdx, m_model->getSpcFluxAxis());
       if (m_enableAmplitudeOffsets) {
-        TPolynomCoeffs polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
-        modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.x0;
-        modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.x1;
-        modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.x2;
+        const auto &polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
+        modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
+        modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
+        modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
       }
 
       Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(

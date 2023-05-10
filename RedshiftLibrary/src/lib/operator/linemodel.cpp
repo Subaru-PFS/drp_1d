@@ -1235,7 +1235,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
   Float64 vInfLim;
   Float64 vSupLim;
   Float64 vStep;
-  std::string lineTypeStr = "undefined";
+  std::string lineTypeStr = undefStr;
   Int32 lineTypeInt = -1;
   for (Int32 iLineType = 0; iLineType < 2; iLineType++) {
     if (iLineType == 0) {

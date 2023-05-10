@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineprofile.h"
@@ -104,6 +105,8 @@ public:
                                   const CSpectrumSpectralAxis &spectralAxis,
                                   Float64 redshift,
                                   const TFloat64Range &lambdaRange);
+  void SetOutsideLambdaRange();
+
   TInt32Range getSupportSubElt(Int32 subeIdx) const;
   TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx) const;
 
@@ -197,6 +200,7 @@ public:
   bool IsOutsideLambdaRange() const;
   Float64 GetLineWidth(Float64 lambda, bool isEmission = 0) const;
   bool IsOutsideLambdaRange(Int32 subeIdx) const;
+  void SetOutsideLambdaRangeList(Int32 subeIdx);
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,
                                  Float64 x0, Float64 sigma,
@@ -211,7 +215,7 @@ public:
   const std::string &GetFittingGroupInfo() const;
   void SetFittingGroupInfo(const std::string &val);
 
-  TPolynomCoeffs GetPolynomCoeffs() const;
+  const TPolynomCoeffs &GetPolynomCoeffs() const;
   void SetPolynomCoeffs(TPolynomCoeffs pCoeffs);
 
   void SetAllOffsets(Float64 val);

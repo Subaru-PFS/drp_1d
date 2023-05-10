@@ -201,6 +201,8 @@ typedef int Int32;
 
 const char* get_version();
 
+static const std::string undefStr;
+
 class CLog {
 public:
   enum ELevel   {
@@ -398,7 +400,7 @@ public:
 struct CTplModelSolution {
 
   // template continuum
-  std::string tplName = "undefined";
+  std::string tplName = undefStr;
   Float64 tplAmplitude = NAN;
   Float64 tplAmplitudeError = NAN;
   Float64 tplAmplitudeSigma = NAN;

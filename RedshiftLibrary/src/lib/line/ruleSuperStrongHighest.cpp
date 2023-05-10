@@ -73,7 +73,7 @@ void CRuleSuperStrong::SetUp(bool EnabledArgument, ...) {
 void CRuleSuperStrong::Correct(CLineModelElementList &LineModelElementList) {
   Float64 coeff = 1.0;
   Float64 erStrong = -1.0;
-  std::string strongName = "undefined";
+  std::string strongName = undefStr;
   Float64 maxiStrong = FindHighestSuperStrongLineAmp(
       m_SuperStrongTags, erStrong, strongName, LineModelElementList);
   if (maxiStrong == -1)

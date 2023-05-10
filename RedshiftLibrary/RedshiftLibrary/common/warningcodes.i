@@ -21,5 +21,6 @@ enum class WarningCode {
   TEMPLATEFITTINGLOG_NO_MASK,                // 19
   CORRECT_SPECTRUM_NOMINFLUX,                // 20
   DEACTIVATE_CONTREESTIMATION_SKIPSECONDPASS, // 21
-  LINEARFIT_RANK_DEFICIENT                    // 22
+  LINEARFIT_RANK_DEFICIENT,                   // 22
+  LBFGSPP_ERROR                               // 23  
 };

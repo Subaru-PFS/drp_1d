@@ -60,6 +60,9 @@ protected:
   bool m_opt_enable_improveBalmerFit = false;
   void fitAmplitudesHybrid(Float64 redshift);
   void improveBalmerFit(Float64 redshift);
+  virtual bool isIndividualFitEnabled() const {
+    return !m_enableAmplitudeOffsets;
+  };
 };
 } // namespace NSEpic
 #endif

@@ -36,41 +36,51 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
-#define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
+#ifndef _REDSHIFT_COMMON_POLYNOM_
+#define _REDSHIFT_COMMON_POLYNOM_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
-#include "RedshiftLibrary/method/solveresult.h"
-
-#include <memory>
-#include <vector>
 
 namespace NSEpic {
 
-/**
- * \ingroup Redshift
- */
-class CLineModelSolveResult : public CPdfSolveResult {
+struct TPolynomCoeffs {
+  TPolynomCoeffs() = default;
+  TPolynomCoeffs(Float64 a0_, Float64 a1_ = 0.0, Float64 a2_ = 0.0)
+      : a0(a0_), a1(a1_), a2(a2_){};
+  TPolynomCoeffs(const TFloat64List &coeffs);
 
+  Float64 getValue(Float64 x) const;
+
+  Float64 getValueAndGrad(Float64 x, TFloat64List &grad) const;
+
+  static constexpr Int32 degree = 2;
+
+  Float64 a0 = NAN;
+  Float64 a1 = NAN;
+  Float64 a2 = NAN;
+};
+
+class CPolynomCoeffsNormalized {
 public:
-  CLineModelSolveResult(
-      const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
-      const std::string &opt_pdfcombination, Float64 evidence)
-      : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
-                        opt_pdfcombination, evidence){};
+  CPolynomCoeffsNormalized() = default;
+  CPolynomCoeffsNormalized(Float64 x0_, Float64 scale_ = 1.0)
+      : x0red(-x0_ / scale_), scale(scale_){};
+
+  void getCoeffs(Float64 &a0_, Float64 &a1_, Float64 &a2_) const;
+  void setCoeffs(Float64 a0_, Float64 a1_, Float64 a2_);
+  Float64 getValue(Float64 x) const;
+  Float64 getValueAndGrad(Float64 x, TFloat64List &grad) const;
+
+  static constexpr Int32 degree = 2;
+
+  Float64 a0 = NAN;
+  Float64 a1 = NAN;
+  Float64 a2 = NAN;
 
 private:
-  std::string tplratioName = undefStr;
-  std::string tplcontinuumName = undefStr;
-  Float64 sigma = NAN;
-  Float64 snrHa = NAN;
-  Float64 lfHa = NAN;
-  Float64 snrOII = NAN;
-  Float64 lfOII = NAN;
+  Float64 x0red = 0.0;
+  Float64 scale = 1.0;
 };
 
 } // namespace NSEpic
-
 #endif

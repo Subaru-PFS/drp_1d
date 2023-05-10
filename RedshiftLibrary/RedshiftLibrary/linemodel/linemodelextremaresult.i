@@ -82,7 +82,7 @@ public:
 
   CMask OutsideLinesMask;
   // template ratio
-  std::string FittedTplratioName = "undefined"; // Name of the best template
+  std::string FittedTplratioName = undefStr; // Name of the best template
                                                 // fitted for tplcorr/tplratio
   Float64 FittedTplratioAmplitudeEm = NAN; // amp of the best template fitted for
                                          // tplcorr/tplratio

@@ -36,41 +36,69 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
-#define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
-#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/common/polynom.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
-#include <memory>
-#include <vector>
+using namespace NSEpic;
 
-namespace NSEpic {
+TPolynomCoeffs::TPolynomCoeffs(const TFloat64List &coeffs) {
+  if (coeffs.size() <= degree)
+    THROWG(INTERNAL_ERROR,
+           Formatter()
+               << "input array too small to initialize a polynomial of degree "
+               << degree);
+  a0 = coeffs[0];
+  a1 = coeffs[1];
+  a2 = coeffs[2];
+}
 
-/**
- * \ingroup Redshift
- */
-class CLineModelSolveResult : public CPdfSolveResult {
+Float64 TPolynomCoeffs::getValue(Float64 x) const {
+  Float64 val = a0;
+  val += a1 * x;
+  val += a2 * x * x;
+  return val;
+}
 
-public:
-  CLineModelSolveResult(
-      const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
-      const std::string &opt_pdfcombination, Float64 evidence)
-      : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
-                        opt_pdfcombination, evidence){};
+Float64 TPolynomCoeffs::getValueAndGrad(Float64 x, TFloat64List &grad) const {
+  grad.resize(degree + 1);
+  grad[0] = 1.0;
+  grad[1] = x;
+  grad[2] = x * x;
+  return grad[0] * a0 + grad[1] * a1 + grad[2] * a2;
+}
 
-private:
-  std::string tplratioName = undefStr;
-  std::string tplcontinuumName = undefStr;
-  Float64 sigma = NAN;
-  Float64 snrHa = NAN;
-  Float64 lfHa = NAN;
-  Float64 snrOII = NAN;
-  Float64 lfOII = NAN;
-};
+constexpr Int32 TPolynomCoeffs::degree;
 
-} // namespace NSEpic
+void CPolynomCoeffsNormalized::getCoeffs(Float64 &a0_, Float64 &a1_,
+                                         Float64 &a2_) const {
+  a0_ = a0 + a1 * x0red + a2 * x0red * x0red;
+  a1_ = (a1 + 2 * a2 * x0red) / scale;
+  a2_ = a2 / (scale * scale);
+}
 
-#endif
+void CPolynomCoeffsNormalized::setCoeffs(Float64 a0_, Float64 a1_,
+                                         Float64 a2_) {
+  a2 = a2_ * scale * scale;
+  a1 = a1_ * scale - 2 * a2 * x0red;
+  a0 = a0_ - a1 * x0red - a2 * x0red * x0red;
+}
+
+Float64 CPolynomCoeffsNormalized::getValue(Float64 x) const {
+  Float64 xred = x / scale + x0red;
+  Float64 val = a0;
+  val += a1 * xred;
+  val += a2 * xred * xred;
+  return val;
+}
+
+Float64 CPolynomCoeffsNormalized::getValueAndGrad(Float64 x,
+                                                  TFloat64List &grad) const {
+  Float64 xred = x / scale + x0red;
+  grad.resize(degree + 1);
+  grad[0] = 1.0;
+  grad[1] = xred;
+  grad[2] = xred * xred;
+  return grad[0] * a0 + grad[1] * a1 + grad[2] * a2;
+}

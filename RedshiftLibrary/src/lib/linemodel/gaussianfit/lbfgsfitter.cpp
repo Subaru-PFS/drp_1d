@@ -48,16 +48,27 @@ using namespace NSEpic;
 CLbfgsFitter::CLeastSquare::CLeastSquare(
     CLbfgsFitter &fitter, const TInt32List &EltsIdx, Int32 lineType,
     Float64 redshift, const TInt32List &xInds, Int32 velA_idx, Int32 velE_idx,
-    Int32 lbdaOffset_idx, Int32 pCoeff_idx, Float64 normFactor)
+    Int32 lbdaOffset_idx, Int32 pCoeff_idx, Float64 normFactor, Float64 normVel,
+    Float64 normLbdaOffset)
     : Functor<Float64, Dynamic, 1>(), m_fitter(&fitter), m_EltsIdx(&EltsIdx),
       m_lineType(lineType), m_redshift(redshift), m_xInds(&xInds),
       m_velA_idx(velA_idx), m_velE_idx(velE_idx),
       m_lbdaOffset_idx(lbdaOffset_idx), m_pCoeff_idx(pCoeff_idx),
-      m_normFactor(normFactor),
+      m_normFactor(normFactor), m_normVel(normVel),
+      m_normLbdaOffset(normLbdaOffset),
       m_spectralAxis(&fitter.m_inputSpc.GetSpectralAxis()),
       m_noContinuumFluxAxis(&fitter.m_model->getSpcFluxAxisNoContinuum()),
       m_continuumFluxAxis(&fitter.m_model->getContinuumFluxAxis()),
       m_ErrorNoContinuum(&fitter.m_inputSpc.GetErrorAxis()) {
+
+  // init normalized polynomial
+  if (m_fitter->m_enableAmplitudeOffsets) {
+    Float64 x_center = 0.5 * ((*m_spectralAxis)[m_xInds->back()] +
+                              (*m_spectralAxis)[m_xInds->front()]);
+    Float64 scale = 0.5 * ((*m_spectralAxis)[m_xInds->back()] -
+                           (*m_spectralAxis)[m_xInds->front()]);
+    m_pCoeffs = CPolynomCoeffsNormalized(x_center, scale);
+  }
 
   // precompute data sum square
   Float64 sumSquare = 0.;
@@ -79,7 +90,7 @@ void CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
 
   TFloat64List amps;
   Float64 redshift;
-  TFloat64List pCoeffs;
+  CPolynomCoeffsNormalized pCoeffs;
   std::tie(amps, redshift, pCoeffs) = unpack(x);
 
   val(0, 0) = ComputeLeastSquare(amps, redshift, pCoeffs);
@@ -118,7 +129,7 @@ coeffs= "
 }
 */
 
-std::tuple<TFloat64List, Float64, TFloat64List>
+std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
 CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
   // unpack param vector
@@ -132,22 +143,24 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
   if (m_fitter->m_enableVelocityFitting) {
 
     if (m_velA_idx != undefIdx)
-      Log.LogDebug(Formatter() << "velocity Abs = " << x[m_velA_idx]);
+      Log.LogDebug(Formatter()
+                   << "velocity Abs = " << x[m_velA_idx] * m_normVel);
     if (m_velE_idx != undefIdx)
-      Log.LogDebug(Formatter() << "velocity Em  = " << x[m_velE_idx]);
+      Log.LogDebug(Formatter()
+                   << "velocity Em  = " << x[m_velE_idx] * m_normVel);
 
     for (Int32 eltIndex : *m_EltsIdx) {
       auto &elt = m_fitter->m_Elements[eltIndex];
       if (elt->GetIsEmission())
-        elt->SetVelocityEmission(x[m_velE_idx]);
+        elt->SetVelocityEmission(x[m_velE_idx] * m_normVel);
       else
-        elt->SetVelocityAbsorption(x[m_velA_idx]);
+        elt->SetVelocityAbsorption(x[m_velA_idx] * m_normVel);
     }
   }
 
   Float64 redshift = m_redshift;
   if (m_fitter->m_enableLambdaOffsetsFit) {
-    redshift += (1.0 + m_redshift) * x[m_lbdaOffset_idx];
+    redshift += (1.0 + m_redshift) * x[m_lbdaOffset_idx] * m_normLbdaOffset;
     Log.LogDebug(Formatter() << "redshift=" << redshift);
   }
 
@@ -162,21 +175,21 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
     }
   }
 
-  TFloat64List pCoeffs;
+  CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
-    size_t ncoeff = 0;
-    ncoeff = TPolynomCoeffs::degree + 1;
-    auto ibegin = x.begin() + m_pCoeff_idx;
-    pCoeffs = TFloat64List(ibegin, ibegin + ncoeff);
-    Log.LogDebug(Formatter() << "p coeffs  = " << pCoeffs[0] << " "
-                             << pCoeffs[1] << " " << pCoeffs[2]);
+    pCoeffs.a0 = x[m_pCoeff_idx];
+    pCoeffs.a1 = x[m_pCoeff_idx + 1];
+    pCoeffs.a2 = x[m_pCoeff_idx + 2];
+    Log.LogDebug(Formatter() << "p coeffs  = " << pCoeffs.a0 << " "
+                             << pCoeffs.a1 << " " << pCoeffs.a2);
   }
 
   return std::make_tuple(std::move(amps), redshift, std::move(pCoeffs));
 }
 
 Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
-    const TFloat64List &amps, Float64 redshift, TFloat64List pCoeffs) const {
+    const TFloat64List &amps, Float64 redshift,
+    const CPolynomCoeffsNormalized &pCoeffs) const {
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
   for (Int32 i = 0; i < m_xInds->size(); i++) {
@@ -197,16 +210,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
       fval += mval;
     }
 
-    if (m_fitter->m_enableAmplitudeOffsets) {
-      // polynome value
-      Float64 polynome = 0.;
-      Float64 xipower = 1.;
-      for (auto coeff : pCoeffs) {
-        polynome += coeff * xipower;
-        xipower *= xi;
-      }
-      fval += polynome;
-    }
+    if (m_fitter->m_enableAmplitudeOffsets)
+      fval += pCoeffs.getValue(xi);
 
     // add squared diff
     sumSquare += (fval * fval - 2.0 * yi * fval) / ei2;
@@ -216,8 +221,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
 }
 
 Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
-    const TFloat64List &amps, Float64 redshift, TFloat64List pCoeffs,
-    VectorXd &grad) const {
+    const TFloat64List &amps, Float64 redshift,
+    const CPolynomCoeffsNormalized &pCoeffs, VectorXd &grad) const {
 
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
@@ -265,18 +270,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
                                                   (*m_continuumFluxAxis)[idx]);
     }
 
-    if (m_fitter->m_enableAmplitudeOffsets) {
-      pCoeffGrad.reserve(pCoeffs.size());
-      // polynome value
-      Float64 polynome = 0.;
-      Float64 xipower = 1.;
-      for (auto coeff : pCoeffs) {
-        polynome += coeff * xipower;
-        pCoeffGrad.push_back(xipower); // polynome derivative
-        xipower *= xi;
-      }
-      fval += polynome;
-    }
+    if (m_fitter->m_enableAmplitudeOffsets)
+      fval += pCoeffs.getValueAndGrad(xi, pCoeffGrad);
 
     // add squared diff
     sumSquare += (fval * fval - 2.0 * yi * fval) / ei2;
@@ -301,8 +296,8 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
     // squared diff derivative wrt polynome coeffs
     if (m_fitter->m_enableAmplitudeOffsets) {
-      for (size_t i = 0; i != pCoeffs.size(); ++i)
-        grad[m_lbdaOffset_idx + i + 1] += residual * pCoeffGrad[i];
+      for (size_t i = 0; i <= TPolynomCoeffs::degree; ++i)
+        grad[m_pCoeff_idx + i] += residual * pCoeffGrad[i];
     }
   }
 
@@ -386,7 +381,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
 
   Int32 pCoeff_param_idx =
-      undefIdx; // position of polynom coeffs in the param vector
+      undefIdx; // position of polynomial coeffs in the param vector
   if (m_enableAmplitudeOffsets) {
     nddl += TPolynomCoeffs::degree + 1;
     pCoeff_param_idx = param_idx;
@@ -417,7 +412,14 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
         return std::abs(noContinuumFluxAxis[l]) <
                std::abs(noContinuumFluxAxis[r]);
       });
+
   Float64 normFactor = 1.0 / std::abs(noContinuumFluxAxis[maxabsval_idx]);
+  Float64 normVel = m_velfitMaxE;
+  Float64 normLbdaOffset = m_LambdaOffsetMax;
+
+  CLeastSquare func(*this, EltsIdx, lineType, redshift, xInds, velA_idx,
+                    velE_idx, lbdaOffset_param_idx, pCoeff_param_idx,
+                    normFactor, normVel, normLbdaOffset);
 
   // bounds for all params
   /////////////////////////
@@ -440,24 +442,26 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   if (m_enableVelocityFitting) {
     if (lineType == CLine::nType_All) {
       const auto vel_indices = seq(velA_idx, velE_idx);
-      lb(vel_indices) << m_velfitMinA, m_velfitMinE;
-      ub(vel_indices) << m_velfitMaxA, m_velfitMaxE;
+      lb(vel_indices) << m_velfitMinA / normVel, m_velfitMinE / normVel;
+      ub(vel_indices) << m_velfitMaxA / normVel, m_velfitMaxE / normVel;
     } else if (lineType == CLine::nType_Absorption) {
-      lb[velA_idx] = m_velfitMinA;
-      ub[velA_idx] = m_velfitMaxA;
+      lb[velA_idx] = m_velfitMinA / normVel;
+      ub[velA_idx] = m_velfitMaxA / normVel;
     } else {
-      lb[velE_idx] = m_velfitMinE;
-      ub[velE_idx] = m_velfitMaxE;
+      lb[velE_idx] = m_velfitMinE / normVel;
+      ub[velE_idx] = m_velfitMaxE / normVel;
     }
   }
 
   if (m_enableLambdaOffsetsFit) {
     // offset bounds
-    lb[lbdaOffset_param_idx] = m_LambdaOffsetMin / SPEED_OF_LIGHT_IN_VACCUM;
-    ub[lbdaOffset_param_idx] = m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM;
+    lb[lbdaOffset_param_idx] =
+        m_LambdaOffsetMin / SPEED_OF_LIGHT_IN_VACCUM / normLbdaOffset;
+    ub[lbdaOffset_param_idx] =
+        m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM / normLbdaOffset;
   }
 
-  // polynome bounds
+  // polynomial bounds
   if (m_enableAmplitudeOffsets) {
     constexpr size_t ncoeff = TPolynomCoeffs::degree + 1;
     auto pCoeff_indices = seq(pCoeff_param_idx, pCoeff_param_idx + ncoeff - 1);
@@ -484,35 +488,52 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
+  Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
     // fitAmplitude(EltsIdx[i], redshift);
     auto &elt = m_Elements[EltsIdx[i]];
     v_xGuess[i] = elt->GetElementAmplitude() * normFactor;
     if (std::isnan(v_xGuess[i]))
       THROWG(INTERNAL_ERROR, "NAN amplitude");
+    // retrive max SNR amplitude:
+    auto sigma = (elt->GetElementError() * normFactor);
+    auto snr = v_xGuess[i] / sigma;
+    max_snr = std::max(max_snr, snr);
+  }
+
+  // if all amplitudes SNR are too small, keep the guess values
+  // since the precise fit may fail because of too noisy least-square
+  Float64 min_snr_threshold = 1.0;
+  if (max_snr < min_snr_threshold)
+    return;
+
+  // polynomial coeffs initial guess
+  if (m_enableAmplitudeOffsets) {
+    const auto &pCoeffs = m_Elements[EltsIdx.front()]->GetPolynomCoeffs();
+    auto pCoeffsNormalized = func.getPcoeffs();
+    pCoeffsNormalized.setCoeffs(pCoeffs.a0 * normFactor,
+                                pCoeffs.a1 * normFactor,
+                                pCoeffs.a2 * normFactor);
+    v_xGuess[pCoeff_param_idx] = pCoeffsNormalized.a0;
+    v_xGuess[pCoeff_param_idx + 1] = pCoeffsNormalized.a1;
+    v_xGuess[pCoeff_param_idx + 2] = pCoeffsNormalized.a2;
   }
 
   // velocity initial guess
   if (m_enableVelocityFitting) {
     if (lineType == CLine::nType_All) {
       const auto vel_indices = seq(velA_idx, velE_idx);
-      v_xGuess(vel_indices) << m_velIniGuessA, m_velIniGuessE;
+      v_xGuess(vel_indices) << m_velIniGuessA / normVel,
+          m_velIniGuessE / normVel;
     } else if (lineType == CLine::nType_Absorption)
-      v_xGuess[velA_idx] = m_velIniGuessA;
+      v_xGuess[velA_idx] = m_velIniGuessA / normVel;
     else
-      v_xGuess[velE_idx] = m_velIniGuessE;
-    // v_xGuess[velE_idx] =  50.0;// DEBUGGING
+      v_xGuess[velE_idx] = m_velIniGuessE / normVel;
   }
 
+  // lambda offset inital guess
   if (m_enableLambdaOffsetsFit)
     v_xGuess[lbdaOffset_param_idx] = 0.;
-
-  if (m_enableAmplitudeOffsets) {
-    const auto nCoeff = TPolynomCoeffs::degree + 1;
-    const auto pCoeff_indices =
-        seq(pCoeff_param_idx, pCoeff_param_idx + nCoeff - 1);
-    v_xGuess(pCoeff_indices) = VectorXd::Zero(nCoeff);
-  }
 
   // Set up solver parameters
   LBFGSBParam<Float64> param; // New parameter class
@@ -545,10 +566,6 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // Create solver and function object
   LBFGSBSolver<Float64, LineSearchMoreThuenteFork> solver(param);
 
-  CLeastSquare func(*this, EltsIdx, lineType, redshift, xInds, velA_idx,
-                    velE_idx, lbdaOffset_param_idx, pCoeff_param_idx,
-                    normFactor);
-
   NumericalDiff<CLeastSquare> func_with_num_diff(func, 1e-12);
 
   auto myfunc = [&func_with_num_diff](const VectorXd &x, VectorXd &grad) {
@@ -560,21 +577,28 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     return val(0, 0);
   };
 
-  // v_xGuess will be overwritten to be the best point found
   Float64 fx;
-  int niter = solver.minimize(myfunc, v_xGuess, fx, lb, ub);
+  VectorXd v_xResult = v_xGuess;
+  try {
+    // v_xResult will be overwritten to be the best point found
+    int niter = solver.minimize(myfunc, v_xResult, fx, lb, ub);
+  } catch (const std::exception &e) {
+    Flag.warning(WarningCode::LBFGSPP_ERROR, Formatter() << e.what());
+    // reset the result to the initial guess
+    v_xResult = v_xGuess;
+  }
 
   // store fitted amplitude
   // TODO SNR computation
   Float64 snr = NAN;
   for (Int32 i = 0; i < EltsIdx.size(); ++i)
-    m_Elements[EltsIdx[i]]->SetElementAmplitude(v_xGuess[i] / normFactor, snr);
+    m_Elements[EltsIdx[i]]->SetElementAmplitude(v_xResult[i] / normFactor, snr);
 
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {
     if (lineType == CLine::nType_All) {
-      Float64 velocityA = v_xGuess[velA_idx];
-      Float64 velocityE = v_xGuess[velE_idx];
+      Float64 velocityA = v_xResult[velA_idx] * normVel;
+      Float64 velocityE = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx) {
         auto &elt = m_Elements[eltIndex];
         if (elt->GetElementType() == CLine::nType_Absorption)
@@ -583,11 +607,11 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
           elt->SetVelocityEmission(velocityE);
       }
     } else if (lineType == CLine::nType_Absorption) {
-      Float64 velocity = v_xGuess[velA_idx];
+      Float64 velocity = v_xResult[velA_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
         m_Elements[eltIndex]->SetVelocityAbsorption(velocity);
     } else {
-      Float64 velocity = v_xGuess[velE_idx];
+      Float64 velocity = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
         m_Elements[eltIndex]->SetVelocityEmission(velocity);
     }
@@ -600,23 +624,30 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       for (Int32 i = 0; i < elt->GetSize(); ++i) {
         Float64 offset = elt->GetOffset(i);
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
-        offset += (1 + offset) * v_xGuess[lbdaOffset_param_idx];
+        offset +=
+            (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
-        elt->SetAllOffsets(offset);
+        elt->SetOffset(i, offset);
       }
     }
   }
 
-  // store polynome coeffs (continuum under line)
+  // store polynomial coeffs (continuum under line)
   if (m_enableAmplitudeOffsets) {
-    Float64 x0 = v_xGuess[pCoeff_param_idx] / normFactor;
-    Float64 x1 = 0.0;
-    Float64 x2 = 0.0;
+    auto pCoeffsNormalized = func.getPcoeffs();
+    pCoeffsNormalized.a0 = v_xResult[pCoeff_param_idx];
+    pCoeffsNormalized.a1 = 0.0;
+    pCoeffsNormalized.a2 = 0.0;
     if (TPolynomCoeffs::degree > 0)
-      x1 = v_xGuess[pCoeff_param_idx + 1] / normFactor;
+      pCoeffsNormalized.a1 = v_xResult[pCoeff_param_idx + 1];
     if (TPolynomCoeffs::degree > 1)
-      x2 = v_xGuess[pCoeff_param_idx + 2] / normFactor;
+      pCoeffsNormalized.a2 = v_xResult[pCoeff_param_idx + 2];
+    Float64 a0 = 0.0;
+    Float64 a1 = 0.0;
+    Float64 a2 = 0.0;
+    pCoeffsNormalized.getCoeffs(a0, a1, a2);
     for (Int32 eltIndex : EltsIdx)
-      m_Elements[eltIndex]->SetPolynomCoeffs({x0, x1, x2});
+      m_Elements[eltIndex]->SetPolynomCoeffs(
+          {a0 / normFactor, a1 / normFactor, a2 / normFactor});
   }
 }

@@ -58,7 +58,7 @@ TLineModelElementParam::TLineModelElementParam(TLineVector lines,
       m_FittedAmplitudeErrorSigmas(lines.size(), NAN),
       m_Lines(std::move(lines)),
       m_LineCatalogIndexes(std::move(lineCatalogIndexes)),
-      m_fittingGroupInfo("-1") {
+      m_fittingGroupInfo(undefStr) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
   for (const auto &line : m_Lines) {
@@ -119,6 +119,7 @@ void CLineModelElement::reset() {
   // init the fitted amplitude values and related variables
   m_ElementParam->m_FittedAmplitudes.assign(nLines, NAN);
   m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+  SetFittingGroupInfo(undefStr);
   m_sumGauss = NAN;
   m_sumCross = NAN;
   m_dtmFree = NAN;
@@ -343,7 +344,7 @@ void CLineModelElement::SetFittingGroupInfo(const std::string &val) {
   m_ElementParam->m_fittingGroupInfo = val;
 }
 
-TPolynomCoeffs CLineModelElement::GetPolynomCoeffs() const {
+const TPolynomCoeffs &CLineModelElement::GetPolynomCoeffs() const {
   return m_ElementParam->m_ampOffsetsCoeffs;
 }
 
@@ -369,9 +370,7 @@ void CLineModelElement::SetLineProfile(Int32 lineIdx,
 }
 
 /**
- * \brief If the argument is greater than or equal to the size of
- *m_ElementParam->m_Lines, returns the string "-1". Otherwise returns a call to
- *the m_Lines GetName.
+ * \brief  returns a call to the m_Lines GetName.
  **/
 const std::string &CLineModelElement::GetLineName(Int32 subeIdx) const {
   if (subeIdx >= GetSize())
@@ -506,6 +505,13 @@ TInt32Range CLineModelElement::EstimateIndexRange(
   return supportRange;
 }
 
+// set the global outside lambda range
+void CLineModelElement::SetOutsideLambdaRange() {
+  m_OutsideLambdaRange = true;
+  for (Int32 i = 0; i < GetSize(); i++)
+    m_OutsideLambdaRange = m_OutsideLambdaRange && m_OutsideLambdaRangeList[i];
+}
+
 /**
  * \brief Limits each m_Lines element within the argument lambdaRange, and sets
  *the m_FittedAmplitudes to -1. Sets the global outside lambda range. Inits the
@@ -522,16 +528,12 @@ void CLineModelElement::prepareSupport(
   m_StartTheoretical.assign(nLines, -1);
   m_EndTheoretical.assign(nLines, -1);
   m_OutsideLambdaRangeList.assign(nLines, true);
-  m_ElementParam->m_fittingGroupInfo = "-1";
   for (Int32 i = 0; i < nLines; i++) {
     EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
-
-    // set the global outside lambda range
-    m_OutsideLambdaRange = m_OutsideLambdaRange && m_OutsideLambdaRangeList[i];
-
     // set the lines active on their own support
     m_LineIsActiveOnSupport[i][i] = 1;
   }
+  SetOutsideLambdaRange();
 
   bool supportNoOverlap_has_duplicates = true;
   Int32 x1 = 0;
@@ -1252,6 +1254,10 @@ bool CLineModelElement::IsOutsideLambdaRange(
     Int32 subeIdx) const // IsOutsideLambdaRange
 {
   return m_OutsideLambdaRangeList[subeIdx];
+}
+
+void CLineModelElement::SetOutsideLambdaRangeList(Int32 subeIdx) {
+  m_OutsideLambdaRangeList[subeIdx] = true;
 }
 
 void CLineModelElement::debug(std::ostream &os) const {

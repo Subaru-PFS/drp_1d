@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_LBFGS_FITTER_
 #define _REDSHIFT_LBFGS_FITTER_
 
+#include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -90,19 +91,22 @@ public:
     CLeastSquare(CLbfgsFitter &fitter, const TInt32List &EltsIdx,
                  Int32 lineType, Float64 redshift, const TInt32List &xInds,
                  Int32 velA_idx, Int32 velE_idx, Int32 lbdaOffset_idx,
-                 Int32 pCoeff_indx, Float64 normFactor);
+                 Int32 pCoeff_indx, Float64 normFactor, Float64 normVel,
+                 Float64 normLbdaOffset);
 
     // Float64 operator()(const VectorXd &x, VectorXd &grad);
     void operator()(const VectorXd &x, ValueType &retvalue) const;
+    const CPolynomCoeffsNormalized &getPcoeffs() const { return m_pCoeffs; };
 
   private:
-    std::tuple<TFloat64List, Float64, TFloat64List>
+    std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
     unpack(const VectorXd &x) const;
     Float64 ComputeLeastSquare(const TFloat64List &amps, Float64 redshift,
-                               TFloat64List pCoeffs) const;
+                               const CPolynomCoeffsNormalized &pCoeffs) const;
 
     Float64 ComputeLeastSquareAndGrad(const TFloat64List &amps,
-                                      Float64 redshift, TFloat64List pCoeffs,
+                                      Float64 redshift,
+                                      const CPolynomCoeffsNormalized &pCoeffs,
                                       VectorXd &grad) const;
 
     CLbfgsFitter *m_fitter;
@@ -115,10 +119,13 @@ public:
     const Int32 m_lbdaOffset_idx;
     const Int32 m_pCoeff_idx;
     const Float64 m_normFactor;
+    const Float64 m_normVel;
+    const Float64 m_normLbdaOffset;
     const CSpectrumSpectralAxis *m_spectralAxis;
     const CSpectrumFluxAxis *m_noContinuumFluxAxis;
     const CSpectrumFluxAxis *m_continuumFluxAxis;
     const CSpectrumNoiseAxis *m_ErrorNoContinuum;
+    CPolynomCoeffsNormalized m_pCoeffs;
     Float64 m_sumSquareData;
   };
 
@@ -135,6 +142,11 @@ public:
 
 private:
   void doFit(Float64 redshift) override;
+
+  bool isIndividualFitEnabled() const override {
+    return !(m_enableAmplitudeOffsets || m_enableVelocityFitting ||
+             m_enableLambdaOffsetsFit);
+  };
 
   const bool m_enableVelocityFitting =
       Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit");

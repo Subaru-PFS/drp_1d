@@ -69,7 +69,7 @@ void CRuleStrongHigherThanWeak::Correct(
     CLineModelElementList &LineModelElementList) {
   Float64 coeff = 1.0;
   Float64 erStrong = -1.0;
-  std::string strongName = "undefined";
+  std::string strongName = undefStr;
   Float64 maxiStrong = FindHighestStrongLineAmp(
       m_LineType, erStrong, strongName, LineModelElementList);
   if (maxiStrong == -1.)
