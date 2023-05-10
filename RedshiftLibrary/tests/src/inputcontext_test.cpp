@@ -128,6 +128,8 @@ const std::string jsonStringOrtho =
     "\"firstpass\": { \"fittingmethod\" : \"individual\", "
     "\"multiplecontinuumfit_disable\": true},"
     "\"fittingmethod\": \"individual\","
+    "\"ampoffsetfit\": \"false\","
+    "\"lbdaoffsetfit\": \"false\","
     "\"linewidthtype\": \"combined\","
     "\"velocityemission\" : 100,"
     "\"velocityabsorption\": 100,"

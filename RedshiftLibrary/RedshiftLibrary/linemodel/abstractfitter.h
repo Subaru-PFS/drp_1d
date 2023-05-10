@@ -57,13 +57,15 @@ public:
       std::shared_ptr<const TLambdaRange> lambdaRange,
       std::shared_ptr<CSpectrumModel> spectrumModel,
       const TLineVector &restLineList,
-      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam);
+      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
   void fit(Float64 redshift);
 
   virtual void resetSupport(Float64 redshift);
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
+  void enableLambdaOffsets() { m_enableLambdaOffsetsFit = true; }
 
   static std::shared_ptr<CAbstractFitter> makeFitter(
       std::string fittingMethod, CLineModelElementList &elements,
@@ -72,7 +74,8 @@ public:
       std::shared_ptr<CSpectrumModel> spectrumModel,
       const TLineVector &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
-      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam);
+      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
   void logParameters();
 
@@ -121,7 +124,7 @@ protected:
 
   // hard coded options
   bool m_enableAmplitudeOffsets = false;
-  bool m_enableLambdaOffsetsFit = true;
+  bool m_enableLambdaOffsetsFit = false;
 
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;

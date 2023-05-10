@@ -80,7 +80,7 @@ using namespace std;
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
 CLineModelFitting::CLineModelFitting()
-    : m_RestLineList(Context.getLineVector()), m_enableAmplitudeOffsets(false) {
+    : m_RestLineList(Context.getLineVector()) {
   initParameters();
 
   m_inputSpc = Context.GetSpectrum(m_useloglambdasampling);
@@ -95,7 +95,7 @@ CLineModelFitting::CLineModelFitting()
 CLineModelFitting::CLineModelFitting(
     const std::shared_ptr<const CSpectrum> &template_,
     const TLambdaRange &lambdaRange)
-    : m_enableAmplitudeOffsets(false), m_RestLineList(Context.getLineVector()) {
+    : m_RestLineList(Context.getLineVector()) {
   m_inputSpc = template_;
   m_lambdaRange = std::make_shared<const TLambdaRange>(lambdaRange);
   initParameters();
@@ -116,6 +116,8 @@ void CLineModelFitting::initParameters() {
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
+  m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampoffsetfit");
+  m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaoffsetfit");
   m_LineWidthType = ps->GetScoped<std::string>("linewidthtype");
 
   m_lineRatioType = ps->GetScoped<std::string>("lineRatioType");
@@ -166,7 +168,8 @@ void CLineModelFitting::initMembers() {
   m_continuumManager = std::make_shared<CContinuumManager>(
       m_model, *(m_lambdaRange), m_continuumFitValues);
 
-  SetFittingMethod(m_fittingmethod);
+  SetFittingMethod(m_fittingmethod, m_enableAmplitudeOffsets,
+                   m_enableLbdaOffsets);
   SetLSF();
   LogCatalogInfos();
 
@@ -223,14 +226,11 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
   }
   if (iPass == 2) {
     m_forcedisableMultipleContinuumfit = false;
-    SetFittingMethod(m_opt_secondpass_fittingmethod);
+    SetFittingMethod(m_opt_secondpass_fittingmethod, m_enableAmplitudeOffsets,
+                     m_enableLbdaOffsets);
   }
   if (iPass == 3) {
-
     m_forcedisableMultipleContinuumfit = false;
-    m_model->m_enableAmplitudeOffsets = true;
-    m_enableAmplitudeOffsets = true;
-    m_fitter->enableAmplitudeOffsets();
   }
 
   m_lineRatioManager->setPassMode(iPass);
@@ -509,11 +509,15 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   return bestMerit;
 }
 
-void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
+void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
+                                         bool enableAmplitudeOffsets,
+                                         bool enableLambdaOffsetsFit) {
   m_fittingmethod = fitMethod;
-  m_fitter = CAbstractFitter::makeFitter(fitMethod, m_Elements, m_inputSpc,
-                                         m_lambdaRange, m_model, m_RestLineList,
-                                         m_continuumManager, m_ElementParam);
+  m_fitter = CAbstractFitter::makeFitter(
+      fitMethod, m_Elements, m_inputSpc, m_lambdaRange, m_model, m_RestLineList,
+      m_continuumManager, m_ElementParam, enableAmplitudeOffsets,
+      enableLambdaOffsetsFit);
+  m_model->m_enableAmplitudeOffsets = enableAmplitudeOffsets;
 }
 
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {

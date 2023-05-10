@@ -53,7 +53,9 @@ public:
                 std::shared_ptr<const TLambdaRange> lambdaRange,
                 std::shared_ptr<CSpectrumModel> spectrumModel,
                 const TLineVector &restLineList,
-                const std::vector<TLineModelElementParam_ptr> &elementParam);
+                const std::vector<TLineModelElementParam_ptr> &elementParam,
+                bool enableAmplitudeOffsets = false,
+                bool enableLambdaOffsetsFit = false);
 
 protected:
   void doFit(Float64 redshift) override;
