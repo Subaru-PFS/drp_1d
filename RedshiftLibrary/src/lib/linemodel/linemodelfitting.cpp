@@ -79,14 +79,15 @@ using namespace std;
  * Sets many state variables.
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
-CLineModelFitting::CLineModelFitting()
+CLineModelFitting::CLineModelFitting(
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
     : m_RestLineList(Context.getLineVector()) {
   initParameters();
 
   m_inputSpc = Context.GetSpectrum(m_useloglambdasampling);
   m_lambdaRange = Context.GetClampedLambdaRange(m_useloglambdasampling);
 
-  initMembers();
+  initMembers(TFOperator);
   setLineRatioType(m_lineRatioType);
   if (m_lineRatioType == "rules")
     dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
@@ -94,7 +95,8 @@ CLineModelFitting::CLineModelFitting()
 
 CLineModelFitting::CLineModelFitting(
     const std::shared_ptr<const CSpectrum> &template_,
-    const TLambdaRange &lambdaRange)
+    const TLambdaRange &lambdaRange,
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
     : m_RestLineList(Context.getLineVector()) {
   m_inputSpc = template_;
   m_lambdaRange = std::make_shared<const TLambdaRange>(lambdaRange);
@@ -104,7 +106,7 @@ CLineModelFitting::CLineModelFitting(
   // temporary options override to be removed when full tpl ortho is implemented
   m_lineRatioType = "rules";
 
-  initMembers();
+  initMembers(TFOperator);
   setLineRatioType(m_lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
@@ -143,7 +145,8 @@ void CLineModelFitting::initParameters() {
   }
 }
 
-void CLineModelFitting::initMembers() {
+void CLineModelFitting::initMembers(
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator) {
 
   m_nominalWidthDefault = 13.4; // euclid 1 px
 
@@ -164,7 +167,7 @@ void CLineModelFitting::initMembers() {
 
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_model = std::make_shared<CSpectrumModel>(
-      m_Elements, m_inputSpc, m_RestLineList, m_continuumFitValues);
+      m_Elements, m_inputSpc, m_RestLineList, m_continuumFitValues, TFOperator);
   m_continuumManager = std::make_shared<CContinuumManager>(
       m_model, *(m_lambdaRange), m_continuumFitValues);
 

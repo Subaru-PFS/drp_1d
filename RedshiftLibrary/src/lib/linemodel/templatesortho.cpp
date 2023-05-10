@@ -201,7 +201,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   // Compute linemodel on the template
   TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
-  CLineModelFitting model(tplOrtho, lambdaRange);
+  std::shared_ptr<COperatorTemplateFitting> TFOperator;
+  CLineModelFitting model(tplOrtho, lambdaRange, TFOperator);
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;

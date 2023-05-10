@@ -45,15 +45,16 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumModel::CSpectrumModel(CLineModelElementList &elements,
-                               std::shared_ptr<const CSpectrum> spc,
-                               const TLineVector &restLineList,
-                               std::shared_ptr<CTplModelSolution> tfv)
+CSpectrumModel::CSpectrumModel(
+    CLineModelElementList &elements,
+    const std::shared_ptr<const CSpectrum> &spc,
+    const TLineVector &restLineList,
+    const std::shared_ptr<CTplModelSolution> &tfv,
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
     : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
       m_SpectrumModel(*(spc)), m_RestLineList(restLineList),
-      m_fitContinuum(tfv) {
+      m_fitContinuum(tfv), m_templateFittingOperator(TFOperator) {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
-  m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.setError(m_inputSpc->GetFluxAxis().GetError());

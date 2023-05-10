@@ -12,13 +12,15 @@ namespace NSEpic {
 class CLineModelSolution;
 class CTplModelSolution;
 class CTemplate;
-class COperatorTemplateFitting;
+class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
-  CSpectrumModel(CLineModelElementList &elements,
-                 std::shared_ptr<const CSpectrum> spc,
-                 const TLineVector &m_RestLineList,
-                 std::shared_ptr<CTplModelSolution> tfv);
+  CSpectrumModel(
+      CLineModelElementList &elements,
+      const std::shared_ptr<const CSpectrum> &spc,
+      const TLineVector &m_RestLineList,
+      const std::shared_ptr<CTplModelSolution> &tfv,
+      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
   void refreshModel(Int32 lineTypeFilter = -1);
@@ -61,7 +63,7 @@ public:
   Float64 m_Redshift = 0.;
   // new methods
   Int32 m__count = 0;
-  std::shared_ptr<COperatorTemplateFitting> m_templateFittingOperator;
+  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
   Int32 m_spcIndex = 0;
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
