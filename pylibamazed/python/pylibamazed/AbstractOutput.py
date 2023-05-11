@@ -259,7 +259,7 @@ class AbstractOutput:
         
         return rs, filtered_datasets
 
-    def filter_dataset_attributes(self, ds_name, object_type=None): 
+    def filter_dataset_attributes(self, ds_name, object_type=None, method=None): 
         rs = self.results_specifications 
         ds_attributes = rs[rs["dataset"]==ds_name]   
         #filter ds_attributes by extended_results column
@@ -268,7 +268,11 @@ class AbstractOutput:
             skipsecondpass = self.parameters.check_lmskipsecondpass(object_type)
         
         #retrieve results which are not firstpass results
-        if skipsecondpass:
+        #exclude firstpass results for methods other than LineModelSolve
+        notLinemodel = False
+        if method:
+            notLinemodel = "LineModelSolve" not in method
+        if skipsecondpass or notLinemodel :
             filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
         else:
             filtered_df = ds_attributes
@@ -366,7 +370,7 @@ class AbstractOutput:
         bands = self.parameters.get_photometry_bands(object_type, method)
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
-            ds_attributes = self.filter_dataset_attributes(ds, object_type).copy()
+            ds_attributes = self.filter_dataset_attributes(ds, object_type, method).copy()
             if not self.has_candidate_dataset_in_source(object_type,
                                               method,
                                               ds):
