@@ -209,15 +209,6 @@ Float64 CLine::GetPosition() const { return m_Pos; }
 
 Float64 CLine::GetOffset() const { return m_Offset; }
 
-bool CLine::SetOffset(Float64 val) {
-  if (m_OffsetFit) {
-    m_Offset = val;
-    return true;
-  } else {
-    return false;
-  }
-}
-
 bool CLine::GetOffsetFitEnabled() const { return m_OffsetFit; }
 
 bool CLine::EnableOffsetFit() {

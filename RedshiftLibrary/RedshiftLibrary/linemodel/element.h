@@ -218,7 +218,7 @@ public:
   const TPolynomCoeffs &GetPolynomCoeffs() const;
   void SetPolynomCoeffs(TPolynomCoeffs pCoeffs);
 
-  void SetAllOffsets(Float64 val);
+  void SetAllOffsetsEnabled(Float64 val);
   void SetOffset(Int32 lineIdx, Float64 val);
   Float64 GetOffset(Int32 lineIdx) const {
     return m_ElementParam->m_Offsets[lineIdx];

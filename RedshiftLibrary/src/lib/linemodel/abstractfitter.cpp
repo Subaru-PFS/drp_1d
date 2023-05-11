@@ -302,7 +302,7 @@ void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
 
   Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
   for (Int32 iE : EltsIdx)
-    m_Elements[iE]->SetAllOffsets(offset);
+    m_Elements[iE]->SetAllOffsetsEnabled(offset);
 
   return;
 }
