@@ -836,9 +836,10 @@ void COperatorLineModel::ComputeSecondPass(
             m_firstpass_extremaResult.Redshift(i);
       }
     }
+    auto saved_fitter = std::move(m_fittingManager->m_fitter);
     m_fittingManager->SetFittingMethod(m_opt_secondpasslcfittingmethod);
     RecomputeAroundCandidates(opt_continuumreest, 2, true);
-    m_fittingManager->SetFittingMethod(opt_fittingmethod);
+    m_fittingManager->m_fitter = std::move(saved_fitter);
 
     Log.LogInfo("  Operator-Linemodel: now re-computing the final chi2 for "
                 "each candidate");
@@ -1217,6 +1218,9 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
               "velocity fitting bounds for Absorption: min=%.1f - max=%.1f - "
               "step=%.1f",
               velfitMinA, velfitMaxA, velfitStepA);
+
+  auto saved_fitter = std::move(m_fittingManager->m_fitter);
+
   // fit the emission and absorption width by minimizing the
   // linemodel merit with linemodel "hybrid" fitting method
   m_fittingManager->SetFittingMethod("hybrid");
@@ -1229,8 +1233,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
                 m_fittingManager->m_lineRatioManager)
                 ->m_opt_firstpass_forcedisableTplratioISMfit); // TODO: add
   }
-  // new param for this ?
-  // m_fittingManager->m_enableAmplitudeOffsets = true;
+
   std::vector<TInt32List> idxVelfitGroups;
   Float64 vInfLim;
   Float64 vSupLim;
@@ -1364,8 +1367,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
     }
   }
   // restore some params
-  m_fittingManager->SetFittingMethod(opt_fittingmethod);
-  // m_fittingManager->m_enableAmplitudeOffsets = false;
+  m_fittingManager->m_fitter = std::move(saved_fitter);
   if (m_fittingManager->getLineRatioType() == "tplratio")
     std::dynamic_pointer_cast<CTplratioManager>(
         m_fittingManager->m_lineRatioManager)

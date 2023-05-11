@@ -49,9 +49,11 @@ CHybridFitter::CHybridFitter(
     std::shared_ptr<const TLambdaRange> lambdaRange,
     std::shared_ptr<CSpectrumModel> spectrumModel,
     const TLineVector &restLineList,
-    const std::vector<TLineModelElementParam_ptr> &elementParam)
+    const std::vector<TLineModelElementParam_ptr> &elementParam,
+    bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit)
     : CSvdFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                 restLineList, elementParam)
+                 restLineList, elementParam, enableAmplitudeOffsets,
+                 enableLambdaOffsetsFit)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();

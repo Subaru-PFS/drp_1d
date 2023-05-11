@@ -56,7 +56,8 @@ public:
                const TLineVector &restLineList,
                const std::vector<TLineModelElementParam_ptr> &elementParam,
                std::shared_ptr<CContinuumManager> continuumManager,
-               Int32 polyOrder = -1);
+               Int32 polyOrder = -1, bool enableAmplitudeOffsets = false,
+               bool enableLambdaOffsetsFit = false);
 
 private:
   void doFit(Float64 redshift) override;

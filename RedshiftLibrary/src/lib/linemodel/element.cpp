@@ -352,7 +352,7 @@ void CLineModelElement::SetPolynomCoeffs(TPolynomCoeffs pCoeffs) {
   m_ElementParam->m_ampOffsetsCoeffs = std::move(pCoeffs);
 }
 
-void CLineModelElement::SetAllOffsets(Float64 val) {
+void CLineModelElement::SetAllOffsetsEnabled(Float64 val) {
   for (size_t i = 0; i < GetSize(); ++i) {
     if (m_ElementParam->m_Lines[i].GetOffsetFitEnabled())
       m_ElementParam->m_Offsets[i] = val;
@@ -360,8 +360,7 @@ void CLineModelElement::SetAllOffsets(Float64 val) {
 }
 
 void CLineModelElement::SetOffset(Int32 lineIdx, Float64 val) {
-  if (m_ElementParam->m_Lines[lineIdx].GetOffsetFitEnabled())
-    m_ElementParam->m_Offsets[lineIdx] = val;
+  m_ElementParam->m_Offsets[lineIdx] = val;
 }
 
 void CLineModelElement::SetLineProfile(Int32 lineIdx,

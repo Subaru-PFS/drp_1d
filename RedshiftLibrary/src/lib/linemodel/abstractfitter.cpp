@@ -19,10 +19,13 @@ CAbstractFitter::CAbstractFitter(
     std::shared_ptr<const TLambdaRange> lambdaRange,
     std::shared_ptr<CSpectrumModel> spectrumModel,
     const TLineVector &restLineList,
-    const std::vector<TLineModelElementParam_ptr> &elementParam)
+    const std::vector<TLineModelElementParam_ptr> &elementParam,
+    bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit)
     : m_Elements(elements), m_inputSpc(*(inputSpectrum)),
       m_RestLineList(restLineList), m_lambdaRange(*(lambdaRange)),
-      m_model(spectrumModel), m_ElementParam(elementParam) {
+      m_model(spectrumModel), m_ElementParam(elementParam),
+      m_enableAmplitudeOffsets(enableAmplitudeOffsets),
+      m_enableLambdaOffsetsFit(enableLambdaOffsetsFit) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
   if (Context.GetCurrentMethod() == "LineModelSolve") {
@@ -46,21 +49,22 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::shared_ptr<CSpectrumModel> spectrumModel,
     const TLineVector &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const std::vector<TLineModelElementParam_ptr> &elementParam) {
+    const std::vector<TLineModelElementParam_ptr> &elementParam,
+    bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit) {
   if (fittingMethod == "hybrid")
-    return std::make_shared<CHybridFitter>(elements, inputSpectrum, lambdaRange,
-                                           spectrumModel, restLineList,
-                                           elementParam);
+    return std::make_shared<CHybridFitter>(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList,
+        elementParam, enableAmplitudeOffsets, enableLambdaOffsetsFit);
 #ifdef LBFGSFITTER
   else if (fittingMethod == "lbfgs")
-    return std::make_shared<CLbfgsFitter>(elements, inputSpectrum, lambdaRange,
-                                          spectrumModel, restLineList,
-                                          elementParam);
+    return std::make_shared<CLbfgsFitter>(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList,
+        elementParam, enableAmplitudeOffsets, enableLambdaOffsetsFit);
 #endif
   else if (fittingMethod == "svd")
-    return std::make_shared<CSvdFitter>(elements, inputSpectrum, lambdaRange,
-                                        spectrumModel, restLineList,
-                                        elementParam);
+    return std::make_shared<CSvdFitter>(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList,
+        elementParam, enableAmplitudeOffsets, enableLambdaOffsetsFit);
   else if (fittingMethod == "svdlc")
     return std::make_shared<CSvdlcFitter>(elements, inputSpectrum, lambdaRange,
                                           spectrumModel, restLineList,
@@ -298,7 +302,7 @@ void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
 
   Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
   for (Int32 iE : EltsIdx)
-    m_Elements[iE]->SetAllOffsets(offset);
+    m_Elements[iE]->SetAllOffsetsEnabled(offset);
 
   return;
 }

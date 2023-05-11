@@ -112,7 +112,9 @@ public:
               Int32 contreest_iterations = 0, bool enableLogging = 0);
   TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
 
-  void SetFittingMethod(const std::string &fitMethod);
+  void SetFittingMethod(const std::string &fitMethod,
+                        bool enableAmplitudeOffsets = false,
+                        bool enableLambdaOffsetsFit = false);
   void setLineRatioType(const std::string &lineratio);
   void SetAbsLinesLimit(Float64 limit);
 
@@ -185,6 +187,7 @@ public:
   void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
+  bool m_enableLbdaOffsets;
 
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;

@@ -102,7 +102,6 @@ public:
   void SetProfile(CLineProfile_ptr &&profile);
   Float64 GetPosition() const;
   Float64 GetOffset() const;
-  bool SetOffset(Float64 val);
   bool GetOffsetFitEnabled() const;
   bool EnableOffsetFit();
   bool DisableOffsetFit();

@@ -80,6 +80,8 @@ const std::string jsonString =
     "\"absvelocityfitmin\" : 150,"
     "\"absvelocityfitmax\" : 500, "
     "\"absvelocityfitstep\" : 50,"
+    "\"ampoffsetfit\": \"false\","
+    "\"lbdaoffsetfit\": \"false\","
     "\"extremacount\" : 5,"
     "\"extremacountB\" : 3,"
     "\"nsigmasupport\" : 8,"
