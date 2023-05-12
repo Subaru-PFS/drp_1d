@@ -45,6 +45,7 @@ from pylibamazed.redshift import ErrorCode
 class Parameters:
     def __init__(self, parameters: dict):
         self.parameters = parameters
+        self.check_params()
         
     def get_solve_methods(self,object_type) -> dict:
         method = self.get_solve_method(object_type)
@@ -338,3 +339,24 @@ class Parameters:
             return self.parameters[object_type][method]["linemodel"]["continuumfit"]["fftprocessing"]
             
         return self.parameters[object_type][method]["fftprocessing"]
+
+    def get_linemodel_continuumfit_params(self, object_type, solve_method):
+        return self.get_linemodel_params(object_type, solve_method).get("continuumfit")
+ 
+    #a list of checks to do for linemodel
+    def check_linemodel_params(self, object_type, solve_method):
+        #nothing to check here
+        if solve_method!= "LineModelSolve" or solve_method!="LineMeasSolve":
+            return True
+        #check1
+        use_loglambdasampling = self.get_linemodel_params(object_type, solve_method).get("useloglambdasampling")
+        fftprocessing = self.get_linemodel_continuumfit_params(object_type, solve_method).get("fftprocessing")
+        if use_loglambdasampling and not fftprocessing:
+            raise APIException(ErrorCode.INVALID_PARAMETER,"useloglambdasampling cannot be activated if fftprocessing is deactivated")
+
+    def check_params(self):
+        #iterate over objects
+        for object_type in self.get_objects() :
+            methods = self.get_solve_methods(object_type)
+            for solve_method in methods:
+                self.check_linemodel_params(object_type, solve_method) 
