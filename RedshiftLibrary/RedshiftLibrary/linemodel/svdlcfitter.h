@@ -49,10 +49,10 @@ namespace NSEpic
 // class CRegulament;
 class CSvdlcFitter : public CAbstractFitter {
 public:
-  CSvdlcFitter(CLineModelElementList &elements,
-               std::shared_ptr<const CSpectrum> inputSpectrum,
-               std::shared_ptr<const TLambdaRange> lambdaRange,
-               std::shared_ptr<CSpectrumModel> spectrumModel,
+  CSvdlcFitter(const CLMEltListVectorPtr &elementsVector,
+               const CCSpectrumVectorPtr &inputSpcs,
+               const CTLambdaRangePtrVector &lambdaRanges,
+               const CSpcModelVectorPtr &spectrumModels,
                const TLineVector &restLineList,
                const std::vector<TLineModelElementParam_ptr> &elementParam,
                std::shared_ptr<CContinuumManager> continuumManager,

@@ -164,6 +164,7 @@ public:
   getClampedLambdaRanges() const {
     return m_inputContext->getClampedLambdaRanges();
   }
+
   const std::vector<std::shared_ptr<const TFloat64Range>> &
   getRebinnedClampedLambdaRanges() const {
     return m_inputContext->getRebinnedClampedLambdaRanges();

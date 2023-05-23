@@ -135,5 +135,7 @@ public:
       elt->debug(os);
   }
 };
+
+using CLMEltListVectorPtr = std::shared_ptr<std::vector<CLineModelElementList>>;
 } // namespace NSEpic
 #endif

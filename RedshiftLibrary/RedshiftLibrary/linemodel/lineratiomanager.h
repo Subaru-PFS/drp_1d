@@ -42,22 +42,23 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
-
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/spectrummodel.h"
 namespace NSEpic {
 
-class CLineModelElementList;
 class CSpectrumModel;
 class CSpectrum;
 class CContinuumManager;
 class CLineModelSolution;
 class CTplModelSolution;
 class CAbstractFitter;
+
 class CLineRatioManager {
 public:
-  CLineRatioManager(CLineModelElementList &elements,
-                    std::shared_ptr<CSpectrumModel> model,
-                    std::shared_ptr<const CSpectrum> inputSpc,
-                    std::shared_ptr<const TFloat64Range> lambdaRange,
+  CLineRatioManager(const CLMEltListVectorPtr &elementsVector,
+                    const CSpcModelVectorPtr &spectrumModels,
+                    const CCSpectrumVectorPtr &inputSpcs,
+                    const CTLambdaRangePtrVector &lambdaRanges,
                     std::shared_ptr<CContinuumManager> continuumManager,
                     const TLineVector &restLineList);
   CLineRatioManager() = delete;
@@ -88,10 +89,10 @@ public:
 
   void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
   static std::shared_ptr<CLineRatioManager> makeLineRatioManager(
-      const std::string &lineRatioType, CLineModelElementList &elements,
-      std::shared_ptr<CSpectrumModel> model,
-      std::shared_ptr<const CSpectrum> inputSpc,
-      std::shared_ptr<const TFloat64Range> lambdaRange,
+      const std::string &lineRatioType,
+      const CLMEltListVectorPtr &elementsVector,
+      const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
+      const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
       const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter);
 
@@ -107,13 +108,29 @@ protected:
 
   Float64 getLeastSquareMerit() const;
 
-  CLineModelElementList &m_Elements;
-  std::shared_ptr<CSpectrumModel> m_model;
-  std::shared_ptr<const CSpectrum> m_inputSpc;
+  CSpectrumModel &getModel(Int32 index = 0) { return (*m_models)[index]; }
+  const CSpectrumModel &getModel(Int32 index = 0) const {
+    return (*m_models)[index];
+  }
+  const CSpectrum &getSpectrum(Int32 index = 0) const {
+    return *((*m_inputSpcs)[index]);
+  }
+  const TLambdaRange &getLambdaRange(Int32 index = 0) const {
+    return *(m_lambdaRanges[index]);
+  }
+  CLineModelElementList &getElementList(Int32 index = 0) {
+    return (*m_elementsVector)[index];
+  }
+  CLineModelElementList &getElementList(Int32 index = 0) const {
+    return (*m_elementsVector)[index];
+  }
+  CLMEltListVectorPtr m_elementsVector;
+  CCSpectrumVectorPtr m_inputSpcs;
+  CTLambdaRangePtrVector m_lambdaRanges;
+  CSpcModelVectorPtr m_models;
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;
   const TLineVector &m_RestLineList;
-  std::shared_ptr<const TFloat64Range> m_lambdaRange;
 
   bool m_forceDisableLyaFitting = false;
   bool m_forceLyaFitting = false;

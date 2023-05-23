@@ -118,7 +118,7 @@ void TLineModelResult::updateFromModel(
   nddl = lmresult->LineModelSolutions[idx]
              .nDDL; // override nddl by the actual number of elements in
   // the fitted model
-  NDof = lmel->m_Elements.GetModelNonZeroElementsNDdl();
+  NDof = lmel->getElementList().GetModelNonZeroElementsNDdl();
 
   Float64 _bic =
       lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC

@@ -3,6 +3,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
 #include <cmath>
@@ -18,14 +19,15 @@ class COperatorTemplateFitting;
 class CSpectrum;
 class CTemplateCatalog;
 class CSpectrumFluxCorrectionCalzetti;
-class CSpectrumModel;
+
 class CTplModelSolution;
 
 class CContinuumManager {
 public:
-  CContinuumManager(const std::shared_ptr<CSpectrumModel> &model,
-                    const TLambdaRange &lambdaRange,
+  CContinuumManager(const CSpcModelVectorPtr &models,
                     std::shared_ptr<CTplModelSolution>);
+
+  CSpectrumModel &getModel(Int32 index = 0) const { return (*m_models)[index]; }
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);
@@ -91,7 +93,7 @@ private:
 
   std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
 
-  std::shared_ptr<CSpectrumModel> m_model;
+  CSpcModelVectorPtr m_models;
 
   std::string m_ContinuumComponent;
   Int32 m_fitContinuum_option;

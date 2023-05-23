@@ -45,17 +45,17 @@
 using namespace NSEpic;
 
 CRulesManager::CRulesManager(
-    CLineModelElementList &elements, std::shared_ptr<CSpectrumModel> model,
-    std::shared_ptr<const CSpectrum> inputSpc,
-    std::shared_ptr<const TFloat64Range> lambdaRange,
+    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
+    const CCSpectrumVectorPtr &inputSpcs,
+    const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
     const TLineVector &restLineList)
-    : CLineRatioManager(elements, model, inputSpc, lambdaRange,
+    : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList) {}
 
 Float64 CRulesManager::computeMerit(Int32 iratio) {
   applyRules(true);
-  m_model->refreshModel();
+  getModel().refreshModel();
   return getLeastSquareMerit();
 }
 
@@ -74,7 +74,7 @@ void CRulesManager::applyRules(bool enableLogs) {
   }
 
   m_Regulament.EnableLogs(enableLogs);
-  m_Regulament.Apply(m_Elements);
+  m_Regulament.Apply(getElementList());
 }
 
 const TStringList &CRulesManager::GetModelRulesLog() const {

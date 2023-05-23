@@ -10,11 +10,10 @@
 using namespace NSEpic;
 using namespace std;
 
-CContinuumManager::CContinuumManager(
-    const std::shared_ptr<CSpectrumModel> &model,
-    const TLambdaRange &lambdaRange, std::shared_ptr<CTplModelSolution> tfv)
+CContinuumManager::CContinuumManager(const CSpcModelVectorPtr &models,
+                                     std::shared_ptr<CTplModelSolution> tfv)
     : m_tplCatalog(Context.GetTemplateCatalog()),
-      m_tplCategoryList({Context.GetCurrentCategory()}), m_model(model),
+      m_tplCategoryList({Context.GetCurrentCategory()}), m_models(models),
       m_fitContinuum(tfv) {
 
   // NB: fitContinuum_option: this is the initialization (default value),
@@ -119,7 +118,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
       m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
   }
 
-  m_model->ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
+  getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
 
   setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                m_fitContinuum->tplAmplitudeError,
@@ -155,7 +154,7 @@ void CContinuumManager::setFitContinuum_tplAmplitude(
   m_fitContinuum->tplAmplitude = tplAmp;
   m_fitContinuum->tplAmplitudeError = tplAmpErr;
   m_fitContinuum->pCoeffs = polyCoeffs;
-  m_model->setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
+  getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
 }
 
 Int32 CContinuumManager::SetFitContinuum_FitStore(
@@ -253,7 +252,7 @@ bool CContinuumManager::isContFittedToNull() {
 
 void CContinuumManager::setContinuumComponent(std::string component) {
   m_ContinuumComponent = std::move(component);
-  m_model->setContinuumComponent(m_ContinuumComponent);
+  getModel().setContinuumComponent(m_ContinuumComponent);
 
   *m_fitContinuum = {};
 
@@ -272,7 +271,7 @@ void CContinuumManager::setContinuumComponent(std::string component) {
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
   std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
       m_tplCategoryList, m_fitContinuum->tplName);
-  m_model->ApplyContinuumOnGrid(tpl, redshift);
+  getModel().ApplyContinuumOnGrid(tpl, redshift);
 }
 
 void CContinuumManager::reinterpolateContinuumResetAmp() {

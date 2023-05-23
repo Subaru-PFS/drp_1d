@@ -132,13 +132,13 @@ public:
   Float64 getLeastSquareContinuumMerit() const;
   Float64 getLeastSquareMeritUnderElements() const;
   Float64 getScaleMargCorrection(Int32 idxLine = -1) const {
-    return m_Elements.getScaleMargCorrection(idxLine);
+    return getElementList().getScaleMargCorrection(idxLine);
   }
 
   Float64 getStrongerMultipleELAmpCoeff() const;
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
-    return m_model->getLinesAboveSNR(*m_lambdaRange, snrcut);
+    return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
   Float64 getCumulSNRStrongEL() const;
@@ -149,10 +149,10 @@ public:
 
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
-  CLineModelElementList m_Elements;
+
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
-  std::shared_ptr<const CSpectrum> m_inputSpc;
+
   const TLineVector m_RestLineList;
 
   Int32 setPassMode(Int32 iPass);
@@ -164,13 +164,37 @@ public:
     return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
-  std::shared_ptr<CSpectrumModel> getSpectrumModel() {
-    return m_model;
-  } // not const because of tplortho
-
-  std::shared_ptr<const CSpectrumModel> getConstSpectrumModel() {
-    return m_model;
+  const CSpectrum &getSpectrum(Int32 index = 0) const {
+    return *((*m_inputSpcs)[index]);
   }
+  shared_ptr<const CSpectrum> getSpectrumPtr(Int32 index = 0) {
+    return (*m_inputSpcs)[index];
+  }
+
+  // CSpectrumModel& getSpectrumModel(Int32 index=0) {
+  //   return (*m_models)[index];
+  // } // not const because of tplortho
+
+  CSpectrumModel &getSpectrumModel(Int32 index = 0) const {
+    return (*m_models)[index];
+  } // not const because of tplortho
+  /*
+  std::shared_ptr<const CSpectrumModel> getConstSpectrumModel(Int32 index=0) {
+    return (*m_models)[index];
+  }
+  */
+
+  CLineModelElementList &getElementList(Int32 index = 0) {
+    return (*m_ElementsVector)[index];
+  }
+  CLineModelElementList &getElementList(Int32 index = 0) const {
+    return (*m_ElementsVector)[index];
+  }
+
+  const TLambdaRange &getLambdaRange(Int32 index = 0) const {
+    return *(m_lambdaRanges[index]);
+  }
+
   const std::string &getFittingMethod() const { return m_fittingmethod; }
 
   std::shared_ptr<CContinuumManager> getContinuumManager() {
@@ -210,7 +234,7 @@ private:
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
 
-  std::shared_ptr<CSpectrumModel> m_model;
+  CSpcModelVectorPtr m_models;
 
   Float64 m_dTransposeD; // the cached dtd (maximum chisquare value)
   TFloat64Range m_dTransposeDLambdaRange; // the lambdaRange used to computed
@@ -231,7 +255,9 @@ private:
 
   bool m_forcedisableMultipleContinuumfit = false;
 
-  std::shared_ptr<const TFloat64Range> m_lambdaRange;
+  CTLambdaRangePtrVector m_lambdaRanges;
+  CCSpectrumVectorPtr m_inputSpcs;
+  CLMEltListVectorPtr m_ElementsVector;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;

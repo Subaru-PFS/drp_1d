@@ -334,5 +334,7 @@ inline CSpectrum CSpectrum::extract(Int32 startIdx, Int32 endIdx) const {
   return spc;
 }
 
+using CCSpectrumVectorPtr =
+    std::shared_ptr<std::vector<std::shared_ptr<const CSpectrum>>>;
 } // namespace NSEpic
 #endif

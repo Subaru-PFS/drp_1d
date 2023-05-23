@@ -457,7 +457,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   if (ignoreLinesSupport) {
     m_templateFittingOperator->setMaskBuilder(
         std::make_shared<COutsideLineMaskBuilder>(
-            m_fittingManager->m_Elements));
+            m_fittingManager->getElementList()));
     boost::chrono::thread_clock::time_point start_tplfitmaskprep =
         boost::chrono::thread_clock::now();
 
@@ -950,7 +950,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       // calling GetModelVelFitGroups, which is not done here. TBSolved in #6623
       // absorption
       std::vector<TInt32List> idxVelfitGroups =
-          m_fittingManager->m_Elements.GetModelVelfitGroups(
+          m_fittingManager->getElementList().GetModelVelfitGroups(
               CLine::nType_Absorption);
       std::string alv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
@@ -964,7 +964,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       Log.LogInfo("    Operator-Linemodel: saveResults with groups alv=%s",
                   alv_list_str.c_str());
       // emission
-      idxVelfitGroups = m_fittingManager->m_Elements.GetModelVelfitGroups(
+      idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
           CLine::nType_Emission);
       std::string elv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
@@ -1029,7 +1029,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       // 2=save model with only Em. lines removed.
       if (overrideModelSavedType == 0) {
         resultspcmodel = std::make_shared<CModelSpectrumResult>(
-            m_fittingManager->getSpectrumModel()->GetModelSpectrum());
+            m_fittingManager->getSpectrumModel().GetModelSpectrum());
       } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
         Int32 lineTypeFilter = -1;
         if (overrideModelSavedType == 2)
@@ -1037,7 +1037,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
         resultspcmodel = std::make_shared<CModelSpectrumResult>(
             m_fittingManager->getSpectrumModel()
-                ->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
+                .GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
       }
       ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 
@@ -1072,7 +1072,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       // Save the reestimated continuum, only the first
       // n=maxSaveNLinemodelContinua extrema
       const CSpectrumFluxAxis &modelContinuumFluxAxis =
-          m_fittingManager->getSpectrumModel()->GetModelContinuum();
+          m_fittingManager->getSpectrumModel().GetModelContinuum();
 
       std::shared_ptr<CModelSpectrumResult> baselineResult =
           std::make_shared<CModelSpectrumResult>(
@@ -1284,7 +1284,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
       // calling GetModelVelFitGroups,which is the case here (through a prior
       // call to ::fit)
       idxVelfitGroups =
-          m_fittingManager->m_Elements.GetModelVelfitGroups(lineTypeInt);
+          m_fittingManager->getElementList().GetModelVelfitGroups(lineTypeInt);
       Log.LogDetail(Formatter()
                     << "  Operator-Linemodel: VelfitGroups " << lineTypeStr
                     << " - n = " << idxVelfitGroups.size());
@@ -1425,7 +1425,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
     if (m_enableWidthFitByGroups) {
       std::vector<TInt32List> idxVelfitGroups;
       // absorption
-      idxVelfitGroups = m_fittingManager->m_Elements.GetModelVelfitGroups(
+      idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
           CLine::nType_Absorption);
       std::string alv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
@@ -1437,7 +1437,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
       Log.LogInfo("    Operator-Linemodel: recompute with groups alv=%s",
                   alv_list_str.c_str());
       // emission
-      idxVelfitGroups = m_fittingManager->m_Elements.GetModelVelfitGroups(
+      idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
           CLine::nType_Emission);
       std::string elv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
@@ -1806,6 +1806,6 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   // make sure polynom info are correctly set. it s up to refresh model to use
   // these coeffs
   m_fittingManager->LoadModelSolution(bestModelSolution);
-  m_fittingManager->getSpectrumModel()->refreshModel();
-  return m_fittingManager->getSpectrumModel()->GetModelSpectrum();
+  m_fittingManager->getSpectrumModel().refreshModel();
+  return m_fittingManager->getSpectrumModel().GetModelSpectrum();
 }
