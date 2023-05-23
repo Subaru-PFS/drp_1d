@@ -82,20 +82,20 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
 
     """
 
-    def load_wave(self, spectrum):
+    def load_wave(self, spectrum, obs_id=""):
         self.waves.append(spectrum.wave)
 
-    def load_flux(self, spectrum):
+    def load_flux(self, spectrum, obs_id=""):
         self.fluxes.append(spectrum.flux)
 
-    def load_error(self, spectrum):
+    def load_error(self, spectrum, obs_id=""):
         self.errors.append(spectrum.err)
 
-    def load_lsf(self, spectrum):
+    def load_lsf(self, spectrum, obs_id=""):
         pass
         #self.lsf_type = "no_lsf"
 
-    def load_photometry(self, phot):
+    def load_photometry(self, phot, obs_id=""):
         self.photometric_data.append(phot)
 
     # spectrum here is a CSpectrum
