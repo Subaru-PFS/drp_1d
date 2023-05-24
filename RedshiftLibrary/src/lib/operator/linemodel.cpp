@@ -602,7 +602,6 @@ void COperatorLineModel::buildExtendedRedshifts() {
 
     Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
                 cand->Redshift, cand->ValProba);
-
     m_firstpass_extremaResult.ExtendedRedshifts.push_back(
         SpanRedshiftWindow(cand->Redshift));
   }
@@ -615,7 +614,6 @@ void COperatorLineModel::buildExtendedRedshifts() {
  * @return extendedList
  */
 TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
-
   Float64 half_r = m_secondPass_halfwindowsize;
   Float64 half_l = m_secondPass_halfwindowsize;
   if (m_redshiftSampling == "log") {
@@ -626,6 +624,7 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
   TFloat64Range windowRange(z - half_l, z + half_r);
   windowRange.IntersectWith(m_Redshifts);
   CZGridParam zparam(windowRange, m_fineStep, z);
+
   return zparam.getZGrid(m_redshiftSampling == "log");
 }
 
@@ -1420,6 +1419,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
     Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- "
                 "---------- Candidate #%d",
                 i);
+
     Float64 Z = extremaResult.Redshift(i);
 
     if (m_enableWidthFitByGroups) {

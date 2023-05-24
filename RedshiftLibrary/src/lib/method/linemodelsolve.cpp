@@ -149,8 +149,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       m_redshiftSampling == "log",
       "SPE", // Id_prefix
       false, // do not allow extrema at border
-      1,     // one peak/window only
-      true   // integrate under peaks
+      1      // one peak/window only
   );
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
@@ -508,7 +507,7 @@ void CLineModelSolve::Solve() {
   COperatorPdfz pdfz(m_opt_pdfcombination,
                      2 * m_opt_secondpass_halfwindowsize, // peak separation
                      m_opt_candidatesLogprobaCutThreshold, extremacount,
-                     m_redshiftSampling == "log", "FPE", true, 0, false);
+                     m_redshiftSampling == "log", "FPE", true, 0);
 
   std::shared_ptr<PdfCandidatesZResult> candResult_fp =
       pdfz.Compute(chisquares);
@@ -554,7 +553,7 @@ void CLineModelSolve::Solve() {
     COperatorPdfz pdfz(m_opt_pdfcombination,
                        2 * m_opt_secondpass_halfwindowsize, // peak separation
                        m_opt_candidatesLogprobaCutThreshold, extremacount,
-                       m_redshiftSampling == "log", "FPB", true, 0, false);
+                       m_redshiftSampling == "log", "FPB", true, 0);
 
     std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares);
 

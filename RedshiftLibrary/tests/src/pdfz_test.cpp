@@ -36,66 +36,47 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/operator/linemodel.h"
+
+#include "RedshiftLibrary/operator/pdfz.h"
 #include <boost/test/unit_test.hpp>
 #include <regex>
 using namespace NSEpic;
 using namespace std;
-BOOST_AUTO_TEST_SUITE(Linemodel)
 
-BOOST_AUTO_TEST_CASE(spanRedshift_test) {
-  Float64 z = 5.;
-  Float64 step = log(1 + 0.5);
-  TFloat64List redshifts{0, 5, 9};
-  std::string redshiftSampling = "log";
-  Float64 secondPass_halfwindowsize = log(1 + 1);
-  Int32 ref_idx = 1;
-  TFloat64List extendedRedshifts_ref{3, 5, 8};
+BOOST_AUTO_TEST_SUITE(Pdfz_test)
 
-  // prepare object
-  COperatorLineModel op;
-  op.m_Redshifts = redshifts;
-  op.m_fineStep = step;
-  op.m_redshiftSampling = redshiftSampling;
-  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
+BOOST_AUTO_TEST_CASE(checkWindowSize_test) {
+  COperatorPdfz op_pdfz("something",
+                        0.0, // no peak Separation in 2nd pass
+                        0.0, // cut threshold
+                        5,   // max nb of final (2nd pass) candidates
+                        true,
+                        "SPE", // Id_prefix
+                        false, // do not allow extrema at border
+                        1      // one peak/window only
+  );
 
-  TFloat64List extendedList = op.SpanRedshiftWindow(z);
-  // check is sorted
-  BOOST_CHECK(
-      std::is_sorted(std::begin(extendedList), std::end(extendedList)) == true);
-  BOOST_CHECK(extendedList == extendedRedshifts_ref);
-  // check presence of z in extendedList
-  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
-  BOOST_CHECK(idx == ref_idx);
+  TFloat64Range integration_range;
+  TFloat64Range window_range;
+
+  integration_range = TFloat64Range{0.1, 0.2};
+  window_range = TFloat64Range{0.05, 0.15};
+  op_pdfz.checkWindowSize(integration_range, window_range);
+  BOOST_CHECK(Flag.getListMessages().size() == 1);
+  BOOST_CHECK(Flag.getListMessages()[0].first == WarningCode::WINDOW_TOO_SMALL);
+
+  Flag.resetFlag();
+  integration_range = TFloat64Range{0.05, 0.15};
+  window_range = TFloat64Range{0.1, 0.2};
+  op_pdfz.checkWindowSize(integration_range, window_range);
+  BOOST_CHECK(Flag.getListMessages().size() == 1);
+  BOOST_CHECK(Flag.getListMessages()[0].first == WarningCode::WINDOW_TOO_SMALL);
+
+  Flag.resetFlag();
+  integration_range = TFloat64Range{0.1, 0.2};
+  window_range = TFloat64Range{0.05, 0.25};
+  op_pdfz.checkWindowSize(integration_range, window_range);
+  BOOST_CHECK(Flag.getListMessages().size() == 0);
 }
 
-BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
-  /*//TODO
-    Float64 z = 5.;
-  Float64 step = 1;
-  TFloat64List redshifts{0, 5, 9};
-  std::string redshiftSampling = "lin";
-  Float64 secondPass_halfwindowsize = 0.5;
-  Int32 ref_idx = 3; // todo
-  TFloat64List extendedRedshifts_ref{2, 3, 4, 5, 6, 7, 8};
-
-  // prepare object
-  COperatorLineModel op;
-  op.m_Redshifts = redshifts;
-  op.m_fineStep = step;
-  op.m_redshiftSampling = redshiftSampling;
-  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
-  op.updateRedshiftGridAndResults();
-      // verifications:
-      auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
-      auto _j = std::distance(m_Redshifts.begin(), it);
-
-      if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
-        THROWG(INTERNAL_ERROR, "linemodel vector is not sorted");
-
-    if (m_result->Redshifts.size() != m_Redshifts.size())
-      THROWG(INTERNAL_ERROR, "linemodel sizes do not match");
-  */
-}
 BOOST_AUTO_TEST_SUITE_END()

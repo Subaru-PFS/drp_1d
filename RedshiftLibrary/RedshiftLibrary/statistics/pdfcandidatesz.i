@@ -48,7 +48,7 @@ public:
   Float64 Redshift = NAN;
   Float64 ValProba = NAN;
   Float64 ValSumProba = 0.;
-  Float64 Deltaz = 0.;
+  Float64 Deltaz = NAN;
   Float64 ValSumProbaZmin = NAN;
   Float64 ValSumProbaZmax = NAN;
 
