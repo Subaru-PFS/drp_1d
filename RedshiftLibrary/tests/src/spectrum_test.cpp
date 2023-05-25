@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   BOOST_CHECK(spc.GetSpectralAxis().GetSamplesVector()[0] == 1210.);
   BOOST_CHECK(spc.GetFluxAxis().GetSamplesVector()[0] == 1.5);
 
-  bool isEmpty = spc.IsEmpty();
+  bool isEmpty = spc.IsFluxEmpty();
   BOOST_CHECK(isEmpty == false);
 
   // SetType
@@ -351,12 +351,12 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
       std::numeric_limits<double>::infinity();
   spc.ValidateSpectrum(lambdaRange, true);
   BOOST_CHECK(spc.GetRawFluxAxis_().GetSamplesVector()[1] = fluxList[1]);
-  // not IsFluxValid
+  // not ValidateFlux
   spc.GetRawFluxAxis_().GetSamplesVector()[1] =
       std::numeric_limits<double>::infinity();
   BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false), GlobalException);
   spc.GetRawFluxAxis_().GetSamplesVector()[1] = fluxList[1];
-  // not IsNoiseValid
+  // not ValidateNoise
   spc.GetRawFluxAxis_().GetError().GetSamplesVector()[1] =
       std::numeric_limits<double>::infinity();
   BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false), GlobalException);
@@ -535,61 +535,68 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   CSpectrum object_CSpectrum2b(m_SpectralAxis, _FluxAxis7);
 
   //--------------------//
-  // test IsFluxValid
+  // test ValidateSpectralAxis //
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateSpectralAxis(11, 14.1),
+                    GlobalException); // cas où l'intervalle est à l'extérieur
+  BOOST_CHECK_THROW(
+      object_CSpectrum.ValidateSpectralAxis(10, 14.1),
+      GlobalException); // cas où borne sup de l'intervalle est à l'extérieur
+  BOOST_CHECK_THROW(
+      object_CSpectrum.ValidateSpectralAxis(0, 10) == false,
+      GlobalException); // cas où borne inf de l'intervalle est à l'extérieur
 
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(1, 11.1) ==
-              false); // cas dans tout l'intervalle
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(1, 5.1) ==
-              false); // cas dans l'intervalle 1 à 5 avec 0.0
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(1, 6.1) ==
-              true); // cas dans l'intervalle 1 à 6
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(6, 11.1) ==
-              false); // cas dans l'intervalle 6 à 11 avec nan et inf
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(6, 7.1) ==
-              true); // cas dans l'intervalle 6 à 7
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(7, 9.1) ==
-              false); // cas dans l'intervalle 7 à 9 avec nan
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(9, 9.1) ==
-              true); // cas où l'intervalle est un point
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(9, 11.1) ==
-              false); // cas dans l'intervalle 9 à 11 avec inf
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(10, 10.1) ==
-              false); // cas où l'intervalle est un point inf
-  BOOST_CHECK(object_CSpectrum.IsFluxValid(11, 14.1) ==
-              false); // cas où l'intervalle est à l'extérieur
-  // check throw : spectrum is not valid
+  //--------------------//
+  // test ValidateFlux
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(1, 11.1),
+                    GlobalException); // cas dans tout l'intervalle
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(1, 5.1),
+                    GlobalException); // cas dans l'intervalle 1 à 5 avec 0.0
+  BOOST_CHECK_NO_THROW(
+      object_CSpectrum.ValidateFlux(1, 6.1)); // cas dans l'intervalle 1 à 6
+  BOOST_CHECK_THROW(
+      object_CSpectrum.ValidateFlux(6, 11.1),
+      GlobalException); // cas dans l'intervalle 6 à 11 avec nan et inf
+  BOOST_CHECK_NO_THROW(
+      object_CSpectrum.ValidateFlux(6, 7.1)); // cas dans l'intervalle 6 à 7
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(7, 9.1),
+                    GlobalException); // cas dans l'intervalle 7 à 9 avec nan
+  BOOST_CHECK_NO_THROW(object_CSpectrum.ValidateFlux(
+      9, 9.1)); // cas où l'intervalle est un point
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(9, 11.1),
+                    GlobalException); // cas dans l'intervalle 9 à 11 avec inf
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(10, 10.1),
+                    GlobalException); // cas où l'intervalle est un point inf
   object_CSpectrum.GetFluxAxis_().GetSamplesVector().pop_back();
-  BOOST_CHECK_THROW(object_CSpectrum.IsFluxValid(1, 11.1), GlobalException);
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(1, 11.1), GlobalException);
   object_CSpectrum.GetFluxAxis_().GetSamplesVector().push_back(13.);
   object_CSpectrum.GetFluxAxis_().GetError().GetSamplesVector().push_back(
       1e-12);
 
   //--------------------//
-  // test IsNoiseValid
+  // test ValidateNoise
 
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(1, 11.1) ==
-              false); // cas dans tout l'intervalle
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(1, 5.1) ==
-              false); // cas dans l'intervalle 1 à 5 avec 0.0
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(1, 6.1) ==
-              false); // cas dans l'intervalle 1 à 6
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(6, 11.1) ==
-              false); // cas dans l'intervalle 6 à 11 avec nan et inf
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(6, 7.1) ==
-              true); // cas dans l'intervalle 6 à 7
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(7, 9.1) ==
-              false); // cas dans l'intervalle 7 à 9 avec nan
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(9, 9.1) ==
-              true); // cas où l'intervalle est un point
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(9, 11.1) ==
-              false); // cas dans l'intervalle 9 à 11 avec inf
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(10, 10.1) ==
-              false); // cas où l'intervalle est un point inf
-  BOOST_CHECK(object_CSpectrum.IsNoiseValid(11, 14.1) ==
-              false); // cas où l'intervalle est à l'extérieur
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(1, 11.1),
+                    GlobalException); // cas dans tout l'intervalle
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(1, 5.1),
+                    GlobalException); // cas dans l'intervalle 1 à 5 avec 0.0
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(1, 6.1),
+                    GlobalException); // cas dans l'intervalle 1 à 6
+  BOOST_CHECK_THROW(
+      object_CSpectrum.ValidateNoise(6, 11.1),
+      GlobalException); // cas dans l'intervalle 6 à 11 avec nan et inf
+  BOOST_CHECK_NO_THROW(
+      object_CSpectrum.ValidateNoise(6, 7.1)); // cas dans l'intervalle 6 à 7
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(7, 9.1),
+                    GlobalException); // cas dans l'intervalle 7 à 9 avec nan
+  BOOST_CHECK_NO_THROW(object_CSpectrum.ValidateNoise(
+      9, 9.1)); // cas où l'intervalle est un point
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(9, 11.1),
+                    GlobalException); // cas dans l'intervalle 9 à 11 avec inf
+  BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(10, 10.1),
+                    GlobalException); // cas où l'intervalle est un point inf
   // empty noise
   object_CSpectrum2b.GetFluxAxis_().GetError().GetSamplesVector() = {};
-  BOOST_CHECK(object_CSpectrum2b.IsNoiseValid(1, 11.1) == false);
+  BOOST_CHECK_THROW(object_CSpectrum2b.ValidateNoise(1, 11.1), GlobalException);
 
   //--------------------//
   // test correctSpectrum
