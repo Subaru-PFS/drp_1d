@@ -47,9 +47,11 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                       const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CMask &rebinedMask, const std::string opt_error_interp,
-                      const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
                       const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
                       Int32 &cursor) {
+
+  const TAxisSampleList &Xsrc = m_spectrum.GetSpectralAxis().GetSamplesVector();
+  const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
 
   // nearest sample, lookup
   Int32 k = 0;

@@ -47,12 +47,12 @@ void CRebinLinear::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
                          const TFloat64Range &range,
                          const CSpectrumSpectralAxis &targetSpectralAxis,
                          CMask &rebinedMask, const std::string opt_error_interp,
-                         const TAxisSampleList &Xsrc,
-                         const TAxisSampleList &Ysrc,
                          const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
                          Int32 &cursor) {
 
   Int32 n = m_spectrum.GetSampleCount();
+  const TAxisSampleList &Xsrc = m_spectrum.GetSpectralAxis().GetSamplesVector();
+  const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
   const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
 
   Int32 k = 0;

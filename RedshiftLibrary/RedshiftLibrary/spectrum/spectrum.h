@@ -140,8 +140,6 @@ public:
   bool GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const;
 
   bool RemoveContinuum(CContinuum &remover) const;
-  const bool checkFlux(Float64 flux) const;
-  const bool checkNoise(Float64 error) const;
   const bool ValidateSpectralAxis(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;

@@ -65,11 +65,9 @@ void CRebin::compute(const TFloat64Range &range,
   rebinedFluxAxis.SetSize(s); // does not re-allocate if already allocated
   rebinedMask.SetSize(s);
 
-  const TAxisSampleList &Xsrc = spectralAxis.GetSamplesVector();
-  const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
   const TAxisSampleList &Xtgt = targetSpectralAxis.GetSamplesVector();
-
   TFloat64List error_tmp = rebinedFluxAxis.GetError().GetSamplesVector();
+
   // Move cursors up to lambda range start
   Int32 cursor = 0;
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
@@ -82,7 +80,7 @@ void CRebin::compute(const TFloat64Range &range,
   }
 
   rebin(rebinedFluxAxis, range, targetSpectralAxis, rebinedMask,
-        opt_error_interp, Xsrc, Ysrc, Xtgt, error_tmp, cursor);
+        opt_error_interp, Xtgt, error_tmp, cursor);
 
   while (cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[cursor] = 0;

@@ -59,3 +59,11 @@ bool CSpectrumNoiseAxis::Invert() {
 void CSpectrumNoiseAxis::SetSize(Int32 s, Float64 valueDef) {
   m_Samples.assign(s, valueDef);
 }
+
+const bool CSpectrumNoiseAxis::checkNoise(Int32 i) const {
+  bool validValue = true;
+  if (m_Samples[i] < DBL_MIN || std::isnan(m_Samples[i]) ||
+      std::isinf(m_Samples[i]) || m_Samples[i] != m_Samples[i])
+    return false;
+  return true;
+}

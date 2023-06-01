@@ -80,10 +80,10 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
     m_RawFluxAxis.setError(otherRawError.MaskAxis(mask));
 
   if (other.alreadyRemoved) {
-    m_ContinuumFluxAxis = CSpectrumFluxAxis(
-        other.m_ContinuumFluxAxis.MaskAxis(mask).GetSamplesVector());
-    m_WithoutContinuumFluxAxis = CSpectrumFluxAxis(
-        other.m_WithoutContinuumFluxAxis.MaskAxis(mask).GetSamplesVector());
+    m_ContinuumFluxAxis =
+        CSpectrumFluxAxis(other.m_ContinuumFluxAxis.MaskAxis(mask));
+    m_WithoutContinuumFluxAxis =
+        CSpectrumFluxAxis(other.m_WithoutContinuumFluxAxis.MaskAxis(mask));
 
     if (!otherContinuumError.isEmpty())
       m_ContinuumFluxAxis.setError(otherContinuumError.MaskAxis(mask));
@@ -435,20 +435,6 @@ void CSpectrum::SetType(const CSpectrum::EType type) const {
   }
 }
 
-const bool CSpectrum::checkFlux(Float64 flux) const {
-  if (std::isnan(flux) || std::isinf(flux) || (flux != flux))
-    return false;
-  return true;
-}
-
-const bool CSpectrum::checkNoise(Float64 error) const {
-  bool validValue = true;
-  if (error < DBL_MIN || std::isnan(error) || std::isinf(error) ||
-      error != error)
-    return false;
-  return true;
-}
-
 const bool CSpectrum::ValidateSpectralAxis(Float64 LambdaMin,
                                            Float64 LambdaMax) const {
   if (!IsValid())
@@ -496,7 +482,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
   for (Int32 i = iMin; i < iMax; i++) {
 
     // check flux
-    bool validSample = checkFlux(flux[i]);
+    bool validSample = flux.checkFlux(i);
 
     // collect invalid values
     if (!validSample) {
@@ -543,8 +529,8 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   std::map<string, int> invalidElements = {};
   for (Int32 i = iMin; i < iMax; i++) {
     // check noise
-    bool validSample =
-        checkNoise(error[i]); // checkNoise can be moved to CSpectrumNoise
+    bool validSample = GetFluxAxis().GetError().checkNoise(
+        i); // checkNoise can be moved to CSpectrumNoise
 
     if (!validSample) {
       ++nInvalid;
@@ -573,9 +559,9 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
 
-  CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
-  const TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
-  TFloat64List flux = fluxaxis.GetSamplesVector();
+  CSpectrumFluxAxis flux = GetFluxAxis_();
+  CSpectrumFluxAxis error = GetFluxAxis_().GetError();
+  // const TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
@@ -585,40 +571,42 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
 
   Float64 maxNoise = -DBL_MAX;
   Float64 minFlux = DBL_MAX;
+  GetFluxAxis_().correctFlux(iMin, iMax, maxNoise, minFlux);
+
+  // for (Int32 i = iMin; i < iMax; i++) {
+  //   // check noise & flux
+  //   if (!checkNoise(error[i]) || !checkFlux(flux[i]))
+  //     continue;
+
+  //   maxNoise = std::max(maxNoise, error[i]);
+  //   minFlux = std::min(std::abs(flux[i]), std::abs(minFlux));
+  // }
+  // if (minFlux == DBL_MAX) {
+  //   Flag.warning(WarningCode::CORRECT_SPECTRUM_NOMINFLUX,
+  //                Formatter() << "CSpectrum::" << __func__
+  //                            << ": unable to set minFlux value (=" <<
+  //                            minFlux
+  //                            << "). Setting it to 0.");
+  //   minFlux = 0.0;
+  // }
+  // if (maxNoise == -DBL_MAX)
+  //   THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
+
+  // TFloat64List error_tmp = error;
   for (Int32 i = iMin; i < iMax; i++) {
     // check noise & flux
-    if (!checkNoise(error[i]) || !checkFlux(flux[i]))
-      continue;
-
-    maxNoise = std::max(maxNoise, error[i]);
-    minFlux = std::min(std::abs(flux[i]), std::abs(minFlux));
-  }
-  if (minFlux == DBL_MAX) {
-    Flag.warning(WarningCode::CORRECT_SPECTRUM_NOMINFLUX,
-                 Formatter() << "CSpectrum::" << __func__
-                             << ": unable to set minFlux value (=" << minFlux
-                             << "). Setting it to 0.");
-    minFlux = 0.0;
-  }
-  if (maxNoise == -DBL_MAX)
-    THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
-
-  TFloat64List error_tmp = error;
-  for (Int32 i = iMin; i < iMax; i++) {
-    // check noise & flux
-    bool validSample = checkNoise(error[i]) && checkFlux(flux[i]);
+    bool validSample =
+        GetFluxAxis_().GetError().checkNoise(i) && GetFluxAxis_().checkFlux(i);
 
     if (validSample)
       continue;
-    error_tmp[i] = maxNoise * coeffCorr;
+    error[i] = maxNoise * coeffCorr;
     flux[i] = minFlux / coeffCorr;
     corrected = true;
     nCorrected++;
   }
 
-  fluxaxis.setSamplesVector(flux);
-  fluxaxis.setError(CSpectrumNoiseAxis(error_tmp));
-  SetFluxAxis(std::move(fluxaxis));
+  SetFluxAxis(CSpectrumFluxAxis(std::move(flux), std::move(error)));
 
   if (corrected) {
     Log.LogInfo("    CSpectrum::correctSpectrum - Corrected %d invalid samples "

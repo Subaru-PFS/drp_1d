@@ -57,8 +57,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(CSpectrumAxis otherFlux,
     : CSpectrumAxis(std::move(otherFlux)), m_StdError(std::move(otherError)) {}
 
 CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis otherFlux)
-    : CSpectrumAxis(std::move(otherFlux)), m_StdError(this->GetSamplesCount()) {
-}
+    : CSpectrumAxis(std::move(otherFlux)), m_StdError(GetSamplesCount()) {}
 
 CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n)
     : CSpectrumAxis(samples, n), m_StdError(n) {}
@@ -69,7 +68,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const TFloat64List &samples)
 
 CSpectrumFluxAxis::CSpectrumFluxAxis(TFloat64List &&samples)
     : CSpectrumAxis(std::move(samples)),
-      m_StdError(this->GetSamplesCount()) // default to 1
+      m_StdError(GetSamplesCount()) // default to 1
 {}
 
 CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
@@ -80,7 +79,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
   }
 }
 
-void CSpectrumFluxAxis::setError(const CSpectrumNoiseAxis otherError) {
+void CSpectrumFluxAxis::setError(CSpectrumNoiseAxis otherError) {
   if (otherError.GetSamplesCount() != m_StdError.GetSamplesCount())
     THROWG(INTERNAL_ERROR, "FluxAxis and NoiseAxis sizes do not match");
   m_StdError = std::move(otherError);
@@ -208,6 +207,36 @@ Float64 CSpectrumFluxAxis::ComputeRMSDiff(const CSpectrumFluxAxis &other) {
 
   er = sqrt(er2);
   return er;
+}
+
+const bool CSpectrumFluxAxis::checkFlux(Int32 i) const {
+  if (std::isnan(m_Samples[i]) || std::isinf(m_Samples[i]) ||
+      (m_Samples[i] != m_Samples[i]))
+    return false;
+  return true;
+}
+
+void CSpectrumFluxAxis::correctFlux(Int32 iMin, Int32 iMax, Float64 &maxNoise,
+                                    Float64 &minFlux) {
+
+  CSpectrumNoiseAxis error = GetError();
+  for (Int32 i = iMin; i < iMax; i++) {
+    // check noise & flux
+    if (!error.checkNoise(i) || !checkFlux(i))
+      continue;
+
+    maxNoise = std::max(maxNoise, error[i]);
+    minFlux = std::min(std::abs(m_Samples[i]), std::abs(minFlux));
+  }
+  if (minFlux == DBL_MAX) {
+    Flag.warning(WarningCode::CORRECT_SPECTRUM_NOMINFLUX,
+                 Formatter() << "CSpectrumFluxAxis::" << __func__
+                             << ": unable to set minFlux value (=" << minFlux
+                             << "). Setting it to 0.");
+    minFlux = 0.0;
+  }
+  if (maxNoise == -DBL_MAX)
+    THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
 }
 
 bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis &other) {

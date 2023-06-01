@@ -71,7 +71,7 @@ public:
 
   const CSpectrumNoiseAxis &GetError() const;
 
-  void setError(const CSpectrumNoiseAxis otherError);
+  void setError(CSpectrumNoiseAxis otherError);
   void SetSize(Int32 s);
   void clear();
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);
@@ -80,6 +80,8 @@ public:
   bool ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
                           Float64 &sdev) const;
   Float64 ComputeRMSDiff(const CSpectrumFluxAxis &other);
+  const bool checkFlux(Int32 i) const;
+  void correctFlux(Int32 iMin, Int32 iMax, Float64 &maxNoise, Float64 &minFlux);
   bool Subtract(const CSpectrumFluxAxis &other);
   bool Invert();
   CSpectrumFluxAxis

@@ -58,6 +58,7 @@ public:
 
   void SetSize(Int32 s, Float64 valueDef = 1.0);
   bool Invert();
+  const bool checkNoise(Int32 i) const;
   CSpectrumNoiseAxis extract(Int32 startIdx, Int32 endIdx) const;
 
 private:

@@ -101,7 +101,7 @@ inline const Float64 *CSpectrumAxis::GetSamples() const {
 
 inline void CSpectrumAxis::setSamplesVector(TAxisSampleList axisList) {
   resetAxisProperties();
-  m_Samples = axisList;
+  m_Samples = std::move(axisList);
 }
 
 inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const {
