@@ -55,16 +55,16 @@ public:
   using CRebin::CRebin;
   CRebinFineGrid(CRebin &&other) : CRebin(std::move(other)){};
 
-  void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
-             const CSpectrumSpectralAxis &targetSpectralAxis,
-             CMask &rebinedMask, const std::string opt_error_interp,
-             const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
-             Int32 &cursor) override;
   void reset() override { clearFineGrid(); };
 
   const std::string &getType() override { return m_type; };
 
 protected:
+  void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
+             const CSpectrumSpectralAxis &targetSpectralAxis,
+             CMask &rebinedMask, const std::string opt_error_interp,
+             const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
+             Int32 &cursor) override;
   friend class Rebin::rebinFineGrid_test;
   void rebinFineGrid();
   void clearFineGrid();
