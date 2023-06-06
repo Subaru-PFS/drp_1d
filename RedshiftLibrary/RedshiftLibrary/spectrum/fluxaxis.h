@@ -80,8 +80,8 @@ public:
   bool ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
                           Float64 &sdev) const;
   Float64 ComputeRMSDiff(const CSpectrumFluxAxis &other);
-  const bool checkFlux(Int32 i) const;
-  void correctFlux(Int32 iMin, Int32 iMax, Float64 &maxNoise, Float64 &minFlux);
+  const TBoolList checkFlux() const;
+  bool correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax, Float64 coeffCorr);
   bool Subtract(const CSpectrumFluxAxis &other);
   bool Invert();
   CSpectrumFluxAxis

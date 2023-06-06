@@ -209,20 +209,30 @@ Float64 CSpectrumFluxAxis::ComputeRMSDiff(const CSpectrumFluxAxis &other) {
   return er;
 }
 
-const bool CSpectrumFluxAxis::checkFlux(Int32 i) const {
-  if (std::isnan(m_Samples[i]) || std::isinf(m_Samples[i]) ||
-      (m_Samples[i] != m_Samples[i]))
-    return false;
-  return true;
+const TBoolList CSpectrumFluxAxis::checkFlux() const {
+  TBoolList isValid(m_Samples.size(), true);
+  for (std::size_t i = 0; i < m_Samples.size(); i++) {
+    if (std::isnan(m_Samples[i]) || std::isinf(m_Samples[i]) ||
+        (m_Samples[i] != m_Samples[i]))
+      isValid[i] = false;
+  }
+  return isValid;
 }
 
-void CSpectrumFluxAxis::correctFlux(Int32 iMin, Int32 iMax, Float64 &maxNoise,
-                                    Float64 &minFlux) {
-
+bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
+                                                Float64 coeffCorr) {
+  bool corrected = false;
+  Int32 nCorrected = 0;
   CSpectrumNoiseAxis error = GetError();
+  Float64 maxNoise = -DBL_MAX;
+  Float64 minFlux = DBL_MAX;
+
+  // check noise & flux
+  TBoolList isNoiseValid = error.checkNoise();
+  TBoolList isFluxValid = checkFlux();
+
   for (Int32 i = iMin; i < iMax; i++) {
-    // check noise & flux
-    if (!error.checkNoise(i) || !checkFlux(i))
+    if (!isNoiseValid[i] || !isFluxValid[i])
       continue;
 
     maxNoise = std::max(maxNoise, error[i]);
@@ -237,6 +247,28 @@ void CSpectrumFluxAxis::correctFlux(Int32 iMin, Int32 iMax, Float64 &maxNoise,
   }
   if (maxNoise == -DBL_MAX)
     THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
+
+  for (Int32 i = iMin; i < iMax; i++) {
+    // check noise & flux
+    bool validSample = isNoiseValid[i] && isFluxValid[i];
+
+    if (validSample)
+      continue;
+    error[i] = maxNoise * coeffCorr;
+    m_Samples[i] = minFlux / coeffCorr;
+    corrected = true;
+    nCorrected++;
+  }
+
+  if (corrected) {
+    Log.LogInfo(Formatter()
+                << "    CSpectrumFluxAxis::" << __func__ << "- Corrected "
+                << nCorrected << " invalid samples with coeff (=" << coeffCorr
+                << "), minFlux=" << minFlux << ", maxNoise=" << maxNoise);
+    setError(std::move(error));
+  }
+
+  return corrected;
 }
 
 bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis &other) {
