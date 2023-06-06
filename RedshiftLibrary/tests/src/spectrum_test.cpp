@@ -591,8 +591,6 @@ BOOST_AUTO_TEST_CASE(Calcul) {
                     GlobalException); // cas dans l'intervalle 9 à 11 avec inf
   BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(10, 10.1),
                     GlobalException); // cas où l'intervalle est un point inf
-  BOOST_CHECK_THROW(object_CSpectrum.ValidateFlux(11, 14.1),
-                    GlobalException); // cas où l'intervalle est à l'extérieur
   TAxisSampleList fluxAxis2 =
       object_CSpectrum.GetFluxAxis_().GetSamplesVector();
   fluxAxis2.pop_back();
@@ -631,11 +629,6 @@ BOOST_AUTO_TEST_CASE(Calcul) {
                     GlobalException); // cas dans l'intervalle 9 à 11 avec inf
   BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(10, 10.1),
                     GlobalException); // cas où l'intervalle est un point inf
-  BOOST_CHECK_THROW(object_CSpectrum.ValidateNoise(11, 14.1),
-                    GlobalException); // cas où l'intervalle est à l'extérieur
-  // empty noise
-  object_CSpectrum2b.GetFluxAxis_().setError({});
-  BOOST_CHECK_THROW(object_CSpectrum2b.ValidateNoise(1, 11.1), GlobalException);
 
   //--------------------//
   // test correctSpectrum

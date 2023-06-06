@@ -85,6 +85,13 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(spectrumNoiseAxis2_b.GetSamplesCount() == n);
   BOOST_CHECK(spectrumNoiseAxis2_b.GetSamplesVector() == noiseSample_ref);
 
+  CSpectrumFluxAxis object_FluxAxis2_c(spectrumAxis);
+  BOOST_CHECK(object_FluxAxis2_c.GetSamplesCount() == n);
+  BOOST_CHECK(object_FluxAxis2_c.GetSamplesVector() == sample_ref);
+  CSpectrumNoiseAxis spectrumNoiseAxis2_c = object_FluxAxis2_c.GetError();
+  BOOST_CHECK(spectrumNoiseAxis2_c.GetSamplesCount() == n);
+  BOOST_CHECK(spectrumNoiseAxis2_c.GetSamplesVector() == noiseSample_ref);
+
   sample_ref = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   Float64 Array1[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   CSpectrumFluxAxis object_FluxAxis3(Array1, 10);
@@ -411,6 +418,38 @@ BOOST_AUTO_TEST_CASE(Invert_test) {
   TFloat64List sample_ref = {-1., -2., -3., -4., -5., -6., -7., -8., -9., -10.};
 
   BOOST_CHECK(sample_ref == object_FluxAxisA.GetSamplesVector());
+}
+
+BOOST_AUTO_TEST_CASE(CorrectFluxAndNoiseAxis_test) {
+  TFloat64List sample_ref = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+  TFloat64List error_ref(10, 0.);
+
+  CSpectrumFluxAxis fluxAxis(sample_ref.data(), 10, error_ref.data(), 10);
+
+  // noise is 0
+  BOOST_CHECK_THROW(fluxAxis.correctFluxAndNoiseAxis(0, 9, 10.),
+                    GlobalException);
+
+  // 1st value of noise is not valid
+  error_ref = TFloat64List(10, 0.1);
+  error_ref[0] = std::numeric_limits<double>::infinity();
+  fluxAxis.setError(CSpectrumNoiseAxis(error_ref));
+  BOOST_CHECK(fluxAxis.correctFluxAndNoiseAxis(0, 9, 10.) == true);
+  BOOST_CHECK(fluxAxis.GetError()[0] == 1.0); // max valid noise * coeff
+
+  // 1st value of flux is not valid
+  fluxAxis[0] = std::numeric_limits<double>::infinity();
+  // short test on checkFlux
+  TBoolList isValid(10, true);
+  isValid[0] = false;
+  BOOST_CHECK(fluxAxis.checkFlux() == isValid);
+  BOOST_CHECK(fluxAxis.correctFluxAndNoiseAxis(0, 9, 10.) == true);
+  BOOST_CHECK(fluxAxis[0] == 2.0); // min valid flux / coeff
+
+  // error and flux are valid
+  error_ref[0] = 0.1;
+  fluxAxis.setError(CSpectrumNoiseAxis(error_ref));
+  BOOST_CHECK(fluxAxis.correctFluxAndNoiseAxis(0, 9, 10.) == false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
