@@ -1302,3 +1302,100 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
   for (Int32 i = 0; i < m_asymLineIndices.size(); i++)
     os << i << "\t" << m_asymLineIndices[i] << "\n";
 }
+
+void CLineModelElement::computeCrossProducts(
+    Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
+    const CSpectrumFluxAxis &noContinuumfluxAxis,
+    const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx) {
+
+  const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
+
+  Float64 y = 0.0;
+  Float64 x = 0.0;
+  Float64 yg = 0.0;
+  Float64 c = 1.0;
+
+  Float64 err2 = 0.0;
+  Int32 num = 0;
+
+  Int32 nLines = GetSize();
+  for (Int32 k = 0; k < nLines; k++) { // loop for the intervals
+    if (m_OutsideLambdaRangeList[k]) {
+      continue;
+    }
+    if (lineIdx != undefIdx && !isLineActiveOnSupport(k, lineIdx)) {
+      continue;
+    }
+
+    for (Int32 i = getStartNoOverlap(k); i <= getEndNoOverlap(k); i++) {
+      c = continuumfluxAxis[i];
+      y = noContinuumfluxAxis[i];
+      x = spectralAxis[i];
+
+      yg = 0.0;
+
+      for (Int32 k2 = 0; k2 < nLines; k2++) { // loop for the signal synthesis
+        if (m_OutsideLambdaRangeList[k2] ||
+            m_LineIsActiveOnSupport[k2][k] != 1) {
+          continue;
+        }
+        Int32 sf = getSignFactor(k2);
+        if (sf == -1) {
+          yg += sf * c * GetNominalAmplitude(k2) *
+                GetLineProfileAtRedshift(k2, redshift, x);
+        } else {
+          yg += sf * GetNominalAmplitude(k2) *
+                GetLineProfileAtRedshift(k2, redshift, x);
+        }
+      }
+      num++;
+      err2 = 1.0 / (error[i] * error[i]);
+      m_dtmFree += yg * y * err2;
+      m_sumGauss += yg * yg * err2;
+    }
+  }
+
+  if (num == 0 || m_sumGauss == 0) {
+    Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
+                 " num=%d, mtm=%f",
+                 num, m_sumGauss);
+    m_sumGauss = NAN;
+    m_dtmFree = NAN;
+  }
+}
+
+void CLineModelElement::fitAmplitude(
+    Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
+    const CSpectrumFluxAxis &noContinuumfluxAxis,
+    const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx) {
+
+  Int32 nLines = GetSize();
+  m_sumCross = 0.;
+  m_sumGauss = 0.;
+  m_dtmFree = 0.;
+
+  m_ElementParam->m_FittedAmplitudes.assign(nLines, NAN);
+  m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+
+  if (m_OutsideLambdaRange) {
+    m_sumCross = NAN;
+    m_sumGauss = NAN;
+    m_dtmFree = NAN;
+    return;
+  }
+
+  computeCrossProducts(redshift, spectralAxis, noContinuumfluxAxis,
+                       continuumfluxAxis, lineIdx);
+
+  if (std::isnan(GetSumGauss())) {
+    m_sumCross = NAN;
+    return;
+  }
+
+  m_sumCross = std::max(0.0, m_dtmFree);
+  Float64 A = m_sumCross / m_sumGauss;
+
+  SetElementAmplitude(A, 1.0 / sqrt(m_sumGauss));
+
+  return;
+}

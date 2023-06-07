@@ -236,6 +236,17 @@ public:
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;
 
+  void computeCrossProducts(Float64 redshift,
+                            const CSpectrumSpectralAxis &spectralAxis,
+                            const CSpectrumFluxAxis &noContinuumfluxAxis,
+                            const CSpectrumFluxAxis &continuumfluxAxis,
+                            Int32 lineIdx);
+
+  void fitAmplitude(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
+                    const CSpectrumFluxAxis &noContinuumfluxAxis,
+                    const CSpectrumFluxAxis &continuumfluxAxis,
+                    Int32 lineIdx = undefIdx);
+
 protected:
   const TLineModelElementParam_ptr m_ElementParam;
 
