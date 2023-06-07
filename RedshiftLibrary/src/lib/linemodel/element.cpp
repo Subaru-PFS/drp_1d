@@ -151,10 +151,6 @@ Int32 CLineModelElement::GetSize() const {
   return m_ElementParam->m_Lines.size();
 }
 
-bool CLineModelElement::IsOutsideLambdaRange() const {
-  return m_OutsideLambdaRange;
-}
-
 // redirecting to the lsf method for computing instrument responce
 /**
  * Get instrumental response (including source response) from LSF
@@ -1245,16 +1241,6 @@ void CLineModelElement::LimitFittedAmplitude(Int32 subeIdx, Float64 limit) {
   return;
 }
 
-/**
- * \brief Returns whether the line with index subeIdx is outside the lambda
- *range.
- **/
-bool CLineModelElement::IsOutsideLambdaRange(
-    Int32 subeIdx) const // IsOutsideLambdaRange
-{
-  return m_OutsideLambdaRangeList[subeIdx];
-}
-
 void CLineModelElement::SetOutsideLambdaRangeList(Int32 subeIdx) {
   m_OutsideLambdaRangeList[subeIdx] = true;
 }
@@ -1315,9 +1301,4 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
   os << "m_asymLineIndices \n";
   for (Int32 i = 0; i < m_asymLineIndices.size(); i++)
     os << i << "\t" << m_asymLineIndices[i] << "\n";
-}
-
-bool CLineModelElement::isLineActiveOnSupport(Int32 lineIdxA,
-                                              Int32 lineIdxB) const {
-  return m_LineIsActiveOnSupport[lineIdxA][lineIdxB] == 1;
 }

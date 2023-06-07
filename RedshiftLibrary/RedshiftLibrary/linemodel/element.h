@@ -267,6 +267,24 @@ protected:
   TBoolList m_OutsideLambdaRangeList;
 };
 
+inline bool CLineModelElement::IsOutsideLambdaRange() const {
+  return m_OutsideLambdaRange;
+}
+/**
+ * \brief Returns whether the line with index subeIdx is outside the lambda
+ *range.
+ **/
+inline bool CLineModelElement::IsOutsideLambdaRange(
+    Int32 subeIdx) const // IsOutsideLambdaRange
+{
+  return m_OutsideLambdaRangeList[subeIdx];
+}
+
+inline bool CLineModelElement::isLineActiveOnSupport(Int32 lineIdxA,
+                                                     Int32 lineIdxB) const {
+  return m_LineIsActiveOnSupport[lineIdxA][lineIdxB] == 1;
+}
+
 } // namespace NSEpic
 
 #endif // _REDSHIFT_LINEMODEL_ELEMENT_
