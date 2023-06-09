@@ -227,11 +227,9 @@ public:
   void SetLineProfile(Int32 lineIdx, CLineProfile_ptr &&profile);
 
   bool isLineActiveOnSupport(Int32 line, Int32 lineIdx) const;
-  Int32 getStartNoOverlap(Int32 lineIdx) const {
-    return m_StartNoOverlap[lineIdx];
-  }
-  Int32 getEndNoOverlap(Int32 lineIdx) const { return m_EndNoOverlap[lineIdx]; }
-  Int32 getSignFactor(Int32 lineIdx) const { return m_SignFactors[lineIdx]; }
+  Int32 getStartNoOverlap(Int32 lineIdx) const ;
+  Int32 getEndNoOverlap(Int32 lineIdx) const ;
+  Int32 getSignFactor(Int32 lineIdx) const ;
 
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;
@@ -276,6 +274,7 @@ protected:
   TInt32List m_EndTheoretical;
 
   TBoolList m_OutsideLambdaRangeList;
+  Int32 m_size;
 };
 
 inline bool CLineModelElement::IsOutsideLambdaRange() const {
@@ -296,6 +295,30 @@ inline bool CLineModelElement::isLineActiveOnSupport(Int32 lineIdxA,
   return m_LineIsActiveOnSupport[lineIdxA][lineIdxB] == 1;
 }
 
+/**
+ * \brief Returns the nominal amplitude with index subeIdx.
+ **/
+inline Float64 CLineModelElement::GetNominalAmplitude(Int32 subeIdx) const {
+  return m_ElementParam->m_NominalAmplitudes[subeIdx];
+}
+
+/**
+ * \brief Set the nominal amplitude with index subeIdx.
+ **/
+inline bool CLineModelElement::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp) {
+  m_ElementParam->m_NominalAmplitudes[subeIdx] = nominalamp;
+  return true;
+}
+
+inline Int32 CLineModelElement::getStartNoOverlap(Int32 lineIdx) const {
+    return m_StartNoOverlap[lineIdx];
+  }
+inline  Int32 CLineModelElement::getEndNoOverlap(Int32 lineIdx) const { return m_EndNoOverlap[lineIdx]; }
+inline  Int32 CLineModelElement::getSignFactor(Int32 lineIdx) const { return m_SignFactors[lineIdx]; }
+inline Int32 CLineModelElement::GetSize() const {
+  return m_size;
+}
+  
 } // namespace NSEpic
 
 #endif // _REDSHIFT_LINEMODEL_ELEMENT_

@@ -81,13 +81,16 @@ CLineModelElement::CLineModelElement(
                  // the spectrum with the line still considered inside the
                  // lambda range
 
-      m_SignFactors(GetSize()),
-
       m_absLinesLimit(
           1.0) //-1: disable the ABS lines amplitude cut, any other value is
                // used as a limit for the abs line coeff (typically: 1.0)
 
 {
+
+  m_size = m_ElementParam->m_Lines.size();
+  Log.LogInfo(Formatter()<<"Initialize element with size "<<m_size);
+  m_SignFactors= TFloat64List(GetSize());
+
   if (widthType == "instrumentdriven") {
     m_LineWidthType = INSTRUMENTDRIVEN;
   } else if (widthType == "combined") {
@@ -111,7 +114,9 @@ CLineModelElement::CLineModelElement(
       m_asymLineIndices.push_back(k2);
   }
 
+  
   SetElementAmplitude(NAN, NAN);
+  
 }
 
 void CLineModelElement::reset() {
@@ -147,9 +152,6 @@ Int32 CLineModelElement::getLineIndexInCatalog(
   return lineIndex;
 }
 
-Int32 CLineModelElement::GetSize() const {
-  return m_ElementParam->m_Lines.size();
-}
 
 // redirecting to the lsf method for computing instrument responce
 /**
@@ -813,12 +815,6 @@ Float64 CLineModelElement::GetElementError() const {
   return NAN;
 }
 
-/**
- * \brief Returns the nominal amplitude with index subeIdx.
- **/
-Float64 CLineModelElement::GetNominalAmplitude(Int32 subeIdx) const {
-  return m_ElementParam->m_NominalAmplitudes[subeIdx];
-}
 
 Float64 CLineModelElement::GetMaxNominalAmplitude() const {
   auto it = std::max_element(m_ElementParam->m_NominalAmplitudes.cbegin(),
@@ -826,20 +822,14 @@ Float64 CLineModelElement::GetMaxNominalAmplitude() const {
   return *it;
 }
 
-/**
- * \brief Set the nominal amplitude with index subeIdx.
- **/
-bool CLineModelElement::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp) {
-  m_ElementParam->m_NominalAmplitudes[subeIdx] = nominalamp;
-  return true;
-}
 
 void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
                                            Float64 SNR) {
+  
   if (subeIdx == undefIdx ||
       subeIdx >= m_ElementParam->m_FittedAmplitudes.size())
     THROWG(INTERNAL_ERROR, "out-of-bound index");
-
+ 
   if (m_OutsideLambdaRangeList[subeIdx] || std::isnan(A)) {
     m_ElementParam->m_FittedAmplitudes[subeIdx] = NAN;
     m_ElementParam->m_FittedAmplitudeErrorSigmas[subeIdx] = NAN;
@@ -865,30 +855,34 @@ void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
  *amplitude.
  **/
 void CLineModelElement::SetElementAmplitude(Float64 A, Float64 SNR) {
+  TFloat64List &fa=m_ElementParam->m_FittedAmplitudes;
+  TFloat64List &faes=m_ElementParam->m_FittedAmplitudeErrorSigmas;
+  TFloat64List &na=m_ElementParam->m_NominalAmplitudes;
+
   if (std::isnan(A) || m_OutsideLambdaRange) {
-    m_ElementParam->m_FittedAmplitudes.assign(GetSize(), NAN);
-    m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(GetSize(), NAN);
+    fa.assign(GetSize(), NAN);
+    faes.assign(GetSize(), NAN);
     return;
   }
 
   for (Int32 k = 0; k < GetSize(); k++) {
     if (m_OutsideLambdaRangeList[k]) {
-      m_ElementParam->m_FittedAmplitudes[k] = NAN;
-      m_ElementParam->m_FittedAmplitudeErrorSigmas[k] = NAN;
+      fa[k] = NAN;
+      faes[k] = NAN;
       continue;
     }
-    m_ElementParam->m_FittedAmplitudes[k] =
+    fa[k] =
         A * m_ElementParam->m_NominalAmplitudes[k];
     // limit the absorption to 0.0-1.0, so that it's never <0
 
     if (m_SignFactors[k] == -1 && m_absLinesLimit > 0.0 &&
-        m_ElementParam->m_FittedAmplitudes[k] > m_absLinesLimit) {
-      m_ElementParam->m_FittedAmplitudes[k] = m_absLinesLimit;
+        fa[k] > m_absLinesLimit) {
+      fa[k] = m_absLinesLimit;
     }
 
-    m_ElementParam->m_FittedAmplitudeErrorSigmas[k] =
-        SNR * m_ElementParam->m_NominalAmplitudes[k]; // todo: check correct
-                                                      // formulation for Error
+    faes[k] =
+        SNR * na[k]; // todo: check correct
+    // formulation for Error
   }
 }
 
@@ -1309,7 +1303,7 @@ void CLineModelElement::computeCrossProducts(
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx) {
 
   const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
-
+  TFloat64List &nominalAmplitudes=m_ElementParam->m_NominalAmplitudes;
   Float64 y = 0.0;
   Float64 x = 0.0;
   Float64 yg = 0.0;
@@ -1341,10 +1335,10 @@ void CLineModelElement::computeCrossProducts(
         }
         Int32 sf = getSignFactor(k2);
         if (sf == -1) {
-          yg += sf * c * GetNominalAmplitude(k2) *
+          yg += sf * c * nominalAmplitudes[k2] *
                 GetLineProfileAtRedshift(k2, redshift, x);
         } else {
-          yg += sf * GetNominalAmplitude(k2) *
+          yg += sf * nominalAmplitudes[k2] *
                 GetLineProfileAtRedshift(k2, redshift, x);
         }
       }
