@@ -46,6 +46,7 @@
 #include <cfloat>
 #include <climits>
 
+using namespace std;
 using namespace NSEpic;
 
 TLineModelElementParam::TLineModelElementParam(TLineVector lines,
@@ -640,20 +641,20 @@ Float64 CLineModelElement::GetMaxNominalAmplitude() const {
   return *it;
 }
 
-void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
+void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 fittedAmp,
                                            Float64 SNR) {
 
   if (subeIdx == undefIdx ||
       subeIdx >= m_ElementParam->m_FittedAmplitudes.size())
     THROWG(INTERNAL_ERROR, "out-of-bound index");
 
-  if (m_OutsideLambdaRangeList[subeIdx] || std::isnan(A)) {
+  if (m_OutsideLambdaRangeList[subeIdx] || std::isnan(fittedAmp)) {
     m_ElementParam->m_FittedAmplitudes[subeIdx] = NAN;
     m_ElementParam->m_FittedAmplitudeErrorSigmas[subeIdx] = NAN;
     return;
   }
 
-  m_ElementParam->m_FittedAmplitudes[subeIdx] = A;
+  m_ElementParam->m_FittedAmplitudes[subeIdx] = fittedAmp;
 
   // limit the absorption to 0.0-1.0, so that it's never <0
   //*
@@ -1034,20 +1035,22 @@ Int32 CLineModelElement::findElementIndex(const std::string &LineTagStr) const {
  * \brief If the fitted amplitude of line with index subeIdx is above the limit,
  *sets it to either that limit or zero, whichever is greater.
  **/
-void CLineModelElement::LimitFittedAmplitude(Int32 subeIdx, Float64 limit) {
+bool CLineModelElement::LimitFittedAmplitude(Int32 subeIdx, Float64 limit) {
 
-  if (m_ElementParam->m_FittedAmplitudes[subeIdx] > limit) {
+  bool limited = false;
+  if (GetFittedAmplitude(subeIdx) > limit) {
+    limited = true;
     m_ElementParam->m_FittedAmplitudes[subeIdx] = std::max(0.0, limit);
 
     // now update the amplitude of the other lines
-    Float64 amplitudeRef = m_ElementParam->m_FittedAmplitudes[subeIdx] /
+    Float64 amplitudeRef = GetFittedAmplitude(subeIdx) /
                            m_ElementParam->m_NominalAmplitudes[subeIdx];
     for (Int32 k = 0; k < GetSize(); k++) {
       m_ElementParam->m_FittedAmplitudes[k] =
           m_ElementParam->m_NominalAmplitudes[k] * amplitudeRef;
     }
   }
-  return;
+  return limited;
 }
 
 void CLineModelElement::SetOutsideLambdaRangeList(Int32 subeIdx) {

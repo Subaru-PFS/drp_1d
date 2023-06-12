@@ -50,7 +50,23 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
+class RuleStrongHigherThanWeak_fixture;
+
+namespace RuleStrongHigherThanWeak_test {
+class Correct_test_no_change;
+class Correct_test_one_high_weak;
+} // namespace RuleStrongHigherThanWeak_test
+
 namespace NSEpic {
+
+struct LineIndex {
+
+  Int32 iElement;
+  Int32 iLine;
+
+  LineIndex(Int32 iElementArg, Int32 iLineArg)
+      : iElement(iElementArg), iLine(iLineArg) {}
+};
 
 struct TLineModelElementParam {
 
@@ -146,8 +162,8 @@ public:
                                    Int32 lineIdx) const;
 
   Float64 GetNominalAmplitude(Int32 subeIdx) const;
-  Float64 GetMaxNominalAmplitude() const;
   bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
+  Float64 GetMaxNominalAmplitude() const;
   Float64 GetFittedAmplitude(Int32 subeIdx) const;
   Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx) const;
   Float64 GetElementAmplitude() const;
@@ -155,7 +171,7 @@ public:
 
   void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR);
   void SetElementAmplitude(Float64 A, Float64 SNR);
-  void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
+  bool LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
 
   bool SetAbsLinesLimit(Float64 limit);
   Float64 GetAbsLinesLimit() const;
@@ -242,8 +258,11 @@ public:
                     Int32 lineIdx = undefIdx);
 
 protected:
-  const TLineModelElementParam_ptr m_ElementParam;
+  friend ::RuleStrongHigherThanWeak_fixture;
+  friend RuleStrongHigherThanWeak_test::Correct_test_no_change;
+  friend RuleStrongHigherThanWeak_test::Correct_test_one_high_weak;
 
+  const TLineModelElementParam_ptr m_ElementParam;
   TLineWidthType m_LineWidthType;
 
   Float64 m_OutsideLambdaRangeOverlapThreshold;
@@ -282,9 +301,7 @@ inline bool CLineModelElement::IsOutsideLambdaRange() const {
  * \brief Returns whether the line with index subeIdx is outside the lambda
  *range.
  **/
-inline bool CLineModelElement::IsOutsideLambdaRange(
-    Int32 subeIdx) const // IsOutsideLambdaRange
-{
+inline bool CLineModelElement::IsOutsideLambdaRange(Int32 subeIdx) const {
   return m_OutsideLambdaRangeList[subeIdx];
 }
 

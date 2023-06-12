@@ -94,7 +94,8 @@ public:
   bool operator!=(const CLine &str) const;
 
   Int32 GetID() const;
-  bool GetIsStrong() const;
+  bool IsStrong() const { return m_Force == nForce_Strong; }
+  bool IsWeak() const { return m_Force == nForce_Weak; }
   bool GetIsEmission() const;
   Int32 GetForce() const;
   Int32 GetType() const;

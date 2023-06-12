@@ -44,7 +44,10 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include <boost/format.hpp>
 
+class RuleStrongHigherThanWeak_fixture;
+
 namespace NSEpic {
+
 /**
  * \ingroup Redshift
  * Rule to limit lines according to their pairing.
@@ -57,14 +60,20 @@ public:
   void SetUp(bool EnabledArgument, ...);
 
 private:
+  friend class ::RuleStrongHigherThanWeak_fixture;
   Int32 m_LineType;
   void Correct(CLineModelElementList &LineModelElementList);
   Float64 FindHighestStrongLineAmp(Int32 linetype, Float64 &er,
                                    std::string &name,
                                    CLineModelElementList &LineModelElementList);
+  LineIndex
+  FindLowestStrongLineIndex(const CLineModelElementList &LineModelElementList);
   void constructLogMsg(const std::string &nameWeak,
                        const std::string &strongName, Float64 ampB,
                        Float64 maxB);
+  Float64 maxAmplitude(Float64 ampStrong, Float64 erStrong);
+  void correctLineModelElement(CLineModelElement &element, Float64 maxAmplitude,
+                               const std::string &nameStrong);
 };
 } // namespace NSEpic
 

@@ -702,7 +702,7 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const {
 
       Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
       sumAmps += amp;
-      if (m_Elements[iElts]->GetLines()[lineIdx].GetIsStrong()) {
+      if (m_Elements[iElts]->GetLines()[lineIdx].IsStrong()) {
         AmpsStrong.push_back(amp);
       } else {
         AmpsWeak.push_back(amp);
@@ -732,7 +732,7 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
     Int32 iElts = validEltsIdx[iValidElts];
     Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsStrong()) {
+      if (!m_Elements[iElts]->GetLines()[lineIdx].IsStrong()) {
         continue;
       }
       if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission()) {

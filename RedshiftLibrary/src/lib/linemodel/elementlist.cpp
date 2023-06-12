@@ -616,7 +616,7 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
     Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
       if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission() ||
-          !m_Elements[iElts]->GetLines()[lineIdx].GetIsStrong()) {
+          !m_Elements[iElts]->GetLines()[lineIdx].IsStrong()) {
         continue;
       }
 

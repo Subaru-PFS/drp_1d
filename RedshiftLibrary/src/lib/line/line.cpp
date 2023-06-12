@@ -186,9 +186,6 @@ TSymIgmParams CLine::GetSymIgmParams() const {
     THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
   return m_Profile->GetSymIgmParams();
 }
-
-bool CLine::GetIsStrong() const { return m_Force == nForce_Strong; }
-
 bool CLine::GetIsEmission() const { return m_Type == nType_Emission; }
 
 Int32 CLine::GetType() const { return m_Type; }
