@@ -66,17 +66,14 @@ public:
   virtual CSpectrumAxis &operator/=(const Float64 op);
   Float64 &operator[](const Int32 i);
   const Float64 &operator[](const Int32 i) const;
-  void MaskAxis(const TFloat64List &mask, CSpectrumAxis &maskedAxis) const;
-  static void maskVector(const TFloat64List &mask,
-                         const TFloat64List &inputVector,
-                         TFloat64List &outputVector);
+  CSpectrumAxis MaskAxis(const TFloat64List &mask) const;
+  static TFloat64List maskVector(const TFloat64List &mask,
+                                 const TFloat64List &inputVector);
 
   const Float64 *GetSamples() const;
-  Float64 *GetSamples();
   const TAxisSampleList &GetSamplesVector() const;
-  TAxisSampleList &GetSamplesVector();
+  void setSamplesVector(TAxisSampleList axisList);
   Int32 GetSamplesCount() const;
-  Int32 GetSamplesCount();
   virtual void SetSize(Int32 s);
   void clear();
   CSpectrumAxis extract(Int32 startIdx, Int32 endIdx) const;
@@ -98,18 +95,13 @@ inline const Float64 &CSpectrumAxis::operator[](const Int32 i) const {
 
 inline Int32 CSpectrumAxis::GetSamplesCount() const { return m_Samples.size(); }
 
-inline Float64 *CSpectrumAxis::GetSamples() {
-  resetAxisProperties();
-  return m_Samples.data();
-}
-
 inline const Float64 *CSpectrumAxis::GetSamples() const {
   return m_Samples.data();
 }
 
-inline TAxisSampleList &CSpectrumAxis::GetSamplesVector() {
+inline void CSpectrumAxis::setSamplesVector(TAxisSampleList axisList) {
   resetAxisProperties();
-  return m_Samples;
+  m_Samples = std::move(axisList);
 }
 
 inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const {

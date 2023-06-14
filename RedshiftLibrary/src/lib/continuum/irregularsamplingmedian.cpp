@@ -293,7 +293,7 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum(
   medianSmoothAmplitude = max(meanSmoothAmplitude, medianSmoothAmplitude);
 
   noContinuumFluxAxis = CSpectrumFluxAxis(norig, 0.);
-  noContinuumFluxAxis.GetError() = fluxAxis.GetError();
+  noContinuumFluxAxis.setError(fluxAxis.GetError());
 
   bool result = FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
   if (!result)

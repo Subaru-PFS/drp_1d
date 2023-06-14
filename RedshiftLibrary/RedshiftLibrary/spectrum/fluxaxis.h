@@ -62,6 +62,7 @@ public:
   // value =0. is a default value for flux and not for error.
   explicit CSpectrumFluxAxis(Int32 n, Float64 value = 0.0);
   CSpectrumFluxAxis(CSpectrumAxis otherFlux, CSpectrumNoiseAxis otherError);
+  CSpectrumFluxAxis(CSpectrumAxis otherFlux);
   CSpectrumFluxAxis(const Float64 *samples, Int32 n);
   CSpectrumFluxAxis(const TFloat64List &samples);
   CSpectrumFluxAxis(TFloat64List &&samples);
@@ -69,9 +70,8 @@ public:
                     const Int32 m);
 
   const CSpectrumNoiseAxis &GetError() const;
-  CSpectrumNoiseAxis &GetError();
 
-  void setError(const CSpectrumNoiseAxis &otherError);
+  void setError(CSpectrumNoiseAxis otherError);
   void SetSize(Int32 s);
   void clear();
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);
@@ -80,6 +80,8 @@ public:
   bool ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
                           Float64 &sdev) const;
   Float64 ComputeRMSDiff(const CSpectrumFluxAxis &other);
+  const TBoolList checkFlux() const;
+  bool correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax, Float64 coeffCorr);
   bool Subtract(const CSpectrumFluxAxis &other);
   bool Invert();
   CSpectrumFluxAxis
@@ -89,15 +91,8 @@ public:
 private:
   friend class FluxAxis_test::ComputeMeanAndSDev_test;
 
-  bool ComputeMeanAndSDevWithoutError(const CMask &mask, Float64 &mean,
-                                      Float64 &sdev) const;
-  bool ComputeMeanAndSDevWithError(const CMask &mask, Float64 &mean,
-                                   Float64 &sdev) const;
-
   CSpectrumNoiseAxis m_StdError; // STD
 };
-
-inline CSpectrumNoiseAxis &CSpectrumFluxAxis::GetError() { return m_StdError; }
 
 inline const CSpectrumNoiseAxis &CSpectrumFluxAxis::GetError() const {
   return m_StdError;
@@ -108,6 +103,7 @@ inline CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx,
   return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx),
                            m_StdError.extract(startIdx, endIdx));
 }
+
 } // namespace NSEpic
 
 #endif

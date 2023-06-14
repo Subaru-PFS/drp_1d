@@ -222,9 +222,7 @@ CSpectrumModel::GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter) {
   fluxAndContinuum = fluxAxis.GetSamplesVector();
   refreshModel(lineTypeFilter);
 
-  CSpectrumFluxAxis fluxAxisNothingUnderLines =
-      m_spcCorrectedUnderLines.GetFluxAxis();
-  TAxisSampleList &Y = fluxAxisNothingUnderLines.GetSamplesVector();
+  TAxisSampleList Y(m_spcCorrectedUnderLines.GetSampleCount());
   const auto &SpcFluxAxis = m_SpcFluxAxis;
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
   for (Int32 t = 0; t < spectralAxis.GetSamplesCount(); t++) {
@@ -249,7 +247,7 @@ CSpectrumModel::GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter) {
     }
   }
 
-  m_spcCorrectedUnderLines.SetFluxAxis(std::move(fluxAxisNothingUnderLines));
+  m_spcCorrectedUnderLines.SetFluxAxis(CSpectrumFluxAxis(std::move(Y)));
 
   return m_spcCorrectedUnderLines;
 }
@@ -376,8 +374,8 @@ Float64 CSpectrumModel::getModelErrorUnderElement(
 }
 
 void CSpectrumModel::setContinuumToInputSpc() {
-  TAxisSampleList &Yrebin = m_ContinuumFluxAxis.GetSamplesVector();
-  Yrebin = m_inputSpc->GetContinuumFluxAxis().GetSamplesVector();
+  m_ContinuumFluxAxis.setSamplesVector(
+      m_inputSpc->GetContinuumFluxAxis().GetSamplesVector());
 }
 
 void CSpectrumModel::setContinuumComponent(const std::string &component) {

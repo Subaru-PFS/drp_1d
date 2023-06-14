@@ -71,21 +71,18 @@ void CSpectrumAxis::clear() {
   m_Samples.clear();
 }
 
-Int32 CSpectrumAxis::GetSamplesCount() { return m_Samples.size(); }
-
 /*
     maskedAxis is the output axis after applying the mask on the current object
 */
-void CSpectrumAxis::MaskAxis(
-    const TFloat64List &mask,
-    CSpectrumAxis &maskedAxis) const // const//mask is 0. or 1.
+CSpectrumAxis
+CSpectrumAxis::MaskAxis(const TFloat64List &mask) const // mask is 0. or 1.
 {
-  return maskVector(mask, m_Samples, maskedAxis.m_Samples);
+  return CSpectrumAxis(maskVector(mask, m_Samples));
 }
 
-void CSpectrumAxis::maskVector(const TFloat64List &mask,
-                               const TFloat64List &inputVector,
-                               TFloat64List &outputVector) {
+TFloat64List CSpectrumAxis::maskVector(const TFloat64List &mask,
+                                       const TFloat64List &inputVector) {
+  TFloat64List outputVector;
   if (mask.size() != inputVector.size()) {
     THROWG(INTERNAL_ERROR, "mask and vector sizes do not match");
   }
@@ -96,5 +93,5 @@ void CSpectrumAxis::maskVector(const TFloat64List &mask,
     if (mask[i] == 1.)
       outputVector.push_back(inputVector[i]);
   }
-  return;
+  return outputVector;
 }

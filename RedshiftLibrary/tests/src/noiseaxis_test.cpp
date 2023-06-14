@@ -111,6 +111,13 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(noiseAxis2d.GetSamplesCount() == 2);
   BOOST_CHECK(noiseAxis2d[0] == 0.5);
   BOOST_CHECK(noiseAxis2d[1] == 0.5);
+
+  // checkNoise
+  TBoolList isValid(3, true);
+  BOOST_CHECK(noiseAxis.checkNoise() == isValid);
+  isValid[0] = false;
+  noiseAxis[0] = std::numeric_limits<double>::infinity();
+  BOOST_CHECK(noiseAxis.checkNoise() == isValid);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

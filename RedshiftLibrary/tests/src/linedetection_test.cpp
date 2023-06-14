@@ -94,13 +94,14 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
       CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
   CSpectrum spc = CSpectrum();
   CSpectrumSpectralAxis spectralAxis(10, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < spectralAxis.GetSamplesCount(); k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
 
   CSpectrumFluxAxis modelfluxAxis(10);
-  Float64 *modelSamples = modelfluxAxis.GetSamples();
+  TAxisSampleList modelSamples = modelfluxAxis.GetSamplesVector();
   modelSamples[0] = 1.;
   modelSamples[1] = 1.;
   modelSamples[2] = 2.;
@@ -111,6 +112,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   modelSamples[7] = 1.;
   modelSamples[8] = 1.;
   modelSamples[9] = 1.;
+  modelfluxAxis.setSamplesVector(modelSamples);
 
   spc.SetSpectralAndFluxAxes(std::move(spectralAxis), modelfluxAxis);
   Float64 winsize = 10000.;
@@ -152,6 +154,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
 
   modelSamples[8] = 1.2;
   modelSamples[9] = 1.1;
+  modelfluxAxis.setSamplesVector(modelSamples);
   spc.SetFluxAxis(modelfluxAxis);
 
   ratioAmp = lineDetection.ComputeFluxes(spc, winsize, range, mask,
@@ -170,17 +173,8 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   BOOST_CHECK_CLOSE(maxFluxnoContinuum, 1.5, 1e-12);
 
   range = TInt32Range(0, 9);
-  CSpectrumNoiseAxis &error = modelfluxAxis.GetError();
-  error[0] = 0.5;
-  error[1] = 0.3;
-  error[2] = 0.8;
-  error[3] = 0.8;
-  error[4] = 0.9;
-  error[5] = 0.7;
-  error[6] = 0.6;
-  error[7] = 0.8;
-  error[8] = 0.9;
-  error[9] = 0.3;
+  TFloat64List error = {0.5, 0.3, 0.8, 0.8, 0.9, 0.7, 0.6, 0.8, 0.9, 0.3};
+  modelfluxAxis.setError(CSpectrumNoiseAxis(error));
 
   spc.SetFluxAxis(modelfluxAxis);
   ratioAmp = lineDetection.ComputeFluxes(spc, winsize, range, mask,
@@ -205,10 +199,11 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
       CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = k;
@@ -288,10 +283,11 @@ BOOST_AUTO_TEST_CASE(Retest) {
       CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = k;
@@ -403,10 +399,11 @@ BOOST_AUTO_TEST_CASE(Retest) {
 BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop) {
   Int32 n = 250;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *fluxAxis = spectralAxis.GetSamples();
+  TAxisSampleList fluxAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     fluxAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(fluxAxis);
 
   TInt32RangeList peak;
   peak.push_back(TInt32Range(-5, 35));
@@ -451,18 +448,21 @@ BOOST_AUTO_TEST_CASE(Compute) {
 
   Int32 n = 2000;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  Float64 *spcAxis = spectralAxis.GetSamples();
+  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
   for (Int32 k = 0; k < n; k++) {
     spcAxis[k] = k;
   }
+  spectralAxis.setSamplesVector(spcAxis);
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for (Int32 k = 0; k < n; k++) {
     modelfluxAxis[k] = k * 0.0001;
   }
-  CSpectrumNoiseAxis &error = modelfluxAxis.GetError();
+  TFloat64List error;
+  error.resize(n);
   for (Int32 k = 0; k < n; k++) {
     error[k] = k * 0.0001;
   }
+  modelfluxAxis.setError(CSpectrumNoiseAxis(error));
   TInt32RangeList resPeaks;
 
   addLine(modelfluxAxis, 4., 40., 1.5);
