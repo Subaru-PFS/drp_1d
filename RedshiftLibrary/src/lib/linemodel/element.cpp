@@ -91,7 +91,6 @@ CLineModelElement::CLineModelElement(
   m_type = m_ElementParam->m_Lines.front().GetType();
   m_isEmission = m_ElementParam->m_Lines.front().GetIsEmission();
 
-  Log.LogInfo(Formatter() << "Initialize element with size " << m_size);
   m_SignFactors = TFloat64List(GetSize());
 
   if (widthType == "instrumentdriven") {
