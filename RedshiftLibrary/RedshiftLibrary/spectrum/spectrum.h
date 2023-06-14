@@ -123,6 +123,7 @@ public:
   void SetErrorAxis(CSpectrumNoiseAxis &&noiseaxis);
 
   bool IsNoiseEmpty() const;
+  bool IsFluxEmpty() const;
   bool IsEmpty() const;
   bool IsValid() const;
   void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect);
@@ -141,8 +142,9 @@ public:
   bool RemoveContinuum(CContinuum &remover) const;
   const bool checkFlux(Float64 flux) const;
   const bool checkNoise(Float64 error) const;
-  const bool IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
-  const bool IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const;
+  const bool ValidateSpectralAxis(Float64 LambdaMin, Float64 LambdaMax) const;
+  void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
+  void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;
   bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                        Float64 coeffCorr = 10.0);
 
@@ -305,6 +307,8 @@ inline bool CSpectrum::IsValid() const {
   return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() &&
          !IsEmpty() && m_SpectralAxis.isSorted();
 }
+
+inline bool CSpectrum::IsFluxEmpty() const { return GetFluxAxis().isEmpty(); }
 
 inline bool CSpectrum::IsNoiseEmpty() const { return GetErrorAxis().isEmpty(); }
 

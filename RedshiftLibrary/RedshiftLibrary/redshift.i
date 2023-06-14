@@ -568,7 +568,7 @@ class CSpectrum
 
   void setObsID(const std::string& obsID);
 
-  const bool IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const;
+  void ValidateNoise( Float64 LambdaMin,  Float64 LambdaMax ) const;
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
