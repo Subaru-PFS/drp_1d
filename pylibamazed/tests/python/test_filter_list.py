@@ -37,41 +37,34 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.AbstractOutput import AbstractOutput
-from pylibamazed.Parameters import Parameters
-from pylibamazed.PdfHandler import buildPdfHandler
+from pylibamazed.Filter import FilterList, SpectrumFilterItem
+import pytest
+from pylibamazed.Exception import APIException
+import pandas as pd
+from tests.python.comparison_utils import ComparisonUtils
 
-class PdfHandlerTestUtils:
-    @staticmethod
-    def pdf_params():
-        return {
-            "FPZmin": [0],
-            "FPZmax": [100],
-            "FPZstep": [2],
-            "zmin": [0],
-            "zmax": [1],
-            "zstep": [0.1],
-            "zcenter": [0.5]
-        }
+class TestFilterList:
+    
+    def test_apply(self):
+        df = pd.DataFrame({'col1': [1, 22, 111], 'col2': [30, 1, 1]})
 
-    @staticmethod
-    def parameters():
-        return Parameters({"objects": []})
+        # Result is as expected
+        filter = FilterList()
+        filter.add_filter(SpectrumFilterItem('col1', '>', 12))
+        filter.add_filter(SpectrumFilterItem('col2', '<', 10))
+
+        filtered = filter.apply(df)
+        expected = pd.DataFrame({'col1': [22, 111], 'col2': [1, 1]})
+        ComparisonUtils.compare_dataframe_without_index(filtered, expected)
+
+    def test_apply_without_items(self):
+        # If filter list is empty, returns the initial data
+        df = pd.DataFrame({'col1': [1, 22, 111], 'col2': [30, 1, 1]})
+        filter = FilterList()
+        filtered = filter.apply(df)
+        ComparisonUtils.compare_dataframe_without_index(filtered, df)
     
-    @staticmethod
-    def abstract_output():
-        return AbstractOutput(PdfHandlerTestUtils.parameters())
+    def test_repr(self):
+        filter = FilterList()
+        assert filter.__repr__() == "FilterList []"
     
-    @staticmethod
-    def pdf_handler():
-        abstract_output = PdfHandlerTestUtils.abstract_output()
-        abstract_output.object_results = {
-            'some_object_type': {
-                "pdf_params": PdfHandlerTestUtils.pdf_params(),
-                "pdf": {
-                    "PDFProbaLog": ""
-                }
-            }
-        }
-        pdf_handler = buildPdfHandler(abstract_output, "some_object_type", True)
-        return pdf_handler

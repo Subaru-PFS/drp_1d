@@ -37,41 +37,38 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.AbstractOutput import AbstractOutput
-from pylibamazed.Parameters import Parameters
-from pylibamazed.PdfHandler import buildPdfHandler
+from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
+from pylibamazed.Context import Context
 
-class PdfHandlerTestUtils:
-    @staticmethod
-    def pdf_params():
-        return {
-            "FPZmin": [0],
-            "FPZmax": [100],
-            "FPZstep": [2],
-            "zmin": [0],
-            "zmax": [1],
-            "zstep": [0.1],
-            "zcenter": [0.5]
-        }
+from tests.python.test_ITlike import (
+    make_config,
+    get_parameters,
+    get_observation,
+    get_spectra,
+)
 
-    @staticmethod
-    def parameters():
-        return Parameters({"objects": []})
-    
-    @staticmethod
-    def abstract_output():
-        return AbstractOutput(PdfHandlerTestUtils.parameters())
-    
-    @staticmethod
-    def pdf_handler():
-        abstract_output = PdfHandlerTestUtils.abstract_output()
-        abstract_output.object_results = {
-            'some_object_type': {
-                "pdf_params": PdfHandlerTestUtils.pdf_params(),
-                "pdf": {
-                    "PDFProbaLog": ""
-                }
-            }
-        }
-        pdf_handler = buildPdfHandler(abstract_output, "some_object_type", True)
-        return pdf_handler
+
+class TestFilterIntegration:
+    def test_filter_params(self):
+        # Checks that parameters containing columns names & filters are correctly accessed and used
+
+        # Creates a "real" configuration
+        config = make_config(**{"config_filename": "config_filters.json"})
+        param = get_parameters(config["parameters_file"])
+        context = Context(config, param)  # vars returns the dict version of config
+        observation = get_observation(config["input_file"])
+
+        # Read and load spectra using spectra reader
+        spectra = get_spectra(config, observation)
+        reader = ASCIISpectrumReader(
+            observation_id=observation.ProcessingID[0],
+            parameters=param,
+            calibration_library=context,
+            source_id=observation.ProcessingID[0],
+        )
+
+        reader.load_all(spectra)
+        context.run(reader)  # passing spectra reader to launch amazed
+
+        # Checks that the number of waves kapt has decreased (6 to 3) with filtering
+        assert len(reader.get_wave()) == 3

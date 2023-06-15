@@ -37,41 +37,38 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.AbstractOutput import AbstractOutput
-from pylibamazed.Parameters import Parameters
-from pylibamazed.PdfHandler import buildPdfHandler
+import pytest
+from pylibamazed.Filter import FilterList, SpectrumFilterItem
+from pylibamazed.FilterLoader import ParamJsonFilterLoader
 
-class PdfHandlerTestUtils:
-    @staticmethod
-    def pdf_params():
-        return {
-            "FPZmin": [0],
-            "FPZmax": [100],
-            "FPZstep": [2],
-            "zmin": [0],
-            "zmax": [1],
-            "zstep": [0.1],
-            "zcenter": [0.5]
-        }
 
-    @staticmethod
-    def parameters():
-        return Parameters({"objects": []})
-    
-    @staticmethod
-    def abstract_output():
-        return AbstractOutput(PdfHandlerTestUtils.parameters())
-    
-    @staticmethod
-    def pdf_handler():
-        abstract_output = PdfHandlerTestUtils.abstract_output()
-        abstract_output.object_results = {
-            'some_object_type': {
-                "pdf_params": PdfHandlerTestUtils.pdf_params(),
-                "pdf": {
-                    "PDFProbaLog": ""
-                }
-            }
-        }
-        pdf_handler = buildPdfHandler(abstract_output, "some_object_type", True)
-        return pdf_handler
+class TestParamJsonFilterLoader:
+
+    def test_load_check_on_json_format(self):
+        jsonFilterLoader = ParamJsonFilterLoader()
+
+        # Json is not a list
+        params = {"filters": {"i should be a list": ""}}
+        with pytest.raises(ValueError, match=r"must be a list"):
+            jsonFilterLoader.get_filters(params)
+
+        # Wrong key
+        params = {"filters": [{"wrong key": ""}]}
+        with pytest.raises(ValueError, match=r"must have exactly the following keys"):
+            jsonFilterLoader.get_filters(params)
+        
+        # Missing key
+        params= {"filters": [{"key": "", "instruction": ""}]}
+        with pytest.raises(ValueError, match=r"must have exactly the following keys"):
+            jsonFilterLoader.get_filters(params)
+
+    def test_load_returns_expected_filters(self):
+        jsonFilterLoader = ParamJsonFilterLoader()
+        params= {"filters": [
+            {"key": "col1", "instruction": "<", "value": 2},
+            {"key": "col2", "instruction": ">=", "value": 2}
+        ]}
+        assert jsonFilterLoader.get_filters(params) == FilterList([
+            SpectrumFilterItem("col1", "<", 2),
+            SpectrumFilterItem("col2", ">=", 2)
+        ])

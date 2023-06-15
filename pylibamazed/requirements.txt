@@ -44,10 +44,10 @@ prompt-toolkit==3.0.38
 ptyprocess==0.7.0
 pure-eval==0.2.2
 py-cpuinfo==9.0.0
-pyamazed==0.42+gitcb039eea
+# pyamazed==0.42+gitcb039eea
 pyerfa==2.0.0.3
 Pygments==2.14.0
-pylibamazed==0.42+gite7c19960.dirty
+# pylibamazed==0.42+gite7c19960.dirty
 pyrsistent==0.19.3
 pytest==7.2.2
 pytest-cov==4.0.0
@@ -69,6 +69,6 @@ tomli==2.0.1
 traitlets==5.9.0
 tzdata==2023.3
 urllib3==1.26.15
-vizu==0.40.8
+# vizu==0.40.8
 wcwidth==0.2.6
 Werkzeug==2.2.3

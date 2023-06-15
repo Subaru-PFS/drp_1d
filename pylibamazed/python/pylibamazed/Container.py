@@ -36,42 +36,40 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+from typing import Generic, TypeVar
 
-from pylibamazed.AbstractOutput import AbstractOutput
-from pylibamazed.Parameters import Parameters
-from pylibamazed.PdfHandler import buildPdfHandler
+T = TypeVar("T")
+class Container(Generic[T]):
+    def __init__(self, **kwargs):
+        self.data: dict[str, T] = dict()
+        if(kwargs):
+            for key in kwargs:
+                self.append(kwargs[key], key)
 
-class PdfHandlerTestUtils:
-    @staticmethod
-    def pdf_params():
-        return {
-            "FPZmin": [0],
-            "FPZmax": [100],
-            "FPZstep": [2],
-            "zmin": [0],
-            "zmax": [1],
-            "zstep": [0.1],
-            "zcenter": [0.5]
-        }
-
-    @staticmethod
-    def parameters():
-        return Parameters({"objects": []})
+    def __repr__(self):
+        repr = ''
+        for key in self.data:
+            repr += f"\n{key}: {self.data[key]}"
+        return repr
     
-    @staticmethod
-    def abstract_output():
-        return AbstractOutput(PdfHandlerTestUtils.parameters())
+    def __eq__(self, __value__):
+        if type(self) != type(__value__):
+            return False
+        if len(self.data) != len(__value__.data):
+            return False
+        for key in self.data:
+            if self.data.get(key) != __value__.get(key):
+                return False
+        return True
+
+    def append(self, dataToAppend: T, obs_id=""):
+        self.data[obs_id] = dataToAppend
     
-    @staticmethod
-    def pdf_handler():
-        abstract_output = PdfHandlerTestUtils.abstract_output()
-        abstract_output.object_results = {
-            'some_object_type': {
-                "pdf_params": PdfHandlerTestUtils.pdf_params(),
-                "pdf": {
-                    "PDFProbaLog": ""
-                }
-            }
-        }
-        pdf_handler = buildPdfHandler(abstract_output, "some_object_type", True)
-        return pdf_handler
+    def get(self, obs_id="") -> T:
+        return self.data[obs_id]
+
+    def keys(self):
+        return self.data.keys()
+
+    def size(self) -> int:
+        return len(self.data)
