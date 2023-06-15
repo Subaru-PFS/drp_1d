@@ -421,18 +421,19 @@ public:
   static std::vector<CRange<T>>
   joinIntersections(std::vector<CRange<T>> ranges) {
 
+    if (ranges.size() == 1)
+      return ranges;
+
     std::vector<CRange<T>> result;
     std::sort(ranges.begin(), ranges.end());
-    auto it = ranges.begin();
-    CRange<T> current = *(it)++;
-    while (it != ranges.end()) {
+    auto current = ranges.front();
+    for (auto it = ranges.cbegin() + 1, end = ranges.cend(); it != end; ++it) {
       if (current.GetEnd() >= it->GetBegin()) {
         current.SetEnd(std::max(current.GetEnd(), it->GetEnd()));
       } else {
         result.push_back(current);
-        current = *(it);
+        current = *it;
       }
-      it++;
     }
     result.push_back(current);
     return result;

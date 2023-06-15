@@ -65,6 +65,8 @@ public:
     nType_All = 3,
   };
 
+  static const std::map<Int32, std::string> ETypeString;
+
   enum EForce {
     nForce_Weak = 1,
     nForce_Strong = 2,
@@ -75,8 +77,8 @@ public:
         CLineProfile_ptr &&profile, Int32 force, Float64 amp = -1.0,
         Float64 width = -1.0, Float64 cut = -1.0, Float64 posErr = -1.0,
         Float64 sigmaErr = -1.0, Float64 ampErr = -1.0,
-        const std::string &groupName = "-1", Float64 nominalAmp = 1.0,
-        const std::string &velGroupName = "-1", Int32 id = -1);
+        const std::string &groupName = undefStr, Float64 nominalAmp = 1.0,
+        const std::string &velGroupName = undefStr, Int32 id = -1);
   CLine(const std::string &name, Float64 pos, Int32 type,
         CLineProfile_ptr &&profile, Int32 force, Float64 velocityOffset,
         bool enableVelocityOffsetFitting, const std::string &groupName,
@@ -96,11 +98,10 @@ public:
   bool GetIsEmission() const;
   Int32 GetForce() const;
   Int32 GetType() const;
-  const CLineProfile &GetProfile() const;
+  const CLineProfile_ptr &GetProfile() const;
   void SetProfile(CLineProfile_ptr &&profile);
   Float64 GetPosition() const;
   Float64 GetOffset() const;
-  bool SetOffset(Float64 val);
   bool GetOffsetFitEnabled() const;
   bool EnableOffsetFit();
   bool DisableOffsetFit();
@@ -115,6 +116,7 @@ public:
   TSymIgmParams GetSymIgmParams() const;
   void SetAsymParams(const TAsymParams &asymParams);
   void SetSymIgmParams(const TSymIgmParams &params);
+  void SetSymIgmFit(bool val = true);
   void setProfileAndParams(const std::string &profileName,
                            const TAsymParams &asymParams, Float64 nSigmaSupport,
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
@@ -129,9 +131,6 @@ public:
   const std::string &GetVelGroupName() const;
 
   const std::string &GetStrID() const;
-
-  void Save(std::ostream &stream) const;
-  void SaveDescription(std::ostream &stream) const;
 
 private:
   Int32 m_id = -1;
@@ -164,6 +163,7 @@ private:
   std::string m_strID;
 };
 
+using TLineVector = std::vector<CLine>;
 } // namespace NSEpic
 
 #endif

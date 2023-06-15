@@ -1,4 +1,4 @@
-// ============================================================================
+//============================================================================
 //
 // This file is part of: AMAZED
 //
@@ -36,14 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-#include <fstream>
-#include <iomanip> // std::setprecision
-#include <string>
-
-#include <string>
+#include "RedshiftLibrary/spectrum/maskBuilder.h"
 
 using namespace NSEpic;
+
+CMask CMaskBuilder::getMask(const CSpectrumSpectralAxis &spectralAxis,
+                            const TFloat64Range &lamdbdaRange,
+                            const Float64 &redshift) {
+  CMask mask(spectralAxis.GetSamplesCount(), 1);
+  return mask;
+}

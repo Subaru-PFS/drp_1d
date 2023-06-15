@@ -1,21 +1,18 @@
 import pandas as pd
 import json
-import h5py
-import os
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import ErrorCode
 
-class Parameters():
 
-    def __init__(self, parameters, config):
+class Parameters:
+
+    def __init__(self, parameters, config=None):
         self.parameters = parameters
         self.config = config
-        self.calibration_dir = config["calibration_dir"]
-        self.parameters["calibrationDir"]=config["calibration_dir"]
         
     def get_solve_methods(self,object_type):
-        method = self.parameters[object_type]["method"]
-        linemeas_method = self.parameters[object_type]["linemeas_method"]
+        method = self.get_solve_method(object_type)
+        linemeas_method = self.get_linemeas_method(object_type)
         methods = []
         if method:
             methods.append(method)
@@ -28,18 +25,21 @@ class Parameters():
 
     def get_linemodel_methods(self, object_type):
         methods = []
-        if self.parameters[object_type]["linemeas_method"]:
-            methods.append(self.parameters[object_type]["linemeas_method"]) 
-        if self.parameters[object_type]["method"] and self.parameters[object_type]["method"] == "LineModelSolve":
-            methods.append(self.parameters[object_type]["method"]) 
+        linemeas_method = self.get_linemeas_method(object_type)
+        solve_method = self.get_solve_method(object_type)
+        if linemeas_method:
+            methods.append(linemeas_method) 
+        if solve_method and solve_method == "LineModelSolve":
+            methods.append(solve_method) 
         return methods
     
     def check_lmskipsecondpass(self, object_type):
-        if self.parameters[object_type]["method"]:
-            if self.parameters[object_type]["method"] != "LineModelSolve":
+        solve_method = self.get_solve_method(object_type)
+        if solve_method:
+            if solve_method != "LineModelSolve":
                 return False 
             else:
-                return self.parameters[object_type][self.parameters[object_type]["method"]]["linemodel"]["skipsecondpass"]
+                return self.parameters[object_type][solve_method]["linemodel"]["skipsecondpass"]
         return False
 
     def get_solve_method(self, object_type):
@@ -55,11 +55,13 @@ class Parameters():
         for object_type in self.config["linemeascatalog"].keys():
             lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
             lm = lm[lm.ProcessingID == source_id]
+            if lm.empty:
+                raise APIException(ErrorCode.INVALID_PARAMETER,f"Uncomplete linemeas catalog, {source_id} missing")
+            
             columns = self.config["linemeas_catalog_columns"][object_type]
-            redshift_ref = lm[columns["Redshift"]].iloc[0]
-            velocity_abs = lm[columns["VelocityAbsorption"]].iloc[0]
-            velocity_em = lm[columns["VelocityEmission"]].iloc[0]
-            #            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
+            redshift_ref = float(lm[columns["Redshift"]].iloc[0])
+            velocity_abs = float(lm[columns["VelocityAbsorption"]].iloc[0])
+            velocity_em = float(lm[columns["VelocityEmission"]].iloc[0])
             self.parameters[object_type]["redshiftref"] = redshift_ref
             self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
             self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em

@@ -79,54 +79,44 @@ using namespace std;
 TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
-    CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
-    const TInt32List &MeiksinList, const TInt32List &EbmvList) {
+    const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
+    const TInt32List &EbmvList) {
   bool amplForcePositive = true;
   bool status_chisquareSetAtLeastOnce = false;
 
   Int32 EbmvListSize = EbmvList.size();
   Int32 MeiksinListSize = MeiksinList.size();
-
-  TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize);
-
-  if (spcMaskAdditional.GetMasksCount() != m_spectrum.GetSampleCount()) {
-    Log.LogInfo(
-        "COperatorTemplateFitting::BasicFit: spcMaskAdditional does not have "
-        "the same size as the spectrum flux vector... (%d vs %d)",
-        spcMaskAdditional.GetMasksCount(),
-        m_spectrum.GetFluxAxis().GetSamplesCount());
-    result.status = nStatus_DataError;
-    return result;
-  }
-
-  TFloat64Range currentRange; // restframe
-  RebinTemplate(tpl, redshift, currentRange, result.overlapRate,
-                overlapThreshold);
-
-  bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
-      m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), m_kStart,
-      m_kEnd);
-  if (!kStartEnd_ok)
-    THROWG(INTERNAL_ERROR, "Impossible to "
-                           "get valid kstart or kend");
-  if (m_kStart == -1 || m_kEnd == -1)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "kStart=" << m_kStart << ", kEnd=" << m_kEnd);
-
-  if (opt_dustFitting || opt_extinction) {
-    InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
-                     tpl->m_igmCorrectionMeiksin, EbmvListSize);
-  }
-
-  Int32 iEbmvCoeffMin = EbmvList.front();
-  Int32 iEbmvCoeffMax = EbmvList.back();
-
-  m_option_igmFastProcessing = (MeiksinList.size() > 1 ? true : false);
+  m_option_igmFastProcessing = (MeiksinListSize > 1 ? true : false);
 
   bool apply_priore =
       !logpriore.empty() && !tpl->CalzettiInitFailed() &&
       (logpriore.size() ==
        tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
+
+  Int32 iEbmvCoeffMin = EbmvList.front();
+  Int32 iEbmvCoeffMax = EbmvList.back();
+
+  TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize, m_spectra.size());
+
+  TFloat64RangeList currentRanges(m_spectra.size()); // restframe
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+
+    RebinTemplate(tpl, redshift, currentRanges[spcIndex],
+                  result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
+
+    bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
+        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
+        m_kStart[spcIndex], m_kEnd[spcIndex]);
+    if (!kStartEnd_ok)
+      THROWG(INTERNAL_ERROR, "Impossible to "
+                             "get valid kstart or kend");
+    if (m_kStart[spcIndex] == -1 || m_kEnd[spcIndex] == -1)
+      THROWG(INTERNAL_ERROR, Formatter() << "kStart=" << m_kStart[spcIndex]
+                                         << ", kEnd=" << m_kEnd[spcIndex]);
+  }
+  if (opt_dustFitting || opt_extinction)
+    InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
+                     tpl->m_igmCorrectionMeiksin, EbmvListSize);
 
   CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
@@ -148,16 +138,19 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       break;
     }
     Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
-                                        // being the median extinction value)
+    // being the median extinction value)
 
     bool igmCorrectionAppliedOnce = false;
     // Meiksin IGM extinction
     if (opt_extinction) {
-      // check if lya belongs to current range.
-      if (CheckLyaIsInCurrentRange(currentRange))
-        igmCorrectionAppliedOnce = false;
-      else
-        igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx);
+      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+
+        // check if lya belongs to current range.
+        if (CheckLyaIsInCurrentRange(currentRanges[spcIndex]))
+          igmCorrectionAppliedOnce = false;
+        else
+          igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx, spcIndex);
+      }
       if (!igmCorrectionAppliedOnce)
         igmLoopUseless_WavelengthRange = true;
     }
@@ -168,14 +161,18 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
       if (opt_dustFitting) {
         coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
-        ApplyDustCoeff(kEbmv);
+        for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+          ApplyDustCoeff(kEbmv, spcIndex);
       }
 
       const CPriorHelper::SPriorTZE &logpriorTZE =
           apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
-      TFittingResult fitRes =
-          ComputeLeastSquare(kM, kEbmv_, logpriorTZE, spcMaskAdditional);
-
+      TFittingResult fitRes;
+      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+        fitRes.cross_result +=
+            ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
+      }
+      ComputeAmplitudeAndChi2(fitRes, logpriorTZE);
       Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
                                << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
                                << " meiksinIdx=" << meiksinIdx);
@@ -186,8 +183,8 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
       if (fitRes.chiSquare < result.chiSquare) {
         TFittingResult &result_base = result; // upcasting (slicing)
-        result_base =
-            fitRes; // slicing, preserving specific TFittingIsmIGmResult members
+        result_base = fitRes;                 // slicing, preserving specific
+        // TFittingIsmIGmResult members
 
         result.EbmvCoeff = coeffEBMV;
         result.MeiksinIdx =
@@ -213,36 +210,31 @@ void COperatorTemplateFitting::InitIsmIgmConfig(
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
     Int32 EbmvListSize) {
-  m_templateRebined_bf.InitIsmIgmConfig(
-      m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
 
-  m_sumCross_outsideIGM = TFloat64List(EbmvListSize, 0.0);
-  m_sumT_outsideIGM = TFloat64List(EbmvListSize, 0.0);
-  m_sumS_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
+        m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
+        igmCorrectionMeiksin);
+
+  m_sumCross_outsideIGM.assign(m_spectra.size(),
+                               TFloat64List(EbmvListSize, 0.0));
+  m_sumT_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
+  m_sumS_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
 }
 
-TFittingResult COperatorTemplateFitting::ComputeLeastSquare(
-    Int32 kM, Int32 kEbmv_, const CPriorHelper::SPriorTZE &logpriorTZE,
-    const CMask &spcMaskAdditional) {
-  TFittingResult fitResult =
-      ComputeCrossProducts(kM, kEbmv_, spcMaskAdditional);
-
-  ComputeAmplitudeAndChi2(fitResult, logpriorTZE);
-
-  return fitResult;
-}
-
-TFittingResult
-COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
-                                               const CMask &spcMaskAdditional) {
-  const CSpectrumFluxAxis &spcFluxAxis = m_spectrum.GetFluxAxis();
+TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
+    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
+  const CSpectrumFluxAxis &spcFluxAxis = m_spectra[spcIndex]->GetFluxAxis();
   const TAxisSampleList &Yspc = spcFluxAxis.GetSamplesVector();
   const TAxisSampleList &Ytpl =
-      m_templateRebined_bf.GetFluxAxis().GetSamplesVector();
+      m_templateRebined_bf[spcIndex].GetFluxAxis().GetSamplesVector();
   const TAxisSampleList &Xtpl =
-      m_templateRebined_bf.GetSpectralAxis().GetSamplesVector();
+      m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector();
 
-  TFittingResult fitResult;
+  const CMask &spcMaskAdditional =
+      m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
+                             *m_lambdaRanges[spcIndex], redshift);
+  TCrossProductResult fitResult;
 
   Float64 &sumCross = fitResult.sumCross;
   Float64 &sumT = fitResult.sumT;
@@ -258,10 +250,12 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
   Int32 numDevsFull = 0;
   const CSpectrumNoiseAxis &error = spcFluxAxis.GetError();
 
-  Int32 kIgmEnd =
-      m_option_igmFastProcessing ? m_templateRebined_bf.GetIgmEndIndex() : -1;
-  Int32 kEndloop = m_option_igmFastProcessing && kM > 0 ? kIgmEnd : m_kEnd;
-  for (Int32 j = m_kStart; j <= kEndloop; j++) {
+  Int32 kIgmEnd = m_option_igmFastProcessing
+                      ? m_templateRebined_bf[spcIndex].GetIgmEndIndex()
+                      : -1;
+  Int32 kEndloop =
+      m_option_igmFastProcessing && kM > 0 ? kIgmEnd : m_kEnd[spcIndex];
+  for (Int32 j = m_kStart[spcIndex]; j <= kEndloop; j++) {
     if (m_option_igmFastProcessing && sumsIgmSaved == 0 && j > kIgmEnd) {
       // store intermediate sums for IGM range
       sumCross_IGM = sumCross;
@@ -306,13 +300,13 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
 
   if (m_option_igmFastProcessing) {
     if (kM == 0) {
-      m_sumCross_outsideIGM[kEbmv_] = sumCross - sumCross_IGM;
-      m_sumT_outsideIGM[kEbmv_] = sumT - sumT_IGM;
-      m_sumS_outsideIGM[kEbmv_] = sumS - sumS_IGM;
+      m_sumCross_outsideIGM[spcIndex][kEbmv_] = sumCross - sumCross_IGM;
+      m_sumT_outsideIGM[spcIndex][kEbmv_] = sumT - sumT_IGM;
+      m_sumS_outsideIGM[spcIndex][kEbmv_] = sumS - sumS_IGM;
     } else {
-      sumCross += m_sumCross_outsideIGM[kEbmv_];
-      sumT += m_sumT_outsideIGM[kEbmv_];
-      sumS += m_sumS_outsideIGM[kEbmv_];
+      sumCross += m_sumCross_outsideIGM[spcIndex][kEbmv_];
+      sumT += m_sumT_outsideIGM[spcIndex][kEbmv_];
+      sumS += m_sumS_outsideIGM[spcIndex][kEbmv_];
     }
   }
 
@@ -326,9 +320,9 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
 void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
     TFittingResult &fitResult,
     const CPriorHelper::SPriorTZE &logpriorTZE) const {
-  const Float64 &sumCross = fitResult.sumCross;
-  const Float64 &sumT = fitResult.sumT;
-  const Float64 &sumS = fitResult.sumS;
+  const Float64 &sumCross = fitResult.cross_result.sumCross;
+  const Float64 &sumT = fitResult.cross_result.sumT;
+  const Float64 &sumS = fitResult.cross_result.sumS;
 
   Float64 &ampl = fitResult.ampl;
   Float64 &ampl_err = fitResult.ampl_err;
@@ -389,8 +383,7 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-    const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-    bool opt_extinction, bool opt_dustFitting,
+    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
@@ -438,21 +431,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   result->Redshifts = sortedRedshifts;
 
-  // default mask
-  bool useDefaultMask =
-      additional_spcMasks.size() != sortedRedshifts.size() ? true : false;
-  CMask default_spcMask(m_spectrum.GetSampleCount());
-  if (useDefaultMask)
-    for (Int32 km = 0; km < default_spcMask.GetMasksCount(); km++)
-      default_spcMask[km] = 1.0;
-
-  if (additional_spcMasks.size() != sortedRedshifts.size() &&
-      additional_spcMasks.size() != 0)
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "masks-list size (" << additional_spcMasks.size()
-                       << ") does not match the input redshift-list ("
-                       << sortedRedshifts.size() << ") !)");
-
   if (logpriorze.size() > 0 && logpriorze.size() != sortedRedshifts.size())
     THROWG(INTERNAL_ERROR,
            Formatter() << "prior list size(" << logpriorze.size()
@@ -467,13 +445,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
     Float64 redshift = result->Redshifts[i];
 
-    const CMask &additional_spcMask =
-        useDefaultMask ? default_spcMask
-                       : additional_spcMasks[sortedIndexes[i]];
-
-    TFittingIsmIgmResult result_z = BasicFit(
-        tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
-        additional_spcMask, logp, MeiksinList, EbmvList);
+    TFittingIsmIgmResult result_z =
+        BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
+                 opt_dustFitting, logp, MeiksinList, EbmvList);
 
     result->set_at_redshift(i, std::move(result_z));
 
@@ -486,14 +460,20 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidInfZ == -1) {
+    bool ok = true;
+    for (auto ov : result->Overlap[i])
+      ok &= (ov >= overlapThreshold);
+    if (ok) {
       overlapValidInfZ = sortedRedshifts[i];
       break;
     }
   }
   Float64 overlapValidSupZ = -1;
   for (Int32 i = sortedRedshifts.size() - 1; i >= 0; i--) {
-    if (result->Overlap[i] >= overlapThreshold && overlapValidSupZ == -1) {
+    bool ok = true;
+    for (auto ov : result->Overlap[i])
+      ok &= (ov >= overlapThreshold);
+    if (ok) {
       overlapValidSupZ = sortedRedshifts[i];
       break;
     }
@@ -543,7 +523,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
 
   // estimate CstLog for PDF estimation
-  result->CstLog = EstimateLikelihoodCstLog(m_spectrum, m_lambdaRange);
+  result->CstLog = EstimateLikelihoodCstLog();
 
   return result;
 }

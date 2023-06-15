@@ -51,40 +51,96 @@ namespace NSEpic
 class CContinuumManager;
 class CAbstractFitter {
 public:
-  CAbstractFitter(CLineModelElementList &elements,
-                  std::shared_ptr<const CSpectrum> inputSpectrum,
-                  std::shared_ptr<const TLambdaRange> lambdaRange,
-                  std::shared_ptr<CSpectrumModel> spectrumModel,
-                  const CLineCatalog::TLineVector &restLineList);
+  CAbstractFitter(
+      CLineModelElementList &elements,
+      std::shared_ptr<const CSpectrum> inputSpectrum,
+      std::shared_ptr<const TLambdaRange> lambdaRange,
+      std::shared_ptr<CSpectrumModel> spectrumModel,
+      const TLineVector &restLineList,
+      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
-  virtual void fit(Float64 redshift) = 0;
+  void fit(Float64 redshift);
+
+  virtual void resetSupport(Float64 redshift);
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
+  void enableLambdaOffsets() { m_enableLambdaOffsetsFit = true; }
 
-  static std::unique_ptr<CAbstractFitter>
-  makeFitter(std::string fittingMethod, CLineModelElementList &elements,
-             std::shared_ptr<const CSpectrum> inputSpectrum,
-             std::shared_ptr<const TLambdaRange> lambdaRange,
-             std::shared_ptr<CSpectrumModel> spectrumModel,
-             const CLineCatalog::TLineVector &restLineList,
-             std::shared_ptr<CContinuumManager> continuumManager);
+  static std::shared_ptr<CAbstractFitter> makeFitter(
+      std::string fittingMethod, CLineModelElementList &elements,
+      std::shared_ptr<const CSpectrum> inputSpectrum,
+      std::shared_ptr<const TLambdaRange> lambdaRange,
+      std::shared_ptr<CSpectrumModel> spectrumModel,
+      const TLineVector &restLineList,
+      std::shared_ptr<CContinuumManager> continuumManager,
+      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
+
+  void logParameters();
+
+  TAsymParams fitAsymParameters(Float64 redshift, Int32 idxLyaE,
+                                const Int32 &idxLineLyaE);
+
+  Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
+                             const TInt32List &idxLine);
+
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
+  virtual void doFit(Float64 redshift) = 0;
+
+  void initFit(Float64 redshift);
+
+  void resetElementsFittingParam();
+
+  void resetLambdaOffsets();
+
+  void fitLyaProfile(Float64 redshift);
+
+  void computeCrossProducts(CLineModelElement &elt, Float64 redshift,
+                            Int32 lineIdx);
+
+  void fitAmplitude(Int32 eltIndex, Float64 redshift, Int32 lineIdx = undefIdx);
+
+  virtual void fitAmplitudeAndLambdaOffset(Int32 eltIndex, Float64 redshift,
+                                           Int32 lineIdx = undefIdx,
+                                           bool enableOffsetFitting = true);
+
+  Float64 getLeastSquareMeritFast(Int32 idxLine = -1) const;
+
+  void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
+
+  bool HasLambdaOffsetFitting(TInt32List EltsIdx,
+                              bool enableOffsetFitting) const;
+  Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
+
   CLineModelElementList &m_Elements;
+  std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
   const CSpectrum &m_inputSpc;
-  const CLineCatalog::TLineVector &m_RestLineList;
+  const TLineVector &m_RestLineList;
   const TFloat64Range &m_lambdaRange;
   std::shared_ptr<CSpectrumModel> m_model;
 
   // hard coded options
   bool m_enableAmplitudeOffsets = false;
-  bool m_enableLambdaOffsetsFit = true;
+  bool m_enableLambdaOffsetsFit = false;
 
-  Int32 m_AmplitudeOffsetsDegree = 2;
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
+
+  Float64 m_absLinesLimit = 1.0;
+
+  Float64 m_opt_lya_fit_asym_min = 0.0;
+  Float64 m_opt_lya_fit_asym_max = 4.0;
+  Float64 m_opt_lya_fit_asym_step = 1.0;
+  Float64 m_opt_lya_fit_width_min = 1.;
+  Float64 m_opt_lya_fit_width_max = 4.;
+  Float64 m_opt_lya_fit_width_step = 1.;
+  Float64 m_opt_lya_fit_delta_min = 0.;
+  Float64 m_opt_lya_fit_delta_max = 0.;
+  Float64 m_opt_lya_fit_delta_step = 1.;
 };
 } // namespace NSEpic
 

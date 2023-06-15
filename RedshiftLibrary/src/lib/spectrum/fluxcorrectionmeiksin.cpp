@@ -70,6 +70,35 @@ Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
   return getCorrection(zIdx, meiksinIdx, lbdaIdx);
 }
 
+std::tuple<Float64, Float64>
+CSpectrumFluxCorrectionMeiksin::getCorrectionAndDerivLbdaRest(
+    Float64 redshift, Int32 meiksinIdx, Float64 lambdaRest) const {
+
+  if (lambdaRest > RESTLAMBDA_LYA) // && meiksinIdx == -1)
+    return std::make_tuple(1., 0.);
+
+  if (meiksinIdx == -1)
+    THROWG(INTERNAL_ERROR, "igmIdx cannot be negative");
+  Int32 zIdx = getRedshiftIndex(redshift);
+  if (zIdx == -1)
+    return std::make_tuple(1., 0.);
+  Int32 lbdaIdx = getWaveIndex(lambdaRest);
+
+  return std::make_tuple(getCorrection(zIdx, meiksinIdx, lbdaIdx),
+                         getCorrectionDerivLbdaRest(zIdx, meiksinIdx, lbdaIdx));
+}
+
+Float64 CSpectrumFluxCorrectionMeiksin::getCorrectionDerivLbdaRest(
+    Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
+  Int32 lbdaI0 = std::max(0, lbdaIdx - 1);
+  Int32 lbdaI1 = std::min(m_fineLambdaSize - 1, lbdaIdx + 1);
+  Float64 corr_diff = m_corrections[zIdx].fluxcorr[meiksinIdx].at(lbdaI1) -
+                      m_corrections[zIdx].fluxcorr[meiksinIdx].at(lbdaI0);
+  Float64 lbda_diff =
+      m_corrections[zIdx].lbda.at(lbdaI1) - m_corrections[zIdx].lbda.at(lbdaI0);
+  return corr_diff / lbda_diff;
+}
+
 /**
  * @brief CSpectrumFluxCorrectionMeiksin::getRedshiftIndex
  * @param z
@@ -157,7 +186,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
   TInt32Range indices = getWaveRangeIndices(convRange_rest, false);
   Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
   Float64 sigmaSupport =
-      lsf->GetProfile().GetNSigmaSupport() / 2. / (1.0 + z_center);
+      lsf->GetProfile()->GetNSigmaSupport() / 2. / (1.0 + z_center);
   for (std::size_t i = indices.GetBegin(); i <= indices.GetEnd(); i++) {
     Float64 lambda0 = fineLambdas[i]; // lambda restframe
 

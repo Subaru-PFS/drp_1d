@@ -66,21 +66,26 @@ COperatorPdfz::COperatorPdfz(const std::string &opt_combine,
  *  combine pdf and search for candidates.
  */
 std::shared_ptr<PdfCandidatesZResult>
-COperatorPdfz::Compute(const ChisquareArray &chisquarearray,
-                       const TFloat64RangeList &candidatesRedshiftsRanges,
-                       const TCandidateZbyRank &parentCandidates) {
+COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
   Log.LogInfo("%s: Pdfz computation", __func__);
 
-  if (candidatesRedshiftsRanges.size() != parentCandidates.size())
-    THROWG(
-        INTERNAL_ERROR,
-        "candidatesRedshifts and parentCandidates do not have the same size");
+  if (chisquarearray.zgridParams.size() !=
+      chisquarearray.parentCandidates.size())
+    THROWG(INTERNAL_ERROR, "candidates zgridParams and parentCandidates do not "
+                           "have the same size");
 
-  m_parentCandidates =
-      TCandidateZbyID(parentCandidates.cbegin(), parentCandidates.cend());
-  for (Int32 i = 0; i < candidatesRedshiftsRanges.size(); ++i)
-    m_candidatesZRanges[parentCandidates[i].first] =
-        candidatesRedshiftsRanges[i];
+  if (!chisquarearray.parentCandidates.empty()) {
+    m_parentCandidates =
+        TCandidateZbyID(chisquarearray.parentCandidates.cbegin(),
+                        chisquarearray.parentCandidates.cend());
+    for (Int32 i = 0; i < chisquarearray.zgridParams.size(); ++i)
+      m_candidatesZRanges[chisquarearray.parentCandidates[i].first] =
+          TFloat64Range(chisquarearray.zgridParams[i].zmin,
+                        chisquarearray.zgridParams[i].zmax);
+  } else {
+    m_parentCandidates = {{"", nullptr}};
+    m_candidatesZRanges = {{"", {}}};
+  }
 
   // create ClogZPdfResult
   createPdfResult(chisquarearray);

@@ -3,11 +3,25 @@ The **pylibamazed** library for Subaru-PFS project.
 
 ## Requirements
 
+pylibamazed is a Python package wrapping numerical algorithms for the analysis of 1D spectroscopic data of astrophysical sources.
+
+## Main features
+
+* Estimate source category (galaxy, star or QSO)
+* Classify source type (sub-classification into the source category, e.g. the spectral type of a star for the star category)
+* Estimate redshift
+* Provide redshift reliability
+* Estimate radial velocity
+* Measure fluxes of emission lines
+
+## Requirements
+
 `drp_1d` has the following strict requirements:
 * [gcc](https://gcc.gnu.org/)
 * [python](https://www.python.org/) >=3.6
 * [cmake](https://cmake.org/) >=3.12
 * [swig](http://www.swig.org/) >=4.0
+
 
 ## Dependencies
 
@@ -17,6 +31,8 @@ The **pylibamazed** library for Subaru-PFS project.
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
 * [openblas](https://www.openblas.net/) >= 0.3.19
+* [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.0
+* [lbfgspp](https://lbfgspp.statr.me) == 0.2.0-13-g563106b
 
 `drp_1d` also depends on following python packages
 * [numpy](https://www.numpy.org/) >=1.16.0
@@ -90,9 +106,26 @@ From `drp_1d` root directory:
 
 As stated earlier pylibamazed depends on several third parties (refer to [this section](#dependencies) for the complete list). It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install theses thirdparties.
 
+
+### Installing with package manager
+
+On ubuntu :
+```sh
+sudo apt install -y \
+libboost-dev libboost-filesystem-dev libboost-thread-dev libboost-timer-dev libboost-program-options-dev libboost-test-dev \
+libcfitsio-dev \
+libgsl-dev \
+libfftw3-dev \
+libopenblas-dev \
+libeigen3-dev \
+liblbfgspp-dev
+```
+
+### Installing from source
+
     buildandinstallthirdparty.py [-h] [--workdir WORKDIR] [--prefix PREFIX] [-j PARALLEL] [--extra_flags EXTRA_FLAGS] [--force] [name1 ...]
 
-Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas`].
+Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas` | `eigen` | `lbfgspp`].
 
 For instance, to install the fftw and cfitsio third parties into the `thirdparty` directory, execute:
 
@@ -119,6 +152,17 @@ Other command line options:
 `--force`: forces the library building and overwrites existing built library 
 
     python tools/buildandinstallthirdparty.py fftw cfitsio --force
+
+## Tests
+
+In order to launch tests and see coverage, **in pylibamazed folder**
+```
+coverage run --source=pylibamazed -m pytest
+coverage report
+coverage html
+```
+Drag and drop the created index.js in your web navigator
+
 
 ## Contacts
 

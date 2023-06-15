@@ -45,6 +45,9 @@ using namespace NSEpic;
 using namespace std;
 #include <fstream>
 
+const std::map<Int32, std::string> CLine::ETypeString = {
+    {nType_Absorption, "Abs"}, {nType_Emission, "Em"}, {nType_All, "All"}};
+
 CLine::CLine(const string &name, Float64 pos, Int32 type,
              CLineProfile_ptr &&profile, Int32 force, Float64 amp,
              Float64 width, Float64 cut, Float64 posErr, Float64 sigmaErr,
@@ -137,6 +140,12 @@ void CLine::SetSymIgmParams(const TSymIgmParams &params) {
   m_Profile->SetSymIgmParams(params);
 }
 
+void CLine::SetSymIgmFit(bool val) {
+  if (!m_Profile)
+    THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
+  m_Profile->SetSymIgmFit(val);
+}
+
 void CLine::setProfileAndParams(
     const std::string &profileName, const TAsymParams &asymParams,
     Float64 nSigmaSupport,
@@ -184,10 +193,10 @@ bool CLine::GetIsEmission() const { return m_Type == nType_Emission; }
 
 Int32 CLine::GetType() const { return m_Type; }
 
-const CLineProfile &CLine::GetProfile() const {
+const CLineProfile_ptr &CLine::GetProfile() const {
   if (!m_Profile)
     THROWG(INTERNAL_ERROR, "Current line does not have a profile");
-  return *m_Profile;
+  return m_Profile;
 }
 
 void CLine::SetProfile(CLineProfile_ptr &&profile) {
@@ -199,15 +208,6 @@ Int32 CLine::GetForce() const { return m_Force; }
 Float64 CLine::GetPosition() const { return m_Pos; }
 
 Float64 CLine::GetOffset() const { return m_Offset; }
-
-bool CLine::SetOffset(Float64 val) {
-  if (m_OffsetFit) {
-    m_Offset = val;
-    return true;
-  } else {
-    return false;
-  }
-}
 
 bool CLine::GetOffsetFitEnabled() const { return m_OffsetFit; }
 
@@ -244,44 +244,3 @@ const Float64 CLine::GetNominalAmplitude() const { return m_NominalAmplitude; }
 const std::string &CLine::GetVelGroupName() const { return m_VelGroupName; }
 
 Int32 CLine::GetID() const { return m_id; }
-
-void CLine::Save(std::ostream &stream) const {
-  stream << GetName() << "\t" << GetPosition() << "\t";
-  if (GetIsStrong())
-    stream << "S"
-           << "\t";
-  else
-    stream << "W"
-           << "\t";
-  if (GetIsEmission())
-    stream << "E"
-           << "\t";
-  else
-    stream << "A"
-           << "\t";
-  stream << GetCut() << "\t" << GetWidth() << "\t" << GetAmplitude() << "\t"
-         << GetNominalAmplitude() << "\t" << GetVelGroupName() << "\t"
-         << GetGroupName() << "\t" << GetOffset() << "\n";
-}
-
-void CLine::SaveDescription(std::ostream &stream) const {
-  stream << "#";
-  stream << "Name"
-         << "\t"
-         << "Position"
-         << "\t";
-  stream << "Force"
-         << "\t";
-  stream << "Cut"
-         << "\t"
-         << "Width"
-         << "\t"
-         << "Amp"
-         << "\t"
-         << "PosFitErr"
-         << "\t"
-         << "SigmaFitErr"
-         << "\t"
-         << "AmpFitErr"
-         << "\t";
-}

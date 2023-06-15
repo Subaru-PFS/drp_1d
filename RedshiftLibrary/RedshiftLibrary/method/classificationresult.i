@@ -50,5 +50,5 @@ public:
     std::map<std::string,Float64 > m_evidences;
     std::map<std::string,Float64 > m_proba;
 
-    std::string m_TypeLabel="-1";
+    std::string m_TypeLabel=undefStr;
 };

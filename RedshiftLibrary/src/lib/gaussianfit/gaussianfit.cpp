@@ -189,24 +189,10 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
   // Iterate
   int status = 0;
 
-  if (0) {
-    int iter = 0;
-    do {
-      iter++;
-      status = gsl_multifit_fdfsolver_iterate(multifitSolver);
-
-      if (status)
-        break;
-
-      status = gsl_multifit_test_delta(multifitSolver->dx, multifitSolver->x,
-                                       m_AbsTol, m_RelTol);
-    } while (status == GSL_CONTINUE && iter < 500);
-  } else {
-    /* solve the system with a maximum of 500 iterations */
-    int info;
-    gsl_multifit_fdfsolver_driver(multifitSolver, 500, m_RelTol, m_RelTol, 0.0,
-                                  &info);
-  }
+  /* solve the system with a maximum of 500 iterations */
+  int info;
+  gsl_multifit_fdfsolver_driver(multifitSolver, 500, m_RelTol, m_RelTol, 0.0,
+                                &info);
 
   // Set values and errors
   gsl_matrix *covarMatrix = gsl_matrix_alloc(np, np);

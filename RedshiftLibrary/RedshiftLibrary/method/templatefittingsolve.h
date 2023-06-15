@@ -73,7 +73,7 @@ private:
           TScopeStack &scope) override;
 
   void Solve(std::shared_ptr<COperatorResultStore> resultStore,
-             const CSpectrum &spc, const std::shared_ptr<const CTemplate> &tpl,
+             const std::shared_ptr<const CTemplate> &tpl,
              Float64 overlapThreshold, std::vector<CMask> maskList,
              EType spctype = nType_raw, std::string opt_interp = "lin",
              bool opt_extinction = false, bool opt_dustFitting = false);
@@ -96,7 +96,6 @@ private:
   std::string m_opt_pdfcombination;
   Float64 m_redshiftSeparation;
   Int64 m_opt_maxCandidate;
-  bool m_opt_enableSaveIntermediateTemplateFittingResults = false;
 };
 
 } // namespace NSEpic

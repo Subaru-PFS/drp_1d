@@ -54,15 +54,16 @@
 
 #include <fftw3.h>
 
+namespace templateFittingSolve_test {
+class EstimateXtY_test;
+};
+
 namespace NSEpic {
 
 class COperatorTemplateFittingLog : public COperatorTemplateFittingBase {
 
 public:
-  COperatorTemplateFittingLog(const CSpectrum &spectrum,
-                              const CSpectrum &logSampledSpectrum,
-                              const TFloat64Range &lambdaRange,
-                              const TFloat64List &redshifts);
+  COperatorTemplateFittingLog(const TFloat64List &redshifts);
   ~COperatorTemplateFittingLog();
 
   void SetRedshifts(TFloat64List redshifts) override;
@@ -70,8 +71,7 @@ public:
 
   std::shared_ptr<COperatorResult>
   Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
-          Float64 overlapThreshold,
-          const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
+          Float64 overlapThreshold, std::string opt_interp,
           bool opt_extinction = false, bool opt_dustFitting = false,
           Float64 opt_continuum_null_amp_threshold = 0.,
           const CPriorHelper::TPriorZEList &logpriorze =
@@ -82,18 +82,12 @@ public:
 
   // made public for unit-testing
   TInt32Range FindTplSpectralIndex(const TFloat64Range &redshiftrange) const;
-  TInt32Range
-  FindTplSpectralIndex(const CSpectrumSpectralAxis &spcSpectrailAxis,
-                       const CSpectrumSpectralAxis &tplSpectralAxis,
-                       const TFloat64Range &redshiftrange) const;
+  TInt32Range FindTplSpectralIndex(const CSpectrumSpectralAxis &spcSpectralAxis,
+                                   const CSpectrumSpectralAxis &tplSpectralAxis,
+                                   const TFloat64Range &redshiftrange) const;
 
 private:
-  // log grid data
-  CSpectrum m_logSampledSpectrum;
-  TFloat64Range m_logSampledLambdaRange;
-  CSpectrum m_ssSpectrum;
-  TFloat64Range m_ssLambdaRange;
-
+  friend class templateFittingSolve_test::EstimateXtY_test;
   Float64 m_logstep;
   Int32 m_ssRatio;
 
@@ -114,11 +108,9 @@ private:
 
   TInt32RangeList FindZRanges(const TFloat64List &redshifts);
 
-  void EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
+  void EstimateXtY(const TFloat64List &X, const TFloat64List &Y,
                    TFloat64List &XtY, Int32 precomputedFFT = -1);
   Int32 InitFFT(Int32 n);
-  Int32 EstimateXtYSlow(const TFloat64List &X, const TFloat64List &Y,
-                        Int32 nShifts, TFloat64List &XtY);
   Int32 EstimateMtMFast(const TFloat64List &X, const TFloat64List &Y,
                         Int32 nShifts, TFloat64List &XtY);
 
@@ -134,7 +126,6 @@ private:
   fftw_complex *outSpc = nullptr;
   fftw_plan pSpc = nullptr;
   Float64 *inTpl = nullptr;
-  Float64 *inTpl_padded = nullptr;
   fftw_complex *outTpl = nullptr;
   fftw_plan pTpl = nullptr;
   fftw_complex *outCombined = nullptr;

@@ -126,11 +126,10 @@ private:
 
   bool Retest(const CSpectrum &spectrum, CLineDetectionResult &result,
               TInt32RangeList retestPeaks, TGaussParamsList retestGaussParams,
-              CLineCatalog::TLineVector strongLines, Int32 winsize,
-              Float64 cut);
+              TLineVector strongLines, Int32 winsize, Float64 cut);
   bool RemoveStrongFromSpectra(const CSpectrum &spectrum,
                                CLineDetectionResult &result,
-                               CLineCatalog::TLineVector strongLines,
+                               TLineVector strongLines,
                                TInt32RangeList selectedretestPeaks,
                                TGaussParamsList selectedgaussparams,
                                Float64 winsize, Float64 cut);

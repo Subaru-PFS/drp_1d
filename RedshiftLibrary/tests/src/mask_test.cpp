@@ -95,16 +95,16 @@ BOOST_AUTO_TEST_CASE(Mask2) {
   mask1[1] = 0xf0;
   mask2[0] = 0xf0;
   mask2[1] = 0x0f; // mask1=0ff0 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.CompouteOverlapRate(mask2), 1.0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.CompouteOverlapFraction(mask2), 1.0, 1e-6);
 
   mask1[0] = 0;
   mask1[1] = 0; // mask1=0000 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.CompouteOverlapRate(mask2), 0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.CompouteOverlapFraction(mask2), 0, 1e-6);
   // TODO : should better raise an exception
 
   mask1.SetSize(3);
   mask1[2] = 0x01; // mask1=000001 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.CompouteOverlapRate(mask2), -1.0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.CompouteOverlapFraction(mask2), -1.0, 1e-6);
   // TODO : should better raise an exception
 
   mask1 &= mask2;
@@ -113,20 +113,22 @@ BOOST_AUTO_TEST_CASE(Mask2) {
 
   BOOST_CHECK(mask1.IntersectWith(mask2) == false);
 
-  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapRate(mask2), -1.0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapFraction(mask2), -1.0,
+                    1e-6);
 
   mask1.SetSize(2);
   mask1[0] = 0x0f;
   mask1[1] = 0xf0; // mask1=0ff0 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapRate(mask2), 0.0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapFraction(mask2), 0.0, 1e-6);
 
   mask1[0] = 0x12;
   mask1[1] = 0xef; // mask1=12ef mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapRate(mask2), 0.1206, 0.19);
+  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapFraction(mask2), 0.1206,
+                    0.19);
 
   mask1[0] = 0;
   mask1[1] = 0; // mask1=0000 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapRate(mask2), 0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapFraction(mask2), 0, 1e-6);
   // TODO : should better raise an exception
 
   BOOST_CHECK(mask2.GetUnMaskedSampleCount() == 0xff);

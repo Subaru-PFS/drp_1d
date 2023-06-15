@@ -142,7 +142,7 @@ push-rc-38-osx:
 .build-manylinux:
   stage: build
   script:
-    - source /venv/p36/bin/activate
+    - source /venv/p39/bin/activate
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
@@ -156,7 +156,7 @@ push-rc-38-osx:
   stage: build-coverage
   when: manual
   script:
-    - source /venv/p36/bin/activate
+    - source /venv/p39/bin/activate
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
@@ -173,7 +173,6 @@ push-rc-38-osx:
 
 .test-manylinux:
   stage: test
-  allow_failure: true
   script:
     - cd build
     - make test
@@ -245,117 +244,12 @@ push-rc-38-osx:
         -Dsonar.exclusions=*.xml
         -Dsonar.cxx.coverage.reportPath=build/coverage.xml
 
-# Manylinux2010 stages
-
-.manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  variables:
-    PLATFORM: "manylinux2010_x86_64"
-  cache:
-    key: "manylinux2010-$CI_COMMIT_REF_SLUG"
-
-build-manylinux2010:
-  extends:
-    - .manylinux2010
-    - .build-manylinux
-
-test-manylinux2010:
-  extends:
-    - .manylinux2010
-    - .test-manylinux
-
-wheel36-manylinux2010:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .manylinux2010
-    - .wheel-manylinux
-
-wheel37-manylinux2010:
-  variables:
-    PYTHON_VERSION: "37"
-  when: manual
-  extends:
-    - .manylinux2010
-    - .wheel-manylinux
-
-wheel38-manylinux2010:
-  variables:
-    PYTHON_VERSION: "38"
-  when: manual
-  extends:
-    - .manylinux2010
-    - .wheel-manylinux
-
-pytest36-manylinux2010:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .manylinux2010
-    - .pytest-manylinux
-
-pytest37-manylinux2010:
-  variables:
-    PYTHON_VERSION: "37"
-  when: manual
-  extends:
-    - .manylinux2010
-    - .pytest-manylinux
-
-pytest38-manylinux2010:
-  variables:
-    PYTHON_VERSION: "38"
-  when: manual
-  extends:
-    - .manylinux2010
-    - .pytest-manylinux
-
-push-rc-36-manylinux2010:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .manylinux2010
-    - .push-rc-manylinux
-  dependencies:
-    - wheel36-manylinux2010
-
-push-rc-37-manylinux2010:
-  variables:
-    PYTHON_VERSION: "37"
-  extends:
-    - .manylinux2010
-    - .push-rc-manylinux
-  dependencies:
-    - wheel37-manylinux2010
-
-push-rc-38-manylinux2010:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux2010
-    - .push-rc-manylinux
-  dependencies:
-    - wheel38-manylinux2010
-
-coverage-manylinux2010:
-  extends:
-    - .manylinux2010
-    - .build-coverage-manylinux
-
-sonar-scanner-manylinux2010:
-  extends:
-    - .manylinux2010
-    - .sonar-manylinux
-  dependencies:
-    - coverage-manylinux2010
-
 # Manylinux2014 stages
 
 .manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PLATFORM: "manylinux2014_x86_64"
-  when: manual
   cache:
     key: "manylinux2014-$CI_COMMIT_REF_SLUG"
 
@@ -372,6 +266,7 @@ test-manylinux2014:
 wheel36-manylinux2014:
   variables:
     PYTHON_VERSION: "36"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux
@@ -392,9 +287,17 @@ wheel38-manylinux2014:
     - .manylinux2014
     - .wheel-manylinux
 
+wheel39-manylinux2014:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .wheel-manylinux
+
 pytest36-manylinux2014:
   variables:
     PYTHON_VERSION: "36"
+  when: manual
   extends:
     - .manylinux2014
     - .pytest-manylinux
@@ -415,9 +318,17 @@ pytest38-manylinux2014:
     - .manylinux2014
     - .pytest-manylinux
 
+pytest39-manylinux2014:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .pytest-manylinux
+
 push-rc-36-manylinux2014:
   variables:
     PYTHON_VERSION: "36"
+  when: manual
   extends:
     - .manylinux2014
     - .push-rc-manylinux
@@ -441,3 +352,25 @@ push-rc-38-manylinux2014:
     - .push-rc-manylinux
   dependencies:
     - wheel38-manylinux2014
+
+push-rc-39-manylinux2014:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .push-rc-manylinux
+  dependencies:
+    - wheel39-manylinux2014
+
+coverage-manylinux2014:
+  extends:
+    - .manylinux2014
+    - .build-coverage-manylinux
+
+sonar-scanner-manylinux2014:
+  extends:
+    - .manylinux2014
+    - .sonar-manylinux
+  dependencies:
+    - coverage-manylinux2014
+    

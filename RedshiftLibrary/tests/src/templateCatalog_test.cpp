@@ -52,9 +52,9 @@ using namespace NSEpic;
 
 const std::string jsonString =
     "{\"galaxy\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"TemplateFittingSolve\" : {\"ismfit\" : true, \"igmfit\" : true}}, "
     "\"star\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"TemplateFittingSolve\" : {\"ismfit\" : true, \"igmfit\" : true}}, "
     "\"templateCatalog\" : {\"continuumRemoval\" : "
     "{ \"medianKernelWidth\" : 40.0, "
     "\"medianEvenReflection\" : false, "

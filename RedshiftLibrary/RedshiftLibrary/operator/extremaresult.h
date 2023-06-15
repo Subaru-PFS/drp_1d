@@ -40,7 +40,7 @@
 #define _REDSHIFT_OPERATOR_EXTREMARESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"

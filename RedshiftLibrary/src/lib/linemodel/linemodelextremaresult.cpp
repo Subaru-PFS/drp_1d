@@ -46,21 +46,10 @@
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
-    const CContinuumModelSolution &cms, bool all) {
-  if (all) {
-    FittedTplName = cms.tplName;
-    FittedTplAmplitude = cms.tplAmplitude;
-    FittedTplAmplitudeError = cms.tplAmplitudeError;
-    FittedTplMerit = cms.tplMerit;
-    FittedTplMeritPhot = cms.tplMeritPhot;
-    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
-    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
-  }
-  FittedTplRedshift = cms.tplRedshift;
-  FittedTplDtm = cms.tplDtm;
-  FittedTplMtm = cms.tplMtm;
-  FittedTplLogPrior = cms.tplLogPrior;
-  FittedTplpCoeffs = cms.pCoeffs;
+    std::shared_ptr<const CTplModelSolution> cms) {
+  fittedTpl = *cms;
+  fittedTpl.tplName =
+      fittedTpl.tplAmplitude ? fittedTpl.tplName : "nocontinuum";
 }
 
 void TLineModelResult::updateFromLineModelSolution(
@@ -69,32 +58,17 @@ void TLineModelResult::updateFromLineModelSolution(
   Alv = cms.AbsorptionVelocity;
 }
 
-void TLineModelResult::updateContinuumFromModel(
-    const std::shared_ptr<const CLineModelFitting> &lmel) {
-  std::shared_ptr<const CContinuumManager> ccm = lmel->m_continuumManager;
-  FittedTplAmplitude = ccm->getFitContinuum_tplAmplitude();
-  FittedTplName =
-      FittedTplAmplitude ? ccm->getFitContinuum_tplName() : "nocontinuum";
-  FittedTplAmplitudeError = ccm->getFitContinuum_tplAmplitudeError();
-  FittedTplMerit = ccm->getFitContinuum_tplMerit();
-  FittedTplMeritPhot = ccm->getFitContinuum_tplMeritPhot();
-  FittedTplEbmvCoeff = ccm->getFitContinuum_tplIsmEbmvCoeff();
-  FittedTplMeiksinIdx = ccm->getFitContinuum_tplIgmMeiksinIdx();
-}
-
 void TLineModelResult::updateTplRatioFromModel(
     const std::shared_ptr<const CTplratioManager> &lmel) {
   FittedTplratioName = lmel->getTplratio_bestTplName();
   FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
-  FittedTplratioAmplitude = lmel->getTplratio_bestAmplitude();
-  FittedTplratioDtm = lmel->getTplratio_bestDtm();
-  FittedTplratioMtm = lmel->getTplratio_bestMtm();
+  FittedTplratioAmplitudeEm = lmel->getTplratio_bestAmplitudeEm();
 }
 
 void TLineModelResult::updateFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel,
     const std::shared_ptr<const CLineModelResult> &lmresult,
-    bool estimateLeastSquareFast, int idx, int i_2pass) {
+    bool estimateLeastSquareFast, int idx) {
   Merit = lmresult->ChiSquare[idx];
 
   // LineModelSolutions
@@ -115,16 +89,13 @@ void TLineModelResult::updateFromModel(
   snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
 
-  // store the model norm
-  mTransposeM = lmel->EstimateMTransposeM();
-
   // scale marginalization correction
   Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
   CorrScaleMarg = corrScaleMarg;
 
   static Float64 cutThres = 3.0;
   Int32 nValidLines =
-      lmresult->getNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
+      lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
   NLinesOverThreshold = nValidLines; // m/Float64(1+nValidLines);
   Float64 cumulStrongELSNR =
       lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
@@ -190,7 +161,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   if (firstpassResult) {
     return getCandidateParent(rank, dataset);
   }
-  if (dataset == "model_parameters") {
+  if (dataset == "model_parameters" || dataset == "line_mask" ||
+      dataset == "continuum_polynom") {
     return this->m_ranked_candidates[rank].second;
   } else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
     return m_savedModelFittingResults[rank];
@@ -205,7 +177,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
     const std::string &dataset) const {
-  if (dataset == "model_parameters")
+  if (dataset == "model_parameters" || dataset == "line_mask" ||
+      dataset == "continuum_polynom")
     return this->m_ranked_candidates[0].second->getType();
   else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines")
     return this->m_savedModelFittingResults[0]->getType();
@@ -221,7 +194,8 @@ bool LineModelExtremaResult::HasCandidateDataset(
     const std::string &dataset) const {
   return (dataset == "model_parameters" || dataset == "model" ||
           dataset == "fp_model_parameters" || dataset == "continuum" ||
-          dataset == "fitted_lines" || dataset == "fp_fitted_lines");
+          dataset == "fitted_lines" || dataset == "fp_fitted_lines" ||
+          dataset == "line_mask" || dataset == "continuum_polynom");
 }
 
 std::shared_ptr<const COperatorResult>

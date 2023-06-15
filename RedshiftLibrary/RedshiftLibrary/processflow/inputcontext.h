@@ -44,6 +44,16 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 #include <memory>
+
+class fixture_InputContext;
+class fixture_InputContext2;
+namespace inputContext_test { // boost_test_suite
+// all boost_auto_test_case that use private method
+class getterSetter_test;
+class rebinInputs_test;
+class OrthogonalizeTemplates_test;
+} // namespace inputContext_test
+
 namespace NSEpic {
 class CSpectrumLogRebinning; // forward declaration
 class CSpectrum;
@@ -53,17 +63,29 @@ class CParameterStore;
 class CPhotBandCatalog;
 class CLineCatalogsTplRatio;
 class CLine;
-typedef std::vector<CLine> TLineVector;
 
 class CInputContext {
 public:
   CInputContext(std::shared_ptr<CParameterStore> paramStore);
 
   // const getters
-  std::shared_ptr<const CSpectrum> GetSpectrum() const { return m_Spectrum; }
-  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
-    return m_rebinnedSpectrum;
+  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false,
+                                               int i = 0) const {
+    return const_cast<CInputContext *>(this)->GetSpectrum(rebinned, i);
   }
+  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
+    return const_cast<CInputContext *>(this)->GetRebinnedSpectrum(i);
+  }
+
+  const std::vector<std::shared_ptr<const CSpectrum>> &getSpectra() const {
+    return m_constSpectra;
+  }
+
+  const std::vector<std::shared_ptr<const CSpectrum>> &
+  getRebinnedSpectra() const {
+    return m_constRebinnedSpectra;
+  }
+
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_TemplateCatalog;
   }
@@ -80,9 +102,15 @@ public:
   }
 
   // mutable getters
-  const std::shared_ptr<CSpectrum> &GetSpectrum() { return m_Spectrum; }
-  const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum() {
-    return m_rebinnedSpectrum;
+  const std::shared_ptr<CSpectrum> &GetSpectrum(bool rebinned = false,
+                                                int i = 0) {
+    if (rebinned)
+      return m_rebinnedSpectra[i];
+    else
+      return m_spectra[i];
+  }
+  const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum(int i = 0) {
+    return m_rebinnedSpectra[i];
   }
   const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     return m_TemplateCatalog;
@@ -91,23 +119,16 @@ public:
   GetTemplateRatioCatalog(const std::string &objectType);
   const std::shared_ptr<CLineCatalog> &
   GetLineCatalog(const std::string &objectType, const std::string &method);
-  const CLineCatalog::TLineVector
-  GetFilteredLineVector(const std::string &objectType,
-                        const std::string &method, const std::string &type,
-                        const std::string &force);
+  const TLineVector GetFilteredLineVector(const std::string &objectType,
+                                          const std::string &method,
+                                          const std::string &type,
+                                          const std::string &force);
   const std::shared_ptr<CPhotBandCatalog> &GetPhotBandCatalog() {
     return m_photBandCatalog;
   }
   const std::shared_ptr<CParameterStore> &GetParameterStore() {
     return m_ParameterStore;
   }
-
-  void SetRebinnedSpectrum(const std::shared_ptr<CSpectrum> &rebinnedSpc) {
-    m_rebinnedSpectrum = rebinnedSpc;
-  }
-  std::shared_ptr<TFloat64Range> m_lambdaRange;
-  std::shared_ptr<TFloat64Range> m_clampedLambdaRange;
-  std::shared_ptr<TFloat64Range> m_rebinnedClampedLambdaRange;
 
   bool m_use_LogLambaSpectrum = 0;
   Float64 m_logGridStep;
@@ -117,8 +138,7 @@ public:
   std::map<std::string, SRebinResults> m_logRebin;
 
   // fill this from api, based on a new parameter in parameters.json we call
-  // object_types, it's a list consisting of the object types to process, it
-  // replaces enable<object_type>solve
+  // object_types, it's a list consisting of the object types to process
   TStringList
       m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
@@ -135,8 +155,9 @@ public:
   setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog) {
     m_photBandCatalog = photBandCatalog;
   }
-  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
-    m_Spectrum = spectrum;
+  void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
+    m_spectra.push_back(spectrum);
+    m_constSpectra.push_back(spectrum);
   }
   void
   setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
@@ -152,9 +173,49 @@ public:
 
   void resetSpectrumSpecific();
 
+  const Float64 &getLogGridStep(int i = 0) const { return m_logGridStep; }
+
+  std::shared_ptr<const TFloat64Range> getLambdaRange(int i = 0) const {
+    return m_lambdaRanges[i];
+  }
+  std::shared_ptr<const TFloat64Range> getClampedLambdaRange(bool rebinned,
+                                                             int i = 0) const {
+    if (rebinned)
+      return m_rebinnedClampedLambdaRanges[i];
+    else
+      return m_clampedLambdaRanges[i];
+  }
+
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
+  getClampedLambdaRanges() const {
+    return m_constClampedLambdaRanges;
+  }
+
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
+  getRebinnedClampedLambdaRanges() const {
+    return m_constRebinnedClampedLambdaRanges;
+  }
+
 private:
-  std::shared_ptr<CSpectrum> m_Spectrum;
-  std::shared_ptr<CSpectrum> m_rebinnedSpectrum;
+  friend class ::fixture_InputContext;
+  friend class ::fixture_InputContext2;
+  friend class inputContext_test::getterSetter_test;
+  friend class inputContext_test::rebinInputs_test;
+  friend class inputContext_test::OrthogonalizeTemplates_test;
+
+  std::vector<std::shared_ptr<CSpectrum>> m_spectra;
+  std::vector<std::shared_ptr<CSpectrum>> m_rebinnedSpectra;
+  std::vector<std::shared_ptr<const CSpectrum>> m_constSpectra;
+  std::vector<std::shared_ptr<const CSpectrum>> m_constRebinnedSpectra;
+
+  std::vector<std::shared_ptr<TFloat64Range>> m_lambdaRanges;
+  std::vector<std::shared_ptr<TFloat64Range>> m_clampedLambdaRanges;
+  std::vector<std::shared_ptr<TFloat64Range>> m_rebinnedClampedLambdaRanges;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_constLambdaRanges;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_constClampedLambdaRanges;
+  std::vector<std::shared_ptr<const TFloat64Range>>
+      m_constRebinnedClampedLambdaRanges;
+
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::map<std::string, std::map<std::string, std::shared_ptr<CLineCatalog>>>
       m_lineCatalogs;
@@ -164,8 +225,13 @@ private:
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismcorrectionCalzetti;
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
+
   void OrthogonalizeTemplates();
   void RebinInputs();
+  void addRebinSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
+    m_rebinnedSpectra.push_back(spectrum);
+    m_constRebinnedSpectra.push_back(spectrum);
+  }
 };
 
 inline std::shared_ptr<const CLineCatalog>
@@ -184,7 +250,7 @@ CInputContext::GetLineCatalog(const std::string &objectType,
   return m_lineCatalogs[objectType][method];
 }
 
-inline const CLineCatalog::TLineVector CInputContext::GetFilteredLineVector(
+inline const TLineVector CInputContext::GetFilteredLineVector(
     const std::string &objectType, const std::string &method,
     const std::string &type, const std::string &force) {
   //  if (std::findm_categories.find(objectType))

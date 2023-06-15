@@ -48,7 +48,7 @@ CTplCorrManager::CTplCorrManager(
     std::shared_ptr<const CSpectrum> inputSpc,
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineCatalog::TLineVector &restLineList)
+    const TLineVector &restLineList)
     : CTplratioManager(elements, model, inputSpc, lambdaRange, continuumManager,
                        restLineList) {}
 
@@ -84,7 +84,7 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
     Float64 er = AmplitudesUncertainties[subeIdx]; // not modifying the
     // fitting error for now
     Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
-    m_Elements[eIdx]->SetFittedAmplitude(
+    m_Elements[eIdx]->SetElementAmplitude(
         correctedAmplitudes[iRestLine] / nominalAmp, er);
   }
   m_model->refreshModel();

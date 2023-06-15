@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.42.0 (2023-04-20)
+### Added
+* [7875] : Add 38 new solver results in the extended results list
+* [7967] : Reliability is now able to handle three classes
+* [7961] : Add eigen 3.3 and lbfgspp as thirdparties (requiered for the new line measurement solver based on Gaussian Fit)
+* [7892] : Specific dataset result can be excluded from HDF5 output
+* [7213] : Template line-ratio amplitude are now available in the results
+* [7759] : Implement multi observation for template fitting method solver
+* [7378] : Implement new line measurement solver based on full Gaussian fit
+### Changes
+* [7078] : change resolution conversion to sigma to 1/2.35
+### Fixed
+* [7983] : Fix `CLineModelElement::getSupport/SubElt()`  : last sample return is skipped by caller
+* [7977] : Fix polynomial under lines handling (linemeas)
+* [7919] : Fix skipsecondpass
+* [7924] : Fix useloglambdasampling
+* [7891] : Fix abs mtm tplratio recording
+* [7744] : Use InternalException to catch internally
+* [7996] : Fix catch exceptions in AbstractOutput.get_attributes
+* [7990] : Fix polynome under lines overlapping
+
 ## 0.40.0 (2022-12-14)
 ### Changes
 * [7648] : Clean IGM extinction curves and rebuild hires curves

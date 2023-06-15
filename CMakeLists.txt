@@ -127,8 +127,22 @@ LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
 LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
 LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 
+# setup thirdparty directory : eigen3
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+message(STATUS "Found eigen")
+message(STATUS "EIGEN3_INCLUDE_DIRS = ${EIGEN3_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_HEADERONLY Eigen3::Eigen)
+
+# setup thirdparty directory : lbfgspp
+find_package (lbfgspp 0.2.0 REQUIRED NO_MODULE)
+get_target_property(LBFGSPP_INCLUDE_DIRS lbfgspp INTERFACE_INCLUDE_DIRECTORIES)
+message(STATUS "Found lbfgspp:")
+message(STATUS "LBFGSPP_INCLUDE_DIRS = ${LBFGSPP_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_HEADERONLY lbfgspp)
+
 # Thirdparties setup summary
 MESSAGE("Using third party libraries: " "${cpf-redshift_THIRDPARTY_LIBS}")
+MESSAGE("Using third party header only libraries: " "${cpf-redshift_THIRDPARTY_HEADERONLY}")
 
 #--------------------------------------------------------
 # Setting ccache
@@ -158,8 +172,10 @@ SET( LIB_NAME cpf-redshift )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
+ADD_DEFINITIONS(-DLBFGSFITTER)
+
 ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
-TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
+TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_HEADERONLY})
 INSTALL( TARGETS ${LIB_NAME} LIBRARY DESTINATION lib)
 
 #--------------------------------------------------------

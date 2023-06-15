@@ -45,10 +45,10 @@
 
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 #include <memory>
 
@@ -60,9 +60,8 @@ class CLineModelResult : public COperatorResult {
 public:
   CLineModelResult() : COperatorResult("CLineModelResult"){};
 
-  void Init(TFloat64List redshifts, CLineCatalog::TLineVector restLines,
-            Int32 nTplContinuum, Int32 nTplratios,
-            TFloat64List tplratiosPriors);
+  void Init(TFloat64List redshifts, TLineVector restLines, Int32 nTplContinuum,
+            Int32 nTplratios, TFloat64List tplratiosPriors);
 
   Int32 getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres,
                                   Float64 fitThres) const;
@@ -124,10 +123,10 @@ public:
       ChiSquareTplContinuum; // chi2 for all continuum templates fited
 
   std::vector<CLineModelSolution> LineModelSolutions;
-  std::vector<CContinuumModelSolution> ContinuumModelSolutions;
+  std::vector<CTplModelSolution> ContinuumModelSolutions;
 
   COperator::TStatusList Status;
-  CLineCatalog::TLineVector restLineList;
+  TLineVector restLineList;
   Int32 nSpcSamples = 0;
   Float64 dTransposeD = 0.0;
   Float64 cstLog = 0.0;

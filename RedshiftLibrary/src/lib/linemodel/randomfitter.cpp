@@ -43,7 +43,7 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRandomFitter::fit(Float64 redshift) {
+void CRandomFitter::doFit(Float64 redshift) {
   srand(time(0));
   Float64 randNumFloat = (Float64)rand() / (Float64)(RAND_MAX);
 
@@ -59,7 +59,7 @@ void CRandomFitter::fit(Float64 redshift) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
-    if (m_Elements[iElts]->m_Lines[0].GetType() == CLine::nType_Absorption) {
+    if (m_Elements[iElts]->GetElementType() == CLine::nType_Absorption) {
       amax = meanContinuum * 0.5 * coeffAmpAbsorption;
     } else {
       amax = meanContinuum * coeffAmpEmission;
@@ -102,7 +102,7 @@ Float64 CRandomFitter::getContinuumMeanUnderElement(Int32 eltId) const {
   const auto &ContinuumFluxAxis = m_model->getContinuumFluxAxis();
   // const auto & ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
+    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
       n++;
       // w = 1.0 / ErrorNoContinuum[j];
       // sumErr += w;

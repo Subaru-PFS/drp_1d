@@ -44,15 +44,18 @@
 using namespace NSEpic;
 using namespace std;
 
-CSvdlcFitter::CSvdlcFitter(CLineModelElementList &elements,
-                           std::shared_ptr<const CSpectrum> inputSpectrum,
-                           std::shared_ptr<const TLambdaRange> lambdaRange,
-                           std::shared_ptr<CSpectrumModel> spectrumModel,
-                           const CLineCatalog::TLineVector &restLineList,
-                           std::shared_ptr<CContinuumManager> continuumManager,
-                           Int32 polyOrder)
+CSvdlcFitter::CSvdlcFitter(
+    CLineModelElementList &elements,
+    std::shared_ptr<const CSpectrum> inputSpectrum,
+    std::shared_ptr<const TLambdaRange> lambdaRange,
+    std::shared_ptr<CSpectrumModel> spectrumModel,
+    const TLineVector &restLineList,
+    const std::vector<TLineModelElementParam_ptr> &elementParam,
+    std::shared_ptr<CContinuumManager> continuumManager, Int32 polyOrder,
+    bool enableAmplitudeOffset, bool enableLambdaOffsetsFit)
     : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList),
+                      restLineList, elementParam, enableAmplitudeOffset,
+                      enableLambdaOffsetsFit),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
       m_spectralAxis(inputSpectrum->GetSpectralAxis())
 
@@ -61,7 +64,7 @@ CSvdlcFitter::CSvdlcFitter(CLineModelElementList &elements,
 // fit the amplitude of all elements AND continuum amplitude together
 // with linear solver: gsl_multifit_wlinear
 
-void CSvdlcFitter::fit(Float64 redshift) {
+void CSvdlcFitter::doFit(Float64 redshift) {
 
   // 1. fit only the current continuum
   // prepare continuum on the observed grid

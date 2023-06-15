@@ -51,58 +51,14 @@ void CLineModelPassExtremaResult::Resize(
                   // create another function ::init
   m_ranked_candidates.resize(
       size, std::pair<std::string, std::shared_ptr<TCandidateZ>>());
-  FittedTplName.resize(size, "undefined");
-  FittedTplAmplitude.resize(size, NAN);
-  FittedTplAmplitudeError.resize(size, NAN);
-  FittedTplMerit.resize(size, NAN);
-  FittedTplMeritPhot.resize(size, NAN);
-  FittedTplEbmvCoeff.resize(size, NAN);
-  FittedTplMeiksinIdx.resize(size, -1);
-  FittedTplDtm.resize(size, NAN);
-  FittedTplMtm.resize(size, NAN);
-  FittedTplLogPrior.resize(size, 0.);
-  FittedTplSNR.resize(size, NAN);
 
-  MeritContinuum.resize(size, NAN);
-
-  mTransposeM.resize(size, NAN);
-  CorrScaleMarg.resize(size, NAN);
-  NDof.resize(size, -1);
-  snrHa.resize(size, NAN);
-  lfHa.resize(size, NAN);
-  snrOII.resize(size, NAN);
-  lfOII.resize(size, NAN);
-
-  ExtendedRedshifts.resize(
-      size, TFloat64List()); // we dont know the range size per candidate
-  NLinesOverThreshold.resize(size, NAN);
-  LogArea.resize(size, NAN);
-  LogAreaCorrectedExtrema.resize(size, NAN);
-  SigmaZ.resize(size, NAN);
-
-  StrongELSNR.resize(size, NAN);
-  StrongELSNRAboveCut.resize(
-      size); // we dont have all info to correctly resize it
-  bic.resize(size, NAN);
-  ContinuumIndexes.resize(size); // how many indices per extrema?
-  OutsideLinesMask.resize(size, CMask());
-  OutsideLinesSTDFlux.resize(size, NAN);
-  OutsideLinesSTDError.resize(size, NAN);
+  FittedTpl.resize(size);
 
   Elv.resize(size, NAN);
   Alv.resize(size, NAN);
   GroupsELv.resize(size,
                    TFloat64List(250, NAN)); // WARNING: hardcoded ngroups max
   GroupsALv.resize(size, TFloat64List(250, NAN));
-
-  FittedTplRedshift.resize(size, NAN);
-  FittedTplpCoeffs.resize(size, TFloat64List(3, NAN));
-
-  FittedTplratioName.resize(size, "undefined");
-  FittedTplratioAmplitude.resize(size, NAN);
-  FittedTplratioDtm.resize(size, NAN);
-  FittedTplratioMtm.resize(size, NAN);
-  FittedTplratioIsmCoeff.resize(size, NAN);
 }
 
 TFloat64List CLineModelPassExtremaResult::GetRedshifts() const {
@@ -114,12 +70,12 @@ TFloat64List CLineModelPassExtremaResult::GetRedshifts() const {
 }
 
 TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
-    std::shared_ptr<const CLineModelPassExtremaResult> results_b) {
+    const CLineModelPassExtremaResult &results_b) const {
   TInt32List uniqueIndices;
   Float64 skip_thres_absdiffz =
       5e-4; // threshold to remove duplicate extrema/candidates
-  for (Int32 keb = 0; keb < results_b->m_ranked_candidates.size(); keb++) {
-    const Float64 &z_fpb = results_b->m_ranked_candidates[keb].second->Redshift;
+  for (Int32 keb = 0; keb < results_b.m_ranked_candidates.size(); keb++) {
+    const Float64 &z_fpb = results_b.m_ranked_candidates[keb].second->Redshift;
     // skip if z_fpb is nearly the same as any z_fp
     Float64 minAbsDiffz = DBL_MAX;
     bool duplicate = false;
@@ -137,18 +93,6 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
 }
 
 void CLineModelPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
-    Int32 i, const CContinuumModelSolution &contModelSol) {
-  FittedTplName[i] = contModelSol.tplName;
-  FittedTplAmplitude[i] = contModelSol.tplAmplitude;
-  FittedTplAmplitudeError[i] = contModelSol.tplAmplitudeError;
-  FittedTplMerit[i] = contModelSol.tplMerit;
-  FittedTplMeritPhot[i] = contModelSol.tplMeritPhot;
-  FittedTplEbmvCoeff[i] = contModelSol.tplEbmvCoeff;
-  FittedTplMeiksinIdx[i] = contModelSol.tplMeiksinIdx;
-  FittedTplRedshift[i] = contModelSol.tplRedshift;
-  FittedTplDtm[i] = contModelSol.tplDtm;
-  FittedTplMtm[i] = contModelSol.tplMtm;
-  FittedTplLogPrior[i] = contModelSol.tplLogPrior;
-  FittedTplpCoeffs[i] = contModelSol.pCoeffs;
-  return;
+    Int32 i, const CTplModelSolution &contModelSol) {
+  FittedTpl[i] = contModelSol;
 }

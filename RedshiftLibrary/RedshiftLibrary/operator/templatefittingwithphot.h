@@ -57,7 +57,6 @@ class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
 
 public:
   explicit COperatorTemplateFittingPhot(
-      const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
       const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
       const Float64 weight = 1.0,
       const TFloat64List &redshifts = TFloat64List());
@@ -67,8 +66,8 @@ private:
 
   void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
                      Float64 redshift, TFloat64Range &currentRange,
-                     Float64 &overlaprate,
-                     const Float64 overlapThreshold) override;
+                     Float64 &overlapFraction, const Float64 overlapThreshold,
+                     Int32 spcIndex = 0) override;
 
   void RebinTemplateOnPhotBand(const std::shared_ptr<const CTemplate> &tpl,
                                Float64 redshift);
@@ -84,21 +83,21 @@ private:
   bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const override;
 
-  bool ApplyMeiksinCoeff(Int32 meiksinIdx) override;
-  bool ApplyDustCoeff(Int32 kEbmv) override;
-
-  TFittingResult ComputeLeastSquare(Int32 kM, Int32 kEbmv,
-                                    const CPriorHelper::SPriorTZE &logprior,
-                                    const CMask &spcMaskAdditional) override;
+  bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
+  bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
 
   void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
-                                TFittingResult &fitResult,
-                                Float64 &sumCross_phot, Float64 &sumT_phot,
-                                Float64 &sumS_phot);
+                                TCrossProductResult &fitResult);
 
-  Float64
-  EstimateLikelihoodCstLog(const CSpectrum &spectrum,
-                           const TFloat64Range &lambdaRange) const override;
+  TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
+                                           Float64 redshift,
+                                           Int32 spcIndex = 0) override;
+
+  void ComputeAmplitudeAndChi2(
+      TFittingResult &fitres,
+      const CPriorHelper::SPriorTZE &logpriorTZ) const override;
+
+  Float64 EstimateLikelihoodCstLog() const override;
 
   std::map<std::string, CSpectrumSpectralAxis> m_photSpectralAxis_restframe;
   std::map<std::string, CTemplate> m_templateRebined_phot;

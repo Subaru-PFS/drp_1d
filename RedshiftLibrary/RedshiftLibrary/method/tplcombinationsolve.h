@@ -67,8 +67,6 @@ public:
 
   CTplcombinationSolve(TScopeStack &scope, std::string objectType);
 
-  const std::string GetDescription() const;
-
   std::shared_ptr<CSolveResult>
   compute(std::shared_ptr<const CInputContext> inputContext,
           std::shared_ptr<COperatorResultStore> resultStore,

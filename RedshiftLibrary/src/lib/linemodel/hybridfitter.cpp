@@ -43,13 +43,17 @@
 using namespace NSEpic;
 using namespace std;
 
-CHybridFitter::CHybridFitter(CLineModelElementList &elements,
-                             std::shared_ptr<const CSpectrum> inputSpectrum,
-                             std::shared_ptr<const TLambdaRange> lambdaRange,
-                             std::shared_ptr<CSpectrumModel> spectrumModel,
-                             const CLineCatalog::TLineVector &restLineList)
+CHybridFitter::CHybridFitter(
+    CLineModelElementList &elements,
+    std::shared_ptr<const CSpectrum> inputSpectrum,
+    std::shared_ptr<const TLambdaRange> lambdaRange,
+    std::shared_ptr<CSpectrumModel> spectrumModel,
+    const TLineVector &restLineList,
+    const std::vector<TLineModelElementParam_ptr> &elementParam,
+    bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit)
     : CSvdFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                 restLineList)
+                 restLineList, elementParam, enableAmplitudeOffsets,
+                 enableLambdaOffsetsFit)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -59,10 +63,9 @@ CHybridFitter::CHybridFitter(CLineModelElementList &elements,
         ps->GetScoped<bool>("linemodel.improveBalmerFit");
 }
 
-void CHybridFitter::fit(Float64 redshift) {
+void CHybridFitter::doFit(Float64 redshift) {
 
   // fit the amplitudes of each element independently, unless there is overlap
-
   fitAmplitudesHybrid(redshift);
 
   // apply a continuum iterative re-estimation with lines removed from the
@@ -114,12 +117,10 @@ void CHybridFitter::fit(Float64 redshift) {
  *fitAmplitude on its entry. Else, SetElementAmplitude to 0. Update the index of
  *already-fitted subelements.
  **/
-Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
+void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
-  const CSpectrumFluxAxis &spcFluxAxisNoContinuum =
-      m_model->getSpcFluxAxisNoContinuum();
-  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
+  if (m_enableAmplitudeOffsets)
+    m_Elements.resetAmplitudeOffset();
 
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TInt32List indexesFitted;
@@ -143,7 +144,7 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     // setting the fitting group info
     for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
       std::string fitGroupTag = boost::str(boost::format("hy%d") % iValidElts);
-      m_Elements[overlappingInds[ifit]]->m_fittingGroupInfo = fitGroupTag;
+      m_Elements[overlappingInds[ifit]]->SetFittingGroupInfo(fitGroupTag);
     }
 
     // Log.LogDebug( "Redshift: %f", redshift);
@@ -153,69 +154,14 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
       Log.LogDebug("    model: hybrid fit:     overlapping #%d - eltIdx=%d",
                    ifit, overlappingInds[ifit]);
     }
-    if (!m_enableAmplitudeOffsets && overlappingInds.size() < 2) {
+    if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
       Log.LogDebug("    model: hybrid fit:     Individual fit");
-      m_Elements[iElts]->fitAmplitudeAndLambdaOffset(
-          spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
-          undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
-          m_LambdaOffsetMin, m_LambdaOffsetMax);
+      fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
+                                  m_enableLambdaOffsetsFit);
     } else {
-      Log.LogDebug("    model: hybrid fit:     SVD fit");
-      // fit individually: mainly for mtm and dtm estimation
-      for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-        m_Elements[overlappingInds[ifit]]->fitAmplitudeAndLambdaOffset(
-            spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
-            undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
-            m_LambdaOffsetMin, m_LambdaOffsetMax);
-      }
-      TFloat64List ampsfitted;
-      TFloat64List errorsfitted;
-      Int32 retVal = fitAmplitudesLinSolveAndLambdaOffset(
-          overlappingInds, spectralAxis, ampsfitted, errorsfitted,
-          m_enableLambdaOffsetsFit, redshift);
-      // if all the amplitudes fitted don't have the same sign, do it
-      // separately
-      TInt32List overlappingIndsSameSign;
-      if (retVal != 1 && ampsfitted.size() > 0) {
-        for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-          if (ampsfitted[ifit] > 0) {
-            overlappingIndsSameSign.push_back(overlappingInds[ifit]);
-            // m_Elements[overlappingInds[ifit]]->fitAmplitude(spectralAxis,
-            // spcFluxAxisNoContinuum, redshift);
-          } else {
-            m_Elements.SetElementAmplitude(overlappingInds[ifit], 0.0,
-                                           errorsfitted[ifit]);
-          }
-        }
-        // fit the rest of the overlapping elements (same sign) together
-        if (!m_enableAmplitudeOffsets && overlappingIndsSameSign.size() == 1) {
-          m_Elements[overlappingIndsSameSign[0]]->fitAmplitudeAndLambdaOffset(
-              spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
-              undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
-              m_LambdaOffsetMin, m_LambdaOffsetMax);
-        } else if (overlappingIndsSameSign.size() > 0) {
-          Int32 retVal2 = fitAmplitudesLinSolveAndLambdaOffset(
-              overlappingIndsSameSign, spectralAxis, ampsfitted, errorsfitted,
-              m_enableLambdaOffsetsFit, redshift);
-
-          if (retVal2 != 1) {
-            for (Int32 ifit = 0; ifit < overlappingIndsSameSign.size();
-                 ifit++) {
-              if (ampsfitted[ifit] > 0) {
-                m_Elements[overlappingIndsSameSign[ifit]]
-                    ->fitAmplitudeAndLambdaOffset(
-                        spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis,
-                        redshift, undefIdx, m_enableLambdaOffsetsFit,
-                        m_LambdaOffsetStep, m_LambdaOffsetMin,
-                        m_LambdaOffsetMax);
-              } else {
-                m_Elements.SetElementAmplitude(overlappingIndsSameSign[ifit],
-                                               0.0, errorsfitted[ifit]);
-              }
-            }
-          }
-        }
-      }
+      Log.LogDebug("    model: hybrid fit:     Joint fit");
+      fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
+                                           m_enableLambdaOffsetsFit, redshift);
     }
 
     // update the already fitted list
@@ -227,13 +173,11 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
   if (m_opt_enable_improveBalmerFit) {
     improveBalmerFit(redshift);
   }
-
-  return 0;
 }
 
 // return error: 1=can't find element index, 2=Abs_width not high enough
 // compared to Em_width
-Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
+void CHybridFitter::improveBalmerFit(Float64 redshift) {
 
   // Emission Balmer lines
   TStringList linetagsE;
@@ -261,7 +205,7 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
 
   if (linetagsE.size() != linetagsA.size() ||
       linetagsE.size() != linetagsMore.size()) {
-    return -1;
+    return;
   }
 
   for (Int32 itag = 0; itag < linetagsE.size(); itag++) {
@@ -275,12 +219,16 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
       continue;
     }
     // for now only allow this process if Em and Abs line are single lines
-    if (m_Elements[ilineE]->m_Lines.size() > 1 ||
-        m_Elements[ilineA]->m_Lines.size() > 1) {
+    if (m_Elements[ilineE]->GetSize() > 1 ||
+        m_Elements[ilineA]->GetSize() > 1) {
       continue;
     }
     Int32 subeIdxE = 0;
     Int32 subeIdxA = 0;
+
+    // check if line is visible:
+    if (m_Elements[ilineE]->IsOutsideLambdaRange())
+      continue;
 
     // find the linesMore unique elements indexes
     TInt32List ilinesMore;
@@ -342,10 +290,7 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
     TFloat64List ampsfitted;
     TFloat64List errorsfitted;
-    fitAmplitudesLinSolve(eltsIdx, m_inputSpc.GetSpectralAxis(),
-                          m_model->getSpcFluxAxisNoContinuum(),
-                          m_model->getContinuumFluxAxis(), ampsfitted,
-                          errorsfitted, redshift);
+    fitAmplitudesLinSolve(eltsIdx, ampsfitted, errorsfitted, redshift);
 
     // decide if the fit is better than previous amps
     TInt32List elts;
@@ -360,19 +305,17 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
     if (modelErr_withfit > modelErr_init) {
       Float64 nominal_ampA = m_Elements[ilineA]->GetNominalAmplitude(0);
       Float64 nominal_ampE = m_Elements[ilineE]->GetNominalAmplitude(0);
-      m_Elements[ilineA]->SetFittedAmplitude(ampA / nominal_ampA,
-                                             amp_errorA / nominal_ampA);
-      m_Elements[ilineE]->SetFittedAmplitude(ampE / nominal_ampE,
-                                             amp_errorE / nominal_ampE);
+      m_Elements[ilineA]->SetElementAmplitude(ampA / nominal_ampA,
+                                              amp_errorA / nominal_ampA);
+      m_Elements[ilineE]->SetElementAmplitude(ampE / nominal_ampE,
+                                              amp_errorE / nominal_ampE);
       for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
         Float64 nominal_ampMore =
             m_Elements[ilinesMore[imore]]->GetNominalAmplitude(0);
-        m_Elements[ilinesMore[imore]]->SetFittedAmplitude(
+        m_Elements[ilinesMore[imore]]->SetElementAmplitude(
             ampsMore[imore] / nominal_ampMore,
             ampErrorsMore[imore] / nominal_ampMore);
       }
     }
   }
-
-  return 0;
 }

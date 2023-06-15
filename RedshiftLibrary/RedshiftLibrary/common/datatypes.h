@@ -40,6 +40,7 @@
 #define _REDSHIFT_COMMON_DATATYPES_
 
 #include <cfloat>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -98,12 +99,6 @@ constexpr typename std::add_const<T>::type &as_const(T &t) noexcept {
 };
 
 template <class T> void as_const(const T &&) = delete;
-
-typedef struct {
-  Float64 x0;
-  Float64 x1;
-  Float64 x2;
-} TPolynomCoeffs;
 
 #include "RedshiftLibrary/common/errorcodes.i"
 #include "RedshiftLibrary/common/warningcodes.i"

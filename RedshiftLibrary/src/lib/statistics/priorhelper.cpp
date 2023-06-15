@@ -37,15 +37,16 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/statistics/priorhelper.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/log/log.h"
 #include <fstream>
+
 using namespace NSEpic;
 using namespace std;
 using namespace boost;

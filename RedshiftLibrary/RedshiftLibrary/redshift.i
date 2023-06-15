@@ -99,6 +99,7 @@
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/singleton.h"
 #include "RedshiftLibrary/log/consolehandler.h"
@@ -126,6 +127,7 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
@@ -199,6 +201,8 @@ typedef int Int32;
 
 const char* get_version();
 
+static const std::string undefStr;
+
 class CLog {
 public:
   enum ELevel   {
@@ -259,6 +263,11 @@ class CRange
   const T& GetEnd() const;
   const T& GetBegin() const;
 };
+
+class CMask {
+ public:
+  const TMaskList& getMaskList() const;
+};
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
@@ -266,6 +275,8 @@ typedef std::vector<Float64> TFloat64List;
 typedef std::vector<Float32> TFloat32List;
 typedef std::vector<Int32> TInt32List;
 typedef std::vector<std::string> TStringList;
+typedef std::vector<Mask> TMaskList;
+typedef std::vector<bool> TBoolList;
 
 
 %template(TFloat64Range) CRange<Float64>;
@@ -274,10 +285,12 @@ typedef std::vector<std::string> TStringList;
 %template(TStringList) std::vector<std::string>;
 %template(VecTFloat64List) std::vector<  std::vector<Float64> >;
 %template(TBoolList) std::vector<bool>;
+%template(TMaskList) std::vector<Mask>;
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
 %apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
+%apply bool &OUTPUT { bool& out_bool };
 
 class PC
 {
@@ -290,6 +303,10 @@ class PC
   static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_Float32Array) get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  %rename(Get_BoolArray) get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
+ %rename(Get_MaskArray) get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
+  static void get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
 
 };
 
@@ -380,6 +397,27 @@ public:
 %include "operator/modelspectrumresult.i"
 %include "linemodel/linemodelsolution.i"
 
+struct CTplModelSolution {
+
+  // template continuum
+  std::string tplName = undefStr;
+  Float64 tplAmplitude = NAN;
+  Float64 tplAmplitudeError = NAN;
+  Float64 tplAmplitudeSigma = NAN;
+  Float64 tplEbmvCoeff = NAN;
+  Int32 tplMeiksinIdx = undefIdx;
+  Float64 tplRedshift = NAN;
+
+  Float64 tplMerit = NAN;
+  Float64 tplMeritPhot = NAN;
+  Float64 tplDtM = NAN;
+  Float64 tplMtM = NAN;
+  Float64 tplLogPrior = 0.;
+
+  // polynom
+  TFloat64List pCoeffs;
+};
+
 class CProcessFlowContext {
 public:
 
@@ -388,11 +426,11 @@ public:
   void Init();
   void setLineCatalog(const std::string& objectType, const std::string& method, const std::shared_ptr<CLineCatalog> &catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplRatio> &catalog); 
-  void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
-  void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}
-  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum){ m_Spectrum = spectrum;}
-  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
-  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
+  void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog);
+  void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog);
+  void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum);
+  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin);
+  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti);
   void reset();
 
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
@@ -527,6 +565,8 @@ class CSpectrum
 
   void  SetName( const char* name );
   const std::string GetName() const;
+
+  void setObsID(const std::string& obsID);
 
   const bool IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const;
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;

@@ -60,12 +60,6 @@ void CRule2SingleLinesAmplitude::SetUp(bool EnabledArgument, ...) {
   m_LineB = std::string(va_arg(Arguments, const char *));
   m_Coefficient = va_arg(Arguments, Float64);
 
-  if (0) {
-    std::string strTmp =
-        boost::str((boost::format("setup - linetype=%d, lineA=%s, lineB=%s") %
-                    m_LineType % m_LineA % m_LineB));
-    Logs.append(strTmp.c_str());
-  }
   va_end(Arguments);
 }
 

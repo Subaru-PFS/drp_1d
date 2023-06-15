@@ -90,7 +90,7 @@ public:
 
   Float64 CstLog = NAN;
   TFloat64List SNR;
-  TFloat64List Overlap;
+  std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra
   COperator::TStatusList Status;
 };
 

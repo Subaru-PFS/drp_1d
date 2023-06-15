@@ -74,7 +74,8 @@ public:
 private:
   ChisquareArray
   BuildChisquareArray(const std::shared_ptr<const CLineModelResult> &result,
-                      const TZGridListParams &zgridParams = {}) const;
+                      const TZGridListParams &zgridParams = {},
+                      const TCandidateZbyRank &parentZCand = {}) const;
 
   void GetZpriorsOptions(bool &zPriorStrongLinePresence,
                          bool &zPriorHaStrongestLine, bool &zPriorNLineSNR,
@@ -89,11 +90,7 @@ private:
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
-  void StoreChisquareTplRatioResults(
-      std::shared_ptr<COperatorResultStore> dataStore,
-      std::shared_ptr<const CLineModelResult> result) const;
-  const CLineCatalog::TLineVector
-  FilterRestLineCatalog(const CLineCatalog &restlinecatalog);
+  const TLineVector FilterRestLineCatalog(const CLineCatalog &restlinecatalog);
   void fillChisquareArrayForTplRatio(
       const std::shared_ptr<const CLineModelResult> &result,
       ChisquareArray &chisquarearray) const;
@@ -117,6 +114,8 @@ private:
   Int32 m_opt_firstpass_largegridstepRatio;
   bool m_opt_skipsecondpass = false;
   Float64 m_coarseRedshiftStep = NAN;
+
+  bool m_useloglambdasampling;
 };
 
 } // namespace NSEpic

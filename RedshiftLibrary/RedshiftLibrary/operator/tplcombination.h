@@ -121,7 +121,7 @@ private:
   void RebinTemplate(const CSpectrum &spectrum,
                      const TTemplateConstRefList &tplList, Float64 redshift,
                      const TFloat64Range &lambdaRange,
-                     TFloat64Range &currentRange, Float64 &overlapRate,
+                     TFloat64Range &currentRange, Float64 &overlapFraction,
                      const Float64 overlapThreshold);
   // buffers for the interpolated axis (templates & spectrum)
   std::vector<CTemplate> m_templatesRebined_bf;

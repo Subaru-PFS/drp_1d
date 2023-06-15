@@ -55,7 +55,6 @@ class CSpectrumFluxCorrectionMeiksin;
 class CLineCatalog {
 
 public:
-  typedef std::vector<CLine> TLineVector;
   CLineCatalog(Float64 sigmaSupport);
   virtual ~CLineCatalog() = default;
   CLineCatalog() = default; // TODO remove in 7007
@@ -80,7 +79,7 @@ public:
                               Int32 forceFilter = -1) const;
   TLineVector GetFilteredList(const std::string &typeFilter,
                               const std::string &forceFilter) const;
-  static const std::vector<CLineCatalog::TLineVector>
+  static const std::vector<TLineVector>
   ConvertToGroupList(const TLineVector &filteredList);
 
   void Sort();
@@ -91,7 +90,6 @@ public:
                         const Float64 &nominalAmplitude);
   void convertLineProfiles2SYMIGM(
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
-  void debug(std::ostream &os);
 
 protected:
   TLineVector m_List;

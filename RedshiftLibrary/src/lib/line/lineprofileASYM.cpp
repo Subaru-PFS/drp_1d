@@ -125,23 +125,22 @@ Float64 CLineProfileASYM::GetLineFlux(Float64 x0, Float64 sigma,
   return A * sigma * m_asym_sigma_coeff * sqrt(2 * M_PI);
 }
 
-Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0,
-                                               Float64 redshift,
-                                               Float64 sigma) const {
+Float64 CLineProfileASYM::GetLineProfileDerivX0(Float64 x, Float64 x0,
+                                                Float64 sigma) const {
   if (!isValid()) {
     THROWG(INTERNAL_ERROR, "LineProfile is not valid");
   }
   Float64 xsurc;
   Float64 alpha2 = m_asym_alpha * m_asym_alpha;
-  Float64 xc = x - x0 * (1 + redshift);
+  Float64 xc = x - x0;
 
   GetXSurc(xc, sigma, xsurc);
 
   Float64 xsurc2 = xsurc * xsurc;
-  Float64 val = x0 / sigma * xsurc * exp(-0.5 * xsurc2) *
-                    (1.0 + erf(m_asym_alpha / sqrt(2.0) * xsurc)) -
-                m_asym_alpha * x0 / sqrt(2 * M_PI) / sigma *
-                    exp(-(1 + alpha2) / 2 * xsurc2);
+  Float64 val =
+      xsurc / sigma * exp(-0.5 * xsurc2) *
+          (1.0 + erf(m_asym_alpha / sqrt(2.0) * xsurc)) -
+      m_asym_alpha / sqrt(2 * M_PI) / sigma * exp(-(1 + alpha2) / 2 * xsurc2);
   return val;
 }
 

@@ -91,9 +91,9 @@ bool CRules::checkRule01(
       return true;
 
   // check if the absence of strong lines is justified by the wavelength range
-  CLineCatalog::TLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
+  TLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
       CLine::nType_Emission, CLine::nForce_Strong);
-  CLineCatalog::TLineVector strongRestLinesInsideLambdaRangeList;
+  TLineVector strongRestLinesInsideLambdaRangeList;
 
   for (const auto &line : strongRestLineList) {
     Float64 lambda = line.GetPosition() * (1 + z);
@@ -209,7 +209,7 @@ bool CRules::checkRule03(
 }
 
 Float64 CRules::getRestLineLambda(std::string nametag) {
-  CLineCatalog::TLineVector restLineList = m_RestCatalog.GetFilteredList();
+  TLineVector restLineList = m_RestCatalog.GetFilteredList();
   Int32 ncatalog = restLineList.size();
   for (Int32 c = 0; c < ncatalog; c++) {
     std::string name = restLineList[c].GetName();
