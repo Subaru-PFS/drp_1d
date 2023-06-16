@@ -43,6 +43,11 @@
 #include "RedshiftLibrary/line/lineprofile.h"
 #include <cmath>
 #include <string>
+
+namespace lineProfile_test {
+class lineprofileSYM_test;
+} // namespace lineProfile_test
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -54,8 +59,8 @@ public:
                                     Float64 sigma) const override;
   virtual Float64 GetLineFlux(Float64 x0, Float64 sigma,
                               Float64 A = 1.0) const override;
-  virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
-                                       Float64 sigma) const override;
+  virtual Float64 GetLineProfileDerivX0(Float64 x, Float64 x0,
+                                        Float64 sigma) const override;
   virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                            Float64 sigma) const override;
 
@@ -63,6 +68,7 @@ protected:
   CLineProfileSYM(const Float64 nsigmasupport, const TProfile pltype);
 
 private:
+  friend class lineProfile_test::lineprofileSYM_test;
   CLineProfile *CloneImplementation() const override {
     return new CLineProfileSYM(*this);
   }

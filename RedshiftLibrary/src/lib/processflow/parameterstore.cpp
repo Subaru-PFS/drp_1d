@@ -159,11 +159,11 @@ bool CParameterStore::HasTplIsmExtinction(const std::string &objectType) const {
     return false;
   const auto &method = Get<std::string>(methodScope);
   if (method == "TemplateFittingSolve" || method == "TplcombinationSolve") {
-    const std::string scopeStr = objectType + "." + method + ".dustfit";
+    const std::string scopeStr = objectType + "." + method + ".ismfit";
     if (Has<bool>(scopeStr))
       extinction = Get<bool>(scopeStr);
   } else if (method == "LineModelSolve") {
-    // two parameters plays here: continuumfit.ismfit and tplratio_ismfit
+    // two parameters play here: continuumfit.ismfit and tplratio_ismfit
     //
     const std::string scopeStr =
         objectType + "." + method + ".linemodel.continuumfit.ismfit";
@@ -184,16 +184,15 @@ bool CParameterStore::HasTplIgmExtinction(const std::string &objectType) const {
   if (!Has<std::string>(methodScope))
     return false;
   const auto &method = Get<std::string>(methodScope);
-  if (method == "TemplateFittingSolve" || method == "TplcombinationSolve") {
-    const std::string scopeStr = objectType + "." + method + ".extinction";
-    if (Has<bool>(scopeStr))
-      extinction = Get<bool>(scopeStr);
-  } else if (method == "LineModelSolve") {
-    const std::string scopeStr =
-        objectType + "." + method + ".linemodel.continuumfit.igmfit";
-    if (Has<bool>(scopeStr))
-      extinction = Get<bool>(scopeStr);
-  }
+  std::string scopeStr = objectType + "." + method;
+  if (method == "TemplateFittingSolve" || method == "TplcombinationSolve")
+    scopeStr += ".igmfit";
+  else if (method == "LineModelSolve")
+    scopeStr += ".linemodel.continuumfit.igmfit";
+
+  if (Has<bool>(scopeStr))
+    extinction = Get<bool>(scopeStr);
+
   return extinction;
 }
 

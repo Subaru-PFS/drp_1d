@@ -49,17 +49,22 @@ class Reliability:
         self.parameters = parameters
         self.calibration_library = calibration
         
-    def Compute(self, context):
+    def Compute(self, source):
         # context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
         output = ResultStoreOutput(
-            context.GetResultStore(),
-            self.parameters,
-            auto_load=False,
-            extended_results=False,
-        )
+                source.GetResultStore(),
+                self.parameters,
+                auto_load=False,
+                extended_results=False,
+            )
+        
+        model = self.calibration_library.reliability_models[self.object_type]
+        model_parameters = self.calibration_library.reliability_parameters[self.object_type]
+        return self.get_probas(output, model, model_parameters)["success"]
 
-        calib_parameters = self.calibration_library.reliability_parameters[self.object_type]
-        c_zgrid_zend = calib_parameters["zgrid_end"]
+    def get_probas(self, output, model, model_parameters):
+
+        c_zgrid_zend = model_parameters["zgrid_end"]
 
         logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
         output.load_object_level(self.object_type)
@@ -69,7 +74,6 @@ class Reliability:
 
         zgrid = pdf.redshifts
         pdfval = pdf.valProbaLog
-        model = self.calibration_library.reliability_models[self.object_type]
 
         zgrid_end = zgrid[-1]
         if pdfval.shape[0] != model.input_shape[1]:
@@ -79,10 +83,13 @@ class Reliability:
         if zend_diff > 1e-6:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {zgrid_end} != {c_zgrid_zend}")
         z_step = (zgrid[-1]+1)/(zgrid[-2]+1)
-        c_zrange_step = calib_parameters["zrange_step"]
+        c_zrange_step = model_parameters["zrange_step"]
         step_diff = (np.exp(c_zrange_step)-z_step)/z_step
         if step_diff > 1e-6:
             raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {z_step} != {np.exp(c_zrange_step)}")
-
-        return  model.predict(np.exp(pdfval[None, :, None]))[0, 1]
-
+        ret = dict()
+        classes = model_parameters["classes"]
+        probas =model.predict(np.exp(pdfval[None, :, None]))
+        for i in range(1,len(classes)):
+            ret[classes[i]]=probas[0, i]
+        return ret

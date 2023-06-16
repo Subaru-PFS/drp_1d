@@ -50,7 +50,8 @@ class CSpectrumModel;
 class CSpectrum;
 class CContinuumManager;
 class CLineModelSolution;
-class CContinuumModelSolution;
+class CTplModelSolution;
+class CAbstractFitter;
 class CLineRatioManager {
 public:
   CLineRatioManager(CLineModelElementList &elements,
@@ -58,7 +59,7 @@ public:
                     std::shared_ptr<const CSpectrum> inputSpc,
                     std::shared_ptr<const TFloat64Range> lambdaRange,
                     std::shared_ptr<CContinuumManager> continuumManager,
-                    const CLineCatalog::TLineVector &restLineList);
+                    const TLineVector &restLineList);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -85,40 +86,33 @@ public:
   } // TODO, called in computeFirstPass in the general case but only active when
     // line_ratio_type = tplratio -> should be reviewed
 
-  static std::shared_ptr<CLineRatioManager>
-  makeLineRatioManager(const std::string &lineRatioType,
-                       CLineModelElementList &elements,
-                       std::shared_ptr<CSpectrumModel> model,
-                       std::shared_ptr<const CSpectrum> inputSpc,
-                       std::shared_ptr<const TFloat64Range> lambdaRange,
-                       std::shared_ptr<CContinuumManager> continuumManager,
-                       const CLineCatalog::TLineVector &restLineList);
+  void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
+  static std::shared_ptr<CLineRatioManager> makeLineRatioManager(
+      const std::string &lineRatioType, CLineModelElementList &elements,
+      std::shared_ptr<CSpectrumModel> model,
+      std::shared_ptr<const CSpectrum> inputSpc,
+      std::shared_ptr<const TFloat64Range> lambdaRange,
+      std::shared_ptr<CContinuumManager> continuumManager,
+      const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter);
 
 protected:
-  void setLyaProfile(Float64 redshift,
-                     const CLineCatalog::TLineVector &lineList);
+  void setLyaProfile(Float64 redshift, const TLineVector &lineList);
   void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
-                      const CLineCatalog::TLineVector &lineList);
-  TAsymParams fitAsymParameters(Float64 redshift, Int32 idxLyaE,
-                                const Int32 &idxLineLyaE);
-
-  virtual Int32
-  getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
-                        const CLineCatalog::TLineVector &catalog) const;
+                      const TLineVector &lineList);
+  virtual Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
+                                      const TLineVector &catalog) const;
 
   void setSymIgmProfile(Int32 iElts, const TInt32List &idxLineIGM,
                         Float64 redshift);
-  Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
-                             const TInt32List &idxLine);
 
-  Float64 getLeastSquareMeritFast(Int32 idxLine = -1) const;
   Float64 getLeastSquareMerit() const;
 
   CLineModelElementList &m_Elements;
   std::shared_ptr<CSpectrumModel> m_model;
   std::shared_ptr<const CSpectrum> m_inputSpc;
   std::shared_ptr<CContinuumManager> m_continuumManager;
-  const CLineCatalog::TLineVector &m_RestLineList;
+  std::shared_ptr<CAbstractFitter> m_fitter;
+  const TLineVector &m_RestLineList;
   std::shared_ptr<const TFloat64Range> m_lambdaRange;
 
   bool m_forceDisableLyaFitting = false;
@@ -126,16 +120,6 @@ protected:
 
   bool m_opt_lya_forcefit = false;
   bool m_opt_lya_forcedisablefit = false;
-
-  Float64 m_opt_lya_fit_asym_min = 0.0;
-  Float64 m_opt_lya_fit_asym_max = 4.0;
-  Float64 m_opt_lya_fit_asym_step = 1.0;
-  Float64 m_opt_lya_fit_width_min = 1.;
-  Float64 m_opt_lya_fit_width_max = 4.;
-  Float64 m_opt_lya_fit_width_step = 1.;
-  Float64 m_opt_lya_fit_delta_min = 0.;
-  Float64 m_opt_lya_fit_delta_max = 0.;
-  Float64 m_opt_lya_fit_delta_step = 1.;
 };
 
 } // namespace NSEpic

@@ -60,13 +60,14 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
     const std::string &method =
         inputContext->GetParameterStore()->Get<std::string>(category +
                                                             ".method");
-    try {
+
+    if (resultStore->hasSolveResult(category, method)) {
       results[category] = std::dynamic_pointer_cast<const CPdfSolveResult>(
           resultStore->GetSolveResult(category, method).lock());
       hasResult[category] = true;
-    } catch (std::exception &e) {
+    } else
       hasResult[category] = false;
-    }
+
     logEvidences[category] = -INFINITY;
   }
   std::shared_ptr<CClassificationResult> classifResult =

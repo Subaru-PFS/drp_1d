@@ -40,8 +40,7 @@
 
 using namespace NSEpic;
 
-CLineModelSolution::CLineModelSolution(
-    const CLineCatalog::TLineVector &restLineList)
+CLineModelSolution::CLineModelSolution(const TLineVector &restLineList)
     : COperatorResult("CLineModelSolution"), lineId(restLineList.size(), -1),
       ElementId(restLineList.size(), undefIdx),
       Amplitudes(restLineList.size(), NAN),
@@ -56,7 +55,7 @@ CLineModelSolution::CLineModelSolution(
       FluxDirectIntegration(restLineList.size(), NAN),
       FluxDirectIntegrationError(restLineList.size(), NAN),
       OutsideLambdaRange(restLineList.size(), true),
-      fittingGroupInfo(restLineList.size(), "undefined"),
+      fittingGroupInfo(restLineList.size(), undefStr),
       continuum_pCoeff0(restLineList.size(), NAN),
       continuum_pCoeff1(restLineList.size(), NAN),
       continuum_pCoeff2(restLineList.size(), NAN) {

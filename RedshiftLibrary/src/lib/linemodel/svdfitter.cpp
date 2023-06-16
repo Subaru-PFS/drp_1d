@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/svdfitter.h"
+#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -48,55 +49,79 @@ using namespace NSEpic;
 using namespace std;
 
 // set all the amplitudes to 1.0
-void CSvdFitter::fit(Float64 redshift) {
+void CSvdFitter::doFit(Float64 redshift) {
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-  TFloat64List ampsfitted;
-  TFloat64List errorsfitted;
-  fitAmplitudesLinSolveAndLambdaOffset(
-      validEltsIdx, m_inputSpc.GetSpectralAxis(), ampsfitted, errorsfitted,
-      m_enableLambdaOffsetsFit, redshift);
-}
 
-void CSvdFitter::setOffset(const TInt32List &EltsIdx, Int32 offsetCount) const {
+  if (validEltsIdx.empty())
+    return;
 
-  Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
-  for (Int32 iE : EltsIdx) {
-    for (auto &line : m_Elements[iE]->m_Lines)
-      if (line.GetOffsetFitEnabled())
-        line.SetOffset(offset);
-  }
-  return;
+  std::string fitGroupTag = "svd";
+  for (Int32 idx : validEltsIdx)
+    m_Elements[idx]->SetFittingGroupInfo(fitGroupTag);
+
+  if (m_enableAmplitudeOffsets)
+    m_Elements.resetAmplitudeOffset();
+
+  fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, m_enableLambdaOffsetsFit,
+                                       redshift);
 }
 
 /**
  * \brief Use GSL to fit linearly the elements listed in argument EltsIdx.
  * If size of argument EltsIdx is less than 1 return -1.
  **/
-Int32 CSvdFitter::fitAmplitudesLinSolve(
-    const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-    const CSpectrumFluxAxis &fluxAxis,
-    const CSpectrumFluxAxis &continuumfluxAxis, TFloat64List &ampsfitted,
-    TFloat64List &errorsfitted, Float64 redshift) {
+bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
+                                       TFloat64List &ampsfitted,
+                                       TFloat64List &errorsfitted,
+                                       Float64 redshift,
+                                       const TInt32List &IdxToFit) {
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
+  const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxisNoContinuum();
+  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
   bool useAmpOffset = m_enableAmplitudeOffsets;
-  Int32 idxAmpOffset = -1;
 
-  Int32 nddl = EltsIdx.size();
-  if (nddl < 1)
-    return -1;
+  if (EltsIdx.size() < 1)
+    THROWG(INTERNAL_ERROR, "empty Line element list to fit");
 
   TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
-  if (xInds.size() < 1)
-    return -1;
+  Int32 n = xInds.size();
+  if (n < 1)
+    THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
 
-  if (useAmpOffset) {
-    nddl += m_AmplitudeOffsetsDegree + 1;
-    // find the amplitudeOffset Support that corresponds to these elts
-    idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
+  // list of elements to fit
+  TInt32List EltsIdxToFit;
+  if (IdxToFit.empty())
+    EltsIdxToFit = EltsIdx;
+  else {
+    EltsIdxToFit.reserve(IdxToFit.size());
+    for (auto idx : IdxToFit)
+      EltsIdxToFit.push_back(EltsIdx[idx]);
+  }
+  Int32 nddl = EltsIdxToFit.size();
+
+  if (useAmpOffset)
+    nddl += TPolynomCoeffs::degree + 1;
+
+  if (n < nddl) {
+    Flag.warning(WarningCode::LINEARFIT_RANK_DEFICIENT,
+                 Formatter() << __func__ << " SVD ill ranked:"
+                             << " number of samples = " << n
+                             << ", number of parameters to fit = " << nddl);
+    ampsfitted.assign(EltsIdx.size(), 0.0);
+    errorsfitted.assign(EltsIdx.size(), INFINITY);
+    for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
+      m_Elements.SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
+    if (useAmpOffset) {
+      for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
+        m_Elements[EltsIdx[iddl]]->SetPolynomCoeffs({0., 0., 0.});
+    }
+    return true;
   }
 
-  for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
-    m_Elements.SetElementAmplitude(EltsIdx[iddl], 1.0, 0.0);
+  for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++)
+    m_Elements.SetElementAmplitude(EltsIdxToFit[iddl], 1.0, 0.0);
 
   const auto &ErrorNoContinuum = m_inputSpc.GetErrorAxis();
 
@@ -105,17 +130,6 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(
   double chisq;
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
-
-  Int32 n = xInds.size();
-  if (n < nddl) {
-    ampsfitted.resize(nddl);
-    errorsfitted.resize(nddl);
-    for (Int32 iddl = 0; iddl < nddl; iddl++) {
-      ampsfitted[iddl] = 0.0;
-      errorsfitted[iddl] = 1e12; // some high number
-    }
-    return -1;
-  }
 
   X = gsl_matrix_alloc(n, nddl);
   y = gsl_vector_alloc(n);
@@ -143,21 +157,21 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, 1.0 / (ei * ei));
 
-    for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
-      fval = m_Elements[EltsIdx[iddl]]->getModelAtLambda(
+    for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++) {
+      fval = m_Elements[EltsIdxToFit[iddl]]->getModelAtLambda(
           xi, redshift, continuumfluxAxis[idx]);
       gsl_matrix_set(X, i, iddl, fval);
       Log.LogDebug("fval = '%.3e'", fval);
     }
 
     if (useAmpOffset) {
-      gsl_matrix_set(X, i, EltsIdx.size(), 1.0);
-      if (m_AmplitudeOffsetsDegree == 0)
+      gsl_matrix_set(X, i, EltsIdxToFit.size(), 1.0);
+      if (TPolynomCoeffs::degree == 0)
         continue;
-      gsl_matrix_set(X, i, EltsIdx.size() + 1, xi);
-      if (m_AmplitudeOffsetsDegree == 1)
+      gsl_matrix_set(X, i, EltsIdxToFit.size() + 1, xi);
+      if (TPolynomCoeffs::degree == 1)
         continue;
-      gsl_matrix_set(X, i, EltsIdx.size() + 2, xi * xi);
+      gsl_matrix_set(X, i, EltsIdxToFit.size() + 2, xi * xi);
     }
   }
 
@@ -172,46 +186,33 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(
     Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
   }
 
-  Int32 sameSign = 1;
-  Float64 a0 = gsl_vector_get(c, 0) / normFactor;
-  for (Int32 iddl = 1; iddl < EltsIdx.size(); iddl++) {
-    Float64 a = gsl_vector_get(c, iddl) / normFactor;
-    Float64 product = a0 * a;
-    if (product < 0)
-      sameSign = 0;
-  }
+  bool allPositive = true;
 
-  Log.LogDetail("# Found amplitudes with sameSign=%d", sameSign);
-  if (sameSign) {
-    for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
-      Float64 a = gsl_vector_get(c, iddl) / normFactor;
-      Float64 cova = gsl_matrix_get(cov, iddl, iddl);
-      Float64 sigma = sqrt(cova) / normFactor;
-      m_Elements.SetElementAmplitude(EltsIdx[iddl], a, sigma);
-    }
-    // refreshModel();
-  } else {
-    ampsfitted.resize(EltsIdx.size());
-    errorsfitted.resize(EltsIdx.size());
-    for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
-      Float64 a = gsl_vector_get(c, iddl) / normFactor;
-      Float64 cova = gsl_matrix_get(cov, iddl, iddl);
-      Float64 sigma = sqrt(cova) / normFactor;
-      m_Elements.SetElementAmplitude(EltsIdx[iddl], a, sigma);
-      ampsfitted[iddl] = (a);
-      errorsfitted[iddl] = (sigma);
-    }
+  ampsfitted.resize(EltsIdxToFit.size());
+  errorsfitted.resize(EltsIdxToFit.size());
+  for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++) {
+    Float64 a = gsl_vector_get(c, iddl) / normFactor;
+    if (a < 0)
+      allPositive = false;
+    Float64 cova = gsl_matrix_get(cov, iddl, iddl);
+    Float64 sigma = sqrt(cova) / normFactor;
+    m_Elements.SetElementAmplitude(EltsIdxToFit[iddl], a, sigma);
+    ampsfitted[iddl] = (a);
+    errorsfitted[iddl] = (sigma);
   }
 
   if (useAmpOffset) {
-    Float64 x0 = gsl_vector_get(c, EltsIdx.size()) / normFactor;
+    Float64 x0 = gsl_vector_get(c, EltsIdxToFit.size()) / normFactor;
     Float64 x1 = 0.0;
     Float64 x2 = 0.0;
-    if (m_AmplitudeOffsetsDegree > 0)
-      x1 = gsl_vector_get(c, EltsIdx.size() + 1) / normFactor;
-    if (m_AmplitudeOffsetsDegree > 1)
-      x2 = gsl_vector_get(c, EltsIdx.size() + 2) / normFactor;
-    m_Elements.setAmplitudeOffsetsCoeffsAt(idxAmpOffset, {x0, x1, x2});
+    if (TPolynomCoeffs::degree > 0)
+      x1 = gsl_vector_get(c, EltsIdxToFit.size() + 1) / normFactor;
+    if (TPolynomCoeffs::degree > 1)
+      x2 = gsl_vector_get(c, EltsIdxToFit.size() + 2) / normFactor;
+    // set the polynomial coeffs for all elements, even those not fitted and
+    // fixed at zero
+    for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
+      m_Elements[EltsIdx[iddl]]->SetPolynomCoeffs({x0, x1, x2});
   }
 
   gsl_matrix_free(X);
@@ -220,47 +221,70 @@ Int32 CSvdFitter::fitAmplitudesLinSolve(
   gsl_vector_free(c);
   gsl_matrix_free(cov);
 
-  return sameSign;
+  return allPositive;
 }
 
-Int32 CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(
-    TInt32List EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-    std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted,
-    bool enableOffsetFitting, Float64 redshift) {
+// poor-man positive constraint
+// if some amplitudes are negative, force them to zero and refit the
+// positive ones
+void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+                                               Float64 redshift) {
+
+  TFloat64List ampsfitted;
+  TFloat64List errorsfitted;
+
+  bool allPositive =
+      fitAmplitudesLinSolve(EltsIdx, ampsfitted, errorsfitted, redshift);
+
+  if (!allPositive) {
+    TInt32List idx_positive;
+    for (Int32 ifit = 0; ifit < EltsIdx.size(); ifit++) {
+      if (ampsfitted[ifit] < 0) {
+        m_Elements.SetElementAmplitude(EltsIdx[ifit], 0.0, errorsfitted[ifit]);
+      } else {
+        idx_positive.push_back(ifit);
+      }
+    }
+    // refit the positive elements together
+    if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
+      fitAmplitude(EltsIdx[idx_positive.front()], redshift, undefIdx);
+    } else if (idx_positive.size() > 0) {
+      bool allPositive2 = fitAmplitudesLinSolve(
+          EltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
+
+      if (!allPositive2) {
+        for (Int32 irefit = 0; irefit < idx_positive.size(); ++irefit) {
+          if (ampsfitted[irefit] > 0) {
+            fitAmplitude(EltsIdx[idx_positive[irefit]], redshift, undefIdx);
+          } else {
+            m_Elements.SetElementAmplitude(EltsIdx[idx_positive[irefit]], 0.0,
+                                           errorsfitted[irefit]);
+          }
+        }
+      }
+    }
+  }
+}
+
+void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
+                                                      bool enableOffsetFitting,
+                                                      Float64 redshift) {
 
   const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxisNoContinuum();
-  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
-  Int32 ret = -1;
-
-  bool atLeastOneOffsetToFit = false;
-  if (enableOffsetFitting) {
-    for (Int32 iE : EltsIdx)
-      for (const auto &line : m_Elements[iE]->m_Lines)
-        // check if the line is to be fitted
-        if (line.GetOffsetFitEnabled()) {
-          atLeastOneOffsetToFit = true;
-          break;
-        }
-  }
-
-  Int32 nSteps =
-      atLeastOneOffsetToFit
-          ? int((m_LambdaOffsetMax - m_LambdaOffsetMin) / m_LambdaOffsetStep +
-                0.5)
-          : 1;
+  bool atLeastOneOffsetToFit =
+      HasLambdaOffsetFitting(EltsIdx, enableOffsetFitting);
+  Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
 
   Float64 bestMerit = DBL_MAX;
   Int32 idxBestMerit = -1;
   for (Int32 iO = 0; iO < nSteps; iO++) {
     // set offset value
     if (atLeastOneOffsetToFit)
-      setOffset(EltsIdx, iO);
+      setLambdaOffset(EltsIdx, iO);
 
     // fit for this offset
-    ret = fitAmplitudesLinSolve(EltsIdx, spectralAxis, fluxAxis,
-                                continuumfluxAxis, ampsfitted, errorsfitted,
-                                redshift);
+    fitAmplitudesLinSolvePositive(EltsIdx, redshift);
 
     // check fitting
     if (!atLeastOneOffsetToFit)
@@ -280,15 +304,11 @@ Int32 CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(
   }
 
   if (idxBestMerit == -1 || !atLeastOneOffsetToFit)
-    return ret;
+    return;
 
   // set offset value
   if (atLeastOneOffsetToFit)
-    setOffset(EltsIdx, idxBestMerit);
+    setLambdaOffset(EltsIdx, idxBestMerit);
   // fit again for this offset
-  ret =
-      fitAmplitudesLinSolve(EltsIdx, spectralAxis, fluxAxis, continuumfluxAxis,
-                            ampsfitted, errorsfitted, redshift);
-
-  return ret;
+  fitAmplitudesLinSolvePositive(EltsIdx, redshift);
 }

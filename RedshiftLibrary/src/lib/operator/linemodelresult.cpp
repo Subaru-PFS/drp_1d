@@ -60,8 +60,7 @@ using namespace NSEpic;
  * @param nTplratios
  * @return
  */
-void CLineModelResult::Init(TFloat64List redshifts,
-                            CLineCatalog::TLineVector restLines,
+void CLineModelResult::Init(TFloat64List redshifts, TLineVector restLines,
                             Int32 nTemplates, Int32 nTplratios,
                             TFloat64List tplratiosPriors) {
   if (tplratiosPriors.size() != nTplratios) {
@@ -79,7 +78,7 @@ void CLineModelResult::Init(TFloat64List redshifts,
   Redshifts = std::move(redshifts);
   restLineList = std::move(restLines);
   LineModelSolutions.assign(nResults, CLineModelSolution());
-  ContinuumModelSolutions.assign(nResults, CContinuumModelSolution());
+  ContinuumModelSolutions.assign(nResults, CTplModelSolution());
 
   ChiSquareContinuum.assign(nResults, NAN);
   ScaleMargCorrectionContinuum.assign(nResults, NAN);
@@ -117,8 +116,8 @@ void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
   insertWithDuplicates<Float64>(ScaleMargCorrection, idx, count, NAN, ndup);
   insertWithDuplicates(LineModelSolutions, idx, count, CLineModelSolution(),
                        ndup);
-  insertWithDuplicates(ContinuumModelSolutions, idx, count,
-                       CContinuumModelSolution(), ndup);
+  insertWithDuplicates(ContinuumModelSolutions, idx, count, CTplModelSolution(),
+                       ndup);
   insertWithDuplicates<Float64>(ChiSquareContinuum, idx, count, NAN, ndup);
   insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, idx, count, NAN,
                                 ndup);
@@ -151,7 +150,7 @@ void CLineModelResult::SetChisquareTplContinuumResult(
   for (Int32 k = 0; k < tplFitStore->GetContinuumCount();
        k++) { // TODO: handle the use of more than one continuum in linemodel
     ChiSquareTplContinuum[k][index_z] =
-        tplFitStore->GetFitValues(index_z_in_store, k).merit;
+        tplFitStore->GetFitValues(index_z_in_store, k).tplMerit;
   }
 }
 
@@ -398,11 +397,11 @@ TInt32List CLineModelResult::getNLinesAboveSnrcut(
 TBoolList CLineModelResult::getStrongestLineIsHa(
     const std::vector<CLineModelSolution> &linemodelsols) const {
   TBoolList isHaStrongest(linemodelsols.size(), false);
-  std::string ampMaxLineTag = "undefined";
+  std::string ampMaxLineTag = undefStr;
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
        solutionIdx++) {
     Float64 ampMax = -DBL_MAX;
-    ampMaxLineTag = "undefined";
+    ampMaxLineTag = undefStr;
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
       if (!restLineList[j].GetIsEmission() ||
           linemodelsols[solutionIdx].OutsideLambdaRange[j])

@@ -40,8 +40,11 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
+#include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
+
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
@@ -66,36 +69,59 @@ const std::string jsonString =
     "\"objects\" : [\"galaxy\"],"
     "\"calibrationDir\" : \"\","
     "\"autocorrectinput\" : false,"
+    "\"airvacuum_method\" : \"default\",";
+
+const std::string jsonStringFFT = {
     "\"galaxy\" : {"
     "\"redshiftrange\" : [ 2.84, 2.88 ],"
     "\"redshiftstep\" : 0.0001,"
     "\"redshiftsampling\" : \"log\","
     "\"method\" : \"TemplateFittingSolve\","
-    "\"template_dir\" : \"templates/BC03_sdss_tremonti21\","
     "\"linemeas_method\" : null,"
+    "\"TemplateFittingSolve\" : {"
     "\"extremacount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : false,"
+    "\"fftprocessing\" : true,"
     "\"interpolation\" : \"precomputedfinegrid\","
-    "\"extinction\" : true,"
-    "\"dustfit\" : true,"
+    "\"igmfit\" : true,"
+    "\"ismfit\" : true,"
     "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : false,"
+    "\"enablephotometry\" : false}}}"};
+
+const std::string jsonStringNoFFT = {
+    "\"galaxy\" : {"
+    "\"redshiftrange\" : [ 2.84, 2.88 ],"
+    "\"redshiftstep\" : 0.0001,"
+    "\"redshiftsampling\" : \"log\","
+    "\"method\" : \"TemplateFittingSolve\","
+    "\"linemeas_method\" : null,"
     "\"TemplateFittingSolve\" : {"
     "\"extremacount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
     "\"fftprocessing\" : false,"
     "\"interpolation\" : \"precomputedfinegrid\","
-    "\"extinction\" : true,"
-    "\"dustfit\" : true,"
+    "\"igmfit\" : true,"
+    "\"ismfit\" : true,"
     "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : false}},"
-    "\"airvacuum_method\" : \"default\"}";
+    "\"enablephotometry\" : true,"
+    "\"photometry\": {\"weight\" : 1.0}}}}"};
 
-class fixture_TemplateFittingSolveTest {
+class fixture_TemplateFittingSolveTestNoFFT {
 public:
+  fixture_Context ctx;
+  fixture_TemplateFittingSolveTestNoFFT() {
+    fillCatalog();
+    ctx.loadParameterStore(jsonString + jsonStringNoFFT);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.initContext();
+  }
+
   TScopeStack scopeStack;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
@@ -103,13 +129,40 @@ public:
       fixture_CalzettiCorrection().ismCorrectionCalzetti;
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  std::shared_ptr<CParameterStore> paramStore =
-      fixture_ParamStore(jsonString, scopeStack).paramStore;
-  std::shared_ptr<CInputContext> ctx_logSampled =
-      fixture_InputContext(jsonString, paramStore).ctx;
-  std::shared_ptr<COperatorResultStore> resultStore;
-  std::shared_ptr<CTemplate> tplStar_logSampled =
-      fixture_SharedStarTemplate().tpl;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
+  std::shared_ptr<CTemplateCatalog> catalog =
+      fixture_sharedTemplateCatalog().catalog;
+  std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
+      fixture_PhotoBandCatalog().photoBandCatalog;
+  std::shared_ptr<CPhotometricData> photoData = fixture_PhotoData().photoData;
+
+  void fillCatalog() {
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+    catalog->m_logsampling = 1;
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+  }
+};
+
+class fixture_TemplateFittingSolveTestFFT {
+public:
+  fixture_Context ctx;
+  fixture_TemplateFittingSolveTestFFT() {
+    fillCatalog();
+    ctx.loadParameterStore(jsonString + jsonStringFFT);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.addSpectrum(spc, LSF);
+    ctx.initContext();
+  }
+
+  TScopeStack scopeStack;
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      fixture_MeiskinCorrection().igmCorrectionMeiksin;
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
+      fixture_CalzettiCorrection().ismCorrectionCalzetti;
+  std::shared_ptr<CLSF> LSF =
+      fixture_LSFGaussianConstantResolution(scopeStack).LSF;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
 
@@ -120,23 +173,156 @@ public:
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE(templateFittingSolve_test,
-                         fixture_TemplateFittingSolveTest)
+Int32 EstimateXtYSlow(const TFloat64List &X, const TFloat64List &Y,
+                      TFloat64List &XtY) {
+  Int32 nShifts = Y.size() - X.size() + 1;
+  XtY.resize(nShifts);
 
-BOOST_AUTO_TEST_CASE(Constructor_test) {
-  fillCatalog();
-  ctx_logSampled->setTemplateCatalog(catalog);
-  ctx_logSampled->setfluxCorrectionMeiksin(igmCorrectionMeiksin);
-  ctx_logSampled->setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-  ctx_logSampled->GetSpectrum()->SetLSF(LSF);
-  ctx_logSampled->Init();
+  Int32 nX = X.size();
+  Float64 xty = 0.0;
+  for (std::size_t k = 0; k < nShifts; k++) {
+    xty = 0.0;
+    for (std::size_t j = 0; j < nX; j++) {
+      xty += X[j] * Y[j + k];
+    }
+    XtY[k] = xty;
+  }
+  return 0;
+}
 
-  Context.m_parameterStore = paramStore;
-  Context.m_inputContext = ctx_logSampled;
-  Context.m_ScopeStack = scopeStack;
+BOOST_AUTO_TEST_SUITE(templateFittingSolve_test)
 
-  CTemplateFittingSolve templateFittingSolve(scopeStack, "galaxy");
+BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
+                        fixture_TemplateFittingSolveTestNoFFT) {
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
   BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy",
+                                               "TemplateFittingSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CTemplateFittingSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "TemplateFittingSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "TemplateFittingSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "TemplateFittingSolve", "extrema_results", "model_parameters");
+  BOOST_CHECK(resType == "TExtremaResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "TemplateFittingSolve", "extrema_results",
+          "model_parameters", 0);
+  Float64 z = res->Redshift;
+  BOOST_CHECK_CLOSE(z, 2.8604060282076706, 1e-6);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy",
+                                               "TemplateFittingSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CTemplateFittingSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "TemplateFittingSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "TemplateFittingSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "TemplateFittingSolve", "extrema_results", "model_parameters");
+  BOOST_CHECK(resType == "TExtremaResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "TemplateFittingSolve", "extrema_results",
+          "model_parameters", 0);
+
+  Float64 z = res->Redshift;
+  BOOST_CHECK_CLOSE(z, 2.880219830862035, 1e-6);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
+  // Creation of useful objects
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  templateFittingSolve.Compute();
+
+  Float64 precision = 1e-12;
+
+  TFloat64Range lbdaR;
+  TFloat64List XtY;
+  TFloat64List XtYres;
+  TFloat64List redshifts = {2.8399999999999999, 2.8404879658869557,
+                            2.8409759937819086};
+  COperatorTemplateFittingLog tplFittingLog(redshifts);
+
+  // X size even, Y size even
+  lbdaR.Set(1, 10);
+  TFloat64List X = lbdaR.SpreadOver(1);
+  lbdaR.Set(1, 14);
+  TFloat64List Y = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
+
+  // X size even, Y size odd
+  lbdaR.Set(1, 15);
+  Y = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
+
+  // X size odd, Y size odd
+  lbdaR.Set(1, 11);
+  X = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
+
+  // X size odd, Y size even
+  lbdaR.Set(1, 14);
+  Y = lbdaR.SpreadOver(1);
+
+  EstimateXtYSlow(X, Y, XtY);
+
+  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+
+  for (std::size_t i = 0; i < XtY.size(); i++)
+    BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -69,7 +69,7 @@ void CRuleStrongHigherThanWeak::Correct(
     CLineModelElementList &LineModelElementList) {
   Float64 coeff = 1.0;
   Float64 erStrong = -1.0;
-  std::string strongName = "undefined";
+  std::string strongName = undefStr;
   Float64 maxiStrong = FindHighestStrongLineAmp(
       m_LineType, erStrong, strongName, LineModelElementList);
   if (maxiStrong == -1.)
@@ -77,11 +77,11 @@ void CRuleStrongHigherThanWeak::Correct(
 
   for (Int32 iedx = 0; iedx < LineModelElementList.size(); iedx++) {
     auto &eList = LineModelElementList[iedx];
-    Int32 nLines = eList->m_Lines.size();
+    Int32 nLines = eList->GetSize();
     for (Int32 iLineWeak = 0; iLineWeak < nLines; iLineWeak++) {
       if (eList->IsOutsideLambdaRange(iLineWeak) ||
-          eList->m_Lines[iLineWeak].GetForce() != CLine::nForce_Weak ||
-          eList->m_Lines[iLineWeak].GetType() != m_LineType) {
+          eList->GetLines()[iLineWeak].GetForce() != CLine::nForce_Weak ||
+          eList->GetElementType() != m_LineType) {
         continue;
       }
       // Log.LogDebug( "Rule %s: element %d has force weak, type %d and is not
@@ -113,7 +113,7 @@ void CRuleStrongHigherThanWeak::Correct(
 
       // apply correction and log the correction
       eList->LimitFittedAmplitude(iLineWeak, maxB);
-      constructLogMsg(eList->m_Lines[iLineWeak].GetName(), strongName, ampB,
+      constructLogMsg(eList->GetLines()[iLineWeak].GetName(), strongName, ampB,
                       maxB);
     }
   }
@@ -150,13 +150,13 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
   Float64 maxi = -1.0;
   for (Int32 iedx = 0; iedx < LineModelElementList.size(); iedx++) {
     const auto &eList = LineModelElementList[iedx];
-    Int32 nLines = eList->m_Lines.size();
+    Int32 nLines = eList->GetSize();
     for (Int32 iLineStrong = 0; iLineStrong < nLines;
          iLineStrong++) // loop on the strong lines
     {
       if (eList->IsOutsideLambdaRange(iLineStrong) ||
-          eList->m_Lines[iLineStrong].GetForce() != CLine::nForce_Strong ||
-          eList->m_Lines[iLineStrong].GetType() != m_LineType) {
+          eList->GetLines()[iLineStrong].GetForce() != CLine::nForce_Strong ||
+          eList->GetElementType() != m_LineType) {
         continue;
       }
 
@@ -165,7 +165,7 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
       if (maxi < ampStrong /*&& lineSnr>validSNRCut*/) {
         maxi = ampStrong;
         er = erStrong;
-        name = eList->m_Lines[iLineStrong].GetName();
+        name = eList->GetLines()[iLineStrong].GetName();
       }
     }
   }

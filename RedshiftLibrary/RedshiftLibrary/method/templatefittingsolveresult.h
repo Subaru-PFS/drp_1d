@@ -63,7 +63,7 @@ public:
       : CPdfSolveResult("CTemplateFittingSolveResult", ExtremaResult,
                         opt_pdfcombination, evidence){};
 
-  std::string m_tplName = "undefined";
+  std::string m_tplName = undefStr;
   Float64 m_amplitude = NAN;
   Float64 m_amplitudeError = NAN;
   Float64 m_EbmvCoeff = NAN;

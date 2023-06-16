@@ -79,8 +79,8 @@ public:
 
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
-  void Combine_firstpass_candidates(
-      std::shared_ptr<const CLineModelPassExtremaResult> results_b);
+  void
+  Combine_firstpass_candidates(const CLineModelPassExtremaResult &results_b);
 
   void ComputeSecondPass(
       const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
@@ -89,8 +89,7 @@ public:
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
 
-  std::shared_ptr<const LineModelExtremaResult>
-  buildFirstPassExtremaResults(const TCandidateZbyRank &zCandidates);
+  std::shared_ptr<const LineModelExtremaResult> buildFirstPassExtremaResults();
   std::shared_ptr<LineModelExtremaResult>
   buildExtremaResults(const CSpectrum &spectrum,
                       const TFloat64Range &lambdaRange,
@@ -117,15 +116,14 @@ public:
       false; // default: false, as ortho templates store makes this un-necessary
   bool m_opt_firstpass_multiplecontinuumfit_disable = true;
   std::string m_opt_firstpass_fittingmethod;
-  std::string m_opt_secondpasslcfittingmethod = "-1";
+  std::string m_opt_secondpasslcfittingmethod = undefStr;
   std::string m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
 
   Int32 m_continnuum_fit_option = 0; // default to "retryall" templates
   // candidates
-  std::shared_ptr<CLineModelPassExtremaResult> m_firstpass_extremaResult;
-  CLineModelPassExtremaResult m_secondpass_parameters_extremaResult;
+  CLineModelPassExtremaResult m_firstpass_extremaResult;
 
   CLineModelSolution
   fitWidthByGroups(std::shared_ptr<const CInputContext> context,
@@ -142,8 +140,7 @@ private:
   std::shared_ptr<CTemplatesFitStore>
   PrecomputeContinuumFit(const TFloat64List &redshifts,
                          Int32 candidateIdx = -1);
-  void EstimateSecondPassParameters(const CSpectrum &spectrum,
-                                    const TFloat64Range &lambdaRange);
+  void EstimateSecondPassParameters();
 
   void RecomputeAroundCandidates(
       const std::string &opt_continuumreest, const Int32 tplfit_option,
@@ -154,9 +151,10 @@ private:
   std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_Redshifts; // coarse grid
   Float64 m_fineStep = NAN;
-  std::string m_redshiftSampling = "undefined";
+  std::string m_redshiftSampling = undefStr;
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
+  void buildExtendedRedshifts();
   TFloat64List SpanRedshiftWindow(Float64 z) const;
 
   Float64 FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,

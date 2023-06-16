@@ -78,6 +78,7 @@ public:
 
   // size
   Int32 spcAxisSize = fixture_TemplateStar().spcAxisSize;
+  Int32 idxCount = fixture_MeiskinCorrection().idxCount;
 };
 
 BOOST_FIXTURE_TEST_SUITE(Template, fixture_TemplateTest)
@@ -190,8 +191,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
   BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
 
-  // InitIsmIgmConfig with lambdarange & redshift
-  TFloat64Range lbdaRange(spcAxisList[0], spcAxisList[spcAxisSize + 1]);
+  // InitIsmIgmConfig with lambdarange & redshift -> range outside spectral axis
+  TFloat64Range lbdaRange(1, 860);
   BOOST_CHECK_THROW(tplStar.InitIsmIgmConfig(lbdaRange, 2.86,
                                              ismCorrectionCalzetti,
                                              igmCorrectionMeiksin),
@@ -373,8 +374,8 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   BOOST_CHECK(meiksinList[0] == -1);
 
   meiksinList = tpl5.GetIgmIdxList(1, -1);
-  BOOST_CHECK(meiksinList.size() == 7);
-  ref_list = {0, 1, 2, 3, 4, 5, 6};
+  BOOST_CHECK(meiksinList.size() == idxCount);
+  ref_list = {0, 1};
   BOOST_CHECK(meiksinList == ref_list);
 
   meiksinList = tpl5.GetIgmIdxList(1, 3);

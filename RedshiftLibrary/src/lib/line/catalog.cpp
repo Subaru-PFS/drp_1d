@@ -61,12 +61,10 @@ using namespace boost::filesystem;
 CLineCatalog::CLineCatalog(Float64 sigmaSupport)
     : m_nSigmaSupport(sigmaSupport) {}
 
-const CLineCatalog::TLineVector &CLineCatalog::GetList() const {
-  return m_List;
-}
+const TLineVector &CLineCatalog::GetList() const { return m_List; }
 
-CLineCatalog::TLineVector
-CLineCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const {
+TLineVector CLineCatalog::GetFilteredList(Int32 typeFilter,
+                                          Int32 forceFilter) const {
 
   TLineVector filteredList;
   for (Int32 i = 0; i < m_List.size(); i++) {
@@ -79,7 +77,7 @@ CLineCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const {
   return filteredList;
 }
 
-CLineCatalog::TLineVector
+TLineVector
 CLineCatalog::GetFilteredList(const std::string &typeFilter,
                               const std::string &forceFilter) const {
   Int32 itypeFilter = -1;
@@ -95,12 +93,12 @@ CLineCatalog::GetFilteredList(const std::string &typeFilter,
   return GetFilteredList(itypeFilter, iforceFilter);
 }
 
-const std::vector<CLineCatalog::TLineVector>
+const std::vector<TLineVector>
 CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
 
   TStringList tags;
   for (int i = 0; i < filteredList.size(); i++) {
-    if (filteredList[i].GetGroupName() != "-1") {
+    if (filteredList[i].GetGroupName() != undefStr) {
       tags.push_back(filteredList[i].GetGroupName());
     }
   }
@@ -124,7 +122,7 @@ CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
   // add the non grouped lines
   for (int i = 0; i < filteredList.size(); i++) {
     std::string group = filteredList[i].GetGroupName();
-    if (group == "-1") {
+    if (group == undefStr) {
       TLineVector taggedGroupList;
       taggedGroupList.push_back(filteredList[i]);
       fullList.push_back(taggedGroupList);
@@ -233,7 +231,7 @@ void CLineCatalog::setAsymProfileAndParams(const std::string &profile,
                                            TAsymParams params) {
   TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
-    if (it->GetProfile().isAsymFit() || it->GetProfile().isAsymFixed())
+    if (it->GetProfile()->isAsymFit() || it->GetProfile()->isAsymFixed())
       return it->setProfileAndParams(profile, params, m_nSigmaSupport);
   }
 }
@@ -249,9 +247,4 @@ void CLineCatalog::convertLineProfiles2SYMIGM(
       it->setProfileAndParams("SYMIGM", TAsymParams(), m_nSigmaSupport,
                               igmcorrection);
   }
-}
-
-void CLineCatalog::debug(std::ostream &os) {
-  for (CLine &line : m_List)
-    line.Save(os);
 }

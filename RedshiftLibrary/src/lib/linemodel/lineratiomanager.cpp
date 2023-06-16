@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
+#include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
@@ -55,30 +56,20 @@ CLineRatioManager::CLineRatioManager(
     std::shared_ptr<const CSpectrum> inputSpc,
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineCatalog::TLineVector &restLineList)
+    const TLineVector &restLineList)
     : m_Elements(elements), m_model(model), m_inputSpc(inputSpc),
       m_lambdaRange(lambdaRange), m_continuumManager(continuumManager),
       m_RestLineList(restLineList) {
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
+  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   if (Context.GetCurrentMethod() == "LineModelSolve") {
-
     m_opt_lya_forcefit = ps->GetScoped<bool>("lyaforcefit");
     m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaforcedisablefit");
-
-    m_opt_lya_fit_asym_min = ps->GetScoped<Float64>("lyafit.asymfitmin");
-    m_opt_lya_fit_asym_max = ps->GetScoped<Float64>("lyafit.asymfitmax");
-    m_opt_lya_fit_asym_step = ps->GetScoped<Float64>("lyafit.asymfitstep");
-    m_opt_lya_fit_width_min = ps->GetScoped<Float64>("lyafit.widthfitmin");
-    m_opt_lya_fit_width_max = ps->GetScoped<Float64>("lyafit.widthfitmax");
-    m_opt_lya_fit_width_step = ps->GetScoped<Float64>("lyafit.widthfitstep");
-    m_opt_lya_fit_delta_min = ps->GetScoped<Float64>("lyafit.deltafitmin");
-    m_opt_lya_fit_delta_max = ps->GetScoped<Float64>("lyafit.deltafitmax");
-    m_opt_lya_fit_delta_step = ps->GetScoped<Float64>("lyafit.deltafitstep");
   }
 }
+
 /**
  * @brief CLineModelFitting::setLyaProfile
  * If a Lya line is present with SYMIGM profile, fit igmIdx
@@ -93,13 +84,11 @@ CLineRatioManager::CLineRatioManager(
  * below Lya)
  */
 
-void CLineRatioManager::setLyaProfile(
-    Float64 redshift, const CLineCatalog::TLineVector &catalog) {
-  auto idxLineIGM_ = m_Elements.getIgmLinesIndices();
-  auto const idxEltIGM = std::move(idxLineIGM_.front());
-  std::vector<TInt32List> idxLineIGM(
-      std::make_move_iterator(idxLineIGM_.begin() + 1),
-      std::make_move_iterator(idxLineIGM_.end()));
+void CLineRatioManager::setLyaProfile(Float64 redshift,
+                                      const TLineVector &catalog) {
+  TInt32List idxEltIGM;
+  std::vector<TInt32List> idxLineIGM;
+  std::tie(idxEltIGM, idxLineIGM) = m_Elements.getIgmLinesIndices();
 
   if (idxEltIGM.empty())
     return;
@@ -108,191 +97,76 @@ void CLineRatioManager::setLyaProfile(
   Int32 idxLyaE = idxEltIGM.front();
   Int32 idxLineLyaE = idxLineIGM.front().front();
 
-  if (!m_Elements[idxLyaE]->IsOutsideLambdaRange(idxLineLyaE)) {
-    const auto &profile =
-        m_Elements[idxLyaE]->m_Lines[idxLineLyaE].GetProfile();
-    if (profile.isAsym())
-      setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
-  }
+  const auto &profile =
+      m_Elements[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
+  if (profile->isAsym())
+    setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
 
   for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
     const auto &Elt = m_Elements[idxEltIGM[i]];
-    if (!Elt->IsOutsideLambdaRange()) {
-      TInt32List &idxLine = idxLineIGM[i];
-      auto end =
-          std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-            return !Elt->m_Lines[idx].GetProfile().isSymIgm();
-          });
-      idxLine.erase(end, idxLine.end());
-      if (!idxLine.empty())
-        setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
-    }
+    TInt32List &idxLine = idxLineIGM[i];
+    auto end = std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
+      return !Elt->GetLines()[idx].GetProfile()->isSymIgm();
+    });
+    idxLine.erase(end, idxLine.end());
+    if (!idxLine.empty())
+      setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
   }
 }
 
-void CLineRatioManager::setAsymProfile(
-    Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
-    const CLineCatalog::TLineVector &catalog) {
+void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
+                                       Float64 redshift,
+                                       const TLineVector &catalog) {
   Int32 lineIndex = getLineIndexInCatalog(idxLyaE, idxLineLyaE, catalog);
   if (lineIndex == undefIdx)
     return;
 
   // finding or setting the correct profile
   CLineProfile_ptr profile;
-  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile().isAsymFit())
+  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile()->isAsymFit())
     // convert asymfit to asymfixed profile
     profile = dynamic_cast<const CLineProfileASYMFIT *>(
-                  &catalog[lineIndex].GetProfile())
+                  catalog[lineIndex].GetProfile().get())
                   ->cloneToASYM();
-  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
+  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile()->isAsymFixed())
     // convert asymfixed to asymfit
-    profile =
-        dynamic_cast<const CLineProfileASYM *>(&catalog[lineIndex].GetProfile())
-            ->cloneToASYMFIT();
+    profile = dynamic_cast<const CLineProfileASYM *>(
+                  catalog[lineIndex].GetProfile().get())
+                  ->cloneToASYMFIT();
   else
-    profile = catalog[lineIndex].GetProfile().Clone();
+    profile = catalog[lineIndex].GetProfile()->Clone();
 
-  bool doasymfit = profile->isAsymFit();
-
-  m_Elements[idxLyaE]->m_Lines[idxLineLyaE].SetProfile(std::move(profile));
-
-  if (!doasymfit)
-    return;
-
-  // find the best width and asym coeff. parameters
-  TAsymParams bestfitParams = fitAsymParameters(redshift, idxLyaE, idxLineLyaE);
-
-  // set the associated Lya members in the element definition
-  m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
-}
-
-TAsymParams CLineRatioManager::fitAsymParameters(Float64 redshift,
-                                                 Int32 idxLyaE,
-                                                 const Int32 &idxLineLyaE) {
-
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-  // 3. find the best width and asym coeff. parameters
-  Float64 widthCoeffStep = m_opt_lya_fit_width_step;
-  Float64 widthCoeffMin = m_opt_lya_fit_width_min;
-  Float64 widthCoeffMax = m_opt_lya_fit_width_max;
-  Int32 nWidthSteps =
-      int((widthCoeffMax - widthCoeffMin) / widthCoeffStep + 1.5);
-  Float64 asymCoeffStep = m_opt_lya_fit_asym_step;
-  Float64 asymCoeffMin = m_opt_lya_fit_asym_min;
-  Float64 asymCoeffMax = m_opt_lya_fit_asym_max;
-  Int32 nAsymSteps = int((asymCoeffMax - asymCoeffMin) / asymCoeffStep + 1.5);
-  Float64 deltaStep = m_opt_lya_fit_delta_step;
-  Float64 deltaMin = m_opt_lya_fit_delta_min;
-  Float64 deltaMax = m_opt_lya_fit_delta_max;
-  Int32 nDeltaSteps = int((deltaMax - deltaMin) / deltaStep + 1.5);
-
-  TAsymParams bestparams = {widthCoeffMin, asymCoeffMin, deltaMin};
-  Float64 meritMin = DBL_MAX;
-
-  TInt32List filterEltsIdxLya(1, idxLyaE);
-
-  for (Int32 iDelta = 0; iDelta < nDeltaSteps; iDelta++) {
-    Float64 delta = deltaMin + deltaStep * iDelta;
-    for (Int32 iWidth = 0; iWidth < nWidthSteps; iWidth++) {
-      Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep * iWidth;
-      for (Int32 iAsym = 0; iAsym < nAsymSteps; iAsym++) {
-        Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep * iAsym;
-        m_Elements[idxLyaE]->SetAsymfitParams(
-            {asymWidthCoeff, asymAlphaCoeff, delta});
-
-        // idxLineLyaE = -1;
-        m_Elements[idxLyaE]->fitAmplitude(
-            spectralAxis, m_model->getSpcFluxAxisNoContinuum(),
-            m_model->getContinuumFluxAxis(), redshift, idxLineLyaE);
-
-        Float64 m = 0; // TODO DV why initializing to m_dTransposeD ?;
-        if (1) {
-
-          m_model->refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
-          m = m_model->getModelErrorUnderElement(idxLyaE,
-                                                 m_model->getSpcFluxAxis());
-        } else {
-          m = getLeastSquareMeritFast(idxLyaE);
-        }
-        if (m < meritMin) {
-          meritMin = m;
-          bestparams = m_Elements[idxLyaE]->GetAsymfitParams(0);
-        }
-
-        Log.LogDebug("Fitting Lya Profile: width=%f, asym=%f, delta=%f",
-                     asymWidthCoeff, asymAlphaCoeff, delta);
-        Log.LogDebug("Fitting Lya Profile: merit=%e", m);
-        Log.LogDebug("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d", idxLyaE,
-                     idxLineLyaE);
-      }
-    }
-  }
-  Log.LogDebug("Lya Profile found: width=%f, asym=%f, delta=%f",
-               bestparams.sigma, bestparams.alpha, bestparams.delta);
-  return bestparams;
+  m_Elements[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
 }
 
 Int32 CLineRatioManager::getLineIndexInCatalog(
-    Int32 iElts, Int32 idxLine,
-    const CLineCatalog::TLineVector &catalog) const {
-  Int32 lineIndex = undefIdx;
-  lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[idxLine];
-  if (lineIndex < 0 || lineIndex >= catalog.size())
-    THROWG(INTERNAL_ERROR, "Lya idx out-of-bound");
-
-  return lineIndex;
+    Int32 iElts, Int32 idxLine, const TLineVector &catalog) const {
+  return m_Elements[iElts]->getLineIndexInCatalog(idxLine, catalog);
 }
 
 void CLineRatioManager::setSymIgmProfile(Int32 iElts,
                                          const TInt32List &idxLineIGM,
                                          Float64 redshift) {
 
-  bool fixedIGM = m_continuumManager->isContinuumComponentTplfitxx();
+  bool fixedIGM =
+      m_continuumManager->isContinuumComponentTplfitxx() &&
+      !m_continuumManager->isContFittedToNull(); // set to false when continuum
+                                                 // is fitted to null
 
-  // set to false when continuum is fitted to null
-  fixedIGM &= m_continuumManager->isContFittedToNull();
-
-  Int32 bestigmidx = fixedIGM
-                         ? m_continuumManager->getFittedMeiksinIndex()
-                         : fitAsymIGMCorrection(redshift, iElts, idxLineIGM);
-
-  m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
-}
-
-Int32 CLineRatioManager::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
-                                              const TInt32List &idxLine) {
-
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-  if (spectralAxis[0] / (1 + redshift) > RESTLAMBDA_LYA)
-    return -1;
-
-  Float64 meritMin = DBL_MAX;
-  Int32 bestIgmIdx = -1;
-
-  Int32 igmCount =
-      m_Elements[iElts]->getLineProfile(idxLine.front()).getIGMIdxCount();
-  for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
-    m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
-    m_Elements[iElts]->fitAmplitude(spectralAxis,
-                                    m_model->getSpcFluxAxisNoContinuum(),
-                                    m_model->getContinuumFluxAxis(), redshift);
-
-    m_model->refreshModelUnderElements(TInt32List(1, iElts));
-    Float64 m =
-        m_model->getModelErrorUnderElement(iElts, m_model->getSpcFluxAxis());
-
-    if (m < meritMin) {
-      meritMin = m;
-      bestIgmIdx = igmIdx;
-    }
+  if (fixedIGM) {
+    Int32 igmidx = m_continuumManager->getFittedMeiksinIndex();
+    m_Elements[iElts]->SetSymIgmFit(false);
+    m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmidx, redshift));
+  } else {
+    m_Elements[iElts]->SetSymIgmFit(true);
   }
-  return bestIgmIdx;
 }
 
 bool CLineRatioManager::init(Float64 redshift, Int32 itratio) {
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
   setLyaProfile(redshift, m_RestLineList);
+
   return false;
 }
 
@@ -390,51 +264,11 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
   return fit;
 }
 
-/**
- * \brief Get the squared difference by fast method proposed by D. Vibert
- **/
-Float64 CLineRatioManager::getLeastSquareMeritFast(Int32 idxLine) const {
-  Float64 fit = -1; // TODO restore getLeastSquareContinuumMeritFast();
-
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (idxLine != undefIdx && idxLine != iElts) {
-      continue;
-    }
-    Float64 dtm = m_Elements[iElts]->GetSumCross();
-    Float64 mtm = m_Elements[iElts]->GetSumGauss();
-    Float64 a = m_Elements[iElts]->GetFitAmplitude();
-    Float64 term1 = a * a * mtm;
-    Float64 term2 = -2. * a * dtm;
-    fit += term1 + term2;
-  }
-
-  Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit fast = %f", fit);
-  return fit;
-}
-
 void CLineRatioManager::logParameters() {
 
   Log.LogDetail(Formatter() << " m_opt_lya_forcefit" << m_opt_lya_forcefit);
   Log.LogDetail(Formatter()
                 << " m_opt_lya_forcedisablefit" << m_opt_lya_forcedisablefit);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_asym_min" << m_opt_lya_fit_asym_min);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_asym_max" << m_opt_lya_fit_asym_max);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_asym_step" << m_opt_lya_fit_asym_step);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_width_min" << m_opt_lya_fit_width_min);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_width_max" << m_opt_lya_fit_width_max);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_width_step" << m_opt_lya_fit_width_step);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_delta_min" << m_opt_lya_fit_delta_min);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_delta_max" << m_opt_lya_fit_delta_max);
-  Log.LogDetail(Formatter()
-                << " m_opt_lya_fit_delta_step" << m_opt_lya_fit_delta_step);
 }
 
 std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
@@ -443,23 +277,23 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     std::shared_ptr<const CSpectrum> inputSpc,
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineCatalog::TLineVector &restLineList)
-
-{
-
+    const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
+  std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
-    return std::make_shared<CTplratioManager>(
+    ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elements, model, inputSpc, lambdaRange,
                          continuumManager, restLineList));
   else if (lineRatioType == "tplcorr")
-    return std::make_shared<CTplCorrManager>(
+    ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elements, model, inputSpc, lambdaRange,
                         continuumManager, restLineList));
   else if (lineRatioType == "rules")
-    return std::make_shared<CRulesManager>(
+    ret = std::make_shared<CRulesManager>(
         CRulesManager(elements, model, inputSpc, lambdaRange, continuumManager,
                       restLineList));
   else
     THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
                               "supported for linemodel.lineRatioType");
+  ret->setFitter(fitter);
+  return ret;
 }

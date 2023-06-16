@@ -62,8 +62,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     std::shared_ptr<const CInputContext> inputContext,
     std::shared_ptr<COperatorResultStore> resultStore, TScopeStack &scope) {
 
-  const CSpectrum &spc = *(inputContext->GetSpectrum());
-  const CSpectrum &rebinnedSpc = *(inputContext->GetRebinnedSpectrum());
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
@@ -79,9 +77,9 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
   const bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("extinction");
+      inputContext->GetParameterStore()->GetScoped<bool>("igmfit");
   bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("ismfit");
 
   bool fft_processing =
       inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
@@ -100,18 +98,18 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
                            "implemented with photometry enabled");
 
   if (fft_processing) {
-    m_templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(
-        spc, rebinnedSpc, m_lambdaRange, m_redshifts);
+    m_templateFittingOperator =
+        std::make_shared<COperatorTemplateFittingLog>(m_redshifts);
     tplCatalog.m_logsampling = true;
   } else {
     if (use_photometry) {
       m_templateFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
-              spc, m_lambdaRange, inputContext->GetPhotBandCatalog(),
-              photometry_weight, m_redshifts);
+              inputContext->GetPhotBandCatalog(), photometry_weight,
+              m_redshifts);
     } else {
-      m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(
-          spc, m_lambdaRange, m_redshifts);
+      m_templateFittingOperator =
+          std::make_shared<COperatorTemplateFitting>(m_redshifts);
     }
     tplCatalog.m_logsampling = false;
   }
@@ -146,9 +144,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "pdfcombination");
 
-  // TODO totaly remove this option ?
-  m_opt_enableSaveIntermediateTemplateFittingResults = false;
-
   Log.LogInfo("Method parameters:");
   Log.LogInfo("    -overlapThreshold: %.3f", overlapThreshold);
   Log.LogInfo("    -component: %s", opt_spcComponent.c_str());
@@ -156,8 +151,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   Log.LogInfo("    -IGM extinction: %s", opt_extinction ? "true" : "false");
   Log.LogInfo("    -ISM dust-fit: %s", opt_dustFit ? "true" : "false");
   Log.LogInfo("    -pdfcombination: %s", m_opt_pdfcombination.c_str());
-  Log.LogInfo("    -saveintermediateresults: %d",
-              (int)m_opt_enableSaveIntermediateTemplateFittingResults);
   Log.LogInfo("");
 
   if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0) {
@@ -176,9 +169,8 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       std::shared_ptr<const CTemplate> tpl =
           tplCatalog.GetTemplate(category, j);
 
-      Solve(resultStore, fft_processing ? rebinnedSpc : spc, tpl,
-            overlapThreshold, maskList, _type, opt_interp, opt_extinction,
-            opt_dustFit);
+      Solve(resultStore, tpl, overlapThreshold, maskList, _type, opt_interp,
+            opt_extinction, opt_dustFit);
 
       storeResult = true;
     }
@@ -221,7 +213,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
 }
 
 void CTemplateFittingSolve::Solve(
-    std::shared_ptr<COperatorResultStore> resultStore, const CSpectrum &spc,
+    std::shared_ptr<COperatorResultStore> resultStore,
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     std::vector<CMask> maskList, EType spctype, std::string opt_interp,
     bool opt_extinction, bool opt_dustFitting) {
@@ -238,7 +230,9 @@ void CTemplateFittingSolve::Solve(
     _ntype = 3;
   }
 
-  const CSpectrum::EType save_spcType = spc.GetType();
+  std::vector<CSpectrum::EType> save_spcTypes;
+  for (auto spc : Context.getSpectra())
+    save_spcTypes.push_back(spc->GetType());
   const CSpectrum::EType save_tplType = tpl->GetType();
 
   for (Int32 i = 0; i < _ntype; i++) {
@@ -247,7 +241,8 @@ void CTemplateFittingSolve::Solve(
     } else {
       _spctype = static_cast<CSpectrum::EType>(spctype);
     }
-    spc.SetType(_spctype);
+    for (auto spc : Context.getSpectra())
+      spc->SetType(_spctype);
     tpl->SetType(_spctype);
     tpl->setRebinInterpMethod(opt_interp);
 
@@ -272,7 +267,7 @@ void CTemplateFittingSolve::Solve(
     // Compute merit function
     auto templateFittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
-            m_templateFittingOperator->Compute(tpl, overlapThreshold, maskList,
+            m_templateFittingOperator->Compute(tpl, overlapThreshold,
                                                opt_interp, opt_extinction,
                                                opt_dustFitting));
 
@@ -282,41 +277,11 @@ void CTemplateFittingSolve::Solve(
     // Store results
     resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
                                               templateFittingResult);
-
-    // Save intermediate templatefitting results
-    if (m_opt_enableSaveIntermediateTemplateFittingResults &&
-        templateFittingResult->ChiSquareIntermediate.size() > 0 &&
-        templateFittingResult->ChiSquareIntermediate.size() ==
-            templateFittingResult->Redshifts.size()) {
-      const Int32 nz = templateFittingResult->Redshifts.size();
-      const Int32 nISM = templateFittingResult->ChiSquareIntermediate[0].size();
-      if (nISM > 0) {
-        const Int32 nIGM =
-            templateFittingResult->ChiSquareIntermediate[0][0].size();
-        for (Int32 kism = 0; kism < nISM; kism++) {
-          for (Int32 kigm = 0; kigm < nIGM; kigm++) {
-            std::shared_ptr<CTemplateFittingResult>
-                result_chisquare_intermediate =
-                    std::make_shared<CTemplateFittingResult>(nz);
-            result_chisquare_intermediate->Redshifts =
-                templateFittingResult->Redshifts;
-            for (Int32 kz = 0; kz < nz; kz++)
-              result_chisquare_intermediate->ChiSquare[kz] =
-                  templateFittingResult->ChiSquareIntermediate[kz][kism][kigm];
-
-            std::string resname =
-                (boost::format("%s_intermediate_ism%d_igm%d") %
-                 scopeStr.c_str() % kism % kigm)
-                    .str();
-            resultStore->StoreScopedPerTemplateResult(
-                tpl, resname.c_str(), result_chisquare_intermediate);
-          }
-        }
-      }
-    }
   }
 
-  spc.SetType(save_spcType);
+  int i = 0;
+  for (auto spc : Context.getSpectra())
+    spc->SetType(save_spcTypes[i++]);
   tpl->SetType(save_tplType);
 }
 
@@ -487,23 +452,24 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[i].second->FittedTplMerit = ChiSquare;
-    extremaResult->m_ranked_candidates[i].second->FittedTplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMerit =
+        ChiSquare;
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplName = tplName;
-    extremaResult->m_ranked_candidates[i].second->FittedTplMeiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplName = tplName;
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplEbmvCoeff =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplEbmvCoeff =
         TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitude =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplAmplitude =
         TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeError =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplAmplitudeError =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplDtm =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplDtM =
         TplFitResult->FitDtM[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplMtm =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMtM =
         TplFitResult->FitMtM[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplLogPrior =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplLogPrior =
         TplFitResult->LogPrior[idx];
 
     Float64 FitSNR = NAN;
@@ -520,7 +486,9 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
         m_templateFittingOperator->ComputeSpectrumModel(
             tpl, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-            overlapThreshold);
+            overlapThreshold,
+            0); // TODO [multiobs] save multiple models , there should be a loop
+                // here, only model N°0 is recorded
 
     if (spcmodelPtr == nullptr)
       THROWG(INTERNAL_ERROR, "Could not "

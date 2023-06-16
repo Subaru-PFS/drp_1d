@@ -62,8 +62,8 @@ public:
                         opt_pdfcombination, evidence){};
 
 private:
-  std::string tplratioName = "undefined";
-  std::string tplcontinuumName = "undefined";
+  std::string tplratioName = undefStr;
+  std::string tplcontinuumName = undefStr;
   Float64 sigma = NAN;
   Float64 snrHa = NAN;
   Float64 lfHa = NAN;

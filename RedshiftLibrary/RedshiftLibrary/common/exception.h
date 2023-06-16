@@ -48,6 +48,8 @@
 
 #define THROWG(code, msg)                                                      \
   throw GlobalException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
+#define THROWI(code, msg)                                                      \
+  throw InternalException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
 namespace NSEpic {
 
 class AmzException : public std::exception {
@@ -92,6 +94,13 @@ public:
   GlobalException(ErrorCode ec, const std::string &message,
                   const char *filename_, const char *method_,
                   int line_) noexcept;
+};
+
+class InternalException : public AmzException {
+public:
+  InternalException(ErrorCode ec, const std::string &message,
+                    const char *filename_, const char *method_,
+                    int line_) noexcept;
 };
 
 } // namespace NSEpic

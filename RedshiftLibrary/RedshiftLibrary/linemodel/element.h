@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineprofile.h"
@@ -51,6 +52,26 @@
 
 namespace NSEpic {
 
+struct TLineModelElementParam {
+
+  TLineModelElementParam(TLineVector lines, Float64 velocityEmission,
+                         Float64 velocityAbsorption,
+                         TInt32List lineCatalogIndexes);
+
+  Float64 m_VelocityEmission = NAN;
+  Float64 m_VelocityAbsorption = NAN;
+  TFloat64List m_FittedAmplitudes;
+  TFloat64List m_FittedAmplitudeErrorSigmas;
+  TFloat64List m_NominalAmplitudes;
+  TFloat64List m_Offsets;
+  TLineVector m_Lines;
+  TInt32List m_LineCatalogIndexes;
+  std::string m_fittingGroupInfo;
+  TPolynomCoeffs m_ampOffsetsCoeffs;
+};
+
+using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
+
 /**
  * \ingroup Redshift
  */
@@ -58,11 +79,10 @@ class CLineModelElement {
   enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 
 public:
-  CLineModelElement(std::vector<CLine> rs, const std::string &widthType,
-                    const Float64 velocityEmission,
-                    const Float64 velocityAbsorption,
-                    TFloat64List nominalAmplitudes, Float64 nominalWidth,
-                    TInt32List catalogIndexes);
+  CLineModelElement(const TLineModelElementParam_ptr elementParam,
+                    const std::string &widthType);
+
+  void reset();
 
   Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -71,9 +91,12 @@ public:
   void getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift,
                                        Float64 &mu, Float64 &sigma,
                                        bool doAsymfitdelta = true) const;
-
-  const std::string &GetElementTypeTag() const;
-
+  Int32 GetElementType() const {
+    return m_ElementParam->m_Lines.front().GetType();
+  };
+  bool GetIsEmission() const {
+    return m_ElementParam->m_Lines.front().GetIsEmission();
+  };
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange);
   TInt32RangeList getSupport() const;
@@ -82,6 +105,8 @@ public:
                                   const CSpectrumSpectralAxis &spectralAxis,
                                   Float64 redshift,
                                   const TFloat64Range &lambdaRange);
+  void SetOutsideLambdaRange();
+
   TInt32Range getSupportSubElt(Int32 subeIdx) const;
   TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx) const;
 
@@ -92,31 +117,20 @@ public:
   Float64 GetContinuumAtCenterProfile(
       Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
       Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
-      const TPolynomCoeffs &line_polynomCoeffs) const;
+      bool enableAmplitudeOffsets = false) const;
 
-  void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
-                    const CSpectrumFluxAxis &fluxAxis,
-                    const CSpectrumFluxAxis &continuumfluxAxis,
-                    Float64 redshift, Int32 lineIdx = undefIdx);
-  void fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis &spectralAxis,
-                                   const CSpectrumFluxAxis &fluxAxis,
-                                   const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Float64 redshift, Int32 lineIdx = undefIdx,
-                                   bool enableOffsetFitting = true,
-                                   Float64 step = 25., Float64 min = -400.,
-                                   Float64 max = 400.);
   Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                            Float64 continuumFlux,
                            Int32 kLineSupport = -1) const;
   Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift,
                                          Float64 continuumFlux) const;
+  Float64 GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
+                                   Float64 continuumFlux) const;
   Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
                                             Float64 continuumFluxUnscale) const;
-  Float64 GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift,
-                                            Float64 continuumFlux) const;
   Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
                                  Float64 continuumFlux,
-                                 Float64 continuumFluxDerivZ) const;
+                                 Float64 continuumFluxDerivZ = 0.0) const;
 
   void addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                           CSpectrumFluxAxis &modelfluxAxis,
@@ -131,8 +145,12 @@ public:
   void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                          const CSpectrumFluxAxis &continuumfluxAxis,
                          Int32 lineIdx = undefIdx) const;
+  void initSpectrumModelPolynomial(CSpectrumFluxAxis &modelfluxAxis,
+                                   const CSpectrumSpectralAxis &spcAxis,
+                                   Int32 lineIdx) const;
 
   Float64 GetNominalAmplitude(Int32 subeIdx) const;
+  Float64 GetMaxNominalAmplitude() const;
   bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
   Float64 GetFittedAmplitude(Int32 subeIdx) const;
   Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx) const;
@@ -140,16 +158,17 @@ public:
   Float64 GetElementError() const;
 
   void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR);
-  void SetFittedAmplitude(Float64 A, Float64 SNR);
+  void SetElementAmplitude(Float64 A, Float64 SNR);
   void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
 
   bool SetAbsLinesLimit(Float64 limit);
+  Float64 GetAbsLinesLimit() const;
 
   void SetVelocityEmission(Float64 vel);
-  Float64 GetVelocityEmission() const;
+  Float64 getVelocityEmission() const;
   void SetVelocityAbsorption(Float64 vel);
-  Float64 GetVelocityAbsorption() const;
-  Float64 GetVelocity() const;
+  Float64 getVelocityAbsorption() const;
+  Float64 getVelocity() const;
   void setVelocity(Float64 vel);
 
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
@@ -159,24 +178,29 @@ public:
                    Int32 indx = undefIdx); // undefIdx means setting for all
   void SetSymIgmParams(const TSymIgmParams &params,
                        Int32 indx = undefIdx); // undefIdx means setting for all
+  void SetSymIgmFit(bool val = true,
+                    Int32 indx = undefIdx); // undefIdx means setting for all
   TAsymParams GetAsymfitParams(Int32 asymIdx = 0) const;
   TSymIgmParams GetSymIgmParams(Int32 asymIdx = 0) const;
 
   void resetAsymfitParams();
   Int32 findElementIndex(Int32 LineCatalogIndex) const;
   Int32 findElementIndex(const std::string &LineTagStr) const;
+  Int32 getLineIndexInCatalog(Int32 idxLine, const TLineVector &catalog) const;
+
   const TInt32List &getIgmLinesIndices() const { return m_asymLineIndices; };
-  const CLineProfile &getLineProfile(Int32 lineIdx) const;
+  const CLineProfile_ptr &getLineProfile(Int32 lineIdx) const;
 
   Float64 GetSignFactor(Int32 subeIdx) const;
 
   Int32 GetSize() const;
-  std::vector<CLine> GetLines() const;
+  const TLineVector &GetLines() const { return m_ElementParam->m_Lines; };
+
   const std::string &GetLineName(Int32 subeIdx) const;
   bool IsOutsideLambdaRange() const;
-  Float64 GetLineWidth(Float64 lambda, Float64 z = 0.,
-                       bool isEmission = 0) const;
+  Float64 GetLineWidth(Float64 lambda, bool isEmission = 0) const;
   bool IsOutsideLambdaRange(Int32 subeIdx) const;
+  void SetOutsideLambdaRangeList(Int32 subeIdx);
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,
                                  Float64 x0, Float64 sigma,
@@ -188,44 +212,50 @@ public:
   void SetDtmFree(Float64 val);
   Float64 GetSumGauss() const;
   void SetSumGauss(Float64 val);
-  Float64 GetFitAmplitude() const;
+  const std::string &GetFittingGroupInfo() const;
+  void SetFittingGroupInfo(const std::string &val);
+
+  const TPolynomCoeffs &GetPolynomCoeffs() const;
+  void SetPolynomCoeffs(TPolynomCoeffs pCoeffs);
+
+  void SetAllOffsetsEnabled(Float64 val);
+  void SetOffset(Int32 lineIdx, Float64 val);
+  Float64 GetOffset(Int32 lineIdx) const {
+    return m_ElementParam->m_Offsets[lineIdx];
+  }
+
+  void SetLineProfile(Int32 lineIdx, CLineProfile_ptr &&profile);
+
+  bool isLineActiveOnSupport(Int32 line, Int32 lineIdx) const;
+  Int32 getStartNoOverlap(Int32 lineIdx) const {
+    return m_StartNoOverlap[lineIdx];
+  }
+  Int32 getEndNoOverlap(Int32 lineIdx) const { return m_EndNoOverlap[lineIdx]; }
+  Int32 getSignFactor(Int32 lineIdx) const { return m_SignFactors[lineIdx]; }
 
   void debug(std::ostream &os) const;
-
-  std::vector<CLine> m_Lines; // only used in multiline for now... tbd: should
-                              // be moved elsewhere ?
-  TInt32List m_LineCatalogIndexes;
-  std::string m_fittingGroupInfo;
   void dumpElement(std::ostream &os) const;
 
 protected:
-  TLineWidthType m_LineWidthType;
-  Float64 m_NominalWidth; // relevant only for LSF GaussianConstantWidth
+  const TLineModelElementParam_ptr m_ElementParam;
 
-  Float64 m_VelocityEmission = NAN;
-  Float64 m_VelocityAbsorption = NAN;
+  TLineWidthType m_LineWidthType;
 
   Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;
-  std::string m_ElementType;
-
-  TInt32List m_asymLineIndices; // corresponds to indices of asymmetric lines,
-                                // mainly LyA. Currently max 1 asymfit is found
-                                // per linecatalog
 
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;
   Float64 m_dtmFree =
       0.0; // dtmFree is the non-positive-constrained version of sumCross
-  Float64 m_fitAmplitude = NAN;
+
   const Float64 m_speedOfLightInVacuum = SPEED_OF_LIGHT_IN_VACCUM;
   std::shared_ptr<const CLSF> m_LSF;
 
   std::vector<TInt32List> m_LineIsActiveOnSupport;
   TFloat64List m_SignFactors;
-  TFloat64List m_FittedAmplitudes;
-  TFloat64List m_FittedAmplitudeErrorSigmas;
-  TFloat64List m_NominalAmplitudes;
+
+  TInt32List m_asymLineIndices;
 
   Float64 m_absLinesLimit;
 

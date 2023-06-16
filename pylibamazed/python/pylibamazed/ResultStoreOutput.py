@@ -45,6 +45,8 @@ from collections import defaultdict
 from pylibamazed.redshift import (PC_Get_Float64Array,
                                   PC_Get_Float32Array,
                                   PC_Get_Int32Array,
+                                  PC_Get_BoolArray,
+                                  PC_Get_MaskArray,
                                   CLog, ErrorCode)
 from pylibamazed.Exception import AmazedError,APIException
 
@@ -67,7 +69,11 @@ class ResultStoreOutput(AbstractOutput):
             operator_result_name = data_spec.OperatorResult_name.replace("[object_type]","")
         else:
             operator_result_name = data_spec.OperatorResult_name
-        attr = getattr(operator_result, operator_result_name)
+        if "." in operator_result_name:
+            o = data_spec.OperatorResult_name.split(".")
+            attr = getattr(getattr(operator_result,o[0]),o[1])
+        else:    
+            attr = getattr(operator_result, operator_result_name)
         attr_type = type(attr).__name__
         if attr_type == "TMapFloat64":
             return attr[object_type]
@@ -77,6 +83,10 @@ class ResultStoreOutput(AbstractOutput):
             return PC_Get_Float32Array(attr)
         elif attr_type == "TInt32List":
             return PC_Get_Int32Array(attr)
+        elif attr_type == "TBoolList":
+            return PC_Get_BoolArray(attr)
+        elif attr_type == "CMask":
+            ret = PC_Get_MaskArray(attr.getMaskList())
         else:
             return attr
 
@@ -116,6 +126,13 @@ class ResultStoreOutput(AbstractOutput):
             or_name = attribute_info.OperatorResult_name.replace("[object_type]", "")
             if hasattr(operator_result, or_name):
                 return object_type in getattr(operator_result, or_name)
+            else:
+                return False
+        elif "." in attribute_info.OperatorResult_name:
+            o = attribute_info.OperatorResult_name.split(".")
+            has_o = hasattr(operator_result, o[0])
+            if has_o:
+                return hasattr(getattr(operator_result,o[0]),o[1])
             else:
                 return False
         else:

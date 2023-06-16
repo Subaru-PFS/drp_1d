@@ -65,9 +65,8 @@ Float64 CLineProfileLOR::GetLineFlux(Float64 x0, Float64 sigma,
   return A * sigma * M_PI;
 }
 
-Float64 CLineProfileLOR::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
-                                              Float64 redshift,
-                                              Float64 sigma) const {
+Float64 CLineProfileLOR::GetLineProfileDerivX0(Float64 x, Float64 lambda0,
+                                               Float64 sigma) const {
   THROWG(INTERNAL_ERROR, "Deriv for Z not IMPLEMENTED for profile LOR");
 }
 

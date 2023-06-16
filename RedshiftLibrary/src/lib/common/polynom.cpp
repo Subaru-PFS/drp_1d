@@ -36,39 +36,69 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
-#define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/polynom.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
-#include "RedshiftLibrary/continuum/indexes.h"
-#include "RedshiftLibrary/line/catalog.h"
-#include <cmath>
+using namespace NSEpic;
 
-namespace NSEpic {
+TPolynomCoeffs::TPolynomCoeffs(const TFloat64List &coeffs) {
+  if (coeffs.size() <= degree)
+    THROWG(INTERNAL_ERROR,
+           Formatter()
+               << "input array too small to initialize a polynomial of degree "
+               << degree);
+  a0 = coeffs[0];
+  a1 = coeffs[1];
+  a2 = coeffs[2];
+}
 
-struct CContinuumModelSolution {
+Float64 TPolynomCoeffs::getValue(Float64 x) const {
+  Float64 val = a0;
+  val += a1 * x;
+  val += a2 * x * x;
+  return val;
+}
 
-  // template continuum
-  std::string tplName;
-  Float64 tplAmplitude = NAN;
-  Float64 tplAmplitudeError = NAN;
-  Float64 tplEbmvCoeff = NAN;
-  Int32 tplMeiksinIdx = -1;
-  Float64 tplRedshift = NAN;
+Float64 TPolynomCoeffs::getValueAndGrad(Float64 x, TFloat64List &grad) const {
+  grad.resize(degree + 1);
+  grad[0] = 1.0;
+  grad[1] = x;
+  grad[2] = x * x;
+  return grad[0] * a0 + grad[1] * a1 + grad[2] * a2;
+}
 
-  Float64 tplMerit = NAN;
-  Float64 tplMeritPhot = NAN;
-  Float64 tplDtm = NAN;
-  Float64 tplMtm = NAN;
-  Float64 tplLogPrior = NAN;
+constexpr Int32 TPolynomCoeffs::degree;
 
-  // polynom
-  TFloat64List pCoeffs;
-};
+void CPolynomCoeffsNormalized::getCoeffs(Float64 &a0_, Float64 &a1_,
+                                         Float64 &a2_) const {
+  a0_ = a0 + a1 * x0red + a2 * x0red * x0red;
+  a1_ = (a1 + 2 * a2 * x0red) / scale;
+  a2_ = a2 / (scale * scale);
+}
 
-} // namespace NSEpic
+void CPolynomCoeffsNormalized::setCoeffs(Float64 a0_, Float64 a1_,
+                                         Float64 a2_) {
+  a2 = a2_ * scale * scale;
+  a1 = a1_ * scale - 2 * a2 * x0red;
+  a0 = a0_ - a1 * x0red - a2 * x0red * x0red;
+}
 
-#endif
+Float64 CPolynomCoeffsNormalized::getValue(Float64 x) const {
+  Float64 xred = x / scale + x0red;
+  Float64 val = a0;
+  val += a1 * xred;
+  val += a2 * xred * xred;
+  return val;
+}
+
+Float64 CPolynomCoeffsNormalized::getValueAndGrad(Float64 x,
+                                                  TFloat64List &grad) const {
+  Float64 xred = x / scale + x0red;
+  grad.resize(degree + 1);
+  grad[0] = 1.0;
+  grad[1] = xred;
+  grad[2] = xred * xred;
+  return grad[0] * a0 + grad[1] * a1 + grad[2] * a2;
+}

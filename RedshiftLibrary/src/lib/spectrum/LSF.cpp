@@ -58,7 +58,7 @@ Float64 CLSF::GetProfileVal(Float64 lambda, Float64 lambda0,
   return m_profile->GetLineProfileVal(lambda, lambda0, sigma0);
 }
 
-const CLineProfile &CLSF::GetProfile() const { return *m_profile; }
+const CLineProfile_ptr &CLSF::GetProfile() const { return m_profile; }
 
 TFloat64List CLSF::getNormalizedProfileVector(TFloat64List lambda,
                                               Float64 lambda0) const {

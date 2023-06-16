@@ -52,7 +52,8 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxCorrectionMeiksin,
                                   VecTFloat64List, VecMeiksinCorrection,
                                   CSpectrumFluxCorrectionCalzetti, CalzettiCorrection,
-                                  GlobalException, ErrorCode)
+                                  GlobalException, ErrorCode, undefStr)
+
 import numpy as np
 from astropy.io import fits, ascii
 import glob
@@ -66,6 +67,42 @@ zflag = CFlagWarning.GetInstance()
 def _get_linecatalog_id(row):
     wl = round(row.WaveLength,2)
     return row.Name + "_" + str(wl) + "_" + row.Type
+
+def load_reliability_model(model_path,params_dict, object_type):
+    try:
+        # to avoid annoying messages about gpu/cuda availability
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+        from tensorflow.keras import models
+        import keras
+    except ImportError:
+        raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
+    ret = dict()
+    model_ha = h5py.File(model_path).attrs
+    keras_model_version = model_ha["keras_version"].split(".")
+    keras_system_version = keras.__version__.split(".")
+    if keras_model_version[0] > keras_system_version[0]:
+        raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,
+                           f"Tensorflow major version >= {keras_model_version[0]} required")
+    redshift_range = [model_ha["zrange_min"],
+                      model_ha["zrange_max"]]
+    redshift_range_step = model_ha["zrange_step"]
+    s_redshift_range = params_dict[object_type]["redshiftrange"]
+    s_redshift_range_step = params_dict[object_type]["redshiftstep"]
+    if s_redshift_range != redshift_range:
+        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift range of reliability model must be identical to solver one : {redshift_range} != {s_redshift_range}")
+    if s_redshift_range_step != redshift_range_step:
+        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift step of reliability model must be identical to solver one : {redshift_range_step} != {s_redshift_range_step}")
+    model = models.load_model(model_path)
+    ret["model"] = model
+    ret["parameters"] = dict()
+    ret["parameters"]["zgrid_end"]=model_ha["zgrid_end"]
+    ret["parameters"]["zrange_step"]=model_ha["zrange_step"]
+    if "classes" in model_ha:
+        ret["parameters"]["classes"]=json.loads(model_ha["classes"])
+    else:
+        ret["parameters"]["classes"]=["failure","success"]
+    # TODO add classes here
+    return ret
 
 
 class CalibrationLibrary:
@@ -173,13 +210,16 @@ class CalibrationLibrary:
         nsigmasupport = self.parameters[object_type][method]["linemodel"]["nsigmasupport"]
         self.line_catalogs[object_type][method] = CLineCatalog(nsigmasupport)
         try:
-            line_catalog = pd.read_csv( line_catalog_file, sep='\t',dtype={"WaveLength":float,
+            line_catalog = pd.read_csv( line_catalog_file, sep='\t',dtype={"WaveLength":float,"AmplitudeGroupName":str,
                                                                            "EnableFitWaveLengthOffset":bool})
         except pd.errors.ParserError:
             raise AmazedError(ErrorCode.BAD_FILEFORMAT, "bad line catalog {0} cause :{1}".format(line_catalog_file, e))
         except Exception as e:
             raise Exception("bad line catalog " + line_catalog_file + " cause :" + "{}".format(e))
         
+        # force "-1" to undefStr (for compatibility)
+        line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName" ] = undefStr
+
         enableIGM = self.parameters[object_type][method]["linemodel"]["igmfit"]
 
         #here should go the change of profiles if igm is applied
@@ -308,7 +348,12 @@ class CalibrationLibrary:
         meiksinCorrectionCurves = VecMeiksinCorrection()
         for z in zbins[1:]: 
             filename = f"Meiksin_Var_curves_{z}.txt"
-            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename), names=columns)
+            file_path = os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename)
+            if not os.path.isfile(file_path):#mainly for unit tests
+                continue
+            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin_v3.1", filename))
+            columns = columns[:len(meiksin_df.columns)]
+            meiksin_df.rename_columns(tuple(meiksin_df.columns), tuple(columns))
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)
@@ -335,36 +380,14 @@ class CalibrationLibrary:
 	
                 # Load the reliability model
                 if self.parameters[object_type].get("enable_reliability"):
-                    try:
-                        # to avoid annoying messages about gpu/cuda availability
-                        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-                        from tensorflow.keras import models
-                        import keras
-                    except ImportError:
-                        raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
-
+                    
                     model_path = os.path.join(self.calibration_dir,
                                               self.parameters[object_type]["reliability_model"])
-                    model_ha = h5py.File(model_path).attrs
-                    keras_model_version = model_ha["keras_version"].split(".")
-                    keras_system_version = keras.__version__.split(".")
-                    if keras_model_version[0] > keras_system_version[0]:
-                        raise APIException(ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,
-                                           f"Tensorflow major version >= {keras_model_version[0]} required")
-                    redshift_range = [model_ha["zrange_min"],
-                                      model_ha["zrange_max"]]
-                    redshift_range_step = model_ha["zrange_step"]
-                    s_redshift_range = self.parameters[object_type]["redshiftrange"]
-                    s_redshift_range_step = self.parameters[object_type]["redshiftstep"]
-                    if s_redshift_range != redshift_range:
-                        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift range of reliability model must be identical to solver one : {redshift_range} != {s_redshift_range}")
-                    if s_redshift_range_step != redshift_range_step:
-                        raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift step of reliability model must be identical to solver one : {redshift_range_step} != {s_redshift_range_step}")
-                    model = models.load_model(model_path)
-                    self.reliability_models[object_type] = model
-                    self.reliability_parameters[object_type] = dict()
-                    self.reliability_parameters[object_type]["zgrid_end"]=model_ha["zgrid_end"]
-                    self.reliability_parameters[object_type]["zrange_step"]=model_ha["zrange_step"]
+                    mp = load_reliability_model(model_path,
+                                                self.parameters,
+                                                object_type)
+                    self.reliability_models[object_type] = mp["model"]
+                    self.reliability_parameters[object_type] = mp["parameters"]
 
             if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
                 self.load_lsf()

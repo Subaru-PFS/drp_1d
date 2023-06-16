@@ -43,24 +43,21 @@ public:
     m_type = "TLineModelResult";
   }
 
-  void updateFromContinuumModelSolution(const CContinuumModelSolution &cms,
-                                        bool all);
+  void updateFromContinuumModelSolution(std::shared_ptr<const CTplModelSolution> cms);
 
   void updateFromLineModelSolution(const CLineModelSolution &cms);
 
-  void updateContinuumFromModel(
-      const std::shared_ptr<const CLineModelFitting> &lmel);
   void
   updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &lmel);
 
   void updateFromModel(const std::shared_ptr<const CLineModelFitting> &lmel,
                        const std::shared_ptr<const CLineModelResult> &lmresult,
-                       bool estimateLeastSquareFast, int indx, int i_2pass);
+                       bool estimateLeastSquareFast, int indx);
 
   Float64 MeritContinuum; // best continum  chi2
   Float64 Merit;          // fullmodel best chi2
 
-  Float64 mTransposeM;   // extrema model norm
+
   Float64 CorrScaleMarg; // extrema scale marg. correction
   Int32 NDof;            // non zero elements in the lambdarange
   Float64 snrHa;
@@ -69,16 +66,11 @@ public:
   Float64 lfOII;
 
   Float64 NLinesOverThreshold;
-  Float64 LogArea;                 // log area for each extrema
-  Float64 LogAreaCorrectedExtrema; // corrected z for each extrema
-  Float64 SigmaZ;                  // sigmaz for each extrema
 
   Float64 StrongELSNR;
   std::unordered_set<std::string> StrongELSNRAboveCut;
   Float64 bic; // bayesian information criterion for each extrema
-  std::vector<CContinuumIndexes::TContinuumIndexList>
-      ContinuumIndexes;   // continuum indexes for each extrema
-  CMask OutsideLinesMask; // Mask with 0 under the lines and 1 anywhere else
+
   Float64 OutsideLinesSTDFlux; // STD measured on the spectrum continuum
                                // substracted outside lines
   Float64
@@ -87,24 +79,15 @@ public:
   // line width
   Float64 Elv;            // emission line width
   Float64 Alv;            // absorption line width
-  TFloat64List GroupsELv; // per fitting group line width , EL
-  TFloat64List GroupsALv; // per fitting group line width , AL
 
-  // template continuum (+ base class)
-  Float64
-      FittedTplRedshift; // Redshift for the best template fitted for continuum
-  TFloat64List FittedTplpCoeffs; // poly coeffs for the best template fitted for
-                                 // continuum
-
+  CMask OutsideLinesMask;
   // template ratio
-  std::string FittedTplratioName = "undefined"; // Name of the best template
+  std::string FittedTplratioName = undefStr; // Name of the best template
                                                 // fitted for tplcorr/tplratio
-  Float64 FittedTplratioAmplitude = NAN; // amp of the best template fitted for
+  Float64 FittedTplratioAmplitudeEm = NAN; // amp of the best template fitted for
                                          // tplcorr/tplratio
-  Float64 FittedTplratioDtm =
-      NAN; // dtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioMtm =
-      NAN; // mtm of the best template fitted for tplcorr/tplratio
+  Float64 FittedTplratioAmplitudeAbs = NAN;
+
   Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
                                         // fitted for tplcorr/tplratio
 };

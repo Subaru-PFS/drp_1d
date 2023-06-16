@@ -78,14 +78,13 @@ public:
 
   void initParameters();
   void initMembers();
-  void LoadCatalog(const CLineCatalog::TLineVector &restLineList);
-  void LoadCatalogOneMultiline(const CLineCatalog::TLineVector &restLineList);
-  void
-  LoadCatalogTwoMultilinesAE(const CLineCatalog::TLineVector &restLineList);
+  void LoadCatalog(const TLineVector &restLineList);
+  void LoadCatalogOneMultiline(const TLineVector &restLineList);
+  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList);
 
   void LogCatalogInfos();
 
-  void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
+  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
   void setContinuumComponent(std::string component);
   const std::string &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
@@ -105,22 +104,17 @@ public:
   void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
   void setVelocityEmissionByGroup(Float64 vel, const TInt32List &inds);
 
-  void setVelocity(Float64 vel, Int32 lineType);
-  void setVelocity(Float64 vel, Int32 idxElt, Int32 lineType);
-
   Float64 GetVelocityEmission() const;
   Float64 GetVelocityAbsorption() const;
-  Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
-
-  bool initModelAtZ(Float64 redshift,
-                    const CSpectrumSpectralAxis &spectralAxis);
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
-              CContinuumModelSolution &continuumModelSolution,
+              CTplModelSolution &continuumModelSolution,
               Int32 contreest_iterations = 0, bool enableLogging = 0);
   TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
 
-  void SetFittingMethod(const std::string &fitMethod);
+  void SetFittingMethod(const std::string &fitMethod,
+                        bool enableAmplitudeOffsets = false,
+                        bool enableLambdaOffsetsFit = false);
   void setLineRatioType(const std::string &lineratio);
   void SetAbsLinesLimit(Float64 limit);
 
@@ -153,10 +147,10 @@ public:
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
   CLineModelElementList m_Elements;
-  std::unique_ptr<CAbstractFitter> m_fitter;
+  std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
   std::shared_ptr<const CSpectrum> m_inputSpc;
-  const CLineCatalog::TLineVector m_RestLineList;
+  const TLineVector m_RestLineList;
 
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
@@ -175,6 +169,14 @@ public:
     return m_model;
   }
   const std::string &getFittingMethod() const { return m_fittingmethod; }
+
+  std::shared_ptr<CContinuumManager> getContinuumManager() {
+    return m_continuumManager;
+  }
+  std::shared_ptr<const CTplModelSolution> getContinuumFitValues() const {
+    return m_continuumFitValues;
+  }
+
   // we keep that getters temporarily, waiting for refactoring linemodel extrema
   // result
   Int32 getTplratio_count() const;
@@ -182,29 +184,28 @@ public:
 
   std::string getLineRatioType() { return m_lineRatioType; }
 
+  void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
+  bool m_enableLbdaOffsets;
 
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
 
+private:
+  std::shared_ptr<CTplModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
-private:
-  void fitAmplitudesSimplex();
+  void AddElement(TLineVector &&lines, Float64 velocityEmission,
+                  Float64 velocityAbsorption, TInt32List &&inds);
 
   void SetLSF();
 
-  TInt32List findLineIdxInCatalog(const CLineCatalog::TLineVector &restLineList,
+  TInt32List findLineIdxInCatalog(const TLineVector &restLineList,
                                   const std::string &strTag, Int32 type) const;
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
-  void addDoubleLine(const CLine &r1, const CLine &r2, Int32 index1,
-                     Int32 index2, Float64 nominalWidth, Float64 a1,
-                     Float64 a2);
-
-  void applyRules(bool enableLogs = false);
 
   std::shared_ptr<CSpectrumModel> m_model;
 
@@ -217,10 +218,7 @@ private:
 
   std::string m_LineWidthType;
 
-  Float64 m_velocityEmission;
-  Float64 m_velocityAbsorption;
-  Float64 m_velocityEmissionInit;
-  Float64 m_velocityAbsorptionInit;
+  std::vector<TLineModelElementParam_ptr> m_ElementParam;
 
   Float64 m_nominalWidthDefault;
 
@@ -233,7 +231,7 @@ private:
   std::shared_ptr<const TFloat64Range> m_lambdaRange;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
-
+  Int32 m_opt_fitcontinuum_maxN;
   std::string m_opt_firstpass_fittingmethod = "hybrid";
   std::string m_opt_secondpass_fittingmethod = "hybrid";
 

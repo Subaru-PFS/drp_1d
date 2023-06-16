@@ -42,6 +42,7 @@
 
 #include <cfloat>
 #include <cmath>
+#include <numeric>
 
 using namespace NSEpic;
 using namespace std;
@@ -151,10 +152,10 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
 
   TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
   for (auto iElts : nonZeroIndexes)
-    for (const auto &line : m_Elements[iElts]->m_Lines)
+    for (const auto &line : m_Elements[iElts]->GetLines())
       if (lineType == line.GetType()) {
         std::string _tag = line.GetVelGroupName();
-        if (_tag != "-1")
+        if (_tag != undefStr)
           tags.push_back(_tag);
         else
           nonGroupedLines.push_back(iElts);
@@ -170,7 +171,7 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
   for (Int32 itag = 0; itag < tags.size(); itag++) {
     TInt32List _group;
     for (auto iElts : nonZeroIndexes)
-      for (const auto &line : m_Elements[iElts]->m_Lines)
+      for (const auto &line : m_Elements[iElts]->GetLines())
         if (lineType == line.GetType())
           if (tags[itag] == line.GetVelGroupName())
             _group.push_back(iElts);
@@ -189,7 +190,7 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
       nonGroupedLines.end());
   for (const auto lIdx : nonGroupedLines) {
     groups.push_back({lIdx});
-    groupsTags.push_back("-1");
+    groupsTags.push_back(undefStr);
   }
 
   if (true) {
@@ -209,7 +210,7 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
   TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
   for(Int32 i=0; i<nonZeroIndexes.size(); i++)
   {
-      if(lineType == m_Elements[nonZeroIndexes[i]]->m_Lines[0].GetType())
+      if(lineType == m_Elements[nonZeroIndexes[i]]->GetElementType())
       {
           TInt32List gr;
           gr.push_back(nonZeroIndexes[i]);
@@ -238,8 +239,8 @@ TInt32List CLineModelElementList::getOverlappingElements(
     return indexes;
   }
 
-  std::vector<CLine> linesRef = m_Elements[ind]->GetLines();
-  Int32 linetypeRef = linesRef[0].GetType();
+  const TLineVector &linesRef = m_Elements[ind]->GetLines();
+  Int32 linetypeRef = m_Elements[ind]->GetElementType();
 
   Int32 xinf = 0;
   Int32 yinf = 0;
@@ -247,7 +248,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
   Int32 ysup = 0;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
     // check linetype
-    if (m_Elements[iElts]->m_Lines[0].GetType() != linetypeRef) {
+    if (m_Elements[iElts]->GetElementType() != linetypeRef) {
       continue;
     }
 
@@ -268,24 +269,24 @@ TInt32List CLineModelElementList::getOverlappingElements(
       continue;
     }
 
-    std::vector<CLine> linesElt = m_Elements[iElts]->GetLines();
+    const TLineVector &linesElt = m_Elements[iElts]->GetLines();
 
     for (Int32 iLineElt = 0; iLineElt < linesElt.size(); iLineElt++) {
       for (Int32 iLineRef = 0; iLineRef < linesRef.size(); iLineRef++) {
         Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
         Float64 cRef = m_Elements[ind]->GetLineWidth(
-            muRef, redshift, linesRef[iLineRef].GetIsEmission());
+            muRef, linesRef[iLineRef].GetIsEmission());
         Float64 winsizeRef =
-            linesRef[iLineRef].GetProfile().GetNSigmaSupport() * cRef;
+            linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * cRef;
         Float64 overlapSizeMin = winsizeRef * overlapThres;
         xinf = muRef - winsizeRef / 2.0;
         xsup = muRef + winsizeRef / 2.0;
 
         Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
         Float64 cElt = m_Elements[iElts]->GetLineWidth(
-            muElt, redshift, linesElt[iLineElt].GetIsEmission());
+            muElt, linesElt[iLineElt].GetIsEmission());
         Float64 winsizeElt =
-            linesElt[iLineElt].GetProfile().GetNSigmaSupport() * cElt;
+            linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * cElt;
         yinf = muElt - winsizeElt / 2.0;
         ysup = muElt + winsizeElt / 2.0;
 
@@ -328,11 +329,11 @@ TInt32List CLineModelElementList::getOverlappingElementsBySupport(
     return indexes;
   }
   TInt32RangeList refsupport = m_Elements[ind]->getSupport();
-  const CLine &line = m_Elements[ind]->m_Lines[0];
+  const CLine &line = m_Elements[ind]->GetLines().front();
   Int32 linetype = line.GetType();
   Float64 mu = line.GetPosition() * (1 + redshift);
-  Float64 c = m_Elements[ind]->GetLineWidth(mu, redshift, line.GetIsEmission());
-  Float64 winsize = line.GetProfile().GetNSigmaSupport() * c;
+  Float64 c = m_Elements[ind]->GetLineWidth(mu, line.GetIsEmission());
+  Float64 winsize = line.GetProfile()->GetNSigmaSupport() * c;
   Float64 overlapThresholdMin = winsize * overlapThres;
   // overlapThresholdMin = 0.0;
 
@@ -341,7 +342,7 @@ TInt32List CLineModelElementList::getOverlappingElementsBySupport(
   Int32 x2 = 0;
   Int32 y2 = 0;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->m_Lines[0].GetType() != linetype) {
+    if (m_Elements[iElts]->GetElementType() != linetype) {
       continue;
     }
 
@@ -387,7 +388,7 @@ TInt32List CLineModelElementList::getOverlappingElementsBySupport(
 void CLineModelElementList::SetElementAmplitude(Int32 j, Float64 a,
                                                 Float64 snr) {
   if (j >= 0 && j < m_Elements.size()) {
-    m_Elements[j]->SetFittedAmplitude(a, snr);
+    m_Elements[j]->SetElementAmplitude(a, snr);
   }
   return;
 }
@@ -416,7 +417,7 @@ CLineModelElementList::getValidElementIndices(Int32 lineTypeFilter) const {
   const TInt32List validEltsIdx = GetModelValidElementsIndexes();
   TInt32List nonZeroValidEltsIdx;
   for (const Int32 eIdx : validEltsIdx) {
-    const Int32 lineType = m_Elements[eIdx]->m_Lines[0].GetType();
+    const Int32 lineType = m_Elements[eIdx]->GetElementType();
     if (lineTypeFilter != -1 && lineTypeFilter != lineType)
       continue;
 
@@ -425,6 +426,15 @@ CLineModelElementList::getValidElementIndices(Int32 lineTypeFilter) const {
       nonZeroValidEltsIdx.push_back(eIdx);
   }
   return nonZeroValidEltsIdx;
+}
+
+TInt32List
+CLineModelElementList::findElementTypeIndices(CLine::EType type) const {
+  TInt32List idx;
+  for (size_t i = 0; i < m_Elements.size(); ++i)
+    if (m_Elements[i]->GetElementType() == type)
+      idx.push_back(i);
+  return idx;
 }
 
 /**
@@ -458,8 +468,7 @@ Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
     if (lineIdx == undefIdx)
       continue;
 
-    if (linetype != -1 &&
-        m_Elements[iElts]->m_Lines[lineIdx].GetType() != linetype)
+    if (linetype != -1 && m_Elements[iElts]->GetElementType() != linetype)
       continue;
 
     idx = iElts;
@@ -476,16 +485,18 @@ Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
 
 // first element returned is the list of element indices, then all remaining
 // elts are the list of line indices, for each element listed.
-std::vector<TInt32List> CLineModelElementList::getIgmLinesIndices() const {
-  std::vector<TInt32List> lineIdxList(1);
+std::tuple<TInt32List, std::vector<TInt32List>>
+CLineModelElementList::getIgmLinesIndices() const {
+  TInt32List EltsIdxList;
+  std::vector<TInt32List> lineIdxList;
   for (Int32 iElts = 0; iElts < m_Elements.size(); ++iElts) {
     TInt32List lineIdx = m_Elements[iElts]->getIgmLinesIndices();
     if (!lineIdx.empty()) {
-      lineIdxList.front().push_back(iElts);
+      EltsIdxList.push_back(iElts);
       lineIdxList.push_back(std::move(lineIdx));
     }
   }
-  return lineIdxList;
+  return std::make_tuple(std::move(EltsIdxList), std::move(lineIdxList));
 }
 
 /**
@@ -512,7 +523,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
   }
 
   for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
+    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
       indexes.push_back(j);
     }
   }
@@ -523,114 +534,36 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
   return indexes;
 }
 
-Int32 CLineModelElementList::getIndexAmpOffset(Int32 xIndex) const {
-  Int32 idxAmpOffset = undefIdx;
+void CLineModelElementList::addToSpectrumAmplitudeOffset(
+    const CSpectrumSpectralAxis &spectralAxis, CSpectrumFluxAxis &modelfluxAxis,
+    const TInt32List &eIdx_list, Int32 lineTypeFilter) const {
 
-  for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-    if (xIndex >= m_ampOffsetsIdxStart[i] && xIndex <= m_ampOffsetsIdxStop[i]) {
-      idxAmpOffset = i;
-      break;
+  const auto ampOffsetGroups = getFittingGroups(eIdx_list, lineTypeFilter);
+
+  Log.LogDetail("Elementlist: Adding n=%d ampOffsets", ampOffsetGroups.size());
+
+  // need to avoid overlapping polynomes since the ovelapping condition is
+  // computed unsing the lambda range support of the lines that intersect with a
+  // bigger fraction than OVERLAP_THRES_HYBRID_FIT. It can lead to shared pixels
+  // between elements considered not overlapped. In this case we should not add
+  // the overlapped polynomes, but choose one of them.
+  TInt32List mask(modelfluxAxis.GetSamplesCount(), 1);
+  for (const auto &g : ampOffsetGroups) {
+    const auto &group_eIdx_list = g.second;
+    auto samples = getSupportIndexes(group_eIdx_list);
+    const auto &pCoeffs =
+        m_Elements[group_eIdx_list.front()]->GetPolynomCoeffs();
+    for (Int32 s : samples) {
+      modelfluxAxis[s] += pCoeffs.getValue(spectralAxis[s]) * mask[s];
+      mask[s] = 0; // one sample can only be written once
     }
   }
-  if (idxAmpOffset == undefIdx)
-    THROWG(INTERNAL_ERROR, "spectral sample has no associated polynomial");
-
-  Log.LogDetail("AmplitudeOffset enabled: idx offset = %d", idxAmpOffset);
-  return idxAmpOffset;
 }
 
-void CLineModelElementList::setAmplitudeOffsetsCoeffsAt(
-    Int32 index, const TPolynomCoeffs &line_polynomCoeffs) {
-  m_ampOffsetsCoeffs[index] = line_polynomCoeffs;
-}
-
-bool CLineModelElementList::addToSpectrumAmplitudeOffset(
-    const CSpectrumSpectralAxis &spectralAxis,
-    CSpectrumFluxAxis &modelfluxAxis) const {
-
-  Log.LogDetail("Elementlist: Adding n=%d ampOffsets",
-                m_ampOffsetsIdxStart.size());
-  Float64 x0 = NAN;
-  Float64 x1 = NAN;
-  Float64 x2 = NAN;
-  for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-    x0 = m_ampOffsetsCoeffs[i].x0;
-    x1 = m_ampOffsetsCoeffs[i].x1;
-    x2 = m_ampOffsetsCoeffs[i].x2;
-    if (std::isnan(x0) || std::isnan(x1) || std::isnan(x2))
-      THROWG(INTERNAL_ERROR, "Polynom coefficients cannot be NaN");
-    for (Int32 k = m_ampOffsetsIdxStart[i]; k <= m_ampOffsetsIdxStop[i]; k++) {
-      modelfluxAxis[k] +=
-          x0 + x1 * spectralAxis[k] + x2 * spectralAxis[k] * spectralAxis[k];
-    }
+void CLineModelElementList::resetAmplitudeOffset() {
+  for (auto &elt : m_Elements) {
+    elt->SetPolynomCoeffs(TPolynomCoeffs());
   }
-  return true;
-}
-
-Int32 CLineModelElementList::prepareAmplitudeOffset() {
-  m_ampOffsetsCoeffs.clear();
-  m_ampOffsetsIdxStart.clear();
-  m_ampOffsetsIdxStop.clear();
-
-  TInt32List validEltsIdx = GetModelValidElementsIndexes();
-  if (validEltsIdx.size() < 1) {
-    return -1;
-  }
-  TInt32List supportIdxes = getSupportIndexes(validEltsIdx);
-  if (supportIdxes.size() < 1) {
-    return -1;
-  }
-
-  Int32 idxPrevious = supportIdxes[0];
-  m_ampOffsetsIdxStart.push_back(supportIdxes[0]);
-  for (Int32 i = 1; i < supportIdxes.size(); i++) {
-    Int32 idxCurrent = supportIdxes[i];
-    if (idxCurrent > idxPrevious + 1) {
-      m_ampOffsetsIdxStop.push_back(idxPrevious);
-      m_ampOffsetsIdxStart.push_back(idxCurrent);
-    }
-    idxPrevious = idxCurrent;
-  }
-  m_ampOffsetsIdxStop.push_back(supportIdxes[supportIdxes.size() - 1]);
-
-  /*
-  //estimate mean fluxNoCOnt in each support
-  for( Int32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
-  {
-      Float64 sum = 0.0;
-      Int32 count = 0;
-
-      for( Int32 k=m_ampOffsetsIdxStart[i]; k<=m_ampOffsetsIdxStop[i]; k++ )
-      {
-          sum +=spcFlux[k];
-          count +=1;
-      }
-      Float64 mean = 0.0;
-      if(count>0)
-      {
-          mean = sum/(Float64)count;
-      }
-
-      m_ampOffsetsA.push_back(mean);
-  }
-  //*/
-  for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-    m_ampOffsetsCoeffs.push_back({0., 0., 0.});
-  }
-
-  if (1) {
-    for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
-      Log.LogDebug("Elementlist: i=%d, m_ampOffsetsIdxStart: %d, "
-                   "m_ampOffsetsIdxStop: %d",
-                   i, m_ampOffsetsIdxStart[i], m_ampOffsetsIdxStop[i]);
-    }
-  }
-  return 0;
-}
-
-void CLineModelElementList::debug(std::ostream &os) const {
-  for (const std::shared_ptr<CLineModelElement> &elt : m_Elements)
-    elt->debug(os);
 }
 
 /**
@@ -680,10 +613,10 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
   TInt32List validEltsIdx = GetModelValidElementsIndexes();
   for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
     Int32 iElts = validEltsIdx[iValidElts];
-    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission() ||
-          !m_Elements[iElts]->m_Lines[lineIdx].GetIsStrong()) {
+      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission() ||
+          !m_Elements[iElts]->GetLines()[lineIdx].GetIsStrong()) {
         continue;
       }
 
@@ -692,7 +625,7 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
         isStrongPresent = true;
         Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found "
                      "Strong EL: %s",
-                     m_Elements[iElts]->m_Lines[lineIdx].GetName().c_str());
+                     m_Elements[iElts]->GetLines()[lineIdx].GetName().c_str());
         break;
       }
     }
@@ -715,15 +648,16 @@ bool CLineModelElementList::GetModelHaStrongest() const {
   TInt32List validEltsIdx = GetModelValidElementsIndexes();
   for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
     Int32 iElts = validEltsIdx[iValidElts];
-    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission()) {
+      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission()) {
         continue;
       }
 
       Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
       if (amp > 0. && amp > ampMax) {
-        ampMaxLineTag = m_Elements[iElts]->m_Lines[lineIdx].GetName().c_str();
+        ampMaxLineTag =
+            m_Elements[iElts]->GetLines()[lineIdx].GetName().c_str();
         ampMax = amp;
       }
     }
@@ -739,24 +673,47 @@ bool CLineModelElementList::GetModelHaStrongest() const {
   return isHaStrongest;
 }
 
+std::map<std::string, TInt32List>
+CLineModelElementList::getFittingGroups(TInt32List EltsIdx,
+                                        Int32 lineTypeFilter) const {
+  std::map<std::string, TInt32List> fittingGroups;
+
+  // if not elments list do with all
+  if (EltsIdx.empty()) {
+    EltsIdx.resize(size());
+    std::iota(EltsIdx.begin(), EltsIdx.end(), 0);
+  }
+
+  for (auto idx : EltsIdx) {
+    const auto &elt = m_Elements[idx];
+
+    Int32 lineType = elt->GetElementType();
+    if (lineTypeFilter != undefIdx && lineTypeFilter != lineType)
+      continue;
+
+    const auto &info = elt->GetFittingGroupInfo();
+    if (info == undefStr)
+      continue;
+    if (fittingGroups.find(info) == fittingGroups.end()) {
+      fittingGroups[info] = {idx};
+      continue;
+    }
+
+    fittingGroups[info].push_back(idx);
+  }
+
+  return fittingGroups;
+}
+
 /**
  * @brief Look for polynom coeffs corresponding to one specific Line
- * Here,we assume that we already fitted one line at a time, which is not
- * really the case
- * TODO: take into consideration lines fitted together for the element in
- * question
  *
  * @param eIdx
  * @return TPolynomCoeffs
  */
-TPolynomCoeffs CLineModelElementList::getPolynomCoeffs(Int32 eIdx) const {
-  TInt32List xInds = getSupportIndexes({Int32(eIdx)});
-  TPolynomCoeffs polynom_coeffs = {0., 0., 0.};
-  if (xInds.size() && m_ampOffsetsCoeffs.size()) {
-    Int32 idxAmpOffset = getIndexAmpOffset(xInds[0]);
-    polynom_coeffs = m_ampOffsetsCoeffs[idxAmpOffset];
-  }
-  return polynom_coeffs;
+const TPolynomCoeffs &
+CLineModelElementList::getPolynomCoeffs(Int32 eIdx) const {
+  return m_Elements[eIdx]->GetPolynomCoeffs();
 }
 
 /**
@@ -794,18 +751,4 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
       TInt32Range::joinIntersections(std::move(indexRangeList));
 
   return nonOverlappingIndexRangeList;
-}
-
-void CLineModelElementList::dumpElement(std::string pre) {
-  std::string fname = "ElementList_" + pre + "_" + to_string(m__count) + ".txt";
-  m__count++;
-  std::ofstream os(fname);
-
-  os << "CLineModelElementList::m_Elements \n";
-  Int32 count = 0;
-  for (const auto &el : m_Elements) {
-    os << count++ << "\n";
-    el->dumpElement(os);
-  }
-  os.close();
 }

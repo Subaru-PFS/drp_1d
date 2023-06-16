@@ -215,7 +215,7 @@ CLineMatchingResult::GetMeanRedshiftSolution(const TSolutionSet &s) const {
  * strong emission lines.
  */
 Int32 CLineMatchingResult::getNStrongRestLines(const TSolutionSet &s) const {
-  CLineCatalog::TLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
+  TLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
       CLine::nType_Emission, CLine::nForce_Strong);
   Int32 ncatalog = strongRestLineList.size();
 

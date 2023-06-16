@@ -53,7 +53,7 @@ public:
                 std::shared_ptr<const CSpectrum> inputSpc,
                 std::shared_ptr<const TFloat64Range> lambdaRange,
                 std::shared_ptr<CContinuumManager> continuumManager,
-                const CLineCatalog::TLineVector &restLineList);
+                const TLineVector &restLineList);
 
   CRulesManager() = delete;
   virtual ~CRulesManager() = default;

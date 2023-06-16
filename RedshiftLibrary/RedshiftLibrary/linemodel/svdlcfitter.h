@@ -53,13 +53,14 @@ public:
                std::shared_ptr<const CSpectrum> inputSpectrum,
                std::shared_ptr<const TLambdaRange> lambdaRange,
                std::shared_ptr<CSpectrumModel> spectrumModel,
-               const CLineCatalog::TLineVector &restLineList,
+               const TLineVector &restLineList,
+               const std::vector<TLineModelElementParam_ptr> &elementParam,
                std::shared_ptr<CContinuumManager> continuumManager,
-               Int32 polyOrder = -1);
-
-  void fit(Float64 redshift) override;
+               Int32 polyOrder = -1, bool enableAmplitudeOffsets = false,
+               bool enableLambdaOffsetsFit = false);
 
 private:
+  void doFit(Float64 redshift) override;
   Int32 fitAmplitudesLinesAndContinuumLinSolve(
       const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
       TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,

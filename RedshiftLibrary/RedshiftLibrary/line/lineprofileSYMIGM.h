@@ -46,6 +46,10 @@
 #include <cmath>
 #include <string>
 
+namespace lineProfile_test {
+class lineprofileSYMIGM_test;
+} // namespace lineProfile_test
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -60,27 +64,35 @@ public:
                             Float64 sigma) const override;
   Float64 GetLineFlux(Float64 x0, Float64 sigma,
                       Float64 A = 1.0) const override;
-  Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
-                               Float64 sigma) const override;
+  Float64 GetLineProfileDerivX0(Float64 x, Float64 x0,
+                                Float64 sigma) const override;
   Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                    Float64 sigma) const override;
   TSymIgmParams GetSymIgmParams() const override;
   bool isSymIgm() const override { return true; };
+  bool isSymIgmFit() const override { return m_igmFit; };
 
   void SetSymIgmParams(const TSymIgmParams &params) override;
+  void SetSymIgmFit(bool val = true) override { m_igmFit = val; };
+  void SetSymIgmFixed() override { m_igmFit = false; };
+
   void resetParams() override;
   Int32 getIGMIdxCount() const override;
 
 private:
+  friend class lineProfile_test::lineprofileSYMIGM_test;
   CLineProfile *CloneImplementation() const override {
     return new CLineProfileSYMIGM(*this);
   }
   void CheckMeiksinInit() const;
   Float64 getIGMCorrection(Float64 x) const;
+  std::tuple<Float64, Float64> getIGMCorrectionAndDerivX0(Float64 x,
+                                                          Float64 x0) const;
 
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   Float64 m_redshift = NAN;
   Int32 m_igmidx = -1;
+  bool m_igmFit = false;
 };
 } // namespace NSEpic
 #endif

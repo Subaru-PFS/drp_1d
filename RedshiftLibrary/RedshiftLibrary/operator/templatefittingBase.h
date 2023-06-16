@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/spectrum/maskBuilder.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
@@ -63,17 +64,8 @@ class CModelSpectrumResult;
 class COperatorTemplateFittingBase : public COperator {
 
 public:
-  COperatorTemplateFittingBase(const CSpectrum &spectrum,
-                               const TFloat64Range &lambdaRange,
-                               const TFloat64List &redshifts = TFloat64List());
-  COperatorTemplateFittingBase(const CSpectrum &&spectrum,
-                               const TFloat64Range &lambdaRange,
-                               const TFloat64List &redshifts) = delete;
+  COperatorTemplateFittingBase(const TFloat64List &redshifts = TFloat64List());
 
-  COperatorTemplateFittingBase(COperatorTemplateFittingBase const &other) =
-      delete; // ref member inside
-  COperatorTemplateFittingBase &
-  operator=(COperatorTemplateFittingBase const &other) = delete;
   virtual ~COperatorTemplateFittingBase() = default;
 
   virtual void SetRedshifts(TFloat64List redshifts) {
@@ -82,8 +74,7 @@ public:
 
   virtual std::shared_ptr<COperatorResult> Compute(
       const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-      const std::vector<CMask> &additional_spcMasks, std::string opt_interp,
-      bool opt_extinction, bool opt_dustFitting,
+      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
@@ -91,30 +82,36 @@ public:
   std::shared_ptr<CModelSpectrumResult>
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
-                       Float64 amplitude, const Float64 overlapThreshold);
+                       Float64 amplitude, const Float64 overlapThreshold,
+                       Int32 index);
 
   inline virtual bool IsFFTProcessing() { return false; };
 
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
+  void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
+    m_maskBuilder = maskBuilder;
+  }
 
 protected:
   virtual void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
                              Float64 redshift, TFloat64Range &currentRange,
-                             Float64 &overlaprate,
-                             const Float64 overlapThreshold);
+                             Float64 &overlapFraction,
+                             const Float64 overlapThreshold,
+                             Int32 spcIndex = 0);
+
   // Likelihood
-  virtual Float64
-  EstimateLikelihoodCstLog(const CSpectrum &spectrum,
-                           const TFloat64Range &lambdaRange) const;
+  virtual Float64 EstimateLikelihoodCstLog() const;
   void applyPositiveAndNonNullConstraint(Float64 amp_sigma,
                                          Float64 &ampl) const;
-  const CSpectrum &m_spectrum;
-  TFloat64Range m_lambdaRange;
+
+  std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
   TFloat64List m_redshifts;
 
-  CTemplate m_templateRebined_bf;
-  CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
-  CMask m_mskRebined_bf;
+  std::vector<CTemplate> m_templateRebined_bf;
+  std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
+  std::vector<CMask> m_mskRebined_bf;
+  std::shared_ptr<CMaskBuilder> m_maskBuilder;
   Float64 m_continuum_null_amp_threshold; // in SNR
 };
 

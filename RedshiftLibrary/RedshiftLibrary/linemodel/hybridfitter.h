@@ -52,14 +52,19 @@ public:
                 std::shared_ptr<const CSpectrum> inputSpectrum,
                 std::shared_ptr<const TLambdaRange> lambdaRange,
                 std::shared_ptr<CSpectrumModel> spectrumModel,
-                const CLineCatalog::TLineVector &restLineList);
+                const TLineVector &restLineList,
+                const std::vector<TLineModelElementParam_ptr> &elementParam,
+                bool enableAmplitudeOffsets = false,
+                bool enableLambdaOffsetsFit = false);
 
-  void fit(Float64 redshift) override;
-
-private:
+protected:
+  void doFit(Float64 redshift) override;
   bool m_opt_enable_improveBalmerFit = false;
-  Int32 fitAmplitudesHybrid(Float64 redshift);
-  Int32 improveBalmerFit(Float64 redshift);
+  void fitAmplitudesHybrid(Float64 redshift);
+  void improveBalmerFit(Float64 redshift);
+  virtual bool isIndividualFitEnabled() const {
+    return !m_enableAmplitudeOffsets;
+  };
 };
 } // namespace NSEpic
 #endif

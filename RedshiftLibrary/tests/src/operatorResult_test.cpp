@@ -54,6 +54,26 @@ BOOST_AUTO_TEST_CASE(operatorResult_test) {
   BOOST_CHECK_THROW(result.getCandidateDatasetType("dataset"), GlobalException);
   BOOST_CHECK_THROW(result.getCandidate(0, "dataset"), GlobalException);
   BOOST_CHECK_THROW(result.HasCandidateDataset("dataset"), GlobalException);
+
+  // copy and copy assignement
+  COperatorResult result2(result);
+  type = result2.getType();
+  BOOST_CHECK(type == "COperatorResult");
+
+  COperatorResult result3("COperatorResult3");
+  result3 = result2;
+  type = result3.getType();
+  BOOST_CHECK(type == "COperatorResult");
+
+  // move and move assignement
+  COperatorResult result4(std::move(result));
+  type = result4.getType();
+  BOOST_CHECK(type == "COperatorResult");
+
+  COperatorResult result5("COperatorResult5");
+  result5 = std::move(result2);
+  type = result5.getType();
+  BOOST_CHECK(type == "COperatorResult");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -48,6 +48,16 @@
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
+namespace LogRebinning_test { // boost_test_suite
+// all boost_auto_test_case that use private method
+class setupRebinning_test;
+class computeTargetLogSpectralAxis_test;
+class checkTemplateAlignment_test;
+class isRebinningNeeded_test;
+class inferTemplateRebinningSetup_test;
+class loglambdaRebinTemplate_test;
+} // namespace LogRebinning_test
+
 namespace NSEpic {
 class CInputContext;
 class CSpectrumLogRebinning {
@@ -67,6 +77,13 @@ public:
   TFloat64Range m_lambdaRange_ref;
 
 private:
+  friend class LogRebinning_test::setupRebinning_test;
+  friend class LogRebinning_test::computeTargetLogSpectralAxis_test;
+  friend class LogRebinning_test::checkTemplateAlignment_test;
+  friend class LogRebinning_test::isRebinningNeeded_test;
+  friend class LogRebinning_test::inferTemplateRebinningSetup_test;
+  friend class LogRebinning_test::loglambdaRebinTemplate_test;
+
   void setupRebinning(CSpectrum &spectrum, const TFloat64Range &lambdaRange);
   CSpectrumSpectralAxis
   computeTargetLogSpectralAxis(const TFloat64Range &lambdarange,

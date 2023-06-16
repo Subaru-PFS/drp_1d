@@ -48,10 +48,6 @@ private:
   std::vector<std::shared_ptr<CLineModelElement>> m_Elements;
 
 public:
-  std::vector<TPolynomCoeffs> m_ampOffsetsCoeffs;
-  TInt32List m_ampOffsetsIdxStart;
-  TInt32List m_ampOffsetsIdxStop;
-
   TInt32List m_elementsDisabledIndexes;
 
   TInt32List GetModelValidElementsIndexes() const;
@@ -81,18 +77,18 @@ public:
                          Int32 linetype = -1) const;
   Int32 findElementIndex(const std::string &LineTagStr, Int32 linetype,
                          Int32 &lineIdx) const;
-  std::vector<TInt32List> getIgmLinesIndices() const;
+  std::tuple<TInt32List, std::vector<TInt32List>> getIgmLinesIndices() const;
 
   Int32 findElementIndex(Int32 LineCatalogIndex, Int32 &lineIdx) const;
-
+  TInt32List findElementTypeIndices(CLine::EType type) const;
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
-  Int32 getIndexAmpOffset(Int32 index) const;
-  void setAmplitudeOffsetsCoeffsAt(Int32 index,
-                                   const TPolynomCoeffs &line_polynomCoeffs);
-  Int32 prepareAmplitudeOffset();
-  bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis &spectralAxis,
-                                    CSpectrumFluxAxis &modelfluxAxis) const;
+  void resetAmplitudeOffset();
+
+  void addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis &spectralAxis,
+                                    CSpectrumFluxAxis &modelfluxAxis,
+                                    const TInt32List &eIdx_list = {},
+                                    Int32 lineTypeFilter = undefIdx) const;
 
   bool IsElementIndexInDisabledList(Int32 index) const;
   void SetElementIndexesDisabledAuto();
@@ -102,11 +98,11 @@ public:
   bool GetModelStrongEmissionLinePresent() const;
   bool GetModelHaStrongest() const;
 
-  TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
+  const TPolynomCoeffs &getPolynomCoeffs(Int32 eIdx) const;
+  std::map<std::string, TInt32List>
+  getFittingGroups(TInt32List EltsIdx = {},
+                   Int32 lineTypeFilter = undefIdx) const;
 
-  void debug(std::ostream &os) const;
-  Int32 m__count = 0;
-  void dumpElement(std::string pre = "");
   const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {
     return m_Elements[i];
   }
@@ -132,6 +128,11 @@ public:
   Int32 size() const { return m_Elements.size(); }
   void push_back(const std::shared_ptr<CLineModelElement> &elt) {
     m_Elements.push_back(elt);
+  }
+
+  void debug(std::ostream &os) const {
+    for (auto elt : m_Elements)
+      elt->debug(os);
   }
 };
 } // namespace NSEpic

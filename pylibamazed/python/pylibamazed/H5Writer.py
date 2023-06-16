@@ -45,9 +45,11 @@ import pandas as pd
 
 def _create_dataset_from_dict(h5_node, name, source, compress=False):
     df = pd.DataFrame(source)
+    if df.empty:
+        return
     records = df.to_records(index=False)
     h5_node.create_dataset(name,
-                           len(records),
+                           records.shape,
                            records.dtype,
                            records,
                            compression="lzf")
@@ -57,6 +59,7 @@ class H5Writer():
 
     def __init__(self, output):
         self.output = output
+        self.excluded_datasets = dict()
 
     def write_hdf5_root(self, hdf5_spectrum_node):
         for ds in self.output.get_available_datasets("root"):
@@ -68,6 +71,9 @@ class H5Writer():
         level = "object"
         for ds in self.output.get_available_datasets("object",
                                                      object_type=object_type):
+            if object_type in self.excluded_datasets and ds in self.excluded_datasets[object_type]:
+                continue
+
             ds_size = self.output.get_dataset_size(object_type, ds)
             dataset = self.output.get_dataset(object_type,
                                               ds)
@@ -88,18 +94,26 @@ class H5Writer():
             for rank in range(nb_candidates):
                 candidate = candidates.create_group(self.output.get_candidate_group_name(rank))
                 for ds in self.output.get_available_datasets("candidate",object_type = object_type):
+                    if object_type in self.excluded_datasets and ds in self.excluded_datasets[object_type]:
+                        continue
                     dataset = self.output.get_dataset(object_type,
                                                       ds,
                                                       rank)
                     ds_dim = self.output.get_dataset_size(object_type, ds, rank)
-                    if ds_dim == 1:
+                    if ds_dim == 0:
+                        continue
+                    elif ds_dim == 1:
                         candidate.create_group(ds)
                         for attr_name, attr in dataset.items():
                             candidate.get(ds).attrs[attr_name] = attr
                     else:
-                        _create_dataset_from_dict(candidate,
-                                                  ds,
-                                                  dataset)
+                        try:
+                            _create_dataset_from_dict(candidate,
+                                                      ds,
+                                                      dataset)
+                        except Exception as e:
+                            zlog.LogError(f"failed to create dataset {ds} : {e}")
+
         
     def write_hdf5(self,hdf5_root,spectrum_id):
         try:

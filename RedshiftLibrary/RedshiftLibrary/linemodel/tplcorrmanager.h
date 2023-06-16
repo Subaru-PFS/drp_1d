@@ -55,7 +55,7 @@ public:
                   std::shared_ptr<const CSpectrum> inputSpc,
                   std::shared_ptr<const TFloat64Range> lambdaRange,
                   std::shared_ptr<CContinuumManager> continuumManager,
-                  const CLineCatalog::TLineVector &restLineList);
+                  const TLineVector &restLineList);
   CTplCorrManager() = delete;
   CTplCorrManager(CTplCorrManager const &other) = default;
   CTplCorrManager &operator=(CTplCorrManager const &other) = default;

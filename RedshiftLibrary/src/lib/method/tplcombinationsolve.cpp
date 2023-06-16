@@ -75,11 +75,11 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
   bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("ismfit");
   Float64 overlapThreshold =
       inputContext->GetParameterStore()->GetScoped<Float64>("overlapThreshold");
   bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("extinction");
+      inputContext->GetParameterStore()->GetScoped<bool>("igmfit");
 
   std::string opt_spcComponent =
       inputContext->GetParameterStore()->GetScoped<std::string>(
@@ -398,13 +398,13 @@ CTplcombinationSolve::buildExtremaResults(
     const Int32 idx = std::distance(redshifts.begin(), itZ);
 
     // Fill extrema Result
-    extremaResult->m_ranked_candidates[i].second->FittedTplMerit =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMerit =
         TplFitResult->ChiSquare[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplMeiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplEbmvCoeff =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplEbmvCoeff =
         TplFitResult->FitEbmvCoeff[idx];
     extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeList =
         TplFitResult->FitAmplitude[idx];
@@ -414,7 +414,7 @@ CTplcombinationSolve::buildExtremaResults(
         TplFitResult->FitAmplitudeSigma[idx];
     extremaResult->m_ranked_candidates[i].second->FittedTplCovMatrix =
         TplFitResult->FitCOV[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplLogPrior = NAN;
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplLogPrior = NAN;
     extremaResult->m_ranked_candidates[i].second->FittedTplSNR =
         TplFitResult->SNR[idx];
     // make sure tpl is non-rebinned

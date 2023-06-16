@@ -76,7 +76,7 @@ bool CMask::IntersectWith(const CMask &other) {
 /**
  *
  */
-Float64 CMask::CompouteOverlapRate(const CMask &other) const {
+Float64 CMask::CompouteOverlapFraction(const CMask &other) const {
   if (other.GetMasksCount() != GetMasksCount())
     return -1.0;
 
@@ -109,7 +109,7 @@ Float64 CMask::CompouteOverlapRate(const CMask &other) const {
 /**
  *
  */
-Float64 CMask::IntersectAndComputeOverlapRate(const CMask &other) const {
+Float64 CMask::IntersectAndComputeOverlapFraction(const CMask &other) const {
   if (other.GetMasksCount() != GetMasksCount())
     return -1.0;
 

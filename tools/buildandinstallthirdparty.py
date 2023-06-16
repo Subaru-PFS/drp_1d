@@ -13,6 +13,7 @@ else:
 import argparse
 import os
 import tarfile
+import zipfile
 from platform import platform
 
 
@@ -30,6 +31,24 @@ def ExtractTarGZ(tarPath, destPath):
         tfile.extractall(extractDir)
         extractedPath = os.path.normpath(os.path.join(extractDir,
                                                       tfile.getmembers()[0].name))
+
+        os.rename(extractedPath, destPath)
+
+        return True
+
+def ExtractZip(zipPath, destPath):
+    if os.path.exists(destPath):
+        print("File or folder: " + os.path.normpath(destPath) +
+              " already exist, extraction skipped...")
+        return False
+    else:
+        with zipfile.ZipFile(zipPath, 'r') as zfile :
+            print("Extracting: \n\tFrom: " + zipPath + " to: " + destPath)
+
+            extractDir = os.path.dirname(destPath) + "/"
+            zfile.extractall(extractDir)
+            extractedPath = os.path.normpath(os.path.join(extractDir,
+                                                          zfile.namelist()[0]))
 
         os.rename(extractedPath, destPath)
 
@@ -129,6 +148,14 @@ def _openblas_build(path, prefix, options, extra_flags=''):
                   shared=1 if options.shared else 0,    
                   extra_flags=extra_flags))
 
+def _eigen_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix}; make install".format(
+                  path=path, prefix=prefix))
+
+def _lbfgspp_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix}; make install".format(
+                  path=path, prefix=prefix))
+
 libDict = {
     "boost": {
         "path":  "boost-1.57.0",
@@ -167,6 +194,22 @@ libDict = {
         "check_file": "libopenblas",
         "build": _openblas_build,
         "extra_flags": "NO_LAPACK=1"
+    },
+    "eigen": {
+        "path": "eigen-3.4.0",
+        "src": "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/"
+        "eigen-3.4.0.tar.gz",
+        "check_file": "",
+        "build": _eigen_build,
+        "extra_flags": ""
+    },
+    "lbfgspp" : {
+        "path": "LBFGSpp-v0.2.0+git001b7ee",
+        "src": "https://github.com/yixuan/LBFGSpp/archive/"
+        "001b7eeea2126b6955751a19555b89bbd4f5ef51.zip",
+        "check_file": "",
+        "build": _lbfgspp_build,
+        "extra_flags": ""
     }
 
 }
@@ -229,8 +272,12 @@ def Main(argv):
         if not _check_lib(module, prefix, args) or args.force:
             if args.force:
                 print("Build force by user.")
-            DownloadHTTPFile(libSrc, libPath + ".tar.gz")
-            ExtractTarGZ(libPath + ".tar.gz", libPath)
+            if module == "lbfgspp" :
+                DownloadHTTPFile(libSrc, libPath + ".zip")
+                ExtractZip(libPath + ".zip", libPath)
+            else :
+                DownloadHTTPFile(libSrc, libPath + ".tar.gz")
+                ExtractTarGZ(libPath + ".tar.gz", libPath)
             build_method(libPath, prefix, args, extra_flags)
 
 

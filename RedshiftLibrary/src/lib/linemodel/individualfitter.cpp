@@ -46,10 +46,8 @@ using namespace std;
 
 // fit the amplitudes of each element independently, unless there is
 // overlap
-void CIndividualFitter::fit(Float64 redshift) {
+void CIndividualFitter::doFit(Float64 redshift) {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    m_Elements[iElts]->fitAmplitude(m_inputSpc.GetSpectralAxis(),
-                                    m_model->getSpcFluxAxisNoContinuum(),
-                                    m_model->getContinuumFluxAxis(), redshift);
+    fitAmplitude(iElts, redshift);
   }
 }
