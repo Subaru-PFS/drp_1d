@@ -16,7 +16,7 @@ DatasetTools==0.42
 decorator==5.1.1
 exceptiongroup==1.1.1
 executing==1.2.0
-Flask==2.2.3
+Flask==2.2.5
 gitdb==4.0.10
 GitPython==3.1.31
 h5py==3.8.0
