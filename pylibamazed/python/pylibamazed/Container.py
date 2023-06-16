@@ -58,7 +58,7 @@ class Container(Generic[T]):
         if len(self.data) != len(__value__.data):
             return False
         for key in self.data:
-            if self.data.get(key) != __value__.get(key):
+            if not all(self.data.get(key) == __value__.get(key)):
                 return False
         return True
 
@@ -66,7 +66,7 @@ class Container(Generic[T]):
         self.data[obs_id] = dataToAppend
     
     def get(self, obs_id="") -> T:
-        return self.data[obs_id]
+        return self.data.get(obs_id)
 
     def keys(self):
         return self.data.keys()
