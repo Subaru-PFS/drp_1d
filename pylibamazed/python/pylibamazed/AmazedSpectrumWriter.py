@@ -51,12 +51,12 @@ class AmazedSpectrumWriter:
         
         hdr = fits.Header()
         
-        d = {'Wave': np.array(self.reader.waves[0]).byteswap().newbyteorder() ,
-             'Flux': np.array(self.reader.fluxes[0]).byteswap().newbyteorder(),
-             'Err': np.array(self.reader.errors[0]).byteswap().newbyteorder()}
+        d = {'Wave': np.array(self.reader.waves.get()).byteswap().newbyteorder() ,
+             'Flux': np.array(self.reader.fluxes.get()).byteswap().newbyteorder(),
+             'Err': np.array(self.reader.errors.get()).byteswap().newbyteorder()}
         df = pd.DataFrame(data=d)
     
-        is_sorted = all(self.reader.waves[0][i] <= self.reader.waves[0][i+1] for i in range(len(self.reader.waves[0]) - 1))
+        is_sorted = all(self.reader.waves.get()[i] <= self.reader.waves.get()[i+1] for i in range(len(self.reader.waves.get()) - 1))
         if not is_sorted and not sort:
             raise Exception(" Spectral axis is not sorted. If you wish to sort, rerun the conversion with --sort option")   
         if not is_sorted and sort:
