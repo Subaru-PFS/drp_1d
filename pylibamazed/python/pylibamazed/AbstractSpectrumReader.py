@@ -43,7 +43,7 @@ import json
 
 import pandas as pd
 from pylibamazed.Parameters import Parameters
-from pylibamazed.FilterLoader import ParamJsonFilterLoader
+from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
 from pylibamazed.Container import Container
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxAxis_withError,
@@ -82,17 +82,16 @@ class AbstractSpectrumReader:
 
     """
     def __init__(
-            self,
-            observation_id: str,
-            parameters: Parameters,
-            calibration_library,
-            source_id: str,
-            FilterLoaderClass=ParamJsonFilterLoader
+        self,
+        observation_id: str,
+        parameters: Parameters,
+        calibration_library,
+        source_id: str,
+        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader
     ):
         """Constructor method
         """
         self.observation_id = observation_id
-        self.filterLoaderClass = FilterLoaderClass
         
         # Initial loaded data
         self.waves = Container[np.ndarray]()
@@ -105,10 +104,11 @@ class AbstractSpectrumReader:
         self.photometric_data = []
         self._spectra = []
         self.w_frame = 'vacuum'
-        self.parameters = parameters.copy()
+        self.parameters = parameters
         self.calibration_library = calibration_library
         self.source_id = str(source_id)
         self.editable_spectra = Container[pd.DataFrame]()
+        self.filter_loader_class = filter_loader_class
 
     def load_wave(self, resource, obs_id=""):
         """Append the spectral axis in self.wave , units are in Angstrom by default
@@ -250,12 +250,12 @@ class AbstractSpectrumReader:
         self._add_cspectra()
         lsf_factory = CLSFFactory.GetInstance()
         lsf_args = self._lsf_args()
-        lsf = lsf_factory.Create(self.parameters["LSF"]["LSFType"], lsf_args)
+        lsf = lsf_factory.Create(self.parameters.get_lsf_type(), lsf_args)
         self._spectra[0].SetLSF(lsf)
         self._add_photometric_data()
 
     def _get_filters(self):
-        return self.filterLoaderClass().get_filters(self.parameters)
+        return self.filter_loader_class().get_filters(self.parameters)
 
     def _apply_filters(self, filters: FilterList) -> None:
         if filters is None:
@@ -300,7 +300,7 @@ class AbstractSpectrumReader:
     
     def _add_cspectra(self):
         airvacuum_method = self._corrected_airvacuum_method()
-        multiobs_type = self.parameters["multiobsmethod"]
+        multiobs_type = self.parameters.get_multiobs_method()
         if not multiobs_type:
 
             # Add check names if multiobs type is null
@@ -361,7 +361,7 @@ class AbstractSpectrumReader:
         ctx.addSpectrum(self._spectra[-1])
 
     def _corrected_airvacuum_method(self):
-        airvacuum_method = self.parameters.get("airvacuum_method", "")
+        airvacuum_method = self.parameters.get_airvacuum_method()
         
         if airvacuum_method == "default":
             airvacuum_method = "Morton2000"
@@ -380,19 +380,19 @@ class AbstractSpectrumReader:
 
     def _lsf_args(self):
         ctx = CProcessFlowContext.GetInstance()
-        parameter_lsf_type = self.parameters["LSF"]["LSFType"]
+        parameter_lsf_type = self.parameters.get_lsf_type()
 
         if parameter_lsf_type == "FROMSPECTRUMDATA":
-            self.parameters["LSF"]["LSFType"] = self.lsf_type
+            self.parameters.set_lsf_type(self.lsf_type)
             if self.lsf_type != "GaussianVariableWidth":
-                self.parameters["LSF"][LSFParameters[self.lsf_type]] = self.lsf_data[0]
-                parameter_store = ctx.LoadParameterStore(json.dumps(self.parameters))
+                self.parameters.set_lsf_param(LSFParameters[self.lsf_type], self.lsf_data[0])
+                parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
                 lsf_args = TLSFArgumentsCtor[self.lsf_type](parameter_store)
             else:
                 lsf_args = TLSFGaussianVarWidthArgs(self.lsf_data[0]["wave"], self.lsf_data[0]["width"])
         else:
             if parameter_lsf_type != "GaussianVariableWidth":
-                parameter_store = ctx.LoadParameterStore(json.dumps(self.parameters))
+                parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
                 lsf_args = TLSFArgumentsCtor[parameter_lsf_type](parameter_store)
             else:
                 lsf_args = TLSFGaussianVarWidthArgs(self.calibration_library.lsf["wave"],

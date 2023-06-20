@@ -45,7 +45,7 @@ from pylibamazed.Parameters import Parameters
 from tests.python.test_parameters_utils import TestParametersUtils
         
 class TestParameters:
-    generic_parameters: Parameters = TestParametersUtils().make_parameters();
+    generic_parameters: Parameters = Parameters(TestParametersUtils().make_parameters_dict());
 
     def test_get_solve_methods(self):
         self.generic_parameters.get_solve_methods(TestParametersUtils.default_object_type)
@@ -61,11 +61,11 @@ class TestParameters:
         self.generic_parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
 
         # With other solve method
-        parameters = TestParametersUtils().make_parameters(**{"method": "other"})
+        parameters = Parameters(TestParametersUtils().make_parameters_dict(**{"method": "other"}))
         parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
 
         # With None solve method
-        parameters = TestParametersUtils().make_parameters(**{"method": None})
+        parameters = Parameters(TestParametersUtils().make_parameters_dict(**{"method": None}))
         parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
 
     def test_get_solve_method(self):
@@ -85,11 +85,12 @@ class TestParameters:
             "velocity_absorption_column_name": [0],
             "velocity_emission_column_name": [0],
         }))
-        self.generic_parameters.load_linemeas_parameters_from_catalog(source_id)
+        config = TestParametersUtils().make_config()
+        self.generic_parameters.load_linemeas_parameters_from_catalog(source_id, config)
 
         # Source id absent from loaded dataframe
         with pytest.raises(APIException):
-            self.generic_parameters.load_linemeas_parameters_from_catalog("some absent source id")
+            self.generic_parameters.load_linemeas_parameters_from_catalog("some absent source id", config)
 
     def test_load_linemeas_parameters_from_result_store(self, mocker):
         mocker.patch(
@@ -112,11 +113,11 @@ class TestParameters:
         self.generic_parameters.reliability_enabled(TestParametersUtils.default_object_type)
 
     def test_lineratio_catalog_enabled(self):
-        self.generic_parameters.lineratio_catalog_enabled(TestParametersUtils.default_object_type)
+        self.generic_parameters.is_tplratio_catalog_needed(TestParametersUtils.default_object_type)
 
         # With other solve method
-        parameters = TestParametersUtils().make_parameters(**{"method": "other"})
-        parameters.lineratio_catalog_enabled(TestParametersUtils.default_object_type)
+        parameters = Parameters(TestParametersUtils().make_parameters_dict(**{"method": "other"}))
+        parameters.is_tplratio_catalog_needed(TestParametersUtils.default_object_type)
 
     def test_stage_enabled(self):
         for stage in [

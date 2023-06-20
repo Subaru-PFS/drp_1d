@@ -36,17 +36,17 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+from typing import List
 import pandas as pd
 import json
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import ErrorCode
 
 class Parameters:
-    def __init__(self, parameters, config=None):
+    def __init__(self, parameters: dict):
         self.parameters = parameters
-        self.config = config
         
-    def get_solve_methods(self,object_type):
+    def get_solve_methods(self,object_type) -> dict:
         method = self.get_solve_method(object_type)
         linemeas_method = self.get_linemeas_method(object_type)
         methods = []
@@ -57,7 +57,7 @@ class Parameters:
         return methods
         
     def get_redshift_sampling(self,object_type):
-        return self.parameters[object_type]["redshiftsampling"]
+        return self.get_object_params(object_type).get("redshiftsampling")
 
     def get_linemodel_methods(self, object_type):
         methods = []
@@ -65,7 +65,7 @@ class Parameters:
         solve_method = self.get_solve_method(object_type)
         if linemeas_method:
             methods.append(linemeas_method) 
-        if solve_method and solve_method == "LineModelSolve":
+        if solve_method == "LineModelSolve":
             methods.append(solve_method) 
         return methods
     
@@ -75,32 +75,111 @@ class Parameters:
             if solve_method != "LineModelSolve":
                 return False 
             else:
-                return self.parameters[object_type][solve_method]["linemodel"]["skipsecondpass"]
+                return self.get_linemodel_params(object_type, solve_method).get("skipsecondpass")
         return False
+    
+    def get_objects_solve_methods(self):
+        ret = dict()
+        for object_type in self.get_objects():
+            if self.get_solve_method(object_type):
+                ret[object_type] = self.get_solve_method(object_type)
+        return ret
+    
+    def get_objects_linemeas_methods(self):
+        ret = dict()
+        for object_type in self.get_objects():
+            if self.get_linemeas_method(object_type):
+                ret[object_type] = self.get_linemeas_method(object_type)
+        return ret
 
     def get_solve_method(self, object_type):
-        return self.parameters[object_type]["method"]
+        return self.get_object_params(object_type).get("method")
 
     def get_linemeas_method(self, object_type):
-        return self.parameters[object_type]["linemeas_method"]
+        return self.get_object_params(object_type).get("linemeas_method")
+    
+    def get_solve_method_params(self, object_type, solve_method):
+        return self.get_object_params(object_type).get(solve_method)
+    
+    def get_linemodel_params(self, object_type, solve_method) ->  dict:
+        return self.get_solve_method_params(object_type, solve_method).get("linemodel")
+    
+    def get_linecatalog(self, object_type, solve_method, throw=True):
+        linecatalog = self.get_linemodel_params(object_type, solve_method).get("linecatalog")
+        if linecatalog is None and throw:
+            raise APIException(
+                ErrorCode.MISSING_PARAMETER,
+                "Incomplete parameter file, {}.linemodel.linecatalog entry"
+                " mandatory".format(solve_method)
+                )
+        return linecatalog
 
+    def get_linemodel_nsigmasupport(self, object_type, solve_method):
+        return self.get_linemodel_params(object_type, solve_method).get("nsigmasupport")
+    
+    def get_linemodel_igmfit(self, object_type, solve_method):
+        return self.get_linemodel_params(object_type, solve_method).get("igmfit")
+    
+    def get_tplratio_ismfit(self, object_type, solve_method):
+        return self.get_linemodel_params(object_type, solve_method).get("tplratio_ismfit")
+
+    def get_tplratio_catalog(self, object_type, solve_method="LineModelSolve", throw=True):
+        catalog = self.get_linemodel_params(object_type, solve_method).get("tplratio_catalog")
+        if catalog is None and throw:
+            raise APIException(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format("LineModelSolve"))
+        return catalog
+    
     def get_objects(self):
-        return self.parameters["objects"]
+        return self.parameters.get("objects")
+    
+    def get_template_dir(self, object_type: str, throw=True):
+        template_dir = self.get_object_params(object_type).get("template_dir")
+        if template_dir is None and throw :
+            raise APIException(
+                ErrorCode.MISSING_PARAMETER,
+                "Incomplete parameter file, template_dir entry mandatory"
+            )
+        return template_dir
+    
+    def get_ebmv(self) -> dict:
+        return self.parameters.get("ebmv")
 
-    def load_linemeas_parameters_from_catalog(self, source_id):
-        for object_type in self.config["linemeascatalog"].keys():
-            lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
+    def get_ebmv_count(self):
+        return self.get_ebmv().get("count")
+    
+    def get_ebmv_step(self):
+        return self.get_ebmv().get("step")
+    
+    def get_ebmv_start(self):
+        return self.get_ebmv().get("start")
+    
+    def set_redshiftref(self, object_type, redshift_ref) -> None:
+        self.get_object_params(object_type)["redshiftref"] = redshift_ref
+
+    def set_velocity_absorption(self, object_type: str, solve_method, velocity_abs) -> None:
+        self.get_linemodel_params(object_type, solve_method)["velocityabsorption"] = velocity_abs
+
+    def set_velocity_emission(self, object_type: str, solve_method, velocity_em) -> None:
+        self.get_linemodel_params(object_type, solve_method)["velocityemission"] = velocity_em
+
+    def load_linemeas_parameters_from_catalog(self, source_id, config):
+        for object_type in config["linemeascatalog"].keys():
+            lm = pd.read_csv(config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
             lm = lm[lm.ProcessingID == source_id]
             if lm.empty:
-                raise APIException(ErrorCode.INVALID_PARAMETER,f"Uncomplete linemeas catalog, {source_id} missing")
+                raise APIException(
+                    ErrorCode.INVALID_PARAMETER,
+                    f"Uncomplete linemeas catalog, {source_id} missing"
+                )
             
-            columns = self.config["linemeas_catalog_columns"][object_type]
+            columns = config["linemeas_catalog_columns"][object_type]
             redshift_ref = float(lm[columns["Redshift"]].iloc[0])
             velocity_abs = float(lm[columns["VelocityAbsorption"]].iloc[0])
             velocity_em = float(lm[columns["VelocityEmission"]].iloc[0])
-            self.parameters[object_type]["redshiftref"] = redshift_ref
-            self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
-            self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em
+
+            self.set_redshiftref(object_type, redshift_ref)
+            self.set_velocity_absorption(object_type, "LineMeasSolve", velocity_abs)
+            self.set_velocity_emission(object_type, "LineMeasSolve", velocity_em)
 
     def load_linemeas_parameters_from_result_store(self, output, object_type):
 
@@ -110,28 +189,32 @@ class Parameters:
                                                     "Redshift",
                                                     0)
         self.parameters[object_type]["redshiftref"] = redshift
-        vel_a = output.get_attribute_from_source(object_type,
+        velocity_abs = output.get_attribute_from_source(object_type,
                                                  self.get_solve_method(object_type),
                                                  "model_parameters",
                                                  "VelocityAbsorption",
                                                  0)
-        vel_e = output.get_attribute_from_source(object_type,
+        velocity_em = output.get_attribute_from_source(object_type,
                                                  self.get_solve_method(object_type),
                                                  "model_parameters",
                                                  "VelocityEmission",
                                                  0)
-        self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = vel_a
-        self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = vel_e
+        self.set_velocity_absorption(object_type, "LineMeasSolve", velocity_abs)
+        self.set_velocity_emission(object_type, "LineMeasSolve", velocity_em)
         
     def get_json(self):
         return json.dumps(self.parameters)
     
     def reliability_enabled(self, object_type):
-        return self.parameters[object_type].get("enable_reliability")
+        return self.get_object_params(object_type).get("enable_reliability")
 
-    def lineratio_catalog_enabled(self, object_type):
-        if self.get_solve_method(object_type) == "LineModelSolve" :
-            return self.parameters[object_type]["LineModelSolve"]["linemodel"]["lineRatioType"] == "tplratio"
+    def get_lineratio_type(self, object_type, solve_method) -> str:
+        return self.get_linemodel_params(object_type, solve_method).get("lineRatioType")
+
+    def is_tplratio_catalog_needed(self, object_type) -> bool:
+        solve_method = self.get_solve_method(object_type)
+        if solve_method == "LineModelSolve" :
+            return self.get_lineratio_type(object_type, solve_method) == "tplratio"
         else:
             return False
         
@@ -145,9 +228,82 @@ class Parameters:
         elif stage == "reliability_solver":
             return self.reliability_enabled(object_type)
         elif stage == "sub_classif_solver":
-            return self.lineratio_catalog_enabled(object_type)
+            return self.is_tplratio_catalog_needed(object_type)
         else:
             raise Exception("Unknown stage {stage}") 
        
     def get_filters(self):
         return self.parameters.get("filters")
+    
+    def get_additional_cols(self) -> List[str]:
+        return self.parameters.get("additional_cols")
+    
+    def get_photometry_band(self, throw=True):
+        band = self.parameters.get("photometryBand")
+        if band is None and throw:
+            raise APIException(ErrorCode.MISSING_PARAMETER,"photometryBand parameter required")
+        if len(band) == 0 and throw:
+            raise APIException(ErrorCode.INVALID_PARAMETER, "photometryBand parameter is empty")
+        return band
+
+    def get_lsf(self) -> dict:
+        return self.parameters.get("LSF")
+
+    def get_lsf_type(self):
+        return self.get_lsf().get("LSFType")
+    
+    def get_multiobs_method(self):
+        registered_methods = [None, "", "merge", "full"]
+        method = self.parameters.get("multiobsmethod")
+        if method not in registered_methods:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER,
+                f"multiobsmethod must be one of {registered_methods}"
+            )
+        return method
+
+    def get_airvacuum_method(self):
+        return self.parameters.get("airvacuum_method", "")
+    
+    def get_gaussian_variable_width_file_name(self):
+        return self.get_lsf().get("GaussianVariablewidthFileName")
+    
+    def get_photometry_transmission_dir(self):
+        return self.parameters.get("photometryTransmissionDir")
+    
+    def get_reliability_model(self, object_type):
+        return self.get_object_params(object_type).get("reliability_model")
+    
+    def get_object_params(self, object_type) -> dict:
+        return self.parameters.get(object_type)
+    
+    def get_redshift_range(self, object_type):
+        return self.get_object_params(object_type).get("redshiftrange")
+    
+    def get_redshift_step(self, object_type):
+        return self.get_object_params(object_type).get("redshiftstep")
+    
+    def get_additional_cols(self):
+        return self.parameters.get("additional_cols")
+
+    def get_lambda_range(self):
+        return self.parameters.get("lambdarange")
+    
+    def set_lsf_type(self, lsf_type):
+        self.parameters["LSF"]["LSFType"] = lsf_type
+    
+    def set_lsf_param(self, param_name, data):
+        self.parameters["LSF"][param_name] = data
+
+    def to_json(self):
+        return json.dumps(self.parameters)
+    
+    def check_lineameas_validity(self):
+        for object_type in self.get_objects():
+            method = self.get_solve_method(object_type)
+            if method == "LineModelSolve":
+                if self.get_linemeas_method(object_type):
+                    raise APIException(
+                        ErrorCode.INCOHERENT_CONFIG_OPTION,
+                        "Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously."
+                    )

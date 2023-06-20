@@ -59,6 +59,7 @@ from astropy.io import fits, ascii
 import glob
 import h5py
 from pylibamazed.Exception import AmazedError,AmazedErrorFromGlobalException,APIException
+from pylibamazed.Parameters import Parameters
 
 
 zflag = CFlagWarning.GetInstance()
@@ -68,7 +69,7 @@ def _get_linecatalog_id(row):
     wl = round(row.WaveLength,2)
     return row.Name + "_" + str(wl) + "_" + row.Type
 
-def load_reliability_model(model_path,params_dict, object_type):
+def load_reliability_model(model_path,parameters: Parameters, object_type):
     try:
         # to avoid annoying messages about gpu/cuda availability
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -86,8 +87,8 @@ def load_reliability_model(model_path,params_dict, object_type):
     redshift_range = [model_ha["zrange_min"],
                       model_ha["zrange_max"]]
     redshift_range_step = model_ha["zrange_step"]
-    s_redshift_range = params_dict[object_type]["redshiftrange"]
-    s_redshift_range_step = params_dict[object_type]["redshiftstep"]
+    s_redshift_range = parameters.get_redshift_range(object_type)
+    s_redshift_range_step = parameters.get_redshift_step(object_type)
     if s_redshift_range != redshift_range:
         raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"redshift range of reliability model must be identical to solver one : {redshift_range} != {s_redshift_range}")
     if s_redshift_range_step != redshift_range_step:
@@ -116,14 +117,14 @@ class CalibrationLibrary:
     :param calibration_dir: path of the directory containing all calibration data
     :type calibration_dir: path
     """
-    def __init__(self, parameters, calibration_dir):
+    def __init__(self, parameters: Parameters, calibration_dir):
         self.parameters = parameters
         self.calibration_dir = os.path.expanduser(calibration_dir)
         self.templates_catalogs = dict()
         self.templates_ratios = dict()
         self.line_catalogs = dict()
         self.line_catalogs_df = dict()
-        for object_type in self.parameters["objects"]:
+        for object_type in self.parameters.get_objects():
             self.line_catalogs[object_type] = dict()
             self.line_catalogs_df[object_type] = dict()
 
@@ -185,30 +186,28 @@ class CalibrationLibrary:
                 self.templates_catalogs[object_type].Add(template)
 
     def load_templates_catalog(self, object_type):
-        if "template_dir" not in self.parameters[object_type]:
-            # TODO create a dedicated class for setup exceptions
-            raise APIException(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, template_dir entry mandatory")
         self.templates_catalogs[object_type] = CTemplateCatalog()
-        self._load_templates(object_type, self.parameters[object_type]["template_dir"])
+        template_dir = self.parameters.get_template_dir(object_type)
+        self._load_templates(object_type, template_dir)
         # Temporary hack before handling process flow in api
         if "all" not in self.templates_catalogs:
             self.templates_catalogs["all"] = CTemplateCatalog()
-        self._load_templates("all", self.parameters[object_type]["template_dir"])
+        self._load_templates("all", template_dir)
 
-    def load_linecatalog(self, object_type, method):
+    def load_linecatalog(self, object_type, solve_method):
         logger = logging.getLogger("calibration_api")
-        linemodel_params = self.parameters[object_type][method]["linemodel"]
-        if "linecatalog" not in linemodel_params:
-            raise APIException(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, {}.linemodel.linecatalog entry"
-                                                          " mandatory".format(method))
-        line_catalog_file = os.path.join(self.calibration_dir,linemodel_params["linecatalog"])
+        linemodel_params = self.parameters.get_linemodel_params(object_type, solve_method)
+        line_catalog_file = os.path.join(
+            self.calibration_dir,
+            self.parameters.get_linecatalog(object_type, solve_method)
+        )
         if not os.path.exists(line_catalog_file):
             raise APIException(ErrorCode.INVALID_FILEPATH,"{} cannot be found".format(line_catalog_file))
 
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
-        nsigmasupport = self.parameters[object_type][method]["linemodel"]["nsigmasupport"]
-        self.line_catalogs[object_type][method] = CLineCatalog(nsigmasupport)
+        nsigmasupport = self.parameters.get_linemodel_nsigmasupport(object_type, solve_method)
+        self.line_catalogs[object_type][solve_method] = CLineCatalog(nsigmasupport)
         try:
             line_catalog = pd.read_csv( line_catalog_file, sep='\t',dtype={"WaveLength":float,"AmplitudeGroupName":str,
                                                                            "EnableFitWaveLengthOffset":bool})
@@ -219,11 +218,11 @@ class CalibrationLibrary:
         
         # force "-1" to undefStr (for compatibility)
         line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName" ] = undefStr
-
-        enableIGM = self.parameters[object_type][method]["linemodel"]["igmfit"]
+        
+        enableIGM = self.parameters.get_linemodel_igmfit(object_type, solve_method)
 
         #here should go the change of profiles if igm is applied
-        self.line_catalogs_df[object_type][method] = line_catalog
+        self.line_catalogs_df[object_type][solve_method] = line_catalog
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
                 asymParams = TAsymParams(1., 4.5, 0.)
@@ -233,7 +232,7 @@ class CalibrationLibrary:
                 raise Exception("Profile in linecatalog cannot be asymFixed")
             else:
                 asymParams = TAsymParams(0, 0, 0)
-            self.line_catalogs[object_type][method].AddLineFromParams(row.Name,
+            self.line_catalogs[object_type][solve_method].AddLineFromParams(row.Name,
                                                              row.WaveLength,
                                                              row.Type,
                                                              row.Force,
@@ -248,36 +247,34 @@ class CalibrationLibrary:
                                                              _get_linecatalog_id(row),
                                                              self.meiksin)
             if enableIGM:
-                    self.line_catalogs[object_type][method].convertLineProfiles2SYMIGM(self.meiksin)                                  
+                    self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)                                  
 
     def load_line_ratio_catalog_list(self, object_type):
         logger = logging.getLogger("calibration_api")
-        linemodel_params = self.parameters[object_type]["LineModelSolve"]["linemodel"]
-        if "tplratio_catalog" not in linemodel_params:
-            raise APIException(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format("LineModelSolve"))
-
+        solve_method = "LineModelSolve"
+        tplratio_catalog = self.parameters.get_tplratio_catalog(object_type, solve_method)
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
-                                               linemodel_params["tplratio_catalog"],
+                                               tplratio_catalog,
                                                "*.tsv")
         line_ratio_catalog_list = glob.glob(line_ratio_catalog_list)
         if not line_ratio_catalog_list:
             raise APIException(ErrorCode.INVALID_FILEPATH, "Template ratio catalog empty")
         line_ratio_catalog_list.sort()
-        logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
+        logger.info("Loading {} line ratio catalogs: {}".format(object_type, tplratio_catalog))
 
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1
-        if self.parameters[object_type]["LineModelSolve"]["linemodel"]["tplratio_ismfit"]:
-            n_ebmv_coeffs = self.parameters["ebmv"]["count"]
+        if self.parameters.get_tplratio_ismfit(object_type, solve_method):
+            n_ebmv_coeffs = self.parameters.get_ebmv_count()
         prior = 1./(n_ebmv_coeffs * len(line_ratio_catalog_list))
 
-        enableIGM = self.parameters[object_type]["LineModelSolve"]["linemodel"]["igmfit"]
+        enableIGM = self.parameters.get_linemodel_igmfit(object_type, solve_method)
 
         for f in line_ratio_catalog_list:
             lr_catalog_df = pd.read_csv(f,sep='\t')
             name = f.split(os.sep)[-1][:-4]
             with open(os.path.join(self.calibration_dir,
-                                   linemodel_params["tplratio_catalog"],
+                                   self.parameters.get_tplratio_catalog(object_type, solve_method),
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
             for k in range(n_ebmv_coeffs):
@@ -308,9 +305,9 @@ class CalibrationLibrary:
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
 
     def load_lsf(self):
-        if self.parameters["LSF"]["LSFType"] == "GaussianVariableWidth":
+        if self.parameters.get_lsf_type() == "GaussianVariableWidth":
             file = os.path.join(self.calibration_dir,
-                                self.parameters["LSF"]["GaussianVariablewidthFileName"])
+                                self.parameters.get_gaussian_variable_width_file_name())
             # TODO check hdul here
             with fits.open(file) as hdul:
                 self.lsf["wave"] = hdul[1].data.field(0)
@@ -318,13 +315,10 @@ class CalibrationLibrary:
 
     def load_photometric_bands(self):
         paths = os.path.join(self.calibration_dir,
-                             self.parameters["photometryTransmissionDir"],
+                             self.parameters.get_photometry_transmission_dir(),
                              "*")
-        if not "photometryBand" in self.parameters:
-            raise APIException(ErrorCode.MISSING_PARAMETER,"photometryBand parameter required")
-        bands = self.parameters["photometryBand"]
-        if len(bands) == 0:
-            raise APIException(ErrorCode.INVALID_PARAMETER, "photometryBand parameter is empty")
+        
+        bands = self.parameters.get_photometry_band()
         for f in glob.glob(paths):
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
@@ -336,9 +330,9 @@ class CalibrationLibrary:
         df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))
         _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
         self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti,
-                                                        self.parameters["ebmv"]["start"],
-                                                        self.parameters["ebmv"]["step"],
-                                                        self.parameters["ebmv"]["count"])
+                                                        self.parameters.get_ebmv_start(),
+                                                        self.parameters.get_ebmv_step(),
+                                                        self.parameters.get_ebmv_count())
 
     # Important: igm curves should be loaded in the increasing order of their extinction per bin of z,
     # i.e., from the least extinction curve to the highest extinction curve 
@@ -364,35 +358,35 @@ class CalibrationLibrary:
         try:
             self.load_Meiksin()
             self.load_calzetti()
-            for object_type in self.parameters["objects"]:
+            for object_type in self.parameters.get_objects():
                 self.load_templates_catalog(object_type)
                 #load linecatalog for linemodelsolve
                 
-                method = self.parameters[object_type]["method"]            
-                if method == "LineModelSolve":                
-                    self.load_linecatalog(object_type,method)
-                    if self.parameters[object_type][method]["linemodel"]["lineRatioType"] == "tplratio" or self.parameters[object_type][method]["linemodel"]["lineRatioType"] == "tplcorr" :
+                solve_method = self.parameters.get_solve_method(object_type)           
+                if solve_method == "LineModelSolve":                
+                    self.load_linecatalog(object_type,solve_method)
+                    
+                    if self.parameters.is_tplratio_catalog_needed(object_type):
                         self.load_line_ratio_catalog_list(object_type)
 		            #load linecatalog for linemeassolve
-                linemeas_method = self.parameters[object_type]["linemeas_method"]
+                linemeas_method = self.parameters.get_linemeas_method(object_type)
                 if linemeas_method == "LineMeasSolve":
                     self.load_linecatalog(object_type,linemeas_method)            
 	
                 # Load the reliability model
-                if self.parameters[object_type].get("enable_reliability"):
-                    
+                if self.parameters.reliability_enabled(object_type):
                     model_path = os.path.join(self.calibration_dir,
-                                              self.parameters[object_type]["reliability_model"])
+                                              self.parameters.get_reliability_model(object_type))
                     mp = load_reliability_model(model_path,
                                                 self.parameters,
                                                 object_type)
                     self.reliability_models[object_type] = mp["model"]
                     self.reliability_parameters[object_type] = mp["parameters"]
 
-            if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
+            if self.parameters.get_lsf_type() != "FROMSPECTRUMDATA":
                 self.load_lsf()
 
-            if "photometryTransmissionDir" in self.parameters:
+            if self.parameters.get_photometry_transmission_dir() is not None:
                 self.load_photometric_bands()
         except GlobalException as e:
             raise AmazedErrorFromGlobalException(e)
@@ -409,9 +403,10 @@ class CalibrationLibrary:
         raise NotImplementedError("TODO after reviewing CProcessFlowContext::Init")
 
     def get_sub_type(self, object_type,line_ratio_catalog):
-        linemodel_params = self.parameters[object_type]["LineModelSolve"]["linemodel"]
-        with open(os.path.join(self.calibration_dir,
-                               linemodel_params["tplratio_catalog"],
-                               line_ratio_catalog + ".json")) as f:
-                tpl_ratio_conf = json.load(f)
-                return tpl_ratio_conf["sub_type"]
+        with open(os.path.join(
+            self.calibration_dir,
+            self.parameters.get_tplratio_catalog(object_type, "LineModelSolve"),
+            line_ratio_catalog + ".json"
+        )) as f:
+            tpl_ratio_conf = json.load(f)
+            return tpl_ratio_conf["sub_type"]

@@ -82,6 +82,6 @@ class TestParametersUtils:
         }
         return config
 
-    def make_parameters(self, config=None, **kwargs) -> Parameters:
-        return Parameters(self.make_input_parameters(**kwargs), self.make_config())
+    def make_parameters_dict(self, config=None, **kwargs) -> dict:
+        return self.make_input_parameters(**kwargs)
     

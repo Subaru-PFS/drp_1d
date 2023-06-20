@@ -40,6 +40,7 @@
 import pytest
 from pylibamazed.Filter import FilterList, SpectrumFilterItem
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
+from pylibamazed.Parameters import Parameters
 
 
 class TestParamJsonFilterLoader:
@@ -48,26 +49,26 @@ class TestParamJsonFilterLoader:
         jsonFilterLoader = ParamJsonFilterLoader()
 
         # Json is not a list
-        params = {"filters": {"i should be a list": ""}}
+        params = Parameters({"filters": {"i should be a list": ""}})
         with pytest.raises(ValueError, match=r"must be a list"):
             jsonFilterLoader.get_filters(params)
 
         # Wrong key
-        params = {"filters": [{"wrong key": ""}]}
+        params = Parameters({"filters": [{"wrong key": ""}]})
         with pytest.raises(ValueError, match=r"must have exactly the following keys"):
             jsonFilterLoader.get_filters(params)
         
         # Missing key
-        params= {"filters": [{"key": "", "instruction": ""}]}
+        params = Parameters({"filters": [{"key": "", "instruction": ""}]})
         with pytest.raises(ValueError, match=r"must have exactly the following keys"):
             jsonFilterLoader.get_filters(params)
 
     def test_load_returns_expected_filters(self):
         jsonFilterLoader = ParamJsonFilterLoader()
-        params= {"filters": [
+        params = Parameters({"filters": [
             {"key": "col1", "instruction": "<", "value": 2},
             {"key": "col2", "instruction": ">=", "value": 2}
-        ]}
+        ]})
         assert jsonFilterLoader.get_filters(params) == FilterList([
             SpectrumFilterItem("col1", "<", 2),
             SpectrumFilterItem("col2", ">=", 2)

@@ -89,8 +89,7 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
         self.photometric_data.append(phot)
 
     def load_others(self, spectrum, obs_id: str=""):
-        # TODO add additional cols in parameters
-        additional_cols = self.parameters.get("additional_cols")
+        additional_cols = self.parameters.get_additional_cols()
         if additional_cols is None:
             return
         

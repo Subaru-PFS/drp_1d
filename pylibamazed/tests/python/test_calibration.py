@@ -39,28 +39,27 @@
 # ============================================================================
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
-from pylibamazed.redshift import GlobalException
+from pylibamazed.Parameters import Parameters
 import os
 
 module_root_dir = os.path.split(__file__)[0]
-
 calibration_dir = os.path.join(module_root_dir, "..","..","auxdir","pylibamazed","test","calibration")
 
 
-def make_parameters():
-    parameters = dict()
-    parameters["objects"]=["galaxy"]
-    parameters["ebmv"] = dict()
-    parameters["ebmv"]["count"] = 3
-    parameters["galaxy"] = dict()
-    parameters["galaxy"]["LineModelSolve"]=dict()
-    parameters["galaxy"]["LineModelSolve"]["linemodel"]=dict()
-    parameters["galaxy"]["LineModelSolve"]["linemodel"]["linecatalog"]="linecatalogs/linecatalogamazedvacuum_H0.tsv"
-    parameters["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_catalog"]="lineratiocataloglists/lineratiocatalogs_v16/"
-    parameters["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_ismfit"]=True
-    parameters["galaxy"]["LineModelSolve"]["linemodel"]["nsigmasupport"]=8
-    parameters["galaxy"]["LineModelSolve"]["linemodel"]["igmfit"]=True
-    return parameters
+def make_parameters() -> Parameters:
+    parameters_dict = dict()
+    parameters_dict["objects"]=["galaxy"]
+    parameters_dict["ebmv"] = dict()
+    parameters_dict["ebmv"]["count"] = 3
+    parameters_dict["galaxy"] = dict()
+    parameters_dict["galaxy"]["LineModelSolve"]=dict()
+    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]=dict()
+    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["linecatalog"]="linecatalogs/linecatalogamazedvacuum_H0.tsv"
+    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_catalog"]="lineratiocataloglists/lineratiocatalogs_v16/"
+    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_ismfit"]=True
+    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["nsigmasupport"]=8
+    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["igmfit"]=True
+    return Parameters(parameters_dict)
 
 
 def test_calibration_linecatalog():

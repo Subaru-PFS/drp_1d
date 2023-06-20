@@ -40,6 +40,7 @@
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
+from pylibamazed.Parameters import Parameters
 
 import os
 import json
@@ -142,7 +143,7 @@ def save_output(output, config, observation):
 
 def test_ITLikeTest():
     config = make_config()
-    param = get_parameters(config["parameters_file"])
+    param = Parameters(get_parameters(config["parameters_file"]))
     context = Context(config, param)  # vars returns the dict version of config
     observation = get_observation(config["input_file"])
 
