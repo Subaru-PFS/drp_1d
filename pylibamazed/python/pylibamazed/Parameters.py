@@ -319,12 +319,16 @@ class Parameters:
     # photometry is not yet implemented for TplcombinationSolve 
     # photometry has no sens for LineMeasSolve, since "nocontinuum"
     def is_photometry_activated(self, object_type, method):
-        if method == "TplcombinationSolve" or self.isfftprocessingActive(object_type):
-            return False
+# TODO this should be checked elsewhere, else we duplicate code -> us try except, there are other places in this class with same problem
+#        if method == "TplcombinationSolve" or self.isfftprocessingActive(object_type):
+#            return False
         if method == "LineModelSolve":
             return self.parameters[object_type][method]["linemodel"]["enablephotometry"]
-        return self.parameters[object_type][method]["enablephotometry"]
-
+        try:
+            return self.parameters[object_type][method]["enablephotometry"]
+        except:
+            return False
+        
     #a simple check 
     def isfftprocessingActive(self, object_type):
         method = self.parameters[object_type]["method"]
