@@ -403,10 +403,13 @@ class CalibrationLibrary:
         raise NotImplementedError("TODO after reviewing CProcessFlowContext::Init")
 
     def get_sub_type(self, object_type,line_ratio_catalog):
-        with open(os.path.join(
-            self.calibration_dir,
-            self.parameters.get_tplratio_catalog(object_type, "LineModelSolve"),
-            line_ratio_catalog + ".json"
-        )) as f:
-            tpl_ratio_conf = json.load(f)
-            return tpl_ratio_conf["sub_type"]
+        try:
+            with open(os.path.join(
+                self.calibration_dir,
+                self.parameters.get_tplratio_catalog(object_type, "LineModelSolve"),
+                line_ratio_catalog + ".json"
+            )) as f:
+                tpl_ratio_conf = json.load(f)
+                return tpl_ratio_conf["sub_type"]
+        except FileNotFoundError as e:
+            return ""
