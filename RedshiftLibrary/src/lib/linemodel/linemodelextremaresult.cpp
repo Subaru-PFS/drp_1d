@@ -196,10 +196,9 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
 bool LineModelExtremaResult::HasCandidateDataset(
     const std::string &dataset) const {
   return (dataset == "model_parameters" || dataset == "model" ||
-          dataset == "fp_model_parameters" || dataset == "continuum" ||
-          dataset == "fitted_lines" || dataset == "fp_fitted_lines" ||
-          dataset == "line_mask" || dataset == "continuum_polynom" ||
-          dataset == "phot_values");
+          dataset == "continuum" || dataset == "fitted_lines" ||
+          dataset == "fp_fitted_lines" || dataset == "line_mask" ||
+          dataset == "continuum_polynom" || dataset == "phot_values");
 }
 
 std::shared_ptr<const COperatorResult>

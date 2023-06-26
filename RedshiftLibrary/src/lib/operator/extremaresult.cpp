@@ -44,7 +44,7 @@ using namespace NSEpic;
 std::shared_ptr<const COperatorResult>
 ExtremaResult::getCandidate(const int &rank, const std::string &dataset,
                             bool firstpassResults) const {
-  if (dataset == "model_parameters" || dataset == "fp_model_parameters")
+  if (dataset == "model_parameters")
     return m_ranked_candidates[rank].second;
   else if (dataset == "model")
     return m_savedModelSpectrumResults[rank];
@@ -59,7 +59,7 @@ ExtremaResult::getCandidate(const int &rank, const std::string &dataset,
 
 const std::string &
 ExtremaResult::getCandidateDatasetType(const std::string &dataset) const {
-  if (dataset == "model_parameters" || dataset == "fp_model_parameters")
+  if (dataset == "model_parameters")
     return m_ranked_candidates[0].second->getType();
   else if (dataset == "model")
     return m_savedModelSpectrumResults[0]->getType();
@@ -73,5 +73,5 @@ ExtremaResult::getCandidateDatasetType(const std::string &dataset) const {
 
 bool ExtremaResult::HasCandidateDataset(const std::string &dataset) const {
   return (dataset == "model_parameters" || dataset == "model" ||
-          dataset == "fp_model_parameters" || dataset == "phot_values");
+          dataset == "phot_values");
 }
