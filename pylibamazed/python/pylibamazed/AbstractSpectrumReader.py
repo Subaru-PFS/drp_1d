@@ -48,7 +48,7 @@ from pylibamazed.Container import Container
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxAxis_withError,
                                   CSpectrum,
-                                  PC_Get_AxisSampleList,
+                                  PC,
                                   CProcessFlowContext,
                                   TLSFGaussianVarWidthArgs,
                                   CLSFFactory,
@@ -192,7 +192,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return PC_Get_AxisSampleList(self._spectra[index].GetSpectralAxis().GetSamplesVector())
+        return PC.Get_AxisSampleList(self._spectra[index].GetSpectralAxis().GetSamplesVector())
 
     def get_flux(self, index=0):
         """
@@ -201,7 +201,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return PC_Get_AxisSampleList(self._spectra[index].GetFluxAxis().GetSamplesVector())
+        return PC.Get_AxisSampleList(self._spectra[index].GetFluxAxis().GetSamplesVector())
 
     def get_error(self, index=0):
         """
@@ -210,7 +210,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return PC_Get_AxisSampleList(self._spectra[index].GetErrorAxis().GetSamplesVector())
+        return PC.Get_AxisSampleList(self._spectra[index].GetErrorAxis().GetSamplesVector())
 
     def get_lsf(self):
         """

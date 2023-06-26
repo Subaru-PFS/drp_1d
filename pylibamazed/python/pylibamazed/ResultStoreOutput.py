@@ -42,12 +42,7 @@ import numpy as np
 import pandas as pd
 import resource
 from collections import defaultdict
-from pylibamazed.redshift import (PC_Get_Float64Array,
-                                  PC_Get_Float32Array,
-                                  PC_Get_Int32Array,
-                                  PC_Get_BoolArray,
-                                  PC_Get_MaskArray,
-                                  CLog, ErrorCode)
+from pylibamazed.redshift import PC,CLog, ErrorCode
 from pylibamazed.Exception import AmazedError,APIException
 
 
@@ -85,15 +80,15 @@ class ResultStoreOutput(AbstractOutput):
                 return attr[band_name]
             return attr[object_type]
         elif attr_type == "TFloat64List":
-            return PC_Get_Float64Array(attr)
+            return PC.Get_Float64Array(attr)
         elif attr_type == "TFloat32List":
-            return PC_Get_Float32Array(attr)
+            return PC.Get_Float32Array(attr)
         elif attr_type == "TInt32List":
-            return PC_Get_Int32Array(attr)
+            return PC.Get_Int32Array(attr)
         elif attr_type == "TBoolList":
-            return PC_Get_BoolArray(attr)
+            return PC.Get_BoolArray(attr)
         elif attr_type == "CMask":
-            ret = PC_Get_MaskArray(attr.getMaskList())
+            ret = PC.Get_MaskArray(attr.getMaskList())
         else:
             return attr
 
