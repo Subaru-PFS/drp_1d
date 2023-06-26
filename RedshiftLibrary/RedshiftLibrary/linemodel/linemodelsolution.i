@@ -60,8 +60,12 @@ public:
 
   Float64 snrHa = NAN;
   Float64 lfHa = NAN;
+  Float64 snrHa_DI = NAN;
+  Float64 lfHa_DI = NAN;
   Float64 snrOII = NAN;
   Float64 lfOII = NAN;
+  Float64 snrOII_DI = NAN;
+  Float64 lfOII_DI = NAN;
   Int32 NLinesAboveSnrCut = -1;
   Int32 nDDL = -1;
 
