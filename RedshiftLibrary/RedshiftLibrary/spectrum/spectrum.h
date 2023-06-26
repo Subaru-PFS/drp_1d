@@ -157,7 +157,7 @@ public:
   void SetContinuumEstimationMethod(std::string method) const;
   void SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
 
-  void ScaleFluxAxis(Float64 scale);
+  void ApplyAmplitude(Float64 amplitude);
 
   void Rebin(const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,

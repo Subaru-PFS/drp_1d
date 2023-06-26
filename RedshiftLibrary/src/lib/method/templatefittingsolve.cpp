@@ -42,10 +42,12 @@
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/operator/templatefittingwithphot.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -482,19 +484,24 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     tplCatalog.m_logsampling = false;
     std::shared_ptr<const CTemplate> tpl =
         tplCatalog.GetTemplateByName(m_categoryList, tplName);
-    std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
+
+    std::shared_ptr<CModelSpectrumResult> spcmodelPtr;
+    TPhotVal values;
+    std::tie(spcmodelPtr, values) =
         m_templateFittingOperator->ComputeSpectrumModel(
             tpl, z, TplFitResult->FitEbmvCoeff[idx],
             TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
             overlapThreshold,
-            0); // TODO [multiobs] save multiple models , there should be a loop
-                // here, only model N°0 is recorded
+            0); // TODO [multiobs] save multiple models , there should be a
+                // loop here, only model N°0 is recorded
 
     if (spcmodelPtr == nullptr)
       THROWG(INTERNAL_ERROR, "Could not "
                              "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
+    extremaResult->m_modelPhotValue[i] =
+        std::make_shared<const CModelPhotValueResult>(values);
   }
 
   return extremaResult;

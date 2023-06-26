@@ -147,14 +147,6 @@ protected:
     return currentRange.GetBegin() > RESTLAMBDA_LYA;
   };
 
-  virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) {
-    return m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);
-  };
-
-  virtual bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) {
-    return m_templateRebined_bf[spcIndex].ApplyDustCoeff(kEbmv);
-  };
-
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                                                    Float64 redshift,
                                                    Int32 spcIndex = 0);

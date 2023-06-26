@@ -45,15 +45,16 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumModel::CSpectrumModel(CLineModelElementList &elements,
-                               std::shared_ptr<const CSpectrum> spc,
-                               const TLineVector &restLineList,
-                               std::shared_ptr<CTplModelSolution> tfv)
+CSpectrumModel::CSpectrumModel(
+    CLineModelElementList &elements,
+    const std::shared_ptr<const CSpectrum> &spc,
+    const TLineVector &restLineList,
+    const std::shared_ptr<CTplModelSolution> &tfv,
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
     : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
       m_SpectrumModel(*(spc)), m_RestLineList(restLineList),
-      m_fitContinuum(tfv) {
+      m_fitContinuum(tfv), m_templateFittingOperator(TFOperator) {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
-  m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.setError(m_inputSpc->GetFluxAxis().GetError());
@@ -685,7 +686,8 @@ Int32 CSpectrumModel::ApplyContinuumOnGrid(
   std::string inter_opt = "spline";
   tpl->setRebinInterpMethod(inter_opt);
   Float64 overlapThreshold = 1., amplitude = 1.;
-  std::shared_ptr<CModelSpectrumResult> spcmodel =
+  std::shared_ptr<CModelSpectrumResult> spcmodel;
+  std::tie(spcmodel, m_photValues) =
       m_templateFittingOperator->ComputeSpectrumModel(
           tpl, zcontinuum, m_fitContinuum->tplEbmvCoeff,
           m_fitContinuum->tplMeiksinIdx, amplitude, overlapThreshold,

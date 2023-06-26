@@ -657,11 +657,11 @@ void CSpectrum::Rebin(const TFloat64Range &range,
                    opt_error_interp);
 }
 
-void CSpectrum::ScaleFluxAxis(Float64 scale) {
-  m_RawFluxAxis *= scale;
+void CSpectrum::ApplyAmplitude(Float64 amplitude) {
+  m_RawFluxAxis *= amplitude;
   if (alreadyRemoved) {
-    m_ContinuumFluxAxis *= scale;
-    m_WithoutContinuumFluxAxis *= scale;
+    m_ContinuumFluxAxis *= amplitude;
+    m_WithoutContinuumFluxAxis *= amplitude;
   }
   m_rebin->reset();
 }

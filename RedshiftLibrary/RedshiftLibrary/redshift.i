@@ -71,6 +71,7 @@
 %shared_ptr(TTplCombinationResult)
 %shared_ptr(TLineModelResult)
 %shared_ptr(CModelSpectrumResult)
+%shared_ptr(CModelPhotValueResult)
 %shared_ptr(TLSFArguments)
 %shared_ptr(TLSFGaussianVarWidthArgs)
 %shared_ptr(TLSFGaussianConstantWidthArgs)
@@ -127,6 +128,7 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
@@ -395,6 +397,7 @@ public:
 %include "operator/tplCombinationExtremaResult.i"
 %include "linemodel/linemodelextremaresult.i"
 %include "operator/modelspectrumresult.i"
+%include "operator/modelphotvalueresult.i"
 %include "linemodel/linemodelsolution.i"
 
 struct CTplModelSolution {
@@ -486,13 +489,13 @@ class COperatorResultStore
   std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
 										 const std::string& method,
 										 const std::string& name ,
-								                 const std::string &dataset,
+								     const std::string &dataset,
 										 const int& rank
 										 ) const;
   std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType,
 										 const std::string& method,
 										 const std::string& name ,
-                         							 const std::string &dataset,
+                     const std::string &dataset,
 										 const int& rank
 									       ) const;
 
@@ -520,7 +523,12 @@ class COperatorResultStore
 								     const std::string& method,
 								     const std::string& name 
 								     ) const  ;
-  
+  std::shared_ptr<const CModelPhotValueResult> GetModelPhotValueResult(const std::string &objectType,
+                                            const std::string &method,
+                                            const std::string &name,
+                                            const std::string &dataset,
+                                            const int &rank) const;
+
   const std::string&  GetGlobalResultType(const std::string& objectType,
                                           const std::string& method,
                                           const std::string& name ) const;

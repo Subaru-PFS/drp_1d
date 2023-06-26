@@ -408,38 +408,24 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
-  // sort the redshift and keep track of the indexes
-  TFloat64List sortedRedshifts(m_redshifts.size());
-  TFloat64List sortedIndexes(m_redshifts.size());
-  vector<pair<Float64, Int32>> vp;
-  vp.reserve(m_redshifts.size());
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    vp.push_back(make_pair(m_redshifts[i], i));
-  }
-  std::sort(vp.begin(), vp.end());
-  for (Int32 i = 0; i < vp.size(); i++) {
-    sortedRedshifts[i] = vp[i].first;
-    sortedIndexes[i] = vp[i].second;
-  }
-
   std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>(sortedRedshifts.size());
+      std::make_shared<CTemplateFittingResult>(m_redshifts.size());
   TInt32List MeiksinList;
   TInt32List EbmvList;
   tpl->GetIsmIgmIdxList(opt_extinction, opt_dustFitting, MeiksinList, EbmvList,
                         FitEbmvIdx, FitMeiksinIdx);
 
-  result->Redshifts = sortedRedshifts;
+  result->Redshifts = m_redshifts;
 
-  if (logpriorze.size() > 0 && logpriorze.size() != sortedRedshifts.size())
+  if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size())
     THROWG(INTERNAL_ERROR,
            Formatter() << "prior list size(" << logpriorze.size()
                        << ") does not match the input redshift-list size :"
-                       << sortedRedshifts.size());
+                       << m_redshifts.size());
 
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
+  for (Int32 i = 0; i < m_redshifts.size(); i++) {
     const CPriorHelper::TPriorEList &logp =
-        logpriorze.size() > 0 && logpriorze.size() == sortedRedshifts.size()
+        logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
             ? logpriorze[i]
             : CPriorHelper::TPriorEList();
 
@@ -459,27 +445,27 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   // overlap warning
   Float64 overlapValidInfZ = -1;
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
+  for (Int32 i = 0; i < m_redshifts.size(); i++) {
     bool ok = true;
     for (auto ov : result->Overlap[i])
       ok &= (ov >= overlapThreshold);
     if (ok) {
-      overlapValidInfZ = sortedRedshifts[i];
+      overlapValidInfZ = m_redshifts[i];
       break;
     }
   }
   Float64 overlapValidSupZ = -1;
-  for (Int32 i = sortedRedshifts.size() - 1; i >= 0; i--) {
+  for (Int32 i = m_redshifts.size() - 1; i >= 0; i--) {
     bool ok = true;
     for (auto ov : result->Overlap[i])
       ok &= (ov >= overlapThreshold);
     if (ok) {
-      overlapValidSupZ = sortedRedshifts[i];
+      overlapValidSupZ = m_redshifts[i];
       break;
     }
   }
-  if (overlapValidInfZ != sortedRedshifts[0] ||
-      overlapValidSupZ != sortedRedshifts[sortedRedshifts.size() - 1]) {
+  if (overlapValidInfZ != m_redshifts[0] ||
+      overlapValidSupZ != m_redshifts[m_redshifts.size() - 1]) {
     Log.LogInfo("  Operator-TemplateFitting: overlap warning for %s: "
                 "minz=%.3f, maxz=%.3f",
                 tpl->GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
@@ -487,7 +473,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   // only bad status warning
   Int32 oneValidStatusFoundIndex = -1;
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
+  for (Int32 i = 0; i < m_redshifts.size(); i++) {
     if (result->Status[i] == nStatus_OK) {
       oneValidStatusFoundIndex = i;
       Log.LogDebug("  Operator-TemplateFitting: STATUS VALID found for %s: at "
@@ -506,7 +492,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   // loop error status warning
   Int32 loopErrorStatusFoundIndex = -1;
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
+  for (Int32 i = 0; i < m_redshifts.size(); i++) {
     if (result->Status[i] == nStatus_LoopError) {
       loopErrorStatusFoundIndex = i;
       Log.LogDebug("  Operator-TemplateFitting: STATUS Loop Error found for "

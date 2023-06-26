@@ -89,7 +89,6 @@ private:
       m_fitValues; //[nz][n_continuum_candidates]
   std::shared_ptr<fitMaxValues> m_fitMaxValues;
   Int32 n_continuum_candidates = 0;
-
   TFloat64List redshiftgrid;
 };
 

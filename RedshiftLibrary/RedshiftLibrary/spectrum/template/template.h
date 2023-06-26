@@ -93,7 +93,7 @@ public:
 
   bool ApplyDustCoeff(Int32 kDust);
   bool ApplyMeiksinCoeff(Int32 meiksinIdx);
-  void ScaleFluxAxis(Float64 amplitude);
+  void ApplyAmplitude(Float64 amplitude);
   Int32 GetIsmCoeff() const;
   Int32 GetIgmCoeff() const;
   const TFloat64List &GetcomputedDustCoeffs() const;

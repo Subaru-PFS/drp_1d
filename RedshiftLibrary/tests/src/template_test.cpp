@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
   BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
 
-  tplStar.ScaleFluxAxis(1.);
+  tplStar.ApplyAmplitude(1.);
   tplStar.InitIsmIgmConfig(lbdaRange, 2.86, ismCorrectionCalzetti,
                            igmCorrectionMeiksin);
   BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxAxisList);

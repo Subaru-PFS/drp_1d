@@ -633,6 +633,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     const std::shared_ptr<CTemplateFittingResult> &result,
     const TInt32List &MeiksinList, const TInt32List &EbmvList,
     const Float64 &dtd) {
+
   const TAxisSampleList &spectrumRebinedLambda =
       m_spectra[0]->GetSpectralAxis().GetSamplesVector();
   const TAxisSampleList &spectrumRebinedFluxRaw =
@@ -754,7 +755,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
     if (enableIGM) {
       Int32 meiksinIdx = MeiksinList[kIGM];
-      m_templateRebined_bf[0].ApplyMeiksinCoeff(meiksinIdx);
+      ApplyMeiksinCoeff(meiksinIdx);
     }
 
     for (Int32 kISM = 0; kISM < nISM; kISM++) {
@@ -764,7 +765,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
       if (m_enableISM) {
         Int32 kDust = EbmvList[kISM];
-        m_templateRebined_bf[0].ApplyDustCoeff(kDust);
+        ApplyDustCoeff(kDust);
       }
 
       const TAxisSampleList &tplRebinedFluxcorr =

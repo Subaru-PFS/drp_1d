@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
@@ -79,13 +80,16 @@ public:
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
 
-  std::shared_ptr<CModelSpectrumResult>
+  std::tuple<std::shared_ptr<CModelSpectrumResult>, TPhotVal>
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
                        Float64 amplitude, const Float64 overlapThreshold,
                        Int32 index);
+  virtual TPhotVal getIntegratedFluxes(Float64 ampl = 1.0) const {
+    return TPhotVal();
+  };
 
-  inline virtual bool IsFFTProcessing() { return false; };
+  virtual bool IsFFTProcessing() { return false; };
 
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
   void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
@@ -98,6 +102,18 @@ protected:
                              Float64 &overlapFraction,
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);
+
+  virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);
+  };
+
+  virtual bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyDustCoeff(kEbmv);
+  };
+
+  virtual void ApplyAmplitude(Float64 amplitude, Int32 spcIndex = 0) {
+    return m_templateRebined_bf[spcIndex].ApplyAmplitude(amplitude);
+  };
 
   // Likelihood
   virtual Float64 EstimateLikelihoodCstLog() const;

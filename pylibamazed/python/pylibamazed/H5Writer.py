@@ -93,7 +93,7 @@ class H5Writer():
             nb_candidates = self.output.get_nb_candidates(object_type)
             for rank in range(nb_candidates):
                 candidate = candidates.create_group(self.output.get_candidate_group_name(rank))
-                for ds in self.output.get_available_datasets("candidate",object_type = object_type):
+                for ds in self.output.get_available_datasets(level,object_type = object_type):
                     if object_type in self.excluded_datasets and ds in self.excluded_datasets[object_type]:
                         continue
                     dataset = self.output.get_dataset(object_type,

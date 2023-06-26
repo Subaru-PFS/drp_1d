@@ -174,6 +174,7 @@ private:
       Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
       TTemplateConstRefList &tplList) const;
   void updateRedshiftGridAndResults();
+  void makeTFOperator(const TFloat64List &redshifts);
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;

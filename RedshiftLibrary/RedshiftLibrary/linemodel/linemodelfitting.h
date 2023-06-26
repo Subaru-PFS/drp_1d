@@ -68,16 +68,19 @@ class CLineRatioManager;
 class CLineModelFitting {
 
 public:
-  CLineModelFitting();
+  CLineModelFitting(
+      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
   CLineModelFitting(
       const std::shared_ptr<const CSpectrum> &template_,
-      const TLambdaRange
-          &lambdaRange); // only used for template orthogonalization, TODO use
-                         // only one of the future subclasses ? at least inherit
-                         // from clinemodelfitting
+      const TLambdaRange &lambdaRange,
+      const std::shared_ptr<COperatorTemplateFittingBase>
+          &TFOperator); // only used for template orthogonalization, TODO use
+                        // only one of the future subclasses ? at least inherit
+                        // from clinemodelfitting
 
   void initParameters();
-  void initMembers();
+  void
+  initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
   void LoadCatalog(const TLineVector &restLineList);
   void LoadCatalogOneMultiline(const TLineVector &restLineList);
   void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList);
