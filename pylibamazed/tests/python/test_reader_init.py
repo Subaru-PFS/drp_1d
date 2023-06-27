@@ -40,7 +40,7 @@
 from pylibamazed.Exception import APIException
 import pytest
 
-from pylibamazed.redshift import GlobalException, PC_Get_AxisSampleList
+from pylibamazed.redshift import GlobalException
 from pylibamazed.Filter import FilterList, SpectrumFilterItem
 from tests.python.spectrum_reader_utils import TestSpectrumReaderUtils
 import numpy as np
