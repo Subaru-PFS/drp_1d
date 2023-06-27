@@ -67,8 +67,8 @@ class AbstractOutput:
         self.errors = dict()        
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
-
-        #TODO find another emplacement for these informations
+        self.load_errors()
+        self.cache = False
 
     def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None, band_name=None):
         raise NotImplementedError("Implement in derived class")
@@ -85,8 +85,8 @@ class AbstractOutput:
     def get_nb_candidates_in_source(self, object_type, method):
         raise NotImplementedError("Implement in derived class")
 
-    def has_error_in_source(self, object_type, stage):
-        raise NotImplementedError("Implement in derived class")
+    def load_errors(self):
+        pass
 
     def has_error(self, object_type, stage):
         return self.get_error_full_name(object_type, stage) in self.errors
@@ -99,39 +99,6 @@ class AbstractOutput:
             return f"{stage}_{object_type}"
         else:
             return stage
-        
-    def store_error(self, amz_exception, object_type, stage):
-        full_name = self.get_error_full_name(object_type, stage)
-        self.errors[full_name] = dict()
-        self.errors[full_name]["code"]=ErrorCode(amz_exception.getErrorCode()).name
-        self.errors[full_name]["message"]=amz_exception.getMessage()
-        self.errors[full_name]["line"]=amz_exception.getLine()
-        self.errors[full_name]["filename"]=amz_exception.getFileName()
-        self.errors[full_name]["method"]=amz_exception.getMethod()
-
-        if not object_type and stage != "classification":
-            for ot in self.object_types:
-                for o_stage in ObjectStages:
-                    if self.parameters.stage_enabled(ot,o_stage):
-                        self.store_consequent_error(ot, o_stage, stage)
-        else:
-            for i in range(len(ObjectStages)):
-                if stage == ObjectStages[i]:
-                    for j in range(i+1,len(ObjectStages)):
-                        o_stage = ObjectStages[j]
-                        if self.parameters.stage_enabled(object_type,o_stage):
-                            self.store_consequent_error(object_type, o_stage, stage)                
-
-    def store_consequent_error(self, object_type, stage, causing_stage):
-
-        full_name = self.get_error_full_name(object_type, stage)
-        self.errors[full_name] = dict()
-        self.errors[full_name]["code"]=causing_stage
-        self.errors[full_name]["message"]=f"not run because {causing_stage} failed"
-        self.errors[full_name]["line"]=-1
-        self.errors[full_name]["filename"]=""
-        self.errors[full_name]["method"]=""
-        
     
     def load_all(self):
         self.load_root()
@@ -141,8 +108,65 @@ class AbstractOutput:
             self.load_object_level(object_type)
             self.load_method_level(object_type)
             self.load_candidate_level(object_type)
+        self.cache = True
+        
+    def get_attribute_short(self, attribute, lines_ids):
 
+        attr_parts = attribute.split(".")
+        root = attr_parts[0]
+        data = attr_parts[-1]
+        rank = None
+        if root == "classification":
+            return self.get_attribute(None,"classification",data,None)
+        elif root == "error":
+            if self.has_error(attr_parts[1], attr_parts[2]):
+                return self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
+            elif self.has_error(None,attr_parts[1]):
+                return self.get_error(None,attr_parts[1])[attr_parts[2]]
+            else:
+                print(f"wrong error definition {attribute}",file=sys.stderr)
+                return None
+        elif root == "ContextWarningFlags":
+            return self.get_attribute(None,"context_warningFlag","ContextWarningFlags")
+        elif "WarningFlags" in data:
+            return self.get_attribute(root,"warningFlag",data)
+        else:
+            object_type = root
+            if len(attr_parts) == 2:
+                rank = 0
+            elif len(attr_parts) == 3:
+                rank = int(attr_parts[1]) 
+        if len(attr_parts) < 4:
+            if self.has_attribute(object_type,"model_parameters", data, rank):
+                return self.get_attribute(object_type, "model_parameters", data, rank)
+            else:
+                rank = None
+                for dataset in ["linemeas_parameters", "reliability"]:
+                    if self.has_attribute(object_type,dataset, data, rank):
+                        return self.get_attribute(object_type, dataset, data, rank)
+        else:
+            dataset = attr_parts[1]
+            line_name = attr_parts[2]
+            col_name = attr_parts[3]
+            object_type = root
+            if line_name not in lines_ids:
+                raise APIException(ErrorCode.INTERNAL_ERROR, f"Line {line_name}  not found in {lines_ids}")
+            if len(attr_parts) == 4:
+                rank = None
+                index_col = "LinemeasLineID"
+            else:
+                rank = int(attr_parts[4])
+                index_col = "FittedLineID"
+            fitted_lines_attr = self.get_attribute(object_type, dataset, col_name, rank)
+            fitted_lines_idx =  self.get_attribute(object_type, dataset, index_col, rank)
+            df = pd.DataFrame({"idx":fitted_lines_idx,col_name:fitted_lines_attr}).set_index("idx")
+            return df.at[lines_ids[line_name], col_name]
+        return None
+    
     def get_attribute(self,object_type, dataset, attribute, rank = None):
+        if not self.cache:
+            method = self.get_method(object_type, dataset)
+            return self.get_attribute_from_source(object_type, method, dataset, attribute, rank)
         if object_type:
             if rank is None:
                 return self.object_results[object_type][dataset][attribute]
@@ -157,7 +181,18 @@ class AbstractOutput:
         else:
             return False
 
+    def get_method(self, object_type, dataset):
+        if object_type == None:
+            return None
+        if dataset == "linemeas":
+            return self.parameters.get_linemeas_method(object_type)
+        else:
+            return self.parameters.get_solve_method(object_type)
+        
     def has_attribute(self,object_type, dataset,attribute,rank=None):
+        if not self.cache:
+            method = self.get_method(object_type, dataset)
+            return self.has_attribute_in_source(object_type, method, dataset, attribute, rank)
         if not object_type:
             if dataset in self.root_results:
                 return attribute in self.root_results[dataset]
@@ -392,7 +427,7 @@ class AbstractOutput:
                                                     ds,
                                                     attr_name,
                                                     rank=rank,
-                                                    band_name=band) 
+                                                    band_name=band)
                             if attr is not None:
                                 attr_name_ = band
                                 candidates[rank][attr_name_] = attr
@@ -429,58 +464,11 @@ class AbstractOutput:
         ret = dict()
         ret["ProcessingID"] = self.spectrum_id
         for attribute in attributes:
-            attr_parts = attribute.split(".")
-            root = attr_parts[0]
-            data = attr_parts[-1]
-            rank = None
             try:
-                if root == "classification":
-                    ret[attribute]=self.get_attribute(None,"classification",data,None)
-                    continue
-                elif root == "error":
-                    if self.has_error(attr_parts[1], attr_parts[2]):
-                        ret[attribute] = self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
-                    elif self.has_error(None,attr_parts[1]):
-                        ret[attribute] = self.get_error(None,attr_parts[1])[attr_parts[2]]
-                    continue
-                elif root == "ContextWarningFlags":
-                    ret[attribute] = self.root_results["context_warningFlag"]["ContextWarningFlags"]
-                    continue
-                elif "WarningFlags" in data:
-                    ret[attribute] = self.object_results[root]["warningFlag"][data]
-                    continue
-                else:
-                    category = root
-                    if len(attr_parts) == 2:
-                        rank = 0
-                    elif len(attr_parts) == 3:
-                        rank = int(attr_parts[1]) 
-                if len(attr_parts) < 4:
-                    if self.has_attribute(category,"model_parameters", data, rank):
-                        ret[attribute] = self.get_attribute(category, "model_parameters", data, rank)
-                    else:
-                        rank = None
-                        for dataset in ["linemeas_parameters", "reliability"]:
-                            if self.has_attribute(category,dataset, data, rank):
-                                ret[attribute] = self.get_attribute(category, dataset, data, rank)
-                else:
-                    dataset = attr_parts[1]
-                    if not self.has_dataset(category, dataset):
-                        continue
-                    line_name = attr_parts[2]
-                    col_name = attr_parts[3]
-                    if line_name not in lines_ids:
-                        raise APIException(ErrorCode.INTERNAL_ERROR, f"Line {line_name}  not found in {lines_ids}")
-                    if len(attr_parts) == 4:
-                        fitted_lines = pd.DataFrame(self.get_dataset(category, dataset))
-                    else:
-                        fitted_lines = pd.DataFrame(self.get_dataset(category, dataset,int(attr_parts[4])))
-                    if dataset == "linemeas":
-                        fitted_lines.set_index("LinemeasLineID", inplace=True)
-                    else:
-                        fitted_lines.set_index("FittedLineID", inplace=True)
-                    ret[attribute] = fitted_lines.at[lines_ids[line_name], col_name]
+                value = self.get_attribute_short(attribute, lines_ids)
+                if value is not None:
+                    ret[attribute] = value 
             except Exception as e:
-                zlog.LogDebug(f"could not extract {attribute}") 
+                zlog.LogDebug(f"could not extract {attribute} : {e}") 
         return ret
 
