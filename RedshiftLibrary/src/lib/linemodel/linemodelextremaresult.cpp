@@ -89,6 +89,12 @@ void TLineModelResult::updateFromModel(
   snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
 
+  // store Lya fitting parameters
+  LyaWidthCoeff = lmresult->LineModelSolutions[idx].LyaWidthCoeff;
+  LyaAlpha = lmresult->LineModelSolutions[idx].LyaAlpha;
+  LyaDelta = lmresult->LineModelSolutions[idx].LyaDelta;
+  LyaIgm = lmresult->LineModelSolutions[idx].LyaIgm;
+
   // scale marginalization correction
   Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
   CorrScaleMarg = corrScaleMarg;

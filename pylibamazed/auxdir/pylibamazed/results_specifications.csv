@@ -53,6 +53,10 @@ lfOII	model_parameters	False	candidate	lfOII	extrema_results	f8
 snrOII	model_parameters	False	candidate	snrOII	extrema_results	f8
 lfHa	model_parameters	False	candidate	lfHa	extrema_results	f8
 snrHa	model_parameters	False	candidate	snrHa	extrema_results	f8
+LyaWidthCoeff	model_parameters	False	candidate	LyaWidthCoeff	extrema_results	f8
+LyaAlpha	model_parameters	False	candidate	LyaAlpha	extrema_results	f8
+LyaDelta	model_parameters	False	candidate	LyaDelta	extrema_results	f8
+LyaIgm	model_parameters	False	candidate	LyaIgm	extrema_results	i
 FirstpassRedshift	model_parameters	True	candidate	Redshift	extrema_results	f8
 FirstpassRedshiftLogProbaDensity	model_parameters	True	candidate	ValProba	extrema_results	f8
 FirstpassContinuumName	model_parameters	True	candidate	fittedTpl.tplName	extrema_results	S40
