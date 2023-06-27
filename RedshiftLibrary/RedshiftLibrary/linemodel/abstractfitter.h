@@ -98,9 +98,6 @@ protected:
 
   void fitLyaProfile(Float64 redshift);
 
-  void computeCrossProducts(CLineModelElement &elt, Float64 redshift,
-                            Int32 lineIdx);
-
   void fitAmplitude(Int32 eltIndex, Float64 redshift, Int32 lineIdx = undefIdx);
 
   virtual void fitAmplitudeAndLambdaOffset(Int32 eltIndex, Float64 redshift,

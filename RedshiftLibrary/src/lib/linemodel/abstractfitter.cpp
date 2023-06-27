@@ -196,105 +196,15 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   }
 }
 
-void CAbstractFitter::computeCrossProducts(CLineModelElement &elt,
-                                           Float64 redshift, Int32 lineIdx) {
-
+void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
+                                   Int32 lineIdx) {
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
   const CSpectrumFluxAxis &noContinuumfluxAxis =
       m_model->getSpcFluxAxisNoContinuum();
   const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
-  Float64 sumCross = 0.0;
-  Float64 sumGauss = 0.0;
-  Float64 dtmFree = 0.0;
-
-  const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
-
-  Float64 y = 0.0;
-  Float64 x = 0.0;
-  Float64 yg = 0.0;
-  Float64 c = 1.0;
-
-  Float64 err2 = 0.0;
-  Int32 num = 0;
-
-  Int32 nLines = elt.GetSize();
-  for (Int32 k = 0; k < nLines; k++) { // loop for the intervals
-    if (elt.IsOutsideLambdaRange(k)) {
-      continue;
-    }
-    if (lineIdx != undefIdx && !elt.isLineActiveOnSupport(k, lineIdx)) {
-      continue;
-    }
-
-    for (Int32 i = elt.getStartNoOverlap(k); i <= elt.getEndNoOverlap(k); i++) {
-      c = continuumfluxAxis[i];
-      y = noContinuumfluxAxis[i];
-      x = spectralAxis[i];
-
-      yg = 0.0;
-
-      for (Int32 k2 = 0; k2 < nLines; k2++) { // loop for the signal synthesis
-        if (elt.IsOutsideLambdaRange(k2) || !elt.isLineActiveOnSupport(k2, k)) {
-          continue;
-        }
-        Int32 sf = elt.getSignFactor(k2);
-        if (sf == -1) {
-          yg += sf * c * elt.GetNominalAmplitude(k2) *
-                elt.GetLineProfileAtRedshift(k2, redshift, x);
-        } else {
-          yg += sf * elt.GetNominalAmplitude(k2) *
-                elt.GetLineProfileAtRedshift(k2, redshift, x);
-        }
-      }
-      num++;
-      err2 = 1.0 / (error[i] * error[i]);
-      dtmFree += yg * y * err2;
-      sumGauss += yg * yg * err2;
-    }
-  }
-
-  if (num == 0 || sumGauss == 0) {
-    Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
-                 " num=%d, mtm=%f",
-                 num, sumGauss);
-    sumGauss = NAN;
-    dtmFree = NAN;
-  }
-
-  elt.SetSumGauss(sumGauss);
-  elt.SetDtmFree(dtmFree);
-}
-
-void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
-                                   Int32 lineIdx) {
-  auto &elt = m_Elements[eltIndex];
-  Int32 nLines = elt->GetSize();
-  auto &elementParam = m_ElementParam[eltIndex];
-
-  elementParam->m_FittedAmplitudes.assign(nLines, NAN);
-  elementParam->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
-
-  if (elt->IsOutsideLambdaRange()) {
-    elt->SetSumCross(NAN);
-    elt->SetSumGauss(NAN);
-    elt->SetDtmFree(NAN);
-    return;
-  }
-
-  computeCrossProducts(*elt, redshift, lineIdx);
-
-  if (std::isnan(elt->GetSumGauss())) {
-    elt->SetSumCross(NAN);
-    return;
-  }
-
-  elt->SetSumCross(std::max(0.0, elt->GetDtmFree()));
-  Float64 A = elt->GetSumCross() / elt->GetSumGauss();
-
-  elt->SetElementAmplitude(A, 1.0 / sqrt(elt->GetSumGauss()));
-
-  return;
+  m_Elements[eltIndex]->fitAmplitude(
+      redshift, spectralAxis, noContinuumfluxAxis, continuumfluxAxis, lineIdx);
 }
 
 void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
