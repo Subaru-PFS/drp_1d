@@ -177,7 +177,7 @@ class ResultStoreOutput(AbstractOutput):
 
     def _get_operator_result(self, object_type, method, attribute_info, rank=None):
         if attribute_info.level == "root":
-            if attribute_info.ResultStore_key == "context_warningFlag":
+            if attribute_info.ResultStore_key in ["context_warningFlag" , "warningFlag"]:
                 return self.results_store.GetFlagLogResult(attribute_info.dataset,
                                                            attribute_info.dataset,
                                                            attribute_info.ResultStore_key)
