@@ -214,7 +214,7 @@ class Parameters:
     def is_tplratio_catalog_needed(self, object_type) -> bool:
         solve_method = self.get_solve_method(object_type)
         if solve_method == "LineModelSolve" :
-            return self.get_lineratio_type(object_type, solve_method) == "tplratio"
+            return self.get_lineratio_type(object_type, solve_method) in ["tplratio", "tplcorr"]
         else:
             return False
         
