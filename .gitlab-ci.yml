@@ -80,12 +80,6 @@ test-osx:
     policy: pull
     untracked: true
 
-wheel36-osx:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .wheel-osx
-
 wheel37-osx:
   variables:
     PYTHON_VERSION: "37"
@@ -112,14 +106,6 @@ wheel38-osx:
     key: "osx-$CI_COMMIT_REF_SLUG"
     policy: pull
     untracked: true
-
-push-rc-36-osx:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .push-rc-osx
-  dependencies:
-    - wheel36-osx
 
 push-rc-37-osx:
   variables:
@@ -263,14 +249,6 @@ test-manylinux2014:
     - .manylinux2014
     - .test-manylinux
 
-wheel36-manylinux2014:
-  variables:
-    PYTHON_VERSION: "36"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .wheel-manylinux
-
 wheel37-manylinux2014:
   variables:
     PYTHON_VERSION: "37"
@@ -294,14 +272,6 @@ wheel39-manylinux2014:
     - .manylinux2014
     - .wheel-manylinux
 
-pytest36-manylinux2014:
-  variables:
-    PYTHON_VERSION: "36"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .pytest-manylinux
-
 pytest37-manylinux2014:
   variables:
     PYTHON_VERSION: "37"
@@ -324,16 +294,6 @@ pytest39-manylinux2014:
   extends:
     - .manylinux2014
     - .pytest-manylinux
-
-push-rc-36-manylinux2014:
-  variables:
-    PYTHON_VERSION: "36"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .push-rc-manylinux
-  dependencies:
-    - wheel36-manylinux2014
 
 push-rc-37-manylinux2014:
   variables:
