@@ -87,7 +87,7 @@ bool CRules::checkRule01(
 
   // check if only weak lines are in this solution set
   for (const auto &mSolution : matchingSolutionSet)
-    if (mSolution.RestLine.GetIsStrong())
+    if (mSolution.RestLine.IsStrong())
       return true;
 
   // check if the absence of strong lines is justified by the wavelength range

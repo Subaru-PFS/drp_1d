@@ -327,7 +327,7 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
     bool alreadysol = std::find(indexesSols.begin(), indexesSols.end(),
                                 LineModelSolutions[solutionIdx].ElementId[j]) !=
                       indexesSols.end();
-    if (alreadysol || !restLineList[j].GetIsStrong() ||
+    if (alreadysol || !restLineList[j].IsStrong() ||
         !restLineList[j].GetIsEmission())
       continue;
 
@@ -356,7 +356,7 @@ TBoolList CLineModelResult::getStrongLinesPresence(
     const std::vector<CLineModelSolution> &linemodelsols) const {
 
   auto lineDoesntMatchStrongFilter = [&filterType](const CLine &line) {
-    return !line.GetIsStrong() ||
+    return !line.IsStrong() ||
            // i have a doubt on these below conditions. didier ?
            (filterType == 1 && !line.GetIsEmission()) ||
            (filterType == 2 && line.GetIsEmission());

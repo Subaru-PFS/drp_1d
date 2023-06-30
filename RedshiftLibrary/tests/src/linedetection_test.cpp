@@ -272,10 +272,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
   BOOST_CHECK(
       lineDetectionResult.LineCatalog.GetList()[1].GetProfile()->GetName() ==
       profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].GetIsStrong() ==
-              false);
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[1].GetIsStrong() ==
-              false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].IsStrong() == false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[1].IsStrong() == false);
 }
 
 BOOST_AUTO_TEST_CASE(Retest) {
@@ -355,10 +353,8 @@ BOOST_AUTO_TEST_CASE(Retest) {
   BOOST_CHECK(
       lineDetectionResult.LineCatalog.GetList()[1].GetProfile()->GetName() ==
       profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].GetIsStrong() ==
-              false);
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[1].GetIsStrong() ==
-              false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].IsStrong() == false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[1].IsStrong() == false);
 
   TInt32RangeList retestPeaks2;
   retestPeaks2.push_back(TInt32Range(5, 35));
@@ -392,8 +388,7 @@ BOOST_AUTO_TEST_CASE(Retest) {
   BOOST_CHECK(
       lineDetectionResult.LineCatalog.GetList()[0].GetProfile()->GetName() ==
       profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].GetIsStrong() ==
-              false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].IsStrong() == false);
 }
 
 BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop) {
@@ -519,7 +514,7 @@ BOOST_AUTO_TEST_CASE(Compute) {
   BOOST_CHECK_CLOSE(res->LineCatalog.GetList()[0].GetWidth(), 4.0, 1e-6);
   BOOST_CHECK(res->LineCatalog.GetList()[0].GetProfile()->GetName() ==
               profilesym->GetName());
-  BOOST_CHECK(res->LineCatalog.GetList()[0].GetIsStrong() == true);
+  BOOST_CHECK(res->LineCatalog.GetList()[0].IsStrong() == true);
   BOOST_CHECK(res->LineCatalog.GetList()[0].GetIsEmission() == true);
 }
 
