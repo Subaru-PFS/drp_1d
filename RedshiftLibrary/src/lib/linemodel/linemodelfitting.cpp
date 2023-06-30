@@ -137,10 +137,7 @@ void CLineModelFitting::initParameters() {
   if (continuumComponent == "tplfit" || continuumComponent == "tplfitauto") {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
-    // useloglambdasampling param is relevant only if linemodel.continuumfit is
-    // set to use fftprocessing below we explicit this check on this condition
     m_useloglambdasampling = ps->GetScoped<bool>("useloglambdasampling");
-    m_useloglambdasampling &= ps->GetScoped<bool>("continuumfit.fftprocessing");
     m_opt_fitcontinuum_maxN = ps->GetScoped<Int32>("continuumfit.count");
   }
 }

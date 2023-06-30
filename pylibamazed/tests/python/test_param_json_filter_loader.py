@@ -45,9 +45,13 @@ from pylibamazed.Parameters import Parameters
 
 class TestParamJsonFilterLoader:
 
-    def test_load_check_on_json_format(self):
+    def test_load_check_on_json_format(self, mocker):
         jsonFilterLoader = ParamJsonFilterLoader()
 
+        mocker.patch(
+            'pylibamazed.Parameters.Parameters.check_params',
+            return_value=True
+        )
         # Json is not a list
         params = Parameters({"filters": {"i should be a list": ""}})
         with pytest.raises(ValueError, match=r"must be a list"):
@@ -63,7 +67,11 @@ class TestParamJsonFilterLoader:
         with pytest.raises(ValueError, match=r"must have exactly the following keys"):
             jsonFilterLoader.get_filters(params)
 
-    def test_load_returns_expected_filters(self):
+    def test_load_returns_expected_filters(self, mocker):
+        mocker.patch(
+            'pylibamazed.Parameters.Parameters.check_params',
+            return_value=True
+        )
         jsonFilterLoader = ParamJsonFilterLoader()
         params = Parameters({"filters": [
             {"key": "col1", "instruction": "<", "value": 2},
