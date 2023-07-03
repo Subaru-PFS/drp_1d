@@ -352,29 +352,41 @@ class CalibrationLibrary:
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)
 
-    def load_all(self):
+    def load_all(self,calibs="all"):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content
         """
+        meiksin = calibs == "all" or "meiksin" in calibs
+        calzetti = calibs == "all" or "calzetti" in calibs
+        templates = calibs == "all" or "templates" in calibs
+        linecatalogs = calibs == "all" or "linecatalogs" in calibs
+        lineratios = calibs == "all" or "lineratios" in calibs
+        reliability = calibs == "all" or "reliability" in calibs
         try:
-            self.load_Meiksin()
-            self.load_calzetti()
+            if meiksin:
+                self.load_Meiksin()
+            if calzetti:
+                self.load_calzetti()
             for object_type in self.parameters.get_objects():
-                self.load_templates_catalog(object_type)
+                if templates:
+                    self.load_templates_catalog(object_type)
                 #load linecatalog for linemodelsolve
                 
                 solve_method = self.parameters.get_solve_method(object_type)           
                 if solve_method == "LineModelSolve":                
-                    self.load_linecatalog(object_type,solve_method)
+                    if linecatalogs:
+                        self.load_linecatalog(object_type,solve_method)
                     
                     if self.parameters.is_tplratio_catalog_needed(object_type):
-                        self.load_line_ratio_catalog_list(object_type)
+                        if lineratios:
+                            self.load_line_ratio_catalog_list(object_type)
 		            #load linecatalog for linemeassolve
                 linemeas_method = self.parameters.get_linemeas_method(object_type)
                 if linemeas_method == "LineMeasSolve":
-                    self.load_linecatalog(object_type,linemeas_method)            
+                    if linecatalogs:
+                        self.load_linecatalog(object_type,linemeas_method)            
 	
                 # Load the reliability model
-                if self.parameters.reliability_enabled(object_type):
+                if self.parameters.reliability_enabled(object_type) and reliability:
                     model_path = os.path.join(self.calibration_dir,
                                               self.parameters.get_reliability_model(object_type))
                     mp = load_reliability_model(model_path,
