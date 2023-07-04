@@ -44,7 +44,8 @@ import resource
 from collections import defaultdict
 from pylibamazed.redshift import PC,CLog, ErrorCode
 from pylibamazed.Exception import AmazedError,APIException
-
+from pylibamazed.redshift import ErrorCode, WarningCode
+from pylibamazed.AbstractOutput import ObjectStages,RootStages
 
 zlog = CLog.GetInstance()
 
@@ -222,3 +223,34 @@ class ResultStoreOutput(AbstractOutput):
             raise APIException(ErrorCode.OUTPUT_READER_ERROR,
                                "Unknown level {}".format(attribute_info.level))
 
+    def store_error(self, amz_exception, object_type, stage):
+        full_name = self.get_error_full_name(object_type, stage)
+        self.errors[full_name] = dict()
+        self.errors[full_name]["code"]=ErrorCode(amz_exception.getErrorCode()).name
+        self.errors[full_name]["message"]=amz_exception.getMessage()
+        self.errors[full_name]["line"]=amz_exception.getLine()
+        self.errors[full_name]["filename"]=amz_exception.getFileName()
+        self.errors[full_name]["method"]=amz_exception.getMethod()
+
+        if not object_type and stage != "classification":
+            for ot in self.object_types:
+                for o_stage in ObjectStages:
+                    if self.parameters.stage_enabled(ot,o_stage):
+                        self.store_consequent_error(ot, o_stage, stage)
+        else:
+            for i in range(len(ObjectStages)):
+                if stage == ObjectStages[i]:
+                    for j in range(i+1,len(ObjectStages)):
+                        o_stage = ObjectStages[j]
+                        if self.parameters.stage_enabled(object_type,o_stage):
+                            self.store_consequent_error(object_type, o_stage, stage)
+
+    def store_consequent_error(self, object_type, stage, causing_stage):
+
+        full_name = self.get_error_full_name(object_type, stage)
+        self.errors[full_name] = dict()
+        self.errors[full_name]["code"]=causing_stage
+        self.errors[full_name]["message"]=f"not run because {causing_stage} failed"
+        self.errors[full_name]["line"]=-1
+        self.errors[full_name]["filename"]=""
+        self.errors[full_name]["method"]=""
