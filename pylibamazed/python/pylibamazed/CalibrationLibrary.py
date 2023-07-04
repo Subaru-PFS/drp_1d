@@ -430,17 +430,18 @@ class CalibrationLibrary:
         lines_ids=dict()
         for attr in attributes:
             attr_parts = attr.split(".")
-            if len(attr_parts) < 2:
+            try:
+                if attr_parts[1] == "linemeas":
+                    linemeas_object = attr_parts[0]
+                    l_method = "LineMeasSolve"
+                elif attr_parts[1] == "fitted_lines":
+                    linemeas_object = attr_parts[0]
+                    l_method = "LineModelSolve"
+                else:
+                    continue
+                lines = self.line_catalogs_df[linemeas_object][l_method]
+            except :
                 continue
-            if attr_parts[1] == "linemeas" :
-                linemeas_object = attr_parts[0]
-                l_method = "LineMeasSolve"
-            elif attr_parts[1] == "fitted_lines":
-                linemeas_object = attr_parts[0]
-                l_method = "LineModelSolve"
-            else:
-                continue
-            lines = self.line_catalogs_df[linemeas_object][l_method]
             try:
                 line_name = attr_parts[2]
                 line_id = lines[lines["Name"] == line_name].index[0]
