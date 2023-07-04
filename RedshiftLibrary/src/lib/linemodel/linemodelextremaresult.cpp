@@ -84,10 +84,14 @@ void TLineModelResult::updateFromModel(
   // store model Ha SNR & Flux
   snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa = lmresult->LineModelSolutions[idx].lfHa;
+  snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
+  lfHa_DI = lmresult->LineModelSolutions[idx].lfHa_DI;
 
   // store model OII SNR & Flux
   snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
+  snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
+  lfOII_DI = lmresult->LineModelSolutions[idx].lfOII_DI;
 
   // store Lya fitting parameters
   LyaWidthCoeff = lmresult->LineModelSolutions[idx].LyaWidthCoeff;

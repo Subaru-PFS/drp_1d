@@ -976,6 +976,12 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
 
   TInt32List eIdx_oii;
   TInt32List subeIdx_oii;
+  TInt32List eIdx_ha;
+  TInt32List subeIdx_ha;
+  Float64 flux_oii = 0.0;
+  Float64 fluxVar_oii = 0.0;
+  Float64 flux_ha = 0.0;
+  Float64 fluxVar_ha = 0.0;
 
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 subeIdx = undefIdx;
@@ -1054,33 +1060,44 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
       modelSolution.FluxErrors[iRestLine] = fluxError;
       modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
 
-      // rough estimation of SNR_Ha, using the given model and fitting method
-      //(warning: Ha flux and error could have been obtained by global fitting
-      // of the model, which leads to different results than fitted
-      // individually...)
-      bool directIntegration = true;
+      // sum Ha complex fluxes
       if (isEmission &&
-          m_RestLineList[iRestLine].GetName() == linetags::halpha_em) {
-        if (directIntegration) {
-          modelSolution.snrHa = snrDI;
-          if (fluxDI > 0.0)
-            modelSolution.lfHa = log10(fluxDI);
-          else if (fluxDI == 0.)
-            modelSolution.lfHa = -INFINITY;
-        } else {
-          if (fluxError > 0.0)
-            modelSolution.snrHa = flux / fluxError;
-          if (flux > 0.0)
-            modelSolution.lfHa = log10(flux);
+          (m_RestLineList[iRestLine].GetName() == linetags::halpha_em ||
+           m_RestLineList[iRestLine].GetName() == linetags::niia_em ||
+           m_RestLineList[iRestLine].GetName() == linetags::niib_em)) {
+        eIdx_ha.push_back(eIdx);
+        subeIdx_ha.push_back(subeIdx);
+        if (flux > 0.0)
+          flux_ha += flux;
+        if (fluxError > 0.0)
+          fluxVar_ha += fluxError * fluxError;
+
+        if (eIdx_ha.size() == 3) {
+          fluxDI = NAN;
+          snrDI = NAN;
+          Int32 opt_cont_substract_abslinesmodel = 0;
+          m_model->getFluxDirectIntegration(eIdx_ha, subeIdx_ha,
+                                            opt_cont_substract_abslinesmodel,
+                                            fluxDI, snrDI, *(m_lambdaRange));
+          modelSolution.snrHa_DI = snrDI;
+          modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
+          modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
+          modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
         }
       }
+
+      // sum OII doublet fluxes
       if (isEmission &&
           (m_RestLineList[iRestLine].GetName() == linetags::oII3726_em ||
            m_RestLineList[iRestLine].GetName() == linetags::oII3729_em)) {
-        // here we only cover the fluxDI case.
         eIdx_oii.push_back(eIdx);
         subeIdx_oii.push_back(subeIdx);
-        if (directIntegration) {
+        if (flux > 0.0)
+          flux_oii += flux;
+        if (fluxError > 0.0)
+          fluxVar_oii += fluxError * fluxError;
+
+        if (eIdx_oii.size() == 2) {
           fluxDI = NAN;
           snrDI = NAN;
           Int32 opt_cont_substract_abslinesmodel = 0;
@@ -1088,11 +1105,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
                                             opt_cont_substract_abslinesmodel,
                                             fluxDI, snrDI, *(m_lambdaRange));
 
-          modelSolution.snrOII = snrDI;
-          if (fluxDI > 0.0)
-            modelSolution.lfOII = log10(fluxDI);
-          else if (fluxDI == 0.)
-            modelSolution.lfOII = -INFINITY;
+          modelSolution.snrOII_DI = snrDI;
+          modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
+          modelSolution.lfOII = flux_oii > 0.0 ? log10(flux_oii) : -INFINITY;
+          modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
         }
       }
     }

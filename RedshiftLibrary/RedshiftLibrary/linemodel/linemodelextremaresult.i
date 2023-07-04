@@ -62,8 +62,12 @@ public:
   Int32 NDof;            // non zero elements in the lambdarange
   Float64 snrHa;
   Float64 lfHa;
+  Float64 snrHa_DI;
+  Float64 lfHa_DI;
   Float64 snrOII;
   Float64 lfOII;
+  Float64 snrOII_DI;
+  Float64 lfOII_DI;
   Float64 LyaWidthCoeff;
   Float64 LyaAlpha;
   Float64 LyaDelta;
