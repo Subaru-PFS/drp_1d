@@ -234,28 +234,30 @@ TInt32List CLineModelElementList::getOverlappingElements(
     Float64 overlapThres) const {
   TInt32List indexes;
 
-  if (m_Elements[ind]->IsOutsideLambdaRange()) {
+  const auto &element_ref = *m_Elements[ind];
+
+  if (element_ref.IsOutsideLambdaRange()) {
     indexes.push_back(ind);
     return indexes;
   }
 
-  const TLineVector &linesRef = m_Elements[ind]->GetLines();
-  Int32 linetypeRef = m_Elements[ind]->GetElementType();
+  const TLineVector &linesRef = element_ref.GetLines();
+  Int32 linetypeRef = element_ref.GetElementType();
 
-  Int32 xinf = 0;
-  Int32 yinf = 0;
-  Int32 xsup = 0;
-  Int32 ysup = 0;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    // check linetype
-    if (m_Elements[iElts]->GetElementType() != linetypeRef) {
+    const auto &element = *m_Elements[iElts];
+
+    // skip itself
+    if (iElts == ind) {
+      indexes.push_back(ind);
       continue;
     }
 
-    // check if outside lambdarange
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
+    if (element.GetElementType() != linetypeRef)
       continue;
-    }
+
+    if (element.IsOutsideLambdaRange())
+      continue;
 
     // check if in exclusion list
     bool excluded = false;
@@ -265,33 +267,36 @@ TInt32List CLineModelElementList::getOverlappingElements(
         break;
       }
     }
-    if (excluded) {
+    if (excluded)
       continue;
-    }
 
-    const TLineVector &linesElt = m_Elements[iElts]->GetLines();
+    const TLineVector &linesElt = element.GetLines();
 
     for (Int32 iLineElt = 0; iLineElt < linesElt.size(); iLineElt++) {
+      if (element.IsOutsideLambdaRange(iLineElt))
+        continue;
       for (Int32 iLineRef = 0; iLineRef < linesRef.size(); iLineRef++) {
-        Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
-        Float64 cRef = m_Elements[ind]->GetLineWidth(
-            muRef, linesRef[iLineRef].GetIsEmission());
-        Float64 winsizeRef =
-            linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * cRef;
-        Float64 overlapSizeMin = winsizeRef * overlapThres;
-        xinf = muRef - winsizeRef / 2.0;
-        xsup = muRef + winsizeRef / 2.0;
+        if (element_ref.IsOutsideLambdaRange(iLineRef))
+          continue;
+        const Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
+        const Float64 sigmaRef =
+            element_ref.GetLineWidth(muRef, linesRef[iLineRef].GetIsEmission());
+        const Float64 winsizeRef =
+            linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * sigmaRef;
+        const Float64 overlapSizeMin = winsizeRef * overlapThres;
+        const Float64 xinf = muRef - winsizeRef / 2.0;
+        const Float64 xsup = muRef + winsizeRef / 2.0;
 
-        Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
-        Float64 cElt = m_Elements[iElts]->GetLineWidth(
-            muElt, linesElt[iLineElt].GetIsEmission());
-        Float64 winsizeElt =
-            linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * cElt;
-        yinf = muElt - winsizeElt / 2.0;
-        ysup = muElt + winsizeElt / 2.0;
+        const Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
+        const Float64 sigmaElt =
+            element.GetLineWidth(muElt, linesElt[iLineElt].GetIsEmission());
+        const Float64 winsizeElt =
+            linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * sigmaElt;
+        const Float64 yinf = muElt - winsizeElt / 2.0;
+        const Float64 ysup = muElt + winsizeElt / 2.0;
 
-        Float64 max = std::max(xinf, yinf);
-        Float64 min = std::min(xsup, ysup);
+        const Float64 max = std::max(xinf, yinf);
+        const Float64 min = std::min(xsup, ysup);
         if (max - min < -overlapSizeMin) {
           indexes.push_back(iElts);
           break;
