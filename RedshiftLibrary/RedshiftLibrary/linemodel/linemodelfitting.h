@@ -113,7 +113,7 @@ public:
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
               CTplModelSolution &continuumModelSolution,
               Int32 contreest_iterations = 0, bool enableLogging = 0);
-  TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
+  TFloat64Range &getDTDLambdaRange() { return m_dTransposeDLambdaRange; };
 
   void SetFittingMethod(const std::string &fitMethod,
                         bool enableAmplitudeOffsets = false,
