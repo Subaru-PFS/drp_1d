@@ -160,30 +160,31 @@ void CLineModelFitting::initParameters() {
 
 void CLineModelFitting::initMembers(
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator) {
-
+  m_nbObs = m_inputSpcs->size();
+  m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
   m_nominalWidthDefault = 13.4; // euclid 1 px
 
-  Log.LogDetail("    model: Continuum winsize found is %.2f A",
-                getSpectrum().GetMedianWinsize());
-  // Load the line catalog
-  Log.LogDebug("About to load line catalog.");
-  m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
-  m_ElementsVector->push_back(CLineModelElementList());
-  if (m_lineRatioType == "rules") {
-    // load the regular catalog
-    LoadCatalog(m_RestLineList);
-  } else { //"tplratio" and "tplcorr"
-    // load the tplratio catalog with only 1 element for all lines
-    // LoadCatalogOneMultiline(restLineList);
-    // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for the
-    // Abs lines
-    LoadCatalogTwoMultilinesAE(m_RestLineList);
+  for (UInt8 i = 0; i < m_nbObs; i++) {
+    Log.LogDetail("    model: Continuum winsize found is %.2f A",
+                  getSpectrum(i).GetMedianWinsize());
+    m_ElementsVector->push_back(CLineModelElementList());
+    if (m_lineRatioType == "rules") {
+      // load the regular catalog
+      LoadCatalog(m_RestLineList, i);
+    } else { //"tplratio" and "tplcorr"
+      // load the tplratio catalog with only 1 element for all lines
+      // LoadCatalogOneMultiline(restLineList);
+      // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
+      // the Abs lines
+      LoadCatalogTwoMultilinesAE(m_RestLineList, i);
+    }
   }
 
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_models = std::make_shared<std::vector<CSpectrumModel>>();
   m_models->push_back(CSpectrumModel(getElementList(), getSpectrumPtr(),
-                                     m_RestLineList, m_continuumFitValues));
+                                     m_RestLineList, m_continuumFitValues,
+                                     TFOperator));
   m_continuumManager =
       std::make_shared<CContinuumManager>(m_models, m_continuumFitValues);
 
@@ -261,11 +262,15 @@ Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
 void CLineModelFitting::AddElement(TLineVector &&lines,
                                    Float64 velocityEmission,
                                    Float64 velocityAbsorption,
-                                   TInt32List &&inds) {
-  m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
-      std::move(lines), velocityEmission, velocityAbsorption, std::move(inds)));
-  getElementList().push_back(std::make_shared<CLineModelElement>(
-      m_ElementParam.back(), m_LineWidthType));
+                                   TInt32List &&inds, Int32 ig,
+                                   UInt8 obsIndex) {
+  if (obsIndex == 0) {
+    m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
+        std::move(lines), velocityEmission, velocityAbsorption,
+        std::move(inds)));
+  }
+  getElementList(obsIndex).push_back(
+      std::make_shared<CLineModelElement>(m_ElementParam[ig], m_LineWidthType));
 }
 
 /**
@@ -277,12 +282,14 @@ void CLineModelFitting::AddElement(TLineVector &&lines,
  *line thusly associated to this line. If at least one line was found, save
  *this result in getElementList().
  **/
-void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
+void CLineModelFitting::LoadCatalog(const TLineVector &restLineList,
+                                    UInt8 obsIndex) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   Float64 velocityEmission = ps->GetScoped<Float64>("velocityemission");
   Float64 velocityAbsorption = ps->GetScoped<Float64>("velocityabsorption");
+  Int32 lastEltIndex = 0;
 
   std::vector<TLineVector> groupList =
       CLineCatalog::ConvertToGroupList(restLineList);
@@ -295,14 +302,16 @@ void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
       inds.push_back(idx[0]);
       lines.push_back(groupList[ig][i]);
     }
-    if (lines.size() > 0)
+    if (lines.size() > 0) {
       AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-                 std::move(inds));
+                 std::move(inds), lastEltIndex, obsIndex);
+      lastEltIndex++;
+    }
   }
 }
 
-void CLineModelFitting::LoadCatalogOneMultiline(
-    const TLineVector &restLineList) {
+void CLineModelFitting::LoadCatalogOneMultiline(const TLineVector &restLineList,
+                                                UInt8 obsIndex) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -318,11 +327,11 @@ void CLineModelFitting::LoadCatalogOneMultiline(
 
   if (lines.size() > 0)
     AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-               std::move(inds));
+               std::move(inds), 0, obsIndex);
 }
 
 void CLineModelFitting::LoadCatalogTwoMultilinesAE(
-    const TLineVector &restLineList) {
+    const TLineVector &restLineList, UInt8 obsIndex) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -332,6 +341,7 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
   std::vector<CLine::EType> types = {CLine::nType_Absorption,
                                      CLine::nType_Emission};
 
+  Int32 lastEltIndex = 0;
   for (Int32 iType = 0; iType < 2; iType++) {
     TLineVector lines;
     TInt32List inds;
@@ -342,9 +352,11 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
       }
     }
 
-    if (lines.size() > 0)
+    if (lines.size() > 0) {
       AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-                 std::move(inds));
+                 std::move(inds), lastEltIndex, obsIndex);
+      lastEltIndex++;
+    }
   }
 }
 
@@ -1114,9 +1126,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
           fluxDI = NAN;
           snrDI = NAN;
           Int32 opt_cont_substract_abslinesmodel = 0;
-          m_model->getFluxDirectIntegration(eIdx_ha, subeIdx_ha,
-                                            opt_cont_substract_abslinesmodel,
-                                            fluxDI, snrDI, *(m_lambdaRange));
+          getSpectrumModel().getFluxDirectIntegration(
+              eIdx_ha, subeIdx_ha, opt_cont_substract_abslinesmodel, fluxDI,
+              snrDI, getLambdaRange());
           modelSolution.snrHa_DI = snrDI;
           modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
           modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;

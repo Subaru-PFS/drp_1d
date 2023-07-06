@@ -1052,7 +1052,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       } else
         ExtremaResult->m_modelPhotValue[i] =
             std::make_shared<const CModelPhotValueResult>(
-                m_fittingManager->getSpectrumModel()->getPhotValues());
+                m_fittingManager->getSpectrumModel().getPhotValues());
 
       ExtremaResult->m_modelPhotValue[i] =
           std::make_shared<CModelPhotValueResult>(values); // temporary for test

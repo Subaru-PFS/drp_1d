@@ -81,9 +81,11 @@ public:
   void initParameters();
   void
   initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
-  void LoadCatalog(const TLineVector &restLineList);
-  void LoadCatalogOneMultiline(const TLineVector &restLineList);
-  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList);
+  void LoadCatalog(const TLineVector &restLineList, UInt8 obsIndex = 0);
+  void LoadCatalogOneMultiline(const TLineVector &restLineList,
+                               UInt8 obsIndex = 0);
+  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList,
+                                  UInt8 obsIndex = 0);
 
   void LogCatalogInfos();
 
@@ -225,7 +227,8 @@ private:
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
   void AddElement(TLineVector &&lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, TInt32List &&inds);
+                  Float64 velocityAbsorption, TInt32List &&inds, Int32 ig,
+                  UInt8 obsIndex = 0);
 
   void SetLSF();
 
@@ -267,6 +270,7 @@ private:
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
+  Int32 m_nbObs;
 };
 
 } // namespace NSEpic
