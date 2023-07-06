@@ -55,7 +55,7 @@ public:
                    const CCSpectrumVectorPtr &inputSpcs,
                    const CTLambdaRangePtrVector &lambdaRanges,
                    std::shared_ptr<CContinuumManager> continuumManager,
-                   const TLineVector &restLineList);
+                   const CLineVector &restLineList);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
   CTplratioManager(CTplratioManager const &other) = default;
@@ -107,7 +107,7 @@ public:
 
 protected:
   Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
-                              const TLineVector &catalog) const override;
+                              const CLineVector &catalog) const override;
 
   void initMerit(Int32 ntplratio);
   void SetTplratio_PriorHelper();

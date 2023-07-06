@@ -61,7 +61,7 @@ public:
 
 private:
   friend class ::RuleStrongHigherThanWeak_fixture;
-  Int32 m_LineType;
+  CLine::EType m_LineType;
   void Correct(CLineModelElementList &LineModelElementList);
   Float64 FindHighestStrongLineAmp(Int32 linetype, Float64 &er,
                                    std::string &name,

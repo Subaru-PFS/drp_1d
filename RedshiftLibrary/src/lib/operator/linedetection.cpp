@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/operator/linedetection.h"
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/gaussianfit/gaussianfit.h"
+#include "RedshiftLibrary/line/linedetected.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/linedetectionresult.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
@@ -53,9 +54,10 @@ using namespace NSEpic;
 /**
  * Attribution constructor.
  */
-CLineDetection::CLineDetection(Int32 type, Float64 cut, Float64 strongcut,
-                               Float64 winsize, Float64 minsize,
-                               Float64 maxsize, bool disableFitQualityCheck) {
+CLineDetection::CLineDetection(CLine::EType type, Float64 cut,
+                               Float64 strongcut, Float64 winsize,
+                               Float64 minsize, Float64 maxsize,
+                               bool disableFitQualityCheck) {
   FWHM_FACTOR = 2.35;
 
   m_winsize = winsize;
@@ -200,8 +202,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
     } // Check if gaussian fit is very different from peak itself
 
     // check type weak or strong
-    Int32 force = 1;         // weak by default
-    Float64 ratioAmp = -1.0; // cut = -1.0 by default
+    auto force = CLine::EForce::nForce_Weak; // weak by default
+    Float64 ratioAmp = -1.0;                 // cut = -1.0 by default
     if (toAdd) {
       ratioAmp = ComputeFluxes(spc, m_winsize, resPeaks[j]);
       if (ratioAmp < m_cut) {
@@ -218,7 +220,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
             SGaussParams(gaussPos, gaussAmp, gaussWidth));
       } else {
         if (ratioAmp > m_cut * m_strongcut) {
-          force = 2; // strong
+          force = CLine::EForce::nForce_Strong;
         }
       }
     }
@@ -231,24 +233,24 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
       sprintf(buffer, "detected_peak_%d", j);
       std::string peakName = buffer;
       result->LineCatalog.Add(
-          CLine(peakName, gaussPos, m_type,
-                std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force,
-                gaussAmp, gaussWidth, ratioAmp, gaussPosErr, gaussWidthErr,
-                gaussAmpErr));
+          CLineDetected(peakName, gaussPos, m_type,
+                        std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()),
+                        force, gaussAmp, gaussWidth, ratioAmp, gaussPosErr,
+                        gaussWidthErr, gaussAmpErr));
     }
   }
 
   // retest
   bool retest_flag = false;
   if (retestPeaks.size() > 0) {
-    // TLineVector
+    // CLineVector
     retest_flag = true;
   }
   while (retest_flag) {
-    retest_flag = Retest(
-        spectrum, *result, retestPeaks, retestGaussParams,
-        result->LineCatalog.GetFilteredList(m_type, CLine::nForce_Strong),
-        m_winsize, m_cut);
+    retest_flag = Retest(spectrum, *result, retestPeaks, retestGaussParams,
+                         result->LineCatalog.GetFilteredList(
+                             m_type, CLine::EForce::nForce_Strong),
+                         m_winsize, m_cut);
   }
 
   return result;
@@ -408,7 +410,7 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
                             CLineDetectionResult &result,
                             TInt32RangeList retestPeaks,
                             TGaussParamsList retestGaussParams,
-                            TLineVector strongLines, Int32 winsize,
+                            CLineDetectedVector strongLines, Int32 winsize,
                             Float64 cut) {
   Log.LogDebug("Retest %d peaks, winsize = %d, strongLines.size() = %d.",
                retestPeaks.size(), winsize, strongLines.size());
@@ -461,7 +463,7 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
  */
 bool CLineDetection::RemoveStrongFromSpectra(
     const CSpectrum &spectrum, CLineDetectionResult &result,
-    TLineVector strongLines, TInt32RangeList selectedretestPeaks,
+    CLineDetectedVector strongLines, TInt32RangeList selectedretestPeaks,
     TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut) {
 
   const CSpectrumSpectralAxis wavesAxis = spectrum.GetSpectralAxis();
@@ -531,12 +533,12 @@ bool CLineDetection::RemoveStrongFromSpectra(
     // selectedretestPeaks[k], mask);
     Float64 ratioAmp = ComputeFluxes(reducedSpectrum, winsize, reducedrange);
     if (ratioAmp > cut) {
-      Float64 force = CLine::nForce_Weak;
+      auto const force = CLine::EForce::nForce_Weak;
       char buffer[64];
       sprintf(buffer, "detected_retested_peak_%d", k);
       std::string peakName = buffer;
 
-      result.LineCatalog.Add(CLine(
+      result.LineCatalog.Add(CLineDetected(
           peakName, selectedgaussparams[k].Pos, m_type,
           std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force,
           selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp));

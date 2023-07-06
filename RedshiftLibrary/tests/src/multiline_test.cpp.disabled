@@ -15,7 +15,7 @@ Float64 precision = 1e-12;
 BOOST_AUTO_TEST_CASE(Instance) {
   CLine line = CLine("Abs", 4500., 1, CLine::SYM, 2, 0.2, 0.3);
   CLine line2 = CLine("Em", 6564.61, 2, CLine::SYM, 2, 1.0, 0.5);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(line);
   rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
   BOOST_CHECK_CLOSE(1.0, element.GetSignFactor(1), precision);
   BOOST_CHECK_CLOSE(0.0, element.GetWidth(0, 2.), precision);
 
-  TLineVector lineInMulti = element.GetLines();
+  CLineVector lineInMulti = element.GetLines();
   for (Int32 k = 0; k < lineInMulti.size(); k++) {
     BOOST_CHECK(rs[k].GetName() == lineInMulti[k].GetName());
   }
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
                   "group", 10.8);
   CLine line2 = CLine("Em", 4400, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(line);
   rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(prepareSupportJoined) {
                   "group", 10.8);
   CLine line2 = CLine("Em", 5520, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(line);
   rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportAll) {
                    "group", 10.8);
   CLine line3 = CLine("Em2", 150, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(line);
   rs.push_back(line2);
   rs.push_back(line3);
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial) {
                   "group", 10.8);
   CLine line2 = CLine("Em", 15, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(line);
   rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(addModel_totalOutside) {
                   "group", 10.8);
   CLine line2 = CLine("Em", 15, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(line);
   rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(fitAmplitude) {
                   "group", 10.8);
   CLine line2 = CLine("Em", lambda0, 2, CLine::SYM, 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(line);
   rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();

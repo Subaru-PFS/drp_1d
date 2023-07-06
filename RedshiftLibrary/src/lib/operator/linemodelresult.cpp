@@ -60,7 +60,7 @@ using namespace NSEpic;
  * @param nTplratios
  * @return
  */
-void CLineModelResult::Init(TFloat64List redshifts, TLineVector restLines,
+void CLineModelResult::Init(TFloat64List redshifts, CLineVector restLines,
                             Int32 nTemplates, Int32 nTplratios,
                             TFloat64List tplratiosPriors) {
   if (tplratiosPriors.size() != nTplratios) {
@@ -328,7 +328,7 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
                                 LineModelSolutions[solutionIdx].ElementId[j]) !=
                       indexesSols.end();
     if (alreadysol || !restLineList[j].IsStrong() ||
-        !restLineList[j].GetIsEmission())
+        !restLineList[j].IsEmission())
       continue;
 
     Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
@@ -358,8 +358,8 @@ TBoolList CLineModelResult::getStrongLinesPresence(
   auto lineDoesntMatchStrongFilter = [&filterType](const CLine &line) {
     return !line.IsStrong() ||
            // i have a doubt on these below conditions. didier ?
-           (filterType == 1 && !line.GetIsEmission()) ||
-           (filterType == 2 && line.GetIsEmission());
+           (filterType == 1 && !line.IsEmission()) ||
+           (filterType == 2 && line.IsEmission());
   };
   TBoolList strongIsPresent(linemodelsols.size(), false);
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
@@ -403,7 +403,7 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
     Float64 ampMax = -DBL_MAX;
     ampMaxLineTag = undefStr;
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (!restLineList[j].GetIsEmission() ||
+      if (!restLineList[j].IsEmission() ||
           linemodelsols[solutionIdx].OutsideLambdaRange[j])
         continue;
 

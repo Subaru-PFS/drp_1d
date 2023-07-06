@@ -55,7 +55,7 @@ public:
   void SetUp(bool EnabledArgument, ...);
 
 private:
-  Int32 m_LineType;
+  CLine::EType m_LineType;
   std::string m_LineA;
   std::string m_LineB;
   Float64 m_Coefficient;

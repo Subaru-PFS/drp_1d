@@ -56,8 +56,8 @@ using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(test_linedetection)
 
 BOOST_AUTO_TEST_CASE(XMadFind) {
-  CLineDetection lineDetection =
-      CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
+  CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
+                                                0.5, 0.6, 0.7, 0.8, 0.9, true);
 
   TFloat64List x(10);
   x[0] = 5.;
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(XMadFind) {
 }
 
 BOOST_AUTO_TEST_CASE(ComputeFluxes) {
-  CLineDetection lineDetection =
-      CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
+  CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
+                                                0.5, 0.6, 0.7, 0.8, 0.9, true);
   CSpectrum spc = CSpectrum();
   CSpectrumSpectralAxis spectralAxis(10, false);
   TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
 }
 
 BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
-  CLineDetection lineDetection =
-      CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
+  CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
+                                                0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
   TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
@@ -218,7 +218,9 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
   }
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
-  CLine line1 = CLine("Line1", mu1, 2, profilesym->Clone(), 2, A1, sigma1, 5.6);
+  auto const line1 = CLineDetected(
+      "Line1", mu1, CLine::EType::nType_Emission, profilesym->Clone(),
+      CLine::EForce::nForce_Strong, A1, sigma1, 5.6);
 
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
@@ -227,12 +229,14 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
     modelfluxAxis[k] += A1 / (sigma1 * 2.506597694086548) *
                         exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
   }
-  CLine line2 = CLine("Line2", mu2, 2, profilesym->Clone(), 2, A2, sigma2, 5.8);
+  auto const line2 = CLineDetected(
+      "Line2", mu2, CLine::EType::nType_Emission, profilesym->Clone(),
+      CLine::EForce::nForce_Strong, A2, sigma2, 5.8);
 
   CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult;
-  TLineVector strongLines;
+  CLineDetectedVector strongLines;
   strongLines.push_back(line1);
   strongLines.push_back(line2);
 
@@ -277,8 +281,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
 }
 
 BOOST_AUTO_TEST_CASE(Retest) {
-  CLineDetection lineDetection =
-      CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 0.9, true);
+  CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
+                                                0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
   TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
@@ -299,7 +303,9 @@ BOOST_AUTO_TEST_CASE(Retest) {
   }
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
-  CLine line1 = CLine("Line1", mu1, 2, profilesym->Clone(), 2, A1, sigma1, 5.6);
+  auto const line1 = CLineDetected(
+      "Line1", mu1, CLine::EType::nType_Emission, profilesym->Clone(),
+      CLine::EForce::nForce_Strong, A1, sigma1, 5.6);
 
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
@@ -308,12 +314,14 @@ BOOST_AUTO_TEST_CASE(Retest) {
     modelfluxAxis[k] += A2 / (sigma2 * 2.506597694086548) *
                         exp(-(k - mu2) * (k - mu2) / (2 * sigma2 * sigma2));
   }
-  CLine line2 = CLine("Line2", mu2, 2, profilesym->Clone(), 2, A2, sigma2, 5.8);
+  auto const line2 = CLineDetected(
+      "Line2", mu2, CLine::EType::nType_Emission, profilesym->Clone(),
+      CLine::EForce::nForce_Strong, A2, sigma2, 5.8);
 
   CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult;
-  TLineVector strongLines;
+  CLineDetectedVector strongLines;
   strongLines.push_back(line1);
   strongLines.push_back(line2);
 
@@ -407,8 +415,8 @@ BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop) {
   peak.push_back(TInt32Range(160, 200));
   peak.push_back(TInt32Range(190, 230));
 
-  CLineDetection lineDetection =
-      CLineDetection(CLine::nType_Emission, 0.5, 0.6, 0.7, 0.8, 40, true);
+  CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
+                                                0.5, 0.6, 0.7, 0.8, 40, true);
   TInt32Range range =
       lineDetection.LimitGaussianFitStartAndStop(0, peak, n, spectralAxis);
   BOOST_CHECK_EQUAL(range.GetBegin(), 0);
@@ -439,7 +447,7 @@ void addLine(CSpectrumFluxAxis &spectrumFluxAxis, Float64 sigma, Float64 mu,
 }
 
 BOOST_AUTO_TEST_CASE(Compute) {
-  CLineDetection lineDetection = CLineDetection(CLine::nType_Emission);
+  CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission);
 
   Int32 n = 2000;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
@@ -515,7 +523,7 @@ BOOST_AUTO_TEST_CASE(Compute) {
   BOOST_CHECK(res->LineCatalog.GetList()[0].GetProfile()->GetName() ==
               profilesym->GetName());
   BOOST_CHECK(res->LineCatalog.GetList()[0].IsStrong() == true);
-  BOOST_CHECK(res->LineCatalog.GetList()[0].GetIsEmission() == true);
+  BOOST_CHECK(res->LineCatalog.GetList()[0].IsEmission() == true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

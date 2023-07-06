@@ -49,8 +49,9 @@ using namespace NSEpic;
 
 class RuleStrongHigherThanWeak_fixture {
 public:
-  static CLine createLine(std::string name, Int32 force, Float64 amp);
-  static CLineModelElement createCLineModelElement(TLineVector lines);
+  static CLine createLine(std::string name, CLine::EForce force, Int32 id);
+  static CLineModelElement createCLineModelElement(CLineVector lines,
+                                                   std::vector<Float64> amps);
   static CLineModelElementList
   createElementList(vector<CLineModelElement> elements, Int32 nElements);
   CLineModelElementList makeSomeElementList(Float64 weak1Amp, Float64 weak2Amp,
@@ -59,27 +60,22 @@ public:
 };
 
 CLine RuleStrongHigherThanWeak_fixture::createLine(std::string name,
-                                                   Int32 force, Float64 amp) {
+                                                   CLine::EForce force,
+                                                   Int32 id) {
   return CLine(name, -1., CLine::EType::nType_Emission,
                std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force,
-               amp, -1., -1., 0.);
+               0., false, undefStr, 1.0, "Em1", id, std::to_string(id));
 };
 
-CLineModelElement
-RuleStrongHigherThanWeak_fixture::createCLineModelElement(TLineVector lines) {
+CLineModelElement RuleStrongHigherThanWeak_fixture::createCLineModelElement(
+    CLineVector lines, std::vector<Float64> amps) {
   TLineModelElementParam_ptr elementParam_ptr =
       std::make_shared<TLineModelElementParam>(lines, 1.0, 1.1, TInt32List{});
   CLineModelElement cLineModelElement(elementParam_ptr, "instrumentdriven");
 
-  vector<Float64> fittedAmps;
-  vector<Float64> fittedAmplitudesErrorSigmas;
-  Int32 i;
-  for (i = 0; i < lines.size(); i++) {
-    fittedAmps.push_back(lines[i].GetAmplitude());
-    fittedAmplitudesErrorSigmas.push_back(0.);
-  }
-  cLineModelElement.m_ElementParam->m_FittedAmplitudes = fittedAmps;
-  cLineModelElement.m_ElementParam->m_NominalAmplitudes = fittedAmps;
+  vector<Float64> fittedAmplitudesErrorSigmas(lines.size());
+  cLineModelElement.m_ElementParam->m_FittedAmplitudes = amps;
+  cLineModelElement.m_ElementParam->m_NominalAmplitudes = amps;
   cLineModelElement.m_ElementParam->m_FittedAmplitudeErrorSigmas =
       fittedAmplitudesErrorSigmas;
 
@@ -106,27 +102,27 @@ CLineModelElementList RuleStrongHigherThanWeak_fixture::makeSomeElementList(
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
 
   CLine lineWeak1 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineWeak1", CLine::EForce::nForce_Weak, weak1Amp);
+      "LineWeak1", CLine::EForce::nForce_Weak, 0);
   CLine lineWeak2 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineWeak2", CLine::EForce::nForce_Weak, weak2Amp);
+      "LineWeak2", CLine::EForce::nForce_Weak, 1);
   CLine lineStrong1 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineStrong1", CLine::EForce::nForce_Strong, strong1Amp);
+      "LineStrong1", CLine::EForce::nForce_Strong, 2);
   CLine lineStrong2 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineStrong2", CLine::EForce::nForce_Strong, strong2Amp);
+      "LineStrong2", CLine::EForce::nForce_Strong, 3);
 
   CLineModelElement weakElement1 =
       RuleStrongHigherThanWeak_fixture::createCLineModelElement(
-          {lineWeak1, lineWeak2});
+          {lineWeak1, lineWeak2}, {weak1Amp, weak2Amp});
   CLineModelElement strongElement1 =
       RuleStrongHigherThanWeak_fixture::createCLineModelElement(
-          {lineStrong1, lineStrong2});
+          {lineStrong1, lineStrong2}, {strong1Amp, strong2Amp});
 
   CLineModelElementList elementList =
       RuleStrongHigherThanWeak_fixture::createElementList(
           {weakElement1, strongElement1}, 2);
 
   CRuleStrongHigherThanWeak rule;
-  rule.SetUp(true, CLine::nType_Emission);
+  rule.SetUp(true, CLine::EType::nType_Emission);
   rule.Correct(elementList);
   return elementList;
 }

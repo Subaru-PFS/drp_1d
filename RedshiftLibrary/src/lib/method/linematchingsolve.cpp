@@ -127,7 +127,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
     const TFloat64Range &lambdaRange, const TFloat64Range &redshiftsRange,
     const CLineCatalog &restLineCatalog) {
 
-  Int32 lineType = CLine::nType_Emission;
+  auto lineType = CLine::EType::nType_Emission;
   std::string linetypeStr = "E";
 
   Log.LogDebug("Attempting to load parameters from parameter JSON.");
@@ -149,12 +149,12 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
     m_strongcut = paramStore->GetScoped<Float64>("linematching.strongcut");
     m_tol = paramStore->GetScoped<Float64>("linematching.tol");
     m_winsize = paramStore->GetScoped<Float64>("linematching.winsize");
-    lineType = CLine::nType_All;
+    lineType = CLine::EType::nType_All;
     if (linetypeStr == "Absorption") {
-      lineType = CLine::nType_Absorption;
+      lineType = CLine::EType::nType_Absorption;
     }
     if (linetypeStr == "Emission") {
-      lineType = CLine::nType_Emission;
+      lineType = CLine::EType::nType_Emission;
     }
   }
 
@@ -189,13 +189,13 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
   CPeakDetection peakDetection(m_winsize, m_detectioncut, 1, m_enlargeRate,
                                m_detectionnoiseoffset);
   CSpectrum _spc = spc;
-  if (lineType == CLine::nType_Absorption) {
-    Log.LogDebug("lineType == CLine::nType_Absorption");
+  if (lineType == CLine::EType::nType_Absorption) {
+    Log.LogDebug("lineType == CLine::EType::nType_Absorption");
     _spc.InvertFlux();
   }
 
-  if (lineType == CLine::nType_Emission) {
-    Log.LogDebug("lineType == CLine::nType_Emission");
+  if (lineType == CLine::EType::nType_Emission) {
+    Log.LogDebug("lineType == CLine::EType::nType_Emission");
   }
 
   auto peakDetectionResult = peakDetection.Compute(_spc);

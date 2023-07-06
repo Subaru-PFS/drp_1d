@@ -56,7 +56,7 @@ namespace NSEpic {
 class CRules {
 
 public:
-  CRules(CSpectrum &spc, CLineCatalog &detectedCatalog,
+  CRules(CSpectrum &spc, CLineDetectedCatalog &detectedCatalog,
          CLineCatalog &restCatalog, TFloat64Range &lambdaRange,
          Float64 winsize);
 
@@ -74,7 +74,7 @@ private:
   Float64 getRestLineLambda(std::string nametag);
   bool isLineInsideRange(Float64 lambda, bool winsize = false) const;
   CSpectrum m_spc;
-  CLineCatalog m_DetectedCatalog;
+  CLineDetectedCatalog m_DetectedCatalog;
   CLineCatalog m_RestCatalog;
   TFloat64Range m_lambdaRange;
   Float64 m_winsize;

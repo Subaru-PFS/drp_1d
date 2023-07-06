@@ -105,7 +105,7 @@ void COperatorLineModel::ComputeFirstPass() {
       m_opt_continuumcomponent == "tplfitauto")
     for (const auto &category : m_tplCategoryList)
       nfitcontinuum += tplCatalog->GetTemplateCount(category);
-  m_result->Init(m_Redshifts, Context.getLineVector(), nfitcontinuum,
+  m_result->Init(m_Redshifts, Context.getCLineVector(), nfitcontinuum,
                  m_fittingManager->getTplratio_count(),
                  m_fittingManager->getTplratio_priors());
 
@@ -928,7 +928,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       // absorption
       std::vector<TInt32List> idxVelfitGroups =
           m_fittingManager->getElementList().GetModelVelfitGroups(
-              CLine::nType_Absorption);
+              CLine::EType::nType_Absorption);
       std::string alv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
         m_fittingManager->setVelocityAbsorptionByGroup(
@@ -942,7 +942,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
                   alv_list_str.c_str());
       // emission
       idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
-          CLine::nType_Emission);
+          CLine::EType::nType_Emission);
       std::string elv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
         m_fittingManager->setVelocityEmissionByGroup(
@@ -1008,9 +1008,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         resultspcmodel = std::make_shared<CModelSpectrumResult>(
             m_fittingManager->getSpectrumModel().GetModelSpectrum());
       } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
-        Int32 lineTypeFilter = -1;
+        auto lineTypeFilter = CLine::EType::nType_All;
         if (overrideModelSavedType == 2)
-          lineTypeFilter = CLine::nType_Emission;
+          lineTypeFilter = CLine::EType::nType_Emission;
 
         resultspcmodel = std::make_shared<CModelSpectrumResult>(
             m_fittingManager->getSpectrumModel()
@@ -1238,20 +1238,20 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
   Float64 vSupLim;
   Float64 vStep;
   std::string lineTypeStr = undefStr;
-  Int32 lineTypeInt = -1;
+  auto lineTypeInt = CLine::EType::nType_All;
   for (Int32 iLineType = 0; iLineType < 2; iLineType++) {
     if (iLineType == 0) {
       vInfLim = velfitMinA;
       vSupLim = velfitMaxA;
       vStep = velfitStepA;
       lineTypeStr = "ABSORPTION";
-      lineTypeInt = CLine::nType_Absorption;
+      lineTypeInt = CLine::EType::nType_Absorption;
     } else {
       vInfLim = velfitMinE;
       vSupLim = velfitMaxE;
       vStep = velfitStepE;
       lineTypeStr = "EMISSION";
-      lineTypeInt = CLine::nType_Emission;
+      lineTypeInt = CLine::EType::nType_Emission;
     }
     Log.LogDetail(Formatter()
                   << "  Operator-Linemodel: manualStep velocity fit "
@@ -1403,7 +1403,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
       std::vector<TInt32List> idxVelfitGroups;
       // absorption
       idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
-          CLine::nType_Absorption);
+          CLine::EType::nType_Absorption);
       std::string alv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
         m_fittingManager->setVelocityAbsorptionByGroup(
@@ -1415,7 +1415,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
                   alv_list_str.c_str());
       // emission
       idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
-          CLine::nType_Emission);
+          CLine::EType::nType_Emission);
       std::string elv_list_str = "";
       for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
         m_fittingManager->setVelocityEmissionByGroup(
@@ -1707,8 +1707,8 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(
   TFloat64List zList =
   TFloat64Range(redshift-opt_manvelfit_dzmin,redshift+opt_manvelfit_dzmax).SpreadOverEpsilon(opt_manvelfit_dzstep);
 
-  fitVelocityByGroups(velFitEList,zList,CLine::nType_Emission);
-  fitVelocityByGroups(velFitAList,zList,CLine::nType_Absorption);
+  fitVelocityByGroups(velFitEList,zList,CLine::EType::nType_Emission);
+  fitVelocityByGroups(velFitAList,zList,CLine::EType::nType_Absorption);
 
 */
   CLineModelSolution clms;

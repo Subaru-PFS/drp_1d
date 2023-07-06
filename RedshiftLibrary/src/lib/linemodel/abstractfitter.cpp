@@ -17,7 +17,7 @@ CAbstractFitter::CAbstractFitter(
     const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
@@ -46,7 +46,7 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
@@ -229,7 +229,7 @@ bool CAbstractFitter::HasLambdaOffsetFitting(TInt32List EltsIdx,
     for (Int32 iE : EltsIdx)
       for (const auto &line : getElementList()[iE]->GetLines())
         // check if the line is to be fitted
-        if (line.GetOffsetFitEnabled()) {
+        if (line.IsOffsetFitEnabled()) {
           atLeastOneOffsetToFit = true;
           break;
         }

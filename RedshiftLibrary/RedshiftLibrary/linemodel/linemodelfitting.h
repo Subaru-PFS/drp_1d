@@ -81,9 +81,9 @@ public:
   void initParameters();
   void
   initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
-  void LoadCatalog(const TLineVector &restLineList);
-  void LoadCatalogOneMultiline(const TLineVector &restLineList);
-  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList);
+  void LoadCatalog(const CLineVector &restLineList);
+  void LoadCatalogOneMultiline(const CLineVector &restLineList);
+  void LoadCatalogTwoMultilinesAE(const CLineVector &restLineList);
 
   void LogCatalogInfos();
 
@@ -153,7 +153,7 @@ public:
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
 
-  const TLineVector m_RestLineList;
+  const CLineVector m_RestLineList;
 
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
@@ -213,13 +213,14 @@ private:
   std::shared_ptr<CTplModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
-  void AddElement(TLineVector &&lines, Float64 velocityEmission,
+  void AddElement(CLineVector &&lines, Float64 velocityEmission,
                   Float64 velocityAbsorption, TInt32List &&inds, Int32 ig);
 
   void SetLSF();
 
-  TInt32List findLineIdxInCatalog(const TLineVector &restLineList,
-                                  const std::string &strTag, Int32 type) const;
+  TInt32List findLineIdxInCatalog(const CLineVector &restLineList,
+                                  const std::string &strTag,
+                                  CLine::EType type) const;
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
 

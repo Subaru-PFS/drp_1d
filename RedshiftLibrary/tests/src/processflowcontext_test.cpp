@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.GetLineCatalog("galaxy", "LineModelSolve") ==
               lineCatalog);
   Context.m_ScopeStack.push_back("LineModelSolve");
-  BOOST_CHECK(Context.getLineVector().size() ==
+  BOOST_CHECK(Context.getCLineVector().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
   Context.setfluxCorrectionCalzetti(ismCorrectionCalzetti);

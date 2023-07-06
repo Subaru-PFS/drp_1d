@@ -59,7 +59,7 @@ void CRandomFitter::doFit(Float64 redshift) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
-    if (getElementList()[iElts]->GetElementType() == CLine::nType_Absorption) {
+    if (getElementList()[iElts]->GetElementType() == CLine::EType::nType_Absorption) {
       amax = meanContinuum * 0.5 * coeffAmpAbsorption;
     } else {
       amax = meanContinuum * coeffAmpEmission;

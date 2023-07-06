@@ -207,7 +207,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;
   bool enableLogging = true;
-  CLineModelSolution modelSolution(Context.getLineVector());
+  CLineModelSolution modelSolution(Context.getCLineVector());
   CTplModelSolution continuumModelSolution;
 
   model.fit(redshift, modelSolution, continuumModelSolution,

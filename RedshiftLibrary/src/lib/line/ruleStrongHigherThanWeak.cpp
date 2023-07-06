@@ -45,14 +45,15 @@
 using namespace NSEpic;
 using namespace std;
 
-CRuleStrongHigherThanWeak::CRuleStrongHigherThanWeak() : m_LineType(0) {}
+CRuleStrongHigherThanWeak::CRuleStrongHigherThanWeak()
+    : m_LineType(CLine::EType::nType_All) {}
 
 void CRuleStrongHigherThanWeak::SetUp(bool EnabledArgument, ...) {
   Name = "strongweak";
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start(Arguments, EnabledArgument);
-  m_LineType = va_arg(Arguments, Int32);
+  m_LineType = va_arg(Arguments, CLine::EType);
   va_end(Arguments);
 }
 
@@ -183,7 +184,7 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
     {
       if (element_ptr->IsOutsideLambdaRange(iLineStrong) ||
           element_ptr->GetLines()[iLineStrong].GetForce() !=
-              CLine::nForce_Strong ||
+              CLine::EForce::nForce_Strong ||
           element_ptr->GetElementType() != m_LineType) {
         continue;
       }

@@ -146,7 +146,7 @@ void CLineModelElementList::ResetElementIndexesDisabled() {
  *indexes individually as  agroup
  **/
 std::vector<TInt32List>
-CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
+CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
   TStringList tags;
   TInt32List nonGroupedLines;
 
@@ -241,8 +241,8 @@ TInt32List CLineModelElementList::getOverlappingElements(
     return indexes;
   }
 
-  const TLineVector &linesRef = element_ref.GetLines();
-  Int32 linetypeRef = element_ref.GetElementType();
+  auto const &linesRef = element_ref.GetLines();
+  auto const linetypeRef = element_ref.GetElementType();
 
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
     const auto &element = *m_Elements[iElts];
@@ -270,7 +270,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
     if (excluded)
       continue;
 
-    const TLineVector &linesElt = element.GetLines();
+    auto const &linesElt = element.GetLines();
 
     for (Int32 iLineElt = 0; iLineElt < linesElt.size(); iLineElt++) {
       if (element.IsOutsideLambdaRange(iLineElt))
@@ -280,7 +280,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
           continue;
         const Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
         const Float64 sigmaRef =
-            element_ref.GetLineWidth(muRef, linesRef[iLineRef].GetIsEmission());
+            element_ref.GetLineWidth(muRef, linesRef[iLineRef].IsEmission());
         const Float64 winsizeRef =
             linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * sigmaRef;
         const Float64 overlapSizeMin = winsizeRef * overlapThres;
@@ -289,7 +289,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
 
         const Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
         const Float64 sigmaElt =
-            element.GetLineWidth(muElt, linesElt[iLineElt].GetIsEmission());
+            element.GetLineWidth(muElt, linesElt[iLineElt].IsEmission());
         const Float64 winsizeElt =
             linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * sigmaElt;
         const Float64 yinf = muElt - winsizeElt / 2.0;
@@ -341,14 +341,14 @@ Float64 CLineModelElementList::GetElementAmplitude(Int32 j) const {
  * @param lineTypeFilter
  * @return TFloat64List
  */
-TInt32List
-CLineModelElementList::getValidElementIndices(Int32 lineTypeFilter) const {
+TInt32List CLineModelElementList::getValidElementIndices(
+    CLine::EType lineTypeFilter) const {
 
   const TInt32List validEltsIdx = GetModelValidElementsIndexes();
   TInt32List nonZeroValidEltsIdx;
   for (const Int32 eIdx : validEltsIdx) {
-    const Int32 lineType = m_Elements[eIdx]->GetElementType();
-    if (lineTypeFilter != -1 && lineTypeFilter != lineType)
+    auto const lineType = m_Elements[eIdx]->GetElementType();
+    if (lineTypeFilter != CLine::EType::nType_All && lineTypeFilter != lineType)
       continue;
 
     if (!std::isnan(m_Elements[eIdx]->GetElementAmplitude()) &&
@@ -390,7 +390,7 @@ Int32 CLineModelElementList::findElementIndex(Int32 LineCatalogIndex,
  *findElementIndex method with LineTagStr argument does not return -1.
  **/
 Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
-                                              Int32 linetype,
+                                              CLine::EType linetype,
                                               Int32 &lineIdx) const {
   Int32 idx = undefIdx;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
@@ -398,7 +398,8 @@ Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
     if (lineIdx == undefIdx)
       continue;
 
-    if (linetype != -1 && m_Elements[iElts]->GetElementType() != linetype)
+    if (linetype != CLine::EType::nType_All &&
+        m_Elements[iElts]->GetElementType() != linetype)
       continue;
 
     idx = iElts;
@@ -408,7 +409,7 @@ Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
 }
 
 Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
-                                              Int32 linetype) const {
+                                              CLine::EType linetype) const {
   Int32 lineIdx = undefIdx;
   return findElementIndex(LineTagStr, linetype, lineIdx);
 }
@@ -466,7 +467,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
 
 void CLineModelElementList::addToSpectrumAmplitudeOffset(
     const CSpectrumSpectralAxis &spectralAxis, CSpectrumFluxAxis &modelfluxAxis,
-    const TInt32List &eIdx_list, Int32 lineTypeFilter) const {
+    const TInt32List &eIdx_list, CLine::EType lineTypeFilter) const {
 
   const auto ampOffsetGroups = getFittingGroups(eIdx_list, lineTypeFilter);
 
@@ -545,7 +546,7 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
     Int32 iElts = validEltsIdx[iValidElts];
     Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission() ||
+      if (!m_Elements[iElts]->GetLines()[lineIdx].IsEmission() ||
           !m_Elements[iElts]->GetLines()[lineIdx].IsStrong()) {
         continue;
       }
@@ -580,7 +581,7 @@ bool CLineModelElementList::GetModelHaStrongest() const {
     Int32 iElts = validEltsIdx[iValidElts];
     Int32 nlines = m_Elements[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->GetLines()[lineIdx].GetIsEmission()) {
+      if (!m_Elements[iElts]->GetLines()[lineIdx].IsEmission()) {
         continue;
       }
 
@@ -605,7 +606,7 @@ bool CLineModelElementList::GetModelHaStrongest() const {
 
 std::map<std::string, TInt32List>
 CLineModelElementList::getFittingGroups(TInt32List EltsIdx,
-                                        Int32 lineTypeFilter) const {
+                                        CLine::EType lineTypeFilter) const {
   std::map<std::string, TInt32List> fittingGroups;
 
   // if not elments list do with all
@@ -617,8 +618,8 @@ CLineModelElementList::getFittingGroups(TInt32List EltsIdx,
   for (auto idx : EltsIdx) {
     const auto &elt = m_Elements[idx];
 
-    Int32 lineType = elt->GetElementType();
-    if (lineTypeFilter != undefIdx && lineTypeFilter != lineType)
+    auto const lineType = elt->GetElementType();
+    if (lineTypeFilter != CLine::EType::nType_All && lineTypeFilter != lineType)
       continue;
 
     const auto &info = elt->GetFittingGroupInfo();

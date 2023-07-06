@@ -56,7 +56,7 @@ CLineRatioManager::CLineRatioManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const TLineVector &restLineList)
+    const CLineVector &restLineList)
     : m_elementsVector(elementsVector), m_models(models),
       m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
       m_continuumManager(continuumManager), m_RestLineList(restLineList) {
@@ -85,7 +85,7 @@ CLineRatioManager::CLineRatioManager(
  */
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
-                                      const TLineVector &catalog) {
+                                      const CLineVector &catalog) {
   TInt32List idxEltIGM;
   std::vector<TInt32List> idxLineIGM;
   std::tie(idxEltIGM, idxLineIGM) = getElementList().getIgmLinesIndices();
@@ -116,7 +116,7 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
 
 void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
                                        Float64 redshift,
-                                       const TLineVector &catalog) {
+                                       const CLineVector &catalog) {
   Int32 lineIndex = getLineIndexInCatalog(idxLyaE, idxLineLyaE, catalog);
   if (lineIndex == undefIdx)
     return;
@@ -140,7 +140,7 @@ void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
 }
 
 Int32 CLineRatioManager::getLineIndexInCatalog(
-    Int32 iElts, Int32 idxLine, const TLineVector &catalog) const {
+    Int32 iElts, Int32 idxLine, const CLineVector &catalog) const {
   return getElementList()[iElts]->getLineIndexInCatalog(idxLine, catalog);
 }
 
@@ -278,7 +278,7 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
+    const CLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
   std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
     ret = std::make_shared<CTplratioManager>(

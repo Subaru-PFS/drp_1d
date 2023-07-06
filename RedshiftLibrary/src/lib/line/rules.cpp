@@ -44,7 +44,7 @@ using namespace NSEpic;
 using namespace std;
 #include <fstream>
 
-CRules::CRules(CSpectrum &spc, CLineCatalog &detectedCatalog,
+CRules::CRules(CSpectrum &spc, CLineDetectedCatalog &detectedCatalog,
                CLineCatalog &restCatalog, TFloat64Range &lambdaRange,
                Float64 winsize)
     : m_spc(spc), m_DetectedCatalog(detectedCatalog),
@@ -91,9 +91,9 @@ bool CRules::checkRule01(
       return true;
 
   // check if the absence of strong lines is justified by the wavelength range
-  TLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
-      CLine::nType_Emission, CLine::nForce_Strong);
-  TLineVector strongRestLinesInsideLambdaRangeList;
+  CLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
+      CLine::EType::nType_Emission, CLine::EForce::nForce_Strong);
+  CLineVector strongRestLinesInsideLambdaRangeList;
 
   for (const auto &line : strongRestLineList) {
     Float64 lambda = line.GetPosition() * (1 + z);
@@ -209,7 +209,7 @@ bool CRules::checkRule03(
 }
 
 Float64 CRules::getRestLineLambda(std::string nametag) {
-  TLineVector restLineList = m_RestCatalog.GetFilteredList();
+  CLineVector restLineList = m_RestCatalog.GetFilteredList();
   Int32 ncatalog = restLineList.size();
   for (Int32 c = 0; c < ncatalog; c++) {
     std::string name = restLineList[c].GetName();

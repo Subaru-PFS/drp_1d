@@ -52,7 +52,7 @@ CTplratioManager::CTplratioManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const TLineVector &restLineList)
+    const CLineVector &restLineList)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -89,7 +89,7 @@ void CTplratioManager::SetTplratio_PriorHelper() {
 }
 
 Int32 CTplratioManager::getLineIndexInCatalog(
-    Int32 iElts, Int32 idxLine, const TLineVector &catalog) const {
+    Int32 iElts, Int32 idxLine, const CLineVector &catalog) const {
 
   // get index of line inside tplratio catalog
   const std::string &strID =

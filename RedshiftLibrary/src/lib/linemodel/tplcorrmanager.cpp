@@ -48,7 +48,7 @@ CTplCorrManager::CTplCorrManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const TLineVector &restLineList)
+    const CLineVector &restLineList)
     : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
                        continuumManager, restLineList) {}
 

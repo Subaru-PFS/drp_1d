@@ -78,90 +78,92 @@ bool CRegulament::CreateRulesFromJSONFiles(void) {
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::halpha_em,
-                              linetags::hbeta_em, 1.0 / 2.86 * 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::halpha_em, linetags::hbeta_em,
+                              1.0 / 2.86 * 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::hbeta_em,
-                              linetags::hgamma_em, 0.47 * 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::hbeta_em, linetags::hgamma_em,
+                              0.47 * 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::hgamma_em,
-                              linetags::hdelta_em, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::hgamma_em, linetags::hdelta_em, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::hdelta_em,
-                              linetags::h8_em, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::hdelta_em, linetags::h8_em, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::h8_em,
-                              linetags::h9_em, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::h8_em, linetags::h9_em, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::h9_em,
-                              linetags::h10_em, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::h9_em, linetags::h10_em, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::h10_em,
-                              linetags::h11_em, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::h10_em, linetags::h11_em, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::hbeta_abs,
-                              linetags::hgamma_abs, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::hbeta_abs, linetags::hgamma_abs, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::hgamma_abs,
-                              linetags::hdelta_abs, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::hgamma_abs, linetags::hdelta_abs, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::hdelta_abs,
-                              linetags::h8_abs, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::hdelta_abs, linetags::h8_abs, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::h8_abs,
-                              linetags::h9_abs, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::h8_abs, linetags::h9_abs, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::h9_abs,
-                              linetags::h10_abs, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::h9_abs, linetags::h10_abs, 1.1);
 
   m_RulesVector.push_back(
       unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::h10_abs,
-                              linetags::h11_abs, 1.1);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::h10_abs, linetags::h11_abs, 1.1);
 
   m_RulesVector.push_back(unique_ptr<CRuleRatioRange>(new CRuleRatioRange()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission, linetags::oII3726_em,
-                              linetags::oII3729_em, 2.5);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
+                              linetags::oII3726_em, linetags::oII3729_em, 2.5);
 
   m_RulesVector.push_back(
       unique_ptr<CRuleStrongHigherThanWeak>(new CRuleStrongHigherThanWeak()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission);
 
   m_RulesVector.push_back(
       unique_ptr<CRuleStrongHigherThanWeak>(new CRuleStrongHigherThanWeak()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Absorption);
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Absorption);
 
   m_RulesVector.push_back(unique_ptr<CRuleRatioRange>(new CRuleRatioRange()));
-  m_RulesVector.back()->SetUp(True, CLine::nType_Emission,
+  m_RulesVector.back()->SetUp(True, CLine::EType::nType_Emission,
                               linetags::cIII1907_em, linetags::cIII1909_em,
                               2.0);
 
   // OII and Halpha Super Strong
   // m_RulesVector.push_back( unique_ptr<CRuleSuperStrong>(new
   // CRuleSuperStrong()) ); m_RulesVector.back()->SetUp( True,
-  // CLine::nType_Emission, linetags::oII3726_em, linetags::oII3729_em,
+  // CLine::EType::nType_Emission, linetags::oII3726_em, linetags::oII3729_em,
   // linetags::halpha_em, 1.1 );
 
   if (m_LogsEnabled) {

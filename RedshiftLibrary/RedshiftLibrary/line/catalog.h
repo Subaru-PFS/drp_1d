@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/line.h"
+#include "RedshiftLibrary/line/linedetected.h"
 #include <string>
 #include <vector>
 
@@ -52,37 +53,31 @@ class CSpectrumFluxCorrectionMeiksin;
  * Line catalog allow to store multiple lines description in a single text file.
  *
  */
-class CLineCatalog {
+
+template <typename TLine = CLine> class CLineCatalogBase {
+
+  static_assert(std::is_base_of<CLine, TLine>::value);
+  using TLineVector = std::vector<TLine>;
 
 public:
-  CLineCatalog(Float64 sigmaSupport);
-  virtual ~CLineCatalog() = default;
-  CLineCatalog() = default; // TODO remove in 7007
-  CLineCatalog(const CLineCatalog &other) = default;
-  CLineCatalog(CLineCatalog &&other) = default;
-  CLineCatalog &operator=(const CLineCatalog &other) = default;
-  CLineCatalog &operator=(CLineCatalog &&other) = default;
+  CLineCatalogBase(Float64 sigmaSupport) : m_nSigmaSupport(sigmaSupport){};
+  virtual ~CLineCatalogBase() = default;
+  CLineCatalogBase() = default;
+  CLineCatalogBase(const CLineCatalogBase &other) = default;
+  CLineCatalogBase(CLineCatalogBase &&other) = default;
+  CLineCatalogBase &operator=(const CLineCatalogBase &other) = default;
+  CLineCatalogBase &operator=(CLineCatalogBase &&other) = default;
 
-  void Add(const CLine &r);
-  void AddLineFromParams(
-      const std::string &name, const Float64 &position, const std::string &type,
-      const std::string &force, const std::string &profile,
-      const TAsymParams &asymParams, const std::string &groupName,
-      const Float64 &nominalAmplitude, const std::string &velocityGroup,
-      const Float64 &velocityOffset, const bool &enableVelocityFit,
-      const Int32 &id, const std::string &str_id,
-      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection =
-          nullptr);
+  void Add(const TLine &r);
 
-  const TLineVector &GetList() const;
-  TLineVector GetFilteredList(Int32 typeFilter = -1,
-                              Int32 forceFilter = -1) const;
+  const TLineVector &GetList() const { return m_List; };
+  TLineVector
+  GetFilteredList(CLine::EType typeFilter = CLine::EType::nType_All,
+                  CLine::EForce forceFilter = CLine::EForce::nForce_All) const;
   TLineVector GetFilteredList(const std::string &typeFilter,
                               const std::string &forceFilter) const;
   static const std::vector<TLineVector>
   ConvertToGroupList(const TLineVector &filteredList);
-
-  void Sort();
 
   void setAsymProfileAndParams(const std::string &profile, TAsymParams params);
 
@@ -93,10 +88,36 @@ public:
 
 protected:
   TLineVector m_List;
-  //    std::map<std::string, TLineVector> lineGroups; TODO use this map to
-  //    handle velocity groups
 
   Float64 m_nSigmaSupport = N_SIGMA_SUPPORT;
+};
+
+// specialization: AddLineFromParams is only implemented for
+// CLineCatalogBase<CLine>
+class CLineCatalog : public CLineCatalogBase<> {
+public:
+  using CLineCatalogBase<>::CLineCatalogBase;
+  virtual ~CLineCatalog() = default;
+  CLineCatalog(const CLineCatalog &other) = default;
+  CLineCatalog(CLineCatalog &&other) = default;
+  CLineCatalog &operator=(const CLineCatalog &other) = default;
+  CLineCatalog &operator=(CLineCatalog &&other) = default;
+
+  void AddLineFromParams(
+      const std::string &name, const Float64 &position, std::string const &type,
+      std::string const &force, const std::string &profile,
+      const TAsymParams &asymParams, const std::string &groupName,
+      const Float64 &nominalAmplitude, const std::string &velocityGroup,
+      const Float64 &velocityOffset, const bool &enableVelocityFit,
+      const Int32 &id, const std::string &str_id,
+      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection =
+          nullptr);
+};
+
+class CLineDetectedCatalog : public CLineCatalogBase<CLineDetected> {
+public:
+  using CLineCatalogBase<CLineDetected>::CLineCatalogBase;
+  void Sort();
 };
 
 } // namespace NSEpic

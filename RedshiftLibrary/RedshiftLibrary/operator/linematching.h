@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/line/line.h"
+#include "RedshiftLibrary/line/linedetected.h"
 #include "RedshiftLibrary/operator/linematchingresult.h"
 #include <functional>
 namespace NSEpic {
@@ -56,11 +56,13 @@ namespace NSEpic {
 class CLineMatching {
 public:
   std::shared_ptr<CLineMatchingResult>
-  Compute(const CLineCatalog &restLineCatalog,
-          const CLineCatalog &detectedLineCatalog,
+  Compute(const CLineDetectedCatalog &detectedLineCatalog,
+          const CLineCatalog &restLineCatalog,
           const TFloat64Range &redshiftRange, Int32 nThreshold = 5,
-          Float64 tol = 0.002, Int32 typeFilter = CLine::nType_Emission,
-          Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1) const;
+          Float64 tol = 0.002,
+          CLine::EType typeFilter = CLine::EType::nType_Emission,
+          CLine::EForce detectedForceFilter = CLine::EForce::nForce_All,
+          CLine::EForce restRorceFilter = CLine::EForce::nForce_All) const;
 
 private:
   bool AreSolutionSetsEqual(const CLineMatchingResult::TSolutionSet &s1,
@@ -70,13 +72,13 @@ private:
                   const TFloat64Range &redshiftRange, Int32 nThreshold) const;
   void updateSolution(Int32 iDetectedLine, Float64 redShift, Float64 tol,
                       CLineMatchingResult::TSolutionSet &solution, // to update
-                      const TLineVector &detectedLineList,
-                      const TLineVector &restLineList) const;
+                      const CLineDetectedVector &detectedLineList,
+                      const CLineVector &restLineList) const;
   std::function<Float64(Int32, Int32)>
-  getRedshift(const TLineVector &detectedLineList,
-              const TLineVector &restLineList) const;
+  getRedshift(const CLineDetectedVector &detectedLineList,
+              const CLineVector &restLineList) const;
   bool
-  isLineAlreadyPresent(const CLine &line,
+  isLineAlreadyPresent(const CLineDetected &line,
                        const CLineMatchingResult::TSolutionSet &solution) const;
 };
 } // namespace NSEpic
