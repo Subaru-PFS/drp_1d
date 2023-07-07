@@ -81,9 +81,7 @@ class ResultStoreOutput(AbstractOutput):
         elif attr_type == "TBoolList":
             return PC.Get_BoolArray(attr)
         elif attr_type == "CMask":
-            # TODO investigate
-            # ret = PC.Get_MaskArray(attr.getMaskList())
-            pass
+            return PC.Get_MaskArray(attr.getMaskList())
         else:
             return attr
 
