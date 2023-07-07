@@ -36,13 +36,15 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+import sys
+import traceback
+
 from pylibamazed.redshift import AmzException, ErrorCode
-import sys,traceback
 
 
 class AmazedError(AmzException):
     def __init__(self, errCode, message, line=-1, method="", filename=""):
-        self.errCode = errCode # we keep the python enum for further use
+        self.errCode = errCode  # we keep the python enum for further use
         if line == -1:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             frame = traceback.extract_tb(exc_traceback)[-1]
@@ -53,8 +55,8 @@ class AmazedError(AmzException):
                                   frame.name,
                                   frame.lineno)
         else:
-            AmzException.__init__(self, errCode.value, message,filename,method,line)
-            
+            AmzException.__init__(self, errCode.value, message, filename, method, line)
+
         self.LogError(self.__str__())
 
     def __str__(self):
@@ -62,15 +64,16 @@ class AmazedError(AmzException):
         ret = ret + self.getFileName() + ":" + str(self.getLine()) + ":" + self.getMethod() + "]"
         return ret
 
+
 def AmazedErrorFromGlobalException(global_exception):
-        errCode = ErrorCode(global_exception.getErrorCode())
-        ae = AmazedError(errCode,
-                         global_exception.getMessage(),
-                         line=global_exception.getLine(),
-                         filename=global_exception.getFileName(),
-                         method=global_exception.getMethod())
- 
-        return ae
+    errCode = ErrorCode(global_exception.getErrorCode())
+    ae = AmazedError(errCode,
+                     global_exception.getMessage(),
+                     line=global_exception.getLine(),
+                     filename=global_exception.getFileName(),
+                     method=global_exception.getMethod())
+
+    return ae
 
 
 class APIException(Exception):
@@ -79,4 +82,4 @@ class APIException(Exception):
         self.message = message
 
     def __str__(self):
-        return '{}:{}'.format(self.errCode.name,self.message)
+        return '{}:{}'.format(self.errCode.name, self.message)

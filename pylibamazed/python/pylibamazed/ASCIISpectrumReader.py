@@ -37,17 +37,9 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-import numpy as np
-import os, json
-
-import pandas as pd
-from pylibamazed.Container import Container
-from pylibamazed.redshift import (
-    CLog,
-    CFlagWarning,
-)
-
 from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader
+from pylibamazed.Container import Container
+from pylibamazed.redshift import CFlagWarning, CLog
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -55,14 +47,16 @@ zflag = CFlagWarning.GetInstance()
 
 class ASCIISpectrumReader(AbstractSpectrumReader):
     """
-    Child class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also handles
-    Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle photometric data
-    if present.
+    Child class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also
+    handles Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle
+    photometric data if present.
 
     Reads a CSpectrum
-    :param observation_id: Observation ID of the spectrum, there can be multiple observation id for the same source_id
+    :param observation_id: Observation ID of the spectrum, there can be multiple observation id for the same
+        source_id
     :type observation_id: str
-    :param parameters: Parameters of the amazed run. It should at least have information about LSF and lambda range
+    :param parameters: Parameters of the amazed run. It should at least have information about LSF and lambda
+        range
     :type parameters: dict
     :param calibration_library: Calibration library object, containing all calibration data necessary,
         according to parameters
@@ -83,16 +77,16 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
 
     def load_lsf(self, spectrum, obs_id=""):
         pass
-        #self.lsf_type = "no_lsf"
+        # self.lsf_type = "no_lsf"
 
     def load_photometry(self, phot, obs_id=""):
         self.photometric_data.append(phot)
 
-    def load_others(self, spectrum, obs_id: str=""):
+    def load_others(self, spectrum, obs_id: str = ""):
         additional_cols = self.parameters.get_additional_cols()
         if additional_cols is None:
             return
-        
+
         for col_name in additional_cols:
             col_data = spectrum[col_name]
             if self.others.get(col_name) is None:
@@ -107,4 +101,3 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
         self.load_error(spectrum)
         self.load_lsf(spectrum)
         self.load_others(spectrum)
-

@@ -1,27 +1,27 @@
 # ============================================================================
-# 
+#
 # This file is part of: AMAZED
-# 
+#
 # Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
-# 
+#
 # https://www.lam.fr/
-# 
+#
 # This software is a computer program whose purpose is to estimate the
 # spectrocopic redshift of astronomical sources (galaxy/quasar/star)
 # from there 1D spectrum.
-# 
+#
 # This software is governed by the CeCILL-C license under French law and
-# abiding by the rules of distribution of free software.  You can  use, 
+# abiding by the rules of distribution of free software.  You can  use,
 # modify and/ or redistribute the software under the terms of the CeCILL-C
 # license as circulated by CEA, CNRS and INRIA at the following URL
-# "http://www.cecill.info". 
-# 
+# "http://www.cecill.info".
+#
 # As a counterpart to the access to the source code and  rights to copy,
 # modify and redistribute granted by the license, users are provided only
 # with a limited warranty  and the software's author,  the holder of the
 # economic rights,  and the successive licensors  have only  limited
-# liability. 
-# 
+# liability.
+#
 # In this respect, the user's attention is drawn to the risks associated
 # with loading,  using,  modifying and/or developing or reproducing the
 # software by the user in light of its specific status of free software,
@@ -29,19 +29,22 @@
 # therefore means  that it is reserved for developers  and  experienced
 # professionals having in-depth computer knowledge. Users are therefore
 # encouraged to load and test the software's suitability as regards their
-# requirements in conditions enabling the security of their systems and/or 
-# data to be ensured and,  more generally, to use and operate it in the 
-# same conditions as regards security. 
-# 
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
+# same conditions as regards security.
+#
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import random
+import tempfile
+
 import numpy as np
+from pylibamazed.AbstractSpectrumReader import (AbstractSpectrumReader,
+                                                Container)
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
-import tempfile
-from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader, Container
+
 
 class TestSpectrumReaderUtils:
 
@@ -50,30 +53,31 @@ class TestSpectrumReaderUtils:
         params_dict["LSF"] = dict()
         params_dict["LSF"]["LSFType"] = kwargs.get("lsf_type", "FROMSPECTRUMDATA")
         params_dict["airvacuum_method"] = kwargs.get("airvacuum_method", "")
-        params_dict["objects"]=[]
-        params_dict["multiobsmethod"]=kwargs.get("multiobsmethod", "")
+        params_dict["objects"] = []
+        params_dict["multiobsmethod"] = kwargs.get("multiobsmethod", "")
         if kwargs.get("filters"):
             params_dict["filters"] = kwargs.get("filters")
         return params_dict
 
     def full_load(self, fsr, **kwargs):
-        fsr.load_wave([0,10], kwargs.get('obs_id', ''))
-        fsr.load_flux([0,10], kwargs.get('obs_id', ''))
-        fsr.load_error([0,10], kwargs.get('obs_id', ''))
+        fsr.load_wave([0, 10], kwargs.get('obs_id', ''))
+        fsr.load_flux([0, 10], kwargs.get('obs_id', ''))
+        fsr.load_error([0, 10], kwargs.get('obs_id', ''))
 
     def initialize_fsr_with_data(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)
         params = Parameters(params_dict)
         cl = CalibrationLibrary(params, tempfile.mkdtemp())
-        fsr = FakeSpectrumReader("000", params, cl, "000","range")
+        fsr = FakeSpectrumReader("000", params, cl, "000", "range")
         self.full_load(fsr, **kwargs)
         fsr.load_lsf(None)
         return fsr
 
+
 class FakeSpectrumReader(AbstractSpectrumReader):
 
     def __init__(self, observation_id, parameters: Parameters, calibration_library, source_id, lambda_type):
-        AbstractSpectrumReader.__init__(self, observation_id,parameters,calibration_library,source_id)
+        AbstractSpectrumReader.__init__(self, observation_id, parameters, calibration_library, source_id)
         self.lambda_type = lambda_type
         super().__init__(observation_id, parameters, calibration_library, source_id)
 
@@ -94,7 +98,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
     def load_flux(self, l_range, obs_id=""):
         if l_range is not None:
             self.fluxes.append(
-                np.array([random.random() for i in range(l_range[0],l_range[1])]),
+                np.array([random.random() for i in range(l_range[0], l_range[1])]),
                 obs_id=obs_id,
             )
         else:
@@ -106,7 +110,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
     def load_error(self, l_range, obs_id=""):
         if l_range is not None:
             self.errors.append(
-                np.array([random.random() for i in range(l_range[0],l_range[1])]),
+                np.array([random.random() for i in range(l_range[0], l_range[1])]),
                 obs_id=obs_id,
             )
         else:
@@ -114,7 +118,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
                 np.array([random.random() for i in range(10)]),
                 obs_id=obs_id,
             )
-    
+
     def load_others(self, data_name: str, obs_id=""):
         if not self.others.get(data_name):
             self.others[data_name] = Container()
