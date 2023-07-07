@@ -36,8 +36,6 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import sys
-
 import numpy as np
 import pandas as pd
 from pylibamazed.Exception import APIException
@@ -127,7 +125,6 @@ class AbstractOutput:
             elif self.has_error(None, attr_parts[1]):
                 return self.get_error(None, attr_parts[1])[attr_parts[2]]
             else:
-                print(f"wrong error definition {attribute}", file=sys.stderr)
                 return None
         elif root == "ContextWarningFlags":
             return self.get_attribute(None, "context_warningFlag", "ContextWarningFlags")
