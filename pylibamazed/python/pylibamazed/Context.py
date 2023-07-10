@@ -36,31 +36,28 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import os.path
-import sys,traceback
-from pylibamazed.CalibrationLibrary import CalibrationLibrary
-from pylibamazed.ResultStoreOutput import ResultStoreOutput
-from pylibamazed.Reliability import Reliability
-from pylibamazed.Parameters import Parameters
-from pylibamazed.SubType import SubType
-from pylibamazed.redshift import (CProcessFlowContext,
-                                  CLineModelSolve,
-                                  CTemplateFittingSolve,
-                                  CTplcombinationSolve,
-                                  CClassificationSolve,
-                                  CReliabilitySolve,
-                                  CLineMeasSolve,
-                                  CLineMatchingSolve,
-                                  CFlagWarning,CLog,
-                                  GlobalException, ErrorCode)
-import pandas as pd
-import json
-import os
 import functools
+import os
+import os.path
 
-from pylibamazed.Exception import (AmazedError,
-                                   AmazedErrorFromGlobalException,
+from pylibamazed.CalibrationLibrary import CalibrationLibrary
+from pylibamazed.Exception import (AmazedError, AmazedErrorFromGlobalException,
                                    APIException)
+from pylibamazed.Parameters import Parameters
+# NB: DO NOT REMOVE - these libs are used in globals
+from pylibamazed.redshift import CClassificationSolve  # noqa F401
+from pylibamazed.redshift import CLineMatchingSolve  # noqa F401
+from pylibamazed.redshift import CLineMeasSolve  # noqa F401
+from pylibamazed.redshift import CLineModelSolve  # noqa F401
+from pylibamazed.redshift import CReliabilitySolve  # noqa F401
+from pylibamazed.redshift import CTemplateFittingSolve  # noqa F401
+from pylibamazed.redshift import CTplcombinationSolve  # noqa F401
+from pylibamazed.redshift import (CFlagWarning, CLog, CProcessFlowContext,
+                                  ErrorCode, GlobalException)
+from pylibamazed.Reliability import Reliability
+from pylibamazed.ResultStoreOutput import ResultStoreOutput
+from pylibamazed.SubType import SubType
+
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
 
@@ -80,27 +77,31 @@ class Context:
                 self.config["linemeascatalog"] = {}
             else:
                 _check_LinemeasValidity(config, parameters)
-            
 
             self.extended_results = config["extended_results"]
         except GlobalException as e:
             raise AmazedErrorFromGlobalException(e)
         except APIException as e:
-            raise AmazedError(e.errCode,e.message)
+            raise AmazedError(e.errCode, e.message)
         except Exception as e:
             raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
-            
+
     def init_context(self):
         self.process_flow_context = CProcessFlowContext.GetInstance()
         self.process_flow_context.reset()
         for object_type in self.parameters.get_objects():
             if object_type in self.calibration_library.line_catalogs:
                 for method in self.parameters.get_linemodel_methods(object_type):
-                    self.process_flow_context.setLineCatalog(object_type, method,
-                                                             self.calibration_library.line_catalogs[object_type][method])
+                    self.process_flow_context.setLineCatalog(
+                        object_type,
+                        method,
+                        self.calibration_library.line_catalogs[object_type][method]
+                    )
             if object_type in self.calibration_library.line_ratio_catalog_lists:
-                self.process_flow_context.setLineRatioCatalogCatalog(object_type,
-                                                                     self.calibration_library.line_ratio_catalog_lists[object_type])
+                self.process_flow_context.setLineRatioCatalogCatalog(
+                    object_type,
+                    self.calibration_library.line_ratio_catalog_lists[object_type]
+                )
 
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
@@ -112,11 +113,11 @@ class Context:
             resultStore = CProcessFlowContext.GetInstance().GetResultStore()
             rso = ResultStoreOutput(resultStore,
                                     self.parameters,
-                                    auto_load = False,
-                                    extended_results = self.extended_results)
+                                    auto_load=False,
+                                    extended_results=self.extended_results)
         except Exception as e:
-            rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)),None,"init")
-        context_warningFlagRecorded=False
+            rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)), None, "init")
+        context_warningFlagRecorded = False
         try:
             self.init_context()
             spectrum_reader.init()
@@ -124,58 +125,63 @@ class Context:
                 self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id, self.config)
             self.process_flow_context.LoadParameterStore(self.parameters.get_json())
             self.process_flow_context.Init()
-            #store flag in root object
-            resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
+            # store flag in root object
+            resultStore.StoreFlagResult("context_warningFlag", zflag.getBitMask())
             context_warningFlagRecorded = True
             zflag.resetFlag()
         except GlobalException as e:
-            rso.store_error(AmazedErrorFromGlobalException(e),None,"init")
+            rso.store_error(AmazedErrorFromGlobalException(e), None, "init")
             rso.load_root()
             return rso
         except APIException as e:
             if not context_warningFlagRecorded:
-                resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
+                resultStore.StoreFlagResult("context_warningFlag", zflag.getBitMask())
                 zflag.resetFlag()
-            rso.store_error(AmazedError(e.errCode,e.message), None, "init")
+            rso.store_error(AmazedError(e.errCode, e.message), None, "init")
             rso.load_root()
             return rso
         except Exception as e:
             if not context_warningFlagRecorded:
-                resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
+                resultStore.StoreFlagResult("context_warningFlag", zflag.getBitMask())
                 zflag.resetFlag()
-            rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)),None,"init")
+            rso.store_error(AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)), None, "init")
             rso.load_root()
             return rso
 
         for object_type in self.parameters.get_objects():
-            linemeas_params_from_solver = not self.config["linemeascatalog"] and not object_type in self.config["linemeascatalog"]
+            linemeas_params_from_solver = not self.config["linemeascatalog"] \
+                and object_type not in self.config["linemeascatalog"]
             method = self.parameters.get_solve_method(object_type)
             if method:
                 self.run_redshift_solver(rso, object_type, "redshift_solver")
 
             if self.parameters.get_linemeas_method(object_type):
                 if linemeas_params_from_solver and not rso.has_error(object_type, "redshift_solver"):
-                    self.run_load_linemeas_params(rso,object_type,"linemeas_catalog_load")
+                    self.run_load_linemeas_params(rso, object_type, "linemeas_catalog_load")
                 if not rso.has_error(object_type, "linemeas_catalog_load"):
-                    self.run_linemeas_solver(rso, object_type, "linemeas_solver") 
+                    self.run_linemeas_solver(rso, object_type, "linemeas_solver")
 
-            if self.parameters.is_tplratio_catalog_needed(object_type) and not rso.has_error(object_type, "redshift_solver"):
+            if self.parameters.is_tplratio_catalog_needed(object_type) \
+                    and not rso.has_error(object_type, "redshift_solver"):
                 self.run_sub_classification(rso, object_type, "sub_classif_solver")
 
-            if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models and not rso.has_error(object_type, "redshift_solver"):
+            if self.parameters.reliability_enabled(object_type) \
+                and object_type in self.calibration_library.reliability_models \
+                    and not rso.has_error(object_type, "redshift_solver"):
                 self.run_reliability(rso, object_type, "reliability_solver")
 
         enable_classification = False
         for object_type in self.parameters.get_objects():
-            if self.parameters.get_solve_method(object_type) and not rso.has_error(object_type, "redshift_solver"):
+            if self.parameters.get_solve_method(object_type) \
+                    and not rso.has_error(object_type, "redshift_solver"):
                 enable_classification = True
                 break
-            
-        if enable_classification:
-            self.run_classification(rso,None,"classification")
 
-        self.load_result_store(rso,None,"load_result_store")
-        
+        if enable_classification:
+            self.run_classification(rso, None, "classification")
+
+        self.load_result_store(rso, None, "load_result_store")
+
         return rso
 
     def run_method_exception_handler(func):
@@ -187,7 +193,7 @@ class Context:
                 stage = args[2]
                 func(self, *args, **kwargs)
             except GlobalException as e:
-                rso.store_error(AmazedErrorFromGlobalException(e),object_type,stage)
+                rso.store_error(AmazedErrorFromGlobalException(e), object_type, stage)
             except APIException as e:
                 rso.store_error(AmazedError(e.errCode, e.message), object_type, stage)
             except Exception as e:
@@ -208,12 +214,12 @@ class Context:
 
     @run_method_exception_handler
     def run_load_linemeas_params(self, rso, object_type, stage):
-        self.parameters.load_linemeas_parameters_from_result_store(rso,object_type)
+        self.parameters.load_linemeas_parameters_from_result_store(rso, object_type)
         self.process_flow_context.LoadParameterStore(self.parameters.get_json())
 
     @run_method_exception_handler
     def run_reliability(self, rso, object_type, stage):
-        rel = Reliability(object_type, self.parameters,self.calibration_library)
+        rel = Reliability(object_type, self.parameters, self.calibration_library)
         rso.object_results[object_type]['reliability'] = dict()
         rso.object_results[object_type]['reliability']['Reliability'] = rel.Compute(self.process_flow_context)
 
@@ -230,36 +236,42 @@ class Context:
 
     @run_method_exception_handler
     def run_classification(self, rso, object_type, stage):
-        self.run_method("classification","ClassificationSolve")
+        self.run_method("classification", "ClassificationSolve")
 
     @run_method_exception_handler
     def load_result_store(self, rso, object_type, stage):
         rso.load_all()
-        
+
     def run_method(self, object_type, method):
         if "C" + method not in globals():
-            raise APIException(ErrorCode.INVALID_PARAMETER,"Unknown method {}".format(method))
+            raise APIException(ErrorCode.INVALID_PARAMETER, "Unknown method {}".format(method))
         solver_method = globals()["C" + method]
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
         solver.Compute()
 
-        
+
 def _check_config(config):
     if "calibration_dir" not in config:
-        raise APIException(ErrorCode.MISSING_CONFIG_OPTION,"Config must contain 'calibration_dir' key")
+        raise APIException(ErrorCode.MISSING_CONFIG_OPTION, "Config must contain 'calibration_dir' key")
     if not os.path.exists(config["calibration_dir"]):
-        raise APIException(ErrorCode.INVALID_DIRECTORY,"Calibration directory {} does not exist".format(config["calibration_dir"]))
+        raise APIException(ErrorCode.INVALID_DIRECTORY,
+                           "Calibration directory {} does not exist".format(config["calibration_dir"]))
     if "linemeascatalog" in config:
         if "linemeas_catalog_columns" not in config:
-            raise APIException(ErrorCode.MISSING_CONFIG_OPTION,"Missing linemeas_catalog_columns key in linemeascatalog config-option")
+            raise APIException(ErrorCode.MISSING_CONFIG_OPTION,
+                               "Missing linemeas_catalog_columns key in linemeascatalog config-option")
         for object_type in config["linemeascatalog"].keys():
             if object_type not in config["linemeas_catalog_columns"]:
-                raise APIException(ErrorCode.INCOHERENT_CONFIG_OPTIONS,"Missing category {} in linemeas_catalog_columns ".format(object_type))
+                raise APIException(ErrorCode.INCOHERENT_CONFIG_OPTIONS,
+                                   "Missing category {} in linemeas_catalog_columns ".format(object_type))
 
             for attr in ["Redshift", "VelocityAbsorption", "VelocityEmission"]:
                 if attr not in config["linemeas_catalog_columns"][object_type]:
-                    raise APIException(ErrorCode.ATTRIBUTE_NOT_SUPPORTED,"Not supported Attribute {0} in Config['linemeas_catalog_columns'][{1}]".format(object_type, attr))
+                    raise APIException(
+                        ErrorCode.ATTRIBUTE_NOT_SUPPORTED,
+                        f"Not supported Attribute {object_type} in Config['linemeas_catalog_columns'][{attr}]"
+                    )
 
 
 def _check_LinemeasValidity(config, parameters):

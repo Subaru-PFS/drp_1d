@@ -39,9 +39,10 @@
 
 
 from pylibamazed.redshift import (TLSFArguments,
-                                  TLSFGaussianVarWidthArgs, TLSFGaussianConstantWidthArgs,
-                                  TLSFGaussianConstantResolutionArgs, TLSFGaussianNISPVSSPSF201707Args)
-
+                                  TLSFGaussianConstantResolutionArgs,
+                                  TLSFGaussianConstantWidthArgs,
+                                  TLSFGaussianNISPVSSPSF201707Args,
+                                  TLSFGaussianVarWidthArgs)
 
 LSFParameters = {
     'GaussianConstantWidth': "width",
@@ -57,8 +58,3 @@ TLSFArgumentsCtor = {'GaussianNISPSIM2016': TLSFArguments,
                      'GaussianConstantResolution': TLSFGaussianConstantResolutionArgs,
                      'GaussianNISPVSSPSF201707': TLSFGaussianNISPVSSPSF201707Args,
                      "GaussianVariableWidth": TLSFGaussianVarWidthArgs}
-
-
-
-
-

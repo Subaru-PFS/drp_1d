@@ -37,27 +37,28 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.ResultStoreOutput import ResultStoreOutput
 import numpy as np
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import (CLogZPdfResult, ErrorCode)
 from pylibamazed.PdfHandler import buildPdfHandler
+from pylibamazed.redshift import ErrorCode
+from pylibamazed.ResultStoreOutput import ResultStoreOutput
+
 
 class Reliability:
-    def __init__(self, object_type,parameters, calibration):
+    def __init__(self, object_type, parameters, calibration):
         self.object_type = object_type
         self.parameters = parameters
         self.calibration_library = calibration
-        
+
     def Compute(self, source):
         # context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
         output = ResultStoreOutput(
-                source.GetResultStore(),
-                self.parameters,
-                auto_load=False,
-                extended_results=False,
-            )
-        
+            source.GetResultStore(),
+            self.parameters,
+            auto_load=False,
+            extended_results=False,
+        )
+
         model = self.calibration_library.reliability_models[self.object_type]
         model_parameters = self.calibration_library.reliability_parameters[self.object_type]
         return self.get_probas(output, model, model_parameters)["success"]
@@ -68,7 +69,7 @@ class Reliability:
 
         logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
         output.load_object_level(self.object_type)
-        
+
         pdf = buildPdfHandler(output, self.object_type, logsampling)
         pdf.convertToRegular(True, c_zgrid_zend)
 
@@ -77,19 +78,27 @@ class Reliability:
 
         zgrid_end = zgrid[-1]
         if pdfval.shape[0] != model.input_shape[1]:
-            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,"PDF and model shapes are not compatible")
-        # The model needs a PDF, not LogPDF        
-        zend_diff = (zgrid_end - c_zgrid_zend)/zgrid_end
+            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
+                               "PDF and model shapes are not compatible")
+        # The model needs a PDF, not LogPDF
+        zend_diff = (zgrid_end - c_zgrid_zend) / zgrid_end
         if zend_diff > 1e-6:
-            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {zgrid_end} != {c_zgrid_zend}")
-        z_step = (zgrid[-1]+1)/(zgrid[-2]+1)
+            raise APIException(
+                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
+                "PDF and model shapes are not compatible, zgrid differ in the end : "
+                f"{zgrid_end} != {c_zgrid_zend}"
+            )
+        z_step = (zgrid[-1] + 1) / (zgrid[-2] + 1)
         c_zrange_step = model_parameters["zrange_step"]
-        step_diff = (np.exp(c_zrange_step)-z_step)/z_step
+        step_diff = (np.exp(c_zrange_step) - z_step) / z_step
         if step_diff > 1e-6:
-            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,f"PDF and model shapes are not compatible, zgrid differ in the end : {z_step} != {np.exp(c_zrange_step)}")
+            raise APIException(
+                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
+                "PDF and model shapes are not compatible, zgrid differ in the end : "
+                f"{z_step} != {np.exp(c_zrange_step)}")
         ret = dict()
         classes = model_parameters["classes"]
-        probas =model.predict(np.exp(pdfval[None, :, None]))
-        for i in range(1,len(classes)):
-            ret[classes[i]]=probas[0, i]
+        probas = model.predict(np.exp(pdfval[None, :, None]))
+        for i in range(1, len(classes)):
+            ret[classes[i]] = probas[0, i]
         return ret

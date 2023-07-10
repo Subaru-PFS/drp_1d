@@ -38,41 +38,37 @@
 # ============================================================================
 
 from typing import Dict
-import numpy as np
-import json
 
+import numpy as np
 import pandas as pd
-from pylibamazed.Parameters import Parameters
-from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
 from pylibamazed.Container import Container
-from pylibamazed.redshift import (CSpectrumSpectralAxis,
-                                  CSpectrumFluxAxis_withError,
-                                  CSpectrum,
-                                  PC,
-                                  CProcessFlowContext,
-                                  TLSFGaussianVarWidthArgs,
-                                  CLSFFactory,
-                                  CPhotometricData,
-                                  CLog,
-                                  CFlagWarning,
-                                  ErrorCode,
-                                  WarningCode
-                                 )
-from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
+from pylibamazed.Exception import APIException
 from pylibamazed.Filter import FilterList
+from pylibamazed.FilterLoader import (AbstractFilterLoader,
+                                      ParamJsonFilterLoader)
+from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
+from pylibamazed.Parameters import Parameters
+from pylibamazed.redshift import (PC, CFlagWarning, CLog, CLSFFactory,
+                                  CPhotometricData, CProcessFlowContext,
+                                  CSpectrum, CSpectrumFluxAxis_withError,
+                                  CSpectrumSpectralAxis, ErrorCode,
+                                  TLSFGaussianVarWidthArgs, WarningCode)
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
-from pylibamazed.Exception import APIException
+
+
 class AbstractSpectrumReader:
     """
-    Base class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also handles
-    Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle photometric data
-    if present.
+    Base class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also
+    handles Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle
+    photometric data if present.
 
-    :param observation_id: Observation ID of the spectrum, there can be multiple observation id for the same source_id
+    :param observation_id: Observation ID of the spectrum, there can be multiple observation id for the same
+        source_id
     :type observation_id: str
-    :param parameters: Parameters of the amazed run. It should at least have information about LSF and lambda range
+    :param parameters: Parameters of the amazed run. It should at least have information about LSF and lambda
+        range
     :type parameters: dict
     :param calibration_library: Calibration library object, containing all calibration data necessary,
         according to parameters
@@ -81,6 +77,7 @@ class AbstractSpectrumReader:
     :type source_id: str
 
     """
+
     def __init__(
         self,
         observation_id: str,
@@ -92,7 +89,7 @@ class AbstractSpectrumReader:
         """Constructor method
         """
         self.observation_id = observation_id
-        
+
         # Initial loaded data
         self.waves = Container[np.ndarray]()
         self.fluxes = Container[np.ndarray]()
@@ -122,8 +119,8 @@ class AbstractSpectrumReader:
     def load_flux(self, resource, obs_id=""):
         """Append the flux in self.flux , units are in erg.cm-2 by default
 
-        :param resource: resource where the flux can be found, no restriction for type (can be a path, a file handler,
-            an hdf5 node,...)
+        :param resource: resource where the flux can be found, no restriction for type (can be a path, a file
+            handler, an hdf5 node,...)
 
         """
         raise NotImplementedError("Implement in derived class")
@@ -131,8 +128,8 @@ class AbstractSpectrumReader:
     def load_error(self, resource, obs_id=""):
         """Append the variance in self.error , units are in erg.cm-2 by default
 
-        :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
-            an hdf5 node,...)
+        :param resource: resource where the error can be found, no restriction for type (can be a path, a
+            file handler, an hdf5 node,...)
 
         """
         raise NotImplementedError("Implement in derived class")
@@ -140,8 +137,8 @@ class AbstractSpectrumReader:
     def load_lsf(self, resource, obs_id=""):
         """Append the spectral axis in self.flux , units are in erg.cm-2 by default
 
-         :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
-            an hdf5 node,...)
+         :param resource: resource where the error can be found, no restriction for type (can be a path, a
+            file handler, an hdf5 node,...)
 
         """
         raise NotImplementedError("Implement in derived class")
@@ -149,8 +146,8 @@ class AbstractSpectrumReader:
     def load_photometry(self, resource, obs_id=""):
         """Append the photometric data in self.photometric_data , units are in erg.cm-2 by default
 
-        :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
-            an hdf5 node,...)
+        :param resource: resource where the error can be found, no restriction for type (can be a path, a
+            file handler, an hdf5 node,...)
 
         """
         raise NotImplementedError("Implement in derived class")
@@ -158,8 +155,8 @@ class AbstractSpectrumReader:
     def load_others(self, resource, obs_id=""):
         """Appends other data in self.others
 
-        :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
-            an hdf5 node,...)
+        :param resource: resource where the error can be found, no restriction for type (can be a path, a
+            file handler, an hdf5 node,...)
         """
         pass
 
@@ -184,7 +181,7 @@ class AbstractSpectrumReader:
         """
         self._check_spectrum_is_loaded()
         return self._spectra[index]
-        
+
     def get_wave(self, index=0):
         """
         :raises: Spectrum not loaded
@@ -223,7 +220,8 @@ class AbstractSpectrumReader:
 
     def set_air(self):
         """
-        Set w_frame to "air" (default is vacuum). Client should use this method if input spectra are in air frame
+        Set w_frame to "air" (default is vacuum). Client should use this method if input spectra are in air
+        frame
         """
         self.w_frame = "air"
 
@@ -234,16 +232,16 @@ class AbstractSpectrumReader:
                 ErrorCode.INVALID_SPECTRUM,
                 f"Number of error, wavelength, flux and other arrays should be the same: {sizes}"
             )
-        
+
         if not self._obs_ids_are_consistent():
             raise APIException(
                 ErrorCode.INVALID_SPECTRUM,
-                f"Names of error, wavelength, flux and other arrays should be the same"
+                "Names of error, wavelength, flux and other arrays should be the same"
             )
 
         if len(self.lsf_data) > 1:
             raise APIException(ErrorCode.MULTILSF_NOT_HANDLED, "Multiple LSF not handled")
-        
+
         self._merge_spectrum_in_dataframe()
         self._apply_filters(self._get_filters())
 
@@ -288,16 +286,16 @@ class AbstractSpectrumReader:
                 if obs_id not in container.keys():
                     return False
         return True
-    
+
     def _editable_waves(self, obs_id=""):
         return self.editable_spectra.get(obs_id)["waves"]
-    
+
     def _editable_fluxes(self, obs_id=""):
         return self.editable_spectra.get(obs_id)["fluxes"]
-    
+
     def _editable_errors(self, obs_id=""):
         return self.editable_spectra.get(obs_id)["errors"]
-    
+
     def _add_cspectra(self):
         airvacuum_method = self._corrected_airvacuum_method()
         multiobs_type = self.parameters.get_multiobs_method()
@@ -312,7 +310,7 @@ class AbstractSpectrumReader:
 
             spectralaxis = CSpectrumSpectralAxis(self._editable_waves(), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(self._editable_fluxes(), self._editable_errors())
-            self._add_cspectrum(spectralaxis,signal)
+            self._add_cspectrum(spectralaxis, signal)
 
         elif multiobs_type == "merge":
             wses = []
@@ -327,17 +325,17 @@ class AbstractSpectrumReader:
             codes, uniques = pd.factorize(wse["wave"])
             epsilon = np.concatenate([i for i in map(np.arange, np.bincount(codes))]) * 1e-10
             wse["wave"] = wse["wave"] + epsilon
-                
+
             if len(wse["wave"].unique()) != wse.index.size:
-                raise  APIException(ErrorCode.UNALLOWED_DUPLICATES, "Duplicates in wavelengths")
-            
+                raise APIException(ErrorCode.UNALLOWED_DUPLICATES, "Duplicates in wavelengths")
+
             if not (np.diff(wse["wave"]) > 0).all():
-                raise  APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
-                
+                raise APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
+
             spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
                                                  np.array(wse["error"]))
-            self._add_cspectrum(spectralaxis,signal)
+            self._add_cspectrum(spectralaxis, signal)
 
         elif multiobs_type == "full":
             for obs_id in self.waves.keys():
@@ -345,14 +343,14 @@ class AbstractSpectrumReader:
                                                      airvacuum_method)
                 signal = CSpectrumFluxAxis_withError(self._editable_fluxes(obs_id),
                                                      self._editable_errors(obs_id))
-                self._add_cspectrum(spectralaxis,signal,obs_id)
+                self._add_cspectrum(spectralaxis, signal, obs_id)
         else:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER,
-                f"multiobsmethod must be one of 'merge', 'full'"
+                "multiobsmethod must be one of 'merge', 'full'"
             )
 
-    def _add_cspectrum(self,spectralaxis, signal, obs_id=""):
+    def _add_cspectrum(self, spectralaxis, signal, obs_id=""):
         self._spectra.append(CSpectrum(spectralaxis, signal))
         self._spectra[-1].SetName(self.source_id)
         self._spectra[-1].setObsID(obs_id)
@@ -362,20 +360,20 @@ class AbstractSpectrumReader:
 
     def _corrected_airvacuum_method(self):
         airvacuum_method = self.parameters.get_airvacuum_method()
-        
+
         if airvacuum_method == "default":
             airvacuum_method = "Morton2000"
-        
+
         if airvacuum_method == "" and self.w_frame == "air":
             airvacuum_method = "Morton2000"
-        
+
         elif airvacuum_method != "" and self.w_frame == "vacuum":
             zflag.warning(
                 WarningCode.AIR_VACCUM_CONVERSION_IGNORED.value,
                 f"Air vaccum method {airvacuum_method} ignored, spectrum already in vacuum"
             )
             airvacuum_method = ""
-        
+
         return airvacuum_method
 
     def _lsf_args(self):
@@ -400,7 +398,7 @@ class AbstractSpectrumReader:
         return lsf_args
 
     def _check_spectrum_is_loaded(self):
-        if not self._spectra :
+        if not self._spectra:
             raise APIException(
                 ErrorCode.SPECTRUM_NOT_LOADED,
                 "Spectrum not loaded, launch init first"
