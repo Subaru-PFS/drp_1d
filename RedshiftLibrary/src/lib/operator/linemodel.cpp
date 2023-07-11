@@ -495,6 +495,13 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++) {
       const auto &chisquareResult = chisquareResultsAllTpl[j];
 
+      Float64 tplfitsnr = -1.;
+      if (chisquareResult->FitMtM[i] > 0.)
+        tplfitsnr =
+            chisquareResult->FitDtM[i] / std::sqrt(chisquareResult->FitMtM[i]);
+      if (tplfitsnr > bestTplFitSNR)
+        bestTplFitSNR = tplfitsnr;
+
       bool retAdd = tplfitStore->Add(
           chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
           chisquareResult->FitMeiksinIdx[i], redshift,
@@ -502,18 +509,9 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
           chisquareResult->FitAmplitude[i],
           chisquareResult->FitAmplitudeError[i],
           chisquareResult->FitAmplitudeSigma[i], chisquareResult->FitDtM[i],
-          chisquareResult->FitMtM[i], chisquareResult->LogPrior[i]);
-
+          chisquareResult->FitMtM[i], chisquareResult->LogPrior[i], tplfitsnr);
       if (!retAdd)
         THROWG(INTERNAL_ERROR, "Failed to add continuum fit to store");
-
-      Float64 tplfitsnr = -1.;
-      if (chisquareResult->FitMtM[i] > 0.)
-        tplfitsnr =
-            chisquareResult->FitDtM[i] / std::sqrt(chisquareResult->FitMtM[i]);
-
-      if (tplfitsnr > bestTplFitSNR)
-        bestTplFitSNR = tplfitsnr;
     }
   }
   tplfitStore->setSNRMax(bestTplFitSNR);
