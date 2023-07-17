@@ -39,6 +39,7 @@ CAbstractFitter::CAbstractFitter(
     m_opt_lya_fit_delta_max = ps->GetScoped<Float64>("lyafit.deltafitmax");
     m_opt_lya_fit_delta_step = ps->GetScoped<Float64>("lyafit.deltafitstep");
   }
+  m_curObs = 0;
 }
 
 std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(

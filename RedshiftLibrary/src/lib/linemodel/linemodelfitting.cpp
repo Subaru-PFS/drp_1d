@@ -161,25 +161,26 @@ void CLineModelFitting::initParameters() {
 void CLineModelFitting::initMembers(
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator) {
   m_nbObs = m_inputSpcs->size();
+  m_curObs = 0;
   m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
   m_nominalWidthDefault = 13.4; // euclid 1 px
 
-  for (UInt8 i = 0; i < m_nbObs; i++) {
+  for (m_curObs = 0; m_curObs < m_nbObs; m_curObs++) {
     Log.LogDetail("    model: Continuum winsize found is %.2f A",
-                  getSpectrum(i).GetMedianWinsize());
+                  getSpectrum().GetMedianWinsize());
     m_ElementsVector->push_back(CLineModelElementList());
     if (m_lineRatioType == "rules") {
       // load the regular catalog
-      LoadCatalog(m_RestLineList, i);
+      LoadCatalog(m_RestLineList);
     } else { //"tplratio" and "tplcorr"
       // load the tplratio catalog with only 1 element for all lines
       // LoadCatalogOneMultiline(restLineList);
       // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
       // the Abs lines
-      LoadCatalogTwoMultilinesAE(m_RestLineList, i);
+      LoadCatalogTwoMultilinesAE(m_RestLineList);
     }
   }
-
+  m_curObs = 0;
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_models = std::make_shared<std::vector<CSpectrumModel>>();
   m_models->push_back(CSpectrumModel(getElementList(), getSpectrumPtr(),
@@ -262,14 +263,13 @@ Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
 void CLineModelFitting::AddElement(TLineVector &&lines,
                                    Float64 velocityEmission,
                                    Float64 velocityAbsorption,
-                                   TInt32List &&inds, Int32 ig,
-                                   UInt8 obsIndex) {
-  if (obsIndex == 0) {
+                                   TInt32List &&inds, Int32 ig) {
+  if (m_curObs == 0) {
     m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
         std::move(lines), velocityEmission, velocityAbsorption,
         std::move(inds)));
   }
-  getElementList(obsIndex).push_back(
+  getElementList().push_back(
       std::make_shared<CLineModelElement>(m_ElementParam[ig], m_LineWidthType));
 }
 
@@ -282,8 +282,7 @@ void CLineModelFitting::AddElement(TLineVector &&lines,
  *line thusly associated to this line. If at least one line was found, save
  *this result in getElementList().
  **/
-void CLineModelFitting::LoadCatalog(const TLineVector &restLineList,
-                                    UInt8 obsIndex) {
+void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -304,14 +303,14 @@ void CLineModelFitting::LoadCatalog(const TLineVector &restLineList,
     }
     if (lines.size() > 0) {
       AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-                 std::move(inds), lastEltIndex, obsIndex);
+                 std::move(inds), lastEltIndex);
       lastEltIndex++;
     }
   }
 }
 
-void CLineModelFitting::LoadCatalogOneMultiline(const TLineVector &restLineList,
-                                                UInt8 obsIndex) {
+void CLineModelFitting::LoadCatalogOneMultiline(
+    const TLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -327,11 +326,11 @@ void CLineModelFitting::LoadCatalogOneMultiline(const TLineVector &restLineList,
 
   if (lines.size() > 0)
     AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-               std::move(inds), 0, obsIndex);
+               std::move(inds), 0);
 }
 
 void CLineModelFitting::LoadCatalogTwoMultilinesAE(
-    const TLineVector &restLineList, UInt8 obsIndex) {
+    const TLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -354,7 +353,7 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(
 
     if (lines.size() > 0) {
       AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-                 std::move(inds), lastEltIndex, obsIndex);
+                 std::move(inds), lastEltIndex);
       lastEltIndex++;
     }
   }

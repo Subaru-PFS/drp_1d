@@ -81,11 +81,9 @@ public:
   void initParameters();
   void
   initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
-  void LoadCatalog(const TLineVector &restLineList, UInt8 obsIndex = 0);
-  void LoadCatalogOneMultiline(const TLineVector &restLineList,
-                               UInt8 obsIndex = 0);
-  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList,
-                                  UInt8 obsIndex = 0);
+  void LoadCatalog(const TLineVector &restLineList);
+  void LoadCatalogOneMultiline(const TLineVector &restLineList);
+  void LoadCatalogTwoMultilinesAE(const TLineVector &restLineList);
 
   void LogCatalogInfos();
 
@@ -166,35 +164,33 @@ public:
     return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
-  const CSpectrum &getSpectrum(Int32 index = 0) const {
-    return *((*m_inputSpcs)[index]);
-  }
-  shared_ptr<const CSpectrum> getSpectrumPtr(Int32 index = 0) {
-    return (*m_inputSpcs)[index];
+  const CSpectrum &getSpectrum() const { return *((*m_inputSpcs)[m_curObs]); }
+  shared_ptr<const CSpectrum> getSpectrumPtr() {
+    return (*m_inputSpcs)[m_curObs];
   }
 
-  // CSpectrumModel& getSpectrumModel(Int32 index=0) {
-  //   return (*m_models)[index];
+  // CSpectrumModel& getSpectrumModel(Int32 m_curObs=0) {
+  //   return (*m_models)[m_curObs];
   // } // not const because of tplortho
 
-  CSpectrumModel &getSpectrumModel(Int32 index = 0) const {
-    return (*m_models)[index];
+  CSpectrumModel &getSpectrumModel() const {
+    return (*m_models)[m_curObs];
   } // not const because of tplortho
   /*
-  std::shared_ptr<const CSpectrumModel> getConstSpectrumModel(Int32 index=0) {
-    return (*m_models)[index];
+  std::shared_ptr<const CSpectrumModel> getConstSpectrumModel(Int32 m_curObs=0)
+  { return (*m_models)[m_curObs];
   }
   */
 
-  CLineModelElementList &getElementList(Int32 index = 0) {
-    return (*m_ElementsVector)[index];
+  CLineModelElementList &getElementList() {
+    return (*m_ElementsVector)[m_curObs];
   }
-  CLineModelElementList &getElementList(Int32 index = 0) const {
-    return (*m_ElementsVector)[index];
+  CLineModelElementList &getElementList() const {
+    return (*m_ElementsVector)[m_curObs];
   }
 
-  const TLambdaRange &getLambdaRange(Int32 index = 0) const {
-    return *(m_lambdaRanges[index]);
+  const TLambdaRange &getLambdaRange() const {
+    return *(m_lambdaRanges[m_curObs]);
   }
 
   const std::string &getFittingMethod() const { return m_fittingmethod; }
@@ -227,8 +223,7 @@ private:
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
   void AddElement(TLineVector &&lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, TInt32List &&inds, Int32 ig,
-                  UInt8 obsIndex = 0);
+                  Float64 velocityAbsorption, TInt32List &&inds, Int32 ig);
 
   void SetLSF();
 
@@ -271,6 +266,7 @@ private:
 
   bool m_useloglambdasampling = false;
   Int32 m_nbObs;
+  Int32 m_curObs;
 };
 
 } // namespace NSEpic
