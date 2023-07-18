@@ -429,3 +429,6 @@ class AbstractSpectrumReader:
                     full_spectrum[col_key] = obs_others
 
             self.editable_spectra.append(full_spectrum, obs_id)
+
+    def get_observation_ids(self):
+        return self.waves.keys()

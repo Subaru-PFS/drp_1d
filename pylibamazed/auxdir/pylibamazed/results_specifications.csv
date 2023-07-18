@@ -41,8 +41,7 @@ FittedOutsideRange	fitted_lines	True	candidate	OutsideLambdaRange	extrema_result
 ContinuumPCoeff0	fitted_lines	True	candidate	continuum_pCoeff0	extrema_results	f8
 ContinuumPCoeff1	fitted_lines	True	candidate	continuum_pCoeff1	extrema_results	f8
 ContinuumPCoeff2	fitted_lines	True	candidate	continuum_pCoeff2	extrema_results	f8
-ModelLambda	model	False	candidate	ModelLambda	extrema_results	f8
-ModelFlux	model	False	candidate	ModelFlux	extrema_results	f8
+ModelFlux<ObsID>	model	False	candidate	ModelFlux	extrema_results	f8
 BestContinuumLambda	continuum	False	candidate	ModelLambda	extrema_results	f8
 BestContinuumFlux	continuum	False	candidate	ModelFlux	extrema_results	f8
 GaussianPDFAmp	model_parameters	True	candidate	GaussAmp	extrema_results	f8

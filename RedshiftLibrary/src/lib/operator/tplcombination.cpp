@@ -699,7 +699,7 @@ COperatorTplcombination::ComputeSpectrumModel(
   m_templatesRebined_bf.clear();
   m_masksRebined_bf.clear();
   return std::make_shared<CModelSpectrumResult>(
-      CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)));
+      CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)), "");
 }
 
 /**

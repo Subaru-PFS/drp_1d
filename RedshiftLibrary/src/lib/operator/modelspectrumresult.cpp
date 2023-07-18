@@ -51,14 +51,17 @@ using namespace NSEpic;
 /**
  * \brief Sets the model to CSpectrum ( spc ).
  **/
-CModelSpectrumResult::CModelSpectrumResult(const CSpectrum &spc)
-    : COperatorResult("CModelSpectrumResult"),
-      ModelLambda(spc.GetSpectralAxis().GetSamplesVector()),
-      ModelFlux(spc.GetFluxAxis().GetSamplesVector()) {
+CModelSpectrumResult::CModelSpectrumResult(const CSpectrum &spc,
+                                           const std::string &obsId)
+    : COperatorResult("CModelSpectrumResult") {
+  ModelLambda[obsId] = spc.GetSpectralAxis().GetSamplesVector();
+  ModelFlux[obsId] = spc.GetFluxAxis().GetSamplesVector();
   // probably can add model params as class variable here..
 }
 
-CModelSpectrumResult::CModelSpectrumResult(CSpectrum &&spc)
-    : COperatorResult("CModelSpectrumResult"),
-      ModelLambda(std::move(spc.GetSpectralAxis().GetSamplesVector())),
-      ModelFlux(std::move(spc.GetFluxAxis().GetSamplesVector())) {}
+CModelSpectrumResult::CModelSpectrumResult(CSpectrum &&spc,
+                                           const std::string &obsId)
+    : COperatorResult("CModelSpectrumResult") {
+  ModelLambda[obsId] = std::move(spc.GetSpectralAxis().GetSamplesVector());
+  ModelFlux[obsId] = std::move(spc.GetFluxAxis().GetSamplesVector());
+}

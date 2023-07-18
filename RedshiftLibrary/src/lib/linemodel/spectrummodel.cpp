@@ -698,7 +698,7 @@ Int32 CSpectrumModel::ApplyContinuumOnGrid(
 
   // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not
   // AxisSampleList
-  m_observeGridContinuumFlux = std::move((*spcmodel).ModelFlux);
+  m_observeGridContinuumFlux = std::move((*spcmodel).ModelFlux.at(""));
 
   return 0;
 }

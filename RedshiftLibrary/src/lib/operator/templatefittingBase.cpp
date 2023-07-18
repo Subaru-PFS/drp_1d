@@ -142,7 +142,8 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
                              CSpectrumSpectralAxis::nShiftForward);
 
   return std::make_tuple(std::make_shared<CModelSpectrumResult>(
-                             CSpectrum(std::move(modelwav), modelflux)),
+                             CSpectrum(std::move(modelwav), modelflux),
+                             m_spectra[spcIndex]->getObsID()),
                          getIntegratedFluxes());
 }
 
