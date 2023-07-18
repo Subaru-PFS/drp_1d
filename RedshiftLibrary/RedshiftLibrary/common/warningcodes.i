@@ -22,5 +22,6 @@ enum class WarningCode {
   CORRECT_SPECTRUM_NOMINFLUX,                // 20
   DEACTIVATE_CONTREESTIMATION_SKIPSECONDPASS, // 21
   LINEARFIT_RANK_DEFICIENT,                   // 22
-  LBFGSPP_ERROR                               // 23  
+  LBFGSPP_ERROR,                              // 23
+  WINDOW_TOO_SMALL,                           // 24
 };

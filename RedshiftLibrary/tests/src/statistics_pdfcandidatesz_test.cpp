@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping1) {
   zcandidates["EXT1"]->Redshift = center_redshifts[1];
   zcandidates["EXT1"]->Deltaz = deltaz[1];
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-  zcand_op.SetIntegrationWindows(TFloat64Range(pdfz), ranges);
+  zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
 
   BOOST_CHECK_CLOSE(ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
                     1E-4);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping1) {
   // deltaz no set : m_dzDefault * (1 + cand.Redshift)
   zcandidates["EXT0"]->Deltaz = -1;
   CPdfCandidatesZ zcand_op_2 = CPdfCandidatesZ(zcandidates);
-  zcand_op_2.SetIntegrationWindows(TFloat64Range(pdfz), ranges);
+  zcand_op_2.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
   BOOST_CHECK_CLOSE(zcand_op_2.m_candidates["EXT0"]->Deltaz,
                     1e-3 * (1 + zcandidates["EXT0"]->Redshift), precision);
 }
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_nooverlapping) {
   zcandidates["EXT1"]->Redshift = center_redshifts[1];
   zcandidates["EXT1"]->Deltaz = deltaz[1];
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-  zcand_op.SetIntegrationWindows(TFloat64Range(pdfz), ranges);
+  zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
 
   BOOST_CHECK_CLOSE(ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
                     1E-4);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_3) {
   zcandidates["EXT1"]->Redshift = center_redshifts[1];
   zcandidates["EXT1"]->Deltaz = deltaz[1];
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-  zcand_op.SetIntegrationWindows(TFloat64Range(pdfz), ranges);
+  zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
 
   BOOST_CHECK_CLOSE(ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
                     1E-4);
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_4) {
   zcandidates["EXT1"]->Redshift = center_redshifts[1];
   zcandidates["EXT1"]->Deltaz = deltaz[1];
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-  zcand_op.SetIntegrationWindows(TFloat64Range(pdfz), ranges);
+  zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
 
   BOOST_CHECK_CLOSE(ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
                     1E-4);
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_5) {
   zcandidates["EXT1"]->Redshift = center_redshifts[1];
   zcandidates["EXT1"]->Deltaz = deltaz[1];
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-  TStringList b = zcand_op.SetIntegrationWindows(TFloat64Range(pdfz), ranges);
+  TStringList b = zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
 
   BOOST_CHECK(b[0] == "EXT0");
   BOOST_CHECK_CLOSE(ranges["EXT1"].GetEnd(), correct_ranges["EXT1"].GetEnd(),
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_6) {
   zcandidates["EXT0"]->Deltaz = deltaz[0];
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
 
-  BOOST_CHECK_THROW(zcand_op.SetIntegrationWindows(TFloat64Range(pdfz), ranges),
+  BOOST_CHECK_THROW(zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges),
                     GlobalException);
 }
 
@@ -369,6 +369,23 @@ BOOST_AUTO_TEST_CASE(getCandidateRobustGaussFit_test) {
                     precision);
 }
 
+BOOST_AUTO_TEST_CASE(computeCandidatesDeltaz) {
+  TRedshiftList redshifts = {1.0, 2.0};
+  CPdfCandidatesZ zcand_op = CPdfCandidatesZ(redshifts);
+  TFloat64List gaussY_2 = generateGaussian(gaussZ, 0.3, mu);
+
+  // Deltaz is nan before calling computeCandidatesDeltaz
+  for (auto &c : zcand_op.m_candidates) {
+    BOOST_CHECK(isnan(c.second->Deltaz));
+  }
+  zcand_op.computeCandidatesDeltaz(gaussZ, gaussY_2);
+
+  // Deltaz is not nan anymore after calling computeCandidatesDeltaz
+  for (auto &c : zcand_op.m_candidates) {
+    BOOST_CHECK(~isnan(c.second->Deltaz));
+  }
+}
+
 BOOST_AUTO_TEST_CASE(Compute_test) {
   TCandidateZbyID candidate_ref = {{"EXT0", std::make_shared<TCandidateZ>()}};
   candidate_ref["EXT0"]->Redshift = 1.;
@@ -377,6 +394,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(candidate_ref);
 
   // compute with direct integration
+  zcand_op.computeCandidatesDeltaz(gaussZ, gaussY_2);
   std::shared_ptr<PdfCandidatesZResult> result =
       zcand_op.Compute(gaussZ, gaussY_2);
 

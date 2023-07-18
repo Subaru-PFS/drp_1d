@@ -57,7 +57,8 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 namespace Linemodel {
 class spanRedshift_test;
-}
+class checkSecondPassWindowSize_test;
+} // namespace Linemodel
 
 namespace NSEpic {
 
@@ -136,6 +137,7 @@ public:
 
 private:
   friend class Linemodel::spanRedshift_test;
+  friend class Linemodel::checkSecondPassWindowSize_test;
 
   std::shared_ptr<CTemplatesFitStore>
   PrecomputeContinuumFit(const TFloat64List &redshifts,
