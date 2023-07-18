@@ -70,6 +70,7 @@ FirstpassContinuumAmplitude	model_parameters	True	candidate	fittedTpl.tplAmplitu
 FirstpassContinuumAmplitudeUncertainty	model_parameters	True	candidate	fittedTpl.tplAmplitudeError	extrema_results	f8
 FirstpassContinuumLeastSquare	model_parameters	True	candidate	fittedTpl.tplMerit	extrema_results	f8
 FirstpassContinuumLogPrior	model_parameters	True	candidate	fittedTpl.tplLogPrior	extrema_results	f8
+FirstpassContinuumSNR	model_parameters	True	candidate	fittedTpl.tplSNR	extrema_results	f8
 FirstpassFittedTemplateDtM	model_parameters	True	candidate	fittedTpl.tplDtm	extrema_results	f8
 FirstpassFittedTemplateMtM	model_parameters	True	candidate	fittedTpl.tplMtm	extrema_results	f8
 FirstpassVelocityEmission	model_parameters	True	candidate	Elv	extrema_results	f8
