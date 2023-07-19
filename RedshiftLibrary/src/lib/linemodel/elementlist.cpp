@@ -234,28 +234,30 @@ TInt32List CLineModelElementList::getOverlappingElements(
     Float64 overlapThres) const {
   TInt32List indexes;
 
-  if (m_Elements[ind]->IsOutsideLambdaRange()) {
+  const auto &element_ref = *m_Elements[ind];
+
+  if (element_ref.IsOutsideLambdaRange()) {
     indexes.push_back(ind);
     return indexes;
   }
 
-  const TLineVector &linesRef = m_Elements[ind]->GetLines();
-  Int32 linetypeRef = m_Elements[ind]->GetElementType();
+  const TLineVector &linesRef = element_ref.GetLines();
+  Int32 linetypeRef = element_ref.GetElementType();
 
-  Int32 xinf = 0;
-  Int32 yinf = 0;
-  Int32 xsup = 0;
-  Int32 ysup = 0;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    // check linetype
-    if (m_Elements[iElts]->GetElementType() != linetypeRef) {
+    const auto &element = *m_Elements[iElts];
+
+    // skip itself
+    if (iElts == ind) {
+      indexes.push_back(ind);
       continue;
     }
 
-    // check if outside lambdarange
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
+    if (element.GetElementType() != linetypeRef)
       continue;
-    }
+
+    if (element.IsOutsideLambdaRange())
+      continue;
 
     // check if in exclusion list
     bool excluded = false;
@@ -265,109 +267,37 @@ TInt32List CLineModelElementList::getOverlappingElements(
         break;
       }
     }
-    if (excluded) {
+    if (excluded)
       continue;
-    }
 
-    const TLineVector &linesElt = m_Elements[iElts]->GetLines();
+    const TLineVector &linesElt = element.GetLines();
 
     for (Int32 iLineElt = 0; iLineElt < linesElt.size(); iLineElt++) {
+      if (element.IsOutsideLambdaRange(iLineElt))
+        continue;
       for (Int32 iLineRef = 0; iLineRef < linesRef.size(); iLineRef++) {
-        Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
-        Float64 cRef = m_Elements[ind]->GetLineWidth(
-            muRef, linesRef[iLineRef].GetIsEmission());
-        Float64 winsizeRef =
-            linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * cRef;
-        Float64 overlapSizeMin = winsizeRef * overlapThres;
-        xinf = muRef - winsizeRef / 2.0;
-        xsup = muRef + winsizeRef / 2.0;
+        if (element_ref.IsOutsideLambdaRange(iLineRef))
+          continue;
+        const Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
+        const Float64 sigmaRef =
+            element_ref.GetLineWidth(muRef, linesRef[iLineRef].GetIsEmission());
+        const Float64 winsizeRef =
+            linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * sigmaRef;
+        const Float64 overlapSizeMin = winsizeRef * overlapThres;
+        const Float64 xinf = muRef - winsizeRef / 2.0;
+        const Float64 xsup = muRef + winsizeRef / 2.0;
 
-        Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
-        Float64 cElt = m_Elements[iElts]->GetLineWidth(
-            muElt, linesElt[iLineElt].GetIsEmission());
-        Float64 winsizeElt =
-            linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * cElt;
-        yinf = muElt - winsizeElt / 2.0;
-        ysup = muElt + winsizeElt / 2.0;
+        const Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
+        const Float64 sigmaElt =
+            element.GetLineWidth(muElt, linesElt[iLineElt].GetIsEmission());
+        const Float64 winsizeElt =
+            linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * sigmaElt;
+        const Float64 yinf = muElt - winsizeElt / 2.0;
+        const Float64 ysup = muElt + winsizeElt / 2.0;
 
-        Float64 max = std::max(xinf, yinf);
-        Float64 min = std::min(xsup, ysup);
+        const Float64 max = std::max(xinf, yinf);
+        const Float64 min = std::min(xsup, ysup);
         if (max - min < -overlapSizeMin) {
-          indexes.push_back(iElts);
-          break;
-        }
-      }
-    }
-  }
-
-  std::sort(indexes.begin(), indexes.end());
-  indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
-
-  return indexes;
-}
-
-// TODO never called function, keep it ?
-/**
- * \brief Returns a sorted set of line indices present in the supports of the
- *argument. Create a vector named indexes. If the argument ind is an index to
- *m_Elements that IsOutSideLambdaRange, return indexes. For each entry in
- *m_Elements: If the entry has a different linetype than the line
- *corresponding to ind, go to the next entry. If the entry
- *IsOutsideLambdaRange, go to the enxt entry. For each subentry in the support
- *of entry: For each subsubentry in the support of ind: If the overlap in the
- *spectralAxis is smaller than -1 * overlapThres * winsize, add entry to
- *indexes. Sort indexes, remove duplicates from indexes, and return indexes.
- **/
-TInt32List CLineModelElementList::getOverlappingElementsBySupport(
-    Int32 ind, Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
-    Float64 overlapThres) const {
-
-  TInt32List indexes;
-
-  if (m_Elements[ind]->IsOutsideLambdaRange()) {
-    indexes.push_back(ind);
-    return indexes;
-  }
-  TInt32RangeList refsupport = m_Elements[ind]->getSupport();
-  const CLine &line = m_Elements[ind]->GetLines().front();
-  Int32 linetype = line.GetType();
-  Float64 mu = line.GetPosition() * (1 + redshift);
-  Float64 c = m_Elements[ind]->GetLineWidth(mu, line.GetIsEmission());
-  Float64 winsize = line.GetProfile()->GetNSigmaSupport() * c;
-  Float64 overlapThresholdMin = winsize * overlapThres;
-  // overlapThresholdMin = 0.0;
-
-  Int32 x1 = 0;
-  Int32 y1 = 0;
-  Int32 x2 = 0;
-  Int32 y2 = 0;
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->GetElementType() != linetype) {
-      continue;
-    }
-
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
-      continue;
-    }
-    TInt32RangeList s = m_Elements[iElts]->getSupport();
-    for (Int32 iS = 0; iS < s.size(); iS++) {
-      for (Int32 iRefS = 0; iRefS < refsupport.size(); iRefS++) {
-        x1 = refsupport[iRefS].GetBegin();
-        x2 = refsupport[iRefS].GetEnd();
-        y1 = s[iS].GetBegin();
-        y2 = s[iS].GetEnd();
-
-        // Log.LogInfo( "hybrid fit: iRefS=%d - support=%d,%d", iRefS, x1,
-        // x2); Log.LogInfo( "hybrid fit: iS=%d - support=%d,%d", iS, y1, y2);
-
-        //                if( std::max(x1,y1) < std::min(x2,y2) ){
-        //                    indexes.push_back(iElts);
-        //                    break;
-        //                }
-
-        Float64 max = spectralAxis[std::max(x1, y1)];
-        Float64 min = spectralAxis[std::min(x2, y2)];
-        if (max - min < -overlapThresholdMin) {
           indexes.push_back(iElts);
           break;
         }
