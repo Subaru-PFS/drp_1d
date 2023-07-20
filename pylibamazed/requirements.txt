@@ -46,7 +46,7 @@ pure-eval==0.2.2
 py-cpuinfo==9.0.0
 pyamazed==0.42+gitcb039eea
 pyerfa==2.0.0.3
-Pygments==2.14.0
+Pygments==2.15.0
 pylibamazed==0.42+gite7c19960.dirty
 pyrsistent==0.19.3
 pytest==7.2.2
