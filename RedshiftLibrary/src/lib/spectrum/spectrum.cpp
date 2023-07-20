@@ -674,14 +674,14 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   TFloat64Range clampedlambdaRange;
   m_SpectralAxis.ClampLambdaRange(lambdaRange, clampedlambdaRange);
-  Log.LogInfo("Validate spectrum: (CLambdaRange: %f-%f:%f)",
+  Log.LogInfo("Validate spectrum: (clamped lambda range: %f-%f:%f)",
               clampedlambdaRange.GetBegin(), clampedlambdaRange.GetEnd(),
               GetResolution());
 
   Float64 lmin = clampedlambdaRange.GetBegin();
   Float64 lmax = clampedlambdaRange.GetEnd();
 
-  // Check if the Spectrum is valid on the lambdarange
+  // Check if the Spectrum is valid on the clamped lambdarange
   if (enableInputSpcCorrect)
     if (correctSpectrum(lmin, lmax))
       Log.LogInfo(
@@ -694,7 +694,7 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
                 "(%.1f ; %.1f)",
                 lmin, lmax);
 
-  // Check if the noise is valid in the clampedlambdaRange
+  // Check if the noise is valid in the clamped lambdaRange
   ValidateNoise(lmin, lmax);
   Log.LogDetail(
       "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin,
@@ -702,9 +702,8 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   if (!m_LSF)
     return;
-  // check if spectrum LSF spectralAxis covers lambdaRange
-  if (!m_LSF->checkAvailability(lambdaRange.GetBegin()) ||
-      !m_LSF->checkAvailability(lambdaRange.GetEnd())) {
+  // check if spectrum LSF spectralAxis covers clamped lambdaRange
+  if (!m_LSF->checkAvailability(lmin) || !m_LSF->checkAvailability(lmax)) {
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Failed to validate lsf on wavelength range ["
                                << lmin << ";" << lmax << "]");
