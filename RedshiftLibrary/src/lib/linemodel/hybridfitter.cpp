@@ -49,9 +49,10 @@ CHybridFitter::CHybridFitter(
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
-    bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit)
+    const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
+    bool enableLambdaOffsetsFit)
     : CSvdFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
-                 restLineList, elementParam, enableAmplitudeOffsets,
+                 restLineList, elementParam, curObsPtr, enableAmplitudeOffsets,
                  enableLambdaOffsetsFit)
 
 {

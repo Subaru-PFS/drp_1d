@@ -19,11 +19,12 @@ CAbstractFitter::CAbstractFitter(
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
-    bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit)
+    const shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
+    bool enableLambdaOffsetsFit)
     : m_ElementsVector(elementsVector), m_inputSpcs(inputSpcs),
       m_RestLineList(restLineList), m_lambdaRanges(lambdaRanges),
       m_models(spectrumModels), m_ElementParam(elementParam),
-      m_enableAmplitudeOffsets(enableAmplitudeOffsets),
+      m_curObs(curObsPtr), m_enableAmplitudeOffsets(enableAmplitudeOffsets),
       m_enableLambdaOffsetsFit(enableLambdaOffsetsFit) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
@@ -39,7 +40,6 @@ CAbstractFitter::CAbstractFitter(
     m_opt_lya_fit_delta_max = ps->GetScoped<Float64>("lyafit.deltafitmax");
     m_opt_lya_fit_delta_step = ps->GetScoped<Float64>("lyafit.deltafitstep");
   }
-  m_curObs = 0;
 }
 
 std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
@@ -49,42 +49,46 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
-    bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit) {
+    const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
+    bool enableLambdaOffsetsFit) {
   if (fittingMethod == "hybrid")
     return std::make_shared<CHybridFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, enableAmplitudeOffsets, enableLambdaOffsetsFit);
+        elementParam, curObsPtr, enableAmplitudeOffsets,
+        enableLambdaOffsetsFit);
 #ifdef LBFGSFITTER
   else if (fittingMethod == "lbfgs")
     return std::make_shared<CLbfgsFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, enableAmplitudeOffsets, enableLambdaOffsetsFit);
+        elementParam, curObsPtr, enableAmplitudeOffsets,
+        enableLambdaOffsetsFit);
 #endif
   else if (fittingMethod == "svd")
     return std::make_shared<CSvdFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, enableAmplitudeOffsets, enableLambdaOffsetsFit);
+        elementParam, curObsPtr, enableAmplitudeOffsets,
+        enableLambdaOffsetsFit);
   else if (fittingMethod == "svdlc")
     return std::make_shared<CSvdlcFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, continuumManager);
+        elementParam, curObsPtr, continuumManager);
   else if (fittingMethod == "svdlcp2")
     return std::make_shared<CSvdlcFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, continuumManager, 2);
+        elementParam, curObsPtr, continuumManager, 2);
 
   else if (fittingMethod == "ones")
     return std::make_shared<COnesFitter>(elementsVector, inputSpcs,
                                          lambdaRanges, spectrumModels,
-                                         restLineList, elementParam);
+                                         restLineList, elementParam, curObsPtr);
   else if (fittingMethod == "random")
-    return std::make_shared<CRandomFitter>(elementsVector, inputSpcs,
-                                           lambdaRanges, spectrumModels,
-                                           restLineList, elementParam);
+    return std::make_shared<CRandomFitter>(
+        elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
+        elementParam, curObsPtr);
   else if (fittingMethod == "individual")
-    return std::make_shared<CIndividualFitter>(elementsVector, inputSpcs,
-                                               lambdaRanges, spectrumModels,
-                                               restLineList, elementParam);
+    return std::make_shared<CIndividualFitter>(
+        elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
+        elementParam, curObsPtr);
   else
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Unknown fitting method " << fittingMethod);

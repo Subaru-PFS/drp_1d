@@ -54,6 +54,7 @@ public:
                 const CSpcModelVectorPtr &spectrumModels,
                 const TLineVector &restLineList,
                 const std::vector<TLineModelElementParam_ptr> &elementParam,
+                const std::shared_ptr<Int32> &curObsPtr,
                 bool enableAmplitudeOffsets = false,
                 bool enableLambdaOffsetsFit = false);
 

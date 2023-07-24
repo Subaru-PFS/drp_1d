@@ -164,24 +164,24 @@ public:
     return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
-  const CSpectrum &getSpectrum() const { return *((*m_inputSpcs)[m_curObs]); }
+  const CSpectrum &getSpectrum() const { return *((*m_inputSpcs)[*m_curObs]); }
   shared_ptr<const CSpectrum> getSpectrumPtr() {
-    return (*m_inputSpcs)[m_curObs];
+    return (*m_inputSpcs)[*m_curObs];
   }
 
   CSpectrumModel &getSpectrumModel() const {
-    return (*m_models)[m_curObs];
+    return (*m_models)[*m_curObs];
   } // not const because of tplortho
 
   CLineModelElementList &getElementList() {
-    return (*m_ElementsVector)[m_curObs];
+    return (*m_ElementsVector)[*m_curObs];
   }
   CLineModelElementList &getElementList() const {
-    return (*m_ElementsVector)[m_curObs];
+    return (*m_ElementsVector)[*m_curObs];
   }
 
   const TLambdaRange &getLambdaRange() const {
-    return *(m_lambdaRanges[m_curObs]);
+    return *(m_lambdaRanges[*m_curObs]);
   }
 
   const std::string &getFittingMethod() const { return m_fittingmethod; }
@@ -257,7 +257,7 @@ private:
 
   bool m_useloglambdasampling = false;
   Int32 m_nbObs;
-  Int32 m_curObs;
+  std::shared_ptr<Int32> m_curObs;
 };
 
 } // namespace NSEpic

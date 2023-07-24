@@ -25,9 +25,10 @@ class CTplModelSolution;
 class CContinuumManager {
 public:
   CContinuumManager(const CSpcModelVectorPtr &models,
-                    std::shared_ptr<CTplModelSolution>);
+                    std::shared_ptr<CTplModelSolution>,
+                    std::shared_ptr<Int32> curObs);
 
-  CSpectrumModel &getModel(Int32 index = 0) const { return (*m_models)[index]; }
+  CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);
@@ -94,6 +95,7 @@ private:
   std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
 
   CSpcModelVectorPtr m_models;
+  std::shared_ptr<Int32> m_curObs;
 
   std::string m_ContinuumComponent;
   Int32 m_fitContinuum_option;

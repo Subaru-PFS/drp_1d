@@ -11,10 +11,11 @@ using namespace NSEpic;
 using namespace std;
 
 CContinuumManager::CContinuumManager(const CSpcModelVectorPtr &models,
-                                     std::shared_ptr<CTplModelSolution> tfv)
+                                     std::shared_ptr<CTplModelSolution> tfv,
+                                     std::shared_ptr<Int32> curObs)
     : m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategoryList({Context.GetCurrentCategory()}), m_models(models),
-      m_fitContinuum(tfv) {
+      m_fitContinuum(tfv), m_curObs(curObs) {
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets

@@ -103,8 +103,7 @@ CLineModelFitting::CLineModelFitting(
     : m_RestLineList(Context.getLineVector()) {
   m_inputSpcs =
       std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>();
-  //  m_lambdaRanges = std::make_shared<std::vector<std::shared_ptr<const
-  //  TLambdaRange>>>();
+
   m_inputSpcs->push_back(template_);
   m_lambdaRanges.push_back(std::make_shared<const TLambdaRange>(lambdaRange));
   initParameters();
@@ -152,11 +151,11 @@ void CLineModelFitting::initParameters() {
 void CLineModelFitting::initMembers(
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator) {
   m_nbObs = m_inputSpcs->size();
-  m_curObs = 0;
+  m_curObs = std::make_shared<Int32>(0);
   m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
   m_nominalWidthDefault = 13.4; // euclid 1 px
 
-  for (m_curObs = 0; m_curObs < m_nbObs; m_curObs++) {
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     Log.LogDetail("    model: Continuum winsize found is %.2f A",
                   getSpectrum().GetMedianWinsize());
     m_ElementsVector->push_back(CLineModelElementList());
@@ -171,14 +170,14 @@ void CLineModelFitting::initMembers(
       LoadCatalogTwoMultilinesAE(m_RestLineList);
     }
   }
-  m_curObs = 0;
+  *m_curObs = 0;
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_models = std::make_shared<std::vector<CSpectrumModel>>();
   m_models->push_back(CSpectrumModel(getElementList(), getSpectrumPtr(),
                                      m_RestLineList, m_continuumFitValues,
                                      TFOperator));
-  m_continuumManager =
-      std::make_shared<CContinuumManager>(m_models, m_continuumFitValues);
+  m_continuumManager = std::make_shared<CContinuumManager>(
+      m_models, m_continuumFitValues, m_curObs);
 
   SetFittingMethod(m_fittingmethod, m_enableAmplitudeOffsets,
                    m_enableLbdaOffsets);
@@ -255,7 +254,7 @@ void CLineModelFitting::AddElement(TLineVector &&lines,
                                    Float64 velocityEmission,
                                    Float64 velocityAbsorption,
                                    TInt32List &&inds, Int32 ig) {
-  if (m_curObs == 0) {
+  if (*m_curObs == 0) {
     m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
         std::move(lines), velocityEmission, velocityAbsorption,
         std::move(inds)));
@@ -541,7 +540,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
   m_fittingmethod = fitMethod;
   m_fitter = CAbstractFitter::makeFitter(
       fitMethod, m_ElementsVector, m_inputSpcs, m_lambdaRanges, m_models,
-      m_RestLineList, m_continuumManager, m_ElementParam,
+      m_RestLineList, m_continuumManager, m_ElementParam, m_curObs,
       enableAmplitudeOffsets, enableLambdaOffsetsFit);
 
   getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;

@@ -50,11 +50,12 @@ CSvdlcFitter::CSvdlcFitter(
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
+    const shared_ptr<Int32> &curObsPtr,
     std::shared_ptr<CContinuumManager> continuumManager, Int32 polyOrder,
     bool enableAmplitudeOffset, bool enableLambdaOffsetsFit)
     : CAbstractFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
-                      restLineList, elementParam, enableAmplitudeOffset,
-                      enableLambdaOffsetsFit),
+                      restLineList, elementParam, curObsPtr,
+                      enableAmplitudeOffset, enableLambdaOffsetsFit),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
       m_spectralAxis(getSpectrum().GetSpectralAxis())
 

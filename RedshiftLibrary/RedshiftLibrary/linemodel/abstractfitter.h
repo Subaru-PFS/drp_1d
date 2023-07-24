@@ -57,6 +57,7 @@ public:
       const CTLambdaRangePtrVector &lambdaRanges,
       const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      const std::shared_ptr<Int32> &curObsPtr,
       bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
   void fit(Float64 redshift);
@@ -73,6 +74,7 @@ public:
       const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      const std::shared_ptr<Int32> &curObsPtr,
       bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
   void logParameters();
@@ -110,15 +112,15 @@ protected:
                               bool enableOffsetFitting) const;
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
-  CSpectrumModel &getModel() { return (*m_models)[m_curObs]; }
-  const CSpectrumModel &getModel() const { return (*m_models)[m_curObs]; }
-  const CSpectrum &getSpectrum() { return *((*m_inputSpcs)[m_curObs]); }
-  const TLambdaRange &getLambdaRange() { return *(m_lambdaRanges[m_curObs]); }
+  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
+  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
+  const CSpectrum &getSpectrum() { return *((*m_inputSpcs)[*m_curObs]); }
+  const TLambdaRange &getLambdaRange() { return *(m_lambdaRanges[*m_curObs]); }
   CLineModelElementList &getElementList() {
-    return (*m_ElementsVector)[m_curObs];
+    return (*m_ElementsVector)[*m_curObs];
   }
   CLineModelElementList &getElementList() const {
-    return (*m_ElementsVector)[m_curObs];
+    return (*m_ElementsVector)[*m_curObs];
   }
   CLMEltListVectorPtr m_ElementsVector;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
@@ -127,7 +129,7 @@ protected:
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
 
-  Int32 m_curObs; // ou const ref? ou shared_ptr ?
+  std::shared_ptr<Int32> m_curObs;
   // hard coded options
   bool m_enableAmplitudeOffsets = false;
   bool m_enableLambdaOffsetsFit = false;
