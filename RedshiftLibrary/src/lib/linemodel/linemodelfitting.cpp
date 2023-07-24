@@ -84,21 +84,12 @@ CLineModelFitting::CLineModelFitting(
     : m_RestLineList(Context.getLineVector()) {
   initParameters();
 
-  if (m_useloglambdasampling) {
-    m_inputSpcs =
-        std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>(
-            Context.getRebinnedSpectra());
-    m_lambdaRanges = // std::make_shared<std::vector<std::shared_ptr<const
-                     // TLambdaRange>>>(
-        Context.getRebinnedClampedLambdaRanges();
-  } else {
-    m_inputSpcs =
-        std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>(
-            Context.getSpectra());
-    m_lambdaRanges = // std::make_shared<std::vector<std::shared_ptr<const
-                     // TLambdaRange>>>(
-        Context.getClampedLambdaRanges();
-  }
+  m_inputSpcs = std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>(
+      Context.getSpectra(m_useloglambdasampling));
+  m_lambdaRanges = // std::make_shared<std::vector<std::shared_ptr<const
+                   // TLambdaRange>>>(
+      Context.getClampedLambdaRanges(m_useloglambdasampling);
+
   initMembers(TFOperator);
   setLineRatioType(m_lineRatioType);
   if (m_lineRatioType == "rules")

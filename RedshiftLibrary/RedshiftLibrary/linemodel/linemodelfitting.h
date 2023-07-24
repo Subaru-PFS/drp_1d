@@ -169,18 +169,9 @@ public:
     return (*m_inputSpcs)[m_curObs];
   }
 
-  // CSpectrumModel& getSpectrumModel(Int32 m_curObs=0) {
-  //   return (*m_models)[m_curObs];
-  // } // not const because of tplortho
-
   CSpectrumModel &getSpectrumModel() const {
     return (*m_models)[m_curObs];
   } // not const because of tplortho
-  /*
-  std::shared_ptr<const CSpectrumModel> getConstSpectrumModel(Int32 m_curObs=0)
-  { return (*m_models)[m_curObs];
-  }
-  */
 
   CLineModelElementList &getElementList() {
     return (*m_ElementsVector)[m_curObs];
