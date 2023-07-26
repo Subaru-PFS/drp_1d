@@ -261,7 +261,6 @@ bool COperatorLineModel::isfftprocessingActive(Int32 redshiftsTplFitCount) {
 
 void COperatorLineModel::fitContinuumTemplates(
     Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
-    const std::vector<CMask> &maskList,
     std::vector<std::shared_ptr<CTemplateFittingResult>>
         &chisquareResultsAllTpl,
     TStringList &chisquareResultsTplName) {
@@ -453,37 +452,15 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                              << ": unable to ignoreLinesSupport if "
                                 "fftprocessing. ignoreLinesSupport disabled");
   }
-  std::vector<CMask> maskList;
   if (ignoreLinesSupport) {
     m_templateFittingOperator->setMaskBuilder(
         std::make_shared<COutsideLineMaskBuilder>(
             m_fittingManager->getElementList()));
-    boost::chrono::thread_clock::time_point start_tplfitmaskprep =
-        boost::chrono::thread_clock::now();
-
-    maskList.resize(redshiftsTplFit.size());
-    for (Int32 i = 0; i < redshiftsTplFit.size(); i++) {
-      m_fittingManager->setRedshift(redshiftsTplFit[i]);
-      m_fittingManager->m_fitter->resetSupport(redshiftsTplFit[i]);
-      maskList[i] = m_fittingManager->getOutsideLinesMask();
-    }
-
-    boost::chrono::thread_clock::time_point stop_tplfitmaskprep =
-        boost::chrono::thread_clock::now();
-    Float64 duration_tplfitmaskprep =
-        boost::chrono::duration_cast<boost::chrono::microseconds>(
-            stop_tplfitmaskprep - start_tplfitmaskprep)
-            .count();
-    Float64 duration_tplfitmaskprep_seconds = duration_tplfitmaskprep / 1e6;
-    Log.LogInfo("COperatorLineModel::PrecomputeContinuumFit: tplfit-precompute "
-                "mask prep done in %.4e sec",
-                duration_tplfitmaskprep_seconds);
   }
-
   std::vector<std::shared_ptr<CTemplateFittingResult>> chisquareResultsAllTpl;
   TStringList chisquareResultsTplName;
-  fitContinuumTemplates(candidateIdx, redshiftsTplFit, maskList,
-                        chisquareResultsAllTpl, chisquareResultsTplName);
+  fitContinuumTemplates(candidateIdx, redshiftsTplFit, chisquareResultsAllTpl,
+                        chisquareResultsTplName);
 
   // fill the fit store with fitted values: only the best fitted values FOR
   // EACH TEMPLATE are used
