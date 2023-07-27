@@ -47,8 +47,7 @@ using namespace std;
 
 CSpectrumModel::CSpectrumModel(
     CLineModelElementList &elements,
-    const std::shared_ptr<const CSpectrum> &spc,
-    const CLineVector &restLineList,
+    const std::shared_ptr<const CSpectrum> &spc, const CLineMap &restLineList,
     const std::shared_ptr<CTplModelSolution> &tfv,
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
     : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
@@ -298,7 +297,7 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
  * @return -1: zero samples found for error estimation, NAN: not enough samples
  * found for error estimation
  */
-Float64 CSpectrumModel::GetContinuumError(Int32 eIdx, Int32 subeIdx) {
+Float64 CSpectrumModel::GetContinuumError(Int32 eIdx, Int32 line_id) {
   Int32 nMinValueForErrorEstimation = 10;
 
   const CSpectrum &noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
@@ -310,7 +309,7 @@ Float64 CSpectrumModel::GetContinuumError(Int32 eIdx, Int32 subeIdx) {
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
   Float64 winsizeAngstrom = 150.;
 
-  Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
+  Float64 mu = m_Elements[eIdx]->GetObservedPosition(line_id, m_Redshift);
   TInt32Range indexRange = CLineModelElement::EstimateIndexRange(
       spectralAxis, mu, lambdaRange, winsizeAngstrom);
 
@@ -528,9 +527,9 @@ std::unordered_set<std::string>
 CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
                                  Float64 snrcut) const {
 
-  auto isElementInvalid = [this](Int32 eIdx, Int32 subeIdx) {
-    return eIdx < 0 || subeIdx < 0 ||
-           m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx);
+  auto isElementInvalid = [this](Int32 eIdx, Int32 line_id) {
+    return eIdx < 0 || line_id < 0 ||
+           m_Elements[eIdx]->IsOutsideLambdaRange(line_id);
   };
 
   const auto lineList = {linetags::halpha_em,   linetags::oIIIa_em,
@@ -548,39 +547,39 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
        ++it, ++itLineNames) {
     const auto &lineTag = *it;
 
-    const Int32 iRestLine =
-        std::find_if(m_RestLineList.begin(), m_RestLineList.end(),
-                     [lineTag](const CLine &line) {
-                       return line.GetName() == lineTag;
-                     }) -
-        m_RestLineList.begin();
-    if (iRestLine == m_RestLineList.size()) // did not find line
+    auto const it2 =
+        std::find_if(m_RestLineList.cbegin(), m_RestLineList.cend(),
+                     [lineTag](auto const &id_line) {
+                       return id_line.second.GetName() == lineTag;
+                     });
+    if (it2 == m_RestLineList.cend()) // did not find line
       continue;
 
+    Int32 line_id = it2->first;
+
     bool isEmission =
-        m_RestLineList[iRestLine].GetType() == CLine::EType::nType_Emission;
+        m_RestLineList.at(line_id).GetType() == CLine::EType::nType_Emission;
     if (!isEmission) // non-sense since all elts in linelist are emission
                      // lines
       continue;
 
-    Int32 subeIdx = undefIdx;
-    Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
-    if (isElementInvalid(eIdx, subeIdx))
+    Int32 eIdx = m_Elements.findElementIndex(line_id);
+    if (isElementInvalid(eIdx, line_id))
       continue;
 
     Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(
-        subeIdx, m_inputSpc->GetSpectralAxis(), m_Redshift,
+        line_id, m_inputSpc->GetSpectralAxis(), m_Redshift,
         getContinuumFluxAxis(), m_enableAmplitudeOffsets);
     Float64 mu = NAN;
     Float64 sigma = NAN;
-    m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu,
+    m_Elements[eIdx]->getObservedPositionAndLineWidth(line_id, m_Redshift, mu,
                                                       sigma, false);
     Float64 fluxDI = NAN;
     Float64 snrDI = NAN;
     TInt32List eIdx_line(1, eIdx);
     TInt32List eIdx_oii;
     TInt32List eIdx_ciii;
-    TInt32List subeIdx_line(1, subeIdx);
+    TInt32List subeIdx_line(1, line_id);
     TInt32List subeIdx_oii;
     TInt32List subeIdx_ciii;
 
@@ -588,13 +587,13 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
     if (lineTag == linetags::oII3726_em || lineTag == linetags::oII3729_em) {
       opt_cont_substract_abslinesmodel = false;
       eIdx_oii.push_back(eIdx);
-      subeIdx_oii.push_back(subeIdx);
+      subeIdx_oii.push_back(line_id);
       eIdx_line = eIdx_oii;
     };
     if (lineTag == linetags::cIII1907_em || lineTag == linetags::cIII1909_em) {
       opt_cont_substract_abslinesmodel = false;
       eIdx_ciii.push_back(eIdx);
-      subeIdx_ciii.push_back(subeIdx);
+      subeIdx_ciii.push_back(line_id);
       eIdx_line = eIdx_ciii;
     }
     getFluxDirectIntegration(eIdx_line, subeIdx_line,

@@ -17,7 +17,7 @@ CAbstractFitter::CAbstractFitter(
     const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
@@ -46,7 +46,7 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
@@ -153,8 +153,8 @@ void CAbstractFitter::resetElementsFittingParam() {
 
 void CAbstractFitter::resetLambdaOffsets() {
   for (auto &elt : getElementList())
-    for (size_t lineIdx = 0; lineIdx < elt->GetSize(); ++lineIdx)
-      elt->SetOffset(lineIdx, elt->GetLines()[lineIdx].GetOffset());
+    for (auto const &[id, line] : elt->GetLines())
+      elt->SetOffset(id, line.GetOffset());
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
@@ -187,7 +187,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
       TInt32List &idxLine = idxLineIGM[i];
       auto end =
           std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-            return !Elt->GetLines()[idx].GetProfile()->isSymIgmFit();
+            return !Elt->GetLines().at(idx).GetProfile()->isSymIgmFit();
           });
       idxLine.erase(end, idxLine.end());
       if (!idxLine.empty()) {
@@ -227,7 +227,7 @@ bool CAbstractFitter::HasLambdaOffsetFitting(TInt32List EltsIdx,
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
     for (Int32 iE : EltsIdx)
-      for (const auto &line : getElementList()[iE]->GetLines())
+      for (const auto &[_, line] : getElementList()[iE]->GetLines())
         // check if the line is to be fitted
         if (line.IsOffsetFitEnabled()) {
           atLeastOneOffsetToFit = true;
@@ -306,13 +306,13 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 /**
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
-Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 idxLine) const {
+Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
   Float64 fit = 0.; // TODO restore getLeastSquareContinuumMeritFast();
   Int32 istart = 0;
   Int32 iend = getElementList().size();
-  if (idxLine != undefIdx) {
-    istart = idxLine;
-    iend = idxLine + 1;
+  if (eltIdx != undefIdx) {
+    istart = eltIdx;
+    iend = eltIdx + 1;
   }
   for (Int32 iElts = istart; iElts < iend; iElts++) {
     Float64 dtm = getElementList()[iElts]->GetSumCross();

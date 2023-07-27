@@ -70,16 +70,20 @@ BOOST_AUTO_TEST_CASE(Compute) {
   CLineCatalog restLineCatalog;
   restLineCatalog.Add(CLine("Line2_1", 10, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 0, "0"));
+                            0., false, "-1", 1.0, "em"),
+                      0);
   restLineCatalog.Add(CLine("Line2_2", 20, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 1, "1"));
+                            0., false, "-1", 1.0, "em"),
+                      1);
   restLineCatalog.Add(CLine("Line2_3", 125, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 2, "2"));
+                            0., false, "-1", 1.0, "em"),
+                      2);
   restLineCatalog.Add(CLine("Line2_4", 400, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 3, "3"));
+                            0., false, "-1", 1.0, "em"),
+                      3);
 
   CLineMatching lineMathing = CLineMatching();
   TFloat64Range redshiftRange = TFloat64Range(0, 5);
@@ -105,16 +109,20 @@ BOOST_AUTO_TEST_CASE(Compute) {
   restLineCatalog = CLineCatalog();
   restLineCatalog.Add(CLine("Line2_1", 10, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 0, "0"));
+                            0., false, "-1", 1.0, "em"),
+                      0);
   restLineCatalog.Add(CLine("Line2_2", 20, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 1, "1"));
+                            0., false, "-1", 1.0, "em"),
+                      1);
   restLineCatalog.Add(CLine("Line2_3", 125, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 2, "2"));
+                            0., false, "-1", 1.0, "em"),
+                      2);
   restLineCatalog.Add(CLine("Line2_4", 400, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 3, "3"));
+                            0., false, "-1", 1.0, "em"),
+                      3);
   nThreshold = 1;
   res = lineMathing.Compute(detectedLineCatalog, restLineCatalog, redshiftRange,
                             nThreshold, tol, typeFilter, detectedForceFilter,
@@ -147,19 +155,24 @@ BOOST_AUTO_TEST_CASE(Compute) {
   restLineCatalog = CLineCatalog();
   restLineCatalog.Add(CLine("Line2_1", 10, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 0, "0"));
+                            0., false, "-1", 1.0, "em"),
+                      0);
   restLineCatalog.Add(CLine("Line2_2", 10, CLine::EType::nType_Absorption,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 1, "1"));
+                            0., false, "-1", 1.0, "em"),
+                      1);
   restLineCatalog.Add(CLine("Line2_3", 20, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 2, "2"));
+                            0., false, "-1", 1.0, "em"),
+                      2);
   restLineCatalog.Add(CLine("Line2_4", 40, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 3, "3"));
+                            0., false, "-1", 1.0, "em"),
+                      3);
   restLineCatalog.Add(CLine("Line2_5", 80, CLine::EType::nType_Emission,
                             profilesym->Clone(), CLine::EForce::nForce_Strong,
-                            0., false, "-1", 1.0, "em", 4, "4"));
+                            0., false, "-1", 1.0, "em"),
+                      4);
   nThreshold = 3;
   redshiftRange = TFloat64Range(0, 10);
   /*  res = lineMathing.Compute(detectedLineCatalog, restLineCatalog,

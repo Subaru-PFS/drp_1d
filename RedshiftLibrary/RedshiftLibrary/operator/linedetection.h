@@ -97,10 +97,11 @@ public:
 
   Float64 FWHM_FACTOR;
 
-  Float64 ComputeFluxes(const CSpectrum &spectrum, Float64 winsize,
-                        TInt32Range range, TFloat64List mask = TFloat64List(),
-                        Float64 *maxFluxnoContinuum = NULL,
-                        Float64 *noise = NULL);
+  static Float64 ComputeFluxes(CSpectrum const &spectrum, Float64 winsize,
+                               TInt32Range const &range,
+                               TFloat64List mask = TFloat64List(),
+                               Float64 *maxFluxnoContinuum = NULL,
+                               Float64 *noise = NULL);
 
 private:
   friend class test_linedetection::XMadFind;
@@ -124,16 +125,19 @@ private:
                                Int32 len,
                                const CSpectrumSpectralAxis spectralAxis);
 
-  bool Retest(const CSpectrum &spectrum, CLineDetectionResult &result,
-              TInt32RangeList retestPeaks, TGaussParamsList retestGaussParams,
-              CLineDetectedVector strongLines, Int32 winsize, Float64 cut);
-  bool RemoveStrongFromSpectra(const CSpectrum &spectrum,
-                               CLineDetectionResult &result,
-                               CLineDetectedVector strongLines,
-                               TInt32RangeList selectedretestPeaks,
-                               TGaussParamsList selectedgaussparams,
-                               Float64 winsize, Float64 cut);
-  Float64 XMadFind(const Float64 *x, Int32 n, Float64 median);
+  void Retest(CLineDetectionResult &result, CSpectrum const &spectrum,
+              TInt32RangeList const &retestPeaks,
+              TGaussParamsList const &retestGaussParams,
+              CLineDetectedMap const &strongLines, Int32 winsize, Float64 cut);
+
+  void RemoveStrongFromSpectra(CLineDetectionResult &result,
+                               CSpectrum const &spectrum,
+                               CLineDetectedMap const &strongLines,
+                               TInt32RangeList const &selectedretestPeaks,
+                               TGaussParamsList const &selectedgaussparams,
+                               Float64 winsize, Float64 cut) const;
+
+  static Float64 XMadFind(const Float64 *x, Int32 n, Float64 median);
 };
 } // namespace NSEpic
 

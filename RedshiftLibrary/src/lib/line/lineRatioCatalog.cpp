@@ -44,7 +44,7 @@ using namespace NSEpic;
 CLineRatioCatalog::CLineRatioCatalog(const std::string &name,
                                      const CLineCatalog &lineCatalog)
     : CLineCatalog(lineCatalog), m_Name(name) {
-  for (CLine &line : m_List) {
+  for (auto &[_, line] : m_List) {
     line.setNominalAmplitude(0.);
   }
   // TODO set all nominalAmplitudes to 0

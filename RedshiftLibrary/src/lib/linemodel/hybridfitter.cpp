@@ -47,7 +47,7 @@ CHybridFitter::CHybridFitter(
     const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
@@ -123,32 +123,24 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     getElementList().resetAmplitudeOffset();
 
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
-  TInt32List indexesFitted;
-  for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
-    Int32 iElts = validEltsIdx[iValidElts];
+  TInt32Set indexesFitted;
+  for (Int32 iElts : validEltsIdx) {
     // skip if already fitted
-    bool alreadyfitted = false;
-    for (Int32 i = 0; i < indexesFitted.size(); i++) {
-      if (iElts == indexesFitted[i]) {
-        alreadyfitted = true;
-        break;
-      }
-    }
-    if (alreadyfitted) {
+    if (std::find(indexesFitted.cbegin(), indexesFitted.cend(), iElts) !=
+        indexesFitted.cend())
       continue;
-    }
 
     TInt32List overlappingInds = getElementList().getOverlappingElements(
         iElts, indexesFitted, redshift, OVERLAP_THRES_HYBRID_FIT);
 
     // setting the fitting group info
-    for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-      std::string fitGroupTag = boost::str(boost::format("hy%d") % iValidElts);
-      getElementList()[overlappingInds[ifit]]->SetFittingGroupInfo(fitGroupTag);
+    for (Int32 overlapping_iElt : overlappingInds) {
+      std::string fitGroupTag = boost::str(boost::format("hy%d") % iElts);
+      getElementList()[overlapping_iElt]->SetFittingGroupInfo(fitGroupTag);
     }
 
     // Log.LogDebug( "Redshift: %f", redshift);
-    Log.LogDebug("    model: hybrid fit: #%d - N overlapping=%d", iValidElts,
+    Log.LogDebug("    model: hybrid fit: #%d - N overlapping=%d", iElts,
                  overlappingInds.size());
     for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
       Log.LogDebug("    model: hybrid fit:     overlapping #%d - eltIdx=%d",
@@ -165,8 +157,8 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     }
 
     // update the already fitted list
-    for (Int32 i = 0; i < overlappingInds.size(); i++) {
-      indexesFitted.push_back(overlappingInds[i]);
+    for (Int32 overlapping_iElt : overlappingInds) {
+      indexesFitted.insert(overlapping_iElt);
     }
   }
 
@@ -212,38 +204,37 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     std::string tagE = linetagsE[itag];
     std::string tagA = linetagsA[itag];
 
-    Int32 ilineE =
-       
+    auto const &[iElt_lineE, lineE_id] =
         getElementList().findElementIndex(tagE, CLine::EType::nType_Emission);
-    Int32 ilineA =
-       
+    auto const &[iElt_lineA, lineA_id] =
         getElementList().findElementIndex(tagA, CLine::EType::nType_Absorption);
     // Were the lines indexes found ?
-    if (ilineE < 0 || ilineA < 0) {
+    if (iElt_lineE == undefIdx || iElt_lineA == undefIdx)
       continue;
-    }
+
     // for now only allow this process if Em and Abs line are single lines
-    if (getElementList()[ilineE]->GetSize() > 1 ||
-        getElementList()[ilineA]->GetSize() > 1) {
+    if (getElementList()[iElt_lineE]->GetSize() > 1 ||
+        getElementList()[iElt_lineA]->GetSize() > 1) {
       continue;
     }
-    Int32 subeIdxE = 0;
-    Int32 subeIdxA = 0;
 
     // check if line is visible:
-    if (getElementList()[ilineE]->IsOutsideLambdaRange())
+    if (getElementList()[iElt_lineE]->IsOutsideLambdaRange())
       continue;
 
     // find the linesMore unique elements indexes
     TInt32List ilinesMore;
+    TInt32List linesMoreIds;
     for (Int32 imore = 0; imore < linetagsMore[itag].size(); imore++) {
       std::string tagMore = linetagsMore[itag][imore];
-      Int32 ilineMore =
-          getElementList().findElementIndex(tagMore, CLine::EType::nType_Emission);
-      if (ilineMore < 0) {
+      auto const &[iElt_lineMore, lineMore_id] =
+          getElementList().findElementIndex(tagMore,
+                                            CLine::EType::nType_Emission);
+      if (iElt_lineMore == undefIdx)
         continue;
-      }
-      ilinesMore.push_back(ilineMore);
+
+      ilinesMore.push_back(iElt_lineMore);
+      linesMoreIds.push_back(lineMore_id);
     }
     std::sort(ilinesMore.begin(), ilinesMore.end());
     ilinesMore.erase(std::unique(ilinesMore.begin(), ilinesMore.end()),
@@ -259,11 +250,11 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     Float64 muA = NAN;
     Float64 sigmaE = NAN;
     Float64 sigmaA = NAN;
-    getElementList()[ilineE]->getObservedPositionAndLineWidth(
-        subeIdxE, redshift, muE, sigmaE,
+    getElementList()[iElt_lineE]->getObservedPositionAndLineWidth(
+        lineE_id, redshift, muE, sigmaE,
         false); // do not apply Lya asym offset
-    getElementList()[ilineA]->getObservedPositionAndLineWidth(
-        subeIdxA, redshift, muA, sigmaA,
+    getElementList()[iElt_lineA]->getObservedPositionAndLineWidth(
+        lineA_id, redshift, muA, sigmaA,
         false); // do not apply Lya asym offset
     if (sigmaA < AbsVSEmWidthCoeffThreshold * sigmaE) {
       continue;
@@ -271,13 +262,13 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
 
     // simulatneous fit with linsolve
     Float64 modelErr_init = getModel().getModelErrorUnderElement(
-        ilineA, getModel().getSpcFluxAxis());
-    Float64 ampA = getElementList()[ilineA]->GetFittedAmplitude(0);
+        iElt_lineA, getModel().getSpcFluxAxis());
+    Float64 ampA = getElementList()[iElt_lineA]->GetFittedAmplitude(lineA_id);
     Float64 amp_errorA =
-        getElementList()[ilineA]->GetFittedAmplitudeErrorSigma(0);
-    Float64 ampE = getElementList()[ilineE]->GetFittedAmplitude(0);
+        getElementList()[iElt_lineA]->GetFittedAmplitudeErrorSigma(lineA_id);
+    Float64 ampE = getElementList()[iElt_lineE]->GetFittedAmplitude(lineE_id);
     Float64 amp_errorE =
-        getElementList()[ilineE]->GetFittedAmplitudeErrorSigma(0);
+        getElementList()[iElt_lineE]->GetFittedAmplitudeErrorSigma(lineE_id);
     TFloat64List ampsMore;
     TFloat64List ampErrorsMore;
     for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
@@ -289,8 +280,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     TInt32List eltsIdx;
-    eltsIdx.push_back(ilineA);
-    eltsIdx.push_back(ilineE);
+    eltsIdx.push_back(iElt_lineA);
+    eltsIdx.push_back(iElt_lineE);
     for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
       eltsIdx.push_back(ilinesMore[imore]);
     }
@@ -299,25 +290,22 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     fitAmplitudesLinSolve(eltsIdx, ampsfitted, errorsfitted, redshift);
 
     // decide if the fit is better than previous amps
-    TInt32List elts;
-    elts.push_back(ilineA);
-    elts.push_back(ilineE);
-    for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
-      elts.push_back(ilinesMore[imore]);
-    }
-    getModel().refreshModelUnderElements(elts);
+    getModel().refreshModelUnderElements(eltsIdx);
     Float64 modelErr_withfit = getModel().getModelErrorUnderElement(
-        ilineA, getModel().getSpcFluxAxis());
+        iElt_lineA, getModel().getSpcFluxAxis());
     if (modelErr_withfit > modelErr_init) {
-      Float64 nominal_ampA = getElementList()[ilineA]->GetNominalAmplitude(0);
-      Float64 nominal_ampE = getElementList()[ilineE]->GetNominalAmplitude(0);
-      getElementList()[ilineA]->SetElementAmplitude(ampA / nominal_ampA,
-                                                    amp_errorA / nominal_ampA);
-      getElementList()[ilineE]->SetElementAmplitude(ampE / nominal_ampE,
-                                                    amp_errorE / nominal_ampE);
+      Float64 nominal_ampA =
+          getElementList()[iElt_lineA]->GetNominalAmplitude(lineA_id);
+      Float64 nominal_ampE =
+          getElementList()[iElt_lineE]->GetNominalAmplitude(lineE_id);
+      getElementList()[iElt_lineA]->SetElementAmplitude(
+          ampA / nominal_ampA, amp_errorA / nominal_ampA);
+      getElementList()[iElt_lineE]->SetElementAmplitude(
+          ampE / nominal_ampE, amp_errorE / nominal_ampE);
       for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
         Float64 nominal_ampMore =
-            getElementList()[ilinesMore[imore]]->GetNominalAmplitude(0);
+            getElementList()[ilinesMore[imore]]->GetNominalAmplitude(
+                linesMoreIds[imore]);
         getElementList()[ilinesMore[imore]]->SetElementAmplitude(
             ampsMore[imore] / nominal_ampMore,
             ampErrorsMore[imore] / nominal_ampMore);

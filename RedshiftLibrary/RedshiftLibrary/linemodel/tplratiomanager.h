@@ -55,7 +55,7 @@ public:
                    const CCSpectrumVectorPtr &inputSpcs,
                    const CTLambdaRangePtrVector &lambdaRanges,
                    std::shared_ptr<CContinuumManager> continuumManager,
-                   const CLineVector &restLineList);
+                   const CLineMap &restLineList);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
   CTplratioManager(CTplratioManager const &other) = default;
@@ -106,18 +106,14 @@ public:
   bool m_opt_firstpass_forcedisableTplratioISMfit = true;
 
 protected:
-  Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
-                              const CLineVector &catalog) const override;
-
   void initMerit(Int32 ntplratio);
   void SetTplratio_PriorHelper();
   void initTplratioCatalogs(Int32 opt_tplratio_ismFit);
-  void SetMultilineNominalAmplitudesFast(Int32 iCatalog);
+  void SetNominalAmplitudes(Int32 iCatalog);
 
   Float64 GetIsmCoeff(Int32 idx) const;
 
-  std::vector<std::vector<TFloat64List>>
-      m_LineCatalogLinesCorrespondingNominalAmp;
+  std::vector<TFloat64Map> m_LineCatalogCorrespondingNominalAmp;
   Int32 m_savedIdxFitted = -1; // for rigidity=tplratio
   TFloat64List m_MeritTplratio;
   TFloat64List m_PriorMeritTplratio;

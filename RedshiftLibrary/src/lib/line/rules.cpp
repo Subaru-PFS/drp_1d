@@ -91,17 +91,17 @@ bool CRules::checkRule01(
       return true;
 
   // check if the absence of strong lines is justified by the wavelength range
-  CLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
+  CLineMap strongRestLineList = m_RestCatalog.GetFilteredList(
       CLine::EType::nType_Emission, CLine::EForce::nForce_Strong);
-  CLineVector strongRestLinesInsideLambdaRangeList;
+  CLineMap strongRestLinesInsideLambdaRangeList;
 
-  for (const auto &line : strongRestLineList) {
+  for (const auto &[id, line] : strongRestLineList) {
     Float64 lambda = line.GetPosition() * (1 + z);
     if (isLineInsideRange(lambda))
-      strongRestLinesInsideLambdaRangeList.push_back(line);
+      strongRestLinesInsideLambdaRangeList[id] = line;
   }
 
-  if (strongRestLinesInsideLambdaRangeList.size() == 0)
+  if (strongRestLinesInsideLambdaRangeList.empty())
     return true;
 
   // check if the absence of the remaining strong lines is explained by noise
@@ -126,7 +126,7 @@ bool CRules::checkRule01(
     maxNoiseWeak = std::max(maxNoiseWeak, noiseWeak);
   }
   // estimate the strong lines SNR
-  for (const auto &line : strongRestLineList) {
+  for (const auto &[_, line] : strongRestLineList) {
     Float64 lambda = line.GetPosition() * (1 + z);
     TFloat64Range lambdarange(lambda - m_winsize / 2.0,
                               lambda + m_winsize / 2.0);
@@ -209,13 +209,13 @@ bool CRules::checkRule03(
 }
 
 Float64 CRules::getRestLineLambda(std::string nametag) {
-  CLineVector restLineList = m_RestCatalog.GetFilteredList();
+  CLineMap restLineList = m_RestCatalog.GetFilteredList();
   Int32 ncatalog = restLineList.size();
-  for (Int32 c = 0; c < ncatalog; c++) {
-    std::string name = restLineList[c].GetName();
+  for (auto const &[id, line] : restLineList) {
+    std::string const &name = line.GetName();
     std::size_t foundstr = name.find(nametag.c_str());
     if (foundstr != std::string::npos) {
-      return restLineList[c].GetPosition();
+      return line.GetPosition();
     }
   }
   return -1.0;

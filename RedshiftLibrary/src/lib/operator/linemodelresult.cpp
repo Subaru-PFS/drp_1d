@@ -60,7 +60,7 @@ using namespace NSEpic;
  * @param nTplratios
  * @return
  */
-void CLineModelResult::Init(TFloat64List redshifts, CLineVector restLines,
+void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
                             Int32 nTemplates, Int32 nTplratios,
                             TFloat64List tplratiosPriors) {
   if (tplratiosPriors.size() != nTplratios) {
@@ -323,12 +323,14 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
   TInt32List indexesSols;
   for (Int32 j = 0; j < LineModelSolutions[solutionIdx].Amplitudes.size();
        j++) {
+    Int32 line_id = LineModelSolutions[solutionIdx].lineId[j];
     // skip if already sol
     bool alreadysol = std::find(indexesSols.begin(), indexesSols.end(),
                                 LineModelSolutions[solutionIdx].ElementId[j]) !=
                       indexesSols.end();
-    if (alreadysol || !restLineList[j].IsStrong() ||
-        !restLineList[j].IsEmission())
+
+    if (alreadysol || !restLineList.at(line_id).IsStrong() ||
+        !restLineList.at(line_id).IsEmission())
       continue;
 
     Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
@@ -366,7 +368,8 @@ TBoolList CLineModelResult::getStrongLinesPresence(
        solutionIdx++) {
     // search for the first strong line, with valid amplitude
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (lineDoesntMatchStrongFilter(restLineList[j]))
+      Int32 line_id = linemodelsols[solutionIdx].lineId[j];
+      if (lineDoesntMatchStrongFilter(restLineList.at(line_id)))
         continue;
 
       if (linemodelsols[solutionIdx].isLineValid(j)) {
@@ -403,15 +406,16 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
     Float64 ampMax = -DBL_MAX;
     ampMaxLineTag = undefStr;
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (!restLineList[j].IsEmission() ||
+      Int32 line_id = linemodelsols[solutionIdx].lineId[j];
+      if (!restLineList.at(line_id).IsEmission() ||
           linemodelsols[solutionIdx].OutsideLambdaRange[j])
         continue;
 
       Log.LogDebug("    linemodelresult: using line for max amp search=%s",
-                   restLineList[j].GetName().c_str());
+                   restLineList.at(line_id).GetName().c_str());
       if (linemodelsols[solutionIdx].Amplitudes[j] > ampMax) {
         ampMax = linemodelsols[solutionIdx].Amplitudes[j];
-        ampMaxLineTag = restLineList[j].GetName().c_str();
+        ampMaxLineTag = restLineList.at(line_id).GetName().c_str();
       }
     }
 

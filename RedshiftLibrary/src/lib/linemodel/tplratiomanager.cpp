@@ -52,7 +52,7 @@ CTplratioManager::CTplratioManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineVector &restLineList)
+    const CLineMap &restLineList)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -86,23 +86,6 @@ void CTplratioManager::SetTplratio_PriorHelper() {
   m_tplratio_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_tplratio_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
   m_tplratio_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
-}
-
-Int32 CTplratioManager::getLineIndexInCatalog(
-    Int32 iElts, Int32 idxLine, const CLineVector &catalog) const {
-
-  // get index of line inside tplratio catalog
-  const std::string &strID =
-      getElementList()[iElts]->GetLines()[idxLine].GetStrID();
-  Int32 lineIndex = std::find_if(catalog.begin(), catalog.end(),
-                                 [strID](const CLine &line) {
-                                   return line.GetStrID() == strID;
-                                 }) -
-                    catalog.begin();
-  if (lineIndex >= catalog.size())
-    lineIndex = undefIdx;
-
-  return lineIndex;
 }
 
 Int32 CTplratioManager::prepareFit(Float64 redshift) {
@@ -179,12 +162,11 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: use the passed tplRatioCatalog
   // TODO: check if m_CatalogTplRatio changes between iterations
 
-  m_LineCatalogLinesCorrespondingNominalAmp =
+  m_LineCatalogCorrespondingNominalAmp =
       m_CatalogTplRatio->InitLineCorrespondingAmplitudes(
-          getElementList(), opt_tplratio_ismFit,
-          m_continuumManager->getIsmCorrectionFromTpl(), m_NSigmaSupport);
+          opt_tplratio_ismFit, m_continuumManager->getIsmCorrectionFromTpl());
   m_opt_dust_calzetti = opt_tplratio_ismFit;
-  SetMultilineNominalAmplitudesFast(0);
+  SetNominalAmplitudes(0);
   // m_RestLineList = m_CatalogTplRatio->GetRestLinesList(0);
   // LoadCatalog(m_RestLineList);
   // LogCatalogInfos();
@@ -211,7 +193,7 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
 }
 
 /**
- * @brief CLineModelFitting::SetMultilineNominalAmplitudesFast
+ * @brief CTplratioManager::SetNominalAmplitudes
  * This method sets the linemodel unique elt nominal amplitudes to the
  * corresponding value of the iCatalog st catalog. INFO: fast method,
  * InitLineCorrespondence() should have been called previously with the same
@@ -219,18 +201,15 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
  * @param iCatalog
  * @return
  */
-void CTplratioManager::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
-  if (iCatalog < 0)
+void CTplratioManager::SetNominalAmplitudes(Int32 iCatalog) {
+  if (iCatalog < 0 || iCatalog >= m_CatalogTplRatio->GetCatalogsCount())
     THROWG(INTERNAL_ERROR, Formatter()
                                << "wrong line catalog index: " << iCatalog);
-
-  Float64 nominalAmp = 0.0;
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-    Int32 nLines = getElementList()[iElts]->GetSize();
-    for (Int32 j = 0; j < nLines; j++) {
-      nominalAmp =
-          m_LineCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j];
-      getElementList()[iElts]->SetNominalAmplitude(j, nominalAmp);
+  for (auto &elt : getElementList()) {
+    for (auto const &[id, _] : elt->GetLines()) {
+      Float64 const nominalAmp =
+          m_LineCatalogCorrespondingNominalAmp[iCatalog].at(id);
+      elt->SetNominalAmplitude(id, nominalAmp);
     }
   }
 }
@@ -354,7 +333,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
                                              Float64 _meritprior) {
   m_PriorMeritTplratio[idx] = _meritprior;
   m_MeritTplratio[idx] = _merit;
-  m_ScaleMargCorrTplratio[idx] = getElementList().getScaleMargCorrection(idx);
+  m_ScaleMargCorrTplratio[idx] = getElementList().getScaleMargCorrection();
   m_StrongELPresentTplratio[idx] =
       getElementList().GetModelStrongEmissionLinePresent();
   // given that Ha is a strong emission line,
@@ -382,32 +361,30 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   for (Int32 iElt = 0; iElt < s; iElt++) {
     bool savedAmp = false;
     bool allampzero = true;
-    Int32 nLines = getElementList()[iElt]->GetSize();
-    for (Int32 j = 0; j < nLines; j++) {
-      Float64 amp = getElementList()[iElt]->GetFittedAmplitude(j);
+    auto const &elt = getElementList()[iElt];
+    for (auto const &[id, line] : elt->GetLines()) {
+      Float64 amp = elt->GetFittedAmplitude(id);
       // we need to take into case where lineratioAmplitude is NAN
-      if (isnan(amp) || amp <= 0. ||
-          getElementList()[iElt]->IsOutsideLambdaRange(j))
+      if (isnan(amp) || amp <= 0. || elt->IsOutsideLambdaRange(id))
         continue;
       allampzero = false;
 
-      Float64 amp_error =
-          getElementList()[iElt]->GetFittedAmplitudeErrorSigma(j);
-      Float64 nominal_amp = getElementList()[iElt]->GetNominalAmplitude(j);
+      Float64 amp_error = elt->GetFittedAmplitudeErrorSigma(id);
+      Float64 nominal_amp = elt->GetNominalAmplitude(id);
       m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
       Log.LogDebug("    model : fit tplratio mode, tplratio_fittedamp: %e",
                    m_FittedAmpTplratio[idx][iElt]);
 
       m_FittedErrorTplratio[idx][iElt] = amp_error / nominal_amp;
-      m_DtmTplratio[idx][iElt] = getElementList()[iElt]->GetSumCross();
-      m_MtmTplratio[idx][iElt] = getElementList()[iElt]->GetSumGauss();
+      m_DtmTplratio[idx][iElt] = elt->GetSumCross();
+      m_MtmTplratio[idx][iElt] = elt->GetSumGauss();
 
-      TAsymParams params = getElementList()[iElt]->GetAsymfitParams(0);
+      TAsymParams params = elt->GetAsymfitParams(0);
       m_LyaAsymCoeffTplratio[idx][iElt] = params.alpha;
       m_LyaWidthCoeffTplratio[idx][iElt] = params.sigma;
       m_LyaDeltaCoeffTplratio[idx][iElt] = params.delta;
 
-      TSymIgmParams params_igm = getElementList()[iElt]->GetSymIgmParams(0);
+      TSymIgmParams params_igm = elt->GetSymIgmParams(0);
       m_LyaIgmIdxTplratio[idx][iElt] = params_igm.m_igmidx;
 
       savedAmp = true;
@@ -441,12 +418,11 @@ Float64 CTplratioManager::computelogLinePriorMerit(
   Float64 ampl = 0.0;
   for (const auto &elt : getElementList()) {
     bool foundAmp = false;
-    Int32 nLines = elt->GetSize();
-    for (Int32 j = 0; j < nLines; j++) {
-      Float64 amp = elt->GetFittedAmplitude(j);
-      if (amp <= 0. || elt->IsOutsideLambdaRange(j))
+    for (auto const &[id, line] : elt->GetLines()) {
+      Float64 amp = elt->GetFittedAmplitude(id);
+      if (amp <= 0. || elt->IsOutsideLambdaRange(id))
         continue;
-      Float64 nominal_amp = elt->GetNominalAmplitude(j);
+      Float64 nominal_amp = elt->GetNominalAmplitude(id);
       ampl = amp / nominal_amp;
       foundAmp = true;
       break;
@@ -569,7 +545,7 @@ Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {
 
 bool CTplratioManager::setTplratioModel(Int32 itplratio,
                                         bool enableSetVelocity) {
-  SetMultilineNominalAmplitudesFast(itplratio);
+  SetNominalAmplitudes(itplratio);
 
   /* TODO reactivate this if once called with enableSetVelocity=true . ->
   velocities must be imported from linemodelfitting if (enableSetVelocity) {

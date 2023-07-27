@@ -56,7 +56,7 @@ public:
                 Float64 width = -1.0, Float64 cut = -1.0, Float64 posErr = -1.0,
                 Float64 sigmaErr = -1.0, Float64 ampErr = -1.0)
       : CLine(name, pos, type, std::move(profile), force, 0., false, undefStr,
-              1.0, undefStr, undefIdx, std::string()),
+              1.0, undefStr),
         m_Amp(amp), m_Width(width), m_Cut(cut), m_PosFitErr(posErr),
         m_SigmaFitErr(sigmaErr), m_AmpFitErr(ampErr){};
 
@@ -99,6 +99,7 @@ private:
 };
 
 using CLineDetectedVector = std::vector<CLineDetected>;
+using CLineDetectedMap = std::map<Int32, CLineDetected>;
 
 } // namespace NSEpic
 

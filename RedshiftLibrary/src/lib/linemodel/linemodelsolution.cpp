@@ -40,8 +40,8 @@
 
 using namespace NSEpic;
 
-CLineModelSolution::CLineModelSolution(const CLineVector &restLineList)
-    : COperatorResult("CLineModelSolution"), lineId(restLineList.size(), -1),
+CLineModelSolution::CLineModelSolution(const CLineMap &restLineList)
+    : COperatorResult("CLineModelSolution"),
       ElementId(restLineList.size(), undefIdx),
       Amplitudes(restLineList.size(), NAN),
       AmplitudesUncertainties(restLineList.size(), NAN),
@@ -60,8 +60,9 @@ CLineModelSolution::CLineModelSolution(const CLineVector &restLineList)
       continuum_pCoeff1(restLineList.size(), NAN),
       continuum_pCoeff2(restLineList.size(), NAN) {
   // filling lineIds
-  for (Int32 i = 0; i < restLineList.size(); i++)
-    lineId[i] = restLineList[i].GetID();
+  lineId.reserve(restLineList.size());
+  for (auto const &[id, _] : restLineList)
+    lineId.push_back(id);
 }
 
 bool CLineModelSolution::isLineValid(Int32 lineIdx) const {

@@ -119,10 +119,10 @@ public:
   GetTemplateRatioCatalog(const std::string &objectType);
   const std::shared_ptr<CLineCatalog> &
   GetLineCatalog(const std::string &objectType, const std::string &method);
-  const CLineVector GetFilteredLineVector(const std::string &objectType,
-                                          const std::string &method,
-                                          const std::string &type,
-                                          const std::string &force);
+  const CLineMap GetFilteredLineMap(const std::string &objectType,
+                                    const std::string &method,
+                                    const std::string &type,
+                                    const std::string &force);
   const std::shared_ptr<CPhotBandCatalog> &GetPhotBandCatalog() {
     return m_photBandCatalog;
   }
@@ -243,20 +243,14 @@ CInputContext::GetLineCatalog(const std::string &objectType,
 inline const std::shared_ptr<CLineCatalog> &
 CInputContext::GetLineCatalog(const std::string &objectType,
                               const std::string &method) {
-  //  if (std::findm_categories.find(objectType))
-  // throw
-  // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetLineCatalog:
-  // invalid object type");
+
   return m_lineCatalogs[objectType][method];
 }
 
-inline const CLineVector CInputContext::GetFilteredLineVector(
+inline const CLineMap CInputContext::GetFilteredLineMap(
     const std::string &objectType, const std::string &method,
     const std::string &type, const std::string &force) {
-  //  if (std::findm_categories.find(objectType))
-  // throw
-  // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetLineCatalog:
-  // invalid object type");
+
   return m_lineCatalogs[objectType][method]->GetFilteredList(type, force);
 }
 

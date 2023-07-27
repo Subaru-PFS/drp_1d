@@ -57,9 +57,11 @@ class CSpectrumFluxCorrectionMeiksin;
 template <typename TLine = CLine> class CLineCatalogBase {
 
   static_assert(std::is_base_of<CLine, TLine>::value);
-  using TLineVector = std::vector<TLine>;
 
 public:
+  using TLineVector = std::vector<TLine>;
+  using TLineMap = std::map<Int32, TLine>;
+
   CLineCatalogBase(Float64 sigmaSupport) : m_nSigmaSupport(sigmaSupport){};
   virtual ~CLineCatalogBase() = default;
   CLineCatalogBase() = default;
@@ -68,26 +70,25 @@ public:
   CLineCatalogBase &operator=(const CLineCatalogBase &other) = default;
   CLineCatalogBase &operator=(CLineCatalogBase &&other) = default;
 
-  void Add(const TLine &r);
+  void Add(const TLine &r, Int32 id) { m_List[id] = r; };
 
-  const TLineVector &GetList() const { return m_List; };
-  TLineVector
+  const TLineMap &GetList() const { return m_List; };
+  TLineMap
   GetFilteredList(CLine::EType typeFilter = CLine::EType::nType_All,
                   CLine::EForce forceFilter = CLine::EForce::nForce_All) const;
-  TLineVector GetFilteredList(const std::string &typeFilter,
-                              const std::string &forceFilter) const;
-  static const std::vector<TLineVector>
-  ConvertToGroupList(const TLineVector &filteredList);
+  TLineMap GetFilteredList(const std::string &typeFilter,
+                           const std::string &forceFilter) const;
+  static const std::map<std::string, TLineMap>
+  ConvertToGroupList(const TLineMap &filteredList);
 
   void setAsymProfileAndParams(const std::string &profile, TAsymParams params);
 
-  void setLineAmplitude(const std::string &str_id,
-                        const Float64 &nominalAmplitude);
+  void setLineAmplitude(Int32 id, const Float64 &nominalAmplitude);
   void convertLineProfiles2SYMIGM(
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
 
 protected:
-  TLineVector m_List;
+  TLineMap m_List;
 
   Float64 m_nSigmaSupport = N_SIGMA_SUPPORT;
 };
@@ -109,7 +110,7 @@ public:
       const TAsymParams &asymParams, const std::string &groupName,
       const Float64 &nominalAmplitude, const std::string &velocityGroup,
       const Float64 &velocityOffset, const bool &enableVelocityFit,
-      const Int32 &id, const std::string &str_id,
+      const Int32 &id,
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection =
           nullptr);
 };
@@ -117,8 +118,14 @@ public:
 class CLineDetectedCatalog : public CLineCatalogBase<CLineDetected> {
 public:
   using CLineCatalogBase<CLineDetected>::CLineCatalogBase;
+  void Add(const CLineDetected &r, Int32 id) = delete;
+  void Add(const CLineDetected &r) { m_List[m_List.size()] = r; };
+
   void Sort();
 };
+
+template class CLineCatalogBase<>;
+template class CLineCatalogBase<CLineDetected>;
 
 } // namespace NSEpic
 

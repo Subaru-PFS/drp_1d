@@ -82,25 +82,21 @@ CLine::EForce CLine::string2Force(std::string const &sforce) {
 CLine::CLine(const string &name, Float64 pos, EType type,
              CLineProfile_ptr &&profile, EForce force, Float64 velocityOffset,
              bool enableVelocityOffsetFitting, const std::string &groupName,
-             Float64 nominalAmp, const string &velGroupName, Int32 id,
-             const std::string &str_id)
+             Float64 nominalAmp, const string &velGroupName)
     : m_Name(name), m_Pos(pos), m_Type(type), m_Force(force),
       m_Profile(std::move(profile)), m_GroupName(groupName),
-      m_NominalAmplitude(nominalAmp), m_VelGroupName(velGroupName), m_id(id),
-      m_Offset(velocityOffset), m_OffsetFit(enableVelocityOffsetFitting),
-      m_strID(str_id) {}
+      m_NominalAmplitude(nominalAmp), m_VelGroupName(velGroupName),
+      m_Offset(velocityOffset), m_OffsetFit(enableVelocityOffsetFitting) {}
 
 CLine::CLine(const CLine &other)
-    : m_id(other.m_id), m_Type(other.m_Type),
+    : m_Type(other.m_Type),
       m_Profile(other.m_Profile->Clone()), // deep copy for m_Profile
       m_Force(other.m_Force), m_Pos(other.m_Pos), m_Offset(other.m_Offset),
       m_Name(other.m_Name), m_GroupName(other.m_GroupName),
       m_NominalAmplitude(other.m_NominalAmplitude),
-      m_OffsetFit(other.m_OffsetFit), m_VelGroupName(other.m_VelGroupName),
-      m_strID(other.m_strID) {}
+      m_OffsetFit(other.m_OffsetFit), m_VelGroupName(other.m_VelGroupName) {}
 
 CLine &CLine::operator=(const CLine &other) {
-  m_id = other.m_id;
   m_Type = other.m_Type;
   m_Profile = other.m_Profile->Clone(); // deep copy for m_Profile
   m_Force = other.m_Force;
@@ -116,7 +112,6 @@ CLine &CLine::operator=(const CLine &other) {
 
   m_VelGroupName = other.m_VelGroupName;
 
-  m_strID = other.m_strID;
   return *this;
 }
 

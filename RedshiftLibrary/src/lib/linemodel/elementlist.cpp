@@ -67,20 +67,11 @@ Int32 CLineModelElementList::GetModelValidElementsNDdl() const {
  **/
 Int32 CLineModelElementList::GetModelNonZeroElementsNDdl() const {
   Int32 nddl = 0;
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->IsOutsideLambdaRange() == true) {
+  for (auto const &elt : m_Elements) {
+    if (elt->IsOutsideLambdaRange())
       continue;
-    }
-    bool isAllZero = true;
-    for (Int32 ie = 0; ie < m_Elements[iElts]->GetSize(); ie++) {
-      if (m_Elements[iElts]->GetFittedAmplitude(ie) > 0.0) {
-        isAllZero = false;
-      }
-    }
-
-    if (isAllZero == false) {
+    if (!elt->isAllAmplitudesNull())
       nddl++;
-    }
   }
   return nddl;
 }
@@ -92,12 +83,11 @@ Int32 CLineModelElementList::GetModelNonZeroElementsNDdl() const {
 TInt32List CLineModelElementList::GetModelValidElementsIndexes() const {
   TInt32List nonZeroIndexes;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->IsOutsideLambdaRange() == true) {
+    if (m_Elements[iElts]->IsOutsideLambdaRange() == true)
       continue;
-    }
-    if (IsElementIndexInDisabledList(iElts)) {
+
+    if (IsElementIndexInDisabledList(iElts))
       continue;
-    }
 
     nonZeroIndexes.push_back(iElts);
   }
@@ -105,12 +95,9 @@ TInt32List CLineModelElementList::GetModelValidElementsIndexes() const {
 }
 
 bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index) const {
-  for (Int32 i = 0; i < m_elementsDisabledIndexes.size(); i++) {
-    if (m_elementsDisabledIndexes[i] == index) {
-      return true;
-    }
-  }
-  return false;
+  return std::find(m_elementsDisabledIndexes.cbegin(),
+                   m_elementsDisabledIndexes.cend(),
+                   index) != m_elementsDisabledIndexes.cend();
 }
 
 /**
@@ -120,19 +107,12 @@ bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index) const {
  */
 void CLineModelElementList::SetElementIndexesDisabledAuto() {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->IsOutsideLambdaRange() == true) {
+    auto const &elt = m_Elements[iElts];
+    if (elt->IsOutsideLambdaRange())
       continue;
-    }
-    bool isAllZero = true;
-    for (Int32 ie = 0; ie < m_Elements[iElts]->GetSize(); ie++) {
-      if (m_Elements[iElts]->GetFittedAmplitude(ie) > 0.0) {
-        isAllZero = false;
-      }
-    }
 
-    if (isAllZero == true) {
+    if (elt->isAllAmplitudesNull())
       m_elementsDisabledIndexes.push_back(iElts);
-    }
   }
 }
 
@@ -151,75 +131,37 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
   TInt32List nonGroupedLines;
 
   TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
-  for (auto iElts : nonZeroIndexes)
-    for (const auto &line : m_Elements[iElts]->GetLines())
+
+  std::map<std::string, TInt32List> tag_groups;
+  for (auto iElts : nonZeroIndexes) {
+    for (const auto &[id, line] : m_Elements[iElts]->GetLines())
       if (lineType == line.GetType()) {
-        std::string _tag = line.GetVelGroupName();
-        if (_tag != undefStr)
-          tags.push_back(_tag);
-        else
-          nonGroupedLines.push_back(iElts);
+        std::string tag = line.GetVelGroupName();
+        if (tag == undefStr)
+          tag = "single_" + std::to_string(id);
+        tag_groups[tag].push_back(iElts);
       }
-
-  // create the group tag set by removing duplicates
-  std::sort(tags.begin(), tags.end());
-  tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
-
-  // add the grouped lines
-  std::vector<TInt32List> groups;
-  TStringList groupsTags;
-  for (Int32 itag = 0; itag < tags.size(); itag++) {
-    TInt32List _group;
-    for (auto iElts : nonZeroIndexes)
-      for (const auto &line : m_Elements[iElts]->GetLines())
-        if (lineType == line.GetType())
-          if (tags[itag] == line.GetVelGroupName())
-            _group.push_back(iElts);
-
-    // add the grouped lines, no duplicates
-    std::sort(_group.begin(), _group.end());
-    _group.erase(std::unique(_group.begin(), _group.end()), _group.end());
-
-    groups.push_back(_group);
-    groupsTags.push_back(tags[itag]);
-  }
-  // add the non grouped lines, no duplicates
-  std::sort(nonGroupedLines.begin(), nonGroupedLines.end());
-  nonGroupedLines.erase(
-      std::unique(nonGroupedLines.begin(), nonGroupedLines.end()),
-      nonGroupedLines.end());
-  for (const auto lIdx : nonGroupedLines) {
-    groups.push_back({lIdx});
-    groupsTags.push_back(undefStr);
   }
 
-  if (true) {
-    // print the groups
-    for (Int32 igr = 0; igr < groups.size(); igr++) {
-      Log.LogDebug("    model: Group %d/%d: nlines=%d, tag=%s", igr + 1,
-                   groups.size(), groups[igr].size(), groupsTags[igr].c_str());
-      for (Int32 i = 0; i < groups[igr].size(); i++) {
-        Log.LogDebug("    model: \t%d: iElt=%d", i + 1, groups[igr][i]);
-      }
+  // remove duplicate elements in each groups
+  for (auto [_, group] : tag_groups) {
+    std::sort(group.begin(), group.end());
+    group.erase(std::unique(group.begin(), group.end()), group.end());
+  }
+
+  // print the groups
+  for (auto const &[tag, group] : tag_groups) {
+    Log.LogDebug("    model: Group %s: nlines=%d", tag.c_str(), group.size());
+    for (auto const &element : group) {
+      Log.LogDebug("    model: \t iElt=%d", element);
     }
   }
 
-  // Override velGroups from Catalog: => Individual lines as groups
-  /*
+  // return vector, removing tag keys
   std::vector<TInt32List> groups;
-  TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
-  for(Int32 i=0; i<nonZeroIndexes.size(); i++)
-  {
-      if(lineType == m_Elements[nonZeroIndexes[i]]->GetElementType())
-      {
-          TInt32List gr;
-          gr.push_back(nonZeroIndexes[i]);
-          groups.push_back(gr);
-          //Log.LogInfo("Group %d, idx=%d", groups.size(),
-  groups[groups.size()-1][0]);
-      }
-  }
-  //*/
+  groups.reserve(tag_groups.size());
+  for (auto [_, group] : tag_groups)
+    groups.push_back(std::move(group));
 
   return groups;
 }
@@ -230,7 +172,7 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
  **/
 
 TInt32List CLineModelElementList::getOverlappingElements(
-    Int32 ind, const TInt32List &excludedInd, Float64 redshift,
+    Int32 ind, const TInt32Set &excludedInd, Float64 redshift,
     Float64 overlapThres) const {
   TInt32List indexes;
 
@@ -260,38 +202,31 @@ TInt32List CLineModelElementList::getOverlappingElements(
       continue;
 
     // check if in exclusion list
-    bool excluded = false;
-    for (Int32 iexcl = 0; iexcl < excludedInd.size(); iexcl++) {
-      if (iElts == excludedInd[iexcl]) {
-        excluded = true;
-        break;
-      }
-    }
-    if (excluded)
+    if (excludedInd.find(iElts) != excludedInd.cend())
       continue;
 
     auto const &linesElt = element.GetLines();
 
-    for (Int32 iLineElt = 0; iLineElt < linesElt.size(); iLineElt++) {
+    for (auto const &[iLineElt, line_elt] : element.GetLines()) {
       if (element.IsOutsideLambdaRange(iLineElt))
         continue;
-      for (Int32 iLineRef = 0; iLineRef < linesRef.size(); iLineRef++) {
+      for (auto [iLineRef, line_ref] : linesRef) {
         if (element_ref.IsOutsideLambdaRange(iLineRef))
           continue;
-        const Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
+        const Float64 muRef = line_ref.GetPosition() * (1 + redshift);
         const Float64 sigmaRef =
-            element_ref.GetLineWidth(muRef, linesRef[iLineRef].IsEmission());
+            element_ref.GetLineWidth(muRef, line_ref.IsEmission());
         const Float64 winsizeRef =
-            linesRef[iLineRef].GetProfile()->GetNSigmaSupport() * sigmaRef;
+            line_ref.GetProfile()->GetNSigmaSupport() * sigmaRef;
         const Float64 overlapSizeMin = winsizeRef * overlapThres;
         const Float64 xinf = muRef - winsizeRef / 2.0;
         const Float64 xsup = muRef + winsizeRef / 2.0;
 
-        const Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
+        const Float64 muElt = line_elt.GetPosition() * (1 + redshift);
         const Float64 sigmaElt =
-            element.GetLineWidth(muElt, linesElt[iLineElt].IsEmission());
+            element.GetLineWidth(muElt, line_elt.IsEmission());
         const Float64 winsizeElt =
-            linesElt[iLineElt].GetProfile()->GetNSigmaSupport() * sigmaElt;
+            line_elt.GetProfile()->GetNSigmaSupport() * sigmaElt;
         const Float64 yinf = muElt - winsizeElt / 2.0;
         const Float64 ysup = muElt + winsizeElt / 2.0;
 
@@ -372,46 +307,32 @@ CLineModelElementList::findElementTypeIndices(CLine::EType type) const {
  *findElementIndex method with LineCatalogIndex argument does not return -1.
  * Returns also the line index
  **/
-Int32 CLineModelElementList::findElementIndex(Int32 LineCatalogIndex,
-                                              Int32 &lineIdx) const {
-  Int32 idx = undefIdx;
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    lineIdx = m_Elements[iElts]->findElementIndex(LineCatalogIndex);
-    if (lineIdx != undefIdx) {
-      idx = iElts;
-      break;
-    }
-  }
-  return idx;
+Int32 CLineModelElementList::findElementIndex(Int32 line_id) const {
+  auto it = std::find_if(begin(), end(), [line_id](auto const &elt_ptr) {
+    return elt_ptr->hasLine(line_id);
+  });
+  if (it == end())
+    return undefIdx;
+  else
+    return it - begin();
 }
 
-/**
- * \brief Returns the first index of m_Elements where calling the element's
- *findElementIndex method with LineTagStr argument does not return -1.
- **/
-Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
-                                              CLine::EType linetype,
-                                              Int32 &lineIdx) const {
-  Int32 idx = undefIdx;
+std::pair<Int32, Int32>
+CLineModelElementList::findElementIndex(const std::string &LineTagStr,
+                                        CLine::EType linetype) const {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    lineIdx = m_Elements[iElts]->findElementIndex(LineTagStr);
-    if (lineIdx == undefIdx)
+
+    auto [found, line_id] = m_Elements[iElts]->hasLine(LineTagStr);
+    if (!found)
       continue;
 
     if (linetype != CLine::EType::nType_All &&
         m_Elements[iElts]->GetElementType() != linetype)
       continue;
 
-    idx = iElts;
-    break;
+    return make_pair(iElts, line_id);
   }
-  return idx;
-}
-
-Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
-                                              CLine::EType linetype) const {
-  Int32 lineIdx = undefIdx;
-  return findElementIndex(LineTagStr, linetype, lineIdx);
+  return make_pair(undefIdx, undefIdx);
 }
 
 // first element returned is the list of element indices, then all remaining
@@ -443,20 +364,17 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
   if (!EltsIdx.size())
     return indexes;
   TInt32RangeList support;
-  for (Int32 i = 0; i < EltsIdx.size(); i++) {
-    Int32 iElts = EltsIdx[i];
-
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
+  for (Int32 iElts : EltsIdx) {
+    if (m_Elements[iElts]->IsOutsideLambdaRange())
       continue;
-    }
+
     TInt32RangeList s = m_Elements[iElts]->getSupport();
     support.insert(support.end(), s.begin(), s.end());
   }
 
   for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
+    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++)
       indexes.push_back(j);
-    }
   }
 
   std::sort(indexes.begin(), indexes.end());
@@ -503,27 +421,24 @@ void CLineModelElementList::resetAmplitudeOffset() {
  * WARNING: (todo-check) for lm-rules or lm-free, if hybrid method was used to
  *fit, mtm and dtm are not estimated for now...
  **/
-Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine) const {
+Float64 CLineModelElementList::getScaleMargCorrection(Int32 Eltidx) const {
   Float64 corr = 0.0;
 
   // scale marg for continuum
   // corr += getContinuumScaleMargCorrection();
-
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (idxLine != undefIdx && idxLine != iElts) {
+  Int32 iElts_start = 0;
+  Int32 iElts_end = m_Elements.size();
+  if (Eltidx != undefIdx) {
+    iElts_start = Eltidx;
+    iElts_end = Eltidx + 1;
+  }
+  for (Int32 iElts = iElts_start; iElts != iElts_end; iElts++) {
+    if (m_Elements[iElts]->IsOutsideLambdaRange() == true)
       continue;
-    }
-    if (m_Elements[iElts]->IsOutsideLambdaRange() == true) {
-      continue;
-    }
-    // if(m_Elements[iElts]->GetElementAmplitude()<=0.0){
-    //     continue;
-    // }
 
     Float64 mtm = m_Elements[iElts]->GetSumGauss();
-    if (mtm > 0.0) {
+    if (mtm > 0.0)
       corr += log(mtm);
-    }
   }
 
   return corr;
@@ -535,36 +450,23 @@ Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine) const {
  */
 bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
 
-  // TODO is this check really necessary here ?
-  //   if (!m_RestLineList.size())
-  //   THROWG(INTERNAL_ERROR, "m_RestframeList is empty");
-
-  bool isStrongPresent = false;
-
   TInt32List validEltsIdx = GetModelValidElementsIndexes();
-  for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
-    Int32 iElts = validEltsIdx[iValidElts];
-    Int32 nlines = m_Elements[iElts]->GetSize();
-    for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->GetLines()[lineIdx].IsEmission() ||
-          !m_Elements[iElts]->GetLines()[lineIdx].IsStrong()) {
+  for (Int32 iElts : validEltsIdx) {
+    for (auto const &[id, line] : m_Elements[iElts]->GetLines()) {
+      if (!line.IsEmission() || !line.IsStrong())
         continue;
-      }
 
-      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(id);
       if (amp > 0.0) {
-        isStrongPresent = true;
         Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found "
                      "Strong EL: %s",
-                     m_Elements[iElts]->GetLines()[lineIdx].GetName().c_str());
-        break;
+                     line.GetName().c_str());
+        return true;
       }
     }
-    if (isStrongPresent)
-      break;
   }
 
-  return isStrongPresent;
+  return false;
 }
 
 /**
@@ -577,18 +479,15 @@ bool CLineModelElementList::GetModelHaStrongest() const {
   std::string ampMaxLineTag = "";
 
   TInt32List validEltsIdx = GetModelValidElementsIndexes();
-  for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
-    Int32 iElts = validEltsIdx[iValidElts];
-    Int32 nlines = m_Elements[iElts]->GetSize();
-    for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!m_Elements[iElts]->GetLines()[lineIdx].IsEmission()) {
+  for (Int32 iElts : validEltsIdx) {
+    for (auto const &[id, line] : m_Elements[iElts]->GetLines()) {
+      if (!line.IsEmission()) {
         continue;
       }
 
-      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(id);
       if (amp > 0. && amp > ampMax) {
-        ampMaxLineTag =
-            m_Elements[iElts]->GetLines()[lineIdx].GetName().c_str();
+        ampMaxLineTag = line.GetName().c_str();
         ampMax = amp;
       }
     }

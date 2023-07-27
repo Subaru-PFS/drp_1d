@@ -54,21 +54,19 @@ BOOST_AUTO_TEST_SUITE(test_element)
 BOOST_AUTO_TEST_CASE(Instance) {
   CLineProfile_ptr profilesym =
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
-  CLine line = CLine("O2", 0.1, CLine::EType::nType_Emission,
-                     std::move(profilesym), CLine::EForce::nForce_Strong, 0.,
-                     false, "group", 0.8, "em", 0, "id0");
+  CLine line("O2", 0.1, CLine::EType::nType_Emission, std::move(profilesym),
+             CLine::EForce::nForce_Strong, 0., false, "group", 0.8, "em");
   CLineProfile_ptr profileAsym =
       std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT());
-  CLine lineAsym = CLine("Lya", 0.1, CLine::EType::nType_Emission,
-                         std::move(profileAsym), CLine::EForce::nForce_Strong,
-                         0., false, "group", 0.8, "em", 1, "id1");
-  CLineVector rs;
-  rs.push_back(std::move(line));
-  rs.push_back(std::move(lineAsym));
-  TInt32List catalogIndexes{0, 1};
+  CLine lineAsym("Lya", 0.1, CLine::EType::nType_Emission,
+                 std::move(profileAsym), CLine::EForce::nForce_Strong, 0.,
+                 false, "group", 0.8, "em");
+  CLineMap rs;
+  rs[0] = std::move(line);
+  rs[1] = std::move(lineAsym);
 
   TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
   BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), GlobalException);
 
@@ -104,18 +102,15 @@ BOOST_AUTO_TEST_CASE(Instance) {
 BOOST_AUTO_TEST_CASE(GetLineWidth) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
-  CLine line = CLine("Halpha", 6564.61, CLine::EType::nType_Emission,
-                     std::move(profilesym), CLine::EForce::nForce_Strong, 0.,
-                     false, "group", 1.0, "velgroup", 1, "id1");
+  CLine line("Halpha", 6564.61, CLine::EType::nType_Emission,
+             std::move(profilesym), CLine::EForce::nForce_Strong, 0., false,
+             "group", 1.0, "velgroup");
 
   line.setNominalAmplitude(0.8);
-  CLineVector rs;
-  rs.push_back(std::move(line));
-  TInt32List catalogIndexes;
-  catalogIndexes.push_back(1);
-  catalogIndexes.push_back(0);
+  CLineMap rs;
+  rs[0] = std::move(line);
   TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
   CLineModelElement elementID = CLineModelElement(fdata, "instrumentdriven");
   CLineModelElement elementcombined = CLineModelElement(fdata, "combined");
@@ -148,16 +143,13 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
 BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
-  CLine line = CLine("Halpha", 6564.61, CLine::EType::nType_Emission,
-                     profilesym->Clone(), CLine::EForce::nForce_Strong, 0.,
-                     false, "group", 1.0, "velgroup", 1, "id1");
+  CLine line("Halpha", 6564.61, CLine::EType::nType_Emission,
+             profilesym->Clone(), CLine::EForce::nForce_Strong, 0., false,
+             "group", 1.0, "velgroup");
 
   line.setNominalAmplitude(0.8);
-  CLineVector rs;
-  rs.push_back(std::move(line));
-  TInt32List catalogIndexes;
-  catalogIndexes.push_back(1);
-  catalogIndexes.push_back(0);
+  CLineMap rs;
+  rs[0] = std::move(line);
 
   Float64 nsigmasupport = 8.;
   Float64 resolution = 0.9;
@@ -165,7 +157,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
   TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
   CLineModelElement element = CLineModelElement(fdata, "combined");
 
@@ -195,20 +187,17 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
 
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
-  CLine line = CLine("Halpha", 6564.61, CLine::EType::nType_Emission,
-                     profilesym->Clone(), CLine::EForce::nForce_Strong, 0.,
-                     false, "group", 1.0, "velgroup", 1, "id1");
+  CLine line("Halpha", 6564.61, CLine::EType::nType_Emission,
+             profilesym->Clone(), CLine::EForce::nForce_Strong, 0., false,
+             "group", 1.0, "velgroup");
 
   line.setNominalAmplitude(0.8);
-  CLineVector rs;
-  rs.push_back(std::move(line));
+  CLineMap rs;
+  rs[0] = std::move(line);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
-  TInt32List catalogIndexes;
-  catalogIndexes.push_back(1);
-  catalogIndexes.push_back(0);
   std::shared_ptr<TLineModelElementParam> fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
   CLineModelElement element = CLineModelElement(fdata, "velocitydriven");
 

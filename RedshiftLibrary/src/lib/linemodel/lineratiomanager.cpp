@@ -56,7 +56,7 @@ CLineRatioManager::CLineRatioManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineVector &restLineList)
+    const CLineMap &restLineList)
     : m_elementsVector(elementsVector), m_models(models),
       m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
       m_continuumManager(continuumManager), m_RestLineList(restLineList) {
@@ -85,7 +85,7 @@ CLineRatioManager::CLineRatioManager(
  */
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
-                                      const CLineVector &catalog) {
+                                      const CLineMap &catalog) {
   TInt32List idxEltIGM;
   std::vector<TInt32List> idxLineIGM;
   std::tie(idxEltIGM, idxLineIGM) = getElementList().getIgmLinesIndices();
@@ -98,7 +98,7 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
   Int32 idxLineLyaE = idxLineIGM.front().front();
 
   const auto &profile =
-      getElementList()[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
+      getElementList()[idxLyaE]->GetLines().at(idxLineLyaE).GetProfile();
   if (profile->isAsym())
     setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
 
@@ -106,7 +106,7 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
     const auto &Elt = getElementList()[idxEltIGM[i]];
     TInt32List &idxLine = idxLineIGM[i];
     auto end = std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-      return !Elt->GetLines()[idx].GetProfile()->isSymIgm();
+      return !Elt->GetLines().at(idx).GetProfile()->isSymIgm();
     });
     idxLine.erase(end, idxLine.end());
     if (!idxLine.empty())
@@ -116,32 +116,24 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
 
 void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
                                        Float64 redshift,
-                                       const CLineVector &catalog) {
-  Int32 lineIndex = getLineIndexInCatalog(idxLyaE, idxLineLyaE, catalog);
-  if (lineIndex == undefIdx)
-    return;
+                                       const CLineMap &catalog) {
+  auto const &ref_line = catalog.at(idxLineLyaE);
 
   // finding or setting the correct profile
+  auto const &ref_profile = ref_line.GetProfile();
   CLineProfile_ptr profile;
-  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile()->isAsymFit())
+  if (m_forceDisableLyaFitting && ref_profile->isAsymFit())
     // convert asymfit to asymfixed profile
-    profile = dynamic_cast<const CLineProfileASYMFIT *>(
-                  catalog[lineIndex].GetProfile().get())
+    profile = dynamic_cast<const CLineProfileASYMFIT *>(ref_profile.get())
                   ->cloneToASYM();
-  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile()->isAsymFixed())
+  else if (m_forceLyaFitting && ref_profile->isAsymFixed())
     // convert asymfixed to asymfit
-    profile = dynamic_cast<const CLineProfileASYM *>(
-                  catalog[lineIndex].GetProfile().get())
+    profile = dynamic_cast<const CLineProfileASYM *>(ref_profile.get())
                   ->cloneToASYMFIT();
   else
-    profile = catalog[lineIndex].GetProfile()->Clone();
+    profile = ref_profile->Clone();
 
   getElementList()[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
-}
-
-Int32 CLineRatioManager::getLineIndexInCatalog(
-    Int32 iElts, Int32 idxLine, const CLineVector &catalog) const {
-  return getElementList()[iElts]->getLineIndexInCatalog(idxLine, catalog);
 }
 
 void CLineRatioManager::setSymIgmProfile(Int32 iElts,
@@ -278,7 +270,7 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
+    const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
   std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
     ret = std::make_shared<CTplratioManager>(

@@ -105,7 +105,7 @@ void COperatorLineModel::ComputeFirstPass() {
       m_opt_continuumcomponent == "tplfitauto")
     for (const auto &category : m_tplCategoryList)
       nfitcontinuum += tplCatalog->GetTemplateCount(category);
-  m_result->Init(m_Redshifts, Context.getCLineVector(), nfitcontinuum,
+  m_result->Init(m_Redshifts, Context.getCLineMap(), nfitcontinuum,
                  m_fittingManager->getTplratio_count(),
                  m_fittingManager->getTplratio_priors());
 

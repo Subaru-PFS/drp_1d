@@ -55,31 +55,26 @@ public:
   void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
   Float64 GetElementAmplitude(Int32 j) const;
 
-  TInt32List getOverlappingElements(Int32 ind, const TInt32List &excludedInd,
+  TInt32List getOverlappingElements(Int32 ind, const TInt32Set &excludedInd,
                                     Float64 redshift,
                                     Float64 overlapThres) const;
-  TInt32List
-  getOverlappingElementsBySupport(Int32 ind, Float64 redshift,
-                                  const CSpectrumSpectralAxis &spectralAxis,
-                                  Float64 overlapThres = 0.1) const;
 
   Int32 GetModelValidElementsNDdl() const;
   Int32 GetModelNonZeroElementsNDdl() const;
 
   std::vector<TInt32List> GetModelVelfitGroups(CLine::EType lineType) const;
 
-  std::vector<CRange<Int32>> getlambdaIndexesUnderLines(
+  TInt32RangeList getlambdaIndexesUnderLines(
       const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
       Float64 sigma_support, const CSpectrumSpectralAxis &spectralAxis,
       const TFloat64Range &lambdaRange, Float64 redshift) const;
 
-  Int32 findElementIndex(const std::string &LineTagStr,
-                         CLine::EType linetype = CLine::EType::nType_All) const;
-  Int32 findElementIndex(const std::string &LineTagStr, CLine::EType linetype,
-                         Int32 &lineIdx) const;
   std::tuple<TInt32List, std::vector<TInt32List>> getIgmLinesIndices() const;
 
-  Int32 findElementIndex(Int32 LineCatalogIndex, Int32 &lineIdx) const;
+  std::pair<Int32, Int32>
+  findElementIndex(const std::string &LineTagStr,
+                   CLine::EType linetype = CLine::EType::nType_All) const;
+  Int32 findElementIndex(Int32 line_id) const;
   TInt32List findElementTypeIndices(CLine::EType type) const;
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
@@ -94,7 +89,7 @@ public:
   void SetElementIndexesDisabledAuto();
   void ResetElementIndexesDisabled();
 
-  Float64 getScaleMargCorrection(Int32 idxLine) const;
+  Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const;
   bool GetModelStrongEmissionLinePresent() const;
   bool GetModelHaStrongest() const;
 

@@ -72,11 +72,11 @@ private:
                   const TFloat64Range &redshiftRange, Int32 nThreshold) const;
   void updateSolution(Int32 iDetectedLine, Float64 redShift, Float64 tol,
                       CLineMatchingResult::TSolutionSet &solution, // to update
-                      const CLineDetectedVector &detectedLineList,
-                      const CLineVector &restLineList) const;
+                      const CLineDetectedMap &detectedLineList,
+                      const CLineMap &restLineList) const;
   std::function<Float64(Int32, Int32)>
-  getRedshift(const CLineDetectedVector &detectedLineList,
-              const CLineVector &restLineList) const;
+  getRedshift(const CLineDetectedMap &detectedLineList,
+              const CLineMap &restLineList) const;
   bool
   isLineAlreadyPresent(const CLineDetected &line,
                        const CLineMatchingResult::TSolutionSet &solution) const;

@@ -623,13 +623,13 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   if (m_enableLambdaOffsetsFit) {
     for (Int32 eltIndex : EltsIdx) {
       auto &elt = getElementList()[eltIndex];
-      for (Int32 i = 0; i < elt->GetSize(); ++i) {
-        Float64 offset = elt->GetOffset(i);
+      for (auto const &[id, _] : elt->GetLines()) {
+        Float64 offset = elt->GetOffset(id);
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
         offset +=
             (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
-        elt->SetOffset(i, offset);
+        elt->SetOffset(id, offset);
       }
     }
   }

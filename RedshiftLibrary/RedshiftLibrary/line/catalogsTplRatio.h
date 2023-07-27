@@ -60,49 +60,49 @@ class CLineModelElementList;
 class CLineCatalogsTplRatio {
 
 public:
-  // bool AreCatalogsAligned( const CLineVector& restLineList,
-  // Int32 typeFilter, Int32 forceFilter  );
-  Float64 GetBestFit(const CLineVector &restLineList,
-                     const TFloat64List &fittedAmplitudes,
-                     const TFloat64List &fittedErrors,
-                     TFloat64List &amplitudesCorrected,
+  Float64 GetBestFit(const CLineMap &restLineList,
+                     const TFloat64Map &fittedAmplitudes,
+                     const TFloat64Map &fittedErrors,
+                     TFloat64Map &amplitudesCorrected,
                      std::string &bestTplName) const;
-  CLineVector GetRestLinesList(Int32 index) const;
-  Int32 GetCatalogsCount() const;
+  CLineMap GetRestLinesList(Int32 index) const;
+  Int32 GetCatalogsCount() const { return m_lineRatioCatalogs.size(); }
+
   TFloat64List getCatalogsPriors() const;
-  std::string GetCatalogName(Int32 idx) const;
-  Int32 GetIsmIndex(Int32 idx) const;
-  Float64 GetIsmCoeff(Int32 idx) const;
+  std::string GetCatalogName(Int32 idx) const {
+    return m_lineRatioCatalogs.at(idx).getName();
+  }
+  Int32 GetIsmIndex(Int32 idx) const {
+    return m_lineRatioCatalogs.at(idx).getIsmIndex();
+  }
 
   bool GetCatalogVelocities(Int32 idx, Float64 &elv, Float64 &alv) const;
-  std::vector<std::vector<TFloat64List>> InitLineCorrespondingAmplitudes(
-      const CLineModelElementList &LineModelElementList,
+  std::vector<TFloat64Map> InitLineCorrespondingAmplitudes(
       Int32 enableISMCalzetti,
       const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-          &ismCorrectionCalzetti,
-      Float64 nsigmasupport) const;
-  const CLineCatalog &GetCatalog(Int32 icatlog) const;
+          &ismCorrectionCalzetti) const;
+  const CLineRatioCatalog &GetCatalog(Int32 iCatalog) const {
+    return m_lineRatioCatalogs[iCatalog];
+  }
 
   void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog) {
     m_lineRatioCatalogs.push_back(lr_catalog);
   }
 
 private:
-  Float64 computeFitValue(const TFloat64List &ampsLM, const TFloat64List &errLM,
-                          const TFloat64List &ampsTPL,
-                          TFloat64List &ampsCorrected) const;
-  Float64 getFitForOneCatalog(const CLineVector &restLineList,
-                              const TFloat64List &fittedAmplitudes,
-                              const TFloat64List &fittedErrors,
+  Float64 computeFitValue(const TFloat64Map &ampsLM, const TFloat64Map &errLM,
+                          const TFloat64Map &ampsTPL,
+                          TFloat64Map &ampsCorrected) const;
+  Float64 getFitForOneCatalog(const CLineMap &restLineList,
+                              const TFloat64Map &fittedAmplitudes,
+                              const TFloat64Map &fittedErrors,
                               const CLineRatioCatalog &catalog,
-                              TFloat64List &ampsCorrected) const;
-  void
-  logLineNominalAmp(const CLineModelElementList &LineModelElementList,
-                    bool enableISMCalzetti,
-                    const std::vector<std::vector<TFloat64List>>
-                        &lineCatalogLinesCorrespondingNominalAmp,
-                    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                        &ismCorrectionCalzetti) const;
+                              TFloat64Map &ampsCorrected) const;
+  void logLineNominalAmp(
+      bool enableISMCalzetti,
+      const std::vector<TFloat64Map> &lineCatalogLinesCorrespondingNominalAmp,
+      const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+          &ismCorrectionCalzetti) const;
   std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
 };
 
