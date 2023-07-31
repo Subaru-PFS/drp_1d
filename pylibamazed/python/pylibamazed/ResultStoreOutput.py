@@ -36,6 +36,8 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+import os
+
 from pylibamazed.AbstractOutput import AbstractOutput, ObjectStages
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import PC, CLog, ErrorCode
@@ -217,14 +219,17 @@ class ResultStoreOutput(AbstractOutput):
 
     def store_error(self, amz_exception, object_type, stage):
         full_name = self.get_error_full_name(object_type, stage)
+        fn_path = amz_exception.getFileName()
+        if len(fn_path.split(os.sep)) > 3:
+            fn_path = "/".join(fn_path.split(os.sep)[-3:])
         self.errors[full_name] = dict()
         self.errors[full_name]["code"] = ErrorCode(amz_exception.getErrorCode()).name
         self.errors[full_name]["message"] = amz_exception.getMessage()
         self.errors[full_name]["line"] = amz_exception.getLine()
-        self.errors[full_name]["filename"] = amz_exception.getFileName()
+        self.errors[full_name]["filename"] = fn_path
         self.errors[full_name]["method"] = amz_exception.getMethod()
 
-        if not object_type and stage != "classification":
+        if not object_type and stage == "init":
             for ot in self.object_types:
                 for o_stage in ObjectStages:
                     if self.parameters.stage_enabled(ot, o_stage):
