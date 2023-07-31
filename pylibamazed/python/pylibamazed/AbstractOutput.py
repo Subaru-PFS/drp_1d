@@ -43,7 +43,7 @@ from pylibamazed.Parameters import Parameters
 from pylibamazed.r_specifications import rspecifications
 from pylibamazed.redshift import CLog, ErrorCode
 
-RootStages = ["init", "classification", "result_store_fill"]
+RootStages = ["init", "classification", "load_result_store"]
 ObjectStages = ["redshift_solver", "linemeas_catalog_load",
                 "linemeas_solver", "reliability_solver", "sub_classif_solver"]
 
@@ -315,8 +315,7 @@ class AbstractOutput:
 
         if self.extended_results:
             return filtered_df
-
-        filtered_df = filtered_df[ds_attributes["extended_results"] is False]
+        filtered_df = filtered_df[~ds_attributes["extended_results"]]
         return filtered_df
 
     # root is every first level data excluding self.objects
