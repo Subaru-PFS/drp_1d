@@ -315,7 +315,7 @@ class AbstractOutput:
 
         if self.extended_results:
             return filtered_df
-        filtered_df = filtered_df[~ds_attributes["extended_results"]]
+        filtered_df = filtered_df.loc[~ds_attributes["extended_results"]]
         return filtered_df
 
     # root is every first level data excluding self.objects
