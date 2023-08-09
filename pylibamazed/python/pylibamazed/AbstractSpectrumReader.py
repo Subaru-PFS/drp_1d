@@ -158,7 +158,6 @@ class AbstractSpectrumReader:
         :param resource: resource where the error can be found, no restriction for type (can be a path, a
             file handler, an hdf5 node,...)
         """
-        pass
 
     def load_all(self, resource):
         """
@@ -295,6 +294,18 @@ class AbstractSpectrumReader:
 
     def _editable_errors(self, obs_id=""):
         return self.editable_spectra.get(obs_id)["errors"]
+
+    def get_filtered_others(self, obs_id: str = "") -> pd.DataFrame:
+        """
+        Return a dataframe with the filtered non-mandatory columns of the spectrum.
+
+        :param obs_id: name of the observation
+        :return: dataframe with the data of the other columns of the spectrum
+        """
+        others_data = pd.DataFrame()
+        for col in self.others:
+            others_data[col] = self.editable_spectra.get(obs_id)[col]
+        return others_data
 
     def _add_cspectra(self):
         airvacuum_method = self._corrected_airvacuum_method()
