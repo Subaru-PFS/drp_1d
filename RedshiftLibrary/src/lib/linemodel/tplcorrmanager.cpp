@@ -44,31 +44,32 @@
 using namespace NSEpic;
 
 CTplCorrManager::CTplCorrManager(
-    CLineModelElementList &elements, std::shared_ptr<CSpectrumModel> model,
-    std::shared_ptr<const CSpectrum> inputSpc,
-    std::shared_ptr<const TFloat64Range> lambdaRange,
+    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
+    const CCSpectrumVectorPtr &inputSpcs,
+    const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
     const TLineVector &restLineList)
-    : CTplratioManager(elements, model, inputSpc, lambdaRange, continuumManager,
-                       restLineList) {}
+    : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
+                       continuumManager, restLineList) {}
 
 Float64 CTplCorrManager::computeMerit(Int32 itratio) {
 
-  m_model->refreshModel();
+  getModel().refreshModel();
   Int32 s = m_RestLineList.size();
   TFloat64List Amplitudes(s);
   TFloat64List AmplitudesUncertainties(s); // noise sigma
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 subeIdx = undefIdx;
-    Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
+    Int32 eIdx = getElementList().findElementIndex(iRestLine, subeIdx);
 
     if (eIdx == undefIdx || subeIdx == undefIdx ||
-        m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx)) {
+        getElementList()[eIdx]->IsOutsideLambdaRange(subeIdx)) {
       continue; // data already set to its default values
     }
-    Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
+    Float64 amp = getElementList()[eIdx]->GetFittedAmplitude(subeIdx);
     Amplitudes[iRestLine] = amp;
-    Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
+    Float64 ampError =
+        getElementList()[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
     AmplitudesUncertainties[iRestLine] = ampError;
   }
   TFloat64List correctedAmplitudes(Amplitudes.size());
@@ -77,17 +78,17 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
                                 m_tplratioBestTplName);
   for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
     Int32 subeIdx = undefIdx;
-    Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
+    Int32 eIdx = getElementList().findElementIndex(iRestLine, subeIdx);
     if (eIdx == undefIdx || subeIdx == undefIdx)
       continue;
 
     Float64 er = AmplitudesUncertainties[subeIdx]; // not modifying the
     // fitting error for now
-    Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
-    m_Elements[eIdx]->SetElementAmplitude(
+    Float64 nominalAmp = getElementList()[eIdx]->GetNominalAmplitude(subeIdx);
+    getElementList()[eIdx]->SetElementAmplitude(
         correctedAmplitudes[iRestLine] / nominalAmp, er);
   }
-  m_model->refreshModel();
+  getModel().refreshModel();
   return getLeastSquareMerit();
 }
 

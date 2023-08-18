@@ -48,12 +48,13 @@ namespace NSEpic
 // class CRegulament;
 class CHybridFitter : public CSvdFitter {
 public:
-  CHybridFitter(CLineModelElementList &elements,
-                std::shared_ptr<const CSpectrum> inputSpectrum,
-                std::shared_ptr<const TLambdaRange> lambdaRange,
-                std::shared_ptr<CSpectrumModel> spectrumModel,
+  CHybridFitter(const CLMEltListVectorPtr &elementsVector,
+                const CCSpectrumVectorPtr &inputSpcs,
+                const CTLambdaRangePtrVector &lambdaRanges,
+                const CSpcModelVectorPtr &spectrumModels,
                 const TLineVector &restLineList,
                 const std::vector<TLineModelElementParam_ptr> &elementParam,
+                const std::shared_ptr<Int32> &curObsPtr,
                 bool enableAmplitudeOffsets = false,
                 bool enableLambdaOffsetsFit = false);
 

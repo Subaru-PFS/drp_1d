@@ -105,5 +105,6 @@ private:
   TPhotVal m_photValues;
 };
 
+using CSpcModelVectorPtr = std::shared_ptr<std::vector<CSpectrumModel>>;
 } // namespace NSEpic
 #endif

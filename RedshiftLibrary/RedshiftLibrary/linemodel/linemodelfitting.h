@@ -113,7 +113,7 @@ public:
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
               CTplModelSolution &continuumModelSolution,
               Int32 contreest_iterations = 0, bool enableLogging = 0);
-  TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
+  TFloat64Range &getDTDLambdaRange() { return m_dTransposeDLambdaRange; };
 
   void SetFittingMethod(const std::string &fitMethod,
                         bool enableAmplitudeOffsets = false,
@@ -132,13 +132,13 @@ public:
   Float64 getLeastSquareContinuumMerit() const;
   Float64 getLeastSquareMeritUnderElements() const;
   Float64 getScaleMargCorrection(Int32 idxLine = -1) const {
-    return m_Elements.getScaleMargCorrection(idxLine);
+    return getElementList().getScaleMargCorrection(idxLine);
   }
 
   Float64 getStrongerMultipleELAmpCoeff() const;
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
-    return m_model->getLinesAboveSNR(*m_lambdaRange, snrcut);
+    return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
   Float64 getCumulSNRStrongEL() const;
@@ -149,10 +149,10 @@ public:
 
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
-  CLineModelElementList m_Elements;
+
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
-  std::shared_ptr<const CSpectrum> m_inputSpc;
+
   const TLineVector m_RestLineList;
 
   Int32 setPassMode(Int32 iPass);
@@ -164,13 +164,26 @@ public:
     return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
-  std::shared_ptr<CSpectrumModel> getSpectrumModel() {
-    return m_model;
+  const CSpectrum &getSpectrum() const { return *((*m_inputSpcs)[*m_curObs]); }
+  shared_ptr<const CSpectrum> getSpectrumPtr() {
+    return (*m_inputSpcs)[*m_curObs];
+  }
+
+  CSpectrumModel &getSpectrumModel() const {
+    return (*m_models)[*m_curObs];
   } // not const because of tplortho
 
-  std::shared_ptr<const CSpectrumModel> getConstSpectrumModel() {
-    return m_model;
+  CLineModelElementList &getElementList() {
+    return (*m_ElementsVector)[*m_curObs];
   }
+  CLineModelElementList &getElementList() const {
+    return (*m_ElementsVector)[*m_curObs];
+  }
+
+  const TLambdaRange &getLambdaRange() const {
+    return *(m_lambdaRanges[*m_curObs]);
+  }
+
   const std::string &getFittingMethod() const { return m_fittingmethod; }
 
   std::shared_ptr<CContinuumManager> getContinuumManager() {
@@ -201,7 +214,7 @@ private:
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
   void AddElement(TLineVector &&lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, TInt32List &&inds);
+                  Float64 velocityAbsorption, TInt32List &&inds, Int32 ig);
 
   void SetLSF();
 
@@ -210,7 +223,7 @@ private:
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
 
-  std::shared_ptr<CSpectrumModel> m_model;
+  CSpcModelVectorPtr m_models;
 
   Float64 m_dTransposeD; // the cached dtd (maximum chisquare value)
   TFloat64Range m_dTransposeDLambdaRange; // the lambdaRange used to computed
@@ -231,7 +244,9 @@ private:
 
   bool m_forcedisableMultipleContinuumfit = false;
 
-  std::shared_ptr<const TFloat64Range> m_lambdaRange;
+  CTLambdaRangePtrVector m_lambdaRanges;
+  CCSpectrumVectorPtr m_inputSpcs;
+  CLMEltListVectorPtr m_ElementsVector;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;
@@ -241,6 +256,8 @@ private:
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
+  Int32 m_nbObs;
+  std::shared_ptr<Int32> m_curObs;
 };
 
 } // namespace NSEpic

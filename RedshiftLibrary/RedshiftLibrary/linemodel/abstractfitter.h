@@ -52,12 +52,12 @@ class CContinuumManager;
 class CAbstractFitter {
 public:
   CAbstractFitter(
-      CLineModelElementList &elements,
-      std::shared_ptr<const CSpectrum> inputSpectrum,
-      std::shared_ptr<const TLambdaRange> lambdaRange,
-      std::shared_ptr<CSpectrumModel> spectrumModel,
-      const TLineVector &restLineList,
+      const CLMEltListVectorPtr &elementsVector,
+      const CCSpectrumVectorPtr &inputSpcs,
+      const CTLambdaRangePtrVector &lambdaRanges,
+      const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      const std::shared_ptr<Int32> &curObsPtr,
       bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
   void fit(Float64 redshift);
@@ -68,13 +68,13 @@ public:
   void enableLambdaOffsets() { m_enableLambdaOffsetsFit = true; }
 
   static std::shared_ptr<CAbstractFitter> makeFitter(
-      std::string fittingMethod, CLineModelElementList &elements,
-      std::shared_ptr<const CSpectrum> inputSpectrum,
-      std::shared_ptr<const TLambdaRange> lambdaRange,
-      std::shared_ptr<CSpectrumModel> spectrumModel,
-      const TLineVector &restLineList,
+      std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
+      const CCSpectrumVectorPtr &inputSpcs,
+      const CTLambdaRangePtrVector &lambdaRanges,
+      const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
+      const std::shared_ptr<Int32> &curObsPtr,
       bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
   void logParameters();
@@ -112,13 +112,24 @@ protected:
                               bool enableOffsetFitting) const;
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
-  CLineModelElementList &m_Elements;
+  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
+  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
+  const CSpectrum &getSpectrum() { return *((*m_inputSpcs)[*m_curObs]); }
+  const TLambdaRange &getLambdaRange() { return *(m_lambdaRanges[*m_curObs]); }
+  CLineModelElementList &getElementList() {
+    return (*m_ElementsVector)[*m_curObs];
+  }
+  CLineModelElementList &getElementList() const {
+    return (*m_ElementsVector)[*m_curObs];
+  }
+  CLMEltListVectorPtr m_ElementsVector;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
-  const CSpectrum &m_inputSpc;
+  CCSpectrumVectorPtr m_inputSpcs;
   const TLineVector &m_RestLineList;
-  const TFloat64Range &m_lambdaRange;
-  std::shared_ptr<CSpectrumModel> m_model;
+  CTLambdaRangePtrVector m_lambdaRanges;
+  CSpcModelVectorPtr m_models;
 
+  std::shared_ptr<Int32> m_curObs;
   // hard coded options
   bool m_enableAmplitudeOffsets = false;
   bool m_enableLambdaOffsetsFit = false;

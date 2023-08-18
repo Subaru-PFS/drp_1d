@@ -55,11 +55,11 @@ void CRandomFitter::doFit(Float64 redshift) {
   Log.LogInfo("LineModel simulation: coeffAmpAbsorption = %.2f",
               coeffAmpAbsorption);
   // fit the model amplitudes individually
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
-    if (m_Elements[iElts]->GetElementType() == CLine::nType_Absorption) {
+    if (getElementList()[iElts]->GetElementType() == CLine::nType_Absorption) {
       amax = meanContinuum * 0.5 * coeffAmpAbsorption;
     } else {
       amax = meanContinuum * coeffAmpEmission;
@@ -70,15 +70,15 @@ void CRandomFitter::doFit(Float64 redshift) {
       a = 0.0;
     }
     // get the max nominal amplitude
-    Int32 nLines = m_Elements[iElts]->GetSize();
+    Int32 nLines = getElementList()[iElts]->GetSize();
     Float64 maxNominalAmp = -1.0;
     for (Int32 j = 0; j < nLines; j++) {
-      if (maxNominalAmp < m_Elements[iElts]->GetNominalAmplitude(j)) {
-        maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+      if (maxNominalAmp < getElementList()[iElts]->GetNominalAmplitude(j)) {
+        maxNominalAmp = getElementList()[iElts]->GetNominalAmplitude(j);
       }
     }
 
-    m_Elements.SetElementAmplitude(iElts, a / maxNominalAmp, err);
+    getElementList().SetElementAmplitude(iElts, a / maxNominalAmp, err);
   }
 }
 
@@ -90,16 +90,16 @@ Float64 CRandomFitter::getContinuumMeanUnderElement(Int32 eltId) const {
   TInt32RangeList support;
   Int32 iElts = eltId;
   {
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
+    if (getElementList()[iElts]->IsOutsideLambdaRange()) {
       return 0.0;
     }
-    TInt32RangeList s = m_Elements[iElts]->getSupport();
+    TInt32RangeList s = getElementList()[iElts]->getSupport();
     for (Int32 iS = 0; iS < s.size(); iS++) {
       support.push_back(s[iS]);
     }
   }
 
-  const auto &ContinuumFluxAxis = m_model->getContinuumFluxAxis();
+  const auto &ContinuumFluxAxis = getModel().getContinuumFluxAxis();
   // const auto & ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   for (Int32 iS = 0; iS < support.size(); iS++) {
     for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {

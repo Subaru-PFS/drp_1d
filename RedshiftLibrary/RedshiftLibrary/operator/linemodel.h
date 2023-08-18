@@ -168,7 +168,6 @@ private:
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
   void
   fitContinuumTemplates(Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
-                        const std::vector<CMask> &maskList,
                         std::vector<std::shared_ptr<CTemplateFittingResult>>
                             &chisquareResultsAllTpl,
                         TStringList &chisquareResultsTplName);
