@@ -48,14 +48,15 @@ using namespace NSEpic;
 using namespace std;
 
 CRule2SingleLinesAmplitude::CRule2SingleLinesAmplitude()
-    : m_LineType(0), m_LineA(""), m_LineB(""), m_Coefficient(0) {}
+    : m_LineType(CLine::EType::nType_All), m_LineA(""), m_LineB(""),
+      m_Coefficient(0) {}
 
 void CRule2SingleLinesAmplitude::SetUp(bool EnabledArgument, ...) {
   Name = "balmersingle";
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start(Arguments, EnabledArgument);
-  m_LineType = va_arg(Arguments, Int32);
+  m_LineType = va_arg(Arguments, CLine::EType);
   m_LineA = std::string(va_arg(Arguments, const char *));
   m_LineB = std::string(va_arg(Arguments, const char *));
   m_Coefficient = va_arg(Arguments, Float64);

@@ -312,7 +312,7 @@ class PC
 
 };
 
-class CLineCatalog
+class CLineCatalog : public CLineCatalogBase<>
 {
 public:
   CLineCatalog();

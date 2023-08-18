@@ -45,41 +45,56 @@ using namespace NSEpic;
 using namespace std;
 #include <fstream>
 
-const std::map<Int32, std::string> CLine::ETypeString = {
-    {nType_Absorption, "Abs"}, {nType_Emission, "Em"}, {nType_All, "All"}};
+const std::map<CLine::EType, std::string> CLine::ETypeString = {
+    {EType::nType_Absorption, "Abs"},
+    {EType::nType_Emission, "Em"},
+    {EType::nType_All, "All"}};
 
-CLine::CLine(const string &name, Float64 pos, Int32 type,
-             CLineProfile_ptr &&profile, Int32 force, Float64 amp,
-             Float64 width, Float64 cut, Float64 posErr, Float64 sigmaErr,
-             Float64 ampErr, const std::string &groupName, Float64 nominalAmp,
-             const string &velGroupName, Int32 id)
-    : m_Name(name), m_Pos(pos), m_Type(type), m_Force(force), m_Amp(amp),
-      m_Width(width), m_Cut(cut), m_Profile(std::move(profile)),
-      m_PosFitErr(posErr), m_SigmaFitErr(sigmaErr), m_AmpFitErr(ampErr),
-      m_GroupName(groupName), m_NominalAmplitude(nominalAmp),
-      m_VelGroupName(velGroupName), m_id(id), m_Offset(0.), m_OffsetFit(false) {
+const std::map<CLine::EForce, std::string> CLine::EForceString = {
+    {EForce::nForce_Weak, "Weak"}, {EForce::nForce_Strong, "Strong"}};
+
+CLine::EType CLine::string2Type(std::string const &stype) {
+  if (stype == "no")
+    return EType::nType_All;
+  auto const ctype = stype.front();
+  if (ctype == 'E')
+    return EType::nType_Emission;
+  if (ctype == 'A')
+    return EType::nType_Absorption;
+
+  THROWG(INTERNAL_ERROR,
+         Formatter() << "Bad line type, should be in {A,E} : " << ctype);
 }
 
-CLine::CLine(const string &name, Float64 pos, Int32 type,
-             CLineProfile_ptr &&profile, Int32 force, Float64 velocityOffset,
+CLine::EForce CLine::string2Force(std::string const &sforce) {
+  if (sforce == "no")
+    return EForce::nForce_All;
+  auto const cforce = sforce.front();
+  if (cforce == 'W')
+    return EForce::nForce_Weak;
+  if (cforce == 'S')
+    return EForce::nForce_Strong;
+
+  THROWG(INTERNAL_ERROR,
+         Formatter() << "Bad line force, should be in {S,W} : " << cforce);
+}
+
+CLine::CLine(const string &name, Float64 pos, EType type,
+             CLineProfile_ptr &&profile, EForce force, Float64 velocityOffset,
              bool enableVelocityOffsetFitting, const std::string &groupName,
              Float64 nominalAmp, const string &velGroupName, Int32 id,
              const std::string &str_id)
-    : m_Name(name), m_Pos(pos), m_Type(type), m_Force(force), m_Amp(-1.0),
-      m_Width(-1.0), m_Cut(-1.0), m_Profile(std::move(profile)),
-      m_PosFitErr(-1.0), m_SigmaFitErr(-1.0), m_AmpFitErr(-1.0),
-      m_GroupName(groupName), m_NominalAmplitude(nominalAmp),
-      m_VelGroupName(velGroupName), m_id(id), m_Offset(velocityOffset),
-      m_OffsetFit(enableVelocityOffsetFitting), m_strID(str_id) {}
+    : m_Name(name), m_Pos(pos), m_Type(type), m_Force(force),
+      m_Profile(std::move(profile)), m_GroupName(groupName),
+      m_NominalAmplitude(nominalAmp), m_VelGroupName(velGroupName), m_id(id),
+      m_Offset(velocityOffset), m_OffsetFit(enableVelocityOffsetFitting),
+      m_strID(str_id) {}
 
 CLine::CLine(const CLine &other)
     : m_id(other.m_id), m_Type(other.m_Type),
       m_Profile(other.m_Profile->Clone()), // deep copy for m_Profile
       m_Force(other.m_Force), m_Pos(other.m_Pos), m_Offset(other.m_Offset),
-      m_Amp(other.m_Amp), m_Width(other.m_Width), m_Cut(other.m_Cut),
-      m_PosFitErr(other.m_PosFitErr), m_SigmaFitErr(other.m_SigmaFitErr),
-      m_AmpFitErr(other.m_AmpFitErr), m_Name(other.m_Name),
-      m_GroupName(other.m_GroupName),
+      m_Name(other.m_Name), m_GroupName(other.m_GroupName),
       m_NominalAmplitude(other.m_NominalAmplitude),
       m_OffsetFit(other.m_OffsetFit), m_VelGroupName(other.m_VelGroupName),
       m_strID(other.m_strID) {}
@@ -91,13 +106,6 @@ CLine &CLine::operator=(const CLine &other) {
   m_Force = other.m_Force;
   m_Pos = other.m_Pos;
   m_Offset = other.m_Offset;
-  m_Amp = other.m_Amp;
-  m_Width = other.m_Width;
-  m_Cut = other.m_Cut;
-
-  m_PosFitErr = other.m_PosFitErr;
-  m_SigmaFitErr = other.m_SigmaFitErr;
-  m_AmpFitErr = other.m_AmpFitErr;
 
   m_Name = other.m_Name;
 
@@ -110,22 +118,6 @@ CLine &CLine::operator=(const CLine &other) {
 
   m_strID = other.m_strID;
   return *this;
-}
-
-bool CLine::operator<(const CLine &str) const {
-  if (m_Pos == str.m_Pos) {
-    return (m_Amp < str.m_Amp);
-  } else {
-    return (m_Pos < str.m_Pos);
-  }
-}
-
-bool CLine::operator!=(const CLine &str) const {
-  if (m_Pos == str.m_Pos) {
-    return (m_Amp != str.m_Amp);
-  } else {
-    return (m_Pos != str.m_Pos);
-  }
 }
 
 void CLine::SetAsymParams(const TAsymParams &asymParams) {
@@ -186,58 +178,9 @@ TSymIgmParams CLine::GetSymIgmParams() const {
     THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
   return m_Profile->GetSymIgmParams();
 }
-bool CLine::GetIsEmission() const { return m_Type == nType_Emission; }
-
-Int32 CLine::GetType() const { return m_Type; }
 
 const CLineProfile_ptr &CLine::GetProfile() const {
   if (!m_Profile)
     THROWG(INTERNAL_ERROR, "Current line does not have a profile");
   return m_Profile;
 }
-
-void CLine::SetProfile(CLineProfile_ptr &&profile) {
-  m_Profile = std::move(profile);
-}
-
-Int32 CLine::GetForce() const { return m_Force; }
-
-Float64 CLine::GetPosition() const { return m_Pos; }
-
-Float64 CLine::GetOffset() const { return m_Offset; }
-
-bool CLine::GetOffsetFitEnabled() const { return m_OffsetFit; }
-
-bool CLine::EnableOffsetFit() {
-  m_OffsetFit = true;
-  return true;
-}
-
-bool CLine::DisableOffsetFit() {
-  m_OffsetFit = false;
-  return true;
-}
-
-Float64 CLine::GetAmplitude() const { return m_Amp; }
-
-Float64 CLine::GetWidth() const { return m_Width; }
-
-Float64 CLine::GetCut() const { return m_Cut; }
-
-Float64 CLine::GetPosFitError() const { return m_PosFitErr; }
-
-Float64 CLine::GetSigmaFitError() const { return m_SigmaFitErr; }
-
-Float64 CLine::GetAmpFitError() const { return m_AmpFitErr; }
-
-const std::string &CLine::GetName() const { return m_Name; }
-
-const std::string &CLine::GetStrID() const { return m_strID; }
-
-const std::string &CLine::GetGroupName() const { return m_GroupName; }
-
-const Float64 CLine::GetNominalAmplitude() const { return m_NominalAmplitude; }
-
-const std::string &CLine::GetVelGroupName() const { return m_VelGroupName; }
-
-Int32 CLine::GetID() const { return m_id; }

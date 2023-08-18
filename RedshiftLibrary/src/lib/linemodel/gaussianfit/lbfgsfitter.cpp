@@ -46,7 +46,7 @@ using namespace LBFGSpp;
 using namespace NSEpic;
 
 CLbfgsFitter::CLeastSquare::CLeastSquare(
-    CLbfgsFitter &fitter, const TInt32List &EltsIdx, Int32 lineType,
+    CLbfgsFitter &fitter, const TInt32List &EltsIdx, CLine::EType lineType,
     Float64 redshift, const TInt32List &xInds, Int32 velA_idx, Int32 velE_idx,
     Int32 lbdaOffset_idx, Int32 pCoeff_idx, Float64 normFactor, Float64 normVel,
     Float64 normLbdaOffset)
@@ -113,10 +113,11 @@ CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x, VectorXd &grad) {
   Log.LogDebug(Formatter() << "LeastSquare = " << lsq);
   for (size_t i = 0; i < m_EltsIdx->size(); ++i)
     Log.LogDebug(Formatter() << "LeastSquare grad amp[" << i <<"] = " <<
-grad[i]); if (m_lineType == CLine::nType_All) { Log.LogDebug(Formatter() <<
-"LeastSquare grad velA= " << grad[m_velA_idx]); Log.LogDebug(Formatter() <<
+grad[i]); if (m_lineType == CLine::EType::nType_All) { Log.LogDebug(Formatter()
+<< "LeastSquare grad velA= " << grad[m_velA_idx]); Log.LogDebug(Formatter() <<
 "LeastSquare grad velE= " << grad[m_velE_idx]); } else if (m_lineType ==
-CLine::nType_Absorption) Log.LogDebug(Formatter() << "LeastSquare grad velA= "
+CLine::EType::nType_Absorption) Log.LogDebug(Formatter() << "LeastSquare grad
+velA= "
 << grad[m_velA_idx]); else Log.LogDebug(Formatter() << "LeastSquare grad velE= "
 << grad[m_velE_idx]); Log.LogDebug(Formatter() << "LeastSquare grad zoffset= "
 << grad[m_lbdaOffset_idx]); Log.LogDebug(Formatter() << "LeastSquare grad p
@@ -151,7 +152,7 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
     for (Int32 eltIndex : *m_EltsIdx) {
       auto &elt = m_fitter->getElementList()[eltIndex];
-      if (elt->GetIsEmission())
+      if (elt->IsEmission())
         elt->SetVelocityEmission(x[m_velE_idx] * m_normVel);
       else
         elt->SetVelocityAbsorption(x[m_velA_idx] * m_normVel);
@@ -255,7 +256,7 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
       // velocity derivative
       if (m_fitter->m_enableVelocityFitting) {
-        if (elt->GetElementType() == CLine::nType_Absorption) {
+        if (elt->GetElementType() == CLine::EType::nType_Absorption) {
           velocityAGrad += elt->GetModelDerivVelAtLambda(
               xi, redshift, (*m_continuumFluxAxis)[idx]);
         } else {
@@ -283,7 +284,7 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
       // squared diff derivative wrt velocity
       if (m_fitter->m_enableVelocityFitting) {
         if (m_fitter->getElementList()[eltIndex]->GetElementType() ==
-            CLine::nType_Absorption) {
+            CLine::EType::nType_Absorption) {
           grad[m_velA_idx] += residual * velocityAGrad;
         } else {
           grad[m_velE_idx] += residual * velocityEGrad;
@@ -347,7 +348,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   Int32 param_idx = nddl;
   Int32 velA_idx = undefIdx;
   Int32 velE_idx = undefIdx;
-  Int32 lineType = 0;
+  CLine::EType lineType = CLine::EType::nType_All;
   if (m_enableVelocityFitting) {
     ++nddl;
     // position of velocity in the param vector
@@ -355,13 +356,13 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
     // check if mixed types (Abs & Em)
     lineType = getElementList()[EltsIdx.front()]->GetElementType();
-    if (lineType == CLine::nType_Absorption)
+    if (lineType == CLine::EType::nType_Absorption)
       velA_idx = velocity_param_idx;
     else
       velE_idx = velocity_param_idx;
     for (Int32 eltIndex : EltsIdx)
       if (lineType != getElementList()[eltIndex]->GetElementType()) {
-        lineType = CLine::nType_All;
+        lineType = CLine::EType::nType_All;
         ++nddl; // 2 velocity parameter
         velA_idx = velocity_param_idx;
         velE_idx = velocity_param_idx + 1;
@@ -432,7 +433,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   for (size_t i = 0; i < EltsIdx.size(); ++i) {
     Float64 ampMax = INFINITY;
     auto &elt = getElementList()[EltsIdx[i]];
-    if (elt->GetElementType() == CLine::nType_Absorption &&
+    if (elt->GetElementType() == CLine::EType::nType_Absorption &&
         elt->GetAbsLinesLimit() > 0.0)
       ampMax = elt->GetAbsLinesLimit() / elt->GetMaxNominalAmplitude();
     ub[i] = ampMax;
@@ -440,11 +441,11 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   // velocity bounds
   if (m_enableVelocityFitting) {
-    if (lineType == CLine::nType_All) {
+    if (lineType == CLine::EType::nType_All) {
       const auto vel_indices = seq(velA_idx, velE_idx);
       lb(vel_indices) << m_velfitMinA / normVel, m_velfitMinE / normVel;
       ub(vel_indices) << m_velfitMaxA / normVel, m_velfitMaxE / normVel;
-    } else if (lineType == CLine::nType_Absorption) {
+    } else if (lineType == CLine::EType::nType_Absorption) {
       lb[velA_idx] = m_velfitMinA / normVel;
       ub[velA_idx] = m_velfitMaxA / normVel;
     } else {
@@ -481,7 +482,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   for (auto eltIndex : EltsIdx) {
     auto &elt = getElementList()[eltIndex];
     // set velocity guess
-    if (elt->GetElementType() == CLine::nType_Absorption) {
+    if (elt->GetElementType() == CLine::EType::nType_Absorption) {
       elt->SetVelocityAbsorption(m_velIniGuessA);
     } else {
       elt->SetVelocityEmission(m_velIniGuessE);
@@ -521,11 +522,11 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   // velocity initial guess
   if (m_enableVelocityFitting) {
-    if (lineType == CLine::nType_All) {
+    if (lineType == CLine::EType::nType_All) {
       const auto vel_indices = seq(velA_idx, velE_idx);
       v_xGuess(vel_indices) << m_velIniGuessA / normVel,
           m_velIniGuessE / normVel;
-    } else if (lineType == CLine::nType_Absorption)
+    } else if (lineType == CLine::EType::nType_Absorption)
       v_xGuess[velA_idx] = m_velIniGuessA / normVel;
     else
       v_xGuess[velE_idx] = m_velIniGuessE / normVel;
@@ -597,17 +598,17 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {
-    if (lineType == CLine::nType_All) {
+    if (lineType == CLine::EType::nType_All) {
       Float64 velocityA = v_xResult[velA_idx] * normVel;
       Float64 velocityE = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx) {
         auto &elt = getElementList()[eltIndex];
-        if (elt->GetElementType() == CLine::nType_Absorption)
+        if (elt->GetElementType() == CLine::EType::nType_Absorption)
           elt->SetVelocityAbsorption(velocityA);
         else
           elt->SetVelocityEmission(velocityE);
       }
-    } else if (lineType == CLine::nType_Absorption) {
+    } else if (lineType == CLine::EType::nType_Absorption) {
       Float64 velocity = v_xResult[velA_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
         getElementList()[eltIndex]->SetVelocityAbsorption(velocity);

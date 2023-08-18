@@ -60,14 +60,14 @@ class CLineModelElementList;
 class CLineCatalogsTplRatio {
 
 public:
-  // bool AreCatalogsAligned( const TLineVector& restLineList,
+  // bool AreCatalogsAligned( const CLineVector& restLineList,
   // Int32 typeFilter, Int32 forceFilter  );
-  Float64 GetBestFit(const TLineVector &restLineList,
+  Float64 GetBestFit(const CLineVector &restLineList,
                      const TFloat64List &fittedAmplitudes,
                      const TFloat64List &fittedErrors,
                      TFloat64List &amplitudesCorrected,
                      std::string &bestTplName) const;
-  TLineVector GetRestLinesList(Int32 index) const;
+  CLineVector GetRestLinesList(Int32 index) const;
   Int32 GetCatalogsCount() const;
   TFloat64List getCatalogsPriors() const;
   std::string GetCatalogName(Int32 idx) const;
@@ -91,7 +91,7 @@ private:
   Float64 computeFitValue(const TFloat64List &ampsLM, const TFloat64List &errLM,
                           const TFloat64List &ampsTPL,
                           TFloat64List &ampsCorrected) const;
-  Float64 getFitForOneCatalog(const TLineVector &restLineList,
+  Float64 getFitForOneCatalog(const CLineVector &restLineList,
                               const TFloat64List &fittedAmplitudes,
                               const TFloat64List &fittedErrors,
                               const CLineRatioCatalog &catalog,

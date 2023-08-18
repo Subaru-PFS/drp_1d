@@ -81,7 +81,7 @@ using namespace std;
  **/
 CLineModelFitting::CLineModelFitting(
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
-    : m_RestLineList(Context.getLineVector()) {
+    : m_RestLineList(Context.getCLineVector()) {
   initParameters();
 
   m_inputSpcs = std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>(
@@ -100,7 +100,7 @@ CLineModelFitting::CLineModelFitting(
     const std::shared_ptr<const CSpectrum> &template_,
     const TLambdaRange &lambdaRange,
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
-    : m_RestLineList(Context.getLineVector()) {
+    : m_RestLineList(Context.getCLineVector()) {
   m_inputSpcs =
       std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>();
 
@@ -250,7 +250,7 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
 }
 Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
 
-void CLineModelFitting::AddElement(TLineVector &&lines,
+void CLineModelFitting::AddElement(CLineVector &&lines,
                                    Float64 velocityEmission,
                                    Float64 velocityAbsorption,
                                    TInt32List &&inds, Int32 ig) {
@@ -272,7 +272,7 @@ void CLineModelFitting::AddElement(TLineVector &&lines,
  *line thusly associated to this line. If at least one line was found, save
  *this result in getElementList().
  **/
-void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
+void CLineModelFitting::LoadCatalog(const CLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -280,10 +280,10 @@ void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
   Float64 velocityAbsorption = ps->GetScoped<Float64>("velocityabsorption");
   Int32 lastEltIndex = 0;
 
-  std::vector<TLineVector> groupList =
+  std::vector<CLineVector> groupList =
       CLineCatalog::ConvertToGroupList(restLineList);
   for (Int32 ig = 0; ig < groupList.size(); ig++) {
-    TLineVector lines;
+    CLineVector lines;
     TInt32List inds;
     for (Int32 i = 0; i < groupList[ig].size(); i++) {
       TInt32List idx = findLineIdxInCatalog(
@@ -300,14 +300,14 @@ void CLineModelFitting::LoadCatalog(const TLineVector &restLineList) {
 }
 
 void CLineModelFitting::LoadCatalogOneMultiline(
-    const TLineVector &restLineList) {
+    const CLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   Float64 velocityEmission = ps->GetScoped<Float64>("velocityemission");
   Float64 velocityAbsorption = ps->GetScoped<Float64>("velocityabsorption");
 
-  TLineVector lines;
+  CLineVector lines;
   TInt32List inds;
   for (Int32 ir = 0; ir < restLineList.size(); ir++) {
     inds.push_back(ir);
@@ -320,19 +320,19 @@ void CLineModelFitting::LoadCatalogOneMultiline(
 }
 
 void CLineModelFitting::LoadCatalogTwoMultilinesAE(
-    const TLineVector &restLineList) {
+    const CLineVector &restLineList) {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   Float64 velocityEmission = ps->GetScoped<Float64>("velocityemission");
   Float64 velocityAbsorption = ps->GetScoped<Float64>("velocityabsorption");
 
-  std::vector<CLine::EType> types = {CLine::nType_Absorption,
-                                     CLine::nType_Emission};
+  std::vector<CLine::EType> types = {CLine::EType::nType_Absorption,
+                                     CLine::EType::nType_Emission};
 
   Int32 lastEltIndex = 0;
   for (Int32 iType = 0; iType < 2; iType++) {
-    TLineVector lines;
+    CLineVector lines;
     TInt32List inds;
     for (Int32 ir = 0; ir < restLineList.size(); ir++) {
       if (restLineList[ir].GetType() == types[iType]) {
@@ -725,7 +725,7 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const {
     Int32 iElts = validEltsIdx[iValidElts];
     Int32 nlines = getElementList()[iElts]->GetSize();
     for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
-      if (!getElementList()[iElts]->GetLines()[lineIdx].GetIsEmission()) {
+      if (!getElementList()[iElts]->GetLines()[lineIdx].IsEmission()) {
         continue;
       }
 
@@ -764,7 +764,7 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
       if (!getElementList()[iElts]->GetLines()[lineIdx].IsStrong()) {
         continue;
       }
-      if (!getElementList()[iElts]->GetLines()[lineIdx].GetIsEmission()) {
+      if (!getElementList()[iElts]->GetLines()[lineIdx].IsEmission()) {
         continue;
       }
 
@@ -896,9 +896,9 @@ Float64 CLineModelFitting::getCumulSNROnRange(TInt32Range idxRange) const {
  *strTag.
  **/
 TInt32List
-CLineModelFitting::findLineIdxInCatalog(const TLineVector &restLineList,
+CLineModelFitting::findLineIdxInCatalog(const CLineVector &restLineList,
                                         const std::string &strTag,
-                                        Int32 type) const {
+                                        CLine::EType type) const {
   TInt32List indexes;
   for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
     if (restLineList[iRestLine].GetType() != type) {
@@ -1073,7 +1073,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
       TInt32List subeIdx_line(1, subeIdx);
       Int32 opt_cont_substract_abslinesmodel = 0;
       bool isEmission = false;
-      if (m_RestLineList[iRestLine].GetType() == CLine::nType_Emission) {
+      if (m_RestLineList[iRestLine].GetType() == CLine::EType::nType_Emission) {
         opt_cont_substract_abslinesmodel = 1;
         isEmission = true;
       }

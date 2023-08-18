@@ -48,7 +48,7 @@ CSvdlcFitter::CSvdlcFitter(
     const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const shared_ptr<Int32> &curObsPtr,
     std::shared_ptr<CContinuumManager> continuumManager, Int32 polyOrder,

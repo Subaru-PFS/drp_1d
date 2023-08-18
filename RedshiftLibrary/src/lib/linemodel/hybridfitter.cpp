@@ -47,7 +47,7 @@ CHybridFitter::CHybridFitter(
     const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const TLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
@@ -213,9 +213,11 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     std::string tagA = linetagsA[itag];
 
     Int32 ilineE =
-        getElementList().findElementIndex(tagE, CLine::nType_Emission);
+       
+        getElementList().findElementIndex(tagE, CLine::EType::nType_Emission);
     Int32 ilineA =
-        getElementList().findElementIndex(tagA, CLine::nType_Absorption);
+       
+        getElementList().findElementIndex(tagA, CLine::EType::nType_Absorption);
     // Were the lines indexes found ?
     if (ilineE < 0 || ilineA < 0) {
       continue;
@@ -237,7 +239,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     for (Int32 imore = 0; imore < linetagsMore[itag].size(); imore++) {
       std::string tagMore = linetagsMore[itag][imore];
       Int32 ilineMore =
-          getElementList().findElementIndex(tagMore, CLine::nType_Emission);
+          getElementList().findElementIndex(tagMore, CLine::EType::nType_Emission);
       if (ilineMore < 0) {
         continue;
       }

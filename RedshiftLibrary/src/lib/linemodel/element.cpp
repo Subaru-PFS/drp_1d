@@ -49,7 +49,7 @@
 using namespace std;
 using namespace NSEpic;
 
-TLineModelElementParam::TLineModelElementParam(TLineVector lines,
+TLineModelElementParam::TLineModelElementParam(CLineVector lines,
                                                Float64 velocityEmission,
                                                Float64 velocityAbsorption,
                                                TInt32List lineCatalogIndexes)
@@ -90,7 +90,7 @@ CLineModelElement::CLineModelElement(
 
   m_size = m_ElementParam->m_Lines.size();
   m_type = m_ElementParam->m_Lines.front().GetType();
-  m_isEmission = m_ElementParam->m_Lines.front().GetIsEmission();
+  m_isEmission = m_ElementParam->m_Lines.front().IsEmission();
 
   m_SignFactors = TFloat64List(GetSize());
 
@@ -106,7 +106,7 @@ CLineModelElement::CLineModelElement(
 
   Int32 nLines = GetSize();
   for (Int32 i = 0; i < nLines; i++) {
-    if (GetIsEmission())
+    if (IsEmission())
       m_SignFactors[i] = 1.0;
     else
       m_SignFactors[i] = -1.0;
@@ -144,7 +144,7 @@ Int32 CLineModelElement::findElementIndex(Int32 LineCatalogIndex) const {
 }
 
 Int32 CLineModelElement::getLineIndexInCatalog(
-    Int32 idxLine, const TLineVector &catalog) const {
+    Int32 idxLine, const CLineVector &catalog) const {
   Int32 lineIndex = undefIdx;
   lineIndex = m_ElementParam->m_LineCatalogIndexes[idxLine];
   if (lineIndex < 0 || lineIndex >= catalog.size())
@@ -222,7 +222,7 @@ Float64 CLineModelElement::getVelocity() const {
   if (!GetSize())
     return NAN;
 
-  return GetIsEmission() ? getVelocityEmission() : getVelocityAbsorption();
+  return IsEmission() ? getVelocityEmission() : getVelocityAbsorption();
 }
 
 /**
@@ -268,7 +268,7 @@ void CLineModelElement::EstimateTheoreticalSupport(
     m_OutsideLambdaRangeList[subeIdx] = true;
     return;
   }
-  Float64 sigma = GetLineWidth(mu, GetIsEmission());
+  Float64 sigma = GetLineWidth(mu, IsEmission());
   Float64 winsize = getLineProfile(subeIdx)->GetNSigmaSupport() * sigma;
   TInt32Range supportRange =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
@@ -559,7 +559,7 @@ void CLineModelElement::getObservedPositionAndLineWidth(
   if (!m_LSF->checkAvailability(mu)) {
     THROWG(INTERNAL_ERROR, "Line position does not belong to LSF range");
   } else
-    sigma = GetLineWidth(mu, GetIsEmission());
+    sigma = GetLineWidth(mu, IsEmission());
   return;
 }
 
@@ -750,7 +750,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(
     if (m_OutsideLambdaRangeList[k])
       continue;
 
-    if ((emissionLine ^ GetIsEmission()))
+    if ((emissionLine ^ IsEmission()))
       continue;
 
     Float64 A = m_ElementParam->m_FittedAmplitudes[k];
@@ -769,12 +769,12 @@ void CLineModelElement::addToSpectrumModelDerivVel(
       if (m_SignFactors[k] == -1)
         modelfluxAxis[i] += m_SignFactors[k] * A * continuumfluxAxis[i] *
                             GetLineProfileDerivVel(*getLineProfile(k), x, mu,
-                                                   sigma, GetIsEmission());
+                                                   sigma, IsEmission());
       else
         modelfluxAxis[i] +=
             m_SignFactors[k] * A *
             GetLineProfileDerivVel(*getLineProfile(k), x, mu, sigma,
-                                   m_ElementParam->m_Lines[k].GetIsEmission());
+                                   m_ElementParam->m_Lines[k].IsEmission());
     }
   }
   return;
@@ -877,7 +877,7 @@ CLineModelElement::GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
                                     false); // do not apply Lya asym offset
 
     const auto &profile = getLineProfile(k2);
-    bool isEmission = GetElementType() == CLine::nType_Emission;
+    bool isEmission = GetElementType() == CLine::EType::nType_Emission;
     Float64 lineprofile_derivVel =
         GetLineProfileDerivVel(*profile, x, mu, sigma, isEmission);
     Float64 fluxval = m_SignFactors[k2] * A * lineprofile_derivVel;

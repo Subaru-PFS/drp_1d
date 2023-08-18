@@ -70,7 +70,7 @@ struct LineIndex {
 
 struct TLineModelElementParam {
 
-  TLineModelElementParam(TLineVector lines, Float64 velocityEmission,
+  TLineModelElementParam(CLineVector lines, Float64 velocityEmission,
                          Float64 velocityAbsorption,
                          TInt32List lineCatalogIndexes);
 
@@ -80,7 +80,7 @@ struct TLineModelElementParam {
   TFloat64List m_FittedAmplitudeErrorSigmas;
   TFloat64List m_NominalAmplitudes;
   TFloat64List m_Offsets;
-  TLineVector m_Lines;
+  CLineVector m_Lines;
   TInt32List m_LineCatalogIndexes;
   std::string m_fittingGroupInfo;
   TPolynomCoeffs m_ampOffsetsCoeffs;
@@ -107,8 +107,8 @@ public:
   void getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift,
                                        Float64 &mu, Float64 &sigma,
                                        bool doAsymfitdelta = true) const;
-  Int32 GetElementType() const { return m_type; };
-  bool GetIsEmission() const { return m_isEmission; };
+  CLine::EType GetElementType() const { return m_type; };
+  bool IsEmission() const { return m_isEmission; };
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange);
   TInt32RangeList getSupport() const;
@@ -198,7 +198,7 @@ public:
   void resetAsymfitParams();
   Int32 findElementIndex(Int32 LineCatalogIndex) const;
   Int32 findElementIndex(const std::string &LineTagStr) const;
-  Int32 getLineIndexInCatalog(Int32 idxLine, const TLineVector &catalog) const;
+  Int32 getLineIndexInCatalog(Int32 idxLine, const CLineVector &catalog) const;
 
   const TInt32List &getIgmLinesIndices() const { return m_asymLineIndices; };
   const CLineProfile_ptr &getLineProfile(Int32 lineIdx) const;
@@ -206,7 +206,7 @@ public:
   Float64 GetSignFactor(Int32 subeIdx) const;
 
   Int32 GetSize() const;
-  const TLineVector &GetLines() const { return m_ElementParam->m_Lines; };
+  const CLineVector &GetLines() const { return m_ElementParam->m_Lines; };
 
   const std::string &GetLineName(Int32 subeIdx) const;
   bool IsOutsideLambdaRange() const;
@@ -290,7 +290,7 @@ protected:
 
   TBoolList m_OutsideLambdaRangeList;
   Int32 m_size;
-  Int32 m_type;
+  CLine::EType m_type;
   bool m_isEmission;
 };
 
@@ -387,7 +387,7 @@ inline void CLineModelElement::setVelocity(Float64 vel) {
     THROWG(INTERNAL_ERROR, "Empty line model element, could not set velocity");
 #endif
 
-  if (GetIsEmission()) {
+  if (IsEmission()) {
     m_ElementParam->m_VelocityEmission = vel;
   } else {
     m_ElementParam->m_VelocityAbsorption = vel;
@@ -479,7 +479,7 @@ inline void CLineModelElement::SetPolynomCoeffs(TPolynomCoeffs pCoeffs) {
 
 inline void CLineModelElement::SetAllOffsetsEnabled(Float64 val) {
   for (size_t i = 0; i < GetSize(); ++i) {
-    if (m_ElementParam->m_Lines[i].GetOffsetFitEnabled())
+    if (m_ElementParam->m_Lines[i].IsOffsetFitEnabled())
       m_ElementParam->m_Offsets[i] = val;
   }
 }

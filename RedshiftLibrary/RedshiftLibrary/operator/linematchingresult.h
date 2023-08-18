@@ -57,11 +57,11 @@ public:
   CLineMatchingResult() : COperatorResult("CLineMatchingResult"){};
 
   struct SSolution {
-    CLine DetectedLine;
+    CLineDetected DetectedLine;
     CLine RestLine;
     Float64 Redshift;
 
-    SSolution(CLine detectedLine, CLine restLine, Float64 redshift) {
+    SSolution(CLineDetected detectedLine, CLine restLine, Float64 redshift) {
       DetectedLine = std::move(detectedLine);
       RestLine = std::move(restLine);
       Redshift = redshift;
@@ -81,10 +81,6 @@ public:
                     // redshift
   typedef std::vector<TSolutionSet>
       TSolutionSetList; // a list of possible redshift solutions
-
-  void SaveSolutionSetToStream(std::ostream &stream,
-                               TSolutionSetList selectedResults,
-                               Int32 type) const;
 
   bool GetBestRedshift(Float64 &Redshift, Int32 &MatchingNumber) const;
   bool GetBestMatchNumRedshift(Float64 &Redshift, Int32 &MatchingNumber) const;
@@ -111,7 +107,7 @@ public:
   std::vector<int> FilterTypeList;
 
   CLineCatalog m_RestCatalog;
-  CLineCatalog m_DetectedCatalog;
+  CLineDetectedCatalog m_DetectedCatalog;
 };
 } // namespace NSEpic
 

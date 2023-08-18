@@ -40,7 +40,7 @@
 class CLineModelSolution : public COperatorResult {
 public:
   CLineModelSolution() : COperatorResult("CLineModelSolution"){};
-  CLineModelSolution(const TLineVector &restLineList);
+  CLineModelSolution(const CLineVector &restLineList);
   bool isLineValid(Int32 lineIdx) const;
   TInt32List ElementId; // id of the linemodel element it is part of
   TFloat64List Amplitudes;

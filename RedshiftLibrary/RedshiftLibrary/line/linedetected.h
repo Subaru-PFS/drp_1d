@@ -36,36 +36,70 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_HYBRID_FITTER_
-#define _REDSHIFT_HYBRID_FITTER_
+#ifndef _REDSHIFT_LINE_LINEDETECTED_
+#define _REDSHIFT_LINE_LINEDETECTED_
 
-#include "RedshiftLibrary/linemodel/svdfitter.h"
+#include "RedshiftLibrary/line/line.h"
 
-namespace NSEpic
+namespace NSEpic {
 
-{
+/**
+ * \ingroup Redshift
+ * Represent a Single Line.
+ */
+class CLineDetected : public CLine {
 
-// class CRegulament;
-class CHybridFitter : public CSvdFitter {
 public:
-  CHybridFitter(const CLMEltListVectorPtr &elementsVector,
-                const CCSpectrumVectorPtr &inputSpcs,
-                const CTLambdaRangePtrVector &lambdaRanges,
-                const CSpcModelVectorPtr &spectrumModels,
-                const CLineVector &restLineList,
-                const std::vector<TLineModelElementParam_ptr> &elementParam,
-                const std::shared_ptr<Int32> &curObsPtr,
-                bool enableAmplitudeOffsets = false,
-                bool enableLambdaOffsetsFit = false);
+  CLineDetected() = default;
+  CLineDetected(const std::string &name, Float64 pos, EType type,
+                CLineProfile_ptr &&profile, EForce force, Float64 amp = -1.0,
+                Float64 width = -1.0, Float64 cut = -1.0, Float64 posErr = -1.0,
+                Float64 sigmaErr = -1.0, Float64 ampErr = -1.0)
+      : CLine(name, pos, type, std::move(profile), force, 0., false, undefStr,
+              1.0, undefStr, undefIdx, std::string()),
+        m_Amp(amp), m_Width(width), m_Cut(cut), m_PosFitErr(posErr),
+        m_SigmaFitErr(sigmaErr), m_AmpFitErr(ampErr){};
 
-protected:
-  void doFit(Float64 redshift) override;
-  bool m_opt_enable_improveBalmerFit = false;
-  void fitAmplitudesHybrid(Float64 redshift);
-  void improveBalmerFit(Float64 redshift);
-  virtual bool isIndividualFitEnabled() const {
-    return !m_enableAmplitudeOffsets;
+  ~CLineDetected() = default;
+  CLineDetected(const CLineDetected &other) = default;
+  CLineDetected(CLineDetected &&other) = default;
+  CLineDetected &operator=(const CLineDetected &other) = default;
+  CLineDetected &operator=(CLineDetected &&other) = default;
+
+  bool operator<(const CLineDetected &rhs) const {
+    if (m_Pos == rhs.m_Pos)
+      return (m_Amp < rhs.m_Amp);
+    else
+      return (m_Pos < rhs.m_Pos);
   };
+
+  bool operator!=(const CLineDetected &rhs) const {
+    if (m_Pos == rhs.m_Pos)
+      return (m_Amp != rhs.m_Amp);
+    else
+      return (m_Pos != rhs.m_Pos);
+  };
+
+  Float64 GetAmplitude() const { return m_Amp; };
+  Float64 GetWidth() const { return m_Width; };
+  Float64 GetCut() const { return m_Cut; };
+  Float64 GetPosFitError() const { return m_PosFitErr; };
+  Float64 GetSigmaFitError() const { return m_SigmaFitErr; };
+  Float64 GetAmpFitError() const { return m_AmpFitErr; };
+
+private:
+  Float64 m_Amp = 0.;
+  Float64 m_Width = 0.;
+  Float64 m_Cut = 0.;
+
+  // fit err
+  Float64 m_PosFitErr = 0.;
+  Float64 m_SigmaFitErr = 0.;
+  Float64 m_AmpFitErr = 0.;
 };
+
+using CLineDetectedVector = std::vector<CLineDetected>;
+
 } // namespace NSEpic
+
 #endif

@@ -59,60 +59,60 @@ class CSpectrumFluxCorrectionMeiksin;
 class CLine {
 
 public:
-  enum EType {
+  enum class EType {
     nType_Absorption = 1,
     nType_Emission = 2,
     nType_All = 3,
   };
 
-  static const std::map<Int32, std::string> ETypeString;
+  static const std::map<EType, std::string> ETypeString;
 
-  enum EForce {
+  enum class EForce {
     nForce_Weak = 1,
     nForce_Strong = 2,
+    nForce_All = 3,
   };
 
+  static const std::map<EForce, std::string> EForceString;
+
   CLine() = default;
-  CLine(const std::string &name, Float64 pos, Int32 type,
-        CLineProfile_ptr &&profile, Int32 force, Float64 amp = -1.0,
-        Float64 width = -1.0, Float64 cut = -1.0, Float64 posErr = -1.0,
-        Float64 sigmaErr = -1.0, Float64 ampErr = -1.0,
-        const std::string &groupName = undefStr, Float64 nominalAmp = 1.0,
-        const std::string &velGroupName = undefStr, Int32 id = -1);
-  CLine(const std::string &name, Float64 pos, Int32 type,
-        CLineProfile_ptr &&profile, Int32 force, Float64 velocityOffset,
+  CLine(const std::string &name, Float64 pos, EType type,
+        CLineProfile_ptr &&profile, EForce force, Float64 velocityOffset,
         bool enableVelocityOffsetFitting, const std::string &groupName,
         Float64 nominalAmp, const std::string &velGroupName, Int32 id,
         const std::string &str_id);
-
+  virtual ~CLine() = default;
   CLine(const CLine &other);
   CLine(CLine &&other) = default;
   CLine &operator=(const CLine &other);
   CLine &operator=(CLine &&other) = default;
 
-  bool operator<(const CLine &str) const;
-  bool operator!=(const CLine &str) const;
+  bool operator!=(const CLine &rhs) const { return (m_id != rhs.m_id); };
 
-  Int32 GetID() const;
-  bool IsStrong() const { return m_Force == nForce_Strong; }
-  bool IsWeak() const { return m_Force == nForce_Weak; }
-  bool GetIsEmission() const;
-  Int32 GetForce() const;
-  Int32 GetType() const;
+  Int32 GetID() const { return m_id; };
+  bool IsStrong() const { return m_Force == EForce::nForce_Strong; }
+  bool IsWeak() const { return m_Force == EForce::nForce_Weak; }
+  bool IsEmission() const { return m_Type == EType::nType_Emission; };
+  EForce GetForce() const { return m_Force; };
+  EType GetType() const { return m_Type; };
+  std::string GetTypeString() const { return ETypeString.at(m_Type); };
+  std::string GetForceString() const { return EForceString.at(m_Force); };
   const CLineProfile_ptr &GetProfile() const;
-  void SetProfile(CLineProfile_ptr &&profile);
-  Float64 GetPosition() const;
-  Float64 GetOffset() const;
-  bool GetOffsetFitEnabled() const;
-  bool EnableOffsetFit();
-  bool DisableOffsetFit();
+  void SetProfile(CLineProfile_ptr &&profile) {
+    m_Profile = std::move(profile);
+  };
+  Float64 GetPosition() const { return m_Pos; };
+  Float64 GetOffset() const { return m_Offset; };
+  bool IsOffsetFitEnabled() const { return m_OffsetFit; };
+  bool EnableOffsetFit() {
+    m_OffsetFit = true;
+    return true;
+  };
+  bool DisableOffsetFit() {
+    m_OffsetFit = false;
+    return true;
+  };
 
-  Float64 GetAmplitude() const;
-  Float64 GetWidth() const;
-  Float64 GetCut() const;
-  Float64 GetPosFitError() const;
-  Float64 GetSigmaFitError() const;
-  Float64 GetAmpFitError() const;
   TAsymParams GetAsymParams() const;
   TSymIgmParams GetSymIgmParams() const;
   void SetAsymParams(const TAsymParams &asymParams);
@@ -125,29 +125,22 @@ public:
   void resetAsymFitParams();
   void setNominalAmplitude(const Float64 &ampl) { m_NominalAmplitude = ampl; }
 
-  const std::string &GetName() const;
-  const std::string &GetGroupName() const;
-  const Float64 GetNominalAmplitude() const;
+  const std::string &GetName() const { return m_Name; };
+  const std::string &GetGroupName() const { return m_GroupName; };
+  const Float64 GetNominalAmplitude() const { return m_NominalAmplitude; };
+  const std::string &GetVelGroupName() const { return m_VelGroupName; };
+  const std::string &GetStrID() const { return m_strID; };
 
-  const std::string &GetVelGroupName() const;
+  static EType string2Type(std::string const &s);
+  static EForce string2Force(std::string const &s);
 
-  const std::string &GetStrID() const;
-
-private:
+protected:
   Int32 m_id = -1;
-  Int32 m_Type = 0;
+  EType m_Type = EType::nType_Emission;
   CLineProfile_ptr m_Profile = nullptr;
-  Int32 m_Force = 0;
+  EForce m_Force = EForce::nForce_Weak;
   Float64 m_Pos = 0.;
   Float64 m_Offset = 0.;
-  Float64 m_Amp = 0.;
-  Float64 m_Width = 0.;
-  Float64 m_Cut = 0.;
-
-  // fit err
-  Float64 m_PosFitErr = 0.;
-  Float64 m_SigmaFitErr = 0.;
-  Float64 m_AmpFitErr = 0.;
 
   std::string m_Name = "";
 
@@ -164,7 +157,8 @@ private:
   std::string m_strID;
 };
 
-using TLineVector = std::vector<CLine>;
+using CLineVector = std::vector<CLine>;
+using CLineMap = std::map<std::string, CLine>;
 } // namespace NSEpic
 
 #endif

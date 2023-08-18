@@ -58,43 +58,54 @@ using namespace std;
 using namespace boost;
 using namespace boost::filesystem;
 
-CLineCatalog::CLineCatalog(Float64 sigmaSupport)
-    : m_nSigmaSupport(sigmaSupport) {}
-
-const TLineVector &CLineCatalog::GetList() const { return m_List; }
-
-TLineVector CLineCatalog::GetFilteredList(Int32 typeFilter,
-                                          Int32 forceFilter) const {
+template <typename TLine>
+std::vector<TLine>
+CLineCatalogBase<TLine>::GetFilteredList(CLine::EType typeFilter,
+                                         CLine::EForce forceFilter) const {
 
   TLineVector filteredList;
+
   for (Int32 i = 0; i < m_List.size(); i++) {
-    if (typeFilter == -1 || typeFilter == m_List[i].GetType()) {
-      if (forceFilter == -1 || forceFilter == m_List[i].GetForce()) {
+    if (typeFilter == CLine::EType::nType_All ||
+        typeFilter == m_List[i].GetType()) {
+      if (forceFilter == CLine::EForce::nForce_All ||
+          forceFilter == m_List[i].GetForce()) {
         filteredList.push_back(m_List[i]);
       }
     }
   }
+
+  /*   for (const auto &it : m_List) {
+      const auto &str_Id = it.first;
+      const auto &line = it.second;
+      if ((typeFilter == CLine::EType::nType_All ||
+           typeFilter == line.GetType()) &&
+          (forceFilter == CLine::EForce::nForce_All ||
+           forceFilter == line.GetForce())) {
+        filteredList[str_Id] = line;
+      }
+    }
+   */
+
   return filteredList;
 }
 
-TLineVector
-CLineCatalog::GetFilteredList(const std::string &typeFilter,
-                              const std::string &forceFilter) const {
-  Int32 itypeFilter = -1;
-  if (typeFilter == "A")
-    itypeFilter = CLine::nType_Absorption;
-  else if (typeFilter == "E")
-    itypeFilter = CLine::nType_Emission;
+template <typename TLine>
+std::vector<TLine>
+CLineCatalogBase<TLine>::GetFilteredList(const std::string &typeFilter,
+                                         const std::string &forceFilter) const {
+  const auto &etypeFilter = CLine::string2Type(typeFilter);
+  const auto &eforceFilter = CLine::string2Force(forceFilter);
 
-  Int32 iforceFilter = -1; // CLine::nForce_Strong;
-  if (forceFilter == "S")
-    iforceFilter = CLine::nForce_Strong;
-
-  return GetFilteredList(itypeFilter, iforceFilter);
+  return GetFilteredList(etypeFilter, eforceFilter);
 }
 
-const std::vector<TLineVector>
-CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
+template <typename TLine>
+const std::vector<std::vector<TLine>>
+CLineCatalogBase<TLine>::ConvertToGroupList(
+    const std::vector<TLine> &filteredList) {
+
+  std::vector<TLineVector> fullList;
 
   TStringList tags;
   for (int i = 0; i < filteredList.size(); i++) {
@@ -108,9 +119,8 @@ CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
   tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
 
   // get all group tags
-  std::vector<TLineVector> fullList;
   for (Int32 itag = 0; itag < tags.size(); itag++) {
-    TLineVector taggedGroupList;
+    std::vector<TLine> taggedGroupList;
     for (int i = 0; i < filteredList.size(); i++) {
       std::string group = filteredList[i].GetGroupName();
       if (group == tags[itag]) {
@@ -123,31 +133,50 @@ CLineCatalog::ConvertToGroupList(const TLineVector &filteredList) {
   for (int i = 0; i < filteredList.size(); i++) {
     std::string group = filteredList[i].GetGroupName();
     if (group == undefStr) {
-      TLineVector taggedGroupList;
+      std::vector<TLine> taggedGroupList;
       taggedGroupList.push_back(filteredList[i]);
       fullList.push_back(taggedGroupList);
     }
   }
 
+  /*
+    for (const auto &it : filteredList) {
+      const auto &line = it.second;
+      const auto &str_Id = it.first;
+      const auto &group_name = line.GetGroupName();
+      if (group_name == undefStr)
+        // non grouped lines are added in dedicated maps (one element)
+        filteredList[str_Id] = std::vector<TLine>{{str_Id, line}};
+      else
+        filteredList[group_name][str_Id] = line;
+    }
+  */
   return fullList;
 }
 
-void CLineCatalog::Add(const CLine &r) {
-  TLineVector::iterator it;
+template <typename TLine> void CLineCatalogBase<TLine>::Add(const TLine &r) {
+
+  typename TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
-    // TODO this should be a map with key defined as struct{name,position,type}
-    //  TODO this should be a map with key defined as ID, much better than
-    //  struct{name,position,type} now that a line has an ID Can't add a line
-    //  with a name + position + type that already exists in the list
     if ((*it).GetPosition() == r.GetPosition() &&
         (*it).GetType() == r.GetType())
       THROWG(INTERNAL_ERROR,
              Formatter() << "line with name " << r.GetName()
                          << " already exists, position=" << r.GetPosition()
-                         << " type=" << r.GetType());
+                         << " type=" << r.GetTypeString());
   }
 
   m_List.push_back(r);
+
+  /*   const auto &str_Id = r.GetStrID();
+    // verify unicity
+    if (m_List.find(str_Id) != m_List.end())
+      THROWG(INTERNAL_ERROR, Formatter() << "Duplicated Ids: line " << str_Id
+                                          << "is already in the catalog");
+
+    // insert new line
+    m_List[str_Id] = r;
+   */
 }
 
 void CLineCatalog::AddLineFromParams(
@@ -158,23 +187,10 @@ void CLineCatalog::AddLineFromParams(
     const Float64 &velocityOffset, const bool &enableVelocityFit,
     const Int32 &id, const std::string &str_id,
     const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection) {
-  Int32 etype = -1;
-  if (type == "E")
-    etype = 2;
-  else if (type == "A")
-    etype = 1;
-  else
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "Bad line type, should be in {A,E} : " << type);
 
-  Int32 eforce = -1;
-  if (force == "W")
-    eforce = 1;
-  else if (force == "S")
-    eforce = 2;
-  else
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "Bad line force, should be in {S,W} : " << force);
+  const auto &etype = CLine::string2Type(type);
+  const auto &eforce = CLine::string2Force(force);
+
   TAsymParams _asymParams = {1., 4.5, 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
   std::unique_ptr<CLineProfile> profile;
@@ -207,17 +223,26 @@ void CLineCatalog::AddLineFromParams(
             str_id));
 }
 
-void CLineCatalog::Sort() { sort(m_List.begin(), m_List.end()); }
+void CLineDetectedCatalog::Sort() { sort(m_List.begin(), m_List.end()); }
 
-void CLineCatalog::setLineAmplitude(const std::string &str_id,
-                                    const Float64 &nominalAmplitude) {
-  TLineVector::iterator it;
+template <typename TLine>
+void CLineCatalogBase<TLine>::setLineAmplitude(
+    const std::string &str_id, const Float64 &nominalAmplitude) {
+  typename TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
     if (it->GetStrID() == str_id)
       return it->setNominalAmplitude(nominalAmplitude);
   }
   THROWG(INTERNAL_ERROR, Formatter() << " Line with id " << str_id
                                      << " does not exist in catalog");
+
+  /*   const auto &search = m_List.find(str_id);
+    if (search != m_List.end())
+      search->second.setNominalAmplitude(nominalAmplitude);
+    else
+      THROWG(INTERNAL_ERROR, Formatter() << " Line with id " << str_id
+                                         << " does not exist in catalog");
+   */
 }
 
 /**
@@ -227,24 +252,48 @@ void CLineCatalog::setLineAmplitude(const std::string &str_id,
  * @param profile
  * @param params
  */
-void CLineCatalog::setAsymProfileAndParams(const std::string &profile,
-                                           TAsymParams params) {
-  TLineVector::iterator it;
+template <typename TLine>
+void CLineCatalogBase<TLine>::setAsymProfileAndParams(
+    const std::string &profile, TAsymParams params) {
+
+  typename TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
     if (it->GetProfile()->isAsymFit() || it->GetProfile()->isAsymFixed())
       return it->setProfileAndParams(profile, params, m_nSigmaSupport);
   }
+
+  /*   for (const auto it : m_List) {
+      const auto &line = it.second;
+      if (line.GetProfile()->isAsymFit() || line.GetProfile()->isAsymFixed())
+        line.setProfileAndParams(profile, params, m_nSigmaSupport);
+    }
+   */
 }
 
-void CLineCatalog::convertLineProfiles2SYMIGM(
+template <typename TLine>
+void CLineCatalogBase<TLine>::convertLineProfiles2SYMIGM(
     const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection) {
+
   linetags ltags;
-  TLineVector::iterator it;
+  typename TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
-    if (!it->GetIsEmission())
+    if (!it->IsEmission())
       continue;
     if (it->GetName() == ltags.lya_em || it->GetPosition() < RESTLAMBDA_LYA)
       it->setProfileAndParams("SYMIGM", TAsymParams(), m_nSigmaSupport,
                               igmcorrection);
   }
+
+  /*   for (const auto &it : m_List) {
+      const auto &line = it.second;
+      if (!line.IsEmission())
+        continue;
+      if (line.GetName() == linetags::lya_em ||
+          line.GetPosition() < RESTLAMBDA_LYA)
+        line.setProfileAndParams("SYMIGM", TAsymParams(), m_nSigmaSupport,
+                                 igmcorrection);
+    } */
 }
+
+template class CLineCatalogBase<CLine>;
+template class CLineCatalogBase<CLineDetected>;

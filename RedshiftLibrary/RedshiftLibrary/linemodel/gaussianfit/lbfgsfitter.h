@@ -89,10 +89,10 @@ public:
 
   public:
     CLeastSquare(CLbfgsFitter &fitter, const TInt32List &EltsIdx,
-                 Int32 lineType, Float64 redshift, const TInt32List &xInds,
-                 Int32 velA_idx, Int32 velE_idx, Int32 lbdaOffset_idx,
-                 Int32 pCoeff_indx, Float64 normFactor, Float64 normVel,
-                 Float64 normLbdaOffset);
+                 CLine::EType lineType, Float64 redshift,
+                 const TInt32List &xInds, Int32 velA_idx, Int32 velE_idx,
+                 Int32 lbdaOffset_idx, Int32 pCoeff_indx, Float64 normFactor,
+                 Float64 normVel, Float64 normLbdaOffset);
 
     // Float64 operator()(const VectorXd &x, VectorXd &grad);
     void operator()(const VectorXd &x, ValueType &retvalue) const;
@@ -111,7 +111,7 @@ public:
 
     CLbfgsFitter *m_fitter;
     const TInt32List *m_EltsIdx;
-    const Int32 m_lineType;
+    const CLine::EType m_lineType;
     const Float64 m_redshift;
     const TInt32List *m_xInds;
     const Int32 m_velA_idx;

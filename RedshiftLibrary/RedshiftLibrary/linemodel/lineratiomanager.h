@@ -60,7 +60,7 @@ public:
                     const CCSpectrumVectorPtr &inputSpcs,
                     const CTLambdaRangePtrVector &lambdaRanges,
                     std::shared_ptr<CContinuumManager> continuumManager,
-                    const TLineVector &restLineList);
+                    const CLineVector &restLineList);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -94,14 +94,14 @@ public:
       const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
-      const TLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter);
+      const CLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter);
 
 protected:
-  void setLyaProfile(Float64 redshift, const TLineVector &lineList);
+  void setLyaProfile(Float64 redshift, const CLineVector &lineList);
   void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
-                      const TLineVector &lineList);
+                      const CLineVector &lineList);
   virtual Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
-                                      const TLineVector &catalog) const;
+                                      const CLineVector &catalog) const;
 
   void setSymIgmProfile(Int32 iElts, const TInt32List &idxLineIGM,
                         Float64 redshift);
@@ -130,7 +130,7 @@ protected:
   CSpcModelVectorPtr m_models;
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;
-  const TLineVector &m_RestLineList;
+  const CLineVector &m_RestLineList;
 
   bool m_forceDisableLyaFitting = false;
   bool m_forceLyaFitting = false;

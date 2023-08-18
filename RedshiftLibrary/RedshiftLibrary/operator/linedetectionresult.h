@@ -39,8 +39,8 @@
 #ifndef _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
 #define _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
 
+#include "RedshiftLibrary/line/linedetected.h"
 #include "RedshiftLibrary/processflow/result.h"
-
 #include <vector>
 
 namespace NSEpic {
@@ -54,7 +54,7 @@ class CLineDetectionResult : public COperatorResult {
 public:
   CLineDetectionResult() : COperatorResult("CLineDetectionResult"){};
 
-  CLineCatalog LineCatalog;
+  CLineDetectedCatalog LineCatalog;
   TStringList PeakListDetectionStatus;
 };
 

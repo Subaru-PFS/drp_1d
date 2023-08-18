@@ -119,7 +119,7 @@ public:
   GetTemplateRatioCatalog(const std::string &objectType);
   const std::shared_ptr<CLineCatalog> &
   GetLineCatalog(const std::string &objectType, const std::string &method);
-  const TLineVector GetFilteredLineVector(const std::string &objectType,
+  const CLineVector GetFilteredLineVector(const std::string &objectType,
                                           const std::string &method,
                                           const std::string &type,
                                           const std::string &force);
@@ -250,7 +250,7 @@ CInputContext::GetLineCatalog(const std::string &objectType,
   return m_lineCatalogs[objectType][method];
 }
 
-inline const TLineVector CInputContext::GetFilteredLineVector(
+inline const CLineVector CInputContext::GetFilteredLineVector(
     const std::string &objectType, const std::string &method,
     const std::string &type, const std::string &force) {
   //  if (std::findm_categories.find(objectType))
