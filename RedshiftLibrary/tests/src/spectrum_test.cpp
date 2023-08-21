@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(Calcul) {
       error[i] = 1e-12;
     }
 
-    BOOST_TEST_MESSAGE("m_SpectralAxis[i]:" << as_const(m_SpectralAxis)[i]);
+    BOOST_TEST_MESSAGE("m_SpectralAxis[i]:" << std::as_const(m_SpectralAxis)[i]);
   }
   m_FluxAxis.setError(CSpectrumNoiseAxis(error));
 
