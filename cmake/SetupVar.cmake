@@ -32,7 +32,7 @@ set(CMAKE_CXX_FLAGS_COVERAGE "-g -O0 --coverage")
 
 mark_as_advanced(CMAKE_CXX_FLAGS_COVERAGE)
 
-add_definitions("-std=c++11 -Wno-deprecated -Werror=return-type")
+add_definitions("-std=c++17 -Wno-deprecated -Werror=return-type")
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 
