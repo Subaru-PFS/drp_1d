@@ -293,14 +293,14 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
     }
   }
 
-  if (idxBestMerit >= 0 && atLeastOneOffsetToFit) {
-    // set offset value
-    if (atLeastOneOffsetToFit)
-      setLambdaOffset({eltIndex}, idxBestMerit);
+  if (idxBestMerit == -1 || !atLeastOneOffsetToFit)
+    return;
 
-    // fit again for this offset
-    fitAmplitude(eltIndex, redshift, lineIdx);
-  }
+  // set offset value
+  if (atLeastOneOffsetToFit)
+    setLambdaOffset({eltIndex}, idxBestMerit);
+  // fit again for this offset
+  fitAmplitude(eltIndex, redshift, lineIdx);
 }
 
 /**
