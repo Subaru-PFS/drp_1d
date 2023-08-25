@@ -12,3 +12,11 @@ pylibamazed
    ResultStoreOutput
    lsf
    r_specifications
+
+parameters
+===========
+.. toctree::
+   :maxdepth: 4
+
+   schema_doc
+   general
