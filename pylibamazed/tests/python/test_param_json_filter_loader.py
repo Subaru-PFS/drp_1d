@@ -37,35 +37,13 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-import pytest
 from pylibamazed.Filter import FilterList, SpectrumFilterItem
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestParamJsonFilterLoader:
-
-    def test_load_check_on_json_format(self, mocker):
-        jsonFilterLoader = ParamJsonFilterLoader()
-
-        mocker.patch(
-            'pylibamazed.Parameters.Parameters.check_params',
-            return_value=True
-        )
-        # Json is not a list
-        params = Parameters({"filters": {"i should be a list": ""}})
-        with pytest.raises(ValueError, match=r"must be a list"):
-            jsonFilterLoader.get_filters(params)
-
-        # Wrong key
-        params = Parameters({"filters": [{"wrong key": ""}]})
-        with pytest.raises(ValueError, match=r"must have exactly the following keys"):
-            jsonFilterLoader.get_filters(params)
-
-        # Missing key
-        params = Parameters({"filters": [{"key": "", "instruction": ""}]})
-        with pytest.raises(ValueError, match=r"must have exactly the following keys"):
-            jsonFilterLoader.get_filters(params)
 
     def test_load_returns_expected_filters(self, mocker):
         mocker.patch(
@@ -76,7 +54,7 @@ class TestParamJsonFilterLoader:
         params = Parameters({"filters": [
             {"key": "col1", "instruction": "<", "value": 2},
             {"key": "col2", "instruction": ">=", "value": 2}
-        ]})
+        ]}, FakeParametersChecker)
         assert jsonFilterLoader.get_filters(params) == FilterList([
             SpectrumFilterItem("col1", "<", 2),
             SpectrumFilterItem("col2", ">=", 2)

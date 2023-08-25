@@ -39,7 +39,7 @@
 
 import pandas as pd
 from pylibamazed.Filter import FilterList, SpectrumFilterItem
-from tests.python.comparison_utils import ComparisonUtils
+from tests.python.utils import ComparisonUtils
 
 
 class TestFilterList:

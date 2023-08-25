@@ -47,6 +47,7 @@ from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 module_root_dir = os.path.split(__file__)[0]
 test_dir = os.path.join(
@@ -151,7 +152,7 @@ def save_output(output, config, observation):
 
 def test_ITLikeTest():
     config = make_config()
-    param = Parameters(get_parameters(config["parameters_file"]))
+    param = Parameters(get_parameters(config["parameters_file"]), FakeParametersChecker)
     context = Context(config, param)  # vars returns the dict version of config
     observation = get_observation(config["input_file"])
 

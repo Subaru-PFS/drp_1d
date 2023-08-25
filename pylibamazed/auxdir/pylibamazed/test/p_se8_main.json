@@ -20,9 +20,7 @@
     "continuumRemoval": {
         "method": "IrregularSamplingMedian",
         "medianKernelWidth": 150,
-        "medianEvenReflection": true,
-        "decompScales": 9,
-        "binPath": ""
+        "medianEvenReflection": true
     },
     "airvacuum_method":"default",
     "LSF": {
@@ -33,7 +31,6 @@
     "objects": [
         "galaxy"
     ],
-    "calibrationDir": "",
     "autocorrectinput": false,
     "galaxy": {
         "redshiftrange": [

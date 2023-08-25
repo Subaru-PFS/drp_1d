@@ -36,9 +36,16 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-class ComparisonUtils:
-    @staticmethod
-    def compare_dataframe_without_index(df1, df2):
-        df1_without_index = df1.reset_index(drop=True)
-        df2_without_index = df2.reset_index(drop=True)
-        assert df1_without_index.equals(df2_without_index)
+
+import pytest
+from pylibamazed.Exception import APIException
+from pylibamazed.ParametersAccessor import ParametersAccessor
+from pylibamazed.ParametersChecker import ParametersChecker
+
+
+class TestParametersChecker:
+    def test_json_schema_error(self):
+        param_dict = {}
+        accessor = ParametersAccessor(param_dict)
+        with pytest.raises(APIException, match=r"INVALID_PARAMETER_FILE"):
+            ParametersChecker(accessor).check(param_dict)

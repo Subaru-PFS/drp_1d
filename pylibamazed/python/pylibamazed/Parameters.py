@@ -36,18 +36,22 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+
 import json
 from typing import List
 
 import pandas as pd
 from pylibamazed.Exception import APIException
+from pylibamazed.ParametersAccessor import ParametersAccessor
+from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.redshift import ErrorCode
 
 
 class Parameters:
-    def __init__(self, parameters: dict):
-        self.parameters = parameters
-        self.check_params()
+    def __init__(self, parameters_dict: dict, Checker=ParametersChecker, Accessor=ParametersAccessor):
+        self.parameters = parameters_dict
+        self.accessor = Accessor(parameters_dict)
+        Checker(self.accessor).check(parameters_dict)
 
     def get_solve_methods(self, object_type) -> dict:
         method = self.get_solve_method(object_type)

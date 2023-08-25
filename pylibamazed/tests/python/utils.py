@@ -36,54 +36,55 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from __future__ import annotations
+from pylibamazed.ParametersAccessor import ParametersAccessor
+from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.redshift import CFlagWarning
 
-from abc import abstractmethod
-from typing import TYPE_CHECKING, List
-
-from pylibamazed.Filter import FilterItem, FilterList, SpectrumFilterItem
-
-if TYPE_CHECKING:
-    from pylibamazed.Parameters import Parameters
+default_object_type = "galaxy"
 
 
-class AbstractFilterLoader:
-    keys = ["key", "instruction", "value"]
-
-    def __init__(
-        self,
-        FilterItemClass,
-    ):
-        # dictionary name of the key in FilterItem object: name of the key in json
-        self.FilterItemClass = FilterItemClass
-
-    @abstractmethod
-    def get_filters(self):
-        pass
+class ComparisonUtils:
+    @staticmethod
+    def compare_dataframe_without_index(df1, df2):
+        df1_without_index = df1.reset_index(drop=True)
+        df2_without_index = df2.reset_index(drop=True)
+        assert df1_without_index.equals(df2_without_index)
 
 
-class ParamJsonFilterLoader(AbstractFilterLoader):
-    """Reads & loads filter from input param file.
+class WarningUtils:
+    @staticmethod
+    def has_warning(zflag: CFlagWarning):
+        return zflag.getBitMask() != 0
 
-    Loaded param must have the following format:
-    [
-        {"key": "col1", "instruction": "<" , "value": 2},
-        {"key": "col2", "instruction": ">=", "value": 2},
-        ...
-    ]
-    """
 
-    def __init__(
-        self,
-        FitlerItemClass=SpectrumFilterItem
-    ):
-        super().__init__(FitlerItemClass)
+class DictUtils:
+    @staticmethod
+    def make_nested(dict: dict, nested: str) -> dict:
+        if nested is None:
+            return dict
+        else:
+            return {nested: dict}
 
-    def get_filters(self, params: Parameters) -> FilterList:
-        filters: List[FilterItem] = []
-        json_filters = params.get_filters()
-        if json_filters is None:
-            return None
-        for filter in json_filters:
-            filters.append(self.FilterItemClass(filter["key"], filter["instruction"], filter["value"]))
-        return FilterList(filters)
+
+def make_parameter_dict(**kwargs) -> dict:
+    param_dict = {}
+
+    for key, value in kwargs.items():
+        param_dict[key] = value
+    return param_dict
+
+
+def make_parameter_dict_at_object_level(**kwargs) -> dict:
+    param_dict = {
+        "objects": [default_object_type],
+        default_object_type: {}
+    }
+
+    for key, value in kwargs.items():
+        param_dict[default_object_type][key] = value
+    return param_dict
+
+
+def check_from_parameter_dict(param_dict: dict):
+    accessor = ParametersAccessor(param_dict)
+    ParametersChecker(accessor).custom_check()

@@ -66,7 +66,6 @@ const std::string jsonString =
     "4300},"
     "\"extremaredshiftseparation\" : 0.01,"
     "\"objects\" : [\"galaxy\"],"
-    "\"calibrationDir\" : \"\","
     "\"autocorrectinput\" : false,"
     "\"galaxy\" : {"
     "\"redshiftrange\" : [ 2.84, 2.88 ],"

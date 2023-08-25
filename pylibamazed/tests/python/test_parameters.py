@@ -42,11 +42,13 @@ import pytest
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Exception import APIException
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.test_parameters_utils import TestParametersUtils
 
 
 class TestParameters:
-    generic_parameters: Parameters = Parameters(TestParametersUtils().make_parameters_dict())
+    generic_parameters: Parameters = Parameters(
+        TestParametersUtils().make_parameters_dict(), FakeParametersChecker)
 
     def test_get_solve_methods(self):
         self.generic_parameters.get_solve_methods(TestParametersUtils.default_object_type)
@@ -62,11 +64,13 @@ class TestParameters:
         self.generic_parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
 
         # With other solve method
-        parameters = Parameters(TestParametersUtils().make_parameters_dict(**{"method": "other"}))
+        parameters = Parameters(TestParametersUtils().make_parameters_dict(
+            **{"method": "other"}), FakeParametersChecker)
         parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
 
         # With None solve method
-        parameters = Parameters(TestParametersUtils().make_parameters_dict(**{"method": None}))
+        parameters = Parameters(TestParametersUtils().make_parameters_dict(
+            **{"method": None}), FakeParametersChecker)
         parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
 
     def test_get_solve_method(self):
@@ -117,7 +121,8 @@ class TestParameters:
         self.generic_parameters.is_tplratio_catalog_needed(TestParametersUtils.default_object_type)
 
         # With other solve method
-        parameters = Parameters(TestParametersUtils().make_parameters_dict(**{"method": "other"}))
+        parameters = Parameters(TestParametersUtils().make_parameters_dict(
+            **{"method": "other"}), FakeParametersChecker)
         parameters.is_tplratio_catalog_needed(TestParametersUtils.default_object_type)
 
     def test_stage_enabled(self):

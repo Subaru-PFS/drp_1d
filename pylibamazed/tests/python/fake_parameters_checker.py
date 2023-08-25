@@ -1,3 +1,4 @@
+
 # ============================================================================
 #
 # This file is part of: AMAZED
@@ -36,54 +37,14 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from __future__ import annotations
 
-from abc import abstractmethod
-from typing import TYPE_CHECKING, List
-
-from pylibamazed.Filter import FilterItem, FilterList, SpectrumFilterItem
-
-if TYPE_CHECKING:
-    from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import ParametersAccessor
 
 
-class AbstractFilterLoader:
-    keys = ["key", "instruction", "value"]
+class FakeParametersChecker:
 
-    def __init__(
-        self,
-        FilterItemClass,
-    ):
-        # dictionary name of the key in FilterItem object: name of the key in json
-        self.FilterItemClass = FilterItemClass
+    def __init__(self, accessor: ParametersAccessor):
+        self.accessor = accessor
 
-    @abstractmethod
-    def get_filters(self):
+    def check(self, jsonParameters):
         pass
-
-
-class ParamJsonFilterLoader(AbstractFilterLoader):
-    """Reads & loads filter from input param file.
-
-    Loaded param must have the following format:
-    [
-        {"key": "col1", "instruction": "<" , "value": 2},
-        {"key": "col2", "instruction": ">=", "value": 2},
-        ...
-    ]
-    """
-
-    def __init__(
-        self,
-        FitlerItemClass=SpectrumFilterItem
-    ):
-        super().__init__(FitlerItemClass)
-
-    def get_filters(self, params: Parameters) -> FilterList:
-        filters: List[FilterItem] = []
-        json_filters = params.get_filters()
-        if json_filters is None:
-            return None
-        for filter in json_filters:
-            filters.append(self.FilterItemClass(filter["key"], filter["instruction"], filter["value"]))
-        return FilterList(filters)
