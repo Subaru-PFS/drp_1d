@@ -485,24 +485,26 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     std::shared_ptr<const CTemplate> tpl =
         tplCatalog.GetTemplateByName(m_categoryList, tplName);
 
-    for (int spcIndex = 0; i < Context.getSpectra().size(); i++) {
+    std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
+        std::make_shared<CModelSpectrumResult>();
+    for (int spcIndex = 0; spcIndex < Context.getSpectra().size(); spcIndex++) {
       const std::string &obsId = Context.getSpectra()[i]->getObsID();
-      std::shared_ptr<CModelSpectrumResult> spcmodelPtr;
+
       TPhotVal values;
-      std::tie(spcmodelPtr, values) =
-          m_templateFittingOperator->ComputeSpectrumModel(
-              tpl, z, TplFitResult->FitEbmvCoeff[idx],
-              TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-              overlapThreshold, i);
+      values = m_templateFittingOperator->ComputeSpectrumModel(
+          tpl, z, TplFitResult->FitEbmvCoeff[idx],
+          TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
+          overlapThreshold, spcIndex, spcmodelPtr);
 
       if (spcmodelPtr == nullptr)
         THROWG(INTERNAL_ERROR, "Could not "
                                "compute spectrum model");
       tplCatalog.m_logsampling = currentSampling;
-      extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
+
       extremaResult->m_modelPhotValue[i] =
           std::make_shared<const CModelPhotValueResult>(values);
     }
+    extremaResult->m_savedModelSpectrumResults[i] = spcmodelPtr;
   }
 
   return extremaResult;

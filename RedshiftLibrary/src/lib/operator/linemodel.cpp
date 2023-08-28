@@ -999,13 +999,14 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     Int32 maxSaveNLinemodelContinua = maxModelSave;
     if (savedModels < maxModelSave) {
       // CModelSpectrumResult
-      std::shared_ptr<CModelSpectrumResult> resultspcmodel;
+      std::shared_ptr<CModelSpectrumResult> resultspcmodel =
+          std::make_shared<CModelSpectrumResult>();
       Int32 overrideModelSavedType = 0;
       // 0=save model, (DEFAULT)
       // 1=save model with lines removed,
       // 2=save model with only Em. lines removed.
       if (overrideModelSavedType == 0) {
-        resultspcmodel = std::make_shared<CModelSpectrumResult>(
+        resultspcmodel->addModel(
             m_fittingManager->getSpectrumModel().GetModelSpectrum(),
             spectrum.getObsID());
       } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
@@ -1013,7 +1014,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         if (overrideModelSavedType == 2)
           lineTypeFilter = CLine::EType::nType_Emission;
 
-        resultspcmodel = std::make_shared<CModelSpectrumResult>(
+        resultspcmodel->addModel(
             m_fittingManager->getSpectrumModel()
                 .GetObservedSpectrumWithLinesRemoved(lineTypeFilter),
             spectrum.getObsID());
@@ -1054,9 +1055,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_fittingManager->getSpectrumModel().GetModelContinuum();
 
       std::shared_ptr<CModelSpectrumResult> baselineResult =
-          std::make_shared<CModelSpectrumResult>(
-              CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis),
-              spectrum.getObsID());
+          std::make_shared<CModelSpectrumResult>();
+      baselineResult->addModel(
+          CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis),
+          spectrum.getObsID());
 
       ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
 

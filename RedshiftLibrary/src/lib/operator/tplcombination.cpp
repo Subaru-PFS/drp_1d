@@ -698,8 +698,10 @@ COperatorTplcombination::ComputeSpectrumModel(
   // Deallocate the rebined template and mask buffers
   m_templatesRebined_bf.clear();
   m_masksRebined_bf.clear();
-  return std::make_shared<CModelSpectrumResult>(
-      CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)), "");
+  std::shared_ptr<CModelSpectrumResult> ret =
+      std::make_shared<CModelSpectrumResult>();
+  ret->addModel(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)), "");
+  return ret;
 }
 
 /**

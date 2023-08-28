@@ -687,12 +687,12 @@ Int32 CSpectrumModel::ApplyContinuumOnGrid(
   std::string inter_opt = "spline";
   tpl->setRebinInterpMethod(inter_opt);
   Float64 overlapThreshold = 1., amplitude = 1.;
-  std::shared_ptr<CModelSpectrumResult> spcmodel;
-  std::tie(spcmodel, m_photValues) =
-      m_templateFittingOperator->ComputeSpectrumModel(
-          tpl, zcontinuum, m_fitContinuum->tplEbmvCoeff,
-          m_fitContinuum->tplMeiksinIdx, amplitude, overlapThreshold,
-          m_spcIndex);
+  std::shared_ptr<CModelSpectrumResult> spcmodel =
+      std::make_shared<CModelSpectrumResult>();
+  m_photValues = m_templateFittingOperator->ComputeSpectrumModel(
+      tpl, zcontinuum, m_fitContinuum->tplEbmvCoeff,
+      m_fitContinuum->tplMeiksinIdx, amplitude, overlapThreshold, m_spcIndex,
+      spcmodel);
   if (spcmodel == nullptr)
     THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
 
