@@ -121,7 +121,7 @@ class ResultStoreOutput(AbstractOutput):
             if self.results_store.HasCandidateDataset(object_type,
                                                       method,
                                                       attribute_info.ResultStore_key,
-                                                      attribute_info.dataset):
+                                                      attribute_info.dataset.replace("<ObsID>", "")):
                 operator_result = self._get_operator_result(object_type, method, attribute_info, rank)
             else:
                 return False
@@ -184,7 +184,7 @@ class ResultStoreOutput(AbstractOutput):
         return self.results_store.HasCandidateDataset(object_type,
                                                       method,
                                                       rs_key,
-                                                      dataset)
+                                                      dataset.replace("<ObsID>", ""))
 
     def get_nb_candidates_in_source(self, object_type, method):
         return self.results_store.getNbRedshiftCandidates(object_type, method)
@@ -218,7 +218,7 @@ class ResultStoreOutput(AbstractOutput):
             or_type = self.results_store.GetCandidateResultType(object_type,
                                                                 method,
                                                                 attribute_info.ResultStore_key,
-                                                                attribute_info.dataset)
+                                                                attribute_info.dataset.replace("<ObsID>", ""))
             if or_type == "TLineModelResult":
                 firstpass_result = "Firstpass" in attribute_info["name"]
                 return self.results_store.GetLineModelResult(object_type,
@@ -231,7 +231,7 @@ class ResultStoreOutput(AbstractOutput):
                 return getter(object_type,
                               method,
                               attribute_info.ResultStore_key,
-                              attribute_info.dataset,
+                              attribute_info.dataset.replace("<ObsID>", ""),
                               rank)
         else:
             raise APIException(ErrorCode.OUTPUT_READER_ERROR,

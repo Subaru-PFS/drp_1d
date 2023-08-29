@@ -54,7 +54,7 @@ class ParametersAccessor:
         return self.parameters.get("photometryTransmissionDir")
 
     def get_photometry_bands(self) -> List[str]:
-        return self.parameters.get("photometryBand")
+        return self.parameters.get("photometryBand",[])
 
     def get_multiobs_method(self):
         return self.parameters.get("multiobsmethod")
