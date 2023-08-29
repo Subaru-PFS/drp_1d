@@ -53,14 +53,18 @@ class ResultStoreOutput(AbstractOutput):
         if auto_load:
             self.load_all()
 
-    def _get_attribute_from_result_store(self, object_type, method, data_spec, rank, band_name=None):
+    def _get_attribute_from_result_store(self, object_type, method, data_spec,
+                                         rank, band_name=None, obs_id=None):
         operator_result = self._get_operator_result(object_type, method, data_spec, rank)
         band_name_hook = "[band_name]"
         object_type_hook = "[object_type]"
+        obs_id_hook = "[obs_id]"
         if object_type_hook in data_spec.OperatorResult_name:
             operator_result_name = data_spec.OperatorResult_name.replace(object_type_hook, "")
         elif band_name_hook in data_spec.OperatorResult_name:
             operator_result_name = data_spec.OperatorResult_name.replace(band_name_hook, "")
+        elif obs_id_hook in data_spec.OperatorResult_name:
+            operator_result_name = data_spec.OperatorResult_name.replace(obs_id_hook, "")
         else:
             operator_result_name = data_spec.OperatorResult_name
         if "." in operator_result_name:
@@ -74,6 +78,9 @@ class ResultStoreOutput(AbstractOutput):
             if band_name is not None:
                 return attr[band_name]
             return attr[object_type]
+        if attr_type == "TMapTFloat64List":
+            if obs_id is not None:
+                return PC.Get_Float64Array(attr[obs_id])
         elif attr_type == "TFloat64List":
             return PC.Get_Float64Array(attr)
         elif attr_type == "TFloat32List":
@@ -87,7 +94,8 @@ class ResultStoreOutput(AbstractOutput):
         else:
             return attr
 
-    def get_attribute_from_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def get_attribute_from_source(self, object_type, method, dataset, attribute,
+                                  rank=None, band_name=None, obs_id=None):
         rs = self.results_specifications
         rs = rs[rs["name"] == attribute]
         rs = rs[rs["dataset"] == dataset]
@@ -96,9 +104,11 @@ class ResultStoreOutput(AbstractOutput):
                                                      method,
                                                      attribute_info,
                                                      rank=rank,
-                                                     band_name=band_name)
+                                                     band_name=band_name,
+                                                     obs_id=obs_id)
 
-    def has_attribute_in_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def has_attribute_in_source(self, object_type, method, dataset, attribute,
+                                rank=None, band_name=None, obs_id=None):
         rs = self.results_specifications
         rs = rs[rs["name"] == attribute]
         rs = rs[rs["dataset"] == dataset]
@@ -132,6 +142,16 @@ class ResultStoreOutput(AbstractOutput):
                 o = getattr(operator_result, or_name)
                 if o:
                     return band_name in o
+                else:
+                    return False
+            else:
+                return False
+        elif "[obs_id]" in attribute_info.OperatorResult_name:
+            or_name = attribute_info.OperatorResult_name.replace("[obs_id]", "")
+            if hasattr(operator_result, or_name):
+                o = getattr(operator_result, or_name)
+                if o:
+                    return obs_id in o
                 else:
                     return False
             else:

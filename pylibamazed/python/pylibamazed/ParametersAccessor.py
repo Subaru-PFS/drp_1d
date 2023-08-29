@@ -321,7 +321,7 @@ class ParametersAccessor:
     def get_redshift_sampling(self, object_type):
         return self.get_object_section(object_type).get("redshiftsampling")
     
-    def get_observation_ids(self, obs_ids):
+    def get_observation_ids(self):
         try:
             return list(self.parameters["lambdarange"].keys())
         except Exception:

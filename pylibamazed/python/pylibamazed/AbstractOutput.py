@@ -71,10 +71,12 @@ class AbstractOutput:
         self.load_errors()
         self.cache = False
 
-    def get_attribute_from_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def get_attribute_from_source(self, object_type, method, dataset, attribute,
+                                  rank=None, band_name=None, obs_id=None):
         raise NotImplementedError("Implement in derived class")
 
-    def has_attribute_in_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def has_attribute_in_source(self, object_type, method, dataset, attribute,
+                                rank=None, band_name=None, obs_id=None):
         raise NotImplementedError("Implement in derived class")
 
     def has_dataset_in_source(self, object_type, method, dataset):
@@ -435,7 +437,17 @@ class AbstractOutput:
                             if attr is not None:
                                 attr_name_ = band
                                 candidates[rank][attr_name_] = attr
-
+                    if "<ObsID>" in attr_name:
+                        for obsId in self.parameters.get_observation_ids():
+                            attr = self.get_attribute_wrapper(object_type,
+                                                              method,
+                                                              ds,
+                                                              attr_name,
+                                                              rank=rank,
+                                                              obs_id=obsId)
+                            if attr is not None:
+                                attr_name_ = attr_name.replace("<ObsID>", obsId)
+                                candidates[rank][attr_name_] = attr
                     else:
                         attr = self.get_attribute_wrapper(object_type,
                                                           method,
@@ -445,20 +457,23 @@ class AbstractOutput:
                         if attr is not None:
                             candidates[rank][attr_name] = attr
 
-    def get_attribute_wrapper(self, object_type, method, ds, attr_name, rank=None, band_name=None):
+    def get_attribute_wrapper(self, object_type, method, ds, attr_name,
+                              rank=None, band_name=None, obs_id=None):
         attr = None
         if self.has_attribute_in_source(object_type,
                                         method,
                                         ds,
                                         attr_name,
                                         rank=rank,
-                                        band_name=band_name):
+                                        band_name=band_name,
+                                        obs_id=obs_id):
             attr = self.get_attribute_from_source(object_type,
                                                   method,
                                                   ds,
                                                   attr_name,
                                                   rank,
-                                                  band_name=band_name)
+                                                  band_name=band_name,
+                                                  obs_id=obs_id)
         return attr
 
     def get_candidate_group_name(self, rank):
