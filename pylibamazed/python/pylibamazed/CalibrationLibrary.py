@@ -89,8 +89,8 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
     redshift_range = [model_ha["zrange_min"],
                       model_ha["zrange_max"]]
     redshift_range_step = model_ha["zrange_step"]
-    s_redshift_range = parameters.get_redshift_range(object_type)
-    s_redshift_range_step = parameters.get_redshift_step(object_type)
+    s_redshift_range = parameters.get_object_redshiftrange(object_type)
+    s_redshift_range_step = parameters.get_object_redshiftstep(object_type)
     if s_redshift_range != redshift_range:
         raise APIException(
             ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
@@ -216,7 +216,7 @@ class CalibrationLibrary:
 
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
-        nsigmasupport = self.parameters.get_linemodel_nsigmasupport(object_type, solve_method)
+        nsigmasupport = self.parameters.get_nsigmasupport(object_type, solve_method)
         self.line_catalogs[object_type][solve_method] = CLineCatalog(nsigmasupport)
         try:
             line_catalog = pd.read_csv(
@@ -233,7 +233,7 @@ class CalibrationLibrary:
         # force "-1" to undefStr (for compatibility)
         line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName"] = undefStr
 
-        enableIGM = self.parameters.get_linemodel_igmfit(object_type, solve_method)
+        enableIGM = self.parameters.get_solve_method_igm_fit(object_type, solve_method)
 
         # here should go the change of profiles if igm is applied
         self.line_catalogs_df[object_type][solve_method] = line_catalog
@@ -265,8 +265,7 @@ class CalibrationLibrary:
 
     def load_line_ratio_catalog_list(self, object_type):
         logger = logging.getLogger("calibration_api")
-        solve_method = "LineModelSolve"
-        tplratio_catalog = self.parameters.get_tplratio_catalog(object_type, solve_method)
+        tplratio_catalog = self.parameters.get_lineModelSolve_tplratio_catalog(object_type)
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                tplratio_catalog,
                                                "*.tsv")
@@ -278,17 +277,17 @@ class CalibrationLibrary:
 
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1
-        if self.parameters.get_tplratio_ismfit(object_type, solve_method):
+        if self.parameters.get_lineModelSolve_tplratio_ismfit(object_type):
             n_ebmv_coeffs = self.parameters.get_ebmv_count()
         prior = 1. / (n_ebmv_coeffs * len(line_ratio_catalog_list))
 
-        enableIGM = self.parameters.get_linemodel_igmfit(object_type, solve_method)
+        enableIGM = self.parameters.get_lineModelSolve_igmfit(object_type)
 
         for f in line_ratio_catalog_list:
             lr_catalog_df = pd.read_csv(f, sep='\t')
             name = f.split(os.sep)[-1][:-4]
             with open(os.path.join(self.calibration_dir,
-                                   self.parameters.get_tplratio_catalog(object_type, solve_method),
+                                   self.parameters.get_lineModelSolve_tplratio_catalog(object_type),
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
             for k in range(n_ebmv_coeffs):
@@ -322,7 +321,7 @@ class CalibrationLibrary:
     def load_lsf(self):
         if self.parameters.get_lsf_type() == "GaussianVariableWidth":
             file = os.path.join(self.calibration_dir,
-                                self.parameters.get_gaussian_variable_width_file_name())
+                                self.parameters.get_lsf_width_file_name())
             # TODO check hdul here
             with fits.open(file) as hdul:
                 self.lsf["wave"] = hdul[1].data.field(0)
@@ -389,7 +388,7 @@ class CalibrationLibrary:
                     self.load_templates_catalog(object_type)
                 # load linecatalog for linemodelsolve
 
-                solve_method = self.parameters.get_solve_method(object_type)
+                solve_method = self.parameters.get_object_solve_method(object_type)
                 if solve_method == "LineModelSolve":
                     if linecatalogs:
                         self.load_linecatalog(object_type, solve_method)
@@ -398,15 +397,15 @@ class CalibrationLibrary:
                         if lineratios:
                             self.load_line_ratio_catalog_list(object_type)
                             # load linecatalog for linemeassolve
-                linemeas_method = self.parameters.get_linemeas_method(object_type)
+                linemeas_method = self.parameters.get_object_linemeas_method(object_type)
                 if linemeas_method == "LineMeasSolve":
                     if linecatalogs:
                         self.load_linecatalog(object_type, linemeas_method)
 
                 # Load the reliability model
-                if self.parameters.reliability_enabled(object_type) and reliability:
+                if self.parameters.get_object_reliability_enabled(object_type) and reliability:
                     model_path = os.path.join(self.calibration_dir,
-                                              self.parameters.get_reliability_model(object_type))
+                                              self.parameters.get_object_reliability_model(object_type))
                     mp = load_reliability_model(model_path,
                                                 self.parameters,
                                                 object_type)
@@ -436,7 +435,7 @@ class CalibrationLibrary:
         try:
             with open(os.path.join(
                 self.calibration_dir,
-                self.parameters.get_tplratio_catalog(object_type, "LineModelSolve"),
+                self.parameters.get_lineModelSolve_tplratio_catalog(object_type),
                 line_ratio_catalog + ".json"
             )) as f:
                 tpl_ratio_conf = json.load(f)

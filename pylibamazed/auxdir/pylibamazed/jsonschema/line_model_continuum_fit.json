@@ -5,6 +5,7 @@
     "type": "object",
     "required": ["fftprocessing", "ismfit", "igmfit", "count", "ignorelinesupport", "negativethreshold", "nullthreshold", "priors"],
     "additionalProperties": false,
+    "description": "Concerns only fullmodel ie `continuumcomponent=\"tplfit\"`",
     "properties": {
         "fftprocessing": {
             "type": "boolean",
@@ -13,18 +14,18 @@
         },
         "ismfit": {
             "type": "boolean",
-            "title": "Activate ISM extinction fit ?",
-            "description": "Activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `LineModelSolve.linemodel_extrema.csv`)"
+            "title": "Wether to activate ISM extinction fit",
+            "description": "Wether to activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `LineModelSolve.linemodel_extrema.csv`)"
         },
         "igmfit": {
             "type": "boolean",
-            "title": "Activate IGM fit?",
-            "description": "Activate fit of IGM with Meiksin tables. Index scan from 0 to 0.9, step = 0.1 (best profile index stored in FittedTplMeiksinIdx parameter in LineModelSolve.linemodel_extrema.csv)"
+            "title": "Wether to activate IGM fit",
+            "description": "Wether to activate fit of IGM with Meiksin tables. Index scan from 0 to 0.9, step = 0.1 (best profile index stored in FittedTplMeiksinIdx parameter in LineModelSolve.linemodel_extrema.csv)"
         },
         "count": {
-            "type": "boolean",
+            "type": "number",
             "title": "Number of continuum templates to keep",
-            "description": "Number of continuum templates, ranked by deacreasing pdf at each z, kept to fit lines. Concerns only fullmodel ie `continuumcomponent=\"tplfit\"` (1 = only the best template is used)"
+            "description": "Number of continuum templates, ranked by deacreasing pdf at each z, kept to fit lines (1 = only the best template is used)."
         },
         "ignorelinesupport": {
             "type": "boolean",

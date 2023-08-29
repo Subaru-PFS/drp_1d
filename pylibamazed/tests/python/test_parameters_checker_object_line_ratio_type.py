@@ -199,7 +199,6 @@ class TestLineModelSolve:
             })
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_warning(zflag)
-            # TODO access and test warning message
 
         def test_OK_if_continuumcomponent_is_fromspectrum_and_mandatory_fields_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -221,6 +220,7 @@ class TestLineModelSolve:
                     "secondpass": {"continuumfit": ""}
                 }}
             })
+            param_dict["continuumRemoval"] = {}
             with pytest.raises(
                 APIException,
                 match=r"Missing parameter object galaxy LineModelSolve continuumfit"
@@ -238,6 +238,8 @@ class TestLineModelSolve:
                     "continuumfit": {}
                 }}
             })
+            param_dict["continuumRemoval"] = {}
+
             with pytest.raises(
                 APIException,
                 match=r"Missing parameter object galaxy LineModelSolve secondpass continuumfit"
@@ -254,5 +256,6 @@ class TestLineModelSolve:
                     "secondpass": {"continuumfit": ""}
                 }}
             })
+            param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_warning(zflag)

@@ -57,9 +57,8 @@ class ParametersChecker:
         self.accessor = accessor
         self.filter_loader = FilterLoader()
 
-    def check(self, jsonParameters):
-        # TODO homogenize use of jsonParameters
-        self.json_schema_check(self.jsonSchema, jsonParameters)
+    def check(self):
+        self.json_schema_check()
         self.custom_check()
 
     def _get_json_schema(self):
@@ -67,14 +66,11 @@ class ParametersChecker:
             jsonSchema = json.load(schemaFile)
         return jsonSchema
 
-    def json_schema_check(self, jsonSchema, jsonParameters) -> None:
-        # TODO move
+    def json_schema_check(self) -> None:
         # How to link the different json schema files
-        resolver = RefResolver(jsonSchemaPath, jsonSchema)
-
-        # Add a try / catch to put a custom error message
+        resolver = RefResolver(jsonSchemaPath, self.jsonSchema)
         try:
-            validate(instance=jsonParameters, schema=jsonSchema, resolver=resolver)
+            validate(instance=self.accessor.parameters, schema=self.jsonSchema, resolver=resolver)
         except ValidationError as e:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
@@ -150,13 +146,11 @@ class ParametersChecker:
         self._check_GaussianConstantWidth_lsf_type()
         self._check_GaussianNISPSIM_lsf_type()
         self._check_GaussianConstantResolution_lsf_type()
-        self._check_GaussianVariablewidth_lsf_type()
-
-        self._check_lsf_GaussianVariablewidthFileName(self.accessor.get_lsf_type())
+        self._check_GaussianVariablewidth_FileName()
 
     def _check_GaussianNISPSIM_lsf_type(self):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lsf_type() in ["GaussianNISPSIM2016", "GaussianNISPSIM201707"],
+            self.accessor.get_lsf_type() == "GaussianNISPSIM201707",
             self.accessor.get_lsf_sourcesize() is not None,
             "LSF sourcesize",
             "LSF sourcesize"
@@ -178,18 +172,13 @@ class ParametersChecker:
             "LSF resolution"
         )
 
-    def _check_GaussianVariablewidth_lsf_type(self):
+    def _check_GaussianVariablewidth_FileName(self):
         self._check_dependant_parameter_presence(
             self.accessor.get_lsf_type() == "GaussianVariablewidth",
             self.accessor.get_lsf_width_file_name() is not None,
             "LSF GaussianVariablewidthFileName",
             "LSF GaussianVariablewidthFileName"
         )
-
-    def _check_lsf_GaussianVariablewidthFileName(self, lsf_type: str) -> None:
-        filename = self.accessor.get_lsf_width_file_name()
-        if lsf_type != "GaussianVariablewidth" and filename is not None:
-            self._add_unused_parameter_warning("LSF GaussianVariableWidthFileName")
 
     def _check_continuum_removal(self, nested=None) -> None:
         self._check_IrregularSamplingMedian_kernel_width(nested)
@@ -216,7 +205,7 @@ class ParametersChecker:
         self._check_linemeassolve_redshiftstep(object_type)
         self._check_object_reliability(object_type)
         self._check_templateFittingSolve_section(object_type)
-        self.check_templateCombinationSolve_section(object_type)
+        self._check_templateCombinationSolve_section(object_type)
         self._check_lineModelSolve(object_type)
 
     def _check_linemeassolve_dzhalf(self, object_type: str) -> None:
@@ -269,16 +258,16 @@ class ParametersChecker:
             f"object {object_type} TemplateFittingSolve photometry weight"
         )
 
-    def check_templateCombinationSolve_section(self, object_type: str) -> None:
+    def _check_templateCombinationSolve_section(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
             self.accessor.get_object_solve_method(object_type) == "TplcombinationSolve",
             self.accessor.get_templateCombinationSolve_section(object_type) is not None,
             error_message=f"TplcombinationSolve for object {object_type}",
             warning_message=f"object {object_type} TplcombinationSolve"
         )
-        self.check_templateCombinationSolve_ism(object_type)
+        self._check_templateCombinationSolve_ism(object_type)
 
-    def check_templateCombinationSolve_ism(self, object_type: str) -> None:
+    def _check_templateCombinationSolve_ism(self, object_type: str) -> None:
         ism = self.accessor.get_templateCombinationSolve_ism(object_type)
         ebmv = self.accessor.get_ebmv_section()
 
@@ -289,6 +278,7 @@ class ParametersChecker:
 
         self._check_linemodelsolve_section(object_type)
 
+        self._check_linemodelsolve_improveBalmerFit(object_type)
         self._check_linemodelsolve_lineratiotype_rules(object_type)
 
         self._check_lineratiotype_tplratio_catalog(object_type)
@@ -323,6 +313,16 @@ class ParametersChecker:
             warning_message=f"object {object_type} LineModelSolve rules"
         )
 
+    def _check_linemodelsolve_improveBalmerFit(self, object_type: str):
+        improveBalmerFit = self.accessor.get_lineModelSolve_improveBalmerFit(object_type)
+        lineRatioType = self.accessor.get_lineModelSolve_lineRatioType(object_type)
+        if improveBalmerFit and lineRatioType != "rules":
+            zflag.warning(
+                WarningCode.UNUSED_PARAMETER.value,
+                f"object {object_type} LineModelSolve lineRatioType must be rules to "
+                "activate improveBalmerFit"
+            )
+
     def _check_lineratiotype_tplratio_catalog(self, object_type):
         self._check_dependant_parameter_presence(
             self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"],
@@ -341,7 +341,8 @@ class ParametersChecker:
 
     def _check_linemodelsolve_continuumremoval(self, object_type):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) == "fromspectrum",
+            self.accessor.get_lineModelSolve_continuumComponent(object_type) in [
+                "fromspectrum", "tplfitauto"],
             self.accessor.get_continuum_removal() is not None,
             error_message="continuumRemoval"
         )
@@ -419,19 +420,34 @@ class ParametersChecker:
             )
 
     def _check_dependant_parameter_presence(self, triggering_condition: bool, dependant_condition: bool,
-                                            error_message: str,
-                                            warning_message: str = None):
+                                            error_message: str = None,
+                                            warning_message: str = None,
+                                            custom_error_message: str = False,
+                                            custom_warning_message: str = False
+                                            ):
         # Checks that if triggering_condition is valid, then dependant_condition too. Otherwise error.
         # If a warning message is specified, raises an error if dependant_condition is present without its
         # triggering_condition
         if triggering_condition and not dependant_condition:
-            self._raise_missing_param_error(error_message)
+            if error_message is not None:
+                if custom_error_message:
+                    raise APIException(
+                        ErrorCode.INVALID_PARAMETER_FILE,
+                        error_message
+                    )
+                else:
+                    self._raise_missing_param_error(error_message)
         elif not triggering_condition and dependant_condition:
             if warning_message is not None:
-                self._add_unused_parameter_warning(warning_message)
+                if custom_warning_message:
+                    zflag.warning(
+                        WarningCode.UNUSED_PARAMETER.value,
+                        warning_message
+                    )
+                else:
+                    self._add_unused_parameter_warning(warning_message)
 
     def _add_unused_parameter_warning(self, param_name):
-        print("WARNING", f"Unused parameter {param_name}")
         zflag.warning(
             WarningCode.UNUSED_PARAMETER.value,
             f"Unused parameter {param_name}"

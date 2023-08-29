@@ -135,7 +135,6 @@ class TestParametersCheckGeneral:
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
             param_dict = self._make_param_dict(**{"enablephotometry": True})
             param_dict["photometryTransmissionDir"] = "sth"
-            print("param dict", param_dict)
             accessor = ParametersAccessor(param_dict)
             ParametersChecker(accessor).custom_check()
             assert not WarningUtils.has_warning(zflag)

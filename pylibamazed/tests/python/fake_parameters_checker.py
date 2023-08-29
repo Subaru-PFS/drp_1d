@@ -46,5 +46,5 @@ class FakeParametersChecker:
     def __init__(self, accessor: ParametersAccessor):
         self.accessor = accessor
 
-    def check(self, jsonParameters):
+    def check(self):
         pass

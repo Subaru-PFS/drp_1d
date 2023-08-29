@@ -22,7 +22,7 @@
                 "polynomialdegree": {
                     "type": "integer",
                     "title": "Polynomial degree",
-                    "description": "Value between 0 and 2, referring to the polynom degree to represent the continuum below lines"
+                    "description": "Value between 0 and 2, referring to the polynom degree to represent the continuum below lines. Useful only if ampoffsetfit=True."
                 },
                 "linecatalog": {
                     "type": "string",
@@ -48,8 +48,8 @@
                 },
                 "velocityfit": {
                     "type": "boolean",
-                    "title": "Fit line width ?",
-                    "discription": "Wether 2nd pass includes line width fitting. To specify only if fittingMethod is lbfgsb."
+                    "title": "Wether to fit line width",
+                    "discription": "Wether 2nd pass includes line width fitting. Used only if `fittingMethod=lbfgsb` (for linemeas)."
                 },
                  "emvelocityfitmin": {
                     "type": "number",
@@ -73,13 +73,13 @@
                 },
                 "lbdaoffsetfit": {
                     "type": "boolean",
-                    "title": "Fit wavelength offset ?",
-                    "description": "Wether the 2nd pass includes lines wavelength offset fitting. Relevant only for `fittingmethod=svd`, `hybrid` or `lbfgsb`"
+                    "title": "Wether to fit wavelength offset",
+                    "description": "Wether to include wavelength offset fitting. Relevant only for `fittingmethod=svd`, `hybrid` or `lbfgsb`"
                 },
                 "ampoffsetfit": {
                     "type": "boolean",
-                    "title": "Fit amplitude offset ?",
-                    "description": "Wether the 2nd pass includes line's polynomial offset in the profile fitting. Relevant only for `fittingmethod=svd`, `hybrid` or `lbfgsb`"
+                    "title": "Wether to fit amplitude offset",
+                    "description": "Wether to use line's polynomial offset in the profile fitting. Relevant only for `fittingmethod=svd`, `hybrid` or `lbfgsb`"
                 },
                 "lineRatioType": {
                     "type": "string",

@@ -19,16 +19,18 @@
         },
         "resolution": {
             "type": "number",
-            "title": "Instrument resolution"
+            "title": "Instrument resolution",
+            "description": "Must be specified if and only if LSFType=GaussianConstantResolution"
         },
         "sourcesize": {
             "type": "number",
-            "title": "Source size"
+            "title": "Source size",
+            "description": "Must be specified if and only if LSFType=GaussianNISPVSSPSF201707"
         },
         "GaussianVariablewidthFileName": {
             "type": "string",
             "title": "Path to file where width array is saved",
-            "description": "Useful for lsfType=\"GaussianVariableWidth\""
+            "description": "Must be specified if and only if LSFType=GaussianVariableWidth"
         }
     }
 }

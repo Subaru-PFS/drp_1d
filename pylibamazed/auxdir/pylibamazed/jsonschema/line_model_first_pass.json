@@ -15,17 +15,17 @@
         "largegridstepratio": {
             "type": "integer",
             "title": "Large grid step ratio",
-            "description": "Is a multiple of the `redshiftstep `parameter. To use finegrid step, set largegridstep to 0 or 1 "
+            "description": "Multiplicative factor of the redshift step size for the first pass: firstpassz step = step * largegridstepratio. To use finegrid step, set largegridstep to 0 or 1"
         },
         "tplratio_ismfit": {
             "type": "boolean",
-            "title": "Activate ISM extinction fit ?",
+            "title": "Wether to activate ISM extinction fit",
             "description":"Wether to overwrite the `tplratio_ismfit` parameter",
             "default": "false"
         },
         "multiplecontinuumfit_disable": {
             "type": "boolean",
-            "title": "Use only the best continuum template ?",
+            "title": "Wether to use only the best continuum template",
             "description": "Wether to overwrite the `continuumfit.count` parameter to keep only the best continuum template (true=> sets `continuumfit.count` to 1)"
         }
     }

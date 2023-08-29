@@ -45,42 +45,12 @@ from pylibamazed.Parameters import Parameters
 from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.test_parameters_utils import TestParametersUtils
 
+# TODO see what should be removed here
+
 
 class TestParameters:
     generic_parameters: Parameters = Parameters(
         TestParametersUtils().make_parameters_dict(), FakeParametersChecker)
-
-    def test_get_solve_methods(self):
-        self.generic_parameters.get_solve_methods(TestParametersUtils.default_object_type)
-
-    def test_get_redshift_sampling(self):
-        self.generic_parameters.get_redshift_sampling(TestParametersUtils.default_object_type)
-
-    def test_get_linemodel_methods(self):
-        self.generic_parameters.get_linemodel_methods(TestParametersUtils.default_object_type)
-
-    def test_check_lmskipsecondpass(self):
-        # With Linemodel solve method
-        self.generic_parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
-
-        # With other solve method
-        parameters = Parameters(TestParametersUtils().make_parameters_dict(
-            **{"method": "other"}), FakeParametersChecker)
-        parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
-
-        # With None solve method
-        parameters = Parameters(TestParametersUtils().make_parameters_dict(
-            **{"method": None}), FakeParametersChecker)
-        parameters.check_lmskipsecondpass(TestParametersUtils.default_object_type)
-
-    def test_get_solve_method(self):
-        self.generic_parameters.get_solve_method(TestParametersUtils.default_object_type)
-
-    def test_get_linemeas_method(self):
-        self.generic_parameters.get_linemeas_method(TestParametersUtils.default_object_type)
-
-    def test_get_objects(self):
-        self.generic_parameters.get_objects()
 
     def test_load_linemeas_parameters_from_catalog(self, mocker):
         source_id = 'some_source_id'
@@ -111,11 +81,8 @@ class TestParameters:
             TestParametersUtils.default_object_type,
         )
 
-    def test_get_json(self):
-        self.generic_parameters.get_json()
-
-    def test_reliability_enabled(self):
-        self.generic_parameters.reliability_enabled(TestParametersUtils.default_object_type)
+    def test_to_json(self):
+        self.generic_parameters.to_json()
 
     def test_lineratio_catalog_enabled(self):
         self.generic_parameters.is_tplratio_catalog_needed(TestParametersUtils.default_object_type)

@@ -85,26 +85,6 @@ class TestLSF:
             check_from_parameter_dict(parametersDict)
             assert not WarningUtils.has_warning(zflag)
 
-    class TestLSFTypeGaussianNISPSIM2016:
-        def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
-            parametersDict = {
-                "LSF": {
-                    "LSFType": "GaussianNISPSIM2016"
-                }
-            }
-            with pytest.raises(APIException, match=r"Missing parameter LSF sourcesize"):
-                check_from_parameter_dict(parametersDict)
-
-        def test_OK_if_GaussianConstantResolution_with_width_defined(self, zflag):
-            parametersDict = {
-                "LSF": {
-                    "LSFType": "GaussianNISPSIM2016",
-                    "sourcesize": "1"
-                }
-            }
-            check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
-
     class TestLSFTypeGaussianNISPSIM201707:
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
             parametersDict = {

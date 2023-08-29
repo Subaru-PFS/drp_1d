@@ -185,9 +185,9 @@ class AbstractOutput:
         if object_type is None:
             return None
         if dataset == "linemeas":
-            return self.parameters.get_linemeas_method(object_type)
+            return self.parameters.get_object_linemeas_method(object_type)
         else:
-            return self.parameters.get_solve_method(object_type)
+            return self.parameters.get_object_solve_method(object_type)
 
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
@@ -301,7 +301,7 @@ class AbstractOutput:
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:
-            skipsecondpass = self.parameters.check_lmskipsecondpass(object_type)
+            skipsecondpass = self.parameters.get_lineModelSolve_skipsecondpass(object_type)
 
         # retrieve results which are not firstpass results
         # exclude firstpass results for methods other than LineModelSolve
@@ -397,13 +397,16 @@ class AbstractOutput:
                         self.object_results[object_type][ds][attr_name] = attr
 
     def load_candidate_level(self, object_type):
-        method = self.parameters.get_solve_method(object_type)
+        method = self.parameters.get_object_solve_method(object_type)
         if not method:
             return
         level = "candidate"
 
         # get phot bands from params
-        bands = self.parameters.get_photometry_bands(object_type, method)
+        if self.parameters.photometry_is_enabled():
+            bands = self.parameters.get_photometry_bands(object_type, method)
+        else:
+            bands = []
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
             ds_attributes = self.filter_dataset_attributes(ds, object_type, method).copy()

@@ -61,7 +61,7 @@
         },
         "autocorrectinput": {
             "type": "boolean",
-            "title": "Correct input spectrum ?",
+            "title": "Wether to correct input spectrum",
             "description": "Wether to apply a flux/noise correction on input spectrum"
         },
         "objects": {
@@ -79,7 +79,7 @@
         "photometryBand": {
             "type": "array",
             "title": "Photometry band",
-            "description": "List of the band names to use. The name is contained in each band file, and souhd have the same name than the photometric data contained in the fits (amazed format) spectra",
+            "description": "List of the band names to use. The name is contained in each band file, and should have the same name than the photometric data contained in the input spectra",
             "items": {
                 "type": "string"
             }

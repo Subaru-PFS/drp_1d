@@ -46,10 +46,6 @@ from tests.python.fake_parameters_checker import FakeParametersChecker
 class TestParamJsonFilterLoader:
 
     def test_load_returns_expected_filters(self, mocker):
-        mocker.patch(
-            'pylibamazed.Parameters.Parameters.check_params',
-            return_value=True
-        )
         jsonFilterLoader = ParamJsonFilterLoader()
         params = Parameters({"filters": [
             {"key": "col1", "instruction": "<", "value": 2},

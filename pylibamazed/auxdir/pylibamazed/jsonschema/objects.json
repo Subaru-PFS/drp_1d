@@ -73,7 +73,7 @@
         },
         "TemplateFittingSolve": {
             "type": "object",
-            "title": "Template fiitng solve",
+            "title": "Template fitting solve",
             "properties": {
                 "$ref": "template_fitting_solve.json"
             }
