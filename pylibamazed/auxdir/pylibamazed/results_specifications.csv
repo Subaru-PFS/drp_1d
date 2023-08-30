@@ -41,9 +41,10 @@ FittedOutsideRange	fitted_lines	True	candidate	OutsideLambdaRange	extrema_result
 ContinuumPCoeff0	fitted_lines	True	candidate	continuum_pCoeff0	extrema_results	f8
 ContinuumPCoeff1	fitted_lines	True	candidate	continuum_pCoeff1	extrema_results	f8
 ContinuumPCoeff2	fitted_lines	True	candidate	continuum_pCoeff2	extrema_results	f8
+ModelLambda	model<ObsID>	False	candidate	ModelLambda[obs_id]	extrema_results	f8
 ModelFlux	model<ObsID>	False	candidate	ModelFlux[obs_id]	extrema_results	f8
-BestContinuumLambda	continuum	False	candidate	ModelLambda	extrema_results	f8
-BestContinuumFlux	continuum	False	candidate	ModelFlux	extrema_results	f8
+BestContinuumLambda	continuum<ObsID>	False	candidate	ModelLambda[obs_id]	extrema_results	f8
+BestContinuumFlux	continuum<ObsID>	False	candidate	ModelFlux[obs_id]	extrema_results	f8
 GaussianPDFAmp	model_parameters	True	candidate	GaussAmp	extrema_results	f8
 GaussianPDFAmpErr	model_parameters	True	candidate	GaussAmpErr	extrema_results	f8
 GaussianPDFSigma	model_parameters	True	candidate	GaussSigma	extrema_results	f8
@@ -111,8 +112,8 @@ LinemeasLfHaNII_DirectIntegration	linemeas_parameters	False	object	lfHa_DI	linem
 Linemeas_VelocityEmission	linemeas_parameters	False	object	EmissionVelocity	linemeas	f8
 Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	linemeas	f8
 LinemeasLyaIgm	linemeas_parameters	False	object	LyaIgm	linemeas	f8
-ModelLambda	linemeas_model	False	object	ModelLambda	linemeas_model	f8
-ModelFlux	linemeas_model	False	object	ModelFlux	linemeas_model	f8
+ModelLambda	linemeas_model<ObsID>	False	object	ModelLambda[obs_id]	linemeas_model	f8
+ModelFlux	linemeas_model<ObsID>	False	object	ModelFlux[obs_id]	linemeas_model	f8
 Reliability	reliability	False	object	m_ReliabilityLabel	solveResult	f8
 FirstpassPDFProbaLog	firstpass_pdf	True	object	valProbaLog	firstpass_pdf	f8
 ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i

@@ -363,20 +363,27 @@ class AbstractOutput:
             for method in methods:
                 if self.has_dataset_in_source(object_type,
                                               method,
-                                              dataset):
-                    self.object_results[object_type][dataset] = dict()
-                    self.fill_object_dataset(object_type, method, dataset)
+                                              dataset.replace("<ObsID>", "")):
 
-    def fill_object_dataset(self, object_type, method, dataset):
+                    if "<ObsID>" in dataset:
+                        for obs_id in self.parameters.get_observation_ids():
+                            self.object_results[object_type][dataset.replace("<ObsID>", obs_id)] = dict()
+                            self.fill_object_dataset(object_type, method, dataset, obs_id)
+                    else:
+                        self.object_results[object_type][dataset] = dict()
+                        self.fill_object_dataset(object_type, method, dataset)
+
+    def fill_object_dataset(self, object_type, method, dataset, obs_id=""):
         ds_attributes = self.filter_dataset_attributes(dataset)
         for index, ds_row in ds_attributes.iterrows():
             attr_name = ds_row["name"]
-            if self.has_attribute_in_source(object_type, method, dataset, attr_name):
+            if self.has_attribute_in_source(object_type, method, dataset, attr_name, obs_id=obs_id):
                 attr = self.get_attribute_from_source(object_type,
                                                       method,
                                                       dataset,
-                                                      attr_name)
-                self.object_results[object_type][dataset][attr_name] = attr
+                                                      attr_name,
+                                                      obs_id=obs_id)
+                self.object_results[object_type][dataset.replace("<ObsID>", obs_id)][attr_name] = attr
 
     def load_method_level(self, object_type):
         level = "method"
@@ -456,25 +463,17 @@ class AbstractOutput:
                                                           dataset,
                                                           attr_name,
                                                           rank=rank,
-                                                          obs_id=obsId)
+                                                          obs_id=obs_id)
                         if attr is not None:
                             attr_name_ = attr_name.replace("<ObsID>", obs_id)
                             candidates[rank][attr_name_] = attr
-                elif obs_id:
+                else:
                     attr = self.get_attribute_wrapper(object_type,
                                                       method,
                                                       dataset,
                                                       attr_name,
                                                       rank=rank,
                                                       obs_id=obs_id)
-                    if attr is not None:
-                        candidates[rank][attr_name] = attr
-                else:
-                    attr = self.get_attribute_wrapper(object_type,
-                                                      method,
-                                                      dataset,
-                                                      attr_name,
-                                                      rank=rank)
                     if attr is not None:
                         candidates[rank][attr_name] = attr
         return candidates

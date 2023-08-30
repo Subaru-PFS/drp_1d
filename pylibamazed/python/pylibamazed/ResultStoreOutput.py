@@ -38,6 +38,7 @@
 # ============================================================================
 import os
 
+import numpy as np
 from pylibamazed.AbstractOutput import AbstractOutput, ObjectStages
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import PC, CLog, ErrorCode
@@ -80,7 +81,7 @@ class ResultStoreOutput(AbstractOutput):
             return attr[object_type]
         if attr_type == "TMapTFloat64List":
             if obs_id is not None:
-                return PC.Get_Float64Array(attr[obs_id])
+                return np.array(attr[obs_id])
         elif attr_type == "TFloat64List":
             return PC.Get_Float64Array(attr)
         elif attr_type == "TFloat32List":
