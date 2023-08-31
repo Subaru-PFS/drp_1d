@@ -420,17 +420,19 @@ class AbstractOutput:
                 continue
             multiobs_ds = "<ObsID>" in ds
             if not multiobs_ds:
-                cds = self.build_candidate_dataset(object_type,
-                                                   method,
-                                                   ds)
-                self.object_results[object_type][ds] = cds
+                if ds not in self.object_results[object_type]:
+                    self.object_results[object_type][ds.replace("<ObsID>", "")] = []
+                self.build_candidate_dataset(object_type,
+                                             method,
+                                             ds)
             else:
                 for obs_id in self.parameters.get_observation_ids():
-                    ocds = self.build_candidate_dataset(object_type,
-                                                        method,
-                                                        ds,
-                                                        obs_id)
-                    self.object_results[object_type][ds.replace("<ObsID>", obs_id)] = ocds
+                    if ds.replace("<ObsID>", obs_id) not in self.object_results[object_type]:
+                        self.object_results[object_type][ds.replace("<ObsID>", obs_id)] = []
+                    self.build_candidate_dataset(object_type,
+                                                 method,
+                                                 ds,
+                                                 obs_id)
 
     def build_candidate_dataset(self, object_type, method, dataset, obs_id=""):
         nb_candidates = self.get_nb_candidates_in_source(object_type,
@@ -438,9 +440,11 @@ class AbstractOutput:
         ds_attributes = self.filter_dataset_attributes(dataset,
                                                        object_type,
                                                        method).copy()
-        candidates = []
+        candidates = self.object_results[object_type][dataset.replace("<ObsID>", obs_id)]
+        if not candidates:
+            for rank in range(nb_candidates):
+                candidates.append(dict())
         for rank in range(nb_candidates):
-            candidates.append(dict())
             for index, ds_row in ds_attributes.iterrows():
                 attr_name = ds_row["name"]
                 if "<BandName>" in attr_name:
@@ -457,7 +461,7 @@ class AbstractOutput:
                             attr_name_ = band
                             candidates[rank][attr_name_] = attr
                 if "<ObsID>" in attr_name:
-                    for obsId in self.parameters.get_observation_ids():
+                    for obs_id in self.parameters.get_observation_ids():
                         attr = self.get_attribute_wrapper(object_type,
                                                           method,
                                                           dataset,
