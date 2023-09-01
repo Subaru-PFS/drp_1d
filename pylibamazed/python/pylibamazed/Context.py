@@ -170,15 +170,7 @@ class Context:
                     and not rso.has_error(object_type, "redshift_solver"):
                 self.run_reliability(rso, object_type, "reliability_solver")
 
-        enable_classification = False
-        for object_type in self.parameters.get_objects():
-            if self.parameters.get_solve_method(object_type) \
-                    and not rso.has_error(object_type, "redshift_solver"):
-                enable_classification = True
-                break
-
-        if enable_classification:
-            self.run_classification(rso, None, "classification")
+        self.run_classification(rso, None, "classification")
 
         self.load_result_store(rso, None, "load_result_store")
 
@@ -236,7 +228,18 @@ class Context:
 
     @run_method_exception_handler
     def run_classification(self, rso, object_type, stage):
-        self.run_method("classification", "ClassificationSolve")
+        enable_classification = False
+        for object_type in self.parameters.get_objects():
+            if self.parameters.get_solve_method(object_type) \
+                    and not rso.has_error(object_type, "redshift_solver"):
+                enable_classification = True
+                break
+
+        if enable_classification:
+            self.run_method("classification", "ClassificationSolve")
+        else:
+            raise APIException(ErrorCode.NO_CLASSIFICATION,
+                               "Classification not run because all redshift_solver failed")
 
     @run_method_exception_handler
     def load_result_store(self, rso, object_type, stage):
