@@ -430,13 +430,13 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
   std::shared_ptr<ExtremaResult> extremaResult =
       make_shared<ExtremaResult>(ranked_zCandidates);
 
-  for (Int32 i = 0; i < extremumCount; i++) {
-    // std::string Id = ranked_zCandidates[i].first;
-    Float64 z = ranked_zCandidates[i].second->Redshift;
+  for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
+    // std::string Id = ranked_zCandidates[iExtremum].first;
+    Float64 z = ranked_zCandidates[iExtremum].second->Redshift;
 
     // find the corresponding Z
     auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
-    const Int32 idx = std::distance(redshifts.begin(), itZ);
+    const Int32 zIndex = std::distance(redshifts.begin(), itZ);
 
     // find the min chisquare at corresponding redshift
     Float64 ChiSquare = DBL_MAX;
@@ -445,8 +445,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
       auto TplFitResult =
           std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
 
-      if (TplFitResult->ChiSquare[idx] < ChiSquare) {
-        ChiSquare = TplFitResult->ChiSquare[idx];
+      if (TplFitResult->ChiSquare[zIndex] < ChiSquare) {
+        ChiSquare = TplFitResult->ChiSquare[zIndex];
         tplName = r.first;
       };
     }
@@ -454,31 +454,30 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMerit =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplMerit =
         ChiSquare;
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeritPhot =
-        TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplName = tplName;
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeiksinIdx =
-        TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplEbmvCoeff =
-        TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplAmplitude =
-        TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplAmplitudeError =
-        TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplDtM =
-        TplFitResult->FitDtM[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMtM =
-        TplFitResult->FitMtM[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplLogPrior =
-        TplFitResult->LogPrior[idx];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedTpl.tplMeritPhot = TplFitResult->ChiSquarePhot[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplName =
+        tplName;
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedTpl.tplMeiksinIdx = TplFitResult->FitMeiksinIdx[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedTpl.tplEbmvCoeff = TplFitResult->FitEbmvCoeff[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedTpl.tplAmplitude = TplFitResult->FitAmplitude[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedTpl.tplAmplitudeError =
+        TplFitResult->FitAmplitudeError[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplDtM =
+        TplFitResult->FitDtM[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplMtM =
+        TplFitResult->FitMtM[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplSNR =
+        TplFitResult->SNR[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedTpl.tplLogPrior = TplFitResult->LogPrior[zIndex];
 
-    Float64 FitSNR = NAN;
-    if (TplFitResult->FitMtM[idx] != 0.)
-      FitSNR = abs(TplFitResult->FitDtM[idx]) /
-               sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
-    extremaResult->m_ranked_candidates[i].second->FittedTplSNR = FitSNR;
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;
@@ -488,22 +487,23 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
         std::make_shared<CModelSpectrumResult>();
     for (int spcIndex = 0; spcIndex < Context.getSpectra().size(); spcIndex++) {
-      const std::string &obsId = Context.getSpectra()[i]->getObsID();
+      const std::string &obsId = Context.getSpectra()[spcIndex]->getObsID();
 
       TPhotVal values = m_templateFittingOperator->ComputeSpectrumModel(
-          tpl, z, TplFitResult->FitEbmvCoeff[idx],
-          TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-          overlapThreshold, spcIndex, spcmodelPtr);
+          tpl, z, TplFitResult->FitEbmvCoeff[zIndex],
+          TplFitResult->FitMeiksinIdx[zIndex],
+          TplFitResult->FitAmplitude[zIndex], overlapThreshold, spcIndex,
+          spcmodelPtr);
 
       if (spcmodelPtr == nullptr)
         THROWG(INTERNAL_ERROR, "Could not "
                                "compute spectrum model");
       tplCatalog.m_logsampling = currentSampling;
 
-      extremaResult->m_modelPhotValue[i] =
+      extremaResult->m_modelPhotValue[iExtremum] =
           std::make_shared<const CModelPhotValueResult>(values);
     }
-    extremaResult->m_savedModelSpectrumResults[i] = spcmodelPtr;
+    extremaResult->m_savedModelSpectrumResults[iExtremum] = spcmodelPtr;
   }
 
   return extremaResult;

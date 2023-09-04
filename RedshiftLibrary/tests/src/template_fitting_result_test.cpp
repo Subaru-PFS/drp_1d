@@ -1,3 +1,4 @@
+
 // ============================================================================
 //
 // This file is part of: AMAZED
@@ -36,40 +37,26 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVERESULT_
-#define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVERESULT_
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include <boost/test/unit_test.hpp>
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/method/solveresult.h"
-#include "RedshiftLibrary/operator/extremaresult.h"
+using namespace NSEpic;
 
-#include <cmath>
-#include <memory>
-#include <unordered_map>
-#include <vector>
+BOOST_AUTO_TEST_SUITE(TemplateFittingResult_test)
 
-namespace NSEpic {
+BOOST_AUTO_TEST_CASE(SNRCalculation_test) {
+  CTemplateFittingResult result(1);
 
-/**
- * \ingroup Redshift
- */
-class CTemplateFittingSolveResult : public CPdfSolveResult {
+  // Result is None if mtm <= 0
+  BOOST_CHECK(std::isnan(result.SNRCalculation(1, 0)));
+  BOOST_CHECK(std::isnan(result.SNRCalculation(1, -1)));
 
-public:
-  CTemplateFittingSolveResult(
-      const std::shared_ptr<const TCandidateZ> &ExtremaResult,
-      const std::string &opt_pdfcombination, Float64 evidence)
-      : CPdfSolveResult("CTemplateFittingSolveResult", ExtremaResult,
-                        opt_pdfcombination, evidence){};
+  // Result is 0 if dtm <= 0
+  BOOST_CHECK(result.SNRCalculation(0, 1) == 0);
+  BOOST_CHECK(result.SNRCalculation(-1, 1) == 0);
 
-  std::string m_tplName = undefStr;
-  Float64 m_amplitude = NAN;
-  Float64 m_amplitudeError = NAN;
-  Float64 m_EbmvCoeff = NAN;
-  Int32 m_meiksinIdx = -1;
-};
+  // Result is as expected otherwise
+  BOOST_CHECK(result.SNRCalculation(1, 4) == 0.5);
+}
 
-} // namespace NSEpic
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()
