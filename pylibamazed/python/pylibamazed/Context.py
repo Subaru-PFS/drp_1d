@@ -151,7 +151,7 @@ class Context:
         for object_type in self.parameters.get_objects():
             linemeas_params_from_solver = not self.config["linemeascatalog"] \
                 and object_type not in self.config["linemeascatalog"]
-            method = self.parameters.get_object_solve_method(object_type)
+            method = self.parameters.get_solve_method(object_type)
             if method:
                 self.run_redshift_solver(rso, object_type, "redshift_solver")
 
@@ -170,7 +170,15 @@ class Context:
                     and not rso.has_error(object_type, "redshift_solver"):
                 self.run_reliability(rso, object_type, "reliability_solver")
 
-        self.run_classification(rso, None, "classification")
+        enable_classification = False
+        for object_type in self.parameters.get_objects():
+            if self.parameters.get_solve_method(object_type) \
+                    and not rso.has_error(object_type, "redshift_solver"):
+                enable_classification = True
+                break
+
+        if enable_classification:
+            self.run_classification(rso, None, "classification")
 
         self.load_result_store(rso, None, "load_result_store")
 
@@ -197,7 +205,7 @@ class Context:
     @run_method_exception_handler
     def run_redshift_solver(self, rso, object_type, stage):
         self.run_method(object_type,
-                        self.parameters.get_object_solve_method(object_type))
+                        self.parameters.get_solve_method(object_type))
 
     @run_method_exception_handler
     def run_linemeas_solver(self, rso, object_type, stage):
@@ -233,12 +241,12 @@ class Context:
             if self.parameters.get_object_linemeas_method(object_type) and \
                     not rso.has_error(object_type, "linemeas_catalog_load"):
                 linemeas_only = True
-            if self.parameters.get_object_solve_method(object_type):
+            if self.parameters.get_solve_method(object_type):
                 linemeas_only = False
 
         enable_classification = False
         for object_type in self.parameters.get_objects():
-            if self.parameters.get_object_solve_method(object_type) \
+            if self.parameters.get_solve_method(object_type) \
                     and not rso.has_error(object_type, "redshift_solver"):
                 enable_classification = True
                 break

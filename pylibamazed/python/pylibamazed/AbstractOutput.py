@@ -187,7 +187,7 @@ class AbstractOutput:
         if dataset == "linemeas":
             return self.parameters.get_object_linemeas_method(object_type)
         else:
-            return self.parameters.get_object_solve_method(object_type)
+            return self.parameters.get_solve_method(object_type)
 
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
@@ -397,7 +397,7 @@ class AbstractOutput:
                         self.object_results[object_type][ds][attr_name] = attr
 
     def load_candidate_level(self, object_type):
-        method = self.parameters.get_object_solve_method(object_type)
+        method = self.parameters.get_solve_method(object_type)
         if not method:
             return
         level = "candidate"

@@ -388,7 +388,7 @@ class CalibrationLibrary:
                     self.load_templates_catalog(object_type)
                 # load linecatalog for linemodelsolve
 
-                solve_method = self.parameters.get_object_solve_method(object_type)
+                solve_method = self.parameters.get_solve_method(object_type)
                 if solve_method == "LineModelSolve":
                     if linecatalogs:
                         self.load_linecatalog(object_type, solve_method)

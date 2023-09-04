@@ -234,7 +234,7 @@ class ParametersChecker:
 
     def _check_templateFittingSolve_section(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_object_solve_method(object_type) == "TemplateFittingSolve",
+            self.accessor.get_solve_method(object_type) == "TemplateFittingSolve",
             self.accessor.get_templateFittingSolve_section(object_type) is not None,
             error_message=f"TemplateFittingSolve for object {object_type}",
             warning_message=f"object {object_type} TemplateFittingSolve"
@@ -260,7 +260,7 @@ class ParametersChecker:
 
     def _check_templateCombinationSolve_section(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_object_solve_method(object_type) == "TplcombinationSolve",
+            self.accessor.get_solve_method(object_type) == "TplcombinationSolve",
             self.accessor.get_templateCombinationSolve_section(object_type) is not None,
             error_message=f"TplcombinationSolve for object {object_type}",
             warning_message=f"object {object_type} TplcombinationSolve"
@@ -299,7 +299,7 @@ class ParametersChecker:
 
     def _check_linemodelsolve_section(self, object_type: str):
         self._check_dependant_parameter_presence(
-            self.accessor.get_object_solve_method(object_type) == "LineModelSolve",
+            self.accessor.get_solve_method(object_type) == "LineModelSolve",
             self.accessor.get_lineModelSolve_section(object_type) is not None,
             error_message=f"LineModelSolve for object {object_type}",
             warning_message=f"object {object_type} LineModelSolve"

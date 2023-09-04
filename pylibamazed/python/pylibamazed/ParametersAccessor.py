@@ -65,7 +65,7 @@ class ParametersAccessor:
     def get_object_section(self, object_type) -> dict:
         return self.parameters.get(object_type)
 
-    def get_object_solve_method(self, object_type: str) -> str:
+    def get_solve_method(self, object_type: str) -> str:
         return self.get_object_section(object_type).get("method")
 
     def get_object_linemeas_method(self, object_type: str) -> str:
@@ -94,7 +94,7 @@ class ParametersAccessor:
 
     def photometry_is_enabled(self):
         for obj in self.get_objects([]):
-            method = self.get_object_solve_method(obj)
+            method = self.get_solve_method(obj)
             method_params: dict = (self.parameters[obj]).get(method)
             if method == "LineModelSolve":
                 method_params = self._get_on_None(method_params, "linemodel")
@@ -290,12 +290,10 @@ class ParametersAccessor:
 
     def get_nsigmasupport(self, object_type: str, method: str) -> float:
         nsigmasupport = None
-        print("method", method)
         if method == "LineModelSolve":
             nsigmasupport = self.get_lineModelSolve_nsigmasupport(object_type)
         elif method == "LineMeasSolve":
             nsigmasupport = self.get_lineMeasSolve_nsigmasupport(object_type)
-        print("nisigmasupport", nsigmasupport)
         return nsigmasupport
 
     def get_lineModelSolve_linecatalog(self, object_type: str) -> str:

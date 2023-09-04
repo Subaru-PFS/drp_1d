@@ -53,7 +53,7 @@ class Parameters(ParametersAccessor):
         Checker(accessor).check()
 
     def get_solve_methods(self, object_type) -> dict:
-        method = self.get_object_solve_method(object_type)
+        method = self.get_solve_method(object_type)
         linemeas_method = self.get_object_linemeas_method(object_type)
         methods = []
         if method:
@@ -65,7 +65,7 @@ class Parameters(ParametersAccessor):
     def get_linemodel_methods(self, object_type):
         methods = []
         linemeas_method = self.get_object_linemeas_method(object_type)
-        solve_method = self.get_object_solve_method(object_type)
+        solve_method = self.get_solve_method(object_type)
         if linemeas_method:
             methods.append(linemeas_method)
         if solve_method == "LineModelSolve":
@@ -75,8 +75,8 @@ class Parameters(ParametersAccessor):
     def get_objects_solve_methods(self):
         ret = dict()
         for object_type in self.get_objects():
-            if self.get_object_solve_method(object_type):
-                ret[object_type] = self.get_object_solve_method(object_type)
+            if self.get_solve_method(object_type):
+                ret[object_type] = self.get_solve_method(object_type)
         return ret
 
     def get_objects_linemeas_methods(self):
@@ -107,18 +107,18 @@ class Parameters(ParametersAccessor):
 
     def load_linemeas_parameters_from_result_store(self, output, object_type):
         redshift = output.get_attribute_from_source(object_type,
-                                                    self.get_object_solve_method(object_type),
+                                                    self.get_solve_method(object_type),
                                                     "model_parameters",
                                                     "Redshift",
                                                     0)
         self.parameters[object_type]["redshiftref"] = redshift
         velocity_abs = output.get_attribute_from_source(object_type,
-                                                        self.get_object_solve_method(object_type),
+                                                        self.get_solve_method(object_type),
                                                         "model_parameters",
                                                         "VelocityAbsorption",
                                                         0)
         velocity_em = output.get_attribute_from_source(object_type,
-                                                       self.get_object_solve_method(object_type),
+                                                       self.get_solve_method(object_type),
                                                        "model_parameters",
                                                        "VelocityEmission",
                                                        0)
@@ -126,7 +126,7 @@ class Parameters(ParametersAccessor):
         self.set_velocity_emission(object_type, "LineMeasSolve", velocity_em)
 
     def is_tplratio_catalog_needed(self, object_type) -> bool:
-        solve_method = self.get_object_solve_method(object_type)
+        solve_method = self.get_solve_method(object_type)
         if solve_method == "LineModelSolve":
             return self.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"]
         else:
@@ -134,12 +134,12 @@ class Parameters(ParametersAccessor):
 
     def stage_enabled(self, object_type, stage):
         if stage == "redshift_solver":
-            return self.get_object_solve_method(object_type) is not None
+            return self.get_solve_method(object_type) is not None
         elif stage == "linemeas_solver":
             return self.get_object_linemeas_method(object_type) is not None
         elif stage == "linemeas_catalog_load":
             return self.get_object_linemeas_method(object_type) is not None \
-                and self.get_object_solve_method(object_type) is None
+                and self.get_solve_method(object_type) is None
         elif stage == "reliability_solver":
             return self.get_object_reliability_enabled(object_type)
         elif stage == "sub_classif_solver":
@@ -167,7 +167,7 @@ class Parameters(ParametersAccessor):
 
     def check_linemeas_validity(self):
         for object_type in self.get_objects():
-            method = self.get_object_solve_method(object_type)
+            method = self.get_solve_method(object_type)
             if method == "LineModelSolve":
                 if self.get_object_linemeas_method(object_type):
                     raise APIException(
