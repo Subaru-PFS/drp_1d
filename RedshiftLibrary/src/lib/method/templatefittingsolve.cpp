@@ -490,8 +490,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     for (int spcIndex = 0; spcIndex < Context.getSpectra().size(); spcIndex++) {
       const std::string &obsId = Context.getSpectra()[i]->getObsID();
 
-      TPhotVal values;
-      values = m_templateFittingOperator->ComputeSpectrumModel(
+      TPhotVal values = m_templateFittingOperator->ComputeSpectrumModel(
           tpl, z, TplFitResult->FitEbmvCoeff[idx],
           TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
           overlapThreshold, spcIndex, spcmodelPtr);

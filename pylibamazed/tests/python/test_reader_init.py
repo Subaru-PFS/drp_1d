@@ -189,7 +189,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
     def test_obs_ids_are_consistent(self):
         # Without "others"
         # All keys consistent, no multi obs
-        fsr = self.initialize_fsr_with_data()
+        fsr = self.initialize_fsr_with_data(**{"obs_id": "1"})
         assert fsr._obs_ids_are_consistent() is True
 
         # All key consistent, with multi obs
@@ -220,6 +220,8 @@ class TestReaderInit(TestSpectrumReaderUtils):
 
     def test_input_output_size_coherence_with_filtering(self):
         fsr = self.initialize_fsr_with_data(**{
+            "obs_id": "1",
+            "lambdarange": {"1": [0, 1], "2": [3, 4]},
             "multiobsmethod": "full",
             "filters": [{"key": "waves", "instruction": "<=", "value": 3}]
         })
@@ -229,14 +231,14 @@ class TestReaderInit(TestSpectrumReaderUtils):
         fsr.init()
 
         # Check size is correct for spectrum first obs
-        spectrum = fsr.get_spectrum()
+        spectrum = fsr.get_spectrum("1")
 
         assert spectrum.GetSpectralAxis().GetSamplesCount() == 4
         assert spectrum.GetFluxAxis().GetSamplesCount() == 4
         assert spectrum.GetErrorAxis().GetSamplesCount() == 4
 
         # Check size is correct for second obs
-        spectrum = fsr.get_spectrum(1)
+        spectrum = fsr.get_spectrum("2")
         assert spectrum.GetSpectralAxis().GetSamplesCount() == 4
         assert spectrum.GetFluxAxis().GetSamplesCount() == 4
         assert spectrum.GetErrorAxis().GetSamplesCount() == 4

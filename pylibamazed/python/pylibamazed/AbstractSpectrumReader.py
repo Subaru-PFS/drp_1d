@@ -248,7 +248,8 @@ class AbstractSpectrumReader:
         lsf_factory = CLSFFactory.GetInstance()
         lsf_args = self._lsf_args()
         lsf = lsf_factory.Create(self.parameters.get_lsf_type(), lsf_args)
-        self._spectra[0].SetLSF(lsf)
+        for obs_id in self.parameters.get_observation_ids():
+            self._spectra[obs_id].SetLSF(lsf)
         self._add_photometric_data()
 
     def _get_filters(self):
@@ -265,7 +266,8 @@ class AbstractSpectrumReader:
             names = tuple(self.photometric_data[0].Name)
             flux = tuple([float(f) for f in self.photometric_data[0].Flux])
             fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
-            self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
+            for obs_id in self.parameters.get_observation_ids():
+                self._spectra[obs_id].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
     def _all_containers(self):
         return [container for container in self.others.values()] \

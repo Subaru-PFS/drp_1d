@@ -94,7 +94,8 @@ void COperatorTemplateFittingPhot::RebinTemplate(
   COperatorTemplateFittingBase::RebinTemplate(
       tpl, redshift, currentRange, overlapFraction, overlapThreshold, spcIndex);
 
-  RebinTemplateOnPhotBand(tpl, redshift);
+  if (spcIndex == 0)
+    RebinTemplateOnPhotBand(tpl, redshift);
 }
 
 void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
