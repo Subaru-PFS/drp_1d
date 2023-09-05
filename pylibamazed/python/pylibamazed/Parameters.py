@@ -47,10 +47,11 @@ from pylibamazed.redshift import ErrorCode
 
 
 class Parameters(ParametersAccessor):
-    def __init__(self, parameters_dict: dict, Checker=ParametersChecker):
+    def __init__(self, parameters_dict: dict, Checker=ParametersChecker, makeChecks=True):
         self.parameters = parameters_dict
-        accessor = ParametersAccessor(self.parameters)
-        Checker(accessor).check()
+        if makeChecks:
+            accessor = ParametersAccessor(self.parameters)
+            Checker(accessor).check()
 
     def get_solve_methods(self, object_type) -> dict:
         method = self.get_solve_method(object_type)
