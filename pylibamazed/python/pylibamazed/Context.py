@@ -228,6 +228,14 @@ class Context:
 
     @run_method_exception_handler
     def run_classification(self, rso, object_type, stage):
+        linemeas_only = False
+        for object_type in self.parameters.get_objects():
+            if self.parameters.get_linemeas_method(object_type) and \
+                    not rso.has_error(object_type, "linemeas_catalog_load"):
+                linemeas_only = True
+            if self.parameters.get_solve_method(object_type):
+                linemeas_only = False
+
         enable_classification = False
         for object_type in self.parameters.get_objects():
             if self.parameters.get_solve_method(object_type) \
@@ -235,11 +243,12 @@ class Context:
                 enable_classification = True
                 break
 
-        if enable_classification:
-            self.run_method("classification", "ClassificationSolve")
-        else:
-            raise APIException(ErrorCode.NO_CLASSIFICATION,
-                               "Classification not run because all redshift_solver failed")
+        if not linemeas_only:
+            if enable_classification:
+                self.run_method("classification", "ClassificationSolve")
+            else:
+                raise APIException(ErrorCode.NO_CLASSIFICATION,
+                                   "Classification not run because all redshift_solver failed")
 
     @run_method_exception_handler
     def load_result_store(self, rso, object_type, stage):
