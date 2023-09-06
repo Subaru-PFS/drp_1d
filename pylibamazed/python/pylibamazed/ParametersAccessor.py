@@ -44,9 +44,12 @@ class ParametersAccessor:
     def __init__(self, parameters: dict):
         self.parameters = parameters
 
-    def get_lambda_range(self):
-        return self.parameters.get("lambdarange")
-
+    def get_lambda_range(self, obs_id=""):
+        if not obs_id:
+            return self.parameters["lambdarange"]
+        else:
+            return self.parameters["lambdarange"][obs_id]
+    
     def get_airvacuum_method(self):
         return self.parameters.get("airvacuum_method", "")
 
