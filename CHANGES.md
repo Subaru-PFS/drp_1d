@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.44.0 (2023-09-06)
+### Added
+* [8033] : Read additional columns from input spectrum data and filter input spectrum based on column values
+* [8112] : Add Lya model to amazed output
+* [8065] : Add classification warning to amazed output
+* [8058] : Add Continuum SNR to amazed output
+* [7529] : Add a warning when 2nd pass window size is too small
+* [8223] : Raise an error when classification is not run
+### Changes
+* [8051] : Enhance error message description when spectrum validation fails
+* [7706] : Updates rule "strong higher than weak"
+* [8048] : Change parameters access. All accesses are made through object. There no dictionary access any more
+* [8222] : Change error enumeration
+## Removed
+* [8120] : End of support for python 3.6
+## Fixed
+* [8070] : Fix wrong signatures of load_XXX methods in ASCIISpectrumReader
+* [8143] : Fix values accessor in AmazedSpectrumWriter
+* [8171] : Fix overlapping lines
+* [8199] : Fix result specification filtering
+
 ## 0.42.0 (2023-04-20)
 ### Added
 * [7875] : Add 38 new solver results in the extended results list
