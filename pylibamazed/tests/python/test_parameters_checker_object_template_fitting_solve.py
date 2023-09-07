@@ -50,7 +50,7 @@ class TestTemplateFittingSolve:
         param_dict = make_parameter_dict_at_object_level(**kwargs)
         if kwargs.get("TemplateFittingSolve", {}).get("enablephotometry"):
             param_dict["photometryTransmissionDir"] = "sth"
-            param_dict["photometryBand"] = []
+            param_dict["photometryBand"] = ["someBand"]
         return param_dict
 
     def test_error_if_method_is_templateFittingSolve_and_section_is_absent(self):
