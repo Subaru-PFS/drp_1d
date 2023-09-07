@@ -185,7 +185,7 @@ class AbstractOutput:
         if object_type is None:
             return None
         if dataset == "linemeas":
-            return self.parameters.get_object_linemeas_method(object_type)
+            return self.parameters.get_linemeas_method(object_type)
         else:
             return self.parameters.get_solve_method(object_type)
 
@@ -404,7 +404,7 @@ class AbstractOutput:
 
         # get phot bands from params
         if self.parameters.photometry_is_enabled():
-            bands = self.parameters.get_photometry_bands(object_type, method)
+            bands = self.parameters.get_photometry_bands()
         else:
             bands = []
         rs, candidate_datasets = self.filter_datasets(level)

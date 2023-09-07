@@ -89,8 +89,8 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
     redshift_range = [model_ha["zrange_min"],
                       model_ha["zrange_max"]]
     redshift_range_step = model_ha["zrange_step"]
-    s_redshift_range = parameters.get_object_redshiftrange(object_type)
-    s_redshift_range_step = parameters.get_object_redshiftstep(object_type)
+    s_redshift_range = parameters.get_redshiftrange(object_type)
+    s_redshift_range_step = parameters.get_redshiftstep(object_type)
     if s_redshift_range != redshift_range:
         raise APIException(
             ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
@@ -332,7 +332,7 @@ class CalibrationLibrary:
                              self.parameters.get_photometry_transmission_dir(),
                              "*")
 
-        bands = self.parameters.get_photometry_band()
+        bands = self.parameters.get_photometry_bands()
         for f in glob.glob(paths):
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
@@ -397,15 +397,15 @@ class CalibrationLibrary:
                         if lineratios:
                             self.load_line_ratio_catalog_list(object_type)
                             # load linecatalog for linemeassolve
-                linemeas_method = self.parameters.get_object_linemeas_method(object_type)
+                linemeas_method = self.parameters.get_linemeas_method(object_type)
                 if linemeas_method == "LineMeasSolve":
                     if linecatalogs:
                         self.load_linecatalog(object_type, linemeas_method)
 
                 # Load the reliability model
-                if self.parameters.get_object_reliability_enabled(object_type) and reliability:
+                if self.parameters.get_reliability_enabled(object_type) and reliability:
                     model_path = os.path.join(self.calibration_dir,
-                                              self.parameters.get_object_reliability_model(object_type))
+                                              self.parameters.get_reliability_model(object_type))
                     mp = load_reliability_model(model_path,
                                                 self.parameters,
                                                 object_type)

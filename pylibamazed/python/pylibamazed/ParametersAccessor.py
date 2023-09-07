@@ -53,7 +53,7 @@ class ParametersAccessor:
     def get_photometry_transmission_dir(self):
         return self.parameters.get("photometryTransmissionDir")
 
-    def get_photometry_band(self) -> List[str]:
+    def get_photometry_bands(self) -> List[str]:
         return self.parameters.get("photometryBand")
 
     def get_multiobs_method(self):
@@ -68,25 +68,25 @@ class ParametersAccessor:
     def get_solve_method(self, object_type: str) -> str:
         return self.get_object_section(object_type).get("method")
 
-    def get_object_linemeas_method(self, object_type: str) -> str:
+    def get_linemeas_method(self, object_type: str) -> str:
         return self.get_object_section(object_type).get("linemeas_method")
 
-    def get_object_linemeas_dzhalf(self, object_type: str) -> float:
+    def get_linemeas_dzhalf(self, object_type: str) -> float:
         return self.get_object_section(object_type).get("linemeas_dzhalf")
 
-    def get_object_redshiftrange(self, obejct_type: str) -> List[float]:
+    def get_redshiftrange(self, obejct_type: str) -> List[float]:
         return self.get_object_section(obejct_type).get("redshiftrange")
 
-    def get_object_redshiftstep(self, object_type: str) -> float:
+    def get_redshiftstep(self, object_type: str) -> float:
         return self.get_object_section(object_type).get("redshiftstep")
 
-    def get_object_linemeas_redshiftstep(self, object_type: str) -> float:
+    def get_linemeas_redshiftstep(self, object_type: str) -> float:
         return self.get_object_section(object_type).get("linemeas_redshiftstep")
 
-    def get_object_reliability_enabled(self, object_type: str) -> str:
+    def get_reliability_enabled(self, object_type: str) -> str:
         return self.get_object_section(object_type).get("enable_reliability")
 
-    def get_object_reliability_model(self, object_type: str) -> str:
+    def get_reliability_model(self, object_type: str) -> str:
         return self.get_object_section(object_type).get("reliability_model")
 
     def get_template_dir(self, object_type: str):
@@ -318,5 +318,5 @@ class ParametersAccessor:
             linemodel = self.get_lineMeasSolve_linemodel_section(object_type)
         return linemodel
 
-    def get_object_redshift_sampling(self, object_type):
+    def get_redshift_sampling(self, object_type):
         return self.get_object_section(object_type).get("redshiftsampling")

@@ -103,7 +103,7 @@ class ParametersChecker:
         parameter_name = "photometryBand"
         self._check_dependant_parameter_presence(
             self.accessor.photometry_is_enabled(),
-            self.accessor.get_photometry_band() is not None,
+            self.accessor.get_photometry_bands() is not None,
             parameter_name,
             parameter_name
         )
@@ -210,24 +210,24 @@ class ParametersChecker:
 
     def _check_linemeassolve_dzhalf(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_object_linemeas_method(object_type) not in ["", None],
-            self.accessor.get_object_linemeas_dzhalf(object_type) is not None,
+            self.accessor.get_linemeas_method(object_type) not in ["", None],
+            self.accessor.get_linemeas_dzhalf(object_type) is not None,
             f"lineameas_dzhalf for object {object_type}",
             f"object {object_type} linemeas_dzhalf"
         )
 
     def _check_linemeassolve_redshiftstep(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_object_linemeas_method(object_type) not in ["", None],
-            self.accessor.get_object_linemeas_redshiftstep(object_type) is not None,
+            self.accessor.get_linemeas_method(object_type) not in ["", None],
+            self.accessor.get_linemeas_redshiftstep(object_type) is not None,
             f"lineameas_redshiftstep for object {object_type}",
             f"object {object_type} linemeas_redshiftstep"
         )
 
     def _check_object_reliability(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_object_reliability_enabled(object_type),
-            self.accessor.get_object_reliability_model(object_type) is not None,
+            self.accessor.get_reliability_enabled(object_type),
+            self.accessor.get_reliability_model(object_type) is not None,
             error_message=f"reliability_model for object {object_type}",
             warning_message=f"object {object_type} reliability_enabled"
         )

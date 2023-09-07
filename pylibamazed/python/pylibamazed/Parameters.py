@@ -55,7 +55,7 @@ class Parameters(ParametersAccessor):
 
     def get_solve_methods(self, object_type) -> dict:
         method = self.get_solve_method(object_type)
-        linemeas_method = self.get_object_linemeas_method(object_type)
+        linemeas_method = self.get_linemeas_method(object_type)
         methods = []
         if method:
             methods.append(method)
@@ -65,7 +65,7 @@ class Parameters(ParametersAccessor):
 
     def get_linemodel_methods(self, object_type):
         methods = []
-        linemeas_method = self.get_object_linemeas_method(object_type)
+        linemeas_method = self.get_linemeas_method(object_type)
         solve_method = self.get_solve_method(object_type)
         if linemeas_method:
             methods.append(linemeas_method)
@@ -137,12 +137,12 @@ class Parameters(ParametersAccessor):
         if stage == "redshift_solver":
             return self.get_solve_method(object_type) is not None
         elif stage == "linemeas_solver":
-            return self.get_object_linemeas_method(object_type) is not None
+            return self.get_linemeas_method(object_type) is not None
         elif stage == "linemeas_catalog_load":
-            return self.get_object_linemeas_method(object_type) is not None \
+            return self.get_linemeas_method(object_type) is not None \
                 and self.get_solve_method(object_type) is None
         elif stage == "reliability_solver":
-            return self.get_object_reliability_enabled(object_type)
+            return self.get_reliability_enabled(object_type)
         elif stage == "sub_classif_solver":
             return self.is_tplratio_catalog_needed(object_type)
         else:
@@ -170,7 +170,7 @@ class Parameters(ParametersAccessor):
         for object_type in self.get_objects():
             method = self.get_solve_method(object_type)
             if method == "LineModelSolve":
-                if self.get_object_linemeas_method(object_type):
+                if self.get_linemeas_method(object_type):
                     raise APIException(
                         ErrorCode.INCOHERENT_CONFIG_OPTION,
                         "Cannot run LineMeasSolve from catalog when sequencial processing is selected"
