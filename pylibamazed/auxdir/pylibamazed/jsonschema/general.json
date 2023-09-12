@@ -36,8 +36,8 @@
             "$ref": "objects.json"
         },
         "lambdarange": {
-            "type": "array",
-            "title": "Lambda range in Angstroms",
+            "type": ["array", "object"],
+            "title": "Lambda range in Angstroms. Is a array (range) for mono obs, and a dictionary of ranges for multiobs",
             "minItems": 2,
             "maxItems": 2,
             "prefixItems": [
