@@ -1,0 +1,13 @@
+{
+    "$id": "template-catalog",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Template catalog",
+    "required": ["continuumRemoval"],
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "continuumRemoval": {
+            "$ref": "continuum_removal.json"
+        }
+    }
+}

@@ -123,7 +123,7 @@ class Context:
             spectrum_reader.init()
             if self.config.get("linemeascatalog"):
                 self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id, self.config)
-            self.process_flow_context.LoadParameterStore(self.parameters.get_json())
+            self.process_flow_context.LoadParameterStore(self.parameters.to_json())
             self.process_flow_context.Init()
             # store flag in root object
             resultStore.StoreFlagResult("context_warningFlag", zflag.getBitMask())
@@ -165,12 +165,20 @@ class Context:
                     and not rso.has_error(object_type, "redshift_solver"):
                 self.run_sub_classification(rso, object_type, "sub_classif_solver")
 
-            if self.parameters.reliability_enabled(object_type) \
+            if self.parameters.get_reliability_enabled(object_type) \
                 and object_type in self.calibration_library.reliability_models \
                     and not rso.has_error(object_type, "redshift_solver"):
                 self.run_reliability(rso, object_type, "reliability_solver")
 
-        self.run_classification(rso, None, "classification")
+        enable_classification = False
+        for object_type in self.parameters.get_objects():
+            if self.parameters.get_solve_method(object_type) \
+                    and not rso.has_error(object_type, "redshift_solver"):
+                enable_classification = True
+                break
+
+        if enable_classification:
+            self.run_classification(rso, None, "classification")
 
         self.load_result_store(rso, None, "load_result_store")
 
@@ -207,7 +215,7 @@ class Context:
     @run_method_exception_handler
     def run_load_linemeas_params(self, rso, object_type, stage):
         self.parameters.load_linemeas_parameters_from_result_store(rso, object_type)
-        self.process_flow_context.LoadParameterStore(self.parameters.get_json())
+        self.process_flow_context.LoadParameterStore(self.parameters.to_json())
 
     @run_method_exception_handler
     def run_reliability(self, rso, object_type, stage):
@@ -289,4 +297,4 @@ def _check_config(config):
 def _check_LinemeasValidity(config, parameters):
     if not config["linemeascatalog"]:
         return
-    parameters.check_lineameas_validity()
+    parameters.check_linemeas_validity()

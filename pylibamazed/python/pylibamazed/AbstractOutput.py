@@ -301,7 +301,7 @@ class AbstractOutput:
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:
-            skipsecondpass = self.parameters.check_lmskipsecondpass(object_type)
+            skipsecondpass = self.parameters.get_lineModelSolve_skipsecondpass(object_type)
 
         # retrieve results which are not firstpass results
         # exclude firstpass results for methods other than LineModelSolve
@@ -403,7 +403,10 @@ class AbstractOutput:
         level = "candidate"
 
         # get phot bands from params
-        bands = self.parameters.get_photometry_bands(object_type, method)
+        if self.parameters.photometry_is_enabled():
+            bands = self.parameters.get_photometry_bands()
+        else:
+            bands = []
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
             ds_attributes = self.filter_dataset_attributes(ds, object_type, method).copy()

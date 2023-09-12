@@ -36,23 +36,25 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import json
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from pylibamazed.Filter import FilterItem, FilterList, SpectrumFilterItem
-from pylibamazed.Parameters import Parameters
+
+if TYPE_CHECKING:
+    from pylibamazed.Parameters import Parameters
 
 
 class AbstractFilterLoader:
+    keys = ["key", "instruction", "value"]
 
     def __init__(
         self,
-        json_keys_to_filter_attrs,
         FilterItemClass,
     ):
         # dictionary name of the key in FilterItem object: name of the key in json
-        self.json_keys_to_filter_attrs = json_keys_to_filter_attrs
         self.FilterItemClass = FilterItemClass
 
     @abstractmethod
@@ -71,39 +73,17 @@ class ParamJsonFilterLoader(AbstractFilterLoader):
     ]
     """
 
-    default_json_keys_to_filter_attrs = {
-        "key": "key",
-        "instruction": "instruction",
-        "value": "value"
-    }
-
     def __init__(
         self,
-        json_keys_to_filter_attrs=default_json_keys_to_filter_attrs,
         FitlerItemClass=SpectrumFilterItem
     ):
-        super().__init__(json_keys_to_filter_attrs, FitlerItemClass)
+        super().__init__(FitlerItemClass)
 
     def get_filters(self, params: Parameters) -> FilterList:
         filters: List[FilterItem] = []
         json_filters = params.get_filters()
         if json_filters is None:
             return None
-        self._check_json_format(json_filters)
         for filter in json_filters:
             filters.append(self.FilterItemClass(filter["key"], filter["instruction"], filter["value"]))
         return FilterList(filters)
-
-    def _check_json_format(self, json: json) -> None:
-        if type(json) != list:
-            raise ValueError("Input filters json must be a list")
-
-        filter: List
-        for filter in json:
-            json_keys = self.json_keys_to_filter_attrs.values()
-            different_keys = set(filter.keys()) != set(json_keys)
-            different_length = len(filter.keys()) != len(json_keys)
-            if different_keys or different_length:
-                raise ValueError(
-                    f"Each dictionary in json list must have exactly the following keys {json_keys}"
-                )

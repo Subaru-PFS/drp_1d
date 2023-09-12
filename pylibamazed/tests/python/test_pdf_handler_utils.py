@@ -40,6 +40,7 @@
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Parameters import Parameters
 from pylibamazed.PdfHandler import buildPdfHandler
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class PdfHandlerTestUtils:
@@ -57,7 +58,7 @@ class PdfHandlerTestUtils:
 
     @staticmethod
     def parameters():
-        return Parameters({"objects": []})
+        return Parameters({"objects": []}, FakeParametersChecker)
 
     @staticmethod
     def abstract_output():

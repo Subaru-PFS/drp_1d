@@ -1,0 +1,32 @@
+{
+    "$id": "line-model-first-pass-schema",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Line model first pass",
+    "type": "object",
+    "required": ["fittingmethod", "largegridstepratio", "multiplecontinuumfit_disable"],
+    "additionalProperties": false,
+    "properties": {
+        "fittingmethod": {
+            "type": "string",
+            "enum": ["hybrid", "individual", "svd"],
+            "title": "Fitting method",
+            "description": "Overwrite `fittingmethod` parameter to select a different method"
+        },
+        "largegridstepratio": {
+            "type": "integer",
+            "title": "Large grid step ratio",
+            "description": "Multiplicative factor of the redshift step size for the first pass: firstpassz step = step * largegridstepratio. To use finegrid step, set largegridstep to 0 or 1"
+        },
+        "tplratio_ismfit": {
+            "type": "boolean",
+            "title": "Wether to activate ISM extinction fit",
+            "description":"Wether to overwrite the `tplratio_ismfit` parameter",
+            "default": "false"
+        },
+        "multiplecontinuumfit_disable": {
+            "type": "boolean",
+            "title": "Wether to use only the best continuum template",
+            "description": "Wether to overwrite the `continuumfit.count` parameter to keep only the best continuum template (true=> sets `continuumfit.count` to 1)"
+        }
+    }
+}

@@ -1,0 +1,103 @@
+{
+    "$id": "objects",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Objects",
+    "type": "object",
+    "required": [
+        "redshiftrange",
+        "redshiftstep",
+        "redshiftsampling",
+        "template_dir",
+        "linemeas_method",
+        "method",
+        "enable_reliability"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "redshiftrange": {
+            "type": "array",
+            "title": "Redshift range",
+            "description": "[min, max]",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+                {"type": "number"},
+                {"type": "number"}
+            ],
+            "items": false
+        },
+        "redshiftstep": {
+            "type": "number",
+            "title": "Redshift step",
+            "description": "Redshift step for linear scale or lowest step for log scale"
+        },
+        "redshiftsampling": {
+            "type": "string",
+            "enum": ["lin", "log"],
+            "title": "Redshift sampling scale",
+            "description": "Scale: \n * **lin**: linear \n * **log**: logarithmic"
+        },
+        "template_dir": {
+            "type": "string",
+            "title": "Template directory"
+        },
+        "linemeas_method": {
+            "type": ["string", "null"],
+            "enum": ["", "LineMeasSolve", null],
+            "title": "Linemeas solve"
+        },
+        "linemeas_dzhalf": {
+            "type": "number",
+            "title": "Redshift range radius",
+            "description": "Radius for redshift range around Zref "
+        },
+        "linemeas_redshiftstep": {
+            "type": "number",
+            "title": "Redshift step"
+        },
+        "method": {
+            "type": ["string", "null"],
+            "enum": ["", "LineModelSolve", "TemplateFittingSolve", "TplcombinationSolve", null],
+            "title": "Fitting method",
+            "description": "Select the fitting methods for object type : \n * **TemplateFittingSolve**: least-square template fitting \n * **LineModelSolve**: least-square fitting of a line model (it includes fullmodel ie continuum model + line model) \n * **TplcombinationSolve**: least-square template fitting combination"
+        },
+        "enable_reliability": {
+            "type": "boolean",
+            "title": "Enable reliability",
+            "description": "Enable reliability computation using machine learning"
+        },
+        "reliability_model": {
+            "type": "string",
+            "title": "Reliability path",
+            "description": "Relative path to the neural network model"
+        },
+        "TemplateFittingSolve": {
+            "type": "object",
+            "title": "Template fitting solve",
+            "properties": {
+                "$ref": "template_fitting_solve.json"
+            }
+        },
+        "TplcombinationSolve": {
+            "type": "object",
+            "title": "Template combination solve",
+            "properties": {
+                "$ref": "template_combination_solve.json"
+            }
+        },
+        "LineModelSolve": {
+            "type": "object",
+            "title": "Line model solve",
+            "properties": {
+                "$ref": "line_model_solve.json"
+            }
+        },
+        "LineMeasSolve": {
+           "type": "object",
+           "title": "Linemeas solve",
+           "properties": {
+            "$ref": "linemeas_solve.json"
+           }
+        }
+    }
+}

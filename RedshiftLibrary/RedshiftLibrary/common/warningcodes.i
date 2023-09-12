@@ -24,4 +24,5 @@ enum class WarningCode {
   LINEARFIT_RANK_DEFICIENT,                   // 22
   LBFGSPP_ERROR,                              // 23
   WINDOW_TOO_SMALL,                           // 24
+  UNUSED_PARAMETER,                           // 24
 };

@@ -44,6 +44,7 @@ from pylibamazed.AbstractSpectrumReader import (AbstractSpectrumReader,
                                                 Container)
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestSpectrumReaderUtils:
@@ -66,7 +67,7 @@ class TestSpectrumReaderUtils:
 
     def initialize_fsr_with_data(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)
-        params = Parameters(params_dict)
+        params = Parameters(params_dict, FakeParametersChecker)
         cl = CalibrationLibrary(params, tempfile.mkdtemp())
         fsr = FakeSpectrumReader("000", params, cl, "000", "range")
         self.full_load(fsr, **kwargs)

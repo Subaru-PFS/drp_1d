@@ -42,6 +42,7 @@ import os
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 module_root_dir = os.path.split(__file__)[0]
 calibration_dir = os.path.join(module_root_dir, "..", "..", "auxdir", "pylibamazed", "test", "calibration")
@@ -62,7 +63,7 @@ def make_parameters() -> Parameters:
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_ismfit"] = True
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["nsigmasupport"] = 8
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["igmfit"] = True
-    return Parameters(parameters_dict)
+    return Parameters(parameters_dict, FakeParametersChecker)
 
 
 def test_calibration_linecatalog():
