@@ -249,14 +249,6 @@ test-manylinux2014:
     - .manylinux2014
     - .test-manylinux
 
-wheel37-manylinux2014:
-  variables:
-    PYTHON_VERSION: "37"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .wheel-manylinux
-
 wheel38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
@@ -272,14 +264,6 @@ wheel39-manylinux2014:
     - .manylinux2014
     - .wheel-manylinux
 
-pytest37-manylinux2014:
-  variables:
-    PYTHON_VERSION: "37"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .pytest-manylinux
-
 pytest38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
@@ -294,15 +278,6 @@ pytest39-manylinux2014:
   extends:
     - .manylinux2014
     - .pytest-manylinux
-
-push-rc-37-manylinux2014:
-  variables:
-    PYTHON_VERSION: "37"
-  extends:
-    - .manylinux2014
-    - .push-rc-manylinux
-  dependencies:
-    - wheel37-manylinux2014
 
 push-rc-38-manylinux2014:
   variables:
