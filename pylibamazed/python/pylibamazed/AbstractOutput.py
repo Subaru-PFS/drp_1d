@@ -460,7 +460,7 @@ class AbstractOutput:
                         if attr is not None:
                             attr_name_ = band
                             candidates[rank][attr_name_] = attr
-                if "<ObsID>" in attr_name:
+                elif "<ObsID>" in attr_name:
                     for obs_id in self.parameters.get_observation_ids():
                         attr = self.get_attribute_wrapper(object_type,
                                                           method,
