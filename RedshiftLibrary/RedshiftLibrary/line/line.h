@@ -119,7 +119,7 @@ public:
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
                                &igmcorrectionMeiksin = nullptr);
   void resetAsymFitParams();
-  void setNominalAmplitude(const Float64 &ampl) { m_NominalAmplitude = ampl; }
+  void setNominalAmplitude(Float64 ampl) { m_NominalAmplitude = ampl; }
 
   const std::string &GetName() const { return m_Name; };
   const std::string &GetGroupName() const { return m_GroupName; };

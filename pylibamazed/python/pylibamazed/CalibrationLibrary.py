@@ -60,14 +60,20 @@ from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   CTemplateCatalog, ErrorCode, GlobalException,
                                   MeiksinCorrection, TAsymParams,
                                   VecMeiksinCorrection, VecTFloat64List,
-                                  undefStr)
+                                  WarningCode, undefStr)
 
 zflag = CFlagWarning.GetInstance()
 
 
-def _get_linecatalog_id(row):
-    wl = round(row.WaveLength, 2)
-    return row.Name + "_" + str(wl) + "_" + row.Type
+def _strid(waveLength, name, ltype):
+    wl = round(waveLength, 2)
+    return name + "_" + str(wl) + "_" + ltype
+
+
+def _get_linecatalog_strid(lineCatalog_df):
+    return [_strid(w, n, t) for w, n, t in zip(lineCatalog_df.WaveLength,
+                                               lineCatalog_df.Name,
+                                               lineCatalog_df.Type)]
 
 
 def load_reliability_model(model_path, parameters: Parameters, object_type):
@@ -222,7 +228,9 @@ class CalibrationLibrary:
             line_catalog = pd.read_csv(
                 line_catalog_file,
                 sep='\t',
-                dtype={"WaveLength": float, "AmplitudeGroupName": str, "EnableFitWaveLengthOffset": bool}
+                dtype={"WaveLength": float, "AmplitudeGroupName": str, "EnableFitWaveLengthOffset": bool,
+                       "Name": str, "Type": str, "NominalAmplitude": float
+                       }
             )
         except pd.errors.ParserError as e:
             raise AmazedError(ErrorCode.BAD_FILEFORMAT,
@@ -232,11 +240,12 @@ class CalibrationLibrary:
 
         # force "-1" to undefStr (for compatibility)
         line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName"] = undefStr
-
-        enableIGM = self.parameters.get_solve_method_igm_fit(object_type, solve_method)
-
-        # here should go the change of profiles if igm is applied
+        line_catalog['strId'] = _get_linecatalog_strid(line_catalog)
+        if not line_catalog.strId.is_unique:
+            raise APIException(ErrorCode.DUPLICATED_LINES, "some rows in the linecatalog are duplicating the\
+                same line (name position, type)")
         self.line_catalogs_df[object_type][solve_method] = line_catalog
+
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
                 asymParams = TAsymParams(1., 4.5, 0.)
@@ -258,10 +267,11 @@ class CalibrationLibrary:
                                                                             row.WaveLengthOffset,
                                                                             row.EnableFitWaveLengthOffset,
                                                                             index,
-                                                                            _get_linecatalog_id(row),
                                                                             self.meiksin)
-            if enableIGM:
-                self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)
+
+        enableIGM = self.parameters.get_solve_method_igm_fit(object_type, solve_method)
+        if enableIGM:
+            self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)
 
     def load_line_ratio_catalog_list(self, object_type):
         logger = logging.getLogger("calibration_api")
@@ -281,35 +291,54 @@ class CalibrationLibrary:
             n_ebmv_coeffs = self.parameters.get_ebmv_count()
         prior = 1. / (n_ebmv_coeffs * len(line_ratio_catalog_list))
 
-        enableIGM = self.parameters.get_lineModelSolve_igmfit(object_type)
-
+        line_catalog_df = self.line_catalogs_df[object_type]["LineModelSolve"]
+        line_ids = line_catalog_df["strId"].reset_index()
+        line_ids["index"] = line_ids["index"].astype(pd.Int64Dtype())  # enable int missing value
         for f in line_ratio_catalog_list:
-            lr_catalog_df = pd.read_csv(f, sep='\t')
+            lr_catalog_df = pd.read_csv(f, sep='\t',
+                                        dtype={"WaveLength": float, "Name": str, "Type": str,
+                                               "NominalAmplitude": float})
             name = f.split(os.sep)[-1][:-4]
             with open(os.path.join(self.calibration_dir,
                                    self.parameters.get_lineModelSolve_tplratio_catalog(object_type),
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
-            for k in range(n_ebmv_coeffs):
-                lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["LineModelSolve"])
-                for index, row in lr_catalog_df.iterrows():
-                    if row.Name in list(self.line_catalogs_df[object_type]["LineModelSolve"].Name):
-                        lr_catalog.setLineAmplitude(_get_linecatalog_id(row), row.NominalAmplitude)
-                lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
-                lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
-                # here also we should change the profile type
-                lr_catalog.setAsymProfileAndParams(
-                    line_ratio_catalog_parameter["asym_params"]["profile"],
-                    TAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
-                                line_ratio_catalog_parameter["asym_params"]["alpha"],
-                                line_ratio_catalog_parameter["asym_params"]["delta"],
-                                )
-                )
-                if enableIGM:
-                    lr_catalog.convertLineProfiles2SYMIGM(self.meiksin)
 
+            lr_catalog_df['strId'] = _get_linecatalog_strid(lr_catalog_df)
+            if not lr_catalog_df.strId.is_unique:
+                raise APIException(ErrorCode.DUPLICATED_LINES, "some rows in the lineratio catalog are\
+                     duplicating the same line (name position, type)")
+
+            # set corresponding line ids from the main catalog
+            lr_catalog_df = lr_catalog_df.merge(line_ids, on="strId", how="left", validate="1:1",
+                                                indicator=True)
+            missing_ids = lr_catalog_df["index"].isnull()
+            if np.any(missing_ids):
+                wrong_lines = ' ; '.join([lineid for lineid in lr_catalog_df.strId[missing_ids]])
+                zflag.warning(
+                    WarningCode.LINE_RATIO_UNKNOWN_LINE.value,
+                    f"unknown line(s) in lineratio catalog {name}: {wrong_lines}"
+                )
+                # raise APIException(ErrorCode.LINE_RATIO_UNKNOWN_LINE, "unknown line ratio line in\
+                #      line ratio catalog")
+
+            lr_catalog_df = (lr_catalog_df.loc[~missing_ids]).set_index("index")
+            lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["LineModelSolve"])
+            for index, row in lr_catalog_df.iterrows():
+                lr_catalog.setLineAmplitude(int(index), row.NominalAmplitude)
+            lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
+            lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
+            lr_catalog.setAsymProfileAndParams(
+                line_ratio_catalog_parameter["asym_params"]["profile"],
+                TAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
+                            line_ratio_catalog_parameter["asym_params"]["alpha"],
+                            line_ratio_catalog_parameter["asym_params"]["delta"],
+                            )
+            )
+            lr_catalog.setPrior(prior)
+
+            for k in range(n_ebmv_coeffs):
                 lr_catalog.setIsmIndex(k)
-                lr_catalog.setPrior(prior)
                 self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
 
     def load_empty_line_catalog(self, object_type, method):

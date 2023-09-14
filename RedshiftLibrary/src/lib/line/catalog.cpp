@@ -111,12 +111,11 @@ CLineCatalogBase<TLine>::ConvertToGroupList(
 }
 
 void CLineCatalog::AddLineFromParams(
-    const std::string &name, const Float64 &position, const std::string &type,
+    const std::string &name, Float64 position, const std::string &type,
     const std::string &force, const std::string &profileName,
     const TAsymParams &asymParams, const std::string &groupName,
-    const Float64 &nominalAmplitude, const std::string &velocityGroup,
-    const Float64 &velocityOffset, const bool &enableVelocityFit,
-    const Int32 &id,
+    Float64 nominalAmplitude, const std::string &velocityGroup,
+    Float64 velocityOffset, bool enableVelocityFit, Int32 id,
     const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection) {
 
   const auto &etype = CLine::string2Type(type);
@@ -155,8 +154,8 @@ void CLineCatalog::AddLineFromParams(
 }
 
 template <typename TLine>
-void CLineCatalogBase<TLine>::setLineAmplitude(
-    Int32 id, const Float64 &nominalAmplitude) {
+void CLineCatalogBase<TLine>::setLineAmplitude(Int32 id,
+                                               Float64 nominalAmplitude) {
 
   const auto &search = m_List.find(id);
   if (search != m_List.end())

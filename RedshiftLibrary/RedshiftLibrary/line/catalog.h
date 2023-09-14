@@ -83,7 +83,7 @@ public:
 
   void setAsymProfileAndParams(const std::string &profile, TAsymParams params);
 
-  void setLineAmplitude(Int32 id, const Float64 &nominalAmplitude);
+  void setLineAmplitude(Int32 id, Float64 nominalAmplitude);
   void convertLineProfiles2SYMIGM(
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
 
@@ -105,12 +105,11 @@ public:
   CLineCatalog &operator=(CLineCatalog &&other) = default;
 
   void AddLineFromParams(
-      const std::string &name, const Float64 &position, std::string const &type,
+      const std::string &name, Float64 position, std::string const &type,
       std::string const &force, const std::string &profile,
       const TAsymParams &asymParams, const std::string &groupName,
-      const Float64 &nominalAmplitude, const std::string &velocityGroup,
-      const Float64 &velocityOffset, const bool &enableVelocityFit,
-      const Int32 &id,
+      Float64 nominalAmplitude, const std::string &velocityGroup,
+      Float64 velocityOffset, bool enableVelocityFit, Int32 id,
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection =
           nullptr);
 };

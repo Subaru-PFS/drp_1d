@@ -317,20 +317,20 @@ public:
   CLineCatalog();
   CLineCatalog(Float64 nSigmaSupport);
   void AddLineFromParams(const std::string& name,
-			const Float64& position,
+			Float64 position,
 			const std::string& type,
 			const std::string& force,
 			const std::string& profile,
 			const TAsymParams& asymParams,
 			const std::string& groupName,
-			const Float64& nominalAmplitude,
+			Float64 nominalAmplitude,
 			const std::string& velocityGroup,
-			const Float64& velocityOffset,
-			const bool& enableVelocityFit,
-			const Int32& id,
+			Float64 velocityOffset,
+			bool enableVelocityFit,
+			Int32 line_id,
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmcorrection=nullptr);
 
-  void setLineAmplitude(Int32 id, const Float64& nominalAmplitude);
+  void setLineAmplitude(Int32 line_id, Float64 nominalAmplitude);
   void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
   void convertLineProfiles2SYMIGM(
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
