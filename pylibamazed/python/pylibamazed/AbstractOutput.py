@@ -71,10 +71,12 @@ class AbstractOutput:
         self.load_errors()
         self.cache = False
 
-    def get_attribute_from_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def get_attribute_from_source(self, object_type, method, dataset, attribute,
+                                  rank=None, band_name=None, obs_id=None):
         raise NotImplementedError("Implement in derived class")
 
-    def has_attribute_in_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def has_attribute_in_source(self, object_type, method, dataset, attribute,
+                                rank=None, band_name=None, obs_id=None):
         raise NotImplementedError("Implement in derived class")
 
     def has_dataset_in_source(self, object_type, method, dataset):
@@ -264,8 +266,9 @@ class AbstractOutput:
 
     # TODO more robust version, should iterate over candidate datasets and check existence
     def get_nb_candidates(self, object_type):
-        if "model" in self.object_results[object_type]:
-            return len(self.object_results[object_type]["model"])
+        available_datasets = self.get_available_datasets("candidate", object_type)
+        if len(available_datasets) > 0:
+            return len(self.object_results[object_type][available_datasets[0]])
         else:
             return 0
 
@@ -360,20 +363,27 @@ class AbstractOutput:
             for method in methods:
                 if self.has_dataset_in_source(object_type,
                                               method,
-                                              dataset):
-                    self.object_results[object_type][dataset] = dict()
-                    self.fill_object_dataset(object_type, method, dataset)
+                                              dataset.replace("<ObsID>", "")):
 
-    def fill_object_dataset(self, object_type, method, dataset):
+                    if "<ObsID>" in dataset:
+                        for obs_id in self.parameters.get_observation_ids():
+                            self.object_results[object_type][dataset.replace("<ObsID>", obs_id)] = dict()
+                            self.fill_object_dataset(object_type, method, dataset, obs_id)
+                    else:
+                        self.object_results[object_type][dataset] = dict()
+                        self.fill_object_dataset(object_type, method, dataset)
+
+    def fill_object_dataset(self, object_type, method, dataset, obs_id=""):
         ds_attributes = self.filter_dataset_attributes(dataset)
         for index, ds_row in ds_attributes.iterrows():
             attr_name = ds_row["name"]
-            if self.has_attribute_in_source(object_type, method, dataset, attr_name):
+            if self.has_attribute_in_source(object_type, method, dataset, attr_name, obs_id=obs_id):
                 attr = self.get_attribute_from_source(object_type,
                                                       method,
                                                       dataset,
-                                                      attr_name)
-                self.object_results[object_type][dataset][attr_name] = attr
+                                                      attr_name,
+                                                      obs_id=obs_id)
+                self.object_results[object_type][dataset.replace("<ObsID>", obs_id)][attr_name] = attr
 
     def load_method_level(self, object_type):
         level = "method"
@@ -402,63 +412,93 @@ class AbstractOutput:
             return
         level = "candidate"
 
-        # get phot bands from params
-        if self.parameters.photometry_is_enabled():
-            bands = self.parameters.get_photometry_bands()
-        else:
-            bands = []
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
-            ds_attributes = self.filter_dataset_attributes(ds, object_type, method).copy()
             if not self.has_candidate_dataset_in_source(object_type,
                                                         method,
                                                         ds):
                 continue
+            multiobs_ds = "<ObsID>" in ds
+            if not multiobs_ds:
+                if ds not in self.object_results[object_type]:
+                    self.object_results[object_type][ds.replace("<ObsID>", "")] = []
+                self.build_candidate_dataset(object_type,
+                                             method,
+                                             ds)
+            else:
+                for obs_id in self.parameters.get_observation_ids():
+                    if ds.replace("<ObsID>", obs_id) not in self.object_results[object_type]:
+                        self.object_results[object_type][ds.replace("<ObsID>", obs_id)] = []
+                    self.build_candidate_dataset(object_type,
+                                                 method,
+                                                 ds,
+                                                 obs_id)
 
-            nb_candidates = self.get_nb_candidates_in_source(object_type,
-                                                             method)
-            if ds not in self.object_results[object_type]:
-                self.object_results[object_type][ds] = []
-            candidates = self.object_results[object_type][ds]
+    def build_candidate_dataset(self, object_type, method, dataset, obs_id=""):
+        nb_candidates = self.get_nb_candidates_in_source(object_type,
+                                                         method)
+        ds_attributes = self.filter_dataset_attributes(dataset,
+                                                       object_type,
+                                                       method).copy()
+        candidates = self.object_results[object_type][dataset.replace("<ObsID>", obs_id)]
+        if not candidates:
             for rank in range(nb_candidates):
                 candidates.append(dict())
-                for index, ds_row in ds_attributes.iterrows():
-                    attr_name = ds_row["name"]
-                    if "<BandName>" in attr_name:
-                        for band in bands:
-                            attr = self.get_attribute_wrapper(object_type,
-                                                              method,
-                                                              ds,
-                                                              attr_name,
-                                                              rank=rank,
-                                                              band_name=band)
-                            if attr is not None:
-                                attr_name_ = band
-                                candidates[rank][attr_name_] = attr
-
-                    else:
+        for rank in range(nb_candidates):
+            for index, ds_row in ds_attributes.iterrows():
+                attr_name = ds_row["name"]
+                if "<BandName>" in attr_name:
+                    # get phot bands from params
+                    bands = self.parameters.get_photometry_bands()
+                    for band in bands:
                         attr = self.get_attribute_wrapper(object_type,
                                                           method,
-                                                          ds,
+                                                          dataset,
                                                           attr_name,
-                                                          rank=rank)
+                                                          rank=rank,
+                                                          band_name=band)
                         if attr is not None:
-                            candidates[rank][attr_name] = attr
+                            attr_name_ = band
+                            candidates[rank][attr_name_] = attr
+                elif "<ObsID>" in attr_name:
+                    for obs_id in self.parameters.get_observation_ids():
+                        attr = self.get_attribute_wrapper(object_type,
+                                                          method,
+                                                          dataset,
+                                                          attr_name,
+                                                          rank=rank,
+                                                          obs_id=obs_id)
+                        if attr is not None:
+                            attr_name_ = attr_name.replace("<ObsID>", obs_id)
+                            candidates[rank][attr_name_] = attr
+                else:
+                    attr = self.get_attribute_wrapper(object_type,
+                                                      method,
+                                                      dataset,
+                                                      attr_name,
+                                                      rank=rank,
+                                                      obs_id=obs_id)
+                    if attr is not None:
+                        candidates[rank][attr_name] = attr
+        return candidates
 
-    def get_attribute_wrapper(self, object_type, method, ds, attr_name, rank=None, band_name=None):
+    def get_attribute_wrapper(self, object_type, method, ds, attr_name,
+                              rank=None, band_name=None, obs_id=None):
         attr = None
         if self.has_attribute_in_source(object_type,
                                         method,
                                         ds,
                                         attr_name,
                                         rank=rank,
-                                        band_name=band_name):
+                                        band_name=band_name,
+                                        obs_id=obs_id):
             attr = self.get_attribute_from_source(object_type,
                                                   method,
                                                   ds,
                                                   attr_name,
                                                   rank,
-                                                  band_name=band_name)
+                                                  band_name=band_name,
+                                                  obs_id=obs_id)
         return attr
 
     def get_candidate_group_name(self, rank):

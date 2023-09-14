@@ -99,7 +99,7 @@ class AbstractSpectrumReader:
         self.lsf_type = None
         self.lsf_data = []
         self.photometric_data = []
-        self._spectra = []
+        self._spectra = dict()
         self.w_frame = 'vacuum'
         self.parameters = parameters
         self.calibration_library = calibration_library
@@ -172,41 +172,41 @@ class AbstractSpectrumReader:
         self.load_photometry(resource)
         self.load_others(resource)
 
-    def get_spectrum(self, index=0):
+    def get_spectrum(self, obs_id=""):
         """
         Get spectrum c++ object
 
         :return: CSpectrum object, fully loaded
         """
         self._check_spectrum_is_loaded()
-        return self._spectra[index]
+        return self._spectra[obs_id]
 
-    def get_wave(self, index=0):
+    def get_wave(self, obs_id=""):
         """
         :raises: Spectrum not loaded
         :return: wavelength
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return PC.Get_AxisSampleList(self._spectra[index].GetSpectralAxis().GetSamplesVector())
+        return PC.Get_AxisSampleList(self._spectra[obs_id].GetSpectralAxis().GetSamplesVector())
 
-    def get_flux(self, index=0):
+    def get_flux(self, obs_id=""):
         """
         :raises: Spectrum not loaded
         :return: wavelength
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return PC.Get_AxisSampleList(self._spectra[index].GetFluxAxis().GetSamplesVector())
+        return PC.Get_AxisSampleList(self._spectra[obs_id].GetFluxAxis().GetSamplesVector())
 
-    def get_error(self, index=0):
+    def get_error(self, obs_id=""):
         """
         :raises: Spectrum not loaded
         :return: error
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return PC.Get_AxisSampleList(self._spectra[index].GetErrorAxis().GetSamplesVector())
+        return PC.Get_AxisSampleList(self._spectra[obs_id].GetErrorAxis().GetSamplesVector())
 
     def get_lsf(self):
         """
@@ -248,7 +248,8 @@ class AbstractSpectrumReader:
         lsf_factory = CLSFFactory.GetInstance()
         lsf_args = self._lsf_args()
         lsf = lsf_factory.Create(self.parameters.get_lsf_type(), lsf_args)
-        self._spectra[0].SetLSF(lsf)
+        for obs_id in self.parameters.get_observation_ids():
+            self._spectra[obs_id].SetLSF(lsf)
         self._add_photometric_data()
 
     def _get_filters(self):
@@ -265,7 +266,8 @@ class AbstractSpectrumReader:
             names = tuple(self.photometric_data[0].Name)
             flux = tuple([float(f) for f in self.photometric_data[0].Flux])
             fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
-            self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
+            for obs_id in self.parameters.get_observation_ids():
+                self._spectra[obs_id].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
     def _all_containers(self):
         return [container for container in self.others.values()] \
@@ -362,12 +364,12 @@ class AbstractSpectrumReader:
             )
 
     def _add_cspectrum(self, spectralaxis, signal, obs_id=""):
-        self._spectra.append(CSpectrum(spectralaxis, signal))
-        self._spectra[-1].SetName(self.source_id)
-        self._spectra[-1].setObsID(obs_id)
+        self._spectra[obs_id] = CSpectrum(spectralaxis, signal)
+        self._spectra[obs_id].SetName(self.source_id)
+        self._spectra[obs_id].setObsID(obs_id)
 
         ctx = CProcessFlowContext.GetInstance()
-        ctx.addSpectrum(self._spectra[-1])
+        ctx.addSpectrum(self._spectra[obs_id])
 
     def _corrected_airvacuum_method(self):
         airvacuum_method = self.parameters.get_airvacuum_method()
@@ -429,3 +431,6 @@ class AbstractSpectrumReader:
                     full_spectrum[col_key] = obs_others
 
             self.editable_spectra.append(full_spectrum, obs_id)
+
+    def get_observation_ids(self):
+        return self.waves.keys()

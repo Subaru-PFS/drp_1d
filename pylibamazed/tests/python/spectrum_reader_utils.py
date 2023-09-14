@@ -56,6 +56,7 @@ class TestSpectrumReaderUtils:
         params_dict["airvacuum_method"] = kwargs.get("airvacuum_method", "")
         params_dict["objects"] = []
         params_dict["multiobsmethod"] = kwargs.get("multiobsmethod", "")
+        params_dict["lambdarange"] = kwargs.get("lambdarange", [0, 1])
         if kwargs.get("filters"):
             params_dict["filters"] = kwargs.get("filters")
         return params_dict

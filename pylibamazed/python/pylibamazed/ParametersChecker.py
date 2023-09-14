@@ -103,7 +103,7 @@ class ParametersChecker:
         parameter_name = "photometryBand"
         self._check_dependant_parameter_presence(
             self.accessor.photometry_is_enabled(),
-            self.accessor.get_photometry_bands() is not None,
+            len(self.accessor.get_photometry_bands()) > 0,
             parameter_name,
             parameter_name
         )

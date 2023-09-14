@@ -88,11 +88,11 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
 }
 
 // return tuple with photmetric values
-std::tuple<std::shared_ptr<CModelSpectrumResult>, TPhotVal>
-COperatorTemplateFittingBase::ComputeSpectrumModel(
+TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
-    const Float64 overlapThreshold, Int32 spcIndex) {
+    const Float64 overlapThreshold, Int32 spcIndex,
+    const std::shared_ptr<CModelSpectrumResult> &models) {
   Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model "
                 "templateFitting for candidate Zcand=%f",
                 redshift);
@@ -140,10 +140,9 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
           .GetSpectralAxis(); // needs a copy to be shifted
   modelwav.ShiftByWaveLength((1.0 + redshift),
                              CSpectrumSpectralAxis::nShiftForward);
-
-  return std::make_tuple(std::make_shared<CModelSpectrumResult>(
-                             CSpectrum(std::move(modelwav), modelflux)),
-                         getIntegratedFluxes());
+  models->addModel(CSpectrum(std::move(modelwav), modelflux),
+                   m_spectra[spcIndex]->getObsID());
+  return spcIndex > 0 ? TPhotVal() : getIntegratedFluxes();
 }
 
 void COperatorTemplateFittingBase::RebinTemplate(

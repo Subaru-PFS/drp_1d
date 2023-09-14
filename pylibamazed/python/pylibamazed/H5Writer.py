@@ -113,7 +113,7 @@ class H5Writer():
                                                       ds,
                                                       dataset)
                         except Exception as e:
-                            zlog.LogError(f"failed to create dataset {ds} : {e}")
+                            raise Exception(f"failed to create dataset {ds} : {e}")
 
     def write_hdf5(self, hdf5_root, spectrum_id):
         try:

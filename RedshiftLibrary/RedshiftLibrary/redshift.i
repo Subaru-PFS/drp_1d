@@ -385,6 +385,7 @@ public:
 };
 
 %template(TMapFloat64) std::map<std::string, Float64>;
+%template(TMapTFloat64List) std::map<std::string, TFloat64List>;
 %template(TZGridListParams) std::vector<CZGridParam>;
 
 %include "method/classificationresult.i"

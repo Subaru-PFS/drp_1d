@@ -101,9 +101,9 @@ std::shared_ptr<CLineModelSolution> getLineModelSolution() {
 
 // create Model Spectrum Result>
 std::shared_ptr<CModelSpectrumResult> getModelSpectrumResult() {
-  CSpectrum spc;
+
   std::shared_ptr<CModelSpectrumResult> result_in =
-      std::make_shared<CModelSpectrumResult>(spc);
+      std::make_shared<CModelSpectrumResult>();
   return result_in;
 }
 

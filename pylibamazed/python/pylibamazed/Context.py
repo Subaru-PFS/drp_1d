@@ -121,6 +121,7 @@ class Context:
         try:
             self.init_context()
             spectrum_reader.init()
+
             if self.config.get("linemeascatalog"):
                 self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id, self.config)
             self.process_flow_context.LoadParameterStore(self.parameters.to_json())
