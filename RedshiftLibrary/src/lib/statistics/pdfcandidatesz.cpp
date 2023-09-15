@@ -116,27 +116,32 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
     std::string &candidateKeyLow = *(candidateKey + 1);
     Float64 &zHigh = candidates[candidateKeyHigh]->Redshift;
     Float64 &zLow = candidates[candidateKeyLow]->Redshift;
+
+    Float64 zSizeHighRange = ranges[candidateKeyHigh].GetEnd() - ranges[candidateKeyHigh].GetBegin();
+    Float64 zSizeLowRange = ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyLow].GetBegin();
+
     Float64 overlap =
-        ranges[candidateKeyHigh].GetBegin() - ranges[candidateKeyLow].GetEnd();
-    if (overlap >= 0)
+        ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyHigh].GetBegin();
+   
+    if (overlap <= 0)
       continue;
 
-    // in the case of duplicates, trim completely the range of the second cand
-    if ((zHigh - zLow) > 2 * 1E-4) {
+    // in the case of duplicates, split equally the overlap between both candidates
+    Float64 overlapHighRatio = overlap / zSizeHighRange;
+    Float64 overlapLowRatio = overlap / zSizeLowRange;
+    if (overlapHighRatio < OVERLAP_THRESHOLD && overlapLowRatio < OVERLAP_THRESHOLD) {
       Log.LogDebug("    CPdfCandidatesZ::SetIntegrationRanges: integration "
                    "supports overlap for %f and %f",
                    zHigh, zLow);
-      ranges[candidateKeyHigh].SetBegin(
-          (max(zLow, ranges[candidateKeyHigh].GetBegin()) +
-           min(zHigh, ranges[candidateKeyLow].GetEnd())) /
-          2);
+      Float64 midOverlap = ranges[candidateKeyLow].GetEnd() - 0.5 * overlap;
+      ranges[candidateKeyLow].SetEnd(midOverlap);
+      ranges[candidateKeyHigh].SetBegin(midOverlap);
     } else {
       Log.LogInfo(" CPdfCandidatesZ::SetIntegrationRanges: very close "
                   "candidates are identified %f and %f",
                   zHigh, zLow);
       duplicates.push_back(candidateKeyLow);
     }
-    ranges[candidateKeyLow].SetEnd(ranges[candidateKeyHigh].GetBegin() - 1E-4);
   }
 
   // iterate over computed ranges and check that corresponding zcandidates
