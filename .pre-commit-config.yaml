@@ -2,42 +2,49 @@
 # See https://pre-commit.com/hooks.html for more hooks
 
 repos:
-# C++ hooks
--   repo: https://github.com/pre-commit/mirrors-clang-format
+  # C++ hooks
+  - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v13.0.1'
     hooks:
-    -   id: clang-format
+      - id: clang-format
         types_or: [c++, c]
         exclude: RedshiftLibrary/RedshiftLibrary/linemodel/gaussianfit/LineSearchMoreThuente.h
-        args: ["-style=LLVM", "-i"]
+        args: ['-style=LLVM', '-i']
 
-# Yaml hooks
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  # Yaml hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
     hooks:
-    -   id: check-yaml
+      - id: check-yaml
         types: [yaml]
 
-
-# Python hooks
--   repo: https://github.com/PyCQA/autoflake
+  # Python hooks
+  - repo: https://github.com/PyCQA/autoflake
     rev: v2.1.1
     hooks:
-    -   id: autoflake
+      - id: autoflake
         files: 'pylibamazed'
         exclude: 'redshift.py'
         types: [python]
--   repo: https://github.com/PyCQA/isort
+  - repo: https://github.com/PyCQA/isort
     rev: 5.11.5
     hooks:
-    -   id: isort
+      - id: isort
         files: 'pylibamazed'
         exclude: 'redshift.py'
         types: [python]
--   repo: https://github.com/PyCQA/flake8
+  - repo: https://github.com/PyCQA/flake8
     rev: 6.0.0
     hooks:
-    -   id: flake8
+      - id: flake8
         files: 'pylibamazed'
         exclude: 'redshift.py'
         types: [python]
+
+  # JSON hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: pretty-format-json
+        types: [json]
+        args: ['--autofix', '--no-sort-keys']

@@ -1,169 +1,168 @@
 {
-    "multiobsmethod": "",
-    "lambdarange": [
-        12510,
-        18500
-    ],
-    "smoothWidth": 0.0,
-    "templateCatalog": {
-        "continuumRemoval": {
-            "method": "zero",
-            "medianKernelWidth": 75,
-            "medianEvenReflection": true
-        }
-    },
-    "ebmv": {
-        "start": 0,
-        "step": 0.1,
-        "count": 10
-    },
+  "multiobsmethod": "",
+  "lambdarange": [
+    12510,
+    18500
+  ],
+  "smoothWidth": 0.0,
+  "templateCatalog": {
     "continuumRemoval": {
-        "method": "IrregularSamplingMedian",
-        "medianKernelWidth": 150,
-        "medianEvenReflection": true
-    },
-    "airvacuum_method":"default",
-    "LSF": {
-        "LSFType": "GaussianNISPVSSPSF201707",
-        "sourcesize": 0.1
-    },
-    "extremaredshiftseparation": 0.01,
-    "objects": [
-        "galaxy"
+      "method": "zero",
+      "medianKernelWidth": 75,
+      "medianEvenReflection": true
+    }
+  },
+  "ebmv": {
+    "start": 0,
+    "step": 0.1,
+    "count": 10
+  },
+  "continuumRemoval": {
+    "method": "IrregularSamplingMedian",
+    "medianKernelWidth": 150,
+    "medianEvenReflection": true
+  },
+  "airvacuum_method": "default",
+  "LSF": {
+    "LSFType": "GaussianNISPVSSPSF201707",
+    "sourcesize": 0.1
+  },
+  "extremaredshiftseparation": 0.01,
+  "objects": [
+    "galaxy"
+  ],
+  "autocorrectinput": false,
+  "galaxy": {
+    "redshiftrange": [
+      0.9001832537307723,
+      1.70026612
     ],
-    "autocorrectinput": false,
-    "galaxy": {
-        "redshiftrange": [
-            0.9001832537307723481,
-            1.70026612
-        ],
-        "redshiftstep": 0.0001,
-        "redshiftsampling": "log",
-        "method": "LineModelSolve",
-        "template_dir": "templates/BC03_sdss_tremonti21",
-        "LineModelSolve": {
-            "linemodel": {
-                "linecatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
-                "linetypefilter": "E",
-                "lineforcefilter": "no",
-                "fittingmethod": "individual",
-                "igmfit": false,
-                "linewidthtype": "combined",
-                "velocityemission": 100,
-                "velocityabsorption": 100,
-                "velocityfit": true,
-                "ampoffsetfit": false,
-		"lbdaoffsetfit": false,   
-                "pdfcombination": "marg",
-                "emvelocityfitmin": 100,
-                "emvelocityfitmax": 700,
-                "emvelocityfitstep": 20,
-                "absvelocityfitmin": 150,
-                "absvelocityfitmax": 500,
-                "absvelocityfitstep": 50,
-                "lyaforcefit": false,
-                "lyaforcedisablefit": false,
-                "lyafit": {
-                    "asymfitmin": 0,
-                    "asymfitmax": 4,
-                    "asymfitstep": 1,
-                    "widthfitmin": 1,
-                    "widthfitmax": 4,
-                    "widthfitstep": 1,
-                    "deltafitmin": 0,
-                    "deltafitmax": 0,
-                    "deltafitstep": 1
-                },
-                "extremacountB": 0,
-                "haprior": -1,
-                "lineRatioType": "tplratio",
-                "rules": "all",
-                "improveBalmerFit": true,
-                "tplratio_catalog": "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v16_emission",
-                "tplratio_ismfit": true,
-                "continuumcomponent": "tplfit",
-                "continuumreestimation": "no",
-                "continuumfit": {
-                    "negativethreshold": -5.0,
-                    "nullthreshold": 3,
-                    "fftprocessing": false,
-                    "ismfit": true,
-                    "igmfit": false,
-                    "count": 1,
-                    "ignorelinesupport": false,
-                    "priors": {
-                        "betaA": 1,
-                        "betaTE": 1,
-                        "betaZ": 1,
-                        "catalog_dirpath": ""
-                    }
-                },
-                "useloglambdasampling": false,
-                "skipsecondpass": false,
-                "extremacount": 5,
-                "extremacutprobathreshold": -1,
-                "pdf": {
-                    "margampcorr": false,
-                    "bestzoption": "maxintproba"
-                },
-                "firstpass": {
-                    "fittingmethod": "individual",
-                    "largegridstepratio": 10,
-                    "tplratio_ismfit": false,
-                    "multiplecontinuumfit_disable": true
-                },
-                "secondpass": {
-                    "halfwindowsize": 0.002,
-                    "continuumfit": "refitfirstpass"
-                },
-                "secondpasslcfittingmethod": -1,
-                "stronglinesprior": 0.001,
-                "euclidnhaemittersStrength": -1,
-                "tplratio": {
-                    "priors": {
-                        "betaA": 1,
-                        "betaTE": 1,
-                        "betaZ": 1,
-                        "catalog_dirpath": ""
-                    }
-                },
-                "nsigmasupport": 8,
-                "enablephotometry": true,
-                "photometry": {
-                    "weight": 1.0
-                }
-
-            }
+    "redshiftstep": 0.0001,
+    "redshiftsampling": "log",
+    "method": "LineModelSolve",
+    "template_dir": "templates/BC03_sdss_tremonti21",
+    "LineModelSolve": {
+      "linemodel": {
+        "linecatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
+        "linetypefilter": "E",
+        "lineforcefilter": "no",
+        "fittingmethod": "individual",
+        "igmfit": false,
+        "linewidthtype": "combined",
+        "velocityemission": 100,
+        "velocityabsorption": 100,
+        "velocityfit": true,
+        "ampoffsetfit": false,
+        "lbdaoffsetfit": false,
+        "pdfcombination": "marg",
+        "emvelocityfitmin": 100,
+        "emvelocityfitmax": 700,
+        "emvelocityfitstep": 20,
+        "absvelocityfitmin": 150,
+        "absvelocityfitmax": 500,
+        "absvelocityfitstep": 50,
+        "lyaforcefit": false,
+        "lyaforcedisablefit": false,
+        "lyafit": {
+          "asymfitmin": 0,
+          "asymfitmax": 4,
+          "asymfitstep": 1,
+          "widthfitmin": 1,
+          "widthfitmax": 4,
+          "widthfitstep": 1,
+          "deltafitmin": 0,
+          "deltafitmax": 0,
+          "deltafitstep": 1
         },
-        "linemeas_method": "LineMeasSolve",
-        "linemeas_dzhalf": 0.001,
-        "linemeas_redshiftstep": 0.0001,
-        "LineMeasSolve": {
-            "linemodel": {
-                "continuumcomponent": "nocontinuum",
-                "linecatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
-                "linetypefilter": "E",
-                "lineforcefilter": "no",
-                "nsigmasupport": 8,
-                "linewidthtype": "combined",
-                "fittingmethod": "hybrid",
-                "polynomialdegree": 2,
-                "velocityfit": false,
-                "lineRatioType": "rules",
-                "rules": "no",
-                "igmfit": false,
-                "improveBalmerFit": true,
-                "lyaforcedisablefit": false
-            }
+        "extremacountB": 0,
+        "haprior": -1,
+        "lineRatioType": "tplratio",
+        "rules": "all",
+        "improveBalmerFit": true,
+        "tplratio_catalog": "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v16_emission",
+        "tplratio_ismfit": true,
+        "continuumcomponent": "tplfit",
+        "continuumreestimation": "no",
+        "continuumfit": {
+          "negativethreshold": -5.0,
+          "nullthreshold": 3,
+          "fftprocessing": false,
+          "ismfit": true,
+          "igmfit": false,
+          "count": 1,
+          "ignorelinesupport": false,
+          "priors": {
+            "betaA": 1,
+            "betaTE": 1,
+            "betaZ": 1,
+            "catalog_dirpath": ""
+          }
         },
-        "enable_reliability": false,
-        "reliability_model": "reliability/NNmodels/tagged/NN04181302_25_WholeModel.h5"
+        "useloglambdasampling": false,
+        "skipsecondpass": false,
+        "extremacount": 5,
+        "extremacutprobathreshold": -1,
+        "pdf": {
+          "margampcorr": false,
+          "bestzoption": "maxintproba"
+        },
+        "firstpass": {
+          "fittingmethod": "individual",
+          "largegridstepratio": 10,
+          "tplratio_ismfit": false,
+          "multiplecontinuumfit_disable": true
+        },
+        "secondpass": {
+          "halfwindowsize": 0.002,
+          "continuumfit": "refitfirstpass"
+        },
+        "secondpasslcfittingmethod": -1,
+        "stronglinesprior": 0.001,
+        "euclidnhaemittersStrength": -1,
+        "tplratio": {
+          "priors": {
+            "betaA": 1,
+            "betaTE": 1,
+            "betaZ": 1,
+            "catalog_dirpath": ""
+          }
+        },
+        "nsigmasupport": 8,
+        "enablephotometry": true,
+        "photometry": {
+          "weight": 1.0
+        }
+      }
     },
-        "photometryTransmissionDir": "photometric_transmission/EL-COSMOSv2/",
-	"photometryBand": [
-		"H",
-		"J",
-		"Y",
-		"riz"
-	 ]
+    "linemeas_method": "LineMeasSolve",
+    "linemeas_dzhalf": 0.001,
+    "linemeas_redshiftstep": 0.0001,
+    "LineMeasSolve": {
+      "linemodel": {
+        "continuumcomponent": "nocontinuum",
+        "linecatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
+        "linetypefilter": "E",
+        "lineforcefilter": "no",
+        "nsigmasupport": 8,
+        "linewidthtype": "combined",
+        "fittingmethod": "hybrid",
+        "polynomialdegree": 2,
+        "velocityfit": false,
+        "lineRatioType": "rules",
+        "rules": "no",
+        "igmfit": false,
+        "improveBalmerFit": true,
+        "lyaforcedisablefit": false
+      }
+    },
+    "enable_reliability": false,
+    "reliability_model": "reliability/NNmodels/tagged/NN04181302_25_WholeModel.h5"
+  },
+  "photometryTransmissionDir": "photometric_transmission/EL-COSMOSv2/",
+  "photometryBand": [
+    "H",
+    "J",
+    "Y",
+    "riz"
+  ]
 }
