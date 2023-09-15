@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from pylibamazed.Container import Container
 
 
@@ -20,3 +21,17 @@ def test_container_equality():
 
     # Containers with same data and keys but in different order are not equal
     assert (Container(**{"key": array1, "key2": array2}) == Container(**{"key2": array2, "key": array1}))
+
+
+def test_container_check_append_type():
+    cont = Container()
+    integer = 1
+    floating = 2.0
+
+    cont.append(integer, 'key1')
+    with pytest.raises(TypeError) as terr:
+        cont.append(floating, 'key2')
+
+    error_message = f"Data for container must be of the declared {type(integer)} type"
+    # Attempting to append data of different type raises type error
+    assert error_message in str(terr.value)
