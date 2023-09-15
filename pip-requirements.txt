@@ -4,6 +4,6 @@ astropy>=3.1.1
 cython>=0.17.0
 pandas>=1.0.0
 h5py>=2.9
-GitPython>=3.1.31
+GitPython>=3.1.32
 pytest-mock>=3.11.1
 jsonschema>=4.17.3
