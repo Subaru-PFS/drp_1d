@@ -140,7 +140,13 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
       Log.LogInfo(" CPdfCandidatesZ::SetIntegrationRanges: very close "
                   "candidates are identified %f and %f",
                   zHigh, zLow);
-      duplicates.push_back(candidateKeyLow);
+      std::string candidateKeyToRemove;
+      if (candidates[candidateKeyLow]->ValProba > candidates[candidateKeyHigh]->ValProba) {
+        candidateKeyToRemove = candidateKeyHigh;
+      } else {
+        candidateKeyToRemove = candidateKeyLow;
+      }
+      duplicates.push_back(candidateKeyToRemove);
     }
   }
 
