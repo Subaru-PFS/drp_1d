@@ -104,7 +104,9 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   BOOST_CHECK(tpl4.GetFluxAxis().GetSamplesVector() == fluxAxisList);
 
   CTemplate tpl5(tplStar);
-  tpl5.GetRawFluxAxis_().GetSamplesVector().pop_back();
+  TAxisSampleList rawFlux = tpl5.GetRawFluxAxis_().GetSamplesVector();
+  rawFlux.pop_back();
+  tpl5.GetRawFluxAxis_().setSamplesVector(rawFlux);
   BOOST_CHECK_THROW(CTemplate tpl6(tpl5), GlobalException);
 
   CTemplate tpl7;
@@ -206,7 +208,7 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
   BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
 
-  tplStar.ScaleFluxAxis(1.);
+  tplStar.ApplyAmplitude(1.);
   tplStar.InitIsmIgmConfig(lbdaRange, 2.86, ismCorrectionCalzetti,
                            igmCorrectionMeiksin);
   BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxAxisList);

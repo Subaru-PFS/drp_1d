@@ -295,3 +295,20 @@ Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {
 
   return cstlog;
 }
+
+// used to output the model photometric values
+TPhotVal COperatorTemplateFittingPhot::getIntegratedFluxes(Float64 amp) const {
+
+  TPhotVal modelPhotValue;
+
+  // compute photometric Leastquare
+  for (auto bandName : m_sortedBandNames) {
+    const auto &photBand = m_photBandCat->at(bandName);
+    const auto &flux =
+        m_templateRebined_phot.at(bandName).GetFluxAxis().GetSamplesVector();
+
+    // integrate flux
+    modelPhotValue[bandName] = photBand.IntegrateFlux(flux) * amp;
+  }
+  return modelPhotValue;
+}

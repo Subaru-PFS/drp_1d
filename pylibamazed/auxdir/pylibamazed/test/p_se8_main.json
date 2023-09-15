@@ -55,6 +55,8 @@
                 "velocityemission": 100,
                 "velocityabsorption": 100,
                 "velocityfit": true,
+                "ampoffsetfit": false,
+		"lbdaoffsetfit": false,   
                 "pdfcombination": "marg",
                 "emvelocityfitmin": 100,
                 "emvelocityfitmax": 700,

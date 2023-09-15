@@ -46,12 +46,15 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinSpline::rebin(
-    CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
-    const CSpectrumSpectralAxis &targetSpectralAxis, CSpectrum &rebinedSpectrum,
-    CMask &rebinedMask, const std::string opt_error_interp,
-    const TAxisSampleList &Xsrc, const TAxisSampleList &Ysrc,
-    const TAxisSampleList &Xtgt, const TFloat64List &Error, Int32 &cursor) {
+void CRebinSpline::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+                         const TFloat64Range &range,
+                         const CSpectrumSpectralAxis &targetSpectralAxis,
+                         CMask &rebinedMask, const std::string opt_error_interp,
+                         const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
+                         Int32 &cursor) {
+
+  const TAxisSampleList &Xsrc = m_spectrum.GetSpectralAxis().GetSamplesVector();
+  const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
 
   // GSL method spline
   // Initialize and allocate the gsl

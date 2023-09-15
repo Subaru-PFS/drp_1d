@@ -92,14 +92,6 @@ typedef std::vector<Mask> TMaskList;
 typedef std::vector<Redshift> TRedshiftList;
 typedef std::vector<Sample> TAxisSampleList;
 
-// for C++11, defined since C++17,
-template <class T>
-constexpr typename std::add_const<T>::type &as_const(T &t) noexcept {
-  return t;
-};
-
-template <class T> void as_const(const T &&) = delete;
-
 #include "RedshiftLibrary/common/errorcodes.i"
 #include "RedshiftLibrary/common/warningcodes.i"
 

@@ -450,7 +450,7 @@ typedef TFloat64Range TLambdaRange;
 typedef std::vector<TLambdaRange> TLambdaRangeList;
 typedef std::vector<TInt32Range> TInt32RangeList;
 typedef std::vector<TFloat64Range> TFloat64RangeList;
-
+using CTLambdaRangePtrVector = std::vector<std::shared_ptr<const TLambdaRange>>;
 } // namespace NSEpic
 
 #endif

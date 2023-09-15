@@ -87,7 +87,8 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
-std::shared_ptr<CModelSpectrumResult>
+// return tuple with photmetric values
+std::tuple<std::shared_ptr<CModelSpectrumResult>, TPhotVal>
 COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
     Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
@@ -112,7 +113,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (EbmvCoeff > 0.) {
     if (m_templateRebined_bf[spcIndex].CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "ISM in not initialized");
+      THROWG(INTERNAL_ERROR, "ISM is not initialized");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
@@ -120,16 +121,17 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
             EbmvCoeff);
 
     if (idxEbmv != -1)
-      m_templateRebined_bf[spcIndex].ApplyDustCoeff(idxEbmv);
+      ApplyDustCoeff(idxEbmv, spcIndex);
   }
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf[spcIndex].MeiksinInitFailed()) {
       THROWG(INTERNAL_ERROR, "IGM in not initialized");
     }
-    m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);
+    ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   }
-  m_templateRebined_bf[spcIndex].ScaleFluxAxis(amplitude);
+  ApplyAmplitude(amplitude, spcIndex);
+
   // shift the spectralaxis to sync with the spectrum lambdaAxis
   const CSpectrumFluxAxis &modelflux =
       m_templateRebined_bf[spcIndex].GetFluxAxis();
@@ -139,8 +141,9 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
   modelwav.ShiftByWaveLength((1.0 + redshift),
                              CSpectrumSpectralAxis::nShiftForward);
 
-  return std::make_shared<CModelSpectrumResult>(
-      CSpectrum(std::move(modelwav), modelflux));
+  return std::make_tuple(std::make_shared<CModelSpectrumResult>(
+                             CSpectrum(std::move(modelwav), modelflux)),
+                         getIntegratedFluxes());
 }
 
 void COperatorTemplateFittingBase::RebinTemplate(

@@ -84,10 +84,20 @@ void TLineModelResult::updateFromModel(
   // store model Ha SNR & Flux
   snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa = lmresult->LineModelSolutions[idx].lfHa;
+  snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
+  lfHa_DI = lmresult->LineModelSolutions[idx].lfHa_DI;
 
   // store model OII SNR & Flux
   snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
+  snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
+  lfOII_DI = lmresult->LineModelSolutions[idx].lfOII_DI;
+
+  // store Lya fitting parameters
+  LyaWidthCoeff = lmresult->LineModelSolutions[idx].LyaWidthCoeff;
+  LyaAlpha = lmresult->LineModelSolutions[idx].LyaAlpha;
+  LyaDelta = lmresult->LineModelSolutions[idx].LyaDelta;
+  LyaIgm = lmresult->LineModelSolutions[idx].LyaIgm;
 
   // scale marginalization correction
   Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
@@ -108,7 +118,7 @@ void TLineModelResult::updateFromModel(
   nddl = lmresult->LineModelSolutions[idx]
              .nDDL; // override nddl by the actual number of elements in
   // the fitted model
-  NDof = lmel->m_Elements.GetModelNonZeroElementsNDdl();
+  NDof = lmel->getElementList().GetModelNonZeroElementsNDdl();
 
   Float64 _bic =
       lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
@@ -162,15 +172,16 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
     return getCandidateParent(rank, dataset);
   }
   if (dataset == "model_parameters" || dataset == "line_mask" ||
-      dataset == "continuum_polynom") {
+      dataset == "continuum_polynom")
     return this->m_ranked_candidates[rank].second;
-  } else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
+  else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines")
     return m_savedModelFittingResults[rank];
-  } else if (dataset == "model")
+  else if (dataset == "model")
     return this->m_savedModelSpectrumResults[rank];
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[rank];
-
+  else if (dataset == "phot_values")
+    return this->m_modelPhotValue[rank];
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
@@ -186,6 +197,8 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
     return this->m_savedModelSpectrumResults[0]->getType();
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[0]->getType();
+  else if (dataset == "phot_values")
+    return this->m_modelPhotValue[0]->getType();
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
@@ -193,9 +206,9 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
 bool LineModelExtremaResult::HasCandidateDataset(
     const std::string &dataset) const {
   return (dataset == "model_parameters" || dataset == "model" ||
-          dataset == "fp_model_parameters" || dataset == "continuum" ||
-          dataset == "fitted_lines" || dataset == "fp_fitted_lines" ||
-          dataset == "line_mask" || dataset == "continuum_polynom");
+          dataset == "continuum" || dataset == "fitted_lines" ||
+          dataset == "fp_fitted_lines" || dataset == "line_mask" ||
+          dataset == "continuum_polynom" || dataset == "phot_values");
 }
 
 std::shared_ptr<const COperatorResult>

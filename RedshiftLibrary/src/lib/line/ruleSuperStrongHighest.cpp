@@ -50,7 +50,7 @@ void CRuleSuperStrong::SetUp(bool EnabledArgument, ...) {
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start(Arguments, EnabledArgument);
-  m_LineType = va_arg(Arguments, Int32);
+  m_LineType = va_arg(Arguments, CLine::EType);
   std::string _superStrongTag1 = std::string(va_arg(Arguments, const char *));
   m_SuperStrongTags.push_back(_superStrongTag1);
   std::string _superStrongTag2 = std::string(va_arg(Arguments, const char *));
@@ -156,7 +156,8 @@ Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp(
     for (Int32 iLineStrong = 0; iLineStrong < nLines;
          iLineStrong++) // loop on the strong lines
     {
-      if (eList->GetLines()[iLineStrong].GetForce() != CLine::nForce_Strong ||
+      if (eList->GetLines()[iLineStrong].GetForce() !=
+              CLine::EForce::nForce_Strong ||
           eList->GetElementType() != m_LineType ||
           eList->IsOutsideLambdaRange(iLineStrong))
         continue;

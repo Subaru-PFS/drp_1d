@@ -39,7 +39,7 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/operator/linemodel.h"
 #include <boost/test/unit_test.hpp>
-
+#include <regex>
 using namespace NSEpic;
 using namespace std;
 BOOST_AUTO_TEST_SUITE(Linemodel)

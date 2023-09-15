@@ -54,58 +54,62 @@ BOOST_AUTO_TEST_SUITE(test_element)
 BOOST_AUTO_TEST_CASE(Instance) {
   CLineProfile_ptr profilesym =
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
-  CLine line = CLine("O2", 0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4, 0.5,
-                     0.6, 0.7, "group", 0.8);
-  TLineVector rs;
+  CLine line = CLine("O2", 0.1, CLine::EType::nType_Emission,
+                     std::move(profilesym), CLine::EForce::nForce_Strong, 0.,
+                     false, "group", 0.8, "em", 0, "id0");
+  CLineProfile_ptr profileAsym =
+      std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT());
+  CLine lineAsym = CLine("Lya", 0.1, CLine::EType::nType_Emission,
+                         std::move(profileAsym), CLine::EForce::nForce_Strong,
+                         0., false, "group", 0.8, "em", 1, "id1");
+  CLineVector rs;
   rs.push_back(std::move(line));
-  TInt32List catalogIndexes;
-  catalogIndexes.push_back(1);
-  catalogIndexes.push_back(0);
+  rs.push_back(std::move(lineAsym));
+  TInt32List catalogIndexes{0, 1};
 
   TLineModelElementParam_ptr fdata =
       std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
 
   BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), GlobalException);
 
-  BOOST_CHECK_THROW(CLineModelElement(fdata, "fixed"), GlobalException);
-  /*
-  CLineModelElement element = CLineModelElement(rs,  "fixed",  8.0,
-  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes); BOOST_CHECK_CLOSE( 1.0,
-  element.GetVelocityEmission(), 0.01 ); BOOST_CHECK_CLOSE( 1.1,
-  element.GetVelocityAbsorption(), 0.01 );
-  BOOST_CHECK(element.GetElementTypeTag() == "CLineModelElement" );
-  BOOST_CHECK(element.GetSize()==2);
+  CLineModelElement element = CLineModelElement(fdata, "combined");
+  BOOST_CHECK_CLOSE(1.0, element.getVelocityEmission(), 0.01);
+  BOOST_CHECK_CLOSE(1.1, element.getVelocityAbsorption(), 0.01);
+  BOOST_CHECK(element.GetElementType() == CLine::EType::nType_Emission);
+  BOOST_CHECK(element.IsEmission());
+  BOOST_CHECK(element.GetSize() == 2);
   element.SetVelocityEmission(2.0);
-  BOOST_CHECK_CLOSE( 2.0, element.GetVelocityEmission(), 0.01 );
+  BOOST_CHECK_CLOSE(2.0, element.getVelocityEmission(), 0.01);
 
   element.SetVelocityAbsorption(2.1);
-  BOOST_CHECK_CLOSE( 2.1, element.GetVelocityAbsorption(), 0.01 );
+  BOOST_CHECK_CLOSE(2.1, element.getVelocityAbsorption(), 0.01);
 
-  element.SetAsymfitWidthCoeff(2.2);
-  BOOST_CHECK_CLOSE( 2.2, element.GetAsymfitWidthCoeff(), 0.01 );
+  TAsymParams const params = {2.2, 2.3, 2.4};
+  element.SetAsymfitParams(params);
+  TAsymParams const rparam = element.GetAsymfitParams(0);
 
-  element.SetAsymfitAlphaCoeff(2.3);
-  BOOST_CHECK_CLOSE( 2.3, element.GetAsymfitAlphaCoeff(), 0.01 );
-
-  element.SetAsymfitDelta(2.4);
-  BOOST_CHECK_CLOSE( 2.4, element.GetAsymfitDelta(), 0.01 );
+  BOOST_CHECK_CLOSE(2.2, rparam.sigma, 0.01);
+  BOOST_CHECK_CLOSE(2.3, rparam.alpha, 0.01);
+  BOOST_CHECK_CLOSE(2.4, rparam.delta, 0.01);
 
   element.SetSumCross(2.5);
-  BOOST_CHECK_CLOSE( 2.5, element.GetSumCross(), 0.01 );
+  BOOST_CHECK_CLOSE(2.5, element.GetSumCross(), 0.01);
 
   element.SetSumGauss(2.6);
-  BOOST_CHECK_CLOSE( 2.6, element.GetSumGauss(), 0.01 );
+  BOOST_CHECK_CLOSE(2.6, element.GetSumGauss(), 0.01);
 
-  BOOST_CHECK_CLOSE( 0., element.GetFitAmplitude(), 0.01 );
-  */
+  BOOST_CHECK(std::isnan(element.GetFittedAmplitude(0)));
 }
 
 BOOST_AUTO_TEST_CASE(GetLineWidth) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
-  CLine line = CLine("Halpha", 6564.61, 2, std::move(profilesym), 2, 1.0, 0.5);
+  CLine line = CLine("Halpha", 6564.61, CLine::EType::nType_Emission,
+                     std::move(profilesym), CLine::EForce::nForce_Strong, 0.,
+                     false, "group", 1.0, "velgroup", 1, "id1");
+
   line.setNominalAmplitude(0.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(std::move(line));
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
@@ -114,12 +118,8 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
       std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, catalogIndexes);
 
   CLineModelElement elementID = CLineModelElement(fdata, "instrumentdriven");
-  // CLineModelElement elementfixed = CLineModelElement(rs,  "fixed", 1.0, 1.1,
-  // nominalAmplitudes, 1.2,catalogIndexes);
   CLineModelElement elementcombined = CLineModelElement(fdata, "combined");
   CLineModelElement elementVD = CLineModelElement(fdata, "velocitydriven");
-  // CLineModelElement elementNip = CLineModelElement(rs,
-  // "nispsim2016", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
   // setLSF on multiLines
   std::string lsfType = "GaussianConstantResolution"; // TBC
@@ -137,30 +137,23 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
 
   BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., true), 0.001);
   BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., false), 0.001);
-  /*
-  BOOST_CHECK_CLOSE( 1.2,  elementfixed.GetLineWidth(10000., true),0.001);
-  BOOST_CHECK_CLOSE( 1.2, elementfixed.GetLineWidth(10000., false),0.001);
-  */
+
   BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., true), 0.001);
   BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., false),
                     0.001);
   BOOST_CHECK_CLOSE(0.0333564, elementVD.GetLineWidth(10000., true), 0.001);
   BOOST_CHECK_CLOSE(0.0366920, elementVD.GetLineWidth(10000., false), 0.001);
-  /*
-   BOOST_CHECK_CLOSE( 6.61532, elementNip.GetLineWidth(10000., 1., true),
-   0.001); BOOST_CHECK_CLOSE( 6.61534, elementNip.GetLineWidth(10000., 1.,
-   false), 0.001);
-   */
-  // BOOST_CHECK_CLOSE( 600., elementNip.GetLineWidth(10000., 1., false,
-  // CLine::EXTINCT), 0.001);
 }
 
 BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
-  CLine line = CLine("Halpha", 6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
+  CLine line = CLine("Halpha", 6564.61, CLine::EType::nType_Emission,
+                     profilesym->Clone(), CLine::EForce::nForce_Strong, 0.,
+                     false, "group", 1.0, "velgroup", 1, "id1");
+
   line.setNominalAmplitude(0.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(std::move(line));
   TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
@@ -202,10 +195,12 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
 
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
+  CLine line = CLine("Halpha", 6564.61, CLine::EType::nType_Emission,
+                     profilesym->Clone(), CLine::EForce::nForce_Strong, 0.,
+                     false, "group", 1.0, "velgroup", 1, "id1");
 
-  CLine line = CLine("Halpha", 6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
   line.setNominalAmplitude(0.8);
-  TLineVector rs;
+  CLineVector rs;
   rs.push_back(std::move(line));
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
@@ -255,24 +250,6 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport) {
   CLineProfile_ptr profileasym{
       std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(8.))};
 
-  /*
-    CLine line = CLine("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
-    TLineVector rs;
-    rs.push_back(line);
-    TFloat64List nominalAmplitudes = TFloat64List ();
-    nominalAmplitudes.push_back(0.8);
-    TInt32List catalogIndexes;
-    catalogIndexes.push_back(1);
-    catalogIndexes.push_back(0);
-    CLineModelElement element = CLineModelElement(rs,  "nispsim2016", 8.0,
-    0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    */
-  /*std::cout << profilesym->GetNSigmaSupport()<<"\n";
-  std::cout << profilelor->GetNSigmaSupport()<<"\n";
-  std::cout << profileasym->GetNSigmaSupport()<<"\n";
-  std::cout << profileasymfit->GetNSigmaSupport()<<"\n";
-  std::cout << profileasymfixed->GetNSigmaSupport()<<"\n";
-*/
   BOOST_CHECK_CLOSE(8., profilesym->GetNSigmaSupport(), 0.001);
   BOOST_CHECK_CLOSE(32., profilelor->GetNSigmaSupport(), 0.001);
   BOOST_CHECK_CLOSE(8., profileasym->GetNSigmaSupport(), 0.001);

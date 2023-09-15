@@ -156,20 +156,29 @@ public:
     return m_ScopeStack[1];
   }
 
-  const TLineVector getLineVector();
+  const CLineVector getCLineVector();
   std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
 
   const std::vector<std::shared_ptr<const TFloat64Range>> &
-  getClampedLambdaRanges() const {
-    return m_inputContext->getClampedLambdaRanges();
+  getClampedLambdaRanges(bool rebinned = false) const {
+    if (rebinned)
+      return m_inputContext->getRebinnedClampedLambdaRanges();
+    else
+      return m_inputContext->getClampedLambdaRanges();
   }
+
   const std::vector<std::shared_ptr<const TFloat64Range>> &
   getRebinnedClampedLambdaRanges() const {
     return m_inputContext->getRebinnedClampedLambdaRanges();
   }
-  const std::vector<std::shared_ptr<const CSpectrum>> &getSpectra() const {
-    return m_inputContext->getSpectra();
+
+  const std::vector<std::shared_ptr<const CSpectrum>> &
+  getSpectra(bool rebinned = false) const {
+    if (rebinned)
+      return m_inputContext->getRebinnedSpectra();
+    else
+      return m_inputContext->getSpectra();
   }
 
   const std::vector<std::shared_ptr<const CSpectrum>> &

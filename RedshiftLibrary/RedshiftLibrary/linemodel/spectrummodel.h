@@ -12,22 +12,25 @@ namespace NSEpic {
 class CLineModelSolution;
 class CTplModelSolution;
 class CTemplate;
-class COperatorTemplateFitting;
+class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
-  CSpectrumModel(CLineModelElementList &elements,
-                 std::shared_ptr<const CSpectrum> spc,
-                 const TLineVector &m_RestLineList,
-                 std::shared_ptr<CTplModelSolution> tfv);
+  CSpectrumModel(
+      CLineModelElementList &elements,
+      const std::shared_ptr<const CSpectrum> &spc,
+      const CLineVector &m_RestLineList,
+      const std::shared_ptr<CTplModelSolution> &tfv,
+      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
-  void refreshModel(Int32 lineTypeFilter = -1);
+  void refreshModel(CLine::EType lineTypeFilter = CLine::EType::nType_All);
   void reinitModelUnderElements(const TInt32List &filterEltsIdx, Int32 lineIdx);
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
                                  Int32 lineIdx = -1);
 
-  CSpectrumFluxAxis getModel(const TInt32List &eIdx_list,
-                             Int32 lineTypeFilter = -1) const;
+  CSpectrumFluxAxis
+  getModel(const TInt32List &eIdx_list,
+           CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
   void setContinuumToInputSpc();
   void setContinuumComponent(const std::string &component);
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
@@ -35,8 +38,8 @@ public:
   const CSpectrum &GetModelSpectrum() const;
   const CSpectrumFluxAxis &GetModelContinuum() const;
 
-  const CSpectrum &
-  GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter = -1);
+  const CSpectrum &GetObservedSpectrumWithLinesRemoved(
+      CLine::EType lineTypeFilter = CLine::EType::nType_All);
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
                                              const TInt32List &EltsIdx) const;
 
@@ -61,7 +64,7 @@ public:
   Float64 m_Redshift = 0.;
   // new methods
   Int32 m__count = 0;
-  std::shared_ptr<COperatorTemplateFitting> m_templateFittingOperator;
+  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
   Int32 m_spcIndex = 0;
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
@@ -77,6 +80,7 @@ public:
   Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate> &tpl,
                              Float64 zcontinuum);
   void initObserveGridContinuumFlux(Int32 size);
+  const TPhotVal &getPhotValues() const { return m_photValues; };
 
 private:
   CSpectrumFluxAxis
@@ -84,7 +88,7 @@ private:
                          const TInt32List &eIdx_list,
                          bool substract_abslinesmodel) const;
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
-  const TLineVector &m_RestLineList;
+  const CLineVector &m_RestLineList;
   std::shared_ptr<CTplModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
@@ -99,7 +103,9 @@ private:
       m_observeGridContinuumFlux; // the continuum spectre without the
   // amplitude coeff; m_ContinuumFLux = amp *
   // m_observeGridContinuumFlux
+  TPhotVal m_photValues;
 };
 
+using CSpcModelVectorPtr = std::shared_ptr<std::vector<CSpectrumModel>>;
 } // namespace NSEpic
 #endif

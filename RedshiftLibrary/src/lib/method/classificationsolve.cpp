@@ -92,7 +92,7 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
     }
   }
   if (sum <= 0) {
-    THROWG(INTERNAL_ERROR,
+    THROWG(NO_CLASSIFICATION,
            "Classification failed, all probabilities undefined");
   }
   for (const std::string &category : inputContext->m_categories) {

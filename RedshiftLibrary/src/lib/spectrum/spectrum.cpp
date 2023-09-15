@@ -46,6 +46,7 @@
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+#include <map>
 
 using namespace NSEpic;
 using namespace std;
@@ -72,26 +73,24 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
                            &otherWithoutContinuumError =
                                other.m_WithoutContinuumFluxAxis.GetError();
 
-  CSpectrumNoiseAxis &RawError = m_RawFluxAxis.GetError(),
-                     &ContinuumError = m_ContinuumFluxAxis.GetError(),
-                     &WithoutContinuumError =
-                         m_WithoutContinuumFluxAxis.GetError();
-
-  other.m_SpectralAxis.MaskAxis(mask, m_SpectralAxis);
-  other.m_RawFluxAxis.MaskAxis(mask, m_RawFluxAxis);
+  m_SpectralAxis = other.m_SpectralAxis.MaskAxis(mask);
+  m_RawFluxAxis = other.m_RawFluxAxis.MaskAxis(mask);
 
   if (!otherRawError.isEmpty())
-    otherRawError.MaskAxis(mask, RawError);
+    m_RawFluxAxis.setError(otherRawError.MaskAxis(mask));
 
   if (other.alreadyRemoved) {
-    other.m_ContinuumFluxAxis.MaskAxis(mask, m_ContinuumFluxAxis);
-    other.m_WithoutContinuumFluxAxis.MaskAxis(mask, m_WithoutContinuumFluxAxis);
+    m_ContinuumFluxAxis =
+        CSpectrumFluxAxis(other.m_ContinuumFluxAxis.MaskAxis(mask));
+    m_WithoutContinuumFluxAxis =
+        CSpectrumFluxAxis(other.m_WithoutContinuumFluxAxis.MaskAxis(mask));
 
     if (!otherContinuumError.isEmpty())
-      otherContinuumError.MaskAxis(mask, ContinuumError);
+      m_ContinuumFluxAxis.setError(otherContinuumError.MaskAxis(mask));
 
     if (!otherWithoutContinuumError.isEmpty())
-      otherWithoutContinuumError.MaskAxis(mask, WithoutContinuumError);
+      m_WithoutContinuumFluxAxis.setError(
+          otherWithoutContinuumError.MaskAxis(mask));
   }
 }
 
@@ -436,115 +435,125 @@ void CSpectrum::SetType(const CSpectrum::EType type) const {
   }
 }
 
-const bool CSpectrum::checkFlux(Float64 flux) const {
-  if (std::isnan(flux) || std::isinf(flux) || (flux != flux))
-    return false;
-  return true;
-}
-
-const bool CSpectrum::checkNoise(Float64 error) const {
-  bool validValue = true;
-  if (error < DBL_MIN || std::isnan(error) || std::isinf(error) ||
-      error != error)
-    return false;
-  return true;
-}
-
-const bool CSpectrum::IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const {
+const bool CSpectrum::ValidateSpectralAxis(Float64 LambdaMin,
+                                           Float64 LambdaMax) const {
   if (!IsValid())
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
 
-  if (LambdaMin < m_SpectralAxis[0] ||
-      LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount() - 1])
-    return false;
+  // Checks that specified wavelength are contained in spectral axis
+  if (LambdaMin < m_SpectralAxis[0])
+    THROWG(INVALID_SPECTRUM, Formatter()
+                                 << "Failed to validate spectrum\n"
+                                 << "LambdaMin (value: " << LambdaMin << " ) "
+                                 << "lower than spectral axis min (value: "
+                                 << m_SpectralAxis[0] << " )");
+
+  Float64 lambdaMaxSpectralAxis =
+      m_SpectralAxis[m_SpectralAxis.GetSamplesCount() - 1];
+  if (LambdaMax > lambdaMaxSpectralAxis)
+    THROWG(INVALID_SPECTRUM, Formatter()
+                                 << "Failed to validate spectrum\n"
+                                 << "LambdaMax (value: " << LambdaMax << " ) "
+                                 << "higher than spectral axis max (value: "
+                                 << lambdaMaxSpectralAxis << " )");
+  return true;
+}
+
+void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
+  if (IsFluxEmpty())
+    THROWG(INVALID_SPECTRUM, "Invalid spectrum: empty flux");
 
   bool allzero = true;
-  bool invalidValue = false;
   Int32 nInvalid = 0;
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-  Log.LogDetail("CSpectrum::IsFluxValid - checking on the configured "
+  Log.LogDetail("CSpectrum::ValidateFlux - checking on the configured "
                 "lambdarange = (%f, %f)",
                 LambdaMin, LambdaMax);
-  Log.LogDetail("CSpectrum::IsFluxValid - checking on the true observed "
+  Log.LogDetail("CSpectrum::ValidateFlux - checking on the true observed "
                 "spectral axis lambdarange = (%f, %f)",
                 m_SpectralAxis[iMin], m_SpectralAxis[iMax]);
 
   const CSpectrumFluxAxis &flux = GetFluxAxis();
-  for (Int32 i = iMin; i < iMax; i++) {
-    // check flux
-    bool validSample = checkFlux(flux[i]);
+  std::map<string, int> invalidElements = {};
 
-    if (!validSample) {
-      invalidValue = true;
-      nInvalid++;
+  // check flux
+  TBoolList validSamples = flux.checkFlux();
+  for (Int32 i = iMin; i < iMax; i++) {
+    // collect invalid values
+    if (!validSamples[i]) {
+      ++nInvalid;
+      ++invalidElements[to_string(flux[i])];
     }
 
-    // all zero check
+    // all zeroes check
     if (flux[i] != 0.0)
       allzero = false;
   }
-  bool valid = !invalidValue && !allzero;
-  if (nInvalid > 0)
-    Log.LogDetail("    CSpectrum::IsFluxValid - Found %d invalid flux samples",
-                  nInvalid);
 
-  return valid;
+  if (nInvalid > 0) {
+    string errorMessage = "Failed to validate spectrum flux. " +
+                          to_string(nInvalid) + " invalid values:\n";
+    for (auto &itr : invalidElements) {
+      errorMessage += itr.first + " : " + to_string(itr.second) + "\n";
+    }
+    THROWG(INTERNAL_ERROR, errorMessage);
+  }
+
+  if (allzero) {
+    THROWG(INVALID_SPECTRUM,
+           "Failed to validate spectrum flux: all values are zeroes.\n");
+  }
 }
 
-const bool CSpectrum::IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const {
-  bool valid = true;
+void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   Int32 nInvalid = 0;
 
   if (IsNoiseEmpty())
-    return false;
+    THROWG(INVALID_SPECTRUM, "Invalid spectrum: empty noise.");
 
   const TFloat64List &error = GetFluxAxis().GetError().GetSamplesVector();
-  if (LambdaMin < m_SpectralAxis[0] ||
-      LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount() - 1])
-    return false;
-
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-  Log.LogDetail("CSpectrum::IsNoiseValid - checking on the configured "
+  Log.LogDetail("CSpectrum::ValidateNoise - checking on the configured "
                 "lambdarange = (%f, %f)",
                 LambdaMin, LambdaMax);
-  Log.LogDetail("CSpectrum::IsNoiseValid - checking on the true observed "
+  Log.LogDetail("CSpectrum::ValidateNoise - checking on the true observed "
                 "spectral axis lambdarange = (%f, %f)",
                 m_SpectralAxis[iMin], m_SpectralAxis[iMax]);
-  for (Int32 i = iMin; i < iMax; i++) {
-    // check noise
-    bool validSample =
-        checkNoise(error[i]); // checkNoise can be moved to CSpectrumNoise
 
-    if (!validSample) {
-      valid = false;
-      nInvalid++;
+  std::map<string, int> invalidElements = {};
+
+  // check noise
+  TBoolList validSamples = GetFluxAxis().GetError().checkNoise();
+  for (Int32 i = iMin; i < iMax; i++) {
+    if (!validSamples[i]) {
+      ++nInvalid;
+      invalidElements[to_string(error[i])]++;
     }
   }
-  if (nInvalid > 0)
+  if (nInvalid > 0) {
+    string errorMessage = "Failed to validate spectrum noise. " +
+                          to_string(nInvalid) + " invalid values:\n";
+    for (auto &itr : invalidElements) {
+      errorMessage += itr.first + " : " + to_string(itr.second) + "\n";
+    }
     Log.LogDetail(
-        "    CSpectrum::IsNoiseValid - Found %d invalid noise samples",
+        "    CSpectrum::ValidateNoise - Found %d invalid noise samples",
         nInvalid);
-
-  return valid;
+    THROWG(INTERNAL_ERROR, errorMessage);
+  }
 }
 
 bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                                 Float64 coeffCorr) {
-  bool corrected = false;
-  Int32 nCorrected = 0;
   if (!IsValid())
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
-
-  CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
-  TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
-  TFloat64List &flux = fluxaxis.GetSamplesVector();
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
@@ -552,46 +561,11 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
   // wmin=%f, iMax=%d and wmax=%f", iMin, m_SpectralAxis[iMin], iMax,
   // m_SpectralAxis[iMax]);
 
-  Float64 maxNoise = -DBL_MAX;
-  Float64 minFlux = DBL_MAX;
-  for (Int32 i = iMin; i < iMax; i++) {
-    // check noise & flux
-    if (!checkNoise(error[i]) || !checkFlux(flux[i]))
-      continue;
+  bool corrected =
+      GetFluxAxis_().correctFluxAndNoiseAxis(iMin, iMax, coeffCorr);
 
-    maxNoise = std::max(maxNoise, error[i]);
-    minFlux = std::min(std::abs(flux[i]), std::abs(minFlux));
-  }
-  if (minFlux == DBL_MAX) {
-    Flag.warning(WarningCode::CORRECT_SPECTRUM_NOMINFLUX,
-                 Formatter() << "CSpectrum::" << __func__
-                             << ": unable to set minFlux value (=" << minFlux
-                             << "). Setting it to 0.");
-    minFlux = 0.0;
-  }
-  if (maxNoise == -DBL_MAX)
-    THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
-
-  for (Int32 i = iMin; i < iMax; i++) {
-    // check noise & flux
-    bool validSample = checkNoise(error[i]) && checkFlux(flux[i]);
-
-    if (validSample)
-      continue;
-    error[i] = maxNoise * coeffCorr;
-    flux[i] = minFlux / coeffCorr;
-    corrected = true;
-    nCorrected++;
-  }
-
-  SetFluxAxis(std::move(fluxaxis));
-
-  if (corrected) {
-    Log.LogInfo("    CSpectrum::correctSpectrum - Corrected %d invalid samples "
-                "with coeff (=%f), minFlux=%e, maxNoise=%e",
-                nCorrected, coeffCorr, minFlux, maxNoise);
+  if (corrected)
     ResetContinuum();
-  }
 
   return corrected;
 }
@@ -683,11 +657,11 @@ void CSpectrum::Rebin(const TFloat64Range &range,
                    opt_error_interp);
 }
 
-void CSpectrum::ScaleFluxAxis(Float64 scale) {
-  m_RawFluxAxis *= scale;
+void CSpectrum::ApplyAmplitude(Float64 amplitude) {
+  m_RawFluxAxis *= amplitude;
   if (alreadyRemoved) {
-    m_ContinuumFluxAxis *= scale;
-    m_WithoutContinuumFluxAxis *= scale;
+    m_ContinuumFluxAxis *= amplitude;
+    m_WithoutContinuumFluxAxis *= amplitude;
   }
   m_rebin->reset();
 }
@@ -700,45 +674,36 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   TFloat64Range clampedlambdaRange;
   m_SpectralAxis.ClampLambdaRange(lambdaRange, clampedlambdaRange);
-  Log.LogInfo("Validate spectrum: (CLambdaRange: %f-%f:%f)",
+  Log.LogInfo("Validate spectrum: (clamped lambda range: %f-%f:%f)",
               clampedlambdaRange.GetBegin(), clampedlambdaRange.GetEnd(),
               GetResolution());
 
   Float64 lmin = clampedlambdaRange.GetBegin();
   Float64 lmax = clampedlambdaRange.GetEnd();
 
-  // Check if the Spectrum is valid on the lambdarange
+  // Check if the Spectrum is valid on the clamped lambdarange
   if (enableInputSpcCorrect)
     if (correctSpectrum(lmin, lmax))
       Log.LogInfo(
           "Successfully corrected noise on wavelength range (%.1f ; %.1f)",
           lmin, lmax);
 
-  if (!IsFluxValid(lmin, lmax))
-    THROWG(
-        INTERNAL_ERROR,
-        Formatter() << "Failed to validate spectrum flux on wavelength range ["
-                    << lmin << ";" << lmax << "]");
-  else
-    Log.LogDetail("Successfully validated spectrum flux, on wavelength range "
-                  "(%.1f ; %.1f)",
-                  lmin, lmax);
+  ValidateSpectralAxis(lmin, lmax);
+  ValidateFlux(lmin, lmax);
+  Log.LogDetail("Successfully validated spectrum flux, on wavelength range "
+                "(%.1f ; %.1f)",
+                lmin, lmax);
 
-  // Check if the noise is valid in the clampedlambdaRange
-  if (!IsNoiseValid(lmin, lmax))
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "Failed to validate noise on wavelength range ["
-                       << lmin << ";" << lmax << "]");
-  else
-    Log.LogDetail(
-        "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin,
-        lmax);
+  // Check if the noise is valid in the clamped lambdaRange
+  ValidateNoise(lmin, lmax);
+  Log.LogDetail(
+      "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin,
+      lmax);
 
   if (!m_LSF)
     return;
-  // check if spectrum LSF spectralAxis covers lambdaRange
-  if (!m_LSF->checkAvailability(lambdaRange.GetBegin()) ||
-      !m_LSF->checkAvailability(lambdaRange.GetEnd())) {
+  // check if spectrum LSF spectralAxis covers clamped lambdaRange
+  if (!m_LSF->checkAvailability(lmin) || !m_LSF->checkAvailability(lmax)) {
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Failed to validate lsf on wavelength range ["
                                << lmin << ";" << lmax << "]");

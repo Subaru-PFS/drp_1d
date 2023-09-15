@@ -300,6 +300,20 @@ COperatorResultStore::GetModelSpectrumResult(const std::string &objectType,
           ->getCandidate(rank, dataset));
 }
 
+std::shared_ptr<const CModelPhotValueResult>
+COperatorResultStore::GetModelPhotValueResult(const std::string &objectType,
+                                              const std::string &method,
+                                              const std::string &name,
+                                              const std::string &dataset,
+                                              const int &rank) const
+
+{
+  return std::dynamic_pointer_cast<const CModelPhotValueResult>(
+      GetGlobalResult(objectType, method, name)
+          .lock()
+          ->getCandidate(rank, dataset));
+}
+
 std::shared_ptr<const CLineModelSolution>
 COperatorResultStore::GetLineModelSolution(const std::string &objectType,
                                            const std::string &method,

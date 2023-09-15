@@ -84,10 +84,10 @@ public:
 
   typedef std::vector<SGaussParams> TGaussParamsList;
 
-  CLineDetection(Int32 type = CLine::nType_Emission, Float64 cut = 5.0,
-                 Float64 strongcut = 2.0, Float64 winsize = 250,
-                 Float64 minsize = 3, Float64 maxsize = 70,
-                 bool disableFitQualityCheck = false);
+  CLineDetection(CLine::EType type = CLine::EType::nType_Emission,
+                 Float64 cut = 5.0, Float64 strongcut = 2.0,
+                 Float64 winsize = 250, Float64 minsize = 3,
+                 Float64 maxsize = 70, bool disableFitQualityCheck = false);
   virtual ~CLineDetection(){};
 
   std::shared_ptr<const CLineDetectionResult>
@@ -108,7 +108,7 @@ private:
   friend class test_linedetection::Retest;
   friend class test_linedetection::LimitGaussianFitStartAndStop;
 
-  Int32 m_type;
+  CLine::EType m_type;
 
   Float64 m_winsize;
   Float64 m_minsize;
@@ -126,10 +126,10 @@ private:
 
   bool Retest(const CSpectrum &spectrum, CLineDetectionResult &result,
               TInt32RangeList retestPeaks, TGaussParamsList retestGaussParams,
-              TLineVector strongLines, Int32 winsize, Float64 cut);
+              CLineDetectedVector strongLines, Int32 winsize, Float64 cut);
   bool RemoveStrongFromSpectra(const CSpectrum &spectrum,
                                CLineDetectionResult &result,
-                               TLineVector strongLines,
+                               CLineDetectedVector strongLines,
                                TInt32RangeList selectedretestPeaks,
                                TGaussParamsList selectedgaussparams,
                                Float64 winsize, Float64 cut);

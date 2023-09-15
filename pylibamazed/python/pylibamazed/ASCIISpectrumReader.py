@@ -37,42 +37,26 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-import numpy as np
-import os, json
-
-import pandas as pd
-from pylibamazed.redshift import (
-    CSpectrumSpectralAxis,
-    CSpectrumFluxAxis_withError,
-    CSpectrum,
-    PC_Get_AxisSampleList,
-    CProcessFlowContext,
-    TLSFGaussianVarWidthArgs,
-    CLSFFactory,
-    CPhotometricData,
-    CLog,
-    CFlagWarning,
-    ErrorCode,
-)
-from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader
-from pylibamazed.redshift import PC_Get_AxisSampleList
+from pylibamazed.Container import Container
+from pylibamazed.redshift import CFlagWarning, CLog
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
-from pylibamazed.Exception import APIException
 
 
 class ASCIISpectrumReader(AbstractSpectrumReader):
     """
-    Child class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also handles
-    Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle photometric data
-    if present.
+    Child class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also
+    handles Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle
+    photometric data if present.
 
     Reads a CSpectrum
-    :param observation_id: Observation ID of the spectrum, there can be multiple observation id for the same source_id
+    :param observation_id: Observation ID of the spectrum, there can be multiple observation id for the same
+        source_id
     :type observation_id: str
-    :param parameters: Parameters of the amazed run. It should at least have information about LSF and lambda range
+    :param parameters: Parameters of the amazed run. It should at least have information about LSF and lambda
+        range
     :type parameters: dict
     :param calibration_library: Calibration library object, containing all calibration data necessary,
         according to parameters
@@ -82,21 +66,33 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
 
     """
 
-    def load_wave(self, spectrum):
+    def load_wave(self, spectrum, obs_id=""):
         self.waves.append(spectrum.wave)
 
-    def load_flux(self, spectrum):
+    def load_flux(self, spectrum, obs_id=""):
         self.fluxes.append(spectrum.flux)
 
-    def load_error(self, spectrum):
+    def load_error(self, spectrum, obs_id=""):
         self.errors.append(spectrum.err)
 
-    def load_lsf(self, spectrum):
+    def load_lsf(self, spectrum, obs_id=""):
         pass
-        #self.lsf_type = "no_lsf"
+        # self.lsf_type = "no_lsf"
 
-    def load_photometry(self, phot):
+    def load_photometry(self, phot, obs_id=""):
         self.photometric_data.append(phot)
+
+    def load_others(self, spectrum, obs_id: str = ""):
+        additional_cols = self.parameters.get_additional_cols()
+        if additional_cols is None:
+            return
+
+        for col_name in additional_cols:
+            col_data = spectrum[col_name]
+            if self.others.get(col_name) is None:
+                self.others[col_name] = Container(**{obs_id: col_data})
+            else:
+                self.others[col_name].append(col_data, obs_id)
 
     # spectrum here is a CSpectrum
     def load_all(self, spectrum):
@@ -104,5 +100,4 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
         self.load_flux(spectrum)
         self.load_error(spectrum)
         self.load_lsf(spectrum)
-        # self.load_photometry(spectrum)
-
+        self.load_others(spectrum)

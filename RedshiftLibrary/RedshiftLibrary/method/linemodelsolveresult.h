@@ -69,6 +69,10 @@ private:
   Float64 lfHa = NAN;
   Float64 snrOII = NAN;
   Float64 lfOII = NAN;
+  Float64 LyaWidthCoeff = NAN;
+  Float64 LyaAlpha = NAN;
+  Float64 LyaDelta = NAN;
+  Int32 LyaIgm = undefIdx;
 };
 
 } // namespace NSEpic

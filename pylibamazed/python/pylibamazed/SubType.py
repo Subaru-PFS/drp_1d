@@ -37,20 +37,18 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
+from pylibamazed.redshift import CLog
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
-import numpy as np
-import json
-from pylibamazed.redshift import (CLog, ErrorCode)
-import os
 
 zlog = CLog.GetInstance()
 
+
 class SubType:
-    def __init__(self, object_type,parameters, calibration):
+    def __init__(self, object_type, parameters, calibration):
         self.object_type = object_type
         self.parameters = parameters
         self.calibration_library = calibration
-        
+
     def Compute(self, context):
         output = ResultStoreOutput(context.GetResultStore(),
                                    self.parameters,
@@ -58,7 +56,9 @@ class SubType:
                                    extended_results=False)
         ret = []
 
-        for rank in range(context.GetResultStore().getNbRedshiftCandidates(self.object_type,"LineModelSolve")):
+        for rank in range(
+            context.GetResultStore().getNbRedshiftCandidates(self.object_type, "LineModelSolve")
+        ):
             tpl_ratio = output.get_attribute_from_source(self.object_type,
                                                          "LineModelSolve",
                                                          "model_parameters",
@@ -67,4 +67,3 @@ class SubType:
             ret.append(self.calibration_library.get_sub_type(self.object_type,
                                                              tpl_ratio))
         return ret
-

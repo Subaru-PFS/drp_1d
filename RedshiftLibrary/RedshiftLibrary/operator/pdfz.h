@@ -49,6 +49,10 @@
 
 #include <string>
 
+namespace Pdfz_test { // boost_test_suite
+class checkWindowSize_test;
+}
+
 namespace NSEpic {
 
 struct ChisquareArray {
@@ -69,16 +73,16 @@ struct ChisquareArray {
 class COperatorPdfz : public COperator {
 
 public:
-  COperatorPdfz(
-      const std::string &opt_combine,
-      Float64 peakSeparation = 0.0,    // no minimal separation
-      Float64 meritcut = 0.0,          // no cut
-      Int32 maxCandidate = 10,         // max number of candidate at the end
-      bool redshiftLogSampling = true, //
-      const std::string &Id_prefix = "EXT", bool allow_extrema_at_border = true,
-      Int32 maxPeakCount_per_window =
-          0, // <=0 will be set to maxCandidate (default to one window)
-      bool integ = true);
+  COperatorPdfz(const std::string &opt_combine,
+                Float64 peakSeparation = 0.0, // no minimal separation
+                Float64 meritcut = 0.0,       // no cut
+                Int32 maxCandidate = 10, // max number of candidate at the end
+                bool redshiftLogSampling = true, //
+                const std::string &Id_prefix = "EXT",
+                bool allow_extrema_at_border = true,
+                Int32 maxPeakCount_per_window =
+                    0 // <=0 will be set to maxCandidate (default to one window)
+  );
 
   std::shared_ptr<CPdfCandidateszResult<TCandidateZ>>
   Compute(const ChisquareArray &chisquares);
@@ -99,6 +103,10 @@ public:
                                 const TFloat64List &redshifts);
 
 private:
+  friend class Pdfz_test::checkWindowSize_test;
+  void checkWindowSize(const TFloat64Range &integration_range,
+                       const TFloat64Range &window_range);
+
   void ComputeEvidenceAll(const TFloat64List &LogEvidencesWPriorM,
                           Float64 &MaxiLogEvidence);
 
@@ -127,7 +135,6 @@ private:
   const bool m_allow_extrema_at_border;
   const Float64 m_meritcut;
   const std::string m_Id_prefix; // =  "EXT"; // for "extrema"
-  const bool m_integ;
 
   TCandidateZbyID m_parentCandidates;
 };

@@ -55,15 +55,14 @@ using namespace NSEpic;
  * Returns a smart pointer of a CLineMatchingResult, containing the set of
  * matches.
  */
-std::shared_ptr<CLineMatchingResult>
-CLineMatching::Compute(const CLineCatalog &detectedLineCatalog,
-                       const CLineCatalog &restLineCatalog,
-                       const TFloat64Range &redshiftRange, Int32 nThreshold,
-                       Float64 tol, Int32 typeFilter, Int32 detectedForceFilter,
-                       Int32 restForceFilter) const {
-  TLineVector detectedLineList =
+std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
+    const CLineDetectedCatalog &detectedLineCatalog,
+    const CLineCatalog &restLineCatalog, const TFloat64Range &redshiftRange,
+    Int32 nThreshold, Float64 tol, CLine::EType typeFilter,
+    CLine::EForce detectedForceFilter, CLine::EForce restForceFilter) const {
+  CLineDetectedVector detectedLineList =
       detectedLineCatalog.GetFilteredList(typeFilter, detectedForceFilter);
-  TLineVector restLineList =
+  CLineVector restLineList =
       restLineCatalog.GetFilteredList(typeFilter, restForceFilter);
   auto redshiftGetter = getRedshift(detectedLineList, restLineList);
 
@@ -107,13 +106,13 @@ CLineMatching::Compute(const CLineCatalog &detectedLineCatalog,
   auto result = std::make_shared<CLineMatchingResult>();
   result->SolutionSetList = newSolutions;
   result->m_RestCatalog = restLineCatalog;
-  result->m_DetectedCatalog = restLineCatalog;
+  result->m_DetectedCatalog = detectedLineCatalog;
   return result;
 }
 
 std::function<Float64(Int32, Int32)>
-CLineMatching::getRedshift(const TLineVector &detectedLineList,
-                           const TLineVector &restLineList) const {
+CLineMatching::getRedshift(const CLineDetectedVector &detectedLineList,
+                           const CLineVector &restLineList) const {
   return [&detectedLineList, &restLineList](Int32 idx, Int32 iRestLine) {
     return (detectedLineList[idx].GetPosition() -
             restLineList[iRestLine].GetPosition()) /
@@ -124,8 +123,8 @@ CLineMatching::getRedshift(const TLineVector &detectedLineList,
 void CLineMatching::updateSolution(
     Int32 iDetectedLine, Float64 redShift, Float64 tol,
     CLineMatchingResult::TSolutionSet &solution, // to update
-    const TLineVector &detectedLineList,
-    const TLineVector &restLineList) const {
+    const CLineDetectedVector &detectedLineList,
+    const CLineVector &restLineList) const {
   auto redshiftGetter = getRedshift(detectedLineList, restLineList);
   for (Int32 iDetectedLine2 = 0; iDetectedLine2 < detectedLineList.size();
        iDetectedLine2++) {
@@ -160,7 +159,7 @@ void CLineMatching::updateSolution(
  * @return false
  */
 bool CLineMatching::isLineAlreadyPresent(
-    const CLine &line,
+    const CLineDetected &line,
     const CLineMatchingResult::TSolutionSet &solution) const {
   for (const auto &currentSet : solution)
     if (currentSet.DetectedLine.GetPosition() == line.GetPosition())

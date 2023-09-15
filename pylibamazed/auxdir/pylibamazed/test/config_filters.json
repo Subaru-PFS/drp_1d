@@ -1,0 +1,18 @@
+{
+  "parameters_file": "p_filters.json",
+  "output_dir": "output",
+  "input_file": "filters.1",
+  "spectrum_dir": "spectra",
+  "calibration_dir": "calibration",
+  "linemeascatalog": {},
+  "multiobs": false,
+  "summary_conf_path": "",
+  "linemeas_catalog_columns": {},
+  "extended_results": true,
+  "reader": "amazed",
+  "photometry_path": "",
+  "spectrum_prefix": "",
+  "spectrum_suffix": ".dat",
+  "excluded_datasets": {},
+  "ld_preload": ""
+}

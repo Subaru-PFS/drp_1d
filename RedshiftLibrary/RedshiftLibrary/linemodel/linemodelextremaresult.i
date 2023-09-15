@@ -43,7 +43,8 @@ public:
     m_type = "TLineModelResult";
   }
 
-  void updateFromContinuumModelSolution(std::shared_ptr<const CTplModelSolution> cms);
+  void updateFromContinuumModelSolution(
+      std::shared_ptr<const CTplModelSolution> cms);
 
   void updateFromLineModelSolution(const CLineModelSolution &cms);
 
@@ -57,13 +58,20 @@ public:
   Float64 MeritContinuum; // best continum  chi2
   Float64 Merit;          // fullmodel best chi2
 
-
   Float64 CorrScaleMarg; // extrema scale marg. correction
   Int32 NDof;            // non zero elements in the lambdarange
   Float64 snrHa;
   Float64 lfHa;
+  Float64 snrHa_DI;
+  Float64 lfHa_DI;
   Float64 snrOII;
   Float64 lfOII;
+  Float64 snrOII_DI;
+  Float64 lfOII_DI;
+  Float64 LyaWidthCoeff;
+  Float64 LyaAlpha;
+  Float64 LyaDelta;
+  Int32 LyaIgm = undefIdx;
 
   Float64 NLinesOverThreshold;
 
@@ -77,15 +85,15 @@ public:
       OutsideLinesSTDError; // STD measured on the error spectrum outside lines
 
   // line width
-  Float64 Elv;            // emission line width
-  Float64 Alv;            // absorption line width
+  Float64 Elv; // emission line width
+  Float64 Alv; // absorption line width
 
   CMask OutsideLinesMask;
   // template ratio
   std::string FittedTplratioName = undefStr; // Name of the best template
-                                                // fitted for tplcorr/tplratio
-  Float64 FittedTplratioAmplitudeEm = NAN; // amp of the best template fitted for
-                                         // tplcorr/tplratio
+                                             // fitted for tplcorr/tplratio
+  Float64 FittedTplratioAmplitudeEm = NAN;   // amp of the best template fitted
+                                             // for tplcorr/tplratio
   Float64 FittedTplratioAmplitudeAbs = NAN;
 
   Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
