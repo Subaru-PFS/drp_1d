@@ -50,12 +50,12 @@ class CLineCatalogsTplRatio;
 
 class CTplratioManager : public CLineRatioManager {
 public:
-  CTplratioManager(CLineModelElementList &elements,
-                   std::shared_ptr<CSpectrumModel> model,
-                   std::shared_ptr<const CSpectrum> inputSpc,
-                   std::shared_ptr<const TFloat64Range> lambdaRange,
+  CTplratioManager(const CLMEltListVectorPtr &elementsVector,
+                   const CSpcModelVectorPtr &models,
+                   const CCSpectrumVectorPtr &inputSpcs,
+                   const CTLambdaRangePtrVector &lambdaRanges,
                    std::shared_ptr<CContinuumManager> continuumManager,
-                   const TLineVector &restLineList);
+                   const CLineVector &restLineList);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
   CTplratioManager(CTplratioManager const &other) = default;
@@ -107,7 +107,7 @@ public:
 
 protected:
   Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
-                              const TLineVector &catalog) const override;
+                              const CLineVector &catalog) const override;
 
   void initMerit(Int32 ntplratio);
   void SetTplratio_PriorHelper();

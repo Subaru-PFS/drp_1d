@@ -51,7 +51,7 @@ public:
   TInt32List m_elementsDisabledIndexes;
 
   TInt32List GetModelValidElementsIndexes() const;
-  TInt32List getValidElementIndices(Int32 lineTypeFilter) const;
+  TInt32List getValidElementIndices(CLine::EType lineTypeFilter) const;
   void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
   Float64 GetElementAmplitude(Int32 j) const;
 
@@ -66,7 +66,7 @@ public:
   Int32 GetModelValidElementsNDdl() const;
   Int32 GetModelNonZeroElementsNDdl() const;
 
-  std::vector<TInt32List> GetModelVelfitGroups(Int32 lineType) const;
+  std::vector<TInt32List> GetModelVelfitGroups(CLine::EType lineType) const;
 
   std::vector<CRange<Int32>> getlambdaIndexesUnderLines(
       const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
@@ -74,8 +74,8 @@ public:
       const TFloat64Range &lambdaRange, Float64 redshift) const;
 
   Int32 findElementIndex(const std::string &LineTagStr,
-                         Int32 linetype = -1) const;
-  Int32 findElementIndex(const std::string &LineTagStr, Int32 linetype,
+                         CLine::EType linetype = CLine::EType::nType_All) const;
+  Int32 findElementIndex(const std::string &LineTagStr, CLine::EType linetype,
                          Int32 &lineIdx) const;
   std::tuple<TInt32List, std::vector<TInt32List>> getIgmLinesIndices() const;
 
@@ -85,10 +85,10 @@ public:
 
   void resetAmplitudeOffset();
 
-  void addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis &spectralAxis,
-                                    CSpectrumFluxAxis &modelfluxAxis,
-                                    const TInt32List &eIdx_list = {},
-                                    Int32 lineTypeFilter = undefIdx) const;
+  void addToSpectrumAmplitudeOffset(
+      const CSpectrumSpectralAxis &spectralAxis,
+      CSpectrumFluxAxis &modelfluxAxis, const TInt32List &eIdx_list = {},
+      CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
 
   bool IsElementIndexInDisabledList(Int32 index) const;
   void SetElementIndexesDisabledAuto();
@@ -101,7 +101,7 @@ public:
   const TPolynomCoeffs &getPolynomCoeffs(Int32 eIdx) const;
   std::map<std::string, TInt32List>
   getFittingGroups(TInt32List EltsIdx = {},
-                   Int32 lineTypeFilter = undefIdx) const;
+                   CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
 
   const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {
     return m_Elements[i];
@@ -135,5 +135,7 @@ public:
       elt->debug(os);
   }
 };
+
+using CLMEltListVectorPtr = std::shared_ptr<std::vector<CLineModelElementList>>;
 } // namespace NSEpic
 #endif

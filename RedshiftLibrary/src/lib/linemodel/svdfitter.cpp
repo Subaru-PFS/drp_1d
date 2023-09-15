@@ -50,17 +50,17 @@ using namespace std;
 
 // set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
-  TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
 
   if (validEltsIdx.empty())
     return;
 
   std::string fitGroupTag = "svd";
   for (Int32 idx : validEltsIdx)
-    m_Elements[idx]->SetFittingGroupInfo(fitGroupTag);
+    getElementList()[idx]->SetFittingGroupInfo(fitGroupTag);
 
   if (m_enableAmplitudeOffsets)
-    m_Elements.resetAmplitudeOffset();
+    getElementList().resetAmplitudeOffset();
 
   fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, m_enableLambdaOffsetsFit,
                                        redshift);
@@ -76,16 +76,17 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                                        Float64 redshift,
                                        const TInt32List &IdxToFit) {
 
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc.GetSpectralAxis();
-  const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxisNoContinuum();
-  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
+  const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
+  const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxisNoContinuum();
+  const CSpectrumFluxAxis &continuumfluxAxis =
+      getModel().getContinuumFluxAxis();
 
   bool useAmpOffset = m_enableAmplitudeOffsets;
 
   if (EltsIdx.size() < 1)
     THROWG(INTERNAL_ERROR, "empty Line element list to fit");
 
-  TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
+  TInt32List xInds = getElementList().getSupportIndexes(EltsIdx);
   Int32 n = xInds.size();
   if (n < 1)
     THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
@@ -112,18 +113,18 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     ampsfitted.assign(EltsIdx.size(), 0.0);
     errorsfitted.assign(EltsIdx.size(), INFINITY);
     for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
-      m_Elements.SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
+      getElementList().SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
     if (useAmpOffset) {
       for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
-        m_Elements[EltsIdx[iddl]]->SetPolynomCoeffs({0., 0., 0.});
+        getElementList()[EltsIdx[iddl]]->SetPolynomCoeffs({0., 0., 0.});
     }
     return true;
   }
 
   for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++)
-    m_Elements.SetElementAmplitude(EltsIdxToFit[iddl], 1.0, 0.0);
+    getElementList().SetElementAmplitude(EltsIdxToFit[iddl], 1.0, 0.0);
 
-  const auto &ErrorNoContinuum = m_inputSpc.GetErrorAxis();
+  const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
 
   // Linear fit
   Float64 fval;
@@ -158,7 +159,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     gsl_vector_set(w, i, 1.0 / (ei * ei));
 
     for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++) {
-      fval = m_Elements[EltsIdxToFit[iddl]]->getModelAtLambda(
+      fval = getElementList()[EltsIdxToFit[iddl]]->getModelAtLambda(
           xi, redshift, continuumfluxAxis[idx]);
       gsl_matrix_set(X, i, iddl, fval);
       Log.LogDebug("fval = '%.3e'", fval);
@@ -196,7 +197,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       allPositive = false;
     Float64 cova = gsl_matrix_get(cov, iddl, iddl);
     Float64 sigma = sqrt(cova) / normFactor;
-    m_Elements.SetElementAmplitude(EltsIdxToFit[iddl], a, sigma);
+    getElementList().SetElementAmplitude(EltsIdxToFit[iddl], a, sigma);
     ampsfitted[iddl] = (a);
     errorsfitted[iddl] = (sigma);
   }
@@ -212,7 +213,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     // set the polynomial coeffs for all elements, even those not fitted and
     // fixed at zero
     for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
-      m_Elements[EltsIdx[iddl]]->SetPolynomCoeffs({x0, x1, x2});
+      getElementList()[EltsIdx[iddl]]->SetPolynomCoeffs({x0, x1, x2});
   }
 
   gsl_matrix_free(X);
@@ -240,7 +241,8 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     TInt32List idx_positive;
     for (Int32 ifit = 0; ifit < EltsIdx.size(); ifit++) {
       if (ampsfitted[ifit] < 0) {
-        m_Elements.SetElementAmplitude(EltsIdx[ifit], 0.0, errorsfitted[ifit]);
+        getElementList().SetElementAmplitude(EltsIdx[ifit], 0.0,
+                                             errorsfitted[ifit]);
       } else {
         idx_positive.push_back(ifit);
       }
@@ -257,8 +259,8 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
           if (ampsfitted[irefit] > 0) {
             fitAmplitude(EltsIdx[idx_positive[irefit]], redshift, undefIdx);
           } else {
-            m_Elements.SetElementAmplitude(EltsIdx[idx_positive[irefit]], 0.0,
-                                           errorsfitted[irefit]);
+            getElementList().SetElementAmplitude(EltsIdx[idx_positive[irefit]],
+                                                 0.0, errorsfitted[irefit]);
           }
         }
       }
@@ -270,7 +272,7 @@ void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
                                                       bool enableOffsetFitting,
                                                       Float64 redshift) {
 
-  const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxisNoContinuum();
+  const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxisNoContinuum();
 
   bool atLeastOneOffsetToFit =
       HasLambdaOffsetFitting(EltsIdx, enableOffsetFitting);
@@ -291,11 +293,11 @@ void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
       continue;
 
     Float64 sumFit = 0.0;
-    m_model->refreshModelUnderElements(EltsIdx);
+    getModel().refreshModelUnderElements(EltsIdx);
 
     // todo: replace lambdarange using elements limits for speed
     for (Int32 iE : EltsIdx)
-      sumFit += m_model->getModelErrorUnderElement(iE, fluxAxis);
+      sumFit += getModel().getModelErrorUnderElement(iE, fluxAxis);
 
     if (sumFit < bestMerit) {
       bestMerit = sumFit;

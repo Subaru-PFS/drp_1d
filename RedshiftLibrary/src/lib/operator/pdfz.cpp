@@ -52,14 +52,14 @@ COperatorPdfz::COperatorPdfz(const std::string &opt_combine,
                              Int32 maxCandidate, bool redshiftLogSampling,
                              const std::string &Id_prefix,
                              bool allow_extrema_at_border,
-                             Int32 maxPeakCount_per_window, bool integ)
+                             Int32 maxPeakCount_per_window)
     : m_opt_combine(opt_combine), m_peakSeparation(peakSeparation),
       m_meritcut(meritcut), m_allow_extrema_at_border(allow_extrema_at_border),
       m_maxPeakCount_per_window(maxPeakCount_per_window <= 0
                                     ? maxCandidate
                                     : maxPeakCount_per_window),
       m_maxCandidate(maxCandidate), m_redshiftLogSampling(redshiftLogSampling),
-      m_Id_prefix(Id_prefix), m_integ(integ) {}
+      m_Id_prefix(Id_prefix) {}
 
 /*
  * Main Pdf operator entrance
@@ -74,7 +74,14 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
     THROWG(INTERNAL_ERROR, "candidates zgridParams and parentCandidates do not "
                            "have the same size");
 
-  if (!chisquarearray.parentCandidates.empty()) {
+  const bool isFirstPass = chisquarearray.parentCandidates.empty();
+
+  // Set m_parentcandidates & m_candidateszrange depending on 1st / 2nd pass
+  if (isFirstPass) {
+    m_parentCandidates = {{"", nullptr}};
+    m_candidatesZRanges = {{"", {}}};
+  } else {
+    // second pass
     m_parentCandidates =
         TCandidateZbyID(chisquarearray.parentCandidates.cbegin(),
                         chisquarearray.parentCandidates.cend());
@@ -82,9 +89,6 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
       m_candidatesZRanges[chisquarearray.parentCandidates[i].first] =
           TFloat64Range(chisquarearray.zgridParams[i].zmin,
                         chisquarearray.zgridParams[i].zmax);
-  } else {
-    m_parentCandidates = {{"", nullptr}};
-    m_candidatesZRanges = {{"", {}}};
   }
 
   // create ClogZPdfResult
@@ -98,28 +102,56 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
       searchMaxPDFcandidates(); // will be sorted by the id syntax inside each
                                 // redhisftwindow
 
+  CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
+
   std::shared_ptr<PdfCandidatesZResult> CandidateszResult;
-  if (m_integ) {
-    // compute pdf candidate properties (deltaz, integ, rank )
-    CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-    CandidateszResult = zcand_op.Compute(m_postmargZResult->redshifts,
-                                         m_postmargZResult->valProbaLog);
 
-    // eventually truncate candidates at maxcount
-    size_t newsize = std::min(CandidateszResult->m_ranked_candidates.size(),
-                              size_t(m_maxCandidate));
-    CandidateszResult->m_ranked_candidates.resize(newsize);
-  } else {
-    CandidateszResult = std::make_shared<PdfCandidatesZResult>();
-    for (auto c : zcandidates) {
-      CandidateszResult->m_ranked_candidates.emplace_back(c);
-    }
-  }
+  // compute pdf candidate properties (deltaz)
+  CandidateszResult = zcand_op.Compute(m_postmargZResult->redshifts,
+                                       m_postmargZResult->valProbaLog);
 
+  // eventually truncate candidates at maxcount
+  size_t newsize = std::min(CandidateszResult->m_ranked_candidates.size(),
+                            size_t(m_maxCandidate));
+  CandidateszResult->m_ranked_candidates.resize(newsize);
+
+  // Sets rank
   for (int r = 0; r < CandidateszResult->size(); r++)
     CandidateszResult->m_ranked_candidates[r].second->Rank = r;
 
+  // Checks window size
+  TFloat64Range window_range;
+  for (int r = 0; r < CandidateszResult->size(); r++) {
+    auto rth_ranked_candidate = CandidateszResult->m_ranked_candidates[r];
+    TFloat64Range integration_range{
+        rth_ranked_candidate.second->ValSumProbaZmin,
+        rth_ranked_candidate.second->ValSumProbaZmax};
+
+    window_range =
+        isFirstPass
+            ? TFloat64Range{m_postmargZResult->redshifts.front(),
+                            m_postmargZResult->redshifts.back()}
+            : m_candidatesZRanges.at(rth_ranked_candidate.second->ParentId);
+    checkWindowSize(integration_range, window_range);
+  }
+
   return CandidateszResult;
+}
+
+void COperatorPdfz::checkWindowSize(const TFloat64Range &integration_range,
+                                    const TFloat64Range &window_range) {
+
+  if (integration_range.GetBegin() < window_range.GetBegin() ||
+      integration_range.GetEnd() > window_range.GetEnd()) {
+    Flag.warning(WarningCode::WINDOW_TOO_SMALL,
+                 Formatter()
+                     << "COperatorPdfz::" << __func__
+                     << " Window is too small : \n"
+                     << "integration range: " << integration_range.GetBegin()
+                     << ", " << integration_range.GetEnd()
+                     << ", window range : [" << window_range.GetBegin() << ", "
+                     << window_range.GetEnd());
+  }
 }
 
 void COperatorPdfz::createPdfResult(const ChisquareArray &chisquarearray) {

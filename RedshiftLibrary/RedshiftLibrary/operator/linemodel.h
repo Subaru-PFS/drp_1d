@@ -57,7 +57,8 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 namespace Linemodel {
 class spanRedshift_test;
-}
+class checkSecondPassWindowSize_test;
+} // namespace Linemodel
 
 namespace NSEpic {
 
@@ -136,6 +137,7 @@ public:
 
 private:
   friend class Linemodel::spanRedshift_test;
+  friend class Linemodel::checkSecondPassWindowSize_test;
 
   std::shared_ptr<CTemplatesFitStore>
   PrecomputeContinuumFit(const TFloat64List &redshifts,
@@ -166,7 +168,6 @@ private:
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
   void
   fitContinuumTemplates(Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
-                        const std::vector<CMask> &maskList,
                         std::vector<std::shared_ptr<CTemplateFittingResult>>
                             &chisquareResultsAllTpl,
                         TStringList &chisquareResultsTplName);
@@ -174,6 +175,7 @@ private:
       Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
       TTemplateConstRefList &tplList) const;
   void updateRedshiftGridAndResults();
+  void makeTFOperator(const TFloat64List &redshifts);
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;

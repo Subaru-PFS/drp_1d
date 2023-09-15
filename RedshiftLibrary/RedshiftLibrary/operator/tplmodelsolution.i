@@ -14,6 +14,7 @@ struct CTplModelSolution {
   Float64 tplDtM = NAN;
   Float64 tplMtM = NAN;
   Float64 tplLogPrior = 0.;
+  Float64 tplSNR = NAN;
 
   // polynom
   TFloat64List pCoeffs;

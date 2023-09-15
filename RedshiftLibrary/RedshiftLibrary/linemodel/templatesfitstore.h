@@ -62,7 +62,7 @@ public:
            Float64 redshift, Float64 merit, Float64 chiSquare_phot,
            Float64 fitAmplitude, Float64 fitAmplitudeError,
            Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,
-           Float64 logprior);
+           Float64 logprior, Float64 snr);
 
   void initFitValues();
   Int32 GetRedshiftIndex(Float64 z) const;
@@ -89,7 +89,6 @@ private:
       m_fitValues; //[nz][n_continuum_candidates]
   std::shared_ptr<fitMaxValues> m_fitMaxValues;
   Int32 n_continuum_candidates = 0;
-
   TFloat64List redshiftgrid;
 };
 

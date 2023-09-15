@@ -47,6 +47,7 @@ using namespace NSEpic;
 using namespace std;
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -72,20 +73,20 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List &redshifts) {
  * identified very close candidates, at 2*1E-4
  */
 TStringList
-CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
-                                       TCandidateZRangebyID &ranges) {
+CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
+                                      TCandidateZRangebyID &ranges) {
   ranges.clear();
 
-  for (auto &c : m_candidates) {
-    const std::string &Id = c.first;
-    std::shared_ptr<TCandidateZ> &cand = c.second;
+  for (auto &candidatePair : m_candidates) {
+    const std::string &Id = candidatePair.first;
+    std::shared_ptr<TCandidateZ> &cand = candidatePair.second;
 
     // check cases where deltaz couldnt be computed or wasnt set--> use default
     // value,
     if (cand->Deltaz == -1)
       cand->Deltaz = m_dzDefault * (1 + cand->Redshift);
 
-    const Float64 halfWidth = 3 * cand->Deltaz;
+    const Float64 halfWidth = integrationWindowHalfWidth(cand->Deltaz);
 
     // initialize range boundaries for each candidate]
     TFloat64Range range = {cand->Redshift - halfWidth,
@@ -95,58 +96,78 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
   };
 
   // sort candidate keys (Ids) by decreasing redshifts
-  TStringList Ids(m_candidates.size());
-  std::transform(m_candidates.begin(), m_candidates.end(), Ids.begin(),
+  TStringList candidatesKeys(m_candidates.size());
+  std::transform(m_candidates.begin(), m_candidates.end(),
+                 candidatesKeys.begin(),
                  [](const pair_Id_TCandidateZ &c) { return c.first; });
 
-  TCandidateZbyID &c = m_candidates;
-  std::sort(Ids.rbegin(), Ids.rend(), [&c](std::string Id1, std::string Id2) {
-    return c[Id1]->Redshift < c[Id2]->Redshift;
-  });
+  TCandidateZbyID &candidates = m_candidates;
+
+  std::sort(candidatesKeys.rbegin(), candidatesKeys.rend(),
+            [&candidates](std::string Id1, std::string Id2) {
+              return candidates[Id1]->Redshift < candidates[Id2]->Redshift;
+            });
 
   // trim overlapping ranges
-  TStringList b = {};
-  for (auto Id_it = Ids.begin(); Id_it != Ids.end() - 1; ++Id_it) {
-    std::string &Id_h = *Id_it;
-    std::string &Id_l = *(Id_it + 1);
-    Float64 &z_h = c[Id_h]->Redshift;
-    Float64 &z_l = c[Id_l]->Redshift;
-    Float64 overlap = ranges[Id_h].GetBegin() - ranges[Id_l].GetEnd();
+  TStringList duplicates = {};
+  for (auto candidateKey = candidatesKeys.begin();
+       candidateKey != candidatesKeys.end() - 1; ++candidateKey) {
+    std::string &candidateKeyHigh = *candidateKey;
+    std::string &candidateKeyLow = *(candidateKey + 1);
+    Float64 &zHigh = candidates[candidateKeyHigh]->Redshift;
+    Float64 &zLow = candidates[candidateKeyLow]->Redshift;
+    Float64 overlap =
+        ranges[candidateKeyHigh].GetBegin() - ranges[candidateKeyLow].GetEnd();
     if (overlap >= 0)
       continue;
 
     // in the case of duplicates, trim completely the range of the second cand
-    if ((z_h - z_l) > 2 * 1E-4) {
-      Log.LogDebug("    CPdfCandidatesZ::SetIntegrationWindows: integration "
+    if ((zHigh - zLow) > 2 * 1E-4) {
+      Log.LogDebug("    CPdfCandidatesZ::SetIntegrationRanges: integration "
                    "supports overlap for %f and %f",
-                   z_h, z_l);
-      ranges[Id_h].SetBegin((max(z_l, ranges[Id_h].GetBegin()) +
-                             min(z_h, ranges[Id_l].GetEnd())) /
-                            2);
+                   zHigh, zLow);
+      ranges[candidateKeyHigh].SetBegin(
+          (max(zLow, ranges[candidateKeyHigh].GetBegin()) +
+           min(zHigh, ranges[candidateKeyLow].GetEnd())) /
+          2);
     } else {
-      Log.LogInfo(" CPdfCandidatesZ::SetIntegrationWindows: very close "
+      Log.LogInfo(" CPdfCandidatesZ::SetIntegrationRanges: very close "
                   "candidates are identified %f and %f",
-                  z_h, z_l);
-      b.push_back(Id_l);
+                  zHigh, zLow);
+      duplicates.push_back(candidateKeyLow);
     }
-    ranges[Id_l].SetEnd(ranges[Id_h].GetBegin() - 1E-4);
+    ranges[candidateKeyLow].SetEnd(ranges[candidateKeyHigh].GetBegin() - 1E-4);
   }
 
   // iterate over computed ranges and check that corresponding zcandidates
   // belong to that range, otherwise throw error
-  for (const auto &Id : Ids) {
+  for (const auto &candidateKey : candidatesKeys) {
     // if current index belongs to the duplicates b vector, skip testing it
     // and only test the others
-    if (find(b.begin(), b.end(), Id) != b.end())
+    if (find(duplicates.begin(), duplicates.end(), candidateKey) !=
+        duplicates.end())
       continue;
-    if (c[Id]->Redshift < ranges[Id].GetBegin() ||
-        c[Id]->Redshift > ranges[Id].GetEnd())
+    if (candidates[candidateKey]->Redshift < ranges[candidateKey].GetBegin() ||
+        candidates[candidateKey]->Redshift > ranges[candidateKey].GetEnd())
       THROWG(
           INTERNAL_ERROR,
           Formatter() << "Failed to identify a range including the candidate "
-                      << c[Id]->Redshift);
+                      << candidates[candidateKey]->Redshift);
   }
-  return b;
+
+  return duplicates;
+}
+
+void CPdfCandidatesZ::computeCandidatesDeltaz(const TRedshiftList &PdfRedshifts,
+                                              const TFloat64List &PdfProbaLog) {
+  CDeltaz deltaz_op;
+  for (auto &c : m_candidates)
+    c.second->Deltaz =
+        deltaz_op.GetDeltaz(PdfRedshifts, PdfProbaLog, c.second->Redshift);
+}
+
+inline Float64 CPdfCandidatesZ::integrationWindowHalfWidth(Float64 DeltaZ) {
+  return 3 * DeltaZ;
 }
 
 /**
@@ -159,16 +180,11 @@ CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
       "    CPdfCandidatesZ::Compute pdf peaks using method= %d {0:direct "
       "integration; 1:gaussian fitting}",
       m_optMethod);
-
-  // compute deltaz
-  CDeltaz deltaz_op;
-  for (auto &c : m_candidates)
-    c.second->Deltaz =
-        deltaz_op.GetDeltaz(PdfRedshifts, PdfProbaLog, c.second->Redshift);
-
+  computeCandidatesDeltaz(PdfRedshifts, PdfProbaLog);
   TCandidateZRangebyID zranges;
   TStringList duplicates =
-      SetIntegrationWindows(TFloat64Range(PdfRedshifts), zranges);
+      SetIntegrationRanges(TFloat64Range(PdfRedshifts), zranges);
+  CDeltaz deltaz_op;
   for (auto &c : m_candidates) {
     const std::string &Id = c.first;
     std::shared_ptr<TCandidateZ> &cand = c.second;
@@ -230,11 +246,6 @@ void CPdfCandidatesZ::getCandidateSumTrapez(
     const TRedshiftList &redshifts, const TFloat64List &valprobalog,
     const TFloat64Range &zrange,
     std::shared_ptr<TCandidateZ> &candidate) const {
-  // TODO use a std function and throw exception
-  // TODO check that this is really necessary and not just a debug
-  // functionnality
-  //      -> use a DEBUG directive ?
-
   // check that redshifts are sorted
   if (!std::is_sorted(redshifts.begin(), redshifts.end()))
     THROWG(INTERNAL_ERROR, Formatter() << "redshifts are not sorted");
@@ -254,6 +265,7 @@ void CPdfCandidatesZ::getCandidateSumTrapez(
       TFloat64List(redshifts.begin() + kmin, redshifts.begin() + kmax + 1);
   candidate->ValSumProbaZmin = ZinRange.front();
   candidate->ValSumProbaZmax = ZinRange.back();
+
   TFloat64List valprobainRange =
       TFloat64List(valprobalog.begin() + kmin, valprobalog.begin() + kmax + 1);
 
@@ -261,8 +273,6 @@ void CPdfCandidatesZ::getCandidateSumTrapez(
   candidate->ValSumProba = exp(logSum);
 }
 
-// TODO: this requires a deeper check to include the updates window support
-// range
 bool CPdfCandidatesZ::getCandidateRobustGaussFit(
     const TRedshiftList &redshifts, const TFloat64List &valprobalog,
     const TFloat64Range &zrange,

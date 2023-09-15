@@ -208,29 +208,27 @@ BOOST_AUTO_TEST_CASE(SpectrumAxis_test) {
   Float64 n6Array[] = {0, 1, 2, 3, 4, 5};
   TFloat64List n6Mask = {0, 0, 1, 1, 0, 0};
   CSpectrumAxis n6Axis(n6Array, 6);
-  TFloat64List outputVector;
-  n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector(), outputVector);
+  TFloat64List outputVector =
+      n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector());
 
   BOOST_CHECK(outputVector.size() == 2);
   BOOST_CHECK(outputVector[0] == n6Array[2]);
   BOOST_CHECK(outputVector[1] == n6Array[3]);
 
   n6Mask = {1, 1, 0, 0, 0, 1};
-  n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector(), outputVector);
+  outputVector = n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector());
   BOOST_CHECK(outputVector.size() == 3);
   BOOST_CHECK(outputVector[0] == n6Array[0]);
   BOOST_CHECK(outputVector[1] == n6Array[1]);
   BOOST_CHECK(outputVector[2] == n6Array[5]);
 
   n6Mask.resize(5);
-  BOOST_CHECK_THROW(
-      n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector(), outputVector),
-      GlobalException);
+  BOOST_CHECK_THROW(n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector()),
+                    GlobalException);
 
   // test MaskAxis
   n6Mask.resize(6);
-  CSpectrumAxis n6AxisMasked;
-  n6Axis.MaskAxis(n6Mask, n6AxisMasked);
+  CSpectrumAxis n6AxisMasked(n6Axis.MaskAxis(n6Mask));
   BOOST_CHECK(n6AxisMasked.GetSamplesCount() == 2);
   BOOST_CHECK(n6AxisMasked[0] == n6Array[0]);
   BOOST_CHECK(n6AxisMasked[1] == n6Array[1]);

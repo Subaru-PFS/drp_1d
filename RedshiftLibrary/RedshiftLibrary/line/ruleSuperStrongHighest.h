@@ -56,7 +56,7 @@ public:
   void SetUp(bool EnabledArgument, ...);
 
 private:
-  Int32 m_LineType = 0;
+  CLine::EType m_LineType = CLine::EType::nType_All;
   TStringList m_SuperStrongTags;
   void Correct(CLineModelElementList &LineModelElementList);
   Float64

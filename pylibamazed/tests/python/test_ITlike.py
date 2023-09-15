@@ -37,20 +37,22 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
+import json
+import os
+import tempfile
+
+import h5py
+import pandas as pd
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
-
-import os
-import json
-import h5py
-import pandas as pd
-import tempfile
+from pylibamazed.Parameters import Parameters
 
 module_root_dir = os.path.split(__file__)[0]
 test_dir = os.path.join(
     module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
 )
+
 
 def read_photometry_fromfile(fname):
     df = pd.DataFrame(
@@ -77,10 +79,11 @@ def accessOutputData(output):
         None,
     )
 
-def make_config():
+
+def make_config(**kwargs):
     config_path = os.path.join(
         test_dir,
-        "config.json",
+        kwargs.get("config_filename", "config.json"),
     )
 
     with open(os.path.expanduser(config_path), "r") as f:
@@ -90,6 +93,7 @@ def make_config():
 
     return config
 
+
 def get_parameters(parameters_file_path):
     parameters_json_path = os.path.join(
         test_dir,
@@ -97,8 +101,9 @@ def get_parameters(parameters_file_path):
     )
     with open(parameters_json_path) as f:
         param = json.load(f)
-    
+
     return param
+
 
 def get_observation(input_file_path):
     input_spectra_path = os.path.join(test_dir, input_file_path)
@@ -106,6 +111,7 @@ def get_observation(input_file_path):
         input_spectra_path, delimiter=" ", names=["ProcessingID"]
     )
     return observation
+
 
 def get_spectra(config, observation):
     s_filename = (
@@ -117,18 +123,21 @@ def get_spectra(config, observation):
 
     # read and load spectra using spectra reader
     spectra = pd.read_table(s_filename, delimiter="\t")
+    print('spectra', spectra)
     return spectra
+
 
 def add_photometry_to_reader(config, observation, reader):
     phot_fname = (
-    os.path.join(test_dir, config["spectrum_dir"])
-    + "/"
-    + str(observation.ProcessingID[0])
-    + "_phot.txt"
+        os.path.join(test_dir, config["spectrum_dir"])
+        + "/"
+        + str(observation.ProcessingID[0])
+        + "_phot.txt"
     )
     if os.path.exists(phot_fname):
         phot = read_photometry_fromfile(phot_fname)
         reader.load_photometry(phot)
+
 
 def save_output(output, config, observation):
     # save in temporary file
@@ -139,9 +148,10 @@ def save_output(output, config, observation):
     writer.write_hdf5(output_file, str(observation.ProcessingID[0]))
     output_file.close()
 
+
 def test_ITLikeTest():
     config = make_config()
-    param = get_parameters(config["parameters_file"])
+    param = Parameters(get_parameters(config["parameters_file"]))
     context = Context(config, param)  # vars returns the dict version of config
     observation = get_observation(config["input_file"])
 
@@ -157,7 +167,7 @@ def test_ITLikeTest():
 
     reader.load_all(spectra)
     add_photometry_to_reader(config, observation, reader)
-    
+
     output = context.run(reader)  # passing spectra reader to launch amazed
 
     # add calls to output

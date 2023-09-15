@@ -34,7 +34,9 @@ pylibamazed is a Python package wrapping numerical algorithms for the analysis o
 * [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.0
 * [lbfgspp](https://lbfgspp.statr.me) == 0.2.0-13-g563106b
 
-`drp_1d` also depends on following python packages
+lbfgspp needs to be installed from source
+
+Required python packages:
 * [numpy](https://www.numpy.org/) >=1.16.0
 * [astropy](https://www.astropy.org/) >=3.1.1
 * [cython](https://cython.org/) >=0.17.0
@@ -118,8 +120,9 @@ libgsl-dev \
 libfftw3-dev \
 libopenblas-dev \
 libeigen3-dev \
-liblbfgspp-dev
 ```
+
+`lbfgspp` needs to be installed from source.
 
 ### Installing from source
 

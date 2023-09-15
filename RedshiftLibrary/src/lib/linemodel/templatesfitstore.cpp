@@ -104,7 +104,7 @@ bool CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
                              Float64 merit, Float64 chiSquare_phot,
                              Float64 fitAmplitude, Float64 fitAmplitudeError,
                              Float64 fitAmplitudeSigma, Float64 fitDtM,
-                             Float64 fitMtM, Float64 logprior) {
+                             Float64 fitMtM, Float64 logprior, Float64 snr) {
   CTplModelSolution tmpCContinuumModelSolution;
   tmpCContinuumModelSolution.tplMerit = merit;
   tmpCContinuumModelSolution.tplMeritPhot = chiSquare_phot;
@@ -118,6 +118,7 @@ bool CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
   tmpCContinuumModelSolution.tplMeiksinIdx = igmMeiksinIdx;
   tmpCContinuumModelSolution.tplName = tplName;
   tmpCContinuumModelSolution.tplRedshift = redshift;
+  tmpCContinuumModelSolution.tplSNR = snr;
 
   //
   Int32 idxz = GetRedshiftIndex(redshift);

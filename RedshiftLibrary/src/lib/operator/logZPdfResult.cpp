@@ -62,7 +62,8 @@ void CLogZPdfResult::check_sizes() const {
                                        << ") is different from pdf size ("
                                        << valProbaLog.size() << ")");
 }
-void CLogZPdfResult::CLogZPdfResult::setZGrid() {
+
+void CLogZPdfResult::setZGrid() {
   redshifts = getZGridParams().getZGrid(logsampling);
 }
 

@@ -238,8 +238,7 @@ BOOST_AUTO_TEST_CASE(MaskAxis_test) {
   TFloat64List mask = {0, 0, 1, 0, 0};
 
   CSpectrumSpectralAxis spcAxis(sample_in);
-  CSpectrumSpectralAxis spcAxisMasked;
-  spcAxis.MaskAxis(mask, spcAxisMasked);
+  CSpectrumSpectralAxis spcAxisMasked = spcAxis.MaskAxis(mask);
   BOOST_CHECK(spcAxisMasked.GetSamplesCount() == 1);
   BOOST_CHECK(spcAxisMasked[0] == sample_in[2]);
 }

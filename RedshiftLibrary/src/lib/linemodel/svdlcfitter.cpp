@@ -45,19 +45,19 @@ using namespace NSEpic;
 using namespace std;
 
 CSvdlcFitter::CSvdlcFitter(
-    CLineModelElementList &elements,
-    std::shared_ptr<const CSpectrum> inputSpectrum,
-    std::shared_ptr<const TLambdaRange> lambdaRange,
-    std::shared_ptr<CSpectrumModel> spectrumModel,
-    const TLineVector &restLineList,
+    const CLMEltListVectorPtr &elementsVector,
+    const CCSpectrumVectorPtr &inputSpcs,
+    const CTLambdaRangePtrVector &lambdaRanges,
+    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
+    const shared_ptr<Int32> &curObsPtr,
     std::shared_ptr<CContinuumManager> continuumManager, Int32 polyOrder,
     bool enableAmplitudeOffset, bool enableLambdaOffsetsFit)
-    : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
-                      restLineList, elementParam, enableAmplitudeOffset,
-                      enableLambdaOffsetsFit),
+    : CAbstractFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
+                      restLineList, elementParam, curObsPtr,
+                      enableAmplitudeOffset, enableLambdaOffsetsFit),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
-      m_spectralAxis(inputSpectrum->GetSpectralAxis())
+      m_spectralAxis(getSpectrum().GetSpectralAxis())
 
 {}
 
@@ -74,7 +74,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // re-interpolate the continuum on the grid
 
   m_continuumManager->reinterpolateContinuumResetAmp();
-  TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
   Float64 chi2_cl = INFINITY;
@@ -84,7 +84,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
                                          redshift);
 
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
-  m_model->initModelWithContinuum();
+  getModel().initModelWithContinuum();
 }
 
 /**
@@ -109,9 +109,10 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     Float64 redshift) {
   // boost::chrono::thread_clock::time_point start_prep =
   // boost::chrono::thread_clock::now();
-  const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxis();
-  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
-  const auto &ErrorNoContinuum = m_inputSpc.GetFluxAxis().GetError();
+  const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
+  const CSpectrumFluxAxis &continuumfluxAxis =
+      getModel().getContinuumFluxAxis();
+  const auto &ErrorNoContinuum = getSpectrum().GetFluxAxis().GetError();
 
   if (EltsIdx.size() < 1)
     return -1;
@@ -120,7 +121,7 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
                          0); // number of param to be fitted=nlines+continuum
 
   Int32 imin = -1, imax = -1;
-  bool b = m_lambdaRange.getClosedIntervalIndices(
+  bool b = getLambdaRange().getClosedIntervalIndices(
       spectralAxis.GetSamplesVector(), imin, imax);
   if (!b)
     return -1;
@@ -133,7 +134,7 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     return -1;
 
   for (Int32 eltIdx : EltsIdx)
-    m_Elements.SetElementAmplitude(eltIdx, 1.0, 0.0);
+    getElementList().SetElementAmplitude(eltIdx, 1.0, 0.0);
 
   // Linear fit
   double chisq;
@@ -206,8 +207,8 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     errorsfitted[iddl] = sqrt(cova) / normFactor;
     ampsfitted[iddl] = gsl_vector_get(c, iddl) / normFactor;
     if (iddl < EltsIdx.size())
-      m_Elements.SetElementAmplitude(EltsIdx[iddl], ampsfitted[iddl],
-                                     errorsfitted[iddl]);
+      getElementList().SetElementAmplitude(EltsIdx[iddl], ampsfitted[iddl],
+                                           errorsfitted[iddl]);
   }
 
   if (m_fitc_polyOrder >= 0) {
@@ -241,7 +242,7 @@ void CSvdlcFitter::fillMatrix(Int32 imin, Int32 imax, Float64 redshift,
     Float64 ci = continuumfluxAxis[idx];
     for (Int32 iddl = 0, e = EltsIdx.size(); iddl < e; iddl++) {
       Float64 fval =
-          m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, redshift, ci);
+          getElementList()[EltsIdx[iddl]]->getModelAtLambda(xi, redshift, ci);
       gsl_matrix_set(X, i, iddl, fval);
     }
 

@@ -114,8 +114,7 @@ public:
   Int32 GetLogSamplingIntegerRatio(Float64 logstep, Float64 &modulo) const;
   bool isSorted() const;
 
-  void MaskAxis(const TFloat64List &mask,
-                CSpectrumSpectralAxis &maskedAxis) const;
+  CSpectrumSpectralAxis MaskAxis(const TFloat64List &masks) const;
   void SetSize(Int32 s) override;
 
 private:

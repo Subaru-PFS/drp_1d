@@ -123,14 +123,16 @@ CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator/=(const Float64 op) {
     m_isSorted = (GetSamplesCount() < 2);
   return *this;
 }
-void CSpectrumSpectralAxis::MaskAxis(
-    const TFloat64List &mask, CSpectrumSpectralAxis &maskedSpcAxis) const {
-  CSpectrumAxis::MaskAxis(mask, maskedSpcAxis);
-  maskedSpcAxis.m_isSorted = m_isSorted;
-  if (maskedSpcAxis.GetSamplesCount() < 2)
-    maskedSpcAxis.m_isSorted = true;
-  maskedSpcAxis.m_isLogSampled = indeterminate;
+CSpectrumSpectralAxis
+CSpectrumSpectralAxis::MaskAxis(const TFloat64List &mask) const {
+  CSpectrumSpectralAxis spc_axis = CSpectrumAxis::MaskAxis(mask);
+  spc_axis.m_isSorted = m_isSorted;
+  if (spc_axis.GetSamplesCount() < 2)
+    spc_axis.m_isSorted = true;
+  spc_axis.m_isLogSampled = indeterminate;
+  return spc_axis;
 }
+
 void CSpectrumSpectralAxis::SetSize(Int32 s) {
   Float64 sample_size = GetSamplesCount();
   CSpectrumAxis::SetSize(s);

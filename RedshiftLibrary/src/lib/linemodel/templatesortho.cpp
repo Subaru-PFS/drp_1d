@@ -201,12 +201,13 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   // Compute linemodel on the template
   TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
-  CLineModelFitting model(tplOrtho, lambdaRange);
+  std::shared_ptr<COperatorTemplateFitting> TFOperator;
+  CLineModelFitting model(tplOrtho, lambdaRange, TFOperator);
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;
   bool enableLogging = true;
-  CLineModelSolution modelSolution(Context.getLineVector());
+  CLineModelSolution modelSolution(Context.getCLineVector());
   CTplModelSolution continuumModelSolution;
 
   model.fit(redshift, modelSolution, continuumModelSolution,
@@ -219,8 +220,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   Float64 mtm = model.EstimateMTransposeM();
 
   // Subtract the fitted model from the original template
-  model.getSpectrumModel()->refreshModel();
-  CSpectrum modelSpc = model.getSpectrumModel()->GetModelSpectrum();
+  model.getSpectrumModel().refreshModel();
+  CSpectrum modelSpc = model.getSpectrumModel().GetModelSpectrum();
   /*//debug:
   FILE* f = fopen( "templatesortho_fittedmodel_dbg.txt", "w+" );
   for( Int32 t=0;t<modelSpc.GetSampleCount();t++)

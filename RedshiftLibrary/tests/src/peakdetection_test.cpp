@@ -169,10 +169,11 @@ BOOST_AUTO_TEST_CASE(FindPossiblePeaks_test) {
   BOOST_CHECK_EQUAL(peakList[0], TInt32Range(3, 5));
 
   // no peak detected
-  Float64 *modelSamples = modelfluxAxis.GetSamples();
+  TAxisSampleList modelSamples = modelfluxAxis.GetSamplesVector();
   for (Int32 k = 0; k < modelfluxAxis.GetSamplesCount(); k++) {
     modelSamples[k] = 1.;
   }
+  modelfluxAxis.setSamplesVector(modelSamples);
   spc.SetSpectralAndFluxAxes(spectralAxis, modelfluxAxis);
   peakDetection.FindPossiblePeaks(modelfluxAxis, spectralAxis, peakList);
 
@@ -218,10 +219,11 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   BOOST_CHECK_EQUAL(result->EnlargedPeakList[0], TInt32Range(0, 10));
 
   // no peak detected
-  Float64 *modelSamples = modelfluxAxis.GetSamples();
+  TAxisSampleList modelSamples = modelfluxAxis.GetSamplesVector();
   for (Int32 k = 0; k < modelfluxAxis.GetSamplesCount(); k++) {
     modelSamples[k] = 1.;
   }
+  modelfluxAxis.setSamplesVector(modelSamples);
   spc.SetSpectralAndFluxAxes(spectralAxis, modelfluxAxis);
   result = peakDetection.Compute(spc);
 

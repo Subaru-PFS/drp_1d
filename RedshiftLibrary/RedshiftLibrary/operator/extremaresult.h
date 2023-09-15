@@ -50,6 +50,7 @@
 
 namespace NSEpic {
 class CModelSpectrumResult;
+class CModelPhotValueResult;
 
 #include "RedshiftLibrary/operator/extremaresult.i"
 
@@ -61,7 +62,7 @@ class CExtremaResult<TExtremaResult>
 public:
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
-
+  std::vector<std::shared_ptr<const CModelPhotValueResult>> m_modelPhotValue;
   CExtremaResult<TExtremaResult>(const TCandidateZbyRank &zCandidates) {
     m_type = "ExtremaResult";
     for (const auto &cand : zCandidates) {
@@ -71,6 +72,7 @@ public:
               std::make_shared<TExtremaResult>(*cand.second)));
     }
     m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
+    m_modelPhotValue.resize(this->m_ranked_candidates.size());
   }
 
   std::shared_ptr<const COperatorResult>

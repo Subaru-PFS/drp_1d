@@ -75,9 +75,11 @@ public:
 
   std::shared_ptr<CPdfCandidateszResult<TCandidateZ>>
   Compute(TRedshiftList const &PdfRedshifts, TFloat64List const &PdfProbaLog);
-
-  TStringList SetIntegrationWindows(const TFloat64Range PdfZRange,
-                                    TCandidateZRangebyID &ranges);
+  void computeCandidatesDeltaz(const TRedshiftList &PdfRedshifts,
+                               const TFloat64List &PdfProbaLog);
+  TStringList SetIntegrationRanges(const TFloat64Range PdfZRange,
+                                   TCandidateZRangebyID &ranges);
+  static Float64 integrationWindowHalfWidth(Float64 DeltaZ);
 
   Int32 m_optMethod = 0; // 0: direct integration, 1:gaussian fit
   Float64 m_dzDefault =

@@ -1,0 +1,348 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+//
+// https://www.lam.fr/
+//
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+//
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use,
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info".
+//
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability.
+//
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or
+// data to be ensured and,  more generally, to use and operate it in the
+// same conditions as regards security.
+//
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/log/filehandler.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "tests/src/tool/inputContextLight.h"
+
+using namespace NSEpic;
+
+//#define PROFILING
+
+const std::string jsonString =
+    "{\"lambdarange\" : [ 12504, 18507 ],"
+    "\"smoothWidth\" : 0.0,"
+    "\"templateCatalog\" : {"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"zero\","
+    "\"medianKernelWidth\" : 75,"
+    "\"medianEvenReflection\" : true}},"
+    "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"IrregularSamplingMedian\","
+    "\"medianKernelWidth\" : 400,"
+    "\"medianEvenReflection\" : true,"
+    "\"decompScales\" : 9},"
+    "\"LSF\" : {\"LSFType\" : \"GaussianNISPVSSPSF201707\", "
+    "\"sourcesize\" : 0.1},"
+    "\"extremaredshiftseparation\" : 0.01,"
+    "\"objects\" : [\"galaxy\"],"
+    "\"autocorrectinput\" : false,"
+    "\"airvacuum_method\" : \"default\","
+    "\"galaxy\" : {"
+    "\"redshiftrange\" : [ 1.0, 2.0 ],"
+    "\"redshiftstep\" : 0.0001,"
+    "\"redshiftsampling\" : \"log\","
+    "\"method\" : \"LineModelSolve\","
+    "\"LineModelSolve\" : {"
+    "\"linemodel\" : {"
+    "\"continuumreestimation\" : \"no\","
+    "\"velocityfit\" : true,"
+    "\"emvelocityfitmin\" : 10,"
+    "\"emvelocityfitmax\" : 700, "
+    "\"emvelocityfitstep\" : 20,"
+    "\"absvelocityfitmin\" : 150,"
+    "\"absvelocityfitmax\" : 500, "
+    "\"absvelocityfitstep\" : 50,"
+    "\"extremacount\" : 5,"
+    "\"extremacountB\" : 3,"
+    "\"nsigmasupport\" : 8,"
+    "\"haprior\" : 0.5,"
+    "\"euclidnhaemittersStrength\" : 1.0,"
+    "\"extremacutprobathreshold\" : -1,"
+    "\"skipsecondpass\" : false,"
+    "\"secondpasslcfittingmethod\" : -1,"
+    "\"useloglambdasampling\": false,"
+    "\"lyaforcefit\": false,"
+    "\"lyaforcedisablefit\": false,"
+    "\"stronglinesprior\" : 1.0,"
+    "\"fittingmethod\": \"individual\","
+    "\"linewidthtype\": \"combined\","
+    "\"velocityemission\" : 100,"
+    "\"velocityabsorption\": 100,"
+    "\"linetypefilter\" : \"no\","
+    "\"lineforcefilter\" : \"no\","
+    "\"lyafit\": {"
+    "\"asymfitmin\" : 0,"
+    "\"asymfitmax\" : 4, \"asymfitstep\" : 1, "
+    "\"widthfitmin\" : 1,"
+    "\"widthfitmax\" : 4, \"widthfitstep\" : 1, "
+    "\"deltafitmin\" : 0,"
+    "\"deltafitmax\" : 0, \"deltafitstep\" : 1}, "
+    "\"tplratio\": { \"priors\": {"
+    "\"betaA\" : 1,    \"betaTE\" : 1, \"betaZ\" : 1, "
+    "\"catalog_dirpath\" : \"\"}}, "
+    "\"firstpass\": { \"fittingmethod\" : \"individual\", "
+    "\"tplratio_ismfit\" : true,"
+    "\"largegridstepratio\" : 10, "
+    "\"multiplecontinuumfit_disable\": true},"
+    "\"secondpass\" : {\"halfwindowsize\" : 0.001, "
+    "\"continuumfit\" : \"refitfirstpass\"},"
+    "\"continuumcomponent\" : \"tplfit\","
+    "\"pdfcombination\" : \"marg\","
+    "\"tplratio_ismfit\" : true,"
+    "\"rules\" : \"all\","
+    "\"improveBalmerFit\" : true,"
+    "\"lineRatioType\": \"tplratio\","
+    "\"enablephotometry\" : false, "
+    "\"photometry\" : {\"weight\" : 1},"
+    "\"continuumfit\" : { \"ignorelinesupport\": false,"
+    "\"negativethreshold\": -5.0,"
+    "\"count\" : 1,"
+    "\"nullthreshold\": 3,"
+    "\"ismfit\" : true,"
+    "\"igmfit\" : true,"
+    "\"fftprocessing\": false, "
+    "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
+    "\"catalog_dirpath\" : \"\"}}}}}}";
+
+const std::string sep8 =
+    "{"
+    "    \"multiobsmethod\": \"\","
+    "    \"lambdarange\": ["
+    "	12510,"
+    "        18500],"
+    "    \"smoothWidth\": 0.0,"
+    "    \"templateCatalog\": {"
+    "        \"continuumRemoval\": {"
+    "            \"method\": \"zero\","
+    "            \"medianKernelWidth\": 75,"
+    "            \"medianEvenReflection\": true"
+    "        }"
+    "    },"
+    "    \"ebmv\": {"
+    "        \"start\": 0,"
+    "        \"step\": 0.1,"
+    "        \"count\": 10"
+    "    },"
+    "    \"continuumRemoval\": {"
+    "        \"method\": \"IrregularSamplingMedian\","
+    "        \"medianKernelWidth\": 400,"
+    "        \"medianEvenReflection\": true,"
+    "        \"decompScales\": 9,"
+    "        \"binPath\": \"\""
+    "    },"
+    "    \"LSF\": {"
+    "        \"LSFType\": \"GaussianConstantResolution\","
+    "        \"resolution\": 4300"
+    "    },"
+    "    \"extremaredshiftseparation\": 0.01,"
+    "    \"objects\": ["
+    "        \"galaxy\""
+    "    ],"
+    "    \"calibrationDir\": \"\","
+    "    \"autocorrectinput\": false,"
+    "    \"galaxy\": {"
+    "        \"redshiftrange\": ["
+    "            0.01,"
+    "            6.0"
+    "        ],"
+    "        \"redshiftstep\": 0.0001,"
+    "        \"redshiftsampling\": \"log\","
+    "        \"method\": \"LineModelSolve\","
+    "        \"template_dir\": \"templates/BC03_sdss_tremonti21\","
+    "        \"LineModelSolve\": {"
+    "            \"linemodel\": {"
+    "                \"linecatalog\": "
+    "\"linecatalogs/linecatalogamazedvacuum_H0.tsv\","
+    "                \"linetypefilter\": \"no\","
+    "                \"lineforcefilter\": \"no\","
+    "                \"fittingmethod\": \"individual\","
+    "                \"ampoffsetfit\":false,"
+    "                \"lbdaoffsetfit\":false,"
+    "                \"igmfit\": false,"
+    "                \"linewidthtype\": \"combined\","
+    "                \"velocityemission\": 100,"
+    "                \"velocityabsorption\": 100,"
+    "                \"velocityfit\": true,"
+    "                \"pdfcombination\": \"marg\","
+    "                \"emvelocityfitmin\": 10,"
+    "                \"emvelocityfitmax\": 400,"
+    "                \"emvelocityfitstep\": 2,"
+    "                \"absvelocityfitmin\": 150,"
+    "                \"absvelocityfitmax\": 500,"
+    "                \"absvelocityfitstep\": 50,"
+    "                \"lyaforcefit\": false,"
+    "                \"lyaforcedisablefit\": false,"
+    "                \"lyafit\": {"
+    "                    \"asymfitmin\": 0,"
+    "                    \"asymfitmax\": 4,"
+    "                    \"asymfitstep\": 1,"
+    "                    \"widthfitmin\": 1,"
+    "                    \"widthfitmax\": 4,"
+    "                    \"widthfitstep\": 1,"
+    "                    \"deltafitmin\": 0,"
+    "                    \"deltafitmax\": 0,"
+    "                    \"deltafitstep\": 1"
+    "                },"
+    "                \"extremacountB\": 0,"
+    "                \"haprior\": -1,"
+    "                \"lineRatioType\": \"tplratio\","
+    "                \"rules\": \"all\","
+    "                \"improveBalmerFit\": true,"
+    "                \"tplratio_catalog\": "
+    "\"linecatalogs_tplshapes/"
+    "linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v16_"
+    "emission\","
+    "                \"tplratio_ismfit\": false,"
+    "                \"continuumcomponent\": \"fromspectrum\","
+    "                \"continuumreestimation\": \"no\","
+    "                \"continuumfit\": {"
+    "                    \"negativethreshold\": -5.0,"
+    "                    \"nullthreshold\": 3,"
+    "                    \"fftprocessing\": true,"
+    "                    \"ismfit\": true,"
+    "                    \"igmfit\": true,"
+    "                    \"count\": 1,"
+    "                    \"ignorelinesupport\": false,"
+    "                    \"priors\": {"
+    "                        \"betaA\": 1,"
+    "                        \"betaTE\": 1,"
+    "                        \"betaZ\": 1,"
+    "                        \"catalog_dirpath\": \"\""
+    "                    }"
+    "                },"
+    "                \"useloglambdasampling\": false,"
+    "                \"skipsecondpass\": false,"
+    "                \"extremacount\": 5,"
+    "                \"extremacutprobathreshold\": -1,"
+    "                \"pdf\": {"
+    "                    \"margampcorr\": false,"
+    "                    \"bestzoption\": \"maxintproba\""
+    "                },"
+    "                \"firstpass\": {"
+    "                    \"fittingmethod\": \"individual\","
+    "                    \"largegridstepratio\": 5,"
+    "                    \"tplratio_ismfit\": false,"
+    "                    \"multiplecontinuumfit_disable\": true"
+    "                },"
+    "                \"secondpass\": {"
+    "                    \"halfwindowsize\": 0.001,"
+    "                    \"continuumfit\": \"refitfirstpass\""
+    "                },"
+    "                \"secondpasslcfittingmethod\": -1,"
+    "                \"stronglinesprior\": -1,"
+    "                \"euclidnhaemittersStrength\": -1,"
+    "                \"tplratio\": {"
+    "                    \"priors\": {"
+    "                        \"betaA\": 1,"
+    "                        \"betaTE\": 1,"
+    "                        \"betaZ\": 1,"
+    "                        \"catalog_dirpath\": \"\""
+    "                    }"
+    "                },"
+    "                \"nsigmasupport\": 8,"
+    "                \"enablephotometry\": false"
+    "            }"
+    "        },"
+    "        \"linemeas_method\": null,"
+    "        \"enable_reliability\": false"
+    "    },"
+    "    \"airvacuum_method\": \"default\""
+    "}";
+
+class fixture_LineModelSolveTest {
+public:
+  fixture_Context ctx;
+  TScopeStack scopeStack;
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      fixture_MeiskinCorrection().igmCorrectionMeiksin;
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
+      fixture_CalzettiCorrection().ismCorrectionCalzetti;
+  std::shared_ptr<CLSF> LSF =
+      fixture_LSFGaussianConstantResolution(scopeStack).LSF;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumFull().spc;
+  std::shared_ptr<CTemplateCatalog> catalog =
+      fixture_sharedTemplateCatalog().catalog;
+  std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
+      fixture_PhotoBandCatalog().photoBandCatalog;
+  std::shared_ptr<CPhotometricData> photoData = fixture_PhotoData().photoData;
+  std::shared_ptr<CLineCatalogsTplRatio> lineRatioTplCatalog =
+      fixture_LineRatioTplCatalog().lineRatioTplCatalog;
+  std::shared_ptr<CLineRatioCatalog> lineRatioCatalogA =
+      fixture_LineRatioCatalogA().lineRatioCatalogA;
+  std::shared_ptr<CLineRatioCatalog> lineRatioCatalogB =
+      fixture_LineRatioCatalogB().lineRatioCatalogB;
+  std::shared_ptr<CLineCatalog> lineCatalog =
+      fixture_FullLineCatalog().lineCatalog;
+
+  void fillCatalog() {
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl3);
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl3);
+  }
+};
+
+class fixture_LineModelSolveTestTplFitTplRatio
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestTplFitTplRatio() {
+    fillCatalog();
+    ctx.loadParameterStore(sep8);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogA);
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogB);
+  }
+};
+
+int main() {
+  // CLogConsoleHandler console_handler;
+  // console_handler.SetLevelMask(70);
+
+  bfs::path logFile = bfs::unique_path("log_8b7e0ea2.txt");
+
+  // Add consoleHandler to the log
+  CLogFileHandler file_handler(logFile.c_str());
+  file_handler.SetLevelMask(70);
+
+  fixture_LineModelSolveTestTplFitTplRatio fix;
+  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+#ifdef PROFILING
+  lineModelSolve.Compute();
+#endif
+  return 0;
+}

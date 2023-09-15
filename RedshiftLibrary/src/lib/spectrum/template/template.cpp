@@ -109,12 +109,13 @@ CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
       m_Igm_kend = -1; // not necessary but for security
       m_NoIsmIgmFluxAxis.clear();
     } else {
-      other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
+      m_NoIsmIgmFluxAxis =
+          CSpectrumFluxAxis(other.m_NoIsmIgmFluxAxis.MaskAxis(mask));
 
-      CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff,
-                                m_computedDustCoeff);
-      CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff,
-                                m_computedMeiksingCoeff);
+      m_computedDustCoeff =
+          CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff);
+      m_computedMeiksingCoeff =
+          CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff);
     }
   }
 }
@@ -371,9 +372,9 @@ Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const {
              : it - 1 - m_SpectralAxis.GetSamplesVector().begin();
 }
 
-void CTemplate::ScaleFluxAxis(Float64 amplitude) {
+void CTemplate::ApplyAmplitude(Float64 amplitude) {
 
-  CSpectrum::ScaleFluxAxis(amplitude);
+  CSpectrum::ApplyAmplitude(amplitude);
   if (CheckIsmIgmEnabled())
     m_NoIsmIgmFluxAxis *= amplitude;
 }

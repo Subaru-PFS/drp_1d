@@ -36,22 +36,30 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from pylibamazed import AbstractOutput
-from pylibamazed.redshift import CLogZPdfResult, CZGridParam, CZGridListParams, TFloat64Range
 import numpy as np
+from pylibamazed.redshift import (CLogZPdfResult, CZGridListParams,
+                                  CZGridParam, TFloat64Range)
 
-def buildPdfParams(pdf_params, first_pass = False):
+from pylibamazed import AbstractOutput
+
+
+def buildPdfParams(pdf_params, first_pass=False):
     v = [dict(zip(pdf_params, t)) for t in zip(*pdf_params.values())]
     if first_pass:
-        return CZGridListParams([CZGridParam(TFloat64Range(p["FPZmin"], p["FPZmax"]), p["FPZstep"], np.nan) for p in v])
-    return CZGridListParams([CZGridParam(TFloat64Range(p["zmin"], p["zmax"]), p["zstep"], p["zcenter"]) for p in v])
+        return CZGridListParams(
+            [CZGridParam(TFloat64Range(p["FPZmin"], p["FPZmax"]), p["FPZstep"], np.nan) for p in v]
+        )
+    return CZGridListParams(
+        [CZGridParam(TFloat64Range(p["zmin"], p["zmax"]), p["zstep"], p["zcenter"]) for p in v]
+    )
+
 
 def buildPdfHandler(
-        abstract_output: AbstractOutput,
-        object_type,
-        logsampling,
-        first_pass=False
-    ):
+    abstract_output: AbstractOutput,
+    object_type,
+    logsampling,
+    first_pass=False
+):
     dataset_prefix = ""
     name_prefix = ""
 
@@ -64,6 +72,7 @@ def buildPdfHandler(
     pdf_proba = abstract_output.get_dataset(object_type, dataset_prefix + "pdf")[name_prefix + "PDFProbaLog"]
 
     return PdfHandler(c_pdf_params, logsampling, pdf_proba)
+
 
 class PdfHandler:
     def __init__(self, pdf_params, logsampling: bool, pdf_proba):
@@ -82,7 +91,7 @@ class PdfHandler:
 
     def convertToRegular(self, fine=True, zgrid_max=None):
         self._pdf.convertToRegular(fine)
-        
+
         if zgrid_max is not None and self._pdf.zmax[0] < zgrid_max:
             self._pdf.extrapolate_on_right_border(zgrid_max)
 

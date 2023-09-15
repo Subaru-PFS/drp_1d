@@ -51,8 +51,16 @@ GaussianPDFSigma	model_parameters	True	candidate	GaussSigma	extrema_results	f8
 GaussianPDFSigmaErr	model_parameters	True	candidate	GaussSigmaErr	extrema_results	f8
 lfOII	model_parameters	False	candidate	lfOII	extrema_results	f8
 snrOII	model_parameters	False	candidate	snrOII	extrema_results	f8
-lfHa	model_parameters	False	candidate	lfHa	extrema_results	f8
-snrHa	model_parameters	False	candidate	snrHa	extrema_results	f8
+lfHaNII	model_parameters	False	candidate	lfHa	extrema_results	f8
+snrHaNII	model_parameters	False	candidate	snrHa	extrema_results	f8
+lfOII_DirectIntegration	model_parameters	False	candidate	lfOII_DI	extrema_results	f8
+snrOII_DirectIntegration	model_parameters	False	candidate	snrOII_DI	extrema_results	f8
+lfHaNII_DirectIntegration	model_parameters	False	candidate	lfHa_DI	extrema_results	f8
+snrHaNII_DirectIntegration	model_parameters	False	candidate	snrHa_DI	extrema_results	f8
+LyaWidthCoeff	model_parameters	False	candidate	LyaWidthCoeff	extrema_results	f8
+LyaAlpha	model_parameters	False	candidate	LyaAlpha	extrema_results	f8
+LyaDelta	model_parameters	False	candidate	LyaDelta	extrema_results	f8
+LyaIgm	model_parameters	False	candidate	LyaIgm	extrema_results	i
 FirstpassRedshift	model_parameters	True	candidate	Redshift	extrema_results	f8
 FirstpassRedshiftLogProbaDensity	model_parameters	True	candidate	ValProba	extrema_results	f8
 FirstpassContinuumName	model_parameters	True	candidate	fittedTpl.tplName	extrema_results	S40
@@ -62,6 +70,7 @@ FirstpassContinuumAmplitude	model_parameters	True	candidate	fittedTpl.tplAmplitu
 FirstpassContinuumAmplitudeUncertainty	model_parameters	True	candidate	fittedTpl.tplAmplitudeError	extrema_results	f8
 FirstpassContinuumLeastSquare	model_parameters	True	candidate	fittedTpl.tplMerit	extrema_results	f8
 FirstpassContinuumLogPrior	model_parameters	True	candidate	fittedTpl.tplLogPrior	extrema_results	f8
+FirstpassContinuumSNR	model_parameters	True	candidate	fittedTpl.tplSNR	extrema_results	f8
 FirstpassFittedTemplateDtM	model_parameters	True	candidate	fittedTpl.tplDtm	extrema_results	f8
 FirstpassFittedTemplateMtM	model_parameters	True	candidate	fittedTpl.tplMtm	extrema_results	f8
 FirstpassVelocityEmission	model_parameters	True	candidate	Elv	extrema_results	f8
@@ -69,6 +78,7 @@ FirstpassVelocityAbsorption	model_parameters	True	candidate	Alv	extrema_results	
 <ObjectType>Evidence	classification	False	root	m_evidences[object_type]	solveResult	f8
 <ObjectType>Proba	classification	False	root	m_proba[object_type]	solveResult	f8
 Type	classification	False	root	m_TypeLabel	solveResult	S1
+WarningFlags	classification	False	root	flagValue	warningFlag	i
 PDFProbaLog	pdf	False	object	valProbaLog	pdf	f8
 ContinuumVectAmplitude	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeList	extrema_results	f8
 ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeErrorList	extrema_results	f8
@@ -92,9 +102,13 @@ LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	i
 LinemeasContinuumPCoeff2	linemeas	True	object	continuum_pCoeff2	linemeas	i
 LinemeasRedshift	linemeas_parameters	False	object	Redshift	linemeas	f8
 Linemeas_snrOII	linemeas_parameters	False	object	snrOII	linemeas	f8
-Linemeas_snrHa	linemeas_parameters	False	object	snrHa	linemeas	f8
+Linemeas_snrHaNII	linemeas_parameters	False	object	snrHa	linemeas	f8
 LinemeasLfOII	linemeas_parameters	False	object	lfOII	linemeas	f8
-LinemeasLfHa	linemeas_parameters	False	object	lfHa	linemeas	f8
+LinemeasLfHaNII	linemeas_parameters	False	object	lfHa	linemeas	f8
+Linemeas_snrOII_DirectIntegration	linemeas_parameters	False	object	snrOII_DI	linemeas	f8
+Linemeas_snrHaNII_DirectIntegration	linemeas_parameters	False	object	snrHa_DI	linemeas	f8
+LinemeasLfOII_DirectIntegration	linemeas_parameters	False	object	lfOII_DI	linemeas	f8
+LinemeasLfHaNII_DirectIntegration	linemeas_parameters	False	object	lfHa_DI	linemeas	f8
 Linemeas_VelocityEmission	linemeas_parameters	False	object	EmissionVelocity	linemeas	f8
 Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	linemeas	f8
 LinemeasLyaIgm	linemeas_parameters	False	object	LyaIgm	linemeas	f8
@@ -125,3 +139,4 @@ ContinuumRedshift	model_parameters	True	candidate	fittedTpl.tplRedshift	extrema_
 Coeffs	continuum_polynom	True	candidate	fittedTpl.pCoeffs	extrema_results	f8
 LineMask	line_mask	True	candidate	OutsideLinesMask	extrema_results	i
 LineMask	linemeas_line_mask	True	object	OutsideLinesMask	extrema_results	i
+<BandName>photValue	phot_values	False	candidate	m_photValues[band_name]	extrema_results	f8

@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   bfs::path noisePath;
   bfs::path linecatalogPath;
 
-  Int32 lineTypeFilter = CLine::nType_Emission;
-  Int32 forceFilter = CLine::nForce_Strong;
+  auto lineTypeFilter = CLine::EType::nType_Emission;
+  auto forceFilter = CLine::EForce::nForce_Strong;
   string opt_lineWidthType = "velocitydriven";
   Float64 opt_nsigmasupport = 8.;
   Float64 initVelocity = 50.0;
