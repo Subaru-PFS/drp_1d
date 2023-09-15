@@ -75,6 +75,8 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
   FitMeiksinIdx[i] = val.MeiksinIdx;
   FitDtM[i] = val.cross_result.sumCross;
   FitMtM[i] = val.cross_result.sumT;
+
+  SNR[i] = SNRCalculation(FitDtM[i], FitMtM[i]);
   LogPrior[i] = val.logprior;
   Overlap[i] = val.overlapFraction;
   Status[i] = val.status;
@@ -82,4 +84,16 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
   ChiSquareIntermediate[i] = std::move(val.ChiSquareInterm);
   IsmEbmvCoeffIntermediate[i] = std::move(val.IsmCalzettiCoeffInterm);
   IgmMeiksinIdxIntermediate[i] = std::move(val.IgmMeiksinIdxInterm);
+}
+
+Float64 CTemplateFittingResult::SNRCalculation(Float64 dtm, Float64 mtm) {
+  Float64 snr;
+  if (mtm <= 0) {
+    snr = NAN;
+  } else if (dtm <= 0) {
+    snr = 0;
+  } else {
+    snr = dtm / std::sqrt(mtm);
+  }
+  return snr;
 }
