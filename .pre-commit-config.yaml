@@ -11,12 +11,15 @@ repos:
         exclude: RedshiftLibrary/RedshiftLibrary/linemodel/gaussianfit/LineSearchMoreThuente.h
         args: ['-style=LLVM', '-i']
 
-  # Yaml hooks
+  # Yaml and JSON hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       - id: check-yaml
         types: [yaml]
+      - id: pretty-format-json
+        types: [json]
+        args: ['--autofix', '--no-sort-keys']
 
   # Python hooks
   - repo: https://github.com/PyCQA/autoflake
@@ -40,11 +43,3 @@ repos:
         files: 'pylibamazed'
         exclude: 'redshift.py'
         types: [python]
-
-  # JSON hooks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: pretty-format-json
-        types: [json]
-        args: ['--autofix', '--no-sort-keys']
