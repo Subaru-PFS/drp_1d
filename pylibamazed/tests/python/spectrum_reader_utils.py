@@ -56,15 +56,24 @@ class TestSpectrumReaderUtils:
         params_dict["airvacuum_method"] = kwargs.get("airvacuum_method", "")
         params_dict["objects"] = []
         params_dict["multiobsmethod"] = kwargs.get("multiobsmethod", "")
-        params_dict["lambdarange"] = kwargs.get("lambdarange", [0, 1])
+        if params_dict["multiobsmethod"] == "full":
+            params_dict["lambdarange"] = kwargs.get("parameters_lambdarange", {"": [0, 10]})
+        else:
+            params_dict["lambdarange"] = kwargs.get("parameters_lambdarange", [0, 10])
         if kwargs.get("filters"):
             params_dict["filters"] = kwargs.get("filters")
         return params_dict
 
     def full_load(self, fsr, **kwargs):
-        fsr.load_wave([0, 10], kwargs.get('obs_id', ''))
-        fsr.load_flux([0, 10], kwargs.get('obs_id', ''))
-        fsr.load_error([0, 10], kwargs.get('obs_id', ''))
+        obs_id = kwargs.get('obs_id', '')
+        if kwargs.get("multiobsmethod") == "full":
+            wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
+            wave_range = wave_ranges[obs_id]
+        else:
+            wave_range = kwargs.get("spectrum_wave_range", [0, 10])
+        fsr.load_wave(wave_range, kwargs.get('obs_id', ''))
+        fsr.load_flux(wave_range, kwargs.get('obs_id', ''))
+        fsr.load_error(wave_range, kwargs.get('obs_id', ''))
 
     def initialize_fsr_with_data(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)

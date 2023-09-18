@@ -124,7 +124,6 @@ def get_spectra(config, observation):
 
     # read and load spectra using spectra reader
     spectra = pd.read_table(s_filename, delimiter="\t")
-    print('spectra', spectra)
     return spectra
 
 
