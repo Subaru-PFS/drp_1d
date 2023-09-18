@@ -129,7 +129,7 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
     // in the case of duplicates, split equally the overlap between both candidates
     Float64 overlapHighRatio = overlap / zSizeHighRange;
     Float64 overlapLowRatio = overlap / zSizeLowRange;
-    if (overlapHighRatio < OVERLAP_THRESHOLD && overlapLowRatio < OVERLAP_THRESHOLD) {
+    if (overlapHighRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION && overlapLowRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION) {
       Log.LogDebug("    CPdfCandidatesZ::SetIntegrationRanges: integration "
                    "supports overlap for %f and %f",
                    zHigh, zLow);
