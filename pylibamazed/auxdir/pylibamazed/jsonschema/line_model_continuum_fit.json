@@ -1,49 +1,58 @@
 {
-    "$id": "line-model-continuum-fit-schema",
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "Continuum fit",
-    "type": "object",
-    "required": ["fftprocessing", "ismfit", "igmfit", "count", "ignorelinesupport", "negativethreshold", "nullthreshold", "priors"],
-    "additionalProperties": false,
-    "description": "Concerns only fullmodel ie `continuumcomponent=\"tplfit\"`",
-    "properties": {
-        "fftprocessing": {
-            "type": "boolean",
-            "title": "Use fft processing",
-            "description": "Use FFT for Least-square template fitting (in log lambda)"
-        },
-        "ismfit": {
-            "type": "boolean",
-            "title": "Wether to activate ISM extinction fit",
-            "description": "Wether to activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `LineModelSolve.linemodel_extrema.csv`)"
-        },
-        "igmfit": {
-            "type": "boolean",
-            "title": "Wether to activate IGM fit",
-            "description": "Wether to activate fit of IGM with Meiksin tables. Index scan from 0 to 0.9, step = 0.1 (best profile index stored in FittedTplMeiksinIdx parameter in LineModelSolve.linemodel_extrema.csv)"
-        },
-        "count": {
-            "type": "number",
-            "title": "Number of continuum templates to keep",
-            "description": "Number of continuum templates, ranked by deacreasing pdf at each z, kept to fit lines (1 = only the best template is used)."
-        },
-        "ignorelinesupport": {
-            "type": "boolean",
-            "title": "Ignore lines support",
-            "description": "\n * **yes**: mask the lines to fit the continuum \n * **no**: the lines are inverse-weighted in the fit (orthogonalization of the continuum wrt the lines such that the joint fitting of the continnum amplitude and the lines amplitude can be done separately)"
-        },
-        "negativethreshold": {
-            "type": "number",
-            "title": "Negative threshold",
-            "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below the threshold, amazed raises an error"
-        },
-        "nullthreshold": {
-            "type": "number",
-            "title": "Null threshold",
-            "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below `threshold * sigma`, continuum component is forced to nocontinuum"
-        },
-        "priors": {
-            "$ref": "line_model_priors.json"
-        }
+  "$id": "line-model-continuum-fit-schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Continuum fit",
+  "type": "object",
+  "required": [
+    "fftprocessing",
+    "ismfit",
+    "igmfit",
+    "count",
+    "ignorelinesupport",
+    "negativethreshold",
+    "nullthreshold",
+    "priors"
+  ],
+  "additionalProperties": false,
+  "description": "Concerns only fullmodel ie `continuumcomponent=\"tplfit\"`",
+  "properties": {
+    "fftprocessing": {
+      "type": "boolean",
+      "title": "Use fft processing",
+      "description": "Use FFT for Least-square template fitting (in log lambda)"
+    },
+    "ismfit": {
+      "type": "boolean",
+      "title": "Wether to activate ISM extinction fit",
+      "description": "Wether to activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `LineModelSolve.linemodel_extrema.csv`)"
+    },
+    "igmfit": {
+      "type": "boolean",
+      "title": "Wether to activate IGM fit",
+      "description": "Wether to activate fit of IGM with Meiksin tables. Index scan from 0 to 0.9, step = 0.1 (best profile index stored in FittedTplMeiksinIdx parameter in LineModelSolve.linemodel_extrema.csv)"
+    },
+    "count": {
+      "type": "number",
+      "title": "Number of continuum templates to keep",
+      "description": "Number of continuum templates, ranked by deacreasing pdf at each z, kept to fit lines (1 = only the best template is used)."
+    },
+    "ignorelinesupport": {
+      "type": "boolean",
+      "title": "Ignore lines support",
+      "description": "\n * **yes**: mask the lines to fit the continuum \n * **no**: the lines are inverse-weighted in the fit (orthogonalization of the continuum wrt the lines such that the joint fitting of the continnum amplitude and the lines amplitude can be done separately)"
+    },
+    "negativethreshold": {
+      "type": "number",
+      "title": "Negative threshold",
+      "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below the threshold, amazed raises an error"
+    },
+    "nullthreshold": {
+      "type": "number",
+      "title": "Null threshold",
+      "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below `threshold * sigma`, continuum component is forced to nocontinuum"
+    },
+    "priors": {
+      "$ref": "line_model_priors.json"
     }
+  }
 }

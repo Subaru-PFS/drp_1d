@@ -1,59 +1,65 @@
 {
-    "$id": "line-model-lya-fit",
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "Line model Lya fit",
-    "type": "object",
-    "required": [
-        "asymfitmin" , "asymfitmax", "asymfitstep", 
-        "widthfitmin", "widthfitmax", "widthfitstep",
-        "deltafitmin", "deltafitmax", "deltastepmax"
-    ],
-    "additionalProperties": false,
-    "properties": {
-        "asymfitmin": {
-            "type": "number",
-            "title": "Asym fit min",
-            "description": "Tabulation of Lya asym alpha: min value"
-        },
-        "asymfitmax": {
-            "type": "number",
-            "title": "Asym fit max",
-            "description": "Tabulation of Lya asym alpha: max value"
-        },
-        "asymfitstep": {
-            "type": "number",
-            "title": "Asym fit step",
-            "description": "Tabulation of Lya asym alpha: step value"
-        },
-        "widthfitmin": {
-            "type": "number",
-            "title": "Width fit min",
-            "description": "Tabulation of Lya width (sigma), min value (in Angtröms)"
-        },
-        "widthfitmax": {
-            "type": "number",
-            "title": "Width fit max",
-            "description": "Tabulation of Lya width (sigma), max value (in Angtröms)"
-        },
-        "widthfitstep": {
-            "type": "number",
-            "title": "Width fit step",
-            "description": "Tabulation of Lya width (sigma), step value (in Angtröms)"
-        },
-        "deltafitmin": {
-            "type": "number",
-            "title": "Delta fit min",
-            "description": "Tabulation of Lya offset, min value (in Angtröms), (offset is defined relative to mean of skewed gaussian profile)"
-        },
-        "deltafitmax": {
-            "type": "number",
-            "title": "Delta fit max",
-            "description": "Tabulation of Lya offset, max value (in Angtröms)"
-        },
-        "deltastepmax": {
-            "type": "number",
-            "title": "Delta fit step",
-            "description": "Tabulation of Lya offset, step value (in Angtröms)"
-        }
+  "$id": "line-model-lya-fit",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Line model Lya fit",
+  "type": "object",
+  "required": [
+    "asymfitmin",
+    "asymfitmax",
+    "asymfitstep",
+    "widthfitmin",
+    "widthfitmax",
+    "widthfitstep",
+    "deltafitmin",
+    "deltafitmax",
+    "deltastepmax"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "asymfitmin": {
+      "type": "number",
+      "title": "Asym fit min",
+      "description": "Tabulation of Lya asym alpha: min value"
+    },
+    "asymfitmax": {
+      "type": "number",
+      "title": "Asym fit max",
+      "description": "Tabulation of Lya asym alpha: max value"
+    },
+    "asymfitstep": {
+      "type": "number",
+      "title": "Asym fit step",
+      "description": "Tabulation of Lya asym alpha: step value"
+    },
+    "widthfitmin": {
+      "type": "number",
+      "title": "Width fit min",
+      "description": "Tabulation of Lya width (sigma), min value (in Angtr\u00f6ms)"
+    },
+    "widthfitmax": {
+      "type": "number",
+      "title": "Width fit max",
+      "description": "Tabulation of Lya width (sigma), max value (in Angtr\u00f6ms)"
+    },
+    "widthfitstep": {
+      "type": "number",
+      "title": "Width fit step",
+      "description": "Tabulation of Lya width (sigma), step value (in Angtr\u00f6ms)"
+    },
+    "deltafitmin": {
+      "type": "number",
+      "title": "Delta fit min",
+      "description": "Tabulation of Lya offset, min value (in Angtr\u00f6ms), (offset is defined relative to mean of skewed gaussian profile)"
+    },
+    "deltafitmax": {
+      "type": "number",
+      "title": "Delta fit max",
+      "description": "Tabulation of Lya offset, max value (in Angtr\u00f6ms)"
+    },
+    "deltastepmax": {
+      "type": "number",
+      "title": "Delta fit step",
+      "description": "Tabulation of Lya offset, step value (in Angtr\u00f6ms)"
     }
+  }
 }
