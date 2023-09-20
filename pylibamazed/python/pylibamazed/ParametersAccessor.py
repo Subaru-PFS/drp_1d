@@ -45,11 +45,16 @@ class ParametersAccessor:
         self.parameters = parameters
 
     def get_lambda_range(self, obs_id=""):
-        if not obs_id:
+        """Depending on multiobs method, lambda range is not of the same type:
+        - mono obs or merge => lambdarange is a range [min, max]
+        - full => lambdarange is a dict of ranges {obs_id: [min, max], ...}
+        """
+        multiobs = self.get_multiobs_method()
+        if multiobs in ["", "merge"]:
             return self.parameters["lambdarange"]
         else:
             return self.parameters["lambdarange"][obs_id]
-    
+
     def get_airvacuum_method(self):
         return self.parameters.get("airvacuum_method", "")
 
@@ -323,7 +328,7 @@ class ParametersAccessor:
 
     def get_redshift_sampling(self, object_type):
         return self.get_object_section(object_type).get("redshiftsampling")
-    
+
     def get_observation_ids(self):
         try:
             return list(self.parameters["lambdarange"].keys())

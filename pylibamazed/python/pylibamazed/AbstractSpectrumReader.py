@@ -243,7 +243,7 @@ class AbstractSpectrumReader:
 
         self._merge_spectrum_in_dataframe()
         self._apply_filters(self._get_filters())
-
+        self._check_wavelengths()
         self._add_cspectra()
         lsf_factory = CLSFFactory.GetInstance()
         lsf_args = self._lsf_args()
@@ -260,6 +260,23 @@ class AbstractSpectrumReader:
             return
         for spectrum_key in self.editable_spectra.keys():
             self.editable_spectra.data[spectrum_key] = filters.apply(self.editable_spectra.data[spectrum_key])
+
+    def _check_wavelengths(self):
+        """Looks if lambda range specified in parameters is contained in spectrum range."""
+        for obs_id in self.waves.keys():
+            [params_lambda_min, params_lambda_max] = self.parameters.get_lambda_range(obs_id)
+            obs_waves = np.array(self.waves.get(obs_id))
+            spectrum_lambda_min = obs_waves[0]
+            spectrum_lambda_max = obs_waves[-1]
+
+            params_lambda_range_in_spectrum_lambdas = spectrum_lambda_min <= params_lambda_min \
+                and spectrum_lambda_max >= params_lambda_max
+            if not params_lambda_range_in_spectrum_lambdas:
+                zflag.warning(
+                    WarningCode.TIGHT_SPECTRUM_WAVELENGTH.value,
+                    f"Parameters lambda range ([{params_lambda_min}, {params_lambda_max}])is not "
+                    f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])"
+                )
 
     def _add_photometric_data(self):
         if len(self.photometric_data) > 0 and len(self.photometric_data[0]) > 0:
@@ -357,11 +374,6 @@ class AbstractSpectrumReader:
                 signal = CSpectrumFluxAxis_withError(self._editable_fluxes(obs_id),
                                                      self._editable_errors(obs_id))
                 self._add_cspectrum(spectralaxis, signal, obs_id)
-        else:
-            raise APIException(
-                ErrorCode.INVALID_PARAMETER,
-                "multiobsmethod must be one of 'merge', 'full'"
-            )
 
     def _add_cspectrum(self, spectralaxis, signal, obs_id=""):
         self._spectra[obs_id] = CSpectrum(spectralaxis, signal)
