@@ -49,7 +49,7 @@ public:
   void updateFromLineModelSolution(const CLineModelSolution &cms);
 
   void
-  updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &lmel);
+  updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &ratioMgr);
 
   void updateFromModel(const std::shared_ptr<const CLineModelFitting> &lmel,
                        const std::shared_ptr<const CLineModelResult> &lmresult,

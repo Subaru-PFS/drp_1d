@@ -59,10 +59,11 @@ void TLineModelResult::updateFromLineModelSolution(
 }
 
 void TLineModelResult::updateTplRatioFromModel(
-    const std::shared_ptr<const CTplratioManager> &lmel) {
-  FittedTplratioName = lmel->getTplratio_bestTplName();
-  FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
-  FittedTplratioAmplitudeEm = lmel->getTplratio_bestAmplitudeEm();
+    const std::shared_ptr<const CTplratioManager> &ratioMgr) {
+  FittedTplratioName = ratioMgr->getTplratio_bestTplName();
+  FittedTplratioIsmCoeff = ratioMgr->getTplratio_bestTplIsmCoeff();
+  FittedTplratioAmplitudeEm = ratioMgr->getTplratio_bestAmplitudeEm();
+  FittedTplratioAmplitudeAbs = ratioMgr->getTplratio_bestAmplitudeAbs();
 }
 
 void TLineModelResult::updateFromModel(
