@@ -36,6 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+import numpy as np
 import os
 
 import numpy as np
@@ -90,6 +91,8 @@ class ResultStoreOutput(AbstractOutput):
             return PC.Get_Int32Array(attr)
         elif attr_type == "TBoolList":
             return PC.Get_BoolArray(attr)
+        elif attr_type == "TStringList":
+            return np.array(tuple(attr))
         elif attr_type == "CMask":
             return PC.Get_MaskArray(attr.getMaskList())
         else:

@@ -38,6 +38,7 @@ FittedContinuumError	fitted_lines	True	candidate	ContinuumError	extrema_results	
 FittedVelocity	fitted_lines	True	candidate	Velocity	extrema_results	f8
 FittedOffset	fitted_lines	True	candidate	Offset	extrema_results	f8
 FittedOutsideRange	fitted_lines	True	candidate	OutsideLambdaRange	extrema_results	i
+FittedFittingGroupInfo	fitted_lines	True	candidate	fittingGroupInfo	extrema_results	S10
 ContinuumPCoeff0	fitted_lines	True	candidate	continuum_pCoeff0	extrema_results	f8
 ContinuumPCoeff1	fitted_lines	True	candidate	continuum_pCoeff1	extrema_results	f8
 ContinuumPCoeff2	fitted_lines	True	candidate	continuum_pCoeff2	extrema_results	f8
@@ -97,6 +98,7 @@ LinemeasContinuumError	linemeas	True	object	ContinuumError	linemeas	f8
 LinemeasVelocity	linemeas	False	object	Velocity	linemeas	f8
 LinemeasOffset	linemeas	False	object	Offset	linemeas	f8
 LinemeasOutsideRange	linemeas	True	object	OutsideLambdaRange	linemeas	i
+LinemeasFittingGroupInfo	linemeas	True	object	fittingGroupInfo	linemeas	S10
 LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	i
 LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	i
 LinemeasContinuumPCoeff2	linemeas	True	object	continuum_pCoeff2	linemeas	i
