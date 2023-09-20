@@ -525,7 +525,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     */
   }
   if (m_lineRatioType == "tplratio") {
-    m_lineRatioManager->finish(redshift);
+    m_lineRatioManager->resetToBestRatio(redshift);
     Int32 modelSolutionLevel = Int32(enableLogging);
     modelSolution = GetModelSolution(modelSolutionLevel);
     continuumModelSolution =
