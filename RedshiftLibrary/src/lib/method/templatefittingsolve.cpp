@@ -500,7 +500,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
                                "compute spectrum model");
       tplCatalog.m_logsampling = currentSampling;
 
-      extremaResult->m_modelPhotValue[iExtremum] =
+      extremaResult->m_modelPhotValues[iExtremum] =
           std::make_shared<const CModelPhotValueResult>(values);
     }
     extremaResult->m_savedModelSpectrumResults[iExtremum] = spcmodelPtr;
