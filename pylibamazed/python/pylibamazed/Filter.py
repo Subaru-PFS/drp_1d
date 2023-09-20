@@ -154,6 +154,8 @@ class FilterList:
         return "FilterList " + str(self.items)
 
     def __eq__(self, __value__):
+        if len(__value__.items) != len(self.items):
+            return False
         for i, filter in enumerate(self.items):
             if filter != __value__.items[i]:
                 return False

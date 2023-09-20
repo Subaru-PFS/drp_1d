@@ -66,3 +66,35 @@ class TestFilterList:
     def test_repr(self):
         filter = FilterList()
         assert filter.__repr__() == "FilterList []"
+
+    class TestEquality:
+        default_filter_item_1 = SpectrumFilterItem('col1', '>', 12)
+        default_filter_item_2 = SpectrumFilterItem('col2', '<', 10)
+
+        def test_eq_true_for_empty_filters(self):
+            filter1 = FilterList()
+            filter2 = FilterList()
+
+            assert filter1 == filter2
+            assert filter2 == filter1
+
+        def test_eq_true_for_filters_containing_same_elements_in_same_order(self):
+            filter1 = FilterList([self.default_filter_item_1, self.default_filter_item_2])
+            filter2 = FilterList([self.default_filter_item_1, self.default_filter_item_2])
+
+            assert filter1 == filter2
+            assert filter2 == filter1
+
+        def test_eq_false_for_filters_containing_same_elements_in_different_order(self):
+            filter1 = FilterList([self.default_filter_item_1, self.default_filter_item_2])
+            filter2 = FilterList([self.default_filter_item_2, self.default_filter_item_1])
+
+            assert filter1 != filter2
+            assert filter2 != filter1
+        
+        def test_eq_false_for_filters_with_different_length(self):
+            filter1 = FilterList([self.default_filter_item_1])
+            filter2 = FilterList([self.default_filter_item_1, self.default_filter_item_2])
+
+            assert filter1 != filter2
+            assert filter2 != filter1
