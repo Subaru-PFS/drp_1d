@@ -639,15 +639,34 @@ Float64 CLineModelFitting::getLeastSquareContinuumMeritFast() const {
  **/
 // TODO rename this ! not a simple getter
 Int32 CLineModelFitting::getSpcNSamples() const {
-  const CSpectrumSpectralAxis &spcSpectralAxis =
-      getSpectrum().GetSpectralAxis();
 
-  Float64 imin =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-  Float64 imax =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+  std::vector<Int32> imin;
+  std::vector<Int32> imax;
+  Int32 lambdaMinSpcIndex = -1;
+  Int32 lambdaMaxSpcIndex = -1;
+  Float64 lambdaMin = 1e30;
+  Float64 lambdaMax = -1.;
 
-  return abs(imax - imin);
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        getSpectrum().GetSpectralAxis();
+    imin.push_back(
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin()));
+    imax.push_back(
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd()));
+
+    if (getLambdaRange().GetBegin() < lambdaMin) {
+      lambdaMin = getLambdaRange().GetBegin();
+      lambdaMinSpcIndex = *m_curObs;
+    }
+    if (getLambdaRange().GetEnd() > lambdaMax) {
+      lambdaMax = getLambdaRange().GetEnd();
+      lambdaMaxSpcIndex = *m_curObs;
+    }
+  }
+  *m_curObs = 0;
+
+  return abs(imax[lambdaMaxSpcIndex] - imin[lambdaMinSpcIndex]);
 }
 
 /**
