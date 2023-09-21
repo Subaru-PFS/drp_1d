@@ -72,14 +72,14 @@ public:
       m_savedModelContinuumSpectrumResults;
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
-  std::vector<std::shared_ptr<const CModelPhotValueResult>> m_modelPhotValue;
+  std::vector<std::shared_ptr<const CModelPhotValueResult>> m_modelPhotValues;
 
   CExtremaResult<TLineModelResult>(const TCandidateZbyRank &zCandidates)
       : m_savedModelFittingResults(zCandidates.size()),
         m_savedModelRulesResults(zCandidates.size()),
         m_savedModelContinuumSpectrumResults(zCandidates.size()),
         m_savedModelSpectrumResults(zCandidates.size()),
-        m_modelPhotValue(zCandidates.size()) {
+        m_modelPhotValues(zCandidates.size()) {
     m_type = "LineModelExtremaResult";
     for (const auto &cand : zCandidates) {
       m_ranked_candidates.push_back(

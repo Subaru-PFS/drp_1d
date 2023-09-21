@@ -49,7 +49,7 @@ ExtremaResult::getCandidate(const int &rank, const std::string &dataset,
   else if (dataset == "model")
     return m_savedModelSpectrumResults[rank];
   else if (dataset == "phot_values")
-    return m_modelPhotValue[rank];
+    return m_modelPhotValues[rank];
   // else if (dataset == "continuum")  return
   // m_savedModelContinuumSpectrumResults[rank];
 
@@ -64,7 +64,7 @@ ExtremaResult::getCandidateDatasetType(const std::string &dataset) const {
   else if (dataset == "model")
     return m_savedModelSpectrumResults[0]->getType();
   else if (dataset == "phot_values")
-    return m_modelPhotValue[0]->getType();
+    return m_modelPhotValues[0]->getType();
   // else if (dataset == "continuum")  return
   // m_savedModelContinuumSpectrumResults[0]->getType();
   else

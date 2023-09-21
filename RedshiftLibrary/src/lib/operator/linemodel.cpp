@@ -1020,19 +1020,17 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
       // below spectrumModel doesnt include identified lines
       auto &cont = m_result->ContinuumModelSolutions[idx];
-      TPhotVal values;
+      TPhotVal phot_values;
       if (cont.tplName == "nocontinuum" ||
           m_opt_continuumcomponent == "fromspectrum") { // no photometry
-        Log.LogInfo(
+        Log.LogDetail(
             "photometry cannot be applied for fromspectrum or nocontinuum");
 
       } else
-        ExtremaResult->m_modelPhotValue[i] =
-            std::make_shared<const CModelPhotValueResult>(
-                m_fittingManager->getSpectrumModel().getPhotValues());
+        phot_values = m_fittingManager->getSpectrumModel().getPhotValues();
 
-      ExtremaResult->m_modelPhotValue[i] =
-          std::make_shared<CModelPhotValueResult>(values); // temporary for test
+      ExtremaResult->m_modelPhotValues[i] =
+          std::make_shared<CModelPhotValueResult>(std::move(phot_values));
       ExtremaResult->m_savedModelFittingResults[i] =
           std::make_shared<CLineModelSolution>(
               m_result->LineModelSolutions[idx]);

@@ -486,11 +486,11 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
   return _merit;
 }
 
-void CTplratioManager::finish(Float64 redshift) {
-  SetMultilineNominalAmplitudesFast(m_savedIdxFitted);
-  // Set the velocities from templates: todo auto switch when velfit is ON
-  // m_CatalogTplRatio->GetCatalogVelocities(savedIdxFitted,
-  // m_velocityEmission, m_velocityAbsorption);
+void CTplratioManager::resetToBestRatio(Float64 redshift) {
+
+  // first reinit all the elements:
+  init(redshift, m_savedIdxFitted);
+
   for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
     Log.LogDetail("    model - Linemodel: tplratio = %d (%s, with "
                   "ebmv=%.3f), and A=%e",

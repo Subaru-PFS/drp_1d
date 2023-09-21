@@ -68,7 +68,7 @@ public:
   bool init(Float64 redshift, Int32 itratio) override;
 
   Float64 computeMerit(Int32 itratio) override;
-  void finish(Float64 redshift) override;
+  void resetToBestRatio(Float64 redshift) override;
   void setPassMode(Int32 iPass) override;
   void saveResults(Int32 itratio) override;
   Int32 getTplratio_count() const override;

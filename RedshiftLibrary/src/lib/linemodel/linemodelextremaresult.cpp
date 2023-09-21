@@ -59,10 +59,11 @@ void TLineModelResult::updateFromLineModelSolution(
 }
 
 void TLineModelResult::updateTplRatioFromModel(
-    const std::shared_ptr<const CTplratioManager> &lmel) {
-  FittedTplratioName = lmel->getTplratio_bestTplName();
-  FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
-  FittedTplratioAmplitudeEm = lmel->getTplratio_bestAmplitudeEm();
+    const std::shared_ptr<const CTplratioManager> &ratioMgr) {
+  FittedTplratioName = ratioMgr->getTplratio_bestTplName();
+  FittedTplratioIsmCoeff = ratioMgr->getTplratio_bestTplIsmCoeff();
+  FittedTplratioAmplitudeEm = ratioMgr->getTplratio_bestAmplitudeEm();
+  FittedTplratioAmplitudeAbs = ratioMgr->getTplratio_bestAmplitudeAbs();
 }
 
 void TLineModelResult::updateFromModel(
@@ -181,7 +182,7 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[rank];
   else if (dataset == "phot_values")
-    return this->m_modelPhotValue[rank];
+    return this->m_modelPhotValues[rank];
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
@@ -198,7 +199,7 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[0]->getType();
   else if (dataset == "phot_values")
-    return this->m_modelPhotValue[0]->getType();
+    return this->m_modelPhotValues[0]->getType();
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
