@@ -1098,6 +1098,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
       modelSolution.Fluxs[iRestLine] = flux;
       modelSolution.FluxErrors[iRestLine] = fluxError;
       modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
+      modelSolution.FluxDirectIntegrationError[iRestLine] =
+          std::abs(fluxDI) / snrDI;
 
       // sum Ha complex fluxes
       if (isEmission &&
