@@ -79,13 +79,17 @@ public:
   CLine(const std::string &name, Float64 pos, EType type,
         CLineProfile_ptr &&profile, EForce force, Float64 velocityOffset,
         bool enableVelocityOffsetFitting, const std::string &groupName,
-        Float64 nominalAmp, const std::string &velGroupName);
+        Float64 nominalAmp, const std::string &velGroupName, Int32 id,
+        const std::string &str_id);
   virtual ~CLine() = default;
   CLine(const CLine &other);
   CLine(CLine &&other) = default;
   CLine &operator=(const CLine &other);
   CLine &operator=(CLine &&other) = default;
 
+  bool operator!=(const CLine &rhs) const { return (m_id != rhs.m_id); };
+
+  Int32 GetID() const { return m_id; };
   bool IsStrong() const { return m_Force == EForce::nForce_Strong; }
   bool IsWeak() const { return m_Force == EForce::nForce_Weak; }
   bool IsEmission() const { return m_Type == EType::nType_Emission; };
@@ -125,11 +129,13 @@ public:
   const std::string &GetGroupName() const { return m_GroupName; };
   const Float64 GetNominalAmplitude() const { return m_NominalAmplitude; };
   const std::string &GetVelGroupName() const { return m_VelGroupName; };
+  const std::string &GetStrID() const { return m_strID; };
 
   static EType string2Type(std::string const &s);
   static EForce string2Force(std::string const &s);
 
 protected:
+  Int32 m_id = undefIdx;
   EType m_Type = EType::nType_Emission;
   CLineProfile_ptr m_Profile = nullptr;
   EForce m_Force = EForce::nForce_Weak;
@@ -147,6 +153,8 @@ protected:
 
   // for velocity fitting
   std::string m_VelGroupName = "";
+
+  std::string m_strID;
 };
 
 using CLineVector = std::vector<CLine>;

@@ -61,17 +61,20 @@ public:
          Float64 winsize);
 
   Int32 check(Float64 z,
-              CLineMatchingResult::TSolutionSet &matchingSolutionSet);
+              CLineMatchingResult::TSolutionSet &matchingSolutionSet) const;
 
 private:
-  bool checkRule01(Float64 z,
-                   CLineMatchingResult::TSolutionSet &matchingSolutionSet);
-  bool checkRule02(Float64 z,
-                   CLineMatchingResult::TSolutionSet &matchingSolutionSet);
-  bool checkRule03(Float64 z,
-                   CLineMatchingResult::TSolutionSet &matchingSolutionSet);
+  bool
+  checkRule01(Float64 z,
+              CLineMatchingResult::TSolutionSet &matchingSolutionSet) const;
+  bool
+  checkRule02(Float64 z,
+              CLineMatchingResult::TSolutionSet &matchingSolutionSet) const;
+  bool
+  checkRule03(Float64 z,
+              CLineMatchingResult::TSolutionSet &matchingSolutionSet) const;
 
-  Float64 getRestLineLambda(std::string nametag);
+  Float64 getRestLineLambda(std::string nametag) const;
   bool isLineInsideRange(Float64 lambda, bool winsize = false) const;
   CSpectrum m_spc;
   CLineDetectedCatalog m_DetectedCatalog;

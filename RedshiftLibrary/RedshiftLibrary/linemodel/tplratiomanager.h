@@ -91,8 +91,6 @@ public:
   const TInt32List &GetNLinesAboveSNRTplratio() const;
 
   bool setTplratioModel(Int32 itplratio, bool enableSetVelocity = false);
-  bool setTplratioAmplitude(const TFloat64List &ampsElts,
-                            const TFloat64List &errorsElts);
   void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
   void SetForcedisableTplratioISMfit(bool opt);
@@ -113,7 +111,7 @@ protected:
 
   Float64 GetIsmCoeff(Int32 idx) const;
 
-  std::vector<TFloat64Map> m_LineCatalogCorrespondingNominalAmp;
+  std::vector<std::vector<TFloat64List>> m_LineCatalogCorrespondingNominalAmp;
   Int32 m_savedIdxFitted = -1; // for rigidity=tplratio
   TFloat64List m_MeritTplratio;
   TFloat64List m_PriorMeritTplratio;

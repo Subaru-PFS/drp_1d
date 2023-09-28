@@ -478,6 +478,7 @@ public:
           lineCatalogData.dispersionVelocityGroupName[i],
           lineCatalogData.waveLengthOffset[i],
           lineCatalogData.enableFitWaveLengthOffset[i], i,
+          lineCatalogData.name[i],
           fixture_MeiskinCorrection().igmCorrectionMeiksin);
     }
   }

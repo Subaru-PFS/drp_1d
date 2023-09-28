@@ -56,7 +56,7 @@ public:
                 Float64 width = -1.0, Float64 cut = -1.0, Float64 posErr = -1.0,
                 Float64 sigmaErr = -1.0, Float64 ampErr = -1.0)
       : CLine(name, pos, type, std::move(profile), force, 0., false, undefStr,
-              1.0, undefStr),
+              1.0, undefStr, undefIdx, undefStr),
         m_Amp(amp), m_Width(width), m_Cut(cut), m_PosFitErr(posErr),
         m_SigmaFitErr(sigmaErr), m_AmpFitErr(ampErr){};
 

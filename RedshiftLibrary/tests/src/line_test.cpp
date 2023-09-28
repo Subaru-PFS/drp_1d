@@ -66,13 +66,13 @@ BOOST_AUTO_TEST_CASE(LoadLineRatioCatalog) {
   CLineCatalog catalog;
   TAsymParams asymP;
   catalog.AddLineFromParams("Halpha", 6562.8, "E", "S", "SYM", asymP, "", 1.,
-                            "E1", INFINITY, false, 0);
+                            "E1", INFINITY, false, 0, "Halpha_,6562.8_E");
   catalog.AddLineFromParams("Hbeta", 4861.3, "E", "S", "SYM", asymP, "", 1.,
-                            "E1", INFINITY, false, 1);
+                            "E1", INFINITY, false, 1, "Hbeta_4861.3_E");
   catalog.AddLineFromParams("Hgamma", 4340.4, "E", "W", "SYM", asymP, "", 1.,
-                            "E1", INFINITY, false, 2);
+                            "E1", INFINITY, false, 2, "Hgamma_4340.4_E");
   catalog.AddLineFromParams("Hdelta", 4101.7, "E", "W", "SYM", asymP, "", 1.,
-                            "E1", INFINITY, false, 3);
+                            "E1", INFINITY, false, 3, "Hdelta_4101.7_E");
 
   // TODO this test should be moved to python
   //    BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR
@@ -87,13 +87,17 @@ BOOST_AUTO_TEST_CASE(MatchingTest1) {
   CLineCatalog restFrameCatalog;
   TAsymParams asymP;
   restFrameCatalog.AddLineFromParams("Halpha", 6562.8, "E", "S", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 0);
+                                     "", 1., "E1", INFINITY, false, 0,
+                                     "Halpha_6562.8_E");
   restFrameCatalog.AddLineFromParams("Hbeta", 4861.3, "E", "S", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 1);
+                                     "", 1., "E1", INFINITY, false, 1,
+                                     "Hbeta_4861.3_E");
   restFrameCatalog.AddLineFromParams("Hgamma", 4340.4, "E", "W", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 2);
+                                     "", 1., "E1", INFINITY, false, 2,
+                                     "Hgamma_4340.4_E");
   restFrameCatalog.AddLineFromParams("Hdelta", 4101.7, "E", "W", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 3);
+                                     "", 1., "E1", INFINITY, false, 3,
+                                     "Hdelta_4101.7_E");
 
   CLineDetectedCatalog detectedCatalog;
   Float64 shiftLambda = 1.5;
@@ -121,13 +125,17 @@ BOOST_AUTO_TEST_CASE(BuilLineRatioCatalog) {
   CLineCatalog restFrameCatalog;
   TAsymParams asymP;
   restFrameCatalog.AddLineFromParams("Halpha", 6562.8, "E", "S", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 0);
+                                     "", 1., "E1", INFINITY, false, 0,
+                                     "Halpha_6562.8_E");
   restFrameCatalog.AddLineFromParams("Hbeta", 4861.3, "E", "S", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 1);
+                                     "", 1., "E1", INFINITY, false, 1,
+                                     "Hbeta_4861.3_E");
   restFrameCatalog.AddLineFromParams("Hgamma", 4340.4, "E", "W", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 2);
+                                     "", 1., "E1", INFINITY, false, 2,
+                                     "Hgamma_4340.4_E");
   restFrameCatalog.AddLineFromParams("Hdelta", 4101.7, "E", "W", "SYM", asymP,
-                                     "", 1., "E1", INFINITY, false, 3);
+                                     "", 1., "E1", INFINITY, false, 3,
+                                     "Hdelta_4101.7_E");
 
   CLineRatioCatalog lrCatalog("H", restFrameCatalog);
   lrCatalog.addVelocity("velA", 200);

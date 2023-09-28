@@ -73,10 +73,9 @@ void CRandomFitter::doFit(Float64 redshift) {
     // get the max nominal amplitude
     Float64 maxNominalAmp = -1.0;
     auto const &elt = getElementList()[iElts];
-    for (auto const &[id, _] : elt->GetLines()) {
-      if (maxNominalAmp < elt->GetNominalAmplitude(id)) {
-        maxNominalAmp = elt->GetNominalAmplitude(id);
-      }
+    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
+      if (maxNominalAmp < elt->GetNominalAmplitude(line_idx))
+        maxNominalAmp = elt->GetNominalAmplitude(line_idx);
     }
 
     getElementList().SetElementAmplitude(iElts, a / maxNominalAmp, err);

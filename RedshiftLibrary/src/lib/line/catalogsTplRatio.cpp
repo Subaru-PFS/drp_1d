@@ -59,20 +59,6 @@ using namespace NSEpic;
 using namespace std;
 using namespace boost;
 
-/**
- * @brief CLineCatalogsTplRatio::GetRestLinesList
- * @param index
- * WARNING: ismCoeff not applied on the restlines provided by that function.
- */
-CLineMap CLineCatalogsTplRatio::GetRestLinesList(Int32 index) const {
-  auto const typeFilter = CLine::EType::nType_All;
-  auto const forceFilter = CLine::EForce::nForce_All;
-
-  CLineMap restLineList =
-      m_lineRatioCatalogs[index].GetFilteredList(typeFilter, forceFilter);
-  return restLineList;
-}
-
 TFloat64List CLineCatalogsTplRatio::getCatalogsPriors() const {
   TFloat64List catalogsPriors;
   catalogsPriors.reserve(m_lineRatioCatalogs.size());
@@ -90,39 +76,51 @@ bool CLineCatalogsTplRatio::GetCatalogVelocities(Int32 idx, Float64 &elv,
   return true;
 }
 
-std::vector<TFloat64Map> CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
-    Int32 enableISMCalzetti,
+std::vector<std::vector<TFloat64List>>
+CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
+    const CLineModelElementList &LineModelElementList, Int32 enableISMCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti) const {
 
-  std::vector<TFloat64Map> lineCatalogCorrespondingNominalAmp(
-      GetCatalogsCount(), TFloat64Map());
+  std::vector<std::vector<TFloat64List>> lineCatalogCorrespondingNominalAmp(
+      GetCatalogsCount(),
+      std::vector<TFloat64List>(LineModelElementList.size()));
 
   for (Int32 iCatalog = 0; iCatalog != GetCatalogsCount(); ++iCatalog) {
     auto const &catalog = GetCatalog(iCatalog);
-    for (auto const &[id, line] : catalog.GetList()) {
-      Float64 nominalAmp = line.GetNominalAmplitude();
-      Float64 const restLambda = line.GetPosition();
-      if (enableISMCalzetti) {
-        Float64 dustCoeff = ismCorrectionCalzetti->GetDustCoeff(
-            catalog.getIsmIndex(), restLambda);
-        nominalAmp *= dustCoeff;
+    for (Int32 elt_index = 0; elt_index != LineModelElementList.size();
+         ++elt_index) {
+      auto &elt_ptr = LineModelElementList[elt_index];
+      auto &correspondingNominalAmp =
+          lineCatalogCorrespondingNominalAmp[iCatalog][elt_index];
+      correspondingNominalAmp.reserve(elt_ptr->GetSize());
+      for (Int32 line_index = 0; line_index != elt_ptr->GetSize();
+           ++line_index) {
+        auto const line_id = elt_ptr->GetLines()[line_index].GetID();
+        auto const &catalog_line = catalog.GetList().at(line_id);
+        Float64 nominalAmp = catalog_line.GetNominalAmplitude();
+        Float64 const restLambda = catalog_line.GetPosition();
+        if (enableISMCalzetti) {
+          Float64 dustCoeff = ismCorrectionCalzetti->GetDustCoeff(
+              catalog.getIsmIndex(), restLambda);
+          nominalAmp *= dustCoeff;
+        }
+        correspondingNominalAmp.push_back(nominalAmp);
       }
-      lineCatalogCorrespondingNominalAmp[iCatalog][id] = nominalAmp;
     }
   }
 
   // Now log the linesCorrespondingNominalAmp
-  logLineNominalAmp(enableISMCalzetti, lineCatalogCorrespondingNominalAmp,
-                    ismCorrectionCalzetti);
+  logLineNominalAmp(LineModelElementList, enableISMCalzetti,
+                    lineCatalogCorrespondingNominalAmp, ismCorrectionCalzetti);
 
   return lineCatalogCorrespondingNominalAmp;
 }
 
 // only logging
 void CLineCatalogsTplRatio::logLineNominalAmp(
-    bool enableISMCalzetti,
-    const std::vector<std::map<Int32, Float64>>
+    const CLineModelElementList &LineModelElementList, bool enableISMCalzetti,
+    const std::vector<std::vector<TFloat64List>>
         &lineCatalogCorrespondingNominalAmp,
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti) const {
@@ -130,18 +128,29 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
   for (Int32 k = 0; k != lineCatalogCorrespondingNominalAmp.size(); ++k) {
     Log.LogDebug(Formatter() << "log linesCorrespondingNominalAmp for "
                              << m_lineRatioCatalogs[k].getName());
-    for (const auto &[id, line] : lineCatalogCorrespondingNominalAmp[k]) {
-      Float64 ebv = enableISMCalzetti
-                        ? ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
-                        : NAN;
-      Float64 nomAmp = lineCatalogCorrespondingNominalAmp[k].at(id);
-      std::string const &lineName = GetCatalog(k).GetList().at(id).GetName();
-      Log.LogDebug("    CatalogsTplRatio - "
-                   "linesCorrespondingNominalAmp, "
-                   "iCatalog=%d, LineId=%d with name=%s, ebv=%f: "
-                   "NominalAmpFound = "
-                   "%e",
-                   k, id, lineName.c_str(), ebv, nomAmp);
+    for (Int32 elt_index = 0;
+         elt_index != lineCatalogCorrespondingNominalAmp[k].size();
+         ++elt_index) {
+      for (Int32 line_index = 0;
+           line_index !=
+           lineCatalogCorrespondingNominalAmp[k][elt_index].size();
+           ++line_index) {
+        Float64 ebv = enableISMCalzetti
+                          ? ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
+                          : NAN;
+        Float64 nomAmp =
+            lineCatalogCorrespondingNominalAmp[k][elt_index][line_index];
+        auto const &line_id =
+            LineModelElementList[elt_index]->GetLines()[line_index].GetID();
+        std::string const &lineName =
+            GetCatalog(k).GetList().at(line_id).GetStrID();
+        Log.LogDebug("    CatalogsTplRatio - "
+                     "linesCorrespondingNominalAmp, "
+                     "iCatalog=%d, iElt=%d, iLine=%d with name=%s, ebv=%f: "
+                     "NominalAmpFound = "
+                     "%e",
+                     k, elt_index, line_index, lineName.c_str(), ebv, nomAmp);
+      }
     }
   }
 }
@@ -151,30 +160,28 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
  *and the tplRatio catalogs: (for lm-rigidity=tplcorr)
  *
  **/
-Float64 CLineCatalogsTplRatio::GetBestFit(const CLineMap &restLineList,
-                                          const TFloat64Map &fittedAmplitudes,
-                                          const TFloat64Map &fittedErrors,
-                                          TFloat64Map &amplitudesCorrected,
+Float64 CLineCatalogsTplRatio::GetBestFit(const TInt32List &validLinesIndex,
+                                          const TFloat64List &fittedAmplitudes,
+                                          const TFloat64List &fittedErrors,
+                                          TFloat64List &amplitudesCorrected,
                                           std::string &bestTplName) const {
 
   Float64 coeffMin = -1.0;
-  TFloat64Map bestFitAmplitudes;
+  TFloat64List bestFitAmplitudes;
 
-  auto negativefittedValues = [&fittedAmplitudes,
-                               &fittedErrors](Int32 line_id) {
-    return (fittedAmplitudes.at(line_id) < 0 || fittedErrors.at(line_id) <= 0);
+  auto negativefittedValues = [&fittedAmplitudes, &fittedErrors](Int32 idx) {
+    return (fittedAmplitudes[idx] < 0 || fittedErrors[idx] <= 0);
   };
 
   // mask is unique and independent from catalogs
-  TBoolMap mask;
-  for (auto const &[iLine, _] : fittedAmplitudes)
-    mask[iLine] = negativefittedValues(iLine) ? false : true;
+  TBoolList mask;
+  for (Int32 idx = 0; idx != validLinesIndex.size(); ++idx)
+    mask.push_back(negativefittedValues(idx) ? false : true);
 
-  // bestFitAmplitudes.resize(restLineList.size());
   for (const auto &catalog : m_lineRatioCatalogs) {
 
-    TFloat64Map ampsCorrected;
-    Float64 fit = getFitForOneCatalog(restLineList, fittedAmplitudes,
+    TFloat64List ampsCorrected;
+    Float64 fit = getFitForOneCatalog(validLinesIndex, fittedAmplitudes,
                                       fittedErrors, catalog, ampsCorrected);
 
     if (fit > 0.0 && !std::isnan(fit) && (fit < coeffMin || coeffMin == -1.)) {
@@ -191,46 +198,42 @@ Float64 CLineCatalogsTplRatio::GetBestFit(const CLineMap &restLineList,
     return coeffMin;
 
   // fill the corrected amplitudes vector
-  Int32 iTplAmps = 0;
-  for (auto const &[id, amp] : bestFitAmplitudes) {
-    if (mask.at(id))
-      amplitudesCorrected.at(id) = amp;
+  for (Int32 idx = 0; idx != validLinesIndex.size(); ++idx) {
+    if (mask[idx])
+      amplitudesCorrected[idx] = bestFitAmplitudes[idx];
   }
 
   return coeffMin;
 }
 
 Float64 CLineCatalogsTplRatio::getFitForOneCatalog(
-    const CLineMap &restLineList, const TFloat64Map &fittedAmplitudes,
-    const TFloat64Map &fittedErrors, const CLineRatioCatalog &catalog,
-    TFloat64Map &ampsCorrected) const {
+    const TInt32List &validLinesIndex, const TFloat64List &fittedAmplitudes,
+    const TFloat64List &fittedErrors, const CLineRatioCatalog &catalog,
+    TFloat64List &ampsCorrected) const {
 
   if (fittedAmplitudes.empty())
     return NAN;
 
-  auto const &lineList = catalog.GetList();
   // create the amplitude float vectors
-  TFloat64Map tplratioAmplitudes;
-
-  for (auto const &[lineID, line] : restLineList) {
-
-    auto it = lineList.find(lineID);
-
-    if (it == lineList.end())
-      tplratioAmplitudes[lineID] = 0.0;
-    else
-      tplratioAmplitudes[lineID] = it->second.GetNominalAmplitude();
+  // This assumes lineratios and main linecat have all same keys
+  TFloat64List tplratioAmplitudes;
+  auto const &lineList = catalog.GetList();
+  auto it = lineList.cbegin();
+  Int32 lastIdx = 0;
+  for (auto idx : validLinesIndex) {
+    std::advance(it, idx - lastIdx);
+    lastIdx = idx;
+    tplratioAmplitudes.push_back(it->second.GetNominalAmplitude());
   }
 
-  // ampsCorrected = TFloat64List(linemodelAmplitudes.size());
   Float64 const fit = computeFitValue(fittedAmplitudes, fittedErrors,
                                       tplratioAmplitudes, ampsCorrected);
   return fit;
 }
 
 Float64 CLineCatalogsTplRatio::computeFitValue(
-    const TFloat64Map &ampsLM, const TFloat64Map &errLM,
-    const TFloat64Map &ampsTPL, TFloat64Map &ampsCorrected) const {
+    const TFloat64List &ampsLM, const TFloat64List &errLM,
+    const TFloat64List &ampsTPL, TFloat64List &ampsCorrected) const {
 
   Float64 N = ampsLM.size();
 
@@ -238,13 +241,13 @@ Float64 CLineCatalogsTplRatio::computeFitValue(
   // Float64 normalizeCoeff =
   //     std::accumulate(ampsLM.cbegin(), ampsLM.cend(), 0.0,
   //                     [](const Float64 previous, const auto &e) {
-  //                       return previous + e.second;
+  //                       return previous + e;
   //                     });
   // std::transform(ampsLM.cbegin(), ampsLM.cend(), ampsLM.begin(),
   //                [normalizeCoeff](auto &e) {
-  //                  return std::pair(e.first, e.second / normalizeCoeff);
+  //                  return e / normalizeCoeff);
   //                });
-  // for (auto &[_, amp] : ampsLM)
+  // for (auto &amp : ampsLM)
   //   amp /= normalizeCoeff;
 
   Float64 normalizeCoeff = 1.0;
@@ -255,14 +258,14 @@ Float64 CLineCatalogsTplRatio::computeFitValue(
   Float64 sumCross = 0.0;
   Float64 sumTPL2 = 0.0;
 
-  for (auto const &[id, _] : ampsLM) {
-    Float64 err2 = 1.0 / (errLM.at(id) * errLM.at(id));
+  for (Int32 i = 0; i != ampsLM.size(); ++i) {
+    Float64 err2 = 1.0 / (errLM[i] * errLM[i]);
 
-    sumCross += ampsLM.at(id) * ampsTPL.at(id) * err2;
-    sumTPL2 += ampsTPL.at(id) * ampsTPL.at(id) * err2;
+    sumCross += ampsLM[i] * ampsTPL[i] * err2;
+    sumTPL2 += ampsTPL[i] * ampsTPL[i] * err2;
 
-    sumLM += ampsLM.at(id) * err2;
-    sumTPL += ampsTPL.at(id) * err2;
+    sumLM += ampsLM[i] * err2;
+    sumTPL += ampsTPL[i] * err2;
   }
 
   if (sumCross == 0 || sumTPL2 == 0)
@@ -270,14 +273,15 @@ Float64 CLineCatalogsTplRatio::computeFitValue(
 
   Float64 ampl = sumCross / sumTPL2;
   Float64 fit = 0.0;
-  for (auto const &[id, _] : ampsLM) {
+  ampsCorrected.assign(ampsLM.size(), NAN);
+  for (Int32 i = 0; i != ampsLM.size(); ++i) {
     // compute the chi2
-    Float64 const err2 = 1.0 / (errLM.at(id) * errLM.at(id));
-    Float64 const diff = ampsLM.at(id) - ampl * ampsTPL.at(id);
+    Float64 const err2 = 1.0 / (errLM[i] * errLM[i]);
+    Float64 const diff = ampsLM[i] - ampl * ampsTPL[i];
     fit += diff * diff * err2;
 
     // fill the amps_corrected map
-    ampsCorrected.at(id) = ampsTPL.at(id) * ampl * normalizeCoeff;
+    ampsCorrected[i] = ampsTPL[i] * ampl * normalizeCoeff;
   }
 
   return fit;

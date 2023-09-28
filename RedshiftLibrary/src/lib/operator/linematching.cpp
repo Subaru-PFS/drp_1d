@@ -60,11 +60,11 @@ std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
     const CLineCatalog &restLineCatalog, const TFloat64Range &redshiftRange,
     Int32 nThreshold, Float64 tol, CLine::EType typeFilter,
     CLine::EForce detectedForceFilter, CLine::EForce restForceFilter) const {
-  auto const &detectedLineList =
+  auto const detectedLineList =
       detectedLineCatalog.GetFilteredList(typeFilter, detectedForceFilter);
-  auto const &restLineList =
+  auto const restLineList =
       restLineCatalog.GetFilteredList(typeFilter, restForceFilter);
-  auto redshiftGetter = getRedshift(detectedLineList, restLineList);
+  auto const redshiftGetter = getRedshift();
 
   CLineMatchingResult::TSolutionSetList solutions;
   Int32 const N = restLineList.size();
@@ -75,7 +75,7 @@ std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
       // for each detected line / rest line couple, enumerate how many other
       // couples fit within the tolerance
       CLineMatchingResult::TSolutionSet solution;
-      Float64 redShift = redshiftGetter(iDetectedLine, iRestLine);
+      Float64 redShift = redshiftGetter(DetectedLine, RestLine);
       if (redShift < 0) // we don't care about blueshifts.
         continue;
       solution.push_back(CLineMatchingResult::SSolution(
@@ -109,13 +109,11 @@ std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
   return result;
 }
 
-std::function<Float64(Int32, Int32)>
-CLineMatching::getRedshift(const CLineDetectedMap &detectedLineList,
-                           const CLineMap &restLineList) const {
-  return [&detectedLineList, &restLineList](Int32 idx, Int32 iRestLine) {
-    return (detectedLineList.at(idx).GetPosition() -
-            restLineList.at(iRestLine).GetPosition()) /
-           restLineList.at(iRestLine).GetPosition();
+std::function<Float64(CLineDetected const &, CLine const &)>
+CLineMatching::getRedshift() const {
+  return [](CLineDetected const &detectedLine, CLine const &restLine) {
+    return (detectedLine.GetPosition() - restLine.GetPosition()) /
+           restLine.GetPosition();
   };
 }
 
@@ -124,14 +122,14 @@ void CLineMatching::updateSolution(
     CLineMatchingResult::TSolutionSet &solution, // to update
     CLineDetectedMap const &detectedLineList,
     CLineMap const &restLineList) const {
-  auto redshiftGetter = getRedshift(detectedLineList, restLineList);
+  auto redshiftGetter = getRedshift();
 
   for (auto const &[iDetectedLine2, DetectedLine2] : detectedLineList) {
     if (iDetectedLine == iDetectedLine2)
       continue;
 
     for (auto const &[iRestLine2, RestLine2] : restLineList) {
-      Float64 redShift2 = redshiftGetter(iDetectedLine2, iRestLine2);
+      Float64 redShift2 = redshiftGetter(DetectedLine2, RestLine2);
       if (redShift2 < 0) // we don't care about blueshifts.
         continue;
       Float64 redshiftTolerance = tol * (1 + (redShift + redShift2) * 0.5);

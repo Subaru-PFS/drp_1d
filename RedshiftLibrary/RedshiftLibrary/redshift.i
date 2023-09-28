@@ -328,6 +328,7 @@ public:
 			Float64 velocityOffset,
 			bool enableVelocityFit,
 			Int32 line_id,
+      const std::string& strId,
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmcorrection=nullptr);
 
   void setLineAmplitude(Int32 line_id, Float64 nominalAmplitude);

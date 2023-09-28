@@ -86,38 +86,39 @@ CLineRatioManager::CLineRatioManager(
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
                                       const CLineMap &catalog) {
-  TInt32List idxEltIGM;
-  std::vector<TInt32List> idxLineIGM;
-  std::tie(idxEltIGM, idxLineIGM) = getElementList().getIgmLinesIndices();
+  auto const indices_Igm = getElementList().getIgmLinesIndices();
 
-  if (idxEltIGM.empty())
+  if (indices_Igm.empty())
     return;
 
   // assuming only one asymfit/fixed profile
-  Int32 idxLyaE = idxEltIGM.front();
-  Int32 idxLineLyaE = idxLineIGM.front().front();
+  auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
+  Int32 line_idx_LyaE = line_indices_LyaE.front();
 
   const auto &profile =
-      getElementList()[idxLyaE]->GetLines().at(idxLineLyaE).GetProfile();
+      getElementList()[elt_idx_LyaE]->GetLines()[line_idx_LyaE].GetProfile();
   if (profile->isAsym())
-    setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
+    setAsymProfile(elt_idx_LyaE, line_idx_LyaE, redshift, catalog);
 
-  for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
-    const auto &Elt = getElementList()[idxEltIGM[i]];
-    TInt32List &idxLine = idxLineIGM[i];
-    auto end = std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-      return !Elt->GetLines().at(idx).GetProfile()->isSymIgm();
-    });
-    idxLine.erase(end, idxLine.end());
-    if (!idxLine.empty())
-      setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
+  for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
+    const auto &elt = getElementList()[elt_idx_LyaE];
+    auto line_indices_filtered = line_indices_LyaE;
+    auto end =
+        std::remove_if(line_indices_filtered.begin(),
+                       line_indices_filtered.end(), [&elt](Int32 idx) {
+                         return !elt->GetLines()[idx].GetProfile()->isSymIgm();
+                       });
+    line_indices_filtered.erase(end, line_indices_filtered.end());
+    if (!line_indices_filtered.empty())
+      setSymIgmProfile(elt_idx_LyaE, line_indices_filtered, redshift);
   }
 }
 
 void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
                                        Float64 redshift,
                                        const CLineMap &catalog) {
-  auto const &ref_line = catalog.at(idxLineLyaE);
+  Int32 lineId = getElementList()[idxLyaE]->GetLines()[idxLineLyaE].GetID();
+  auto const &ref_line = catalog.at(lineId);
 
   // finding or setting the correct profile
   auto const &ref_profile = ref_line.GetProfile();

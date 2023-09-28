@@ -90,7 +90,7 @@ void CTplratioManager::SetTplratio_PriorHelper() {
 
 Int32 CTplratioManager::prepareFit(Float64 redshift) {
   m_logPriorDataTplRatio.clear();
-  m_savedIdxFitted = -1;
+  m_savedIdxFitted = undefIdx;
   Int32 ntplratio = m_CatalogTplRatio->GetCatalogsCount();
   initMerit(ntplratio);
   if (!m_tplratio_priorhelper->mInitFailed) {
@@ -159,17 +159,12 @@ void CTplratioManager::duplicateTplratioResult(Int32 idx) {
 }
 
 void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
-  // TODO: use the passed tplRatioCatalog
-  // TODO: check if m_CatalogTplRatio changes between iterations
 
   m_LineCatalogCorrespondingNominalAmp =
       m_CatalogTplRatio->InitLineCorrespondingAmplitudes(
-          opt_tplratio_ismFit, m_continuumManager->getIsmCorrectionFromTpl());
+          getElementList(), opt_tplratio_ismFit,
+          m_continuumManager->getIsmCorrectionFromTpl());
   m_opt_dust_calzetti = opt_tplratio_ismFit;
-  SetNominalAmplitudes(0);
-  // m_RestLineList = m_CatalogTplRatio->GetRestLinesList(0);
-  // LoadCatalog(m_RestLineList);
-  // LogCatalogInfos();
   m_tplratioBestTplName = undefStr;
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
   Int32 elCount = getElementList().size();
@@ -205,11 +200,12 @@ void CTplratioManager::SetNominalAmplitudes(Int32 iCatalog) {
   if (iCatalog < 0 || iCatalog >= m_CatalogTplRatio->GetCatalogsCount())
     THROWG(INTERNAL_ERROR, Formatter()
                                << "wrong line catalog index: " << iCatalog);
-  for (auto &elt : getElementList()) {
-    for (auto const &[id, _] : elt->GetLines()) {
+  for (Int32 elt_index = 0; elt_index != getElementList().size(); ++elt_index) {
+    auto &elt_ptr = getElementList()[elt_index];
+    for (Int32 line_index = 0; line_index != elt_ptr->GetSize(); ++line_index) {
       Float64 const nominalAmp =
-          m_LineCatalogCorrespondingNominalAmp[iCatalog].at(id);
-      elt->SetNominalAmplitude(id, nominalAmp);
+          m_LineCatalogCorrespondingNominalAmp[iCatalog][elt_index][line_index];
+      elt_ptr->SetNominalAmplitude(line_index, nominalAmp);
     }
   }
 }
@@ -301,15 +297,6 @@ const TInt32List &CTplratioManager::GetNLinesAboveSNRTplratio() const {
   return m_NLinesAboveSNRTplratio;
 }
 
-bool CTplratioManager::setTplratioAmplitude(const TFloat64List &ampsElts,
-                                            const TFloat64List &errorsElts) {
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-    getElementList()[iElts]->SetElementAmplitude(ampsElts[iElts],
-                                                 errorsElts[iElts]);
-  }
-  return true;
-}
-
 void CTplratioManager::SetLeastSquareFastEstimationEnabled(Int32 enabled) {
   m_tplratioLeastSquareFast = enabled;
 }
@@ -362,15 +349,15 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
     bool savedAmp = false;
     bool allampzero = true;
     auto const &elt = getElementList()[iElt];
-    for (auto const &[id, line] : elt->GetLines()) {
-      Float64 amp = elt->GetFittedAmplitude(id);
+    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
+      Float64 amp = elt->GetFittedAmplitude(line_idx);
       // we need to take into case where lineratioAmplitude is NAN
-      if (isnan(amp) || amp <= 0. || elt->IsOutsideLambdaRange(id))
+      if (isnan(amp) || amp <= 0. || elt->IsOutsideLambdaRange(line_idx))
         continue;
       allampzero = false;
 
-      Float64 amp_error = elt->GetFittedAmplitudeErrorSigma(id);
-      Float64 nominal_amp = elt->GetNominalAmplitude(id);
+      Float64 amp_error = elt->GetFittedAmplitudeErrorSigma(line_idx);
+      Float64 nominal_amp = elt->GetNominalAmplitude(line_idx);
       m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
       Log.LogDebug("    model : fit tplratio mode, tplratio_fittedamp: %e",
                    m_FittedAmpTplratio[idx][iElt]);
@@ -418,11 +405,11 @@ Float64 CTplratioManager::computelogLinePriorMerit(
   Float64 ampl = 0.0;
   for (const auto &elt : getElementList()) {
     bool foundAmp = false;
-    for (auto const &[id, line] : elt->GetLines()) {
-      Float64 amp = elt->GetFittedAmplitude(id);
-      if (amp <= 0. || elt->IsOutsideLambdaRange(id))
+    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
+      Float64 amp = elt->GetFittedAmplitude(line_idx);
+      if (amp <= 0. || elt->IsOutsideLambdaRange(line_idx))
         continue;
-      Float64 nominal_amp = elt->GetNominalAmplitude(id);
+      Float64 nominal_amp = elt->GetNominalAmplitude(line_idx);
       ampl = amp / nominal_amp;
       foundAmp = true;
       break;

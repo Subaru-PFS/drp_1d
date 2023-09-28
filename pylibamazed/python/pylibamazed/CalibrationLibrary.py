@@ -267,6 +267,7 @@ class CalibrationLibrary:
                                                                             row.WaveLengthOffset,
                                                                             row.EnableFitWaveLengthOffset,
                                                                             index,
+                                                                            row.strId,
                                                                             self.meiksin)
 
         enableIGM = self.parameters.get_solve_method_igm_fit(object_type, solve_method)

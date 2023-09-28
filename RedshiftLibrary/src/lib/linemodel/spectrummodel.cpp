@@ -527,9 +527,9 @@ std::unordered_set<std::string>
 CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
                                  Float64 snrcut) const {
 
-  auto isElementInvalid = [this](Int32 eIdx, Int32 line_id) {
-    return eIdx < 0 || line_id < 0 ||
-           m_Elements[eIdx]->IsOutsideLambdaRange(line_id);
+  auto isElementInvalid = [this](Int32 eIdx, Int32 line_index) {
+    return eIdx < 0 || line_index < 0 ||
+           m_Elements[eIdx]->IsOutsideLambdaRange(line_index);
   };
 
   const auto lineList = {linetags::halpha_em,   linetags::oIIIa_em,
@@ -541,6 +541,11 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
                                  "OII", "OII",   "CIII", "CIII"};
 
   std::unordered_set<std::string> str_above_cut;
+
+  TInt32List eIdx_oii;
+  TInt32List eIdx_ciii;
+  TInt32List subeIdx_oii;
+  TInt32List subeIdx_ciii;
 
   auto itLineNames = lineNames.begin();
   for (auto it = lineList.begin(), end = lineList.end(); it < end;
@@ -555,46 +560,42 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
     if (it2 == m_RestLineList.cend()) // did not find line
       continue;
 
-    Int32 line_id = it2->first;
+    auto const &[line_id, line] = *it2;
 
-    bool isEmission =
-        m_RestLineList.at(line_id).GetType() == CLine::EType::nType_Emission;
-    if (!isEmission) // non-sense since all elts in linelist are emission
-                     // lines
+    bool isEmission = line.GetType() == CLine::EType::nType_Emission;
+    if (!isEmission)
       continue;
 
-    Int32 eIdx = m_Elements.findElementIndex(line_id);
-    if (isElementInvalid(eIdx, line_id))
+    auto const &[eIdx, line_index] = m_Elements.findElementIndex(line_id);
+    if (isElementInvalid(eIdx, line_index))
       continue;
 
     Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(
-        line_id, m_inputSpc->GetSpectralAxis(), m_Redshift,
+        line_index, m_inputSpc->GetSpectralAxis(), m_Redshift,
         getContinuumFluxAxis(), m_enableAmplitudeOffsets);
     Float64 mu = NAN;
     Float64 sigma = NAN;
-    m_Elements[eIdx]->getObservedPositionAndLineWidth(line_id, m_Redshift, mu,
-                                                      sigma, false);
+    m_Elements[eIdx]->getObservedPositionAndLineWidth(line_index, m_Redshift,
+                                                      mu, sigma, false);
     Float64 fluxDI = NAN;
     Float64 snrDI = NAN;
     TInt32List eIdx_line(1, eIdx);
-    TInt32List eIdx_oii;
-    TInt32List eIdx_ciii;
-    TInt32List subeIdx_line(1, line_id);
-    TInt32List subeIdx_oii;
-    TInt32List subeIdx_ciii;
+    TInt32List subeIdx_line(1, line_index);
 
     bool opt_cont_substract_abslinesmodel = isEmission;
     if (lineTag == linetags::oII3726_em || lineTag == linetags::oII3729_em) {
       opt_cont_substract_abslinesmodel = false;
       eIdx_oii.push_back(eIdx);
-      subeIdx_oii.push_back(line_id);
+      subeIdx_oii.push_back(line_index);
       eIdx_line = eIdx_oii;
+      subeIdx_line = subeIdx_oii;
     };
     if (lineTag == linetags::cIII1907_em || lineTag == linetags::cIII1909_em) {
       opt_cont_substract_abslinesmodel = false;
       eIdx_ciii.push_back(eIdx);
-      subeIdx_ciii.push_back(line_id);
+      subeIdx_ciii.push_back(line_index);
       eIdx_line = eIdx_ciii;
+      subeIdx_line = subeIdx_ciii;
     }
     getFluxDirectIntegration(eIdx_line, subeIdx_line,
                              opt_cont_substract_abslinesmodel, fluxDI, snrDI,

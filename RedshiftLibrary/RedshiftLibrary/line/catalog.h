@@ -70,7 +70,7 @@ public:
   CLineCatalogBase &operator=(const CLineCatalogBase &other) = default;
   CLineCatalogBase &operator=(CLineCatalogBase &&other) = default;
 
-  void Add(const TLine &r, Int32 id) { m_List[id] = r; };
+  void Add(const TLine &r) { m_List[r.GetID()] = r; };
 
   const TLineMap &GetList() const { return m_List; };
   TLineMap
@@ -78,7 +78,7 @@ public:
                   CLine::EForce forceFilter = CLine::EForce::nForce_All) const;
   TLineMap GetFilteredList(const std::string &typeFilter,
                            const std::string &forceFilter) const;
-  static const std::map<std::string, TLineMap>
+  static const std::map<std::string, TLineVector>
   ConvertToGroupList(const TLineMap &filteredList);
 
   void setAsymProfileAndParams(const std::string &profile, TAsymParams params);
@@ -110,6 +110,7 @@ public:
       const TAsymParams &asymParams, const std::string &groupName,
       Float64 nominalAmplitude, const std::string &velocityGroup,
       Float64 velocityOffset, bool enableVelocityFit, Int32 id,
+      const std::string &str_id,
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection =
           nullptr);
 };

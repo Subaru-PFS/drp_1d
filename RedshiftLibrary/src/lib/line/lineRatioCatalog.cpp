@@ -47,7 +47,6 @@ CLineRatioCatalog::CLineRatioCatalog(const std::string &name,
   for (auto &[_, line] : m_List) {
     line.setNominalAmplitude(0.);
   }
-  // TODO set all nominalAmplitudes to 0
 }
 
 void CLineRatioCatalog::addVelocity(const std::string &name, Float64 value) {

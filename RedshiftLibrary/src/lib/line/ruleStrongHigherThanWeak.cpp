@@ -68,7 +68,7 @@ void CRuleStrongHigherThanWeak::SetUp(bool EnabledArgument, ...) {
  **/
 void CRuleStrongHigherThanWeak::Correct(
     CLineModelElementList &LineModelElementList) {
-  auto const [minStrongEltIndex, minStrongLineId] =
+  auto const [minStrongEltIndex, minStrongLineIndex] =
       FindLowestStrongLineIndex(LineModelElementList);
 
   // If no strong line was found, there is no correction to apply
@@ -79,10 +79,10 @@ void CRuleStrongHigherThanWeak::Correct(
   // Access strong line infos
   auto &minElement_ptr = LineModelElementList[minStrongEltIndex];
   Float64 erStrong =
-      minElement_ptr->GetFittedAmplitudeErrorSigma(minStrongLineId);
-  Float64 ampStrong = minElement_ptr->GetFittedAmplitude(minStrongLineId);
+      minElement_ptr->GetFittedAmplitudeErrorSigma(minStrongLineIndex);
+  Float64 ampStrong = minElement_ptr->GetFittedAmplitude(minStrongLineIndex);
   std::string nameStrong =
-      minElement_ptr->GetLines().at(minStrongLineId).GetName();
+      minElement_ptr->GetLines()[minStrongLineIndex].GetName();
   Float64 maxAmp = maxAmplitude(ampStrong, erStrong);
 
   for (Int32 iElement = 0; iElement < LineModelElementList.size(); iElement++) {
@@ -100,9 +100,10 @@ void CRuleStrongHigherThanWeak::correctLineModelElement(
     CLineModelElement &element, Float64 maxAmplitude,
     const std::string &nameStrong) {
 
-  for (auto const &[iLine, line] : element.GetLines()) {
+  for (Int32 iLine = 0; iLine != element.GetSize(); ++iLine) {
     if (element.IsOutsideLambdaRange(iLine))
       continue;
+    auto const &line = element.GetLines()[iLine];
     if (line.IsWeak()) {
       Float64 fittedAmplitude = element.GetFittedAmplitude(iLine);
       bool limited = element.LimitFittedAmplitude(iLine, maxAmplitude);
@@ -179,7 +180,9 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
   Float64 maxi = -1.0;
   for (Int32 iedx = 0; iedx < LineModelElementList.size(); iedx++) {
     const auto &element_ptr = LineModelElementList[iedx];
-    for (auto const &[iLineStrong, lineStrong] : element_ptr->GetLines()) {
+    for (Int32 iLineStrong = 0; iLineStrong != element_ptr->GetSize();
+         ++iLineStrong) {
+      auto const &lineStrong = element_ptr->GetLines()[iLineStrong];
       if (element_ptr->IsOutsideLambdaRange(iLineStrong) ||
           lineStrong.GetForce() != CLine::EForce::nForce_Strong ||
           element_ptr->GetElementType() != m_LineType) {
@@ -208,7 +211,8 @@ std::pair<Int32, Int32> CRuleStrongHigherThanWeak::FindLowestStrongLineIndex(
     if (element_ptr->GetElementType() != m_LineType)
       continue;
 
-    for (auto const &[iLine, line] : element_ptr->GetLines()) {
+    for (Int32 iLine = 0; iLine != element_ptr->GetSize(); ++iLine) {
+      auto const &line = element_ptr->GetLines()[iLine];
       if (element_ptr->IsOutsideLambdaRange(iLine))
         continue;
 

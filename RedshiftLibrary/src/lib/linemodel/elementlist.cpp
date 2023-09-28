@@ -134,11 +134,11 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
 
   std::map<std::string, TInt32List> tag_groups;
   for (auto iElts : nonZeroIndexes) {
-    for (const auto &[id, line] : m_Elements[iElts]->GetLines())
+    for (const auto &line : m_Elements[iElts]->GetLines())
       if (lineType == line.GetType()) {
         std::string tag = line.GetVelGroupName();
         if (tag == undefStr)
-          tag = "single_" + std::to_string(id);
+          tag = "single_" + line.GetStrID();
         tag_groups[tag].push_back(iElts);
       }
   }
@@ -176,15 +176,15 @@ TInt32List CLineModelElementList::getOverlappingElements(
     Float64 overlapThres) const {
   TInt32List indexes;
 
-  const auto &element_ref = *m_Elements[ind];
+  const auto &refElement = *m_Elements[ind];
 
-  if (element_ref.IsOutsideLambdaRange()) {
+  if (refElement.IsOutsideLambdaRange()) {
     indexes.push_back(ind);
     return indexes;
   }
 
-  auto const &linesRef = element_ref.GetLines();
-  auto const linetypeRef = element_ref.GetElementType();
+  auto const &refLinesList = refElement.GetLines();
+  auto const refLineType = refElement.GetElementType();
 
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
     const auto &element = *m_Elements[iElts];
@@ -195,7 +195,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
       continue;
     }
 
-    if (element.GetElementType() != linetypeRef)
+    if (element.GetElementType() != refLineType)
       continue;
 
     if (element.IsOutsideLambdaRange())
@@ -207,26 +207,29 @@ TInt32List CLineModelElementList::getOverlappingElements(
 
     auto const &linesElt = element.GetLines();
 
-    for (auto const &[iLineElt, line_elt] : element.GetLines()) {
-      if (element.IsOutsideLambdaRange(iLineElt))
+    for (Int32 eltLineIdx = 0; eltLineIdx != element.GetSize(); ++eltLineIdx) {
+      auto eltLine = element.GetLines()[eltLineIdx];
+      if (element.IsOutsideLambdaRange(eltLineIdx))
         continue;
-      for (auto [iLineRef, line_ref] : linesRef) {
-        if (element_ref.IsOutsideLambdaRange(iLineRef))
+      for (Int32 refLineIdx = 0; refLineIdx != refLinesList.size();
+           ++refLineIdx) {
+        auto const &refLine = refLinesList[refLineIdx];
+        if (refElement.IsOutsideLambdaRange(refLineIdx))
           continue;
-        const Float64 muRef = line_ref.GetPosition() * (1 + redshift);
+        const Float64 muRef = refLine.GetPosition() * (1 + redshift);
         const Float64 sigmaRef =
-            element_ref.GetLineWidth(muRef, line_ref.IsEmission());
+            refElement.GetLineWidth(muRef, refLine.IsEmission());
         const Float64 winsizeRef =
-            line_ref.GetProfile()->GetNSigmaSupport() * sigmaRef;
+            refLine.GetProfile()->GetNSigmaSupport() * sigmaRef;
         const Float64 overlapSizeMin = winsizeRef * overlapThres;
         const Float64 xinf = muRef - winsizeRef / 2.0;
         const Float64 xsup = muRef + winsizeRef / 2.0;
 
-        const Float64 muElt = line_elt.GetPosition() * (1 + redshift);
+        const Float64 muElt = eltLine.GetPosition() * (1 + redshift);
         const Float64 sigmaElt =
-            element.GetLineWidth(muElt, line_elt.IsEmission());
+            element.GetLineWidth(muElt, eltLine.IsEmission());
         const Float64 winsizeElt =
-            line_elt.GetProfile()->GetNSigmaSupport() * sigmaElt;
+            eltLine.GetProfile()->GetNSigmaSupport() * sigmaElt;
         const Float64 yinf = muElt - winsizeElt / 2.0;
         const Float64 ysup = muElt + winsizeElt / 2.0;
 
@@ -307,48 +310,51 @@ CLineModelElementList::findElementTypeIndices(CLine::EType type) const {
  *findElementIndex method with LineCatalogIndex argument does not return -1.
  * Returns also the line index
  **/
-Int32 CLineModelElementList::findElementIndex(Int32 line_id) const {
+std::pair<Int32, Int32>
+CLineModelElementList::findElementIndex(Int32 line_id) const {
+  Int32 elt_index = undefIdx;
+  Int32 line_index = undefIdx;
   auto it = std::find_if(begin(), end(), [line_id](auto const &elt_ptr) {
     return elt_ptr->hasLine(line_id);
   });
-  if (it == end())
-    return undefIdx;
-  else
-    return it - begin();
+  if (it != end()) {
+    elt_index = it - begin();
+    line_index = it->get()->getLineIndex(line_id);
+  }
+  return std::make_pair(elt_index, line_index);
 }
 
 std::pair<Int32, Int32>
 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
                                         CLine::EType linetype) const {
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-
-    auto [found, line_id] = m_Elements[iElts]->hasLine(LineTagStr);
-    if (!found)
-      continue;
-
-    if (linetype != CLine::EType::nType_All &&
-        m_Elements[iElts]->GetElementType() != linetype)
-      continue;
-
-    return make_pair(iElts, line_id);
+  Int32 elt_index = undefIdx;
+  Int32 line_index = undefIdx;
+  auto it = std::find_if(begin(), end(),
+                         [&LineTagStr, &linetype](auto const &elt_ptr) {
+                           return elt_ptr->hasLine(LineTagStr) &&
+                                  (linetype == CLine::EType::nType_All ||
+                                   elt_ptr->GetElementType() == linetype);
+                         });
+  if (it != end()) {
+    elt_index = it - begin();
+    line_index = it->get()->getLineIndex(LineTagStr);
   }
-  return make_pair(undefIdx, undefIdx);
+  return std::make_pair(elt_index, line_index);
 }
 
 // first element returned is the list of element indices, then all remaining
 // elts are the list of line indices, for each element listed.
-std::tuple<TInt32List, std::vector<TInt32List>>
+std::vector<std::pair<Int32, TInt32List>>
 CLineModelElementList::getIgmLinesIndices() const {
-  TInt32List EltsIdxList;
-  std::vector<TInt32List> lineIdxList;
-  for (Int32 iElts = 0; iElts < m_Elements.size(); ++iElts) {
-    TInt32List lineIdx = m_Elements[iElts]->getIgmLinesIndices();
-    if (!lineIdx.empty()) {
-      EltsIdxList.push_back(iElts);
-      lineIdxList.push_back(std::move(lineIdx));
-    }
+
+  std::vector<std::pair<Int32, TInt32List>> indices;
+
+  for (Int32 elt_idx = 0; elt_idx < m_Elements.size(); ++elt_idx) {
+    TInt32List const &line_indices = m_Elements[elt_idx]->getIgmLinesIndices();
+    if (!line_indices.empty())
+      indices.push_back({elt_idx, line_indices});
   }
-  return std::make_tuple(std::move(EltsIdxList), std::move(lineIdxList));
+  return indices;
 }
 
 /**
@@ -452,11 +458,13 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
 
   TInt32List validEltsIdx = GetModelValidElementsIndexes();
   for (Int32 iElts : validEltsIdx) {
-    for (auto const &[id, line] : m_Elements[iElts]->GetLines()) {
+    auto const &elt = m_Elements[iElts];
+    for (Int32 index = 0; index != elt->GetSize(); ++index) {
+      auto const &line = elt->GetLines()[index];
       if (!line.IsEmission() || !line.IsStrong())
         continue;
 
-      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(id);
+      Float64 amp = elt->GetFittedAmplitude(index);
       if (amp > 0.0) {
         Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found "
                      "Strong EL: %s",
@@ -480,12 +488,13 @@ bool CLineModelElementList::GetModelHaStrongest() const {
 
   TInt32List validEltsIdx = GetModelValidElementsIndexes();
   for (Int32 iElts : validEltsIdx) {
-    for (auto const &[id, line] : m_Elements[iElts]->GetLines()) {
-      if (!line.IsEmission()) {
+    auto const &elt = m_Elements[iElts];
+    for (Int32 index = 0; index != elt->GetSize(); ++index) {
+      auto const &line = elt->GetLines()[index];
+      if (!line.IsEmission())
         continue;
-      }
 
-      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(id);
+      Float64 amp = elt->GetFittedAmplitude(index);
       if (amp > 0. && amp > ampMax) {
         ampMaxLineTag = line.GetName().c_str();
         ampMax = amp;

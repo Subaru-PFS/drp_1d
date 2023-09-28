@@ -251,7 +251,7 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
 }
 Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
 
-void CLineModelFitting::AddElement(CLineMap lines, Float64 velocityEmission,
+void CLineModelFitting::AddElement(CLineVector lines, Float64 velocityEmission,
                                    Float64 velocityAbsorption, Int32 ig) {
   if (*m_curObs == 0) {
     m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
@@ -296,7 +296,13 @@ void CLineModelFitting::LoadCatalogOneMultiline() {
   Float64 const velocityAbsorption =
       ps->GetScoped<Float64>("velocityabsorption");
 
-  AddElement(m_RestLineList, velocityEmission, velocityAbsorption, 0);
+  CLineVector RestLineVector;
+  RestLineVector.reserve(m_RestLineList.size());
+  for (auto const &[_, line] : m_RestLineList)
+    RestLineVector.push_back(line);
+
+  AddElement(std::move(RestLineVector), velocityEmission, velocityAbsorption,
+             0);
 }
 
 void CLineModelFitting::LoadCatalogTwoMultilinesAE() {
@@ -312,10 +318,10 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE() {
 
   Int32 lastEltIndex = 0;
   for (auto type : types) {
-    CLineMap lines;
+    CLineVector lines;
     for (auto const &[id, line] : m_RestLineList) {
       if (line.GetType() == type)
-        lines[id] = line;
+        lines.push_back(line);
     }
 
     if (lines.size() > 0) {
@@ -340,13 +346,13 @@ void CLineModelFitting::LogCatalogInfos() {
       Log.LogDetail("LineModel ctlg: elt %d (%s): no lines", iElts,
                     CLine::ETypeString.at(elt->GetElementType()).c_str());
     }
-    for (auto const &[id, line] : elt->GetLines()) {
+    for (Int32 index = 0; index != elt->GetSize(); ++index) {
       std::string nominalAmpStr = "";
       nominalAmpStr = boost::str(boost::format("(nominal amp = %.4e)") %
-                                 elt->GetNominalAmplitude(id));
+                                 elt->GetNominalAmplitude(index));
       Log.LogDetail("LineModel ctlg: elt %d (%s): line %d = %s %s", iElts,
-                    CLine::ETypeString.at(elt->GetElementType()).c_str(), id,
-                    elt->GetLineName(id).c_str(), nominalAmpStr.c_str());
+                    CLine::ETypeString.at(elt->GetElementType()).c_str(), index,
+                    elt->GetLineName(index).c_str(), nominalAmpStr.c_str());
     }
   }
   Log.LogDetail("\n");
@@ -693,11 +699,12 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const {
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   for (Int32 iElts : validEltsIdx) {
     auto const &elt = getElementList()[iElts];
-    for (auto const &[id, line] : elt->GetLines()) {
+    for (Int32 index = 0; index != elt->GetSize(); ++index) {
+      auto const &line = elt->GetLines()[index];
       if (!line.IsEmission())
         continue;
 
-      Float64 const amp = elt->GetFittedAmplitude(id);
+      Float64 const amp = elt->GetFittedAmplitude(index);
       sumAmps += amp;
       if (line.IsStrong()) {
         AmpsStrong.push_back(amp);
@@ -725,11 +732,12 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   for (Int32 iElts : validEltsIdx) {
     auto const &elt = getElementList()[iElts];
-    for (auto const &[id, line] : elt->GetLines()) {
+    for (Int32 index = 0; index != elt->GetSize(); ++index) {
+      auto const &line = elt->GetLines()[index];
       if (!line.IsStrong() || !line.IsEmission())
         continue;
 
-      TInt32Range support = elt->getTheoreticalSupportSubElt(id);
+      TInt32Range support = elt->getTheoreticalSupportSubElt(index);
       supportList.push_back(support);
     }
   }
@@ -839,27 +847,30 @@ void CLineModelFitting::LoadModelSolution(
 
   setRedshift(modelSolution.Redshift, false);
 
-  if (m_enableAmplitudeOffsets)
-    getElementList().resetAmplitudeOffset();
+  auto &eltList = getElementList();
 
-  TBoolList element_done(getElementList().size(), false);
+  if (m_enableAmplitudeOffsets)
+    eltList.resetAmplitudeOffset();
+
+  TBoolList element_done(eltList.size(), false);
   for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue;
     Int32 line_id = modelSolution.lineId[iRestLine];
-    auto const &elt = getElementList()[eIdx];
-    if (!elt->hasLine(line_id))
+    auto const &elt = eltList[eIdx];
+    Int32 elt_line_index = elt->getLineIndex(line_id);
+    if (elt_line_index == undefIdx)
       continue; // or throw an exception ?
 
     if (modelSolution.OutsideLambdaRange[iRestLine]) {
-      elt->SetOutsideLambdaRangeList(line_id);
+      elt->SetOutsideLambdaRangeList(elt_line_index);
       continue;
     }
 
-    elt->SetFittedAmplitude(line_id, modelSolution.Amplitudes[iRestLine],
+    elt->SetFittedAmplitude(elt_line_index, modelSolution.Amplitudes[iRestLine],
                             modelSolution.AmplitudesUncertainties[iRestLine]);
-    elt->SetOffset(line_id, modelSolution.Offset[iRestLine]);
+    elt->SetOffset(elt_line_index, modelSolution.Offset[iRestLine]);
 
     if (element_done[eIdx])
       continue;
@@ -882,28 +893,28 @@ void CLineModelFitting::LoadModelSolution(
       !std::isnan(modelSolution.LyaDelta)) {
 
     std::string lyaTag = linetags::lya_em;
-    auto const [idxLyaE, _] = getElementList().findElementIndex(lyaTag);
+    auto const [idxLyaE, _] = eltList.findElementIndex(lyaTag);
     if (idxLyaE != undefIdx)
-      getElementList()[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
-                                                   modelSolution.LyaAlpha,
-                                                   modelSolution.LyaDelta});
+      eltList[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
+                                          modelSolution.LyaAlpha,
+                                          modelSolution.LyaDelta});
   }
 
   if (modelSolution.LyaIgm != undefIdx) {
-    const auto &[idxEltIGM, _] = getElementList().getIgmLinesIndices();
-    if (!idxEltIGM.empty())
-      for (auto const iElt : idxEltIGM)
-        getElementList()[iElt]->SetSymIgmParams(
+    auto const indices_Igm = eltList.getIgmLinesIndices();
+    if (!indices_Igm.empty())
+      for (auto const &[elt_idx, _] : indices_Igm)
+        eltList[elt_idx]->SetSymIgmParams(
             {modelSolution.LyaIgm, modelSolution.Redshift});
   }
 
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-    getElementList()[iElts]->SetOutsideLambdaRange();
+  for (Int32 iElts = 0; iElts < eltList.size(); iElts++) {
+    eltList[iElts]->SetOutsideLambdaRange();
 
-    if (!getElementList()[iElts]->IsOutsideLambdaRange())
-      getElementList()[iElts]->prepareSupport(
-          spectralAxis, modelSolution.Redshift, getLambdaRange());
+    if (!eltList[iElts]->IsOutsideLambdaRange())
+      eltList[iElts]->prepareSupport(spectralAxis, modelSolution.Redshift,
+                                     getLambdaRange());
   }
 
   return;
@@ -918,7 +929,10 @@ void CLineModelFitting::LoadModelSolution(
 CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
-  modelSolution.nDDL = getElementList().GetModelNonZeroElementsNDdl();
+
+  auto const &eltList = getElementList();
+
+  modelSolution.nDDL = eltList.GetModelNonZeroElementsNDdl();
 
   modelSolution.EmissionVelocity = m_ElementParam[0]->m_VelocityEmission;
   modelSolution.AbsorptionVelocity = m_ElementParam[0]->m_VelocityAbsorption;
@@ -935,25 +949,23 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
 
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 line_id = modelSolution.lineId[iRestLine];
-    Int32 eIdx = getElementList().findElementIndex(line_id);
+    auto const &line = m_RestLineList.at(line_id);
+    auto [eIdx, line_index] = eltList.findElementIndex(line_id);
     modelSolution.ElementId[iRestLine] = eIdx;
-    if (eIdx == undefIdx || line_id == undefIdx ||
-        getElementList()[eIdx]->IsOutsideLambdaRange(line_id)) {
+    if (eIdx == undefIdx || line_index == undefIdx ||
+        eltList[eIdx]->IsOutsideLambdaRange(line_index)) {
       continue; // data already set to its default values
     }
 
-    Float64 amp = getElementList()[eIdx]->GetFittedAmplitude(line_id);
+    Float64 amp = eltList[eIdx]->GetFittedAmplitude(line_index);
     modelSolution.Amplitudes[iRestLine] = amp;
-    Float64 ampError =
-        getElementList()[eIdx]->GetFittedAmplitudeErrorSigma(line_id);
+    Float64 ampError = eltList[eIdx]->GetFittedAmplitudeErrorSigma(line_index);
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
 
     modelSolution.LambdaObs[iRestLine] =
-        getElementList()[eIdx]->GetObservedPosition(line_id,
-                                                    modelSolution.Redshift);
-    modelSolution.Velocity[iRestLine] = getElementList()[eIdx]->getVelocity();
-    modelSolution.Offset[iRestLine] =
-        getElementList()[eIdx]->GetOffset(line_id);
+        eltList[eIdx]->GetObservedPosition(line_index, modelSolution.Redshift);
+    modelSolution.Velocity[iRestLine] = eltList[eIdx]->getVelocity();
+    modelSolution.Offset[iRestLine] = eltList[eIdx]->GetOffset(line_index);
 
     if (opt_level) // brief, to save processing time, do not estimate fluxes
                    // and high level line properties
@@ -962,22 +974,22 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
           getSpectrumModel().getModelErrorUnderElement(
               eIdx, getSpectrumModel().getSpcFluxAxis());
       if (m_enableAmplitudeOffsets) {
-        const auto &polynom_coeffs = getElementList().getPolynomCoeffs(eIdx);
+        const auto &polynom_coeffs = eltList.getPolynomCoeffs(eIdx);
         modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
         modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
         modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
       }
 
-      Float64 cont = getElementList()[eIdx]->GetContinuumAtCenterProfile(
-          line_id, getSpectrum().GetSpectralAxis(), modelSolution.Redshift,
+      Float64 cont = eltList[eIdx]->GetContinuumAtCenterProfile(
+          line_index, getSpectrum().GetSpectralAxis(), modelSolution.Redshift,
           getSpectrumModel().getContinuumFluxAxis(), m_enableAmplitudeOffsets);
       modelSolution.CenterContinuumFlux[iRestLine] = cont;
       modelSolution.ContinuumError[iRestLine] =
-          getSpectrumModel().GetContinuumError(eIdx, line_id);
+          getSpectrumModel().GetContinuumError(eIdx, line_index);
       Float64 mu = NAN;
       Float64 sigma = NAN;
-      getElementList()[eIdx]->getObservedPositionAndLineWidth(
-          line_id, modelSolution.Redshift, mu, sigma,
+      eltList[eIdx]->getObservedPositionAndLineWidth(
+          line_index, modelSolution.Redshift, mu, sigma,
           false); // do not apply Lya asym offset
 
       Float64 flux = NAN;
@@ -985,11 +997,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
       Float64 fluxDI = NAN;
       Float64 snrDI = NAN;
       TInt32List eIdx_line(1, eIdx);
-      TInt32List subeIdx_line(1, line_id);
+      TInt32List subeIdx_line(1, line_index);
       Int32 opt_cont_substract_abslinesmodel = 0;
       bool isEmission = false;
-      if (m_RestLineList.at(line_id).GetType() ==
-          CLine::EType::nType_Emission) {
+      if (line.GetType() == CLine::EType::nType_Emission) {
         opt_cont_substract_abslinesmodel = 1;
         isEmission = true;
       }
@@ -1001,7 +1012,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
           amp *= cont;
           ampError *= cont;
         }
-        const auto &profile = getElementList()[eIdx]->getLineProfile(line_id);
+        const auto &profile = eltList[eIdx]->getLineProfile(line_index);
 
         Float64 lineFlux = profile->GetLineFlux(mu, sigma);
         flux = amp * lineFlux;
@@ -1018,12 +1029,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
           std::abs(fluxDI) / snrDI;
 
       // sum Ha complex fluxes
-      if (isEmission &&
-          (m_RestLineList.at(line_id).GetName() == linetags::halpha_em ||
-           m_RestLineList.at(line_id).GetName() == linetags::niia_em ||
-           m_RestLineList.at(line_id).GetName() == linetags::niib_em)) {
+      if (isEmission && (line.GetName() == linetags::halpha_em ||
+                         line.GetName() == linetags::niia_em ||
+                         line.GetName() == linetags::niib_em)) {
         eIdx_ha.push_back(eIdx);
-        subeIdx_ha.push_back(line_id);
+        subeIdx_ha.push_back(line_index);
         if (flux > 0.0)
           flux_ha += flux;
         if (fluxError > 0.0)
@@ -1044,11 +1054,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
       }
 
       // sum OII doublet fluxes
-      if (isEmission &&
-          (m_RestLineList.at(line_id).GetName() == linetags::oII3726_em ||
-           m_RestLineList.at(line_id).GetName() == linetags::oII3729_em)) {
+      if (isEmission && (line.GetName() == linetags::oII3726_em ||
+                         line.GetName() == linetags::oII3729_em)) {
         eIdx_oii.push_back(eIdx);
-        subeIdx_oii.push_back(line_id);
+        subeIdx_oii.push_back(line_index);
         if (flux > 0.0)
           flux_oii += flux;
         if (fluxError > 0.0)
@@ -1071,20 +1080,20 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
     }
 
     modelSolution.fittingGroupInfo[iRestLine] =
-        getElementList()[eIdx]->GetFittingGroupInfo();
+        eltList[eIdx]->GetFittingGroupInfo();
     modelSolution.OutsideLambdaRange[iRestLine] =
-        getElementList()[eIdx]->IsOutsideLambdaRange(line_id);
+        eltList[eIdx]->IsOutsideLambdaRange(line_index);
   }
 
   // retrieve Lya params if fitted
   std::string lyaTag = linetags::lya_em;
-  auto const [idxLyaE, _] = getElementList().findElementIndex(lyaTag);
+  auto const [idxLyaE, _] = eltList.findElementIndex(lyaTag);
   if (idxLyaE != undefIdx) {
-    TAsymParams params = getElementList()[idxLyaE]->GetAsymfitParams(0);
+    TAsymParams params = eltList[idxLyaE]->GetAsymfitParams(0);
     modelSolution.LyaWidthCoeff = params.sigma;
     modelSolution.LyaAlpha = params.alpha;
     modelSolution.LyaDelta = params.delta;
-    TSymIgmParams params_igm = getElementList()[idxLyaE]->GetSymIgmParams(0);
+    TSymIgmParams params_igm = eltList[idxLyaE]->GetSymIgmParams(0);
     modelSolution.LyaIgm = params_igm.m_igmidx;
   }
 

@@ -65,9 +65,7 @@ CLineCatalogBase<TLine>::GetFilteredList(CLine::EType typeFilter,
 
   TLineMap filteredList;
 
-  for (const auto &it : m_List) {
-    const auto &id = it.first;
-    const auto &line = it.second;
+  for (const auto &[id, line] : m_List) {
     if ((typeFilter == CLine::EType::nType_All ||
          typeFilter == line.GetType()) &&
         (forceFilter == CLine::EForce::nForce_All ||
@@ -90,21 +88,18 @@ CLineCatalogBase<TLine>::GetFilteredList(const std::string &typeFilter,
 }
 
 template <typename TLine>
-const std::map<std::string, typename CLineCatalogBase<TLine>::TLineMap>
+const std::map<std::string, typename CLineCatalogBase<TLine>::TLineVector>
 CLineCatalogBase<TLine>::ConvertToGroupList(
     const CLineCatalogBase<TLine>::TLineMap &filteredList) {
 
-  std::map<std::string, TLineMap> fullList;
+  std::map<std::string, TLineVector> fullList;
 
-  for (const auto &it : filteredList) {
-    const auto &line = it.second;
-    const auto &id = it.first;
+  for (const auto &[_, line] : filteredList) {
     auto group_name = line.GetGroupName();
     if (group_name == undefStr)
       // non grouped lines are added in dedicated maps (one element)
-      group_name = "single_" + std::to_string(id);
-
-    fullList[group_name][id] = line;
+      group_name = "single_" + line.GetStrID();
+    fullList[group_name].push_back(line);
   }
 
   return fullList;
@@ -116,6 +111,7 @@ void CLineCatalog::AddLineFromParams(
     const TAsymParams &asymParams, const std::string &groupName,
     Float64 nominalAmplitude, const std::string &velocityGroup,
     Float64 velocityOffset, bool enableVelocityFit, Int32 id,
+    const std::string &str_id,
     const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection) {
 
   const auto &etype = CLine::string2Type(type);
@@ -149,8 +145,8 @@ void CLineCatalog::AddLineFromParams(
   }
 
   Add(CLine(name, position, etype, std::move(profile), eforce, velocityOffset,
-            enableVelocityFit, groupName, nominalAmplitude, velocityGroup),
-      id);
+            enableVelocityFit, groupName, nominalAmplitude, velocityGroup, id,
+            str_id));
 }
 
 template <typename TLine>

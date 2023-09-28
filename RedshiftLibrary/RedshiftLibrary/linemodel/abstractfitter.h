@@ -106,7 +106,7 @@ protected:
 
   Float64 getLeastSquareMeritFast(Int32 eltIdx = undefIdx) const;
 
-  void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
+  void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount);
 
   bool HasLambdaOffsetFitting(TInt32List EltsIdx,
                               bool enableOffsetFitting) const;
@@ -119,7 +119,7 @@ protected:
   CLineModelElementList &getElementList() {
     return (*m_ElementsVector)[*m_curObs];
   }
-  CLineModelElementList &getElementList() const {
+  const CLineModelElementList &getElementList() const {
     return (*m_ElementsVector)[*m_curObs];
   }
   CLMEltListVectorPtr m_ElementsVector;

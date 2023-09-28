@@ -168,7 +168,7 @@ public:
   CLineModelElementList &getElementList() {
     return (*m_ElementsVector)[*m_curObs];
   }
-  CLineModelElementList &getElementList() const {
+  const CLineModelElementList &getElementList() const {
     return (*m_ElementsVector)[*m_curObs];
   }
 
@@ -208,7 +208,7 @@ public:
   Float64 m_LambdaOffsetStep = 25.0;
 
 private:
-  void AddElement(CLineMap lines, Float64 velocityEmission,
+  void AddElement(CLineVector lines, Float64 velocityEmission,
                   Float64 velocityAbsorption, Int32 ig);
   void LoadCatalog();
   void LoadCatalogOneMultiline();

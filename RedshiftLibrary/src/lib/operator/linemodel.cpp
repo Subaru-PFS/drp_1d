@@ -86,11 +86,6 @@ void COperatorLineModel::ComputeFirstPass() {
 
   makeTFOperator(m_Redshifts);
   if (!m_templateFittingOperator->IsFFTProcessing()) {
-    // cast from TFbase to  TF or TFPhot
-    /* std::shared_ptr<COperatorTemplateFitting> derived =
-         std::dynamic_pointer_cast<COperatorTemplateFitting>(
-             m_templateFittingOperator);*/
-
     m_fittingManager =
         std::make_shared<CLineModelFitting>(m_templateFittingOperator);
   } else { // create a default

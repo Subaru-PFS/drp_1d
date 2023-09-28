@@ -69,12 +69,12 @@ public:
       Float64 sigma_support, const CSpectrumSpectralAxis &spectralAxis,
       const TFloat64Range &lambdaRange, Float64 redshift) const;
 
-  std::tuple<TInt32List, std::vector<TInt32List>> getIgmLinesIndices() const;
+  std::vector<std::pair<Int32, TInt32List>> getIgmLinesIndices() const;
 
   std::pair<Int32, Int32>
   findElementIndex(const std::string &LineTagStr,
                    CLine::EType linetype = CLine::EType::nType_All) const;
-  Int32 findElementIndex(Int32 line_id) const;
+  std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
   TInt32List findElementTypeIndices(CLine::EType type) const;
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
