@@ -121,7 +121,10 @@ void CAbstractFitter::fit(Float64 redshift) {
 };
 
 void CAbstractFitter::initFit(Float64 redshift) {
-  resetSupport(redshift);
+  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    resetSupport(redshift);
+  }
+  *m_curObs = 0;
 
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
@@ -206,14 +209,74 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
 
 void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
                                    Int32 lineIdx) {
-  const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-  const CSpectrumFluxAxis &noContinuumfluxAxis =
-      getModel().getSpcFluxAxisNoContinuum();
-  const CSpectrumFluxAxis &continuumfluxAxis =
-      getModel().getContinuumFluxAxis();
 
-  getElementList()[eltIndex]->fitAmplitude(
-      redshift, spectralAxis, noContinuumfluxAxis, continuumfluxAxis, lineIdx);
+  bool allOutsideLambdaRange = true;
+  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    if (!getElementList()[eltIndex]->IsOutsideLambdaRange()) {
+      allOutsideLambdaRange = false;
+    }
+  }
+  *m_curObs = 0;
+  if (allOutsideLambdaRange) {
+
+    m_ElementParam[eltIndex]->m_sumCross = NAN;
+    m_ElementParam[eltIndex]->m_sumGauss = NAN;
+    m_ElementParam[eltIndex]->m_dtmFree = NAN;
+    return;
+  }
+
+  Int32 nLines = getElementList()[eltIndex]->GetSize();
+  m_ElementParam[eltIndex]->m_sumCross = 0.;
+  m_ElementParam[eltIndex]->m_sumGauss = 0.;
+  m_ElementParam[eltIndex]->m_dtmFree = 0.;
+
+  m_ElementParam[eltIndex]->m_FittedAmplitudes.assign(nLines, NAN);
+  m_ElementParam[eltIndex]->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+
+  Int32 num = 0;
+  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
+    const CSpectrumFluxAxis &noContinuumfluxAxis =
+        getModel().getSpcFluxAxisNoContinuum();
+    const CSpectrumFluxAxis &continuumfluxAxis =
+        getModel().getContinuumFluxAxis();
+
+    num += getElementList()[eltIndex]->computeCrossProducts(
+        redshift, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
+        lineIdx);
+  }
+  *m_curObs = 0;
+  if (num == 0 || m_ElementParam[eltIndex]->m_sumGauss == 0) {
+    Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
+                 " num=%d, mtm=%f",
+                 num, m_ElementParam[eltIndex]->m_sumGauss);
+    m_ElementParam[eltIndex]->m_sumGauss = NAN;
+    m_ElementParam[eltIndex]->m_dtmFree = NAN;
+    m_ElementParam[eltIndex]->m_sumCross = NAN;
+    return;
+  }
+
+  bool allNaN = true;
+  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    if (!std::isnan(getElementList()[eltIndex]->GetSumGauss())) {
+      allNaN = false;
+    }
+  }
+  *m_curObs = 0;
+
+  if (allNaN) {
+    m_ElementParam[eltIndex]->m_sumCross = NAN;
+    return;
+  }
+  m_ElementParam[eltIndex]->m_sumCross =
+      std::max(0.0, m_ElementParam[eltIndex]->m_dtmFree);
+  Float64 A = m_ElementParam[eltIndex]->m_sumCross /
+              m_ElementParam[eltIndex]->m_sumGauss;
+
+  getElementList()[eltIndex]->SetElementAmplitude(
+      A, 1.0 / sqrt(m_ElementParam[eltIndex]->m_sumGauss));
+
+  return;
 }
 
 void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,

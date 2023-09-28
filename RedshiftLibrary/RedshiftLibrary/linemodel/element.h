@@ -74,6 +74,10 @@ struct TLineModelElementParam {
   TInt32Map m_LinesIds;
   std::string m_fittingGroupInfo;
   TPolynomCoeffs m_ampOffsetsCoeffs;
+  Float64 m_sumCross = 0.0;
+  Float64 m_sumGauss = 0.0;
+  Float64 m_dtmFree =
+      0.0; // dtmFree is the non-positive-constrained version of sumCross
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -269,11 +273,6 @@ protected:
   Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;
 
-  Float64 m_sumCross = 0.0;
-  Float64 m_sumGauss = 0.0;
-  Float64 m_dtmFree =
-      0.0; // dtmFree is the non-positive-constrained version of sumCross
-
   const Float64 m_speedOfLightInVacuum = SPEED_OF_LIGHT_IN_VACCUM;
   std::shared_ptr<const CLSF> m_LSF;
 
@@ -457,17 +456,29 @@ CLineModelElement::GetSymIgmParams(Int32 asym_line_index) const {
       .GetSymIgmParams();
 }
 
-inline Float64 CLineModelElement::GetSumCross() const { return m_sumCross; }
+inline Float64 CLineModelElement::GetSumCross() const {
+  return m_ElementParam->m_sumCross;
+}
 
-inline void CLineModelElement::SetSumCross(Float64 val) { m_sumCross = val; }
+inline void CLineModelElement::SetSumCross(Float64 val) {
+  m_ElementParam->m_sumCross = val;
+}
 
-inline Float64 CLineModelElement::GetDtmFree() const { return m_dtmFree; }
+inline Float64 CLineModelElement::GetDtmFree() const {
+  return m_ElementParam->m_dtmFree;
+}
 
-inline void CLineModelElement::SetDtmFree(Float64 val) { m_dtmFree = val; }
+inline void CLineModelElement::SetDtmFree(Float64 val) {
+  m_ElementParam->m_dtmFree = val;
+}
 
-inline Float64 CLineModelElement::GetSumGauss() const { return m_sumGauss; }
+inline Float64 CLineModelElement::GetSumGauss() const {
+  return m_ElementParam->m_sumGauss;
+}
 
-inline void CLineModelElement::SetSumGauss(Float64 val) { m_sumGauss = val; }
+inline void CLineModelElement::SetSumGauss(Float64 val) {
+  m_ElementParam->m_sumGauss = val;
+}
 
 inline const std::string &CLineModelElement::GetFittingGroupInfo() const {
   return m_ElementParam->m_fittingGroupInfo;

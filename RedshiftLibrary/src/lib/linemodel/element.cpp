@@ -117,9 +117,9 @@ void CLineModelElement::reset() {
   m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(GetSize(), NAN);
 
   SetFittingGroupInfo(undefStr);
-  m_sumGauss = NAN;
-  m_sumCross = NAN;
-  m_dtmFree = NAN;
+  m_ElementParam->m_sumGauss = NAN;
+  m_ElementParam->m_sumCross = NAN;
+  m_ElementParam->m_dtmFree = NAN;
 }
 
 Int32 CLineModelElement::getLineIndex(Int32 line_id) const {
@@ -1012,9 +1012,9 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
   os << "m_VelocityAbsorption\t" << getVelocityAbsorption() << "\n";
   os << "m_OutsideLambdaRangeOverlapThreshold\t"
      << m_OutsideLambdaRangeOverlapThreshold << "\n";
-  os << "m_sumCross\t" << m_sumCross << "\n";
-  os << "m_sumGauss\t" << m_sumGauss << "\n";
-  os << "m_dtmFree\t" << m_dtmFree << "\n";
+  os << "m_sumCross\t" << m_ElementParam->m_sumCross << "\n";
+  os << "m_sumGauss\t" << m_ElementParam->m_sumGauss << "\n";
+  os << "m_dtmFree\t" << m_ElementParam->m_dtmFree << "\n";
 
   os << "m_absLinesLimit\t" << m_absLinesLimit << "\n";
 
@@ -1044,7 +1044,7 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
     os << i << "\t" << m_asymLineIndices[i] << "\n";
 }
 
-void CLineModelElement::computeCrossProducts(
+Int32 CLineModelElement::computeCrossProducts(
     Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
     const CSpectrumFluxAxis &noContinuumfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index) {
@@ -1090,18 +1090,12 @@ void CLineModelElement::computeCrossProducts(
       }
       num++;
       err2 = 1.0 / (error[i] * error[i]);
-      m_dtmFree += yg * y * err2;
-      m_sumGauss += yg * yg * err2;
+      m_ElementParam->m_dtmFree += yg * y * err2;
+      m_ElementParam->m_sumGauss += yg * yg * err2;
     }
   }
 
-  if (num == 0 || m_sumGauss == 0) {
-    Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
-                 " num=%d, mtm=%f",
-                 num, m_sumGauss);
-    m_sumGauss = NAN;
-    m_dtmFree = NAN;
-  }
+  return num;
 }
 
 void CLineModelElement::fitAmplitude(
@@ -1109,32 +1103,7 @@ void CLineModelElement::fitAmplitude(
     const CSpectrumFluxAxis &noContinuumfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index) {
 
-  m_sumCross = 0.;
-  m_sumGauss = 0.;
-  m_dtmFree = 0.;
-
-  m_ElementParam->m_FittedAmplitudes.assign(GetSize(), NAN);
-  m_ElementParam->m_FittedAmplitudeErrorSigmas.assign(GetSize(), NAN);
-
-  if (m_OutsideLambdaRange) {
-    m_sumCross = NAN;
-    m_sumGauss = NAN;
-    m_dtmFree = NAN;
-    return;
-  }
 
   computeCrossProducts(redshift, spectralAxis, noContinuumfluxAxis,
-                       continuumfluxAxis, line_index);
-
-  if (std::isnan(GetSumGauss())) {
-    m_sumCross = NAN;
-    return;
-  }
-
-  m_sumCross = std::max(0.0, m_dtmFree);
-  Float64 A = m_sumCross / m_sumGauss;
-
-  SetElementAmplitude(A, 1.0 / sqrt(m_sumGauss));
-
-  return;
+                       continuumfluxAxis, lineIdx);
 }

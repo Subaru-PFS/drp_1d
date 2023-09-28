@@ -405,8 +405,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
   bool fftprocessing = isfftprocessingActive(redshiftsTplFit.size());
 
-  const CSpectrum &spectrum = *(Context.GetSpectrum(fftprocessing));
-
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   std::shared_ptr<const CTemplateCatalog> tplCatalog =

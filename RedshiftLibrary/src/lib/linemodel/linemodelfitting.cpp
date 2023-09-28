@@ -920,14 +920,17 @@ void CLineModelFitting::LoadModelSolution(
             {modelSolution.LyaIgm, modelSolution.Redshift});
   }
 
-  const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-  for (Int32 iElts = 0; iElts < eltList.size(); iElts++) {
-    eltList[iElts]->SetOutsideLambdaRange();
+  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
+    for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
+      getElementList()[iElts]->SetOutsideLambdaRange();
 
-    if (!eltList[iElts]->IsOutsideLambdaRange())
-      eltList[iElts]->prepareSupport(spectralAxis, modelSolution.Redshift,
-                                     getLambdaRange());
+      if (!getElementList()[iElts]->IsOutsideLambdaRange())
+        getElementList()[iElts]->prepareSupport(
+            spectralAxis, modelSolution.Redshift, getLambdaRange());
+    }
   }
+  *m_curObs = 0;
 
   return;
 }
