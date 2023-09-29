@@ -97,7 +97,7 @@ class AbstractSpectrumReader:
         self.others: Dict[str, Container[np.ndarray]] = dict()
 
         self.lsf_type = None
-        self.lsf_data = []
+        self.lsf_data = Container[np.ndarray]()
         self.photometric_data = []
         self._spectra = dict()
         self.w_frame = 'vacuum'
@@ -208,14 +208,14 @@ class AbstractSpectrumReader:
         self._check_spectrum_is_loaded()
         return PC.Get_AxisSampleList(self._spectra[obs_id].GetErrorAxis().GetSamplesVector())
 
-    def get_lsf(self):
+    def get_lsf(self, obs_id=""):
         """
         :raises: Spectrum not loaded
         :return: lsf
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return self.lsf_data[0]
+        return self.lsf_data[obs_id]
 
     def set_air(self):
         """
@@ -237,9 +237,6 @@ class AbstractSpectrumReader:
                 ErrorCode.INVALID_SPECTRUM,
                 "Names of error, wavelength, flux and other arrays should be the same"
             )
-
-        if len(self.lsf_data) > 1:
-            raise APIException(ErrorCode.MULTILSF_NOT_HANDLED, "Multiple LSF not handled")
 
         self._merge_spectrum_in_dataframe()
         self._apply_filters(self._get_filters())
@@ -406,13 +403,16 @@ class AbstractSpectrumReader:
         parameter_lsf_type = self.parameters.get_lsf_type()
 
         if parameter_lsf_type == "FROMSPECTRUMDATA":
+            obs_id = self.parameters.get_observation_ids()[0]
             self.parameters.set_lsf_type(self.lsf_type)
             if self.lsf_type != "GaussianVariableWidth":
-                self.parameters.set_lsf_param(LSFParameters[self.lsf_type], self.lsf_data[0])
+                self.parameters.set_lsf_param(LSFParameters[self.lsf_type],
+                                              self.lsf_data[obs_id]["width"][0])
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
                 lsf_args = TLSFArgumentsCtor[self.lsf_type](parameter_store)
             else:
-                lsf_args = TLSFGaussianVarWidthArgs(self.lsf_data[0]["wave"], self.lsf_data[0]["width"])
+                lsf_args = TLSFGaussianVarWidthArgs(self.lsf_data[obs_id]["wave"],
+                                                    self.lsf_data[obs_id]["width"])
         else:
             if parameter_lsf_type != "GaussianVariableWidth":
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
