@@ -16,7 +16,7 @@ class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
   CSpectrumModel(
-      CLineModelElementList &elements,
+      const std::shared_ptr<CLineModelElementList> &elements,
       const std::shared_ptr<const CSpectrum> &spc,
       const CLineMap &m_RestLineList,
       const std::shared_ptr<CTplModelSolution> &tfv,
@@ -92,7 +92,7 @@ private:
   std::shared_ptr<CTplModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
-  CLineModelElementList &m_Elements;
+  std::shared_ptr<CLineModelElementList> m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis

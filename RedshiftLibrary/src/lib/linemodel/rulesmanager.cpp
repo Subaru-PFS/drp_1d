@@ -49,9 +49,9 @@ CRulesManager::CRulesManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList) {}
+                        continuumManager, restLineList, curObs) {}
 
 Float64 CRulesManager::computeMerit(Int32 iratio) {
   applyRules(true);

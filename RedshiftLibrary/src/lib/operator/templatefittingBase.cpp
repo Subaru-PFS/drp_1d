@@ -94,8 +94,8 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
     const Float64 overlapThreshold, Int32 spcIndex,
     const std::shared_ptr<CModelSpectrumResult> &models) {
   Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model "
-                "templateFitting for candidate Zcand=%f",
-                redshift);
+                "templateFitting for candidate Zcand=%f and obs n° %d",
+                redshift, spcIndex);
 
   Float64 overlapFraction = 0.0;
   TFloat64Range currentRange;

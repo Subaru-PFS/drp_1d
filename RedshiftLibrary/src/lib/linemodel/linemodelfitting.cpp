@@ -155,7 +155,8 @@ void CLineModelFitting::initMembers(
   m_curObs = std::make_shared<Int32>(0);
   m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
   m_nominalWidthDefault = 13.4; // euclid 1 px
-
+  m_continuumFitValues = std::make_shared<CTplModelSolution>();
+  m_models = std::make_shared<std::vector<CSpectrumModel>>();
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     Log.LogDetail("    model: Continuum winsize found is %.2f A",
                   getSpectrum().GetMedianWinsize());
@@ -170,13 +171,13 @@ void CLineModelFitting::initMembers(
       // the Abs lines
       LoadCatalogTwoMultilinesAE();
     }
+    m_models->push_back(CSpectrumModel(
+        std::make_shared<CLineModelElementList>(m_ElementsVector->back()),
+        getSpectrumPtr(), m_RestLineList, m_continuumFitValues, TFOperator));
+    m_models->back().m_spcIndex = *m_curObs;
   }
   *m_curObs = 0;
-  m_continuumFitValues = std::make_shared<CTplModelSolution>();
-  m_models = std::make_shared<std::vector<CSpectrumModel>>();
-  m_models->push_back(CSpectrumModel(getElementList(), getSpectrumPtr(),
-                                     m_RestLineList, m_continuumFitValues,
-                                     TFOperator));
+
   m_continuumManager = std::make_shared<CContinuumManager>(
       m_models, m_continuumFitValues, m_curObs);
 
@@ -396,16 +397,23 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
     return;
 
   if (!isContinuumComponentTplfitxx()) {
-    getSpectrumModel().setContinuumToInputSpc();
+    for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+      getSpectrumModel().setContinuumToInputSpc();
+    }
+    *m_curObs = 0;
     return;
   }
 
   // the support has to be already computed
   // when LoadFitContinuum() is called
-  getSpectrumModel().initObserveGridContinuumFlux(
-      getSpectrum().GetSampleCount());
-  Int32 autoselect = getContinuumComponent() == "tplfitauto";
-  m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+
+    getSpectrumModel().initObserveGridContinuumFlux(
+        getSpectrum().GetSampleCount());
+    Int32 autoselect = getContinuumComponent() == "tplfitauto";
+    m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
+  }
+  *m_curObs = 0;
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
@@ -489,8 +497,12 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       Int32 autoselect =
           m_continuumManager->getContinuumComponent() == "tplfitauto";
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
-      m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, autoselect,
-                                           redshift);
+      for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+
+        m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted,
+                                             autoselect, redshift);
+      }
+      *m_curObs = 0;
     }
     /*
     Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
@@ -525,7 +537,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
   m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
       lineRatioType, m_ElementsVector, m_models, m_inputSpcs, m_lambdaRanges,
-      m_continuumManager, m_RestLineList, m_fitter);
+      m_continuumManager, m_RestLineList, m_fitter, m_curObs);
 }
 
 void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
@@ -1137,39 +1149,53 @@ void CLineModelFitting::SetLSF() {
     THROWG(INTERNAL_ERROR,
            " Cannot enable LSF, LSF spectrum member is not valid");
   }
-
-  for (Int32 j = 0; j < getElementList().size(); j++) {
-    getElementList()[j]->SetLSF(
-        lsf); // lsf has now a type to be used for width computations
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    for (Int32 j = 0; j < getElementList().size(); j++) {
+      getElementList()[j]->SetLSF(
+          lsf); // lsf has now a type to be used for width computations
+    }
   }
+  *m_curObs = 0;
 }
 
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-  for (Int32 j = 0; j < getElementList().size(); j++) {
-    m_ElementParam[j]->m_VelocityEmission = vel;
+    for (Int32 j = 0; j < getElementList().size(); j++) {
+      m_ElementParam[j]->m_VelocityEmission = vel;
+    }
   }
+  *m_curObs = 0;
 }
 
 void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
                                                    const TInt32List &inds) {
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-  for (auto idxElt : inds)
-    m_ElementParam[idxElt]->m_VelocityEmission = vel;
+    for (auto idxElt : inds)
+      m_ElementParam[idxElt]->m_VelocityEmission = vel;
+  }
+  *m_curObs = 0;
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-  for (Int32 j = 0; j < getElementList().size(); j++) {
-    m_ElementParam[j]->m_VelocityAbsorption = vel;
+    for (Int32 j = 0; j < getElementList().size(); j++) {
+      m_ElementParam[j]->m_VelocityAbsorption = vel;
+    }
   }
+  *m_curObs = 0;
 }
 
 void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
                                                      const TInt32List &inds) {
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-  for (auto idxElt : inds)
-    m_ElementParam[idxElt]->m_VelocityAbsorption = vel;
+    for (auto idxElt : inds)
+      m_ElementParam[idxElt]->m_VelocityAbsorption = vel;
+  }
+  *m_curObs = 0;
 }
 
 Float64 CLineModelFitting::GetVelocityEmission() const {

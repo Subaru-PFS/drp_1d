@@ -52,9 +52,9 @@ CTplratioManager::CTplratioManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList) {
+                        continuumManager, restLineList, curObs) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
@@ -430,17 +430,19 @@ Float64 CTplratioManager::computelogLinePriorMerit(
 }
 
 Float64 CTplratioManager::computeMerit(Int32 itratio) {
-  Float64 _merit;
+  Float64 _merit = 0;
+  Float64 _meritprior = 0;
   /*if (!enableLogging && m_tplratioLeastSquareFast)
     _merit = getLeastSquareMeritFast();
   else */
 
-  getModel().refreshModel();
-  _merit = getLeastSquareMerit();
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+    getModel().refreshModel();
+    _merit += getLeastSquareMerit();
 
-  Float64 _meritprior =
-      computelogLinePriorMerit(itratio, m_logPriorDataTplRatio);
-
+    _meritprior += computelogLinePriorMerit(itratio, m_logPriorDataTplRatio);
+  }
+  *m_curObs = 0;
   if (_merit + _meritprior <
       m_MeritTplratio[itratio] + m_PriorMeritTplratio[itratio]) {
     // update result variables

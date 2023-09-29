@@ -48,9 +48,9 @@ CTplCorrManager::CTplCorrManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                       continuumManager, restLineList) {}
+                       continuumManager, restLineList, curObs) {}
 
 Float64 CTplCorrManager::computeMerit(Int32 itratio) {
 

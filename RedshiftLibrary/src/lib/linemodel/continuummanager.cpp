@@ -109,12 +109,14 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
         m_opt_fitcontinuum_neg_threshold)
       m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
   }
-
+  //  for (; *m_curObs < m_models->size(); (*m_curObs)++) {
   getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
-
   setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                m_fitContinuum->tplAmplitudeError,
                                m_fitContinuum->pCoeffs);
+
+  //}
+  //*m_curObs = 0;
 
   Log.LogDebug("    model : LoadFitContinuum, loaded: %s",
                m_fitContinuum->tplName.c_str());
@@ -259,9 +261,13 @@ void CContinuumManager::setContinuumComponent(std::string component) {
 }
 
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
-  std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-      m_tplCategoryList, m_fitContinuum->tplName);
-  getModel().ApplyContinuumOnGrid(tpl, redshift);
+  for (; *m_curObs < m_models->size(); (*m_curObs)++) {
+
+    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
+        m_tplCategoryList, m_fitContinuum->tplName);
+    getModel().ApplyContinuumOnGrid(tpl, redshift);
+  }
+  *m_curObs = 0;
 }
 
 void CContinuumManager::reinterpolateContinuumResetAmp() {

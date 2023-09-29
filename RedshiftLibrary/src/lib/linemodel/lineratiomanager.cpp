@@ -56,10 +56,11 @@ CLineRatioManager::CLineRatioManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : m_elementsVector(elementsVector), m_models(models),
       m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
-      m_continuumManager(continuumManager), m_RestLineList(restLineList) {
+      m_continuumManager(continuumManager), m_RestLineList(restLineList),
+      m_curObs(curObs) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -271,23 +272,25 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
+    const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
+    const std::shared_ptr<Int32> &curObs) {
   std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
     ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                         continuumManager, restLineList));
+                         continuumManager, restLineList, curObs));
   else if (lineRatioType == "tplcorr")
     ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList));
+                        continuumManager, restLineList, curObs));
   else if (lineRatioType == "rules")
     ret = std::make_shared<CRulesManager>(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
-                      continuumManager, restLineList));
+                      continuumManager, restLineList, curObs));
   else
     THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
                               "supported for linemodel.lineRatioType");
   ret->setFitter(fitter);
+
   return ret;
 }

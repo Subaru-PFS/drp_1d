@@ -1098,6 +1098,7 @@ Int32 CLineModelElement::computeCrossProducts(
   return num;
 }
 
+/*
 void CLineModelElement::fitAmplitude(
     Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
     const CSpectrumFluxAxis &noContinuumfluxAxis,
@@ -1105,5 +1106,6 @@ void CLineModelElement::fitAmplitude(
 
 
   computeCrossProducts(redshift, spectralAxis, noContinuumfluxAxis,
-                       continuumfluxAxis, lineIdx);
+                       continuumfluxAxis, line_index);
 }
+*/

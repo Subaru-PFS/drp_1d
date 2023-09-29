@@ -251,17 +251,16 @@ public:
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;
 
-  void computeCrossProducts(Float64 redshift,
-                            const CSpectrumSpectralAxis &spectralAxis,
-                            const CSpectrumFluxAxis &noContinuumfluxAxis,
-                            const CSpectrumFluxAxis &continuumfluxAxis,
-                            Int32 line_index);
+  Int32 computeCrossProducts(Float64 redshift,
+                             const CSpectrumSpectralAxis &spectralAxis,
+                             const CSpectrumFluxAxis &noContinuumfluxAxis,
+                             const CSpectrumFluxAxis &continuumfluxAxis,
+                             Int32 line_index);
 
-  void fitAmplitude(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
-                    const CSpectrumFluxAxis &noContinuumfluxAxis,
-                    const CSpectrumFluxAxis &continuumfluxAxis,
-                    Int32 line_index = undefIdx);
-
+  /*  void fitAmplitude(Float64 redshift, const CSpectrumSpectralAxis
+     &spectralAxis, const CSpectrumFluxAxis &noContinuumfluxAxis, const
+     CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index = undefIdx);
+  */
 protected:
   friend ::RuleStrongHigherThanWeak_fixture;
   friend RuleStrongHigherThanWeak_test::Correct_test_no_change;
