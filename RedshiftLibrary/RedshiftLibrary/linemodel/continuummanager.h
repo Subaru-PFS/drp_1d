@@ -28,7 +28,8 @@ public:
                     std::shared_ptr<CTplModelSolution>,
                     std::shared_ptr<Int32> curObs);
 
-  CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
+  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
+  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);

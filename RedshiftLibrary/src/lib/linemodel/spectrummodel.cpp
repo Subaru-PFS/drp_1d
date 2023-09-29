@@ -50,9 +50,9 @@ CSpectrumModel::CSpectrumModel(
     const std::shared_ptr<const CSpectrum> &spc, const CLineMap &restLineList,
     const std::shared_ptr<CTplModelSolution> &tfv,
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
-    : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
-      m_SpectrumModel(*(spc)), m_RestLineList(restLineList),
-      m_fitContinuum(tfv), m_templateFittingOperator(TFOperator) {
+    : m_Elements(elements), m_inputSpc(spc), m_SpectrumModel(*(spc)),
+      m_RestLineList(restLineList), m_fitContinuum(tfv),
+      m_templateFittingOperator(TFOperator) {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
@@ -208,7 +208,7 @@ void CSpectrumModel::EstimateSpectrumContinuum(Float64 opt_enhance_lines) {
  * \brief Returns a pointer to a spectrum containing the observed spectrum with
  *the fitted lines subtracted
  **/
-const CSpectrum &CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
+CSpectrum CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
     CLine::EType lineTypeFilter) {
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   const CSpectrumFluxAxis &fluxAxis = m_SpectrumModel.GetFluxAxis();
@@ -223,7 +223,9 @@ const CSpectrum &CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
   fluxAndContinuum = fluxAxis.GetSamplesVector();
   refreshModel(lineTypeFilter);
 
-  TAxisSampleList Y(m_spcCorrectedUnderLines.GetSampleCount());
+  CSpectrum spcCorrectedUnderLines(*m_inputSpc);
+
+  TAxisSampleList Y(m_inputSpc->GetSampleCount());
   const auto &SpcFluxAxis = m_SpcFluxAxis;
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
   for (Int32 t = 0; t < spectralAxis.GetSamplesCount(); t++) {
@@ -248,9 +250,9 @@ const CSpectrum &CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
     }
   }
 
-  m_spcCorrectedUnderLines.SetFluxAxis(CSpectrumFluxAxis(std::move(Y)));
+  spcCorrectedUnderLines.SetFluxAxis(CSpectrumFluxAxis(std::move(Y)));
 
-  return m_spcCorrectedUnderLines;
+  return spcCorrectedUnderLines;
 }
 
 Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
@@ -300,7 +302,7 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
 Float64 CSpectrumModel::GetContinuumError(Int32 eIdx, Int32 line_id) {
   Int32 nMinValueForErrorEstimation = 10;
 
-  const CSpectrum &noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
+  const CSpectrum noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
   const CSpectrumFluxAxis &noLinesFluxAxis = noLinesSpectrum.GetFluxAxis();
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   const TFloat64Range lambdaRange =

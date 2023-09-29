@@ -38,7 +38,7 @@ public:
   const CSpectrum &GetModelSpectrum() const;
   const CSpectrumFluxAxis &GetModelContinuum() const;
 
-  const CSpectrum &GetObservedSpectrumWithLinesRemoved(
+  CSpectrum GetObservedSpectrumWithLinesRemoved(
       CLine::EType lineTypeFilter = CLine::EType::nType_All);
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
                                              const TInt32List &EltsIdx) const;
@@ -94,7 +94,6 @@ private:
   CSpectrum m_SpectrumModel; // model
   CLineModelElementList &m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
-  CSpectrum m_spcCorrectedUnderLines;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting

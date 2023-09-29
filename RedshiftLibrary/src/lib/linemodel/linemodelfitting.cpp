@@ -926,7 +926,7 @@ void CLineModelFitting::LoadModelSolution(
  **/
 // this is not really a const method as spectrum model(s) have to be modified
 // (cf CSpectrumModel::getContinuumError)
-CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) const {
+CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
 

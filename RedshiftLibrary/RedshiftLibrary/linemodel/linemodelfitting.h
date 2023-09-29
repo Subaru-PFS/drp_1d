@@ -142,7 +142,7 @@ public:
   Float64 getCumulSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0) const;
+  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
 
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
@@ -161,9 +161,11 @@ public:
     return (*m_inputSpcs)[*m_curObs];
   }
 
-  CSpectrumModel &getSpectrumModel() const {
+  CSpectrumModel &getSpectrumModel() { return (*m_models)[*m_curObs]; }
+
+  const CSpectrumModel &getSpectrumModel() const {
     return (*m_models)[*m_curObs];
-  } // not const because of tplortho
+  }
 
   CLineModelElementList &getElementList() {
     return (*m_ElementsVector)[*m_curObs];
