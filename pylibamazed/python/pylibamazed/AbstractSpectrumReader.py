@@ -215,7 +215,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        return self.lsf_data[obs_id]
+        return self.lsf_data.get(obs_id)
 
     def set_air(self):
         """
