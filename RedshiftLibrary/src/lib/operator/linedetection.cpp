@@ -241,16 +241,11 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
   }
 
   // retest
-  bool retest_flag = false;
-  if (retestPeaks.size() > 0) {
-    // CLineVector
-    retest_flag = true;
-  }
-  while (retest_flag) {
-    retest_flag = Retest(spectrum, *result, retestPeaks, retestGaussParams,
-                         result->LineCatalog.GetFilteredList(
-                             m_type, CLine::EForce::nForce_Strong),
-                         m_winsize, m_cut);
+  if (!retestPeaks.empty()) {
+    Retest(*result, spectrum, retestPeaks, retestGaussParams,
+           result->LineCatalog.GetFilteredList(m_type,
+                                               CLine::EForce::nForce_Strong),
+           m_winsize, m_cut);
   }
 
   return result;
@@ -298,8 +293,8 @@ TInt32Range CLineDetection::LimitGaussianFitStartAndStop(
 /**
  * Returns the ratio between max amplitude without continuum and noise.
  */
-Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
-                                      Float64 winsize, TInt32Range range,
+Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
+                                      Float64 winsize, TInt32Range const &range,
                                       TFloat64List mask,
                                       Float64 *maxFluxnoContinuum,
                                       Float64 *noise) {
@@ -318,17 +313,17 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
                                        << range.GetEnd() << " is < 0");
 
   // if no mask, then set it to 1
-  if (!mask.size())
-    mask.resize(spc.GetSampleCount(), 1);
+  if (mask.empty())
+    mask.assign(spc.GetSampleCount(), 1);
 
   Float64 maxValue = -DBL_MAX;
-  Int32 maxIndex = -1;
+  Int32 maxIndex = undefIdx;
   for (Int32 k = range.GetBegin(); k <= range.GetEnd(); k++)
     if (maxValue < fluxAxis[k] && mask[k] != 0) {
       maxValue = fluxAxis[k];
       maxIndex = k;
     }
-  if (maxIndex == -1)
+  if (maxIndex == undefIdx)
     THROWG(INTERNAL_ERROR, "maxIndex is not valid");
   // strong/weak test to do
   CMedian<Float64> medianProcessor;
@@ -337,10 +332,10 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
   // int left = max(0, (Int32)(maxIndex-windowSampleCount/2.0+0.5) ) ;
   // int right = min((Int32)fluxAxis.GetSamplesCount()-1, (Int32)(maxIndex +
   // windowSampleCount/2.0) )+1; irreg. sampling
-  Int32 left = std::max(range.GetBegin(),
-                        max(0, specAxis.GetIndexAtWaveLength(
-                                   specAxis[maxIndex] - winsize / 2.0)));
-  Int32 right = std::min(
+  Int32 const left = std::max(range.GetBegin(),
+                              max(0, specAxis.GetIndexAtWaveLength(
+                                         specAxis[maxIndex] - winsize / 2.0)));
+  Int32 const right = std::min(
       range.GetEnd() + 1,
       min((Int32)fluxAxis.GetSamplesCount(),
           specAxis.GetIndexAtWaveLength(specAxis[maxIndex] + winsize / 2.0) +
@@ -355,8 +350,8 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
       n++;
     }
   }
-  Float64 med = medianProcessor.Find(fluxMasked);
-  Float64 xmad = XMadFind(fluxMasked.data(), n, med);
+  Float64 const med = medianProcessor.Find(fluxMasked);
+  Float64 const xmad = XMadFind(fluxMasked.data(), n, med);
 
   Float64 noise_win = xmad;
   // use noise spectrum
@@ -390,8 +385,8 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
       // noise_win = mean_noise; //debug
     }
   }
-  Float64 maxValue_no_continuum = maxValue - med;
-  Float64 ratioAmp = maxValue_no_continuum / noise_win;
+  Float64 const maxValue_no_continuum = maxValue - med;
+  Float64 const ratioAmp = maxValue_no_continuum / noise_win;
 
   // assign output pointers
   if (maxFluxnoContinuum != NULL) {
@@ -406,11 +401,11 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum &spectrum,
 /**
  * Verifies the peaks are within the range of a strong peak.
  */
-bool CLineDetection::Retest(const CSpectrum &spectrum,
-                            CLineDetectionResult &result,
-                            TInt32RangeList retestPeaks,
-                            TGaussParamsList retestGaussParams,
-                            CLineDetectedVector strongLines, Int32 winsize,
+void CLineDetection::Retest(CLineDetectionResult &result,
+                            CSpectrum const &spectrum,
+                            TInt32RangeList const &retestPeaks,
+                            TGaussParamsList const &retestGaussParams,
+                            CLineDetectedMap const &strongLines, Int32 winsize,
                             Float64 cut) {
   Log.LogDebug("Retest %d peaks, winsize = %d, strongLines.size() = %d.",
                retestPeaks.size(), winsize, strongLines.size());
@@ -418,92 +413,85 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
   TGaussParamsList selectedgaussparams;
   TInt32RangeList selectedretestPeaks;
 
-  const CSpectrumSpectralAxis wavesAxis = spectrum.GetSpectralAxis();
+  CSpectrumSpectralAxis const &wavesAxis = spectrum.GetSpectralAxis();
   // check if the retest peaks center are in the range of a strong peak
   for (int k = 0; k < retestPeaks.size(); k++) {
     Float64 start = wavesAxis[retestPeaks[k].GetBegin()];
     Float64 stop = wavesAxis[retestPeaks[k].GetEnd()];
     Float64 center = (stop + start) / 2.0;
 
-    for (int l = 0; l < strongLines.size(); l++) {
-      if (strongLines[l].GetPosition() - winsize / 2.0 < center &&
-          strongLines[l].GetPosition() + winsize / 2.0 > center) {
+    for (auto const &[id, line] : strongLines) {
+      Float64 const position = line.GetPosition();
+      if (position - winsize / 2.0 < center &&
+          position + winsize / 2.0 > center) {
         Log.LogDebug("The strongLine[%d].GetPosition() == %f is within "
                      "winsize centered on %f.",
-                     l, strongLines[l].GetPosition(), center);
+                     id, position, center);
         selectedretestPeaks.push_back(retestPeaks[k]);
         selectedgaussparams.push_back(retestGaussParams[k]);
       } else {
         Log.LogDebug("The strongLine[%d].GetPosition() == %f is not within "
                      "winsize centered on %f.",
-                     l, strongLines[l].GetPosition(), center);
+                     id, position, center);
       }
     }
   }
 
-  if (selectedretestPeaks.size() < 1) {
+  if (selectedretestPeaks.empty()) {
     Log.LogDebug("No retestPeaks were selected.");
-    return false;
+    return;
   }
 
   // remove selected retestPeaks: EZELFind ln 1102
   // not implemented, did not seem useful
 
-  bool continue_retest;
-  continue_retest = RemoveStrongFromSpectra(spectrum, result, strongLines,
-                                            selectedretestPeaks,
-                                            selectedgaussparams, winsize, cut);
-
-  return continue_retest;
+  RemoveStrongFromSpectra(result, spectrum, strongLines, selectedretestPeaks,
+                          selectedgaussparams, winsize, cut);
 }
 
 /**
  * Finds the intervals containing strong lines and removes the contents of those
  * intervals from the spectrum.
  */
-bool CLineDetection::RemoveStrongFromSpectra(
-    const CSpectrum &spectrum, CLineDetectionResult &result,
-    CLineDetectedVector strongLines, TInt32RangeList selectedretestPeaks,
-    TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut) {
+void CLineDetection::RemoveStrongFromSpectra(
+    CLineDetectionResult &result, CSpectrum const &spectrum,
+    CLineDetectedMap const &strongLines,
+    TInt32RangeList const &selectedretestPeaks,
+    TGaussParamsList const &selectedgaussparams, Float64 winsize,
+    Float64 cut) const {
 
-  const CSpectrumSpectralAxis wavesAxis = spectrum.GetSpectralAxis();
+  CSpectrumSpectralAxis const &wavesAxis = spectrum.GetSpectralAxis();
+
   // check intersection between stronglines and peaks selected
-  TInt32RangeList toExclude;
-  for (int l = 0; l < strongLines.size(); l++) {
-    Float64 inf =
-        strongLines[l].GetPosition() - FWHM_FACTOR * strongLines[l].GetCut();
-    Float64 sup =
-        strongLines[l].GetPosition() + FWHM_FACTOR * strongLines[l].GetCut();
-    toExclude.push_back(TInt32Range(inf, sup));
+  std::map<Int32, TInt32Range> toExclude;
+  for (auto const &[id, line] : strongLines) {
+    Float64 inf = line.GetPosition() - FWHM_FACTOR * line.GetCut();
+    Float64 sup = line.GetPosition() + FWHM_FACTOR * line.GetCut();
+    toExclude[id] = TInt32Range(inf, sup);
   }
+
   // build toExclude to be non-intersecting stronglines
   for (int k = 0; k < selectedretestPeaks.size(); k++) {
-    for (int l = 0; l < toExclude.size(); l++) {
-      TInt32Range line =
-          TInt32Range(wavesAxis[selectedretestPeaks[k].GetBegin()],
-                      wavesAxis[selectedretestPeaks[k].GetEnd()]);
-      TInt32Range strong = toExclude[l];
+    TInt32Range line = TInt32Range(wavesAxis[selectedretestPeaks[k].GetBegin()],
+                                   wavesAxis[selectedretestPeaks[k].GetEnd()]);
+    for (auto &[id, strong] : toExclude) {
       if (line.GetEnd() > strong.GetBegin() &&
           line.GetBegin() < strong.GetEnd()) {
         if (strong.GetBegin() > line.GetBegin()) {
-          toExclude[l].SetBegin(line.GetEnd());
+          strong.SetBegin(line.GetEnd());
         } else {
-          toExclude[l].SetEnd(line.GetBegin());
+          strong.SetEnd(line.GetBegin());
         }
       }
     }
   }
 
   // create the mask on the strong peaks
-  TFloat64List mask;
-  mask.resize(spectrum.GetSampleCount());
-  for (Int32 k = 0; k < spectrum.GetSampleCount(); k++) {
-    mask[k] = 1;
-  }
+  TFloat64List mask(spectrum.GetSampleCount(), 1);
   for (Int32 k = 0; k < wavesAxis.GetSamplesCount(); k++) {
-    for (int l = 0; l < toExclude.size(); l++) {
-      if (toExclude[l].GetBegin() <= wavesAxis[k] &&
-          toExclude[l].GetEnd() >= wavesAxis[k]) {
+    for (auto &[_, strong] : toExclude) {
+      if (strong.GetBegin() <= wavesAxis[k] &&
+          strong.GetEnd() >= wavesAxis[k]) {
         mask[k] = 0;
         break;
       }
@@ -512,23 +500,17 @@ bool CLineDetection::RemoveStrongFromSpectra(
 
   // create reduced spectra
   const CSpectrum reducedSpectrum(spectrum, mask);
-  TFloat64List reducedindexesMap;
-  for (Int32 k = 0; k < spectrum.GetSampleCount(); k++) {
-    if (k == 0) {
-      reducedindexesMap.push_back(0);
-    } else {
-      if (mask[k] != 0) {
-        reducedindexesMap.push_back(reducedindexesMap[k - 1] + 1);
-      } else {
-        reducedindexesMap.push_back(reducedindexesMap[k - 1]);
-      }
-    }
+  TInt32List reducedindexesMap(spectrum.GetSampleCount());
+  for (Int32 k = 1; k < spectrum.GetSampleCount(); k++) {
+    reducedindexesMap[k] = reducedindexesMap[k - 1];
+    if (mask[k] != 0)
+      reducedindexesMap[k] += 1;
   }
 
   for (int k = 0; k < selectedretestPeaks.size(); k++) {
     TInt32Range reducedrange(
-        (int)reducedindexesMap[selectedretestPeaks[k].GetBegin()],
-        (int)reducedindexesMap[selectedretestPeaks[k].GetEnd()]);
+        reducedindexesMap[selectedretestPeaks[k].GetBegin()],
+        reducedindexesMap[selectedretestPeaks[k].GetEnd()]);
     // Float64 ratioAmp = ComputeFluxes(spectrum, winsize,
     // selectedretestPeaks[k], mask);
     Float64 ratioAmp = ComputeFluxes(reducedSpectrum, winsize, reducedrange);
@@ -545,8 +527,6 @@ bool CLineDetection::RemoveStrongFromSpectra(
       result.LineCatalog.Sort();
     }
   }
-
-  return false;
 }
 
 /**

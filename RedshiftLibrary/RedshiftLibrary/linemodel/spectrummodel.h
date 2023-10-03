@@ -18,7 +18,7 @@ public:
   CSpectrumModel(
       CLineModelElementList &elements,
       const std::shared_ptr<const CSpectrum> &spc,
-      const CLineVector &m_RestLineList,
+      const CLineMap &m_RestLineList,
       const std::shared_ptr<CTplModelSolution> &tfv,
       const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
 
@@ -38,12 +38,12 @@ public:
   const CSpectrum &GetModelSpectrum() const;
   const CSpectrumFluxAxis &GetModelContinuum() const;
 
-  const CSpectrum &GetObservedSpectrumWithLinesRemoved(
+  CSpectrum GetObservedSpectrumWithLinesRemoved(
       CLine::EType lineTypeFilter = CLine::EType::nType_All);
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
                                              const TInt32List &EltsIdx) const;
 
-  Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
+  Float64 GetContinuumError(Int32 eIdx, Int32 line_id);
   Float64 getModelErrorUnderElement(Int32 eltId,
                                     const CSpectrumFluxAxis &fluxRef) const;
   void getFluxDirectIntegration(const TInt32List &eIdx_list,
@@ -88,13 +88,12 @@ private:
                          const TInt32List &eIdx_list,
                          bool substract_abslinesmodel) const;
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
-  const CLineVector &m_RestLineList;
+  const CLineMap &m_RestLineList;
   std::shared_ptr<CTplModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
   CLineModelElementList &m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
-  CSpectrum m_spcCorrectedUnderLines;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting

@@ -83,9 +83,9 @@ void CProcessFlowContext::reset() {
   m_inputContext->resetSpectrumSpecific();
 }
 
-const CLineVector CProcessFlowContext::getCLineVector() {
+const CLineMap CProcessFlowContext::getCLineMap() {
   CAutoScope autoscope(m_ScopeStack, "linemodel");
-  return m_inputContext->GetFilteredLineVector(
+  return m_inputContext->GetFilteredLineMap(
       GetCurrentCategory(), GetCurrentMethod(),
       m_parameterStore->GetScoped<std::string>("linetypefilter"),
       m_parameterStore->GetScoped<std::string>("lineforcefilter"));

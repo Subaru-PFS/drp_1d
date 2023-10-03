@@ -86,11 +86,6 @@ void COperatorLineModel::ComputeFirstPass() {
 
   makeTFOperator(m_Redshifts);
   if (!m_templateFittingOperator->IsFFTProcessing()) {
-    // cast from TFbase to  TF or TFPhot
-    /* std::shared_ptr<COperatorTemplateFitting> derived =
-         std::dynamic_pointer_cast<COperatorTemplateFitting>(
-             m_templateFittingOperator);*/
-
     m_fittingManager =
         std::make_shared<CLineModelFitting>(m_templateFittingOperator);
   } else { // create a default
@@ -105,7 +100,7 @@ void COperatorLineModel::ComputeFirstPass() {
       m_opt_continuumcomponent == "tplfitauto")
     for (const auto &category : m_tplCategoryList)
       nfitcontinuum += tplCatalog->GetTemplateCount(category);
-  m_result->Init(m_Redshifts, Context.getCLineVector(), nfitcontinuum,
+  m_result->Init(m_Redshifts, Context.getCLineMap(), nfitcontinuum,
                  m_fittingManager->getTplratio_count(),
                  m_fittingManager->getTplratio_priors());
 

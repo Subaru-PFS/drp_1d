@@ -60,7 +60,7 @@ class CLineModelResult : public COperatorResult {
 public:
   CLineModelResult() : COperatorResult("CLineModelResult"){};
 
-  void Init(TFloat64List redshifts, CLineVector restLines, Int32 nTplContinuum,
+  void Init(TFloat64List redshifts, CLineMap restLines, Int32 nTplContinuum,
             Int32 nTplratios, TFloat64List tplratiosPriors);
 
   Int32 getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres,
@@ -126,7 +126,7 @@ public:
   std::vector<CTplModelSolution> ContinuumModelSolutions;
 
   COperator::TStatusList Status;
-  CLineVector restLineList;
+  CLineMap restLineList;
   Int32 nSpcSamples = 0;
   Float64 dTransposeD = 0.0;
   Float64 cstLog = 0.0;

@@ -215,18 +215,17 @@ CLineMatchingResult::GetMeanRedshiftSolution(const TSolutionSet &s) const {
  * strong emission lines.
  */
 Int32 CLineMatchingResult::getNStrongRestLines(const TSolutionSet &s) const {
-  CLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
+  CLineMap const strongRestLineList = m_RestCatalog.GetFilteredList(
       CLine::EType::nType_Emission, CLine::EForce::nForce_Strong);
-  Int32 ncatalog = strongRestLineList.size();
 
   TSolutionSet currentSet = s;
   Int32 nStrong = 0;
   Float64 tol = 0.11;
   for (Int32 i = 0; i < currentSet.size(); i++) {
     Int32 found = 0;
-    for (Int32 c = 0; c < ncatalog; c++) {
+    for (auto const &[iStrongRestLine, StrongRestLine] : strongRestLineList) {
       if (fabs(currentSet[i].RestLine.GetPosition() -
-               strongRestLineList[c].GetPosition()) < tol) {
+               StrongRestLine.GetPosition()) < tol) {
         found = 1;
         break;
       }

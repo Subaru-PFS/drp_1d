@@ -60,27 +60,26 @@ std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
     const CLineCatalog &restLineCatalog, const TFloat64Range &redshiftRange,
     Int32 nThreshold, Float64 tol, CLine::EType typeFilter,
     CLine::EForce detectedForceFilter, CLine::EForce restForceFilter) const {
-  CLineDetectedVector detectedLineList =
+  auto const detectedLineList =
       detectedLineCatalog.GetFilteredList(typeFilter, detectedForceFilter);
-  CLineVector restLineList =
+  auto const restLineList =
       restLineCatalog.GetFilteredList(typeFilter, restForceFilter);
-  auto redshiftGetter = getRedshift(detectedLineList, restLineList);
+  auto const redshiftGetter = getRedshift();
 
   CLineMatchingResult::TSolutionSetList solutions;
-  Int32 N = restLineList.size();
+  Int32 const N = restLineList.size();
   Log.LogDebug("CLineMatching: Lines detected. n=%d", N);
 
-  for (Int32 iDetectedLine = 0; iDetectedLine < detectedLineList.size();
-       iDetectedLine++) {
-    for (Int32 iRestLine = 0; iRestLine < N; iRestLine++) {
+  for (auto const &[iDetectedLine, DetectedLine] : detectedLineList) {
+    for (auto const &[iRestLine, RestLine] : restLineList) {
       // for each detected line / rest line couple, enumerate how many other
       // couples fit within the tolerance
       CLineMatchingResult::TSolutionSet solution;
-      Float64 redShift = redshiftGetter(iDetectedLine, iRestLine);
+      Float64 redShift = redshiftGetter(DetectedLine, RestLine);
       if (redShift < 0) // we don't care about blueshifts.
         continue;
       solution.push_back(CLineMatchingResult::SSolution(
-          detectedLineList[iDetectedLine], restLineList[iRestLine], redShift));
+          DetectedLine, {iRestLine, RestLine}, redShift));
 
       if (N == 1) {
         // if there is only one detected line, then there are N=#restlines
@@ -110,29 +109,27 @@ std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
   return result;
 }
 
-std::function<Float64(Int32, Int32)>
-CLineMatching::getRedshift(const CLineDetectedVector &detectedLineList,
-                           const CLineVector &restLineList) const {
-  return [&detectedLineList, &restLineList](Int32 idx, Int32 iRestLine) {
-    return (detectedLineList[idx].GetPosition() -
-            restLineList[iRestLine].GetPosition()) /
-           restLineList[iRestLine].GetPosition();
+std::function<Float64(CLineDetected const &, CLine const &)>
+CLineMatching::getRedshift() const {
+  return [](CLineDetected const &detectedLine, CLine const &restLine) {
+    return (detectedLine.GetPosition() - restLine.GetPosition()) /
+           restLine.GetPosition();
   };
 }
 
 void CLineMatching::updateSolution(
     Int32 iDetectedLine, Float64 redShift, Float64 tol,
     CLineMatchingResult::TSolutionSet &solution, // to update
-    const CLineDetectedVector &detectedLineList,
-    const CLineVector &restLineList) const {
-  auto redshiftGetter = getRedshift(detectedLineList, restLineList);
-  for (Int32 iDetectedLine2 = 0; iDetectedLine2 < detectedLineList.size();
-       iDetectedLine2++) {
+    CLineDetectedMap const &detectedLineList,
+    CLineMap const &restLineList) const {
+  auto redshiftGetter = getRedshift();
+
+  for (auto const &[iDetectedLine2, DetectedLine2] : detectedLineList) {
     if (iDetectedLine == iDetectedLine2)
       continue;
 
-    for (Int32 iRestLine2 = 0; iRestLine2 < restLineList.size(); iRestLine2++) {
-      Float64 redShift2 = redshiftGetter(iDetectedLine2, iRestLine2);
+    for (auto const &[iRestLine2, RestLine2] : restLineList) {
+      Float64 redShift2 = redshiftGetter(DetectedLine2, RestLine2);
       if (redShift2 < 0) // we don't care about blueshifts.
         continue;
       Float64 redshiftTolerance = tol * (1 + (redShift + redShift2) * 0.5);
@@ -140,10 +137,9 @@ void CLineMatching::updateSolution(
         continue;
 
       // avoid repeated solution sets
-      if (!isLineAlreadyPresent(detectedLineList[iDetectedLine2], solution)) {
+      if (!isLineAlreadyPresent(DetectedLine2, solution)) {
         solution.push_back(CLineMatchingResult::SSolution(
-            detectedLineList[iDetectedLine2], restLineList[iRestLine2],
-            redShift2));
+            DetectedLine2, {iRestLine2, RestLine2}, redShift2));
       }
     }
   }
@@ -216,7 +212,7 @@ bool CLineMatching::AreSolutionSetsEqual(
   bool diffFound = false;
   for (Int32 iSet = 0; iSet < s1.size(); iSet++) {
     if (s1[iSet].DetectedLine != s2[iSet].DetectedLine ||
-        s1[iSet].RestLine != s2[iSet].RestLine ||
+        s1[iSet].RestLineId != s2[iSet].RestLineId ||
         s1[iSet].Redshift != s2[iSet].Redshift) {
       diffFound = true;
       break;

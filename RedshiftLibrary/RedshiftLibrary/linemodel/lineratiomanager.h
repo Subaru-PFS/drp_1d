@@ -60,7 +60,7 @@ public:
                     const CCSpectrumVectorPtr &inputSpcs,
                     const CTLambdaRangePtrVector &lambdaRanges,
                     std::shared_ptr<CContinuumManager> continuumManager,
-                    const CLineVector &restLineList);
+                    const CLineMap &restLineList);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -94,14 +94,12 @@ public:
       const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
-      const CLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter);
+      const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter);
 
 protected:
-  void setLyaProfile(Float64 redshift, const CLineVector &lineList);
+  void setLyaProfile(Float64 redshift, const CLineMap &lineList);
   void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
-                      const CLineVector &lineList);
-  virtual Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
-                                      const CLineVector &catalog) const;
+                      const CLineMap &lineList);
 
   void setSymIgmProfile(Int32 iElts, const TInt32List &idxLineIGM,
                         Float64 redshift);
@@ -121,7 +119,7 @@ protected:
   CLineModelElementList &getElementList(Int32 index = 0) {
     return (*m_elementsVector)[index];
   }
-  CLineModelElementList &getElementList(Int32 index = 0) const {
+  const CLineModelElementList &getElementList(Int32 index = 0) const {
     return (*m_elementsVector)[index];
   }
   CLMEltListVectorPtr m_elementsVector;
@@ -130,7 +128,7 @@ protected:
   CSpcModelVectorPtr m_models;
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;
-  const CLineVector &m_RestLineList;
+  const CLineMap &m_RestLineList;
 
   bool m_forceDisableLyaFitting = false;
   bool m_forceLyaFitting = false;

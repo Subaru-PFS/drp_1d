@@ -41,11 +41,12 @@
 
 #include <cfloat>
 #include <cmath>
+#include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <type_traits>
 #include <vector>
-
 namespace NSEpic {
 #ifndef NULL
 #define NULL (0)
@@ -62,10 +63,14 @@ typedef unsigned char Byte;
 typedef const char *String;
 
 typedef std::vector<Float64> TFloat64List;
+typedef std::map<Int32, Float64> TFloat64Map;
 typedef std::vector<Float32> TFloat32List;
 typedef std::vector<Int64> TInt64List;
 typedef std::vector<bool> TBoolList;
+typedef std::map<Int32, bool> TBoolMap;
 typedef std::vector<Int32> TInt32List;
+typedef std::map<Int32, Int32> TInt32Map;
+typedef std::set<Int32> TInt32Set;
 typedef std::vector<std::string> TStringList;
 typedef TStringList TScopeStack;
 

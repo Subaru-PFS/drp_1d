@@ -59,7 +59,8 @@ void CRandomFitter::doFit(Float64 redshift) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
-    if (getElementList()[iElts]->GetElementType() == CLine::EType::nType_Absorption) {
+    if (getElementList()[iElts]->GetElementType() ==
+        CLine::EType::nType_Absorption) {
       amax = meanContinuum * 0.5 * coeffAmpAbsorption;
     } else {
       amax = meanContinuum * coeffAmpEmission;
@@ -70,12 +71,11 @@ void CRandomFitter::doFit(Float64 redshift) {
       a = 0.0;
     }
     // get the max nominal amplitude
-    Int32 nLines = getElementList()[iElts]->GetSize();
     Float64 maxNominalAmp = -1.0;
-    for (Int32 j = 0; j < nLines; j++) {
-      if (maxNominalAmp < getElementList()[iElts]->GetNominalAmplitude(j)) {
-        maxNominalAmp = getElementList()[iElts]->GetNominalAmplitude(j);
-      }
+    auto const &elt = getElementList()[iElts];
+    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
+      if (maxNominalAmp < elt->GetNominalAmplitude(line_idx))
+        maxNominalAmp = elt->GetNominalAmplitude(line_idx);
     }
 
     getElementList().SetElementAmplitude(iElts, a / maxNominalAmp, err);

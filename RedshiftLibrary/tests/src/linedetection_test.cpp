@@ -236,9 +236,9 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
   CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult;
-  CLineDetectedVector strongLines;
-  strongLines.push_back(line1);
-  strongLines.push_back(line2);
+  CLineDetectedMap strongLines;
+  strongLines[0] = line1;
+  strongLines[1] = line2;
 
   TInt32RangeList selectedretestPeaks;
   selectedretestPeaks.push_back(TInt32Range(5, 35));
@@ -250,34 +250,38 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
   Float64 winsize = 100.;
   Float64 cut = -3.;
 
-  lineDetection.RemoveStrongFromSpectra(spc, lineDetectionResult, strongLines,
+  lineDetection.RemoveStrongFromSpectra(lineDetectionResult, spc, strongLines,
                                         selectedretestPeaks,
                                         selectedgaussparams, winsize, cut);
   BOOST_CHECK_EQUAL(lineDetectionResult.LineCatalog.GetList().size(), 2);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetCut(),
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(0).GetCut(),
                     1.7505788080267244, 1e-12);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetCut(), 2,
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(1).GetCut(), 2,
                     1e-12);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetAmplitude(),
-                    0.3, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetAmplitude(),
-                    0.5, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetPosition(),
-                    2.0, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetPosition(),
-                    7.0, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetWidth(),
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(0).GetAmplitude(), 0.3,
+      1e-6);
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(1).GetAmplitude(), 0.5,
+      1e-6);
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(0).GetPosition(), 2.0, 1e-6);
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(1).GetPosition(), 7.0, 1e-6);
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(0).GetWidth(),
                     0.2, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetWidth(),
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(1).GetWidth(),
                     1.0, 1e-6);
   BOOST_CHECK(
-      lineDetectionResult.LineCatalog.GetList()[0].GetProfile()->GetName() ==
+      lineDetectionResult.LineCatalog.GetList().at(0).GetProfile()->GetName() ==
       profilesym->GetName());
   BOOST_CHECK(
-      lineDetectionResult.LineCatalog.GetList()[1].GetProfile()->GetName() ==
+      lineDetectionResult.LineCatalog.GetList().at(1).GetProfile()->GetName() ==
       profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].IsStrong() == false);
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[1].IsStrong() == false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList().at(0).IsStrong() ==
+              false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList().at(1).IsStrong() ==
+              false);
 }
 
 BOOST_AUTO_TEST_CASE(Retest) {
@@ -321,9 +325,9 @@ BOOST_AUTO_TEST_CASE(Retest) {
   CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult;
-  CLineDetectedVector strongLines;
-  strongLines.push_back(line1);
-  strongLines.push_back(line2);
+  CLineDetectedMap strongLines;
+  strongLines[0] = line1;
+  strongLines[1] = line2;
 
   TInt32RangeList retestPeaks;
   retestPeaks.push_back(TInt32Range(5, 35));
@@ -336,33 +340,37 @@ BOOST_AUTO_TEST_CASE(Retest) {
   Float64 winsize = 100.;
   Float64 cut = -3.;
 
-  lineDetection.Retest(spc, lineDetectionResult, retestPeaks,
+  lineDetection.Retest(lineDetectionResult, spc, retestPeaks,
                        selectedgaussparams, strongLines, winsize, cut);
   BOOST_CHECK_EQUAL(lineDetectionResult.LineCatalog.GetList().size(), 2);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetCut(),
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(0).GetCut(),
                     1.7505788080267244, 1e-12);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetCut(),
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(1).GetCut(),
                     1.6729987967017514, 1e-12);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetAmplitude(),
-                    0.3, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetAmplitude(),
-                    0.5, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetPosition(),
-                    2.0, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetPosition(),
-                    7.0, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetWidth(),
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(0).GetAmplitude(), 0.3,
+      1e-6);
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(1).GetAmplitude(), 0.5,
+      1e-6);
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(0).GetPosition(), 2.0, 1e-6);
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(1).GetPosition(), 7.0, 1e-6);
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(0).GetWidth(),
                     0.2, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[1].GetWidth(),
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(1).GetWidth(),
                     1.0, 1e-6);
   BOOST_CHECK(
-      lineDetectionResult.LineCatalog.GetList()[0].GetProfile()->GetName() ==
+      lineDetectionResult.LineCatalog.GetList().at(0).GetProfile()->GetName() ==
       profilesym->GetName());
   BOOST_CHECK(
-      lineDetectionResult.LineCatalog.GetList()[1].GetProfile()->GetName() ==
+      lineDetectionResult.LineCatalog.GetList().at(1).GetProfile()->GetName() ==
       profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].IsStrong() == false);
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[1].IsStrong() == false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList().at(0).IsStrong() ==
+              false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList().at(1).IsStrong() ==
+              false);
 
   TInt32RangeList retestPeaks2;
   retestPeaks2.push_back(TInt32Range(5, 35));
@@ -382,21 +390,23 @@ BOOST_AUTO_TEST_CASE(Retest) {
   spc.SetFluxAxis(std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult2;
-  lineDetection.Retest(spc, lineDetectionResult2, retestPeaks2,
+  lineDetection.Retest(lineDetectionResult2, spc, retestPeaks2,
                        selectedgaussparams, strongLines, winsize, cut);
   BOOST_CHECK_EQUAL(lineDetectionResult2.LineCatalog.GetList().size(), 1);
-  BOOST_CHECK_CLOSE(lineDetectionResult2.LineCatalog.GetList()[0].GetCut(),
+  BOOST_CHECK_CLOSE(lineDetectionResult2.LineCatalog.GetList().at(0).GetCut(),
                     1.7505788080267244, 1e-12);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetAmplitude(),
-                    0.3, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetPosition(),
-                    2.0, 1e-6);
-  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList()[0].GetWidth(),
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(0).GetAmplitude(), 0.3,
+      1e-6);
+  BOOST_CHECK_CLOSE(
+      lineDetectionResult.LineCatalog.GetList().at(0).GetPosition(), 2.0, 1e-6);
+  BOOST_CHECK_CLOSE(lineDetectionResult.LineCatalog.GetList().at(0).GetWidth(),
                     0.2, 1e-6);
   BOOST_CHECK(
-      lineDetectionResult.LineCatalog.GetList()[0].GetProfile()->GetName() ==
+      lineDetectionResult.LineCatalog.GetList().at(0).GetProfile()->GetName() ==
       profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList()[0].IsStrong() == false);
+  BOOST_CHECK(lineDetectionResult.LineCatalog.GetList().at(0).IsStrong() ==
+              false);
 }
 
 BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop) {
@@ -517,13 +527,13 @@ BOOST_AUTO_TEST_CASE(Compute) {
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[7], "Peak_6 : Fitting failed");
 
   BOOST_CHECK_EQUAL(res->LineCatalog.GetList().size(), 1);
-  BOOST_CHECK_CLOSE(res->LineCatalog.GetList()[0].GetAmplitude(), 1.5, 1e-6);
-  BOOST_CHECK_CLOSE(res->LineCatalog.GetList()[0].GetPosition(), 40.0, 1e-6);
-  BOOST_CHECK_CLOSE(res->LineCatalog.GetList()[0].GetWidth(), 4.0, 1e-6);
-  BOOST_CHECK(res->LineCatalog.GetList()[0].GetProfile()->GetName() ==
+  BOOST_CHECK_CLOSE(res->LineCatalog.GetList().at(0).GetAmplitude(), 1.5, 1e-6);
+  BOOST_CHECK_CLOSE(res->LineCatalog.GetList().at(0).GetPosition(), 40.0, 1e-6);
+  BOOST_CHECK_CLOSE(res->LineCatalog.GetList().at(0).GetWidth(), 4.0, 1e-6);
+  BOOST_CHECK(res->LineCatalog.GetList().at(0).GetProfile()->GetName() ==
               profilesym->GetName());
-  BOOST_CHECK(res->LineCatalog.GetList()[0].IsStrong() == true);
-  BOOST_CHECK(res->LineCatalog.GetList()[0].IsEmission() == true);
+  BOOST_CHECK(res->LineCatalog.GetList().at(0).IsStrong() == true);
+  BOOST_CHECK(res->LineCatalog.GetList().at(0).IsEmission() == true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

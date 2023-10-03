@@ -59,9 +59,9 @@ protected:
                                              Float64 redshift);
 
   bool fitAmplitudesLinSolve(const TInt32List &EltsIdx,
-                             std::vector<Float64> &ampsfitted,
-                             std::vector<Float64> &errorsfitted,
-                             Float64 redshift, const TInt32List &IdxToFit = {});
+                             TFloat64List &ampsfitted,
+                             TFloat64List &errorsfitted, Float64 redshift,
+                             const TInt32List &IdxToFit = {});
 };
 } // namespace NSEpic
 #endif

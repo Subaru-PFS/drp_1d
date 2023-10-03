@@ -49,7 +49,7 @@ CRulesManager::CRulesManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineVector &restLineList)
+    const CLineMap &restLineList)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList) {}
 
