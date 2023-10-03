@@ -407,12 +407,12 @@ class AbstractSpectrumReader:
             self.parameters.set_lsf_type(self.lsf_type)
             if self.lsf_type != "GaussianVariableWidth":
                 self.parameters.set_lsf_param(LSFParameters[self.lsf_type],
-                                              self.lsf_data[obs_id]["width"][0])
+                                              self.lsf_data.get(obs_id)["width"][0])
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
                 lsf_args = TLSFArgumentsCtor[self.lsf_type](parameter_store)
             else:
-                lsf_args = TLSFGaussianVarWidthArgs(self.lsf_data[obs_id]["wave"],
-                                                    self.lsf_data[obs_id]["width"])
+                lsf_args = TLSFGaussianVarWidthArgs(self.lsf_data.get(obs_id)["wave"],
+                                                    self.lsf_data.get(obs_id)["width"])
         else:
             if parameter_lsf_type != "GaussianVariableWidth":
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())

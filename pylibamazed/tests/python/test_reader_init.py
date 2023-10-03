@@ -63,12 +63,6 @@ class TestReaderInit(TestSpectrumReaderUtils):
         with pytest.raises(APIException, match=r"INVALID_SPECTRUM"):
             fsr.init()
 
-    def test_multilsf_not_handled(self):
-        fsr = self.initialize_fsr_with_data()
-        fsr.lsf_data.append('exceeding lsf')
-        with pytest.raises(APIException, match=r"MULTILSF_NOT_HANDLED"):
-            fsr.init()
-
     def test_non_multi_obs_naming_restrictions(self):
         fsr = self.initialize_fsr_with_data(**{"obs_id": "name that shouldn't be here"})
         with pytest.raises(APIException, match=r"INVALID_NAME"):
