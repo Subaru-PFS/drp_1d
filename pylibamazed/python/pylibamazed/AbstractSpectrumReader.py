@@ -224,6 +224,9 @@ class AbstractSpectrumReader:
         """
         self.w_frame = "air"
 
+    def get_loaded_lsf_observation_ids(self):
+        return list(self.lsf_data.keys())
+
     def init(self):
         if not self._sizes_are_consistent():
             sizes: str = ', '.join([str(container.size()) for container in self._all_containers()])
@@ -403,7 +406,16 @@ class AbstractSpectrumReader:
         parameter_lsf_type = self.parameters.get_lsf_type()
 
         if parameter_lsf_type == "FROMSPECTRUMDATA":
-            obs_id = self.parameters.get_observation_ids()[0]
+            lsf_obs_ids = self.get_loaded_lsf_observation_ids()
+            if not lsf_obs_ids:
+                raise APIException(ErrorCode.LSF_NOT_LOADED,
+                                   "No LSF loaded in reader, "
+                                   "lsftype=FROMSPECTRUMDATA "
+                                   "parameter cannot be applied")
+            obs_id = lsf_obs_ids[0]
+            if len(lsf_obs_ids) > 1:
+                zflag.warning(WarningCode.ARBITRARY_LSF,
+                              f"LSF of observation {obs_id} chosen, other lsf ignored")
             self.parameters.set_lsf_type(self.lsf_type)
             if self.lsf_type != "GaussianVariableWidth":
                 self.parameters.set_lsf_param(LSFParameters[self.lsf_type],
