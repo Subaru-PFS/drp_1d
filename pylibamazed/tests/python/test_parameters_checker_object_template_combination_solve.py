@@ -59,7 +59,7 @@ class TestTemplateCombinationSolve:
             "TplcombinationSolve": {}
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)
 
     def test_warning_if_method_is_not_templateCombinationSolve_but_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
@@ -67,14 +67,14 @@ class TestTemplateCombinationSolve:
             "TplcombinationSolve": {}
         })
         check_from_parameter_dict(param_dict)
-        assert WarningUtils.has_warning(zflag)
+        assert WarningUtils.has_any_warning(zflag)
 
     def test_ok_if_method_is_not_templateCombinationSolve_and_section_is_absent(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)
 
     def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
         param_dict = self._make_parameter_dict(**{
@@ -89,4 +89,4 @@ class TestTemplateCombinationSolve:
         })
         param_dict["ebmv"] = {}
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)

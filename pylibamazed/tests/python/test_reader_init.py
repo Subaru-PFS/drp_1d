@@ -249,7 +249,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
             })
             fsr.init()
 
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_parameters_lambdarange_is_outside_spectrum_multiobs(self, zflag):
             fsr = self.initialize_fsr_with_data(**{
@@ -265,33 +265,35 @@ class TestReaderInit(TestSpectrumReaderUtils):
             })
             fsr.init()
 
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_warning(zflag, "TIGHT_SPECTRUM_WAVELENGTH")
 
         def test_warning_if_parameters_lambdarange_begins_lower_than_spectrum(self, zflag):
             self._init_fsr(
                 spectrum_wave_range=[10, 30],
                 parameters_lambda_range=[5, 25]
             )
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_parameters_lambdarange_ends_higher_than_spectrum(self, zflag):
             self._init_fsr(
                 spectrum_wave_range=[10, 30],
                 parameters_lambda_range=[11, 31]
             )
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_parameters_lambdarange_boundaries_are_contained_in_spectrum(self, zflag):
             self._init_fsr(
                 spectrum_wave_range=[10, 30],
                 parameters_lambda_range=[15, 20]
             )
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_parameters_lambdarange_boundaries_are_contained_in_spectrum_multiobs(self, zflag):
             fsr = self.initialize_fsr_with_data(**{
                 "obs_id": "1",
                 "multiobsmethod": "full",
+                "lsf_type": "GaussianConstantWidth",
+                "width": 0.01,
                 "spectrum_wave_range": {"1": [10, 40]},
                 "parameters_lambdarange": {"1": [20, 30], "2": [2, 3]}
             })
@@ -302,11 +304,11 @@ class TestReaderInit(TestSpectrumReaderUtils):
             })
             fsr.init()
 
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_warning(zflag, "TIGHT_SPECTRUM_WAVELENGTH")
 
         def test_OK_if_parameters_lambdarange_boundaries_are_equal_to_spectrum(self, zflag):
             self._init_fsr(
                 spectrum_wave_range=[10, 30],  # range => last item is 29
                 parameters_lambda_range=[10, 29]
             )
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)

@@ -414,7 +414,7 @@ class AbstractSpectrumReader:
                                    "parameter cannot be applied")
             obs_id = lsf_obs_ids[0]
             if len(lsf_obs_ids) > 1:
-                zflag.warning(WarningCode.ARBITRARY_LSF,
+                zflag.warning(WarningCode.ARBITRARY_LSF.value,
                               f"LSF of observation {obs_id} chosen, other lsf ignored")
             self.parameters.set_lsf_type(self.lsf_type)
             if self.lsf_type != "GaussianVariableWidth":

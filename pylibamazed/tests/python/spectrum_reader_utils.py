@@ -62,6 +62,8 @@ class TestSpectrumReaderUtils:
             params_dict["lambdarange"] = kwargs.get("parameters_lambdarange", [0, 10])
         if kwargs.get("filters"):
             params_dict["filters"] = kwargs.get("filters")
+        if kwargs.get("width"):
+            params_dict["LSF"]["width"] = kwargs.get("width")
         return params_dict
 
     def full_load(self, fsr, **kwargs):
@@ -140,7 +142,8 @@ class FakeSpectrumReader(AbstractSpectrumReader):
 
     def load_lsf(self, location, obs_id=""):
         self.lsf_type = "GaussianConstantWidth"
-        lsf = {"width": np.array([3.0]), "wave": None}
+        lsf = np.zeros(np.dtype([("width", '<f8')]))
+        lsf["width"][0] = 3.0
         self.lsf_data.append(lsf, obs_id)
 
     def load_photometry(self, location):

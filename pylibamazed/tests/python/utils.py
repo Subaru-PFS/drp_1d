@@ -39,6 +39,7 @@
 from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.redshift import CFlagWarning
+from pylibamazed.Warning import extract_warning_flags
 
 default_object_type = "galaxy"
 
@@ -53,8 +54,11 @@ class ComparisonUtils:
 
 class WarningUtils:
     @staticmethod
-    def has_warning(zflag: CFlagWarning):
+    def has_any_warning(zflag: CFlagWarning):
         return zflag.getBitMask() != 0
+
+    def has_warning(zflag: CFlagWarning, warning_name):
+        return warning_name in extract_warning_flags(zflag.getBitMask())
 
 
 class DictUtils:
