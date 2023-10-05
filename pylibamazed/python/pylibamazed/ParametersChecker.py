@@ -210,15 +210,15 @@ class ParametersChecker:
 
     def _check_linemeassolve_dzhalf(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_linemeas_method(object_type) not in ["", None],
+            self.accessor.get_linemeas_method(object_type) is not None,
             self.accessor.get_linemeas_dzhalf(object_type) is not None,
-            f"lineameas_dzhalf for object {object_type}",
+            f"linemeas_dzhalf for object {object_type}",
             f"object {object_type} linemeas_dzhalf"
         )
 
     def _check_linemeassolve_redshiftstep(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_linemeas_method(object_type) not in ["", None],
+            self.accessor.get_linemeas_method(object_type) is not None,
             self.accessor.get_linemeas_redshiftstep(object_type) is not None,
             f"lineameas_redshiftstep for object {object_type}",
             f"object {object_type} linemeas_redshiftstep"

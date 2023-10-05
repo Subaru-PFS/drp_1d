@@ -47,9 +47,9 @@ from pylibamazed.redshift import ErrorCode
 
 
 class Parameters(ParametersAccessor):
-    def __init__(self, parameters_dict: dict, Checker=ParametersChecker, makeChecks=True):
+    def __init__(self, parameters_dict: dict, Checker=ParametersChecker, make_checks=True):
         self.parameters = parameters_dict
-        if makeChecks:
+        if make_checks:
             accessor = ParametersAccessor(self.parameters)
             Checker(accessor).check()
 
@@ -165,6 +165,15 @@ class Parameters(ParametersAccessor):
 
     def to_json(self):
         return json.dumps(self.parameters)
+  
+    def is_a_redshift_solver_used(self) -> bool:
+        z_solver_found: bool = False
+        for object_type in self.get_objects():
+            if self.get_solve_method(object_type) is not None:
+                z_solver_found = True
+                break
+        print("z_solver_found", z_solver_found)
+        return z_solver_found
 
     def check_linemeas_validity(self):
         for object_type in self.get_objects():

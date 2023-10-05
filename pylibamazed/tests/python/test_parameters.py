@@ -110,3 +110,25 @@ class TestParameters:
                 TestParametersUtils.default_object_type,
                 "unkown stage"
             )
+
+    class TestIsARedshiftSolverUsed:
+        def test_false_if_no_object_has_a_redshift_solver_defined(self):
+            parameters: Parameters = Parameters({
+                "galaxy": {
+                    "method": None
+                },
+                "objects": ["galaxy"]
+            }, make_checks=False)
+            assert parameters.is_a_redshift_solver_used() is False
+    
+        def test_true_if_an_object_has_a_redshift_solver(self):
+            parameters: Parameters = Parameters({
+                "galaxy": {
+                    "method": None
+                },
+                "star": {
+                    "method": "linemodelsolve"
+                },
+                "objects": ["galaxy", "star"]
+            }, make_checks=False)
+            assert parameters.is_a_redshift_solver_used() is True
