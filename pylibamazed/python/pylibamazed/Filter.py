@@ -53,7 +53,7 @@ class FilterItem:
     - value: with which value we want to make the comparison
     """
 
-    allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "0&", "^"]
+    allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
 
     def __init__(self, key: str, instruction: str, value: any):
         self.check_instruction(instruction)
@@ -94,8 +94,10 @@ class FilterItem:
             "in": self._is_in,
             "~in": self._is_not_in,
             "&": self._bitwise_and,
+            "~&": self._bitwise_not_and,
             "0&": self._bitwise_and_or_0,
-            "^": self._xor,
+            "^": self._bitwise_xor,
+            "~^": self._bitwise_not_xor,
         }
         return str_to_action[self.instruction]
 
@@ -126,11 +128,17 @@ class FilterItem:
     def _bitwise_and(self, a):
         return (a & self.value).astype(bool)
 
+    def _bitwise_not_and(self, a):
+        return ~((a & self.value)).astype(bool)
+
     def _bitwise_and_or_0(self, a):
         return (a == 0) | (a & self.value).astype(bool)
 
-    def _xor(self, a):
+    def _bitwise_xor(self, a):
         return (a ^ self.value).astype(bool)
+
+    def _bitwise_not_xor(self, a):
+        return ~(a ^ self.value).astype(bool)
 
     @classmethod
     def check_instruction(cls, instruction: str):
