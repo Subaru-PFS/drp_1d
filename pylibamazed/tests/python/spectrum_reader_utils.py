@@ -142,7 +142,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
 
     def load_lsf(self, location, obs_id=""):
         self.lsf_type = "GaussianConstantWidth"
-        lsf = np.zeros(np.dtype([("width", '<f8')]))
+        lsf = np.ndarray((1,), dtype=np.dtype([("width", '<f8')]))
         lsf["width"][0] = 3.0
         self.lsf_data.append(lsf, obs_id)
 

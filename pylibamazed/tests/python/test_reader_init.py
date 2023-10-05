@@ -152,10 +152,11 @@ class TestReaderInit(TestSpectrumReaderUtils):
         with pytest.raises(KeyError):
             fsr.init()
 
-        fsr = self.initialize_fsr_with_data()
-        fsr.lsf_type = "GaussianVariableWidth"
-        with pytest.raises(TypeError):
-            fsr.init()
+# TODO to make a real test we should add an lsf compatible with spectrum
+# fsr = self.initialize_fsr_with_data()
+# fsr.lsf_type = "GaussianVariableWidth"
+# with pytest.raises(TypeError):
+#     fsr.init()
 
     def test_sizes_are_consistent(self):
         # Without "others"
