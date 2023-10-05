@@ -93,6 +93,9 @@ class TestSpectrumFilterItem:
         filter.instruction = '^'
         assert filter.compliant_lines(df2).equals(pd.Series([True, False, True, True]))
 
+        filter.instruction = '~^'
+        assert filter.compliant_lines(df2).equals(pd.Series([False, True, False, False]))
+
         filter.value = 1
         filter.instruction = '~&'
         assert filter.compliant_lines(df2).equals(pd.Series([True, False, True, False]))

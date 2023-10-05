@@ -96,7 +96,8 @@ class FilterItem:
             "&": self._bitwise_and,
             "~&": self._bitwise_not_and,
             "0&": self._bitwise_and_or_0,
-            "^": self._xor,
+            "^": self._bitwise_xor,
+            "~^": self._bitwise_not_xor,
         }
         return str_to_action[self.instruction]
 
@@ -133,8 +134,11 @@ class FilterItem:
     def _bitwise_and_or_0(self, a):
         return (a == 0) | (a & self.value).astype(bool)
 
-    def _xor(self, a):
+    def _bitwise_xor(self, a):
         return (a ^ self.value).astype(bool)
+
+    def _bitwise_not_xor(self, a):
+        return ~(a ^ self.value).astype(bool)
 
     @classmethod
     def check_instruction(cls, instruction: str):
