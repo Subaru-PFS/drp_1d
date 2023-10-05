@@ -55,7 +55,7 @@ class TestParametersCheckerObject:
             param_dict = self._make_param_dict(**{
                 "linemeas_method": "sth"
             })
-            with pytest.raises(APIException, match=r"Missing parameter lineameas_dzhalf for object"):
+            with pytest.raises(APIException, match=r"Missing parameter linemeas_dzhalf for object"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_method_null_and_dzhalf_not_defined(self, zflag):

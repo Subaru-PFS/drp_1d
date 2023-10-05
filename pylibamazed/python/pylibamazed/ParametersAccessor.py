@@ -62,7 +62,7 @@ class ParametersAccessor:
         return self.parameters.get("photometryTransmissionDir")
 
     def get_photometry_bands(self) -> List[str]:
-        return self.parameters.get("photometryBand",[])
+        return self.parameters.get("photometryBand", [])
 
     def get_multiobs_method(self):
         return self.parameters.get("multiobsmethod")
@@ -74,10 +74,18 @@ class ParametersAccessor:
         return self.parameters.get(object_type)
 
     def get_solve_method(self, object_type: str) -> str:
-        return self.get_object_section(object_type).get("method")
+        method = self.get_object_section(object_type).get("method")
+        # Not in the get because if method is defined as an empty string in the parameters json
+        # we still want method to be "None"
+        if method == "":
+            method = None
+        return method
 
     def get_linemeas_method(self, object_type: str) -> str:
-        return self.get_object_section(object_type).get("linemeas_method")
+        linemeas = self.get_object_section(object_type).get("linemeas_method")
+        if linemeas == "":
+            linemeas = None
+        return linemeas
 
     def get_linemeas_dzhalf(self, object_type: str) -> float:
         return self.get_object_section(object_type).get("linemeas_dzhalf")
