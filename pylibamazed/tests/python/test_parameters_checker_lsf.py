@@ -63,7 +63,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestLSFTypeGaussianConstantResolution:
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
@@ -83,7 +83,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestLSFTypeGaussianNISPSIM201707:
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
@@ -103,7 +103,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestLSFTypeGaussianVariablewidth:
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
@@ -123,7 +123,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestWidth:
         def test_warning_if_width_defined_with_other_LSF_type_than_GaussianConstantWidth(self, zflag):
@@ -134,7 +134,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_width_not_defined_with_other_LSF_type_than_GaussianConstantWidth(self, zflag):
             parametersDict = {
@@ -143,7 +143,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestResolution:
         def test_warning_if_resolution_defined_with_other_LSF_type_than_GaussianConstantResolution(
@@ -155,7 +155,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_resolution_not_defined_with_other_LSF_type_than_GaussianConstantResolution(
                 self, zflag):
@@ -165,7 +165,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestSourceSize:
         def test_warning_if_sourcesize_defined_with_other_LSF_type_than_NISP(self, zflag):
@@ -176,7 +176,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_sourcesize_not_defined_with_other_LSF_type_than_NISP(self, zflag):
             parametersDict = {
@@ -185,7 +185,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestFileName:
         def test_warning_if_filename_defined_with_other_LSF_type_than_NISP(self, zflag):
@@ -196,7 +196,7 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_sourcesize_not_defined_with_other_LSF_type_than_NISP(self, zflag):
             parametersDict = {
@@ -205,4 +205,4 @@ class TestLSF:
                 }
             }
             check_from_parameter_dict(parametersDict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)

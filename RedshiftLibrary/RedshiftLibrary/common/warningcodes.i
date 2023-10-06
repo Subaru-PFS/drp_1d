@@ -27,4 +27,5 @@ enum class WarningCode {
   UNUSED_PARAMETER,                           // 25
   TIGHT_SPECTRUM_WAVELENGTH,                  // 26
   LINE_RATIO_UNKNOWN_LINE,                    // 27
+    ARBITRARY_LSF                             // 28
 };

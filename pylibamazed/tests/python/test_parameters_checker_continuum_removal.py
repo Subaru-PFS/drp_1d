@@ -59,7 +59,7 @@ class TestContinuumRemoval:
 
             accessor = ParametersAccessor(parametersDict)
             ParametersChecker(accessor).custom_check()
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_error_if_method_is_IrregularSamplingMedian_without_medianKernelWidth(self, nesting):
             parametersDict = DictUtils.make_nested({
@@ -95,7 +95,7 @@ class TestContinuumRemoval:
             }, nesting)
             accessor = ParametersAccessor(parametersDict)
             ParametersChecker(accessor).custom_check()
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
     class TestMedianEvenReflection:
         def test_warning_present_and_method_is_not_IrregularSamplingMedian(self, zflag, nesting):
@@ -107,4 +107,4 @@ class TestContinuumRemoval:
             }, nesting)
             accessor = ParametersAccessor(parametersDict)
             ParametersChecker(accessor).custom_check()
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)

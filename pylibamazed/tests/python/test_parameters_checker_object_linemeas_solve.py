@@ -60,12 +60,12 @@ class TestLineMeasSolve:
         def test_ok_if_lineRatioType_is_rules_and_rules_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"lineRatioType": "rules", "rules": "sth"})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_lineRatioType_is_not_rules_but_rules_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"rules": "sth"})
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
     class TestFittingMethod:
         def _make_parameter_dict(self, **kwargs):
@@ -82,12 +82,12 @@ class TestLineMeasSolve:
         def test_ok_if_fittingmethod_is_lbfgsb_and_velocityfit_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"fittingmethod": "lbfgsb", "velocityfit": False})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_fitting_method_is_not_lbfgsb_but_velocityfit_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"velocityfit": False})
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
     class TestVelocityFit:
         def _make_parameter_dict(self, **kwargs):
@@ -113,7 +113,7 @@ class TestLineMeasSolve:
                 "absvelocityfitmax": 1,
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_velocityfit_is_false_but_some_velocity_params_are_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -121,4 +121,4 @@ class TestLineMeasSolve:
                 "emvelocityfitmin": 1,
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)

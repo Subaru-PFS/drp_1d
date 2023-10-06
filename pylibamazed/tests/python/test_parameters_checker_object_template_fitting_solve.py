@@ -63,7 +63,7 @@ class TestTemplateFittingSolve:
             "TemplateFittingSolve": {}
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)
 
     def test_warning_if_method_is_not_templateFittingSolve_but_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
@@ -71,14 +71,14 @@ class TestTemplateFittingSolve:
             "TemplateFittingSolve": {}
         })
         check_from_parameter_dict(param_dict)
-        assert WarningUtils.has_warning(zflag)
+        assert WarningUtils.has_any_warning(zflag)
 
     def test_ok_if_method_is_not_templateFittingSolve_and_section_is_absent(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)
 
     def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
         param_dict = self._make_parameter_dict(**{
@@ -93,7 +93,7 @@ class TestTemplateFittingSolve:
         })
         param_dict["ebmv"] = {}
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)
 
     def test_error_if_photometry_is_enabled_but_photometry_weight_is_absent(self):
         param_dict = self._make_parameter_dict(**{
@@ -113,7 +113,7 @@ class TestTemplateFittingSolve:
             }
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)
 
     def test_warning_if_photometry_is_disabled_but_photometry_weight_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
@@ -123,7 +123,7 @@ class TestTemplateFittingSolve:
             }
         })
         check_from_parameter_dict(param_dict)
-        assert WarningUtils.has_warning(zflag)
+        assert WarningUtils.has_any_warning(zflag)
 
     def test_ok_if_photometry_is_disabled_and_photometry_weight_is_absent(self, zflag):
         param_dict = self._make_parameter_dict(**{
@@ -133,4 +133,4 @@ class TestTemplateFittingSolve:
             }
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_warning(zflag)
+        assert not WarningUtils.has_any_warning(zflag)

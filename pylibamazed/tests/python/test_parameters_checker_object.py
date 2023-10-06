@@ -63,7 +63,7 @@ class TestParametersCheckerObject:
                 "linemeas_method": ""
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_ok_if_method_not_null_and_dzhalf_defined(self, zflag):
             param_dict = self._make_param_dict(**{
@@ -71,7 +71,7 @@ class TestParametersCheckerObject:
                 "linemeas_dzhalf": 1
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_method_null_and_dzhalf_defined(self, zflag):
             param_dict = self._make_param_dict(**{
@@ -79,7 +79,7 @@ class TestParametersCheckerObject:
                 "linemeas_dzhalf": 1
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
     class TestObjectLinemeasredshiftStep:
 
@@ -100,7 +100,7 @@ class TestParametersCheckerObject:
                 "linemeas_method": ""
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_ok_if_method_not_null_and_redshift_defined(self, zflag):
             param_dict = self._make_param_dict(**{
@@ -108,7 +108,7 @@ class TestParametersCheckerObject:
                 "linemeas_redshiftstep": 1
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_method_null_and_redshift_defined(self, zflag):
             param_dict = self._make_param_dict(**{
@@ -116,7 +116,7 @@ class TestParametersCheckerObject:
                 "linemeas_redshiftstep": 1
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
     class TestObjectReliability:
 
@@ -138,7 +138,7 @@ class TestParametersCheckerObject:
                 "reliability_model": "sth"
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_reliability_model_without_enable_reliability(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -146,11 +146,11 @@ class TestParametersCheckerObject:
                 "reliability_model": "sth"
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_reliability_disabled_without_reliability_model(self, zflag):
             param_dict = self._make_parameter_dict(**{
                 "enable_reliability": False,
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)

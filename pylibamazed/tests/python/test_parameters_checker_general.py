@@ -54,7 +54,7 @@ class TestParametersCheckGeneral:
 
                 accessor = ParametersAccessor(parametersDict)
                 ParametersChecker(accessor)._check_filters()
-                assert not WarningUtils.has_warning(zflag)
+                assert not WarningUtils.has_any_warning(zflag)
 
             def test_error_if_filters_is_not_a_list(self):
                 parametersDict = {
@@ -87,7 +87,7 @@ class TestParametersCheckGeneral:
                 accessor = ParametersAccessor(parametersDict)
 
                 ParametersChecker(accessor)._check_filters()
-                assert not WarningUtils.has_warning(zflag)
+                assert not WarningUtils.has_any_warning(zflag)
 
             def test_error_if_filter_uses_an_unknown_column(self):
                 parametersDict = {
@@ -109,7 +109,7 @@ class TestParametersCheckGeneral:
 
                 accessor = ParametersAccessor(parametersDict)
                 ParametersChecker(accessor)._check_filters()
-                assert not WarningUtils.has_warning(zflag)
+                assert not WarningUtils.has_any_warning(zflag)
 
     class TestPhotometryTransmissionDir:
 
@@ -137,14 +137,14 @@ class TestParametersCheckGeneral:
             param_dict["photometryTransmissionDir"] = "sth"
             accessor = ParametersAccessor(param_dict)
             ParametersChecker(accessor).custom_check()
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{"enablephotometry": False})
             param_dict["photometryTransmissionDir"] = "sth"
             accessor = ParametersAccessor(param_dict)
             ParametersChecker(accessor).custom_check()
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
     class TestPhotometryBand:
 
@@ -174,7 +174,7 @@ class TestParametersCheckGeneral:
 
             accessor = ParametersAccessor(param_dict)
             ParametersChecker(accessor).custom_check()
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{"enablephotometry": False})
@@ -182,4 +182,4 @@ class TestParametersCheckGeneral:
 
             accessor = ParametersAccessor(param_dict)
             ParametersChecker(accessor).custom_check()
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)

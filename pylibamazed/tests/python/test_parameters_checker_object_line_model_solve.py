@@ -58,7 +58,7 @@ class TestLineModelSolve:
                 "lineRatioType": "sth"
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
         def test_OK_if_improveBalmerFit_True_and_lineRatioType_is_rules(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -67,7 +67,7 @@ class TestLineModelSolve:
                 "rules": ""
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestContinuumFit:
 
@@ -89,7 +89,7 @@ class TestLineModelSolve:
             })
             param_dict["ebmv"] = {}
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
     class TestFirstPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
@@ -121,7 +121,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_tplratio_imsfit_defined_but_lineratiotype_is_not_tpl(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -131,7 +131,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
 
     class TestSkipSecondPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
@@ -159,7 +159,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag)
+            assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_skipsecondpass_true_but_secondpass_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -169,4 +169,4 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag)
+            assert WarningUtils.has_any_warning(zflag)
