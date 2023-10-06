@@ -117,7 +117,7 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablephotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-            new_kwargs = {"TemplateFittingSolve": new_kwargs}
+            new_kwargs = {"TemplateFittingSolve": new_kwargs, "template_dir": "sth"}
             new_kwargs["method"] = "TemplateFittingSolve"
 
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)
@@ -152,7 +152,7 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablephotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-            new_kwargs = {"TemplateFittingSolve": new_kwargs}
+            new_kwargs = {"TemplateFittingSolve": new_kwargs, "template_dir": "sth"}
             new_kwargs["method"] = "TemplateFittingSolve"
 
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)

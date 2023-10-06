@@ -47,6 +47,8 @@ class TestTemplateFittingSolve:
     def _make_parameter_dict(self, **kwargs) -> dict:
         kwargs["linemeas_method"] = kwargs.get("linemeas_method", "")
         kwargs["method"] = kwargs.get("method", "TemplateFittingSolve")
+        if kwargs["method"] == "TemplateFittingSolve":
+            kwargs["template_dir"] = "sth"
         param_dict = make_parameter_dict_at_object_level(**kwargs)
         if kwargs.get("TemplateFittingSolve", {}).get("enablephotometry"):
             param_dict["photometryTransmissionDir"] = "sth"

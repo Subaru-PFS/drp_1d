@@ -7,7 +7,6 @@
     "redshiftrange",
     "redshiftstep",
     "redshiftsampling",
-    "template_dir",
     "linemeas_method",
     "method",
     "enable_reliability"

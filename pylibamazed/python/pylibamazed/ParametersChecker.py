@@ -207,6 +207,20 @@ class ParametersChecker:
         self._check_templateFittingSolve_section(object_type)
         self._check_templateCombinationSolve_section(object_type)
         self._check_lineModelSolve(object_type)
+        self._check_template_dir(object_type)
+
+    def _check_template_dir(self, object_type: str) -> None:
+        template_dir_presence_condition = \
+            self.accessor.get_solve_method(object_type) in ["TemplateFittingSolve", "TplCombinationSolve"] or (
+                self.accessor.get_solve_method(object_type) == "LineModelSolve" and
+                self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplfit", "tplfitauto"]
+            )
+        self._check_dependant_parameter_presence(
+            template_dir_presence_condition,
+            self.accessor.get_template_dir(object_type) is not None,
+            f"{object_type} template_dir",
+            f"{object_type} template_dir"
+        )
 
     def _check_linemeassolve_dzhalf(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
