@@ -475,24 +475,27 @@ class CalibrationLibrary:
 
     def get_lines_ids(self, attributes):
         lines_ids = dict()
+        lines = None
         for attr in attributes:
             attr_parts = attr.split(".")
-            try:
-                if attr_parts[1] == "linemeas":
-                    linemeas_object = attr_parts[0]
-                    l_method = "LineMeasSolve"
-                elif attr_parts[1] == "fitted_lines":
-                    linemeas_object = attr_parts[0]
-                    l_method = "LineModelSolve"
-                else:
-                    continue
-                lines = self.line_catalogs_df[linemeas_object][l_method]
-            except Exception:
+            if len(attr_parts) == 1:
                 continue
-            try:
-                line_name = attr_parts[2]
-                line_id = lines[lines["Name"] == line_name].index[0]
-                lines_ids[line_name] = line_id
-            except Exception:
-                raise Exception(f"Could not find {line_name} in catalog")
+            if attr_parts[1] == "linemeas":
+                linemeas_object = attr_parts[0]
+                l_method = "LineMeasSolve"
+            elif attr_parts[1] == "fitted_lines":
+                linemeas_object = attr_parts[0]
+                l_method = "LineModelSolve"
+            else:
+                continue
+            if linemeas_object in self.line_catalogs_df \
+                    and l_method in self.line_catalogs_df[linemeas_object]:
+                lines = self.line_catalogs_df[linemeas_object][l_method]
+            if lines is not None:
+                try:
+                    line_name = attr_parts[2]
+                    line_id = lines[lines["Name"] == line_name].index[0]
+                    lines_ids[line_name] = line_id
+                except Exception:
+                    raise Exception(f"Could not find {line_name} in catalog")
         return lines_ids
