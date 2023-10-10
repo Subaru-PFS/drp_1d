@@ -121,10 +121,9 @@ void CAbstractFitter::fit(Float64 redshift) {
 };
 
 void CAbstractFitter::initFit(Float64 redshift) {
-  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     resetSupport(redshift);
   }
-  *m_curObs = 0;
 
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
@@ -211,12 +210,13 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
                                    Int32 lineIdx) {
 
   bool allOutsideLambdaRange = true;
-  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     if (!getElementList()[eltIndex]->IsOutsideLambdaRange()) {
       allOutsideLambdaRange = false;
+      break;
     }
   }
-  *m_curObs = 0;
+
   if (allOutsideLambdaRange) {
 
     m_ElementParam[eltIndex]->m_sumCross = NAN;
@@ -234,7 +234,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   m_ElementParam[eltIndex]->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
 
   Int32 num = 0;
-  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     const CSpectrumFluxAxis &noContinuumfluxAxis =
         getModel().getSpcFluxAxisNoContinuum();
@@ -245,7 +245,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
         redshift, spectralAxis, noContinuumfluxAxis, continuumfluxAxis,
         lineIdx);
   }
-  *m_curObs = 0;
+
   if (num == 0 || m_ElementParam[eltIndex]->m_sumGauss == 0) {
     Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
                  " num=%d, mtm=%f",
@@ -257,12 +257,12 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   }
 
   bool allNaN = true;
-  for (; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     if (!std::isnan(getElementList()[eltIndex]->GetSumGauss())) {
       allNaN = false;
+      break;
     }
   }
-  *m_curObs = 0;
 
   if (allNaN) {
     m_ElementParam[eltIndex]->m_sumCross = NAN;

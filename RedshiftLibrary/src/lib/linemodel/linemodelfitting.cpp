@@ -176,7 +176,7 @@ void CLineModelFitting::initMembers(
         getSpectrumPtr(), m_RestLineList, m_continuumFitValues, TFOperator));
     m_models->back().m_spcIndex = *m_curObs;
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 
   m_continuumManager = std::make_shared<CContinuumManager>(
       m_models, m_continuumFitValues, m_curObs);
@@ -400,7 +400,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
     for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
       getSpectrumModel().setContinuumToInputSpc();
     }
-    *m_curObs = 0;
+    //    *m_curObs = 0;
     return;
   }
 
@@ -413,7 +413,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
     Int32 autoselect = getContinuumComponent() == "tplfitauto";
     m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
   }
-  *m_curObs = 0;
+  //  *m_curObs = 0;
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
@@ -502,7 +502,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted,
                                              autoselect, redshift);
       }
-      *m_curObs = 0;
+      //*m_curObs = 0;
     }
     /*
     Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
@@ -676,7 +676,7 @@ Int32 CLineModelFitting::getSpcNSamples() const {
       lambdaMaxSpcIndex = *m_curObs;
     }
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 
   return abs(imax[lambdaMaxSpcIndex] - imin[lambdaMinSpcIndex]);
 }
@@ -942,7 +942,7 @@ void CLineModelFitting::LoadModelSolution(
             spectralAxis, modelSolution.Redshift, getLambdaRange());
     }
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 
   return;
 }
@@ -1113,7 +1113,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       auto const &el = getElementList();
       is_outside = is_outside || el[eIdx]->IsOutsideLambdaRange(line_index);
     }
-    *m_curObs = 0;
+    //*m_curObs = 0;
     modelSolution.OutsideLambdaRange[iRestLine] = is_outside;
   }
 
@@ -1160,7 +1160,7 @@ void CLineModelFitting::SetLSF() {
           lsf); // lsf has now a type to be used for width computations
     }
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 }
 
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
@@ -1170,7 +1170,7 @@ void CLineModelFitting::SetVelocityEmission(Float64 vel) {
       m_ElementParam[j]->m_VelocityEmission = vel;
     }
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 }
 
 void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
@@ -1180,7 +1180,7 @@ void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
     for (auto idxElt : inds)
       m_ElementParam[idxElt]->m_VelocityEmission = vel;
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
@@ -1190,7 +1190,7 @@ void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
       m_ElementParam[j]->m_VelocityAbsorption = vel;
     }
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 }
 
 void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
@@ -1200,7 +1200,7 @@ void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
     for (auto idxElt : inds)
       m_ElementParam[idxElt]->m_VelocityAbsorption = vel;
   }
-  *m_curObs = 0;
+  //*m_curObs = 0;
 }
 
 Float64 CLineModelFitting::GetVelocityEmission() const {

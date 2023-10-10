@@ -261,13 +261,12 @@ void CContinuumManager::setContinuumComponent(std::string component) {
 }
 
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
-  for (; *m_curObs < m_models->size(); (*m_curObs)++) {
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
 
     std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
         m_tplCategoryList, m_fitContinuum->tplName);
     getModel().ApplyContinuumOnGrid(tpl, redshift);
   }
-  *m_curObs = 0;
 }
 
 void CContinuumManager::reinterpolateContinuumResetAmp() {

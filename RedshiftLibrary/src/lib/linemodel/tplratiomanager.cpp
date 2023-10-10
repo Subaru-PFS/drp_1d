@@ -442,7 +442,7 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
 
     _meritprior += computelogLinePriorMerit(itratio, m_logPriorDataTplRatio);
   }
-  *m_curObs = 0;
+  //  *m_curObs = 0;
   if (_merit + _meritprior <
       m_MeritTplratio[itratio] + m_PriorMeritTplratio[itratio]) {
     // update result variables

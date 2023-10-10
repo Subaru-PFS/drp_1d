@@ -112,15 +112,17 @@ protected:
                               bool enableOffsetFitting) const;
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
-  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
-  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
-  const CSpectrum &getSpectrum() { return *((*m_inputSpcs)[*m_curObs]); }
-  const TLambdaRange &getLambdaRange() { return *(m_lambdaRanges[*m_curObs]); }
+  CSpectrumModel &getModel() { return (*m_models).at(*m_curObs); }
+  const CSpectrumModel &getModel() const { return (*m_models).at(*m_curObs); }
+  const CSpectrum &getSpectrum() { return *((*m_inputSpcs).at(*m_curObs)); }
+  const TLambdaRange &getLambdaRange() {
+    return *(m_lambdaRanges.at(*m_curObs));
+  }
   CLineModelElementList &getElementList() {
-    return (*m_ElementsVector)[*m_curObs];
+    return (*m_ElementsVector).at(*m_curObs);
   }
   const CLineModelElementList &getElementList() const {
-    return (*m_ElementsVector)[*m_curObs];
+    return (*m_ElementsVector).at(*m_curObs);
   }
   CLMEltListVectorPtr m_ElementsVector;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
