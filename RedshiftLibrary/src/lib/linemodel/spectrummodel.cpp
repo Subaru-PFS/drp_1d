@@ -49,10 +49,11 @@ CSpectrumModel::CSpectrumModel(
     const std::shared_ptr<CLineModelElementList> &elements,
     const std::shared_ptr<const CSpectrum> &spc, const CLineMap &restLineList,
     const std::shared_ptr<CTplModelSolution> &tfv,
-    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+    Int32 spcIndex)
     : m_Elements(elements), m_inputSpc(spc), m_SpectrumModel(*(spc)),
       m_RestLineList(restLineList), m_fitContinuum(tfv),
-      m_templateFittingOperator(TFOperator) {
+      m_templateFittingOperator(TFOperator), m_spcIndex(spcIndex) {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);

@@ -28,8 +28,17 @@ public:
                     std::shared_ptr<CTplModelSolution>,
                     std::shared_ptr<Int32> curObs);
 
-  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
-  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
+  const CSpectrumModel &getModel() const {
+    if (*m_curObs > m_models->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+
+    return (*m_models)[*m_curObs];
+  }
+  CSpectrumModel &getModel() {
+    if (*m_curObs > m_models->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return (*m_models)[*m_curObs];
+  }
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);

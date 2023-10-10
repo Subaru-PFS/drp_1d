@@ -87,31 +87,34 @@ CLineRatioManager::CLineRatioManager(
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
                                       const CLineMap &catalog) {
-  auto const indices_Igm = getElementList().getIgmLinesIndices();
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
 
-  if (indices_Igm.empty())
-    return;
+    auto const indices_Igm = getElementList().getIgmLinesIndices();
 
-  // assuming only one asymfit/fixed profile
-  auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
-  Int32 line_idx_LyaE = line_indices_LyaE.front();
+    if (indices_Igm.empty())
+      continue;
 
-  const auto &profile =
-      getElementList()[elt_idx_LyaE]->GetLines()[line_idx_LyaE].GetProfile();
-  if (profile->isAsym())
-    setAsymProfile(elt_idx_LyaE, line_idx_LyaE, redshift, catalog);
+    // assuming only one asymfit/fixed profile
+    auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
+    Int32 line_idx_LyaE = line_indices_LyaE.front();
 
-  for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
-    const auto &elt = getElementList()[elt_idx_LyaE];
-    auto line_indices_filtered = line_indices_LyaE;
-    auto end =
-        std::remove_if(line_indices_filtered.begin(),
-                       line_indices_filtered.end(), [&elt](Int32 idx) {
-                         return !elt->GetLines()[idx].GetProfile()->isSymIgm();
-                       });
-    line_indices_filtered.erase(end, line_indices_filtered.end());
-    if (!line_indices_filtered.empty())
-      setSymIgmProfile(elt_idx_LyaE, line_indices_filtered, redshift);
+    const auto &profile =
+        getElementList()[elt_idx_LyaE]->GetLines()[line_idx_LyaE].GetProfile();
+    if (profile->isAsym())
+      setAsymProfile(elt_idx_LyaE, line_idx_LyaE, redshift, catalog);
+
+    for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
+      const auto &elt = getElementList()[elt_idx_LyaE];
+      auto line_indices_filtered = line_indices_LyaE;
+      auto end = std::remove_if(
+          line_indices_filtered.begin(), line_indices_filtered.end(),
+          [&elt](Int32 idx) {
+            return !elt->GetLines()[idx].GetProfile()->isSymIgm();
+          });
+      line_indices_filtered.erase(end, line_indices_filtered.end());
+      if (!line_indices_filtered.empty())
+        setSymIgmProfile(elt_idx_LyaE, line_indices_filtered, redshift);
+    }
   }
 }
 

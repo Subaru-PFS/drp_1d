@@ -157,26 +157,44 @@ public:
   }
 
   const CSpectrum &getSpectrum() const {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return *((*m_inputSpcs).at(*m_curObs));
   }
   shared_ptr<const CSpectrum> getSpectrumPtr() {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_inputSpcs).at(*m_curObs);
   }
 
-  CSpectrumModel &getSpectrumModel() { return (*m_models).at(*m_curObs); }
+  CSpectrumModel &getSpectrumModel() {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return (*m_models).at(*m_curObs);
+  }
 
   const CSpectrumModel &getSpectrumModel() const {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_models).at(*m_curObs);
   }
 
   CLineModelElementList &getElementList() {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_ElementsVector).at(*m_curObs);
   }
   const CLineModelElementList &getElementList() const {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+
     return (*m_ElementsVector).at(*m_curObs);
   }
 
   const TLambdaRange &getLambdaRange() const {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+
     return *(m_lambdaRanges.at(*m_curObs));
   }
 

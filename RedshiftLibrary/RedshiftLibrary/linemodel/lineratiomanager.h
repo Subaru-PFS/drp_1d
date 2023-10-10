@@ -108,16 +108,34 @@ protected:
 
   Float64 getLeastSquareMerit() const;
 
-  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
-  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
-  const CSpectrum &getSpectrum() const { return *((*m_inputSpcs)[*m_curObs]); }
+  CSpectrumModel &getModel() {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return (*m_models)[*m_curObs];
+  }
+  const CSpectrumModel &getModel() const {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return (*m_models)[*m_curObs];
+  }
+  const CSpectrum &getSpectrum() const {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return *((*m_inputSpcs)[*m_curObs]);
+  }
   const TLambdaRange &getLambdaRange() const {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return *(m_lambdaRanges[*m_curObs]);
   }
   CLineModelElementList &getElementList() {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_elementsVector)[*m_curObs];
   }
   const CLineModelElementList &getElementList() const {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_elementsVector)[*m_curObs];
   }
   CLMEltListVectorPtr m_elementsVector;

@@ -127,6 +127,7 @@ void CAbstractFitter::initFit(Float64 redshift) {
 
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
+
   fitLyaProfile(redshift);
 
   resetElementsFittingParam();
@@ -162,6 +163,7 @@ void CAbstractFitter::resetLambdaOffsets() {
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   TInt32List idxEltIGM;
   std::vector<TInt32List> idxLineIGM;
+
   auto const indices_Igm = getElementList().getIgmLinesIndices();
 
   if (indices_Igm.empty())

@@ -20,7 +20,8 @@ public:
       const std::shared_ptr<const CSpectrum> &spc,
       const CLineMap &m_RestLineList,
       const std::shared_ptr<CTplModelSolution> &tfv,
-      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
+      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+      Int32 spcIndex);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
   void refreshModel(CLine::EType lineTypeFilter = CLine::EType::nType_All);
@@ -65,7 +66,7 @@ public:
   // new methods
   Int32 m__count = 0;
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
-  Int32 m_spcIndex = 0;
+
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
                               const TFloat64List &polyCoeffs);
@@ -97,6 +98,8 @@ private:
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting
+
+  Int32 m_spcIndex = 0;
 
   TAxisSampleList
       m_observeGridContinuumFlux; // the continuum spectre without the

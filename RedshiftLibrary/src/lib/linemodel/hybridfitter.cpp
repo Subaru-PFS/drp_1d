@@ -65,6 +65,7 @@ CHybridFitter::CHybridFitter(
 
 void CHybridFitter::doFit(Float64 redshift) {
 
+  *m_curObs = 0; // temporary multiobs implementation
   // fit the amplitudes of each element independently, unless there is overlap
   fitAmplitudesHybrid(redshift);
 
@@ -150,10 +151,13 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
       Log.LogDebug("    model: hybrid fit:     Individual fit");
       fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
+      *m_curObs = 0; // temporary multiobs implementation
+
     } else {
       Log.LogDebug("    model: hybrid fit:     Joint fit");
       fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
                                            m_enableLambdaOffsetsFit, redshift);
+      *m_curObs = 0; // temporary multiobs implementation
     }
 
     // update the already fitted list

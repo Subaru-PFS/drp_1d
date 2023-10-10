@@ -244,8 +244,9 @@ bool CContinuumManager::isContFittedToNull() {
 
 void CContinuumManager::setContinuumComponent(std::string component) {
   m_ContinuumComponent = std::move(component);
-  getModel().setContinuumComponent(m_ContinuumComponent);
-
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+    getModel().setContinuumComponent(m_ContinuumComponent);
+  }
   *m_fitContinuum = {};
 
   if (m_ContinuumComponent == "nocontinuum") {
