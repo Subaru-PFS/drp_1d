@@ -685,7 +685,7 @@ Int32 CLineModelFitting::getSpcNSamples() const {
  * \brief Accumulates the squared differences between model and spectrum and
  *returns the sum.
  **/
-
+// TODO unused !!!
 Float64 CLineModelFitting::getLeastSquareMeritUnderElements() const {
   const CSpectrumFluxAxis &Yspc = getSpectrumModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &Ymodel =
@@ -1108,8 +1108,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
 
     modelSolution.fittingGroupInfo[iRestLine] =
         eltList[eIdx]->GetFittingGroupInfo();
-    modelSolution.OutsideLambdaRange[iRestLine] =
-        eltList[eIdx]->IsOutsideLambdaRange(line_index);
+    bool is_outside = false;
+    for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+      auto const &el = getElementList();
+      is_outside = is_outside || el[eIdx]->IsOutsideLambdaRange(line_index);
+    }
+    *m_curObs = 0;
+    modelSolution.OutsideLambdaRange[iRestLine] = is_outside;
   }
 
   // retrieve Lya params if fitted
