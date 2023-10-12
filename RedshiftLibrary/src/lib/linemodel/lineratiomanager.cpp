@@ -196,70 +196,80 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
  *the argument lambdaRange and returns the sum.
  **/
 Float64 CLineRatioManager::getLeastSquareMerit() const {
-  const CSpectrumSpectralAxis &spcSpectralAxis =
-      getSpectrum().GetSpectralAxis();
-  const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
-
-  const CSpectrumFluxAxis &Yspc = getModel().getSpcFluxAxis();
-  const CSpectrumFluxAxis &Ymodel = getModel().GetModelSpectrum().GetFluxAxis();
-
   Float64 fit = 0.0;
-  Float64 diff = 0.0;
 
-  Int32 imin =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-  Int32 imax = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
-  for (Int32 j = imin; j < imax; j++) {
-    diff = (Yspc[j] - Ymodel[j]);
-    fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
-    //        if ( 1E6 * diff < ErrorNoContinuum[j] )
-    //        {
-    //            Log.LogDebug( "Warning: noise is at least 6 orders greater
-    //            than the residue!" ); Log.LogDebug(
-    //            "CLineModelFitting::getLeastSquareMerit diff = %f", diff );
-    //            Log.LogDebug( "CLineModelFitting::getLeastSquareMerit
-    //            ErrorNoContinuum[%d] = %f", j, ErrorNoContinuum[j] );
-    //        }
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        getSpectrum().GetSpectralAxis();
+    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+
+    const CSpectrumFluxAxis &Yspc = getModel().getSpcFluxAxis();
+    const CSpectrumFluxAxis &Ymodel =
+        getModel().GetModelSpectrum().GetFluxAxis();
+
+    Float64 diff = 0.0;
+
+    Int32 imin =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
+    Int32 imax =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    for (Int32 j = imin; j < imax; j++) {
+      diff = (Yspc[j] - Ymodel[j]);
+      fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+      //        if ( 1E6 * diff < ErrorNoContinuum[j] )
+      //        {
+      //            Log.LogDebug( "Warning: noise is at least 6 orders greater
+      //            than the residue!" ); Log.LogDebug(
+      //            "CLineModelFitting::getLeastSquareMerit diff = %f", diff );
+      //            Log.LogDebug( "CLineModelFitting::getLeastSquareMerit
+      //            ErrorNoContinuum[%d] = %f", j, ErrorNoContinuum[j] );
+      //        }
+    }
+    if (std::isnan(fit)) {
+      Log.LogDetail(
+          "CLineModelFitting::getLeastSquareMerit: NaN value found on "
+          "the lambdarange = (%f, %f)",
+          getLambdaRange().GetBegin(), getLambdaRange().GetEnd());
+      Log.LogDetail(
+          "CLineModelFitting::getLeastSquareMerit: NaN value found on "
+          "the true observed spectral axis lambdarange = (%f, %f)",
+          spcSpectralAxis[imin], spcSpectralAxis[imax]);
+      for (Int32 j = imin; j < imax; j++) {
+        if (std::isnan(Yspc[j])) {
+          Log.LogDetail(
+              "CLineModelFitting::getLeastSquareMerit: NaN value found "
+              "for the observed spectrum at lambda=%f",
+              spcSpectralAxis[j]);
+          break;
+        }
+        if (std::isnan(Ymodel[j])) {
+          Log.LogDetail(
+              "CLineModelFitting::getLeastSquareMerit: NaN value found "
+              "for the model at lambda=%f",
+              spcSpectralAxis[j]);
+          break;
+        }
+
+        if (std::isnan(ErrorNoContinuum[j])) {
+          Log.LogDetail(
+              "CLineModelFitting::getLeastSquareMerit: NaN value found "
+              "for the sqrt(variance) at lambda=%f",
+              spcSpectralAxis[j]);
+          break;
+        }
+        if (ErrorNoContinuum[j] == 0.0) {
+          Log.LogDetail("CLineModelFitting::getLeastSquareMerit: 0 value found "
+                        "for the sqrt(variance) at lambda=%f",
+                        spcSpectralAxis[j]);
+          break;
+        }
+      }
+      THROWG(INTERNAL_ERROR, "computed fit is NaN");
+    }
   }
-
   fit += m_continuumManager->getFitSum();
 
-  if (std::isnan(fit)) {
-    Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found on "
-                  "the lambdarange = (%f, %f)",
-                  getLambdaRange().GetBegin(), getLambdaRange().GetEnd());
-    Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found on "
-                  "the true observed spectral axis lambdarange = (%f, %f)",
-                  spcSpectralAxis[imin], spcSpectralAxis[imax]);
-    for (Int32 j = imin; j < imax; j++) {
-      if (std::isnan(Yspc[j])) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found "
-                      "for the observed spectrum at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-      if (std::isnan(Ymodel[j])) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found "
-                      "for the model at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-
-      if (std::isnan(ErrorNoContinuum[j])) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found "
-                      "for the sqrt(variance) at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-      if (ErrorNoContinuum[j] == 0.0) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: 0 value found "
-                      "for the sqrt(variance) at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-    }
-    THROWG(INTERNAL_ERROR, "computed fit is NaN");
-  }
   return fit;
 }
 

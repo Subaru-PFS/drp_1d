@@ -146,12 +146,15 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
 }
 
 void CAbstractFitter::resetElementsFittingParam() {
-  auto &eltList = getElementList();
-  for (auto const &elt_ptr : eltList)
-    elt_ptr->reset();
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
 
-  if (m_enableAmplitudeOffsets)
-    eltList.resetAmplitudeOffset();
+    auto &eltList = getElementList();
+    for (auto const &elt_ptr : eltList)
+      elt_ptr->reset();
+
+    if (m_enableAmplitudeOffsets)
+      eltList.resetAmplitudeOffset();
+  }
 }
 
 void CAbstractFitter::resetLambdaOffsets() {
@@ -163,18 +166,25 @@ void CAbstractFitter::resetLambdaOffsets() {
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   TInt32List idxEltIGM;
   std::vector<TInt32List> idxLineIGM;
+  CLineProfile_ptr profile = nullptr;
+  Int32 line_idx_LyaE;
+  TInt32List line_indices_LyaE_copy;
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
 
-  auto const indices_Igm = getElementList().getIgmLinesIndices();
+    auto const indices_Igm = getElementList().getIgmLinesIndices();
 
-  if (indices_Igm.empty())
+    if (!indices_Igm.empty())
+      break;
+    // assuming only one asymfit/fixed profile
+  }
+  if (*m_curObs >= m_models->size())
     return;
-
-  // assuming only one asymfit/fixed profile
+  auto const indices_Igm = getElementList().getIgmLinesIndices();
   auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
-  Int32 line_idx_LyaE = line_indices_LyaE.front();
+  line_idx_LyaE = line_indices_LyaE.front();
 
-  const auto &profile =
-      getElementList()[elt_idx_LyaE]->getLineProfile(line_idx_LyaE);
+  profile =
+      getElementList()[elt_idx_LyaE]->getLineProfile(line_idx_LyaE)->Clone();
 
   if (profile->isAsymFit()) {
     // find the best width and asym coeff. parameters
