@@ -12,7 +12,7 @@
     "widthfitstep",
     "deltafitmin",
     "deltafitmax",
-    "deltastepmax"
+    "deltafitstep"
   ],
   "additionalProperties": false,
   "properties": {
@@ -56,7 +56,7 @@
       "title": "Delta fit max",
       "description": "Tabulation of Lya offset, max value (in Angtr\u00f6ms)"
     },
-    "deltastepmax": {
+    "deltafitstep": {
       "type": "number",
       "title": "Delta fit step",
       "description": "Tabulation of Lya offset, step value (in Angtr\u00f6ms)"

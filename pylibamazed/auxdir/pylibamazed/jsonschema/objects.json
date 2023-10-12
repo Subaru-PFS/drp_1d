@@ -94,32 +94,16 @@
       "description": "Relative path to the neural network model"
     },
     "TemplateFittingSolve": {
-      "type": "object",
-      "title": "Template fitting solve",
-      "properties": {
-        "$ref": "template_fitting_solve.json"
-      }
+      "$ref": "template_fitting_solve.json"
     },
     "TplcombinationSolve": {
-      "type": "object",
-      "title": "Template combination solve",
-      "properties": {
-        "$ref": "template_combination_solve.json"
-      }
+      "$ref": "template_combination_solve.json"
     },
     "LineModelSolve": {
-      "type": "object",
-      "title": "Line model solve",
-      "properties": {
-        "$ref": "line_model_solve.json"
-      }
+      "$ref": "line_model_solve.json"
     },
     "LineMeasSolve": {
-      "type": "object",
-      "title": "Linemeas solve",
-      "properties": {
-        "$ref": "linemeas_solve.json"
-      }
+      "$ref": "linemeas_solve.json"
     }
   }
 }

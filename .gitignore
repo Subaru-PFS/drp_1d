@@ -30,7 +30,7 @@ thirdparty/*
 
 # doc
 docs/html/
-doc/source/*.md
+*/doc/source/json-schema/*.md
 
 #
 pkgconfig
