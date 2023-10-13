@@ -129,12 +129,14 @@
               "in",
               "~in",
               "!=",
+              "~&",
               "&",
               "0&",
-              "^"
+              "^",
+              "~^"
             ],
             "title": "Comparison type",
-            "description": "\n * **in**: value must the be a list of possible value \n * **~in**: not in \n * **!=**: different \n * **&**: binary and \n * **0&**: binary and or 0 \n * **^**: xor"
+            "description": "\n * **in**: value must the be a list of possible value \n * **~in**: not in \n * **!=**: different \n * **& / ~&**: binary and / not binary and \n * **0&**: binary and or 0 \n * **^ / ~^**: xor / not xor"
           },
           "value": {
             "title": "Value to compare with",
