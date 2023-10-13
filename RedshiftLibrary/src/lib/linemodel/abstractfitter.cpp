@@ -1,7 +1,7 @@
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
-#ifdef LBFGSFITTER
-#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsfitter.h"
+#ifdef LBFGSBFITTER
+#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
 #endif
 #include "RedshiftLibrary/linemodel/individualfitter.h"
 #include "RedshiftLibrary/linemodel/onesfitter.h"
@@ -56,9 +56,9 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
         elementParam, curObsPtr, enableAmplitudeOffsets,
         enableLambdaOffsetsFit);
-#ifdef LBFGSFITTER
-  else if (fittingMethod == "lbfgs")
-    return std::make_shared<CLbfgsFitter>(
+#ifdef LBFGSBFITTER
+  else if (fittingMethod == "lbfgsb")
+    return std::make_shared<CLbfgsbFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
         elementParam, curObsPtr, enableAmplitudeOffsets,
         enableLambdaOffsetsFit);

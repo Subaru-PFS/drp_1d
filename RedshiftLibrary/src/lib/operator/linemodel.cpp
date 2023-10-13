@@ -1716,9 +1716,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   std::shared_ptr<const CParameterStore> params =
       inputContext->GetParameterStore();
   if (params->GetScoped<bool>("linemodel.velocityfit") &&
-      params->GetScoped<std::string>("linemodel.fittingmethod") != "lbfgs")
+      params->GetScoped<std::string>("linemodel.fittingmethod") != "lbfgsb")
     THROWG(INTERNAL_ERROR,
-           "velocityfit implemented only for lbfgs ftting method");
+           "velocityfit implemented only for lbfgsb ftting method");
 
   Int32 amplitudeOffsetsDegree =
       params->GetScoped<Int32>("linemodel.polynomialdegree");
