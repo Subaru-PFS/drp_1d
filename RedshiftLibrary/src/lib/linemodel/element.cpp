@@ -213,7 +213,7 @@ Float64 CLineModelElement::getVelocity() const {
   if (!GetSize())
     return NAN;
 
-  return IsEmission() ? getVelocityEmission() : getVelocityAbsorption();
+  return m_ElementParam->getVelocity();
 }
 
 /**

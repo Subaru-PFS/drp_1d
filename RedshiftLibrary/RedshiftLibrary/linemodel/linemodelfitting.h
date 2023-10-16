@@ -229,6 +229,22 @@ public:
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
 
+  // Multi obs combination/aggregation methods on elements Lists
+  Int32 GetModelNonZeroElementsNDdl();
+  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
+  std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
+  std::pair<Int32, Int32>
+  findElementIndex(const std::string &LineTagStr,
+                   CLine::EType linetype = CLine::EType::nType_All) const;
+
+  Float64 getContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
+                                      Float64 redshift);
+  Float64 getContinuumError(Int32 eltIdx, Int32 line_index);
+  std::pair<Float64, Float64>
+  getFluxDirectIntegration(const TInt32List &eIdx_list,
+                           const TInt32List &subeIdx_list,
+                           bool substract_abslinesmodel) const;
+
 private:
   void AddElement(CLineVector lines, Float64 velocityEmission,
                   Float64 velocityAbsorption, Int32 ig);

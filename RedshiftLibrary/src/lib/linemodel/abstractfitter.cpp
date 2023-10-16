@@ -26,7 +26,7 @@ CAbstractFitter::CAbstractFitter(
       m_models(spectrumModels), m_ElementParam(elementParam),
       m_curObs(curObsPtr), m_enableAmplitudeOffsets(enableAmplitudeOffsets),
       m_enableLambdaOffsetsFit(enableLambdaOffsetsFit) {
-
+  m_nbElements = m_ElementsVector->at(0).size();
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
   if (Context.GetCurrentMethod() == "LineModelSolve") {
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -446,8 +446,8 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
         if (1) {
 
           getModel().refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
-          m = getModel().getModelErrorUnderElement(idxLyaE,
-                                                   getModel().getSpcFluxAxis());
+          m = getModelErrorUnderElement(idxLyaE, true);
+
         } else {
           m = getLeastSquareMeritFast(idxLyaE);
         }
@@ -487,8 +487,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
     fitAmplitude(iElts, redshift);
 
     getModel().refreshModelUnderElements(TInt32List(1, iElts));
-    Float64 m = getModel().getModelErrorUnderElement(
-        iElts, getModel().getSpcFluxAxis());
+    Float64 m = getModelErrorUnderElement(iElts, true);
 
     if (m < meritMin) {
       meritMin = m;
@@ -496,4 +495,26 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
     }
   }
   return bestIgmIdx;
+}
+
+Float64 CAbstractFitter::getModelErrorUnderElement(Int32 line_index,
+                                                   bool with_continuum) {
+  Float64 fit_allObs = 0;
+  Float64 sumErr_allObs = 0;
+  Int32 nb_nan = 0;
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    auto [fit, sumErr] = getModel().getModelQuadraticErrorUnderElement(
+        line_index, with_continuum);
+    if (fit == 0.0)
+      continue;
+    if (std::isnan(fit)) {
+      nb_nan++;
+      continue;
+    }
+    fit_allObs += fit;
+    sumErr_allObs += sumErr;
+  }
+  if (nb_nan == m_inputSpcs->size())
+    return NAN;
+  return sqrt(fit_allObs / sumErr_allObs);
 }

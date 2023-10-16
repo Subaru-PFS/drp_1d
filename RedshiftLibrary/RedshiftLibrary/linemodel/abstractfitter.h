@@ -85,6 +85,7 @@ public:
   Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
                              const TInt32List &idxLine);
 
+  Float64 getModelErrorUnderElement(Int32 line_index, bool with_continuum);
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
@@ -143,6 +144,7 @@ protected:
     return (*m_ElementsVector).at(*m_curObs);
   }
   CLMEltListVectorPtr m_ElementsVector;
+  Int32 m_nbElements;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
   CCSpectrumVectorPtr m_inputSpcs;
   const CLineMap &m_RestLineList;

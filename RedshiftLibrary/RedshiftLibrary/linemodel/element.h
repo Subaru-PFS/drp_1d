@@ -90,6 +90,20 @@ struct TLineModelElementParam {
            // used as a limit for the abs line coeff (typically: 1.0)
   CLine::EType m_type;
   bool m_isEmission;
+
+  Float64 getVelocity() {
+    return m_isEmission ? m_VelocityEmission : m_VelocityAbsorption;
+  }
+  TAsymParams GetAsymfitParams(Int32 asym_line_index) const {
+    if (!m_asymLineIndices.size())
+      return TAsymParams(); // case where no asymprofile in linecatalog
+    return m_Lines[m_asymLineIndices[asym_line_index]].GetAsymParams();
+  }
+  TSymIgmParams GetSymIgmParams(Int32 asym_line_index) const {
+    if (!m_asymLineIndices.size())
+      return TSymIgmParams(); // case where no asymprofile in linecatalog
+    return m_Lines[m_asymLineIndices[asym_line_index]].GetSymIgmParams();
+  }
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -445,21 +459,13 @@ inline void CLineModelElement::resetAsymfitParams() {
 // wrapper function
 inline TAsymParams
 CLineModelElement::GetAsymfitParams(Int32 asym_line_index) const {
-  if (!m_ElementParam->m_asymLineIndices.size())
-    return TAsymParams(); // case where no asymprofile in linecatalog
-  return m_ElementParam
-      ->m_Lines[m_ElementParam->m_asymLineIndices[asym_line_index]]
-      .GetAsymParams();
+  return m_ElementParam->GetAsymfitParams(asym_line_index);
 }
 
 // wrapper function
 inline TSymIgmParams
-CLineModelElement::GetSymIgmParams(Int32 asym_line_index) const {
-  if (!m_ElementParam->m_asymLineIndices.size())
-    return TSymIgmParams(); // case where no asymprofile in linecatalog
-  return m_ElementParam
-      ->m_Lines[m_ElementParam->m_asymLineIndices[asym_line_index]]
-      .GetSymIgmParams();
+CLineModelElement::GetSymIgmParams(Int32 sym_line_index) const {
+  return m_ElementParam->GetSymIgmParams(sym_line_index);
 }
 
 inline Float64 CLineModelElement::GetSumCross() const {

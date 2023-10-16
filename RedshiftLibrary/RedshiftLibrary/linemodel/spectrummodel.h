@@ -44,14 +44,16 @@ public:
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
                                              const TInt32List &EltsIdx) const;
 
-  Float64 GetContinuumError(Int32 eIdx, Int32 line_id);
-  Float64 getModelErrorUnderElement(Int32 eltId,
-                                    const CSpectrumFluxAxis &fluxRef) const;
-  void getFluxDirectIntegration(const TInt32List &eIdx_list,
-                                const TInt32List &subeIdx_list,
-                                bool substract_abslinesmodel, Float64 &fluxdi,
-                                Float64 &snrdi,
-                                const TFloat64Range &lambdaRange) const;
+  std::pair<Float64, Int32> getContinuumQuadraticError(Int32 eIdx,
+                                                       Int32 line_id);
+  //  Float64 getModelErrorUnderElement(Int32 eltId,
+  //                                  const CSpectrumFluxAxis &fluxRef) const;
+  std::pair<Float64, Float64>
+  getModelQuadraticErrorUnderElement(Int32 eltId, bool with_continuum) const;
+
+  std::pair<Float64, Float64> getFluxDirectIntegration(
+      const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
+      bool substract_abslinesmodel, const TFloat64Range &lambdaRange) const;
   std::unordered_set<std::string>
   getLinesAboveSNR(const TFloat64Range &lambdaRange,
                    Float64 snrcut = 3.5) const;

@@ -272,8 +272,6 @@ void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
                                                       bool enableOffsetFitting,
                                                       Float64 redshift) {
 
-  const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxisNoContinuum();
-
   bool atLeastOneOffsetToFit =
       HasLambdaOffsetFitting(EltsIdx, enableOffsetFitting);
   Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
@@ -297,7 +295,7 @@ void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
 
     // todo: replace lambdarange using elements limits for speed
     for (Int32 iE : EltsIdx)
-      sumFit += getModel().getModelErrorUnderElement(iE, fluxAxis);
+      sumFit += getModelErrorUnderElement(iE, false);
 
     if (sumFit < bestMerit) {
       bestMerit = sumFit;
