@@ -154,3 +154,76 @@ class TestParametersCheckerObject:
             })
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)
+
+    class TestTemplateDir:
+
+        def test_error_if_templateFittingSolve_without_template_dir(self):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "method": "TemplateFittingSolve", "TemplateFittingSolve": {}
+            })
+            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+                check_from_parameter_dict(param_dict)
+
+        def test_error_if_templateCombinationSolve_without_template_dir(self):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "method": "TplCombinationSolve", "TplCombinationSolve": {}
+            })
+            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+                check_from_parameter_dict(param_dict)
+
+        def test_error_if_lineModelSolve_and_continuum_tplfit_without_template_dir(self):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "method": "LineModelSolve",
+                "LineModelSolve": {
+                    "linemodel": {
+                        "continuumcomponent": "tplfit", # This is the important line
+                        "continuumfit": {},
+                        "secondpass": {
+                            "continuumfit": "sth"
+                        }
+                    }
+                }
+            })
+            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+                check_from_parameter_dict(param_dict)
+
+        def test_error_if_lineModelSolve_and_continuum_tplfitauto_without_template_dir(self):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "method": "LineModelSolve",
+                "LineModelSolve": {
+                    "linemodel": {
+                        "continuumcomponent": "tplfitauto",  # This is the important line
+                        "continuumfit": {},
+                        "secondpass": {
+                            "continuumfit": "sth"
+                        },
+                    }
+                }
+            })
+            param_dict["continuumRemoval"] = {}
+            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+                check_from_parameter_dict(param_dict)
+
+        def test_warning_if_template_dir_is_present_but_no_solve_method(self, zflag):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "method": "",
+                "template_dir": "sth"
+            })
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+
+        def test_warning_if_template_dir_is_present_but_linemodelsolve_without_tplfit(self, zflag):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "method": "LineModelSolve",
+                "LineModelSolve": {
+                    "linemodel": {
+                        "continuumcomponent": "sth",  # This is the important line
+                        "continuumfit": {},
+                        "secondpass": {
+                            "continuumfit": "sth"
+                        },
+                    }
+                }
+            })
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")

@@ -236,7 +236,8 @@ class TestLineModelSolve:
                 "LineModelSolve": {"linemodel": {
                     "continuumcomponent": continuumcomponent,
                     "continuumfit": {}
-                }}
+                }},
+                "template_dir": "sth"
             })
             param_dict["continuumRemoval"] = {}
 
@@ -254,7 +255,8 @@ class TestLineModelSolve:
                     "continuumcomponent": continuumcomponent,
                     "continuumfit": {},
                     "secondpass": {"continuumfit": ""}
-                }}
+                }},
+                "template_dir": "sth"
             })
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
