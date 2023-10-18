@@ -232,8 +232,8 @@ class Context:
 
         if self.parameters.is_a_redshift_solver_used():
             enable_classification = False
-            for object_type in self.parameters.get_objects():
-                if not rso.has_error(object_type, "redshift_solver"):
+            for obj in self.parameters.get_objects():
+                if not rso.has_error(obj, "redshift_solver"):
                     enable_classification = True
                     break
             if enable_classification:
