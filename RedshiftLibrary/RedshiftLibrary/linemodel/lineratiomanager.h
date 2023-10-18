@@ -61,7 +61,8 @@ public:
                     const CTLambdaRangePtrVector &lambdaRanges,
                     std::shared_ptr<CContinuumManager> continuumManager,
                     const CLineMap &restLineList,
-                    const std::shared_ptr<Int32> &curObs);
+                    const std::shared_ptr<Int32> &curObs,
+                    std::vector<TLineModelElementParam_ptr> &elementsParams);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -96,7 +97,8 @@ public:
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
       const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
-      const std::shared_ptr<Int32> &curObs);
+      const std::shared_ptr<Int32> &curObs,
+      std::vector<TLineModelElementParam_ptr> &elementsParams);
 
 protected:
   void setLyaProfile(Float64 redshift, const CLineMap &lineList);
@@ -138,11 +140,18 @@ protected:
       THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_elementsVector)[*m_curObs];
   }
+  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
+  bool isOutsideLambdaRange(Int32 elt_index);
+  std::vector<bool> getOutsideLambdaRangeList(Int32 elt_index);
+
   CLMEltListVectorPtr m_elementsVector;
   CCSpectrumVectorPtr m_inputSpcs;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
   std::shared_ptr<Int32> m_curObs;
+  Int32 m_nbObs;
+  std::vector<TLineModelElementParam_ptr> m_elementsParams;
+  std::vector<std::vector<bool>> m_outsideLambdaRangeList;
 
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;

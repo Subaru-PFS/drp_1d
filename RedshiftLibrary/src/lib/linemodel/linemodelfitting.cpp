@@ -549,7 +549,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
   m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
       lineRatioType, m_ElementsVector, m_models, m_inputSpcs, m_lambdaRanges,
-      m_continuumManager, m_RestLineList, m_fitter, m_curObs);
+      m_continuumManager, m_RestLineList, m_fitter, m_curObs, m_ElementParam);
 }
 
 void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
@@ -866,74 +866,78 @@ CLineModelFitting::getSNROnRange(TInt32Range idxRange) const {
 
 /*
 Reset all the model value to the previous solution found.
-return 0 if every was ok; else -1
+only used by linemeas throug getFittedModelWithoutContinuum to get
+linemeas_model
 */
 void CLineModelFitting::LoadModelSolution(
     const CLineModelSolution &modelSolution) {
 
   setRedshift(modelSolution.Redshift, false);
 
-  auto &eltList = getElementList();
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-  if (m_enableAmplitudeOffsets)
-    eltList.resetAmplitudeOffset();
+    auto &eltList = getElementList();
 
-  TBoolList element_done(eltList.size(), false);
-  for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
-    Int32 eIdx = modelSolution.ElementId[iRestLine];
-    if (eIdx == undefIdx)
-      continue;
-    Int32 line_id = modelSolution.lineId[iRestLine];
-    auto const &elt = eltList[eIdx];
-    Int32 elt_line_index = elt->getLineIndex(line_id);
-    if (elt_line_index == undefIdx)
-      continue; // or throw an exception ?
+    if (m_enableAmplitudeOffsets)
+      eltList.resetAmplitudeOffset();
 
-    if (modelSolution.OutsideLambdaRange[iRestLine]) {
-      elt->SetOutsideLambdaRangeList(elt_line_index);
-      continue;
+    TBoolList element_done(eltList.size(), false);
+    for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
+      Int32 eIdx = modelSolution.ElementId[iRestLine];
+      if (eIdx == undefIdx)
+        continue;
+      Int32 line_id = modelSolution.lineId[iRestLine];
+      auto const &elt = eltList[eIdx];
+      Int32 elt_line_index = elt->getLineIndex(line_id);
+      if (elt_line_index == undefIdx)
+        continue; // or throw an exception ?
+
+      if (modelSolution.OutsideLambdaRange[iRestLine]) {
+        elt->SetOutsideLambdaRangeList(elt_line_index);
+        continue;
+      }
+
+      elt->SetFittedAmplitude(elt_line_index,
+                              modelSolution.Amplitudes[iRestLine],
+                              modelSolution.AmplitudesUncertainties[iRestLine]);
+      elt->SetOffset(elt_line_index, modelSolution.Offset[iRestLine]);
+
+      if (element_done[eIdx])
+        continue;
+
+      elt->setVelocity(modelSolution.Velocity[iRestLine]);
+      elt->SetFittingGroupInfo(modelSolution.fittingGroupInfo[iRestLine]);
+      if (m_enableAmplitudeOffsets) {
+        TPolynomCoeffs contPolynomCoeffs = {
+            modelSolution.continuum_pCoeff0[iRestLine],
+            modelSolution.continuum_pCoeff1[iRestLine],
+            modelSolution.continuum_pCoeff2[iRestLine]};
+        elt->SetPolynomCoeffs(std::move(contPolynomCoeffs));
+      }
+
+      element_done[eIdx] = true;
     }
 
-    elt->SetFittedAmplitude(elt_line_index, modelSolution.Amplitudes[iRestLine],
-                            modelSolution.AmplitudesUncertainties[iRestLine]);
-    elt->SetOffset(elt_line_index, modelSolution.Offset[iRestLine]);
+    if (!std::isnan(modelSolution.LyaWidthCoeff) or
+        !std::isnan(modelSolution.LyaAlpha) or
+        !std::isnan(modelSolution.LyaDelta)) {
 
-    if (element_done[eIdx])
-      continue;
-
-    elt->setVelocity(modelSolution.Velocity[iRestLine]);
-    elt->SetFittingGroupInfo(modelSolution.fittingGroupInfo[iRestLine]);
-    if (m_enableAmplitudeOffsets) {
-      TPolynomCoeffs contPolynomCoeffs = {
-          modelSolution.continuum_pCoeff0[iRestLine],
-          modelSolution.continuum_pCoeff1[iRestLine],
-          modelSolution.continuum_pCoeff2[iRestLine]};
-      elt->SetPolynomCoeffs(std::move(contPolynomCoeffs));
+      std::string lyaTag = linetags::lya_em;
+      auto const [idxLyaE, _] = eltList.findElementIndex(lyaTag);
+      if (idxLyaE != undefIdx)
+        eltList[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
+                                            modelSolution.LyaAlpha,
+                                            modelSolution.LyaDelta});
     }
 
-    element_done[eIdx] = true;
+    if (modelSolution.LyaIgm != undefIdx) {
+      auto const indices_Igm = eltList.getIgmLinesIndices();
+      if (!indices_Igm.empty())
+        for (auto const &[elt_idx, _] : indices_Igm)
+          eltList[elt_idx]->SetSymIgmParams(
+              {modelSolution.LyaIgm, modelSolution.Redshift});
+    }
   }
-
-  if (!std::isnan(modelSolution.LyaWidthCoeff) or
-      !std::isnan(modelSolution.LyaAlpha) or
-      !std::isnan(modelSolution.LyaDelta)) {
-
-    std::string lyaTag = linetags::lya_em;
-    auto const [idxLyaE, _] = eltList.findElementIndex(lyaTag);
-    if (idxLyaE != undefIdx)
-      eltList[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
-                                          modelSolution.LyaAlpha,
-                                          modelSolution.LyaDelta});
-  }
-
-  if (modelSolution.LyaIgm != undefIdx) {
-    auto const indices_Igm = eltList.getIgmLinesIndices();
-    if (!indices_Igm.empty())
-      for (auto const &[elt_idx, _] : indices_Igm)
-        eltList[elt_idx]->SetSymIgmParams(
-            {modelSolution.LyaIgm, modelSolution.Redshift});
-  }
-
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {

@@ -143,6 +143,8 @@ protected:
       THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_ElementsVector).at(*m_curObs);
   }
+  bool isOutsideLambdaRange(Int32 elt_index);
+
   CLMEltListVectorPtr m_ElementsVector;
   Int32 m_nbElements;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;

@@ -191,6 +191,8 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     TAsymParams bestfitParams =
         fitAsymParameters(redshift, elt_idx_LyaE, line_idx_LyaE);
 
+    *m_curObs = 0; // TODO this is simple and dirty implementation : we should
+                   // directly call setasyfitparams on TLineModelElementParam
     // set the associated Lya members in the element definition
     getElementList()[elt_idx_LyaE]->SetAsymfitParams(bestfitParams);
   }
@@ -198,20 +200,25 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   // deal with symIgm profiles
   for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
     // for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
-    const auto &elt = getElementList()[elt_idx_LyaE];
-    if (elt->IsOutsideLambdaRange())
+
+    if (isOutsideLambdaRange(elt_idx_LyaE))
       continue;
     auto line_indices_filtered = line_indices_LyaE;
-    auto end =
-        std::remove_if(line_indices_filtered.begin(),
-                       line_indices_filtered.end(), [&elt](Int32 idx) {
-                         return !elt->GetLines()[idx].GetProfile()->isSymIgm();
-                       });
+    auto end = std::remove_if(line_indices_filtered.begin(),
+                              line_indices_filtered.end(),
+                              [this, elt_idx_LyaE](Int32 idx) {
+                                return !m_ElementParam[elt_idx_LyaE]
+                                            ->m_Lines[idx]
+                                            .GetProfile()
+                                            ->isSymIgm();
+                              });
     line_indices_filtered.erase(end, line_indices_filtered.end());
     if (!line_indices_filtered.empty()) {
       // setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
       auto bestigmidx =
           fitAsymIGMCorrection(redshift, elt_idx_LyaE, line_indices_filtered);
+      *m_curObs = 0; // TODO this is simple and dirty implementation : we should
+                     // directly call setasyfitparams on TLineModelElementParam
       getElementList()[elt_idx_LyaE]->SetSymIgmParams(
           TSymIgmParams(bestigmidx, redshift));
     }
@@ -221,15 +228,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
 void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
                                    Int32 lineIdx) {
 
-  bool allOutsideLambdaRange = true;
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
-    if (!getElementList()[eltIndex]->IsOutsideLambdaRange()) {
-      allOutsideLambdaRange = false;
-      break;
-    }
-  }
-
-  if (allOutsideLambdaRange) {
+  if (isOutsideLambdaRange(eltIndex)) {
 
     m_ElementParam[eltIndex]->m_sumCross = NAN;
     m_ElementParam[eltIndex]->m_sumGauss = NAN;
@@ -436,6 +435,9 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
       Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep * iWidth;
       for (Int32 iAsym = 0; iAsym < nAsymSteps; iAsym++) {
         Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep * iAsym;
+        *m_curObs =
+            0; // TODO this is simple and dirty implementation : we should
+               // directly call setasyfitparams on TLineModelElementParam
         getElementList()[idxLyaE]->SetAsymfitParams(
             {asymWidthCoeff, asymAlphaCoeff, delta});
 
@@ -444,8 +446,9 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
 
         Float64 m = 0; // TODO DV why initializing to m_dTransposeD ?;
         if (1) {
-
-          getModel().refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
+          for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+            getModel().refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
+          }
           m = getModelErrorUnderElement(idxLyaE, true);
 
         } else {
@@ -453,6 +456,9 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
         }
         if (m < meritMin) {
           meritMin = m;
+          *m_curObs =
+              0; // TODO this is simple and dirty implementation : we should
+                 // directly call setasyfitparams on TLineModelElementParam
           bestparams = getElementList()[idxLyaE]->GetAsymfitParams(0);
         }
 
@@ -517,4 +523,16 @@ Float64 CAbstractFitter::getModelErrorUnderElement(Int32 line_index,
   if (nb_nan == m_inputSpcs->size())
     return NAN;
   return sqrt(fit_allObs / sumErr_allObs);
+}
+
+bool CAbstractFitter::isOutsideLambdaRange(Int32 elt_index) {
+
+  bool allOutsideLambdaRange = true;
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    if (!getElementList()[elt_index]->IsOutsideLambdaRange()) {
+      allOutsideLambdaRange = false;
+      break;
+    }
+  }
+  return allOutsideLambdaRange;
 }
