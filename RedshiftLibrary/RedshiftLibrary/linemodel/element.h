@@ -94,16 +94,80 @@ struct TLineModelElementParam {
   Float64 getVelocity() {
     return m_isEmission ? m_VelocityEmission : m_VelocityAbsorption;
   }
-  TAsymParams GetAsymfitParams(Int32 asym_line_index) const {
+  TAsymParams GetAsymfitParams(Int32 asym_line_index = 0) const {
     if (!m_asymLineIndices.size())
       return TAsymParams(); // case where no asymprofile in linecatalog
     return m_Lines[m_asymLineIndices[asym_line_index]].GetAsymParams();
   }
-  TSymIgmParams GetSymIgmParams(Int32 asym_line_index) const {
+  TSymIgmParams GetSymIgmParams(Int32 asym_line_index = 0) const {
     if (!m_asymLineIndices.size())
       return TSymIgmParams(); // case where no asymprofile in linecatalog
     return m_Lines[m_asymLineIndices[asym_line_index]].GetSymIgmParams();
   }
+
+  void SetAsymfitParams(const TAsymParams &params,
+                        Int32 line_index = undefIdx) {
+    if (!m_asymLineIndices.size())
+      return;
+    if (line_index >= 0)
+      m_Lines[line_index].SetAsymParams(params);
+    else
+      for (auto index : m_asymLineIndices)
+        m_Lines[index].SetAsymParams(params);
+  }
+
+  void SetSymIgmParams(const TSymIgmParams &params,
+                       Int32 line_index = undefIdx) {
+    if (!m_asymLineIndices.size())
+      return;
+    if (line_index >= 0)
+      m_Lines[line_index].SetSymIgmParams(params);
+    else
+      for (auto index : m_asymLineIndices)
+        m_Lines[index].SetSymIgmParams(params);
+  }
+
+  void SetSymIgmFit(bool val = true, Int32 line_index = undefIdx) {
+    if (!m_asymLineIndices.size())
+      return;
+    if (line_index >= 0)
+      m_Lines[line_index].SetSymIgmFit(val);
+    else
+      for (auto index : m_asymLineIndices)
+        m_Lines[index].SetSymIgmFit(val);
+  }
+
+  void setAmplitudes(Float64 A, Float64 SNR,
+                     std::vector<bool> outsideLambdaRangeList,
+                     bool outsideLambdaRange) {
+    auto &fa = m_FittedAmplitudes;
+    auto &faes = m_FittedAmplitudeErrorSigmas;
+    auto &na = m_NominalAmplitudes;
+
+    if (std::isnan(A) || outsideLambdaRange) {
+      fa.assign(size(), NAN);
+      faes.assign(size(), NAN);
+      return;
+    }
+
+    for (Int32 index = 0; index != size(); ++index) {
+      if (outsideLambdaRangeList[index]) {
+        fa[index] = NAN;
+        faes[index] = NAN;
+        continue;
+      }
+      fa[index] = A * m_NominalAmplitudes[index];
+      // limit the absorption to 0.0-1.0, so that it's never <0
+      if (m_SignFactors[index] == -1 && m_absLinesLimit > 0.0 &&
+          fa[index] > m_absLinesLimit) {
+        fa[index] = m_absLinesLimit;
+      }
+
+      faes[index] = SNR * na[index];
+    }
+  }
+
+  Int32 size() { return m_Lines.size(); }
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -418,36 +482,18 @@ inline void CLineModelElement::setVelocity(Float64 vel) {
 // wrapper function
 inline void CLineModelElement::SetAsymfitParams(const TAsymParams &params,
                                                 Int32 line_index) {
-  if (!m_ElementParam->m_asymLineIndices.size())
-    return;
-  if (line_index >= 0)
-    m_ElementParam->m_Lines[line_index].SetAsymParams(params);
-  else
-    for (auto index : m_ElementParam->m_asymLineIndices)
-      m_ElementParam->m_Lines[index].SetAsymParams(params);
+  m_ElementParam->SetAsymfitParams(params, line_index);
 }
 
 // wrapper function
 inline void CLineModelElement::SetSymIgmParams(const TSymIgmParams &params,
                                                Int32 line_index) {
-  if (!m_ElementParam->m_asymLineIndices.size())
-    return;
-  if (line_index >= 0)
-    m_ElementParam->m_Lines[line_index].SetSymIgmParams(params);
-  else
-    for (auto index : m_ElementParam->m_asymLineIndices)
-      m_ElementParam->m_Lines[index].SetSymIgmParams(params);
+  m_ElementParam->SetSymIgmParams(params, line_index);
 }
 
 // wrapper function
 inline void CLineModelElement::SetSymIgmFit(bool val, Int32 line_index) {
-  if (!m_ElementParam->m_asymLineIndices.size())
-    return;
-  if (line_index >= 0)
-    m_ElementParam->m_Lines[line_index].SetSymIgmFit(val);
-  else
-    for (auto index : m_ElementParam->m_asymLineIndices)
-      m_ElementParam->m_Lines[index].SetSymIgmFit(val);
+  m_ElementParam->SetSymIgmFit(val, line_index);
 }
 
 // wrapper function

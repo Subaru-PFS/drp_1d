@@ -643,32 +643,8 @@ void CLineModelElement::SetFittedAmplitude(Int32 index, Float64 fittedAmp,
  *amplitude.
  **/
 void CLineModelElement::SetElementAmplitude(Float64 A, Float64 SNR) {
-  auto &fa = m_ElementParam->m_FittedAmplitudes;
-  auto &faes = m_ElementParam->m_FittedAmplitudeErrorSigmas;
-  auto &na = m_ElementParam->m_NominalAmplitudes;
-
-  if (std::isnan(A) || m_OutsideLambdaRange) {
-    fa.assign(GetSize(), NAN);
-    faes.assign(GetSize(), NAN);
-    return;
-  }
-
-  for (Int32 index = 0; index != GetSize(); ++index) {
-    if (m_OutsideLambdaRangeList[index]) {
-      fa[index] = NAN;
-      faes[index] = NAN;
-      continue;
-    }
-    fa[index] = A * m_ElementParam->m_NominalAmplitudes[index];
-    // limit the absorption to 0.0-1.0, so that it's never <0
-    if (m_ElementParam->m_SignFactors[index] == -1 &&
-        m_ElementParam->m_absLinesLimit > 0.0 &&
-        fa[index] > m_ElementParam->m_absLinesLimit) {
-      fa[index] = m_ElementParam->m_absLinesLimit;
-    }
-
-    faes[index] = SNR * na[index];
-  }
+  m_ElementParam->setAmplitudes(A, SNR, m_OutsideLambdaRangeList,
+                                m_OutsideLambdaRange);
 }
 
 /**
