@@ -107,18 +107,18 @@ void TLineModelResult::updateFromModel(
   static Float64 cutThres = 3.0;
   Int32 nValidLines =
       lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
-  NLinesOverThreshold = nValidLines; // m/Float64(1+nValidLines);
-  Float64 cumulStrongELSNR =
-      lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
-  StrongELSNR = cumulStrongELSNR;
+  NLinesOverThreshold = nValidLines;
+  std::tie(ELSNR, StrongELSNR) = lmel->getCumulSNRStrongEL();
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  Int32 nddl = lmel->GetNElements(); // get the total number of
-  // elements in the model
+  Int32 nddl =
+      lmel->GetNElements(); // get the total number of elements in the model
+
   nddl = lmresult->LineModelSolutions[idx]
              .nDDL; // override nddl by the actual number of elements in
-  // the fitted model
+                    // the fitted model
+
   NDof = lmel->getElementList().GetModelNonZeroElementsNDdl();
 
   Float64 _bic =
