@@ -75,6 +75,7 @@ public:
     *size = vec.size();
   }
 
+  // this is memory leak
   static void get(const TMaskList &vec, short **data, int *size) {
     *data = (short *)malloc(sizeof(short) * vec.size());
     *size = (int)vec.size();

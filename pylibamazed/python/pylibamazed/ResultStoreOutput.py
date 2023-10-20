@@ -36,13 +36,12 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import numpy as np
 import os
 
 import numpy as np
 from pylibamazed.AbstractOutput import AbstractOutput, ObjectStages
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import PC, CLog, ErrorCode
+from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
 
@@ -84,17 +83,22 @@ class ResultStoreOutput(AbstractOutput):
             if obs_id is not None:
                 return np.array(attr[obs_id])
         elif attr_type == "TFloat64List":
-            return PC.Get_Float64Array(attr)
-        elif attr_type == "TFloat32List":
-            return PC.Get_Float32Array(attr)
+            # return PC.Get_Float64Array(attr)
+            return np.array(attr)
+        # elif attr_type == "TFloat32List":
+        #     # return PC.Get_Float32Array(attr)
+        #     return np.array(tuple(attr))
         elif attr_type == "TInt32List":
-            return PC.Get_Int32Array(attr)
+            # return PC.Get_Int32Array(attr)
+            return np.array(attr, dtype='int32')
         elif attr_type == "TBoolList":
-            return PC.Get_BoolArray(attr)
+            # return PC.Get_BoolArray(attr)
+            return np.array(attr, dtype=bool)
         elif attr_type == "TStringList":
-            return np.array(tuple(attr))
+            return np.array(attr)
         elif attr_type == "CMask":
-            return PC.Get_MaskArray(attr.getMaskList())
+            # return PC.Get_MaskArray(attr.getMaskList())
+            return np.array(attr.getMaskList(), dtype='uint8')
         else:
             return attr
 

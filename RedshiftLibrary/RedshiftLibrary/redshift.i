@@ -270,6 +270,11 @@ class CMask {
  public:
   const TMaskList& getMaskList() const;
 };
+
+typedef Float64 Sample;
+typedef unsigned char UInt8;
+typedef UInt8 Mask;
+
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
@@ -279,7 +284,7 @@ typedef std::vector<Int32> TInt32List;
 typedef std::vector<std::string> TStringList;
 typedef std::vector<Mask> TMaskList;
 typedef std::vector<bool> TBoolList;
-
+typedef std::vector<Sample> TAxisSampleList;
 
 %template(TFloat64Range) CRange<Float64>;
 %template(TFloat64List) std::vector<Float64>;
@@ -301,8 +306,8 @@ class PC
   static void get(const TFloat64List& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_Int32Array) get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  %rename(Get_AxisSampleList) getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+//  %rename(Get_AxisSampleList) getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+//  static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_Float32Array) get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_BoolArray) get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
