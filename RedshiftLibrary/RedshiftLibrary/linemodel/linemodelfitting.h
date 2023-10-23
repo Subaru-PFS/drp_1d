@@ -97,8 +97,6 @@ public:
   Float64 getDTransposeD();
   Float64 getLikelihood_cstLog();
 
-  Int32 GetNElements() const;
-
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
   void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
@@ -129,7 +127,7 @@ public:
   Float64 getLeastSquareContinuumMerit() const;
   Float64 getLeastSquareMeritUnderElements() const;
   Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const {
-    return getElementList().getScaleMargCorrection(Eltidx);
+    return m_ElementsVector->getScaleMargCorrection(Eltidx);
   }
 
   Float64 getStrongerMultipleELAmpCoeff() const;
@@ -180,15 +178,10 @@ public:
   }
 
   CLineModelElementList &getElementList() {
-    if (*m_curObs >= m_nbObs)
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_ElementsVector).at(*m_curObs);
+    return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    if (*m_curObs >= m_nbObs)
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-
-    return (*m_ElementsVector).at(*m_curObs);
+    return m_ElementsVector->getElementList();
   }
 
   const TLambdaRange &getLambdaRange() const {
@@ -230,12 +223,6 @@ public:
   Float64 m_LambdaOffsetStep = 25.0;
 
   // Multi obs combination/aggregation methods on elements Lists
-  Int32 GetModelNonZeroElementsNDdl();
-  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
-  std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
-  std::pair<Int32, Int32>
-  findElementIndex(const std::string &LineTagStr,
-                   CLine::EType linetype = CLine::EType::nType_All) const;
 
   Float64 getContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
                                       Float64 redshift);
@@ -246,12 +233,6 @@ public:
                            bool substract_abslinesmodel) const;
 
 private:
-  void AddElement(CLineVector lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, Int32 ig);
-  void LoadCatalog();
-  void LoadCatalogOneMultiline();
-  void LoadCatalogTwoMultilinesAE();
-
   void SetLSF();
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
@@ -268,10 +249,6 @@ private:
 
   // Float64* m_unscaleContinuumFluxAxisDerivZ;
 
-  std::string m_LineWidthType;
-
-  std::vector<TLineModelElementParam_ptr> m_ElementParam;
-
   Float64 m_nominalWidthDefault;
 
   std::string m_fittingmethod;
@@ -282,7 +259,7 @@ private:
 
   CTLambdaRangePtrVector m_lambdaRanges;
   CCSpectrumVectorPtr m_inputSpcs;
-  CLMEltListVectorPtr m_ElementsVector;
+  std::shared_ptr<CElementsLists> m_ElementsVector;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;

@@ -127,7 +127,6 @@ void CLineModelFitting::initParameters() {
   m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
   m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampoffsetfit");
   m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaoffsetfit");
-  m_LineWidthType = ps->GetScoped<std::string>("linewidthtype");
 
   m_lineRatioType = ps->GetScoped<std::string>("lineRatioType");
 
@@ -153,26 +152,16 @@ void CLineModelFitting::initMembers(
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator) {
   m_nbObs = m_inputSpcs->size();
   m_curObs = std::make_shared<Int32>(0);
-  m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
   m_nominalWidthDefault = 13.4; // euclid 1 px
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_models = std::make_shared<std::vector<CSpectrumModel>>();
+  m_ElementsVector = std::make_shared<CElementsLists>(CElementsLists(
+      m_lambdaRanges, m_curObs, m_RestLineList, m_lineRatioType == "rules"));
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     Log.LogDetail("    model: Continuum winsize found is %.2f A",
                   getSpectrum().GetMedianWinsize());
-    m_ElementsVector->push_back(CLineModelElementList());
-    if (m_lineRatioType == "rules") {
-      // load the regular catalog
-      LoadCatalog();
-    } else { //"tplratio" and "tplcorr"
-      // load the tplratio catalog with only 1 element for all lines
-      // LoadCatalogOneMultiline(restLineList);
-      // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
-      // the Abs lines
-      LoadCatalogTwoMultilinesAE();
-    }
     m_models->push_back(CSpectrumModel(
-        std::make_shared<CLineModelElementList>(m_ElementsVector->back()),
+        std::make_shared<CLineModelElementList>(getElementList()),
         getSpectrumPtr(), m_RestLineList, m_continuumFitValues, TFOperator,
         *m_curObs));
   }
@@ -204,8 +193,6 @@ void CLineModelFitting::logParameters() {
                             << m_opt_firstpass_fittingmethod);
   Log.LogDetail(Formatter() << "m_opt_secondpass_fittingmethod"
                             << m_opt_secondpass_fittingmethod);
-
-  Log.LogDetail(Formatter() << "LineWidthType=" << m_LineWidthType);
 
   Log.LogDetail(Formatter() << "nominalWidthDefault=" << m_nominalWidthDefault);
 
@@ -251,87 +238,6 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
   return true;
 }
 Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
-
-void CLineModelFitting::AddElement(CLineVector lines, Float64 velocityEmission,
-                                   Float64 velocityAbsorption, Int32 ig) {
-  if (*m_curObs == 0) {
-    m_ElementParam.push_back(std::make_shared<TLineModelElementParam>(
-        std::move(lines), velocityEmission, velocityAbsorption));
-  }
-  getElementList().push_back(
-      std::make_shared<CLineModelElement>(m_ElementParam[ig], m_LineWidthType));
-}
-
-/**
- * \brief For each line in each group of the argument, finds the associated
- *line in the catalog and saves this information to getElementList(). Converts
- *the argument restLineList to a group list. For each entry in this list: For
- *each line in this entry: Finds the index in the catalog from the line name and
- *type. Saves the line, the catalog index and the nominal amplitude for the
- *line thusly associated to this line. If at least one line was found, save
- *this result in getElementList().
- **/
-void CLineModelFitting::LoadCatalog() {
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
-
-  auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityabsorption");
-  Int32 lastEltIndex = 0;
-
-  auto const groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
-
-  for (auto [_, lines] : groupList) {
-    AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-               lastEltIndex);
-    lastEltIndex++;
-  }
-}
-
-void CLineModelFitting::LoadCatalogOneMultiline() {
-  CAutoScope const autoscope(Context.m_ScopeStack, "linemodel");
-
-  auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityabsorption");
-
-  CLineVector RestLineVector;
-  RestLineVector.reserve(m_RestLineList.size());
-  for (auto const &[_, line] : m_RestLineList)
-    RestLineVector.push_back(line);
-
-  AddElement(std::move(RestLineVector), velocityEmission, velocityAbsorption,
-             0);
-}
-
-void CLineModelFitting::LoadCatalogTwoMultilinesAE() {
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
-
-  auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityabsorption");
-
-  std::vector<CLine::EType> const types = {CLine::EType::nType_Absorption,
-                                           CLine::EType::nType_Emission};
-
-  Int32 lastEltIndex = 0;
-  for (auto type : types) {
-    CLineVector lines;
-    for (auto const &[id, line] : m_RestLineList) {
-      if (line.GetType() == type)
-        lines.push_back(line);
-    }
-
-    if (lines.size() > 0) {
-      AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-                 lastEltIndex);
-      lastEltIndex++;
-    }
-  }
-}
 
 /**
  * \brief LogDetail the number of lines for each element, and their nominal
@@ -495,8 +401,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         m_lineRatioManager->saveResults(itratio);
       }
-      if (getContinuumComponent() == "nocontinuum")
-        getSpectrumModel().reinitModel();
+      if (getContinuumComponent() == "nocontinuum") {
+        for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++)
+          getSpectrumModel().reinitModel();
+      }
     }
   }
 
@@ -539,8 +447,8 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
   m_fittingmethod = fitMethod;
   m_fitter = CAbstractFitter::makeFitter(
       fitMethod, m_ElementsVector, m_inputSpcs, m_lambdaRanges, m_models,
-      m_RestLineList, m_continuumManager, m_ElementParam, m_curObs,
-      enableAmplitudeOffsets, enableLambdaOffsetsFit);
+      m_RestLineList, m_continuumManager, m_curObs, enableAmplitudeOffsets,
+      enableLambdaOffsetsFit);
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;
   }
@@ -549,7 +457,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
   m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
       lineRatioType, m_ElementsVector, m_models, m_inputSpcs, m_lambdaRanges,
-      m_continuumManager, m_RestLineList, m_fitter, m_curObs, m_ElementParam);
+      m_continuumManager, m_RestLineList, m_fitter, m_curObs);
 }
 
 void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
@@ -948,7 +856,8 @@ void CLineModelFitting::LoadModelSolution(
             spectralAxis, modelSolution.Redshift, getLambdaRange());
     }
   }
-  //*m_curObs = 0;
+  *m_curObs = 0; // temp hack for linemeas
+                 // (COperatorLineModel::getFittedModelWithoutContinuum)
 
   return;
 }
@@ -963,8 +872,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
 
-  modelSolution.EmissionVelocity = m_ElementParam[0]->m_VelocityEmission;
-  modelSolution.AbsorptionVelocity = m_ElementParam[0]->m_VelocityAbsorption;
+  modelSolution.EmissionVelocity =
+      m_ElementsVector->getElementParam()[0]->m_VelocityEmission;
+  modelSolution.AbsorptionVelocity =
+      m_ElementsVector->getElementParam()[0]->m_VelocityAbsorption;
 
   // For some quantities it is more simple to get them from the first
   // observation objects There could be refactor but it can be complicated for
@@ -982,31 +893,32 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   Float64 flux_ha = 0.0;
   Float64 fluxVar_ha = 0.0;
 
-  modelSolution.nDDL = GetModelNonZeroElementsNDdl();
+  modelSolution.nDDL = m_ElementsVector->GetModelNonZeroElementsNDdl();
 
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 line_id = modelSolution.lineId[iRestLine];
     auto const &line = m_RestLineList.at(line_id);
-    auto [eIdx, line_index] = findElementIndex(line_id);
+    auto [eIdx, line_index] = m_ElementsVector->findElementIndex(line_id);
     modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || line_index == undefIdx ||
-        isOutsideLambdaRange(eIdx, line_index)) {
-      modelSolution.OutsideLambdaRange[line_index] = true;
+        m_ElementsVector->isOutsideLambdaRange(eIdx, line_index)) {
       continue; // data already set to its default values
     }
 
-    Float64 amp = m_ElementParam[eIdx]->m_FittedAmplitudes[line_index];
+    Float64 amp = m_ElementsVector->getElementParam()[eIdx]
+                      ->m_FittedAmplitudes[line_index];
     modelSolution.Amplitudes[iRestLine] = amp;
-    Float64 ampError =
-        m_ElementParam[eIdx]->m_FittedAmplitudeErrorSigmas[line_index];
+    Float64 ampError = m_ElementsVector->getElementParam()[eIdx]
+                           ->m_FittedAmplitudeErrorSigmas[line_index];
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
 
     modelSolution.LambdaObs[iRestLine] =
         firstEltList[eIdx]->GetObservedPosition(line_index,
                                                 modelSolution.Redshift);
-    modelSolution.Velocity[iRestLine] = m_ElementParam[eIdx]->getVelocity();
+    modelSolution.Velocity[iRestLine] =
+        m_ElementsVector->getElementParam()[eIdx]->getVelocity();
     modelSolution.Offset[iRestLine] =
-        m_ElementParam[eIdx]->m_Offsets[line_index];
+        m_ElementsVector->getElementParam()[eIdx]->m_Offsets[line_index];
 
     if (opt_level) // brief, to save processing time, do not estimate fluxes
                    // and high level line properties
@@ -1014,7 +926,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       modelSolution.FittingError[iRestLine] =
           m_fitter->getModelErrorUnderElement(eIdx, true);
       if (m_enableAmplitudeOffsets) {
-        const auto &polynom_coeffs = m_ElementParam[eIdx]->m_ampOffsetsCoeffs;
+        const auto &polynom_coeffs =
+            m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
         modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
         modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
         modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
@@ -1030,7 +943,20 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       Float64 sigma = NAN;
       Float64 flux = NAN;
       Float64 fluxError = NAN;
-
+      TInt32List eIdx_line(1, eIdx);
+      TInt32List subeIdx_line(1, line_index);
+      Int32 opt_cont_substract_abslinesmodel = 0;
+      bool isEmission = false;
+      if (line.GetType() == CLine::EType::nType_Emission) {
+        opt_cont_substract_abslinesmodel = 1;
+        isEmission = true;
+      }
+      if (!std::isnan(amp) && amp >= 0.0) {
+        if (!isEmission) {
+          amp *= cont;
+          ampError *= cont;
+        }
+      }
       for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
         const auto &eltList = getElementList();
         if (!eltList[eIdx]->IsOutsideLambdaRange(line_index)) {
@@ -1046,22 +972,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
           break;
         }
       }
-      TInt32List eIdx_line(1, eIdx);
-      TInt32List subeIdx_line(1, line_index);
-      Int32 opt_cont_substract_abslinesmodel = 0;
-      bool isEmission = false;
-      if (line.GetType() == CLine::EType::nType_Emission) {
-        opt_cont_substract_abslinesmodel = 1;
-        isEmission = true;
-      }
       auto [fluxDI, snrDI] = getFluxDirectIntegration(
           eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
       if (!std::isnan(amp) && amp >= 0.0) {
-        if (!isEmission) {
-          amp *= cont;
-          ampError *= cont;
-        }
-
         if (!isEmission)
           flux = -flux;
       }
@@ -1118,19 +1031,21 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     }
 
     modelSolution.fittingGroupInfo[iRestLine] =
-        m_ElementParam[eIdx]->m_fittingGroupInfo;
+        m_ElementsVector->getElementParam()[eIdx]->m_fittingGroupInfo;
     modelSolution.OutsideLambdaRange[iRestLine] = false;
   }
 
   // retrieve Lya params if fitted
   std::string lyaTag = linetags::lya_em;
-  auto const [idxLyaE, _] = findElementIndex(lyaTag);
+  auto const [idxLyaE, _] = m_ElementsVector->findElementIndex(lyaTag);
   if (idxLyaE != undefIdx) {
-    TAsymParams params = m_ElementParam[idxLyaE]->GetAsymfitParams(0);
+    TAsymParams params =
+        m_ElementsVector->getElementParam()[idxLyaE]->GetAsymfitParams(0);
     modelSolution.LyaWidthCoeff = params.sigma;
     modelSolution.LyaAlpha = params.alpha;
     modelSolution.LyaDelta = params.delta;
-    TSymIgmParams params_igm = m_ElementParam[idxLyaE]->GetSymIgmParams(0);
+    TSymIgmParams params_igm =
+        m_ElementsVector->getElementParam()[idxLyaE]->GetSymIgmParams(0);
     modelSolution.LyaIgm = params_igm.m_igmidx;
   }
 
@@ -1139,14 +1054,6 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
   return modelSolution;
-}
-
-/**
- * \brief Returns the size of getElementList().
- **/
-Int32 CLineModelFitting::GetNElements() const {
-  Int32 nddl = getElementList().size();
-  return nddl;
 }
 
 void CLineModelFitting::SetLSF() {
@@ -1170,51 +1077,37 @@ void CLineModelFitting::SetLSF() {
 }
 
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-
-    for (Int32 j = 0; j < getElementList().size(); j++) {
-      m_ElementParam[j]->m_VelocityEmission = vel;
-    }
+  for (auto &lmep : m_ElementsVector->getElementParam()) {
+    lmep->m_VelocityEmission = vel;
   }
-  //*m_curObs = 0;
 }
 
 void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
                                                    const TInt32List &inds) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-
-    for (auto idxElt : inds)
-      m_ElementParam[idxElt]->m_VelocityEmission = vel;
-  }
-  //*m_curObs = 0;
+  for (auto idxElt : inds)
+    m_ElementsVector->getElementParam()[idxElt]->m_VelocityEmission = vel;
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-    for (Int32 j = 0; j < getElementList().size(); j++) {
-      m_ElementParam[j]->m_VelocityAbsorption = vel;
-    }
+  for (auto &lmep : m_ElementsVector->getElementParam()) {
+    lmep->m_VelocityAbsorption = vel;
   }
-  //*m_curObs = 0;
 }
 
 void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
                                                      const TInt32List &inds) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-    for (auto idxElt : inds)
-      m_ElementParam[idxElt]->m_VelocityAbsorption = vel;
-  }
-  //*m_curObs = 0;
+  for (auto idxElt : inds)
+    m_ElementsVector->getElementParam()[idxElt]->m_VelocityAbsorption = vel;
 }
 
 Float64 CLineModelFitting::GetVelocityEmission() const {
-  return m_ElementParam[0]->m_VelocityEmission;
+  return m_ElementsVector->getElementParam()[0]->m_VelocityEmission;
 }
 
 Float64 CLineModelFitting::GetVelocityAbsorption() const {
-  return m_ElementParam[0]->m_VelocityAbsorption;
+  return m_ElementsVector->getElementParam()[0]->m_VelocityAbsorption;
 }
 
 Float64 CLineModelFitting::GetRedshift() const {
@@ -1352,46 +1245,6 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
-Int32 CLineModelFitting::GetModelNonZeroElementsNDdl() {
-  Int32 nddl = 0;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    nddl += getElementList().GetModelValidElementsNDdl();
-  }
-  return nddl;
-}
-
-bool CLineModelFitting::isOutsideLambdaRange(Int32 elt_index,
-                                             Int32 line_index) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    if (!getElementList()[elt_index]->IsOutsideLambdaRange(line_index))
-      return false;
-  }
-  return true;
-}
-
-std::pair<Int32, Int32>
-CLineModelFitting::findElementIndex(Int32 line_id) const {
-  std::pair<Int32, Int32> ret;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    ret = getElementList().findElementIndex(line_id);
-    if (ret.first != undefIdx and ret.second != undefIdx)
-      return ret;
-  }
-  return std::make_pair(undefIdx, undefIdx);
-}
-
-std::pair<Int32, Int32>
-CLineModelFitting::findElementIndex(const std::string &LineTagStr,
-                                    CLine::EType linetype) const {
-  std::pair<Int32, Int32> ret;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    ret = getElementList().findElementIndex(LineTagStr, linetype);
-    if (ret.first != undefIdx and ret.second != undefIdx)
-      return ret;
-  }
-  return std::make_pair(undefIdx, undefIdx);
-}
-
 Float64 CLineModelFitting::getContinuumAtCenterProfile(Int32 eltIdx,
                                                        Int32 line_index,
                                                        Float64 redshift) {
@@ -1443,7 +1296,7 @@ std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
     sumErr += err;
   }
   if (sumErr <= 0.)
-    return std::make_pair(sumFlux, NAN);
+    return std::make_pair(NAN, NAN);
 
   Float64 snrdi = std::abs(sumFlux) / sqrt(sumErr);
   return std::make_pair(sumFlux, snrdi);

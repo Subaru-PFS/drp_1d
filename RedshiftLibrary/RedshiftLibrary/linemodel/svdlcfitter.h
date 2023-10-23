@@ -49,12 +49,11 @@ namespace NSEpic
 // class CRegulament;
 class CSvdlcFitter : public CAbstractFitter {
 public:
-  CSvdlcFitter(const CLMEltListVectorPtr &elementsVector,
+  CSvdlcFitter(const std::shared_ptr<CElementsLists> &elementsVector,
                const CCSpectrumVectorPtr &inputSpcs,
                const CTLambdaRangePtrVector &lambdaRanges,
                const CSpcModelVectorPtr &spectrumModels,
                const CLineMap &restLineList,
-               const std::vector<TLineModelElementParam_ptr> &elementParam,
                const std::shared_ptr<Int32> &curObsPtr,
                std::shared_ptr<CContinuumManager> continuumManager,
                Int32 polyOrder = -1, bool enableAmplitudeOffsets = false,

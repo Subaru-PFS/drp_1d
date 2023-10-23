@@ -132,5 +132,52 @@ public:
 };
 
 using CLMEltListVectorPtr = std::shared_ptr<std::vector<CLineModelElementList>>;
+
+class CElementsLists {
+public:
+  CElementsLists(CTLambdaRangePtrVector lambdaranges,
+                 const std::shared_ptr<Int32> &curObs,
+                 const CLineMap &restLineList, bool regularCatalog);
+  CElementsLists() = delete;
+
+  Int32 GetModelNonZeroElementsNDdl();
+  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
+  std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
+  std::pair<Int32, Int32>
+  findElementIndex(const std::string &LineTagStr,
+                   CLine::EType linetype = CLine::EType::nType_All) const;
+  Int32 getNbElements() const { return m_ElementsParams.size(); }
+  Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const;
+
+  CLineModelElementList &getElementList() {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return (*m_ElementsVector).at(*m_curObs);
+  }
+  const CLineModelElementList &getElementList() const {
+    if (*m_curObs >= m_nbObs)
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+
+    return (*m_ElementsVector).at(*m_curObs);
+  }
+  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+    return m_ElementsParams;
+  }
+
+private:
+  CLMEltListVectorPtr m_ElementsVector;
+  std::vector<TLineModelElementParam_ptr> m_ElementsParams;
+  CTLambdaRangePtrVector m_lambdaRanges;
+  Int32 m_nbObs;
+  std::shared_ptr<Int32> m_curObs;
+  const CLineMap &m_RestLineList;
+
+  void AddElement(CLineVector lines, Float64 velocityEmission,
+                  Float64 velocityAbsorption, Int32 ig);
+  void LoadCatalog();
+  void LoadCatalogOneMultiline();
+  void LoadCatalogTwoMultilinesAE();
+};
+
 } // namespace NSEpic
 #endif

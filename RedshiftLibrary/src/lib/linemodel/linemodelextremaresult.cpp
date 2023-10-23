@@ -112,12 +112,9 @@ void TLineModelResult::updateFromModel(
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  Int32 nddl =
-      lmel->GetNElements(); // get the total number of elements in the model
-
-  nddl = lmresult->LineModelSolutions[idx]
-             .nDDL; // override nddl by the actual number of elements in
-                    // the fitted model
+  Int32 nddl = lmresult->LineModelSolutions[idx]
+                   .nDDL; // override nddl by the actual number of elements in
+                          // the fitted model
 
   NDof = lmel->getElementList().GetModelNonZeroElementsNDdl();
 

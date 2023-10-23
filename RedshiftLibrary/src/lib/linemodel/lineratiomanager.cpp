@@ -52,16 +52,15 @@
 using namespace NSEpic;
 
 CLineRatioManager::CLineRatioManager(
-    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
-    const CCSpectrumVectorPtr &inputSpcs,
+    const std::shared_ptr<CElementsLists> &elementsVector,
+    const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs,
-    std::vector<TLineModelElementParam_ptr> &elementsParams)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : m_elementsVector(elementsVector), m_models(models),
       m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
       m_continuumManager(continuumManager), m_RestLineList(restLineList),
-      m_curObs(curObs), m_elementsParams(elementsParams) {
+      m_curObs(curObs) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -288,26 +287,26 @@ void CLineRatioManager::logParameters() {
 }
 
 std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
-    const std::string &lineRatioType, const CLMEltListVectorPtr &elementsVector,
+    const std::string &lineRatioType,
+    const std::shared_ptr<CElementsLists> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
-    const std::shared_ptr<Int32> &curObs,
-    std::vector<TLineModelElementParam_ptr> &elementsParams) {
+    const std::shared_ptr<Int32> &curObs) {
   std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
-    ret = std::make_shared<CTplratioManager>(CTplratioManager(
-        elementsVector, models, inputSpcs, lambdaRanges, continuumManager,
-        restLineList, curObs, elementsParams));
+    ret = std::make_shared<CTplratioManager>(
+        CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
+                         continuumManager, restLineList, curObs));
   else if (lineRatioType == "tplcorr")
-    ret = std::make_shared<CTplCorrManager>(CTplCorrManager(
-        elementsVector, models, inputSpcs, lambdaRanges, continuumManager,
-        restLineList, curObs, elementsParams));
+    ret = std::make_shared<CTplCorrManager>(
+        CTplCorrManager(elementsVector, models, inputSpcs, lambdaRanges,
+                        continuumManager, restLineList, curObs));
   else if (lineRatioType == "rules")
     ret = std::make_shared<CRulesManager>(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
-                      continuumManager, restLineList, curObs, elementsParams));
+                      continuumManager, restLineList, curObs));
   else
     THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
                               "supported for linemodel.lineRatioType");
@@ -336,9 +335,10 @@ bool CLineRatioManager::isOutsideLambdaRange(Int32 elt_index) {
 std::vector<bool>
 CLineRatioManager::getOutsideLambdaRangeList(Int32 elt_index) {
 
-  std::vector<bool> ret(m_elementsParams[elt_index]->size());
+  std::vector<bool> ret(m_elementsVector->getElementParam()[elt_index]->size());
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    for (Int32 line_index = 0; line_index < m_elementsParams[elt_index]->size();
+    for (Int32 line_index = 0;
+         line_index < m_elementsVector->getElementParam()[elt_index]->size();
          line_index++)
       ret[line_index] =
           getElementList()[elt_index]->IsOutsideLambdaRange(line_index);

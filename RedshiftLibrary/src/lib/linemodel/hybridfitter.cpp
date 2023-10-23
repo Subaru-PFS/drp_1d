@@ -44,15 +44,14 @@ using namespace NSEpic;
 using namespace std;
 
 CHybridFitter::CHybridFitter(
-    const CLMEltListVectorPtr &elementsVector,
+    const std::shared_ptr<CElementsLists> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-    const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
     : CSvdFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
-                 restLineList, elementParam, curObsPtr, enableAmplitudeOffsets,
+                 restLineList, curObsPtr, enableAmplitudeOffsets,
                  enableLambdaOffsetsFit)
 
 {
@@ -120,6 +119,7 @@ void CHybridFitter::doFit(Float64 redshift) {
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
+  *m_curObs = 0; // dummy implementation
   if (m_enableAmplitudeOffsets)
     getElementList().resetAmplitudeOffset();
 

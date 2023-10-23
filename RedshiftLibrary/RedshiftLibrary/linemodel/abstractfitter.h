@@ -51,14 +51,14 @@ namespace NSEpic
 class CContinuumManager;
 class CAbstractFitter {
 public:
-  CAbstractFitter(
-      const CLMEltListVectorPtr &elementsVector,
-      const CCSpectrumVectorPtr &inputSpcs,
-      const CTLambdaRangePtrVector &lambdaRanges,
-      const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
-      const std::shared_ptr<Int32> &curObsPtr,
-      bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
+  CAbstractFitter(const std::shared_ptr<CElementsLists> &elementsVector,
+                  const CCSpectrumVectorPtr &inputSpcs,
+                  const CTLambdaRangePtrVector &lambdaRanges,
+                  const CSpcModelVectorPtr &spectrumModels,
+                  const CLineMap &restLineList,
+                  const std::shared_ptr<Int32> &curObsPtr,
+                  bool enableAmplitudeOffsets = false,
+                  bool enableLambdaOffsetsFit = false);
 
   void fit(Float64 redshift);
 
@@ -68,12 +68,12 @@ public:
   void enableLambdaOffsets() { m_enableLambdaOffsetsFit = true; }
 
   static std::shared_ptr<CAbstractFitter> makeFitter(
-      std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
+      std::string fittingMethod,
+      const std::shared_ptr<CElementsLists> &elementsVector,
       const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
-      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
       const std::shared_ptr<Int32> &curObsPtr,
       bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
@@ -134,24 +134,24 @@ protected:
     return *(m_lambdaRanges.at(*m_curObs));
   }
   CLineModelElementList &getElementList() {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_ElementsVector).at(*m_curObs);
+    return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_ElementsVector).at(*m_curObs);
+    return m_ElementsVector->getElementList();
+  }
+
+  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+    return m_ElementsVector->getElementParam();
   }
   bool isOutsideLambdaRange(Int32 elt_index);
 
-  CLMEltListVectorPtr m_ElementsVector;
   Int32 m_nbElements;
-  std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
+
   CCSpectrumVectorPtr m_inputSpcs;
   const CLineMap &m_RestLineList;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
+  std::shared_ptr<CElementsLists> m_ElementsVector;
 
   std::shared_ptr<Int32> m_curObs;
   // hard coded options

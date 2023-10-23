@@ -50,6 +50,7 @@ using namespace std;
 
 // set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
+  *m_curObs = 0; // dummy implementation
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
 
   if (validEltsIdx.empty())

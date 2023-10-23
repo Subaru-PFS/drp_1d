@@ -14,19 +14,18 @@
 using namespace NSEpic;
 
 CAbstractFitter::CAbstractFitter(
-    const CLMEltListVectorPtr &elementsVector,
+    const std::shared_ptr<CElementsLists> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-    const std::vector<TLineModelElementParam_ptr> &elementParam,
     const shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
     : m_ElementsVector(elementsVector), m_inputSpcs(inputSpcs),
       m_RestLineList(restLineList), m_lambdaRanges(lambdaRanges),
-      m_models(spectrumModels), m_ElementParam(elementParam),
-      m_curObs(curObsPtr), m_enableAmplitudeOffsets(enableAmplitudeOffsets),
+      m_models(spectrumModels), m_curObs(curObsPtr),
+      m_enableAmplitudeOffsets(enableAmplitudeOffsets),
       m_enableLambdaOffsetsFit(enableLambdaOffsetsFit) {
-  m_nbElements = m_ElementsVector->at(0).size();
+  m_nbElements = m_ElementsVector->getNbElements();
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
   if (Context.GetCurrentMethod() == "LineModelSolve") {
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -43,52 +42,49 @@ CAbstractFitter::CAbstractFitter(
 }
 
 std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
-    std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
+    std::string fittingMethod,
+    const std::shared_ptr<CElementsLists> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit) {
   if (fittingMethod == "hybrid")
     return std::make_shared<CHybridFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, curObsPtr, enableAmplitudeOffsets,
-        enableLambdaOffsetsFit);
+        curObsPtr, enableAmplitudeOffsets, enableLambdaOffsetsFit);
 #ifdef LBFGSBFITTER
   else if (fittingMethod == "lbfgsb")
     return std::make_shared<CLbfgsbFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, curObsPtr, enableAmplitudeOffsets,
-        enableLambdaOffsetsFit);
+        curObsPtr, enableAmplitudeOffsets, enableLambdaOffsetsFit);
 #endif
   else if (fittingMethod == "svd")
     return std::make_shared<CSvdFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, curObsPtr, enableAmplitudeOffsets,
-        enableLambdaOffsetsFit);
+        curObsPtr, enableAmplitudeOffsets, enableLambdaOffsetsFit);
   else if (fittingMethod == "svdlc")
     return std::make_shared<CSvdlcFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, curObsPtr, continuumManager);
+        curObsPtr, continuumManager);
   else if (fittingMethod == "svdlcp2")
     return std::make_shared<CSvdlcFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, curObsPtr, continuumManager, 2);
+        curObsPtr, continuumManager, 2);
 
   else if (fittingMethod == "ones")
     return std::make_shared<COnesFitter>(elementsVector, inputSpcs,
                                          lambdaRanges, spectrumModels,
-                                         restLineList, elementParam, curObsPtr);
+                                         restLineList, curObsPtr);
   else if (fittingMethod == "random")
-    return std::make_shared<CRandomFitter>(
-        elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, curObsPtr);
+    return std::make_shared<CRandomFitter>(elementsVector, inputSpcs,
+                                           lambdaRanges, spectrumModels,
+                                           restLineList, curObsPtr);
   else if (fittingMethod == "individual")
-    return std::make_shared<CIndividualFitter>(
-        elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        elementParam, curObsPtr);
+    return std::make_shared<CIndividualFitter>(elementsVector, inputSpcs,
+                                               lambdaRanges, spectrumModels,
+                                               restLineList, curObsPtr);
   else
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Unknown fitting method " << fittingMethod);
@@ -207,7 +203,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     auto end = std::remove_if(line_indices_filtered.begin(),
                               line_indices_filtered.end(),
                               [this, elt_idx_LyaE](Int32 idx) {
-                                return !m_ElementParam[elt_idx_LyaE]
+                                return !getElementParam()[elt_idx_LyaE]
                                             ->m_Lines[idx]
                                             .GetProfile()
                                             ->isSymIgm();
@@ -217,9 +213,8 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
       // setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
       auto bestigmidx =
           fitAsymIGMCorrection(redshift, elt_idx_LyaE, line_indices_filtered);
-      *m_curObs = 0; // TODO this is simple and dirty implementation : we should
-                     // directly call setasyfitparams on TLineModelElementParam
-      getElementList()[elt_idx_LyaE]->SetSymIgmParams(
+
+      m_ElementsVector->getElementParam()[elt_idx_LyaE]->SetSymIgmParams(
           TSymIgmParams(bestigmidx, redshift));
     }
   }
@@ -230,19 +225,19 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
 
   if (isOutsideLambdaRange(eltIndex)) {
 
-    m_ElementParam[eltIndex]->m_sumCross = NAN;
-    m_ElementParam[eltIndex]->m_sumGauss = NAN;
-    m_ElementParam[eltIndex]->m_dtmFree = NAN;
+    getElementParam()[eltIndex]->m_sumCross = NAN;
+    getElementParam()[eltIndex]->m_sumGauss = NAN;
+    getElementParam()[eltIndex]->m_dtmFree = NAN;
     return;
   }
 
   Int32 nLines = getElementList()[eltIndex]->GetSize();
-  m_ElementParam[eltIndex]->m_sumCross = 0.;
-  m_ElementParam[eltIndex]->m_sumGauss = 0.;
-  m_ElementParam[eltIndex]->m_dtmFree = 0.;
+  getElementParam()[eltIndex]->m_sumCross = 0.;
+  getElementParam()[eltIndex]->m_sumGauss = 0.;
+  getElementParam()[eltIndex]->m_dtmFree = 0.;
 
-  m_ElementParam[eltIndex]->m_FittedAmplitudes.assign(nLines, NAN);
-  m_ElementParam[eltIndex]->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+  getElementParam()[eltIndex]->m_FittedAmplitudes.assign(nLines, NAN);
+  getElementParam()[eltIndex]->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
 
   Int32 num = 0;
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
@@ -257,13 +252,13 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
         lineIdx);
   }
 
-  if (num == 0 || m_ElementParam[eltIndex]->m_sumGauss == 0) {
+  if (num == 0 || getElementParam()[eltIndex]->m_sumGauss == 0) {
     Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
                  " num=%d, mtm=%f",
-                 num, m_ElementParam[eltIndex]->m_sumGauss);
-    m_ElementParam[eltIndex]->m_sumGauss = NAN;
-    m_ElementParam[eltIndex]->m_dtmFree = NAN;
-    m_ElementParam[eltIndex]->m_sumCross = NAN;
+                 num, getElementParam()[eltIndex]->m_sumGauss);
+    getElementParam()[eltIndex]->m_sumGauss = NAN;
+    getElementParam()[eltIndex]->m_dtmFree = NAN;
+    getElementParam()[eltIndex]->m_sumCross = NAN;
     return;
   }
 
@@ -276,16 +271,16 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   }
 
   if (allNaN) {
-    m_ElementParam[eltIndex]->m_sumCross = NAN;
+    getElementParam()[eltIndex]->m_sumCross = NAN;
     return;
   }
-  m_ElementParam[eltIndex]->m_sumCross =
-      std::max(0.0, m_ElementParam[eltIndex]->m_dtmFree);
-  Float64 A = m_ElementParam[eltIndex]->m_sumCross /
-              m_ElementParam[eltIndex]->m_sumGauss;
+  getElementParam()[eltIndex]->m_sumCross =
+      std::max(0.0, getElementParam()[eltIndex]->m_dtmFree);
+  Float64 A = getElementParam()[eltIndex]->m_sumCross /
+              getElementParam()[eltIndex]->m_sumGauss;
 
   getElementList()[eltIndex]->SetElementAmplitude(
-      A, 1.0 / sqrt(m_ElementParam[eltIndex]->m_sumGauss));
+      A, 1.0 / sqrt(getElementParam()[eltIndex]->m_sumGauss));
 
   return;
 }
@@ -489,10 +484,13 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
                        ->getLineProfile(idxLine.front())
                        ->getIGMIdxCount();
   for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
-    getElementList()[iElts]->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
+    m_ElementsVector->getElementParam()[iElts]->SetSymIgmParams(
+        TSymIgmParams(igmIdx, redshift));
     fitAmplitude(iElts, redshift);
 
-    getModel().refreshModelUnderElements(TInt32List(1, iElts));
+    for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+      getModel().refreshModelUnderElements(TInt32List(1, iElts));
+    }
     Float64 m = getModelErrorUnderElement(iElts, true);
 
     if (m < meritMin) {
@@ -503,14 +501,16 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
   return bestIgmIdx;
 }
 
-Float64 CAbstractFitter::getModelErrorUnderElement(Int32 line_index,
+Float64 CAbstractFitter::getModelErrorUnderElement(Int32 elt_index,
                                                    bool with_continuum) {
   Float64 fit_allObs = 0;
   Float64 sumErr_allObs = 0;
   Int32 nb_nan = 0;
+  if (isOutsideLambdaRange(elt_index))
+    return 0;
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     auto [fit, sumErr] = getModel().getModelQuadraticErrorUnderElement(
-        line_index, with_continuum);
+        elt_index, with_continuum);
     if (fit == 0.0)
       continue;
     if (std::isnan(fit)) {

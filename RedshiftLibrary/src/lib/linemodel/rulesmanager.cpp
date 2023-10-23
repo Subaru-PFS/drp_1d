@@ -45,15 +45,13 @@
 using namespace NSEpic;
 
 CRulesManager::CRulesManager(
-    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
-    const CCSpectrumVectorPtr &inputSpcs,
+    const std::shared_ptr<CElementsLists> &elementsVector,
+    const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs,
-    std::vector<TLineModelElementParam_ptr> &elementsParams)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList, curObs,
-                        elementsParams) {}
+                        continuumManager, restLineList, curObs) {}
 
 Float64 CRulesManager::computeMerit(Int32 iratio) {
   applyRules(true);
@@ -71,6 +69,7 @@ Float64 CRulesManager::computeMerit(Int32 iratio) {
  *emission and then for absorption.
  **/
 void CRulesManager::applyRules(bool enableLogs) {
+  *m_curObs = 0; // dummy implementation
   if (m_rulesoption == "no") {
     return;
   }

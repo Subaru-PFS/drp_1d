@@ -55,14 +55,13 @@ class CAbstractFitter;
 
 class CLineRatioManager {
 public:
-  CLineRatioManager(const CLMEltListVectorPtr &elementsVector,
+  CLineRatioManager(const std::shared_ptr<CElementsLists> &elementsVectors,
                     const CSpcModelVectorPtr &spectrumModels,
                     const CCSpectrumVectorPtr &inputSpcs,
                     const CTLambdaRangePtrVector &lambdaRanges,
                     std::shared_ptr<CContinuumManager> continuumManager,
                     const CLineMap &restLineList,
-                    const std::shared_ptr<Int32> &curObs,
-                    std::vector<TLineModelElementParam_ptr> &elementsParams);
+                    const std::shared_ptr<Int32> &curObs);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -92,13 +91,12 @@ public:
   void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
   static std::shared_ptr<CLineRatioManager> makeLineRatioManager(
       const std::string &lineRatioType,
-      const CLMEltListVectorPtr &elementsVector,
+      const std::shared_ptr<CElementsLists> &elementsVector,
       const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
       const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
-      const std::shared_ptr<Int32> &curObs,
-      std::vector<TLineModelElementParam_ptr> &elementsParams);
+      const std::shared_ptr<Int32> &curObs);
 
 protected:
   void setLyaProfile(Float64 redshift, const CLineMap &lineList);
@@ -131,26 +129,21 @@ protected:
     return *(m_lambdaRanges[*m_curObs]);
   }
   CLineModelElementList &getElementList() {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_elementsVector)[*m_curObs];
+    return m_elementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_elementsVector)[*m_curObs];
+    return m_elementsVector->getElementList();
   }
   bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
   bool isOutsideLambdaRange(Int32 elt_index);
   std::vector<bool> getOutsideLambdaRangeList(Int32 elt_index);
 
-  CLMEltListVectorPtr m_elementsVector;
+  std::shared_ptr<CElementsLists> m_elementsVector;
   CCSpectrumVectorPtr m_inputSpcs;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
   std::shared_ptr<Int32> m_curObs;
   Int32 m_nbObs;
-  std::vector<TLineModelElementParam_ptr> m_elementsParams;
   std::vector<std::vector<bool>> m_outsideLambdaRangeList;
 
   std::shared_ptr<CContinuumManager> m_continuumManager;

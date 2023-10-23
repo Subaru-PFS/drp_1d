@@ -1,0 +1,201 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+//
+// https://www.lam.fr/
+//
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+//
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use,
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info".
+//
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability.
+//
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or
+// data to be ensured and,  more generally, to use and operate it in the
+// same conditions as regards security.
+//
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
+
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
+
+using namespace NSEpic;
+using namespace std;
+
+CElementsLists::CElementsLists(CTLambdaRangePtrVector lambdaranges,
+                               const std::shared_ptr<Int32> &curObs,
+                               const CLineMap &restLineList,
+                               bool regularCatalog)
+    : m_lambdaRanges(lambdaranges), m_curObs(curObs),
+      m_RestLineList(restLineList) {
+  m_nbObs = m_lambdaRanges.size();
+
+  m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
+
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+
+    m_ElementsVector->push_back(CLineModelElementList());
+    if (regularCatalog) {
+      // load the regular catalog
+      LoadCatalog();
+    } else { //"tplratio" and "tplcorr"
+      // load the tplratio catalog with only 1 element for all lines
+      // LoadCatalogOneMultiline(restLineList);
+      // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
+      // the Abs lines
+      LoadCatalogTwoMultilinesAE();
+    }
+  }
+}
+
+Int32 CElementsLists::GetModelNonZeroElementsNDdl() {
+  Int32 nddl = 0;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    nddl += getElementList().GetModelNonZeroElementsNDdl();
+  }
+  return nddl;
+}
+
+bool CElementsLists::isOutsideLambdaRange(Int32 elt_index, Int32 line_index) {
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    if (!getElementList()[elt_index]->IsOutsideLambdaRange(line_index))
+      return false;
+  }
+  return true;
+}
+
+std::pair<Int32, Int32> CElementsLists::findElementIndex(Int32 line_id) const {
+  std::pair<Int32, Int32> ret;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    ret = getElementList().findElementIndex(line_id);
+    if (ret.first != undefIdx and ret.second != undefIdx)
+      return ret;
+  }
+  return std::make_pair(undefIdx, undefIdx);
+}
+
+std::pair<Int32, Int32>
+CElementsLists::findElementIndex(const std::string &LineTagStr,
+                                 CLine::EType linetype) const {
+  std::pair<Int32, Int32> ret;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    ret = getElementList().findElementIndex(LineTagStr, linetype);
+    if (ret.first != undefIdx and ret.second != undefIdx)
+      return ret;
+  }
+  return std::make_pair(undefIdx, undefIdx);
+}
+
+void CElementsLists::AddElement(CLineVector lines, Float64 velocityEmission,
+                                Float64 velocityAbsorption, Int32 ig) {
+  if (*m_curObs == 0) {
+    m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
+        std::move(lines), velocityEmission, velocityAbsorption));
+  }
+
+  auto const ps = Context.GetParameterStore();
+
+  getElementList().push_back(std::make_shared<CLineModelElement>(
+      m_ElementsParams[ig], ps->GetScoped<std::string>("linewidthtype")));
+}
+
+/**
+ * \brief For each line in each group of the argument, finds the associated
+ *line in the catalog and saves this information to getElementList(). Converts
+ *the argument restLineList to a group list. For each entry in this list: For
+ *each line in this entry: Finds the index in the catalog from the line name and
+ *type. Saves the line, the catalog index and the nominal amplitude for the
+ *line thusly associated to this line. If at least one line was found, save
+ *this result in getElementList().
+ **/
+void CElementsLists::LoadCatalog() {
+  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+
+  auto const ps = Context.GetParameterStore();
+  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
+  Float64 const velocityAbsorption =
+      ps->GetScoped<Float64>("velocityabsorption");
+  Int32 lastEltIndex = 0;
+
+  auto const groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
+
+  for (auto [_, lines] : groupList) {
+    AddElement(std::move(lines), velocityEmission, velocityAbsorption,
+               lastEltIndex);
+    lastEltIndex++;
+  }
+}
+
+void CElementsLists::LoadCatalogOneMultiline() {
+  CAutoScope const autoscope(Context.m_ScopeStack, "linemodel");
+
+  auto const ps = Context.GetParameterStore();
+  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
+  Float64 const velocityAbsorption =
+      ps->GetScoped<Float64>("velocityabsorption");
+
+  CLineVector RestLineVector;
+  RestLineVector.reserve(m_RestLineList.size());
+  for (auto const &[_, line] : m_RestLineList)
+    RestLineVector.push_back(line);
+
+  AddElement(std::move(RestLineVector), velocityEmission, velocityAbsorption,
+             0);
+}
+
+void CElementsLists::LoadCatalogTwoMultilinesAE() {
+  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+
+  auto const ps = Context.GetParameterStore();
+  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
+  Float64 const velocityAbsorption =
+      ps->GetScoped<Float64>("velocityabsorption");
+
+  std::vector<CLine::EType> const types = {CLine::EType::nType_Absorption,
+                                           CLine::EType::nType_Emission};
+
+  Int32 lastEltIndex = 0;
+  for (auto type : types) {
+    CLineVector lines;
+    for (auto const &[id, line] : m_RestLineList) {
+      if (line.GetType() == type)
+        lines.push_back(line);
+    }
+
+    if (lines.size() > 0) {
+      AddElement(std::move(lines), velocityEmission, velocityAbsorption,
+                 lastEltIndex);
+      lastEltIndex++;
+    }
+  }
+}
+
+Float64 CElementsLists::getScaleMargCorrection(Int32 Eltidx) const {
+  Int32 smc = 0;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    smc += getElementList().getScaleMargCorrection(Eltidx);
+  }
+  return smc;
+}
