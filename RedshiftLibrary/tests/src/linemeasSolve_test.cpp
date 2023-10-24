@@ -89,7 +89,7 @@ const std::string jsonString =
     "\"lyaforcedisablefit\" : false "
     "}}}}";
 
-const std::string jsonString_lbfgs =
+const std::string jsonString_lbfgsb =
     "{\"lambdarange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
@@ -123,7 +123,7 @@ const std::string jsonString_lbfgs =
     "\"lineforcefilter\" : \"no\","
     "\"nsigmasupport\" : 14,"
     "\"linewidthtype\" : \"combined\","
-    "\"fittingmethod\" : \"lbfgs\","
+    "\"fittingmethod\" : \"lbfgsb\","
     "\"polynomialdegree\" : 2,"
     "\"velocityfit\" : true,"
     "\"ampoffsetfit\": \"true\","
@@ -181,14 +181,14 @@ public:
   }
 };
 
-#ifdef LBFGSFITTER
-class fixture_LinemeasSolveLbfgsTest {
+#ifdef LBFGSBFITTER
+class fixture_LinemeasSolveLbfgsbTest {
 public:
   fixture_Context ctx;
 
-  fixture_LinemeasSolveLbfgsTest() {
+  fixture_LinemeasSolveLbfgsbTest() {
     fillCatalog();
-    ctx.loadParameterStore(jsonString_lbfgs);
+    ctx.loadParameterStore(jsonString_lbfgsb);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -249,8 +249,8 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
   ctx.reset();
 }
 
-#ifdef LBFGSFITTER
-BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsTest) {
+#ifdef LBFGSBFITTER
+BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
 
   CLineMeasSolve lineMeasSolve(Context.m_ScopeStack, "galaxy");
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
