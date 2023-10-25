@@ -68,17 +68,19 @@ const std::string jsonString =
     "\"spectrumModels\" : [\"galaxy\"],"
     "\"autoCorrectInput\" : false,"
     "\"galaxy\" : {"
+    "\"stages\": [\"redshiftSolver\"],"
     "\"redshiftRange\" : [ 2.84, 2.88 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"templateFittingSolver\","
     "\"templateDir\" : \"templates/BC03_sdss_tremonti21\","
+    "\"redshiftSolver\": {"
+    "\"method\" : \"templateFittingSolve\","
     "\"linemeas_method\" : null,"
-    "\"lineModelSolver\" : {"
+    "\"lineModelSolve\" : {"
     "\"lineModel\" : {"
     "\"lineTypeFilter\" : \"no\","
     "\"lineForceFilter\" : \"no\"}},"
-    "\"templateFittingSolver\" : {"
+    "\"templateFittingSolve\" : {"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -88,7 +90,7 @@ const std::string jsonString =
     "\"ismFit\" : true,"
     "\"pdfCombination\" : \"marg\","
     "\"enablePhotometry\" : false}},"
-    "\"airVacuumMethod\" : \"default\"}";
+    "\"airVacuumMethod\" : \"default\"}}";
 
 class fixture_processflowcontextTest {
 public:
@@ -124,7 +126,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(inputCtx->getSpectra().size() == 0);
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "templateFittingSolver",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver", "templateFittingSolve",
                                       "solveResult") == false);
 
   spc->SetLSF(LSF);
@@ -146,10 +148,11 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Context.m_ScopeStack.push_back("galaxy");
   BOOST_CHECK(Context.GetTplRatioCatalog() == lineRatioTplCatalog);
 
-  Context.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
-  BOOST_CHECK(Context.GetLineCatalog("galaxy", "lineModelSolver") ==
+  Context.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+  BOOST_CHECK(Context.GetLineCatalog("galaxy", "lineModelSolve") ==
               lineCatalog);
-  Context.m_ScopeStack.push_back("lineModelSolver");
+  Context.m_ScopeStack.push_back("redshiftSolver");
+  Context.m_ScopeStack.push_back("lineModelSolve");
   BOOST_CHECK(Context.getCLineMap().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
@@ -185,16 +188,17 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK_THROW(Context.GetCurrentMethod(), GlobalException);
 
   Context.m_ScopeStack.pop_back();
+  Context.m_ScopeStack.pop_back();
   BOOST_CHECK_THROW(Context.GetCurrentCategory(), GlobalException);
 
-  CTemplateFittingSolve templateFittingSolver(Context.m_ScopeStack, "galaxy");
-  templateFittingSolver.Compute();
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  templateFittingSolve.Compute();
 
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "templateFittingSolver",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver", "templateFittingSolve",
                                       "solveResult") == true);
   Context.reset();
   BOOST_CHECK(Context.getSpectra().size() == 0);
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "templateFittingSolver",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver", "templateFittingSolve",
                                       "solveResult") == false);
 
   // GSL error

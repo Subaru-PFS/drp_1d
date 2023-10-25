@@ -62,6 +62,7 @@ class Parameters(ParametersAccessor):
 
         if make_checks:
             accessor = ParametersAccessor(self.parameters)
+
             self.checker.custom_check(accessor)
 
     def _get_json_schema_version(self, raw_parameters: dict):
@@ -75,9 +76,9 @@ class Parameters(ParametersAccessor):
             )
         return version
 
-    def get_solve_methods(self, object_type) -> dict:
-        method = self.get_solve_method(object_type)
-        linemeas_method = self.get_linemeas_method(object_type)
+    def get_solve_methods(self, spectrum_model) -> dict:
+        method = self.get_redshift_solver_method(spectrum_model)
+        linemeas_method = self.get_linemeas_method(spectrum_model)
         methods = []
         if method:
             methods.append(method)
@@ -85,33 +86,40 @@ class Parameters(ParametersAccessor):
             methods.append(linemeas_method)
         return methods
 
-    def get_linemodel_methods(self, object_type):
+    def get_stage_from_method(self, method: str) -> str:
+        if method == "lineMeasSolve":
+            return "lineMeasSolve"
+        else:
+            return "lineModelSolver"
+
+    def get_linemodel_methods(self, spectrum_model):
         methods = []
-        linemeas_method = self.get_linemeas_method(object_type)
-        solve_method = self.get_solve_method(object_type)
+        linemeas_method = self.get_linemeas_method(spectrum_model)
+        solve_method = self.get_redshift_solver_method(spectrum_model)
         if linemeas_method:
             methods.append(linemeas_method)
-        if solve_method == "lineModelSolver":
+        if solve_method == "lineModelSolve":
             methods.append(solve_method)
         return methods
 
     def get_objects_solve_methods(self):
         ret = dict()
-        for object_type in self.get_objects():
-            if self.get_solve_method(object_type):
-                ret[object_type] = self.get_solve_method(object_type)
+        for spectrum_model in self.get_spectrum_models():
+            if self.get_redshift_solver_method(spectrum_model):
+                ret[spectrum_model] = self.get_redshift_solver_method(spectrum_model)
         return ret
 
     def get_objects_linemeas_methods(self):
         ret = dict()
-        for object_type in self.get_objects():
-            if self.get_linemeas_method(object_type):
-                ret[object_type] = self.get_linemeas_method(object_type)
+        for spectrum_model in self.get_spectrum_models():
+            if self.get_linemeas_method(spectrum_model):
+                ret[spectrum_model] = self.get_linemeas_method(spectrum_model)
         return ret
 
     def load_linemeas_parameters_from_catalog(self, source_id, config):
-        for object_type in config["linemeascatalog"].keys():
-            lm = pd.read_csv(config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
+        for spectrum_model in config["linemeascatalog"].keys():
+            lm = pd.read_csv(config["linemeascatalog"][spectrum_model],
+                             sep='\t', dtype={'ProcessingID': object})
             lm = lm[lm.ProcessingID == source_id]
             if lm.empty:
                 raise APIException(
@@ -119,54 +127,57 @@ class Parameters(ParametersAccessor):
                     f"Uncomplete linemeas catalog, {source_id} missing"
                 )
 
-            columns = config["linemeas_catalog_columns"][object_type]
+            columns = config["linemeas_catalog_columns"][spectrum_model]
             redshift_ref = float(lm[columns["Redshift"]].iloc[0])
             velocity_abs = float(lm[columns["VelocityAbsorption"]].iloc[0])
             velocity_em = float(lm[columns["VelocityEmission"]].iloc[0])
 
-            self.set_redshiftref(object_type, redshift_ref)
-            self.set_velocity_absorption(object_type, "lineMeasSolver", velocity_abs)
-            self.set_velocity_emission(object_type, "lineMeasSolver", velocity_em)
+            self.set_redshiftref(spectrum_model, redshift_ref)
+            self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
+            self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
 
-    def load_linemeas_parameters_from_result_store(self, output, object_type):
-        redshift = output.get_attribute_from_source(object_type,
-                                                    self.get_solve_method(object_type),
+    def load_linemeas_parameters_from_result_store(self, output, spectrum_model):
+        redshift = output.get_attribute_from_source(spectrum_model,
+                                                    "redshiftSolver",
+                                                    self.get_redshift_solver_method(spectrum_model),
                                                     "model_parameters",
                                                     "Redshift",
                                                     0)
-        self.parameters[object_type]["redshiftref"] = redshift
-        velocity_abs = output.get_attribute_from_source(object_type,
-                                                        self.get_solve_method(object_type),
+        self.parameters[spectrum_model]["redshiftref"] = redshift
+        velocity_abs = output.get_attribute_from_source(spectrum_model,
+                                                        "redshiftSolver",
+                                                        self.get_redshift_solver_method(spectrum_model),
                                                         "model_parameters",
                                                         "VelocityAbsorption",
                                                         0)
-        velocity_em = output.get_attribute_from_source(object_type,
-                                                       self.get_solve_method(object_type),
+        velocity_em = output.get_attribute_from_source(spectrum_model,
+                                                       "redshiftSolver",
+                                                       self.get_redshift_solver_method(spectrum_model),
                                                        "model_parameters",
                                                        "VelocityEmission",
                                                        0)
-        self.set_velocity_absorption(object_type, "lineMeasSolver", velocity_abs)
-        self.set_velocity_emission(object_type, "lineMeasSolver", velocity_em)
+        self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
+        self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
 
-    def is_tplratio_catalog_needed(self, object_type) -> bool:
-        solve_method = self.get_solve_method(object_type)
-        if solve_method == "lineModelSolver":
-            return self.get_lineModelSolve_lineRatioType(object_type) in ["tplRatio", "tplCorr"]
+    def is_tplratio_catalog_needed(self, spectrum_model) -> bool:
+        solve_method = self.get_redshift_solver_method(spectrum_model)
+        if solve_method == "lineModelSolve":
+            return self.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"]
         else:
             return False
 
-    def stage_enabled(self, object_type, stage):
+    def stage_enabled(self, spectrum_model, stage):
         if stage == "redshift_solver":
-            return self.get_solve_method(object_type) is not None
+            return self.get_redshift_solver_method(spectrum_model) is not None
         elif stage == "linemeas_solver":
-            return self.get_linemeas_method(object_type) is not None
+            return self.get_linemeas_method(spectrum_model) is not None
         elif stage == "linemeas_catalog_load":
-            return self.get_linemeas_method(object_type) is not None \
-                and self.get_solve_method(object_type) is None
+            return self.get_linemeas_method(spectrum_model) is not None \
+                and self.get_redshift_solver_method(spectrum_model) is None
         elif stage == "reliability_solver":
-            return self.get_reliability_enabled(object_type)
+            return self.get_reliability_enabled(spectrum_model)
         elif stage == "sub_classif_solver":
-            return self.is_tplratio_catalog_needed(object_type)
+            return self.is_tplratio_catalog_needed(spectrum_model)
         else:
             raise Exception("Unknown stage {stage}")
 
@@ -176,31 +187,31 @@ class Parameters(ParametersAccessor):
     def set_lsf_param(self, param_name, data):
         self.parameters["lsf"][param_name] = data
 
-    def set_redshiftref(self, object_type, redshift_ref) -> None:
-        self.get_object_section(object_type)["redshiftref"] = redshift_ref
+    def set_redshiftref(self, spectrum_model, redshift_ref) -> None:
+        self.get_spectrum_model_section(spectrum_model)["redshiftref"] = redshift_ref
 
-    def set_velocity_absorption(self, object_type: str, solve_method, velocity_abs) -> None:
-        self.get_linemodel_section(object_type, solve_method)["velocityAbsorption"] = velocity_abs
+    def set_velocity_absorption(self, spectrum_model: str, solve_method, velocity_abs) -> None:
+        self.get_linemodel_section(spectrum_model, solve_method)["velocityAbsorption"] = velocity_abs
 
-    def set_velocity_emission(self, object_type: str, solve_method, velocity_em) -> None:
-        self.get_linemodel_section(object_type, solve_method)["velocityEmission"] = velocity_em
+    def set_velocity_emission(self, spectrum_model: str, solve_method, velocity_em) -> None:
+        self.get_linemodel_section(spectrum_model, solve_method)["velocityEmission"] = velocity_em
 
     def to_json(self):
         return json.dumps(self.parameters)
 
     def is_a_redshift_solver_used(self) -> bool:
         z_solver_found: bool = False
-        for object_type in self.get_objects():
-            if self.get_solve_method(object_type) is not None:
+        for spectrum_model in self.get_spectrum_models():
+            if self.get_redshift_solver_method(spectrum_model) is not None:
                 z_solver_found = True
                 break
         return z_solver_found
 
     def check_linemeas_validity(self):
-        for object_type in self.get_objects():
-            method = self.get_solve_method(object_type)
-            if method == "lineModelSolver":
-                if self.get_linemeas_method(object_type):
+        for spectrum_model in self.get_spectrum_models():
+            method = self.get_redshift_solver_method(spectrum_model)
+            if method == "lineModelSolve":
+                if self.get_linemeas_method(spectrum_model):
                     raise APIException(
                         ErrorCode.INCOHERENT_CONFIG_OPTION,
                         "Cannot run LineMeasSolve from catalog when sequencial processing is selected"

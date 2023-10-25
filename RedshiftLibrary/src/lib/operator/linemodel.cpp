@@ -1527,7 +1527,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
   m_result = std::make_shared<CLineModelResult>();
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   m_opt_continuumcomponent = ps->GetScoped<std::string>("continuumComponent");
@@ -1538,7 +1537,7 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
   m_fineStep = finestep;
   m_redshiftSampling = redshiftSampling;
 
-  if (Context.GetCurrentMethod() == "lineModelSolver") {
+  if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_secondPass_halfwindowsize =
         ps->GetScoped<Float64>("secondPass.halfWindowSize");
 
@@ -1563,9 +1562,10 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
     m_opt_tplfit_dustFit = ps->GetScoped<bool>("continuumFit.ismFit");
     m_opt_tplfit_extinction = ps->GetScoped<bool>("continuumFit.igmFit");
 
+    // TODO remove ?
     m_opt_tplfit_ignoreLinesSupport =
         ps->GetScoped<bool>("continuumFit.ignoreLineSupport");
-    if (Context.GetCurrentMethod() == "lineModelSolver") {
+    if (Context.GetCurrentMethod() == "lineModelSolve") {
 
       m_opt_secondpasslcfittingmethod =
           ps->GetScoped<std::string>("secondPassLcFittingMethod");

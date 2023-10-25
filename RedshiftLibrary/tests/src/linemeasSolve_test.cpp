@@ -65,11 +65,12 @@ const std::string jsonString =
     "\"galaxy\" : {"
     "\"redshiftSampling\" : \"log\","
     "\"method\" : null ,"
-    "\"linemeas_method\" : \"lineMeasSolver\","
+    "\"linemeas_method\" : \"lineMeasSolve\","
     "\"lineMeasDzHalf\" : 0.0,"
     "\"lineMeasRedshiftStep\" : 0.0001,"
     "\"redshiftref\" : 0.25969245809934272,"
-    "\"lineMeasSolver\" : {"
+    "\"lineMeasSolve\" : {"
+    "\"lineMeasSolve\" : {"
     "\"lineModel\" : {"
     "\"velocityEmission\" : 30.0,"
     "\"velocityAbsorption\" : 150.0,"
@@ -87,107 +88,57 @@ const std::string jsonString =
     "\"rules\" : \"no\","
     "\"improveBalmerFit\" : true,"
     "\"lyaForceDisableFit\" : false "
-    "}}}}";
+    "}}}}}";
 
-// const std::string jsonString_lbfgsb =
-//     "{\"lambdaRange\" : [ 4680, 4712 ],"
-//     "\"smoothWidth\" : 0.0,"
-//     "\"templateCatalog\" : {"
-//     "\"continuumRemoval\" : {"
-//     "\"method\" : \"zero\","
-//     "\"medianKernelWidth\" : 75,"
-//     "\"medianEvenReflection\" : true}},"
-//     "\"continuumRemoval\" : {"
-//     "\"method\" : \"irregularSamplingMedian\","
-//     "\"medianKernelWidth\" : 400,"
-//     "\"medianEvenReflection\" : true,"
-//     "\"decompScales\" : 9},"
-//     "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", "
-//     "\"resolution\" : "
-//     "4300},"
-//     "\"spectrumModels\" : [\"galaxy\"],"
-//     "\"autoCorrectInput\" : false,"
-//     "\"galaxy\" : {"
-//     "\"redshiftSampling\" : \"log\","
-//     "\"method\" : null ,"
-//     "\"linemeas_method\" : \"lineMeasSolver\","
-//     "\"lineMeasDzHalf\" : 0.0,"
-//     "\"lineMeasRedshiftStep\" : 0.0001,"
-//     "\"redshiftref\" : 0.25969245809934272,"
-//     "\"lineMeasSolver\" : {"
-//     "\"lineModel\" : {"
-//     "\"velocityEmission\" : 30.0,"
-//     "\"velocityAbsorption\" : 150.0,"
-//     "\"continuumComponent\" : \"noContinuum\","
-//     "\"lineTypeFilter\" : \"E\","
-//     "\"lineForceFilter\" : \"no\","
-//     "\"nSigmaSupport\" : 14,"
-//     "\"lineWidthType\" : \"combined\","
-//     "\"fittingMethod\" : \"lbfgsb\","
-//     "\"polynomialDegree\" : 2,"
-//     "\"velocityFit\" : true,"
-//     "\"ampOffsetFit\": \"true\","
-//     "\"lbdaOffsetFit\": \"true\","
-//     "\"emVelocityFitMin\" : 10,"
-//     "\"emVelocityFitMax\" : 400,"
-//     "\"absVelocityFitMin\" : 150,"
-//     "\"absVelocityFitMax\" : 500,"
-//     "\"lineRatioType\" : \"rules\","
-//     "\"rules\" : \"no\","
-//     "\"improveBalmerFit\" : true,"
-//     "\"lyaForceDisableFit\" : false "
-//     "}}}}";
-
-const std::string jsonString_lbfgsb = "{"
-"\"lambdaRange\": ["
-"4680,"
-"4712"
-"],"
-"\"smoothWidth\": 0.0,"
-"\"templateCatalog\": {"
-"\"continuumRemoval\": {"
-"\"method\": \"zero\","
-"\"medianKernelWidth\": 75,"
-"\"medianEvenReflection\": true"
-"}"
-"},"
-"\"continuumRemoval\": {"
-"\"method\": \"irregularSamplingMedian\","
-"\"medianKernelWidth\": 400,"
-"\"medianEvenReflection\": true"
-"},"
-"\"lsf\": {"
-"\"lsfType\": \"gaussianConstantResolution\","
-"\"resolution\": 4300"
-"},"
-"\"spectrumModels\": ["
-"\"galaxy\""
-"],"
-"\"autoCorrectInput\": false,"
-"\"spectrumModel_galaxy\": {"
-"\"stages\": null,"
-"\"redshiftSampling\": \"log\","
-"\"lineMeasDzHalf\": 0.0,"
-"\"lineMeasRedshiftStep\": 0.0001,"
-"\"lineMeasSolver\": {"
-"\"lineModel\": {"
-"\"nSigmaSupport\": 8,"
-"\"lineWidthType\": \"combined\","
-"\"fittingMethod\": \"hybrid\","
-"\"polynomialDegree\": 2,"
-"\"velocityFit\": false,"
-"\"ampOffsetFit\": \"true\","
-"\"lbdaOffsetFit\": \"true\","
-"\"emVelocityFitMin\": 10,"
-"\"emVelocityFitMax\": 400,"
-"\"absVelocityFitMin\": 150,"
-"\"absVelocityFitMax\": 500,"
-"\"lineRatioType\": \"rules\","
-"\"rules\": \"no\""
-"}"
-"}"
-"}"
-"}";
+const std::string jsonString_lbfgsb =
+    "{\"lambdaRange\" : [ 4680, 4712 ],"
+    "\"smoothWidth\" : 0.0,"
+    "\"templateCatalog\" : {"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"zero\","
+    "\"medianKernelWidth\" : 75,"
+    "\"medianEvenReflection\" : true}},"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"irregularSamplingMedian\","
+    "\"medianKernelWidth\" : 400,"
+    "\"medianEvenReflection\" : true,"
+    "\"decompScales\" : 9},"
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", "
+    "\"resolution\" : "
+    "4300},"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
+    "\"galaxy\" : {"
+    "\"redshiftSampling\" : \"log\","
+    "\"method\" : null ,"
+    "\"linemeas_method\" : \"lineMeasSolve\","
+    "\"lineMeasDzHalf\" : 0.0,"
+    "\"lineMeasRedshiftStep\" : 0.0001,"
+    "\"redshiftref\" : 0.25969245809934272,"
+    "\"lineMeasSolve\" : {"
+    "\"lineMeasSolve\" : {"
+    "\"lineModel\" : {"
+    "\"velocityEmission\" : 30.0,"
+    "\"velocityAbsorption\" : 150.0,"
+    "\"continuumComponent\" : \"noContinuum\","
+    "\"lineTypeFilter\" : \"E\","
+    "\"lineForceFilter\" : \"no\","
+    "\"nSigmaSupport\" : 14,"
+    "\"lineWidthType\" : \"combined\","
+    "\"fittingMethod\" : \"lbfgsb\","
+    "\"polynomialDegree\" : 2,"
+    "\"velocityFit\" : true,"
+    "\"ampOffsetFit\": \"true\","
+    "\"lbdaOffsetFit\": \"true\","
+    "\"emVelocityFitMin\" : 10,"
+    "\"emVelocityFitMax\" : 400,"
+    "\"absVelocityFitMin\" : 150,"
+    "\"absVelocityFitMax\" : 500,"
+    "\"lineRatioType\" : \"rules\","
+    "\"rules\" : \"no\","
+    "\"improveBalmerFit\" : true,"
+    "\"lyaForceDisableFit\" : false "
+    "}}}}}";
 
 class fixture_LinemeasSolveTest {
 public:
@@ -202,7 +153,7 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineMeasSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineMeasSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -246,7 +197,7 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineMeasSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineMeasSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -284,11 +235,11 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolve", "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolver",
+      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolve", "lineMeasSolve",
                                                      "linemeas");
 
   Float64 snrOII = res->snrOII;
@@ -307,11 +258,11 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolve", "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolver",
+      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolve", "lineMeasSolve",
                                                      "linemeas");
 
   Float64 snrOII = res->snrOII_DI;

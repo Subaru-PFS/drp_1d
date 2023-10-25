@@ -39,7 +39,7 @@
 import pytest
 from pylibamazed.Exception import APIException
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_object_level)
+                                make_parameter_dict_at_linemeas_solve_level)
 
 
 class TestLineMeasSolve:
@@ -47,14 +47,14 @@ class TestLineMeasSolve:
     class TestLineRatioType:
 
         def _make_parameter_dict(self, **kwargs):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "lineMeasSolver": {"lineModel": kwargs}
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**{
+                "lineModel": kwargs
             })
             return param_dict
 
         def test_error_if_lineRatioType_is_rules_but_rules_is_absent(self):
             param_dict = self._make_parameter_dict(**{"lineRatioType": "rules"})
-            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolver rules"):
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolve rules"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_lineRatioType_is_rules_and_rules_is_present(self, zflag):
@@ -69,14 +69,14 @@ class TestLineMeasSolve:
 
     class TestFittingMethod:
         def _make_parameter_dict(self, **kwargs):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "lineMeasSolver": {"lineModel": kwargs}
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**{
+                "lineModel": kwargs
             })
             return param_dict
 
         def test_error_if_fittingmethod_is_lbfgsb_but_velocityfit_is_absent(self):
             param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb"})
-            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolver velocityFit"):
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolve velocityFit"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_fittingmethod_is_lbfgsb_and_velocityfit_is_present(self, zflag):
@@ -91,8 +91,8 @@ class TestLineMeasSolve:
 
     class TestVelocityFit:
         def _make_parameter_dict(self, **kwargs):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "lineMeasSolver": {"lineModel": {"fittingMethod": "lbfgsb", **kwargs}}
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**{
+                "lineModel": {"fittingMethod": "lbfgsb", **kwargs}
             })
             return param_dict
 
@@ -101,7 +101,7 @@ class TestLineMeasSolve:
                 "velocityFit": True,
                 "emVelocityFitMin": 1,
             })
-            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolver"):
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolve"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_velocityfit_is_true_and_all_velocity_params_are_present(self, zflag):

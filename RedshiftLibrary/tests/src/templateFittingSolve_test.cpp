@@ -75,9 +75,10 @@ const std::string jsonStringFFT = {
     "\"redshiftRange\" : [ 2.84, 2.88 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"templateFittingSolver\","
     "\"linemeas_method\" : null,"
-    "\"templateFittingSolver\" : {"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"templateFittingSolve\","
+    "\"templateFittingSolve\" : {"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -86,16 +87,17 @@ const std::string jsonStringFFT = {
     "\"igmFit\" : true,"
     "\"ismFit\" : true,"
     "\"pdfCombination\" : \"marg\","
-    "\"enablePhotometry\" : false}}}"};
+    "\"enablePhotometry\" : false}}}}"};
 
 const std::string jsonStringNoFFT = {
     "\"galaxy\" : {"
     "\"redshiftRange\" : [ 2.84, 2.88 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"templateFittingSolver\","
     "\"linemeas_method\" : null,"
-    "\"templateFittingSolver\" : {"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"templateFittingSolve\","
+    "\"templateFittingSolve\" : {"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -105,7 +107,7 @@ const std::string jsonStringNoFFT = {
     "\"ismFit\" : true,"
     "\"pdfCombination\" : \"marg\","
     "\"enablePhotometry\" : true,"
-    "\"photometry\": {\"weight\" : 1.0}}}}"};
+    "\"photometry\": {\"weight\" : 1.0}}}}}"};
 
 class fixture_TemplateFittingSolveTestNoFFT {
 public:
@@ -193,29 +195,29 @@ BOOST_AUTO_TEST_SUITE(templateFittingSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
                         fixture_TemplateFittingSolveTestNoFFT) {
-  CTemplateFittingSolve templateFittingSolver(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(templateFittingSolver.Compute());
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy",
-                                               "templateFittingSolver");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "templateFittingSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTemplateFittingSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "templateFittingSolver", "pdf");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "templateFittingSolver", "pdf_params");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "templateFittingSolver", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TExtremaResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "templateFittingSolver", "extrema_results",
+          "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
           "model_parameters", 0);
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 2.8604060282076706, 1e-6);
@@ -224,29 +226,29 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
 }
 
 BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
-  CTemplateFittingSolve templateFittingSolver(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(templateFittingSolver.Compute());
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy",
-                                               "templateFittingSolver");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "templateFittingSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTemplateFittingSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "templateFittingSolver", "pdf");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "templateFittingSolver", "pdf_params");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "templateFittingSolver", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TExtremaResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "templateFittingSolver", "extrema_results",
+          "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
@@ -257,8 +259,8 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
 
 BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
   // Creation of useful objects
-  CTemplateFittingSolve templateFittingSolver(Context.m_ScopeStack, "galaxy");
-  templateFittingSolver.Compute();
+  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  templateFittingSolve.Compute();
 
   Float64 precision = 1e-12;
 

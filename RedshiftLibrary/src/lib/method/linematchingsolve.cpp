@@ -59,7 +59,7 @@ using namespace std;
  */
 CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,
                                        std::string spectrumModel)
-    : CObjectSolve("LineMatchingSolve", scope, spectrumModel) {
+    : CObjectSolve("", "LineMatchingSolve", scope, spectrumModel) {
   Log.LogDebug("CLineMatchingSolve::CLineMatchingSolve()");
 
   // Peak Detection

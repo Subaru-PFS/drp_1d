@@ -45,8 +45,8 @@ def generate_parameters(inputString: str, specificJson: dict = None, locations=[
         paramsToUpdate = {f"spectrumModel_{spectrumModel}": {"stages": []}}
         # paramsToUpdate[spectrumModel] = get_parameter(method, locations)
         finalParam["spectrumModels"].append(spectrumModel)
-        if method == "lineMeasSolver":
-            paramsToUpdate[f"spectrumModel_{spectrumModel}"]["stages"].append("lineMeasSolver")
+        if method == "lineMeasSolve":
+            paramsToUpdate[f"spectrumModel_{spectrumModel}"]["stages"].append("lineMeasSolve")
         deep_update(paramsToUpdate[f"spectrumModel_{spectrumModel}"],
                     get_parameter(f"{spectrumModel}.{method}", locations))
         # update(op[object_type][method], get_parameter(f"{object_type}.{method}.{root}", locations))
@@ -58,26 +58,28 @@ def generate_parameters(inputString: str, specificJson: dict = None, locations=[
         deep_update(finalParam, specificJson)
 
     # return json.dumps(finalParam, indent=4)
-    # if toCpp:
-    #     finalParam = json.dumps(finalParam, indent=4)
-    return json.dumps(finalParam, indent=0).replace('"', "\\\"").replace("\n", "\"\n\"")
+    if toCpp:
+        return json.dumps(finalParam, indent=0).replace('"', "\\\"").replace("\n", "\"\n\"")
+    return json.dumps(finalParam, indent=4)
 
 
 if __name__ == "__main__":
     params = generate_parameters(
-        "linemeas_solve|galaxy.lineMeasSolver",
+        "linemeas_solve|galaxy.lineMeasSolve",
         locations=[os.path.join(module_root_dir, "resources/parameters/test-cpp/")],
-        toCpp=True
-        # specificJson={
-        #     "galaxy": {
-        #         "lineMeasSolver": {
-        #             "lineModel": {
-        #                 "nSigmaSupport": 14,
-        #                 "fittingMethod": "lbfgsb",
-        #                 "velocityFit": True
-        #             }
-        #         }
-        #     }
-        # }
+        toCpp=True,
+        specificJson={
+            "spectrumModel_galaxy": {
+                "lineMeasSolve": {
+                    "lineMeasSolve": {
+                        "lineModel": {
+                            "nSigmaSupport": 14,
+                            "fittingMethod": "lbfgsb",
+                            "velocityFit": True
+                        }
+                    }
+                }
+            }
+        }
     )
     print(params)

@@ -65,7 +65,7 @@ CLineRatioManager::CLineRatioManager(
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  if (Context.GetCurrentMethod() == "lineModelSolver") {
+  if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_opt_lya_forcefit = ps->GetScoped<bool>("lyaForceFit");
     m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaForceDisableFit");
   }

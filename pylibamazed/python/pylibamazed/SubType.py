@@ -56,11 +56,11 @@ class SubType:
                                    extended_results=False)
         ret = []
 
-        for rank in range(
-            context.GetResultStore().getNbRedshiftCandidates(self.object_type, "lineModelSolver")
-        ):
+        for rank in range(context.GetResultStore().getNbRedshiftCandidates(
+                self.object_type, "redshiftSolver", "lineModelSolve")):
             tpl_ratio = output.get_attribute_from_source(self.object_type,
-                                                         "lineModelSolver",
+                                                         "redshiftSolver",
+                                                         "lineModelSolve",
                                                          "model_parameters",
                                                          "LinesRatioName",
                                                          rank)

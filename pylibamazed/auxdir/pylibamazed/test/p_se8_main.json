@@ -139,6 +139,8 @@
     "linemeas_redshiftstep": 0.0001,
     "LineMeasSolve": {
       "linemodel": {
+        "ampoffsetfit": false,
+        "lbdaoffsetfit": false,
         "continuumcomponent": "nocontinuum",
         "linecatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
         "linetypefilter": "E",
@@ -148,8 +150,6 @@
         "fittingmethod": "hybrid",
         "polynomialdegree": 2,
         "velocityfit": false,
-        "ampoffsetfit": true,
-        "lbdaoffsetfit": false,
         "lineRatioType": "rules",
         "rules": "no",
         "igmfit": false,

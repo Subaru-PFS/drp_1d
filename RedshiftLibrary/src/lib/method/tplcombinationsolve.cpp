@@ -51,7 +51,7 @@ using namespace std;
 
 CTplcombinationSolve::CTplcombinationSolve(TScopeStack &scope,
                                            string spectrumModel)
-    : CObjectSolve("tplCombinationSolver", scope, spectrumModel) {}
+    : CObjectSolve("redshiftSolver", "tplCombinationSolve", scope, spectrumModel) {}
 
 std::shared_ptr<CSolveResult>
 CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
@@ -182,7 +182,7 @@ bool CTplcombinationSolve::Solve(
   // prepare the list of components/templates
   if (m_categoryList.size() > 1)
     THROWG(INTERNAL_ERROR, "Multiple categories are passed for "
-                           "tplcombinationsolve. Only one is required");
+                           "tplcombinationsolver. Only one is required");
 
   const TTemplateConstRefList &tplList =
       tplCatalog.GetTemplateList(m_categoryList);
@@ -227,7 +227,7 @@ bool CTplcombinationSolve::Solve(
       return false;
 
     // Store results
-    Log.LogDetail("tplcombinationsolve: Save tplcombination results");
+    Log.LogDetail("tplcombinationsolver: Save tplcombination results");
     resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
   }
 
@@ -283,9 +283,9 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
     std::shared_ptr<COperatorResultStore> store,
     const std::string &scopeStr) const {
 
-  Log.LogDetail("tplcombinationsolve: build chisquare array");
+  Log.LogDetail("tplcombinationsolver: build chisquare array");
   Log.LogDetail(Formatter()
-                << "    tplcombinationsolve: using results in scope: "
+                << "    tplcombinationsolver: using results in scope: "
                 << store->GetScopedName(scopeStr));
 
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
@@ -305,7 +305,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 
   if (chisquarearray.cstLog == -1) {
     chisquarearray.cstLog = result->CstLog;
-    Log.LogInfo("tplcombinationsolve: using cstLog = %f",
+    Log.LogInfo("tplcombinationsolver: using cstLog = %f",
                 chisquarearray.cstLog);
   } else if (chisquarearray.cstLog != result->CstLog)
     THROWG(INTERNAL_ERROR, Formatter()
@@ -338,7 +338,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
             result->ChiSquareIntermediate
                 [kz][kism]
                 [kigm]; // + resultXXX->ScaleMargCorrectionTplshapes[][]?;
-      Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit "
+      Log.LogDetail("    tplcombinationsolver: Pdfz combine - prepared merit "
                     "#%d for ism=%d, igm=%d",
                     chisquarearray.chisquares.size() - 1, kism, kigm);
     }
@@ -356,7 +356,7 @@ CTplcombinationSolve::buildExtremaResults(
   Log.LogDetail("CTplCombinationSolve::buildExtremaResults: building "
                 "chisquare array");
   Log.LogDetail(Formatter()
-                << "    tplCombinationSolver: using results in scope: "
+                << "    tplCombinationSolve: using results in scope: "
                 << store->GetScopedName(scopeStr));
   // in contrast to linemodel and TF, there is no perTemplateResults for
   // tplCombination
@@ -383,7 +383,7 @@ CTplcombinationSolve::buildExtremaResults(
   // prepare the list of components/templates
   if (m_categoryList.size() > 1) {
     THROWG(INTERNAL_ERROR, "Multiple categories are passed for "
-                           "tplcombinationsolve. Only one is required");
+                           "tplcombinationsolver. Only one is required");
   }
 
   const TTemplateConstRefList &tplList =

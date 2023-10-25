@@ -60,7 +60,7 @@ void CObjectSolve::InitRanges(
   GetRedshiftSampling(inputContext, redshiftRange, m_redshiftStep);
 
   Log.LogInfo(Formatter() << "Init redshift range with " << redshiftRange
-                          << " and" << m_redshiftStep);
+                          << " and " << m_redshiftStep);
   createRedshiftGrid(inputContext, redshiftRange);
 }
 

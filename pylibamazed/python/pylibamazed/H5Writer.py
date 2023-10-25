@@ -50,11 +50,11 @@ def _create_dataset_from_dict(h5_node, name, source, compress=False):
     if df.empty:
         return
     dtypes = dict()
-    for (k,v) in dict(df.dtypes).items():
+    for (k, v) in dict(df.dtypes).items():
         if v == "O":
-            dtypes[k]=f'S{df[k].str.len().max()}'
+            dtypes[k] = f'S{df[k].str.len().max()}'
         else:
-            dtypes[k]=str(v)
+            dtypes[k] = str(v)
 
     records = df.to_records(index=False, column_dtypes=dtypes)
     h5_node.create_dataset(name,
@@ -95,7 +95,7 @@ class H5Writer():
                     object_results_node.get(ds).attrs[attr_name] = attr
 
     def write_hdf5_candidate_level(self, object_type, object_results_node):
-        if self.output.parameters.get_solve_method(object_type):
+        if self.output.parameters.get_redshift_solver_method(object_type):
             candidates = object_results_node.create_group("candidates")
             level = "candidate"
             nb_candidates = self.output.get_nb_candidates(object_type)

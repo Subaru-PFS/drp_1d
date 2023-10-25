@@ -58,7 +58,7 @@ using namespace std;
 
 CTemplateFittingSolve::CTemplateFittingSolve(TScopeStack &scope,
                                              string spectrumModel)
-    : CObjectSolve("templateFittingSolver", scope, spectrumModel) {}
+    : CObjectSolve("redshiftSolver", "templateFittingSolve", scope, spectrumModel) {}
 
 std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     std::shared_ptr<const CInputContext> inputContext,
@@ -292,9 +292,9 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
     const std::string &scopeStr) const {
   ChisquareArray chisquarearray;
 
-  Log.LogDetail("templatefittingsolve: building chisquare array");
+  Log.LogDetail("templatefittingsolver: building chisquare array");
   Log.LogDetail(Formatter()
-                << "    templatefittingsolve: using results in scope: "
+                << "    templatefittingsolver: using results in scope: "
                 << store->GetScopedName(scopeStr));
 
   TOperatorResultMap meritResults =
@@ -316,7 +316,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
     }
     if (chisquarearray.cstLog == -1) {
       chisquarearray.cstLog = meritResult->CstLog;
-      Log.LogInfo("templatefittingsolve: using cstLog = %f",
+      Log.LogInfo("templatefittingsolver: using cstLog = %f",
                   chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != meritResult->CstLog) {
       THROWG(INTERNAL_ERROR, Formatter()
@@ -360,7 +360,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
                   [kz][kism]
                   [kigm]; // + resultXXX->ScaleMargCorrectionTplratios[][]?;
         }
-        Log.LogDetail("    templatefittingsolve: Pdfz combine - prepared merit "
+        Log.LogDetail("    templatefittingsolver: Pdfz combine - prepared merit "
                       " #%d for model : %s",
                       chisquarearray.chisquares.size() - 1,
                       ((*it).first).c_str());
@@ -379,7 +379,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
   Log.LogDetail(
       "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
   Log.LogDetail(Formatter()
-                << "    templatefittingsolve: using results in scope: "
+                << "    templatefittingsolve:r using results in scope: "
                 << store->GetScopedName(scopeStr));
 
   TOperatorResultMap results =

@@ -124,7 +124,7 @@ std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
 
   THROWG(INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolve.interpolation");
+         "supported for TemplateFittingSolver.interpolation");
 }
 
 std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
@@ -140,5 +140,5 @@ std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
 
   THROWG(INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolve.interpolation");
+         "supported for TemplateFittingSolver.interpolation");
 }

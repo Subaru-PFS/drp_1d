@@ -175,6 +175,9 @@ def test_ITLikeTest():
                                ("galaxy", "reliability_solver"),
                                ("", "classification"),
                                ("", "load_result_store")):
+        # TODO continue here
+        if output.has_error(object_type, stage):
+            print("object_type", object_type, "stage", stage, output.get_error(object_type, stage))
         assert output.has_error(object_type, stage) is False
 
     # add calls to output

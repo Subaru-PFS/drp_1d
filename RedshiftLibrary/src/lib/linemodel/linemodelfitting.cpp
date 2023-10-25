@@ -130,7 +130,7 @@ void CLineModelFitting::initParameters() {
 
   m_lineRatioType = ps->GetScoped<std::string>("lineRatioType");
 
-  if (Context.GetCurrentMethod() == "lineModelSolver") {
+  if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_opt_firstpass_fittingmethod =
         ps->GetScoped<std::string>("firstPass.fittingMethod");
     m_opt_secondpass_fittingmethod = m_fittingmethod;

@@ -68,15 +68,17 @@ const std::string jsonString =
     "\"extremaRedshiftSeparation\" : 0.01,"
     "\"spectrumModels\" : [\"galaxy\"],"
     "\"autoCorrectInput\" : false,"
-    "\"airVacuumMethod\" : \"default\",";
-
-const std::string jsonStringNoFFT =
+    "\"airVacuumMethod\" : \"default\","
     "\"galaxy\" : {"
     "\"redshiftRange\" : [ 2.84, 2.88 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"templateFittingSolver\","
-    "\"templateFittingSolver\" : {"
+    "\"stages\": [\"redshiftSolver\"],"
+    "\"redshiftSolver\" : {";
+
+const std::string jsonStringNoFFT =
+    "\"method\" : \"templateFittingSolve\","
+    "\"templateFittingSolve\" : {"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -85,31 +87,24 @@ const std::string jsonStringNoFFT =
     "\"extinction\" : true,"
     "\"dustfit\" : true,"
     "\"pdfCombination\" : \"marg\","
-    "\"enablePhotometry\" : false}}}";
+    "\"enablePhotometry\" : false}}}}";
 
-const std::string jsonStringFFT = "\"galaxy\" : {"
-                                  "\"redshiftRange\" : [ 2.84, 2.88 ],"
-                                  "\"redshiftStep\" : 0.0001,"
-                                  "\"redshiftSampling\" : \"log\","
-                                  "\"method\" : \"templateFittingSolver\","
-                                  "\"templateFittingSolver\" : {"
-                                  "\"extremaCount\" : 5,"
-                                  "\"overlapThreshold\" : 1,"
-                                  "\"spectrum\" : {\"component\" : \"raw\"},"
-                                  "\"fftProcessing\" : true,"
-                                  "\"interpolation\" : \"preComputedFineGrid\","
-                                  "\"extinction\" : true,"
-                                  "\"dustfit\" : true,"
-                                  "\"pdfCombination\" : \"marg\","
-                                  "\"enablePhotometry\" : false}}}";
+const std::string jsonStringFFT =  
+    "\"method\" : \"templateFittingSolve\","
+    "\"templateFittingSolve\" : {"
+    "\"extremaCount\" : 5,"
+    "\"overlapThreshold\" : 1,"
+    "\"spectrum\" : {\"component\" : \"raw\"},"
+    "\"fftProcessing\" : true,"
+    "\"interpolation\" : \"preComputedFineGrid\","
+    "\"extinction\" : true,"
+    "\"dustfit\" : true,"
+    "\"pdfCombination\" : \"marg\","
+    "\"enablePhotometry\" : false}}}}";
 
 const std::string jsonStringOrtho =
-    "\"galaxy\" : {"
-    "\"redshiftRange\" : [ 2.84, 2.88 ],"
-    "\"redshiftStep\" : 0.0001,"
-    "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"lineModelSolver\","
-    "\"lineModelSolver\" : {"
+    "\"method\" : \"lineModelSolve\","
+    "\"lineModelSolve\" : {"
     "\"lineModel\" : {"
     "\"continuumComponent\" : \"tplFit\","
     "\"useLogLambdaSampling\": false,"
@@ -135,7 +130,7 @@ const std::string jsonStringOrtho =
     "\"velocityAbsorption\": 100,"
     "\"lineRatioType\": \"tplRatio\","
     "\"lineTypeFilter\" : \"no\","
-    "\"lineForceFilter\" : \"no\"}}}}";
+    "\"lineForceFilter\" : \"no\"}}}}}";
 
 class fixture_inputcontextTest {
 public:
@@ -182,7 +177,7 @@ public:
     inputCtx.setPhotBandCatalog(photoBandCatalog);
     inputCtx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
     scopeStack.push_back("galaxy");
-    inputCtx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+    inputCtx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     inputCtx.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
     inputCtx.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
   }
@@ -219,12 +214,12 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) ==
               lineRatioTplCatalog);
 
-  inputCtx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
-  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolver") ==
+  inputCtx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolve") ==
               lineCatalog);
 
   BOOST_CHECK(
-      inputCtx.GetFilteredLineMap("galaxy", "lineModelSolver", "no", "no")
+      inputCtx.GetFilteredLineMap("galaxy", "lineModelSolve", "no", "no")
           .size() == fixture_LineCatalog().lineCatalogSize);
 
   BOOST_CHECK(inputCtx.m_ismcorrectionCalzetti == nullptr);
@@ -276,7 +271,7 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
   inputCtx.Init();
   BOOST_CHECK(inputCtx.GetSpectrum(0) != nullptr);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() != nullptr);
-  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolver") != nullptr);
+  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolve") != nullptr);
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) != nullptr);
   BOOST_CHECK(inputCtx.GetPhotBandCatalog() != nullptr);
 
@@ -284,7 +279,7 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
 
   BOOST_CHECK(inputCtx.getSpectra().size() == 0);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() == nullptr);
-  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolver") == nullptr);
+  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolve") == nullptr);
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) == nullptr);
   BOOST_CHECK(inputCtx.GetPhotBandCatalog() == nullptr);
 
@@ -359,7 +354,7 @@ BOOST_AUTO_TEST_CASE(OrthogonalizeTemplates_test) {
 
   //
   Context.LoadParameterStore(jsonStringOneSpc + jsonString + jsonStringOrtho);
-  Context.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+  Context.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
   inputCtx.OrthogonalizeTemplates();
   BOOST_CHECK(catalog->GetTemplateCount("galaxy", 1, 0) == 1);
 }

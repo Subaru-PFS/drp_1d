@@ -61,7 +61,7 @@
         "type": "string",
         "enum": [
           "redshiftSolver",
-          "lineMeasSolver",
+          "lineMeasSolve",
           "reliabilitySolver",
           "lineMeasLoader",
           "subClassifSolver"
@@ -71,7 +71,7 @@
     "redshiftSolver": {
       "$ref": "redshift_solver.json"
     },
-    "lineMeasSolver": {
+    "lineMeasSolve": {
       "$ref": "linemeas_solver.json"
     },
     "reliabilitySolver": {

@@ -119,14 +119,18 @@ class TestParameters:
                 "spectrumModels": ["galaxy"]
             }, make_checks=False)
             assert parameters.is_a_redshift_solver_used() is False
-    
+
         def test_true_if_an_object_has_a_redshift_solver(self):
             parameters: Parameters = Parameters({
+                "version": 2,
                 "galaxy": {
                     "method": None
                 },
                 "star": {
-                    "method": "lineModelsolve"
+                    "stages": ["redshiftSolver"],
+                    "redshiftSolver": {
+                        "method": "lineModelsolver"
+                    }
                 },
                 "spectrumModels": ["galaxy", "star"]
             }, make_checks=False)

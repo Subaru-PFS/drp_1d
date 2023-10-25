@@ -151,9 +151,9 @@ public:
   }
 
   const std::string &GetCurrentMethod() const {
-    if (m_ScopeStack.size() < 2)
+    if (m_ScopeStack.size() < 3)
       THROWG(INTERNAL_ERROR, "Method unreachable at process flow begin or end");
-    return m_ScopeStack[1];
+    return m_ScopeStack[2];
   }
 
   const CLineMap getCLineMap();

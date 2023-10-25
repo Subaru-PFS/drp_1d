@@ -117,9 +117,14 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-            new_kwargs = {"templateFittingSolver": new_kwargs, "templateDir": "sth"}
-            new_kwargs["method"] = "templateFittingSolver"
-
+            new_kwargs = {
+                "stages": ["redshiftSolver"],
+                "templateDir": "sth",
+                "redshiftSolver": {
+                    "method": "templateFittingSolve",
+                    "templateFittingSolve": new_kwargs,
+                }
+            }
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)
             if kwargs.get("enablePhotometry"):
                 param_dict["photometryBand"] = "sth"
@@ -152,8 +157,15 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-            new_kwargs = {"templateFittingSolver": new_kwargs, "templateDir": "sth"}
-            new_kwargs["method"] = "templateFittingSolver"
+
+            new_kwargs = {
+                "stages": ["redshiftSolver"],
+                "templateDir": "sth",
+                "redshiftSolver": {
+                    "method": "templateFittingSolve",
+                    "templateFittingSolve": new_kwargs,
+                }
+            }
 
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)
             if kwargs.get("enablePhotometry"):
@@ -169,7 +181,6 @@ class TestParametersCheckGeneral:
 
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
             param_dict = self._make_param_dict(**{"enablePhotometry": True})
-            print("param dict", param_dict)
             param_dict["photometryBand"] = "sth"
 
             accessor = ParametersAccessor(param_dict)

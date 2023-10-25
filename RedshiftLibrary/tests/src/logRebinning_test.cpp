@@ -50,17 +50,22 @@ const std::string jsonString =
     "\"smoothWidth\" : 0.5, "
     "\"redshiftStep\" : 0.001, "
     "\"star\" : { \"redshiftRange\" : [ 2.84, 2.88 ], "
-    "\"method\" : \"lineModelSolver\", "
-    "\"lineModelSolver\" : {\"lineModel\" : { \"firstPass\" : { "
-    "\"largeGridStepRatio\" : 1 }}}}, "
+    "\"stages\": [\"redshiftSolver\"],"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"lineModelSolve\", "
+    "\"lineModelSolve\" : {\"lineModel\" : { \"firstPass\" : { "
+    "\"largeGridStepRatio\" : 1 }}}}}, "
     "\"galaxy\" : { \"redshiftRange\" : [ 2.84, 2.88 ], \"redshiftStep\" : "
-    "0.0001, \"method\" : \"lineModelSolver\", "
-    "\"lineModelSolver\" : {\"lineModel\" : { \"firstPass\" : { "
+    "0.0001, "
+    "\"stages\": [\"redshiftSolver\"],"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"lineModelSolve\"," 
+    "\"lineModelSolve\" : {\"lineModel\" : { \"firstPass\" : { "
     "\"largeGridStepRatio\" : 1 },"
     "\"continuumFit\" : {\"fftProcessing\" : true }}}}, "
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"irregularSamplingMedian\"}}";
+    "\"method\" : \"irregularSamplingMedian\"}}}";
 class fixture_logRebinningTest {
 public:
   TScopeStack scopeStack;

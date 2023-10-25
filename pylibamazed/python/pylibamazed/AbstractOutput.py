@@ -50,6 +50,9 @@ ObjectStages = ["redshift_solver", "linemeas_catalog_load",
 zlog = CLog.GetInstance()
 
 
+# TODO bien voir ici qu'il y a deux types de stages : celles définies dans le parameters et Object/Root stages.
+# À ne pas confondre, voir comment on pourrait les fusionner
+
 class AbstractOutput:
 
     def __init__(self,
@@ -64,40 +67,43 @@ class AbstractOutput:
         self.results_specifications = pd.read_csv(results_specifications,
                                                   sep='\t'
                                                   )
-        self.object_types = self.parameters.get_objects()
+        self.object_types = self.parameters.get_spectrum_models()
         self.errors = dict()
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
         self.load_errors()
         self.cache = False
 
-    def get_attribute_from_source(self, object_type, method, dataset, attribute,
+    def get_attribute_from_source(self, object_type, stage, method, dataset, attribute,
                                   rank=None, band_name=None, obs_id=None):
         raise NotImplementedError("Implement in derived class")
 
-    def has_attribute_in_source(self, object_type, method, dataset, attribute,
+    def has_attribute_in_source(self, object_type, stage, method, dataset, attribute,
                                 rank=None, band_name=None, obs_id=None):
         raise NotImplementedError("Implement in derived class")
 
-    def has_dataset_in_source(self, object_type, method, dataset):
+    def has_dataset_in_source(self, object_type, stage, method, dataset):
         raise NotImplementedError("Implement in derived class")
 
-    def has_candidate_dataset_in_source(self, object_type, method, dataset):
+    def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
         raise NotImplementedError("Implement in derived class")
 
-    def get_nb_candidates_in_source(self, object_type, method):
+    def get_nb_candidates_in_source(self, object_type, stage, method):
         raise NotImplementedError("Implement in derived class")
 
     def load_errors(self):
         pass
 
     def has_error(self, object_type, stage):
+        # TODO see here how to handle diff stage from param / stage defined in this file
         return self.get_error_full_name(object_type, stage) in self.errors
 
     def get_error(self, object_type, stage):
+        # TODO see here how to handle diff stage from param / stage defined in this file
         return self.errors[self.get_error_full_name(object_type, stage)]
 
     def get_error_full_name(self, object_type, stage):
+        # TODO see here how to handle diff stage from param / stage defined in this file
         if object_type:
             return f"{stage}_{object_type}"
         else:
@@ -114,7 +120,6 @@ class AbstractOutput:
         self.cache = True
 
     def get_attribute_short(self, attribute, lines_ids):
-
         attr_parts = attribute.split(".")
         root = attr_parts[0]
         data = attr_parts[-1]
@@ -172,7 +177,8 @@ class AbstractOutput:
     def get_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
             method = self.get_method(object_type, dataset)
-            return self.get_attribute_from_source(object_type, method, dataset, attribute, rank)
+            stage = self.parameters.get_stage_from_method(method)
+            return self.get_attribute_from_source(object_type, stage, method, dataset, attribute, rank)
         if object_type:
             if rank is None:
                 return self.object_results[object_type][dataset][attribute]
@@ -193,7 +199,7 @@ class AbstractOutput:
         if dataset == "linemeas":
             return self.parameters.get_linemeas_method(object_type)
         else:
-            return self.parameters.get_solve_method(object_type)
+            return self.parameters.get_redshift_solver_method(object_type)
 
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
@@ -313,14 +319,14 @@ class AbstractOutput:
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:
-            skipsecondpass = self.parameters.get_lineModelSolve_skipsecondpass(
+            skipsecondpass = self.parameters.get_linemodel_skipsecondpass(
                 object_type)
 
         # retrieve results which are not firstpass results
         # exclude firstpass results for methods other than LineModelSolve
         notLinemodel = False
         if method:
-            notLinemodel = "lineModelSolver" not in method
+            notLinemodel = "lineModelSolve" not in method
         if skipsecondpass or notLinemodel:
             filtered_df = ds_attributes[~ds_attributes["name"].str.contains(
                 "Firstpass", na=True)]
@@ -338,7 +344,7 @@ class AbstractOutput:
         level = "root"
         rs, root_datasets = self.filter_datasets(level)
         for ds in root_datasets:
-            skip = not self.has_dataset_in_source(None, None, ds)
+            skip = not self.has_dataset_in_source(None, None, None, ds)
             skip = skip and "warning" not in ds
             if skip:
                 zlog.LogDebug("skipping " + ds)
@@ -347,12 +353,14 @@ class AbstractOutput:
             self.root_results[ds] = dict()
             for index, ds_row in ds_attributes.iterrows():
                 if "<" in ds_row["name"]:
-                    for object_type in self.parameters.get_objects():
+                    for object_type in self.parameters.get_spectrum_models():
                         if self.has_attribute_in_source(object_type,
+                                                        None,
                                                         None,
                                                         ds,
                                                         ds_row["name"]):
                             attr = self.get_attribute_from_source(object_type,
+                                                                  None,
                                                                   None,
                                                                   ds,
                                                                   ds_row["name"])
@@ -362,10 +370,11 @@ class AbstractOutput:
                 else:
                     if self.has_attribute_in_source(None,
                                                     None,
+                                                    None,
                                                     ds_row.dataset,
                                                     ds_row["name"]):
                         self.root_results[ds][ds_row["name"]] = self.get_attribute_from_source(
-                            "root", None, ds_row.dataset, ds_row["name"])
+                            "root", None, None, ds_row.dataset, ds_row["name"])
 
     def load_object_level(self, object_type):
         level = "object"
@@ -373,7 +382,12 @@ class AbstractOutput:
         for dataset in object_datasets:
             methods = self.parameters.get_solve_methods(object_type)
             for method in methods:
+                if method == "lineMeasSolve":
+                    stage = "lineMeasSolve"
+                else:
+                    stage = "redshiftSolver"
                 if self.has_dataset_in_source(object_type,
+                                              stage,
                                               method,
                                               dataset.replace("<ObsID>", "")):
 
@@ -382,17 +396,18 @@ class AbstractOutput:
                             self.object_results[object_type][dataset.replace(
                                 "<ObsID>", obs_id)] = dict()
                             self.fill_object_dataset(
-                                object_type, method, dataset, obs_id)
+                                object_type, stage, method, dataset, obs_id)
                     else:
                         self.object_results[object_type][dataset] = dict()
-                        self.fill_object_dataset(object_type, method, dataset)
+                        self.fill_object_dataset(object_type, stage, method, dataset)
 
-    def fill_object_dataset(self, object_type, method, dataset, obs_id=""):
+    def fill_object_dataset(self, object_type, stage, method, dataset, obs_id=""):
         ds_attributes = self.filter_dataset_attributes(dataset)
         for index, ds_row in ds_attributes.iterrows():
             attr_name = ds_row["name"]
-            if self.has_attribute_in_source(object_type, method, dataset, attr_name, obs_id=obs_id):
+            if self.has_attribute_in_source(object_type, stage, method, dataset, attr_name, obs_id=obs_id):
                 attr = self.get_attribute_from_source(object_type,
+                                                      stage,
                                                       method,
                                                       dataset,
                                                       attr_name,
@@ -401,6 +416,7 @@ class AbstractOutput:
                     "<ObsID>", obs_id)][attr_name] = attr
 
     def load_method_level(self, object_type):
+        stage = "redshiftSolver"
         level = "method"
         rs, object_datasets = self.filter_datasets(level)
         for ds in object_datasets:
@@ -408,6 +424,7 @@ class AbstractOutput:
             self.object_results[object_type][ds] = dict()
             for method in methods:
                 if self.has_dataset_in_source(object_type,
+                                              stage,
                                               method,
                                               ds):
                     ds_attributes = self.filter_dataset_attributes(ds)
@@ -426,7 +443,8 @@ class AbstractOutput:
                             self.object_results[object_type][ds][attr_name] = attr
 
     def load_candidate_level(self, object_type):
-        method = self.parameters.get_solve_method(object_type)
+        stage = "redshiftSolver"
+        method = self.parameters.get_redshift_solver_method(object_type)
         if not method:
             return
         level = "candidate"
@@ -434,6 +452,7 @@ class AbstractOutput:
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
             if not self.has_candidate_dataset_in_source(object_type,
+                                                        stage,
                                                         method,
                                                         ds):
                 continue
@@ -443,6 +462,7 @@ class AbstractOutput:
                     self.object_results[object_type][ds.replace("<ObsID>", "")] = [
                     ]
                 self.build_candidate_dataset(object_type,
+                                             stage,
                                              method,
                                              ds)
             else:
@@ -451,12 +471,14 @@ class AbstractOutput:
                         self.object_results[object_type][ds.replace(
                             "<ObsID>", obs_id)] = []
                     self.build_candidate_dataset(object_type,
+                                                 stage,
                                                  method,
                                                  ds,
                                                  obs_id)
 
-    def build_candidate_dataset(self, object_type, method, dataset, obs_id=""):
+    def build_candidate_dataset(self, object_type, stage, method, dataset, obs_id=""):
         nb_candidates = self.get_nb_candidates_in_source(object_type,
+                                                         stage,
                                                          method)
         ds_attributes = self.filter_dataset_attributes(dataset,
                                                        object_type,
@@ -474,6 +496,7 @@ class AbstractOutput:
                     bands = self.parameters.get_photometry_bands()
                     for band in bands:
                         attr = self.get_attribute_wrapper(object_type,
+                                                          stage,
                                                           method,
                                                           dataset,
                                                           attr_name,
@@ -485,6 +508,7 @@ class AbstractOutput:
                 elif "<ObsID>" in attr_name:
                     for obs_id in self.parameters.get_observation_ids():
                         attr = self.get_attribute_wrapper(object_type,
+                                                          stage,
                                                           method,
                                                           dataset,
                                                           attr_name,
@@ -495,6 +519,7 @@ class AbstractOutput:
                             candidates[rank][attr_name_] = attr
                 else:
                     attr = self.get_attribute_wrapper(object_type,
+                                                      stage,
                                                       method,
                                                       dataset,
                                                       attr_name,
@@ -504,10 +529,11 @@ class AbstractOutput:
                         candidates[rank][attr_name] = attr
         return candidates
 
-    def get_attribute_wrapper(self, object_type, method, ds, attr_name,
+    def get_attribute_wrapper(self, object_type, stage, method, ds, attr_name,
                               rank=None, band_name=None, obs_id=None):
         attr = None
         if self.has_attribute_in_source(object_type,
+                                        stage,
                                         method,
                                         ds,
                                         attr_name,
@@ -515,6 +541,7 @@ class AbstractOutput:
                                         band_name=band_name,
                                         obs_id=obs_id):
             attr = self.get_attribute_from_source(object_type,
+                                                  stage,
                                                   method,
                                                   ds,
                                                   attr_name,

@@ -9,19 +9,21 @@ project_path = "/home/fdufresne/Projects/refacto_parameters/cpf-redshift"
 renaming_filename = os.path.join(project_path, "pylibamazed/auxdir/pylibamazed/rename_params_v1_to_treed.csv")
 
 folders_to_process = [
-    "pylibamazed/auxdir/pylibamazed/jsonschema-v2",
-    "pylibamazed/python",
-    "pylibamazed/tests",
-    "RedshiftLibrary"
+    "pylibamazed/auxdir/pylibamazed/test"
 ]
+# "pylibamazed/auxdir/pylibamazed/jsonschema-v2",
+#     "pylibamazed/python",
+#     "pylibamazed/tests",
+#     "RedshiftLibrary"
+# ]
 
-list_to_exclude = [
-    "pylibamazed/python/pylibamazed/resources",
-    "redshift.py",
-    "egg-info",
-    ".bak",
-    ".pyc"
-]
+list_to_exclude = []
+#     "pylibamazed/python/pylibamazed/resources",
+#     "redshift.py",
+#     "egg-info",
+#     ".bak",
+#     ".pyc"
+# ]
 
 
 def list_files_to_rename():
@@ -30,6 +32,7 @@ def list_files_to_rename():
         filenames = glob.glob(
             os.path.join(project_path,folder, "**/*"),  recursive=True)
         for filename in filenames:
+            if filename
             keep_file = True
             for to_exclude in list_to_exclude:
                 if to_exclude in filename:

@@ -51,7 +51,7 @@ class TestSpectrumReaderUtils:
     def make_parameters_dict(self, **kwargs):
         params_dict = dict()
         params_dict["lsf"] = dict()
-        params_dict["lsf"]["lsfType"] = kwargs.get("lsf_type", "fromSpectrumData")
+        params_dict["lsf"]["lsfType"] = kwargs.get("lsfType", "fromSpectrumData")
         params_dict["airVacuumMethod"] = kwargs.get("airVacuumMethod", "")
         params_dict["spectrumModels"] = []
         params_dict["multiObsMethod"] = kwargs.get("multiObsMethod", "")

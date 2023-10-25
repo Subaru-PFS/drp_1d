@@ -28,7 +28,7 @@ CAbstractFitter::CAbstractFitter(
   m_nbElements = m_ElementsVector->getNbElements();
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-  if (Context.GetCurrentMethod() == "lineModelSolver") {
+  if (Context.GetCurrentMethod() == "lineModelSolve") {
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
     m_opt_lya_fit_asym_min = ps->GetScoped<Float64>("lyaFit.asymFitMin");
     m_opt_lya_fit_asym_max = ps->GetScoped<Float64>("lyaFit.asymFitMax");

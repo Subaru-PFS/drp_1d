@@ -38,7 +38,13 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
+# from pylibamazed.ParametersChecker import ParamJsonFilterLoader, JsonSchemaFileAccessor
+
+
 class FakeParametersChecker:
+    # def __init__(self, FilterLoader=ParamJsonFilterLoader, FileAccessor=JsonSchemaFileAccessor):
+    #     self.filter_loader = FilterLoader()
+    #     self.file_accesor = FileAccessor()
 
     def json_schema_check(self, parameters_dict, version):
         pass

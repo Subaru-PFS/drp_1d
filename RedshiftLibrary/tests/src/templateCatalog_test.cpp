@@ -51,14 +51,14 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"galaxy\" : {\"method\" : \"templateFittingSolver\", "
-    "\"templateFittingSolver\" : {\"ismFit\" : true, \"igmFit\" : true}}, "
-    "\"star\" : {\"method\" : \"templateFittingSolver\", "
-    "\"templateFittingSolver\" : {\"ismFit\" : true, \"igmFit\" : true}}, "
+    "{\"galaxy\": {\"redshiftSolver\": {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"ismFit\" : true, \"igmFit\" : true}}}, "
+    "\"star\": {\"redshiftSolver\": {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"ismFit\" : true, \"igmFit\" : true}}}, "
     "\"templateCatalog\" : {\"continuumRemoval\" : "
     "{ \"medianKernelWidth\" : 40.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"irregularSamplingMedian\"}} }";
+    "\"method\" : \"irregularSamplingMedian\"}}}";
 
 class fixture_TemplateCatalogTest {
 public:

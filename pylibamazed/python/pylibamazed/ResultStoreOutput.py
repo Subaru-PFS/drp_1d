@@ -54,9 +54,9 @@ class ResultStoreOutput(AbstractOutput):
         if auto_load:
             self.load_all()
 
-    def _get_attribute_from_result_store(self, object_type, method, data_spec,
+    def _get_attribute_from_result_store(self, object_type, stage, method, data_spec,
                                          rank, band_name=None, obs_id=None):
-        operator_result = self._get_operator_result(object_type, method, data_spec, rank)
+        operator_result = self._get_operator_result(object_type, stage, method, data_spec, rank)
         band_name_hook = "[band_name]"
         object_type_hook = "[object_type]"
         obs_id_hook = "[obs_id]"
@@ -93,20 +93,21 @@ class ResultStoreOutput(AbstractOutput):
         else:
             return attr
 
-    def get_attribute_from_source(self, object_type, method, dataset, attribute,
+    def get_attribute_from_source(self, object_type, stage, method, dataset, attribute,
                                   rank=None, band_name=None, obs_id=None):
         rs = self.results_specifications
         rs = rs[rs["name"] == attribute]
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
         return self._get_attribute_from_result_store(object_type,
+                                                     stage,
                                                      method,
                                                      attribute_info,
                                                      rank=rank,
                                                      band_name=band_name,
                                                      obs_id=obs_id)
 
-    def has_attribute_in_source(self, object_type, method, dataset, attribute,
+    def has_attribute_in_source(self, object_type, stage, method, dataset, attribute,
                                 rank=None, band_name=None, obs_id=None):
         rs = self.results_specifications
         rs = rs[rs["name"] == attribute]
@@ -116,17 +117,19 @@ class ResultStoreOutput(AbstractOutput):
         if type(attribute_info.ResultStore_key) is not str:
             return False
         if rank is not None:
-            method = self.parameters.get_solve_method(object_type)
+            method = self.parameters.get_redshift_solver_method(object_type)
             if self.results_store.HasCandidateDataset(object_type,
+                                                      stage,
                                                       method,
                                                       attribute_info.ResultStore_key,
                                                       attribute_info.dataset.replace("<ObsID>", "")):
-                operator_result = self._get_operator_result(object_type, method, attribute_info, rank)
+                operator_result = self._get_operator_result(object_type, stage, method, attribute_info, rank)
             else:
                 return False
         else:
             try:
-                operator_result = self._get_operator_result(object_type, method, attribute_info, rank=None)
+                operator_result = self._get_operator_result(
+                    object_type, stage, method, attribute_info, rank=None)
             except Exception:
                 return False
         if "[object_type]" in attribute_info.OperatorResult_name:
@@ -165,41 +168,48 @@ class ResultStoreOutput(AbstractOutput):
         else:
             return hasattr(operator_result, attribute_info.OperatorResult_name)
 
-    def has_dataset_in_source(self, object_type, method, dataset):
+    def has_dataset_in_source(self, object_type, stage, method, dataset):
         if object_type:
             return self.results_store.HasDataset(object_type,
+                                                 stage,
                                                  method,
                                                  dataset)
         else:
+            # TODO investigate here
             return self.results_store.HasDataset(dataset,
+                                                 dataset,
                                                  dataset,
                                                  "solveResult")
 
-    def has_candidate_dataset_in_source(self, object_type, method, dataset):
+    def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
         rs = self.results_specifications
         rs = rs[rs.dataset == dataset]
         rs_key = rs["ResultStore_key"].unique()[0]
 
         return self.results_store.HasCandidateDataset(object_type,
+                                                      stage,
                                                       method,
                                                       rs_key,
                                                       dataset.replace("<ObsID>", ""))
 
-    def get_nb_candidates_in_source(self, object_type, method):
-        return self.results_store.getNbRedshiftCandidates(object_type, method)
+    def get_nb_candidates_in_source(self, object_type, stage, method):
+        return self.results_store.getNbRedshiftCandidates(object_type, stage, method)
 
-    def _get_operator_result(self, object_type, method, attribute_info, rank=None):
+    def _get_operator_result(self, object_type, stage, method, attribute_info, rank=None):
         if attribute_info.level == "root":
             if attribute_info.ResultStore_key in ["context_warningFlag", "warningFlag"]:
                 return self.results_store.GetFlagLogResult(attribute_info.dataset,
+                                                           attribute_info.dataset,  # Added
                                                            attribute_info.dataset,
                                                            attribute_info.ResultStore_key)
             else:
                 or_type = self.results_store.GetGlobalResultType(attribute_info.dataset,
+                                                                 attribute_info.dataset,  # Added
                                                                  attribute_info.dataset,
                                                                  attribute_info.ResultStore_key)
                 if or_type == "CClassificationResult":
                     return self.results_store.GetClassificationResult(attribute_info.dataset,
+                                                                      attribute_info.dataset,  # Added
                                                                       attribute_info.dataset,
                                                                       attribute_info.ResultStore_key)
                 else:
@@ -207,20 +217,24 @@ class ResultStoreOutput(AbstractOutput):
                                        "Unknown OperatorResult type {}".format(str(or_type)))
         elif attribute_info.level == "object" or attribute_info.level == "method":
             or_type = self.results_store.GetGlobalResultType(object_type,
+                                                             stage,
                                                              method,
                                                              attribute_info.ResultStore_key)
             getter = getattr(self.results_store, "Get" + or_type[1:])
             return getter(object_type,
+                          stage,  # Added
                           method,
                           attribute_info.ResultStore_key)
         elif attribute_info.level == "candidate":
             or_type = self.results_store.GetCandidateResultType(object_type,
+                                                                stage,
                                                                 method,
                                                                 attribute_info.ResultStore_key,
                                                                 attribute_info.dataset.replace("<ObsID>", ""))
             if or_type == "TLineModelResult":
                 firstpass_result = "Firstpass" in attribute_info["name"]
                 return self.results_store.GetLineModelResult(object_type,
+                                                             stage,
                                                              method,
                                                              attribute_info.ResultStore_key,
                                                              attribute_info.dataset,
@@ -228,6 +242,7 @@ class ResultStoreOutput(AbstractOutput):
             else:
                 getter = getattr(self.results_store, "Get" + or_type[1:])
                 return getter(object_type,
+                              stage,
                               method,
                               attribute_info.ResultStore_key,
                               attribute_info.dataset.replace("<ObsID>", ""),

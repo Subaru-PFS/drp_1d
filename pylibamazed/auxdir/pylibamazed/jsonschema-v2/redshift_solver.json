@@ -13,21 +13,21 @@
       ],
       "enum": [
         "",
-        "lineModelSolver",
-        "templateFittingSolver",
-        "tplCombinationSolver",
+        "lineModelSolve",
+        "templateFittingSolve",
+        "tplCombinationSolve",
         null
       ],
       "title": "Fitting method",
-      "description": "Select the fitting methods for object type : \n * **templateFittingSolver**: least-square template fitting \n * **lineModelSolver**: least-square fitting of a line model (it includes fullmodel ie continuum model + line model) \n * **tplcombinationSolve**: least-square template fitting combination"
+      "description": "Select the fitting methods for object type : \n * **templateFittingSolve**: least-square template fitting \n * **lineModelSolve**: least-square fitting of a line model (it includes fullmodel ie continuum model + line model) \n * **tplcombinationSolve**: least-square template fitting combination"
     },
-    "templateFittingSolver": {
+    "templateFittingSolve": {
       "$ref": "template_fitting_solve.json"
     },
-    "tplCombinationSolver": {
+    "tplCombinationSolve": {
       "$ref": "template_combination_solve.json"
     },
-    "lineModelSolver": {
+    "lineModelSolve": {
       "$ref": "line_model_solve.json"
     }
   }

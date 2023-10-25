@@ -39,6 +39,8 @@
 
 from typing import List
 
+import json
+
 
 class ParametersAccessor:
     def __init__(self, parameters: dict):
@@ -67,54 +69,79 @@ class ParametersAccessor:
     def get_multiobs_method(self):
         return self.parameters.get("multiObsMethod")
 
-    def get_objects(self, default=None):
+    def get_spectrum_models(self, default=None):
         return self.parameters.get("spectrumModels", default)
 
-    def get_object_section(self, object_type) -> dict:
-        return self.parameters.get(object_type)
+    def get_spectrum_model_section(self, spectrum_model) -> dict:
+        return self.parameters.get(spectrum_model)
 
-    def get_solve_method(self, object_type: str) -> str:
-        method = self.get_object_section(object_type).get("method")
+    def get_stages(self, spectrum_model: str) -> list:
+        return self.get_spectrum_model_section(spectrum_model).get("stages")
+
+    def get_redshift_solver_section(self, spectrum_model) -> dict:
+        return self._get_on_None(self.get_spectrum_model_section(spectrum_model), "redshiftSolver")
+
+    def get_redshift_solver_method(self, spectrum_model: str) -> str:
+        method = self._get_on_None(self.get_redshift_solver_section(spectrum_model), "method")
         # Not in the get because if method is defined as an empty string in the parameters json
         # we still want method to be "None"
         if method == "":
             method = None
         return method
 
-    def get_linemeas_method(self, object_type: str) -> str:
-        linemeas = self.get_object_section(object_type).get("linemeas_method")
-        if linemeas == "":
-            linemeas = None
-        return linemeas
+    def get_linemeas_solver_section(self, spectrum_model) -> dict:
+        return self._get_on_None(self.get_spectrum_model_section(spectrum_model), "lineMeasSolve")
 
-    def get_linemeas_dzhalf(self, object_type: str) -> float:
-        return self.get_object_section(object_type).get("lineMeasDzHalf")
+    def get_linemeas_method(self, spectrum_model: str) -> str:
+        if "lineMeasSolve" not in self.get_stages(spectrum_model):
+            return None
+        return self._get_on_None(self.get_linemeas_solver_section(spectrum_model), "method")
 
-    def get_redshiftrange(self, obejct_type: str) -> List[float]:
-        return self.get_object_section(obejct_type).get("redshiftRange")
+    def get_linemeas_solve_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_linemeas_solver_section(spectrum_model), "lineMeasSolve")
 
-    def get_redshiftstep(self, object_type: str) -> float:
-        return self.get_object_section(object_type).get("redshiftStep")
+    def get_linemeas_dzhalf(self, spectrum_model: str) -> float:
+        return self.get_spectrum_model_section(spectrum_model).get("lineMeasDzHalf")
 
-    def get_linemeas_redshiftstep(self, object_type: str) -> float:
-        return self.get_object_section(object_type).get("lineMeasRedshiftStep")
+    def get_redshiftrange(self, spectrum_model: str) -> List[float]:
+        return self.get_spectrum_model_section(spectrum_model).get("redshiftRange")
 
-    def get_reliability_enabled(self, object_type: str) -> str:
-        return self.get_object_section(object_type).get("enable_reliability")
+    def get_redshiftstep(self, spectrum_model: str) -> float:
+        return self.get_spectrum_model_section(spectrum_model).get("redshiftStep")
 
-    def get_reliability_model(self, object_type: str) -> str:
-        return self.get_object_section(object_type).get("reliabilityModel")
+    def get_linemeas_redshiftstep(self, spectrum_model: str) -> float:
+        return self.get_spectrum_model_section(spectrum_model).get("lineMeasRedshiftStep")
 
-    def get_template_dir(self, object_type: str):
-        return self.get_object_section(object_type).get("templateDir")
+    def get_reliability_enabled(self, spectrum_model: str) -> bool:
+        return "reliabilitySolver" in self.get_stages(spectrum_model)
+
+    def get_reliability_section(self, spectrum_model: str) -> dict:
+        return self.get_spectrum_model_section(spectrum_model).get("reliabilitySolver")
+
+    def get_reliability_method(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_reliability_section(spectrum_model), "method")
+
+    def get_deep_learning_solver_section(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_reliability_section(spectrum_model), "deepLearningSolver")
+
+    def get_reliability_model(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_deep_learning_solver_section(spectrum_model), "reliabilityModel")
+
+    def get_template_dir(self, spectrum_model: str) -> str:
+        return self.get_spectrum_model_section(spectrum_model).get("templateDir")
+
+    def get_redshift_solver_method_section(self, spectrum_model: str) -> dict:
+        method = self.get_redshift_solver_method(spectrum_model)
+
+        return self._get_on_None(self.get_redshift_solver_section(spectrum_model), method)
 
     def photometry_is_enabled(self):
-        for obj in self.get_objects([]):
-            method = self.get_solve_method(obj)
-            method_params: dict = (self.parameters[obj]).get(method)
-            if method == "lineModelSolver":
-                method_params = self._get_on_None(method_params, "lineModel")
-            if self._get_on_None(method_params, "enablePhotometry", False):
+        for spectrum_model in self.get_spectrum_models([]):
+            method = self.get_redshift_solver_method(spectrum_model)
+            method_section = self.get_redshift_solver_method_section(spectrum_model)
+            if method == "lineModelSolve":
+                method_section = self._get_on_None(method_section, "lineModel")
+            if self._get_on_None(method_section, "enablePhotometry", False):
                 return True
         return False
 
@@ -164,26 +191,26 @@ class ParametersAccessor:
         else:
             return dict.get(key, default)
 
-    def get_templateFittingSolve_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_object_section(object_type), "templateFittingSolver")
+    def get_template_fitting_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_redshift_solver_section(spectrum_model), "templateFittingSolve")
 
-    def get_templateFittingSolve_ism(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_templateFittingSolve_section(object_type), "ismFit")
+    def get_template_fitting_ism(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_template_fitting_section(spectrum_model), "ismFit")
 
-    def get_templateFittingSolve_photometry_enabled(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_templateFittingSolve_section(object_type), "enablePhotometry")
+    def get_template_fitting_photometry_enabled(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_template_fitting_section(spectrum_model), "enablePhotometry")
 
-    def get_templateFittingSolve_photometry_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_templateFittingSolve_section(object_type), "photometry")
+    def get_template_fitting_photometry_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_template_fitting_section(spectrum_model), "photometry")
 
-    def get_templateFittingSolve_photometry_weight(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_templateFittingSolve_photometry_section(object_type), "weight")
+    def get_template_fitting_photometry_weight(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_template_fitting_photometry_section(spectrum_model), "weight")
 
-    def get_templateCombinationSolve_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_object_section(object_type), "tplCombinationSolver")
+    def get_template_combination_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_redshift_solver_section(spectrum_model), "tplCombinationSolve")
 
-    def get_templateCombinationSolve_ism(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_templateCombinationSolve_section(object_type), "ismFit")
+    def get_template_combination_ism(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_template_combination_section(spectrum_model), "ismFit")
 
     def get_ebmv_section(self) -> dict:
         return self.parameters.get("ebmv")
@@ -197,145 +224,152 @@ class ParametersAccessor:
     def get_ebmv_start(self):
         return self._get_on_None(self.get_ebmv_section(), "start")
 
-    def get_lineModelSolve_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_object_section(object_type), "lineModelSolver")
+    def get_linemodel_solver_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_redshift_solver_section(spectrum_model), "lineModelSolve")
 
-    def get_lineModelSolve_linemodel_section(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_section(object_type), "lineModel")
+    def get_linemodel_solver_linemodel_section(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemodel_solver_section(spectrum_model), "lineModel")
 
-    def get_solve_method_igm_fit(self, object_type: str, solve_method: str) -> bool:
+    def get_solve_method_igm_fit(self, spectrum_model: str, solve_method: str) -> bool:
         igmfit = None
-        if solve_method == "lineModelSolver":
-            igmfit = self.get_lineModelSolve_igmfit(object_type)
-        elif solve_method == "templateFittingSolver":
-            igmfit = self.get_templateFittingSolve_igmfit(object_type)
-        elif solve_method == "tplCombinationSolver":
-            igmfit = self.get_templateCombinationSolve_igmfit(object_type)
+        if solve_method == "lineModelSolve":
+            igmfit = self.get_linemodel_igmfit(spectrum_model)
+        elif solve_method == "templateFittingSolve":
+            igmfit = self.get_template_fitting_igmfit(spectrum_model)
+        elif solve_method == "tplCombinationSolve":
+            igmfit = self.get_template_combination_igmfit(spectrum_model)
         return igmfit
 
-    def get_lineModelSolve_igmfit(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "igmFit")
+    def get_linemodel_igmfit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "igmFit")
 
-    def get_templateCombinationSolve_igmfit(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_templateCombinationSolve_section(object_type), "igmFit")
+    def get_template_combination_igmfit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_template_combination_section(spectrum_model), "igmFit")
 
-    def get_templateFittingSolve_igmfit(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_templateFittingSolve_section(object_type), "igmFit")
+    def get_template_fitting_igmfit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_template_fitting_section(spectrum_model), "igmFit")
 
-    def get_lineModelSolve_lineRatioType(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "lineRatioType")
+    def get_linemodel_line_ratio_type(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "lineRatioType")
 
-    def get_lineModelSolve_rules(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "rules")
+    def get_linemodel_rules(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "rules")
 
-    def get_lineModelSolve_tplratio_catalog(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "tplRatioCatalog")
-
-    def get_lineModelSolve_tplratio_ismfit(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "tplRatioIsmFit")
-
-    def get_lineModelSolve_continuumComponent(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "continuumComponent")
-
-    def get_lineModelSolve_continuumfit_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "continuumFit")
-
-    def get_lineModelSolve_secondpass_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "secondPass")
-
-    def get_lineModelSolve_secondpass_continuumfit(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_secondpass_section(object_type), "continuumFit")
-
-    def get_lineModelSolve_continuumreestimation(self, object_type: str) -> str:
+    def get_linemodel_tplratio_catalog(self, spectrum_model: str) -> str:
         return self._get_on_None(
-            self.get_lineModelSolve_linemodel_section(object_type),
+            self.get_linemodel_solver_linemodel_section(spectrum_model),
+            "tplRatioCatalog")
+
+    def get_linemodel_tplratio_ismfit(self, spectrum_model: str) -> str:
+        return self._get_on_None(
+            self.get_linemodel_solver_linemodel_section(spectrum_model),
+            "tplRatioIsmFit")
+
+    def get_linemodel_continuum_component(self, spectrum_model: str) -> str:
+        return self._get_on_None(
+            self.get_linemodel_solver_linemodel_section(spectrum_model),
+            "continuumComponent")
+
+    def get_linemodel_continuumfit_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "continuumFit")
+
+    def get_linemodel_secondpass_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "secondPass")
+
+    def get_linemodel_secondpass_continuumfit(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemodel_secondpass_section(spectrum_model), "continuumFit")
+
+    def get_linemodel_continuum_reestimation(self, spectrum_model: str) -> str:
+        return self._get_on_None(
+            self.get_linemodel_solver_linemodel_section(spectrum_model),
             "continuumReestimation"
         )
 
-    def get_lineModelSolve_useloglambdasampling(self, object_type: str) -> bool:
+    def get_linemodel_useloglambdasampling(self, spectrum_model: str) -> bool:
         return self._get_on_None(
-            self.get_lineModelSolve_linemodel_section(object_type),
+            self.get_linemodel_solver_linemodel_section(spectrum_model),
             "useLogLambdaSampling"
         )
 
-    def get_lineModelSolve_continuumfit_ismfit(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_lineModelSolve_continuumfit_section(object_type), "ismFit")
+    def get_linemodel_continuumfit_ismfit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "ismFit")
 
-    def get_lineModelSolve_continuumfit_fftprocessing(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_lineModelSolve_continuumfit_section(object_type), "fftProcessing")
+    def get_linemodel_continuumfit_fftprocessing(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "fftProcessing")
 
-    def get_lineModelSolve_firstpass_section(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "firstPass")
+    def get_linemodel_firstpass_section(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "firstPass")
 
-    def get_lineModelSolve_firstpass_tplratio_ismfit(self, object_type: str) -> bool:
-        return self._get_on_None(self.get_lineModelSolve_firstpass_section(object_type), "tplRatioIsmFit")
+    def get_linemodel_firstpass_tplratio_ismfit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_firstpass_section(spectrum_model), "tplRatioIsmFit")
 
-    def get_lineModelSolve_skipsecondpass(self, object_type: str) -> bool:
+    def get_linemodel_skipsecondpass(self, spectrum_model: str) -> bool:
         return self._get_on_None(
-            self.get_lineModelSolve_linemodel_section(object_type), "skipSecondPass")
+            self.get_linemodel_solver_linemodel_section(spectrum_model), "skipSecondPass")
 
-    def get_lineModelSolve_nsigmasupport(self, object_type: str) -> float:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "nSigmaSupport")
+    def get_linemodel_nsigmasupport(self, spectrum_model: str) -> float:
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "nSigmaSupport")
 
-    def get_lineModelSolve_improveBalmerFit(self, object_type: str) -> float:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "improveBalmerFit")
+    def get_linemodel_improve_balmer_fit(self, spectrum_model: str) -> float:
+        return self._get_on_None(
+            self.get_linemodel_solver_linemodel_section(spectrum_model),
+            "improveBalmerFit")
 
-    def get_lineMeasSolve_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_object_section(object_type), "lineMeasSolver")
+    def get_linemeas_linemodel_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_linemeas_solve_section(spectrum_model), "lineModel")
 
-    def get_lineMeasSolve_linemodel_section(self, object_type: str) -> dict:
-        return self._get_on_None(self.get_lineMeasSolve_section(object_type), "lineModel")
+    def get_linemeas_line_ratio_type(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lineRatioType")
 
-    def get_lineMeasSolve_lineRatioType(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineMeasSolve_linemodel_section(object_type), "lineRatioType")
+    def get_linemeas_rules(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "rules")
 
-    def get_lineMeasSolve_rules(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineMeasSolve_linemodel_section(object_type), "rules")
+    def get_linemeas_fitting_method(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "fittingMethod")
 
-    def get_lineMeasSolve_fittingmethod(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineMeasSolve_linemodel_section(object_type), "fittingMethod")
+    def get_linemeas_velocity_fit(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "velocityFit")
 
-    def get_lineMeasSolve_velocityfit(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineMeasSolve_linemodel_section(object_type), "velocityFit")
+    def get_linemeas_velocity_fit_param(self, spectrum_model: str, param: str) -> float:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), param)
 
-    def get_lineMeasSolve_velocityfit_param(self, object_type: str, param: str) -> float:
-        return self._get_on_None(self.get_lineMeasSolve_linemodel_section(object_type), param)
+    def get_linemeas_nsigmasupport(self, spectrum_model: str) -> float:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "nSigmaSupport")
 
-    def get_lineMeasSolve_nsigmasupport(self, object_type: str) -> float:
-        return self._get_on_None(self.get_lineMeasSolve_linemodel_section(object_type), "nSigmaSupport")
-
-    def get_nsigmasupport(self, object_type: str, method: str) -> float:
+    def get_nsigmasupport(self, spectrum_model: str, method: str) -> float:
         nsigmasupport = None
-        if method == "lineModelSolver":
-            nsigmasupport = self.get_lineModelSolve_nsigmasupport(object_type)
-        elif method == "lineMeasSolver":
-            nsigmasupport = self.get_lineMeasSolve_nsigmasupport(object_type)
+        if method == "lineModelSolve":
+            nsigmasupport = self.get_linemodel_nsigmasupport(spectrum_model)
+        elif method == "lineMeasSolve":
+            nsigmasupport = self.get_linemeas_nsigmasupport(spectrum_model)
         return nsigmasupport
 
-    def get_lineModelSolve_linecatalog(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineModelSolve_linemodel_section(object_type), "lineCatalog")
+    def get_linemodel_linecatalog(self, spectrum_model: str) -> str:
+        # print("parameters", json.dumps(self.get_spectrum_model_section(spectrum_model), indent=4))
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "lineCatalog")
 
-    def get_lineMeasSolve_linecatalog(self, object_type: str) -> str:
-        return self._get_on_None(self.get_lineMeasSolve_linemodel_section(object_type), "lineCatalog")
+    def get_linemeas_linecatalog(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lineCatalog")
 
-    def get_linecatalog(self, object_type: str, method: str) -> str:
+    def get_linecatalog(self, spectrum_model: str, method: str) -> str:
         linecatalog = None
-        if method == "lineModelSolver":
-            linecatalog = self.get_lineModelSolve_linecatalog(object_type)
-        elif method == "lineMeasSolver":
-            linecatalog = self.get_lineMeasSolve_linecatalog(object_type)
+        # print("\n\nmethod", method)
+        if method == "lineModelSolve":
+            linecatalog = self.get_linemodel_linecatalog(spectrum_model)
+        elif method == "lineMeasSolve":
+            linecatalog = self.get_linemeas_linecatalog(spectrum_model)
         return linecatalog
 
-    def get_linemodel_section(self, object_type, method) -> dict:
+    def get_linemodel_section(self, spectrum_model, method) -> dict:
         linemodel = None
-        if method == "lineModelSolver":
-            linemodel = self.get_lineModelSolve_linemodel_section(object_type)
-        elif method == "lineMeasSolver":
-            linemodel = self.get_lineMeasSolve_linemodel_section(object_type)
+        if method == "lineModelSolve":
+            linemodel = self.get_linemodel_solver_linemodel_section(spectrum_model)
+        elif method == "lineMeasSolve":
+            linemodel = self.get_linemeas_linemodel_section(spectrum_model)
         return linemodel
 
-    def get_redshift_sampling(self, object_type):
-        return self.get_object_section(object_type).get("redshiftSampling")
+    def get_redshift_sampling(self, spectrum_model):
+        return self.get_spectrum_model_section(spectrum_model).get("redshiftSampling")
 
     def get_observation_ids(self):
         try:

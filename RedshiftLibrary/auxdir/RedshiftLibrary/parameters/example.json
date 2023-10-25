@@ -28,11 +28,11 @@
     "galaxy": {
         "redshiftSampling": "log",
         "method": null,
-        "linemeas_method": "lineMeasSolver",
+        "linemeas_method": "lineMeasSolve",
         "lineMeasDzHalf": 0.0,
         "lineMeasRedshiftStep": 0.0001,
         "redshiftref": 0.2596924580993427,
-        "lineMeasSolver": {
+        "lineMeasSolve": {
             "lineModel": {
                 "velocityEmission": 30.0,
                 "velocityAbsorption": 150.0,

@@ -299,17 +299,17 @@ bool CSpectrumLogRebinning::checkTemplateAlignment(
 }
 
 TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
-    const std::string &category) const {
+    const std::string &spectrumModel) const {
   TFloat64Range redshiftRange =
-      m_inputContext.GetParameterStore()->Get<TFloat64Range>(category +
+      m_inputContext.GetParameterStore()->Get<TFloat64Range>(spectrumModel +
                                                              ".redshiftRange");
   Int32 SSratio = 1;
   if (m_inputContext.GetParameterStore()->Get<std::string>(
-          category + ".method") == "lineModelSolver" &&
+          spectrumModel + ".redshiftSolver.method") == "lineModelSolve" &&
       m_inputContext.GetParameterStore()->Has<Int32>(
-          category + ".lineModelSolver.lineModel.firstPass.largeGridStepRatio"))
+          spectrumModel + ".redshiftSolver.lineModelSolve.lineModel.firstPass.largeGridStepRatio"))
     SSratio = m_inputContext.GetParameterStore()->Get<Int32>(
-        category + ".lineModelSolver.lineModel.firstPass.largeGridStepRatio");
+        spectrumModel + ".redshiftSolver.lineModelSolve.lineModel.firstPass.largeGridStepRatio");
 
   // compute the effective zrange of the new redshift grid
   // set the min to the initial min
@@ -336,10 +336,10 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
   tplcat->m_logsampling = true;
 
   // check existence of already  & correctly logsampled templates
-  const Int32 ntpl = tplcat->GetTemplateCount(category);
+  const Int32 ntpl = tplcat->GetTemplateCount(spectrumModel);
   if (ntpl > 0) {
     for (Int32 i = 0; i < ntpl; i++) {
-      std::shared_ptr<const CTemplate> tpl = tplcat->GetTemplate(category, i);
+      std::shared_ptr<const CTemplate> tpl = tplcat->GetTemplate(spectrumModel, i);
       bool needrebinning = isRebinningNeeded(tpl, lambdaRange_tpl);
       if (!needrebinning)
         continue;
@@ -350,7 +350,7 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
             tpl->GetName().c_str());
         tplcat->m_logsampling = false;
         std::shared_ptr<const CTemplate> input_tpl =
-            tplcat->GetTemplateByName(TStringList{category}, tpl->GetName());
+            tplcat->GetTemplateByName(TStringList{spectrumModel}, tpl->GetName());
         tplcat->m_logsampling = true;
         tplcat->SetTemplate(
             loglambdaRebinTemplate(input_tpl, lambdaRange_tpl,
@@ -363,7 +363,7 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
     tplcat->m_logsampling = false;
     const TTemplateConstRefList TplList =
         std::const_pointer_cast<const CTemplateCatalog>(tplcat)
-            ->GetTemplateList(TStringList{category});
+            ->GetTemplateList(TStringList{spectrumModel});
     tplcat->m_logsampling = true;
     for (auto tpl : TplList) {
       std::shared_ptr<CTemplate> rebinnedTpl =

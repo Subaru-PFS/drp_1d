@@ -245,7 +245,7 @@ void CInputContext::Init() {
     }
   }
   // template orthogonalisation with linemodel
-  OrthogonalizeTemplates();
+OrthogonalizeTemplates();
 
   // clamp spectral axis at lambdaRange
   for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),

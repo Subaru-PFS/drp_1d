@@ -55,7 +55,7 @@ using namespace boost;
  * \brief Empty constructor.
  **/
 CLineModelSolve::CLineModelSolve(TScopeStack &scope, string spectrumModel)
-    : CObjectSolve("lineModelSolver", scope, spectrumModel) {}
+    : CObjectSolve("redshiftSolver", "lineModelSolve", scope, spectrumModel) {}
 
 /**
  * \brief
@@ -604,7 +604,7 @@ void CLineModelSolve::createRedshiftGrid(
 
   Int32 opt_twosteplargegridstep_ratio =
       inputContext->GetParameterStore()->GetScoped<Int32>(
-          "lineModelSolver.lineModel.firstPass.largeGridStepRatio");
+          "redshiftSolver.lineModelSolve.lineModel.firstPass.largeGridStepRatio");
 
   m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
 

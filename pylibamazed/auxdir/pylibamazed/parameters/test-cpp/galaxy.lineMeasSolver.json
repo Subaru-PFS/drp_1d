@@ -3,7 +3,7 @@
     "stages": null,
     "lineMeasDzHalf": 0.0,
     "lineMeasRedshiftStep": 0.0001,
-    "lineMeasSolver": {
+    "lineMeasSolve": {
         "lineModel": {
             "nSigmaSupport": 8,
             "lineWidthType": "combined",

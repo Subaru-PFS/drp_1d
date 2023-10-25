@@ -56,10 +56,10 @@ namespace bfs = boost::filesystem;
 
 const std::string jsonString =
     "{\"lsf\" : {\"lsfType\" : \"gaussianConstantWidth\" , \"width\" : 0.04},"
-    "\"galaxy\" : {\"method\" : \"templateFittingSolver\", "
-    "\"templateFittingSolver\" : {\"dustfit\" : true, \"extinction\" : true}}, "
-    "\"qso\" : {\"method\" : \"templateFittingSolver\", "
-    "\"templateFittingSolver\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"galaxy\" : {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"qso\" : {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
     "\"templateCatalog\" : {\"continuumRemoval\" : "
     "{ \"medianKernelWidth\" : 40.0, "
     "\"medianEvenReflection\" : false, "

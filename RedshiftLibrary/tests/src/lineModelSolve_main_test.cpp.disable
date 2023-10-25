@@ -72,8 +72,8 @@ const std::string jsonString =
     "\"redshiftRange\" : [ 1.0, 2.0 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"lineModelSolver\","
-    "\"lineModelSolver\" : {"
+    "\"method\" : \"lineModelSolve\","
+    "\"lineModelSolve\" : {"
     "\"lineModel\" : {"
     "\"continuumReestimation\" : \"no\","
     "\"velocityFit\" : true,"
@@ -175,9 +175,9 @@ const std::string sep8 =
     "        ],"
     "        \"redshiftStep\": 0.0001,"
     "        \"redshiftSampling\": \"log\","
-    "        \"method\": \"lineModelSolver\","
+    "        \"method\": \"lineModelSolve\","
     "        \"templateDir\": \"templates/BC03_sdss_tremonti21\","
-    "        \"lineModelSolver\": {"
+    "        \"lineModelSolve\": {"
     "            \"lineModel\": {"
     "                \"lineCatalog\": "
     "\"lineCatalogs/linecatalogamazedvacuum_H0.tsv\","
@@ -320,7 +320,7 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     // lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogA);
     // lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogB);
@@ -338,9 +338,9 @@ public:
   file_handler.SetLevelMask(70);
 
   fixture_LineModelSolveTestTplFitTplRatio fix;
-  CLineModelSolve lineModelSolver(Context.m_ScopeStack, "galaxy");
+  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
 #ifdef PROFILING
-  lineModelSolver.Compute();
+  lineModelSolve.Compute();
 #endif
   return 0;
 }

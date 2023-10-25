@@ -217,7 +217,7 @@
         "tplRatioIsmFit": {
           "type": "boolean",
           "title": "Wether to activate ISM extinction fit for lines ratio calculation.",
-          "description": "Wether to activate fit of ISM extinction (ie ebv parameter from Calzetti profiles) on calibration lines to estimate lines ratio. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `lineModelSolver.linemodel_extrema.csv`)."
+          "description": "Wether to activate fit of ISM extinction (ie ebv parameter from Calzetti profiles) on calibration lines to estimate lines ratio. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `lineModelSolve.linemodel_extrema.csv`)."
         },
         "continuumComponent": {
           "type": "string",

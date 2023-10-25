@@ -70,6 +70,12 @@ class ParametersConverterV2(ParametersConverter):
 
     def convert(self, raw_params: dict) -> dict:
         params = raw_params.copy()
+
+        for key in raw_params:
+            if "spectrumModel_" in key:
+                new_key = key.replace("spectrumModel_", "")
+                params[new_key] = params.pop(key)
+
         return params
 
 
@@ -81,4 +87,44 @@ class ParametersConverterV1(ParametersConverter):
         for _, row in renaming_df.iterrows():
             params_str = params_str.replace(
                 f"\"{row.loc['old_name']}\"", f"\"{row.loc['new_name']}\"")
-        return json.loads(params_str)
+        renamed_params = json.loads(params_str)
+
+        self.update_redshift_part(renamed_params)
+        self.update_linemeas_part(renamed_params)
+        self.update_reliability_part(renamed_params)
+        return renamed_params
+
+    def update_redshift_part(self, renamed_params):
+        redshift_methods = ["lineModelSolve", "templateFittingSolve", "tplCombinationSolve"]
+        for spectrum_model in renamed_params.get("spectrumModels", []):
+            method = renamed_params[spectrum_model].pop("method", None)
+            if method in redshift_methods:
+                renamed_params[spectrum_model].setdefault("stages", []).append("redshiftSolver")
+                renamed_params[spectrum_model]["redshiftSolver"] = {"method": method}
+            for redshift_method in redshift_methods:
+                if redshift_method in renamed_params[spectrum_model]:
+                    renamed_params[spectrum_model].setdefault("redshiftSolver", {})
+                    renamed_params[spectrum_model]["redshiftSolver"][redshift_method] = \
+                        renamed_params[spectrum_model].pop(redshift_method)
+
+    def update_linemeas_part(self, renamed_params):
+        for spectrum_model in renamed_params.get("spectrumModels", []):
+            if renamed_params[spectrum_model].pop("linemeas_method", None) == "lineMeasSolve":
+                renamed_params[spectrum_model].setdefault("stages", []).append("lineMeasSolve")
+                renamed_params[spectrum_model]["lineMeasSolve"] = {
+                    "method": "lineMeasSolve",
+                    "lineMeasSolve": renamed_params[spectrum_model].pop("lineMeasSolve")
+                }
+
+    def update_reliability_part(self, renamed_params):
+        for spectrum_model in renamed_params.get("spectrumModels", []):
+            if renamed_params[spectrum_model].pop("enable_reliability", False):
+                renamed_params[spectrum_model].setdefault("stages", []).append("reliabilitySolver")
+                renamed_params[spectrum_model]["reliabilitySolver"] = {
+                    "method": "deepLearningSolver",
+                    "deepLearningSolver": {
+                        "reliabilityModel": renamed_params[spectrum_model].pop("reliabilityModel")
+                    }
+                }
+            else:
+                renamed_params[spectrum_model].pop("reliabilityModel", None)

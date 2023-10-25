@@ -74,8 +74,10 @@ const std::string jsonString =
     "\"redshiftRange\" : [ 0.24, 0.3 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"lineModelSolver\","
-    "\"lineModelSolver\" : {"
+    "\"stages\" : [\"redshiftSolver\"],"
+    "\"redshiftSolver\" : {"
+    "\"method\" : \"lineModelSolve\","
+    "\"lineModelSolve\" : {"
     "\"lineModel\" : {"
     "\"continuumReestimation\" : \"no\","
     "\"velocityFit\" : true,"
@@ -212,7 +214,7 @@ const std::string jsonStringTplFitRules =
     "\"igmFit\" : true,"
     "\"fftProcessing\": false, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
-    "\"catalogDirPath\" : \"\"}}}}}}";
+    "\"catalogDirPath\" : \"\"}}}}}}}";
 
 const std::string jsonStringTplFitTplRatio =
     "\"skipSecondPass\" : false,"
@@ -232,7 +234,7 @@ const std::string jsonStringTplFitTplRatio =
     "\"igmFit\" : true,"
     "\"fftProcessing\": false, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
-    "\"catalogDirPath\" : \"\"}}}}}}";
+    "\"catalogDirPath\" : \"\"}}}}}}}";
 
 const std::string jsonStringNoContinuumTplRatio =
     "\"skipSecondPass\" : true,"
@@ -271,7 +273,7 @@ const std::string jsonStringFromSpectrum =
     "\"igmFit\" : true,"
     "\"fftProcessing\": true, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
-    "\"catalogDirPath\" : \"\"}}}}}}";
+    "\"catalogDirPath\" : \"\"}}}}}}}";
 
 class fixture_LineModelSolveTest {
 public:
@@ -315,7 +317,7 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -334,7 +336,7 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -393,7 +395,7 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -408,24 +410,24 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
   BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineModelSolver");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver", "lineModelSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "lineModelSolver", "pdf");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "lineModelSolver", "pdf_params");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "lineModelSolver", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "lineModelSolver", "extrema_results", "model_parameters", 0);
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results", "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
@@ -435,28 +437,28 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
                         fixture_LineModelSolveTestTplFitTplRatio) {
-  CLineModelSolve lineModelSolver(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(lineModelSolver.Compute());
+  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineModelSolver");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver", "lineModelSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "lineModelSolver", "pdf");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "lineModelSolver", "pdf_params");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "lineModelSolver", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "lineModelSolver", "extrema_results", "model_parameters", 0);
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results", "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
@@ -533,28 +535,28 @@ BOOST_FIXTURE_TEST_CASE(computeMultiNoContTplRatio_test,
 
 BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
                         fixture_LineModelSolveTestFromSpectrum) {
-  CLineModelSolve lineModelSolver(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(lineModelSolver.Compute());
+  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineModelSolver");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver", "lineModelSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "lineModelSolver", "pdf");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "lineModelSolver", "pdf_params");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "lineModelSolver", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "lineModelSolver", "extrema_results", "model_parameters", 0);
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results", "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1e-6);
