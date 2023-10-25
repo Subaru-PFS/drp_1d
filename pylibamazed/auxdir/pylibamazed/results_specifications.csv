@@ -141,4 +141,4 @@ ContinuumRedshift	model_parameters	True	candidate	fittedTpl.tplRedshift	extrema_
 Coeffs	continuum_polynom	True	candidate	fittedTpl.pCoeffs	extrema_results	f8
 LineMask	line_mask	True	candidate	OutsideLinesMask	extrema_results	i
 LineMask	linemeas_line_mask	True	object	OutsideLinesMask	extrema_results	i
-<BandName>PhotometricModel	phot_values	False	candidate	m_modelPhotValues[band_name]	extrema_results	f8
+<BandName>PhotometricModel	PhotometricModel	False	candidate	m_photValues[band_name]	extrema_results	f8
