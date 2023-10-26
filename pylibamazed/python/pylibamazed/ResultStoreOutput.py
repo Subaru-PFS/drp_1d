@@ -81,24 +81,15 @@ class ResultStoreOutput(AbstractOutput):
             return attr[object_type]
         if attr_type == "TMapTFloat64List":
             if obs_id is not None:
-                return np.array(attr[obs_id])
-        elif attr_type == "TFloat64List":
-            # return PC.Get_Float64Array(attr)
-            return np.array(attr)
-        # elif attr_type == "TFloat32List":
-        #     # return PC.Get_Float32Array(attr)
-        #     return np.array(tuple(attr))
-        elif attr_type == "TInt32List":
-            # return PC.Get_Int32Array(attr)
-            return np.array(attr, dtype='int32')
-        elif attr_type == "TBoolList":
-            # return PC.Get_BoolArray(attr)
-            return np.array(attr, dtype=bool)
+                return attr.to_numpy(obs_id)
+        elif (attr_type == "TFloat64List"
+                or attr_type == "TInt32List"
+                or attr_type == "TBoolList"):
+            return attr.to_numpy()
         elif attr_type == "TStringList":
             return np.array(attr)
         elif attr_type == "CMask":
-            # return PC.Get_MaskArray(attr.getMaskList())
-            return np.array(attr.getMaskList(), dtype='uint8')
+            return attr.getMaskList().to_numpy()
         else:
             return attr
 
@@ -122,7 +113,7 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["dataset"] == dataset]
 
         attribute_info = rs.iloc[0]
-        if type(attribute_info.ResultStore_key) != str:
+        if type(attribute_info.ResultStore_key) is not str:
             return False
         if rank is not None:
             method = self.parameters.get_solve_method(object_type)

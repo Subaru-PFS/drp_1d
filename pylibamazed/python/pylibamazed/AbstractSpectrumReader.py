@@ -188,8 +188,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        # return PC.Get_AxisSampleList(self._spectra[obs_id].GetSpectralAxis().GetSamplesVector())
-        return np.array(self._spectra[obs_id].GetSpectralAxis().GetSamplesVector())
+        return self._spectra[obs_id].GetSpectralAxis().GetSamplesVector().to_numpy()
 
     def get_flux(self, obs_id=""):
         """
@@ -198,8 +197,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        # return PC.Get_AxisSampleList(self._spectra[obs_id].GetFluxAxis().GetSamplesVector())
-        return np.array(self._spectra[obs_id].GetFluxAxis().GetSamplesVector())
+        return self._spectra[obs_id].GetFluxAxis().GetSamplesVector().to_numpy()
 
     def get_error(self, obs_id=""):
         """
@@ -208,8 +206,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         self._check_spectrum_is_loaded()
-        # return PC.Get_AxisSampleList(self._spectra[obs_id].GetErrorAxis().GetSamplesVector())
-        return np.array(self._spectra[obs_id].GetErrorAxis().GetSamplesVector())
+        return self._spectra[obs_id].GetErrorAxis().GetSamplesVector().to_numpy()
 
     def get_lsf(self, obs_id=""):
         """

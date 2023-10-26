@@ -72,6 +72,7 @@ public:
 
   const Float64 *GetSamples() const;
   const TAxisSampleList &GetSamplesVector() const;
+  TAxisSampleList &GetSamplesVector();
   void setSamplesVector(TAxisSampleList axisList);
   Int32 GetSamplesCount() const;
   virtual void SetSize(Int32 s);
@@ -107,6 +108,9 @@ inline void CSpectrumAxis::setSamplesVector(TAxisSampleList axisList) {
 inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const {
   return m_Samples;
 }
+
+inline TAxisSampleList &CSpectrumAxis::GetSamplesVector() { return m_Samples; }
+
 inline bool CSpectrumAxis::isEmpty() const { return m_Samples.size() == 0; }
 
 inline CSpectrumAxis CSpectrumAxis::extract(Int32 startIdx,
