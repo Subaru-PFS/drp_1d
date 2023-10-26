@@ -56,35 +56,25 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis(Int32 n) : CSpectrumAxis(n) {}
  * Constructor, flags log scale when set.
  */
 CSpectrumSpectralAxis::CSpectrumSpectralAxis(const TFloat64List &samples,
-                                             std::string AirVacuum)
+                                             std::string const &AirVacuum)
     : CSpectrumAxis(samples) {
-  if (AirVacuum != "") {
-    m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);
-    Log.LogInfo(
-        Formatter()
-        << "SpectralAxis converted from air to vacuum using translation from: "
-        << AirVacuum);
-  }
+  convertToVacuum(AirVacuum);
 }
 
 CSpectrumSpectralAxis::CSpectrumSpectralAxis(TFloat64List &&samples,
-                                             std::string AirVacuum)
+                                             std::string const &AirVacuum)
     : CSpectrumAxis(std::move(samples)) {
-
-  if (AirVacuum != "") {
-    m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);
-    Log.LogInfo(
-        Formatter()
-        << "SpectralAxis converted from air to vacuum using translation from: "
-        << AirVacuum);
-  }
+  convertToVacuum(AirVacuum);
 }
 
 // only used by client
 CSpectrumSpectralAxis::CSpectrumSpectralAxis(const Float64 *samples, Int32 n,
-                                             std::string AirVacuum)
+                                             std::string const &AirVacuum)
     : CSpectrumAxis(samples, n) {
+  convertToVacuum(AirVacuum);
+}
 
+void CSpectrumSpectralAxis::convertToVacuum(std::string const &AirVacuum) {
   if (AirVacuum != "") {
     m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);
     Log.LogInfo(
@@ -424,9 +414,8 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const {
   return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount() - 1));
 }
 
-TFloat64List
-CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
-                                          TFloat64Range lambdarange) const {
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(
+    Int32 ssratio, TFloat64Range const &lambdarange) const {
   Int32 imin = -1, imax = m_Samples.size();
   lambdarange.getClosedIntervalIndices(m_Samples, imin, imax, false);
   return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));

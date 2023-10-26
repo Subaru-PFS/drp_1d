@@ -45,12 +45,6 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumAxis::CSpectrumAxis(const Float64 *samples, Int32 n) : m_Samples(n) {
-  for (Int32 i = 0; i < n; i++) {
-    m_Samples[i] = samples[i];
-  }
-}
-
 CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
   for (Int32 i = 0; i < m_Samples.size(); i++) {
     m_Samples[i] *= op;
