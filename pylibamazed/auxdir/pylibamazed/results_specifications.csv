@@ -19,6 +19,7 @@ LinesRatioName	model_parameters	False	candidate	FittedTplratioName	extrema_resul
 LeastSquare	model_parameters	False	candidate	Merit	extrema_results	f8
 VelocityEmission	model_parameters	False	candidate	Elv	extrema_results	f8
 VelocityAbsorption	model_parameters	False	candidate	Alv	extrema_results	f8
+EmissionLinesSNR	model_parameters	False	candidate	ELSNR	extrema_results	f8
 StrongEmissionLinesSNR	model_parameters	False	candidate	StrongELSNR	extrema_results	f8
 LinesRatioIsmCoeff	model_parameters	False	candidate	FittedTplratioIsmCoeff	extrema_results	f8
 LinesRatioAmplitudeEm	model_parameters	False	candidate	FittedTplratioAmplitudeEm	extrema_results	f8
@@ -134,7 +135,6 @@ BestContinuumChi2	model_parameters	True	candidate	MeritContinuum	extrema_results
 CorrScaleMarg	model_parameters	True	candidate	CorrScaleMarg	extrema_results	f8
 NDof	model_parameters	True	candidate	NDof	extrema_results	i
 NLinesOverThreshold	model_parameters	True	candidate	NLinesOverThreshold	extrema_results	f8
-StrongELSNR	model_parameters	True	candidate	StrongELSNR	extrema_results	f8
 OutsideLinesSTDError	model_parameters	True	candidate	OutsideLinesSTDError	extrema_results	f8
 BayesianInformationCriterion	model_parameters	True	candidate	bic	extrema_results	f8
 ContinuumRedshift	model_parameters	True	candidate	fittedTpl.tplRedshift	extrema_results	f8

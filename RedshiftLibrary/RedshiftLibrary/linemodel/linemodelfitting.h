@@ -138,8 +138,8 @@ public:
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
-  Float64 getCumulSNRStrongEL() const;
-  Float64 getCumulSNROnRange(TInt32Range idxRange) const;
+  std::pair<Float64, Float64> getCumulSNRStrongEL() const;
+  std::pair<Float64, Float64> getSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
   CLineModelSolution GetModelSolution(Int32 opt_level = 0);

@@ -725,25 +725,28 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const {
  * 1. retrieve the lines support
  * 2. process each
  **/
-Float64 CLineModelFitting::getCumulSNRStrongEL() const {
+std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
 
   // Retrieve all the strone emission lines supports in a list of range
   TInt32RangeList supportList;
+  TBoolList isStrongList;
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   for (Int32 iElts : validEltsIdx) {
     auto const &elt = getElementList()[iElts];
+    if (!elt->IsEmission())
+      continue;
     for (Int32 index = 0; index != elt->GetSize(); ++index) {
-      auto const &line = elt->GetLines()[index];
-      if (!line.IsStrong() || !line.IsEmission())
+      if (elt->IsOutsideLambdaRange(index))
         continue;
-
-      TInt32Range support = elt->getTheoreticalSupportSubElt(index);
-      supportList.push_back(support);
+      auto const &line = elt->GetLines()[index];
+      isStrongList.push_back(line.IsStrong());
+      supportList.push_back(elt->getTheoreticalSupportSubElt(index));
     }
   }
 
   // merge overlapping ranges
   TInt32RangeList nonOverlappingSupportList;
+  TBoolList nonOverlappingIsStrongList;
   TInt32List processedSupport;
   for (Int32 k = 0; k < supportList.size(); k++) {
     // skip if already fitted
@@ -752,90 +755,80 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
       continue;
 
     processedSupport.push_back(k);
-    TInt32Range support = supportList[k];
+    TInt32Range &support = supportList[k];
 
-    for (Int32 l = 0; l < supportList.size(); l++) {
+    for (Int32 l = k + 1; l < supportList.size(); l++) {
       // skip if already fitted
       if (std::find(processedSupport.cbegin(), processedSupport.cend(), l) !=
           processedSupport.cend())
         continue;
 
       // try if current range is bluer than l and overlaps ?
-      Float64 xinf = support.GetBegin();
-      Float64 xsup = support.GetEnd();
-      Float64 yinf = supportList[l].GetBegin();
-      Float64 ysup = supportList[l].GetEnd();
-      Float64 max = std::max(xinf, yinf);
-      Float64 min = std::min(xsup, ysup);
+      Float64 const xinf = support.GetBegin();
+      Float64 const xsup = support.GetEnd();
+      Float64 const yinf = supportList[l].GetBegin();
+      Float64 const ysup = supportList[l].GetEnd();
+      Float64 const max = std::max(xinf, yinf);
+      Float64 const min = std::min(xsup, ysup);
       if (max - min < 0) {
         processedSupport.push_back(l);
         support.SetBegin(std::min(xinf, yinf));
         support.SetEnd(std::max(xsup, ysup));
+        isStrongList[k] = isStrongList[k] || isStrongList[l];
       }
     }
+
     nonOverlappingSupportList.push_back(support);
+    nonOverlappingIsStrongList.push_back(isStrongList[k]);
   }
 
-  TFloat64List snrList;
-  Float64 sumSNR = 0.0;
   // process SNR on the non overlapping ranges
-  for (auto const &support : nonOverlappingSupportList) {
-    snrList.push_back(getCumulSNROnRange(support));
-    sumSNR += snrList.back();
-  }
-  std::sort(snrList.rbegin(), snrList.rend());
-
-  // compute the snr metric
-  TInt32List snrIsrelevantList(snrList.size());
-  Float64 thresRatio = 0.8;
-  Float64 curRatio = 0.0;
-  for (Int32 k = 0; k < snrList.size(); k++) {
-    // relevant if snr>8.0
-    if (snrList[k] > 8.0)
-      snrIsrelevantList[k] = 1;
-
-    // relevant if contributes to the 'thresRatio'*100 percent (ex. 80%) of
-    // the SumSNR value
-    curRatio += snrList[k] / sumSNR;
-    if (curRatio <= thresRatio)
-      snrIsrelevantList[k] = 1;
+  Float64 sumFlux = 0.0;
+  Float64 sumSquaredErr = 0.0;
+  Float64 sumStrongFlux = 0.0;
+  Float64 sumStrongSquaredErr = 0.0;
+  for (size_t k = 0; k != nonOverlappingSupportList.size(); ++k) {
+    auto const &[sumFlux_onRange, sumSquaredErr_onRange] =
+        getSNROnRange(nonOverlappingSupportList[k]);
+    sumFlux += sumFlux_onRange;
+    sumSquaredErr += sumSquaredErr_onRange;
+    if (nonOverlappingIsStrongList[k]) {
+      sumStrongFlux += sumFlux_onRange;
+      sumStrongSquaredErr += sumSquaredErr_onRange;
+    }
   }
 
-  Float64 sumIsRelevant =
-      std::reduce(snrIsrelevantList.cbegin(), snrIsrelevantList.cend(), 0.0);
+  Float64 const SNR = sumFlux / std::sqrt(sumSquaredErr);
+  Float64 const StrongSNR = sumStrongFlux / std::sqrt(sumStrongSquaredErr);
 
-  Float64 snrMetric = sumSNR * sumIsRelevant;
-  return snrMetric;
+  return std::make_pair(SNR, StrongSNR);
 }
 
 /**
- * \brief Returns the cumulative SNR on the idxRange
+ * \brief Returns the SNR on the idxRange
  **/
-Float64 CLineModelFitting::getCumulSNROnRange(TInt32Range idxRange) const {
+std::pair<Float64, Float64>
+CLineModelFitting::getSNROnRange(TInt32Range idxRange) const {
   Int32 n = idxRange.GetEnd() - idxRange.GetBegin() + 1;
-  if (n < 2)
-    return -1;
+  if (idxRange.GetLength() < 1)
+    return std::make_pair(0.0, 0.0);
 
   const CSpectrumFluxAxis &Ymodel =
       getSpectrumModel().GetModelSpectrum().GetFluxAxis();
   const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
   const auto &ContinuumFluxAxis = getSpectrumModel().getContinuumFluxAxis();
 
-  Int32 idx = 0;
   Float64 sumF = 0.0;
   Float64 sumM = 0.0;
-  for (Int32 i = 0; i < n; i++) {
-    idx = i + idxRange.GetBegin();
-    Float64 flux =
+  for (Int32 idx = idxRange.GetBegin(); idx <= idxRange.GetEnd(); idx++) {
+    Float64 const flux =
         Ymodel[idx] - ContinuumFluxAxis[idx]; // using only the no-continuum
                                               // component to estimate SNR
     sumF += flux;
     sumM += ErrorNoContinuum[idx] * ErrorNoContinuum[idx];
   }
-  Float64 Err = std::sqrt(sumM);
-  Float64 rangeSNR = sumF / Err;
 
-  return rangeSNR;
+  return std::make_pair(std::abs(sumF), sumM);
 }
 
 /*

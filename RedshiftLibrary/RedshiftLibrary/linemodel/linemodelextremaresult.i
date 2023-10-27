@@ -75,6 +75,7 @@ public:
 
   Float64 NLinesOverThreshold;
 
+  Float64 ELSNR;
   Float64 StrongELSNR;
   std::unordered_set<std::string> StrongELSNRAboveCut;
   Float64 bic; // bayesian information criterion for each extrema
