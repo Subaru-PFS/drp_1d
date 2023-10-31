@@ -1,0 +1,185 @@
+{
+  "$id": "general",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "General",
+  "type": "object",
+  "required": [
+    "version",
+    "multiObsMethod",
+    "lambdaRange",
+    "extremaRedshiftSeparation",
+    "smoothWidth",
+    "autoCorrectInput",
+    "spectrumModels",
+    "LSF"
+  ],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^spectrumModel_": {
+      "type": "object",
+      "$ref": "spectrum_model.json"
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "title": "Parameters file version"
+    },
+    "calibrationDir": {
+      "description": "To be removed"
+    },
+    "multiObsMethod": { 
+      "type": "string",
+      "title": "Multi obs method",
+      "enum": [
+        "",
+        "full",
+        "merge"
+      ],
+      "description": "\n * **\"\"**: no multiobs \n * **\"full\"**: giving one spectra by observation to the lib \n * **\"merge\"**: merge observations in a single spectra"
+    },
+    "lambdaRange": {
+      "type": [
+        "array",
+        "object"
+      ],
+      "title": "Lambda range in Angstroms. Is a array (range) for mono obs, and a dictionary of ranges for multiobs",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false
+    },
+    "airvacuumMethod": {
+      "type": "string",
+      "enum": [
+        "",
+        "default",
+        "Morton2000",
+        "Edlen1953",
+        "Edlen1966",
+        "Peckreeder1972",
+        "Ciddor1996"
+      ],
+      "title": "Air vaccum method",
+      "description": "Method to apply for the air to vacuum wavelength conversion when reading input spectrum. Currently \"default\" method corresponds to Morton2000"
+    },
+    "extremaRedshiftSeparation": {
+      "type": "number",
+      "title": "Extrema redshift separation",
+      "description": "Minimal distance between two extrema (currently not used with linemodel)"
+    },
+    "smoothWidth": {
+      "type": "number",
+      "title": "smooth width",
+      "description": "Number of elements over which to apply spectrum continuum smoothing (half kernel width)."
+    },
+    "autoCorrectInput": {
+      "type": "boolean",
+      "title": "Wether to correct input spectrum",
+      "description": "Wether to apply a flux/noise correction on input spectrum"
+    },
+    "spectrumModels": {
+      "type": "array",
+      "title": "Spectrum models",
+      "description": "Names of the spectrum models to process. All mentioned models must have dedicated spectrumModel_<name> section.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "photometryTransmissionDir": {
+      "type": "string",
+      "title": "Photometry transmission directory",
+      "description": "Path containing the photometric transmission bands (one per file). If relative, path is relative to calibration directory. Mandatory if enablePhotometry is set to True. Raises a warning if present but enablePhotometry is set to False."
+    },
+    "photometryBand": {
+      "type": "array",
+      "title": "Photometry band",
+      "description": "List of the band names to use. The name is contained in each band file, and should have the same name than the photometric data contained in the input spectra",
+      "items": {
+        "type": "string"
+      }
+    },
+    "filters": {
+      "type": "array",
+      "title": "Filters",
+      "description": "List of filters to apply for pixel selection on spectra.\n Example: we want to select the pixels for which \n 1. flag corresponding to 8 is absent \n 2. flag corresponding to 4 is present or flag is 0 : \n [{\"key\": \"Flag\", \"instruction\": \"^\", \"value\": \"8\"}, {\"key\": \"Flag\", \"instruction\": \"0&\", \"value\": \"4\"}]",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Column name",
+            "description": "Name of the spectrum column to filter on"
+          },
+          "instruction": {
+            "type": "string",
+            "enum": [
+              "<",
+              ">",
+              "<=",
+              ">=",
+              "=",
+              "in",
+              "~in",
+              "!=",
+              "~&",
+              "&",
+              "0&",
+              "^",
+              "~^"
+            ],
+            "title": "Comparison type",
+            "description": "\n * **in**: value must the be a list of possible value \n * **~in**: not in \n * **!=**: different \n * **& / ~&**: binary and / not binary and \n * **0&**: binary and or 0 \n * **^ / ~^**: xor / not xor"
+          },
+          "value": {
+            "title": "Value to compare with",
+            "description": "Possible values are int - float - list of numbers (for `in` and `!in` only)"
+          }
+        },
+        "required": [
+          "key",
+          "instruction",
+          "value"
+        ]
+      }
+    },
+    "additionalCols": {
+      "type": "array",
+      "title": "Additional columns",
+      "description": "List of spectrum columns to take into account addtionally to \"Wave\" \"Flux\" \"Err\". Ex: [\"Flags\"] If you want to filter incoming spectra depending on column a column named Flags",
+      "items": {
+        "type": "string"
+      }
+    },
+    "LSF": {
+      "type": "object",
+      "title": "Line spread function",
+      "$ref": "lsf.json"
+    },
+    "ebmv": {
+      "type": "object",
+      "title": "b minus v",
+      "description": "b minus v: color ratio, used to calculate ISM extinction curve.",
+      "$ref": "ebmv.json"
+    },
+    "templateCatalog": {
+      "type": "object",
+      "title": "Template catalog",
+      "description": "",
+      "$ref": "template_catalog.json"
+    },
+    "continuumRemoval": {
+      "type": "object",
+      "title": "Continuum removal",
+      "description": "",
+      "$ref": "continuum_removal.json"
+    }
+  }
+}

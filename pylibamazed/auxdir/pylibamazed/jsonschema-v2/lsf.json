@@ -1,0 +1,45 @@
+{
+  "$id": "lsf",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LSF",
+  "type": "object",
+  "required": [
+    "LSFType"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "LSFType": {
+      "type": "string",
+      "title": "LSF type",
+      "enum": [
+        "GaussianConstantWidth",
+        "GaussianConstantResolution",
+        "GaussianNISPSIM2016",
+        "GaussianNISPVSSPSF201707",
+        "FROMSPECTRUMDATA",
+        "GaussianVariableWidth"
+      ],
+      "description": "Possible values are: \n * **GaussianConstantWidth**, \n * **GaussianConstantResolution**, \n * **GaussianNISPSIM2016**, \n * **GaussianNISPVSSPSF201707**: nisp psf model as of 2017/07 \n * **FROMSPECTRUMDATA**: Use LSF present in the input spectrum to compute the spectral resolution. LSF is spectra dependent \n * **GaussianVariableWidth**: Use LSF present in file and that corresponds to variable width LSF. \n LSF is common to all spectra"
+    },
+    "width": {
+      "type": "number",
+      "title": "LSF width value",
+      "description": "Must be specified if and only if LSFType=GaussianConstantWidth"
+    },
+    "resolution": {
+      "type": "number",
+      "title": "Instrument resolution",
+      "description": "Must be specified if and only if LSFType=GaussianConstantResolution"
+    },
+    "sourceSize": {
+      "type": "number",
+      "title": "Source size",
+      "description": "Must be specified if and only if LSFType=GaussianNISPVSSPSF201707"
+    },
+    "gaussianVariablewidthFileName": {
+      "type": "string",
+      "title": "Path to file where width array is saved",
+      "description": "Must be specified if and only if LSFType=GaussianVariableWidth"
+    }
+  }
+}

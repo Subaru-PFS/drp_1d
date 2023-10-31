@@ -1,0 +1,81 @@
+{
+  "$id": "spectrum_model",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spectrum model",
+  "type": "object",
+  "required": [
+    "stages",
+    "redshiftRange",
+    "redshiftStep",
+    "redshiftSampling",
+    "templateDir"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "redshiftRange": {
+      "type": "array",
+      "title": "Redshift range",
+      "description": "[min, max]",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false
+    },
+    "redshiftStep": {
+      "type": "number",
+      "title": "Redshift step",
+      "description": "Redshift step for linear scale or lowest step for log scale"
+    },
+    "redshiftSampling": {
+      "type": "string",
+      "enum": [
+        "lin",
+        "log"
+      ],
+      "title": "Redshift sampling scale",
+      "description": "Scale: \n * **lin**: linear \n * **log**: logarithmic"
+    },
+    "templateDir": {
+      "type": "string",
+      "title": "Template directory"
+    },
+    "linemeasDzHalf": {
+      "type": "number",
+      "title": "Redshift range radius",
+      "description": "Radius for redshift range around Zref "
+    },
+    "linemeasRedshiftStep": {
+      "type": "number",
+      "title": "Redshift step"
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "redshiftSolver",
+          "lineMeasSolver",
+          "reliabilitySolver",
+          "lineMeasLoader",
+          "subClassifSolver"
+        ]
+      }
+    },
+    "redshiftSolver": {
+      "$ref": "redshift_solver.json"
+    },
+    "lineMeasSolver": {
+      "$ref": "linemeas_solver.json"
+    },
+    "reliabilitySolver": {
+      "$ref": "reliability_solver.json"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$id": "redshift_solver",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Redshift solver",
+  "type": "object",
+  "required": [
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "method": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "",
+        "lineModelSolve",
+        "templateFittingSolve",
+        "tplcombinationSolve",
+        null
+      ],
+      "title": "Fitting method",
+      "description": "Select the fitting methods for object type : \n * **templateFittingSolve**: least-square template fitting \n * **lineModelSolve**: least-square fitting of a line model (it includes fullmodel ie continuum model + line model) \n * **tplcombinationSolve**: least-square template fitting combination"
+    },
+    "templateFittingSolve": {
+      "$ref": "template_fitting_solve.json"
+    },
+    "tplCombinationSolve": {
+      "$ref": "template_combination_solve.json"
+    },
+    "lineModelSolve": {
+      "$ref": "line_model_solve.json"
+    }
+  }
+}
