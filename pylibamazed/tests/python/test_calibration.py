@@ -70,7 +70,7 @@ def make_parameters() -> Parameters:
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["igmfit"] = True
     parameters_dict["photometryTransmissionDir"] = "photometric_transmission/EL-COSMOSv2/"
     parameters_dict["photometryBand"] = ["H", "J", "Y", "riz"]
-    return Parameters(parameters_dict, FakeParametersChecker)
+    return Parameters(parameters_dict, Checker=FakeParametersChecker)
 
 
 def test_calibration_linecatalog():

@@ -44,21 +44,36 @@ from pylibamazed.Exception import APIException
 from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.redshift import ErrorCode
+from pylibamazed.ParametersConverter import ParametersConverterSelector
 
 
 class Parameters(ParametersAccessor):
-    def __init__(self, raw_parameters_dict: dict, Checker=ParametersChecker, make_checks=True):
+    def __init__(self, raw_params: dict, make_checks=True, Checker=ParametersChecker,
+                 ConverterSelector=ParametersConverterSelector):
 
         self.checker = Checker()
+        version = self._get_json_schema_version(raw_params)
 
         if make_checks:
-            self.checker.json_schema_check(raw_parameters_dict)
+            self.checker.json_schema_check(raw_params, version)
 
-        # Replace later by self.parameters = Translator().translate(raw_parameters_dict)
-        self.parameters = raw_parameters_dict.copy()
+        converter = ConverterSelector().get_converter(version)
+        self.parameters = converter().convert(raw_params)
+
         if make_checks:
             accessor = ParametersAccessor(self.parameters)
             self.checker.custom_check(accessor)
+
+    def _get_json_schema_version(self, raw_parameters: dict):
+        version = raw_parameters.get("version")
+        if version is None:
+            version = 1
+        if type(version) is not int:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER_FILE,
+                "Parameter version must be an integer"
+            )
+        return version
 
     def get_solve_methods(self, object_type) -> dict:
         method = self.get_solve_method(object_type)

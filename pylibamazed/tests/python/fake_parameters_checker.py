@@ -40,7 +40,7 @@
 
 class FakeParametersChecker:
 
-    def json_schema_check(self, parameters_dict):
+    def json_schema_check(self, parameters_dict, version):
         pass
 
     def custom_check(self, accessor):

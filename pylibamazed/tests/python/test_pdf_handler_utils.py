@@ -58,7 +58,7 @@ class PdfHandlerTestUtils:
 
     @staticmethod
     def parameters():
-        return Parameters({"objects": []}, FakeParametersChecker)
+        return Parameters({"objects": []}, Checker=FakeParametersChecker)
 
     @staticmethod
     def abstract_output():

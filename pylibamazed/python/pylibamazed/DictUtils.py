@@ -37,35 +37,19 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
-from pylibamazed.Context import Context
-from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
-from tests.python.test_ITlike import (get_observation, get_parameters,
-                                      get_spectra, make_config)
+class DictUtils:
 
+    @staticmethod
+    def rename_key(dict: dict, old_key: str, new_key: str):
+        # Warning no security for already existing new_key
+        if dict.get(old_key) is not None:
+            dict[new_key] = dict.pop(old_key)
 
-class TestFilterIntegration:
-    def test_filter_params(self):
-        # Checks that parameters containing columns names & filters are correctly accessed and used
-
-        # Creates a "real" configuration
-        config = make_config(**{"config_filename": "config_filters.json"})
-        param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
-        context = Context(config, param)  # vars returns the dict version of config
-        observation = get_observation(config["input_file"])
-
-        # Read and load spectra using spectra reader
-        spectra = get_spectra(config, observation)
-        reader = ASCIISpectrumReader(
-            observation_id=observation.ProcessingID[0],
-            parameters=param,
-            calibration_library=context,
-            source_id=observation.ProcessingID[0],
-        )
-
-        reader.load_all(spectra)
-        context.run(reader)  # passing spectra reader to launch amazed
-
-        # Checks that the number of waves kept has decreased (6 to 3) with filtering
-        assert len(reader.get_wave()) == 3
+    @staticmethod
+    def contains_key(dict: dict, key: str) -> bool:
+        return dict.get(key) is not None
+    
+    @staticmethod
+    def delete(dict: dict, key: str):
+        if DictUtils.contains_key(dict, key):
+            del dict[key]

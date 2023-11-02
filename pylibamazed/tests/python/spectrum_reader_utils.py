@@ -79,7 +79,7 @@ class TestSpectrumReaderUtils:
 
     def initialize_fsr_with_data(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)
-        params = Parameters(params_dict, FakeParametersChecker)
+        params = Parameters(params_dict, Checker=FakeParametersChecker)
         cl = CalibrationLibrary(params, tempfile.mkdtemp())
         fsr = FakeSpectrumReader("000", params, cl, "000", "range")
         self.full_load(fsr, **kwargs)

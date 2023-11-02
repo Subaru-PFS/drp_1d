@@ -37,35 +37,19 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
-from pylibamazed.Context import Context
-from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
-from tests.python.test_ITlike import (get_observation, get_parameters,
-                                      get_spectra, make_config)
+
+class ParametersConverterSelector:
+    def get_converter(self, version):
+        if version == 1:
+            Converter = ParametersConverterV1
+        # Here ask how to add an exception (develop exception)
+        return Converter
 
 
-class TestFilterIntegration:
-    def test_filter_params(self):
-        # Checks that parameters containing columns names & filters are correctly accessed and used
+class ParametersConverterV1:
+    """ Converts raw input parameters into treed parameters, used for custom checks and pylibamazed calculations
+    """
 
-        # Creates a "real" configuration
-        config = make_config(**{"config_filename": "config_filters.json"})
-        param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
-        context = Context(config, param)  # vars returns the dict version of config
-        observation = get_observation(config["input_file"])
-
-        # Read and load spectra using spectra reader
-        spectra = get_spectra(config, observation)
-        reader = ASCIISpectrumReader(
-            observation_id=observation.ProcessingID[0],
-            parameters=param,
-            calibration_library=context,
-            source_id=observation.ProcessingID[0],
-        )
-
-        reader.load_all(spectra)
-        context.run(reader)  # passing spectra reader to launch amazed
-
-        # Checks that the number of waves kept has decreased (6 to 3) with filtering
-        assert len(reader.get_wave()) == 3
+    def convert(self, raw_params: dict) -> dict:
+        params = raw_params.copy()
+        return params

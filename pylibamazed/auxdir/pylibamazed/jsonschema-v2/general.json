@@ -22,7 +22,7 @@
   },
   "properties": {
     "version": {
-      "type": "string",
+      "type": "number",
       "title": "Parameters file version"
     },
     "calibrationDir": {

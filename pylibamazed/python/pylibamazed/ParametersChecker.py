@@ -38,28 +38,47 @@
 # ============================================================================
 
 import json
+import os
 
 from jsonschema import RefResolver, validate
 from jsonschema.exceptions import ValidationError
 from pylibamazed.Exception import APIException
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
-from pylibamazed.r_specifications import jsonSchemaFilename, jsonSchemaPath
+from pylibamazed.r_specifications import module_root_dir
 from pylibamazed.redshift import CFlagWarning, ErrorCode, WarningCode
 
 zflag = CFlagWarning.GetInstance()
 
 
+class JsonSchemaFileAccessor:
+    def get_json_schema(self, version: dict) -> dict:
+        with open(self.json_schema_filename(version)) as schemaFile:
+            jsonSchema = json.load(schemaFile)
+        return jsonSchema
+
+    def json_schema_filename(self, version: str) -> str:
+        return os.path.join(self._json_schema_path(version), "general.json")
+
+    def json_schema_filesystem_path(self, version: str) -> str:
+        return f"file:///{self._json_schema_path(version)}/"
+
+    def _json_schema_path(self, version: str) -> str:
+        return os.path.join(module_root_dir, "resources", f"jsonschema-v{version}")
+
+
 class ParametersChecker:
 
-    def __init__(self, FilterLoader=ParamJsonFilterLoader):
-        self.jsonSchema = self._get_json_schema()
-        self.filter_loader = FilterLoader()
+    jsonSchemaFilename = os.path.join(module_root_dir, "resources", "jsonschema-v1", "general.json")
 
-    def json_schema_check(self, parameters_dict) -> None:
+    def __init__(self, FilterLoader=ParamJsonFilterLoader, FileAccessor=JsonSchemaFileAccessor):
+        self.filter_loader = FilterLoader()
+        self.file_accesor = FileAccessor()
+
+    def json_schema_check(self, parameters_dict: dict, version: int) -> None:
         # Parameters dict must be at "raw parameters dict"
         # How to link the different json schema files
-        jsonSchema = self._get_json_schema()
-        resolver = RefResolver(jsonSchemaPath, jsonSchema)
+        jsonSchema = self.file_accesor.get_json_schema(version)
+        resolver = RefResolver(self.file_accesor.json_schema_filesystem_path(version), jsonSchema)
 
         try:
             validate(instance=parameters_dict, schema=jsonSchema, resolver=resolver)
@@ -68,11 +87,6 @@ class ParametersChecker:
                 ErrorCode.INVALID_PARAMETER_FILE,
                 e.message
             )
-
-    def _get_json_schema(self):
-        with open(jsonSchemaFilename) as schemaFile:
-            jsonSchema = json.load(schemaFile)
-        return jsonSchema
 
     def custom_check(self, accessor):
         self.accessor = accessor

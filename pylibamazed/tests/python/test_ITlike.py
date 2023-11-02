@@ -151,7 +151,7 @@ def save_output(output, config, observation):
 
 def test_ITLikeTest():
     config = make_config()
-    param = Parameters(get_parameters(config["parameters_file"]), FakeParametersChecker)
+    param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
     context = Context(config, param)  # vars returns the dict version of config
     observation = get_observation(config["input_file"])
 
