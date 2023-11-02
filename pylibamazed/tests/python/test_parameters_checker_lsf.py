@@ -53,7 +53,7 @@ class TestLSF:
             }
             accessor = ParametersAccessor(parametersDict)
             with pytest.raises(APIException, match=r"Missing parameter LSF width"):
-                ParametersChecker(accessor).custom_check()
+                ParametersChecker().custom_check(accessor)
 
         def test_OK_if_GaussianConstantWidth_with_width_defined(self, zflag):
             parametersDict = {

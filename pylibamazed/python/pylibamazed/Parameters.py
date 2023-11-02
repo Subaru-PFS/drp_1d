@@ -47,11 +47,18 @@ from pylibamazed.redshift import ErrorCode
 
 
 class Parameters(ParametersAccessor):
-    def __init__(self, parameters_dict: dict, Checker=ParametersChecker, make_checks=True):
-        self.parameters = parameters_dict
+    def __init__(self, raw_parameters_dict: dict, Checker=ParametersChecker, make_checks=True):
+
+        self.checker = Checker()
+
+        if make_checks:
+            self.checker.json_schema_check(raw_parameters_dict)
+
+        # Replace later by self.parameters = Translator().translate(raw_parameters_dict)
+        self.parameters = raw_parameters_dict.copy()
         if make_checks:
             accessor = ParametersAccessor(self.parameters)
-            Checker(accessor).check()
+            self.checker.custom_check(accessor)
 
     def get_solve_methods(self, object_type) -> dict:
         method = self.get_solve_method(object_type)

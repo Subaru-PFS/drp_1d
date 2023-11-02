@@ -43,7 +43,6 @@ from jsonschema import RefResolver, validate
 from jsonschema.exceptions import ValidationError
 from pylibamazed.Exception import APIException
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
-from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.r_specifications import jsonSchemaFilename, jsonSchemaPath
 from pylibamazed.redshift import CFlagWarning, ErrorCode, WarningCode
 
@@ -52,37 +51,36 @@ zflag = CFlagWarning.GetInstance()
 
 class ParametersChecker:
 
-    def __init__(self, accessor: ParametersAccessor, FilterLoader=ParamJsonFilterLoader):
+    def __init__(self, FilterLoader=ParamJsonFilterLoader):
         self.jsonSchema = self._get_json_schema()
-        self.accessor = accessor
         self.filter_loader = FilterLoader()
 
-    def check(self):
-        self.json_schema_check()
-        self.custom_check()
-
-    def _get_json_schema(self):
-        with open(jsonSchemaFilename) as schemaFile:
-            jsonSchema = json.load(schemaFile)
-        return jsonSchema
-
-    def json_schema_check(self) -> None:
+    def json_schema_check(self, parameters_dict) -> None:
+        # Parameters dict must be at "raw parameters dict"
         # How to link the different json schema files
-        resolver = RefResolver(jsonSchemaPath, self.jsonSchema)
+        jsonSchema = self._get_json_schema()
+        resolver = RefResolver(jsonSchemaPath, jsonSchema)
+
         try:
-            validate(instance=self.accessor.parameters, schema=self.jsonSchema, resolver=resolver)
+            validate(instance=parameters_dict, schema=jsonSchema, resolver=resolver)
         except ValidationError as e:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 e.message
             )
 
-    def custom_check(self):
+    def _get_json_schema(self):
+        with open(jsonSchemaFilename) as schemaFile:
+            jsonSchema = json.load(schemaFile)
+        return jsonSchema
+
+    def custom_check(self, accessor):
+        self.accessor = accessor
         self._check_general()
         self._check_lsf()
         self._check_continuum_removal()
         self._check_continuum_removal("templateCatalog")
-        for object in self.accessor.get_objects([]):
+        for object in accessor.get_objects([]):
             self._check_object(object)
 
     def _check_general(self):
@@ -126,7 +124,7 @@ class ParametersChecker:
                 )
 
     def _check_filters_format(self, json: json) -> None:
-        if type(json) != list:
+        if type(json) is not list:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Input filters json must be a list"

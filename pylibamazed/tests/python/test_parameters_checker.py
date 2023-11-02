@@ -48,4 +48,4 @@ class TestParametersChecker:
         param_dict = {}
         accessor = ParametersAccessor(param_dict)
         with pytest.raises(APIException, match=r"INVALID_PARAMETER_FILE"):
-            ParametersChecker(accessor).check()
+            ParametersChecker().json_schema_check(accessor)

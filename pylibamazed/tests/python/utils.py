@@ -91,4 +91,4 @@ def make_parameter_dict_at_object_level(**kwargs) -> dict:
 
 def check_from_parameter_dict(param_dict: dict):
     accessor = ParametersAccessor(param_dict)
-    ParametersChecker(accessor).custom_check()
+    ParametersChecker().custom_check(accessor)

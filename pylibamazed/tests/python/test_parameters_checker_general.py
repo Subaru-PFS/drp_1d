@@ -53,7 +53,7 @@ class TestParametersCheckGeneral:
                 }
 
                 accessor = ParametersAccessor(parametersDict)
-                ParametersChecker(accessor)._check_filters()
+                ParametersChecker().custom_check(accessor)
                 assert not WarningUtils.has_any_warning(zflag)
 
             def test_error_if_filters_is_not_a_list(self):
@@ -63,7 +63,7 @@ class TestParametersCheckGeneral:
 
                 accessor = ParametersAccessor(parametersDict)
                 with pytest.raises(APIException, match=r"Input filters json must be a list"):
-                    ParametersChecker(accessor)._check_filters()
+                    ParametersChecker().custom_check(accessor)
 
             def test_error_if_filters_is_missing_a_key(self):
                 parametersDict = {
@@ -71,7 +71,7 @@ class TestParametersCheckGeneral:
                 }
                 accessor = ParametersAccessor(parametersDict)
                 with pytest.raises(APIException, match=r"Filters"):
-                    ParametersChecker(accessor)._check_filters()
+                    ParametersChecker().custom_check(accessor)
 
             def test_error_if_filters_has_an_additional_key(self):
                 parametersDict = {
@@ -79,14 +79,14 @@ class TestParametersCheckGeneral:
                 }
                 accessor = ParametersAccessor(parametersDict)
                 with pytest.raises(APIException, match=r"Filters"):
-                    ParametersChecker(accessor)._check_filters()
+                    ParametersChecker().custom_check(accessor)
 
         class TestFiltersKeys:
             def test_no_error_if_no_filter(self, zflag):
                 parametersDict = {}
                 accessor = ParametersAccessor(parametersDict)
 
-                ParametersChecker(accessor)._check_filters()
+                ParametersChecker().custom_check(accessor)
                 assert not WarningUtils.has_any_warning(zflag)
 
             def test_error_if_filter_uses_an_unknown_column(self):
@@ -96,7 +96,7 @@ class TestParametersCheckGeneral:
                 accessor = ParametersAccessor(parametersDict)
 
                 with pytest.raises(APIException, match=r"Unknown filter key zzz"):
-                    ParametersChecker(accessor)._check_filters()
+                    ParametersChecker().custom_check(accessor)
 
             def test_ok_if_filter_uses_a_default_or_additional_column(self, zflag):
                 parametersDict = {
@@ -108,7 +108,7 @@ class TestParametersCheckGeneral:
                 }
 
                 accessor = ParametersAccessor(parametersDict)
-                ParametersChecker(accessor)._check_filters()
+                ParametersChecker().custom_check(accessor)
                 assert not WarningUtils.has_any_warning(zflag)
 
     class TestPhotometryTransmissionDir:
@@ -130,20 +130,20 @@ class TestParametersCheckGeneral:
             param_dict = self._make_param_dict(**{"enablephotometry": True})
             accessor = ParametersAccessor(param_dict)
             with pytest.raises(APIException, match=r"Missing parameter"):
-                ParametersChecker(accessor).custom_check()
+                ParametersChecker().custom_check(accessor)
 
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
             param_dict = self._make_param_dict(**{"enablephotometry": True})
             param_dict["photometryTransmissionDir"] = "sth"
             accessor = ParametersAccessor(param_dict)
-            ParametersChecker(accessor).custom_check()
+            ParametersChecker().custom_check(accessor)
             assert not WarningUtils.has_any_warning(zflag)
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{"enablephotometry": False})
             param_dict["photometryTransmissionDir"] = "sth"
             accessor = ParametersAccessor(param_dict)
-            ParametersChecker(accessor).custom_check()
+            ParametersChecker().custom_check(accessor)
             assert WarningUtils.has_any_warning(zflag)
 
     class TestPhotometryBand:
@@ -165,7 +165,7 @@ class TestParametersCheckGeneral:
             param_dict = self._make_param_dict(**{"enablephotometry": True})
             accessor = ParametersAccessor(param_dict)
             with pytest.raises(APIException, match=r"Missing parameter"):
-                ParametersChecker(accessor).custom_check()
+                ParametersChecker().custom_check(accessor)
 
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
             param_dict = self._make_param_dict(**{"enablephotometry": True})
@@ -173,7 +173,7 @@ class TestParametersCheckGeneral:
             param_dict["photometryBand"] = "sth"
 
             accessor = ParametersAccessor(param_dict)
-            ParametersChecker(accessor).custom_check()
+            ParametersChecker().custom_check(accessor)
             assert not WarningUtils.has_any_warning(zflag)
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
@@ -181,5 +181,5 @@ class TestParametersCheckGeneral:
             param_dict["photometryBand"] = "sth"
 
             accessor = ParametersAccessor(param_dict)
-            ParametersChecker(accessor).custom_check()
+            ParametersChecker().custom_check(accessor)
             assert WarningUtils.has_any_warning(zflag)
