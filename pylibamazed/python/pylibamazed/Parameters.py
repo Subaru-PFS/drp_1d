@@ -91,7 +91,7 @@ class Parameters(ParametersAccessor):
         solve_method = self.get_solve_method(object_type)
         if linemeas_method:
             methods.append(linemeas_method)
-        if solve_method == "LineModelSolve":
+        if solve_method == "lineModelSolver":
             methods.append(solve_method)
         return methods
 
@@ -125,8 +125,8 @@ class Parameters(ParametersAccessor):
             velocity_em = float(lm[columns["VelocityEmission"]].iloc[0])
 
             self.set_redshiftref(object_type, redshift_ref)
-            self.set_velocity_absorption(object_type, "LineMeasSolve", velocity_abs)
-            self.set_velocity_emission(object_type, "LineMeasSolve", velocity_em)
+            self.set_velocity_absorption(object_type, "lineMeasSolver", velocity_abs)
+            self.set_velocity_emission(object_type, "lineMeasSolver", velocity_em)
 
     def load_linemeas_parameters_from_result_store(self, output, object_type):
         redshift = output.get_attribute_from_source(object_type,
@@ -145,13 +145,13 @@ class Parameters(ParametersAccessor):
                                                        "model_parameters",
                                                        "VelocityEmission",
                                                        0)
-        self.set_velocity_absorption(object_type, "LineMeasSolve", velocity_abs)
-        self.set_velocity_emission(object_type, "LineMeasSolve", velocity_em)
+        self.set_velocity_absorption(object_type, "lineMeasSolver", velocity_abs)
+        self.set_velocity_emission(object_type, "lineMeasSolver", velocity_em)
 
     def is_tplratio_catalog_needed(self, object_type) -> bool:
         solve_method = self.get_solve_method(object_type)
-        if solve_method == "LineModelSolve":
-            return self.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"]
+        if solve_method == "lineModelSolver":
+            return self.get_lineModelSolve_lineRatioType(object_type) in ["tplRatio", "tplCorr"]
         else:
             return False
 
@@ -171,19 +171,19 @@ class Parameters(ParametersAccessor):
             raise Exception("Unknown stage {stage}")
 
     def set_lsf_type(self, lsf_type):
-        self.parameters["LSF"]["LSFType"] = lsf_type
+        self.parameters["lsf"]["lsfType"] = lsf_type
 
     def set_lsf_param(self, param_name, data):
-        self.parameters["LSF"][param_name] = data
+        self.parameters["lsf"][param_name] = data
 
     def set_redshiftref(self, object_type, redshift_ref) -> None:
         self.get_object_section(object_type)["redshiftref"] = redshift_ref
 
     def set_velocity_absorption(self, object_type: str, solve_method, velocity_abs) -> None:
-        self.get_linemodel_section(object_type, solve_method)["velocityabsorption"] = velocity_abs
+        self.get_linemodel_section(object_type, solve_method)["velocityAbsorption"] = velocity_abs
 
     def set_velocity_emission(self, object_type: str, solve_method, velocity_em) -> None:
-        self.get_linemodel_section(object_type, solve_method)["velocityemission"] = velocity_em
+        self.get_linemodel_section(object_type, solve_method)["velocityEmission"] = velocity_em
 
     def to_json(self):
         return json.dumps(self.parameters)
@@ -199,7 +199,7 @@ class Parameters(ParametersAccessor):
     def check_linemeas_validity(self):
         for object_type in self.get_objects():
             method = self.get_solve_method(object_type)
-            if method == "LineModelSolve":
+            if method == "lineModelSolver":
                 if self.get_linemeas_method(object_type):
                     raise APIException(
                         ErrorCode.INCOHERENT_CONFIG_OPTION,

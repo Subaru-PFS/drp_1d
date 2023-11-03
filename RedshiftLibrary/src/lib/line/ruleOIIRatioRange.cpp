@@ -52,7 +52,7 @@ CRuleRatioRange::CRuleRatioRange()
       m_Coefficient(0) {}
 
 void CRuleRatioRange::SetUp(bool EnabledArgument, ...) {
-  Name = "ratiorange";
+  Name = "ratioRange";
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start(Arguments, EnabledArgument);

@@ -29,7 +29,7 @@
       "type": "string",
       "enum": [
         "lin",
-        "precomputedfinegrid"
+        "preComputedFineGrid"
       ],
       "description": "Interpolation method to redshift the template. \n * **lin**: linear interpolation done at each redshift \n * **precomputefinegrid**: precompute linear interpolation on a fine grid (0.1 Angstr\u00f6m), then do nearest grid point interpolation from the fine grid at each redshift.\n \n Note: Used with fftProcessing set to false"
     },
@@ -49,7 +49,7 @@
       "type": "string",
       "enum": [
         "marg",
-        "bestchi2"
+        "bestChi2"
       ],
       "description": "At each z, select the max of the pdfs or marginalize the pdfs (over templates and all parameters)"
     },
@@ -77,10 +77,10 @@
       "properties": {
         "component": {
           "type": "string",
-          "description": "Component of the spectrum (and templates) to fit.\n * **raw**: Full spectrum and templates \n * **nocontinuum**: Continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods \n * **continuum**: continuum of the spectrum and templates \n * **all**: computes all 3 (\"raw\", \"nocontinuum\" and \"continuum\") options, i.e. 3 chi2(z) in the resultstore, but only one pdf corresponding to \"raw\" option",
+          "description": "Component of the spectrum (and templates) to fit.\n * **raw**: Full spectrum and templates \n * **nocontinuum**: Continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods \n * **continuum**: continuum of the spectrum and templates \n * **all**: computes all 3 (\"raw\", \"noContinuum\" and \"continuum\") options, i.e. 3 chi2(z) in the resultstore, but only one pdf corresponding to \"raw\" option",
           "enum": [
             "raw",
-            "nocontinuum",
+            "noContinuum",
             "continuum",
             "all"
           ]

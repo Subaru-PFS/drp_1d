@@ -45,8 +45,8 @@
 using namespace NSEpic;
 
 CClassificationSolve::CClassificationSolve(TScopeStack &scope,
-                                           std::string objectType)
-    : CSolve("classification", scope, objectType) {}
+                                           std::string spectrumModel)
+    : CSolve("classification", scope, spectrumModel) {}
 
 std::shared_ptr<CSolveResult>
 CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,

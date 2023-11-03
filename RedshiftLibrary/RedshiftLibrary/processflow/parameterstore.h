@@ -74,16 +74,16 @@ public:
     return Has<T>(GetScopedName(name));
   }
 
-  bool HasTplIsmExtinction(const std::string &objectType) const;
-  bool HasTplIgmExtinction(const std::string &objectType) const;
-  bool HasFFTProcessing(const std::string &objectType) const;
+  bool HasTplIsmExtinction(const std::string &spectrumModel) const;
+  bool HasTplIgmExtinction(const std::string &spectrumModel) const;
+  bool HasFFTProcessing(const std::string &spectrumModel) const;
   bool hasToLogRebin(const TStringList &categories,
                      std::map<std::string, bool> &fft_processing)
       const; // wrapper for HasFFTProcessing
   Float64
   getMinZStepForFFTProcessing(std::map<std::string, bool> fftprocessing) const;
-  bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
-  bool EnableTemplateOrthogonalization(const std::string &objectType) const;
+  bool HasToOrthogonalizeTemplates(const std::string &spectrumModel) const;
+  bool EnableTemplateOrthogonalization(const std::string &spectrumModel) const;
 
   template <typename T> T Get(const std::string &name) const {
     boost::optional<T> property = m_PropertyTree.get_optional<T>(name);

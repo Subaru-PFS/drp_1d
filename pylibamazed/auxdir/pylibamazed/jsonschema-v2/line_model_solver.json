@@ -6,7 +6,7 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "linemodel": {
+    "lineModel": {
       "required": [
         "useLogLambdaSampling",
         "igmFit",
@@ -100,21 +100,21 @@
           "type": "string",
           "enum": [
             "combined",
-            "instumentdriven",
-            "velocitydriven"
+            "instumentDriven",
+            "velocityDriven"
           ],
           "title": "Line width type",
-          "description": "Selects which component are included in the line width \n * **instrumentdriven**: only instrument resolution (no intrinsic line width due to velocity dispersion) \n * **velocitydriven**: only line velocity dispersion (assuming negligible instrument PSF) \n * **combined**: both instrument resolution and velocity dispersion"
+          "description": "Selects which component are included in the line width \n * **instrumentDriven**: only instrument resolution (no intrinsic line width due to velocity dispersion) \n * **velocityDriven**: only line velocity dispersion (assuming negligible instrument PSF) \n * **combined**: both instrument resolution and velocity dispersion"
         },
         "velocityEmission": {
           "type": "number",
           "title": "Emission lines velocity",
-          "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocitydriven`"
+          "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
         },
         "velocityAbsorption": {
           "type": "number",
           "title": "Absorption lines velocity",
-          "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocitydriven`"
+          "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
         },
         "velocityFit": {
           "type": "boolean",
@@ -190,9 +190,9 @@
         "lineRatioType": {
           "type": "string",
           "enum": [
-            "tplratio",
+            "tplRatio",
             "rules",
-            "tplcorr"
+            "tplCorr"
           ],
           "title": "Line ratio type",
           "description": "\n * **rules**: fit all lines amplitude independently with eventually some constraints (see rules parameter below) \n * **tplRatio**: fit one amplitude with fixed line ratios coming from template-ratio catalogs \n * **tplcorr**: after a linemodel \"free\", adjusts the best template ratio using the amplitudes vector as data, the global amplitude is the free parameter."
@@ -202,9 +202,9 @@
           "enum": [
             "all",
             "no",
-            "strongweak",
+            "strongWeak",
             "balmerSingle",
-            "ratiorange"
+            "ratioRange"
           ],
           "title": "Rules",
           "description": "Selects used rules (only for `lineRatioType=rules`)"
@@ -217,18 +217,18 @@
         "tplRatioIsmFit": {
           "type": "boolean",
           "title": "Wether to activate ISM extinction fit for lines ratio calculation.",
-          "description": "Wether to activate fit of ISM extinction (ie ebv parameter from Calzetti profiles) on calibration lines to estimate lines ratio. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `lineModelSolve.linemodel_extrema.csv`)."
+          "description": "Wether to activate fit of ISM extinction (ie ebv parameter from Calzetti profiles) on calibration lines to estimate lines ratio. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `lineModelSolver.linemodel_extrema.csv`)."
         },
         "continuumComponent": {
           "type": "string",
           "enum": [
-            "fromspectrum",
-            "tplfit",
-            "tplfitauto",
-            "nocontinuum"
+            "fromSpectrum",
+            "tplFit",
+            "tplFitAuto",
+            "noContinuum"
           ],
           "title": "Continuum processing method",
-          "description": "Selects the method for processing the continuum: \n * **fromspectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplfit\", but switch to \"fromspectrum\" if the fitted continuum amplitude is found significantly negative (at all z)"
+          "description": "Selects the method for processing the continuum: \n * **fromSpectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplFit\", but switch to \"fromSpectrum\" if the fitted continuum amplitude is found significantly negative (at all z)"
         },
         "continuumReestimation": {
           "type": "string",
@@ -238,7 +238,7 @@
             "always"
           ],
           "title": "Wether to re estimatate continuum",
-          "description": "\n * **no**: never \n * **onlyextrema**: second pass \n * **always**: both passes. Needs `continuumComponent=fromspectrum`"
+          "description": "\n * **no**: never \n * **onlyextrema**: second pass \n * **always**: both passes. Needs `continuumComponent=fromSpectrum`"
         },
         "strongLinesPrior": {
           "type": "number",
@@ -253,7 +253,7 @@
         "pdfCombination": {
           "type": "string",
           "enum": [
-            "bestchi2",
+            "bestChi2",
             "marg"
           ],
           "title": "Pdf combination method",
@@ -319,7 +319,7 @@
         "pdf": {
           "type": "object",
           "properties": {
-            "margampcorr": {
+            "margAmpCorr": {
               "type": "boolean",
               "title": "Wether to apply analytic marginalization on amplitudes",
               "description": "Apply the analytic marginalization of the proba on the amplitudes "

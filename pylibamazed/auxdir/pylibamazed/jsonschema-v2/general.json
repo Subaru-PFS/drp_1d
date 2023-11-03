@@ -11,7 +11,7 @@
     "smoothWidth",
     "autoCorrectInput",
     "spectrumModels",
-    "LSF"
+    "lsf"
   ],
   "additionalProperties": false,
   "patternProperties": {
@@ -61,14 +61,14 @@
       "enum": [
         "",
         "default",
-        "Morton2000",
-        "Edlen1953",
-        "Edlen1966",
-        "Peckreeder1972",
-        "Ciddor1996"
+        "morton2000",
+        "edlen1953",
+        "edlen1966",
+        "peckreeder1972",
+        "ciddor1996"
       ],
       "title": "Air vaccum method",
-      "description": "Method to apply for the air to vacuum wavelength conversion when reading input spectrum. Currently \"default\" method corresponds to Morton2000"
+      "description": "Method to apply for the air to vacuum wavelength conversion when reading input spectrum. Currently \"default\" method corresponds to morton2000"
     },
     "extremaRedshiftSeparation": {
       "type": "number",
@@ -158,7 +158,7 @@
         "type": "string"
       }
     },
-    "LSF": {
+    "lsf": {
       "type": "object",
       "title": "Line spread function",
       "$ref": "lsf.json"

@@ -40,7 +40,7 @@
 import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.ParametersChecker import ParametersChecker, JsonSchemaFileAccessor
-from pylibamazed.r_specifications import module_root_dir
+from pylibamazed.Paths import module_root_dir
 
 
 class TestParametersChecker:

@@ -62,7 +62,7 @@ struct TLSFArguments {
 };
 
 struct TLSFGaussianVarWidthArgs : virtual TLSFArguments {
-  // std::string type = "GaussianVariableWidth";
+  // std::string type = "gaussianVariableWidth";
   TFloat64List lambdas;
   TFloat64List width;
   TLSFGaussianVarWidthArgs(TFloat64List _lambdas, TFloat64List _width)
@@ -73,7 +73,7 @@ struct TLSFGaussianConstantWidthArgs : virtual TLSFArguments {
   Float64 width;
   TLSFGaussianConstantWidthArgs(
       const std::shared_ptr<const CParameterStore> &parameterStore)
-      : width(parameterStore->GetScoped<Float64>("LSF.width")) {}
+      : width(parameterStore->GetScoped<Float64>("lsf.width")) {}
 
   TLSFGaussianConstantWidthArgs(Float64 _width) : width(_width) {}
 };
@@ -82,7 +82,7 @@ struct TLSFGaussianConstantResolutionArgs : virtual TLSFArguments {
   Float64 resolution;
   TLSFGaussianConstantResolutionArgs(
       const std::shared_ptr<const CParameterStore> &parameterStore)
-      : resolution(parameterStore->GetScoped<Float64>("LSF.resolution")) {}
+      : resolution(parameterStore->GetScoped<Float64>("lsf.resolution")) {}
 
   TLSFGaussianConstantResolutionArgs(Float64 _resolution)
       : resolution(_resolution) {}
@@ -92,7 +92,7 @@ struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments {
   Float64 sourcesize;
   TLSFGaussianNISPVSSPSF201707Args(
       const std::shared_ptr<const CParameterStore> &parameterStore)
-      : sourcesize(parameterStore->GetScoped<Float64>("LSF.sourcesize")) {}
+      : sourcesize(parameterStore->GetScoped<Float64>("lsf.sourceSize")) {}
 };
 /**
  * \ingroup Redshift

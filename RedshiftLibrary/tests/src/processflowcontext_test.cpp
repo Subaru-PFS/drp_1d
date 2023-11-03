@@ -49,7 +49,7 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4630, 4815 ],"
+    "{\"lambdaRange\" : [ 4630, 4815 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -58,37 +58,37 @@ const std::string jsonString =
     "\"medianEvenReflection\" : true}},"
     "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
     "\"continuumRemoval\" : {"
-    "\"method\" : \"IrregularSamplingMedian\","
+    "\"method\" : \"irregularSamplingMedian\","
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", \"resolution\" : "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", \"resolution\" : "
     "4300},"
-    "\"extremaredshiftseparation\" : 0.01,"
-    "\"objects\" : [\"galaxy\"],"
-    "\"autocorrectinput\" : false,"
+    "\"extremaRedshiftSeparation\" : 0.01,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
     "\"galaxy\" : {"
-    "\"redshiftrange\" : [ 2.84, 2.88 ],"
-    "\"redshiftstep\" : 0.0001,"
-    "\"redshiftsampling\" : \"log\","
-    "\"method\" : \"TemplateFittingSolve\","
-    "\"template_dir\" : \"templates/BC03_sdss_tremonti21\","
+    "\"redshiftRange\" : [ 2.84, 2.88 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
+    "\"method\" : \"templateFittingSolver\","
+    "\"templateDir\" : \"templates/BC03_sdss_tremonti21\","
     "\"linemeas_method\" : null,"
-    "\"LineModelSolve\" : {"
-    "\"linemodel\" : {"
-    "\"linetypefilter\" : \"no\","
-    "\"lineforcefilter\" : \"no\"}},"
-    "\"TemplateFittingSolve\" : {"
-    "\"extremacount\" : 5,"
+    "\"lineModelSolver\" : {"
+    "\"lineModel\" : {"
+    "\"lineTypeFilter\" : \"no\","
+    "\"lineForceFilter\" : \"no\"}},"
+    "\"templateFittingSolver\" : {"
+    "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : true,"
-    "\"interpolation\" : \"precomputedfinegrid\","
-    "\"igmfit\" : true,"
-    "\"ismfit\" : true,"
-    "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : false}},"
-    "\"airvacuum_method\" : \"default\"}";
+    "\"fftProcessing\" : true,"
+    "\"interpolation\" : \"preComputedFineGrid\","
+    "\"igmFit\" : true,"
+    "\"ismFit\" : true,"
+    "\"pdfCombination\" : \"marg\","
+    "\"enablePhotometry\" : false}},"
+    "\"airVacuumMethod\" : \"default\"}";
 
 class fixture_processflowcontextTest {
 public:
@@ -117,14 +117,14 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Context.LoadParameterStore(jsonString);
   std::shared_ptr<const CParameterStore> paramStore =
       Context.GetParameterStore();
-  BOOST_CHECK(paramStore->Get<TFloat64Range>("lambdarange") ==
+  BOOST_CHECK(paramStore->Get<TFloat64Range>("lambdaRange") ==
               TFloat64Range(4630, 4815));
 
   std::shared_ptr<const CInputContext> inputCtx = Context.GetInputContext();
   BOOST_CHECK(inputCtx->getSpectra().size() == 0);
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "templateFittingSolver",
                                       "solveResult") == false);
 
   spc->SetLSF(LSF);
@@ -146,10 +146,10 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Context.m_ScopeStack.push_back("galaxy");
   BOOST_CHECK(Context.GetTplRatioCatalog() == lineRatioTplCatalog);
 
-  Context.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
-  BOOST_CHECK(Context.GetLineCatalog("galaxy", "LineModelSolve") ==
+  Context.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+  BOOST_CHECK(Context.GetLineCatalog("galaxy", "lineModelSolver") ==
               lineCatalog);
-  Context.m_ScopeStack.push_back("LineModelSolve");
+  Context.m_ScopeStack.push_back("lineModelSolver");
   BOOST_CHECK(Context.getCLineMap().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
@@ -187,14 +187,14 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Context.m_ScopeStack.pop_back();
   BOOST_CHECK_THROW(Context.GetCurrentCategory(), GlobalException);
 
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
-  templateFittingSolve.Compute();
+  CTemplateFittingSolve templateFittingSolver(Context.m_ScopeStack, "galaxy");
+  templateFittingSolver.Compute();
 
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "templateFittingSolver",
                                       "solveResult") == true);
   Context.reset();
   BOOST_CHECK(Context.getSpectra().size() == 0);
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "templateFittingSolver",
                                       "solveResult") == false);
 
   // GSL error

@@ -1,0 +1,12 @@
+{
+    "redshiftrange": null,
+    "redshiftstep": null,
+    "redshiftsampling": "log",
+    "method": "LineModelSolve",
+    "template_dir": "templates/BC03_sdss_tremonti21",
+    "linemeas_method": null,
+    "linemeas_dzhalf": 0.001,
+    "linemeas_redshiftstep": 0.0001,
+    "enable_reliability": false,
+    "reliability_model": "reliability/NNmodels/NN02221231_35_WholeModel.h5"
+}

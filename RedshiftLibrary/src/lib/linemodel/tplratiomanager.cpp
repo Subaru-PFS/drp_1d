@@ -57,17 +57,17 @@ CTplratioManager::CTplratioManager(
                         continuumManager, restLineList, curObs) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   m_CatalogTplRatio = Context.GetTplRatioCatalog();
   initTplratioCatalogs(
-      Context.GetParameterStore()->GetScoped<bool>("tplratio_ismfit"));
+      Context.GetParameterStore()->GetScoped<bool>("tplRatioIsmFit"));
   SetTplratio_PriorHelper();
 
   m_opt_firstpass_forcedisableTplratioISMfit =
-      !ps->GetScoped<bool>("firstpass.tplratio_ismfit");
-  m_NSigmaSupport = ps->GetScoped<Float64>("nsigmasupport");
-  m_opt_haprior = ps->GetScoped<Float64>("haprior");
+      !ps->GetScoped<bool>("firstPass.tplRatioIsmFit");
+  m_NSigmaSupport = ps->GetScoped<Float64>("nSigmaSupport");
+  m_opt_haprior = ps->GetScoped<Float64>("hAlphaPrior");
 }
 
 void CTplratioManager::initMerit(Int32 ntplratio) {
@@ -76,12 +76,12 @@ void CTplratioManager::initMerit(Int32 ntplratio) {
 }
 
 void CTplratioManager::SetTplratio_PriorHelper() {
-  CAutoScope b = CAutoScope(Context.m_ScopeStack, "tplratio");
+  CAutoScope b = CAutoScope(Context.m_ScopeStack, "tplRatio");
   CAutoScope c = CAutoScope(Context.m_ScopeStack, "priors");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   m_tplratio_priorhelper = std::make_shared<CPriorHelper>();
-  m_tplratio_priorhelper->Init(ps->GetScoped<std::string>("catalog_dirpath"),
+  m_tplratio_priorhelper->Init(ps->GetScoped<std::string>("catalogDirPath"),
                                1);
   m_tplratio_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_tplratio_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
@@ -217,31 +217,31 @@ void CTplratioManager::SetNominalAmplitudes(Int32 iCatalog) {
 
 void CTplratioManager::logParameters() {
   CLineRatioManager::logParameters();
-  Log.LogDetail(Formatter() << " m_opt_haprior" << m_opt_haprior);
+  Log.LogDetail(Formatter() << " m_opt_hAlphaPrior" << m_opt_haprior);
   Log.LogDetail(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
   Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
                             << m_opt_firstpass_forcedisableTplratioISMfit);
   Log.LogDetail(Formatter() << "forcedisableTplratioISMfit="
                             << m_forcedisableTplratioISMfit);
-  Log.LogDetail(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
+  Log.LogDetail(Formatter() << "tplRatioBestTplName=" << m_tplratioBestTplName);
   Log.LogDetail(Formatter()
-                << "tplratioBestTplIsmCoeff=" << m_tplratioBestTplIsmCoeff);
-  Log.LogDetail(Formatter() << "tplratioBestTplAmplitudeEm="
+                << "tplRatioBestTplIsmCoeff=" << m_tplratioBestTplIsmCoeff);
+  Log.LogDetail(Formatter() << "tplRatioBestTplAmplitudeEm="
                             << m_tplratioBestTplAmplitudeEm);
-  Log.LogDetail(Formatter() << "tplratioBestTplAmplitudeAbs="
+  Log.LogDetail(Formatter() << "tplRatioBestTplAmplitudeAbs="
                             << m_tplratioBestTplAmplitudeAbs);
   Log.LogDetail(Formatter()
-                << "tplratioBestTplDtmEm=" << m_tplratioBestTplDtmEm);
+                << "tplRatioBestTplDtmEm=" << m_tplratioBestTplDtmEm);
   Log.LogDetail(Formatter()
-                << "tplratioBestTplDtmAbs=" << m_tplratioBestTplDtmAbs);
+                << "tplRatioBestTplDtmAbs=" << m_tplratioBestTplDtmAbs);
 
   Log.LogDetail(Formatter()
-                << "tplratioBestTplMtmEm=" << m_tplratioBestTplMtmEm);
+                << "tplRatioBestTplMtmEm=" << m_tplratioBestTplMtmEm);
   Log.LogDetail(Formatter()
-                << "tplratioBestTplMtmAbs=" << m_tplratioBestTplMtmAbs);
+                << "tplRatioBestTplMtmAbs=" << m_tplratioBestTplMtmAbs);
   Log.LogDetail(
       Formatter()
-      << "tplratioLeastSquareFast="
+      << "tplRatioLeastSquareFast="
       << m_tplratioLeastSquareFast); // for rigidity=tplratio: switch to
                                      // use fast least square estimation
 }
@@ -560,7 +560,7 @@ Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {
   if (m_continuumManager->getIsmCorrectionFromTpl() == nullptr &&
       m_opt_dust_calzetti)
     THROWG(INTERNAL_ERROR, "ismCorrectionCalzetti is not loaded while "
-                           "tplratio_ism is activated");
+                           "tplRatio_ism is activated");
   if (!m_opt_dust_calzetti)
     return NAN;
   return m_continuumManager->getIsmCorrectionFromTpl()->GetEbmvValue(

@@ -51,14 +51,14 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"galaxy\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"ismfit\" : true, \"igmfit\" : true}}, "
-    "\"star\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"ismfit\" : true, \"igmfit\" : true}}, "
+    "{\"galaxy\" : {\"method\" : \"templateFittingSolver\", "
+    "\"templateFittingSolver\" : {\"ismFit\" : true, \"igmFit\" : true}}, "
+    "\"star\" : {\"method\" : \"templateFittingSolver\", "
+    "\"templateFittingSolver\" : {\"ismFit\" : true, \"igmFit\" : true}}, "
     "\"templateCatalog\" : {\"continuumRemoval\" : "
     "{ \"medianKernelWidth\" : 40.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}} }";
+    "\"method\" : \"irregularSamplingMedian\"}} }";
 
 class fixture_TemplateCatalogTest {
 public:
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(InitContinuumRemoval_test) {
   TTemplateRefList tplList = catalog.GetTemplateList(categories);
   for (auto tpl : tplList) {
     BOOST_CHECK(tpl->GetContinuumEstimationMethod() ==
-                "IrregularSamplingMedian");
+                "irregularSamplingMedian");
     BOOST_CHECK(tpl->GetMedianWinsize() == 40.);
     BOOST_CHECK(tpl->GetMedianEvenReflection() == false);
   }

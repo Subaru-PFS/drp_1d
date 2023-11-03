@@ -47,8 +47,8 @@ class TestLineModelSolve:
     class TestImproveBalmerFit:
 
         def _make_parameter_dict(self, **kwargs) -> dict:
-            kwargs = {"LineModelSolve": {"linemodel": kwargs}}
-            kwargs["method"] = kwargs.get("method", "LineModelSolve")
+            kwargs = {"lineModelSolver": {"lineModel": kwargs}}
+            kwargs["method"] = kwargs.get("method", "lineModelSolver")
             param_dict = make_parameter_dict_at_object_level(**kwargs)
             return param_dict
 
@@ -72,20 +72,20 @@ class TestLineModelSolve:
     class TestContinuumFit:
 
         def _make_parameter_dict(self, **kwargs) -> dict:
-            kwargs["method"] = kwargs.get("method", "LineModelSolve")
+            kwargs["method"] = kwargs.get("method", "lineModelSolver")
             param_dict = make_parameter_dict_at_object_level(**kwargs)
             return param_dict
 
         def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"linemodel": {"continuumfit": {"ismfit": True}}}
+                "lineModelSolver": {"lineModel": {"continuumFit": {"ismFit": True}}}
             })
             with pytest.raises(APIException, match=r"Missing parameter ebmv"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_ismfit_enabled_and_ebmv_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"ismfit": True}
+                "lineModelSolver": {"ismFit": True}
             })
             param_dict["ebmv"] = {}
             check_from_parameter_dict(param_dict)
@@ -93,31 +93,31 @@ class TestLineModelSolve:
 
     class TestFirstPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
-            kwargs["method"] = "LineModelSolve"
-            if kwargs["LineModelSolve"]["linemodel"]["lineRatioType"] in ["tplratio", "tplcorr"]:
-                kwargs["LineModelSolve"]["linemodel"]["tplratio_catalog"] = "sth"
-                kwargs["LineModelSolve"]["linemodel"]["tplratio_ismfit"] = False
+            kwargs["method"] = "lineModelSolver"
+            if kwargs["lineModelSolver"]["lineModel"]["lineRatioType"] in ["tplRatio", "tplCorr"]:
+                kwargs["lineModelSolver"]["lineModel"]["tplRatioCatalog"] = "sth"
+                kwargs["lineModelSolver"]["lineModel"]["tplRatioIsmFit"] = False
 
             param_dict = make_parameter_dict_at_object_level(**kwargs)
             return param_dict
 
         def test_error_tplratio_ismfit_not_defined_but_lineratiotype_is_tpl(self):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"linemodel": {
-                    "lineRatioType": "tplratio",
+                "lineModelSolver": {"lineModel": {
+                    "lineRatioType": "tplRatio",
                 }}
             })
             with pytest.raises(
                 APIException,
-                match=r"Missing parameter object galaxy LineModelSolve firstpass tplratio_ismfit"
+                match=r"Missing parameter object galaxy lineModelSolver firstpass tplRatioIsmFit"
             ):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_tplratio_ismfit_defined_and_lineratiotype_is_tpl(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"linemodel": {
-                    "lineRatioType": "tplratio",
-                    "firstpass": {"tplratio_ismfit": True}
+                "lineModelSolver": {"lineModel": {
+                    "lineRatioType": "tplRatio",
+                    "firstPass": {"tplRatioIsmFit": True}
                 }}
             })
             check_from_parameter_dict(param_dict)
@@ -125,9 +125,9 @@ class TestLineModelSolve:
 
         def test_warning_tplratio_imsfit_defined_but_lineratiotype_is_not_tpl(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"linemodel": {
+                "lineModelSolver": {"lineModel": {
                     "lineRatioType": "sth",
-                    "firstpass": {"tplratio_ismfit": True}
+                    "firstPass": {"tplRatioIsmFit": True}
                 }}
             })
             check_from_parameter_dict(param_dict)
@@ -135,27 +135,27 @@ class TestLineModelSolve:
 
     class TestSkipSecondPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
-            kwargs["method"] = "LineModelSolve"
+            kwargs["method"] = "lineModelSolver"
             param_dict = make_parameter_dict_at_object_level(**kwargs)
             return param_dict
 
         def test_error_skipsecondpass_false_but_secondpass_absent(self):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"linemodel": {
-                    "skipsecondpass": False,
+                "lineModelSolver": {"lineModel": {
+                    "skipSecondPass": False,
                 }}
             })
             with pytest.raises(
                 APIException,
-                match=r"Missing parameter object galaxy LineModelSolve secondpass"
+                match=r"Missing parameter object galaxy lineModelSolver secondPass"
             ):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_skipsecondpass_false_and_secondpass_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"linemodel": {
-                    "skipsecondpass": False,
-                    "secondpass": {},
+                "lineModelSolver": {"lineModel": {
+                    "skipSecondPass": False,
+                    "secondPass": {},
                 }}
             })
             check_from_parameter_dict(param_dict)
@@ -163,9 +163,9 @@ class TestLineModelSolve:
 
         def test_warning_skipsecondpass_true_but_secondpass_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "LineModelSolve": {"linemodel": {
-                    "skipsecondpass": True,
-                    "secondpass": {},
+                "lineModelSolver": {"lineModel": {
+                    "skipSecondPass": True,
+                    "secondPass": {},
                 }}
             })
             check_from_parameter_dict(param_dict)

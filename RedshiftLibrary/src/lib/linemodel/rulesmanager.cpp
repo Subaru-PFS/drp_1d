@@ -63,9 +63,9 @@ Float64 CRulesManager::computeMerit(Int32 iratio) {
  * /brief Calls the rules' methods depending on the JSON options.
  * If m_rulesoption is "no", do nothing.
  * If either "balmer" or "all" is in the rules string, call
- *ApplyBalmerRuleLinSolve. If "all" or "ratiorange" is in the rules string,
+ *ApplyBalmerRuleLinSolve. If "all" or "ratioRange" is in the rules string,
  *call ApplyAmplitudeRatioRangeRule parameterized for OII. If "all" or
- *"strongweak" is in the rules string, call ApplyStrongHigherWeakRule for
+ *"strongWeak" is in the rules string, call ApplyStrongHigherWeakRule for
  *emission and then for absorption.
  **/
 void CRulesManager::applyRules(bool enableLogs) {
@@ -86,7 +86,7 @@ void CRulesManager::setRulesOption(std::string rulesOption) {
 
   m_Regulament.CreateRulesFromJSONFiles();
   if (rulesOption == "") {
-    CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+    CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
     m_rulesoption = ps->GetScoped<std::string>("rules");
   } else

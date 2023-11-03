@@ -46,21 +46,21 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [4680.0, 4712.0], "
+    "{\"lambdaRange\" : [4680.0, 4712.0], "
     "\"smoothWidth\" : 0.5, "
-    "\"redshiftstep\" : 0.001, "
-    "\"star\" : { \"redshiftrange\" : [ 2.84, 2.88 ], "
-    "\"method\" : \"LineModelSolve\", "
-    "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
-    "\"largegridstepratio\" : 1 }}}}, "
-    "\"galaxy\" : { \"redshiftrange\" : [ 2.84, 2.88 ], \"redshiftstep\" : "
-    "0.0001, \"method\" : \"LineModelSolve\", "
-    "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
-    "\"largegridstepratio\" : 1 },"
-    "\"continuumfit\" : {\"fftprocessing\" : true }}}}, "
+    "\"redshiftStep\" : 0.001, "
+    "\"star\" : { \"redshiftRange\" : [ 2.84, 2.88 ], "
+    "\"method\" : \"lineModelSolver\", "
+    "\"lineModelSolver\" : {\"lineModel\" : { \"firstPass\" : { "
+    "\"largeGridStepRatio\" : 1 }}}}, "
+    "\"galaxy\" : { \"redshiftRange\" : [ 2.84, 2.88 ], \"redshiftStep\" : "
+    "0.0001, \"method\" : \"lineModelSolver\", "
+    "\"lineModelSolver\" : {\"lineModel\" : { \"firstPass\" : { "
+    "\"largeGridStepRatio\" : 1 },"
+    "\"continuumFit\" : {\"fftProcessing\" : true }}}}, "
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}";
+    "\"method\" : \"irregularSamplingMedian\"}}";
 class fixture_logRebinningTest {
 public:
   TScopeStack scopeStack;

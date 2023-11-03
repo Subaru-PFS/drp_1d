@@ -50,8 +50,8 @@ using namespace NSEpic;
 using namespace std;
 
 CTplcombinationSolve::CTplcombinationSolve(TScopeStack &scope,
-                                           string objectType)
-    : CObjectSolve("TplcombinationSolve", scope, objectType) {}
+                                           string spectrumModel)
+    : CObjectSolve("tplCombinationSolver", scope, spectrumModel) {}
 
 std::shared_ptr<CSolveResult>
 CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
@@ -65,21 +65,21 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   bool storeResult = false;
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
-      "extremaredshiftseparation");
+      "extremaRedshiftSeparation");
   m_opt_maxCandidate =
-      inputContext->GetParameterStore()->GetScoped<int>("extremacount");
+      inputContext->GetParameterStore()->GetScoped<int>("extremaCount");
   m_opt_pdfcombination =
       inputContext->GetParameterStore()->GetScoped<std::string>(
-          "pdfcombination");
+          "pdfCombination");
   std::string opt_interp =
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
   bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("ismfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("ismFit");
   Float64 overlapThreshold =
       inputContext->GetParameterStore()->GetScoped<Float64>("overlapThreshold");
   bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("igmfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("igmFit");
 
   std::string opt_spcComponent =
       inputContext->GetParameterStore()->GetScoped<std::string>(
@@ -92,7 +92,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   EType _type = nType_raw;
   if (opt_spcComponent == "raw") {
     _type = nType_raw;
-  } else if (opt_spcComponent == "nocontinuum") {
+  } else if (opt_spcComponent == "noContinuum") {
     _type = nType_noContinuum;
     scopeStr = "tplcombination_nocontinuum";
   } else if (opt_spcComponent == "continuum") {
@@ -356,7 +356,7 @@ CTplcombinationSolve::buildExtremaResults(
   Log.LogDetail("CTplCombinationSolve::buildExtremaResults: building "
                 "chisquare array");
   Log.LogDetail(Formatter()
-                << "    tplCombinationSolve: using results in scope: "
+                << "    tplCombinationSolver: using results in scope: "
                 << store->GetScopedName(scopeStr));
   // in contrast to linemodel and TF, there is no perTemplateResults for
   // tplCombination

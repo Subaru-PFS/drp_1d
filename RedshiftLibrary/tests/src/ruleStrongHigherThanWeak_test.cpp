@@ -71,7 +71,7 @@ CLineModelElement RuleStrongHigherThanWeak_fixture::createCLineModelElement(
     CLineVector lines, std::vector<Float64> amps) {
   TLineModelElementParam_ptr elementParam_ptr =
       std::make_shared<TLineModelElementParam>(lines, 1.0, 1.1);
-  CLineModelElement cLineModelElement(elementParam_ptr, "instrumentdriven");
+  CLineModelElement cLineModelElement(elementParam_ptr, "instrumentDriven");
 
   vector<Float64> fittedAmplitudesErrorSigmas(lines.size());
   cLineModelElement.m_ElementParam->m_FittedAmplitudes = amps;

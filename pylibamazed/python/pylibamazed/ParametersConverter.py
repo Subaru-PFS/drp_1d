@@ -36,20 +36,49 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+import json
+
+from pylibamazed.Exception import APIException
+from pylibamazed.redshift import ErrorCode
+from pylibamazed.Paths import v1_to_treed_filename
+from abc import ABC, abstractmethod
+import pandas as pd
+
+
+class ParametersConverter(ABC):
+    """ Converts raw input parameters into treed parameters, used for custom checks and pylibamazed
+    calculations
+    """
+    @abstractmethod
+    def convert(self, raw_params: dict) -> dict:
+        pass
 
 
 class ParametersConverterSelector:
-    def get_converter(self, version):
+    def get_converter(self, version: int) -> ParametersConverter:
         if version == 1:
             Converter = ParametersConverterV1
-        # Here ask how to add an exception (develop exception)
+        elif version == 2:
+            Converter = ParametersConverterV2
+        else:
+            raise APIException(ErrorCode.INTERNAL_ERROR,
+                               f"Unexpected parameters version {version}")
         return Converter
 
 
-class ParametersConverterV1:
-    """ Converts raw input parameters into treed parameters, used for custom checks and pylibamazed calculations
-    """
+class ParametersConverterV2(ParametersConverter):
 
     def convert(self, raw_params: dict) -> dict:
         params = raw_params.copy()
         return params
+
+
+class ParametersConverterV1(ParametersConverter):
+    def convert(self, raw_params: dict) -> dict:
+        params = raw_params.copy()
+        params_str = json.dumps(params)
+        renaming_df = pd.read_csv(v1_to_treed_filename)
+        for _, row in renaming_df.iterrows():
+            params_str = params_str.replace(
+                f"\"{row.loc['old_name']}\"", f"\"{row.loc['new_name']}\"")
+        return json.loads(params_str)

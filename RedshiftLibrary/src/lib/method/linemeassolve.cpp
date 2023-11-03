@@ -42,8 +42,8 @@
 
 namespace NSEpic {
 
-CLineMeasSolve::CLineMeasSolve(TScopeStack &scope, string objectType)
-    : CObjectSolve("LineMeasSolve", scope, objectType) {}
+CLineMeasSolve::CLineMeasSolve(TScopeStack &scope, string spectrumModel)
+    : CObjectSolve("lineMeasSolver", scope, spectrumModel) {}
 
 void CLineMeasSolve::GetRedshiftSampling(
     const std::shared_ptr<const CInputContext> &inputContext,
@@ -52,9 +52,9 @@ void CLineMeasSolve::GetRedshiftSampling(
   Float64 rangeCenter =
       inputContext->GetParameterStore()->GetScoped<Float64>("redshiftref");
   Float64 halfRange =
-      inputContext->GetParameterStore()->GetScoped<Float64>("linemeas_dzhalf");
+      inputContext->GetParameterStore()->GetScoped<Float64>("lineMeasDzHalf");
   redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>(
-      "linemeas_redshiftstep");
+      "lineMeasRedshiftStep");
 
   halfRange = std::ceil(halfRange / redshiftStep) * redshiftStep;
 
@@ -74,9 +74,9 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   Float64 opt_nsigmasupport =
       inputContext->GetParameterStore()->GetScoped<Float64>(
-          "linemodel.nsigmasupport"); // try with 16 (-> parameters.json)
+          "lineModel.nSigmaSupport"); // try with 16 (-> parameters.json)
   const std::string &opt_continuumcomponent =
-      "nocontinuum"; // params->GetScoped<std::string>("continuumcomponent");
+      "noContinuum"; // params->GetScoped<std::string>("continuumComponent");
 
   m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 

@@ -52,7 +52,7 @@ void CTemplatesOrthogonalization::Orthogonalize(
       inputContext.GetParameterStore()->EnableTemplateOrthogonalization(
           category);
   CAutoScope autoscope_category(Context.m_ScopeStack, category);
-  CAutoScope autoscope_method(Context.m_ScopeStack, "LineModelSolve");
+  CAutoScope autoscope_method(Context.m_ScopeStack, "lineModelSolver");
 
   // retrieve templateCatalog
   std::shared_ptr<CTemplateCatalog> tplCatalog =
@@ -187,11 +187,11 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   if (!m_enableOrtho)
     return tplOrtho;
 
-  std::string opt_continuumcomponent = "fromspectrum";
+  std::string opt_continuumcomponent = "fromSpectrum";
   Float64 opt_continuum_neg_threshold =
-      -INFINITY; // not relevant in the "fromspectrum" case
+      -INFINITY; // not relevant in the "fromSpectrum" case
   Float64 opt_continuum_nullamp_threshold =
-      0.; // not relevant in the "fromspectrum" case;
+      0.; // not relevant in the "fromSpectrum" case;
   tplOrtho->SetLSF(m_LSF);
 
   std::string saveContinuumEstimationMethod =

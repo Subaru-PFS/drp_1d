@@ -1,0 +1,28 @@
+{
+    "lambdarange": null,
+    "smoothWidth": 0.0,
+    "templateCatalog": {
+        "continuumRemoval": {
+            "method": "zero",
+            "medianKernelWidth": 75,
+            "medianEvenReflection": true
+        }
+    },
+    "ebmv": {
+        "start": 0,
+        "step": 0.1,
+        "count": 10
+    },
+    "continuumRemoval": {
+        "method": "IrregularSamplingMedian",
+        "medianKernelWidth": null,
+        "medianEvenReflection": true,
+        "decompScales": 9
+    },
+    "LSF": {
+        "LSFType": null
+    },
+    "extremaredshiftseparation": 0.01,
+    "objects": [],
+    "autocorrectinput": false
+}

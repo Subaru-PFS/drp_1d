@@ -51,7 +51,7 @@ class TestContinuumRemoval:
                 self, zflag, nesting):
             parametersDict = DictUtils.make_nested({
                 "continuumRemoval": {
-                    "method": "IrregularSamplingMedian",
+                    "method": "irregularSamplingMedian",
                     "medianKernelWidth": 1,
                     "medianEvenReflection": 1,
                 }
@@ -64,7 +64,7 @@ class TestContinuumRemoval:
         def test_error_if_method_is_IrregularSamplingMedian_without_medianKernelWidth(self, nesting):
             parametersDict = DictUtils.make_nested({
                 "continuumRemoval": {
-                    "method": "IrregularSamplingMedian",
+                    "method": "irregularSamplingMedian",
                     "medianEvenReflection": 1
                 }
             }, nesting)
@@ -76,7 +76,7 @@ class TestContinuumRemoval:
         def test_error_if_method_is_IrregularSamplingMedian_without_medianEvenReflection(self, nesting):
             parametersDict = DictUtils.make_nested({
                 "continuumRemoval": {
-                    "method": "IrregularSamplingMedian",
+                    "method": "irregularSamplingMedian",
                     "medianKernelWidth": 1
                 }
             }, nesting)

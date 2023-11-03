@@ -80,7 +80,7 @@ def make_parameter_dict(**kwargs) -> dict:
 
 def make_parameter_dict_at_object_level(**kwargs) -> dict:
     param_dict = {
-        "objects": [default_object_type],
+        "spectrumModels": [default_object_type],
         default_object_type: {}
     }
 

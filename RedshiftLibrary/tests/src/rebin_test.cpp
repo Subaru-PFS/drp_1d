@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("lin"));
   BOOST_CHECK(rebin->getType() == "lin");
   BOOST_CHECK_NO_THROW(rebin =
-                           std::move(*rebin).convert("precomputedfinegrid"));
-  BOOST_CHECK(rebin->getType() == "precomputedfinegrid");
+                           std::move(*rebin).convert("preComputedFineGrid"));
+  BOOST_CHECK(rebin->getType() == "preComputedFineGrid");
   BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("spline"));
   BOOST_CHECK(rebin->getType() == "spline");
   BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("ngp"));
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
 
   // test create
   BOOST_CHECK_NO_THROW(CRebin::create("lin", spc));
-  BOOST_CHECK_NO_THROW(CRebin::create("precomputedfinegrid", spc));
+  BOOST_CHECK_NO_THROW(CRebin::create("preComputedFineGrid", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("spline", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("ngp", spc));
   BOOST_CHECK_THROW(CRebin::create("linn", spc), GlobalException);
@@ -178,13 +178,13 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
                                            1215, 1215.5, 1216, 1216.5, 1217,
                                            1217.5, 1218, 1219});
   CMask rebinedMask;
-  std::string interp = "precomputedfinegrid";
+  std::string interp = "preComputedFineGrid";
   std::string errorRebinMethod = "no";
 
-  // interp = "precomputedfinegrid" et errorRebinMethod = "no"
+  // interp = "preComputedFineGrid" et errorRebinMethod = "no"
   std::unique_ptr<CRebinFineGrid> rebin =
       std::unique_ptr<CRebinFineGrid>(new CRebinFineGrid(spcLight));
-  spcLight.setRebinInterpMethod("precomputedfinegrid");
+  spcLight.setRebinInterpMethod("preComputedFineGrid");
   rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                  errorRebinMethod);
   TFloat64List rebinedFlux =
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
     BOOST_CHECK(rebinedMask[i] == 1);
   }
 
-  // interp = "precomputedfinegrid" et errorRebinMethod != "no"
+  // interp = "preComputedFineGrid" et errorRebinMethod != "no"
   errorRebinMethod = "rebin";
   BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),

@@ -45,10 +45,10 @@
 
 using namespace NSEpic;
 
-const std::string jsonStringOneSpc = "{\"lambdarange\" : [ 4631, 4815 ],";
+const std::string jsonStringOneSpc = "{\"lambdaRange\" : [ 4631, 4815 ],";
 
 const std::string jsonStringMO =
-    "{\"lambdarange\" : {\"1\" : [ 4631, 4815], \"2\" : [ 4631, 4815 ]},";
+    "{\"lambdaRange\" : {\"1\" : [ 4631, 4815], \"2\" : [ 4631, 4815 ]},";
 
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
@@ -59,83 +59,83 @@ const std::string jsonString =
     "\"medianEvenReflection\" : true}},"
     "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
     "\"continuumRemoval\" : {"
-    "\"method\" : \"IrregularSamplingMedian\","
+    "\"method\" : \"irregularSamplingMedian\","
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", \"resolution\" : "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", \"resolution\" : "
     "4300},"
-    "\"extremaredshiftseparation\" : 0.01,"
-    "\"objects\" : [\"galaxy\"],"
-    "\"autocorrectinput\" : false,"
-    "\"airvacuum_method\" : \"default\",";
+    "\"extremaRedshiftSeparation\" : 0.01,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
+    "\"airVacuumMethod\" : \"default\",";
 
 const std::string jsonStringNoFFT =
     "\"galaxy\" : {"
-    "\"redshiftrange\" : [ 2.84, 2.88 ],"
-    "\"redshiftstep\" : 0.0001,"
-    "\"redshiftsampling\" : \"log\","
-    "\"method\" : \"TemplateFittingSolve\","
-    "\"TemplateFittingSolve\" : {"
-    "\"extremacount\" : 5,"
+    "\"redshiftRange\" : [ 2.84, 2.88 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
+    "\"method\" : \"templateFittingSolver\","
+    "\"templateFittingSolver\" : {"
+    "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : false,"
-    "\"interpolation\" : \"precomputedfinegrid\","
+    "\"fftProcessing\" : false,"
+    "\"interpolation\" : \"preComputedFineGrid\","
     "\"extinction\" : true,"
     "\"dustfit\" : true,"
-    "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : false}}}";
+    "\"pdfCombination\" : \"marg\","
+    "\"enablePhotometry\" : false}}}";
 
 const std::string jsonStringFFT = "\"galaxy\" : {"
-                                  "\"redshiftrange\" : [ 2.84, 2.88 ],"
-                                  "\"redshiftstep\" : 0.0001,"
-                                  "\"redshiftsampling\" : \"log\","
-                                  "\"method\" : \"TemplateFittingSolve\","
-                                  "\"TemplateFittingSolve\" : {"
-                                  "\"extremacount\" : 5,"
+                                  "\"redshiftRange\" : [ 2.84, 2.88 ],"
+                                  "\"redshiftStep\" : 0.0001,"
+                                  "\"redshiftSampling\" : \"log\","
+                                  "\"method\" : \"templateFittingSolver\","
+                                  "\"templateFittingSolver\" : {"
+                                  "\"extremaCount\" : 5,"
                                   "\"overlapThreshold\" : 1,"
                                   "\"spectrum\" : {\"component\" : \"raw\"},"
-                                  "\"fftprocessing\" : true,"
-                                  "\"interpolation\" : \"precomputedfinegrid\","
+                                  "\"fftProcessing\" : true,"
+                                  "\"interpolation\" : \"preComputedFineGrid\","
                                   "\"extinction\" : true,"
                                   "\"dustfit\" : true,"
-                                  "\"pdfcombination\" : \"marg\","
-                                  "\"enablephotometry\" : false}}}";
+                                  "\"pdfCombination\" : \"marg\","
+                                  "\"enablePhotometry\" : false}}}";
 
 const std::string jsonStringOrtho =
     "\"galaxy\" : {"
-    "\"redshiftrange\" : [ 2.84, 2.88 ],"
-    "\"redshiftstep\" : 0.0001,"
-    "\"redshiftsampling\" : \"log\","
-    "\"method\" : \"LineModelSolve\","
-    "\"LineModelSolve\" : {"
-    "\"linemodel\" : {"
-    "\"continuumcomponent\" : \"tplfit\","
-    "\"useloglambdasampling\": false,"
-    "\"lyaforcefit\": false,"
-    "\"lyaforcedisablefit\": false,"
-    "\"lyafit\": {"
-    "\"asymfitmin\" : 0,"
-    "\"asymfitmax\" : 4, \"asymfitstep\" : 1, \"widthfitmin\" : 1,"
-    "\"widthfitmax\" : 4, \"widthfitstep\" : 1, \"deltafitmin\" : 0,"
-    "\"deltafitmax\" : 0, \"deltafitstep\" : 1}, "
-    "\"continuumfit\" : { \"ignorelinesupport\": false,"
-    "\"negativethreshold\": -5.0,"
-    "\"nullthreshold\": 3,"
+    "\"redshiftRange\" : [ 2.84, 2.88 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
+    "\"method\" : \"lineModelSolver\","
+    "\"lineModelSolver\" : {"
+    "\"lineModel\" : {"
+    "\"continuumComponent\" : \"tplFit\","
+    "\"useLogLambdaSampling\": false,"
+    "\"lyaForceFit\": false,"
+    "\"lyaForceDisableFit\": false,"
+    "\"lyaFit\": {"
+    "\"asymFitMin\" : 0,"
+    "\"asymFitMax\" : 4, \"asymFitStep\" : 1, \"widthFitMin\" : 1,"
+    "\"widthFitMax\" : 4, \"widthFitStep\" : 1, \"deltaFitMin\" : 0,"
+    "\"deltaFitMax\" : 0, \"deltaStepMax\" : 1}, "
+    "\"continuumFit\" : { \"ignoreLineSupport\": false,"
+    "\"negativeThreshold\": -5.0,"
+    "\"nullThreshold\": 3,"
     "\"count\":1,"
-    "\"fftprocessing\": false} ,"
-    "\"firstpass\": { \"fittingmethod\" : \"individual\", "
-    "\"multiplecontinuumfit_disable\": true},"
-    "\"fittingmethod\": \"individual\","
-    "\"ampoffsetfit\": \"false\","
-    "\"lbdaoffsetfit\": \"false\","
-    "\"linewidthtype\": \"combined\","
-    "\"velocityemission\" : 100,"
-    "\"velocityabsorption\": 100,"
-    "\"lineRatioType\": \"tplratio\","
-    "\"linetypefilter\" : \"no\","
-    "\"lineforcefilter\" : \"no\"}}}}";
+    "\"fftProcessing\": false} ,"
+    "\"firstPass\": { \"fittingMethod\" : \"individual\", "
+    "\"multipleContinuumFitDisable\": true},"
+    "\"fittingMethod\": \"individual\","
+    "\"ampOffsetFit\": \"false\","
+    "\"lbdaOffsetFit\": \"false\","
+    "\"lineWidthType\": \"combined\","
+    "\"velocityEmission\" : 100,"
+    "\"velocityAbsorption\": 100,"
+    "\"lineRatioType\": \"tplRatio\","
+    "\"lineTypeFilter\" : \"no\","
+    "\"lineForceFilter\" : \"no\"}}}}";
 
 class fixture_inputcontextTest {
 public:
@@ -182,7 +182,7 @@ public:
     inputCtx.setPhotBandCatalog(photoBandCatalog);
     inputCtx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
     scopeStack.push_back("galaxy");
-    inputCtx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+    inputCtx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
     inputCtx.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
     inputCtx.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
   }
@@ -219,12 +219,12 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) ==
               lineRatioTplCatalog);
 
-  inputCtx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
-  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "LineModelSolve") ==
+  inputCtx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolver") ==
               lineCatalog);
 
   BOOST_CHECK(
-      inputCtx.GetFilteredLineMap("galaxy", "LineModelSolve", "no", "no")
+      inputCtx.GetFilteredLineMap("galaxy", "lineModelSolver", "no", "no")
           .size() == fixture_LineCatalog().lineCatalogSize);
 
   BOOST_CHECK(inputCtx.m_ismcorrectionCalzetti == nullptr);
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
   inputCtx.Init();
   BOOST_CHECK(inputCtx.GetSpectrum(0) != nullptr);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() != nullptr);
-  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "LineModelSolve") != nullptr);
+  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolver") != nullptr);
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) != nullptr);
   BOOST_CHECK(inputCtx.GetPhotBandCatalog() != nullptr);
 
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
 
   BOOST_CHECK(inputCtx.getSpectra().size() == 0);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() == nullptr);
-  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "LineModelSolve") == nullptr);
+  BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolver") == nullptr);
   BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) == nullptr);
   BOOST_CHECK(inputCtx.GetPhotBandCatalog() == nullptr);
 
@@ -311,9 +311,9 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
 BOOST_AUTO_TEST_CASE(rebinInputs_test) {
   CInputContext inputCtx(paramStoreNoFFT);
   setInputData(inputCtx);
-  inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("objects");
+  inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("spectrumModels");
   inputCtx.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-      paramStoreNoFFT->Get<TFloat64Range>("lambdarange")));
+      paramStoreNoFFT->Get<TFloat64Range>("lambdaRange")));
 
   inputCtx.RebinInputs();
   BOOST_CHECK(inputCtx.m_use_LogLambaSpectrum == false);
@@ -321,12 +321,12 @@ BOOST_AUTO_TEST_CASE(rebinInputs_test) {
 
   CInputContext inputCtx2(paramStoreFFT);
   setInputData(inputCtx2);
-  inputCtx2.m_categories = paramStoreFFT->GetList<std::string>("objects");
+  inputCtx2.m_categories = paramStoreFFT->GetList<std::string>("spectrumModels");
   inputCtx2.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-      paramStoreFFT->Get<TFloat64Range>("lambdarange")));
+      paramStoreFFT->Get<TFloat64Range>("lambdaRange")));
   inputCtx2.m_rebinnedClampedLambdaRanges.push_back(
       std::make_shared<TFloat64Range>(
-          paramStoreFFT->Get<TFloat64Range>("lambdarange")));
+          paramStoreFFT->Get<TFloat64Range>("lambdaRange")));
 
   inputCtx2.RebinInputs();
   BOOST_CHECK(inputCtx2.m_use_LogLambaSpectrum == true);
@@ -339,10 +339,10 @@ BOOST_AUTO_TEST_CASE(rebinInputs_test) {
   spc->SetSpectralAxis(CSpectrumSpectralAxis(linLambdaList));
   setInputData(inputCtx2);
   inputCtx2.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-      paramStoreFFT->Get<TFloat64Range>("lambdarange")));
+      paramStoreFFT->Get<TFloat64Range>("lambdaRange")));
   inputCtx2.m_rebinnedClampedLambdaRanges.push_back(
       std::make_shared<TFloat64Range>(
-          paramStoreFFT->Get<TFloat64Range>("lambdarange")));
+          paramStoreFFT->Get<TFloat64Range>("lambdaRange")));
   inputCtx2.RebinInputs();
   BOOST_CHECK(inputCtx2.m_logGridStep == 0.0001);
   BOOST_CHECK(inputCtx2.GetSpectrum(1)->GetSpectralAxis().IsLogSampled() ==
@@ -352,14 +352,14 @@ BOOST_AUTO_TEST_CASE(OrthogonalizeTemplates_test) {
   CInputContext inputCtx(paramStoreOrtho);
   setInputData(inputCtx);
 
-  inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("objects");
+  inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("spectrumModels");
   inputCtx.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-      paramStoreNoFFT->Get<TFloat64Range>("lambdarange")));
+      paramStoreNoFFT->Get<TFloat64Range>("lambdaRange")));
   BOOST_CHECK(catalog->GetTemplateCount("galaxy", 1, 0) == 0);
 
   //
   Context.LoadParameterStore(jsonStringOneSpc + jsonString + jsonStringOrtho);
-  Context.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+  Context.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
   inputCtx.OrthogonalizeTemplates();
   BOOST_CHECK(catalog->GetTemplateCount("galaxy", 1, 0) == 1);
 }

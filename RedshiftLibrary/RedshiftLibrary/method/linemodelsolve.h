@@ -56,7 +56,7 @@ class CTemplateCatalog;
  */
 class CLineModelSolve : public CObjectSolve {
 public:
-  CLineModelSolve(TScopeStack &scope, std::string objectType);
+  CLineModelSolve(TScopeStack &scope, std::string spectrumModel);
 
   bool
   PopulateParameters(std::shared_ptr<const CParameterStore> parameterStore);

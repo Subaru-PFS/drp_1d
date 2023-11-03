@@ -57,8 +57,8 @@ using namespace NSEpic;
 using namespace std;
 
 CTemplateFittingSolve::CTemplateFittingSolve(TScopeStack &scope,
-                                             string objectType)
-    : CObjectSolve("TemplateFittingSolve", scope, objectType) {}
+                                             string spectrumModel)
+    : CObjectSolve("templateFittingSolver", scope, spectrumModel) {}
 
 std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     std::shared_ptr<const CInputContext> inputContext,
@@ -67,7 +67,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
-      "extremaredshiftseparation"); // todo: deci
+      "extremaRedshiftSeparation"); // todo: deci
 
   bool storeResult = false;
   Float64 overlapThreshold =
@@ -79,24 +79,24 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
   const bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("igmfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("igmFit");
   bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("ismfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("ismFit");
 
   bool fft_processing =
-      inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
+      inputContext->GetParameterStore()->GetScoped<bool>("fftProcessing");
 
   bool use_photometry = false;
   Float64 photometry_weight = NAN;
-  if (inputContext->GetParameterStore()->HasScoped<bool>("enablephotometry")) {
+  if (inputContext->GetParameterStore()->HasScoped<bool>("enablePhotometry")) {
     use_photometry =
-        inputContext->GetParameterStore()->GetScoped<bool>("enablephotometry");
+        inputContext->GetParameterStore()->GetScoped<bool>("enablePhotometry");
     if (use_photometry)
       photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>(
           "photometry.weight");
   }
   if (fft_processing && use_photometry)
-    THROWG(INTERNAL_ERROR, "fftprocessing not "
+    THROWG(INTERNAL_ERROR, "fftProcessing not "
                            "implemented with photometry enabled");
 
   if (fft_processing) {
@@ -141,10 +141,10 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   }
 
   m_opt_maxCandidate =
-      inputContext->GetParameterStore()->GetScoped<int>("extremacount");
+      inputContext->GetParameterStore()->GetScoped<int>("extremaCount");
   m_opt_pdfcombination =
       inputContext->GetParameterStore()->GetScoped<std::string>(
-          "pdfcombination");
+          "pdfCombination");
 
   Log.LogInfo("Method parameters:");
   Log.LogInfo("    -overlapThreshold: %.3f", overlapThreshold);

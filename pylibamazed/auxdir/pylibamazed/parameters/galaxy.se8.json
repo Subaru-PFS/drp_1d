@@ -1,0 +1,5 @@
+{
+    "redshiftstep": 0.0001,
+    "enable_reliability": false,
+    "redshiftrange":[0.01,5.0]
+}

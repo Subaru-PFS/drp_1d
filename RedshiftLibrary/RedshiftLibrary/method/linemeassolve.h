@@ -58,7 +58,7 @@ class CTemplateCatalog;
 class CLineMeasSolve : public CObjectSolve {
 
 public:
-  CLineMeasSolve(TScopeStack &scope, std::string objectType);
+  CLineMeasSolve(TScopeStack &scope, std::string spectrumModel);
 
   std::shared_ptr<CSolveResult>
   compute(std::shared_ptr<const CInputContext> inputContext,

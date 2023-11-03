@@ -3,8 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Redshift solver",
   "type": "object",
-  "required": [
-  ],
+  "required": [],
   "additionalProperties": false,
   "properties": {
     "method": {
@@ -14,21 +13,21 @@
       ],
       "enum": [
         "",
-        "lineModelSolve",
-        "templateFittingSolve",
-        "tplcombinationSolve",
+        "lineModelSolver",
+        "templateFittingSolver",
+        "tplCombinationSolver",
         null
       ],
       "title": "Fitting method",
-      "description": "Select the fitting methods for object type : \n * **templateFittingSolve**: least-square template fitting \n * **lineModelSolve**: least-square fitting of a line model (it includes fullmodel ie continuum model + line model) \n * **tplcombinationSolve**: least-square template fitting combination"
+      "description": "Select the fitting methods for object type : \n * **templateFittingSolver**: least-square template fitting \n * **lineModelSolver**: least-square fitting of a line model (it includes fullmodel ie continuum model + line model) \n * **tplcombinationSolve**: least-square template fitting combination"
     },
-    "templateFittingSolve": {
+    "templateFittingSolver": {
       "$ref": "template_fitting_solve.json"
     },
-    "tplCombinationSolve": {
+    "tplCombinationSolver": {
       "$ref": "template_combination_solve.json"
     },
-    "lineModelSolve": {
+    "lineModelSolver": {
       "$ref": "line_model_solve.json"
     }
   }

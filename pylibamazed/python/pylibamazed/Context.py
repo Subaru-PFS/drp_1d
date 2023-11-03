@@ -240,7 +240,7 @@ class Context:
                     enable_classification = True
                     break
             if enable_classification:
-                self.run_method("classification", "ClassificationSolve")
+                self.run_method("classification", "classificationSolver")
             else:
                 raise APIException(ErrorCode.NO_CLASSIFICATION,
                                    "Classification not run because all redshift_solver failed")
@@ -250,9 +250,17 @@ class Context:
         rso.load_all()
 
     def run_method(self, object_type, method):
-        if "C" + method not in globals():
+        method_to_solver = {
+            "classificationSolver": "CClassificationSolve",
+            "lineMeasSolver": "CLineMeasSolve",
+            "lineModelSolver": "CLineModelSolve",
+            "reliabilitySolver": "CReliabilitySolve",
+            "templateFittingSolver": "CTemplateFittingSolve",
+            "tplCombinationSolver": "CTplCombinationSolve"
+        }
+        if method_to_solver[method] not in globals():
             raise APIException(ErrorCode.INVALID_PARAMETER, "Unknown method {}".format(method))
-        solver_method = globals()["C" + method]
+        solver_method = globals()[method_to_solver[method]]
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
         solver.Compute()

@@ -44,7 +44,7 @@ from jsonschema import RefResolver, validate
 from jsonschema.exceptions import ValidationError
 from pylibamazed.Exception import APIException
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
-from pylibamazed.r_specifications import module_root_dir
+from pylibamazed.Paths import module_root_dir
 from pylibamazed.redshift import CFlagWarning, ErrorCode, WarningCode
 
 zflag = CFlagWarning.GetInstance()
@@ -164,32 +164,32 @@ class ParametersChecker:
         self._check_dependant_parameter_presence(
             self.accessor.get_lsf_type() == "GaussianNISPSIM201707",
             self.accessor.get_lsf_sourcesize() is not None,
-            "LSF sourcesize",
-            "LSF sourcesize"
+            "lsf sourceSize",
+            "lsf sourceSize"
         )
 
     def _check_GaussianConstantWidth_lsf_type(self):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lsf_type() == "GaussianConstantWidth",
+            self.accessor.get_lsf_type() == "gaussianConstantWidth",
             self.accessor.get_lsf_width() is not None,
-            "LSF width",
-            "LSF width"
+            "lsf width",
+            "lsf width"
         )
 
     def _check_GaussianConstantResolution_lsf_type(self):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lsf_type() == "GaussianConstantResolution",
+            self.accessor.get_lsf_type() == "gaussianConstantResolution",
             self.accessor.get_lsf_resolution() is not None,
-            "LSF resolution",
-            "LSF resolution"
+            "lsf resolution",
+            "lsf resolution"
         )
 
     def _check_GaussianVariablewidth_FileName(self):
         self._check_dependant_parameter_presence(
             self.accessor.get_lsf_type() == "GaussianVariablewidth",
             self.accessor.get_lsf_width_file_name() is not None,
-            "LSF GaussianVariablewidthFileName",
-            "LSF GaussianVariablewidthFileName"
+            "lsf gaussianVariableWidthFileName",
+            "lsf gaussianVariableWidthFileName"
         )
 
     def _check_continuum_removal(self, nested=None) -> None:
@@ -198,7 +198,7 @@ class ParametersChecker:
 
     def _check_IrregularSamplingMedian_kernel_width(self, nested=None):
         self._check_dependant_parameter_presence(
-            self.accessor.get_continuum_removal_method(nested) == "IrregularSamplingMedian",
+            self.accessor.get_continuum_removal_method(nested) == "irregularSamplingMedian",
             self.accessor.get_continuum_removal_median_kernel_width(nested) is not None,
             "continuumRemoval medianKernelWidth",
             "continuumRemoval medianKernelWidth"
@@ -206,7 +206,7 @@ class ParametersChecker:
 
     def _check_IrregularSamplingMedian_kernel_reflection(self, nested=None):
         self._check_dependant_parameter_presence(
-            self.accessor.get_continuum_removal_method(nested) == "IrregularSamplingMedian",
+            self.accessor.get_continuum_removal_method(nested) == "irregularSamplingMedian",
             self.accessor.get_continuum_median_kernel_reflection(nested) is not None,
             "continuumRemoval medianEvenReflection",
             "continuumRemoval medianEvenReflection"
@@ -223,23 +223,23 @@ class ParametersChecker:
 
     def _check_template_dir(self, object_type: str) -> None:
         template_dir_presence_condition = \
-            self.accessor.get_solve_method(object_type) in ["TemplateFittingSolve", "TplCombinationSolve"] or (
-                self.accessor.get_solve_method(object_type) == "LineModelSolve" and
-                self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplfit", "tplfitauto"]
+            self.accessor.get_solve_method(object_type) in ["templateFittingSolver", "tplCombinationSolver"] or (
+                self.accessor.get_solve_method(object_type) == "lineModelSolver" and
+                self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplFit", "tplFitAuto"]
             )
         self._check_dependant_parameter_presence(
             template_dir_presence_condition,
             self.accessor.get_template_dir(object_type) is not None,
-            f"{object_type} template_dir",
-            f"{object_type} template_dir"
+            f"{object_type} templateDir",
+            f"{object_type} templateDir"
         )
 
     def _check_linemeassolve_dzhalf(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
             self.accessor.get_linemeas_method(object_type) is not None,
             self.accessor.get_linemeas_dzhalf(object_type) is not None,
-            f"linemeas_dzhalf for object {object_type}",
-            f"object {object_type} linemeas_dzhalf"
+            f"lineMeasDzHalf for object {object_type}",
+            f"object {object_type} lineMeasDzHalf"
         )
 
     def _check_linemeassolve_redshiftstep(self, object_type: str) -> None:
@@ -247,23 +247,23 @@ class ParametersChecker:
             self.accessor.get_linemeas_method(object_type) is not None,
             self.accessor.get_linemeas_redshiftstep(object_type) is not None,
             f"lineameas_redshiftstep for object {object_type}",
-            f"object {object_type} linemeas_redshiftstep"
+            f"object {object_type} lineMeasRedshiftStep"
         )
 
     def _check_object_reliability(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
             self.accessor.get_reliability_enabled(object_type),
             self.accessor.get_reliability_model(object_type) is not None,
-            error_message=f"reliability_model for object {object_type}",
+            error_message=f"reliabilityModel for object {object_type}",
             warning_message=f"object {object_type} reliability_enabled"
         )
 
     def _check_templateFittingSolve_section(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_solve_method(object_type) == "TemplateFittingSolve",
+            self.accessor.get_solve_method(object_type) == "templateFittingSolver",
             self.accessor.get_templateFittingSolve_section(object_type) is not None,
-            error_message=f"TemplateFittingSolve for object {object_type}",
-            warning_message=f"object {object_type} TemplateFittingSolve"
+            error_message=f"templateFittingSolver for object {object_type}",
+            warning_message=f"object {object_type} templateFittingSolver"
         )
 
         self._check_templateFittingSolve_ism(object_type)
@@ -286,10 +286,10 @@ class ParametersChecker:
 
     def _check_templateCombinationSolve_section(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_solve_method(object_type) == "TplcombinationSolve",
+            self.accessor.get_solve_method(object_type) == "tplCombinationSolver",
             self.accessor.get_templateCombinationSolve_section(object_type) is not None,
-            error_message=f"TplcombinationSolve for object {object_type}",
-            warning_message=f"object {object_type} TplcombinationSolve"
+            error_message=f"tplCombinationSolver for object {object_type}",
+            warning_message=f"object {object_type} tplCombinationSolver"
         )
         self._check_templateCombinationSolve_ism(object_type)
 
@@ -325,18 +325,18 @@ class ParametersChecker:
 
     def _check_linemodelsolve_section(self, object_type: str):
         self._check_dependant_parameter_presence(
-            self.accessor.get_solve_method(object_type) == "LineModelSolve",
+            self.accessor.get_solve_method(object_type) == "lineModelSolver",
             self.accessor.get_lineModelSolve_section(object_type) is not None,
-            error_message=f"LineModelSolve for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve"
+            error_message=f"lineModelSolver for object {object_type}",
+            warning_message=f"object {object_type} lineModelSolver"
         )
 
     def _check_linemodelsolve_lineratiotype_rules(self, object_type: str):
         self._check_dependant_parameter_presence(
             self.accessor.get_lineModelSolve_lineRatioType(object_type) == "rules",
             self.accessor.get_lineModelSolve_rules(object_type) is not None,
-            error_message=f"LineModelSolve rules for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve rules"
+            error_message=f"lineModelSolver rules for object {object_type}",
+            warning_message=f"object {object_type} lineModelSolver rules"
         )
 
     def _check_linemodelsolve_improveBalmerFit(self, object_type: str):
@@ -345,62 +345,62 @@ class ParametersChecker:
         if improveBalmerFit and lineRatioType != "rules":
             zflag.warning(
                 WarningCode.UNUSED_PARAMETER.value,
-                f"object {object_type} LineModelSolve lineRatioType must be rules to "
+                f"object {object_type} lineModelSolver lineRatioType must be rules to "
                 "activate improveBalmerFit"
             )
 
     def _check_lineratiotype_tplratio_catalog(self, object_type):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"],
+            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplRatio", "tplCorr"],
             self.accessor.get_lineModelSolve_tplratio_catalog(object_type) is not None,
-            error_message=f"LineModelSolve tplratio_catalog for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve tplratio_catalog"
+            error_message=f"lineModelSolver tplRatioCatalog for object {object_type}",
+            warning_message=f"object {object_type} lineModelSolver tplRatioCatalog"
         )
 
     def _check_lineratiotype_tplratio_ismfit(self, object_type):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"],
+            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplRatio", "tplCorr"],
             self.accessor.get_lineModelSolve_tplratio_ismfit(object_type) is not None,
-            error_message=f"LineModelSolve tplratio_ismfit for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve tplratio_ismfit"
+            error_message=f"lineModelSolver tplRatioIsmFit for object {object_type}",
+            warning_message=f"object {object_type} lineModelSolver tplRatioIsmFit"
         )
 
     def _check_linemodelsolve_continuumremoval(self, object_type):
         self._check_dependant_parameter_presence(
             self.accessor.get_lineModelSolve_continuumComponent(object_type) in [
-                "fromspectrum", "tplfitauto"],
+                "fromSpectrum", "tplFitAuto"],
             self.accessor.get_continuum_removal() is not None,
             error_message="continuumRemoval"
         )
 
     def _check_linemodelsolve_continuumreestimation(self, object_type):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) == "fromspectrum",
+            self.accessor.get_lineModelSolve_continuumComponent(object_type) == "fromSpectrum",
             self.accessor.get_lineModelSolve_continuumreestimation(object_type) is not None,
-            error_message=f"object {object_type} LineModelSolve continuumreestimation",
-            warning_message=f"object {object_type} LineModelSolve continuumreestimation"
+            error_message=f"object {object_type} lineModelSolver continuumReestimation",
+            warning_message=f"object {object_type} lineModelSolver continuumReestimation"
         )
 
     def _check_linemodelsolve_continuumfit_section(self, object_type):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplfit", "tplfitauto"],
+            self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplFit", "tplFitAuto"],
             self.accessor.get_lineModelSolve_continuumfit_section(object_type) is not None,
-            error_message=f"object {object_type} LineModelSolve continuumfit"
+            error_message=f"object {object_type} lineModelSolver continuumFit"
         )
 
     def _check_linemodelsolve_secondpass_section(self, object_type):
         self._check_dependant_parameter_presence(
             self.accessor.get_lineModelSolve_skipsecondpass(object_type) is False,
             self.accessor.get_lineModelSolve_secondpass_section(object_type) is not None,
-            f"object {object_type} LineModelSolve secondpass",
-            f"object {object_type} LineModelSolve secondpass"
+            f"object {object_type} lineModelSolver secondPass",
+            f"object {object_type} lineModelSolver secondPass"
         )
 
     def _check_linemodelsolve_secondpass_continuumfit(self, object_type):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplfit", "tplfitauto"],
+            self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplFit", "tplFitAuto"],
             self.accessor.get_lineModelSolve_secondpass_continuumfit(object_type) is not None,
-            error_message=f"object {object_type} LineModelSolve secondpass continuumfit"
+            error_message=f"object {object_type} lineModelSolver secondpass continuumFit"
         )
 
     def _check_linemodelsolve_continuumfit_ism(self, object_type: str) -> None:
@@ -412,17 +412,17 @@ class ParametersChecker:
 
     def _check_linemodelsolve_firstpass_tplratio_ismfit(self, object_type: str):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"],
+            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplRatio", "tplCorr"],
             self.accessor.get_lineModelSolve_firstpass_tplratio_ismfit(object_type) is not None,
-            f"object {object_type} LineModelSolve firstpass tplratio_ismfit",
-            f"object {object_type} LineModelSolve firstpass tplratio_ismfit"
+            f"object {object_type} lineModelSolver firstpass tplRatioIsmFit",
+            f"object {object_type} lineModelSolver firstpass tplRatioIsmFit"
         )
 
     def _check_linemeassolve_lineratiotype_rules(self, object_type: str):
         self._check_dependant_parameter_presence(
             self.accessor.get_lineMeasSolve_lineRatioType(object_type) == "rules",
             self.accessor.get_lineMeasSolve_rules(object_type) is not None,
-            error_message=f"LineMeasSolve rules for object {object_type}",
+            error_message=f"lineMeasSolver rules for object {object_type}",
             warning_message=f"object {object_type} LineMeasSolve rules"
         )
 
@@ -430,18 +430,18 @@ class ParametersChecker:
         self._check_dependant_parameter_presence(
             self.accessor.get_lineMeasSolve_fittingmethod(object_type) == "lbfgsb",
             self.accessor.get_lineMeasSolve_velocityfit(object_type) is not None,
-            error_message=f"LineMeasSolve velocityfit for object {object_type}",
-            warning_message=f"object {object_type} LineMeasSolve velocityfit"
+            error_message=f"lineMeasSolver velocityFit for object {object_type}",
+            warning_message=f"object {object_type} LineMeasSolve velocityFit"
         )
 
     def _check_linemeassolve_velocityfit_params(self, object_type: str):
-        params = ["emvelocityfitmin", "emvelocityfitmax", "absvelocityfitmin", "absvelocityfitmax"]
+        params = ["emVelocityFitMin", "emVelocityFitMax", "absVelocityFitMin", "absVelocityFitMax"]
         velocityfit: bool = self.accessor.get_lineMeasSolve_velocityfit(object_type)
         for param in params:
             self._check_dependant_parameter_presence(
                 velocityfit,
                 self.accessor.get_lineMeasSolve_velocityfit_param(object_type, param) is not None,
-                error_message=f"LineMeasSolve {param} for object {object_type}",
+                error_message=f"lineMeasSolver {param} for object {object_type}",
                 warning_message=f"object {object_type} LineMeasSolve {param}"
             )
 

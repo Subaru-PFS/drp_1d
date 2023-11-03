@@ -91,11 +91,11 @@ CLineModelElement::CLineModelElement(
 
   m_size = m_ElementParam->m_Lines.size();
 
-  if (widthType == "instrumentdriven") {
+  if (widthType == "instrumentDriven") {
     m_ElementParam->m_LineWidthType = INSTRUMENTDRIVEN;
   } else if (widthType == "combined") {
     m_ElementParam->m_LineWidthType = COMBINED;
-  } else if (widthType == "velocitydriven") {
+  } else if (widthType == "velocityDriven") {
     m_ElementParam->m_LineWidthType = VELOCITYDRIVEN;
   } else {
     THROWG(INTERNAL_ERROR, Formatter() << "Unknown LineWidthType" << widthType);
@@ -160,7 +160,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda,
   const Float64 pfsSimuCompensationFactor = 1.0;
 
   if (!m_LSF)
-    THROWG(INTERNAL_ERROR, "LSF object is not initailized.");
+    THROWG(INTERNAL_ERROR, "lsf object is not initailized.");
   Float64 instrumentSigma = m_LSF->GetWidth(redshiftedlambda);
 
   Float64 velocitySigma = pfsSimuCompensationFactor * v / c *

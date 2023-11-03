@@ -104,7 +104,7 @@ class TestParametersCheckGeneral:
                         {"key": "Err", "instruction": "^", "value": "8"},
                         {"key": "zzz", "instruction": "^", "value": "8"}
                     ],
-                    "additional_cols": ["zzz"]
+                    "additionalCols": ["zzz"]
                 }
 
                 accessor = ParametersAccessor(parametersDict)
@@ -115,32 +115,32 @@ class TestParametersCheckGeneral:
 
         def _make_param_dict(self, **kwargs):
             new_kwargs = kwargs.copy()
-            if kwargs.get("enablephotometry"):
+            if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-            new_kwargs = {"TemplateFittingSolve": new_kwargs, "template_dir": "sth"}
-            new_kwargs["method"] = "TemplateFittingSolve"
+            new_kwargs = {"templateFittingSolver": new_kwargs, "templateDir": "sth"}
+            new_kwargs["method"] = "templateFittingSolver"
 
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)
-            if kwargs.get("enablephotometry"):
+            if kwargs.get("enablePhotometry"):
                 param_dict["photometryBand"] = "sth"
 
             return param_dict
 
         def test_photometry_enabled_without_transmission_dir_raises_an_error(self):
-            param_dict = self._make_param_dict(**{"enablephotometry": True})
+            param_dict = self._make_param_dict(**{"enablePhotometry": True})
             accessor = ParametersAccessor(param_dict)
             with pytest.raises(APIException, match=r"Missing parameter"):
                 ParametersChecker().custom_check(accessor)
 
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
-            param_dict = self._make_param_dict(**{"enablephotometry": True})
+            param_dict = self._make_param_dict(**{"enablePhotometry": True})
             param_dict["photometryTransmissionDir"] = "sth"
             accessor = ParametersAccessor(param_dict)
             ParametersChecker().custom_check(accessor)
             assert not WarningUtils.has_any_warning(zflag)
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
-            param_dict = self._make_param_dict(**{"enablephotometry": False})
+            param_dict = self._make_param_dict(**{"enablePhotometry": False})
             param_dict["photometryTransmissionDir"] = "sth"
             accessor = ParametersAccessor(param_dict)
             ParametersChecker().custom_check(accessor)
@@ -150,25 +150,25 @@ class TestParametersCheckGeneral:
 
         def _make_param_dict(self, **kwargs):
             new_kwargs = kwargs.copy()
-            if kwargs.get("enablephotometry"):
+            if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-            new_kwargs = {"TemplateFittingSolve": new_kwargs, "template_dir": "sth"}
-            new_kwargs["method"] = "TemplateFittingSolve"
+            new_kwargs = {"templateFittingSolver": new_kwargs, "templateDir": "sth"}
+            new_kwargs["method"] = "templateFittingSolver"
 
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)
-            if kwargs.get("enablephotometry"):
+            if kwargs.get("enablePhotometry"):
                 param_dict["photometryTransmissionDir"] = "sth"
 
             return param_dict
 
         def test_photometry_enabled_without_transmission_dir_raises_an_error(self):
-            param_dict = self._make_param_dict(**{"enablephotometry": True})
+            param_dict = self._make_param_dict(**{"enablePhotometry": True})
             accessor = ParametersAccessor(param_dict)
             with pytest.raises(APIException, match=r"Missing parameter"):
                 ParametersChecker().custom_check(accessor)
 
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
-            param_dict = self._make_param_dict(**{"enablephotometry": True})
+            param_dict = self._make_param_dict(**{"enablePhotometry": True})
             print("param dict", param_dict)
             param_dict["photometryBand"] = "sth"
 
@@ -177,7 +177,7 @@ class TestParametersCheckGeneral:
             assert not WarningUtils.has_any_warning(zflag)
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
-            param_dict = self._make_param_dict(**{"enablephotometry": False})
+            param_dict = self._make_param_dict(**{"enablePhotometry": False})
             param_dict["photometryBand"] = "sth"
 
             accessor = ParametersAccessor(param_dict)

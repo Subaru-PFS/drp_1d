@@ -48,13 +48,13 @@ class TestLineMeasSolve:
 
         def _make_parameter_dict(self, **kwargs):
             param_dict = make_parameter_dict_at_object_level(**{
-                "LineMeasSolve": {"linemodel": kwargs}
+                "lineMeasSolver": {"lineModel": kwargs}
             })
             return param_dict
 
         def test_error_if_lineRatioType_is_rules_but_rules_is_absent(self):
             param_dict = self._make_parameter_dict(**{"lineRatioType": "rules"})
-            with pytest.raises(APIException, match=r"Missing parameter LineMeasSolve rules"):
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolver rules"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_lineRatioType_is_rules_and_rules_is_present(self, zflag):
@@ -70,55 +70,55 @@ class TestLineMeasSolve:
     class TestFittingMethod:
         def _make_parameter_dict(self, **kwargs):
             param_dict = make_parameter_dict_at_object_level(**{
-                "LineMeasSolve": {"linemodel": kwargs}
+                "lineMeasSolver": {"lineModel": kwargs}
             })
             return param_dict
 
         def test_error_if_fittingmethod_is_lbfgsb_but_velocityfit_is_absent(self):
-            param_dict = self._make_parameter_dict(**{"fittingmethod": "lbfgsb"})
-            with pytest.raises(APIException, match=r"Missing parameter LineMeasSolve velocityfit"):
+            param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb"})
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolver velocityFit"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_fittingmethod_is_lbfgsb_and_velocityfit_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{"fittingmethod": "lbfgsb", "velocityfit": False})
+            param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb", "velocityFit": False})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_fitting_method_is_not_lbfgsb_but_velocityfit_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{"velocityfit": False})
+            param_dict = self._make_parameter_dict(**{"velocityFit": False})
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning(zflag)
 
     class TestVelocityFit:
         def _make_parameter_dict(self, **kwargs):
             param_dict = make_parameter_dict_at_object_level(**{
-                "LineMeasSolve": {"linemodel": {"fittingmethod": "lbfgsb", **kwargs}}
+                "lineMeasSolver": {"lineModel": {"fittingMethod": "lbfgsb", **kwargs}}
             })
             return param_dict
 
         def test_error_if_velocityfit_is_true_but_a_velocity_param_is_absent(self):
             param_dict = self._make_parameter_dict(**{
-                "velocityfit": True,
-                "emvelocityfitmin": 1,
+                "velocityFit": True,
+                "emVelocityFitMin": 1,
             })
-            with pytest.raises(APIException, match=r"Missing parameter LineMeasSolve"):
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolver"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_velocityfit_is_true_and_all_velocity_params_are_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "velocityfit": True,
-                "emvelocityfitmin": 1,
-                "emvelocityfitmax": 1,
-                "absvelocityfitmin": 1,
-                "absvelocityfitmax": 1,
+                "velocityFit": True,
+                "emVelocityFitMin": 1,
+                "emVelocityFitMax": 1,
+                "absVelocityFitMin": 1,
+                "absVelocityFitMax": 1,
             })
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)
 
         def test_warning_if_velocityfit_is_false_but_some_velocity_params_are_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "velocityfit": False,
-                "emvelocityfitmin": 1,
+                "velocityFit": False,
+                "emVelocityFitMin": 1,
             })
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning(zflag)

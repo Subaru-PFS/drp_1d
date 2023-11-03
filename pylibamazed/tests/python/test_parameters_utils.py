@@ -45,23 +45,23 @@ class TestParametersUtils:
     def make_input_parameters(self, **kwargs) -> dict:
         input_parameters = {
             self.default_object_type: {
-                "method": kwargs.get("method", "LineModelSolve"),
+                "method": kwargs.get("method", "lineModelSolver"),
                 "linemeas_method": "some lineas method",
-                "redshiftsampling": "some redshift sampling",
-                "LineModelSolve": {
-                    "linemodel": {
-                        "skipsecondpass": True,
-                        "lineRatioType": "tplratio",
+                "redshiftSampling": "some redshift sampling",
+                "lineModelSolver": {
+                    "lineModel": {
+                        "skipSecondPass": True,
+                        "lineRatioType": "tplRatio",
                     }
                 },
-                "LineMeasSolve": {
-                    "linemodel": {
-                        "velocityabsorption": None,
-                        "velocityemission": None,
+                "lineMeasSolver": {
+                    "lineModel": {
+                        "velocityAbsorption": None,
+                        "velocityEmission": None,
                     }
                 }
             },
-            "objects": [self.default_object_type]
+            "spectrumModels": [self.default_object_type]
         }
         return input_parameters
 

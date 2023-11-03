@@ -24,28 +24,28 @@ CContinuumManager::CContinuumManager(const CSpcModelVectorPtr &models,
       0; // 0=interactive fitting, 1=use precomputed fit store, 2=use fixed
   // values (typical use for second pass recompute)
 
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-  setContinuumComponent(ps->GetScoped<std::string>("continuumcomponent"));
+  setContinuumComponent(ps->GetScoped<std::string>("continuumComponent"));
 
-  if (m_ContinuumComponent != "nocontinuum") {
+  if (m_ContinuumComponent != "noContinuum") {
     m_opt_fitcontinuum_neg_threshold =
-        ps->GetScoped<Float64>("continuumfit.negativethreshold");
+        ps->GetScoped<Float64>("continuumFit.negativeThreshold");
     m_opt_fitcontinuum_null_amp_threshold =
-        ps->GetScoped<Float64>("continuumfit.nullthreshold");
+        ps->GetScoped<Float64>("continuumFit.nullThreshold");
   }
 }
 
 std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
-  CAutoScope a = CAutoScope(Context.m_ScopeStack, "linemodel");
-  CAutoScope b = CAutoScope(Context.m_ScopeStack, "continuumfit");
+  CAutoScope a = CAutoScope(Context.m_ScopeStack, "lineModel");
+  CAutoScope b = CAutoScope(Context.m_ScopeStack, "continuumFit");
   CAutoScope c = CAutoScope(Context.m_ScopeStack, "priors");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   m_fitContinuum_priorhelper = std::make_shared<CPriorHelper>();
   m_fitContinuum_priorhelper->Init(
-      ps->GetScoped<std::string>("catalog_dirpath"), 0);
+      ps->GetScoped<std::string>("catalogDirPath"), 0);
   m_fitContinuum_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_fitContinuum_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
   m_fitContinuum_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
@@ -251,13 +251,13 @@ void CContinuumManager::setContinuumComponent(std::string component) {
   }
   *m_fitContinuum = {};
 
-  if (m_ContinuumComponent == "nocontinuum") {
-    m_fitContinuum->tplName = "nocontinuum"; // to keep track in resultstore
+  if (m_ContinuumComponent == "noContinuum") {
+    m_fitContinuum->tplName = "noContinuum"; // to keep track in resultstore
     // the continuum is set to zero and the observed spectrum is the spectrum
     // without continuum
   }
-  if (m_ContinuumComponent == "fromspectrum") {
-    m_fitContinuum->tplName = "fromspectrum"; // to keep track in resultstore
+  if (m_ContinuumComponent == "fromSpectrum") {
+    m_fitContinuum->tplName = "fromSpectrum"; // to keep track in resultstore
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
   }

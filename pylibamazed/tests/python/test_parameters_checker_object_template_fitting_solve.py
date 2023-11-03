@@ -46,23 +46,23 @@ class TestTemplateFittingSolve:
 
     def _make_parameter_dict(self, **kwargs) -> dict:
         kwargs["linemeas_method"] = kwargs.get("linemeas_method", "")
-        kwargs["method"] = kwargs.get("method", "TemplateFittingSolve")
-        if kwargs["method"] == "TemplateFittingSolve":
-            kwargs["template_dir"] = "sth"
+        kwargs["method"] = kwargs.get("method", "templateFittingSolver")
+        if kwargs["method"] == "templateFittingSolver":
+            kwargs["templateDir"] = "sth"
         param_dict = make_parameter_dict_at_object_level(**kwargs)
-        if kwargs.get("TemplateFittingSolve", {}).get("enablephotometry"):
+        if kwargs.get("templateFittingSolver", {}).get("enablePhotometry"):
             param_dict["photometryTransmissionDir"] = "sth"
             param_dict["photometryBand"] = ["someBand"]
         return param_dict
 
     def test_error_if_method_is_templateFittingSolve_and_section_is_absent(self):
         param_dict = self._make_parameter_dict(**{})
-        with pytest.raises(APIException, match=r"Missing parameter TemplateFittingSolve"):
+        with pytest.raises(APIException, match=r"Missing parameter templateFittingSolver"):
             check_from_parameter_dict(param_dict)
 
     def test_OK_if_method_is_templateFittingSolve_and_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {}
+            "templateFittingSolver": {}
         })
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning(zflag)
@@ -70,7 +70,7 @@ class TestTemplateFittingSolve:
     def test_warning_if_method_is_not_templateFittingSolve_but_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
-            "TemplateFittingSolve": {}
+            "templateFittingSolver": {}
         })
         check_from_parameter_dict(param_dict)
         assert WarningUtils.has_any_warning(zflag)
@@ -84,14 +84,14 @@ class TestTemplateFittingSolve:
 
     def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {"ismfit": True}
+            "templateFittingSolver": {"ismFit": True}
         })
         with pytest.raises(APIException, match=r"Missing parameter ebmv"):
             check_from_parameter_dict(param_dict)
 
     def test_ok_if_ismfit_enabled_and_ebmv_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {"ismfit": True}
+            "templateFittingSolver": {"ismFit": True}
         })
         param_dict["ebmv"] = {}
         check_from_parameter_dict(param_dict)
@@ -99,7 +99,7 @@ class TestTemplateFittingSolve:
 
     def test_error_if_photometry_is_enabled_but_photometry_weight_is_absent(self):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {"enablephotometry": True}
+            "templateFittingSolver": {"enablePhotometry": True}
         })
         with pytest.raises(
             APIException,
@@ -109,8 +109,8 @@ class TestTemplateFittingSolve:
 
     def test_ok_if_photometry_is_enabled_and_photometry_weight_too(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {
-                "enablephotometry": True,
+            "templateFittingSolver": {
+                "enablePhotometry": True,
                 "photometry": {"weight": 1}
             }
         })
@@ -119,8 +119,8 @@ class TestTemplateFittingSolve:
 
     def test_warning_if_photometry_is_disabled_but_photometry_weight_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {
-                "enablephotometry": False,
+            "templateFittingSolver": {
+                "enablePhotometry": False,
                 "photometry": {"weight": 1}
             }
         })
@@ -129,8 +129,8 @@ class TestTemplateFittingSolve:
 
     def test_ok_if_photometry_is_disabled_and_photometry_weight_is_absent(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {
-                "enablephotometry": False,
+            "templateFittingSolver": {
+                "enablePhotometry": False,
                 "photometry": {}
             }
         })

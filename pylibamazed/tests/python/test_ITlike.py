@@ -48,11 +48,7 @@ from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
 from tests.python.fake_parameters_checker import FakeParametersChecker
-
-module_root_dir = os.path.split(__file__)[0]
-test_dir = os.path.join(
-    module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
-)
+from tests.python.config import test_dir
 
 
 def read_photometry_fromfile(fname):

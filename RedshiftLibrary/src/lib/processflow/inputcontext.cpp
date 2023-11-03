@@ -153,13 +153,13 @@ void CInputContext::OrthogonalizeTemplates() {
   Float64 lambda =
       (m_lambdaRanges[0]->GetBegin() + m_lambdaRanges[0]->GetEnd()) / 2;
   if (m_spectra[0]->GetLSF() == nullptr)
-    THROWG(INTERNAL_ERROR, "No defined LSF");
+    THROWG(INTERNAL_ERROR, "No defined lsf");
   Float64 resolution = CLSFGaussianConstantResolution::computeResolution(
       lambda, m_spectra[0]->GetLSF()->GetWidth(lambda));
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantResolutionArgs>(resolution);
   std::shared_ptr<const CLSF> lsf =
-      LSFFactory.Create("GaussianConstantResolution", args);
+      LSFFactory.Create("gaussianConstantResolution", args);
 
   for (std::string cat : m_categories) {
     if (m_ParameterStore->HasToOrthogonalizeTemplates(cat)) {
@@ -170,35 +170,35 @@ void CInputContext::OrthogonalizeTemplates() {
 }
 
 void CInputContext::setLineCatalog(
-    const std::string &objectType, const std::string &method,
+    const std::string &spectrumModel, const std::string &method,
     const std::shared_ptr<CLineCatalog> &catalog) {
-  m_lineCatalogs[objectType][method] = catalog;
+  m_lineCatalogs[spectrumModel][method] = catalog;
 }
 
 void CInputContext::setLineRatioCatalogCatalog(
-    const std::string &objectType,
+    const std::string &spectrumModel,
     const std::shared_ptr<CLineCatalogsTplRatio> &catalog) {
-  m_lineRatioCatalogCatalogs[objectType] = catalog;
+  m_lineRatioCatalogCatalogs[spectrumModel] = catalog;
 }
 
 void CInputContext::Init() {
-  m_categories = m_ParameterStore->GetList<std::string>("objects");
+  m_categories = m_ParameterStore->GetList<std::string>("spectrumModels");
   for (std::string cat : m_categories)
     Log.LogInfo(cat);
 
   // set template continuum removal parameters
   m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
 
-  bool enableInputSpcCorrect = m_ParameterStore->Get<bool>("autocorrectinput");
+  bool enableInputSpcCorrect = m_ParameterStore->Get<bool>("autoCorrectInput");
 
   // non clamped lambdaRange: to be clamped depending on used spectra
   for (auto spectrum : m_spectra) {
     TFloat64Range lambdaRange;
     if (m_spectra.size() > 1)
       lambdaRange = m_ParameterStore->Get<TFloat64Range>(
-          Formatter() << "lambdarange." << spectrum->getObsID());
+          Formatter() << "lambdaRange." << spectrum->getObsID());
     else
-      lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
+      lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdaRange");
     m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(lambdaRange));
     m_clampedLambdaRanges.emplace_back(new TFloat64Range());
     m_rebinnedClampedLambdaRanges.emplace_back(new TFloat64Range());
@@ -218,7 +218,7 @@ void CInputContext::Init() {
     // convolve IGM by LSF
 
     if (!m_igmcorrectionMeiksin->isConvolved() ||
-        m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA")
+        m_ParameterStore->Get<std::string>("lsf.lsfType") == "fromSpectrumData")
       m_igmcorrectionMeiksin->convolveByLSF(spectrum->GetLSF(), *(lambdaRange));
   }
   // insert extinction correction objects if needed

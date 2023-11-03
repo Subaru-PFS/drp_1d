@@ -1,0 +1,13 @@
+{
+    "lambdarange": [
+        12510,
+        18500
+    ],
+    "continuumRemoval": {
+        "medianKernelWidth": 150
+    },
+    "LSF": {
+        "LSFType": "GaussianNISPVSSPSF201707",
+        "sourcesize": 0.1
+    }
+}

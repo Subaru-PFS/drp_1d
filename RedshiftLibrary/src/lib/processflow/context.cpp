@@ -84,11 +84,11 @@ void CProcessFlowContext::reset() {
 }
 
 const CLineMap CProcessFlowContext::getCLineMap() {
-  CAutoScope autoscope(m_ScopeStack, "linemodel");
+  CAutoScope autoscope(m_ScopeStack, "lineModel");
   return m_inputContext->GetFilteredLineMap(
       GetCurrentCategory(), GetCurrentMethod(),
-      m_parameterStore->GetScoped<std::string>("linetypefilter"),
-      m_parameterStore->GetScoped<std::string>("lineforcefilter"));
+      m_parameterStore->GetScoped<std::string>("lineTypeFilter"),
+      m_parameterStore->GetScoped<std::string>("lineForceFilter"));
 }
 
 std::shared_ptr<CLineCatalogsTplRatio>

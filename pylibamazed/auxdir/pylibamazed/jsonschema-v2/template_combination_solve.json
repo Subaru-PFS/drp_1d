@@ -30,19 +30,19 @@
           "type": "string",
           "enum": [
             "raw",
-            "nocontinuum",
+            "noContinuum",
             "continuum",
             "all"
           ],
           "title": "Spectrum components to fit",
-          "description": "Component of the spectrum (and templates) to fit. \n * **raw**: full spectrum and templates \n * **nocontinuum**: continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods) \n * **continuum**: continuum of the spectrum and templates \n * **all**: computes all 3 (\"raw\", \"nocontinuum\" and \"continuum\") options, i.e. 3 chi2(z) in the resultstore, but only one pdf corresponding to \"raw\" option"
+          "description": "Component of the spectrum (and templates) to fit. \n * **raw**: full spectrum and templates \n * **nocontinuum**: continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods) \n * **continuum**: continuum of the spectrum and templates \n * **all**: computes all 3 (\"raw\", \"noContinuum\" and \"continuum\") options, i.e. 3 chi2(z) in the resultstore, but only one pdf corresponding to \"raw\" option"
         }
       }
     },
     "interpolation": {
       "type": "string",
       "enum": [
-        "precomputedfinegrid",
+        "preComputedFineGrid",
         "lin"
       ],
       "title": "Interpolation method",
@@ -64,7 +64,7 @@
     "pdfCombination": {
       "type": "string",
       "enum": [
-        "bestchi2",
+        "bestChi2",
         "marg"
       ],
       "title": "Pdf combination method",

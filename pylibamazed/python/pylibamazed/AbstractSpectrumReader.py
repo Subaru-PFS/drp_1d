@@ -248,7 +248,7 @@ class AbstractSpectrumReader:
         lsf_factory = CLSFFactory.GetInstance()
         lsf_args = self._lsf_args()
         lsf_type = self.parameters.get_lsf_type()
-        if self.parameters.get_lsf_type() == "FROMSPECTRUMDATA":
+        if self.parameters.get_lsf_type() == "fromSpectrumData":
             lsf_type = self.lsf_type
         lsf = lsf_factory.Create(lsf_type, lsf_args)
         for obs_id in self.parameters.get_observation_ids():
@@ -390,10 +390,10 @@ class AbstractSpectrumReader:
         airvacuum_method = self.parameters.get_airvacuum_method()
 
         if airvacuum_method == "default":
-            airvacuum_method = "Morton2000"
+            airvacuum_method = "morton2000"
 
         if airvacuum_method == "" and self.w_frame == "air":
-            airvacuum_method = "Morton2000"
+            airvacuum_method = "morton2000"
 
         elif airvacuum_method != "" and self.w_frame == "vacuum":
             zflag.warning(
@@ -408,18 +408,18 @@ class AbstractSpectrumReader:
         ctx = CProcessFlowContext.GetInstance()
         parameter_lsf_type = self.parameters.get_lsf_type()
 
-        if parameter_lsf_type == "FROMSPECTRUMDATA":
+        if parameter_lsf_type == "fromSpectrumData":
             lsf_obs_ids = self.get_loaded_lsf_observation_ids()
             if not lsf_obs_ids:
                 raise APIException(ErrorCode.LSF_NOT_LOADED,
                                    "No LSF loaded in reader, "
-                                   "lsftype=FROMSPECTRUMDATA "
+                                   "lsftype=fromSpectrumData "
                                    "parameter cannot be applied")
             obs_id = lsf_obs_ids[0]
             if len(lsf_obs_ids) > 1:
                 zflag.warning(WarningCode.ARBITRARY_LSF.value,
-                              f"LSF of observation {obs_id} chosen, other lsf ignored")
-            if self.lsf_type != "GaussianVariableWidth":
+                              f"lsf of observation {obs_id} chosen, other lsf ignored")
+            if self.lsf_type != "gaussianVariableWidth":
                 self.parameters.set_lsf_param(LSFParameters[self.lsf_type],
                                               self.lsf_data.get(obs_id)["width"][0])
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
@@ -428,7 +428,7 @@ class AbstractSpectrumReader:
                 lsf_args = TLSFGaussianVarWidthArgs(self.lsf_data.get(obs_id)["wave"],
                                                     self.lsf_data.get(obs_id)["width"])
         else:
-            if parameter_lsf_type != "GaussianVariableWidth":
+            if parameter_lsf_type != "gaussianVariableWidth":
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
                 lsf_args = TLSFArgumentsCtor[parameter_lsf_type](parameter_store)
             else:

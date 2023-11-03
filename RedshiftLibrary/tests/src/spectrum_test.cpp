@@ -72,7 +72,7 @@ const std::string jsonString =
     "{\"smoothWidth\" : 0.5,"
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}";
+    "\"method\" : \"irregularSamplingMedian\"}}";
 
 class fixture_SpectrumTest {
 public:
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   spc_2.GetRawFluxAxis_().setSamplesVector(rawFlux2);
   BOOST_CHECK_THROW(spc_2.InitSpectrumContinuum(*paramStore), GlobalException);
   spc.InitSpectrumContinuum(*paramStore);
-  BOOST_CHECK(spc.GetContinuumEstimationMethod() == "IrregularSamplingMedian");
+  BOOST_CHECK(spc.GetContinuumEstimationMethod() == "irregularSamplingMedian");
   BOOST_CHECK(spc.GetMedianWinsize() == 74.);
   BOOST_CHECK(spc.GetMedianEvenReflection() == false);
 
@@ -933,7 +933,7 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
 
   // test setRebinType
   BOOST_CHECK_NO_THROW(spcLight.setRebinInterpMethod("lin"));
-  BOOST_CHECK_NO_THROW(spcLight.setRebinInterpMethod("precomputedfinegrid"));
+  BOOST_CHECK_NO_THROW(spcLight.setRebinInterpMethod("preComputedFineGrid"));
   BOOST_CHECK_NO_THROW(spcLight.setRebinInterpMethod("spline"));
   BOOST_CHECK_NO_THROW(spcLight.setRebinInterpMethod("ngp"));
   BOOST_CHECK_THROW(spcLight.setRebinInterpMethod("linn"), GlobalException);

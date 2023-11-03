@@ -262,41 +262,7 @@ endif()
 # Install directive
 #--------------------------------------------------------
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/results_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv COPYONLY)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/continuum_removal.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/continuum_removal.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/ebmv.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/ebmv.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/general.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/general.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/line_model_continuum_fit.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/line_model_continuum_fit.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/line_model_first_pass.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/line_model_first_pass.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/line_model_lya_fit.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/line_model_lya_fit.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/line_model_priors.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/line_model_priors.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/line_model_second_pass.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/line_model_second_pass.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/line_model_solve.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/line_model_solve.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/linemeas_solve.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/linemeas_solve.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/lsf.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/lsf.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/objects.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/objects.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/template_catalog.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/template_catalog.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/template_combination_solve.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/template_combination_solve.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v1/template_fitting_solve.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v1/template_fitting_solve.json COPYONLY)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/continuum_removal.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/continuum_removal.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/ebmv.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/ebmv.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/general.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/general.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/line_model_continuum_fit.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/line_model_continuum_fit.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/line_model_first_pass.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/line_model_first_pass.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/line_model_lya_fit.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/line_model_lya_fit.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/line_model_priors.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/line_model_priors.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/line_model_second_pass.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/line_model_second_pass.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/line_model_solver.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/line_model_solver.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/linemeas_solver.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/linemeas_solver.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/redshift_solver.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/redshift_solver.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/reliability_solver.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/reliability_solver.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/lsf.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/lsf.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/spectrum_model.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/spectrum_model.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/template_catalog.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/template_catalog.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/template_combination_solve.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/template_combination_solve.json COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/jsonschema-v2/template_fitting_solve.json ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/jsonschema-v2/template_fitting_solve.json COPYONLY)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/ DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources)
 
 
 #--------------------------------------------------------

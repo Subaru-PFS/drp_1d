@@ -64,7 +64,7 @@ public:
     nType_all = 4,
   };
 
-  CTemplateFittingSolve(TScopeStack &scope, std::string objectType);
+  CTemplateFittingSolve(TScopeStack &scope, std::string spectrumModel);
 
 private:
   std::shared_ptr<CSolveResult>

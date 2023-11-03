@@ -418,7 +418,7 @@ void COperatorTplcombination::RebinTemplate(
         itplTplSpectrum.GetSpectralAxis();
     Log.LogDebug(
         " Rebinned template #%d has n=%d samples in "
-        "lambdarange: %.2f - %.2f",
+        "lambdaRange: %.2f - %.2f",
         ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0],
         itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount() - 1]);
 

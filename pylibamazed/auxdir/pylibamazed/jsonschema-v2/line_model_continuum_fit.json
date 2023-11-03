@@ -14,7 +14,7 @@
     "priors"
   ],
   "additionalProperties": false,
-  "description": "Concerns only fullmodel ie `continuumComponent=\"tplfit\"`",
+  "description": "Concerns only fullmodel ie `continuumComponent=\"tplFit\"`",
   "properties": {
     "fftProcessing": {
       "type": "boolean",
@@ -24,12 +24,12 @@
     "ismFit": {
       "type": "boolean",
       "title": "Wether to activate ISM extinction fit",
-      "description": "Wether to activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `lineModelSolve.linemodel_extrema.csv`)"
+      "description": "Wether to activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `lineModelSolver.linemodel_extrema.csv`)"
     },
     "igmFit": {
       "type": "boolean",
       "title": "Wether to activate IGM fit",
-      "description": "Wether to activate fit of IGM with Meiksin tables. Index scan from 0 to 0.9, step = 0.1 (best profile index stored in FittedTplMeiksinIdx parameter in lineModelSolve.linemodel_extrema.csv)"
+      "description": "Wether to activate fit of IGM with Meiksin tables. Index scan from 0 to 0.9, step = 0.1 (best profile index stored in FittedTplMeiksinIdx parameter in lineModelSolver.linemodel_extrema.csv)"
     },
     "count": {
       "type": "number",
@@ -49,7 +49,7 @@
     "nullThreshold": {
       "type": "number",
       "title": "Null threshold",
-      "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below `threshold * sigma`, continuum component is forced to nocontinuum"
+      "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below `threshold * sigma`, continuum component is forced to noContinuum"
     },
     "priors": {
       "$ref": "line_model_priors.json"

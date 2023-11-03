@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 from pylibamazed.Exception import APIException
 from pylibamazed.Parameters import Parameters
-from pylibamazed.r_specifications import rspecifications
+from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
 
 RootStages = ["init", "classification", "load_result_store"]
@@ -54,7 +54,7 @@ class AbstractOutput:
 
     def __init__(self,
                  parameters: Parameters,
-                 results_specifications=rspecifications,
+                 results_specifications=results_specifications_filename,
                  extended_results=True):
         self.parameters = parameters
         self.spectrum_id = ''
@@ -152,16 +152,20 @@ class AbstractOutput:
             col_name = attr_parts[3]
             object_type = root
             if line_name not in lines_ids:
-                raise APIException(ErrorCode.INTERNAL_ERROR, f"Line {line_name}  not found in {lines_ids}")
+                raise APIException(ErrorCode.INTERNAL_ERROR,
+                                   f"Line {line_name}  not found in {lines_ids}")
             if len(attr_parts) == 4:
                 rank = None
                 index_col = "LinemeasLineID"
             else:
                 rank = int(attr_parts[4])
                 index_col = "FittedLineID"
-            fitted_lines_attr = self.get_attribute(object_type, dataset, col_name, rank)
-            fitted_lines_idx = self.get_attribute(object_type, dataset, index_col, rank)
-            df = pd.DataFrame({"idx": fitted_lines_idx, col_name: fitted_lines_attr}).set_index("idx")
+            fitted_lines_attr = self.get_attribute(
+                object_type, dataset, col_name, rank)
+            fitted_lines_idx = self.get_attribute(
+                object_type, dataset, index_col, rank)
+            df = pd.DataFrame(
+                {"idx": fitted_lines_idx, col_name: fitted_lines_attr}).set_index("idx")
             return df.at[lines_ids[line_name], col_name]
         return None
 
@@ -220,12 +224,15 @@ class AbstractOutput:
             if dataset in self.object_results[object_type]:
                 if not self.object_results[object_type][dataset]:
                     return 0
-                first_attr = next(iter(self.object_results[object_type][dataset].values()))
+                first_attr = next(
+                    iter(self.object_results[object_type][dataset].values()))
             else:
-                raise APIException(ErrorCode.INTERNAL_ERROR, "Dataset " + dataset + " does not exist")
+                raise APIException(ErrorCode.INTERNAL_ERROR,
+                                   "Dataset " + dataset + " does not exist")
         else:
             if len(self.object_results[object_type][dataset][rank]):
-                first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
+                first_attr = next(
+                    iter(self.object_results[object_type][dataset][rank].values()))
         if first_attr is None:
             return 0
         if type(first_attr) == np.ndarray:
@@ -249,7 +256,8 @@ class AbstractOutput:
                     datasets.append(d)
             return datasets
         else:
-            raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown level " + level)
+            raise APIException(ErrorCode.INTERNAL_ERROR,
+                               "Unknown level " + level)
 
     def get_candidate_data(self, object_type, rank, data_name):
         mp = self.object_results[object_type]["model_parameters"][rank][data_name]
@@ -266,7 +274,8 @@ class AbstractOutput:
 
     # TODO more robust version, should iterate over candidate datasets and check existence
     def get_nb_candidates(self, object_type):
-        available_datasets = self.get_available_datasets("candidate", object_type)
+        available_datasets = self.get_available_datasets(
+            "candidate", object_type)
         if len(available_datasets) > 0:
             return len(self.object_results[object_type][available_datasets[0]])
         else:
@@ -304,15 +313,17 @@ class AbstractOutput:
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:
-            skipsecondpass = self.parameters.get_lineModelSolve_skipsecondpass(object_type)
+            skipsecondpass = self.parameters.get_lineModelSolve_skipsecondpass(
+                object_type)
 
         # retrieve results which are not firstpass results
         # exclude firstpass results for methods other than LineModelSolve
         notLinemodel = False
         if method:
-            notLinemodel = "LineModelSolve" not in method
+            notLinemodel = "lineModelSolver" not in method
         if skipsecondpass or notLinemodel:
-            filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
+            filtered_df = ds_attributes[~ds_attributes["name"].str.contains(
+                "Firstpass", na=True)]
         else:
             filtered_df = ds_attributes
 
@@ -345,7 +356,8 @@ class AbstractOutput:
                                                                   None,
                                                                   ds,
                                                                   ds_row["name"])
-                            attr_name = ds_row["name"].replace("<ObjectType>", object_type)
+                            attr_name = ds_row["name"].replace(
+                                "<ObjectType>", object_type)
                             self.root_results[ds][attr_name] = attr
                 else:
                     if self.has_attribute_in_source(None,
@@ -367,8 +379,10 @@ class AbstractOutput:
 
                     if "<ObsID>" in dataset:
                         for obs_id in self.parameters.get_observation_ids():
-                            self.object_results[object_type][dataset.replace("<ObsID>", obs_id)] = dict()
-                            self.fill_object_dataset(object_type, method, dataset, obs_id)
+                            self.object_results[object_type][dataset.replace(
+                                "<ObsID>", obs_id)] = dict()
+                            self.fill_object_dataset(
+                                object_type, method, dataset, obs_id)
                     else:
                         self.object_results[object_type][dataset] = dict()
                         self.fill_object_dataset(object_type, method, dataset)
@@ -383,7 +397,8 @@ class AbstractOutput:
                                                       dataset,
                                                       attr_name,
                                                       obs_id=obs_id)
-                self.object_results[object_type][dataset.replace("<ObsID>", obs_id)][attr_name] = attr
+                self.object_results[object_type][dataset.replace(
+                    "<ObsID>", obs_id)][attr_name] = attr
 
     def load_method_level(self, object_type):
         level = "method"
@@ -425,14 +440,16 @@ class AbstractOutput:
             multiobs_ds = "<ObsID>" in ds
             if not multiobs_ds:
                 if ds not in self.object_results[object_type]:
-                    self.object_results[object_type][ds.replace("<ObsID>", "")] = []
+                    self.object_results[object_type][ds.replace("<ObsID>", "")] = [
+                    ]
                 self.build_candidate_dataset(object_type,
                                              method,
                                              ds)
             else:
                 for obs_id in self.parameters.get_observation_ids():
                     if ds.replace("<ObsID>", obs_id) not in self.object_results[object_type]:
-                        self.object_results[object_type][ds.replace("<ObsID>", obs_id)] = []
+                        self.object_results[object_type][ds.replace(
+                            "<ObsID>", obs_id)] = []
                     self.build_candidate_dataset(object_type,
                                                  method,
                                                  ds,
@@ -444,7 +461,8 @@ class AbstractOutput:
         ds_attributes = self.filter_dataset_attributes(dataset,
                                                        object_type,
                                                        method).copy()
-        candidates = self.object_results[object_type][dataset.replace("<ObsID>", obs_id)]
+        candidates = self.object_results[object_type][dataset.replace(
+            "<ObsID>", obs_id)]
         if not candidates:
             for rank in range(nb_candidates):
                 candidates.append(dict())

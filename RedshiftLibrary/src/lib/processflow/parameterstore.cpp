@@ -152,43 +152,43 @@ void CParameterStore::FromString(const std::string &json) {
   bpt::json_parser::read_json(jsonstream, m_PropertyTree);
 }
 
-bool CParameterStore::HasTplIsmExtinction(const std::string &objectType) const {
+bool CParameterStore::HasTplIsmExtinction(const std::string &spectrumModel) const {
   bool extinction = false;
-  const std::string methodScope = objectType + ".method";
+  const std::string methodScope = spectrumModel + ".method";
   if (!Has<std::string>(methodScope))
     return false;
   const auto &method = Get<std::string>(methodScope);
-  if (method == "TemplateFittingSolve" || method == "TplcombinationSolve") {
-    const std::string scopeStr = objectType + "." + method + ".ismfit";
+  if (method == "templateFittingSolver" || method == "tplCombinationSolver") {
+    const std::string scopeStr = spectrumModel + "." + method + ".ismFit";
     if (Has<bool>(scopeStr))
       extinction = Get<bool>(scopeStr);
-  } else if (method == "LineModelSolve") {
-    // two parameters play here: continuumfit.ismfit and tplratio_ismfit
+  } else if (method == "lineModelSolver") {
+    // two parameters play here: continuumfit.ismfit and tplRatioIsmFit
     //
     const std::string scopeStr =
-        objectType + "." + method + ".linemodel.continuumfit.ismfit";
+        spectrumModel + "." + method + ".lineModel.continuumFit.ismFit";
     if (Has<bool>(scopeStr))
       extinction = Get<bool>(scopeStr);
 
     const std::string scopeStr_tplratio =
-        objectType + "." + method + ".linemodel.tplratio_ismfit";
+        spectrumModel + "." + method + ".lineModel.tplRatioIsmFit";
     if (Has<bool>(scopeStr_tplratio))
       extinction |= Get<bool>(scopeStr_tplratio);
   }
   return extinction;
 }
 
-bool CParameterStore::HasTplIgmExtinction(const std::string &objectType) const {
+bool CParameterStore::HasTplIgmExtinction(const std::string &spectrumModel) const {
   bool extinction = false;
-  const std::string methodScope = objectType + ".method";
+  const std::string methodScope = spectrumModel + ".method";
   if (!Has<std::string>(methodScope))
     return false;
   const auto &method = Get<std::string>(methodScope);
-  std::string scopeStr = objectType + "." + method;
-  if (method == "TemplateFittingSolve" || method == "TplcombinationSolve")
-    scopeStr += ".igmfit";
-  else if (method == "LineModelSolve")
-    scopeStr += ".linemodel.continuumfit.igmfit";
+  std::string scopeStr = spectrumModel + "." + method;
+  if (method == "templateFittingSolver" || method == "tplCombinationSolver")
+    scopeStr += ".igmFit";
+  else if (method == "lineModelSolver")
+    scopeStr += ".lineModel.continuumFit.igmFit";
 
   if (Has<bool>(scopeStr))
     extinction = Get<bool>(scopeStr);
@@ -196,21 +196,21 @@ bool CParameterStore::HasTplIgmExtinction(const std::string &objectType) const {
   return extinction;
 }
 
-bool CParameterStore::HasFFTProcessing(const std::string &objectType) const {
+bool CParameterStore::HasFFTProcessing(const std::string &spectrumModel) const {
   bool fft_processing = false;
-  const std::string methodScope = objectType + ".method";
+  const std::string methodScope = spectrumModel + ".method";
   if (!Has<std::string>(methodScope))
     return false;
   const auto &method = Get<std::string>(methodScope);
-  if (method == "TemplateFittingSolve") {
+  if (method == "templateFittingSolver") {
     const std::string scopeStr =
-        objectType + ".TemplateFittingSolve.fftprocessing";
+        spectrumModel + ".templateFittingSolver.fftProcessing";
     if (Has<bool>(scopeStr))
       fft_processing = Get<bool>(scopeStr);
   }
-  if (method == "LineModelSolve") {
+  if (method == "lineModelSolver") {
     const std::string scopeStr =
-        objectType + ".LineModelSolve.linemodel.continuumfit.fftprocessing";
+        spectrumModel + ".lineModelSolver.lineModel.continuumFit.fftProcessing";
     if (Has<bool>(scopeStr))
       fft_processing = Get<bool>(scopeStr);
   }
@@ -219,26 +219,26 @@ bool CParameterStore::HasFFTProcessing(const std::string &objectType) const {
 }
 
 bool CParameterStore::HasToOrthogonalizeTemplates(
-    const std::string &objectType) const {
+    const std::string &spectrumModel) const {
 
-  const std::string methodScope = objectType + ".method";
-  bool orthogonalize = Get<std::string>(methodScope) == "LineModelSolve";
+  const std::string methodScope = spectrumModel + ".method";
+  bool orthogonalize = Get<std::string>(methodScope) == "lineModelSolver";
   if (orthogonalize) {
     std::string continuumComponent = Get<std::string>(
-        objectType + ".LineModelSolve.linemodel.continuumcomponent");
+        spectrumModel + ".lineModelSolver.lineModel.continuumComponent");
     orthogonalize &=
-        (continuumComponent == "tplfit" || continuumComponent == "tplfitauto");
+        (continuumComponent == "tplFit" || continuumComponent == "tplFitAuto");
   }
   return orthogonalize;
 }
 
 bool CParameterStore::EnableTemplateOrthogonalization(
-    const std::string &objectType) const {
-  bool enableOrtho = HasToOrthogonalizeTemplates(objectType);
+    const std::string &spectrumModel) const {
+  bool enableOrtho = HasToOrthogonalizeTemplates(spectrumModel);
   if (enableOrtho) {
     enableOrtho &=
-        !Get<bool>(objectType +
-                   ".LineModelSolve.linemodel.continuumfit.ignorelinesupport");
+        !Get<bool>(spectrumModel +
+                   ".lineModelSolver.lineModel.continuumFit.ignoreLineSupport");
   }
   return enableOrtho;
 }
@@ -261,7 +261,7 @@ Float64 CParameterStore::getMinZStepForFFTProcessing(
   for (const auto &p : fftprocessing) {
     if (!p.second)
       continue;
-    Float64 redshift_step = Get<Float64>(p.first + ".redshiftstep");
+    Float64 redshift_step = Get<Float64>(p.first + ".redshiftStep");
     logGridStep = std::min(redshift_step, logGridStep);
   }
   return logGridStep;

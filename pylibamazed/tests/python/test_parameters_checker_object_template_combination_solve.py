@@ -46,19 +46,19 @@ class TestTemplateCombinationSolve:
 
     def _make_parameter_dict(self, **kwargs) -> dict:
         kwargs["linemeas_method"] = kwargs.get("linemeas_method", "")
-        kwargs["method"] = kwargs.get("method", "TplcombinationSolve")
-        if kwargs["method"] == "TplCombinationSolve":
-            kwargs["template_dir"] == "sth"
+        kwargs["method"] = kwargs.get("method", "tplCombinationSolver")
+        if kwargs["method"] == "tplCombinationSolver":
+            kwargs["templateDir"] = "sth"
         return make_parameter_dict_at_object_level(**kwargs)
 
     def test_error_if_method_is_TplcombinationSolve_and_section_is_absent(self):
         param_dict = self._make_parameter_dict(**{})
-        with pytest.raises(APIException, match=r"Missing parameter TplcombinationSolve"):
+        with pytest.raises(APIException, match=r"Missing parameter tplCombinationSolver"):
             check_from_parameter_dict(param_dict)
 
     def test_OK_if_method_is_templateCombinationSolve_and_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TplcombinationSolve": {}
+            "tplCombinationSolver": {}
         })
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning(zflag)
@@ -66,7 +66,7 @@ class TestTemplateCombinationSolve:
     def test_warning_if_method_is_not_templateCombinationSolve_but_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
-            "TplcombinationSolve": {}
+            "tplCombinationSolver": {}
         })
         check_from_parameter_dict(param_dict)
         assert WarningUtils.has_any_warning(zflag)
@@ -80,14 +80,14 @@ class TestTemplateCombinationSolve:
 
     def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
         param_dict = self._make_parameter_dict(**{
-            "TplcombinationSolve": {"ismfit": True}
+            "tplCombinationSolver": {"ismFit": True}
         })
         with pytest.raises(APIException, match=r"Missing parameter ebmv"):
             check_from_parameter_dict(param_dict)
 
     def test_ok_if_ismfit_enabled_and_ebmv_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TplcombinationSolve": {"ismfit": True}
+            "tplCombinationSolver": {"ismFit": True}
         })
         param_dict["ebmv"] = {}
         check_from_parameter_dict(param_dict)

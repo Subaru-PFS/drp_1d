@@ -47,40 +47,40 @@
 
 using namespace NSEpic;
 
-const std::string jsonString = "{\"lambdarange\" : [ 7200, 7800 ],"
+const std::string jsonString = "{\"lambdaRange\" : [ 7200, 7800 ],"
                                "\"smoothWidth\" : 0.0,"
                                "\"templateCatalog\" : {"
                                "\"continuumRemoval\" : {"
-                               "\"method\" : \"IrregularSamplingMedian\","
+                               "\"method\" : \"irregularSamplingMedian\","
                                "\"medianKernelWidth\" : 75,"
                                "\"medianEvenReflection\" : true}},"
                                "\"continuumRemoval\" : {"
-                               "\"method\" : \"IrregularSamplingMedian\","
+                               "\"method\" : \"irregularSamplingMedian\","
                                "\"medianKernelWidth\" : 400,"
                                "\"medianEvenReflection\" : true,"
                                "\"decompScales\" : 9},"
-                               "\"extremaredshiftseparation\" : 0.01,"
-                               "\"objects\" : [\"qso\"],"
-                               "\"autocorrectinput\" : false,"
+                               "\"extremaRedshiftSeparation\" : 0.01,"
+                               "\"spectrumModels\" : [\"qso\"],"
+                               "\"autoCorrectInput\" : false,"
                                "\"qso\" : {"
-                               "\"redshiftrange\" : [ 5.13, 5.16 ],"
-                               "\"redshiftstep\" : 0.001,"
-                               "\"redshiftsampling\" : \"log\","
-                               "\"method\" : \"TplcombinationSolve\","
+                               "\"redshiftRange\" : [ 5.13, 5.16 ],"
+                               "\"redshiftStep\" : 0.001,"
+                               "\"redshiftSampling\" : \"log\","
+                               "\"method\" : \"tplCombinationSolver\","
                                "\"linemeas_method\" : null,"
-                               "\"TplcombinationSolve\" : {"
+                               "\"tplCombinationSolver\" : {"
                                "\"overlapThreshold\" : 1,"
                                "\"interpolation\" : \"lin\","
-                               "\"pdfcombination\" : \"marg\","
-                               "\"extremacount\" : 5,"
-                               "\"ismfit\" : true,"
-                               "\"igmfit\" : true,";
+                               "\"pdfCombination\" : \"marg\","
+                               "\"extremaCount\" : 5,"
+                               "\"ismFit\" : true,"
+                               "\"igmFit\" : true,";
 
 const std::string jsonStringSpcComponentRaw =
     "\"spectrum\" : {\"component\" : \"raw\"}}}}";
 
 const std::string jsonStringSpcComponentNoContinuum =
-    "\"spectrum\" : {\"component\" : \"nocontinuum\"}}}}";
+    "\"spectrum\" : {\"component\" : \"noContinuum\"}}}}";
 
 const std::string jsonStringSpcComponentContinuum =
     "\"spectrum\" : {\"component\" : \"continuum\"}}}}";
@@ -167,23 +167,23 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "tplCombinationSolver");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "tplCombinationSolver", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "tplCombinationSolver", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "tplCombinationSolver", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
+      Context.GetResultStore()->GetExtremaResult("qso", "tplCombinationSolver",
                                                  "extrema_results",
                                                  "model_parameters", 0);
 
@@ -199,23 +199,23 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "tplCombinationSolver");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "tplCombinationSolver", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "tplCombinationSolver", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "tplCombinationSolver", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
+      Context.GetResultStore()->GetExtremaResult("qso", "tplCombinationSolver",
                                                  "extrema_results",
                                                  "model_parameters", 0);
 
@@ -231,23 +231,23 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "tplCombinationSolver");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "tplCombinationSolver", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "tplCombinationSolver", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "tplCombinationSolver", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
+      Context.GetResultStore()->GetExtremaResult("qso", "tplCombinationSolver",
                                                  "extrema_results",
                                                  "model_parameters", 0);
 
@@ -262,23 +262,23 @@ BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "tplCombinationSolver");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "tplCombinationSolver", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "tplCombinationSolver", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "tplCombinationSolver", "extrema_results", "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
+      Context.GetResultStore()->GetExtremaResult("qso", "tplCombinationSolver",
                                                  "extrema_results",
                                                  "model_parameters", 0);
 

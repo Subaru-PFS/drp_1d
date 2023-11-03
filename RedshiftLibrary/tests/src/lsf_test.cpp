@@ -67,12 +67,12 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth) {
     lbdaList[i] = i * 0.4;
   }
   CSpectrumSpectralAxis SpectralAxis(lbdaList);
-  std::string lsfType = "GaussianConstantWidth";
+  std::string lsfType = "gaussianConstantWidth";
   Float64 width = 1.09;
   TScopeStack scopeStack;
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  store->Set("LSF.width", width);
+  store->Set("lsf.width", width);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
@@ -113,12 +113,12 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   TScopeStack scopeStack;
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  std::string lsfType = "GaussianConstantWidth";
+  std::string lsfType = "gaussianConstantWidth";
 
   // TEST OK constructor 1
   Float64 width = 1.0;
   Float64 lambda = 7000.;
-  store->Set("LSF.width", width);
+  store->Set("lsf.width", width);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
 
   // TEST KO
   width = 0.0;
-  store->Set("LSF.width", width);
+  store->Set("lsf.width", width);
   args = std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> LSF_3 = LSFFactory.Create(lsfType, args);
   BOOST_CHECK(LSF_3->IsValid() == false);
@@ -184,13 +184,13 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
   TScopeStack scopeStack;
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  std::string lsfType = "GaussianConstantResolution";
+  std::string lsfType = "gaussianConstantResolution";
 
   // TEST OK constructor 1
   Float64 resolution = 100.0;
   Float64 lambda = 7000.;
   const Float64 instrumentResolutionEmpiricalFactor = 1.0 / 2.355;
-  store->Set("LSF.resolution", resolution);
+  store->Set("lsf.resolution", resolution);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
 
   // TEST KO
   resolution = 0.5;
-  store->Set("LSF.resolution", resolution);
+  store->Set("lsf.resolution", resolution);
   args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> LSF_3 = LSFFactory.Create(lsfType, args);
   BOOST_CHECK(LSF_3->IsValid() == false);
@@ -226,12 +226,12 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPVSSPSF201707_test) {
   TScopeStack scopeStack;
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  std::string lsfType = "GaussianNISPVSSPSF201707";
+  std::string lsfType = "gaussianNISPVSSPSF201707";
 
   // TEST OK
   Float64 sourcesize = 0.3;
   Float64 lambda = 7000.;
-  store->Set("LSF.sourcesize", sourcesize);
+  store->Set("lsf.sourceSize", sourcesize);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianNISPVSSPSF201707Args>(store);
   std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPVSSPSF201707_test) {
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianNISPSIM2016_test) {
-  std::string lsfType = "GaussianNISPSIM2016";
+  std::string lsfType = "gaussianNISPSIM2016";
 
   // TEST OK
   Float64 lambda = 7000.;
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPSIM2016_test) {
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
-  std::string lsfType = "GaussianVariableWidth";
+  std::string lsfType = "gaussianVariableWidth";
 
   // TEST OK
   Int32 n = 10;

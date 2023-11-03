@@ -116,7 +116,7 @@ class TestParameters:
                 "galaxy": {
                     "method": None
                 },
-                "objects": ["galaxy"]
+                "spectrumModels": ["galaxy"]
             }, make_checks=False)
             assert parameters.is_a_redshift_solver_used() is False
     
@@ -126,8 +126,8 @@ class TestParameters:
                     "method": None
                 },
                 "star": {
-                    "method": "linemodelsolve"
+                    "method": "lineModelsolve"
                 },
-                "objects": ["galaxy", "star"]
+                "spectrumModels": ["galaxy", "star"]
             }, make_checks=False)
             assert parameters.is_a_redshift_solver_used() is True

@@ -75,9 +75,9 @@ class AmazedSpectrumWriter:
         hdu = fits.BinTableHDU.from_columns([wave, flux, err], header=hdu1_header)
         hdu.name = "Spectrum"
 
-        if self.reader.lsf_type == "GaussianConstantWidth":
+        if self.reader.lsf_type == "gaussianConstantWidth":
             lsf_header = fits.Header([
-                fits.Card('LSF_TYPE', 'GaussianConstantWidth', 'Type of LSF'),
+                fits.Card('LSF_TYPE', 'gaussianConstantWidth', 'Type of LSF'),
                 fits.Card('S_VALUE', self.reader.lsf_data, 'Scalar value of the LSF, 0 by default')
             ])
         elif self.reader.lsf_type == "no_lsf":
