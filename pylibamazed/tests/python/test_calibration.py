@@ -77,3 +77,9 @@ def test_calibration_lineratiocatalog():
     cl = CalibrationLibrary(parameters, calibration_dir)
     cl.load_linecatalog("galaxy", "LineModelSolve")
     cl.load_line_ratio_catalog_list("galaxy")
+
+
+def test_calibraton_meiksin():
+    parameters = make_parameters()
+    cl = CalibrationLibrary(parameters, calibration_dir)
+    cl.load_Meiksin()

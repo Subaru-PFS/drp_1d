@@ -384,14 +384,19 @@ class CalibrationLibrary:
         zbins = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
         columns = ['restlambda', 'flux0', 'flux1', 'flux2', 'flux3', 'flux4', 'flux5', 'flux6']
         meiksinCorrectionCurves = VecMeiksinCorrection()
-        for z in zbins[1:]:
-            filename = f"Meiksin_Var_curves_{z}.txt"
-            file_path = os.path.join(self.calibration_dir, "igm",
-                                     "IGM_variation_curves_meiksin_v3.1", filename)
-            if not os.path.isfile(file_path):  # mainly for unit tests
-                continue
-            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm",
-                                    "IGM_variation_curves_meiksin_v3.1", filename))
+        meiksin_root_path = os.path.join(self.calibration_dir, "igm",
+                                                               "IGM_variation_curves_meiksin_v3.1")
+        filename_pattern = os.path.join(meiksin_root_path, "Meiksin_Var_curves_[2-7].[0,5].txt")
+        filenames = glob.glob(filename_pattern)
+        if not filenames:
+            raise APIException(ErrorCode.INVALID_FILEPATH,
+                               f"IGM extinction files not found in: {meiksin_root_path}")
+        filenames.sort()
+        zbins = [float(os.path.basename(name).replace("Meiksin_Var_curves_", "").replace(".txt", ""))
+                 for name in filenames]
+        zbins.insert(0, 1.5)
+        for path in filenames:
+            meiksin_df = ascii.read(path)
             columns = columns[:len(meiksin_df.columns)]
             meiksin_df.rename_columns(tuple(meiksin_df.columns), tuple(columns))
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
