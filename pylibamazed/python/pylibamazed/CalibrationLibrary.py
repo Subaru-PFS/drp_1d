@@ -352,26 +352,46 @@ class CalibrationLibrary:
         if self.parameters.get_lsf_type() == "GaussianVariableWidth":
             file = os.path.join(self.calibration_dir,
                                 self.parameters.get_lsf_width_file_name())
-            # TODO check hdul here
-            with fits.open(file) as hdul:
-                self.lsf["wave"] = hdul[1].data.field(0)
-                self.lsf["width"] = hdul[1].data.field(1)
+            if not os.path.isfile(file):
+                raise APIException(ErrorCode.INVALID_FILEPATH, f"wrong LSF file {file}")
+            with fits.open(file) as hdulist:
+                try:
+                    lsf_hdu = hdulist[1]
+                except IndexError:
+                    raise APIException(ErrorCode.BAD_FILEFORMAT, f"Cannot access hdu 1 for LSF in {file}")
+                self.lsf["wave"] = lsf_hdu.data.field(0)
+                self.lsf["width"] = lsf_hdu.data.field(1)
 
     def load_photometric_bands(self):
-        paths = os.path.join(self.calibration_dir,
-                             self.parameters.get_photometry_transmission_dir(),
-                             "*")
-
+        path = os.path.join(self.calibration_dir,
+                            self.parameters.get_photometry_transmission_dir())
+        if not os.path.isdir(path):
+            raise APIException(ErrorCode.INVALID_FILEPATH, f"Photometric transmission dir not found: {path}")
         bands = self.parameters.get_photometry_bands()
-        for f in glob.glob(paths):
+        band_paths = glob.glob(os.path.join(path, "*"))
+        if not band_paths:
+            raise APIException(ErrorCode.INVALID_FILEPATH, "Photometric transmission dir empty")
+        for f in band_paths:
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
             if band in bands:
+                if band in self.photometric_bands.GetNameList():
+                    raise APIException(ErrorCode.BAD_FILEFORMAT,
+                                       f"Photometric transmission band duplicated: {band}")
                 self.photometric_bands.Add(band, CPhotometricBand(df[band].to_numpy(),
                                                                   df["lambda"].to_numpy()))
+        # check all requested bands are loaded
+        if len(bands) != self.photometric_bands.size():
+            unknown_bands = [band for band in bands if band not in self.photometric_bands]
+            raise APIException(ErrorCode.BAD_PARAMETER_VALUE,
+                               f"some bands of parameter photometryBand are unknown: {unknown_bands}")
 
     def load_calzetti(self):
-        df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))
+        path = os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt")
+        if not os.path.isfile(path):
+            raise APIException(ErrorCode.INVALID_FILEPATH,
+                               f"ISM extinction file not found: {path}")
+        df = ascii.read(path)
         _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
         self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti,
                                                         self.parameters.get_ebmv_start(),
