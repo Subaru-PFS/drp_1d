@@ -204,9 +204,9 @@ libDict = {
         "extra_flags": ""
     },
     "lbfgspp" : {
-        "path": "LBFGSpp-v0.2.0+git001b7ee",
-        "src": "https://github.com/yixuan/LBFGSpp/archive/"
-        "001b7eeea2126b6955751a19555b89bbd4f5ef51.zip",
+        "path": "LBFGSpp-0.3.0",
+        "src": "https://github.com/yixuan/LBFGSpp/archive/refs/tags/"
+        "v0.3.0.zip",
         "check_file": "",
         "build": _lbfgspp_build,
         "extra_flags": ""
