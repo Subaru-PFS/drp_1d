@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import *
 
 import sys
 if sys.version_info[0] < 3:
@@ -36,13 +33,14 @@ def ExtractTarGZ(tarPath, destPath):
 
         return True
 
+
 def ExtractZip(zipPath, destPath):
     if os.path.exists(destPath):
         print("File or folder: " + os.path.normpath(destPath) +
               " already exist, extraction skipped...")
         return False
     else:
-        with zipfile.ZipFile(zipPath, 'r') as zfile :
+        with zipfile.ZipFile(zipPath, 'r') as zfile:
             print("Extracting: \n\tFrom: " + zipPath + " to: " + destPath)
 
             extractDir = os.path.dirname(destPath) + "/"
@@ -76,7 +74,7 @@ def DownloadHTTPFile(fileUrl, localFilePath):
     print("Downloading: \n\tFrom: " + fileUrl + "\n\tTo: " + localFilePath)
 
     # Download file
-    chunk = 4096*10
+    chunk = 4096 * 10
     size = 0
     while 1:
         data = urlfile.read(chunk)
@@ -140,25 +138,28 @@ def _cfitsio_build(path, prefix, options, extra_flags=''):
                   parallel=options.parallel,
                   shared='shared' if options.shared else 'all-nofitsio'))
 
+
 def _openblas_build(path, prefix, options, extra_flags=''):
     os.system("cd {path} ;"
               "make -j{parallel} {extra_flags}; make install PREFIX={prefix} {extra_flags}".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
-                  shared=1 if options.shared else 0,    
                   extra_flags=extra_flags))
 
+
 def _eigen_build(path, prefix, options, extra_flags=''):
-    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix}; make install".format(
-                  path=path, prefix=prefix))
+    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix};"
+              "make install".format(path=path, prefix=prefix))
+
 
 def _lbfgspp_build(path, prefix, options, extra_flags=''):
-    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix}; make install".format(
-                  path=path, prefix=prefix))
+    os.system("cd {path}; mkdir build ; cd build; cmake .. -DCMAKE_INSTALL_PREFIX={prefix};"
+              "make install".format(path=path, prefix=prefix))
+
 
 libDict = {
     "boost": {
-        "path":  "boost-1.57.0",
+        "path": "boost-1.57.0",
         "src": "http://downloads.sourceforge.net/project/boost/boost/1.57.0/"
         "boost_1_57_0.tar.gz",
         "check_file": "libboost_chrono",
@@ -166,14 +167,14 @@ libDict = {
         "extra_flags": ''
     },
     "gsl": {
-        "path":  "gsl-2.5",
+        "path": "gsl-2.5",
         "src": "https://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz",
         "check_file": "libgsl",
         "build": _standard_build,
         "extra_flags": ''
     },
     "fftw": {
-        "path":  "fftw-3.3.8",
+        "path": "fftw-3.3.8",
         "src": "https://www.fftw.org/fftw-3.3.8.tar.gz",
         "check_file": "libfftw3",
         "build": _standard_build,
@@ -203,7 +204,7 @@ libDict = {
         "build": _eigen_build,
         "extra_flags": ""
     },
-    "lbfgspp" : {
+    "lbfgspp": {
         "path": "LBFGSpp-0.3.0",
         "src": "https://github.com/yixuan/LBFGSpp/archive/refs/tags/"
         "v0.3.0.zip",
@@ -211,27 +212,17 @@ libDict = {
         "build": _lbfgspp_build,
         "extra_flags": ""
     }
-
 }
 
 
 def Main(argv):
 
-    if (sys.version_info[0] < 3 and sys.version_info[1] < 4):
-        # __file__ was relative until python 3.4
-        build_dir = os.path.abspath(os.path.join(os.getcwd(),
-                                                 os.path.dirname(__file__),
-                                                 '..', 'thirdparty'))
-    else:
-        build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                 '..', 'thirdparty'))
-
     usage = "Download and install third party library libraries:\n\t"
     parser = argparse.ArgumentParser(description=usage)
     parser.add_argument("--workdir", metavar='WORKDIR', default=os.getcwd(),
-                        help="working directory to build thirdparty")
+                        help="working directory to build thirdparty, default is cwd")
     parser.add_argument("--prefix", metavar='PREFIX', default="thirdparty",
-                        help="install files in PREFIX")
+                        help="install files in PREFIX, default is './thirdparty'")
 
     parser.add_argument("-j", "--parallel",
                         help="Parallel make flag", type=int,
@@ -242,17 +233,16 @@ def Main(argv):
     # parser.add_argument("--shared",
     #                     help="Build shared libraries", action="store_false",
     #                     dest="shared")
-    parser.add_argument('modules', metavar='NAME', choices=libDict.keys(),
-                        nargs='*', help="Modules to build.")
+    parser.add_argument('modules', metavar='NAME', choices=[*libDict],
+                        nargs='*', help=f"Modules to build among {[*libDict]}")
     parser.add_argument('--extra_flags', default="",
                         help="Extra flags for building stage.")
     parser.add_argument("--force",
                         help="Force to build library even if it already exists", action="store_true")
 
-
     args = parser.parse_args()
 
-    #Add shared/static arguments for backward compatibility
+    # Add shared/static arguments for backward compatibility
     args.shared = True
     args.static = False
 
@@ -272,13 +262,14 @@ def Main(argv):
         if not _check_lib(module, prefix, args) or args.force:
             if args.force:
                 print("Build force by user.")
-            if module == "lbfgspp" :
+            if module == "lbfgspp":
                 DownloadHTTPFile(libSrc, libPath + ".zip")
                 ExtractZip(libPath + ".zip", libPath)
-            else :
+            else:
                 DownloadHTTPFile(libSrc, libPath + ".tar.gz")
                 ExtractTarGZ(libPath + ".tar.gz", libPath)
             build_method(libPath, prefix, args, extra_flags)
 
 
-Main(sys.argv)
+if __name__ == "__main__":
+    Main(sys.argv)
