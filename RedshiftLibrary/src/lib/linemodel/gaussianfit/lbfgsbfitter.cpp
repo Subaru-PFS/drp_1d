@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
-#include "RedshiftLibrary/linemodel/gaussianfit/LineSearchMoreThuente.h"
+
 #include <unsupported/Eigen/NumericalDiff>
 
 using namespace std;
@@ -86,7 +86,7 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
 
 // compute Sum Squared diff
 void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
-                                            ValueType &val) const {
+                                             ValueType &val) const {
 
   TFloat64List amps;
   Float64 redshift;
@@ -339,7 +339,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolveAndLambdaOffset(
 
 // overriding the SVD linear fitting, but here it is not linear inversion
 void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
-                                                 Float64 redshift) {
+                                                  Float64 redshift) {
 
   if (EltsIdx.size() < 1)
     THROWG(INTERNAL_ERROR, "empty Line element list to fit");
@@ -565,7 +565,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   param.max_submin = 0;
 
   // Create solver and function object
-  LBFGSBSolver<Float64, LineSearchMoreThuenteFork> solver(param);
+  LBFGSBSolver<Float64, LineSearchMoreThuente> solver(param);
 
   NumericalDiff<CLeastSquare> func_with_num_diff(func, 1e-12);
 
