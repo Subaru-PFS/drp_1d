@@ -134,7 +134,7 @@ message(STATUS "EIGEN3_INCLUDE_DIRS = ${EIGEN3_INCLUDE_DIRS}")
 LIST(APPEND cpf-redshift_THIRDPARTY_HEADERONLY Eigen3::Eigen)
 
 # setup thirdparty directory : lbfgspp
-find_package (lbfgspp 0.2.0 REQUIRED NO_MODULE)
+find_package (lbfgspp 0.3.0 REQUIRED NO_MODULE)
 get_target_property(LBFGSPP_INCLUDE_DIRS lbfgspp INTERFACE_INCLUDE_DIRECTORIES)
 message(STATUS "Found lbfgspp:")
 message(STATUS "LBFGSPP_INCLUDE_DIRS = ${LBFGSPP_INCLUDE_DIRS}")
