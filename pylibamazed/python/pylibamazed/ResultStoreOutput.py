@@ -36,13 +36,12 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import numpy as np
 import os
 
 import numpy as np
 from pylibamazed.AbstractOutput import AbstractOutput, ObjectStages
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import PC, CLog, ErrorCode
+from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
 
@@ -82,19 +81,15 @@ class ResultStoreOutput(AbstractOutput):
             return attr[object_type]
         if attr_type == "TMapTFloat64List":
             if obs_id is not None:
-                return np.array(attr[obs_id])
-        elif attr_type == "TFloat64List":
-            return PC.Get_Float64Array(attr)
-        elif attr_type == "TFloat32List":
-            return PC.Get_Float32Array(attr)
-        elif attr_type == "TInt32List":
-            return PC.Get_Int32Array(attr)
-        elif attr_type == "TBoolList":
-            return PC.Get_BoolArray(attr)
+                return attr.to_numpy(obs_id)
+        elif (attr_type == "TFloat64List"
+                or attr_type == "TInt32List"
+                or attr_type == "TBoolList"):
+            return attr.to_numpy()
         elif attr_type == "TStringList":
-            return np.array(tuple(attr))
+            return np.array(attr)
         elif attr_type == "CMask":
-            return PC.Get_MaskArray(attr.getMaskList())
+            return attr.getMaskList().to_numpy()
         else:
             return attr
 
@@ -118,7 +113,7 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["dataset"] == dataset]
 
         attribute_info = rs.iloc[0]
-        if type(attribute_info.ResultStore_key) != str:
+        if type(attribute_info.ResultStore_key) is not str:
             return False
         if rank is not None:
             method = self.parameters.get_solve_method(object_type)

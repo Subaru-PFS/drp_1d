@@ -367,8 +367,8 @@ class CalibrationLibrary:
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
             if band in bands:
-                self.photometric_bands.Add(band, CPhotometricBand(np.array(df[band]),
-                                                                  np.array(df["lambda"])))
+                self.photometric_bands.Add(band, CPhotometricBand(df[band].to_numpy(),
+                                                                  df["lambda"].to_numpy()))
 
     def load_calzetti(self):
         df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))

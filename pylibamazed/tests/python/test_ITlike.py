@@ -170,7 +170,18 @@ def test_ITLikeTest():
 
     output = context.run(reader)  # passing spectra reader to launch amazed
 
+    # check results (no errors)
+    for object_type, stage in (("", "init"),
+                               ("galaxy", "redshift_solver"),
+                               ("galaxy", "linemeas_catalog_load"),
+                               ("galaxy", "linemeas_solver"),
+                               ("galaxy", "sub_classif_solver"),
+                               ("galaxy", "reliability_solver"),
+                               ("", "classification"),
+                               ("", "load_result_store")):
+        assert output.has_error(object_type, stage) is False
+
     # add calls to output
-    accessOutputData(output)
+    # accessOutputData(output)
 
     save_output(output, config, observation)

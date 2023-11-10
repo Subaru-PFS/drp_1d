@@ -148,6 +148,8 @@
         "fittingmethod": "hybrid",
         "polynomialdegree": 2,
         "velocityfit": false,
+        "ampoffsetfit": true,
+        "lbdaoffsetfit": false,
         "lineRatioType": "rules",
         "rules": "no",
         "igmfit": false,

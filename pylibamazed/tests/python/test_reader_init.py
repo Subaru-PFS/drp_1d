@@ -72,15 +72,15 @@ class TestReaderInit(TestSpectrumReaderUtils):
         fsr = self.initialize_fsr_with_data(**{"multiobsmethod": "merge"})
         self.full_load(fsr, **{"obs_id": "2"})
         fsr.waves.append(
-            np.array([float(i) + 1e-10 for i in range(0, 10)]),
+            np.arange(10, dtype=float) + 1e-10,
             obs_id="3",
         )
         fsr.fluxes.append(
-            np.array([float(i) + 1e-10 for i in range(0, 10)]),
+            np.arange(10, dtype=float) + 1e-10,
             obs_id="3",
         )
         fsr.errors.append(
-            np.array([float(i) + 1e-10 for i in range(0, 10)]),
+            np.arange(10, dtype=float) + 1e-10,
             obs_id="3",
         )
         with pytest.raises(APIException, match=r"UNALLOWED_DUPLICATES"):
@@ -90,15 +90,15 @@ class TestReaderInit(TestSpectrumReaderUtils):
         fsr = self.initialize_fsr_with_data(**{"multiobsmethod": "merge"})
         self.full_load(fsr, **{"obs_id": "2"})
         fsr.waves.append(
-            np.array([float(i) + 1e-11 for i in range(0, 10)]),
+            np.arange(10, dtype=float) + 1e-11,
             obs_id="3",
         )
         fsr.fluxes.append(
-            np.array([float(i) + 1e-11 for i in range(0, 10)]),
+            np.arange(10, dtype=float) + 1e-11,
             obs_id="3",
         )
         fsr.errors.append(
-            np.array([float(i) + 1e-11 for i in range(0, 10)]),
+            np.arange(10, dtype=float) + 1e-11,
             obs_id="3",
         )
         with pytest.raises(APIException, match=r"UNSORTED_ARRAY"):

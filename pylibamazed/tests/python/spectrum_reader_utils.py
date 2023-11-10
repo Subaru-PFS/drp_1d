@@ -36,7 +36,6 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import random
 import tempfile
 
 import numpy as np
@@ -97,12 +96,12 @@ class FakeSpectrumReader(AbstractSpectrumReader):
     def load_wave(self, l_range, obs_id=""):
         if self.lambda_type == "random":
             self.waves.append(
-                np.array([float(i) + random.uniform(0, 0.0001) for i in range(10)]),
+                np.arange(10, dtype=float) + np.random.uniform(0, 0.0001, 10),
                 obs_id=obs_id,
             )
         elif self.lambda_type == "range":
             self.waves.append(
-                np.array([float(i) for i in range(l_range[0], l_range[1])]),
+                np.arange(l_range[0], l_range[1], dtype=float),
                 obs_id=obs_id,
             )
         else:
@@ -111,24 +110,24 @@ class FakeSpectrumReader(AbstractSpectrumReader):
     def load_flux(self, l_range, obs_id=""):
         if l_range is not None:
             self.fluxes.append(
-                np.array([random.random() for i in range(l_range[0], l_range[1])]),
+                np.random.uniform(0, 1, l_range[1] - l_range[0]),
                 obs_id=obs_id,
             )
         else:
             self.fluxes.append(
-                np.array([random.random() for i in range(10)]),
+                np.random.random(10),
                 obs_id=obs_id,
             )
 
     def load_error(self, l_range, obs_id=""):
         if l_range is not None:
             self.errors.append(
-                np.array([random.random() for i in range(l_range[0], l_range[1])]),
+                np.random.random(l_range[1] - l_range[0]),
                 obs_id=obs_id,
             )
         else:
             self.errors.append(
-                np.array([random.random() for i in range(10)]),
+                np.random.random(10),
                 obs_id=obs_id,
             )
 
@@ -136,7 +135,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
         if not self.others.get(data_name):
             self.others[data_name] = Container()
         self.others[data_name].append(
-            np.array([random.random() for i in range(10)]),
+            np.random.random(10),
             obs_id=obs_id,
         )
 
