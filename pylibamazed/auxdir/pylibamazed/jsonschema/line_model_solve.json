@@ -4,46 +4,50 @@
   "title": "Line model solve",
   "description": "Parameters for line model solve schema",
   "type": "object",
-  "additionalProperties": false,
   "required": [
-    "useloglambdasampling",
-    "igmfit",
-    "improveBalmerFit",
-    "linecatalog",
-    "linetypefilter",
-    "lineforcefilter",
-    "fittingMethod",
-    "linewidthtype",
-    "velocityemission",
-    "velocityabsorption",
-    "velocityfit",
-    "lbdaoffsetfit",
-    "ampoffsetfit",
-    "lyaforcefit",
-    "lyaforcedisablefit",
-    "skipsecondpass",
-    "extremacount",
-    "extremacutprobathreshold",
-    "lineRatioType",
-    "continuumcomponent",
-    "stronglinesprior",
-    "euclidnhaemittersStrength",
-    "pdfcombination",
-    "nsigmasupport",
-    "haprior",
-    "extremacountB",
-    "enablephotometry",
-    "lyafit",
-    "firstpass",
-    "secondpasslcfittingmethod",
-    "secondPass",
-    "pdf",
-    "tplratio"
+    "linemodel"
   ],
+  "additionalProperties": false,
   "properties": {
     "linemodel": {
       "type": "object",
       "title": "Line model parameters",
+      "additionalProperties": false,
+      "required": [
+        "useloglambdasampling",
+        "igmfit",
+        "improveBalmerFit",
+        "linecatalog",
+        "linetypefilter",
+        "lineforcefilter",
+        "fittingmethod",
+        "linewidthtype",
+        "velocityemission",
+        "velocityabsorption",
+        "velocityfit",
+        "lbdaoffsetfit",
+        "ampoffsetfit",
+        "lyaforcefit",
+        "lyaforcedisablefit",
+        "skipsecondpass",
+        "extremacount",
+        "extremacutprobathreshold",
+        "lineRatioType",
+        "continuumcomponent",
+        "stronglinesprior",
+        "euclidnhaemittersStrength",
+        "pdfcombination",
+        "nsigmasupport",
+        "haprior",
+        "extremacountB",
+        "enablephotometry",
+        "lyafit",
+        "firstpass",
+        "secondpasslcfittingmethod",
+        "secondpass",
+        "pdf",
+        "tplratio"
+      ],
       "properties": {
         "useloglambdasampling": {
           "type": "boolean",
@@ -85,7 +89,7 @@
           "title": "Filter on lines force",
           "description": "Restrict the strength category of lines to fit: \n * **W**: Weak \n * **S**: strong \n * **no**: fit all"
         },
-        "fittingMethod": {
+        "fittingmethod": {
           "type": "string",
           "enum": [
             "individual",
@@ -302,8 +306,12 @@
           "$ref": "line_model_first_pass.json"
         },
         "secondpasslcfittingmethod": {
-          "type": "string",
+          "type": [
+            "number",
+            "string"
+          ],
           "enum": [
+            -1,
             "-1",
             "svdlc",
             "svdlcp2",
@@ -313,7 +321,7 @@
           "title": "Second pass continuum fitting method",
           "description": "During the 2nd pass, after fitting of all the parameters, redo a joint fit of continuum and linemodel amplitudes and eventually a 2nd order polynomial using an SVD on the full observed range (heavy computation). \n * **-1**: skip this step \n * **svdlcp2**: refit continuum, linemodel and 2nd order polynomial \n * **svdlc**: refit only continuum and linemodel (usefull if we don't trust the continuum/linemodel orthogonalization, because it is done on a free linemodel or a mask)"
         },
-        "secondPass": {
+        "secondpass": {
           "$ref": "line_model_second_pass.json"
         },
         "pdf": {

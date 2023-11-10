@@ -8,7 +8,7 @@
     "linecatalog",
     "nsigmasupport",
     "linewidthtype",
-    "fittingMethod",
+    "fittingmethod",
     "velocityfit",
     "lbdaoffsetfit",
     "ampoffsetfit",
@@ -44,7 +44,7 @@
           "title": "Line width type",
           "description": "Selects which component are included in the line width \n * **instrumentdriven**: only instrument resolution (no intrinsic line width due to velocity dispersion) \n * **velocitydriven**: only line velocity dispersion (assuming negligible instrument PSF) \n * **combined**: both instrument resolution and velocity dispersion"
         },
-        "fittingMethod": {
+        "fittingmethod": {
           "type": "string",
           "enum": [
             "individual",
@@ -58,27 +58,27 @@
         "velocityfit": {
           "type": "boolean",
           "title": "Wether to fit line width",
-          "discription": "Wether 2nd pass includes line width fitting. Used only if `fittingMethod=lbfgsb` (for linemeas)."
+          "discription": "Wether 2nd pass includes line width fitting. Used only if `fittingmethod=lbfgsb` (for linemeas)."
         },
         "emvelocityfitmin": {
           "type": "number",
           "title": "Emission lines velocity min",
-          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. To specify only if fittingMethod is lbfgsb."
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. To specify only if fittingmethod is lbfgsb."
         },
         "emvelocityfitmax": {
           "type": "number",
           "title": "Emission lines velocity max",
-          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for emission lines. To specify only if fittingMethod is lbfgsb."
+          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for emission lines. To specify only if fittingmethod is lbfgsb."
         },
         "absvelocityfitmin": {
           "type": "number",
           "title": "Aborption lines velocity min",
-          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for absorption lines. To specify only if fittingMethod is lbfgsb."
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for absorption lines. To specify only if fittingmethod is lbfgsb."
         },
         "absvelocityfitmax": {
           "type": "number",
           "title": "Aborption lines velocity max",
-          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for absorption lines. To specify only if fittingMethod is lbfgsb."
+          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for absorption lines. To specify only if fittingmethod is lbfgsb."
         },
         "lbdaoffsetfit": {
           "type": "boolean",
