@@ -38,7 +38,7 @@
           "type": "string",
           "enum": [
             "combined",
-            "instumentdriven",
+            "instrumentdriven",
             "velocitydriven"
           ],
           "title": "Line width type",
@@ -50,7 +50,9 @@
             "individual",
             "svd",
             "hybrid",
-            "lbfgsb"
+            "lbfgsb",
+            "ones",
+            "random"
           ],
           "title": "Line fitting method",
           "description": "Line fitting method: \n* **individual**: independant fit of all lines amplitude \n * **svd**: joint fit of all lines amplitude (sparsity not exploited) \n * **hybrid**: svd only for groups of lines sharings pixels (eg. Ha and N2), independant fit for the other lines \n * **lbfgsb**: like hybrid but using non-linear least-square fit instead of svd to fit jointly the 3 Gaussian parameters (amplitude, position and width). Based on l-bfgs-b algorithm (bounded gradient descent). \n Note: it is not relevant when lineRatioType = tplratio, because one set of ratio corresponds to a unique amplitude fitted for all lines, and thus it is using the individual fitter"
@@ -106,7 +108,7 @@
             "all",
             "no",
             "strongweak",
-            "balmerSingle",
+            "balmersingle",
             "ratiorange"
           ],
           "title": "Rules",
