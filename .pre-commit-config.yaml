@@ -8,7 +8,6 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c++, c]
-        exclude: RedshiftLibrary/RedshiftLibrary/linemodel/gaussianfit/LineSearchMoreThuente.h
         args: ['-style=LLVM', '-i']
 
   # Yaml and JSON hooks
