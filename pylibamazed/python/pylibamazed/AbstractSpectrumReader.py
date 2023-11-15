@@ -247,7 +247,10 @@ class AbstractSpectrumReader:
         self._add_cspectra()
         lsf_factory = CLSFFactory.GetInstance()
         lsf_args = self._lsf_args()
-        lsf = lsf_factory.Create(self.parameters.get_lsf_type(), lsf_args)
+        lsf_type = self.parameters.get_lsf_type()
+        if self.parameters.get_lsf_type() == "FROMSPECTRUMDATA":
+            lsf_type = self.lsf_type
+        lsf = lsf_factory.Create(lsf_type, lsf_args)
         for obs_id in self.parameters.get_observation_ids():
             self._spectra[obs_id].SetLSF(lsf)
         self._add_photometric_data()
@@ -416,7 +419,6 @@ class AbstractSpectrumReader:
             if len(lsf_obs_ids) > 1:
                 zflag.warning(WarningCode.ARBITRARY_LSF.value,
                               f"LSF of observation {obs_id} chosen, other lsf ignored")
-            self.parameters.set_lsf_type(self.lsf_type)
             if self.lsf_type != "GaussianVariableWidth":
                 self.parameters.set_lsf_param(LSFParameters[self.lsf_type],
                                               self.lsf_data.get(obs_id)["width"][0])
