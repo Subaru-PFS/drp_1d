@@ -53,7 +53,12 @@ def make_parameters() -> Parameters:
     parameters_dict["objects"] = ["galaxy"]
     parameters_dict["ebmv"] = dict()
     parameters_dict["ebmv"]["count"] = 3
+    parameters_dict["ebmv"]["start"] = 0.0
+    parameters_dict["ebmv"]["step"] = 0.5
+    parameters_dict["LSF"] = {"LSFType": "GaussianVariableWidth",
+                                         "GaussianVariablewidthFileName": "LSF/EuclidNISPVSSPSF201707.fits"}
     parameters_dict["galaxy"] = dict()
+    parameters_dict["galaxy"]["template_dir"] = "templates/BC03_sdss_tremonti21"
     parameters_dict["galaxy"]["LineModelSolve"] = dict()
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"] = dict()
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["linecatalog"] = \
@@ -63,6 +68,8 @@ def make_parameters() -> Parameters:
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_ismfit"] = True
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["nsigmasupport"] = 8
     parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["igmfit"] = True
+    parameters_dict["photometryTransmissionDir"] = "photometric_transmission/EL-COSMOSv2/"
+    parameters_dict["photometryBand"] = ["H", "J", "Y", "riz"]
     return Parameters(parameters_dict, FakeParametersChecker)
 
 
@@ -77,3 +84,39 @@ def test_calibration_lineratiocatalog():
     cl = CalibrationLibrary(parameters, calibration_dir)
     cl.load_linecatalog("galaxy", "LineModelSolve")
     cl.load_line_ratio_catalog_list("galaxy")
+
+
+def test_calibraton_meiksin():
+    parameters = make_parameters()
+    cl = CalibrationLibrary(parameters, calibration_dir)
+    cl.load_Meiksin()
+
+
+def test_calibraton_calzetti():
+    parameters = make_parameters()
+    cl = CalibrationLibrary(parameters, calibration_dir)
+    cl.load_calzetti()
+
+
+def test_calibration_load_templates_catalog():
+    parameters = make_parameters()
+    cl = CalibrationLibrary(parameters, calibration_dir)
+    cl.load_templates_catalog("galaxy")
+
+
+def test_calibration_load_lsf():
+    parameters = make_parameters()
+    cl = CalibrationLibrary(parameters, calibration_dir)
+    cl.load_lsf()
+
+
+def test_calibration_load_photometric_bands():
+    parameters = make_parameters()
+    cl = CalibrationLibrary(parameters, calibration_dir)
+    cl.load_photometric_bands()
+
+
+def test_calibration_load_all():
+    parameters = make_parameters()
+    cl = CalibrationLibrary(parameters, calibration_dir)
+    cl.load_all()

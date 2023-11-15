@@ -352,26 +352,46 @@ class CalibrationLibrary:
         if self.parameters.get_lsf_type() == "GaussianVariableWidth":
             file = os.path.join(self.calibration_dir,
                                 self.parameters.get_lsf_width_file_name())
-            # TODO check hdul here
-            with fits.open(file) as hdul:
-                self.lsf["wave"] = hdul[1].data.field(0)
-                self.lsf["width"] = hdul[1].data.field(1)
+            if not os.path.isfile(file):
+                raise APIException(ErrorCode.INVALID_FILEPATH, f"wrong LSF file {file}")
+            with fits.open(file) as hdulist:
+                try:
+                    lsf_hdu = hdulist[1]
+                except IndexError:
+                    raise APIException(ErrorCode.BAD_FILEFORMAT, f"Cannot access hdu 1 for LSF in {file}")
+                self.lsf["wave"] = lsf_hdu.data.field(0)
+                self.lsf["width"] = lsf_hdu.data.field(1)
 
     def load_photometric_bands(self):
-        paths = os.path.join(self.calibration_dir,
-                             self.parameters.get_photometry_transmission_dir(),
-                             "*")
-
+        path = os.path.join(self.calibration_dir,
+                            self.parameters.get_photometry_transmission_dir())
+        if not os.path.isdir(path):
+            raise APIException(ErrorCode.INVALID_FILEPATH, f"Photometric transmission dir not found: {path}")
         bands = self.parameters.get_photometry_bands()
-        for f in glob.glob(paths):
+        band_paths = glob.glob(os.path.join(path, "*"))
+        if not band_paths:
+            raise APIException(ErrorCode.INVALID_FILEPATH, "Photometric transmission dir empty")
+        for f in band_paths:
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
             if band in bands:
+                if band in self.photometric_bands.GetNameList():
+                    raise APIException(ErrorCode.BAD_FILEFORMAT,
+                                       f"Photometric transmission band duplicated: {band}")
                 self.photometric_bands.Add(band, CPhotometricBand(df[band].to_numpy(),
                                                                   df["lambda"].to_numpy()))
+        # check all requested bands are loaded
+        if len(bands) != self.photometric_bands.size():
+            unknown_bands = [band for band in bands if band not in self.photometric_bands]
+            raise APIException(ErrorCode.BAD_PARAMETER_VALUE,
+                               f"some bands of parameter photometryBand are unknown: {unknown_bands}")
 
     def load_calzetti(self):
-        df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))
+        path = os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt")
+        if not os.path.isfile(path):
+            raise APIException(ErrorCode.INVALID_FILEPATH,
+                               f"ISM extinction file not found: {path}")
+        df = ascii.read(path)
         _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
         self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti,
                                                         self.parameters.get_ebmv_start(),
@@ -384,14 +404,19 @@ class CalibrationLibrary:
         zbins = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
         columns = ['restlambda', 'flux0', 'flux1', 'flux2', 'flux3', 'flux4', 'flux5', 'flux6']
         meiksinCorrectionCurves = VecMeiksinCorrection()
-        for z in zbins[1:]:
-            filename = f"Meiksin_Var_curves_{z}.txt"
-            file_path = os.path.join(self.calibration_dir, "igm",
-                                     "IGM_variation_curves_meiksin_v3.1", filename)
-            if not os.path.isfile(file_path):  # mainly for unit tests
-                continue
-            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm",
-                                    "IGM_variation_curves_meiksin_v3.1", filename))
+        meiksin_root_path = os.path.join(self.calibration_dir, "igm",
+                                                               "IGM_variation_curves_meiksin_v3.1")
+        filename_pattern = os.path.join(meiksin_root_path, "Meiksin_Var_curves_[2-7].[0,5].txt")
+        filenames = glob.glob(filename_pattern)
+        if not filenames:
+            raise APIException(ErrorCode.INVALID_FILEPATH,
+                               f"IGM extinction files not found in: {meiksin_root_path}")
+        filenames.sort()
+        zbins = [float(os.path.basename(name).replace("Meiksin_Var_curves_", "").replace(".txt", ""))
+                 for name in filenames]
+        zbins.insert(0, 1.5)
+        for path in filenames:
+            meiksin_df = ascii.read(path)
             columns = columns[:len(meiksin_df.columns)]
             meiksin_df.rename_columns(tuple(meiksin_df.columns), tuple(columns))
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
