@@ -82,10 +82,12 @@ public:
   TAsymParams fitAsymParameters(Float64 redshift, Int32 idxLyaE,
                                 const Int32 &idxLineLyaE);
 
-  Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
-                             const TInt32List &idxLine);
+  Int32 fitAsymIGMCorrection(
+      Float64 redshift,
+      std::vector<std::pair<Int32, TInt32List>> const &idxLines);
 
-  Float64 getModelErrorUnderElement(Int32 line_index, bool with_continuum);
+  Float64 getModelErrorUnderElements(TInt32List const &EltsIdx,
+                                     bool with_continuum);
   Int32 m_cont_reestim_iterations = 0;
 
 protected:

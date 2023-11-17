@@ -154,9 +154,9 @@ Int32 CLineProfileSYMIGM::getIGMIdxCount() const {
 }
 
 Float64 CLineProfileSYMIGM::getIGMCorrection(Float64 x) const {
-  if (m_igmidx < 0)
-    return 1.0;
-  return m_igmCorrectionMeiksin->getCorrection(m_redshift, m_igmidx,
+  Int32 igmIdx =
+      m_igmidx != undefIdx ? m_igmidx : 3; // use median extinction curve
+  return m_igmCorrectionMeiksin->getCorrection(m_redshift, igmIdx,
                                                x / (1 + m_redshift));
 }
 

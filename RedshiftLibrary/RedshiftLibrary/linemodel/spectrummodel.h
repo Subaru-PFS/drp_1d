@@ -27,7 +27,7 @@ public:
   void refreshModel(CLine::EType lineTypeFilter = CLine::EType::nType_All);
   void reinitModelUnderElements(const TInt32List &filterEltsIdx, Int32 lineIdx);
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
-                                 Int32 lineIdx = -1);
+                                 Int32 lineIdx = undefIdx);
 
   CSpectrumFluxAxis
   getModel(const TInt32List &eIdx_list,
@@ -46,10 +46,10 @@ public:
 
   std::pair<Float64, Int32> getContinuumQuadraticError(Int32 eIdx,
                                                        Int32 line_id);
-  //  Float64 getModelErrorUnderElement(Int32 eltId,
-  //                                  const CSpectrumFluxAxis &fluxRef) const;
+
   std::pair<Float64, Float64>
-  getModelQuadraticErrorUnderElement(Int32 eltId, bool with_continuum) const;
+  getModelQuadraticErrorUnderElements(TInt32List const &EltsIdx,
+                                      bool with_continuum) const;
 
   std::pair<Float64, Float64> getFluxDirectIntegration(
       const TInt32List &eIdx_list, const TInt32List &subeIdx_list,

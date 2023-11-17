@@ -265,7 +265,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // simulatneous fit with linsolve
-    Float64 modelErr_init = getModelErrorUnderElement(iElt_lineA, true);
+    Float64 modelErr_init = getModelErrorUnderElements({iElt_lineA}, true);
     Float64 ampA = getElementList()[iElt_lineA]->GetFittedAmplitude(lineA_id);
     Float64 amp_errorA =
         getElementList()[iElt_lineA]->GetFittedAmplitudeErrorSigma(lineA_id);
@@ -294,7 +294,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
 
     // decide if the fit is better than previous amps
     getModel().refreshModelUnderElements(eltsIdx);
-    Float64 modelErr_withfit = getModelErrorUnderElement(iElt_lineA, true);
+    Float64 modelErr_withfit = getModelErrorUnderElements({iElt_lineA}, true);
     if (modelErr_withfit > modelErr_init) {
       Float64 nominal_ampA =
           getElementList()[iElt_lineA]->GetNominalAmplitude(lineA_id);

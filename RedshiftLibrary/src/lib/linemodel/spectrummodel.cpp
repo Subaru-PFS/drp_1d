@@ -335,8 +335,8 @@ CSpectrumModel::getContinuumQuadraticError(Int32 eIdx, Int32 line_id) {
  *the square root of fit / sumErr.
  **/
 std::pair<Float64, Float64>
-CSpectrumModel::getModelQuadraticErrorUnderElement(Int32 eltId,
-                                                   bool with_continuum) const {
+CSpectrumModel::getModelQuadraticErrorUnderElements(TInt32List const &EltsIdx,
+                                                    bool with_continuum) const {
   // before elementlistcutting this variable was
   // CElementList::m_ErrorNoContinuum, a reference initialized twice in
   // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
@@ -346,30 +346,22 @@ CSpectrumModel::getModelQuadraticErrorUnderElement(Int32 eltId,
   const CSpectrumFluxAxis &fluxRef =
       with_continuum ? getSpcFluxAxis() : getSpcFluxAxisNoContinuum();
 
-  if (eltId < 0)
+  if (EltsIdx.empty())
     return std::make_pair(NAN, NAN);
 
-  if ((*m_Elements)[eltId]->IsOutsideLambdaRange())
-    return std::make_pair(0.0, 0.0);
-
-  Int32 numDevs = 0;
   Float64 fit = 0.0;
   const TAxisSampleList &Ymodel =
       m_SpectrumModel.GetFluxAxis().GetSamplesVector();
   const TAxisSampleList &Yspc = fluxRef.GetSamplesVector();
   Float64 diff = 0.0;
   Float64 sumErr = 0.0;
-  TInt32RangeList support = (*m_Elements)[eltId]->getSupport();
 
-  Float64 w = 0.0;
-  for (const auto &s : support) {
-    for (Int32 j = s.GetBegin(), e = s.GetEnd(); j <= e; j++) {
-      numDevs++;
-      diff = (Yspc[j] - Ymodel[j]);
-      w = 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]);
-      fit += (diff * diff) * w;
-      sumErr += w;
-    }
+  TInt32List xInds = m_Elements->getSupportIndexes(EltsIdx);
+  for (Int32 const j : xInds) {
+    diff = (Yspc[j] - Ymodel[j]);
+    Float64 const w = 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]);
+    fit += (diff * diff) * w;
+    sumErr += w;
   }
   return std::make_pair(fit, sumErr);
 }

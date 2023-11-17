@@ -330,7 +330,7 @@ void CTemplate::InitIsmIgmConfig(
     // get last index in spectral axis where igm can be applied
     m_Igm_kend = GetIgmEndIndex(m_IsmIgm_kstart, m_Ism_kend);
 
-    if (m_meiksinRedshiftIdx == -1 && m_Igm_kend != -1)
+    if (m_meiksinRedshiftIdx == undefIdx && m_Igm_kend != undefIdx)
       THROWG(INTERNAL_ERROR, Formatter()
                                  << "CTemplate::InitIsmIgmConfig: missing "
                                     "igm extinction curve for redshift z="

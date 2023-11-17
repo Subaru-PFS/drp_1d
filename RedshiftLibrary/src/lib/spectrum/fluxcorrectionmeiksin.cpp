@@ -59,10 +59,10 @@ Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
   if (lambdaRest > RESTLAMBDA_LYA) // && meiksinIdx == -1)
     return 1.;
 
-  if (meiksinIdx == -1)
-    THROWG(INTERNAL_ERROR, "igmIdx cannot be negative");
+  if (meiksinIdx == undefIdx)
+    THROWG(INTERNAL_ERROR, "igmIdx undefined");
   Int32 zIdx = getRedshiftIndex(redshift);
-  if (zIdx == -1)
+  if (zIdx == undefIdx)
     return 1.;
   Int32 lbdaIdx = getWaveIndex(lambdaRest);
 
@@ -79,7 +79,7 @@ CSpectrumFluxCorrectionMeiksin::getCorrectionAndDerivLbdaRest(
   if (meiksinIdx == -1)
     THROWG(INTERNAL_ERROR, "igmIdx cannot be negative");
   Int32 zIdx = getRedshiftIndex(redshift);
-  if (zIdx == -1)
+  if (zIdx == undefIdx)
     return std::make_tuple(1., 0.);
   Int32 lbdaIdx = getWaveIndex(lambdaRest);
 
@@ -108,7 +108,7 @@ Float64 CSpectrumFluxCorrectionMeiksin::getCorrectionDerivLbdaRest(
  * @return
  */
 Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const {
-  Int32 index = -1;
+  Int32 index = undefIdx;
   TFloat64Index::getClosestLowerIndex(m_zbins, z, index);
 
   // keep last curves above last bin

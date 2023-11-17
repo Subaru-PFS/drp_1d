@@ -933,7 +933,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
                    // and high level line properties
     {
       modelSolution.FittingError[iRestLine] =
-          m_fitter->getModelErrorUnderElement(eIdx, true);
+          m_fitter->getModelErrorUnderElements({eIdx}, true);
       if (m_enableAmplitudeOffsets) {
         const auto &polynom_coeffs =
             m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
