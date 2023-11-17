@@ -995,19 +995,22 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       // 0=save model, (DEFAULT)
       // 1=save model with lines removed,
       // 2=save model with only Em. lines removed.
-      if (overrideModelSavedType == 0) {
-        resultspcmodel->addModel(
-            m_fittingManager->getSpectrumModel().GetModelSpectrum(),
-            spectrum.getObsID());
-      } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
-        auto lineTypeFilter = CLine::EType::nType_All;
-        if (overrideModelSavedType == 2)
-          lineTypeFilter = CLine::EType::nType_Emission;
+      for (m_fittingManager->resetCurObs(); m_fittingManager->remainsObs();
+           m_fittingManager->incrementCurObs()) {
+        if (overrideModelSavedType == 0) {
+          resultspcmodel->addModel(
+              m_fittingManager->getSpectrumModel().GetModelSpectrum(),
+              spectrum.getObsID());
+        } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
+          auto lineTypeFilter = CLine::EType::nType_All;
+          if (overrideModelSavedType == 2)
+            lineTypeFilter = CLine::EType::nType_Emission;
 
-        resultspcmodel->addModel(
-            m_fittingManager->getSpectrumModel()
-                .GetObservedSpectrumWithLinesRemoved(lineTypeFilter),
-            spectrum.getObsID());
+          resultspcmodel->addModel(
+              m_fittingManager->getSpectrumModel()
+                  .GetObservedSpectrumWithLinesRemoved(lineTypeFilter),
+              spectrum.getObsID());
+        }
       }
       ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 
@@ -1037,20 +1040,24 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
                     ->GetModelRulesLog());
       }
 
-      // Save the reestimated continuum, only the first
-      // n=maxSaveNLinemodelContinua extrema
-      const CSpectrumFluxAxis &modelContinuumFluxAxis =
-          m_fittingManager->getSpectrumModel().GetModelContinuum();
+      for (m_fittingManager->resetCurObs(); m_fittingManager->remainsObs();
+           m_fittingManager->incrementCurObs()) {
 
-      std::shared_ptr<CModelSpectrumResult> baselineResult =
-          std::make_shared<CModelSpectrumResult>();
-      baselineResult->addModel(
-          CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis),
-          spectrum.getObsID());
+        // Save the reestimated continuum, only the first
+        // n=maxSaveNLinemodelContinua extrema
+        const CSpectrumFluxAxis &modelContinuumFluxAxis =
+            m_fittingManager->getSpectrumModel().GetModelContinuum();
 
-      ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
+        std::shared_ptr<CModelSpectrumResult> baselineResult =
+            std::make_shared<CModelSpectrumResult>();
+        baselineResult->addModel(
+            CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis),
+            spectrum.getObsID());
 
-      savedModels++;
+        ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
+
+        savedModels++;
+      }
     }
 
     // code here has been moved to TLineModelResult::updateFromModel

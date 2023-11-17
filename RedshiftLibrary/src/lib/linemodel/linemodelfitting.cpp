@@ -471,7 +471,8 @@ void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
  *lines
  **/
 CMask CLineModelFitting::getOutsideLinesMask() const {
-
+  // TODO temp basic impl
+  *m_curObs = 0;
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
   CMask _mask(spectralAxis.GetSamplesCount(), 1);
@@ -493,6 +494,9 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
  *STD input: which = 2: uses the spectrum error to compute STD
  **/
 Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
+  // TODO temp basic impl
+  *m_curObs = 0;
+
   if (which != 1 && which != 2)
     THROWG(INTERNAL_ERROR, Formatter()
                                << "wrong argument, which (1 or 2): " << which);
@@ -524,28 +528,30 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
 }
 
 Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
-  const CSpectrumSpectralAxis &spcSpectralAxis =
-      getSpectrum().GetSpectralAxis();
-  const CSpectrumFluxAxis &Yspc = getSpectrumModel().getSpcFluxAxis();
-  const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
 
   Float64 fit = 0.0;
-  const CSpectrumFluxAxis &YCont = getSpectrumModel().getContinuumFluxAxis();
-  Float64 diff = 0.0;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-  Float64 imin =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-  Float64 imax =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
-  for (Int32 j = imin; j < imax; j++) {
-    diff = (Yspc[j] - YCont[j]);
-    fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        getSpectrum().GetSpectralAxis();
+    const CSpectrumFluxAxis &Yspc = getSpectrumModel().getSpcFluxAxis();
+    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+
+    const CSpectrumFluxAxis &YCont = getSpectrumModel().getContinuumFluxAxis();
+    Float64 diff = 0.0;
+
+    Float64 imin =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
+    Float64 imax =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    for (Int32 j = imin; j < imax; j++) {
+      diff = (Yspc[j] - YCont[j]);
+      fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+    }
   }
-
   if (isContinuumComponentTplfitxx()) {
     fit += m_continuumManager->getFittedLogPrior();
   }
-
   return fit;
 }
 
@@ -668,6 +674,7 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const {
  **/
 std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
 
+  *m_curObs = 0; // TODO
   // Retrieve all the strone emission lines supports in a list of range
   TInt32RangeList supportList;
   TBoolList isStrongList;

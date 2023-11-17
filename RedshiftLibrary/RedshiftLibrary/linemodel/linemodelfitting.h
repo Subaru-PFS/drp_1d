@@ -133,6 +133,8 @@ public:
   Float64 getStrongerMultipleELAmpCoeff() const;
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
+    // TODO temp basic impl
+    *m_curObs = 0;
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
@@ -152,6 +154,10 @@ public:
   void computeSpectrumFluxWithoutContinuum();
   bool isContinuumComponentTplfitxx() const {
     return m_continuumManager->isContinuumComponentTplfitxx();
+  }
+
+  Int32 GetModelNonZeroElementsNDdl() const {
+    return m_ElementsVector->GetModelNonZeroElementsNDdl();
   }
 
   const CSpectrum &getSpectrum() const {
@@ -231,6 +237,9 @@ public:
   getFluxDirectIntegration(const TInt32List &eIdx_list,
                            const TInt32List &subeIdx_list,
                            bool substract_abslinesmodel) const;
+  void resetCurObs() { *m_curObs = 0; }
+  void incrementCurObs() { (*m_curObs)++; }
+  Int32 remainsObs() { return *m_curObs < m_nbObs; }
 
 private:
   void SetLSF();
