@@ -92,9 +92,7 @@ public:
 
   std::shared_ptr<const LineModelExtremaResult> buildFirstPassExtremaResults();
   std::shared_ptr<LineModelExtremaResult>
-  buildExtremaResults(const CSpectrum &spectrum,
-                      const TFloat64Range &lambdaRange,
-                      const TCandidateZbyRank &zCandidates,
+  buildExtremaResults(const TCandidateZbyRank &zCandidates,
                       const std::string &opt_continuumreest = "no");
 
   const bool m_enableWidthFitByGroups = false;

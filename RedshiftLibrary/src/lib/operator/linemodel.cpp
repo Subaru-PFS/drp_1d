@@ -843,9 +843,7 @@ void COperatorLineModel::ComputeSecondPass(
 }
 
 std::shared_ptr<LineModelExtremaResult>
-COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
-                                        const TFloat64Range &lambdaRange,
-                                        const TCandidateZbyRank &zCandidates,
+COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
                                         const std::string &opt_continuumreest) {
   Int32 savedFitContinuumOption =
       m_fittingManager->getContinuumManager()->GetFitContinuum_Option();
@@ -972,14 +970,12 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     m_result->ScaleMargCorrectionContinuum[idx] =
         m_fittingManager->getContinuumManager()
             ->getContinuumScaleMargCorrection();
-
     if (m != m_result->ChiSquare[idx] &&
         m_fittingManager->getFittingMethod() != "random")
       THROWG(INTERNAL_ERROR, Formatter() << "COperatorLineModel::" << __func__
                                          << ": m (" << m << " for idx=" << idx
                                          << ") !=chi2 ("
                                          << m_result->ChiSquare[idx] << ")");
-
     m = m_result->ChiSquare[idx];
     // save the model result
     // WARNING: saving results TODO: this is currently wrong !! the model
@@ -997,10 +993,11 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       // 2=save model with only Em. lines removed.
       for (m_fittingManager->resetCurObs(); m_fittingManager->remainsObs();
            m_fittingManager->incrementCurObs()) {
+
         if (overrideModelSavedType == 0) {
           resultspcmodel->addModel(
               m_fittingManager->getSpectrumModel().GetModelSpectrum(),
-              spectrum.getObsID());
+              m_fittingManager->getSpectrum().getObsID());
         } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
           auto lineTypeFilter = CLine::EType::nType_All;
           if (overrideModelSavedType == 2)
@@ -1009,7 +1006,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           resultspcmodel->addModel(
               m_fittingManager->getSpectrumModel()
                   .GetObservedSpectrumWithLinesRemoved(lineTypeFilter),
-              spectrum.getObsID());
+              m_fittingManager->getSpectrum().getObsID());
         }
       }
       ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
@@ -1022,9 +1019,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         Log.LogDetail(
             "photometry cannot be applied for fromspectrum or nocontinuum");
 
-      } else
+      } else {
+        m_fittingManager->resetCurObs();
         phot_values = m_fittingManager->getSpectrumModel().getPhotValues();
-
+      }
       ExtremaResult->m_modelPhotValues[i] =
           std::make_shared<CModelPhotValueResult>(std::move(phot_values));
       ExtremaResult->m_savedModelFittingResults[i] =
@@ -1051,8 +1049,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         std::shared_ptr<CModelSpectrumResult> baselineResult =
             std::make_shared<CModelSpectrumResult>();
         baselineResult->addModel(
-            CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis),
-            spectrum.getObsID());
+            CSpectrum(m_fittingManager->getSpectrum().GetSpectralAxis(),
+                      modelContinuumFluxAxis),
+            m_fittingManager->getSpectrum().getObsID());
 
         ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
 
