@@ -67,7 +67,7 @@ void CRuleStrongHigherThanWeak::SetUp(bool EnabledArgument, ...) {
  *amplitude for strong lines
  **/
 void CRuleStrongHigherThanWeak::Correct(
-    CLineModelElementList &LineModelElementList) {
+    CLMEltListVector &LineModelElementList) {
   auto const [minStrongEltIndex, minStrongLineIndex] =
       FindLowestStrongLineIndex(LineModelElementList);
 
@@ -77,7 +77,8 @@ void CRuleStrongHigherThanWeak::Correct(
   }
 
   // Access strong line infos
-  auto &minElement_ptr = LineModelElementList[minStrongEltIndex];
+  auto &minElement_ptr =
+      LineModelElementList.getElementList()[minStrongEltIndex];
   Float64 erStrong =
       minElement_ptr->GetFittedAmplitudeErrorSigma(minStrongLineIndex);
   Float64 ampStrong = minElement_ptr->GetFittedAmplitude(minStrongLineIndex);
@@ -85,8 +86,9 @@ void CRuleStrongHigherThanWeak::Correct(
       minElement_ptr->GetLines()[minStrongLineIndex].GetName();
   Float64 maxAmp = maxAmplitude(ampStrong, erStrong);
 
-  for (Int32 iElement = 0; iElement < LineModelElementList.size(); iElement++) {
-    auto &element_ptr = LineModelElementList[iElement];
+  for (Int32 iElement = 0;
+       iElement < LineModelElementList.getElementList().size(); iElement++) {
+    auto &element_ptr = LineModelElementList.getElementList()[iElement];
 
     // Consider only desired line types
     if (element_ptr->GetElementType() != m_LineType)
@@ -164,8 +166,7 @@ void CRuleStrongHigherThanWeak::constructLogMsg(const std::string &nameWeak,
   Logs.append(strTmp.c_str());
 }
 
-bool CRuleStrongHigherThanWeak::Check(
-    CLineModelElementList &LineModelElementList) {
+bool CRuleStrongHigherThanWeak::Check(CLMEltListVector &LineModelElementList) {
   return false;
 }
 
@@ -176,10 +177,11 @@ bool CRuleStrongHigherThanWeak::Check(
  **/
 Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
     Int32 linetype, Float64 &er, std::string &name,
-    CLineModelElementList &LineModelElementList) {
+    CLMEltListVector &LineModelElementList) {
   Float64 maxi = -1.0;
-  for (Int32 iedx = 0; iedx < LineModelElementList.size(); iedx++) {
-    const auto &element_ptr = LineModelElementList[iedx];
+  for (Int32 iedx = 0; iedx < LineModelElementList.getElementList().size();
+       iedx++) {
+    const auto &element_ptr = LineModelElementList.getElementList()[iedx];
     for (Int32 iLineStrong = 0; iLineStrong != element_ptr->GetSize();
          ++iLineStrong) {
       auto const &lineStrong = element_ptr->GetLines()[iLineStrong];
@@ -202,12 +204,13 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
 }
 
 std::pair<Int32, Int32> CRuleStrongHigherThanWeak::FindLowestStrongLineIndex(
-    const CLineModelElementList &LineModelElementList) {
+    const CLMEltListVector &LineModelElementList) {
   Float64 amplitudeMin = INFINITY;
   Int32 iElementMin = undefIdx;
   Int32 iLineMin = undefIdx;
-  for (Int32 iElement = 0; iElement < LineModelElementList.size(); iElement++) {
-    const auto &element_ptr = LineModelElementList[iElement];
+  for (Int32 iElement = 0;
+       iElement < LineModelElementList.getElementList().size(); iElement++) {
+    const auto &element_ptr = LineModelElementList.getElementList()[iElement];
     if (element_ptr->GetElementType() != m_LineType)
       continue;
 

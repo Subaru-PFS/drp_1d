@@ -161,25 +161,15 @@ public:
   }
 
   const CSpectrum &getSpectrum() const {
-    if (*m_curObs >= m_nbObs)
-      THROWG(INTERNAL_ERROR, " obs does not exist");
     return *((*m_inputSpcs).at(*m_curObs));
   }
   shared_ptr<const CSpectrum> getSpectrumPtr() {
-    if (*m_curObs >= m_nbObs)
-      THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_inputSpcs).at(*m_curObs);
   }
 
-  CSpectrumModel &getSpectrumModel() {
-    if (*m_curObs >= m_nbObs)
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models).at(*m_curObs);
-  }
+  CSpectrumModel &getSpectrumModel() { return (*m_models).at(*m_curObs); }
 
   const CSpectrumModel &getSpectrumModel() const {
-    if (*m_curObs >= m_nbObs)
-      THROWG(INTERNAL_ERROR, " obs does not exist");
     return (*m_models).at(*m_curObs);
   }
 
@@ -191,9 +181,6 @@ public:
   }
 
   const TLambdaRange &getLambdaRange() const {
-    if (*m_curObs >= m_nbObs)
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-
     return *(m_lambdaRanges.at(*m_curObs));
   }
 
@@ -268,7 +255,7 @@ private:
 
   CTLambdaRangePtrVector m_lambdaRanges;
   CCSpectrumVectorPtr m_inputSpcs;
-  std::shared_ptr<CElementsLists> m_ElementsVector;
+  std::shared_ptr<CLMEltListVector> m_ElementsVector;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;

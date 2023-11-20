@@ -48,7 +48,7 @@ namespace NSEpic {
 
 class CRulesManager : public CLineRatioManager {
 public:
-  CRulesManager(const std::shared_ptr<CElementsLists> &elementsVector,
+  CRulesManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
                 const CSpcModelVectorPtr &models,
                 const CCSpectrumVectorPtr &inputSpcs,
                 const CTLambdaRangePtrVector &lambdaRanges,

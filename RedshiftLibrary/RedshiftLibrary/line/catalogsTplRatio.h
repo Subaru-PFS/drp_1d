@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/line/lineRatioCatalog.h"
+#include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
@@ -52,7 +53,6 @@
 #include <vector>
 
 namespace NSEpic {
-class CLineModelElementList;
 
 /**
  * \ingroup Redshift
@@ -80,7 +80,7 @@ public:
 
   bool GetCatalogVelocities(Int32 idx, Float64 &elv, Float64 &alv) const;
   std::vector<std::vector<TFloat64List>> InitLineCorrespondingAmplitudes(
-      const CLineModelElementList
+      const std::vector<TLineModelElementParam_ptr>
           &LineModelElementList, // TODO refactor this, this should not be a
                                  // linemodelelementlist, because all the
                                  // information retrieved from it are not
@@ -105,13 +105,13 @@ private:
                               const TFloat64List &fittedErrors,
                               const CLineRatioCatalog &catalog,
                               TFloat64List &ampsCorrected) const;
-  void
-  logLineNominalAmp(const CLineModelElementList &LineModelElementList,
-                    bool enableISMCalzetti,
-                    const std::vector<std::vector<TFloat64List>>
-                        &lineCatalogLinesCorrespondingNominalAmp,
-                    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                        &ismCorrectionCalzetti) const;
+  void logLineNominalAmp(
+      const std::vector<TLineModelElementParam_ptr> &LineModelElementList,
+      bool enableISMCalzetti,
+      const std::vector<std::vector<TFloat64List>>
+          &lineCatalogLinesCorrespondingNominalAmp,
+      const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+          &ismCorrectionCalzetti) const;
   std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
 };
 

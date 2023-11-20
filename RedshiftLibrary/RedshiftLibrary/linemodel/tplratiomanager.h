@@ -50,7 +50,7 @@ class CLineCatalogsTplRatio;
 
 class CTplratioManager : public CLineRatioManager {
 public:
-  CTplratioManager(const std::shared_ptr<CElementsLists> &elementsVector,
+  CTplratioManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
                    const CSpcModelVectorPtr &models,
                    const CCSpectrumVectorPtr &inputSpcs,
                    const CTLambdaRangePtrVector &lambdaRanges,

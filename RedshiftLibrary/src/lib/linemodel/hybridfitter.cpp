@@ -44,7 +44,7 @@ using namespace NSEpic;
 using namespace std;
 
 CHybridFitter::CHybridFitter(
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
@@ -209,9 +209,9 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     std::string tagA = linetagsA[itag];
 
     auto const &[iElt_lineE, lineE_id] =
-        getElementList().findElementIndex(tagE, CLine::EType::nType_Emission);
-    auto const &[iElt_lineA, lineA_id] =
-        getElementList().findElementIndex(tagA, CLine::EType::nType_Absorption);
+        m_ElementsVector->findElementIndex(tagE, CLine::EType::nType_Emission);
+    auto const &[iElt_lineA, lineA_id] = m_ElementsVector->findElementIndex(
+        tagA, CLine::EType::nType_Absorption);
     // Were the lines indexes found ?
     if (iElt_lineE == undefIdx || iElt_lineA == undefIdx)
       continue;
@@ -232,8 +232,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     for (Int32 imore = 0; imore < linetagsMore[itag].size(); imore++) {
       std::string tagMore = linetagsMore[itag][imore];
       auto const &[iElt_lineMore, lineMore_id] =
-          getElementList().findElementIndex(tagMore,
-                                            CLine::EType::nType_Emission);
+          m_ElementsVector->findElementIndex(tagMore,
+                                             CLine::EType::nType_Emission);
       if (iElt_lineMore == undefIdx)
         continue;
 

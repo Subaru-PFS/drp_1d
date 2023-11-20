@@ -296,34 +296,26 @@ TInt32List CLineModelElementList::getValidElementIndices(
   return nonZeroValidEltsIdx;
 }
 
-TInt32List
-CLineModelElementList::findElementTypeIndices(CLine::EType type) const {
-  TInt32List idx;
-  for (size_t i = 0; i < m_Elements.size(); ++i)
-    if (m_Elements[i]->GetElementType() == type)
-      idx.push_back(i);
-  return idx;
-}
-
 /**
  * \brief Returns the first index of m_Elements where calling the element's
  *findElementIndex method with LineCatalogIndex argument does not return -1.
  * Returns also the line index
  **/
+
 std::pair<Int32, Int32>
 CLineModelElementList::findElementIndex(Int32 line_id) const {
   Int32 elt_index = undefIdx;
   Int32 line_index = undefIdx;
   auto it = std::find_if(begin(), end(), [line_id](auto const &elt_ptr) {
-    return elt_ptr->hasLine(line_id);
+    return elt_ptr->getElementParam()->hasLine(line_id);
   });
   if (it != end()) {
     elt_index = it - begin();
-    line_index = it->get()->getLineIndex(line_id);
+    line_index = it->get()->getElementParam()->getLineIndex(line_id);
   }
   return std::make_pair(elt_index, line_index);
 }
-
+/*
 std::pair<Int32, Int32>
 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
                                         CLine::EType linetype) const {
@@ -341,7 +333,7 @@ CLineModelElementList::findElementIndex(const std::string &LineTagStr,
   }
   return std::make_pair(elt_index, line_index);
 }
-
+*/
 // first element returned is the list of element indices, then all remaining
 // elts are the list of line indices, for each element listed.
 std::vector<std::pair<Int32, TInt32List>>

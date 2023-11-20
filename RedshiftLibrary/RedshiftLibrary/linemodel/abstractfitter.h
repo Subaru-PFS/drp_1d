@@ -51,7 +51,7 @@ namespace NSEpic
 class CContinuumManager;
 class CAbstractFitter {
 public:
-  CAbstractFitter(const std::shared_ptr<CElementsLists> &elementsVector,
+  CAbstractFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
                   const CCSpectrumVectorPtr &inputSpcs,
                   const CTLambdaRangePtrVector &lambdaRanges,
                   const CSpcModelVectorPtr &spectrumModels,
@@ -69,7 +69,7 @@ public:
 
   static std::shared_ptr<CAbstractFitter> makeFitter(
       std::string fittingMethod,
-      const std::shared_ptr<CElementsLists> &elementsVector,
+      const std::shared_ptr<CLMEltListVector> &elementsVector,
       const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
@@ -151,7 +151,7 @@ protected:
   const CLineMap &m_RestLineList;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
-  std::shared_ptr<CElementsLists> m_ElementsVector;
+  std::shared_ptr<CLMEltListVector> m_ElementsVector;
 
   std::shared_ptr<Int32> m_curObs;
   // hard coded options

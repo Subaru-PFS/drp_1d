@@ -52,17 +52,16 @@ namespace NSEpic {
  */
 class CRuleSuperStrong : public CRule {
 public:
-  bool Check(CLineModelElementList &LineModelElementList);
+  bool Check(CLMEltListVector &LineModelElementList);
   void SetUp(bool EnabledArgument, ...);
 
 private:
   CLine::EType m_LineType = CLine::EType::nType_All;
   TStringList m_SuperStrongTags;
-  void Correct(CLineModelElementList &LineModelElementList);
-  Float64
-  FindHighestSuperStrongLineAmp(TStringList superstrongTags, Float64 &er,
-                                std::string &name,
-                                CLineModelElementList &LineModelElementList);
+  void Correct(CLMEltListVector &LineModelElementList);
+  Float64 FindHighestSuperStrongLineAmp(TStringList superstrongTags,
+                                        Float64 &er, std::string &name,
+                                        CLMEltListVector &LineModelElementList);
   void constructLogMsg(const std::string &nameWeak,
                        const std::string &strongName, Float64 ampB,
                        Float64 maxB);

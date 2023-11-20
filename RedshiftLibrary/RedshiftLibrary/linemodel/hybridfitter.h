@@ -48,7 +48,7 @@ namespace NSEpic
 // class CRegulament;
 class CHybridFitter : public CSvdFitter {
 public:
-  CHybridFitter(const std::shared_ptr<CElementsLists> &elementsVector,
+  CHybridFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
                 const CCSpectrumVectorPtr &inputSpcs,
                 const CTLambdaRangePtrVector &lambdaRanges,
                 const CSpcModelVectorPtr &spectrumModels,

@@ -43,7 +43,7 @@
 #include <boost/format.hpp>
 
 namespace NSEpic {
-class CLineModelElementList;
+class CLMEltListVector;
 
 /**
  * \ingroup Redshift
@@ -61,13 +61,13 @@ public:
   CRule &operator=(const CRule &) = default;
   CRule &operator=(CRule &&) = default;
 
-  void Apply(CLineModelElementList &LineModelElementList);
-  virtual bool Check(CLineModelElementList &LineModelElementList) = 0;
+  void Apply(CLMEltListVector &LineModelElementList);
+  virtual bool Check(CLMEltListVector &LineModelElementList) = 0;
   virtual void SetUp(bool EnabledArgument, ...) = 0;
   std::string GetLogs();
 
 private:
-  virtual void Correct(CLineModelElementList &LineModelElementList) = 0;
+  virtual void Correct(CLMEltListVector &LineModelElementList) = 0;
 
 protected:
   // Library of common methods:

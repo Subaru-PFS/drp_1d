@@ -65,6 +65,8 @@ TLineModelElementParam::TLineModelElementParam(CLineVector lines,
     m_Offsets.push_back(line.GetOffset());
     m_LinesIds[line.GetID()] = index;
   }
+  if (m_Lines.empty())
+    THROWG(INTERNAL_ERROR, "Empty line vector");
   auto const &first_line = m_Lines.front();
 
   m_type = first_line.GetType();
@@ -120,26 +122,27 @@ void CLineModelElement::reset() {
   m_ElementParam->m_dtmFree = NAN;
 }
 
-Int32 CLineModelElement::getLineIndex(Int32 line_id) const {
+Int32 TLineModelElementParam::getLineIndex(Int32 line_id) const {
   Int32 index = undefIdx;
-  auto const &indicesMap = GetLinesIndices();
-  auto const &it = indicesMap.find(line_id);
-  if (it != indicesMap.cend())
+
+  auto const &it = m_LinesIds.find(line_id);
+  if (it != m_LinesIds.cend())
     index = it->second;
   return index;
 }
 
-Int32 CLineModelElement::getLineIndex(const std::string &LineTagStr) const {
+Int32 TLineModelElementParam::getLineIndex(
+    const std::string &LineTagStr) const {
   Int32 line_index = undefIdx;
-  auto const &lines = GetLines();
+
   auto it =
-      std::find_if(lines.cbegin(), lines.cend(), [&LineTagStr](auto &line) {
+      std::find_if(m_Lines.cbegin(), m_Lines.cend(), [&LineTagStr](auto &line) {
         auto const &name = line.GetName();
         std::size_t foundstra = name.find(LineTagStr.c_str());
         return foundstra != std::string::npos;
       });
-  if (it != lines.cend())
-    line_index = it - lines.cbegin();
+  if (it != m_Lines.cend())
+    line_index = it - m_Lines.cbegin();
 
   return line_index;
 }

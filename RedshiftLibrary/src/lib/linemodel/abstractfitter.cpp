@@ -14,7 +14,7 @@
 using namespace NSEpic;
 
 CAbstractFitter::CAbstractFitter(
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
@@ -43,7 +43,7 @@ CAbstractFitter::CAbstractFitter(
 
 std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::string fittingMethod,
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
@@ -254,8 +254,9 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
 
   if (num == 0 || getElementParam()[eltIndex]->m_sumGauss == 0) {
     Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
-                 " num=%d, mtm=%f",
-                 num, getElementParam()[eltIndex]->m_sumGauss);
+                 " num=%d, mtm=%f at line index %d of elt %d",
+                 num, getElementParam()[eltIndex]->m_sumGauss, lineIdx,
+                 eltIndex);
     getElementParam()[eltIndex]->m_sumGauss = NAN;
     getElementParam()[eltIndex]->m_dtmFree = NAN;
     getElementParam()[eltIndex]->m_sumCross = NAN;

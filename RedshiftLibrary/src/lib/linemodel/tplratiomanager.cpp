@@ -48,7 +48,7 @@
 using namespace NSEpic;
 
 CTplratioManager::CTplratioManager(
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
@@ -161,15 +161,14 @@ void CTplratioManager::duplicateTplratioResult(Int32 idx) {
 
 void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
 
-  *m_curObs = 0;
   m_LineCatalogCorrespondingNominalAmp =
       m_CatalogTplRatio->InitLineCorrespondingAmplitudes(
-          getElementList(), opt_tplratio_ismFit,
+          m_elementsVector->getElementParam(), opt_tplratio_ismFit,
           m_continuumManager->getIsmCorrectionFromTpl());
   m_opt_dust_calzetti = opt_tplratio_ismFit;
   m_tplratioBestTplName = undefStr;
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
-  Int32 elCount = getElementList().size();
+  Int32 elCount = m_elementsVector->getElementParam().size();
   // Resize tplratio buffers
   m_MeritTplratio.assign(s, NAN);
   m_ScaleMargCorrTplratio.assign(s, NAN);
@@ -467,10 +466,9 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
     _merit = getLeastSquareMeritFast();
   else */
 
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
-    getModel().refreshModel();
-    _merit += getLeastSquareMerit();
-  }
+  refreshAllModels();
+  _merit += getLeastSquareMerit();
+
   Float64 _meritprior =
       computelogLinePriorMerit(itratio, m_logPriorDataTplRatio);
 
@@ -527,7 +525,7 @@ void CTplratioManager::saveResults(Int32 itratio) {
   m_tplratioBestTplName = m_CatalogTplRatio->GetCatalogName(m_savedIdxFitted);
   m_tplratioBestTplIsmCoeff = GetIsmCoeff(m_savedIdxFitted);
   TInt32List idx_em =
-      getElementList().findElementTypeIndices(CLine::EType::nType_Emission);
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
   if (!idx_em.empty()) {
     m_tplratioBestTplAmplitudeEm =
         m_FittedAmpTplratio[m_savedIdxFitted]
@@ -541,7 +539,7 @@ void CTplratioManager::saveResults(Int32 itratio) {
                                                          // in tpl ratio mode...
   }
   TInt32List idx_abs =
-      getElementList().findElementTypeIndices(CLine::EType::nType_Absorption);
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
   if (!idx_abs.empty()) {
     m_tplratioBestTplAmplitudeAbs =
         m_FittedAmpTplratio[m_savedIdxFitted]

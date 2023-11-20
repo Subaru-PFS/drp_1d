@@ -168,6 +168,15 @@ struct TLineModelElementParam {
   }
 
   Int32 size() { return m_Lines.size(); }
+
+  Int32 getLineIndex(Int32 line_id) const;
+  Int32 getLineIndex(const std::string &LineTagStr) const;
+  bool hasLine(Int32 line_id) const {
+    return getLineIndex(line_id) != undefIdx;
+  };
+  bool hasLine(const std::string &LineTagStr) const {
+    return getLineIndex(LineTagStr) != undefIdx;
+  };
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -282,14 +291,6 @@ public:
   TSymIgmParams GetSymIgmParams(Int32 asymIdx = 0) const;
 
   void resetAsymfitParams();
-  Int32 getLineIndex(Int32 line_id) const;
-  Int32 getLineIndex(const std::string &LineTagStr) const;
-  bool hasLine(Int32 line_id) const {
-    return getLineIndex(line_id) != undefIdx;
-  };
-  bool hasLine(const std::string &LineTagStr) const {
-    return getLineIndex(LineTagStr) != undefIdx;
-  };
 
   const TInt32List &getIgmLinesIndices() const {
     return m_ElementParam->m_asymLineIndices;
@@ -299,6 +300,7 @@ public:
   Float64 GetSignFactor(Int32 line_index) const;
 
   Int32 GetSize() const { return m_size; };
+  // TODO should be removed, only accessible throug TLineModelElementParam
   const CLineVector &GetLines() const { return m_ElementParam->m_Lines; };
   const TInt32Map &GetLinesIndices() const {
     return m_ElementParam->m_LinesIds;
@@ -341,6 +343,8 @@ public:
 
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;
+
+  TLineModelElementParam_ptr getElementParam() { return m_ElementParam; }
 
   Int32 computeCrossProducts(Float64 redshift,
                              const CSpectrumSpectralAxis &spectralAxis,

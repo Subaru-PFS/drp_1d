@@ -55,7 +55,7 @@ class CAbstractFitter;
 
 class CLineRatioManager {
 public:
-  CLineRatioManager(const std::shared_ptr<CElementsLists> &elementsVectors,
+  CLineRatioManager(const std::shared_ptr<CLMEltListVector> &elementsVectors,
                     const CSpcModelVectorPtr &spectrumModels,
                     const CCSpectrumVectorPtr &inputSpcs,
                     const CTLambdaRangePtrVector &lambdaRanges,
@@ -91,7 +91,7 @@ public:
   void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
   static std::shared_ptr<CLineRatioManager> makeLineRatioManager(
       const std::string &lineRatioType,
-      const std::shared_ptr<CElementsLists> &elementsVector,
+      const std::shared_ptr<CLMEltListVector> &elementsVector,
       const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
@@ -108,25 +108,11 @@ protected:
 
   Float64 getLeastSquareMerit() const;
 
-  CSpectrumModel &getModel() {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models)[*m_curObs];
-  }
-  const CSpectrumModel &getModel() const {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models)[*m_curObs];
-  }
-  const CSpectrum &getSpectrum() const {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return *((*m_inputSpcs)[*m_curObs]);
-  }
+  CSpectrumModel &getModel() { return m_models->at(*m_curObs); }
+  const CSpectrumModel &getModel() const { return m_models->at(*m_curObs); }
+  const CSpectrum &getSpectrum() const { return *(m_inputSpcs->at(*m_curObs)); }
   const TLambdaRange &getLambdaRange() const {
-    if (*m_curObs >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return *(m_lambdaRanges[*m_curObs]);
+    return *(m_lambdaRanges.at(*m_curObs));
   }
   CLineModelElementList &getElementList() {
     return m_elementsVector->getElementList();
@@ -137,8 +123,9 @@ protected:
   bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
   bool isOutsideLambdaRange(Int32 elt_index);
   std::vector<bool> getOutsideLambdaRangeList(Int32 elt_index);
+  void refreshAllModels();
 
-  std::shared_ptr<CElementsLists> m_elementsVector;
+  std::shared_ptr<CLMEltListVector> m_elementsVector;
   CCSpectrumVectorPtr m_inputSpcs;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;

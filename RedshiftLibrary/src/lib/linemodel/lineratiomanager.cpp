@@ -52,7 +52,7 @@
 using namespace NSEpic;
 
 CLineRatioManager::CLineRatioManager(
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
@@ -288,7 +288,7 @@ void CLineRatioManager::logParameters() {
 
 std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const std::string &lineRatioType,
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
@@ -344,4 +344,9 @@ CLineRatioManager::getOutsideLambdaRangeList(Int32 elt_index) {
           getElementList()[elt_index]->IsOutsideLambdaRange(line_index);
   }
   return ret;
+}
+void CLineRatioManager::refreshAllModels() {
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+    getModel().refreshModel();
+  }
 }

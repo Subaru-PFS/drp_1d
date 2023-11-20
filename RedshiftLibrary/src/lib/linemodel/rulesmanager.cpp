@@ -45,7 +45,7 @@
 using namespace NSEpic;
 
 CRulesManager::CRulesManager(
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
@@ -75,7 +75,7 @@ void CRulesManager::applyRules(bool enableLogs) {
   }
 
   m_Regulament.EnableLogs(enableLogs);
-  m_Regulament.Apply(getElementList());
+  m_Regulament.Apply(*m_elementsVector);
 }
 
 const TStringList &CRulesManager::GetModelRulesLog() const {

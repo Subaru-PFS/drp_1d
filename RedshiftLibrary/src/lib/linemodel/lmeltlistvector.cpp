@@ -44,19 +44,17 @@
 using namespace NSEpic;
 using namespace std;
 
-CElementsLists::CElementsLists(CTLambdaRangePtrVector lambdaranges,
-                               const std::shared_ptr<Int32> &curObs,
-                               const CLineMap &restLineList,
-                               bool regularCatalog)
+CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
+                                   const std::shared_ptr<Int32> &curObs,
+                                   const CLineMap &restLineList,
+                                   bool regularCatalog)
     : m_lambdaRanges(lambdaranges), m_curObs(curObs),
       m_RestLineList(restLineList) {
   m_nbObs = m_lambdaRanges.size();
 
-  m_ElementsVector = std::make_shared<std::vector<CLineModelElementList>>();
-
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-    m_ElementsVector->push_back(CLineModelElementList());
+    m_ElementsVector.push_back(CLineModelElementList());
     if (regularCatalog) {
       // load the regular catalog
       LoadCatalog();
@@ -70,7 +68,16 @@ CElementsLists::CElementsLists(CTLambdaRangePtrVector lambdaranges,
   }
 }
 
-Int32 CElementsLists::GetModelNonZeroElementsNDdl() {
+CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
+                                   const CLineMap &restLineList)
+    : m_RestLineList(restLineList) { // for unit test
+
+  m_ElementsVector.push_back(eltlist);
+  m_curObs = std::make_shared<int>(0);
+  for (auto elt : m_ElementsVector[0])
+    m_ElementsParams.push_back(elt->getElementParam());
+}
+Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() {
   Int32 nddl = 0;
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     nddl += getElementList().GetModelNonZeroElementsNDdl();
@@ -78,7 +85,7 @@ Int32 CElementsLists::GetModelNonZeroElementsNDdl() {
   return nddl;
 }
 
-bool CElementsLists::isOutsideLambdaRange(Int32 elt_index, Int32 line_index) {
+bool CLMEltListVector::isOutsideLambdaRange(Int32 elt_index, Int32 line_index) {
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRange(line_index))
       return false;
@@ -86,30 +93,8 @@ bool CElementsLists::isOutsideLambdaRange(Int32 elt_index, Int32 line_index) {
   return true;
 }
 
-std::pair<Int32, Int32> CElementsLists::findElementIndex(Int32 line_id) const {
-  std::pair<Int32, Int32> ret;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    ret = getElementList().findElementIndex(line_id);
-    if (ret.first != undefIdx and ret.second != undefIdx)
-      return ret;
-  }
-  return std::make_pair(undefIdx, undefIdx);
-}
-
-std::pair<Int32, Int32>
-CElementsLists::findElementIndex(const std::string &LineTagStr,
-                                 CLine::EType linetype) const {
-  std::pair<Int32, Int32> ret;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    ret = getElementList().findElementIndex(LineTagStr, linetype);
-    if (ret.first != undefIdx and ret.second != undefIdx)
-      return ret;
-  }
-  return std::make_pair(undefIdx, undefIdx);
-}
-
-void CElementsLists::AddElement(CLineVector lines, Float64 velocityEmission,
-                                Float64 velocityAbsorption, Int32 ig) {
+void CLMEltListVector::AddElement(CLineVector lines, Float64 velocityEmission,
+                                  Float64 velocityAbsorption, Int32 ig) {
   if (*m_curObs == 0) {
     m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
         std::move(lines), velocityEmission, velocityAbsorption));
@@ -130,7 +115,7 @@ void CElementsLists::AddElement(CLineVector lines, Float64 velocityEmission,
  *line thusly associated to this line. If at least one line was found, save
  *this result in getElementList().
  **/
-void CElementsLists::LoadCatalog() {
+void CLMEltListVector::LoadCatalog() {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   auto const ps = Context.GetParameterStore();
@@ -148,7 +133,7 @@ void CElementsLists::LoadCatalog() {
   }
 }
 
-void CElementsLists::LoadCatalogOneMultiline() {
+void CLMEltListVector::LoadCatalogOneMultiline() {
   CAutoScope const autoscope(Context.m_ScopeStack, "linemodel");
 
   auto const ps = Context.GetParameterStore();
@@ -165,7 +150,7 @@ void CElementsLists::LoadCatalogOneMultiline() {
              0);
 }
 
-void CElementsLists::LoadCatalogTwoMultilinesAE() {
+void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   auto const ps = Context.GetParameterStore();
@@ -192,10 +177,55 @@ void CElementsLists::LoadCatalogTwoMultilinesAE() {
   }
 }
 
-Float64 CElementsLists::getScaleMargCorrection(Int32 Eltidx) const {
-  Int32 smc = 0;
+Float64 CLMEltListVector::getScaleMargCorrection(Int32 Eltidx) const {
+  Float64 smc = 0;
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     smc += getElementList().getScaleMargCorrection(Eltidx);
   }
   return smc;
+}
+
+TInt32List CLMEltListVector::findElementTypeIndices(CLine::EType type) const {
+  TInt32List idx;
+  for (size_t i = 0; i < m_ElementsParams.size(); ++i)
+    if (m_ElementsParams[i]->m_type == type)
+      idx.push_back(i);
+  return idx;
+}
+
+/**
+ * \brief Returns the first index of m_Elements where calling the element's
+ *findElementIndex method with LineCatalogIndex argument does not return -1.
+ * Returns also the line index
+ **/
+std::pair<Int32, Int32>
+CLMEltListVector::findElementIndex(Int32 line_id) const {
+  Int32 elt_index = undefIdx;
+  Int32 line_index = undefIdx;
+  auto it = std::find_if(
+      m_ElementsParams.begin(), m_ElementsParams.end(),
+      [line_id](auto const &elt_ptr) { return elt_ptr->hasLine(line_id); });
+  if (it != m_ElementsParams.end()) {
+    elt_index = it - m_ElementsParams.begin();
+    line_index = it->get()->getLineIndex(line_id);
+  }
+  return std::make_pair(elt_index, line_index);
+}
+
+std::pair<Int32, Int32>
+CLMEltListVector::findElementIndex(const std::string &LineTagStr,
+                                   CLine::EType linetype) const {
+  Int32 elt_index = undefIdx;
+  Int32 line_index = undefIdx;
+  auto it = std::find_if(m_ElementsParams.begin(), m_ElementsParams.end(),
+                         [&LineTagStr, &linetype](auto const &elt_ptr) {
+                           return elt_ptr->hasLine(LineTagStr) &&
+                                  (linetype == CLine::EType::nType_All ||
+                                   elt_ptr->m_type == linetype);
+                         });
+  if (it != m_ElementsParams.end()) {
+    elt_index = it - m_ElementsParams.begin();
+    line_index = it->get()->getLineIndex(LineTagStr);
+  }
+  return std::make_pair(elt_index, line_index);
 }

@@ -51,7 +51,7 @@ namespace NSEpic {
 class CRuleRatioRange : public CRule {
 public:
   CRuleRatioRange();
-  bool Check(CLineModelElementList &LineModelElementList);
+  bool Check(CLMEltListVector &LineModelElementList);
   void SetUp(bool EnabledArgument, ...);
 
 private:
@@ -59,7 +59,7 @@ private:
   std::string m_LineA;
   std::string m_LineB;
   Float64 m_Coefficient;
-  void Correct(CLineModelElementList &LineModelElementList);
+  void Correct(CLMEltListVector &LineModelElementList);
   void constructLogMsg(const std::string &lineStrA, Float64 ampA,
                        Float64 correctedA);
 };

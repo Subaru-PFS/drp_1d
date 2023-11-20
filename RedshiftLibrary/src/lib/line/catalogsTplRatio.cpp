@@ -78,25 +78,26 @@ bool CLineCatalogsTplRatio::GetCatalogVelocities(Int32 idx, Float64 &elv,
 
 std::vector<std::vector<TFloat64List>>
 CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
-    const CLineModelElementList &LineModelElementList, Int32 enableISMCalzetti,
+    const std::vector<TLineModelElementParam_ptr> &LineModelElementsParams,
+    Int32 enableISMCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti) const {
 
   std::vector<std::vector<TFloat64List>> lineCatalogCorrespondingNominalAmp(
       GetCatalogsCount(),
-      std::vector<TFloat64List>(LineModelElementList.size()));
+      std::vector<TFloat64List>(LineModelElementsParams.size()));
 
   for (Int32 iCatalog = 0; iCatalog != GetCatalogsCount(); ++iCatalog) {
     auto const &catalog = GetCatalog(iCatalog);
-    for (Int32 elt_index = 0; elt_index != LineModelElementList.size();
+    for (Int32 elt_index = 0; elt_index != LineModelElementsParams.size();
          ++elt_index) {
-      auto &elt_ptr = LineModelElementList[elt_index];
+      auto &elt_param_ptr = LineModelElementsParams[elt_index];
       auto &correspondingNominalAmp =
           lineCatalogCorrespondingNominalAmp[iCatalog][elt_index];
-      correspondingNominalAmp.reserve(elt_ptr->GetSize());
-      for (Int32 line_index = 0; line_index != elt_ptr->GetSize();
+      correspondingNominalAmp.reserve(elt_param_ptr->size());
+      for (Int32 line_index = 0; line_index != elt_param_ptr->size();
            ++line_index) {
-        auto const line_id = elt_ptr->GetLines()[line_index].GetID();
+        auto const line_id = elt_param_ptr->m_Lines[line_index].GetID();
         auto const &catalog_line = catalog.GetList().at(line_id);
         Float64 nominalAmp = catalog_line.GetNominalAmplitude();
         Float64 const restLambda = catalog_line.GetPosition();
@@ -111,7 +112,7 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
   }
 
   // Now log the linesCorrespondingNominalAmp
-  logLineNominalAmp(LineModelElementList, enableISMCalzetti,
+  logLineNominalAmp(LineModelElementsParams, enableISMCalzetti,
                     lineCatalogCorrespondingNominalAmp, ismCorrectionCalzetti);
 
   return lineCatalogCorrespondingNominalAmp;
@@ -119,7 +120,8 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
 
 // only logging
 void CLineCatalogsTplRatio::logLineNominalAmp(
-    const CLineModelElementList &LineModelElementList, bool enableISMCalzetti,
+    const std::vector<TLineModelElementParam_ptr> &LineModelElementsParams,
+    bool enableISMCalzetti,
     const std::vector<std::vector<TFloat64List>>
         &lineCatalogCorrespondingNominalAmp,
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
@@ -141,7 +143,7 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
         Float64 nomAmp =
             lineCatalogCorrespondingNominalAmp[k][elt_index][line_index];
         auto const &line_id =
-            LineModelElementList[elt_index]->GetLines()[line_index].GetID();
+            LineModelElementsParams[elt_index]->m_Lines[line_index].GetID();
         std::string const &lineName =
             GetCatalog(k).GetList().at(line_id).GetStrID();
         Log.LogDebug("    CatalogsTplRatio - "

@@ -155,7 +155,7 @@ void CLineModelFitting::initMembers(
   m_nominalWidthDefault = 13.4; // euclid 1 px
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_models = std::make_shared<std::vector<CSpectrumModel>>();
-  m_ElementsVector = std::make_shared<CElementsLists>(CElementsLists(
+  m_ElementsVector = std::make_shared<CLMEltListVector>(CLMEltListVector(
       m_lambdaRanges, m_curObs, m_RestLineList, m_lineRatioType == "rules"));
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     Log.LogDetail("    model: Continuum winsize found is %.2f A",
@@ -803,7 +803,8 @@ void CLineModelFitting::LoadModelSolution(
         continue;
       Int32 line_id = modelSolution.lineId[iRestLine];
       auto const &elt = eltList[eIdx];
-      Int32 elt_line_index = elt->getLineIndex(line_id);
+      Int32 elt_line_index =
+          m_ElementsVector->getElementParam()[eIdx]->getLineIndex(line_id);
       if (elt_line_index == undefIdx)
         continue; // or throw an exception ?
 
@@ -838,7 +839,7 @@ void CLineModelFitting::LoadModelSolution(
         !std::isnan(modelSolution.LyaDelta)) {
 
       std::string lyaTag = linetags::lya_em;
-      auto const [idxLyaE, _] = eltList.findElementIndex(lyaTag);
+      auto const [idxLyaE, _] = m_ElementsVector->findElementIndex(lyaTag);
       if (idxLyaE != undefIdx)
         eltList[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
                                             modelSolution.LyaAlpha,
@@ -1196,25 +1197,27 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
 Float64 CLineModelFitting::EstimateMTransposeM()
     const // duplicate with getMTranposeMCumulative, except for return values
 {
-  const CSpectrumSpectralAxis &spcSpectralAxis =
-      getSpectrum().GetSpectralAxis();
-  const CSpectrumFluxAxis &spcFluxAxis =
-      getSpectrumModel().GetModelSpectrum().GetFluxAxis();
-  const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
-
   Float64 mtm = 0.0;
-  Float64 diff = 0.0;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
-  Float64 imin =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-  Float64 imax =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
-  for (Int32 j = imin; j < imax; j++) {
-    diff = spcFluxAxis[j];
-    mtm += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        getSpectrum().GetSpectralAxis();
+    const CSpectrumFluxAxis &spcFluxAxis =
+        getSpectrumModel().GetModelSpectrum().GetFluxAxis();
+    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+
+    Float64 diff = 0.0;
+
+    Float64 imin =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
+    Float64 imax =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    for (Int32 j = imin; j < imax; j++) {
+      diff = spcFluxAxis[j];
+      mtm += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+    }
+    // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
   }
-  // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
-
   return mtm;
 }
 

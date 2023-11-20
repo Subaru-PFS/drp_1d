@@ -45,7 +45,7 @@ using namespace NSEpic;
 using namespace std;
 
 CSvdlcFitter::CSvdlcFitter(
-    const std::shared_ptr<CElementsLists> &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,

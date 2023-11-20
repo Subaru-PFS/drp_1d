@@ -220,6 +220,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   Float64 mtm = model.EstimateMTransposeM();
 
   // Subtract the fitted model from the original template
+  model.resetCurObs();
   model.getSpectrumModel().refreshModel();
   CSpectrum modelSpc = model.getSpectrumModel().GetModelSpectrum();
   /*//debug:
