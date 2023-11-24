@@ -15,7 +15,9 @@
       "enum": [
         "hybrid",
         "individual",
-        "svd"
+        "svd",
+        "ones",
+        "random"
       ],
       "title": "Fitting method",
       "description": "Overwrite `fittingmethod` parameter to select a different method"
