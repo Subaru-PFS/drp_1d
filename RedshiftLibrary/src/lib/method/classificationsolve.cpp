@@ -101,6 +101,9 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       proba /= sum;
       classifResult->SetProba(category, proba);
       classifResult->SetEvidence(category, logEvidences[category]);
+    } else {
+      classifResult->SetProba(category, 0.);
+      classifResult->SetEvidence(category, -INFINITY);
     }
   }
   classifResult->SetTypeLabel(typeLabel);
