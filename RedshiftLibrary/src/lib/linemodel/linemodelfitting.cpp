@@ -445,6 +445,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
                                          bool enableAmplitudeOffsets,
                                          bool enableLambdaOffsetsFit) {
   m_fittingmethod = fitMethod;
+  *m_curObs = 0; // dummy implementation for svdlc and svdlcp2
   m_fitter = CAbstractFitter::makeFitter(
       fitMethod, m_ElementsVector, m_inputSpcs, m_lambdaRanges, m_models,
       m_RestLineList, m_continuumManager, m_curObs, enableAmplitudeOffsets,

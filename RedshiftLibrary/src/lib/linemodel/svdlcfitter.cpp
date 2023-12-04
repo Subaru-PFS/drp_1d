@@ -71,8 +71,10 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   //	       m_fitContinuum_tplName.c_str());
 
   // re-interpolate the continuum on the grid
-
+  *m_curObs = 0;
   m_continuumManager->reinterpolateContinuumResetAmp();
+  *m_curObs = 0;
+
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
@@ -83,6 +85,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
                                          redshift);
 
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
+  *m_curObs = 0;
   getModel().initModelWithContinuum();
 }
 
@@ -108,6 +111,7 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     Float64 redshift) {
   // boost::chrono::thread_clock::time_point start_prep =
   // boost::chrono::thread_clock::now();
+  *m_curObs = 0; // TODO dummy impl
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();

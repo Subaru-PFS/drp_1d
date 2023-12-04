@@ -146,7 +146,9 @@ void CContinuumManager::setFitContinuum_tplAmplitude(
   m_fitContinuum->tplAmplitude = tplAmp;
   m_fitContinuum->tplAmplitudeError = tplAmpErr;
   m_fitContinuum->pCoeffs = polyCoeffs;
-  getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
+  for (; *m_curObs < m_models->size(); (*m_curObs)++) {
+    getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
+  }
 }
 
 Int32 CContinuumManager::SetFitContinuum_FitStore(

@@ -446,6 +446,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                                 "fftprocessing. ignoreLinesSupport disabled");
   }
   if (ignoreLinesSupport) {
+    m_fittingManager->resetCurObs(); // TODO multiobs, dummy implementation
     m_templateFittingOperator->setMaskBuilder(
         std::make_shared<COutsideLineMaskBuilder>(
             m_fittingManager->getElementList()));
