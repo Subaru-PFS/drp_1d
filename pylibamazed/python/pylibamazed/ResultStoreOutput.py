@@ -265,7 +265,7 @@ class ResultStoreOutput(AbstractOutput):
 
         full_name = self.get_error_full_name(object_type, stage)
         self.errors[full_name] = dict()
-        self.errors[full_name]["code"] = causing_stage
+        self.errors[full_name]["code"] = ErrorCode(ErrorCode.STAGE_NOT_RUN_BECAUSE_OF_PREVIOUS_FAILURE).name
         self.errors[full_name]["message"] = f"not run because {causing_stage} failed"
         self.errors[full_name]["line"] = -1
         self.errors[full_name]["filename"] = ""

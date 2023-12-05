@@ -157,9 +157,12 @@ class Context:
                 self.run_redshift_solver(rso, object_type, "redshift_solver")
 
             if self.parameters.get_linemeas_method(object_type):
-                if linemeas_params_from_solver and not rso.has_error(object_type, "redshift_solver"):
-                    self.run_load_linemeas_params(rso, object_type, "linemeas_catalog_load")
-                if not rso.has_error(object_type, "linemeas_catalog_load"):
+                if linemeas_params_from_solver:
+                    if not rso.has_error(object_type, "redshift_solver"):
+                        self.run_load_linemeas_params(rso, object_type, "linemeas_catalog_load")
+                        if not rso.has_error(object_type, "linemeas_catalog_load"):
+                            self.run_linemeas_solver(rso, object_type, "linemeas_solver")
+                else:
                     self.run_linemeas_solver(rso, object_type, "linemeas_solver")
 
             if self.parameters.is_tplratio_catalog_needed(object_type) \
