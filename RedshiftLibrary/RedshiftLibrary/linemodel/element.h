@@ -75,11 +75,13 @@ public:
 
   Float64 GetObservedPosition(Int32 line_index, Float64 redshift,
                               bool doAsymfitdelta = true) const;
+  Float64 GetObservedPosition(Float64 redshift,
+                              bool doAsymfitdelta = true) const;
   Float64 GetLineProfileAtRedshift(Int32 line_index, Float64 redshift,
                                    Float64 x) const;
-  void getObservedPositionAndLineWidth(Int32 line_index, Float64 redshift,
-                                       Float64 &mu, Float64 &sigma,
-                                       bool doAsymfitdelta = true) const;
+  std::pair<Float64, Float64>
+  getObservedPositionAndLineWidth(Float64 redshift, Int32 line_index = undefIdx,
+                                  bool doAsymfitdelta = true) const;
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange,
                       Float64 max_offset = 0.0);

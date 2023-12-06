@@ -198,17 +198,14 @@ Float64 CSpectrumSpectralAxis::GetResolution(Float64 atWavelength) const {
   return 0.0;
 }
 
-/**
- *
- */
-Float64 CSpectrumSpectralAxis::GetMeanResolution() const {
-  if (GetSamplesCount() < 2)
+Float64
+CSpectrumSpectralAxis::GetMeanResolution(TInt32Range const &index_range) const {
+  if (index_range.GetLength() < 1)
     return 0.0;
 
   Float64 resolution = 0.0;
   Int32 nsum = 0;
-  Int32 nSamples = m_Samples.size() - 1;
-  for (Int32 i = 0; i < nSamples; i++) {
+  for (Int32 i = index_range.GetBegin(); i < index_range.GetEnd(); ++i) {
     resolution += (m_Samples[i + 1] - m_Samples[i]);
     nsum++;
   }

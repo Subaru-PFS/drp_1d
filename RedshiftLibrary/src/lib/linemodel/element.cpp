@@ -450,15 +450,17 @@ TInt32Range CLineModelElement::getTheoreticalSupportSubElt(Int32 index) const {
 /**
  * \brief Calls GetLineWidth using the arguments and a calculated argument mu.
  **/
-void CLineModelElement::getObservedPositionAndLineWidth(
-    Int32 index, Float64 redshift, Float64 &mu, Float64 &sigma,
-    bool doAsymfitdelta) const {
-  mu = GetObservedPosition(index, redshift, doAsymfitdelta);
-  if (!m_LSF->checkAvailability(mu)) {
+std::pair<Float64, Float64> CLineModelElement::getObservedPositionAndLineWidth(
+    Float64 redshift, Int32 index, bool doAsymfitdelta) const {
+
+  Float64 const mu = (index == undefIdx)
+                         ? GetObservedPosition(redshift, doAsymfitdelta)
+                         : GetObservedPosition(index, redshift, doAsymfitdelta);
+
+  if (!m_LSF->checkAvailability(mu))
     THROWG(INTERNAL_ERROR, "Line position does not belong to LSF range");
-  } else
-    sigma = GetLineWidth(mu);
-  return;
+  Float64 const sigma = GetLineWidth(mu);
+  return std::make_pair(mu, sigma);
 }
 
 /**
@@ -480,6 +482,23 @@ Float64 CLineModelElement::GetObservedPosition(Int32 index, Float64 redshift,
   return mu;
 }
 
+Float64 CLineModelElement::GetObservedPosition(Float64 redshift,
+                                               bool doAsymfitdelta) const {
+  Float64 mu = 0.0;
+  Int32 nvalid = 0;
+  for (Int32 index = 0; index < GetSize(); ++index) {
+    if (IsOutsideLambdaRangeLine(index))
+      continue;
+    mu += GetObservedPosition(index, redshift, doAsymfitdelta);
+    ++nvalid;
+  }
+  if (nvalid == 0)
+    THROWG(INTERNAL_ERROR, "Trying to get mean position of an element with "
+                           "all lines outside range");
+  mu /= nvalid;
+  return mu;
+}
+
 /**
  * \brief Returns the line profile of the sub-element with id line_id at
  *wavelength x, for a given redshift.
@@ -487,10 +506,9 @@ Float64 CLineModelElement::GetObservedPosition(Int32 index, Float64 redshift,
 Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 index,
                                                     Float64 redshift,
                                                     Float64 x) const {
-  Float64 mu = NAN;
-  Float64 sigma = NAN;
-  getObservedPositionAndLineWidth(index, redshift, mu, sigma,
-                                  false); // do not apply Lya asym offset
+  auto const &[mu, sigma] =
+      getObservedPositionAndLineWidth(redshift, index,
+                                      false); // do not apply Lya asym offset
 
   auto const &profile = getElementParam()->getLineProfile(index);
 
@@ -591,10 +609,9 @@ void CLineModelElement::addToSpectrumModelDerivVel(
 
     for (Int32 i = m_StartNoOverlap[index]; i <= m_EndNoOverlap[index]; i++) {
 
-      Float64 x = modelspectralAxis[i];
-      Float64 mu = NAN;
-      Float64 sigma = NAN;
-      getObservedPositionAndLineWidth(index, redshift, mu, sigma, false);
+      Float64 const x = modelspectralAxis[i];
+      auto const &[mu, sigma] =
+          getObservedPositionAndLineWidth(redshift, index, false);
 
       if (m_ElementParam->m_SignFactors[index] == -1)
         modelfluxAxis[i] +=
@@ -681,13 +698,11 @@ CLineModelElement::GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
 
   Float64 Yi = 0.0;
 
-  Float64 x = lambda;
-
   for (Int32 index = 0; index != GetSize(); ++index) { // loop on lines
     if (m_OutsideLambdaRangeList[index])
       continue;
 
-    Float64 A = m_ElementParam->m_FittedAmplitudes[index];
+    Float64 const A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
@@ -695,14 +710,13 @@ CLineModelElement::GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
     if (A < 0.)
       continue;
 
-    Float64 mu = NAN;
-    Float64 sigma = NAN;
-    getObservedPositionAndLineWidth(index, redshift, mu, sigma,
-                                    false); // do not apply Lya asym offset
+    auto const &[mu, sigma] =
+        getObservedPositionAndLineWidth(redshift, index,
+                                        false); // do not apply Lya asym offset
 
-    Float64 lineprofile_derivVel =
-        m_ElementParam->GetLineProfileDerivVel(index, x, mu, sigma);
-    Float64 fluxval =
+    Float64 const lineprofile_derivVel =
+        m_ElementParam->GetLineProfileDerivVel(index, lambda, mu, sigma);
+    Float64 const fluxval =
         m_ElementParam->m_SignFactors[index] * A * lineprofile_derivVel;
 
     Yi += m_ElementParam->m_SignFactors[index] == -1 ? continuumFlux * fluxval
@@ -752,36 +766,33 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
 
   Float64 Yi = 0.0;
 
-  Float64 x = lambda;
-
   for (Int32 index = 0; index != GetSize(); ++index) { // loop on lines
     if (m_OutsideLambdaRangeList[index])
       continue;
 
-    Float64 A = m_ElementParam->m_FittedAmplitudes[index];
+    Float64 const A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       continue;
     // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
-    Float64 mu = NAN;
-    Float64 sigma = NAN;
-    getObservedPositionAndLineWidth(index, redshift, mu, sigma,
-                                    false); // do not apply Lya asym offset
-    Float64 lambda_rest =
+    auto const &[mu, sigma] =
+        getObservedPositionAndLineWidth(redshift, index,
+                                        false); // do not apply Lya asym offset
+    Float64 const lambda_rest =
         GetObservedPosition(index, 0.0, false); // get restframe wavelentgh
-    const auto &profile = getElementParam()->getLineProfile(index);
+    auto const &profile = getElementParam()->getLineProfile(index);
 
-    Float64 profile_derivz_val =
-        lambda_rest * profile->GetLineProfileDerivX0(x, mu, sigma);
+    Float64 const profile_derivz_val =
+        lambda_rest * profile->GetLineProfileDerivX0(lambda, mu, sigma);
 
-    Float64 fluxval =
+    Float64 const fluxval =
         m_ElementParam->m_SignFactors[index] * A * profile_derivz_val;
 
     Yi += m_ElementParam->m_SignFactors[index] == -1
               ? continuumFlux * fluxval -
                     A * continuumFluxDerivZ *
-                        profile->GetLineProfileVal(x, mu, sigma)
+                        profile->GetLineProfileVal(lambda, mu, sigma)
               : fluxval;
   }
   return Yi;

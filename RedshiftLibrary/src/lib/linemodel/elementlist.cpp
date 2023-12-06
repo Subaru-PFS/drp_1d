@@ -497,15 +497,12 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
 
   TInt32RangeList indexRangeList(eIdx_list.size());
   for (Int32 i = 0; i < eIdx_list.size(); i++) {
-    Int32 eIdx = eIdx_list[i];
-    Int32 subeIdx = subeIdx_list[i];
+    Int32 const eIdx = eIdx_list[i];
+    Int32 const subeIdx = subeIdx_list[i];
+    auto const &[mu, LineWidth] =
+        m_Elements[eIdx]->getObservedPositionAndLineWidth(redshift, subeIdx);
 
-    Float64 mu = NAN;
-    Float64 LineWidth = NAN;
-    m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, redshift, mu,
-                                                      LineWidth);
-
-    Float64 winsizeAngstrom = LineWidth * sigma_support;
+    Float64 const winsizeAngstrom = LineWidth * sigma_support;
 
     indexRangeList[i] = CLineModelElement::EstimateIndexRange(
         spectralAxis, mu, lambdaRange, winsizeAngstrom);
@@ -513,7 +510,7 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
 
   if (eIdx_list.size() == 1)
     return indexRangeList;
-  TInt32RangeList nonOverlappingIndexRangeList =
+  TInt32RangeList const nonOverlappingIndexRangeList =
       TInt32Range::joinIntersections(std::move(indexRangeList));
 
   return nonOverlappingIndexRangeList;

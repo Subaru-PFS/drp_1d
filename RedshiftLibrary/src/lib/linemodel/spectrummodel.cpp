@@ -292,9 +292,8 @@ CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
   auto const &elt = (*m_Elements)[eIdx];
   auto const &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
-  Float64 mu = NAN;
-  Float64 sigma = NAN;
-  elt->getObservedPositionAndLineWidth(line_id, redshift, mu, sigma);
+  auto const &[mu, sigma] =
+      elt->getObservedPositionAndLineWidth(redshift, line_id);
 
   // compute averaged continuum under line, weighted by the line profile
   auto const &profile = elt->getElementParam()->getLineProfile(line_id);
@@ -384,8 +383,9 @@ std::pair<Float64, Int32> CSpectrumModel::getContinuumSquaredResidualInRange(
  *the square root of fit / sumErr.
  **/
 std::pair<Float64, Float64>
-CSpectrumModel::getModelSquaredResidualUnderElements(
-    TInt32List const &EltsIdx, bool with_continuum) const {
+CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
+                                                     bool with_continuum,
+                                                     bool with_weight) const {
   // before elementlistcutting this variable was
   // CElementList::m_ErrorNoContinuum, a reference initialized twice in
   // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
@@ -408,7 +408,8 @@ CSpectrumModel::getModelSquaredResidualUnderElements(
   TInt32List xInds = m_Elements->getSupportIndexes(EltsIdx);
   for (Int32 const j : xInds) {
     diff = (Yspc[j] - Ymodel[j]);
-    Float64 const w = 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]);
+    Float64 const w =
+        with_weight ? 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]) : 1.0;
     fit += (diff * diff) * w;
     sumErr += w;
   }
@@ -603,10 +604,9 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
     if (isElementInvalid(eIdx, line_index))
       continue;
 
-    Float64 mu = NAN;
-    Float64 sigma = NAN;
-    (*m_Elements)[eIdx]->getObservedPositionAndLineWidth(line_index, m_Redshift,
-                                                         mu, sigma, false);
+    auto const &[mu, sigma] =
+        (*m_Elements)[eIdx]->getObservedPositionAndLineWidth(m_Redshift,
+                                                             line_index, false);
     Float64 fluxDI = NAN;
     Float64 snrDI = NAN;
     TInt32List eIdx_line(1, eIdx);

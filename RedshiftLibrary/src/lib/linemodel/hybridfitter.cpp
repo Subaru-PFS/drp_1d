@@ -255,17 +255,15 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // try if the width is significantly different: abs > em
-    Float64 AbsVSEmWidthCoeffThreshold = 2.0;
-    Float64 muE = NAN;
-    Float64 muA = NAN;
-    Float64 sigmaE = NAN;
-    Float64 sigmaA = NAN;
-    getElementList()[iElt_lineE]->getObservedPositionAndLineWidth(
-        lineE_id, redshift, muE, sigmaE,
-        false); // do not apply Lya asym offset
-    getElementList()[iElt_lineA]->getObservedPositionAndLineWidth(
-        lineA_id, redshift, muA, sigmaA,
-        false); // do not apply Lya asym offset
+    Float64 const AbsVSEmWidthCoeffThreshold = 2.0;
+    auto const &[muE, sigmaE] =
+        getElementList()[iElt_lineE]->getObservedPositionAndLineWidth(
+            redshift, lineE_id,
+            false); // do not apply Lya asym offset
+    auto const &[muA, sigmaA] =
+        getElementList()[iElt_lineA]->getObservedPositionAndLineWidth(
+            redshift, lineA_id,
+            false); // do not apply Lya asym offset
     if (sigmaA < AbsVSEmWidthCoeffThreshold * sigmaE) {
       continue;
     }

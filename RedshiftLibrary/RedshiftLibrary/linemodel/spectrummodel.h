@@ -56,7 +56,8 @@ public:
 
   std::pair<Float64, Float64>
   getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
-                                       bool with_continuum) const;
+                                       bool with_continuum,
+                                       bool with_weight = true) const;
 
   std::pair<Float64, Float64> getFluxDirectIntegration(
       const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
