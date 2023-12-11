@@ -965,28 +965,28 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
           amp *= cont;
           ampError *= cont;
         }
-      }
-      for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
-        const auto &eltList = getElementList();
-        if (!eltList[eIdx]->IsOutsideLambdaRange(line_index)) {
-          eltList[eIdx]->getObservedPositionAndLineWidth(
-              line_index, modelSolution.Redshift, mu, sigma,
-              false); // do not apply Lya asym offset
-          modelSolution.Sigmas[iRestLine] = sigma;
-          const auto &profile = eltList[eIdx]->getLineProfile(line_index);
 
-          Float64 lineFlux = profile->GetLineFlux(mu, sigma);
-          flux = amp * lineFlux;
-          fluxError = ampError * lineFlux;
-          break;
+        for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+          const auto &eltList = getElementList();
+          if (!eltList[eIdx]->IsOutsideLambdaRange(line_index)) {
+            eltList[eIdx]->getObservedPositionAndLineWidth(
+                line_index, modelSolution.Redshift, mu, sigma,
+                false); // do not apply Lya asym offset
+            modelSolution.Sigmas[iRestLine] = sigma;
+            const auto &profile = eltList[eIdx]->getLineProfile(line_index);
+
+            Float64 lineFlux = profile->GetLineFlux(mu, sigma);
+            flux = amp * lineFlux;
+            fluxError = ampError * lineFlux;
+            break;
+          }
         }
-      }
-      auto [fluxDI, snrDI] = getFluxDirectIntegration(
-          eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
-      if (!std::isnan(amp) && amp >= 0.0) {
+
         if (!isEmission)
           flux = -flux;
       }
+      auto [fluxDI, snrDI] = getFluxDirectIntegration(
+          eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
       modelSolution.Fluxs[iRestLine] = flux;
       modelSolution.FluxErrors[iRestLine] = fluxError;
       modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
