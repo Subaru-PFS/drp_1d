@@ -944,11 +944,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
         modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
       }
 
-      Float64 cont =
+      Float64 const cont =
           getContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
       modelSolution.CenterContinuumFlux[iRestLine] = cont;
-      modelSolution.ContinuumError[iRestLine] =
+      Float64 const cont_rms =
           getContinuumError(eIdx, line_index);
+
+      modelSolution.ContinuumError[iRestLine] = cont_rms;
 
       Float64 mu = NAN;
       Float64 sigma = NAN;
@@ -964,8 +966,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       }
       if (!std::isnan(amp) && amp >= 0.0) {
         if (!isEmission) {
-          amp *= cont;
-          ampError *= cont;
+          Float64 const positive_cont = std::max(0.0, cont);
+          ampError *= positive_cont;
+          ampError += amp * cont_rms; // add continuum error (will lead to a
+                                      // non-null error for a null continuum)
+          amp *= -positive_cont; // minus sign to get a negative flux for abs
         }
 
         for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
@@ -977,15 +982,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
             modelSolution.Sigmas[iRestLine] = sigma;
             const auto &profile = eltList[eIdx]->getLineProfile(line_index);
 
-            Float64 lineFlux = profile->GetLineFlux(mu, sigma);
+            Float64 const lineFlux = profile->GetLineFlux(mu, sigma);
+    
             flux = amp * lineFlux;
             fluxError = ampError * lineFlux;
             break;
           }
         }
-
-        if (!isEmission)
-          flux = -flux;
       }
       auto [fluxDI, snrDI] = getFluxDirectIntegration(
           eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
