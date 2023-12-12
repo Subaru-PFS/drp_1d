@@ -81,9 +81,6 @@ public:
   void initParameters();
   void
   initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
-  void LoadCatalog(const CLineVector &restLineList);
-  void LoadCatalogOneMultiline(const CLineVector &restLineList);
-  void LoadCatalogTwoMultilinesAE(const CLineVector &restLineList);
 
   void LogCatalogInfos();
 
@@ -131,8 +128,8 @@ public:
   Float64 getLeastSquareContinuumMeritFast() const;
   Float64 getLeastSquareContinuumMerit() const;
   Float64 getLeastSquareMeritUnderElements() const;
-  Float64 getScaleMargCorrection(Int32 idxLine = -1) const {
-    return getElementList().getScaleMargCorrection(idxLine);
+  Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const {
+    return getElementList().getScaleMargCorrection(Eltidx);
   }
 
   Float64 getStrongerMultipleELAmpCoeff() const;
@@ -141,19 +138,14 @@ public:
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
-  Float64 getCumulSNRStrongEL() const;
-  Float64 getCumulSNROnRange(TInt32Range idxRange) const;
+  std::pair<Float64, Float64> getCumulSNRStrongEL() const;
+  std::pair<Float64, Float64> getSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0) const;
+  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
 
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
-
-  std::shared_ptr<CAbstractFitter> m_fitter;
-  std::shared_ptr<CLineRatioManager> m_lineRatioManager;
-
-  const CLineVector m_RestLineList;
 
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
@@ -169,14 +161,16 @@ public:
     return (*m_inputSpcs)[*m_curObs];
   }
 
-  CSpectrumModel &getSpectrumModel() const {
+  CSpectrumModel &getSpectrumModel() { return (*m_models)[*m_curObs]; }
+
+  const CSpectrumModel &getSpectrumModel() const {
     return (*m_models)[*m_curObs];
-  } // not const because of tplortho
+  }
 
   CLineModelElementList &getElementList() {
     return (*m_ElementsVector)[*m_curObs];
   }
-  CLineModelElementList &getElementList() const {
+  const CLineModelElementList &getElementList() const {
     return (*m_ElementsVector)[*m_curObs];
   }
 
@@ -201,6 +195,12 @@ public:
   std::string getLineRatioType() { return m_lineRatioType; }
 
   void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
+
+  std::shared_ptr<CAbstractFitter> m_fitter;
+  std::shared_ptr<CLineRatioManager> m_lineRatioManager;
+
+  const CLineMap m_RestLineList;
+
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
   bool m_enableLbdaOffsets;
@@ -210,19 +210,18 @@ public:
   Float64 m_LambdaOffsetStep = 25.0;
 
 private:
-  std::shared_ptr<CTplModelSolution> m_continuumFitValues;
-  std::shared_ptr<CContinuumManager> m_continuumManager;
-
-  void AddElement(CLineVector &&lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, TInt32List &&inds, Int32 ig);
+  void AddElement(CLineVector lines, Float64 velocityEmission,
+                  Float64 velocityAbsorption, Int32 ig);
+  void LoadCatalog();
+  void LoadCatalogOneMultiline();
+  void LoadCatalogTwoMultilinesAE();
 
   void SetLSF();
 
-  TInt32List findLineIdxInCatalog(const CLineVector &restLineList,
-                                  const std::string &strTag,
-                                  CLine::EType type) const;
-
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
+
+  std::shared_ptr<CTplModelSolution> m_continuumFitValues;
+  std::shared_ptr<CContinuumManager> m_continuumManager;
 
   CSpcModelVectorPtr m_models;
 

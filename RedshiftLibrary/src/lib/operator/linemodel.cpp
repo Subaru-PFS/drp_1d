@@ -86,11 +86,6 @@ void COperatorLineModel::ComputeFirstPass() {
 
   makeTFOperator(m_Redshifts);
   if (!m_templateFittingOperator->IsFFTProcessing()) {
-    // cast from TFbase to  TF or TFPhot
-    /* std::shared_ptr<COperatorTemplateFitting> derived =
-         std::dynamic_pointer_cast<COperatorTemplateFitting>(
-             m_templateFittingOperator);*/
-
     m_fittingManager =
         std::make_shared<CLineModelFitting>(m_templateFittingOperator);
   } else { // create a default
@@ -105,7 +100,7 @@ void COperatorLineModel::ComputeFirstPass() {
       m_opt_continuumcomponent == "tplfitauto")
     for (const auto &category : m_tplCategoryList)
       nfitcontinuum += tplCatalog->GetTemplateCount(category);
-  m_result->Init(m_Redshifts, Context.getCLineVector(), nfitcontinuum,
+  m_result->Init(m_Redshifts, Context.getCLineMap(), nfitcontinuum,
                  m_fittingManager->getTplratio_count(),
                  m_fittingManager->getTplratio_priors());
 
@@ -472,12 +467,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++) {
       const auto &chisquareResult = chisquareResultsAllTpl[j];
 
-      Float64 tplfitsnr = -1.;
-      if (chisquareResult->FitMtM[i] > 0.)
-        tplfitsnr =
-            chisquareResult->FitDtM[i] / std::sqrt(chisquareResult->FitMtM[i]);
-      if (tplfitsnr > bestTplFitSNR)
-        bestTplFitSNR = tplfitsnr;
+      if (chisquareResult->SNR[i] > bestTplFitSNR)
+        bestTplFitSNR = chisquareResult->SNR[i];
 
       bool retAdd = tplfitStore->Add(
           chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
@@ -486,7 +477,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
           chisquareResult->FitAmplitude[i],
           chisquareResult->FitAmplitudeError[i],
           chisquareResult->FitAmplitudeSigma[i], chisquareResult->FitDtM[i],
-          chisquareResult->FitMtM[i], chisquareResult->LogPrior[i], tplfitsnr);
+          chisquareResult->FitMtM[i], chisquareResult->LogPrior[i],
+          chisquareResult->SNR[i]);
       if (!retAdd)
         THROWG(INTERNAL_ERROR, "Failed to add continuum fit to store");
     }
@@ -999,40 +991,41 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
     Int32 maxSaveNLinemodelContinua = maxModelSave;
     if (savedModels < maxModelSave) {
       // CModelSpectrumResult
-      std::shared_ptr<CModelSpectrumResult> resultspcmodel;
+      std::shared_ptr<CModelSpectrumResult> resultspcmodel =
+          std::make_shared<CModelSpectrumResult>();
       Int32 overrideModelSavedType = 0;
       // 0=save model, (DEFAULT)
       // 1=save model with lines removed,
       // 2=save model with only Em. lines removed.
       if (overrideModelSavedType == 0) {
-        resultspcmodel = std::make_shared<CModelSpectrumResult>(
-            m_fittingManager->getSpectrumModel().GetModelSpectrum());
+        resultspcmodel->addModel(
+            m_fittingManager->getSpectrumModel().GetModelSpectrum(),
+            spectrum.getObsID());
       } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
         auto lineTypeFilter = CLine::EType::nType_All;
         if (overrideModelSavedType == 2)
           lineTypeFilter = CLine::EType::nType_Emission;
 
-        resultspcmodel = std::make_shared<CModelSpectrumResult>(
+        resultspcmodel->addModel(
             m_fittingManager->getSpectrumModel()
-                .GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
+                .GetObservedSpectrumWithLinesRemoved(lineTypeFilter),
+            spectrum.getObsID());
       }
       ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 
       // below spectrumModel doesnt include identified lines
       auto &cont = m_result->ContinuumModelSolutions[idx];
-      TPhotVal values;
+      TPhotVal phot_values;
       if (cont.tplName == "nocontinuum" ||
           m_opt_continuumcomponent == "fromspectrum") { // no photometry
-        Log.LogInfo(
+        Log.LogDetail(
             "photometry cannot be applied for fromspectrum or nocontinuum");
 
       } else
-        ExtremaResult->m_modelPhotValue[i] =
-            std::make_shared<const CModelPhotValueResult>(
-                m_fittingManager->getSpectrumModel().getPhotValues());
+        phot_values = m_fittingManager->getSpectrumModel().getPhotValues();
 
-      ExtremaResult->m_modelPhotValue[i] =
-          std::make_shared<CModelPhotValueResult>(values); // temporary for test
+      ExtremaResult->m_modelPhotValues[i] =
+          std::make_shared<CModelPhotValueResult>(std::move(phot_values));
       ExtremaResult->m_savedModelFittingResults[i] =
           std::make_shared<CLineModelSolution>(
               m_result->LineModelSolutions[idx]);
@@ -1052,8 +1045,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_fittingManager->getSpectrumModel().GetModelContinuum();
 
       std::shared_ptr<CModelSpectrumResult> baselineResult =
-          std::make_shared<CModelSpectrumResult>(
-              CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis));
+          std::make_shared<CModelSpectrumResult>();
+      baselineResult->addModel(
+          CSpectrum(spectrum.GetSpectralAxis(), modelContinuumFluxAxis),
+          spectrum.getObsID());
 
       ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
 
@@ -1721,9 +1716,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   std::shared_ptr<const CParameterStore> params =
       inputContext->GetParameterStore();
   if (params->GetScoped<bool>("linemodel.velocityfit") &&
-      params->GetScoped<std::string>("linemodel.fittingmethod") != "lbfgs")
+      params->GetScoped<std::string>("linemodel.fittingmethod") != "lbfgsb")
     THROWG(INTERNAL_ERROR,
-           "velocityfit implemented only for lbfgs ftting method");
+           "velocityfit implemented only for lbfgsb ftting method");
 
   Int32 amplitudeOffsetsDegree =
       params->GetScoped<Int32>("linemodel.polynomialdegree");

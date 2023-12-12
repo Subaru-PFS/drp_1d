@@ -43,4 +43,4 @@ from pylibamazed.FilterLoader import AbstractFilterLoader
 
 class TestAbstractFilterLoader:
     def test_useless(self):
-        AbstractFilterLoader([], SpectrumFilterItem).get_filters()
+        AbstractFilterLoader(SpectrumFilterItem).get_filters()

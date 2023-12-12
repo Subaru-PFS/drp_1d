@@ -56,7 +56,7 @@ CLineRatioManager::CLineRatioManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineVector &restLineList)
+    const CLineMap &restLineList)
     : m_elementsVector(elementsVector), m_models(models),
       m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
       m_continuumManager(continuumManager), m_RestLineList(restLineList) {
@@ -85,63 +85,56 @@ CLineRatioManager::CLineRatioManager(
  */
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
-                                      const CLineVector &catalog) {
-  TInt32List idxEltIGM;
-  std::vector<TInt32List> idxLineIGM;
-  std::tie(idxEltIGM, idxLineIGM) = getElementList().getIgmLinesIndices();
+                                      const CLineMap &catalog) {
+  auto const indices_Igm = getElementList().getIgmLinesIndices();
 
-  if (idxEltIGM.empty())
+  if (indices_Igm.empty())
     return;
 
   // assuming only one asymfit/fixed profile
-  Int32 idxLyaE = idxEltIGM.front();
-  Int32 idxLineLyaE = idxLineIGM.front().front();
+  auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
+  Int32 line_idx_LyaE = line_indices_LyaE.front();
 
   const auto &profile =
-      getElementList()[idxLyaE]->GetLines()[idxLineLyaE].GetProfile();
+      getElementList()[elt_idx_LyaE]->GetLines()[line_idx_LyaE].GetProfile();
   if (profile->isAsym())
-    setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog);
+    setAsymProfile(elt_idx_LyaE, line_idx_LyaE, redshift, catalog);
 
-  for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
-    const auto &Elt = getElementList()[idxEltIGM[i]];
-    TInt32List &idxLine = idxLineIGM[i];
-    auto end = std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-      return !Elt->GetLines()[idx].GetProfile()->isSymIgm();
-    });
-    idxLine.erase(end, idxLine.end());
-    if (!idxLine.empty())
-      setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
+  for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
+    const auto &elt = getElementList()[elt_idx_LyaE];
+    auto line_indices_filtered = line_indices_LyaE;
+    auto end =
+        std::remove_if(line_indices_filtered.begin(),
+                       line_indices_filtered.end(), [&elt](Int32 idx) {
+                         return !elt->GetLines()[idx].GetProfile()->isSymIgm();
+                       });
+    line_indices_filtered.erase(end, line_indices_filtered.end());
+    if (!line_indices_filtered.empty())
+      setSymIgmProfile(elt_idx_LyaE, line_indices_filtered, redshift);
   }
 }
 
 void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
                                        Float64 redshift,
-                                       const CLineVector &catalog) {
-  Int32 lineIndex = getLineIndexInCatalog(idxLyaE, idxLineLyaE, catalog);
-  if (lineIndex == undefIdx)
-    return;
+                                       const CLineMap &catalog) {
+  Int32 lineId = getElementList()[idxLyaE]->GetLines()[idxLineLyaE].GetID();
+  auto const &ref_line = catalog.at(lineId);
 
   // finding or setting the correct profile
+  auto const &ref_profile = ref_line.GetProfile();
   CLineProfile_ptr profile;
-  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile()->isAsymFit())
+  if (m_forceDisableLyaFitting && ref_profile->isAsymFit())
     // convert asymfit to asymfixed profile
-    profile = dynamic_cast<const CLineProfileASYMFIT *>(
-                  catalog[lineIndex].GetProfile().get())
+    profile = dynamic_cast<const CLineProfileASYMFIT *>(ref_profile.get())
                   ->cloneToASYM();
-  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile()->isAsymFixed())
+  else if (m_forceLyaFitting && ref_profile->isAsymFixed())
     // convert asymfixed to asymfit
-    profile = dynamic_cast<const CLineProfileASYM *>(
-                  catalog[lineIndex].GetProfile().get())
+    profile = dynamic_cast<const CLineProfileASYM *>(ref_profile.get())
                   ->cloneToASYMFIT();
   else
-    profile = catalog[lineIndex].GetProfile()->Clone();
+    profile = ref_profile->Clone();
 
   getElementList()[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
-}
-
-Int32 CLineRatioManager::getLineIndexInCatalog(
-    Int32 iElts, Int32 idxLine, const CLineVector &catalog) const {
-  return getElementList()[iElts]->getLineIndexInCatalog(idxLine, catalog);
 }
 
 void CLineRatioManager::setSymIgmProfile(Int32 iElts,
@@ -278,7 +271,7 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineVector &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
+    const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
   std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplratio")
     ret = std::make_shared<CTplratioManager>(

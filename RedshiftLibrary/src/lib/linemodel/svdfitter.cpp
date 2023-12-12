@@ -121,8 +121,8 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     return true;
   }
 
-  for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++)
-    getElementList().SetElementAmplitude(EltsIdxToFit[iddl], 1.0, 0.0);
+  for (auto const iElt : EltsIdxToFit)
+    getElementList().SetElementAmplitude(iElt, 1.0, 0.0);
 
   const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
 

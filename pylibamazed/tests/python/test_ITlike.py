@@ -47,6 +47,7 @@ from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 module_root_dir = os.path.split(__file__)[0]
 test_dir = os.path.join(
@@ -123,7 +124,6 @@ def get_spectra(config, observation):
 
     # read and load spectra using spectra reader
     spectra = pd.read_table(s_filename, delimiter="\t")
-    print('spectra', spectra)
     return spectra
 
 
@@ -151,7 +151,7 @@ def save_output(output, config, observation):
 
 def test_ITLikeTest():
     config = make_config()
-    param = Parameters(get_parameters(config["parameters_file"]))
+    param = Parameters(get_parameters(config["parameters_file"]), FakeParametersChecker)
     context = Context(config, param)  # vars returns the dict version of config
     observation = get_observation(config["input_file"])
 
@@ -170,7 +170,18 @@ def test_ITLikeTest():
 
     output = context.run(reader)  # passing spectra reader to launch amazed
 
+    # check results (no errors)
+    for object_type, stage in (("", "init"),
+                               ("galaxy", "redshift_solver"),
+                               ("galaxy", "linemeas_catalog_load"),
+                               ("galaxy", "linemeas_solver"),
+                               ("galaxy", "sub_classif_solver"),
+                               ("galaxy", "reliability_solver"),
+                               ("", "classification"),
+                               ("", "load_result_store")):
+        assert output.has_error(object_type, stage) is False
+
     # add calls to output
-    accessOutputData(output)
+    # accessOutputData(output)
 
     save_output(output, config, observation)

@@ -55,7 +55,7 @@ public:
                   const CCSpectrumVectorPtr &inputSpcs,
                   const CTLambdaRangePtrVector &lambdaRanges,
                   std::shared_ptr<CContinuumManager> continuumManager,
-                  const CLineVector &restLineList);
+                  const CLineMap &restLineList);
   CTplCorrManager() = delete;
   CTplCorrManager(CTplCorrManager const &other) = default;
   CTplCorrManager &operator=(CTplCorrManager const &other) = default;

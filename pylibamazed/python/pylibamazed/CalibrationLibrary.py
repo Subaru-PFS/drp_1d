@@ -60,14 +60,20 @@ from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   CTemplateCatalog, ErrorCode, GlobalException,
                                   MeiksinCorrection, TAsymParams,
                                   VecMeiksinCorrection, VecTFloat64List,
-                                  undefStr)
+                                  WarningCode, undefStr)
 
 zflag = CFlagWarning.GetInstance()
 
 
-def _get_linecatalog_id(row):
-    wl = round(row.WaveLength, 2)
-    return row.Name + "_" + str(wl) + "_" + row.Type
+def _strid(waveLength, name, ltype):
+    wl = round(waveLength, 2)
+    return name + "_" + str(wl) + "_" + ltype
+
+
+def _get_linecatalog_strid(lineCatalog_df):
+    return [_strid(w, n, t) for w, n, t in zip(lineCatalog_df.WaveLength,
+                                               lineCatalog_df.Name,
+                                               lineCatalog_df.Type)]
 
 
 def load_reliability_model(model_path, parameters: Parameters, object_type):
@@ -89,8 +95,8 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
     redshift_range = [model_ha["zrange_min"],
                       model_ha["zrange_max"]]
     redshift_range_step = model_ha["zrange_step"]
-    s_redshift_range = parameters.get_redshift_range(object_type)
-    s_redshift_range_step = parameters.get_redshift_step(object_type)
+    s_redshift_range = parameters.get_redshiftrange(object_type)
+    s_redshift_range_step = parameters.get_redshiftstep(object_type)
     if s_redshift_range != redshift_range:
         raise APIException(
             ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
@@ -216,13 +222,15 @@ class CalibrationLibrary:
 
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
-        nsigmasupport = self.parameters.get_linemodel_nsigmasupport(object_type, solve_method)
+        nsigmasupport = self.parameters.get_nsigmasupport(object_type, solve_method)
         self.line_catalogs[object_type][solve_method] = CLineCatalog(nsigmasupport)
         try:
             line_catalog = pd.read_csv(
                 line_catalog_file,
                 sep='\t',
-                dtype={"WaveLength": float, "AmplitudeGroupName": str, "EnableFitWaveLengthOffset": bool}
+                dtype={"WaveLength": float, "AmplitudeGroupName": str, "EnableFitWaveLengthOffset": bool,
+                       "Name": str, "Type": str, "NominalAmplitude": float
+                       }
             )
         except pd.errors.ParserError as e:
             raise AmazedError(ErrorCode.BAD_FILEFORMAT,
@@ -232,11 +240,12 @@ class CalibrationLibrary:
 
         # force "-1" to undefStr (for compatibility)
         line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName"] = undefStr
-
-        enableIGM = self.parameters.get_linemodel_igmfit(object_type, solve_method)
-
-        # here should go the change of profiles if igm is applied
+        line_catalog['strId'] = _get_linecatalog_strid(line_catalog)
+        if not line_catalog.strId.is_unique:
+            raise APIException(ErrorCode.DUPLICATED_LINES, "some rows in the linecatalog are duplicating the\
+                same line (name position, type)")
         self.line_catalogs_df[object_type][solve_method] = line_catalog
+
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
                 asymParams = TAsymParams(1., 4.5, 0.)
@@ -258,15 +267,16 @@ class CalibrationLibrary:
                                                                             row.WaveLengthOffset,
                                                                             row.EnableFitWaveLengthOffset,
                                                                             index,
-                                                                            _get_linecatalog_id(row),
+                                                                            row.strId,
                                                                             self.meiksin)
-            if enableIGM:
-                self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)
+
+        enableIGM = self.parameters.get_solve_method_igm_fit(object_type, solve_method)
+        if enableIGM:
+            self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)
 
     def load_line_ratio_catalog_list(self, object_type):
         logger = logging.getLogger("calibration_api")
-        solve_method = "LineModelSolve"
-        tplratio_catalog = self.parameters.get_tplratio_catalog(object_type, solve_method)
+        tplratio_catalog = self.parameters.get_lineModelSolve_tplratio_catalog(object_type)
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                tplratio_catalog,
                                                "*.tsv")
@@ -278,39 +288,58 @@ class CalibrationLibrary:
 
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1
-        if self.parameters.get_tplratio_ismfit(object_type, solve_method):
+        if self.parameters.get_lineModelSolve_tplratio_ismfit(object_type):
             n_ebmv_coeffs = self.parameters.get_ebmv_count()
         prior = 1. / (n_ebmv_coeffs * len(line_ratio_catalog_list))
 
-        enableIGM = self.parameters.get_linemodel_igmfit(object_type, solve_method)
-
+        line_catalog_df = self.line_catalogs_df[object_type]["LineModelSolve"]
+        line_ids = line_catalog_df["strId"].reset_index()
+        line_ids["index"] = line_ids["index"].astype(pd.Int64Dtype())  # enable int missing value
         for f in line_ratio_catalog_list:
-            lr_catalog_df = pd.read_csv(f, sep='\t')
+            lr_catalog_df = pd.read_csv(f, sep='\t',
+                                        dtype={"WaveLength": float, "Name": str, "Type": str,
+                                               "NominalAmplitude": float})
             name = f.split(os.sep)[-1][:-4]
             with open(os.path.join(self.calibration_dir,
-                                   self.parameters.get_tplratio_catalog(object_type, solve_method),
+                                   self.parameters.get_lineModelSolve_tplratio_catalog(object_type),
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
-            for k in range(n_ebmv_coeffs):
-                lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["LineModelSolve"])
-                for index, row in lr_catalog_df.iterrows():
-                    if row.Name in list(self.line_catalogs_df[object_type]["LineModelSolve"].Name):
-                        lr_catalog.setLineAmplitude(_get_linecatalog_id(row), row.NominalAmplitude)
-                lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
-                lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
-                # here also we should change the profile type
-                lr_catalog.setAsymProfileAndParams(
-                    line_ratio_catalog_parameter["asym_params"]["profile"],
-                    TAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
-                                line_ratio_catalog_parameter["asym_params"]["alpha"],
-                                line_ratio_catalog_parameter["asym_params"]["delta"],
-                                )
-                )
-                if enableIGM:
-                    lr_catalog.convertLineProfiles2SYMIGM(self.meiksin)
 
+            lr_catalog_df['strId'] = _get_linecatalog_strid(lr_catalog_df)
+            if not lr_catalog_df.strId.is_unique:
+                raise APIException(ErrorCode.DUPLICATED_LINES, "some rows in the lineratio catalog are\
+                     duplicating the same line (name position, type)")
+
+            # set corresponding line ids from the main catalog
+            lr_catalog_df = lr_catalog_df.merge(line_ids, on="strId", how="left", validate="1:1",
+                                                indicator=True)
+            missing_ids = lr_catalog_df["index"].isnull()
+            if np.any(missing_ids):
+                wrong_lines = ' ; '.join([lineid for lineid in lr_catalog_df.strId[missing_ids]])
+                zflag.warning(
+                    WarningCode.LINE_RATIO_UNKNOWN_LINE.value,
+                    f"unknown line(s) in lineratio catalog {name}: {wrong_lines}"
+                )
+                # raise APIException(ErrorCode.LINE_RATIO_UNKNOWN_LINE, "unknown line ratio line in\
+                #      line ratio catalog")
+
+            lr_catalog_df = (lr_catalog_df.loc[~missing_ids]).set_index("index")
+            lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["LineModelSolve"])
+            for index, row in lr_catalog_df.iterrows():
+                lr_catalog.setLineAmplitude(int(index), row.NominalAmplitude)
+            lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
+            lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
+            lr_catalog.setAsymProfileAndParams(
+                line_ratio_catalog_parameter["asym_params"]["profile"],
+                TAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
+                            line_ratio_catalog_parameter["asym_params"]["alpha"],
+                            line_ratio_catalog_parameter["asym_params"]["delta"],
+                            )
+            )
+            lr_catalog.setPrior(prior)
+
+            for k in range(n_ebmv_coeffs):
                 lr_catalog.setIsmIndex(k)
-                lr_catalog.setPrior(prior)
                 self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
 
     def load_empty_line_catalog(self, object_type, method):
@@ -322,27 +351,47 @@ class CalibrationLibrary:
     def load_lsf(self):
         if self.parameters.get_lsf_type() == "GaussianVariableWidth":
             file = os.path.join(self.calibration_dir,
-                                self.parameters.get_gaussian_variable_width_file_name())
-            # TODO check hdul here
-            with fits.open(file) as hdul:
-                self.lsf["wave"] = hdul[1].data.field(0)
-                self.lsf["width"] = hdul[1].data.field(1)
+                                self.parameters.get_lsf_width_file_name())
+            if not os.path.isfile(file):
+                raise APIException(ErrorCode.INVALID_FILEPATH, f"wrong LSF file {file}")
+            with fits.open(file) as hdulist:
+                try:
+                    lsf_hdu = hdulist[1]
+                except IndexError:
+                    raise APIException(ErrorCode.BAD_FILEFORMAT, f"Cannot access hdu 1 for LSF in {file}")
+                self.lsf["wave"] = lsf_hdu.data.field(0)
+                self.lsf["width"] = lsf_hdu.data.field(1)
 
     def load_photometric_bands(self):
-        paths = os.path.join(self.calibration_dir,
-                             self.parameters.get_photometry_transmission_dir(),
-                             "*")
-
-        bands = self.parameters.get_photometry_band()
-        for f in glob.glob(paths):
+        path = os.path.join(self.calibration_dir,
+                            self.parameters.get_photometry_transmission_dir())
+        if not os.path.isdir(path):
+            raise APIException(ErrorCode.INVALID_FILEPATH, f"Photometric transmission dir not found: {path}")
+        bands = self.parameters.get_photometry_bands()
+        band_paths = glob.glob(os.path.join(path, "*"))
+        if not band_paths:
+            raise APIException(ErrorCode.INVALID_FILEPATH, "Photometric transmission dir empty")
+        for f in band_paths:
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
             if band in bands:
-                self.photometric_bands.Add(band, CPhotometricBand(np.array(df[band]),
-                                                                  np.array(df["lambda"])))
+                if band in self.photometric_bands.GetNameList():
+                    raise APIException(ErrorCode.BAD_FILEFORMAT,
+                                       f"Photometric transmission band duplicated: {band}")
+                self.photometric_bands.Add(band, CPhotometricBand(df[band].to_numpy(),
+                                                                  df["lambda"].to_numpy()))
+        # check all requested bands are loaded
+        if len(bands) != self.photometric_bands.size():
+            unknown_bands = [band for band in bands if band not in self.photometric_bands]
+            raise APIException(ErrorCode.BAD_PARAMETER_VALUE,
+                               f"some bands of parameter photometryBand are unknown: {unknown_bands}")
 
     def load_calzetti(self):
-        df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))
+        path = os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt")
+        if not os.path.isfile(path):
+            raise APIException(ErrorCode.INVALID_FILEPATH,
+                               f"ISM extinction file not found: {path}")
+        df = ascii.read(path)
         _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
         self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti,
                                                         self.parameters.get_ebmv_start(),
@@ -355,14 +404,19 @@ class CalibrationLibrary:
         zbins = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
         columns = ['restlambda', 'flux0', 'flux1', 'flux2', 'flux3', 'flux4', 'flux5', 'flux6']
         meiksinCorrectionCurves = VecMeiksinCorrection()
-        for z in zbins[1:]:
-            filename = f"Meiksin_Var_curves_{z}.txt"
-            file_path = os.path.join(self.calibration_dir, "igm",
-                                     "IGM_variation_curves_meiksin_v3.1", filename)
-            if not os.path.isfile(file_path):  # mainly for unit tests
-                continue
-            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm",
-                                    "IGM_variation_curves_meiksin_v3.1", filename))
+        meiksin_root_path = os.path.join(self.calibration_dir, "igm",
+                                                               "IGM_variation_curves_meiksin_v3.1")
+        filename_pattern = os.path.join(meiksin_root_path, "Meiksin_Var_curves_[2-7].[0,5].txt")
+        filenames = glob.glob(filename_pattern)
+        if not filenames:
+            raise APIException(ErrorCode.INVALID_FILEPATH,
+                               f"IGM extinction files not found in: {meiksin_root_path}")
+        filenames.sort()
+        zbins = [float(os.path.basename(name).replace("Meiksin_Var_curves_", "").replace(".txt", ""))
+                 for name in filenames]
+        zbins.insert(0, 1.5)
+        for path in filenames:
+            meiksin_df = ascii.read(path)
             columns = columns[:len(meiksin_df.columns)]
             meiksin_df.rename_columns(tuple(meiksin_df.columns), tuple(columns))
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
@@ -404,7 +458,7 @@ class CalibrationLibrary:
                         self.load_linecatalog(object_type, linemeas_method)
 
                 # Load the reliability model
-                if self.parameters.reliability_enabled(object_type) and reliability:
+                if self.parameters.get_reliability_enabled(object_type) and reliability:
                     model_path = os.path.join(self.calibration_dir,
                                               self.parameters.get_reliability_model(object_type))
                     mp = load_reliability_model(model_path,
@@ -436,7 +490,7 @@ class CalibrationLibrary:
         try:
             with open(os.path.join(
                 self.calibration_dir,
-                self.parameters.get_tplratio_catalog(object_type, "LineModelSolve"),
+                self.parameters.get_lineModelSolve_tplratio_catalog(object_type),
                 line_ratio_catalog + ".json"
             )) as f:
                 tpl_ratio_conf = json.load(f)
@@ -446,24 +500,27 @@ class CalibrationLibrary:
 
     def get_lines_ids(self, attributes):
         lines_ids = dict()
+        lines = None
         for attr in attributes:
             attr_parts = attr.split(".")
-            try:
-                if attr_parts[1] == "linemeas":
-                    linemeas_object = attr_parts[0]
-                    l_method = "LineMeasSolve"
-                elif attr_parts[1] == "fitted_lines":
-                    linemeas_object = attr_parts[0]
-                    l_method = "LineModelSolve"
-                else:
-                    continue
-                lines = self.line_catalogs_df[linemeas_object][l_method]
-            except Exception:
+            if len(attr_parts) == 1:
                 continue
-            try:
-                line_name = attr_parts[2]
-                line_id = lines[lines["Name"] == line_name].index[0]
-                lines_ids[line_name] = line_id
-            except Exception:
-                raise Exception(f"Could not find {line_name} in catalog")
+            if attr_parts[1] == "linemeas":
+                linemeas_object = attr_parts[0]
+                l_method = "LineMeasSolve"
+            elif attr_parts[1] == "fitted_lines":
+                linemeas_object = attr_parts[0]
+                l_method = "LineModelSolve"
+            else:
+                continue
+            if linemeas_object in self.line_catalogs_df \
+                    and l_method in self.line_catalogs_df[linemeas_object]:
+                lines = self.line_catalogs_df[linemeas_object][l_method]
+            if lines is not None:
+                try:
+                    line_name = attr_parts[2]
+                    line_id = lines[lines["Name"] == line_name].index[0]
+                    lines_ids[line_name] = line_id
+                except Exception:
+                    raise Exception(f"Could not find {line_name} in catalog")
         return lines_ids

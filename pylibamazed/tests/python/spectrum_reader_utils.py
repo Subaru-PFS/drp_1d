@@ -36,7 +36,6 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import random
 import tempfile
 
 import numpy as np
@@ -44,6 +43,7 @@ from pylibamazed.AbstractSpectrumReader import (AbstractSpectrumReader,
                                                 Container)
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestSpectrumReaderUtils:
@@ -55,22 +55,34 @@ class TestSpectrumReaderUtils:
         params_dict["airvacuum_method"] = kwargs.get("airvacuum_method", "")
         params_dict["objects"] = []
         params_dict["multiobsmethod"] = kwargs.get("multiobsmethod", "")
+        if params_dict["multiobsmethod"] == "full":
+            params_dict["lambdarange"] = kwargs.get("parameters_lambdarange", {"": [0, 10]})
+        else:
+            params_dict["lambdarange"] = kwargs.get("parameters_lambdarange", [0, 10])
         if kwargs.get("filters"):
             params_dict["filters"] = kwargs.get("filters")
+        if kwargs.get("width"):
+            params_dict["LSF"]["width"] = kwargs.get("width")
         return params_dict
 
     def full_load(self, fsr, **kwargs):
-        fsr.load_wave([0, 10], kwargs.get('obs_id', ''))
-        fsr.load_flux([0, 10], kwargs.get('obs_id', ''))
-        fsr.load_error([0, 10], kwargs.get('obs_id', ''))
+        obs_id = kwargs.get('obs_id', '')
+        if kwargs.get("multiobsmethod") == "full":
+            wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
+            wave_range = wave_ranges[obs_id]
+        else:
+            wave_range = kwargs.get("spectrum_wave_range", [0, 10])
+        fsr.load_wave(wave_range, kwargs.get('obs_id', ''))
+        fsr.load_flux(wave_range, kwargs.get('obs_id', ''))
+        fsr.load_error(wave_range, kwargs.get('obs_id', ''))
+        fsr.load_lsf(None, kwargs.get('obs_id', ''))
 
     def initialize_fsr_with_data(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)
-        params = Parameters(params_dict)
+        params = Parameters(params_dict, FakeParametersChecker)
         cl = CalibrationLibrary(params, tempfile.mkdtemp())
         fsr = FakeSpectrumReader("000", params, cl, "000", "range")
         self.full_load(fsr, **kwargs)
-        fsr.load_lsf(None)
         return fsr
 
 
@@ -84,12 +96,12 @@ class FakeSpectrumReader(AbstractSpectrumReader):
     def load_wave(self, l_range, obs_id=""):
         if self.lambda_type == "random":
             self.waves.append(
-                np.array([float(i) + random.uniform(0, 0.0001) for i in range(10)]),
+                np.arange(10, dtype=float) + np.random.uniform(0, 0.0001, 10),
                 obs_id=obs_id,
             )
         elif self.lambda_type == "range":
             self.waves.append(
-                np.array([float(i) for i in range(l_range[0], l_range[1])]),
+                np.arange(l_range[0], l_range[1], dtype=float),
                 obs_id=obs_id,
             )
         else:
@@ -98,24 +110,24 @@ class FakeSpectrumReader(AbstractSpectrumReader):
     def load_flux(self, l_range, obs_id=""):
         if l_range is not None:
             self.fluxes.append(
-                np.array([random.random() for i in range(l_range[0], l_range[1])]),
+                np.random.uniform(0, 1, l_range[1] - l_range[0]),
                 obs_id=obs_id,
             )
         else:
             self.fluxes.append(
-                np.array([random.random() for i in range(10)]),
+                np.random.random(10),
                 obs_id=obs_id,
             )
 
     def load_error(self, l_range, obs_id=""):
         if l_range is not None:
             self.errors.append(
-                np.array([random.random() for i in range(l_range[0], l_range[1])]),
+                np.random.random(l_range[1] - l_range[0]),
                 obs_id=obs_id,
             )
         else:
             self.errors.append(
-                np.array([random.random() for i in range(10)]),
+                np.random.random(10),
                 obs_id=obs_id,
             )
 
@@ -123,13 +135,15 @@ class FakeSpectrumReader(AbstractSpectrumReader):
         if not self.others.get(data_name):
             self.others[data_name] = Container()
         self.others[data_name].append(
-            np.array([random.random() for i in range(10)]),
+            np.random.random(10),
             obs_id=obs_id,
         )
 
-    def load_lsf(self, location):
+    def load_lsf(self, location, obs_id=""):
         self.lsf_type = "GaussianConstantWidth"
-        self.lsf_data.append(3.)
+        lsf = np.ndarray((1,), dtype=np.dtype([("width", '<f8')]))
+        lsf["width"][0] = 3.0
+        self.lsf_data.append(lsf, obs_id)
 
     def load_photometry(self, location):
         pass

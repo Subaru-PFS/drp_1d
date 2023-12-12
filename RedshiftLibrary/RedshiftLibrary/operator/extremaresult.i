@@ -52,5 +52,4 @@ public:
   }
 
   CTplModelSolution fittedTpl;
-  Float64 FittedTplSNR = NAN;
 };

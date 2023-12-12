@@ -99,27 +99,26 @@ BOOST_AUTO_TEST_CASE(MatchingTest1) {
                                      "", 1., "E1", INFINITY, false, 3,
                                      "Hdelta_4101.7_E");
 
-  /* TODO restore this in 7017
-  CLineCatalog detectedCatalog;
+  CLineDetectedCatalog detectedCatalog;
   Float64 shiftLambda = 1.5;
-  CLineVector cataloglist = restFrameCatalog.GetList();
-  CLineVector ::iterator it;
-  CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new
-  CLineProfileSYM()) }; for( it = cataloglist.begin(); it != cataloglist.end();
-  ++it )
-  {
-    detectedCatalog.Add( CLine( (*it).GetName(),
-  (*it).GetPosition()*shiftLambda, 2, profilesym->Clone(), 2 ) );
+  CLineMap const &cataloglist = restFrameCatalog.GetList();
+  CLineMap::iterator it;
+  CLineProfile_ptr profilesym = std::make_unique<CLineProfileSYM>();
+  for (auto const &[id, line] : cataloglist) {
+    detectedCatalog.Add(
+        CLineDetected(line.GetName(), line.GetPosition() * shiftLambda,
+                      CLine::EType::nType_Emission, profilesym->Clone(),
+                      CLine::EForce::nForce_Strong));
   }
 
   CLineMatching lineMatching;
-  TFloat64Range redshiftrange( 0.0, 5.0);
+  TFloat64Range redshiftrange(0.0, 5.0);
   auto result = lineMatching.Compute(detectedCatalog, restFrameCatalog,
-  redshiftrange, 2, 0.002 ); BOOST_CHECK( result != NULL );
+                                     redshiftrange, 2, 0.002);
+  BOOST_CHECK(result != NULL);
 
   Float64 res = result->GetMeanRedshiftSolutionByIndex(0);
-  BOOST_CHECK( fabs(res-(shiftLambda-1)) < 0.0001 );
-  */
+  BOOST_CHECK(fabs(res - (shiftLambda - 1)) < 0.0001);
 }
 
 BOOST_AUTO_TEST_CASE(BuilLineRatioCatalog) {

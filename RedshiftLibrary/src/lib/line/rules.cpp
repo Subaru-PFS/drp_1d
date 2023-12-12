@@ -51,25 +51,22 @@ CRules::CRules(CSpectrum &spc, CLineDetectedCatalog &detectedCatalog,
       m_RestCatalog(restCatalog), m_lambdaRange(lambdaRange),
       m_winsize(winsize) {}
 
-Int32 CRules::check(Float64 z,
-                    CLineMatchingResult::TSolutionSet &matchingSolutionSet) {
+Int32 CRules::check(
+    Float64 z, CLineMatchingResult::TSolutionSet &matchingSolutionSet) const {
   Int32 intval = 0;
 
   bool bval;
   bval = checkRule01(z, matchingSolutionSet);
-  if (!bval) {
+  if (!bval)
     intval += 1;
-  }
 
   bval = checkRule02(z, matchingSolutionSet);
-  if (!bval) {
+  if (!bval)
     intval += 10;
-  }
 
   bval = checkRule03(z, matchingSolutionSet);
-  if (!bval) {
+  if (!bval)
     intval += 100;
-  }
 
   return intval;
 }
@@ -83,7 +80,7 @@ Int32 CRules::check(Float64 z,
  *
  */
 bool CRules::checkRule01(
-    Float64 z, CLineMatchingResult::TSolutionSet &matchingSolutionSet) {
+    Float64 z, CLineMatchingResult::TSolutionSet &matchingSolutionSet) const {
 
   // check if only weak lines are in this solution set
   for (const auto &mSolution : matchingSolutionSet)
@@ -91,17 +88,17 @@ bool CRules::checkRule01(
       return true;
 
   // check if the absence of strong lines is justified by the wavelength range
-  CLineVector strongRestLineList = m_RestCatalog.GetFilteredList(
+  CLineMap const strongRestLineList = m_RestCatalog.GetFilteredList(
       CLine::EType::nType_Emission, CLine::EForce::nForce_Strong);
-  CLineVector strongRestLinesInsideLambdaRangeList;
+  CLineMap strongRestLinesInsideLambdaRangeList;
 
-  for (const auto &line : strongRestLineList) {
+  for (const auto &[id, line] : strongRestLineList) {
     Float64 lambda = line.GetPosition() * (1 + z);
     if (isLineInsideRange(lambda))
-      strongRestLinesInsideLambdaRangeList.push_back(line);
+      strongRestLinesInsideLambdaRangeList[id] = line;
   }
 
-  if (strongRestLinesInsideLambdaRangeList.size() == 0)
+  if (strongRestLinesInsideLambdaRangeList.empty())
     return true;
 
   // check if the absence of the remaining strong lines is explained by noise
@@ -111,10 +108,10 @@ bool CRules::checkRule01(
   Float64 maxNoiseWeak = 0.0;
 
   for (const auto &mSolution : matchingSolutionSet) {
-    Float64 lambda = mSolution.RestLine.GetPosition() * (1 + z);
-    TFloat64Range lambdarange(lambda - m_winsize / 2.0,
-                              lambda + m_winsize / 2.0);
-    TInt32Range range =
+    Float64 const lambda = mSolution.RestLine.GetPosition() * (1 + z);
+    TFloat64Range const lambdarange(lambda - m_winsize / 2.0,
+                                    lambda + m_winsize / 2.0);
+    TInt32Range const range =
         m_spc.GetSpectralAxis().GetIndexesAtWaveLengthRange(lambdarange);
 
     Float64 flux = 0.0;
@@ -126,11 +123,11 @@ bool CRules::checkRule01(
     maxNoiseWeak = std::max(maxNoiseWeak, noiseWeak);
   }
   // estimate the strong lines SNR
-  for (const auto &line : strongRestLineList) {
-    Float64 lambda = line.GetPosition() * (1 + z);
-    TFloat64Range lambdarange(lambda - m_winsize / 2.0,
-                              lambda + m_winsize / 2.0);
-    TInt32Range range =
+  for (const auto &[_, line] : strongRestLineList) {
+    Float64 const lambda = line.GetPosition() * (1 + z);
+    TFloat64Range const lambdarange(lambda - m_winsize / 2.0,
+                                    lambda + m_winsize / 2.0);
+    TInt32Range const range =
         m_spc.GetSpectralAxis().GetIndexesAtWaveLengthRange(lambdarange);
 
     Float64 flux = 0.0;
@@ -149,22 +146,22 @@ bool CRules::checkRule01(
  *
  */
 bool CRules::checkRule02(
-    Float64 z, CLineMatchingResult::TSolutionSet &matchingSolutionSet) {
+    Float64 z, CLineMatchingResult::TSolutionSet &matchingSolutionSet) const {
 
   // check if the OIII doublet is in this solution set
   Int32 founda = 0;
   Int32 foundb = 0;
 
   for (const auto &mSolution : matchingSolutionSet) {
-    std::string name = mSolution.RestLine.GetName();
-    std::size_t foundstra = name.find(linetags::oIIIa_em);
+    std::string const &name = mSolution.RestLine.GetName();
+    std::size_t const foundstra = name.find(linetags::oIIIa_em);
     if (foundstra != std::string::npos)
       founda++;
 
-    std::size_t foundstrb = name.find(linetags::oIIIb_em);
+    std::size_t const foundstrb = name.find(linetags::oIIIb_em);
     if (foundstrb != std::string::npos) {
       // check if OIIIa would be in the wavelength range
-      Float64 lambda = getRestLineLambda(linetags::oIIIa_em) * (1 + z);
+      Float64 const lambda = getRestLineLambda(linetags::oIIIa_em) * (1 + z);
       if (isLineInsideRange(lambda, true))
         foundb++;
     }
@@ -181,7 +178,7 @@ bool CRules::checkRule02(
  *
  */
 bool CRules::checkRule03(
-    Float64 z, CLineMatchingResult::TSolutionSet &matchingSolutionSet) {
+    Float64 z, CLineMatchingResult::TSolutionSet &matchingSolutionSet) const {
 
   // check if the Hbeta doublet is in this solution set
   Int32 foundHbeta = 0;
@@ -190,11 +187,11 @@ bool CRules::checkRule03(
   // Float64 z =
   // CLineMatchingResult::GetMeanRedshiftSolution(matchingSolutionSet);
   for (const auto &mSolution : matchingSolutionSet) {
-    std::string name = mSolution.RestLine.GetName();
+    std::string const &name = mSolution.RestLine.GetName();
     std::size_t foundstr = name.find(linetags::hbeta_em);
     if (foundstr != std::string::npos) {
       // check if Halpha would be in the wavelength range
-      Float64 lambda = getRestLineLambda(linetags::halpha_em) * (1 + z);
+      Float64 const lambda = getRestLineLambda(linetags::halpha_em) * (1 + z);
       if (isLineInsideRange(lambda, true))
         foundHbeta++;
     }
@@ -208,17 +205,15 @@ bool CRules::checkRule03(
   return true;
 }
 
-Float64 CRules::getRestLineLambda(std::string nametag) {
-  CLineVector restLineList = m_RestCatalog.GetFilteredList();
-  Int32 ncatalog = restLineList.size();
-  for (Int32 c = 0; c < ncatalog; c++) {
-    std::string name = restLineList[c].GetName();
-    std::size_t foundstr = name.find(nametag.c_str());
-    if (foundstr != std::string::npos) {
-      return restLineList[c].GetPosition();
-    }
+Float64 CRules::getRestLineLambda(std::string nametag) const {
+  CLineMap const restLineList = m_RestCatalog.GetFilteredList();
+  for (auto const &[id, line] : restLineList) {
+    std::string const &name = line.GetName();
+    std::size_t const foundstr = name.find(nametag.c_str());
+    if (foundstr != std::string::npos)
+      return line.GetPosition();
   }
-  return -1.0;
+  return NAN;
 }
 
 bool CRules::isLineInsideRange(Float64 lambda, bool winsize) const {

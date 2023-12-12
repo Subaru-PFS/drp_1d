@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
               lineCatalog);
 
   BOOST_CHECK(
-      inputCtx.GetFilteredLineVector("galaxy", "LineModelSolve", "no", "no")
+      inputCtx.GetFilteredLineMap("galaxy", "LineModelSolve", "no", "no")
           .size() == fixture_LineCatalog().lineCatalogSize);
 
   BOOST_CHECK(inputCtx.m_ismcorrectionCalzetti == nullptr);

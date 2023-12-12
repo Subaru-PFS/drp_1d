@@ -71,10 +71,11 @@ public:
   CSpectrumSpectralAxis(Int32 n);
   CSpectrumSpectralAxis(Int32 n, Float64 value);
   CSpectrumSpectralAxis(const TFloat64List &samples,
-                        std::string AirVacuum = "");
-  CSpectrumSpectralAxis(TFloat64List &&samples, std::string AirVacuum = "");
+                        std::string const &AirVacuum = "");
+  CSpectrumSpectralAxis(TFloat64List &&samples,
+                        std::string const &AirVacuum = "");
   CSpectrumSpectralAxis(const Float64 *samples, Int32 n,
-                        std::string AirVacuum = "");
+                        std::string const &AirVacuum = "");
   CSpectrumSpectralAxis(const CSpectrumSpectralAxis &origin, Float64 redshift,
                         EShiftDirection direction);
   CSpectrumSpectralAxis &operator*=(const Float64 op) override;
@@ -108,7 +109,7 @@ public:
   void RecomputePreciseLoglambda();
   TFloat64List GetSubSamplingMask(Int32 ssratio) const;
   TFloat64List GetSubSamplingMask(Int32 ssratio,
-                                  TFloat64Range lambdarange) const;
+                                  TFloat64Range const &lambdarange) const;
   TFloat64List GetSubSamplingMask(Int32 ssratio,
                                   const TInt32Range &ilbda) const;
   Int32 GetLogSamplingIntegerRatio(Float64 logstep, Float64 &modulo) const;
@@ -121,11 +122,13 @@ private:
   friend class spectralaxis_test::basic_functions_test;
   friend class spectralaxis_test::logSampling_test;
 
+  void convertToVacuum(std::string const &AirVacuum);
+  void resetAxisProperties() override;
+
   mutable Float64 m_regularLogSamplingStep =
       NAN; // sampling log step with which sampling was validated in
            // CheckLoglambdaSampling
 
-  void resetAxisProperties() override;
   mutable tribool m_isSorted = indeterminate;
   mutable tribool m_isLogSampled = indeterminate;
 };

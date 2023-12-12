@@ -52,15 +52,6 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
   return m_fitContinuum_priorhelper;
 }
 
-// This SNR estimate maybe needs to use observed spectrum with lines removed ?
-Float64 CContinuumManager::getFitContinuum_snr() const {
-  Float64 snr = -1.; // shoudnt be NAN here?
-  if (m_fitContinuum->tplMtM > 0.) {
-    snr = m_fitContinuum->tplDtM / std::sqrt(m_fitContinuum->tplMtM);
-  }
-  return snr;
-}
-
 /**
  * \brief Generates a continuum from the fitting with a set of templates :
  * uses the templatefitting operator
@@ -137,11 +128,9 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
                "with logprior=%e",
                m_fitContinuum->tplDtM, m_fitContinuum->tplMtM,
                m_fitContinuum->tplLogPrior);
-  Float64 tplfitsnr = NAN;
-  if (m_fitContinuum->tplMtM > 0.0) {
-    tplfitsnr = m_fitContinuum->tplDtM / std::sqrt(m_fitContinuum->tplMtM);
-  }
-  Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e", tplfitsnr);
+
+  Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e",
+               m_fitContinuum->tplSNR);
 }
 
 void CContinuumManager::setFitContinuum_tplAmplitude(

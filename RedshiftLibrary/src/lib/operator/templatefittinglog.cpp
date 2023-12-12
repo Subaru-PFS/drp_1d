@@ -36,6 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
@@ -510,6 +511,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           subresult->FitAmplitudeSigma[isubz];
       result->FitDtM[fullResultIdx] = subresult->FitDtM[isubz];
       result->FitMtM[fullResultIdx] = subresult->FitMtM[isubz];
+      result->SNR[fullResultIdx] = subresult->SNR[isubz];
 
       Float64 logprior = 0.;
       if (logpriorze.size() > 0) {
@@ -724,6 +726,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   TFloat64List bestFitAmpSigma(nshifts, NAN);
   TFloat64List bestFitDtm(nshifts, NAN);
   TFloat64List bestFitMtm(nshifts, NAN);
+  TFloat64List bestFitSNR(nshifts, NAN);
   TFloat64List bestISMCoeff(nshifts, NAN);
   TInt32List bestIGMIdx(nshifts, undefIdx);
 
@@ -846,6 +849,10 @@ Int32 COperatorTemplateFittingLog::FitRangez(
           bestFitAmpSigma[k] = amp_sigma[k];
           bestFitDtm[k] = dtm_vec[k];
           bestFitMtm[k] = mtm_vec[k];
+          bestFitSNR[k] = -1.;
+          if (bestFitMtm[k] > 0) {
+            bestFitSNR[k] = bestFitDtm[k] / std::sqrt(bestFitMtm[k]);
+          }
           bestISMCoeff[k] =
               m_enableISM
                   ? m_templateRebined_bf[0]
@@ -872,6 +879,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   std::reverse(bestFitAmpSigma.begin(), bestFitAmpSigma.end());
   std::reverse(bestFitDtm.begin(), bestFitDtm.end());
   std::reverse(bestFitMtm.begin(), bestFitMtm.end());
+  std::reverse(bestFitSNR.begin(), bestFitSNR.end());
   std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
   std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
   TFloat64List intermChi2BufferReversed_array(intermediateChi2.size());
@@ -895,6 +903,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   result->FitAmplitudeSigma = bestFitAmpSigma;
   result->FitDtM = bestFitDtm;
   result->FitMtM = bestFitMtm;
+  result->SNR = bestFitSNR;
   result->FitEbmvCoeff = bestISMCoeff;
   result->FitMeiksinIdx = bestIGMIdx;
 

@@ -60,28 +60,33 @@ class CLineModelElementList;
 class CLineCatalogsTplRatio {
 
 public:
-  // bool AreCatalogsAligned( const CLineVector& restLineList,
-  // Int32 typeFilter, Int32 forceFilter  );
-  Float64 GetBestFit(const CLineVector &restLineList,
+  Float64 GetBestFit(const TInt32List &validLinesIndex,
                      const TFloat64List &fittedAmplitudes,
                      const TFloat64List &fittedErrors,
                      TFloat64List &amplitudesCorrected,
                      std::string &bestTplName) const;
-  CLineVector GetRestLinesList(Int32 index) const;
-  Int32 GetCatalogsCount() const;
+  CLineMap const &GetRestLinesList(Int32 index) const {
+    return m_lineRatioCatalogs[index].GetList();
+  };
+  Int32 GetCatalogsCount() const { return m_lineRatioCatalogs.size(); }
+
   TFloat64List getCatalogsPriors() const;
-  std::string GetCatalogName(Int32 idx) const;
-  Int32 GetIsmIndex(Int32 idx) const;
-  Float64 GetIsmCoeff(Int32 idx) const;
+  std::string GetCatalogName(Int32 idx) const {
+    return m_lineRatioCatalogs.at(idx).getName();
+  }
+  Int32 GetIsmIndex(Int32 idx) const {
+    return m_lineRatioCatalogs.at(idx).getIsmIndex();
+  }
 
   bool GetCatalogVelocities(Int32 idx, Float64 &elv, Float64 &alv) const;
   std::vector<std::vector<TFloat64List>> InitLineCorrespondingAmplitudes(
       const CLineModelElementList &LineModelElementList,
       Int32 enableISMCalzetti,
       const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-          &ismCorrectionCalzetti,
-      Float64 nsigmasupport) const;
-  const CLineCatalog &GetCatalog(Int32 icatlog) const;
+          &ismCorrectionCalzetti) const;
+  const CLineRatioCatalog &GetCatalog(Int32 iCatalog) const {
+    return m_lineRatioCatalogs[iCatalog];
+  }
 
   void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog) {
     m_lineRatioCatalogs.push_back(lr_catalog);
@@ -91,7 +96,7 @@ private:
   Float64 computeFitValue(const TFloat64List &ampsLM, const TFloat64List &errLM,
                           const TFloat64List &ampsTPL,
                           TFloat64List &ampsCorrected) const;
-  Float64 getFitForOneCatalog(const CLineVector &restLineList,
+  Float64 getFitForOneCatalog(const TInt32List &validLinesIndex,
                               const TFloat64List &fittedAmplitudes,
                               const TFloat64List &fittedErrors,
                               const CLineRatioCatalog &catalog,

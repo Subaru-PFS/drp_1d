@@ -80,11 +80,11 @@ class PdfHandler:
 
     @property
     def redshifts(self):
-        return np.array(self._pdf.redshifts)
+        return self._pdf.redshifts.to_numpy()
 
     @property
     def valProbaLog(self):
-        return np.array(self._pdf.valProbaLog)
+        return self._pdf.valProbaLog.to_numpy()
 
     def isRegular(self):
         return self._pdf.isRegular()

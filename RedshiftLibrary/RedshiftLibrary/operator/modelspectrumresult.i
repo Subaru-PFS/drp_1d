@@ -39,13 +39,18 @@
 class CModelSpectrumResult : public COperatorResult {
 
 public:
-  CModelSpectrumResult(const CSpectrum &spc);
-  CModelSpectrumResult(CSpectrum &&spc);
+  //  CModelSpectrumResult(const CSpectrum &spc,const std::string& obsId);
+  //CModelSpectrumResult(CSpectrum &&spc,const std::string& obsId);
 
-  //  CModelSpectrumResult();
+ CModelSpectrumResult() : COperatorResult("CModelSpectrumResult"){};
 
-  const TFloat64List ModelLambda;
-  const TFloat64List ModelFlux;
+
+  std::map<std::string, TFloat64List> ModelLambda;
+  std::map<std::string,  TFloat64List> ModelFlux;
+
+  void addModel(const CSpectrum &spc,const std::string &obs_id="");
+  void addModel(CSpectrum &&spc,const std::string &obs_id="");
+  
 };
 
 

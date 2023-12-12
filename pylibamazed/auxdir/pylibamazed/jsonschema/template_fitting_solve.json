@@ -1,0 +1,91 @@
+{
+  "$id": "template-fiting-solve",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Template fitting solve",
+  "description": "Parameters for template fitting solve schema",
+  "type": "object",
+  "required": [
+    "fftprocessing",
+    "overlapThreshold",
+    "spectrum",
+    "interpolation",
+    "extremacount",
+    "igmfit",
+    "ismfit",
+    "pdfcombination",
+    "enablephotometry"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fftprocessing": {
+      "description": "Using FFT for Least-square template fitting (in log lambda)",
+      "type": "boolean"
+    },
+    "overlapThreshold": {
+      "description": "Minimal fraction of the spectrum to be covered by the redshifted template to proceed (at each redshift)",
+      "type": "number"
+    },
+    "interpolation": {
+      "type": "string",
+      "enum": [
+        "lin",
+        "precomputedfinegrid"
+      ],
+      "description": "Interpolation method to redshift the template. \n * **lin**: linear interpolation done at each redshift \n * **precomputefinegrid**: precompute linear interpolation on a fine grid (0.1 Angstr\u00f6m), then do nearest grid point interpolation from the fine grid at each redshift.\n \n Note: Used with fftprocessing set to false"
+    },
+    "extremacount": {
+      "type": "integer",
+      "description": "Number of candidates to retain"
+    },
+    "igmfit": {
+      "type": "boolean",
+      "description": "Activate fit of IGM with Meiksin tables"
+    },
+    "ismfit": {
+      "type": "boolean",
+      "description": "Activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles"
+    },
+    "pdfcombination": {
+      "type": "string",
+      "enum": [
+        "marg",
+        "bestchi2"
+      ],
+      "description": "At each z, select the max of the pdfs or marginalize the pdfs (over templates and all parameters)"
+    },
+    "enablephotometry": {
+      "type": "boolean",
+      "description": "Enable the use of photometry data"
+    },
+    "photometry": {
+      "type": "object",
+      "required": [
+        "weight"
+      ],
+      "properties": {
+        "weight": {
+          "type": "number",
+          "description": "The weight of photometry in the leastsquare sum relative to spectroscopy (factor to the photometry inverse variance, ie bigger than 1. gives more power to the photometry data in the fit). To specify if enablephotometry is True"
+        }
+      }
+    },
+    "spectrum": {
+      "type": "object",
+      "required": [
+        "component"
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "description": "Component of the spectrum (and templates) to fit.\n * **raw**: Full spectrum and templates \n * **nocontinuum**: Continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods \n * **continuum**: continuum of the spectrum and templates \n * **all**: computes all 3 (\"raw\", \"nocontinuum\" and \"continuum\") options, i.e. 3 chi2(z) in the resultstore, but only one pdf corresponding to \"raw\" option",
+          "enum": [
+            "raw",
+            "nocontinuum",
+            "continuum",
+            "all"
+          ]
+        }
+      }
+    }
+  }
+}

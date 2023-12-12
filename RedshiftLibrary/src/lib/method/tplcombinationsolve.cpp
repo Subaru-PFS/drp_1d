@@ -415,7 +415,7 @@ CTplcombinationSolve::buildExtremaResults(
     extremaResult->m_ranked_candidates[i].second->FittedTplCovMatrix =
         TplFitResult->FitCOV[idx];
     extremaResult->m_ranked_candidates[i].second->fittedTpl.tplLogPrior = NAN;
-    extremaResult->m_ranked_candidates[i].second->FittedTplSNR =
+    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplSNR =
         TplFitResult->SNR[idx];
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;

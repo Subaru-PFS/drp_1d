@@ -65,6 +65,7 @@ class Container(Generic[T]):
         return True
 
     def append(self, dataToAppend: T, obs_id=""):
+        self._check_type(dataToAppend)
         self.data[obs_id] = dataToAppend
 
     def get(self, obs_id="") -> T:
@@ -75,3 +76,17 @@ class Container(Generic[T]):
 
     def size(self) -> int:
         return len(self.data)
+
+    def _check_type(self, dataToCheck):
+        """
+        Check the type of some data to append to the Container.
+
+        Throws an error if the type does not match the type of already
+        stored data.
+
+        :param dataToCheck: data passed to the `append` method
+        :type dataToCheck: any
+        """
+        for value in self.data.values():
+            if type(value) != type(dataToCheck):
+                raise TypeError(f"Data for container must be of the declared {type(value)} type")

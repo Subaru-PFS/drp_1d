@@ -52,7 +52,7 @@ public:
                 const CCSpectrumVectorPtr &inputSpcs,
                 const CTLambdaRangePtrVector &lambdaRanges,
                 const CSpcModelVectorPtr &spectrumModels,
-                const CLineVector &restLineList,
+                const CLineMap &restLineList,
                 const std::vector<TLineModelElementParam_ptr> &elementParam,
                 const std::shared_ptr<Int32> &curObsPtr,
                 bool enableAmplitudeOffsets = false,

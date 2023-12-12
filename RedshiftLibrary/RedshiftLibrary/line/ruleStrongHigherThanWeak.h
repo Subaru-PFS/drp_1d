@@ -66,7 +66,7 @@ private:
   Float64 FindHighestStrongLineAmp(Int32 linetype, Float64 &er,
                                    std::string &name,
                                    CLineModelElementList &LineModelElementList);
-  LineIndex
+  std::pair<Int32, Int32>
   FindLowestStrongLineIndex(const CLineModelElementList &LineModelElementList);
   void constructLogMsg(const std::string &nameWeak,
                        const std::string &strongName, Float64 ampB,

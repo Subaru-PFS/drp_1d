@@ -1,7 +1,7 @@
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
-#ifdef LBFGSFITTER
-#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsfitter.h"
+#ifdef LBFGSBFITTER
+#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
 #endif
 #include "RedshiftLibrary/linemodel/individualfitter.h"
 #include "RedshiftLibrary/linemodel/onesfitter.h"
@@ -17,7 +17,7 @@ CAbstractFitter::CAbstractFitter(
     const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
@@ -46,7 +46,7 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
-    const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
+    const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
     const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
@@ -56,9 +56,9 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
         elementParam, curObsPtr, enableAmplitudeOffsets,
         enableLambdaOffsetsFit);
-#ifdef LBFGSFITTER
-  else if (fittingMethod == "lbfgs")
-    return std::make_shared<CLbfgsFitter>(
+#ifdef LBFGSBFITTER
+  else if (fittingMethod == "lbfgsb")
+    return std::make_shared<CLbfgsbFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
         elementParam, curObsPtr, enableAmplitudeOffsets,
         enableLambdaOffsetsFit);
@@ -136,66 +136,70 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
 
   // prepare the elements support
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-    getElementList()[iElts]->resetAsymfitParams();
-    getElementList()[iElts]->prepareSupport(spectralAxis, redshift,
-                                            getLambdaRange());
+  for (auto const &elt_ptr : getElementList()) {
+    elt_ptr->resetAsymfitParams();
+    elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange());
   }
 }
 
 void CAbstractFitter::resetElementsFittingParam() {
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-    getElementList()[iElts]->reset();
-  }
+  auto &eltList = getElementList();
+  for (auto const &elt_ptr : eltList)
+    elt_ptr->reset();
+
   if (m_enableAmplitudeOffsets)
-    getElementList().resetAmplitudeOffset();
+    eltList.resetAmplitudeOffset();
 }
 
 void CAbstractFitter::resetLambdaOffsets() {
-  for (auto &elt : getElementList())
-    for (size_t lineIdx = 0; lineIdx < elt->GetSize(); ++lineIdx)
-      elt->SetOffset(lineIdx, elt->GetLines()[lineIdx].GetOffset());
+  for (auto &elt_ptr : getElementList())
+    for (Int32 line_idx = 0; line_idx != elt_ptr->GetSize(); ++line_idx)
+      elt_ptr->SetOffset(line_idx, elt_ptr->GetLines()[line_idx].GetOffset());
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   TInt32List idxEltIGM;
   std::vector<TInt32List> idxLineIGM;
-  std::tie(idxEltIGM, idxLineIGM) = getElementList().getIgmLinesIndices();
+  auto const indices_Igm = getElementList().getIgmLinesIndices();
 
-  if (idxEltIGM.empty())
+  if (indices_Igm.empty())
     return;
 
   // assuming only one asymfit/fixed profile
-  Int32 idxLyaE = idxEltIGM.front();
-  Int32 idxLineLyaE = idxLineIGM.front().front();
+  auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
+  Int32 line_idx_LyaE = line_indices_LyaE.front();
 
-  const auto &profile = getElementList()[idxLyaE]->getLineProfile(idxLineLyaE);
+  const auto &profile =
+      getElementList()[elt_idx_LyaE]->getLineProfile(line_idx_LyaE);
 
   if (profile->isAsymFit()) {
     // find the best width and asym coeff. parameters
     TAsymParams bestfitParams =
-        fitAsymParameters(redshift, idxLyaE, idxLineLyaE);
+        fitAsymParameters(redshift, elt_idx_LyaE, line_idx_LyaE);
 
     // set the associated Lya members in the element definition
-    getElementList()[idxLyaE]->SetAsymfitParams(bestfitParams);
+    getElementList()[elt_idx_LyaE]->SetAsymfitParams(bestfitParams);
   }
 
   // deal with symIgm profiles
-  for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
-    const auto &Elt = getElementList()[idxEltIGM[i]];
-    if (!Elt->IsOutsideLambdaRange()) {
-      TInt32List &idxLine = idxLineIGM[i];
-      auto end =
-          std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
-            return !Elt->GetLines()[idx].GetProfile()->isSymIgmFit();
-          });
-      idxLine.erase(end, idxLine.end());
-      if (!idxLine.empty()) {
-        // setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
-        auto bestigmidx = fitAsymIGMCorrection(redshift, idxEltIGM[i], idxLine);
-        getElementList()[idxEltIGM[i]]->SetSymIgmParams(
-            TSymIgmParams(bestigmidx, redshift));
-      }
+  for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
+    // for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
+    const auto &elt = getElementList()[elt_idx_LyaE];
+    if (elt->IsOutsideLambdaRange())
+      continue;
+    auto line_indices_filtered = line_indices_LyaE;
+    auto end =
+        std::remove_if(line_indices_filtered.begin(),
+                       line_indices_filtered.end(), [&elt](Int32 idx) {
+                         return !elt->GetLines()[idx].GetProfile()->isSymIgm();
+                       });
+    line_indices_filtered.erase(end, line_indices_filtered.end());
+    if (!line_indices_filtered.empty()) {
+      // setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
+      auto bestigmidx =
+          fitAsymIGMCorrection(redshift, elt_idx_LyaE, line_indices_filtered);
+      getElementList()[elt_idx_LyaE]->SetSymIgmParams(
+          TSymIgmParams(bestigmidx, redshift));
     }
   }
 }
@@ -213,7 +217,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
 }
 
 void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
-                                      Int32 offsetCount) const {
+                                      Int32 offsetCount) {
 
   Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
   for (Int32 iE : EltsIdx)
@@ -293,26 +297,26 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
     }
   }
 
-  if (idxBestMerit >= 0 && atLeastOneOffsetToFit) {
-    // set offset value
-    if (atLeastOneOffsetToFit)
-      setLambdaOffset({eltIndex}, idxBestMerit);
+  if (idxBestMerit == -1 || !atLeastOneOffsetToFit)
+    return;
 
-    // fit again for this offset
-    fitAmplitude(eltIndex, redshift, lineIdx);
-  }
+  // set offset value
+  if (atLeastOneOffsetToFit)
+    setLambdaOffset({eltIndex}, idxBestMerit);
+  // fit again for this offset
+  fitAmplitude(eltIndex, redshift, lineIdx);
 }
 
 /**
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
-Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 idxLine) const {
+Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
   Float64 fit = 0.; // TODO restore getLeastSquareContinuumMeritFast();
   Int32 istart = 0;
   Int32 iend = getElementList().size();
-  if (idxLine != undefIdx) {
-    istart = idxLine;
-    iend = idxLine + 1;
+  if (eltIdx != undefIdx) {
+    istart = eltIdx;
+    iend = eltIdx + 1;
   }
   for (Int32 iElts = istart; iElts < iend; iElts++) {
     Float64 dtm = getElementList()[iElts]->GetSumCross();

@@ -477,7 +477,7 @@ public:
           lineCatalogData.amplitudeGroupValue[i],
           lineCatalogData.dispersionVelocityGroupName[i],
           lineCatalogData.waveLengthOffset[i],
-          lineCatalogData.enableFitWaveLengthOffset[i], 0,
+          lineCatalogData.enableFitWaveLengthOffset[i], i,
           lineCatalogData.name[i],
           fixture_MeiskinCorrection().igmCorrectionMeiksin);
     }
@@ -489,7 +489,7 @@ public:
   Int32 lineCatalogSize = lineCatalogData.waveLength.size();
 };
 
-class fixture_FullLineCatalog {
+/* class fixture_FullLineCatalog {
 public:
   fixture_FullLineCatalog() {
 
@@ -951,6 +951,7 @@ public:
       std::make_shared<CLineCatalog>(nsigmasupport);
   Int32 lineCatalogSize = 115;
 };
+ */
 
 // Creation of line ratio catalog
 //-------------------------------
@@ -966,8 +967,8 @@ public:
   fixture_LineRatioCatalog() {
     // 3727.09	[OII]3726	E	7.65e-15
     // 3729.88 [OII] 3729 E 7.65e-15
-    lineRatioCatalog->setLineAmplitude("[OII]3729", 3729.88);
-    lineRatioCatalog->setLineAmplitude("[OII]3726", 3727.09);
+    lineRatioCatalog->setLineAmplitude(0, 3729.88);
+    lineRatioCatalog->setLineAmplitude(1, 3727.09);
     lineRatioCatalog->addVelocity("em_vel", 320.0);
     lineRatioCatalog->addVelocity("abs_vel", 640.0);
     lineRatioCatalog->setAsymProfileAndParams("ASYMFIXED",
@@ -984,7 +985,7 @@ public:
                                           *fixture_LineCatalog().lineCatalog);
 };
 
-class fixture_LineRatioCatalogA {
+/* class fixture_LineRatioCatalogA {
 public:
   fixture_LineRatioCatalogA() {
 
@@ -1116,8 +1117,8 @@ public:
       std::make_shared<CLineRatioCatalog>(
           "ratioCatalogA", *fixture_FullLineCatalog().lineCatalog);
 };
-
-class fixture_LineRatioCatalogB {
+ */
+/* class fixture_LineRatioCatalogB {
 public:
   fixture_LineRatioCatalogB() {
 
@@ -1245,7 +1246,7 @@ public:
       std::make_shared<CLineRatioCatalog>(
           "ratioCatalogB", *fixture_FullLineCatalog().lineCatalog);
 };
-
+ */
 class fixture_InputContext {
 public:
   fixture_InputContext(std::string jsonString,

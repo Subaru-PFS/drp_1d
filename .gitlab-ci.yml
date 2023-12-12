@@ -6,6 +6,7 @@ stages:
   - build-coverage
   - sonar
   - push-rc
+  - deploy
   
 variables:
   TWINE_USERNAME: gitlab-ci-token
@@ -13,9 +14,9 @@ variables:
   TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
   IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
   SONARQUBE_URL: https://sonarqube.lam.fr
+  DOC_VERSION: ""
 
 # Specific Rules
-
 .trigger-rules:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -24,7 +25,6 @@ variables:
       when: manual
 
 # OSX Stages
-
 build-osx:
   stage: build
   tags:
@@ -124,7 +124,6 @@ push-rc-38-osx:
     - wheel38-osx
 
 # Manylinux stages
-
 .build-manylinux:
   stage: build
   script:
@@ -137,6 +136,7 @@ push-rc-38-osx:
   cache:
     policy: push
     untracked: true
+
 
 .build-coverage-manylinux:
   stage: build-coverage
@@ -230,8 +230,26 @@ push-rc-38-osx:
         -Dsonar.exclusions=*.xml
         -Dsonar.cxx.coverage.reportPath=build/coverage.xml
 
-# Manylinux2014 stages
+.pages-manylinux:
+  stage: deploy
+  script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - pip install -r pip-doc-requirements.txt
+    - generate-schema-doc --config template_name=md pylibamazed/auxdir/pylibamazed/jsonschema pylibamazed/doc/source/json-schema/
+    - sphinx-build -b html pylibamazed/doc/source public/$DOC_VERSION
+  artifacts:
+    paths:
+    - public
+  rules:
+    - if: $CI_COMMIT_TAG
+      variables:
+        DOC_VERSION: "$CI_COMMIT_TAG"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        DOC_VERSION: $CI_DEFAULT_BRANCH
 
+
+# Manylinux2014 stages
 .manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
@@ -249,14 +267,6 @@ test-manylinux2014:
     - .manylinux2014
     - .test-manylinux
 
-wheel37-manylinux2014:
-  variables:
-    PYTHON_VERSION: "37"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .wheel-manylinux
-
 wheel38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
@@ -272,14 +282,6 @@ wheel39-manylinux2014:
     - .manylinux2014
     - .wheel-manylinux
 
-pytest37-manylinux2014:
-  variables:
-    PYTHON_VERSION: "37"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .pytest-manylinux
-
 pytest38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
@@ -294,15 +296,6 @@ pytest39-manylinux2014:
   extends:
     - .manylinux2014
     - .pytest-manylinux
-
-push-rc-37-manylinux2014:
-  variables:
-    PYTHON_VERSION: "37"
-  extends:
-    - .manylinux2014
-    - .push-rc-manylinux
-  dependencies:
-    - wheel37-manylinux2014
 
 push-rc-38-manylinux2014:
   variables:
@@ -333,4 +326,10 @@ sonar-scanner-manylinux2014:
     - .sonar-manylinux
   dependencies:
     - coverage-manylinux2014
-    
+
+pages:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .pages-manylinux

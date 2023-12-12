@@ -55,7 +55,7 @@ public:
       const CLMEltListVectorPtr &elementsVector,
       const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
-      const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
+      const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
       const std::shared_ptr<Int32> &curObsPtr,
       bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
@@ -71,7 +71,7 @@ public:
       std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
       const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
-      const CSpcModelVectorPtr &spectrumModels, const CLineVector &restLineList,
+      const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
       const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
       const std::shared_ptr<Int32> &curObsPtr,
@@ -104,9 +104,9 @@ protected:
                                            Int32 lineIdx = undefIdx,
                                            bool enableOffsetFitting = true);
 
-  Float64 getLeastSquareMeritFast(Int32 idxLine = -1) const;
+  Float64 getLeastSquareMeritFast(Int32 eltIdx = undefIdx) const;
 
-  void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
+  void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount);
 
   bool HasLambdaOffsetFitting(TInt32List EltsIdx,
                               bool enableOffsetFitting) const;
@@ -119,13 +119,13 @@ protected:
   CLineModelElementList &getElementList() {
     return (*m_ElementsVector)[*m_curObs];
   }
-  CLineModelElementList &getElementList() const {
+  const CLineModelElementList &getElementList() const {
     return (*m_ElementsVector)[*m_curObs];
   }
   CLMEltListVectorPtr m_ElementsVector;
   std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
   CCSpectrumVectorPtr m_inputSpcs;
-  const CLineVector &m_RestLineList;
+  const CLineMap &m_RestLineList;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
 

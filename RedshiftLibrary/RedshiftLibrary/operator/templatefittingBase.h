@@ -80,11 +80,12 @@ public:
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
 
-  std::tuple<std::shared_ptr<CModelSpectrumResult>, TPhotVal>
+  TPhotVal
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
                        Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
                        Float64 amplitude, const Float64 overlapThreshold,
-                       Int32 index);
+                       Int32 index,
+                       const std::shared_ptr<CModelSpectrumResult> &models);
   virtual TPhotVal getIntegratedFluxes(Float64 ampl = 1.0) const {
     return TPhotVal();
   };

@@ -55,7 +55,8 @@ public:
   CSpectrumAxis(const CSpectrumAxis &other) = default;
   CSpectrumAxis(CSpectrumAxis &&other) = default;
   explicit CSpectrumAxis(Int32 n, Float64 value = 0.0) : m_Samples(n, value){};
-  CSpectrumAxis(const Float64 *samples, Int32 n);
+  CSpectrumAxis(const Float64 *samples, Int32 n)
+      : m_Samples(samples, samples + n){};
   CSpectrumAxis(const TFloat64List &samples) : m_Samples(samples){};
   CSpectrumAxis(TFloat64List &&samples) : m_Samples(std::move(samples)){};
 
@@ -72,6 +73,7 @@ public:
 
   const Float64 *GetSamples() const;
   const TAxisSampleList &GetSamplesVector() const;
+  TAxisSampleList &GetSamplesVector();
   void setSamplesVector(TAxisSampleList axisList);
   Int32 GetSamplesCount() const;
   virtual void SetSize(Int32 s);
@@ -107,6 +109,9 @@ inline void CSpectrumAxis::setSamplesVector(TAxisSampleList axisList) {
 inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const {
   return m_Samples;
 }
+
+inline TAxisSampleList &CSpectrumAxis::GetSamplesVector() { return m_Samples; }
+
 inline bool CSpectrumAxis::isEmpty() const { return m_Samples.size() == 0; }
 
 inline CSpectrumAxis CSpectrumAxis::extract(Int32 startIdx,

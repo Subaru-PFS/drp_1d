@@ -59,10 +59,11 @@ void TLineModelResult::updateFromLineModelSolution(
 }
 
 void TLineModelResult::updateTplRatioFromModel(
-    const std::shared_ptr<const CTplratioManager> &lmel) {
-  FittedTplratioName = lmel->getTplratio_bestTplName();
-  FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
-  FittedTplratioAmplitudeEm = lmel->getTplratio_bestAmplitudeEm();
+    const std::shared_ptr<const CTplratioManager> &ratioMgr) {
+  FittedTplratioName = ratioMgr->getTplratio_bestTplName();
+  FittedTplratioIsmCoeff = ratioMgr->getTplratio_bestTplIsmCoeff();
+  FittedTplratioAmplitudeEm = ratioMgr->getTplratio_bestAmplitudeEm();
+  FittedTplratioAmplitudeAbs = ratioMgr->getTplratio_bestAmplitudeAbs();
 }
 
 void TLineModelResult::updateFromModel(
@@ -106,18 +107,18 @@ void TLineModelResult::updateFromModel(
   static Float64 cutThres = 3.0;
   Int32 nValidLines =
       lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
-  NLinesOverThreshold = nValidLines; // m/Float64(1+nValidLines);
-  Float64 cumulStrongELSNR =
-      lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
-  StrongELSNR = cumulStrongELSNR;
+  NLinesOverThreshold = nValidLines;
+  std::tie(ELSNR, StrongELSNR) = lmel->getCumulSNRStrongEL();
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  Int32 nddl = lmel->GetNElements(); // get the total number of
-  // elements in the model
+  Int32 nddl =
+      lmel->GetNElements(); // get the total number of elements in the model
+
   nddl = lmresult->LineModelSolutions[idx]
              .nDDL; // override nddl by the actual number of elements in
-  // the fitted model
+                    // the fitted model
+
   NDof = lmel->getElementList().GetModelNonZeroElementsNDdl();
 
   Float64 _bic =
@@ -180,8 +181,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
     return this->m_savedModelSpectrumResults[rank];
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[rank];
-  else if (dataset == "phot_values")
-    return this->m_modelPhotValue[rank];
+  else if (dataset == "PhotometricModel")
+    return this->m_modelPhotValues[rank];
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
@@ -197,8 +198,8 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
     return this->m_savedModelSpectrumResults[0]->getType();
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[0]->getType();
-  else if (dataset == "phot_values")
-    return this->m_modelPhotValue[0]->getType();
+  else if (dataset == "PhotometricModel")
+    return this->m_modelPhotValues[0]->getType();
   else
     THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
@@ -208,7 +209,7 @@ bool LineModelExtremaResult::HasCandidateDataset(
   return (dataset == "model_parameters" || dataset == "model" ||
           dataset == "continuum" || dataset == "fitted_lines" ||
           dataset == "fp_fitted_lines" || dataset == "line_mask" ||
-          dataset == "continuum_polynom" || dataset == "phot_values");
+          dataset == "continuum_polynom" || dataset == "PhotometricModel");
 }
 
 std::shared_ptr<const COperatorResult>

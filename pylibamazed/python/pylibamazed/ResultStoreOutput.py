@@ -38,9 +38,10 @@
 # ============================================================================
 import os
 
+import numpy as np
 from pylibamazed.AbstractOutput import AbstractOutput, ObjectStages
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import PC, CLog, ErrorCode
+from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
 
@@ -53,14 +54,18 @@ class ResultStoreOutput(AbstractOutput):
         if auto_load:
             self.load_all()
 
-    def _get_attribute_from_result_store(self, object_type, method, data_spec, rank, band_name=None):
+    def _get_attribute_from_result_store(self, object_type, method, data_spec,
+                                         rank, band_name=None, obs_id=None):
         operator_result = self._get_operator_result(object_type, method, data_spec, rank)
         band_name_hook = "[band_name]"
         object_type_hook = "[object_type]"
+        obs_id_hook = "[obs_id]"
         if object_type_hook in data_spec.OperatorResult_name:
             operator_result_name = data_spec.OperatorResult_name.replace(object_type_hook, "")
         elif band_name_hook in data_spec.OperatorResult_name:
             operator_result_name = data_spec.OperatorResult_name.replace(band_name_hook, "")
+        elif obs_id_hook in data_spec.OperatorResult_name:
+            operator_result_name = data_spec.OperatorResult_name.replace(obs_id_hook, "")
         else:
             operator_result_name = data_spec.OperatorResult_name
         if "." in operator_result_name:
@@ -74,20 +79,22 @@ class ResultStoreOutput(AbstractOutput):
             if band_name is not None:
                 return attr[band_name]
             return attr[object_type]
-        elif attr_type == "TFloat64List":
-            return PC.Get_Float64Array(attr)
-        elif attr_type == "TFloat32List":
-            return PC.Get_Float32Array(attr)
-        elif attr_type == "TInt32List":
-            return PC.Get_Int32Array(attr)
-        elif attr_type == "TBoolList":
-            return PC.Get_BoolArray(attr)
+        if attr_type == "TMapTFloat64List":
+            if obs_id is not None:
+                return attr.to_numpy(obs_id)
+        elif (attr_type == "TFloat64List"
+                or attr_type == "TInt32List"
+                or attr_type == "TBoolList"):
+            return attr.to_numpy()
+        elif attr_type == "TStringList":
+            return np.array(attr)
         elif attr_type == "CMask":
-            return PC.Get_MaskArray(attr.getMaskList())
+            return attr.getMaskList().to_numpy()
         else:
             return attr
 
-    def get_attribute_from_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def get_attribute_from_source(self, object_type, method, dataset, attribute,
+                                  rank=None, band_name=None, obs_id=None):
         rs = self.results_specifications
         rs = rs[rs["name"] == attribute]
         rs = rs[rs["dataset"] == dataset]
@@ -96,22 +103,24 @@ class ResultStoreOutput(AbstractOutput):
                                                      method,
                                                      attribute_info,
                                                      rank=rank,
-                                                     band_name=band_name)
+                                                     band_name=band_name,
+                                                     obs_id=obs_id)
 
-    def has_attribute_in_source(self, object_type, method, dataset, attribute, rank=None, band_name=None):
+    def has_attribute_in_source(self, object_type, method, dataset, attribute,
+                                rank=None, band_name=None, obs_id=None):
         rs = self.results_specifications
         rs = rs[rs["name"] == attribute]
         rs = rs[rs["dataset"] == dataset]
 
         attribute_info = rs.iloc[0]
-        if type(attribute_info.ResultStore_key) != str:
+        if type(attribute_info.ResultStore_key) is not str:
             return False
         if rank is not None:
             method = self.parameters.get_solve_method(object_type)
             if self.results_store.HasCandidateDataset(object_type,
                                                       method,
                                                       attribute_info.ResultStore_key,
-                                                      attribute_info.dataset):
+                                                      attribute_info.dataset.replace("<ObsID>", "")):
                 operator_result = self._get_operator_result(object_type, method, attribute_info, rank)
             else:
                 return False
@@ -132,6 +141,16 @@ class ResultStoreOutput(AbstractOutput):
                 o = getattr(operator_result, or_name)
                 if o:
                     return band_name in o
+                else:
+                    return False
+            else:
+                return False
+        elif "[obs_id]" in attribute_info.OperatorResult_name:
+            or_name = attribute_info.OperatorResult_name.replace("[obs_id]", "")
+            if hasattr(operator_result, or_name):
+                o = getattr(operator_result, or_name)
+                if o:
+                    return obs_id in o
                 else:
                     return False
             else:
@@ -164,7 +183,7 @@ class ResultStoreOutput(AbstractOutput):
         return self.results_store.HasCandidateDataset(object_type,
                                                       method,
                                                       rs_key,
-                                                      dataset)
+                                                      dataset.replace("<ObsID>", ""))
 
     def get_nb_candidates_in_source(self, object_type, method):
         return self.results_store.getNbRedshiftCandidates(object_type, method)
@@ -198,7 +217,7 @@ class ResultStoreOutput(AbstractOutput):
             or_type = self.results_store.GetCandidateResultType(object_type,
                                                                 method,
                                                                 attribute_info.ResultStore_key,
-                                                                attribute_info.dataset)
+                                                                attribute_info.dataset.replace("<ObsID>", ""))
             if or_type == "TLineModelResult":
                 firstpass_result = "Firstpass" in attribute_info["name"]
                 return self.results_store.GetLineModelResult(object_type,
@@ -211,7 +230,7 @@ class ResultStoreOutput(AbstractOutput):
                 return getter(object_type,
                               method,
                               attribute_info.ResultStore_key,
-                              attribute_info.dataset,
+                              attribute_info.dataset.replace("<ObsID>", ""),
                               rank)
         else:
             raise APIException(ErrorCode.OUTPUT_READER_ERROR,
@@ -246,7 +265,7 @@ class ResultStoreOutput(AbstractOutput):
 
         full_name = self.get_error_full_name(object_type, stage)
         self.errors[full_name] = dict()
-        self.errors[full_name]["code"] = causing_stage
+        self.errors[full_name]["code"] = ErrorCode(ErrorCode.STAGE_NOT_RUN_BECAUSE_OF_PREVIOUS_FAILURE).name
         self.errors[full_name]["message"] = f"not run because {causing_stage} failed"
         self.errors[full_name]["line"] = -1
         self.errors[full_name]["filename"] = ""

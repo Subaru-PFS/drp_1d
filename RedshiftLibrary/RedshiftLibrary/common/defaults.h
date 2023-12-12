@@ -38,5 +38,7 @@ static const Int32 MIN_GRID_COUNT = 10;
 
 static const Float64 LSF_MIN_LAMBDA = 200.0;
 static const Float64 LSF_MAX_LAMBDA = 30000.0;
+
+static const Float64 OVERLAP_THRESHOLD_PDF_INTEGRATION = 0.3;
 } // namespace NSEpic
 #endif

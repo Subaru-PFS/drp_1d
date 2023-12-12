@@ -159,7 +159,7 @@ const std::string jsonStringFromSpectrum =
     "\"continuumcomponent\" : \"fromspectrum\","
     "\"pdfcombination\" : \"bestchi2\","
     "\"tplratio_ismfit\" : true,"
-    "\"rules\" : \"balmerSingle\","
+    "\"rules\" : \"balmersingle\","
     "\"improveBalmerFit\" : true,"
     "\"lineRatioType\": \"tplratio\","
     "\"continuumfit\" : { \"ignorelinesupport\": false,"
