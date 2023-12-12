@@ -120,10 +120,10 @@ class AbstractOutput:
     def get_attribute_short(self, attribute, lines_ids):
         attr_parts = attribute.split(".")
         root = attr_parts[0]
-        data = attr_parts[-1]
+        attr_name = attr_parts[-1]
         rank = None
         if root == "classification":
-            return self.get_attribute(None, "classification", data, None)
+            return self.get_attribute(None, "classification", attr_name, None)
         elif root == "error":
             if self.has_error(attr_parts[1], attr_parts[2]):
                 return self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
@@ -133,27 +133,23 @@ class AbstractOutput:
                 return None
         elif root == "ContextWarningFlags":
             return self.get_attribute(None, "context_warningFlag", "ContextWarningFlags")
-        elif "WarningFlags" in data:
-            return self.get_attribute(root, "warningFlag", data)
+        elif "WarningFlags" in attr_name:
+            return self.get_attribute(root, "warningFlag", attr_name)
         else:
             object_type = root
-            if len(attr_parts) == 2:
-                rank = 0
-            elif len(attr_parts) == 3:
-                rank = int(attr_parts[1])
         if len(attr_parts) < 4:
             specs = self.results_specifications
-            dataset = specs[specs["name"]==data]["dataset"].values[0]
+            # "attr_name" refers to the column "name" in the results.specifications,
+            # we're looking for the corresponding details of that "name"
+            attribute_specs = specs[specs["name"] == attr_name]
+            dataset = attribute_specs["dataset"].values[0]
+            # Rank can be based on the attribute level (only candidates have a rank)
             rank = None
-            if self.has_attribute(object_type, dataset, data, rank):
-                return self.get_attribute(object_type, dataset, data, rank)
-            if self.has_attribute(object_type, "model_parameters", data, rank):
-                return self.get_attribute(object_type, "model_parameters", data, rank)
-            else:
-                rank = None
-                for dataset in ["linemeas_parameters", "reliability"]:
-                    if self.has_attribute(object_type, dataset, data, rank):
-                        return self.get_attribute(object_type, dataset, data, rank)
+            if attribute_specs["level"].values[0] == "candidate":
+                # 0 means no rank was specified, taking the first one by default
+                rank = int(attr_parts[1]) if len(attr_parts) == 3 else 0
+            if self.has_attribute(object_type, dataset, attr_name, rank):
+                return self.get_attribute(object_type, dataset, attr_name, rank)
         else:
             dataset = attr_parts[1]
             line_name = attr_parts[2]
