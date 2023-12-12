@@ -48,45 +48,51 @@ CTplCorrManager::CTplCorrManager(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineVector &restLineList)
+    const CLineMap &restLineList)
     : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
                        continuumManager, restLineList) {}
 
 Float64 CTplCorrManager::computeMerit(Int32 itratio) {
 
   getModel().refreshModel();
-  Int32 s = m_RestLineList.size();
-  TFloat64List Amplitudes(s);
-  TFloat64List AmplitudesUncertainties(s); // noise sigma
-  for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
-    Int32 subeIdx = undefIdx;
-    Int32 eIdx = getElementList().findElementIndex(iRestLine, subeIdx);
-
-    if (eIdx == undefIdx || subeIdx == undefIdx ||
-        getElementList()[eIdx]->IsOutsideLambdaRange(subeIdx)) {
-      continue; // data already set to its default values
-    }
-    Float64 amp = getElementList()[eIdx]->GetFittedAmplitude(subeIdx);
-    Amplitudes[iRestLine] = amp;
-    Float64 ampError =
-        getElementList()[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
-    AmplitudesUncertainties[iRestLine] = ampError;
+  TFloat64List Amplitudes;
+  TFloat64List AmplitudesUncertainties; // noise sigma
+  std::vector<std::pair<Int32, Int32>> eIdxList;
+  TInt32List validLinesIndex;
+  for (auto [i_lineCatalog, line_it] =
+           std::pair(Int32(0), m_RestLineList.cbegin());
+       line_it != m_RestLineList.cend(); ++i_lineCatalog, ++line_it) {
+    Int32 const line_id = line_it->first;
+    auto const [elt_idx, elt_line_idx] =
+        getElementList().findElementIndex(line_id);
+    if (elt_idx == undefIdx)
+      continue;
+    auto const &elt_ptr = getElementList()[elt_idx];
+    if (elt_ptr->IsOutsideLambdaRange(elt_line_idx))
+      continue;
+    eIdxList.push_back(std::pair(
+        elt_idx, elt_line_idx)); // save elt_idx, line_idx for next loop
+    validLinesIndex.push_back(i_lineCatalog);
+    Amplitudes.push_back(elt_ptr->GetFittedAmplitude(elt_line_idx));
+    AmplitudesUncertainties.push_back(
+        elt_ptr->GetFittedAmplitudeErrorSigma(elt_line_idx));
   }
-  TFloat64List correctedAmplitudes(Amplitudes.size());
-  m_CatalogTplRatio->GetBestFit(m_RestLineList, Amplitudes,
+  TFloat64List correctedAmplitudes;
+  m_CatalogTplRatio->GetBestFit(validLinesIndex, Amplitudes,
                                 AmplitudesUncertainties, correctedAmplitudes,
                                 m_tplratioBestTplName);
-  for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
-    Int32 subeIdx = undefIdx;
-    Int32 eIdx = getElementList().findElementIndex(iRestLine, subeIdx);
-    if (eIdx == undefIdx || subeIdx == undefIdx)
-      continue;
 
-    Float64 er = AmplitudesUncertainties[subeIdx]; // not modifying the
-    // fitting error for now
-    Float64 nominalAmp = getElementList()[eIdx]->GetNominalAmplitude(subeIdx);
-    getElementList()[eIdx]->SetElementAmplitude(
-        correctedAmplitudes[iRestLine] / nominalAmp, er);
+  for (Int32 iValidLine = 0; iValidLine != validLinesIndex.size();
+       ++iValidLine) {
+    auto const [elt_idx, line_idx] = eIdxList[iValidLine];
+    auto const &elt_ptr = getElementList()[elt_idx];
+
+    Float64 const er =
+        AmplitudesUncertainties[iValidLine]; // not modifying the fitting error
+                                             // for now
+    Float64 const nominalAmp = elt_ptr->GetNominalAmplitude(line_idx);
+    elt_ptr->SetElementAmplitude(correctedAmplitudes[iValidLine] / nominalAmp,
+                                 er);
   }
   getModel().refreshModel();
   return getLeastSquareMerit();

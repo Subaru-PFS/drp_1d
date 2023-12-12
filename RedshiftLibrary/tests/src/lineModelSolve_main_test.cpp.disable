@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -156,9 +157,7 @@ const std::string sep8 =
     "    \"continuumRemoval\": {"
     "        \"method\": \"IrregularSamplingMedian\","
     "        \"medianKernelWidth\": 400,"
-    "        \"medianEvenReflection\": true,"
-    "        \"decompScales\": 9,"
-    "        \"binPath\": \"\""
+    "        \"medianEvenReflection\": true"
     "    },"
     "    \"LSF\": {"
     "        \"LSFType\": \"GaussianConstantResolution\","
@@ -168,7 +167,6 @@ const std::string sep8 =
     "    \"objects\": ["
     "        \"galaxy\""
     "    ],"
-    "    \"calibrationDir\": \"\","
     "    \"autocorrectinput\": false,"
     "    \"galaxy\": {"
     "        \"redshiftrange\": ["
@@ -297,10 +295,10 @@ public:
   std::shared_ptr<CPhotometricData> photoData = fixture_PhotoData().photoData;
   std::shared_ptr<CLineCatalogsTplRatio> lineRatioTplCatalog =
       fixture_LineRatioTplCatalog().lineRatioTplCatalog;
-  std::shared_ptr<CLineRatioCatalog> lineRatioCatalogA =
-      fixture_LineRatioCatalogA().lineRatioCatalogA;
-  std::shared_ptr<CLineRatioCatalog> lineRatioCatalogB =
-      fixture_LineRatioCatalogB().lineRatioCatalogB;
+  // std::shared_ptr<CLineRatioCatalog> lineRatioCatalogA =
+  //     fixture_LineRatioCatalogA().lineRatioCatalogA;
+  // std::shared_ptr<CLineRatioCatalog> lineRatioCatalogB =
+  //     fixture_LineRatioCatalogB().lineRatioCatalogB;
   std::shared_ptr<CLineCatalog> lineCatalog =
       fixture_FullLineCatalog().lineCatalog;
 
@@ -324,12 +322,12 @@ public:
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
     ctx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
     ctx.initContext();
-    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogA);
-    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogB);
+    // lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogA);
+    // lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalogB);
   }
 };
 
-int main() {
+/* int main() {
   // CLogConsoleHandler console_handler;
   // console_handler.SetLevelMask(70);
 
@@ -346,3 +344,11 @@ int main() {
 #endif
   return 0;
 }
+ */
+
+BOOST_AUTO_TEST_SUITE(lineModelSolve_main_test)
+
+BOOST_FIXTURE_TEST_CASE(main_test, fixture_LineModelSolveTestTplFitTplRatio,
+                        *boost::unit_test::disabled()) {}
+
+BOOST_AUTO_TEST_SUITE_END()

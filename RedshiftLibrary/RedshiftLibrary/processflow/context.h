@@ -156,7 +156,7 @@ public:
     return m_ScopeStack[1];
   }
 
-  const CLineVector getCLineVector();
+  const CLineMap getCLineMap();
   std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
 

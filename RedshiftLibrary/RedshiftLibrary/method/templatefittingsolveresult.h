@@ -68,9 +68,6 @@ public:
   Float64 m_amplitudeError = NAN;
   Float64 m_EbmvCoeff = NAN;
   Int32 m_meiksinIdx = -1;
-
-  // Not sure it is necessary here
-  Float64 m_fittingSNR = NAN;
 };
 
 } // namespace NSEpic

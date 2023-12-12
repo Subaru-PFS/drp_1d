@@ -36,8 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LBFGS_FITTER_
-#define _REDSHIFT_LBFGS_FITTER_
+#ifndef _REDSHIFT_LBFGSB_FITTER_
+#define _REDSHIFT_LBFGSB_FITTER_
 
 #include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
@@ -83,12 +83,12 @@ struct Functor {
   int values() const { return m_values; }
 };
 
-class CLbfgsFitter : public CHybridFitter {
+class CLbfgsbFitter : public CHybridFitter {
 public:
   class CLeastSquare : public Functor<Float64, Eigen::Dynamic, 1> {
 
   public:
-    CLeastSquare(CLbfgsFitter &fitter, const TInt32List &EltsIdx,
+    CLeastSquare(CLbfgsbFitter &fitter, const TInt32List &EltsIdx,
                  CLine::EType lineType, Float64 redshift,
                  const TInt32List &xInds, Int32 velA_idx, Int32 velE_idx,
                  Int32 lbdaOffset_idx, Int32 pCoeff_indx, Float64 normFactor,
@@ -109,7 +109,7 @@ public:
                                       const CPolynomCoeffsNormalized &pCoeffs,
                                       VectorXd &grad) const;
 
-    CLbfgsFitter *m_fitter;
+    CLbfgsbFitter *m_fitter;
     const TInt32List *m_EltsIdx;
     const CLine::EType m_lineType;
     const Float64 m_redshift;

@@ -49,7 +49,7 @@ public:
   void updateFromLineModelSolution(const CLineModelSolution &cms);
 
   void
-  updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &lmel);
+  updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &ratioMgr);
 
   void updateFromModel(const std::shared_ptr<const CLineModelFitting> &lmel,
                        const std::shared_ptr<const CLineModelResult> &lmresult,
@@ -75,6 +75,7 @@ public:
 
   Float64 NLinesOverThreshold;
 
+  Float64 ELSNR;
   Float64 StrongELSNR;
   std::unordered_set<std::string> StrongELSNRAboveCut;
   Float64 bic; // bayesian information criterion for each extrema

@@ -1,3 +1,4 @@
+
 // ============================================================================
 //
 // This file is part of: AMAZED
@@ -36,52 +37,26 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef PYCONV_H
-#define PYCONV_H
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include <boost/test/unit_test.hpp>
 
-namespace NSEpic {
-class PC {
-public:
-  static void get(const TFloat64List &vec, double **data, int *size) {
-    *data = const_cast<double *>(vec.data());
-    *size = vec.size();
-  }
-  static void getasl(const TAxisSampleList &vec, double **data, int *size) {
-    *data = const_cast<double *>(vec.data());
-    *size = vec.size();
-  }
+using namespace NSEpic;
 
-  static void get(const TInt32List &vec, int **data, int *size) {
-    *data = const_cast<int *>(vec.data());
-    *size = vec.size();
-  }
-  static void get(const TFloat32List &vec, float **data, int *size) {
-    *data = const_cast<float *>(vec.data());
-    *size = vec.size();
-  }
+BOOST_AUTO_TEST_SUITE(TemplateFittingResult_test)
 
-  static void get(const TBoolList &vec, short **data, int *size) {
-    *data = (short *)malloc(sizeof(short) * vec.size());
+BOOST_AUTO_TEST_CASE(SNRCalculation_test) {
+  CTemplateFittingResult result(1);
 
-    for (std::size_t i = 0; i < vec.size(); i++)
-      (*data)[i] = vec[i];
-    *size = vec.size();
-  }
+  // Result is None if mtm <= 0
+  BOOST_CHECK(std::isnan(result.SNRCalculation(1, 0)));
+  BOOST_CHECK(std::isnan(result.SNRCalculation(1, -1)));
 
-  static void get(const TMaskList &vec, unsigned char **data,
-                  long unsigned int *size) {
-    *data = const_cast<unsigned char *>(vec.data());
-    *size = vec.size();
-  }
+  // Result is 0 if dtm <= 0
+  BOOST_CHECK(result.SNRCalculation(0, 1) == 0);
+  BOOST_CHECK(result.SNRCalculation(-1, 1) == 0);
 
-  static void get(const TMaskList &vec, short **data, int *size) {
-    *data = (short *)malloc(sizeof(short) * vec.size());
-    *size = (int)vec.size();
-    for (std::size_t i = 0; i < vec.size(); i++)
-      (*data)[i] = (short)vec[i];
-  }
-};
-} // namespace NSEpic
-#endif
+  // Result is as expected otherwise
+  BOOST_CHECK(result.SNRCalculation(1, 4) == 0.5);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

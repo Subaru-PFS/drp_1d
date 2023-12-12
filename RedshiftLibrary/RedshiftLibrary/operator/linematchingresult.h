@@ -58,14 +58,15 @@ public:
 
   struct SSolution {
     CLineDetected DetectedLine;
+    Int32 RestLineId;
     CLine RestLine;
     Float64 Redshift;
 
-    SSolution(CLineDetected detectedLine, CLine restLine, Float64 redshift) {
-      DetectedLine = std::move(detectedLine);
-      RestLine = std::move(restLine);
-      Redshift = redshift;
-    }
+    SSolution(CLineDetected detectedLine, std::pair<Int32, CLine> restLine,
+              Float64 redshift)
+        : DetectedLine(std::move(detectedLine)),
+          RestLineId(std::move(restLine.first)),
+          RestLine(std::move(restLine.second)), Redshift(redshift) {}
 
     bool operator<(const SSolution &str) const {
       if (DetectedLine.GetPosition() == str.DetectedLine.GetPosition()) {

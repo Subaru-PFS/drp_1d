@@ -49,7 +49,14 @@ def _create_dataset_from_dict(h5_node, name, source, compress=False):
     df = pd.DataFrame(source)
     if df.empty:
         return
-    records = df.to_records(index=False)
+    dtypes = dict()
+    for (k,v) in dict(df.dtypes).items():
+        if v == "O":
+            dtypes[k]=f'S{df[k].str.len().max()}'
+        else:
+            dtypes[k]=str(v)
+
+    records = df.to_records(index=False, column_dtypes=dtypes)
     h5_node.create_dataset(name,
                            records.shape,
                            records.dtype,
@@ -113,7 +120,7 @@ class H5Writer():
                                                       ds,
                                                       dataset)
                         except Exception as e:
-                            zlog.LogError(f"failed to create dataset {ds} : {e}")
+                            raise Exception(f"failed to create dataset {ds} : {e}")
 
     def write_hdf5(self, hdf5_root, spectrum_id):
         try:

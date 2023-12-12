@@ -96,7 +96,6 @@
 #define SWIG_FILE_WITH_INIT
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/pyconv.h"
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
@@ -201,6 +200,10 @@ typedef double Float64;
 typedef long long Int64;
 typedef int Int32;
 
+typedef Float64 Sample;
+typedef unsigned char UInt8;
+typedef UInt8 Mask;
+
 const char* get_version();
 
 static const std::string undefStr;
@@ -268,8 +271,22 @@ class CRange
 
 class CMask {
  public:
+  explicit CMask(Int32 weightsCount, Int32 defaultValue = 0);
+  //Mask &operator[](const Int32 i);
   const TMaskList& getMaskList() const;
 };
+%extend CMask {
+   Mask __getitem__(unsigned int i) {
+      return (*($self))[i];
+    }
+    Mask __setitem__(unsigned int i, int m) {
+      (*($self))[i] = m;
+      return (*($self))[i];
+    }
+}
+
+
+
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
@@ -279,7 +296,8 @@ typedef std::vector<Int32> TInt32List;
 typedef std::vector<std::string> TStringList;
 typedef std::vector<Mask> TMaskList;
 typedef std::vector<bool> TBoolList;
-
+typedef std::vector<Sample> TAxisSampleList;
+typedef std::map<std::string, TFloat64List> TMapTFloat64List;
 
 %template(TFloat64Range) CRange<Float64>;
 %template(TFloat64List) std::vector<Float64>;
@@ -288,29 +306,61 @@ typedef std::vector<bool> TBoolList;
 %template(VecTFloat64List) std::vector<  std::vector<Float64> >;
 %template(TBoolList) std::vector<bool>;
 %template(TMaskList) std::vector<Mask>;
+%template(TMapTFloat64List) std::map<std::string, TFloat64List>;
+
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
 %apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
 %apply bool &OUTPUT { bool& out_bool };
 
-class PC
-{
- public:
-  %rename(Get_Float64Array) get(const TFloat64List& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  static void get(const TFloat64List& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  %rename(Get_Int32Array) get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  static void get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  %rename(Get_AxisSampleList) getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  %rename(Get_Float32Array) get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  static void get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  %rename(Get_BoolArray) get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
-  static void get(const TBoolList& vec,short ** ARGOUTVIEW_ARRAY1, int * DIM1);
- %rename(Get_MaskArray) get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
-  static void get(const TMaskList& vec,short ** ARGOUTVIEW_ARRAY1,int * DIM1);
+%inline %{
+  template <typename Tvec, typename Tarr>
+  void stdVectorToNumpy(const std::vector<Tvec> &vec, Tarr **ARGOUTVIEWM_ARRAY1, int *DIM1) {
+    size_t const byte_size = sizeof(Tarr) * vec.size();
+    *ARGOUTVIEWM_ARRAY1 = (Tarr *) malloc(byte_size);
+    for (std::size_t i = 0; i < vec.size(); i++)
+      (*ARGOUTVIEWM_ARRAY1)[i] = vec[i];
+    *DIM1 = vec.size();
+  }
 
-};
+  template  <typename Tarr>
+  void stdVectorToNumpy(const std::vector<Tarr> &vec, Tarr **ARGOUTVIEWM_ARRAY1, int *DIM1) {
+    size_t const byte_size = sizeof(Tarr) * vec.size();
+    *ARGOUTVIEWM_ARRAY1 = (Tarr *) malloc(byte_size);
+      std::memcpy(*ARGOUTVIEWM_ARRAY1, vec.data(), byte_size);
+    *DIM1 = vec.size();
+  }
+  
+  template <typename Tarr>
+  void stdMapVectorToNumpy(const std::map<std::string, std::vector<Tarr>> &map, const std::string &key, 
+                        Tarr **ARGOUTVIEWM_ARRAY1, int *DIM1) {
+    stdVectorToNumpy<Tarr>(map.at(key), ARGOUTVIEWM_ARRAY1, DIM1);                          
+  }
+%}
+
+%template(stdVectorToNumpy) stdVectorToNumpy<Float64>;
+%template(stdVectorToNumpy) stdVectorToNumpy<Int32>;
+%template(stdVectorToNumpy) stdVectorToNumpy<Mask>;
+// convert c++ bool type to short (numpy_typemaps for c++ bool not implemented)
+%template(stdVectorToNumpy) stdVectorToNumpy<bool, short>;
+
+%template(stdMapVectorToNumpy) stdMapVectorToNumpy<Float64>;
+
+%define VectorExtendToNumpy(name)
+%pythoncode %{
+  name.to_numpy = lambda self: stdVectorToNumpy(self)
+%}
+%enddef
+
+VectorExtendToNumpy(TFloat64List)
+VectorExtendToNumpy(TInt32List)
+VectorExtendToNumpy(TMaskList)
+VectorExtendToNumpy(TBoolList)
+
+%pythoncode %{
+  TMapTFloat64List.to_numpy = lambda self, key: stdMapVectorToNumpy(self, key)
+%}
 
 class CLineCatalog : public CLineCatalogBase<>
 {
@@ -318,21 +368,21 @@ public:
   CLineCatalog();
   CLineCatalog(Float64 nSigmaSupport);
   void AddLineFromParams(const std::string& name,
-			const Float64& position,
+			Float64 position,
 			const std::string& type,
 			const std::string& force,
 			const std::string& profile,
 			const TAsymParams& asymParams,
 			const std::string& groupName,
-			const Float64& nominalAmplitude,
+			Float64 nominalAmplitude,
 			const std::string& velocityGroup,
-			const Float64& velocityOffset,
-			const bool& enableVelocityFit,
-			const Int32& id,
-			const std::string& str_id,
+			Float64 velocityOffset,
+			bool enableVelocityFit,
+			Int32 line_id,
+      const std::string& strId,
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmcorrection=nullptr);
 
-  void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
+  void setLineAmplitude(Int32 line_id, Float64 nominalAmplitude);
   void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
   void convertLineProfiles2SYMIGM(
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
@@ -594,7 +644,7 @@ class CSpectrumAxis
   CSpectrumAxis( Int32 n );
   CSpectrumAxis(const Float64* samples, Int32 n );
   Float64* GetSamples();
-  const TAxisSampleList& GetSamplesVector() const;
+  TAxisSampleList& GetSamplesVector();
   Int32 GetSamplesCount() const;
   virtual void SetSize( Int32 s );
 };

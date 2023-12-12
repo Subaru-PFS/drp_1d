@@ -30,6 +30,7 @@ thirdparty/*
 
 # doc
 docs/html/
+*/doc/source/json-schema/*.md
 
 #
 pkgconfig
@@ -81,3 +82,6 @@ lib/*.so
 
 # Generated python coverage files
 .coverage
+
+# Folder with draft files
+draft

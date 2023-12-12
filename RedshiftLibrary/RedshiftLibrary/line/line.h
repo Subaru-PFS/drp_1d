@@ -123,7 +123,7 @@ public:
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
                                &igmcorrectionMeiksin = nullptr);
   void resetAsymFitParams();
-  void setNominalAmplitude(const Float64 &ampl) { m_NominalAmplitude = ampl; }
+  void setNominalAmplitude(Float64 ampl) { m_NominalAmplitude = ampl; }
 
   const std::string &GetName() const { return m_Name; };
   const std::string &GetGroupName() const { return m_GroupName; };
@@ -135,7 +135,7 @@ public:
   static EForce string2Force(std::string const &s);
 
 protected:
-  Int32 m_id = -1;
+  Int32 m_id = undefIdx;
   EType m_Type = EType::nType_Emission;
   CLineProfile_ptr m_Profile = nullptr;
   EForce m_Force = EForce::nForce_Weak;
@@ -158,7 +158,7 @@ protected:
 };
 
 using CLineVector = std::vector<CLine>;
-using CLineMap = std::map<std::string, CLine>;
+using CLineMap = std::map<Int32, CLine>;
 } // namespace NSEpic
 
 #endif

@@ -36,8 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsfitter.h"
-#include "RedshiftLibrary/linemodel/gaussianfit/LineSearchMoreThuente.h"
+#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
+
 #include <unsupported/Eigen/NumericalDiff>
 
 using namespace std;
@@ -45,8 +45,8 @@ using namespace Eigen;
 using namespace LBFGSpp;
 using namespace NSEpic;
 
-CLbfgsFitter::CLeastSquare::CLeastSquare(
-    CLbfgsFitter &fitter, const TInt32List &EltsIdx, CLine::EType lineType,
+CLbfgsbFitter::CLeastSquare::CLeastSquare(
+    CLbfgsbFitter &fitter, const TInt32List &EltsIdx, CLine::EType lineType,
     Float64 redshift, const TInt32List &xInds, Int32 velA_idx, Int32 velE_idx,
     Int32 lbdaOffset_idx, Int32 pCoeff_idx, Float64 normFactor, Float64 normVel,
     Float64 normLbdaOffset)
@@ -85,8 +85,8 @@ CLbfgsFitter::CLeastSquare::CLeastSquare(
 }
 
 // compute Sum Squared diff
-void CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
-                                            ValueType &val) const {
+void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
+                                             ValueType &val) const {
 
   TFloat64List amps;
   Float64 redshift;
@@ -100,8 +100,8 @@ void CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x,
 
 /*
 // compute Sum Squared diff and gradient
-CLbfgsFitter::CLeastSquare::ValueType
-CLbfgsFitter::CLeastSquare::operator()(const VectorXd &x, VectorXd &grad) {
+CLbfgsbFitter::CLeastSquare::ValueType
+CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x, VectorXd &grad) {
 
   TFloat64List amps;
   Float64 redshift;
@@ -131,7 +131,7 @@ coeffs= "
 */
 
 std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
-CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
+CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
   // unpack param vector
   TFloat64List amps(x.begin(), x.begin() + m_EltsIdx->size());
@@ -188,7 +188,7 @@ CLbfgsFitter::CLeastSquare::unpack(const VectorXd &x) const {
   return std::make_tuple(std::move(amps), redshift, std::move(pCoeffs));
 }
 
-Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
+Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
     const TFloat64List &amps, Float64 redshift,
     const CPolynomCoeffsNormalized &pCoeffs) const {
   // compute least square term
@@ -221,7 +221,7 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquare(
   return sumSquare;
 }
 
-Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
+Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
     const TFloat64List &amps, Float64 redshift,
     const CPolynomCoeffsNormalized &pCoeffs, VectorXd &grad) const {
 
@@ -305,7 +305,7 @@ Float64 CLbfgsFitter::CLeastSquare::ComputeLeastSquareAndGrad(
   return sumSquare;
 }
 
-void CLbfgsFitter::resetSupport(Float64 redshift) {
+void CLbfgsbFitter::resetSupport(Float64 redshift) {
 
   // set velocity at max value (to set largest line overlapping)
   if (Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit")) {
@@ -323,7 +323,7 @@ void CLbfgsFitter::resetSupport(Float64 redshift) {
   CAbstractFitter::resetSupport(redshift);
 }
 
-void CLbfgsFitter::doFit(Float64 redshift) {
+void CLbfgsbFitter::doFit(Float64 redshift) {
 
   // fit the amplitudes of each element independently, unless there is overlap
   CHybridFitter::fitAmplitudesHybrid(redshift);
@@ -331,15 +331,15 @@ void CLbfgsFitter::doFit(Float64 redshift) {
 
 // since fitAmplitudesLinSolve is already fitting lambda offsets,
 // this is a simple wrapper
-void CLbfgsFitter::fitAmplitudesLinSolveAndLambdaOffset(
+void CLbfgsbFitter::fitAmplitudesLinSolveAndLambdaOffset(
     TInt32List EltsIdx, bool enableOffsetFitting, Float64 redshift) {
 
   fitAmplitudesLinSolvePositive(EltsIdx, redshift);
 }
 
 // overriding the SVD linear fitting, but here it is not linear inversion
-void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
-                                                 Float64 redshift) {
+void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+                                                  Float64 redshift) {
 
   if (EltsIdx.size() < 1)
     THROWG(INTERNAL_ERROR, "empty Line element list to fit");
@@ -393,7 +393,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   Int32 n = xInds.size();
   if (n < nddl) {
     Flag.warning(WarningCode::LINEARFIT_RANK_DEFICIENT,
-                 Formatter() << __func__ << " LBFGS ill ranked:"
+                 Formatter() << __func__ << " LBFGSB ill ranked:"
                              << " number of samples = " << n
                              << ", number of parameters to fit = " << nddl);
     for (Int32 eltIndex : EltsIdx)
@@ -565,7 +565,7 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   param.max_submin = 0;
 
   // Create solver and function object
-  LBFGSBSolver<Float64, LineSearchMoreThuenteFork> solver(param);
+  LBFGSBSolver<Float64, LineSearchMoreThuente> solver(param);
 
   NumericalDiff<CLeastSquare> func_with_num_diff(func, 1e-12);
 
@@ -623,13 +623,13 @@ void CLbfgsFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   if (m_enableLambdaOffsetsFit) {
     for (Int32 eltIndex : EltsIdx) {
       auto &elt = getElementList()[eltIndex];
-      for (Int32 i = 0; i < elt->GetSize(); ++i) {
-        Float64 offset = elt->GetOffset(i);
+      for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
+        Float64 offset = elt->GetOffset(line_idx);
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
         offset +=
             (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
-        elt->SetOffset(i, offset);
+        elt->SetOffset(line_idx, offset);
       }
     }
   }

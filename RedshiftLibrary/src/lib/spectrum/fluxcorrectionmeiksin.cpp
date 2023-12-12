@@ -48,11 +48,10 @@ using namespace NSEpic;
 CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
     std::vector<MeiksinCorrection> meiksinCorrectionCurves, TFloat64List zbins)
     : m_rawCorrections(std::move(meiksinCorrectionCurves)),
-      m_LambdaMin(m_rawCorrections[0].lbda.front()),
+      m_LambdaMin(m_rawCorrections.at(0).lbda.at(0)),
       m_LambdaMax(RESTLAMBDA_LYA),
-      m_LambdaSize(m_rawCorrections[0].lbda.size()), m_zbins(std::move(zbins)) {
-  // check that m_rawCorrections[0].lbda is well sampled using m_finegridstep
-}
+      m_LambdaSize(m_rawCorrections.at(0).lbda.size()),
+      m_zbins(std::move(zbins)) {}
 
 Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
     Float64 redshift, Int32 meiksinIdx, Float64 lambdaRest) const {

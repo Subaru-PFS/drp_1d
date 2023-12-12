@@ -44,6 +44,7 @@ from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Exception import APIException
 from pylibamazed.Parameters import Parameters
+from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.spectrum_reader_utils import TestSpectrumReaderUtils
 
 
@@ -85,7 +86,7 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
 
     def test_load_others(self):
         # Make test from the abstract spectrum reader
-        parameters = Parameters(self.make_parameters_dict())
+        parameters = Parameters(self.make_parameters_dict(), FakeParametersChecker)
         cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
         fsr = AbstractSpectrumReader("000", parameters, cl, "000")
         fsr.load_others('data name')
@@ -94,7 +95,6 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
 class SpectrumReader(AbstractSpectrumReader):
     def __init__(self):
         self._spectra = []
-        pass
 
 
 class TestSpectrumReaderGetErrors:

@@ -66,7 +66,6 @@ const std::string jsonString =
     "4300},"
     "\"extremaredshiftseparation\" : 0.01,"
     "\"objects\" : [\"galaxy\"],"
-    "\"calibrationDir\" : \"\","
     "\"autocorrectinput\" : false,"
     "\"galaxy\" : {"
     "\"redshiftrange\" : [ 2.84, 2.88 ],"
@@ -151,7 +150,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.GetLineCatalog("galaxy", "LineModelSolve") ==
               lineCatalog);
   Context.m_ScopeStack.push_back("LineModelSolve");
-  BOOST_CHECK(Context.getCLineVector().size() ==
+  BOOST_CHECK(Context.getCLineMap().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
   Context.setfluxCorrectionCalzetti(ismCorrectionCalzetti);

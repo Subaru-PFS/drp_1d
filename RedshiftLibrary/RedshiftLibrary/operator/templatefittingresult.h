@@ -59,6 +59,8 @@ public:
   CTemplateFittingResult &operator=(const CTemplateFittingResult &) = default;
   CTemplateFittingResult &operator=(CTemplateFittingResult &&) = default;
 
+  Float64 SNRCalculation(Float64 dtm, Float64 mtm);
+
   TFloat64List Redshifts;
 
   // best fit results
@@ -72,6 +74,7 @@ public:
   TFloat64List FitDtM;
   TFloat64List FitMtM;
   TFloat64List LogPrior;
+  TFloat64List SNR;
 
   // intermediate chisquare results
   std::vector<std::vector<TFloat64List>>
@@ -89,7 +92,6 @@ public:
   // for correct prior use in marg. mode tplmodel method
 
   Float64 CstLog = NAN;
-  TFloat64List SNR;
   std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra
   COperator::TStatusList Status;
 };

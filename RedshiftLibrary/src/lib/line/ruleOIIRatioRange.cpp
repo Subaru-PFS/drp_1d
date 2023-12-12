@@ -73,48 +73,50 @@ bool CRuleRatioRange::Check(CLineModelElementList &LineModelElementList) {
  *corrected values.
  **/
 void CRuleRatioRange::Correct(CLineModelElementList &LineModelElementList) {
-  Int32 iA = LineModelElementList.findElementIndex(m_LineA, m_LineType);
-  if (iA == -1 || LineModelElementList[iA]->GetSize() < 1) {
+  auto [iEltA, idA] =
+      LineModelElementList.findElementIndex(m_LineA, m_LineType);
+  if (iEltA == undefIdx || LineModelElementList[iEltA]->GetSize() < 1) {
     Log.LogDebug("Rule %s: line %s not found or line has size <1", Name.c_str(),
                  m_LineA.c_str());
     return;
   }
 
-  Int32 iB = LineModelElementList.findElementIndex(m_LineB, m_LineType);
-  if (iB == -1 || LineModelElementList[iB]->GetSize() < 1) {
+  auto [iEltB, idB] =
+      LineModelElementList.findElementIndex(m_LineB, m_LineType);
+  if (iEltB == undefIdx || LineModelElementList[iEltB]->GetSize() < 1) {
     Log.LogDebug("Rule %s: line %s not found or line has size <1", Name.c_str(),
                  m_LineB.c_str());
     return;
   }
 
-  if (iA == iB)
+  if (iEltA == iEltB)
     return;
 
-  if (LineModelElementList[iA]->IsOutsideLambdaRange() ||
-      LineModelElementList[iB]->IsOutsideLambdaRange())
+  if (LineModelElementList[iEltA]->IsOutsideLambdaRange() ||
+      LineModelElementList[iEltB]->IsOutsideLambdaRange())
     return;
 
-  Float64 ampA = LineModelElementList[iA]->GetFittedAmplitude(0);
-  Float64 erA = LineModelElementList[iA]->GetFittedAmplitudeErrorSigma(0);
-  Float64 ampB = LineModelElementList[iB]->GetFittedAmplitude(0);
-  Float64 erB = LineModelElementList[iB]->GetFittedAmplitudeErrorSigma(0);
-  Int32 i1 = iA;
-  Int32 i2 = iB;
+  Float64 ampA = LineModelElementList[iEltA]->GetFittedAmplitude(idA);
+  Float64 erA = LineModelElementList[iEltA]->GetFittedAmplitudeErrorSigma(idA);
+  Float64 ampB = LineModelElementList[iEltB]->GetFittedAmplitude(idB);
+  Float64 erB = LineModelElementList[iEltB]->GetFittedAmplitudeErrorSigma(idB);
+  Int32 i1 = iEltA;
+  Int32 i2 = iEltB;
   Float64 amp1 = ampA;
   Float64 er1 = erA;
   Float64 amp2 = ampB;
   Float64 er2 = erB;
   if (std::abs(ampA) > std::abs(ampB * m_Coefficient)) {
-    i1 = iA;
-    i2 = iB;
+    i1 = iEltA;
+    i2 = iEltB;
     amp1 = ampA;
     er1 = erA;
     amp2 = ampB;
     er2 = erB;
   } else {
     if (std::abs(ampB) > std::abs(ampA * m_Coefficient)) {
-      i1 = iB;
-      i2 = iA;
+      i1 = iEltB;
+      i2 = iEltA;
       amp1 = ampB;
       er1 = erB;
       amp2 = ampA;
@@ -138,7 +140,7 @@ void CRuleRatioRange::Correct(CLineModelElementList &LineModelElementList) {
   // log the correction
   Float64 correctedA = corrected1;
   Float64 correctedB = corrected2;
-  if (i1 == iB) {
+  if (i1 == iEltB) {
     correctedA = corrected2;
     correctedB = corrected1;
   }
