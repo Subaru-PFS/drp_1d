@@ -142,6 +142,11 @@ class AbstractOutput:
             elif len(attr_parts) == 3:
                 rank = int(attr_parts[1])
         if len(attr_parts) < 4:
+            specs = self.results_specifications
+            dataset = specs[specs["name"]==data]["dataset"].values[0]
+            rank = None
+            if self.has_attribute(object_type, dataset, data, rank):
+                return self.get_attribute(object_type, dataset, data, rank)
             if self.has_attribute(object_type, "model_parameters", data, rank):
                 return self.get_attribute(object_type, "model_parameters", data, rank)
             else:
