@@ -52,7 +52,7 @@ public:
 
   TInt32List GetModelValidElementsIndexes() const;
   TInt32List getValidElementIndices(CLine::EType lineTypeFilter) const;
-  void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
+  void SetElementAmplitude(Int32 j, Float64 a, Float64 astd);
   Float64 GetElementAmplitude(Int32 j) const;
 
   TInt32List getOverlappingElements(Int32 ind, const TInt32Set &excludedInd,

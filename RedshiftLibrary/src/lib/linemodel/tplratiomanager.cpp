@@ -443,7 +443,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
       allampzero = false;
 
       Float64 amp_error = m_elementsVector->getElementParam()[iElt]
-                              ->m_FittedAmplitudeErrorSigmas[line_idx];
+                              ->m_FittedAmplitudesStd[line_idx];
       Float64 nominal_amp = m_elementsVector->getElementParam()[iElt]
                                 ->m_NominalAmplitudes[line_idx];
       m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;

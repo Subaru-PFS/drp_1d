@@ -918,7 +918,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
                       ->m_FittedAmplitudes[line_index];
     modelSolution.Amplitudes[iRestLine] = amp;
     Float64 ampError = m_ElementsVector->getElementParam()[eIdx]
-                           ->m_FittedAmplitudeErrorSigmas[line_index];
+                           ->m_FittedAmplitudesStd[line_index];
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
     if (getLineRatioType() == "rules")
       modelSolution.SNR[iRestLine] = std::abs(amp) / ampError;
@@ -947,8 +947,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       Float64 const cont =
           getContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
       modelSolution.CenterContinuumFlux[iRestLine] = cont;
-      Float64 const cont_rms =
-          getContinuumError(eIdx, line_index);
+      Float64 const cont_rms = getContinuumError(eIdx, line_index);
 
       modelSolution.ContinuumError[iRestLine] = cont_rms;
 
@@ -983,7 +982,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
             const auto &profile = eltList[eIdx]->getLineProfile(line_index);
 
             Float64 const lineFlux = profile->GetLineFlux(mu, sigma);
-    
+
             flux = amp * lineFlux;
             fluxError = ampError * lineFlux;
             break;

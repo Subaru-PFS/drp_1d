@@ -161,7 +161,7 @@ Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp(
         continue;
 
       Float64 ampStrong = elt_ptr->GetFittedAmplitude(iLineStrong);
-      Float64 erStrong = elt_ptr->GetFittedAmplitudeErrorSigma(iLineStrong);
+      Float64 erStrong = elt_ptr->GetFittedAmplitudeStd(iLineStrong);
       if (maxi < ampStrong /*&& lineSnr>validSNRCut*/) {
         maxi = ampStrong;
         er = erStrong;

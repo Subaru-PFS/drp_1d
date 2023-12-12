@@ -184,7 +184,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   }
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
-    Float64 a = gsl_vector_get(c, iddl) / normFactor;
+    Float64 const a = gsl_vector_get(c, iddl) / normFactor;
     Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
   }
 
@@ -193,14 +193,14 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   ampsfitted.resize(EltsIdxToFit.size());
   errorsfitted.resize(EltsIdxToFit.size());
   for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++) {
-    Float64 a = gsl_vector_get(c, iddl) / normFactor;
+    Float64 const a = gsl_vector_get(c, iddl) / normFactor;
     if (a < 0)
       allPositive = false;
-    Float64 cova = gsl_matrix_get(cov, iddl, iddl);
-    Float64 sigma = sqrt(cova) / normFactor;
-    getElementList().SetElementAmplitude(EltsIdxToFit[iddl], a, sigma);
-    ampsfitted[iddl] = (a);
-    errorsfitted[iddl] = (sigma);
+    Float64 const var = gsl_matrix_get(cov, iddl, iddl);
+    Float64 const std = sqrt(var) / normFactor;
+    getElementList().SetElementAmplitude(EltsIdxToFit[iddl], a, std);
+    ampsfitted[iddl] = a;
+    errorsfitted[iddl] = std;
   }
 
   if (useAmpOffset) {
@@ -252,7 +252,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
       fitAmplitude(EltsIdx[idx_positive.front()], redshift, undefIdx);
     } else if (idx_positive.size() > 0) {
-      bool allPositive2 = fitAmplitudesLinSolve(
+      bool const allPositive2 = fitAmplitudesLinSolve(
           EltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
 
       if (!allPositive2) {

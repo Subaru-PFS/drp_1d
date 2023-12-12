@@ -76,7 +76,7 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
     validLinesIndex.push_back(i_lineCatalog);
     Amplitudes.push_back(elt_ptr->GetFittedAmplitude(elt_line_idx));
     AmplitudesUncertainties.push_back(
-        elt_ptr->GetFittedAmplitudeErrorSigma(elt_line_idx));
+        elt_ptr->GetFittedAmplitudeStd(elt_line_idx));
   }
   TFloat64List correctedAmplitudes;
   m_CatalogTplRatio->GetBestFit(validLinesIndex, Amplitudes,

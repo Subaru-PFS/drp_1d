@@ -237,7 +237,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   getElementParam()[eltIndex]->m_dtmFree = 0.;
 
   getElementParam()[eltIndex]->m_FittedAmplitudes.assign(nLines, NAN);
-  getElementParam()[eltIndex]->m_FittedAmplitudeErrorSigmas.assign(nLines, NAN);
+  getElementParam()[eltIndex]->m_FittedAmplitudesStd.assign(nLines, NAN);
 
   Int32 num = 0;
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
@@ -277,11 +277,10 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   }
   getElementParam()[eltIndex]->m_sumCross =
       std::max(0.0, getElementParam()[eltIndex]->m_dtmFree);
-  Float64 A = getElementParam()[eltIndex]->m_sumCross /
-              getElementParam()[eltIndex]->m_sumGauss;
-
-  getElementList()[eltIndex]->SetElementAmplitude(
-      A, 1.0 / sqrt(getElementParam()[eltIndex]->m_sumGauss));
+  Float64 const A = getElementParam()[eltIndex]->m_sumCross /
+                    getElementParam()[eltIndex]->m_sumGauss;
+  Float64 const Astd = 1.0 / sqrt(getElementParam()[eltIndex]->m_sumGauss);
+  getElementList()[eltIndex]->SetElementAmplitude(A, Astd);
 
   return;
 }
