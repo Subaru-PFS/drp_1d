@@ -876,7 +876,7 @@ void CLineModelFitting::LoadModelSolution(
  *solutions.
  **/
 // this is not really a const method as spectrum model(s) have to be modified
-// (cf CSpectrumModel::getContinuumError)
+// (cf CSpectrumModel::getContinuumUncertainty)
 CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
@@ -934,8 +934,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     if (opt_level) // brief, to save processing time, do not estimate fluxes
                    // and high level line properties
     {
-      modelSolution.FittingError[iRestLine] =
-          m_fitter->getModelErrorUnderElements({eIdx}, true);
+      modelSolution.ResidualRMS[iRestLine] =
+          m_fitter->getModelResidualRmsUnderElements({eIdx}, true);
       if (m_enableAmplitudeOffsets) {
         const auto &polynom_coeffs =
             m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
@@ -947,9 +947,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       Float64 const cont =
           getContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
       modelSolution.CenterContinuumFlux[iRestLine] = cont;
-      Float64 const cont_rms = getContinuumError(eIdx, line_index);
+      Float64 const cont_rms = GetContinuumUncertainty(eIdx, line_index);
 
-      modelSolution.ContinuumError[iRestLine] = cont_rms;
+      modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_rms;
 
       Float64 mu = NAN;
       Float64 sigma = NAN;
@@ -991,10 +991,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       }
       auto [fluxDI, snrDI] = getFluxDirectIntegration(
           eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
-      modelSolution.Fluxs[iRestLine] = flux;
-      modelSolution.FluxErrors[iRestLine] = fluxError;
+      modelSolution.Flux[iRestLine] = flux;
+      modelSolution.FluxUncertainty[iRestLine] = fluxError;
       modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
-      modelSolution.FluxDirectIntegrationError[iRestLine] =
+      modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
           std::abs(fluxDI) / snrDI;
 
       // sum Ha complex fluxes
@@ -1279,7 +1279,7 @@ Float64 CLineModelFitting::getContinuumAtCenterProfile(Int32 eltIdx,
   return NAN;
 }
 
-Float64 CLineModelFitting::getContinuumError(Int32 eIdx, Int32 line_id) {
+Float64 CLineModelFitting::GetContinuumUncertainty(Int32 eIdx, Int32 line_id) {
   Float64 error = NAN;
 
   Float64 sumAll = 0.;

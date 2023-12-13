@@ -339,7 +339,7 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
       continue;
     Float64 const snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
     Float64 const Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
-                               LineModelSolutions[solutionIdx].FittingError[j];
+                               LineModelSolutions[solutionIdx].ResidualRMS[j];
     if (snr >= snrThres && Fittingsnr >= fitThres) {
       nSol++;
       indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);

@@ -219,7 +219,7 @@ public:
 
   Float64 getContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
                                       Float64 redshift);
-  Float64 getContinuumError(Int32 eltIdx, Int32 line_index);
+  Float64 GetContinuumUncertainty(Int32 eltIdx, Int32 line_index);
   std::pair<Float64, Float64>
   getFluxDirectIntegration(const TInt32List &eIdx_list,
                            const TInt32List &subeIdx_list,

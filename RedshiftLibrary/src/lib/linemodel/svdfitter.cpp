@@ -294,7 +294,7 @@ void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
     Float64 sumFit = 0.0;
     getModel().refreshModelUnderElements(EltsIdx);
 
-    sumFit += getModelErrorUnderElements(EltsIdx, false);
+    sumFit += getModelResidualRmsUnderElements(EltsIdx, false);
 
     if (sumFit < bestMerit) {
       bestMerit = sumFit;

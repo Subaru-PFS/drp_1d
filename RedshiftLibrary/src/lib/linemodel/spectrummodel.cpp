@@ -288,7 +288,7 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
 }
 
 /**
- * @brief GetContinuumError
+ * @brief GetContinuumUncertainty
  * Estimate the error on the continuum in a given window around the line center.
  * 1. calculate the observed spectrum flux with lines subtracted (fitted line
  * model)

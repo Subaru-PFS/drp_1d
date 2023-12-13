@@ -442,7 +442,7 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
             for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++)
               getModel().refreshModelUnderElements(filterEltsIdxLya,
                                                    idxLineLyaE);
-            m = getModelErrorUnderElements({idxLyaE}, true);
+            m = getModelResidualRmsUnderElements({idxLyaE}, true);
 
           } else {
             m = getLeastSquareMeritFast(idxLyaE);
@@ -490,7 +490,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
         elt_indices.push_back(elt_idx);
       for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++)
         getModel().refreshModelUnderElements(elt_indices);
-      Float64 m = getModelErrorUnderElements(elt_indices, true);
+      Float64 m = getModelResidualRmsUnderElements(elt_indices, true);
 
       if (m < meritMin) {
         meritMin = m;
@@ -502,8 +502,8 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
   return bestIgmIdx;
 }
 
-Float64 CAbstractFitter::getModelErrorUnderElements(TInt32List const &EltsIdx,
-                                                    bool with_continuum) {
+Float64 CAbstractFitter::getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
+                                                          bool with_continuum) {
   Float64 fit_allObs = 0;
   Float64 sumErr_allObs = 0;
   Int32 nb_nan = 0;
