@@ -119,13 +119,9 @@ bool CTplratioManager::init(Float64 redshift, Int32 itratio) {
     duplicateTplratioResult(itratio);
     return true;
   }
-  setTplratioModel(itratio, false);
 
-  // prepare the Lya width and asym coefficients if the asymfit profile
-  // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
-  // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
-  // tplratio can override the lyafitting, see m_opt_lya_forcefit
-  setLyaProfile(redshift, m_CatalogTplRatio->GetCatalog(itratio).GetList());
+  setTplratioModel(itratio, redshift, false);
+
   return false;
 }
 
@@ -481,7 +477,7 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
 void CTplratioManager::resetToBestRatio(Float64 redshift) {
 
   // first reinit all the elements:
-  init(redshift, m_savedIdxFitted);
+  setTplratioModel(m_savedIdxFitted, redshift);
 
   for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
        iElts++) {
@@ -565,7 +561,7 @@ Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {
       m_CatalogTplRatio->GetIsmIndex(idx));
 }
 
-bool CTplratioManager::setTplratioModel(Int32 itplratio,
+void CTplratioManager::setTplratioModel(Int32 itplratio, Float64 redshift,
                                         bool enableSetVelocity) {
   SetNominalAmplitudes(itplratio);
 
@@ -579,5 +575,9 @@ bool CTplratioManager::setTplratioModel(Int32 itplratio,
 
   Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
                m_CatalogTplRatio->GetCatalogName(itplratio).c_str());*/
-  return true;
+  // prepare the Lya width and asym coefficients if the asymfit profile
+  // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
+  // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
+  // tplratio can override the lyafitting, see m_opt_lya_forcefit
+  setLyaProfile(redshift, m_CatalogTplRatio->GetCatalog(itplratio).GetList());
 }

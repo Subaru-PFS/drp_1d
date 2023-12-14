@@ -91,7 +91,8 @@ public:
   const TBoolList &getHaELPresentTplratio() const;
   const TInt32List &GetNLinesAboveSNRTplratio() const;
 
-  bool setTplratioModel(Int32 itplratio, bool enableSetVelocity = false);
+  void setTplratioModel(Int32 itplratio, Float64 redshift,
+                        bool enableSetVelocity = false);
   void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
   void SetForcedisableTplratioISMfit(bool opt);
