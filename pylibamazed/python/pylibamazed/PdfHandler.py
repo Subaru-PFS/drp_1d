@@ -54,24 +54,37 @@ def buildPdfParams(pdf_params, first_pass=False):
     )
 
 
-def buildPdfHandler(
-    abstract_output: AbstractOutput,
-    object_type,
-    logsampling,
-    first_pass=False
-):
-    dataset_prefix = ""
-    name_prefix = ""
+class BuilderPdfHandler:
+    def add_params(
+        self,
+        abstract_output: AbstractOutput,
+        object_type,
+        logsampling,
+        first_pass=False
+    ):
+        self.abstract_output = abstract_output
+        self.object_type = object_type
+        self.logsampling = logsampling
+        self.first_pass = first_pass
+        return self
 
-    if first_pass:
-        dataset_prefix = "firstpass_"
-        name_prefix = "Firstpass"
+    def build(self):
+        dataset_prefix = ""
+        name_prefix = ""
 
-    pdf_params = abstract_output.get_dataset(object_type, dataset_prefix + "pdf_params")
-    c_pdf_params = buildPdfParams(pdf_params, first_pass)
-    pdf_proba = abstract_output.get_dataset(object_type, dataset_prefix + "pdf")[name_prefix + "PDFProbaLog"]
+        if self.first_pass:
+            dataset_prefix = "firstpass_"
+            name_prefix = "Firstpass"
 
-    return PdfHandler(c_pdf_params, logsampling, pdf_proba)
+        pdf_params = self.abstract_output.get_dataset(
+            self.object_type, dataset_prefix + "pdf_params"
+        )
+        c_pdf_params = buildPdfParams(pdf_params, self.first_pass)
+        pdf_proba = self.abstract_output.get_dataset(
+            self.object_type, dataset_prefix + "pdf"
+        )[name_prefix + "PDFProbaLog"]
+
+        return PdfHandler(c_pdf_params, self.logsampling, pdf_proba)
 
 
 class PdfHandler:

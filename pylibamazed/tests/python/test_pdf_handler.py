@@ -38,7 +38,7 @@
 # ============================================================================
 
 import pytest
-from pylibamazed.PdfHandler import buildPdfHandler, buildPdfParams
+from pylibamazed.PdfHandler import BuilderPdfHandler, buildPdfParams
 from tests.python.test_pdf_handler_utils import PdfHandlerTestUtils
 
 
@@ -62,7 +62,9 @@ class TestBuildPdfhandler:
                 }
             }
         }
-        buildPdfHandler(abstract_output, "some_object_type", True, True)
+        BuilderPdfHandler().add_params(
+            abstract_output, "some_object_type", True, True
+        ).build()
 
     def test_other_pass(self):
         abstract_output = PdfHandlerTestUtils.abstract_output()
@@ -74,7 +76,9 @@ class TestBuildPdfhandler:
                 }
             }
         }
-        buildPdfHandler(abstract_output, "some_object_type", True)
+        BuilderPdfHandler().add_params(
+            abstract_output, "some_object_type", True
+        ).build()
 
 
 class TestPdfHandlerClass:
