@@ -139,16 +139,15 @@ class AbstractOutput:
         else:
             object_type = root
         if len(attr_parts) < 4:
+            # Exception for pdf attributes : values may need a pdfHandler
+            if "ZGrid" in attr_name or "ProbaLog" in attr_name:
+                return self.get_pdf_attribute(object_type, attr_name, pdf_builder)
+
             specs = self.results_specifications
             # "attr_name" refers to the column "name" in the results.specifications,
             # we're looking for the corresponding details of that "name"
-            attribute_specs = specs[[
-                col in attr_name for col in specs['name']
-            ]]
+            attribute_specs = specs[specs['name'] == attr_name]
             dataset = attribute_specs["dataset"].values[0]
-            # Exception for pdf dataset : values may need a pdfHandler
-            if dataset == "pdf":
-                return self.get_pdf_attribute(object_type, attr_name, pdf_builder)
             # Rank can be based on the attribute level (only candidates have a rank)
             rank = None
             if attribute_specs["level"].values[0] == "candidate":
@@ -190,7 +189,8 @@ class AbstractOutput:
         :param pdf_builder: builder for a PdfHandler object
         :type pdf_builder: pylibamazed.pdfHandler.BuilderPdfHandler
         """
-        self.load_object_level(object_type)
+        if not self.cache:
+            self.load_object_level(object_type)
         pdfHandle = pdf_builder.add_params(
             self,
             object_type,
@@ -198,8 +198,10 @@ class AbstractOutput:
         ).build()
         if "Native" not in attribute:
             pdfHandle.convertToRegular()
-        # TODO: only returns valProbaLog, will add the ZGrid soon
-        pdf_attribute = pdfHandle.valProbaLog
+        if "ZGrid" in attribute:
+            pdf_attribute = pdfHandle.redshifts
+        else:
+            pdf_attribute = pdfHandle.valProbaLog
         return pdf_attribute
 
     def get_attribute(self, object_type, dataset, attribute, rank=None):
