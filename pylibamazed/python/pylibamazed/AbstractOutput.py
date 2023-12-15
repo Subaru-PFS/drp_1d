@@ -400,11 +400,15 @@ class AbstractOutput:
                         attr_name = ds_row["name"]
                         if "<MethodType>" in ds_row["name"]:
                             attr_name = ds_row["name"].replace("<MethodType>", method)
-                        attr = self.get_attribute_from_source(object_type,
+                        if self.has_attribute_in_source(object_type,
+                                                              method,
+                                                              ds_row.dataset,
+                                                              ds_row["name"]):
+                            attr = self.get_attribute_from_source(object_type,
                                                               method,
                                                               ds_row.dataset,
                                                               ds_row["name"])
-                        self.object_results[object_type][ds][attr_name] = attr
+                            self.object_results[object_type][ds][attr_name] = attr
 
     def load_candidate_level(self, object_type):
         method = self.parameters.get_solve_method(object_type)
