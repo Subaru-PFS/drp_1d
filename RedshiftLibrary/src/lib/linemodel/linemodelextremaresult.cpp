@@ -64,6 +64,10 @@ void TLineModelResult::updateTplRatioFromModel(
   FittedTplratioIsmCoeff = ratioMgr->getTplratio_bestTplIsmCoeff();
   FittedTplratioAmplitudeEm = ratioMgr->getTplratio_bestAmplitudeEm();
   FittedTplratioAmplitudeAbs = ratioMgr->getTplratio_bestAmplitudeAbs();
+  FittedTplratioAmplitudeUncertaintyEm =
+      ratioMgr->getTplratio_bestAmplitudeUncertaintyEm();
+  FittedTplratioAmplitudeUncertaintyAbs =
+      ratioMgr->getTplratio_bestAmplitudeUncertaintyAbs();
 }
 
 void TLineModelResult::updateFromModel(

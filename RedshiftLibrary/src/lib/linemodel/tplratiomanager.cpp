@@ -164,6 +164,7 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_opt_dust_calzetti = opt_tplratio_ismFit;
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
   Int32 elCount = m_elementsVector->getElementParam().size();
+
   // Resize tplratio buffers
   m_MeritTplratio.assign(s, NAN);
   m_ScaleMargCorrTplratio.assign(s, NAN);
@@ -181,6 +182,16 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_LinesLogPriorTplratio.assign(s, TFloat64List(elCount, 0.));
 
   m_tplratioLeastSquareFast = false;
+
+  TInt32List idx_em =
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
+  if (!idx_em.empty())
+    m_EmEltIdx = idx_em.front();
+
+  TInt32List idx_abs =
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
+  if (!idx_abs.empty())
+    m_AbsEltIdx = idx_abs.front();
 }
 
 const std::string &CTplratioManager::getTplratio_bestTplName() const {
@@ -192,50 +203,50 @@ Float64 CTplratioManager::getTplratio_bestTplIsmCoeff() const {
 }
 
 Float64 CTplratioManager::getTplratio_bestAmplitudeEm() const {
-  TInt32List idx_em =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
-  if (!idx_em.empty())
-    return m_FittedAmpTplratio[m_savedIdxFitted][idx_em.front()];
+  if (m_EmEltIdx != undefIdx)
+    return m_FittedAmpTplratio[m_savedIdxFitted].at(m_EmEltIdx);
   return NAN;
 }
 
 Float64 CTplratioManager::getTplratio_bestAmplitudeAbs() const {
-  TInt32List idx_abs =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
-  if (!idx_abs.empty())
-    return m_FittedAmpTplratio[m_savedIdxFitted][idx_abs.front()];
+  if (m_AbsEltIdx != undefIdx)
+    return m_FittedAmpTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestAmplitudeUncertaintyEm() const {
+  if (m_EmEltIdx != undefIdx)
+    return m_FittedErrorTplratio[m_savedIdxFitted].at(m_EmEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestAmplitudeUncertaintyAbs() const {
+  if (m_AbsEltIdx != undefIdx)
+    return m_FittedErrorTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
   return NAN;
 }
 
 Float64 CTplratioManager::getTplratio_bestDtmEm() const {
-  TInt32List idx_em =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
-  if (!idx_em.empty())
-    return m_DtmTplratio[m_savedIdxFitted][idx_em.front()];
+  if (m_EmEltIdx != undefIdx)
+    return m_DtmTplratio[m_savedIdxFitted].at(m_EmEltIdx);
   return NAN;
 }
 
 Float64 CTplratioManager::getTplratio_bestDtmAbs() const {
-  TInt32List idx_abs =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
-  if (!idx_abs.empty())
-    return m_DtmTplratio[m_savedIdxFitted][idx_abs.front()];
+  if (m_AbsEltIdx != undefIdx)
+    return m_DtmTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
   return NAN;
 }
 
 Float64 CTplratioManager::getTplratio_bestMtmEm() const {
-  TInt32List idx_em =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
-  if (!idx_em.empty())
-    return m_MtmTplratio[m_savedIdxFitted][idx_em.front()];
+  if (m_EmEltIdx != undefIdx)
+    return m_MtmTplratio[m_savedIdxFitted].at(m_EmEltIdx);
   return NAN;
 }
 
 Float64 CTplratioManager::getTplratio_bestMtmAbs() const {
-  TInt32List idx_abs =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
-  if (!idx_abs.empty())
-    return m_MtmTplratio[m_savedIdxFitted][idx_abs.front()];
+  if (m_AbsEltIdx != undefIdx)
+    return m_MtmTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
   return NAN;
 }
 

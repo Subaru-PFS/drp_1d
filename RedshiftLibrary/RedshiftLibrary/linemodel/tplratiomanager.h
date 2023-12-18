@@ -80,6 +80,8 @@ public:
   Float64 getTplratio_bestTplIsmCoeff() const;
   Float64 getTplratio_bestAmplitudeEm() const;
   Float64 getTplratio_bestAmplitudeAbs() const;
+  Float64 getTplratio_bestAmplitudeUncertaintyEm() const;
+  Float64 getTplratio_bestAmplitudeUncertaintyAbs() const;
   Float64 getTplratio_bestDtmEm() const;
   Float64 getTplratio_bestDtmAbs() const;
   Float64 getTplratio_bestMtmEm() const;
@@ -130,6 +132,9 @@ protected:
   std::vector<TFloat64List> m_LinesLogPriorTplratio;
   Int32 m_tplratioLeastSquareFast =
       0; // for rigidity=tplratio: switch to use fast least square estimation
+
+  Int32 m_EmEltIdx = undefIdx;
+  Int32 m_AbsEltIdx = undefIdx;
 
   TFloat64List m_ScaleMargCorrTplratio;
   TBoolList m_StrongELPresentTplratio;

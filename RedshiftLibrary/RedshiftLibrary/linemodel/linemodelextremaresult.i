@@ -95,8 +95,10 @@ public:
                                              // fitted for tplcorr/tplratio
   Float64 FittedTplratioAmplitudeEm = NAN;   // amp of the best template fitted
                                              // for tplcorr/tplratio
+  Float64 FittedTplratioAmplitudeUncertaintyEm = NAN;
   Float64 FittedTplratioSNREm = NAN;
   Float64 FittedTplratioAmplitudeAbs = NAN;
+  Float64 FittedTplratioAmplitudeUncertaintyAbs = NAN;
   Float64 FittedTplratioSNRAbs = NAN;
 
   Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
