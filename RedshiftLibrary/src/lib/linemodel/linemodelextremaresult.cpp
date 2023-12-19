@@ -68,6 +68,10 @@ void TLineModelResult::updateTplRatioFromModel(
       ratioMgr->getTplratio_bestAmplitudeUncertaintyEm();
   FittedTplratioAmplitudeUncertaintyAbs =
       ratioMgr->getTplratio_bestAmplitudeUncertaintyAbs();
+  FittedTplratioSNREm = std::abs(FittedTplratioAmplitudeEm) /
+                        FittedTplratioAmplitudeUncertaintyEm;
+  FittedTplratioSNRAbs = std::abs(FittedTplratioAmplitudeAbs) /
+                         FittedTplratioAmplitudeUncertaintyAbs;
 }
 
 void TLineModelResult::updateFromModel(
