@@ -73,7 +73,7 @@ public:
   void setPassMode(Int32 iPass) override;
   void saveResults(Int32 itratio) override { m_savedIdxFitted = itratio; };
   Int32 getTplratio_count() const override;
-  TFloat64List getTplratio_priors() override;
+  TFloat64List getTplratio_priors() const override;
 
   void logParameters() override;
   const std::string &getTplratio_bestTplName() const;

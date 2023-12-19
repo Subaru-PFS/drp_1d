@@ -287,7 +287,7 @@ Int32 CLineModelFitting::getTplratio_count() const {
   return m_lineRatioManager->getTplratio_count();
 }
 
-TFloat64List CLineModelFitting::getTplratio_priors() {
+TFloat64List CLineModelFitting::getTplratio_priors() const {
   return m_lineRatioManager->getTplratio_priors();
 }
 

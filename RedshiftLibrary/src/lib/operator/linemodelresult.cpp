@@ -333,12 +333,13 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
         !restLineList.at(line_id).IsEmission())
       continue;
 
-    Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
+    Float64 const noise =
+        LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
     if (noise <= 0)
       continue;
-    Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
-    Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
-                         LineModelSolutions[solutionIdx].FittingError[j];
+    Float64 const snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
+    Float64 const Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
+                               LineModelSolutions[solutionIdx].FittingError[j];
     if (snr >= snrThres && Fittingsnr >= fitThres) {
       nSol++;
       indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);

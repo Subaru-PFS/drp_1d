@@ -119,10 +119,10 @@ public:
   GetTemplateRatioCatalog(const std::string &spectrumModel);
   const std::shared_ptr<CLineCatalog> &
   GetLineCatalog(const std::string &spectrumModel, const std::string &method);
-  const CLineMap GetFilteredLineMap(const std::string &spectrumModel,
-                                    const std::string &method,
-                                    const std::string &type,
-                                    const std::string &force);
+  CLineMap GetFilteredLineMap(const std::string &spectrumModel,
+                              const std::string &method,
+                              const std::string &type,
+                              const std::string &force) const;
   const std::shared_ptr<CPhotBandCatalog> &GetPhotBandCatalog() {
     return m_photBandCatalog;
   }
@@ -247,11 +247,10 @@ CInputContext::GetLineCatalog(const std::string &spectrumModel,
   return m_lineCatalogs[spectrumModel][method];
 }
 
-inline const CLineMap CInputContext::GetFilteredLineMap(
+inline CLineMap CInputContext::GetFilteredLineMap(
     const std::string &spectrumModel, const std::string &method,
-    const std::string &type, const std::string &force) {
-
-  return m_lineCatalogs[spectrumModel][method]->GetFilteredList(type, force);
+    const std::string &type, const std::string &force) const {
+  return m_lineCatalogs.at(spectrumModel).at(method)->GetFilteredList(type, force);
 }
 
 inline std::shared_ptr<const CLineCatalogsTplRatio>

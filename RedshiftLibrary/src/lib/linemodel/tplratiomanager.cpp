@@ -325,7 +325,7 @@ Int32 CTplratioManager::getTplratio_count() const {
   return m_CatalogTplRatio->GetCatalogsCount();
 }
 
-TFloat64List CTplratioManager::getTplratio_priors() {
+TFloat64List CTplratioManager::getTplratio_priors() const {
   return m_CatalogTplRatio->getCatalogsPriors();
 }
 

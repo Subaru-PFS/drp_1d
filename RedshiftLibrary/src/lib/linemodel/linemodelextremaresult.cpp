@@ -87,16 +87,20 @@ void TLineModelResult::updateFromModel(
   }
 
   // store model Ha SNR & Flux
-  snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa = lmresult->LineModelSolutions[idx].lfHa;
-  snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa_DI = lmresult->LineModelSolutions[idx].lfHa_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
 
   // store model OII SNR & Flux
-  snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
-  snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII_DI = lmresult->LineModelSolutions[idx].lfOII_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
 
   // store Lya fitting parameters
   LyaWidthCoeff = lmresult->LineModelSolutions[idx].LyaWidthCoeff;
@@ -108,24 +112,21 @@ void TLineModelResult::updateFromModel(
   Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
   CorrScaleMarg = corrScaleMarg;
 
-  static Float64 cutThres = 3.0;
-  Int32 nValidLines =
-      lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
-  NLinesOverThreshold = nValidLines;
+  Float64 static const cutThres = SNR_THRESHOLD_FOR_NLINESOVER;
+  if (lmel->getLineRatioType() == "rules")
+    NLinesOverThreshold =
+        lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
+
   std::tie(ELSNR, StrongELSNR) = lmel->getCumulSNRStrongEL();
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  Int32 nddl = lmresult->LineModelSolutions[idx]
-                   .nDDL; // override nddl by the actual number of elements in
-                          // the fitted model
-
   NDof = lmel->GetModelNonZeroElementsNDdl();
 
-  Float64 _bic =
-      lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
+  Int32 const nddl = lmresult->LineModelSolutions[idx].nDDL;
+  bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
   // Float64 aic = m + 2*nddl; //AIC
-  bic = _bic;
+
   // lmresult->bic = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
   // //AICc, better when nsamples small
 

@@ -76,7 +76,7 @@ public:
   virtual void resetToBestRatio(Float64 redshift) {}
   virtual void saveResults(Int32 itratio) {}
   virtual void setPassMode(Int32 iPass);
-  virtual TFloat64List getTplratio_priors() {
+  virtual TFloat64List getTplratio_priors() const {
     static TFloat64List dumb;
     return dumb;
   }
