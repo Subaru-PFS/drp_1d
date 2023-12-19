@@ -50,7 +50,8 @@ ObjectStages = ["redshift_solver", "linemeas_catalog_load",
 zlog = CLog.GetInstance()
 
 
-# TODO bien voir ici qu'il y a deux types de stages : celles définies dans le parameters et Object/Root stages.
+# TODO bien voir ici qu'il y a deux types de stages :
+# celles définies dans le parameters et Object/Root stages.
 # À ne pas confondre, voir comment on pourrait les fusionner
 
 class AbstractOutput:
@@ -433,13 +434,15 @@ class AbstractOutput:
                         if "<MethodType>" in ds_row["name"]:
                             attr_name = ds_row["name"].replace("<MethodType>", method)
                         if self.has_attribute_in_source(object_type,
-                                                              method,
-                                                              ds_row.dataset,
-                                                              ds_row["name"]):
+                                                        stage,
+                                                        method,
+                                                        ds_row.dataset,
+                                                        ds_row["name"]):
                             attr = self.get_attribute_from_source(object_type,
-                                                              method,
-                                                              ds_row.dataset,
-                                                              ds_row["name"])
+                                                                  stage,
+                                                                  method,
+                                                                  ds_row.dataset,
+                                                                  ds_row["name"])
                             self.object_results[object_type][ds][attr_name] = attr
 
     def load_candidate_level(self, object_type):
