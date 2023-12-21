@@ -175,7 +175,6 @@ class ResultStoreOutput(AbstractOutput):
                                                  method,
                                                  dataset)
         else:
-            # TODO investigate here
             return self.results_store.HasDataset(dataset,
                                                  dataset,
                                                  dataset,
@@ -199,17 +198,17 @@ class ResultStoreOutput(AbstractOutput):
         if attribute_info.level == "root":
             if attribute_info.ResultStore_key in ["context_warningFlag", "warningFlag"]:
                 return self.results_store.GetFlagLogResult(attribute_info.dataset,
-                                                           attribute_info.dataset,  # Added
+                                                           attribute_info.dataset,
                                                            attribute_info.dataset,
                                                            attribute_info.ResultStore_key)
             else:
                 or_type = self.results_store.GetGlobalResultType(attribute_info.dataset,
-                                                                 attribute_info.dataset,  # Added
+                                                                 attribute_info.dataset,
                                                                  attribute_info.dataset,
                                                                  attribute_info.ResultStore_key)
                 if or_type == "CClassificationResult":
                     return self.results_store.GetClassificationResult(attribute_info.dataset,
-                                                                      attribute_info.dataset,  # Added
+                                                                      attribute_info.dataset,
                                                                       attribute_info.dataset,
                                                                       attribute_info.ResultStore_key)
                 else:
@@ -222,7 +221,7 @@ class ResultStoreOutput(AbstractOutput):
                                                              attribute_info.ResultStore_key)
             getter = getattr(self.results_store, "Get" + or_type[1:])
             return getter(object_type,
-                          stage,  # Added
+                          stage,
                           method,
                           attribute_info.ResultStore_key)
         elif attribute_info.level == "candidate":

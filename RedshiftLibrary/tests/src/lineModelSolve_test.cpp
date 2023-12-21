@@ -48,7 +48,7 @@ using namespace NSEpic;
 
 const std::string lambdaString = "{\"lambdaRange\" : [ 4680, 4712 ],";
 const std::string multiLambdaString =
-    "{\"lambdaRange\" :{ \"A\":[ 4680, 4697 ],\"B\":[4695,4712]}, ";
+    "{\"lambdaRange\" : { \"A\" : [ 4680, 4697 ], \"B\" : [4695, 4712]},";
 
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
@@ -137,7 +137,7 @@ const std::string jsonStringS =
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\","
     "\"resolution\" : "
     "4300},"
     "\"extremaRedshiftSeparation\" : 0.01,"
@@ -148,8 +148,10 @@ const std::string jsonStringS =
     "\"redshiftRange\" : [ 0.24, 0.3 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : \"lineModelSolver\","
-    "\"lineModelSolver\" : {"
+    "\"stages\" : [\"redshiftSolver\"],"
+    "\"redshiftSolver\" : {"
+    "\"method\" : \"lineModelSolve\","
+    "\"lineModelSolve\" : {"
     "\"lineModel\" : {"
     "\"continuumReestimation\" : \"no\","
     "\"velocityFit\" : true,"
@@ -167,7 +169,6 @@ const std::string jsonStringS =
     "\"hAlphaPrior\" : 0.5,"
     "\"nOfZPriorStrength\" : 1.0,"
     "\"extremaCutProbaThreshold\" : -1,"
-
     "\"secondPassLcFittingMethod\" : -1,"
     "\"useLogLambdaSampling\": false,"
     "\"lyaForceFit\": false,"
@@ -190,7 +191,7 @@ const std::string jsonStringS =
     "\"betaA\" : 1,    \"betaTE\" : 1, \"betaZ\" : 1, "
     "\"catalogDirPath\" : \"\"}}, "
     "\"firstPass\": { \"fittingMethod\" : \"individual\", "
-    "\"tplRatio_ismfit\" : true,"
+    "\"tplRatioIsmFit\" : true,"
     "\"largeGridStepRatio\" : 10, "
     "\"multipleContinuumFitDisable\": true},"
     "\"secondPass\" : {\"halfWindowSize\" : 0.001, "
@@ -216,16 +217,16 @@ const std::string jsonStringTplFitRules =
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
     "\"catalogDirPath\" : \"\"}}}}}}}";
 
+//
 const std::string jsonStringTplFitTplRatio =
     "\"skipSecondPass\" : false,"
-    "\"continuumComponent\" : \"tplFit\","
+    "\"continuumComponent\" : \"noContinuum\","
     "\"pdfCombination\" : \"marg\","
     "\"tplRatioIsmFit\" : true,"
     "\"rules\" : \"all\","
     "\"improveBalmerFit\" : true,"
     "\"lineRatioType\": \"tplRatio\","
-    "\"enablePhotometry\" : true, "
-    "\"photometry\" : {\"weight\" : 1},"
+    "\"enablePhotometry\" : false, "
     "\"continuumFit\" : { \"ignoreLineSupport\": false,"
     "\"negativeThreshold\": -5.0,"
     "\"count\" : 1,"
@@ -236,14 +237,14 @@ const std::string jsonStringTplFitTplRatio =
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
     "\"catalogDirPath\" : \"\"}}}}}}}";
 
-const std::string jsonStringNoContinuumTplRatio =
+const std::string jsonStringnoContinuumTplRatio =
     "\"skipSecondPass\" : true,"
-    "\"continuumComponent\" : \"nocontinuum\","
+    "\"continuumComponent\" : \"noContinuum\","
     "\"pdfCombination\" : \"marg\","
     "\"tplRatioIsmFit\" : true,"
     "\"rules\" : \"all\","
     "\"improveBalmerFit\" : true,"
-    "\"lineRatioType\": \"tplratio\","
+    "\"lineRatioType\": \"tplRatio\","
     "\"enablePhotometry\" : false, "
     "\"photometry\" : {\"weight\" : 1},"
     "\"continuumFit\" : { \"ignoreLineSupport\": false,"
@@ -254,7 +255,7 @@ const std::string jsonStringNoContinuumTplRatio =
     "\"igmFit\" : true,"
     "\"fftProcessing\": false, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
-    "\"catalogDirPath\" : \"\"}}}}}}";
+    "\"catalogDirPath\" : \"\"}}}}}}}";
 
 const std::string jsonStringFromSpectrum =
     "\"skipSecondPass\" : false,"
@@ -347,14 +348,14 @@ public:
   fixture_LineModelSolveTestNoContTplRatio() {
     fillCatalog();
     ctx.loadParameterStore(lambdaString + jsonStringS +
-                           jsonStringNoContinuumTplRatio);
+                           jsonStringnoContinuumTplRatio);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -376,7 +377,7 @@ public:
     ctx.addSpectrum(spcA, LSF);
     ctx.addSpectrum(spcB, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "lineModelSolver", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }

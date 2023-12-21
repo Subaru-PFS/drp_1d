@@ -125,7 +125,7 @@ class Context:
             if self.config.get("linemeascatalog"):
                 self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id, self.config)
             self.process_flow_context.LoadParameterStore(self.parameters.to_json())
-            self.process_flow_context.Init()  # TODO here
+            self.process_flow_context.Init()
             # store flag in root object
             resultStore.StoreFlagResult("context_warningFlag", zflag.getBitMask())
             context_warningFlagRecorded = True

@@ -96,15 +96,12 @@ class AbstractOutput:
         pass
 
     def has_error(self, object_type, stage):
-        # TODO see here how to handle diff stage from param / stage defined in this file
         return self.get_error_full_name(object_type, stage) in self.errors
 
     def get_error(self, object_type, stage):
-        # TODO see here how to handle diff stage from param / stage defined in this file
         return self.errors[self.get_error_full_name(object_type, stage)]
 
     def get_error_full_name(self, object_type, stage):
-        # TODO see here how to handle diff stage from param / stage defined in this file
         if object_type:
             return f"{stage}_{object_type}"
         else:

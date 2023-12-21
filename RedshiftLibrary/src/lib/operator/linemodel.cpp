@@ -1562,7 +1562,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
     m_opt_tplfit_dustFit = ps->GetScoped<bool>("continuumFit.ismFit");
     m_opt_tplfit_extinction = ps->GetScoped<bool>("continuumFit.igmFit");
 
-    // TODO remove ?
     m_opt_tplfit_ignoreLinesSupport =
         ps->GetScoped<bool>("continuumFit.ignoreLineSupport");
     if (Context.GetCurrentMethod() == "lineModelSolve") {

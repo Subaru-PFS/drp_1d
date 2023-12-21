@@ -90,7 +90,7 @@ class Parameters(ParametersAccessor):
         if method == "lineMeasSolve":
             return "lineMeasSolve"
         else:
-            return "lineModelSolver"
+            return "lineModelSolve"
 
     def get_linemodel_methods(self, spectrum_model):
         methods = []

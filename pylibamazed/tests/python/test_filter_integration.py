@@ -52,7 +52,6 @@ class TestFilterIntegration:
         # Creates a "real" configuration
         config = make_config(**{"config_filename": "config_filters.json"})
         param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
-        # print("\n\nparameters\n", json.dumps(param.parameters, indent=4))
         context = Context(config, param)  # vars returns the dict version of config
         observation = get_observation(config["input_file"])
 

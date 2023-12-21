@@ -129,7 +129,7 @@ class TestParameters:
                 "star": {
                     "stages": ["redshiftSolver"],
                     "redshiftSolver": {
-                        "method": "lineModelsolver"
+                        "method": "lineModelsolve"
                     }
                 },
                 "spectrumModels": ["galaxy", "star"]
