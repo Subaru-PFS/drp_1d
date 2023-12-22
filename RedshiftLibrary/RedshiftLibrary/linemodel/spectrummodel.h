@@ -43,13 +43,20 @@ public:
       CLine::EType lineTypeFilter = CLine::EType::nType_All);
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
                                              const TInt32List &EltsIdx) const;
+  std::pair<TInt32Range, TFloat64List>
+  GetLineRangeAndProfile(Int32 eIdx, Int32 line_id, Float64 redshift) const;
 
-  std::pair<Float64, Int32> getContinuumQuadraticError(Int32 eIdx,
-                                                       Int32 line_id);
+  std::tuple<Float64, Float64, Float64>
+  GetContinuumWeightedSumInRange(TInt32Range const &indexRange,
+                                 TFloat64List const &weights,
+                                 TPolynomCoeffs const &polynomCoeffs) const;
+
+  std::pair<Float64, Int32>
+  getContinuumSquaredResidualInRange(TInt32Range const &indexRange);
 
   std::pair<Float64, Float64>
-  getModelQuadraticErrorUnderElements(TInt32List const &EltsIdx,
-                                      bool with_continuum) const;
+  getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
+                                       bool with_continuum) const;
 
   std::pair<Float64, Float64> getFluxDirectIntegration(
       const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
@@ -58,10 +65,9 @@ public:
   getLinesAboveSNR(const TFloat64Range &lambdaRange,
                    Float64 snrcut = 3.5) const;
 
-  void
-  integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
-                              const std::vector<CRange<Int32>> &indexRangeList,
-                              Float64 &sumFlux, Float64 &sumErr) const;
+  void integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
+                                   const TInt32RangeList &indexRangeList,
+                                   Float64 &sumFlux, Float64 &sumErr) const;
 
   bool m_enableAmplitudeOffsets = false;
   Float64 m_Redshift = 0.;

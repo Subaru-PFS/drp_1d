@@ -214,14 +214,12 @@ CSpectrum CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   const CSpectrumFluxAxis &fluxAxis = m_SpectrumModel.GetFluxAxis();
 
-  //
-  TFloat64List fluxAndContinuum(spectralAxis.GetSamplesCount(), 0.0);
   if (lineTypeFilter == CLine::EType::nType_Emission)
     refreshModel(CLine::EType::nType_Absorption);
   else if (lineTypeFilter == CLine::EType::nType_Absorption)
     refreshModel(CLine::EType::nType_Emission);
+  TFloat64List fluxAndContinuum = fluxAxis.GetSamplesVector();
 
-  fluxAndContinuum = fluxAxis.GetSamplesVector();
   refreshModel(lineTypeFilter);
 
   CSpectrum spcCorrectedUnderLines(*m_inputSpc);
@@ -287,39 +285,89 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
   return maxWeight;
 }
 
+std::pair<TInt32Range, TFloat64List>
+CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
+                                       Float64 redshift) const {
+  auto const &elt = (*m_Elements)[eIdx];
+  auto const &spectralAxis = m_SpectrumModel.GetSpectralAxis();
+
+  Float64 mu = NAN;
+  Float64 sigma = NAN;
+  elt->getObservedPositionAndLineWidth(line_id, redshift, mu, sigma);
+
+  // compute averaged continuum under line, weighted by the line profile
+  auto const &profile = elt->getLineProfile(line_id);
+  // auto const &polynomCoeffs = elt->GetPolynomCoeffs();
+
+  Float64 const winsize = profile->GetNSigmaSupport() * sigma;
+  TInt32Range const indexRange = elt->EstimateIndexRange(
+      spectralAxis, mu, spectralAxis.GetLambdaRange(), winsize);
+
+  TFloat64List weights;
+  weights.reserve(indexRange.GetLength() + 1);
+  for (Int32 lambda_idx = indexRange.GetBegin();
+       lambda_idx <= indexRange.GetEnd(); ++lambda_idx) {
+    Float64 const lambda = spectralAxis[lambda_idx];
+    weights.push_back(profile->GetLineProfileVal(lambda, mu, sigma));
+  }
+
+  return std::make_pair(indexRange, weights);
+}
+
 /**
- * @brief GetContinuumUncertainty
- * Estimate the error on the continuum in a given window around the line center.
+ * @brief GetContinuumWeightedSumInRange
+ * @param indexRange
+ * Add up polynome contribution below lines
+ * @return the continuum flux val at the sub element center wavelength.
+ */
+std::tuple<Float64, Float64, Float64>
+CSpectrumModel::GetContinuumWeightedSumInRange(
+    TInt32Range const &indexRange, TFloat64List const &weights,
+    const TPolynomCoeffs &polynomCoeffs) const {
+
+  auto const &spectralAxis = m_SpectrumModel.GetSpectralAxis();
+
+  Float64 weighted_sum = 0.;
+  Float64 total_weight = 0.;
+  Float64 total_weight_square = 0.;
+  for (size_t idx = 0; idx <= indexRange.GetLength(); ++idx) {
+    Int32 const lambda_idx = indexRange.GetBegin() + idx;
+    Float64 const lambda = spectralAxis[lambda_idx];
+    Float64 const w = weights[idx];
+    Float64 const cont =
+        m_enableAmplitudeOffsets
+            ? m_ContinuumFluxAxis[lambda_idx] + polynomCoeffs.getValue(lambda)
+            : m_ContinuumFluxAxis[lambda_idx];
+    weighted_sum += w * cont;
+    total_weight += w;
+    total_weight_square += w * w;
+  }
+
+  return std::make_tuple(weighted_sum, total_weight, total_weight_square);
+}
+
+/**
+ * @brief GetContinuumSquaredResidualInRange
+ * Estimate the squared residual (sum of squared residual) on the continuum
+ * in a given wavelength index range and return the squared residual and the
+ * number of terms sumed
  * 1. calculate the observed spectrum flux with lines subtracted (fitted line
  * model)
- * 2. estimate the std in a window corresponding to the sliding median window
- * size (default/hardcoded=150A)
- * @param subeIdx
- * @param spectralAxis
- * @param spectrumfluxAxis
- * @return -1: zero samples found for error estimation, NAN: not enough samples
- * found for error estimation
+ * 2. estimate the squared summ in the given range
+ * @param indexRange
+ * @return NAN: not enough samples found for error estimation
  */
-std::pair<Float64, Int32>
-CSpectrumModel::getContinuumQuadraticError(Int32 eIdx, Int32 line_id) {
+std::pair<Float64, Int32> CSpectrumModel::getContinuumSquaredResidualInRange(
+    TInt32Range const &indexRange) {
 
   const CSpectrum noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
   const CSpectrumFluxAxis &noLinesFluxAxis = noLinesSpectrum.GetFluxAxis();
-  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
-  const TFloat64Range lambdaRange =
-      spectralAxis.GetLambdaRange(); // using the full wavelength range for this
-                                     // error estimation
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
-  Float64 winsizeAngstrom = 150.;
-
-  Float64 mu = (*m_Elements)[eIdx]->GetObservedPosition(line_id, m_Redshift);
-  TInt32Range indexRange = CLineModelElement::EstimateIndexRange(
-      spectralAxis, mu, lambdaRange, winsizeAngstrom);
 
   // estimate sum square error between continuum and nolines-spectrum
   Float64 sum = 0.0;
   Int32 nsum = 0;
-  for (Int32 t = indexRange.GetBegin(); t < indexRange.GetEnd(); t++) {
+  for (Int32 t = indexRange.GetBegin(); t <= indexRange.GetEnd(); t++) {
     Float64 diff = noLinesFluxAxis[t] - ContinuumFluxAxis[t];
     sum += diff * diff;
     nsum++;
@@ -335,8 +383,8 @@ CSpectrumModel::getContinuumQuadraticError(Int32 eIdx, Int32 line_id) {
  *the square root of fit / sumErr.
  **/
 std::pair<Float64, Float64>
-CSpectrumModel::getModelQuadraticErrorUnderElements(TInt32List const &EltsIdx,
-                                                    bool with_continuum) const {
+CSpectrumModel::getModelSquaredResidualUnderElements(
+    TInt32List const &EltsIdx, bool with_continuum) const {
   // before elementlistcutting this variable was
   // CElementList::m_ErrorNoContinuum, a reference initialized twice in
   // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
@@ -554,9 +602,6 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
     if (isElementInvalid(eIdx, line_index))
       continue;
 
-    Float64 cont = (*m_Elements)[eIdx]->GetContinuumAtCenterProfile(
-        line_index, m_inputSpc->GetSpectralAxis(), m_Redshift,
-        getContinuumFluxAxis(), m_enableAmplitudeOffsets);
     Float64 mu = NAN;
     Float64 sigma = NAN;
     (*m_Elements)[eIdx]->getObservedPositionAndLineWidth(line_index, m_Redshift,
