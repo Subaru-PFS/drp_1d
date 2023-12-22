@@ -109,7 +109,7 @@ class TestLSF:
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
             parametersDict = {
                 "lsf": {
-                    "lsfType": "GaussianVariablewidth"
+                    "lsfType": "gaussianVariableWidth"
                 }
             }
             with pytest.raises(APIException, match=r"Missing parameter lsf gaussianVariableWidthFileName"):
@@ -118,7 +118,7 @@ class TestLSF:
         def test_OK_if_GaussianConstantResolution_with_width_defined(self, zflag):
             parametersDict = {
                 "lsf": {
-                    "lsfType": "GaussianVariablewidth",
+                    "lsfType": "gaussianVariableWidth",
                     "gaussianVariableWidthFileName": "someFileName"
                 }
             }

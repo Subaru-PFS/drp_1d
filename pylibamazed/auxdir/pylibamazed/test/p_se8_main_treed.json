@@ -42,7 +42,7 @@
     "templateDir": "templates/BC03_sdss_tremonti21",
     "stages": [
       "redshiftSolver",
-      "lineMeasSolve"
+      "lineMeasSolver"
     ],
     "redshiftSolver": {
       "method": "lineModelSolve",
@@ -142,7 +142,7 @@
     },
     "lineMeasDzHalf": 0.001,
     "lineMeasRedshiftStep": 0.0001,
-    "lineMeasSolve": {
+    "lineMeasSolver": {
       "method": "lineMeasSolve",
       "lineMeasSolve": {
         "lineModel": {

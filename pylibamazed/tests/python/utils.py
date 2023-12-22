@@ -106,8 +106,8 @@ def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwar
         default_object_type: {
             "lineMeasDzHalf": 0.1,
             "lineMeasRedshiftStep": 0.1,
-            "stages": ["lineMeasSolve"],
-            "lineMeasSolve": {
+            "stages": ["lineMeasSolver"],
+            "lineMeasSolver": {
                 "method": "lineMeasSolve",
                 "lineMeasSolve": kwargs,
             }

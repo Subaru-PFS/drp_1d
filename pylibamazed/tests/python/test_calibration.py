@@ -58,8 +58,8 @@ def make_parameters() -> Parameters:
             "step": 0.5
         },
         "lsf": {
-            "lsfType": "GaussianVariableWidth",
-            "GaussianVariablewidthFileName": "LSF/EuclidNISPVSSPSF201707.fits"
+            "lsfType": "gaussianVariableWidth",
+            "gaussianVariableWidthFileName": "LSF/EuclidNISPVSSPSF201707.fits"
         },
         "galaxy": {
             "stages": ["redshiftSolver"],

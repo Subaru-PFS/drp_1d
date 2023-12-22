@@ -130,8 +130,8 @@ class TestParametersConverterV1:
         expected = {
             "spectrumModels": ["galaxy"],
             "galaxy": {
-                "stages": ["lineMeasSolve"],
-                "lineMeasSolve": {
+                "stages": ["lineMeasSolver"],
+                "lineMeasSolver": {
                     "method": "lineMeasSolve",
                     "lineMeasSolve": {
                         "lineModel": {}
@@ -192,12 +192,12 @@ class TestParametersConverterV1:
         expected = {
             "spectrumModels": ["galaxy", "star"],
             "galaxy": {
-                "stages": ["redshiftSolver", "lineMeasSolve", "reliabilitySolver"],
+                "stages": ["redshiftSolver", "lineMeasSolver", "reliabilitySolver"],
                 "redshiftSolver": {
                     "method": "lineModelSolve",
                     "lineModelSolve": {}
                 },
-                "lineMeasSolve": {
+                "lineMeasSolver": {
                     "method": "lineMeasSolve",
                     "lineMeasSolve": {
                         "lineModel": {}

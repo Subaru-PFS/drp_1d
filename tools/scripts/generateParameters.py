@@ -69,7 +69,7 @@ def generate_parameters(inputString: str, specificJson: dict = None, locations=[
         paramsToUpdate = {f"spectrumModel_{spectrumModel}": {"stages": []}}
         finalParam["spectrumModels"].append(spectrumModel)
         if method == "lineMeasSolve":
-            paramsToUpdate[f"spectrumModel_{spectrumModel}"]["stages"].append("lineMeasSolve")
+            paramsToUpdate[f"spectrumModel_{spectrumModel}"]["stages"].append("lineMeasSolver")
         deep_update(paramsToUpdate[f"spectrumModel_{spectrumModel}"],
                     get_parameter(f"{spectrumModel}.{method}", locations))
         deep_update(finalParam, paramsToUpdate)
@@ -83,12 +83,12 @@ def generate_parameters(inputString: str, specificJson: dict = None, locations=[
 
 if __name__ == "__main__":
     params = generate_parameters(
-        "linemeas_solve|galaxy.lineMeasSolve",
+        "linemeas_solve|galaxy.lineMeasSolver",
         locations=[os.path.join(module_root_dir, "resources/parameters/test-cpp/")],
         toCpp=True,
         specificJson={
             "spectrumModel_galaxy": {
-                "lineMeasSolve": {
+                "lineMeasSolver": {
                     "lineMeasSolve": {
                         "lineModel": {
                             "nSigmaSupport": 14,

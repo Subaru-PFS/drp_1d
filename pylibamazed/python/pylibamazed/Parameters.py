@@ -88,9 +88,9 @@ class Parameters(ParametersAccessor):
 
     def get_stage_from_method(self, method: str) -> str:
         if method == "lineMeasSolve":
-            return "lineMeasSolve"
+            return "lineMeasSolver"
         else:
-            return "lineModelSolve"
+            return "redshiftSolver"
 
     def get_linemodel_methods(self, spectrum_model):
         methods = []

@@ -381,7 +381,7 @@ class AbstractOutput:
             methods = self.parameters.get_solve_methods(object_type)
             for method in methods:
                 if method == "lineMeasSolve":
-                    stage = "lineMeasSolve"
+                    stage = "lineMeasSolver"
                 else:
                     stage = "redshiftSolver"
                 if self.has_dataset_in_source(object_type,

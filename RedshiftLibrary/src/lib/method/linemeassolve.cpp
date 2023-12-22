@@ -43,7 +43,7 @@
 namespace NSEpic {
 
 CLineMeasSolve::CLineMeasSolve(TScopeStack &scope, string spectrumModel)
-    : CObjectSolve("lineMeasSolve", "lineMeasSolve", scope, spectrumModel) {}
+    : CObjectSolve("lineMeasSolver", "lineMeasSolve", scope, spectrumModel) {}
 
 void CLineMeasSolve::GetRedshiftSampling(
     const std::shared_ptr<const CInputContext> &inputContext,

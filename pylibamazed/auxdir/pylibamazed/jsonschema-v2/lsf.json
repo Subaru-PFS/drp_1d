@@ -19,7 +19,7 @@
         "fromSpectrumData",
         "gaussianVariableWidth"
       ],
-      "description": "Possible values are: \n * **GaussianConstantWidth**, \n * **GaussianConstantResolution**, \n * **GaussianNISPSIM2016**, \n * **GaussianNISPVSSPSF201707**: nisp psf model as of 2017/07 \n * **FROMSPECTRUMDATA**: Use LSF present in the input spectrum to compute the spectral resolution. LSF is spectra dependent \n * **GaussianVariableWidth**: Use LSF present in file and that corresponds to variable width LSF. \n LSF is common to all spectra"
+      "description": "Possible values are: \n * **gaussianConstantWidth**, \n * **gaussianConstantResolution**, \n * **gaussianNISPSIM2016**, \n * **gaussianNISPVSSPSF201707**: nisp psf model as of 2017/07 \n * **fromSpectrumData**: Use LSF present in the input spectrum to compute the spectral resolution. LSF is spectra dependent \n * **gaussianVariableWidth**: Use LSF present in file and that corresponds to variable width LSF. \n LSF is common to all spectra"
     },
     "width": {
       "type": "number",

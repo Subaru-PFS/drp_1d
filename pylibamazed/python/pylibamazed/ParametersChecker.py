@@ -186,7 +186,7 @@ class ParametersChecker:
 
     def _check_GaussianVariablewidth_FileName(self):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lsf_type() == "GaussianVariablewidth",
+            self.accessor.get_lsf_type() == "gaussianVariableWidth",
             self.accessor.get_lsf_width_file_name() is not None,
             "lsf gaussianVariableWidthFileName",
             "lsf gaussianVariableWidthFileName"

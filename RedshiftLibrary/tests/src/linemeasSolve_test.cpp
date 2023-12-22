@@ -69,7 +69,7 @@ const std::string jsonString =
     "\"lineMeasDzHalf\" : 0.0,"
     "\"lineMeasRedshiftStep\" : 0.0001,"
     "\"redshiftref\" : 0.25969245809934272,"
-    "\"lineMeasSolve\" : {"
+    "\"lineMeasSolver\" : {"
     "\"lineMeasSolve\" : {"
     "\"lineModel\" : {"
     "\"velocityEmission\" : 30.0,"
@@ -115,7 +115,7 @@ const std::string jsonString_lbfgsb =
     "\"lineMeasDzHalf\" : 0.0,"
     "\"lineMeasRedshiftStep\" : 0.0001,"
     "\"redshiftref\" : 0.25969245809934272,"
-    "\"lineMeasSolve\" : {"
+    "\"lineMeasSolver\" : {"
     "\"lineMeasSolve\" : {"
     "\"lineModel\" : {"
     "\"velocityEmission\" : 30.0,"
@@ -235,11 +235,11 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolve", "lineMeasSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver", "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolve", "lineMeasSolve",
+      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolver", "lineMeasSolve",
                                                      "linemeas");
 
   Float64 snrOII = res->snrOII;
@@ -258,11 +258,11 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolve", "lineMeasSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver", "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolve", "lineMeasSolve",
+      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolver", "lineMeasSolve",
                                                      "linemeas");
 
   Float64 snrOII = res->snrOII_DI;

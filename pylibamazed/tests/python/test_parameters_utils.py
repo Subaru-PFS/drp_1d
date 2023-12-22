@@ -48,7 +48,7 @@ class TestParametersUtils:
                 "version": 2,
                 "method": kwargs.get("method", "lineModelSolve"),
                 "redshiftSampling": "some redshift sampling",
-                "stages": ["redshiftSolver", "lineMeasSolve"],
+                "stages": ["redshiftSolver", "lineMeasSolver"],
                 "redshiftSolver": {
                     "lineModelSolve": {
                         "lineModel": {
@@ -57,7 +57,7 @@ class TestParametersUtils:
                         }
                     }
                 },
-                "lineMeasSolve": {
+                "lineMeasSolver": {
                     "method": "lineMeasSolve",
                     "lineMeasSolve": {
                         "lineModel": {

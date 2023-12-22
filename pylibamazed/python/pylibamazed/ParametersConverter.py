@@ -110,8 +110,8 @@ class ParametersConverterV1(ParametersConverter):
     def update_linemeas_part(self, renamed_params):
         for spectrum_model in renamed_params.get("spectrumModels", []):
             if renamed_params[spectrum_model].pop("linemeas_method", None) == "lineMeasSolve":
-                renamed_params[spectrum_model].setdefault("stages", []).append("lineMeasSolve")
-                renamed_params[spectrum_model]["lineMeasSolve"] = {
+                renamed_params[spectrum_model].setdefault("stages", []).append("lineMeasSolver")
+                renamed_params[spectrum_model]["lineMeasSolver"] = {
                     "method": "lineMeasSolve",
                     "lineMeasSolve": renamed_params[spectrum_model].pop("lineMeasSolve")
                 }

@@ -90,10 +90,10 @@ class ParametersAccessor:
         return method
 
     def get_linemeas_solver_section(self, spectrum_model) -> dict:
-        return self._get_on_None(self.get_spectrum_model_section(spectrum_model), "lineMeasSolve")
+        return self._get_on_None(self.get_spectrum_model_section(spectrum_model), "lineMeasSolver")
 
     def get_linemeas_method(self, spectrum_model: str) -> str:
-        if "lineMeasSolve" not in self.get_stages(spectrum_model):
+        if "lineMeasSolver" not in self.get_stages(spectrum_model):
             return None
         return self._get_on_None(self.get_linemeas_solver_section(spectrum_model), "method")
 
