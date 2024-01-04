@@ -87,7 +87,7 @@ FirstpassVelocityAbsorption	model_parameters	True	candidate	Alv	extrema_results	
 <ObjectType>Proba	classification	False	root	m_proba[object_type]	solveResult	f8
 Type	classification	False	root	m_TypeLabel	solveResult	S1
 WarningFlags	classification	False	root	flagValue	warningFlag	i
-PDFProbaLog	pdf	False	object	valProbaLog	pdf	f8
+LogZPdfNative	pdf	False	object	valProbaLog	pdf	f8
 ContinuumVectAmplitude	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeList	extrema_results	f8
 ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeErrorList	extrema_results	f8
 LinemeasLineLambda	linemeas	False	object	LambdaObs	linemeas	f8

@@ -140,7 +140,7 @@ class AbstractOutput:
             object_type = root
         if len(attr_parts) < 4:
             # Exception for pdf attributes : values may need a pdfHandler
-            if "ZGrid" in attr_name or "ProbaLog" in attr_name:
+            if "LogZPdf" in attr_name:
                 return self.get_pdf_attribute(object_type, attr_name, pdf_builder)
 
             specs = self.results_specifications
