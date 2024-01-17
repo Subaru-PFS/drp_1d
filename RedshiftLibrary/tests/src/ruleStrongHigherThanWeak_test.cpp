@@ -109,7 +109,7 @@ CLineModelElementList RuleStrongHigherThanWeak_fixture::makeSomeElementList(
       "LineStrong1", CLine::EForce::nForce_Strong, 2);
   CLine lineStrong2 = RuleStrongHigherThanWeak_fixture::createLine(
       "LineStrong2", CLine::EForce::nForce_Strong, 3);
-
+  CLineMap lm;
   CLineModelElement weakElement1 =
       RuleStrongHigherThanWeak_fixture::createCLineModelElement(
           {lineWeak1, lineWeak2}, {weak1Amp, weak2Amp});
@@ -122,8 +122,9 @@ CLineModelElementList RuleStrongHigherThanWeak_fixture::makeSomeElementList(
           {weakElement1, strongElement1}, 2);
 
   CRuleStrongHigherThanWeak rule;
+  CLMEltListVector lmeltlistv = CLMEltListVector(elementList, lm);
   rule.SetUp(true, CLine::EType::nType_Emission);
-  rule.Correct(elementList);
+  rule.Correct(lmeltlistv);
   return elementList;
 }
 

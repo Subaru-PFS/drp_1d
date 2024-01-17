@@ -59,6 +59,8 @@ class Correct_test_one_high_weak;
 
 namespace NSEpic {
 
+enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
+
 struct TLineModelElementParam {
 
   TLineModelElementParam(CLineVector lines, Float64 velocityEmission,
@@ -74,6 +76,107 @@ struct TLineModelElementParam {
   TInt32Map m_LinesIds;
   std::string m_fittingGroupInfo;
   TPolynomCoeffs m_ampOffsetsCoeffs;
+  Float64 m_sumCross = 0.0;
+  Float64 m_sumGauss = 0.0;
+  Float64 m_dtmFree =
+      0.0; // dtmFree is the non-positive-constrained version of sumCross
+
+  TLineWidthType m_LineWidthType;
+  TFloat64List m_SignFactors;
+
+  TInt32List m_asymLineIndices;
+  Float64 m_absLinesLimit =
+      1.0; //-1: disable the ABS lines amplitude cut, any other value is
+           // used as a limit for the abs line coeff (typically: 1.0)
+  CLine::EType m_type;
+  bool m_isEmission;
+
+  Float64 getVelocity() {
+    return m_isEmission ? m_VelocityEmission : m_VelocityAbsorption;
+  }
+  TAsymParams GetAsymfitParams(Int32 asym_line_index = 0) const {
+    if (!m_asymLineIndices.size())
+      return TAsymParams(); // case where no asymprofile in linecatalog
+    return m_Lines[m_asymLineIndices[asym_line_index]].GetAsymParams();
+  }
+  TSymIgmParams GetSymIgmParams(Int32 asym_line_index = 0) const {
+    if (!m_asymLineIndices.size())
+      return TSymIgmParams(); // case where no asymprofile in linecatalog
+    return m_Lines[m_asymLineIndices[asym_line_index]].GetSymIgmParams();
+  }
+
+  void SetAsymfitParams(const TAsymParams &params,
+                        Int32 line_index = undefIdx) {
+    if (!m_asymLineIndices.size())
+      return;
+    if (line_index >= 0)
+      m_Lines[line_index].SetAsymParams(params);
+    else
+      for (auto index : m_asymLineIndices)
+        m_Lines[index].SetAsymParams(params);
+  }
+
+  void SetSymIgmParams(const TSymIgmParams &params,
+                       Int32 line_index = undefIdx) {
+    if (!m_asymLineIndices.size())
+      return;
+    if (line_index >= 0)
+      m_Lines[line_index].SetSymIgmParams(params);
+    else
+      for (auto index : m_asymLineIndices)
+        m_Lines[index].SetSymIgmParams(params);
+  }
+
+  void SetSymIgmFit(bool val = true, Int32 line_index = undefIdx) {
+    if (!m_asymLineIndices.size())
+      return;
+    if (line_index >= 0)
+      m_Lines[line_index].SetSymIgmFit(val);
+    else
+      for (auto index : m_asymLineIndices)
+        m_Lines[index].SetSymIgmFit(val);
+  }
+
+  void setAmplitudes(Float64 A, Float64 SNR,
+                     std::vector<bool> outsideLambdaRangeList,
+                     bool outsideLambdaRange) {
+    auto &fa = m_FittedAmplitudes;
+    auto &faes = m_FittedAmplitudeErrorSigmas;
+    auto &na = m_NominalAmplitudes;
+
+    if (std::isnan(A) || outsideLambdaRange) {
+      fa.assign(size(), NAN);
+      faes.assign(size(), NAN);
+      return;
+    }
+
+    for (Int32 index = 0; index != size(); ++index) {
+      if (outsideLambdaRangeList[index]) {
+        fa[index] = NAN;
+        faes[index] = NAN;
+        continue;
+      }
+      fa[index] = A * m_NominalAmplitudes[index];
+      // limit the absorption to 0.0-1.0, so that it's never <0
+      if (m_SignFactors[index] == -1 && m_absLinesLimit > 0.0 &&
+          fa[index] > m_absLinesLimit) {
+        fa[index] = m_absLinesLimit;
+      }
+
+      faes[index] = SNR * na[index];
+    }
+  }
+
+  Int32 size() { return m_Lines.size(); }
+
+  Int32 getLineIndex(Int32 line_id) const;
+  Int32 getLineIndex(const std::string &LineTagStr) const;
+  bool hasLine(Int32 line_id) const {
+    return getLineIndex(line_id) != undefIdx;
+  };
+  bool hasLine(const std::string &LineTagStr) const {
+    return getLineIndex(LineTagStr) != undefIdx;
+  };
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -82,7 +185,6 @@ using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
  * \ingroup Redshift
  */
 class CLineModelElement {
-  enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 
 public:
   CLineModelElement(const TLineModelElementParam_ptr elementParam,
@@ -97,8 +199,8 @@ public:
   void getObservedPositionAndLineWidth(Int32 line_index, Float64 redshift,
                                        Float64 &mu, Float64 &sigma,
                                        bool doAsymfitdelta = true) const;
-  CLine::EType GetElementType() const { return m_type; };
-  bool IsEmission() const { return m_isEmission; };
+  CLine::EType GetElementType() const { return m_ElementParam->m_type; };
+  bool IsEmission() const { return m_ElementParam->m_isEmission; };
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange);
   TInt32RangeList getSupport() const;
@@ -189,21 +291,16 @@ public:
   TSymIgmParams GetSymIgmParams(Int32 asymIdx = 0) const;
 
   void resetAsymfitParams();
-  Int32 getLineIndex(Int32 line_id) const;
-  Int32 getLineIndex(const std::string &LineTagStr) const;
-  bool hasLine(Int32 line_id) const {
-    return getLineIndex(line_id) != undefIdx;
-  };
-  bool hasLine(const std::string &LineTagStr) const {
-    return getLineIndex(LineTagStr) != undefIdx;
-  };
 
-  const TInt32List &getIgmLinesIndices() const { return m_asymLineIndices; };
+  const TInt32List &getIgmLinesIndices() const {
+    return m_ElementParam->m_asymLineIndices;
+  };
   const CLineProfile_ptr &getLineProfile(Int32 line_index) const;
 
   Float64 GetSignFactor(Int32 line_index) const;
 
   Int32 GetSize() const { return m_size; };
+  // TODO should be removed, only accessible throug TLineModelElementParam
   const CLineVector &GetLines() const { return m_ElementParam->m_Lines; };
   const TInt32Map &GetLinesIndices() const {
     return m_ElementParam->m_LinesIds;
@@ -247,42 +344,32 @@ public:
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;
 
-  void computeCrossProducts(Float64 redshift,
-                            const CSpectrumSpectralAxis &spectralAxis,
-                            const CSpectrumFluxAxis &noContinuumfluxAxis,
-                            const CSpectrumFluxAxis &continuumfluxAxis,
-                            Int32 line_index);
+  TLineModelElementParam_ptr getElementParam() { return m_ElementParam; }
 
-  void fitAmplitude(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
-                    const CSpectrumFluxAxis &noContinuumfluxAxis,
-                    const CSpectrumFluxAxis &continuumfluxAxis,
-                    Int32 line_index = undefIdx);
+  Int32 computeCrossProducts(Float64 redshift,
+                             const CSpectrumSpectralAxis &spectralAxis,
+                             const CSpectrumFluxAxis &noContinuumfluxAxis,
+                             const CSpectrumFluxAxis &continuumfluxAxis,
+                             Int32 line_index);
 
+  /*  void fitAmplitude(Float64 redshift, const CSpectrumSpectralAxis
+     &spectralAxis, const CSpectrumFluxAxis &noContinuumfluxAxis, const
+     CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index = undefIdx);
+  */
 protected:
   friend ::RuleStrongHigherThanWeak_fixture;
   friend RuleStrongHigherThanWeak_test::Correct_test_no_change;
   friend RuleStrongHigherThanWeak_test::Correct_test_one_high_weak;
 
   const TLineModelElementParam_ptr m_ElementParam;
-  TLineWidthType m_LineWidthType;
 
-  Float64 m_OutsideLambdaRangeOverlapThreshold;
+  const Float64 m_OutsideLambdaRangeOverlapThreshold;
   bool m_OutsideLambdaRange;
-
-  Float64 m_sumCross = 0.0;
-  Float64 m_sumGauss = 0.0;
-  Float64 m_dtmFree =
-      0.0; // dtmFree is the non-positive-constrained version of sumCross
 
   const Float64 m_speedOfLightInVacuum = SPEED_OF_LIGHT_IN_VACCUM;
   std::shared_ptr<const CLSF> m_LSF;
 
   std::vector<TBoolList> m_LineIsActiveOnSupport;
-  TFloat64List m_SignFactors;
-
-  TInt32List m_asymLineIndices;
-
-  Float64 m_absLinesLimit;
 
   TInt32List m_StartNoOverlap;
   TInt32List m_EndNoOverlap;
@@ -291,8 +378,6 @@ protected:
 
   TBoolList m_OutsideLambdaRangeList;
   Int32 m_size;
-  CLine::EType m_type;
-  bool m_isEmission;
 };
 
 inline bool CLineModelElement::IsOutsideLambdaRange() const {
@@ -336,7 +421,7 @@ inline Int32 CLineModelElement::getEndNoOverlap(Int32 line_index) const {
 }
 
 inline Int32 CLineModelElement::getSignFactor(Int32 line_index) const {
-  return m_SignFactors[line_index];
+  return m_ElementParam->m_SignFactors[line_index];
 }
 
 /**
@@ -401,73 +486,61 @@ inline void CLineModelElement::setVelocity(Float64 vel) {
 // wrapper function
 inline void CLineModelElement::SetAsymfitParams(const TAsymParams &params,
                                                 Int32 line_index) {
-  if (!m_asymLineIndices.size())
-    return;
-  if (line_index >= 0)
-    m_ElementParam->m_Lines[line_index].SetAsymParams(params);
-  else
-    for (auto index : m_asymLineIndices)
-      m_ElementParam->m_Lines[index].SetAsymParams(params);
+  m_ElementParam->SetAsymfitParams(params, line_index);
 }
 
 // wrapper function
 inline void CLineModelElement::SetSymIgmParams(const TSymIgmParams &params,
                                                Int32 line_index) {
-  if (!m_asymLineIndices.size())
-    return;
-  if (line_index >= 0)
-    m_ElementParam->m_Lines[line_index].SetSymIgmParams(params);
-  else
-    for (auto index : m_asymLineIndices)
-      m_ElementParam->m_Lines[index].SetSymIgmParams(params);
+  m_ElementParam->SetSymIgmParams(params, line_index);
 }
 
 // wrapper function
 inline void CLineModelElement::SetSymIgmFit(bool val, Int32 line_index) {
-  if (!m_asymLineIndices.size())
-    return;
-  if (line_index >= 0)
-    m_ElementParam->m_Lines[line_index].SetSymIgmFit(val);
-  else
-    for (auto index : m_asymLineIndices)
-      m_ElementParam->m_Lines[index].SetSymIgmFit(val);
+  m_ElementParam->SetSymIgmFit(val, line_index);
 }
 
 // wrapper function
 inline void CLineModelElement::resetAsymfitParams() {
-  for (auto index : m_asymLineIndices)
+  for (auto index : m_ElementParam->m_asymLineIndices)
     m_ElementParam->m_Lines[index].resetAsymFitParams();
 }
 
 // wrapper function
 inline TAsymParams
 CLineModelElement::GetAsymfitParams(Int32 asym_line_index) const {
-  if (!m_asymLineIndices.size())
-    return TAsymParams(); // case where no asymprofile in linecatalog
-  return m_ElementParam->m_Lines[m_asymLineIndices[asym_line_index]]
-      .GetAsymParams();
+  return m_ElementParam->GetAsymfitParams(asym_line_index);
 }
 
 // wrapper function
 inline TSymIgmParams
-CLineModelElement::GetSymIgmParams(Int32 asym_line_index) const {
-  if (!m_asymLineIndices.size())
-    return TSymIgmParams(); // case where no asymprofile in linecatalog
-  return m_ElementParam->m_Lines[m_asymLineIndices[asym_line_index]]
-      .GetSymIgmParams();
+CLineModelElement::GetSymIgmParams(Int32 sym_line_index) const {
+  return m_ElementParam->GetSymIgmParams(sym_line_index);
 }
 
-inline Float64 CLineModelElement::GetSumCross() const { return m_sumCross; }
+inline Float64 CLineModelElement::GetSumCross() const {
+  return m_ElementParam->m_sumCross;
+}
 
-inline void CLineModelElement::SetSumCross(Float64 val) { m_sumCross = val; }
+inline void CLineModelElement::SetSumCross(Float64 val) {
+  m_ElementParam->m_sumCross = val;
+}
 
-inline Float64 CLineModelElement::GetDtmFree() const { return m_dtmFree; }
+inline Float64 CLineModelElement::GetDtmFree() const {
+  return m_ElementParam->m_dtmFree;
+}
 
-inline void CLineModelElement::SetDtmFree(Float64 val) { m_dtmFree = val; }
+inline void CLineModelElement::SetDtmFree(Float64 val) {
+  m_ElementParam->m_dtmFree = val;
+}
 
-inline Float64 CLineModelElement::GetSumGauss() const { return m_sumGauss; }
+inline Float64 CLineModelElement::GetSumGauss() const {
+  return m_ElementParam->m_sumGauss;
+}
 
-inline void CLineModelElement::SetSumGauss(Float64 val) { m_sumGauss = val; }
+inline void CLineModelElement::SetSumGauss(Float64 val) {
+  m_ElementParam->m_sumGauss = val;
+}
 
 inline const std::string &CLineModelElement::GetFittingGroupInfo() const {
   return m_ElementParam->m_fittingGroupInfo;
@@ -514,16 +587,16 @@ CLineModelElement::GetLineName(Int32 line_index) const {
  *argument.
  **/
 inline Float64 CLineModelElement::GetSignFactor(Int32 line_index) const {
-  return m_SignFactors[line_index];
+  return m_ElementParam->m_SignFactors[line_index];
 }
 
 inline bool CLineModelElement::SetAbsLinesLimit(Float64 limit) {
-  m_absLinesLimit = limit;
+  m_ElementParam->m_absLinesLimit = limit;
   return true;
 }
 
 inline Float64 CLineModelElement::GetAbsLinesLimit() const {
-  return m_absLinesLimit;
+  return m_ElementParam->m_absLinesLimit;
 }
 
 inline void CLineModelElement::SetOutsideLambdaRangeList(Int32 line_index) {

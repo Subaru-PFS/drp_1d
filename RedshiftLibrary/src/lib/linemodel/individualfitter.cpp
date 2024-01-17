@@ -47,7 +47,7 @@ using namespace std;
 // fit the amplitudes of each element independently, unless there is
 // overlap
 void CIndividualFitter::doFit(Float64 redshift) {
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
+  for (Int32 iElts = 0; iElts < m_nbElements; iElts++) {
     fitAmplitude(iElts, redshift);
   }
 }

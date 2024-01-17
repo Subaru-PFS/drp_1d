@@ -48,13 +48,13 @@
 using namespace NSEpic;
 
 CTplratioManager::CTplratioManager(
-    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
-    const CCSpectrumVectorPtr &inputSpcs,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
+    const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList) {
+                        continuumManager, restLineList, curObs) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
@@ -144,7 +144,8 @@ void CTplratioManager::duplicateTplratioResult(Int32 idx) {
       m_StrongHalphaELPresentTplratio[idx - 1];
   m_NLinesAboveSNRTplratio[idx] = m_NLinesAboveSNRTplratio[idx - 1];
 
-  for (Int32 iElt = 0; iElt < getElementList().size(); iElt++) {
+  for (Int32 iElt = 0; iElt < m_elementsVector->getElementParam().size();
+       iElt++) {
     m_FittedAmpTplratio[idx][iElt] = m_FittedAmpTplratio[idx - 1][iElt];
     m_FittedErrorTplratio[idx][iElt] = m_FittedErrorTplratio[idx - 1][iElt];
     m_DtmTplratio[idx][iElt] = m_DtmTplratio[idx - 1][iElt];
@@ -162,12 +163,12 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
 
   m_LineCatalogCorrespondingNominalAmp =
       m_CatalogTplRatio->InitLineCorrespondingAmplitudes(
-          getElementList(), opt_tplratio_ismFit,
+          m_elementsVector->getElementParam(), opt_tplratio_ismFit,
           m_continuumManager->getIsmCorrectionFromTpl());
   m_opt_dust_calzetti = opt_tplratio_ismFit;
   m_tplratioBestTplName = undefStr;
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
-  Int32 elCount = getElementList().size();
+  Int32 elCount = m_elementsVector->getElementParam().size();
   // Resize tplratio buffers
   m_MeritTplratio.assign(s, NAN);
   m_ScaleMargCorrTplratio.assign(s, NAN);
@@ -200,12 +201,16 @@ void CTplratioManager::SetNominalAmplitudes(Int32 iCatalog) {
   if (iCatalog < 0 || iCatalog >= m_CatalogTplRatio->GetCatalogsCount())
     THROWG(INTERNAL_ERROR, Formatter()
                                << "wrong line catalog index: " << iCatalog);
-  for (Int32 elt_index = 0; elt_index != getElementList().size(); ++elt_index) {
-    auto &elt_ptr = getElementList()[elt_index];
-    for (Int32 line_index = 0; line_index != elt_ptr->GetSize(); ++line_index) {
+  for (Int32 elt_index = 0;
+       elt_index != m_elementsVector->getElementParam().size(); ++elt_index) {
+
+    for (Int32 line_index = 0;
+         line_index != m_elementsVector->getElementParam()[elt_index]->size();
+         ++line_index) {
       Float64 const nominalAmp =
           m_LineCatalogCorrespondingNominalAmp[iCatalog][elt_index][line_index];
-      elt_ptr->SetNominalAmplitude(line_index, nominalAmp);
+      m_elementsVector->getElementParam()[elt_index]
+          ->m_NominalAmplitudes[line_index] = nominalAmp;
     }
   }
 }
@@ -305,9 +310,16 @@ void CTplratioManager::fillHalphaArray(Int32 idx) {
   // check first that haprior is activated
   if (m_opt_haprior <= 0.)
     return;
-  m_StrongHalphaELPresentTplratio[idx] =
-      m_StrongELPresentTplratio[idx] ? getElementList().GetModelHaStrongest()
-                                     : false; // result per tplratio
+  bool ha_strongest = false;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    if (getElementList().GetModelHaStrongest()) {
+      ha_strongest = true;
+      break;
+    }
+  }
+  m_StrongHalphaELPresentTplratio[idx] = m_StrongELPresentTplratio[idx]
+                                             ? ha_strongest
+                                             : false; // result per tplratio
 }
 /**
  * @brief
@@ -318,11 +330,20 @@ void CTplratioManager::fillHalphaArray(Int32 idx) {
  */
 void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
                                              Float64 _meritprior) {
+
   m_PriorMeritTplratio[idx] = _meritprior;
   m_MeritTplratio[idx] = _merit;
-  m_ScaleMargCorrTplratio[idx] = getElementList().getScaleMargCorrection();
-  m_StrongELPresentTplratio[idx] =
-      getElementList().GetModelStrongEmissionLinePresent();
+
+  m_ScaleMargCorrTplratio[idx] = m_elementsVector->getScaleMargCorrection();
+
+  m_StrongELPresentTplratio[idx] = false;
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    if (getElementList().GetModelStrongEmissionLinePresent()) {
+      m_StrongELPresentTplratio[idx] = true;
+      break;
+    }
+  }
+
   // given that Ha is a strong emission line,
   fillHalphaArray(idx);
 
@@ -331,7 +352,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
                                    // time, so deactivated for now.
   m_NLinesAboveSNRTplratio[idx] = strongELSNRAboveCut.size();
 
-  Int32 s = getElementList().size();
+  Int32 s = m_elementsVector->getElementParam().size();
   // reinit
   m_FittedAmpTplratio[idx].assign(s, NAN);
   m_FittedErrorTplratio[idx].assign(s, NAN);
@@ -348,30 +369,39 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   for (Int32 iElt = 0; iElt < s; iElt++) {
     bool savedAmp = false;
     bool allampzero = true;
-    auto const &elt = getElementList()[iElt];
-    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-      Float64 amp = elt->GetFittedAmplitude(line_idx);
+
+    for (Int32 line_idx = 0;
+         line_idx != m_elementsVector->getElementParam()[iElt]->size();
+         ++line_idx) {
+      Float64 amp = m_elementsVector->getElementParam()[iElt]
+                        ->m_FittedAmplitudes[line_idx];
       // we need to take into case where lineratioAmplitude is NAN
-      if (isnan(amp) || amp <= 0. || elt->IsOutsideLambdaRange(line_idx))
+      if (isnan(amp) || amp <= 0. || isOutsideLambdaRange(iElt, line_idx))
         continue;
       allampzero = false;
 
-      Float64 amp_error = elt->GetFittedAmplitudeErrorSigma(line_idx);
-      Float64 nominal_amp = elt->GetNominalAmplitude(line_idx);
+      Float64 amp_error = m_elementsVector->getElementParam()[iElt]
+                              ->m_FittedAmplitudeErrorSigmas[line_idx];
+      Float64 nominal_amp = m_elementsVector->getElementParam()[iElt]
+                                ->m_NominalAmplitudes[line_idx];
       m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
       Log.LogDebug("    model : fit tplratio mode, tplratio_fittedamp: %e",
                    m_FittedAmpTplratio[idx][iElt]);
 
       m_FittedErrorTplratio[idx][iElt] = amp_error / nominal_amp;
-      m_DtmTplratio[idx][iElt] = elt->GetSumCross();
-      m_MtmTplratio[idx][iElt] = elt->GetSumGauss();
+      m_DtmTplratio[idx][iElt] =
+          m_elementsVector->getElementParam()[iElt]->m_sumCross;
+      m_MtmTplratio[idx][iElt] =
+          m_elementsVector->getElementParam()[iElt]->m_sumGauss;
 
-      TAsymParams params = elt->GetAsymfitParams(0);
+      TAsymParams params =
+          m_elementsVector->getElementParam()[iElt]->GetAsymfitParams(0);
       m_LyaAsymCoeffTplratio[idx][iElt] = params.alpha;
       m_LyaWidthCoeffTplratio[idx][iElt] = params.sigma;
       m_LyaDeltaCoeffTplratio[idx][iElt] = params.delta;
 
-      TSymIgmParams params_igm = elt->GetSymIgmParams(0);
+      TSymIgmParams params_igm =
+          m_elementsVector->getElementParam()[iElt]->GetSymIgmParams(0);
       m_LyaIgmIdxTplratio[idx][iElt] = params_igm.m_igmidx;
 
       savedAmp = true;
@@ -430,13 +460,14 @@ Float64 CTplratioManager::computelogLinePriorMerit(
 }
 
 Float64 CTplratioManager::computeMerit(Int32 itratio) {
-  Float64 _merit;
+  Float64 _merit = 0;
+
   /*if (!enableLogging && m_tplratioLeastSquareFast)
     _merit = getLeastSquareMeritFast();
   else */
 
-  getModel().refreshModel();
-  _merit = getLeastSquareMerit();
+  refreshAllModels();
+  _merit += getLeastSquareMerit();
 
   Float64 _meritprior =
       computelogLinePriorMerit(itratio, m_logPriorDataTplRatio);
@@ -454,33 +485,39 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
   // first reinit all the elements:
   init(redshift, m_savedIdxFitted);
 
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
+  for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
+       iElts++) {
     Log.LogDetail("    model - Linemodel: tplratio = %d (%s, with "
                   "ebmv=%.3f), and A=%e",
                   m_savedIdxFitted, m_tplratioBestTplName.c_str(),
                   m_tplratioBestTplIsmCoeff,
                   m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
-    getElementList()[iElts]->SetElementAmplitude(
+    m_elementsVector->getElementParam()[iElts]->setAmplitudes(
         m_FittedAmpTplratio[m_savedIdxFitted][iElts],
-        m_FittedErrorTplratio[m_savedIdxFitted][iElts]);
-    getElementList()[iElts]->SetSumCross(
-        m_DtmTplratio[m_savedIdxFitted][iElts]);
-    getElementList()[iElts]->SetSumGauss(
-        m_MtmTplratio[m_savedIdxFitted][iElts]);
+        m_FittedErrorTplratio[m_savedIdxFitted][iElts],
+        getOutsideLambdaRangeList(iElts), isOutsideLambdaRange(iElts));
+    m_elementsVector->getElementParam()[iElts]->m_sumCross =
+        m_DtmTplratio[m_savedIdxFitted][iElts];
+    m_elementsVector->getElementParam()[iElts]->m_sumGauss =
+        m_MtmTplratio[m_savedIdxFitted][iElts];
   }
 
   // Lya
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++)
-    getElementList()[iElts]->SetAsymfitParams(
+  for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
+       iElts++)
+    m_elementsVector->getElementParam()[iElts]->SetAsymfitParams(
         {m_LyaWidthCoeffTplratio[m_savedIdxFitted][iElts],
          m_LyaAsymCoeffTplratio[m_savedIdxFitted][iElts],
          m_LyaDeltaCoeffTplratio[m_savedIdxFitted][iElts]});
 
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++)
-    getElementList()[iElts]->SetSymIgmParams(
+  for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
+       iElts++)
+    m_elementsVector->getElementParam()[iElts]->SetSymIgmParams(
         TSymIgmParams(m_LyaIgmIdxTplratio[m_savedIdxFitted][iElts], redshift));
 
-  getModel().refreshModel();
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+    getModel().refreshModel();
+  }
 }
 
 void CTplratioManager::saveResults(Int32 itratio) {
@@ -488,7 +525,7 @@ void CTplratioManager::saveResults(Int32 itratio) {
   m_tplratioBestTplName = m_CatalogTplRatio->GetCatalogName(m_savedIdxFitted);
   m_tplratioBestTplIsmCoeff = GetIsmCoeff(m_savedIdxFitted);
   TInt32List idx_em =
-      getElementList().findElementTypeIndices(CLine::EType::nType_Emission);
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
   if (!idx_em.empty()) {
     m_tplratioBestTplAmplitudeEm =
         m_FittedAmpTplratio[m_savedIdxFitted]
@@ -502,7 +539,7 @@ void CTplratioManager::saveResults(Int32 itratio) {
                                                          // in tpl ratio mode...
   }
   TInt32List idx_abs =
-      getElementList().findElementTypeIndices(CLine::EType::nType_Absorption);
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
   if (!idx_abs.empty()) {
     m_tplratioBestTplAmplitudeAbs =
         m_FittedAmpTplratio[m_savedIdxFitted]

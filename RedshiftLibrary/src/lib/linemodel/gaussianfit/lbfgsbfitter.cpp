@@ -315,8 +315,8 @@ void CLbfgsbFitter::resetSupport(Float64 redshift) {
         "linemodel.absvelocityfitmax");
 
     for (Int32 j = 0; j < getElementList().size(); j++) {
-      m_ElementParam[j]->m_VelocityEmission = velfitMaxE;
-      m_ElementParam[j]->m_VelocityAbsorption = velfitMaxA;
+      getElementParam()[j]->m_VelocityEmission = velfitMaxE;
+      getElementParam()[j]->m_VelocityAbsorption = velfitMaxA;
     }
   }
 

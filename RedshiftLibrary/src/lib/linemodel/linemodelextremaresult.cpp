@@ -112,14 +112,11 @@ void TLineModelResult::updateFromModel(
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  Int32 nddl =
-      lmel->GetNElements(); // get the total number of elements in the model
+  Int32 nddl = lmresult->LineModelSolutions[idx]
+                   .nDDL; // override nddl by the actual number of elements in
+                          // the fitted model
 
-  nddl = lmresult->LineModelSolutions[idx]
-             .nDDL; // override nddl by the actual number of elements in
-                    // the fitted model
-
-  NDof = lmel->getElementList().GetModelNonZeroElementsNDdl();
+  NDof = lmel->GetModelNonZeroElementsNDdl();
 
   Float64 _bic =
       lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC

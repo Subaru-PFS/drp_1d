@@ -70,7 +70,7 @@ void CRuleSuperStrong::SetUp(bool EnabledArgument, ...) {
  *entry to the maximum amplitude for super strong lines
  **/
 // duplicate with ruleStrongHigherThanWeak
-void CRuleSuperStrong::Correct(CLineModelElementList &LineModelElementList) {
+void CRuleSuperStrong::Correct(CLMEltListVector &LineModelElementList) {
   Float64 coeff = 1.0;
   Float64 erStrong = -1.0;
   std::string strongName = undefStr;
@@ -79,7 +79,7 @@ void CRuleSuperStrong::Correct(CLineModelElementList &LineModelElementList) {
   if (maxiStrong == -1)
     return;
 
-  for (auto const &elt_ptr : LineModelElementList) {
+  for (auto const &elt_ptr : LineModelElementList.getElementList()) {
     for (Int32 iLineWeak = 0; iLineWeak != elt_ptr->GetSize(); ++iLineWeak) {
       auto const &lineWeak = elt_ptr->GetLines()[iLineWeak];
       if (elt_ptr->GetElementType() != m_LineType ||
@@ -134,7 +134,7 @@ void CRuleSuperStrong::constructLogMsg(const std::string &nameWeak,
   return;
 }
 
-bool CRuleSuperStrong::Check(CLineModelElementList &LineModelElementList) {
+bool CRuleSuperStrong::Check(CLMEltListVector &LineModelElementList) {
   return false;
 }
 
@@ -145,9 +145,9 @@ bool CRuleSuperStrong::Check(CLineModelElementList &LineModelElementList) {
  **/
 Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp(
     TStringList superstrongTags, Float64 &er, std::string &name,
-    CLineModelElementList &LineModelElementList) {
+    CLMEltListVector &LineModelElementList) {
   Float64 maxi = -1.0;
-  for (auto const &elt_ptr : LineModelElementList) {
+  for (auto const &elt_ptr : LineModelElementList.getElementList()) {
     for (Int32 iLineStrong = 0; iLineStrong != elt_ptr->GetSize();
          ++iLineStrong) { // loop on the strong lines
       auto const &lineStrong = elt_ptr->GetLines()[iLineStrong];

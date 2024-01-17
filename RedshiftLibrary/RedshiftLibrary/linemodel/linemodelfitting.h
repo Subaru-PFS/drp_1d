@@ -97,8 +97,6 @@ public:
   Float64 getDTransposeD();
   Float64 getLikelihood_cstLog();
 
-  Int32 GetNElements() const;
-
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
   void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
@@ -129,12 +127,14 @@ public:
   Float64 getLeastSquareContinuumMerit() const;
   Float64 getLeastSquareMeritUnderElements() const;
   Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const {
-    return getElementList().getScaleMargCorrection(Eltidx);
+    return m_ElementsVector->getScaleMargCorrection(Eltidx);
   }
 
   Float64 getStrongerMultipleELAmpCoeff() const;
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
+    // TODO temp basic impl
+    *m_curObs = 0;
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
@@ -156,26 +156,32 @@ public:
     return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
-  const CSpectrum &getSpectrum() const { return *((*m_inputSpcs)[*m_curObs]); }
-  shared_ptr<const CSpectrum> getSpectrumPtr() {
-    return (*m_inputSpcs)[*m_curObs];
+  Int32 GetModelNonZeroElementsNDdl() const {
+    return m_ElementsVector->GetModelNonZeroElementsNDdl();
   }
 
-  CSpectrumModel &getSpectrumModel() { return (*m_models)[*m_curObs]; }
+  const CSpectrum &getSpectrum() const {
+    return *((*m_inputSpcs).at(*m_curObs));
+  }
+  shared_ptr<const CSpectrum> getSpectrumPtr() {
+    return (*m_inputSpcs).at(*m_curObs);
+  }
+
+  CSpectrumModel &getSpectrumModel() { return (*m_models).at(*m_curObs); }
 
   const CSpectrumModel &getSpectrumModel() const {
-    return (*m_models)[*m_curObs];
+    return (*m_models).at(*m_curObs);
   }
 
   CLineModelElementList &getElementList() {
-    return (*m_ElementsVector)[*m_curObs];
+    return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    return (*m_ElementsVector)[*m_curObs];
+    return m_ElementsVector->getElementList();
   }
 
   const TLambdaRange &getLambdaRange() const {
-    return *(m_lambdaRanges[*m_curObs]);
+    return *(m_lambdaRanges.at(*m_curObs));
   }
 
   const std::string &getFittingMethod() const { return m_fittingmethod; }
@@ -209,13 +215,20 @@ public:
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
 
-private:
-  void AddElement(CLineVector lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, Int32 ig);
-  void LoadCatalog();
-  void LoadCatalogOneMultiline();
-  void LoadCatalogTwoMultilinesAE();
+  // Multi obs combination/aggregation methods on elements Lists
 
+  Float64 getContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
+                                      Float64 redshift);
+  Float64 getContinuumError(Int32 eltIdx, Int32 line_index);
+  std::pair<Float64, Float64>
+  getFluxDirectIntegration(const TInt32List &eIdx_list,
+                           const TInt32List &subeIdx_list,
+                           bool substract_abslinesmodel) const;
+  void resetCurObs() { *m_curObs = 0; }
+  void incrementCurObs() { (*m_curObs)++; }
+  Int32 remainsObs() { return *m_curObs < m_nbObs; }
+
+private:
   void SetLSF();
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
@@ -232,10 +245,6 @@ private:
 
   // Float64* m_unscaleContinuumFluxAxisDerivZ;
 
-  std::string m_LineWidthType;
-
-  std::vector<TLineModelElementParam_ptr> m_ElementParam;
-
   Float64 m_nominalWidthDefault;
 
   std::string m_fittingmethod;
@@ -246,7 +255,7 @@ private:
 
   CTLambdaRangePtrVector m_lambdaRanges;
   CCSpectrumVectorPtr m_inputSpcs;
-  CLMEltListVectorPtr m_ElementsVector;
+  std::shared_ptr<CLMEltListVector> m_ElementsVector;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;

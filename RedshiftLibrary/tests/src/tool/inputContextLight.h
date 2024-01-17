@@ -157,6 +157,17 @@ public:
   TFloat64List linLambdaList = spectrumData.myLinLambdaList;
 };
 
+class fixture_MultiSpectralAxis {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumSpectralAxis spcAxisA = spectrumData.lambdaAList;
+  CSpectrumSpectralAxis spcAxisB = spectrumData.lambdaBList;
+  Int32 spcAxisASize = spectrumData.lambdaAList.size();
+  Int32 spcAxisBSize = spectrumData.lambdaBList.size();
+  TFloat64List spcAxisAList = spectrumData.lambdaAList;
+  TFloat64List spcAxisBList = spectrumData.lambdaBList;
+};
+
 class fixture_SpectralAxisLog {
 public:
   fixture_SpectrumData spectrumData;
@@ -199,6 +210,15 @@ public:
   TFloat64List noiseList = spectrumData.myNoiseList;
 };
 
+class fixture_MultiNoiseAxis {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumNoiseAxis noiseAAxis = spectrumData.noiseAList;
+  CSpectrumNoiseAxis noiseBAxis = spectrumData.noiseBList;
+  TFloat64List noiseAList = spectrumData.noiseAList;
+  TFloat64List noiseBList = spectrumData.noiseBList;
+};
+
 class fixture_NoiseAxisLight {
 public:
   CSpectrumNoiseAxis noiseAxisLight = myNoiseListLight;
@@ -228,6 +248,17 @@ public:
   CSpectrumFluxAxis fluxAxis =
       CSpectrumFluxAxis(spectrumData.myFluxList, fixture_NoiseAxis().noiseAxis);
   TFloat64List fluxAxisList = spectrumData.myFluxList;
+};
+
+class fixture_MultiFluxAxis {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumFluxAxis fluxAAxis = CSpectrumFluxAxis(
+      spectrumData.fluxAList, fixture_MultiNoiseAxis().noiseAAxis);
+  CSpectrumFluxAxis fluxBAxis = CSpectrumFluxAxis(
+      spectrumData.fluxBList, fixture_MultiNoiseAxis().noiseBAxis);
+  TFloat64List fluxAxisAList = spectrumData.fluxAList;
+  TFloat64List fluxAxisBList = spectrumData.fluxBList;
 };
 
 class fixture_FluxAxisLight {
@@ -265,6 +296,14 @@ public:
       CSpectrum(fixture_SpectralAxis().spcAxis, fixture_FluxAxis().fluxAxis);
 };
 
+class fixture_MultiSpectrum {
+public:
+  CSpectrum spcA = CSpectrum(fixture_MultiSpectralAxis().spcAxisA,
+                             fixture_MultiFluxAxis().fluxAAxis);
+  CSpectrum spcB = CSpectrum(fixture_MultiSpectralAxis().spcAxisB,
+                             fixture_MultiFluxAxis().fluxBAxis);
+};
+
 class fixture_SpectrumWithLSF {
 public:
   CSpectrum spcWithVariableWidthLSF =
@@ -289,6 +328,14 @@ class fixture_SharedSpectrum {
 public:
   std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(
       fixture_SpectralAxis().spcAxis, fixture_FluxAxis().fluxAxis);
+};
+
+class fixture_SharedMultiSpectrum {
+public:
+  std::shared_ptr<CSpectrum> spcA = std::make_shared<CSpectrum>(
+      fixture_MultiSpectralAxis().spcAxisA, fixture_MultiFluxAxis().fluxAAxis);
+  std::shared_ptr<CSpectrum> spcB = std::make_shared<CSpectrum>(
+      fixture_MultiSpectralAxis().spcAxisB, fixture_MultiFluxAxis().fluxBAxis);
 };
 
 class fixture_SharedSpectrumFull {
@@ -1287,6 +1334,7 @@ public:
   }
   std::shared_ptr<CInputContext> ctx;
 };
+
 class fixture_Context {
 public:
   void loadParameterStore(std::string jsonString) {

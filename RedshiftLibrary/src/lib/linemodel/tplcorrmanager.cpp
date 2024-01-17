@@ -44,15 +44,16 @@
 using namespace NSEpic;
 
 CTplCorrManager::CTplCorrManager(
-    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
-    const CCSpectrumVectorPtr &inputSpcs,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
+    const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
     : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                       continuumManager, restLineList) {}
+                       continuumManager, restLineList, curObs) {}
 
 Float64 CTplCorrManager::computeMerit(Int32 itratio) {
+  *m_curObs = 0; // dummy implementation
 
   getModel().refreshModel();
   TFloat64List Amplitudes;

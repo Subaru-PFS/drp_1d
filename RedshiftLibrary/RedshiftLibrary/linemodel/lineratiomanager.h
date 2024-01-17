@@ -55,12 +55,13 @@ class CAbstractFitter;
 
 class CLineRatioManager {
 public:
-  CLineRatioManager(const CLMEltListVectorPtr &elementsVector,
+  CLineRatioManager(const std::shared_ptr<CLMEltListVector> &elementsVectors,
                     const CSpcModelVectorPtr &spectrumModels,
                     const CCSpectrumVectorPtr &inputSpcs,
                     const CTLambdaRangePtrVector &lambdaRanges,
                     std::shared_ptr<CContinuumManager> continuumManager,
-                    const CLineMap &restLineList);
+                    const CLineMap &restLineList,
+                    const std::shared_ptr<Int32> &curObs);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -90,11 +91,12 @@ public:
   void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
   static std::shared_ptr<CLineRatioManager> makeLineRatioManager(
       const std::string &lineRatioType,
-      const CLMEltListVectorPtr &elementsVector,
+      const std::shared_ptr<CLMEltListVector> &elementsVector,
       const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
-      const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter);
+      const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
+      const std::shared_ptr<Int32> &curObs);
 
 protected:
   void setLyaProfile(Float64 redshift, const CLineMap &lineList);
@@ -106,26 +108,31 @@ protected:
 
   Float64 getLeastSquareMerit() const;
 
-  CSpectrumModel &getModel(Int32 index = 0) { return (*m_models)[index]; }
-  const CSpectrumModel &getModel(Int32 index = 0) const {
-    return (*m_models)[index];
+  CSpectrumModel &getModel() { return m_models->at(*m_curObs); }
+  const CSpectrumModel &getModel() const { return m_models->at(*m_curObs); }
+  const CSpectrum &getSpectrum() const { return *(m_inputSpcs->at(*m_curObs)); }
+  const TLambdaRange &getLambdaRange() const {
+    return *(m_lambdaRanges.at(*m_curObs));
   }
-  const CSpectrum &getSpectrum(Int32 index = 0) const {
-    return *((*m_inputSpcs)[index]);
+  CLineModelElementList &getElementList() {
+    return m_elementsVector->getElementList();
   }
-  const TLambdaRange &getLambdaRange(Int32 index = 0) const {
-    return *(m_lambdaRanges[index]);
+  const CLineModelElementList &getElementList() const {
+    return m_elementsVector->getElementList();
   }
-  CLineModelElementList &getElementList(Int32 index = 0) {
-    return (*m_elementsVector)[index];
-  }
-  const CLineModelElementList &getElementList(Int32 index = 0) const {
-    return (*m_elementsVector)[index];
-  }
-  CLMEltListVectorPtr m_elementsVector;
+  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
+  bool isOutsideLambdaRange(Int32 elt_index);
+  std::vector<bool> getOutsideLambdaRangeList(Int32 elt_index);
+  void refreshAllModels();
+
+  std::shared_ptr<CLMEltListVector> m_elementsVector;
   CCSpectrumVectorPtr m_inputSpcs;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
+  std::shared_ptr<Int32> m_curObs;
+  Int32 m_nbObs;
+  std::vector<std::vector<bool>> m_outsideLambdaRangeList;
+
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;
   const CLineMap &m_RestLineList;

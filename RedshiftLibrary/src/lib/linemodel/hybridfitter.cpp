@@ -44,15 +44,14 @@ using namespace NSEpic;
 using namespace std;
 
 CHybridFitter::CHybridFitter(
-    const CLMEltListVectorPtr &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-    const std::vector<TLineModelElementParam_ptr> &elementParam,
     const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
     : CSvdFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
-                 restLineList, elementParam, curObsPtr, enableAmplitudeOffsets,
+                 restLineList, curObsPtr, enableAmplitudeOffsets,
                  enableLambdaOffsetsFit)
 
 {
@@ -65,6 +64,7 @@ CHybridFitter::CHybridFitter(
 
 void CHybridFitter::doFit(Float64 redshift) {
 
+  *m_curObs = 0; // temporary multiobs implementation
   // fit the amplitudes of each element independently, unless there is overlap
   fitAmplitudesHybrid(redshift);
 
@@ -119,6 +119,7 @@ void CHybridFitter::doFit(Float64 redshift) {
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
+  *m_curObs = 0; // dummy implementation
   if (m_enableAmplitudeOffsets)
     getElementList().resetAmplitudeOffset();
 
@@ -150,10 +151,13 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
       Log.LogDebug("    model: hybrid fit:     Individual fit");
       fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
+      *m_curObs = 0; // temporary multiobs implementation
+
     } else {
       Log.LogDebug("    model: hybrid fit:     Joint fit");
       fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
                                            m_enableLambdaOffsetsFit, redshift);
+      *m_curObs = 0; // temporary multiobs implementation
     }
 
     // update the already fitted list
@@ -205,9 +209,9 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     std::string tagA = linetagsA[itag];
 
     auto const &[iElt_lineE, lineE_id] =
-        getElementList().findElementIndex(tagE, CLine::EType::nType_Emission);
-    auto const &[iElt_lineA, lineA_id] =
-        getElementList().findElementIndex(tagA, CLine::EType::nType_Absorption);
+        m_ElementsVector->findElementIndex(tagE, CLine::EType::nType_Emission);
+    auto const &[iElt_lineA, lineA_id] = m_ElementsVector->findElementIndex(
+        tagA, CLine::EType::nType_Absorption);
     // Were the lines indexes found ?
     if (iElt_lineE == undefIdx || iElt_lineA == undefIdx)
       continue;
@@ -228,8 +232,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     for (Int32 imore = 0; imore < linetagsMore[itag].size(); imore++) {
       std::string tagMore = linetagsMore[itag][imore];
       auto const &[iElt_lineMore, lineMore_id] =
-          getElementList().findElementIndex(tagMore,
-                                            CLine::EType::nType_Emission);
+          m_ElementsVector->findElementIndex(tagMore,
+                                             CLine::EType::nType_Emission);
       if (iElt_lineMore == undefIdx)
         continue;
 
@@ -261,8 +265,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // simulatneous fit with linsolve
-    Float64 modelErr_init = getModel().getModelErrorUnderElement(
-        iElt_lineA, getModel().getSpcFluxAxis());
+    Float64 modelErr_init = getModelErrorUnderElement(iElt_lineA, true);
     Float64 ampA = getElementList()[iElt_lineA]->GetFittedAmplitude(lineA_id);
     Float64 amp_errorA =
         getElementList()[iElt_lineA]->GetFittedAmplitudeErrorSigma(lineA_id);
@@ -291,8 +294,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
 
     // decide if the fit is better than previous amps
     getModel().refreshModelUnderElements(eltsIdx);
-    Float64 modelErr_withfit = getModel().getModelErrorUnderElement(
-        iElt_lineA, getModel().getSpcFluxAxis());
+    Float64 modelErr_withfit = getModelErrorUnderElement(iElt_lineA, true);
     if (modelErr_withfit > modelErr_init) {
       Float64 nominal_ampA =
           getElementList()[iElt_lineA]->GetNominalAmplitude(lineA_id);

@@ -47,7 +47,7 @@ using namespace std;
 /**
  * Checks the elements and corrects if necessary.
  **/
-void CRule::Apply(CLineModelElementList &LineModelElementList) {
+void CRule::Apply(CLMEltListVector &LineModelElementList) {
   if (!Enabled) {
     return;
   }

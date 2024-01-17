@@ -112,12 +112,16 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   CLineVector rs;
   rs.push_back(std::move(line));
 
-  TLineModelElementParam_ptr fdata =
+  TLineModelElementParam_ptr fdata_id =
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+  TLineModelElementParam_ptr fdata_c =
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+  TLineModelElementParam_ptr fdata_vd =
       std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
-  CLineModelElement elementID = CLineModelElement(fdata, "instrumentdriven");
-  CLineModelElement elementcombined = CLineModelElement(fdata, "combined");
-  CLineModelElement elementVD = CLineModelElement(fdata, "velocitydriven");
+  CLineModelElement elementID = CLineModelElement(fdata_id, "instrumentdriven");
+  CLineModelElement elementcombined = CLineModelElement(fdata_c, "combined");
+  CLineModelElement elementVD = CLineModelElement(fdata_vd, "velocitydriven");
 
   // setLSF on multiLines
   std::string lsfType = "GaussianConstantResolution"; // TBC

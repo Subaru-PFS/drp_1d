@@ -16,11 +16,12 @@ class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
   CSpectrumModel(
-      CLineModelElementList &elements,
+      const std::shared_ptr<CLineModelElementList> &elements,
       const std::shared_ptr<const CSpectrum> &spc,
       const CLineMap &m_RestLineList,
       const std::shared_ptr<CTplModelSolution> &tfv,
-      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
+      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+      Int32 spcIndex);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
   void refreshModel(CLine::EType lineTypeFilter = CLine::EType::nType_All);
@@ -43,14 +44,16 @@ public:
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
                                              const TInt32List &EltsIdx) const;
 
-  Float64 GetContinuumError(Int32 eIdx, Int32 line_id);
-  Float64 getModelErrorUnderElement(Int32 eltId,
-                                    const CSpectrumFluxAxis &fluxRef) const;
-  void getFluxDirectIntegration(const TInt32List &eIdx_list,
-                                const TInt32List &subeIdx_list,
-                                bool substract_abslinesmodel, Float64 &fluxdi,
-                                Float64 &snrdi,
-                                const TFloat64Range &lambdaRange) const;
+  std::pair<Float64, Int32> getContinuumQuadraticError(Int32 eIdx,
+                                                       Int32 line_id);
+  //  Float64 getModelErrorUnderElement(Int32 eltId,
+  //                                  const CSpectrumFluxAxis &fluxRef) const;
+  std::pair<Float64, Float64>
+  getModelQuadraticErrorUnderElement(Int32 eltId, bool with_continuum) const;
+
+  std::pair<Float64, Float64> getFluxDirectIntegration(
+      const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
+      bool substract_abslinesmodel, const TFloat64Range &lambdaRange) const;
   std::unordered_set<std::string>
   getLinesAboveSNR(const TFloat64Range &lambdaRange,
                    Float64 snrcut = 3.5) const;
@@ -65,7 +68,7 @@ public:
   // new methods
   Int32 m__count = 0;
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
-  Int32 m_spcIndex = 0;
+
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
                               const TFloat64List &polyCoeffs);
@@ -92,11 +95,13 @@ private:
   std::shared_ptr<CTplModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
-  CLineModelElementList &m_Elements;
+  std::shared_ptr<CLineModelElementList> m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting
+
+  Int32 m_spcIndex = 0;
 
   TAxisSampleList
       m_observeGridContinuumFlux; // the continuum spectre without the

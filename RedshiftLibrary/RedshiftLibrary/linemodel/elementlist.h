@@ -71,11 +71,6 @@ public:
 
   std::vector<std::pair<Int32, TInt32List>> getIgmLinesIndices() const;
 
-  std::pair<Int32, Int32>
-  findElementIndex(const std::string &LineTagStr,
-                   CLine::EType linetype = CLine::EType::nType_All) const;
-  std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
-  TInt32List findElementTypeIndices(CLine::EType type) const;
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
   void resetAmplitudeOffset();
@@ -97,6 +92,7 @@ public:
   std::map<std::string, TInt32List>
   getFittingGroups(TInt32List EltsIdx = {},
                    CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
+  std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
 
   const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {
     return m_Elements[i];
@@ -131,6 +127,52 @@ public:
   }
 };
 
-using CLMEltListVectorPtr = std::shared_ptr<std::vector<CLineModelElementList>>;
+class CLMEltListVector {
+public:
+  CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
+                   const std::shared_ptr<Int32> &curObs,
+                   const CLineMap &restLineList, bool regularCatalog);
+  CLMEltListVector(CLineModelElementList eltlist,
+                   const CLineMap &restLineList); // for unit test
+
+  CLMEltListVector() = delete;
+
+  Int32 GetModelNonZeroElementsNDdl();
+  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
+  std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
+  std::pair<Int32, Int32>
+  findElementIndex(const std::string &LineTagStr,
+                   CLine::EType linetype = CLine::EType::nType_All) const;
+  Int32 getNbElements() const { return m_ElementsParams.size(); }
+  Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const;
+
+  TInt32List findElementTypeIndices(CLine::EType type) const;
+  TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
+
+  CLineModelElementList &getElementList() {
+    return m_ElementsVector.at(*m_curObs);
+  }
+  const CLineModelElementList &getElementList() const {
+    return m_ElementsVector.at(*m_curObs);
+  }
+  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+    return m_ElementsParams;
+  }
+
+private:
+  std::vector<CLineModelElementList> m_ElementsVector;
+  std::vector<TLineModelElementParam_ptr> m_ElementsParams;
+  CTLambdaRangePtrVector m_lambdaRanges;
+  Int32 m_nbObs;
+  std::shared_ptr<Int32> m_curObs;
+  const CLineMap &m_RestLineList;
+
+  void AddElement(CLineVector lines, Float64 velocityEmission,
+                  Float64 velocityAbsorption, Int32 ig);
+  void LoadCatalog();
+  void LoadCatalogOneMultiline();
+  void LoadCatalogTwoMultilinesAE();
+};
+
 } // namespace NSEpic
 #endif

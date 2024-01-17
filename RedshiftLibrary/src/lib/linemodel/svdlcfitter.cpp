@@ -45,17 +45,16 @@ using namespace NSEpic;
 using namespace std;
 
 CSvdlcFitter::CSvdlcFitter(
-    const CLMEltListVectorPtr &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-    const std::vector<TLineModelElementParam_ptr> &elementParam,
     const shared_ptr<Int32> &curObsPtr,
     std::shared_ptr<CContinuumManager> continuumManager, Int32 polyOrder,
     bool enableAmplitudeOffset, bool enableLambdaOffsetsFit)
     : CAbstractFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
-                      restLineList, elementParam, curObsPtr,
-                      enableAmplitudeOffset, enableLambdaOffsetsFit),
+                      restLineList, curObsPtr, enableAmplitudeOffset,
+                      enableLambdaOffsetsFit),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
       m_spectralAxis(getSpectrum().GetSpectralAxis())
 
@@ -72,8 +71,10 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   //	       m_fitContinuum_tplName.c_str());
 
   // re-interpolate the continuum on the grid
-
+  *m_curObs = 0;
   m_continuumManager->reinterpolateContinuumResetAmp();
+  *m_curObs = 0;
+
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
@@ -84,6 +85,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
                                          redshift);
 
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
+  *m_curObs = 0;
   getModel().initModelWithContinuum();
 }
 
@@ -109,6 +111,7 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     Float64 redshift) {
   // boost::chrono::thread_clock::time_point start_prep =
   // boost::chrono::thread_clock::now();
+  *m_curObs = 0; // TODO dummy impl
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();

@@ -56,18 +56,18 @@ class CRuleStrongHigherThanWeak : public CRule {
 public:
   CRuleStrongHigherThanWeak();
 
-  bool Check(CLineModelElementList &LineModelElementList);
+  bool Check(CLMEltListVector &LineModelElementList);
   void SetUp(bool EnabledArgument, ...);
 
 private:
   friend class ::RuleStrongHigherThanWeak_fixture;
   CLine::EType m_LineType;
-  void Correct(CLineModelElementList &LineModelElementList);
+  void Correct(CLMEltListVector &LineModelElementList);
   Float64 FindHighestStrongLineAmp(Int32 linetype, Float64 &er,
                                    std::string &name,
-                                   CLineModelElementList &LineModelElementList);
+                                   CLMEltListVector &LineModelElementList);
   std::pair<Int32, Int32>
-  FindLowestStrongLineIndex(const CLineModelElementList &LineModelElementList);
+  FindLowestStrongLineIndex(const CLMEltListVector &LineModelElementList);
   void constructLogMsg(const std::string &nameWeak,
                        const std::string &strongName, Float64 ampB,
                        Float64 maxB);

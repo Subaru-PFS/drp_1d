@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
@@ -44,8 +46,11 @@
 
 using namespace NSEpic;
 
+const std::string lambdaString = "{\"lambdarange\" : [ 4680, 4712 ],";
+const std::string multiLambdaString =
+    "{\"lambdarange\" :{ \"A\":[ 4680, 4697 ],\"B\":[4695,4712]}, ";
+
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -88,7 +93,7 @@ const std::string jsonString =
     "\"haprior\" : 0.5,"
     "\"euclidnhaemittersStrength\" : 1.0,"
     "\"extremacutprobathreshold\" : -1,"
-    "\"skipsecondpass\" : false,"
+
     "\"secondpasslcfittingmethod\" : -1,"
     "\"useloglambdasampling\": false,"
     "\"lyaforcefit\": false,"
@@ -117,7 +122,80 @@ const std::string jsonString =
     "\"secondpass\" : {\"halfwindowsize\" : 0.001, "
     "\"continuumfit\" : \"refitfirstpass\"},";
 
+const std::string jsonStringS =
+    "\"smoothWidth\" : 0.0,"
+    "\"templateCatalog\" : {"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"zero\","
+    "\"medianKernelWidth\" : 75,"
+    "\"medianEvenReflection\" : true}},"
+    "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"IrregularSamplingMedian\","
+    "\"medianKernelWidth\" : 400,"
+    "\"medianEvenReflection\" : true,"
+    "\"decompScales\" : 9},"
+    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", "
+    "\"resolution\" : "
+    "4300},"
+    "\"extremaredshiftseparation\" : 0.01,"
+    "\"objects\" : [\"galaxy\"],"
+    "\"autocorrectinput\" : false,"
+    "\"airvacuum_method\" : \"default\","
+    "\"galaxy\" : {"
+    "\"redshiftrange\" : [ 0.24, 0.3 ],"
+    "\"redshiftstep\" : 0.0001,"
+    "\"redshiftsampling\" : \"log\","
+    "\"method\" : \"LineModelSolve\","
+    "\"LineModelSolve\" : {"
+    "\"linemodel\" : {"
+    "\"continuumreestimation\" : \"no\","
+    "\"velocityfit\" : true,"
+    "\"emvelocityfitmin\" : 100,"
+    "\"emvelocityfitmax\" : 200, "
+    "\"emvelocityfitstep\" : 50,"
+    "\"absvelocityfitmin\" : 150,"
+    "\"absvelocityfitmax\" : 200, "
+    "\"absvelocityfitstep\" : 50,"
+    "\"ampoffsetfit\": \"false\","
+    "\"lbdaoffsetfit\": \"false\","
+    "\"extremacount\" : 5,"
+    "\"extremacountB\" : 3,"
+    "\"nsigmasupport\" : 8,"
+    "\"haprior\" : 0.5,"
+    "\"euclidnhaemittersStrength\" : 1.0,"
+    "\"extremacutprobathreshold\" : -1,"
+
+    "\"secondpasslcfittingmethod\" : -1,"
+    "\"useloglambdasampling\": false,"
+    "\"lyaforcefit\": false,"
+    "\"lyaforcedisablefit\": false,"
+    "\"stronglinesprior\" : 1.0,"
+    "\"fittingmethod\": \"individual\","
+    "\"linewidthtype\": \"combined\","
+    "\"velocityemission\" : 100,"
+    "\"velocityabsorption\": 100,"
+    "\"linetypefilter\" : \"no\","
+    "\"lineforcefilter\" : \"no\","
+    "\"lyafit\": {"
+    "\"asymfitmin\" : 0,"
+    "\"asymfitmax\" : 4, \"asymfitstep\" : 1, "
+    "\"widthfitmin\" : 1,"
+    "\"widthfitmax\" : 4, \"widthfitstep\" : 1, "
+    "\"deltafitmin\" : 0,"
+    "\"deltafitmax\" : 0, \"deltafitstep\" : 1}, "
+    "\"tplratio\": { \"priors\": {"
+    "\"betaA\" : 1,    \"betaTE\" : 1, \"betaZ\" : 1, "
+    "\"catalog_dirpath\" : \"\"}}, "
+    "\"firstpass\": { \"fittingmethod\" : \"individual\", "
+    "\"tplratio_ismfit\" : true,"
+    "\"largegridstepratio\" : 10, "
+    "\"multiplecontinuumfit_disable\": true},"
+    "\"secondpass\" : {\"halfwindowsize\" : 0.001, "
+    "\"continuumfit\" : \"refitfirstpass\"},";
+
 const std::string jsonStringTplFitRules =
+    "\"skipsecondpass\" : false,"
     "\"continuumcomponent\" : \"tplfit\","
     "\"pdfcombination\" : \"marg\","
     "\"tplratio_ismfit\" : true,"
@@ -137,13 +215,34 @@ const std::string jsonStringTplFitRules =
     "\"catalog_dirpath\" : \"\"}}}}}}";
 
 const std::string jsonStringTplFitTplRatio =
-    "\"continuumcomponent\" : \"tplfit\","
+    "\"skipsecondpass\" : false,"
+    "\"continuumcomponent\" : \"nocontinuum\","
     "\"pdfcombination\" : \"marg\","
     "\"tplratio_ismfit\" : true,"
     "\"rules\" : \"all\","
     "\"improveBalmerFit\" : true,"
     "\"lineRatioType\": \"tplratio\","
-    "\"enablephotometry\" : true, "
+    "\"enablephotometry\" : false, "
+    "\"photometry\" : {\"weight\" : 1},"
+    "\"continuumfit\" : { \"ignorelinesupport\": false,"
+    "\"negativethreshold\": -5.0,"
+    "\"count\" : 1,"
+    "\"nullthreshold\": 3,"
+    "\"ismfit\" : true,"
+    "\"igmfit\" : true,"
+    "\"fftprocessing\": false, "
+    "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
+    "\"catalog_dirpath\" : \"\"}}}}}}";
+
+const std::string jsonStringNoContinuumTplRatio =
+    "\"skipsecondpass\" : true,"
+    "\"continuumcomponent\" : \"nocontinuum\","
+    "\"pdfcombination\" : \"marg\","
+    "\"tplratio_ismfit\" : true,"
+    "\"rules\" : \"all\","
+    "\"improveBalmerFit\" : true,"
+    "\"lineRatioType\": \"tplratio\","
+    "\"enablephotometry\" : false, "
     "\"photometry\" : {\"weight\" : 1},"
     "\"continuumfit\" : { \"ignorelinesupport\": false,"
     "\"negativethreshold\": -5.0,"
@@ -156,6 +255,7 @@ const std::string jsonStringTplFitTplRatio =
     "\"catalog_dirpath\" : \"\"}}}}}}";
 
 const std::string jsonStringFromSpectrum =
+    "\"skipsecondpass\" : false,"
     "\"continuumcomponent\" : \"fromspectrum\","
     "\"pdfcombination\" : \"bestchi2\","
     "\"tplratio_ismfit\" : true,"
@@ -183,6 +283,8 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CSpectrum> spcA = fixture_SharedMultiSpectrum().spcA;
+  std::shared_ptr<CSpectrum> spcB = fixture_SharedMultiSpectrum().spcB;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -205,7 +307,7 @@ class fixture_LineModelSolveTestTplFitRules
 public:
   fixture_LineModelSolveTestTplFitRules() {
     fillCatalog();
-    ctx.loadParameterStore(jsonString + jsonStringTplFitRules);
+    ctx.loadParameterStore(lambdaString + jsonString + jsonStringTplFitRules);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -223,7 +325,8 @@ class fixture_LineModelSolveTestTplFitTplRatio
 public:
   fixture_LineModelSolveTestTplFitTplRatio() {
     fillCatalog();
-    ctx.loadParameterStore(jsonString + jsonStringTplFitTplRatio);
+    ctx.loadParameterStore(lambdaString + jsonString +
+                           jsonStringTplFitTplRatio);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -236,12 +339,53 @@ public:
   }
 };
 
+class fixture_LineModelSolveTestNoContTplRatio
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestNoContTplRatio() {
+    fillCatalog();
+    ctx.loadParameterStore(lambdaString + jsonStringS +
+                           jsonStringNoContinuumTplRatio);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
+class fixture_LineModelSolveTestMultiNoContTplRatio
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestMultiNoContTplRatio() {
+    fillCatalog();
+    ctx.loadParameterStore(multiLambdaString + jsonStringS +
+                           jsonStringTplFitTplRatio);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+
+    spcA->setObsID("A");
+    spcB->setObsID("B");
+    ctx.addSpectrum(spcA, LSF);
+    ctx.addSpectrum(spcB, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
 class fixture_LineModelSolveTestFromSpectrum
     : public fixture_LineModelSolveTest {
 public:
   fixture_LineModelSolveTestFromSpectrum() {
     fillCatalog();
-    ctx.loadParameterStore(jsonString + jsonStringFromSpectrum);
+    ctx.loadParameterStore(lambdaString + jsonString + jsonStringFromSpectrum);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -258,6 +402,7 @@ BOOST_AUTO_TEST_SUITE(lineModelSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
                         fixture_LineModelSolveTestTplFitRules) {
+
   CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
   BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
@@ -314,6 +459,73 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(computeNoContTplRatio_test,
+                        fixture_LineModelSolveTestNoContTplRatio) {
+
+  bfs::path logFile = bfs::unique_path("/tmp/log_nocont_tplratio");
+  CLogFileHandler file_handler(logFile.c_str());
+  file_handler.SetLevelMask(60);
+
+  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "LineModelSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "LineModelSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "LineModelSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "LineModelSolve", "extrema_results", "model_parameters");
+  BOOST_CHECK(resType == "TLineModelResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
+
+  Float64 z = res->Redshift;
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(computeMultiNoContTplRatio_test,
+                        fixture_LineModelSolveTestMultiNoContTplRatio) {
+  bfs::path logFile = bfs::unique_path("/tmp/log_multi_nocont_tplratio");
+  CLogFileHandler file_handler(logFile.c_str());
+  file_handler.SetLevelMask(60);
+
+  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "LineModelSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "LineModelSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "LineModelSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "LineModelSolve", "extrema_results", "model_parameters");
+  BOOST_CHECK(resType == "TLineModelResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
 
   ctx.reset();
 }

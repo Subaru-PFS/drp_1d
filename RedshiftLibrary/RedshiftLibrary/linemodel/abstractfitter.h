@@ -51,14 +51,14 @@ namespace NSEpic
 class CContinuumManager;
 class CAbstractFitter {
 public:
-  CAbstractFitter(
-      const CLMEltListVectorPtr &elementsVector,
-      const CCSpectrumVectorPtr &inputSpcs,
-      const CTLambdaRangePtrVector &lambdaRanges,
-      const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
-      const std::shared_ptr<Int32> &curObsPtr,
-      bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
+  CAbstractFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
+                  const CCSpectrumVectorPtr &inputSpcs,
+                  const CTLambdaRangePtrVector &lambdaRanges,
+                  const CSpcModelVectorPtr &spectrumModels,
+                  const CLineMap &restLineList,
+                  const std::shared_ptr<Int32> &curObsPtr,
+                  bool enableAmplitudeOffsets = false,
+                  bool enableLambdaOffsetsFit = false);
 
   void fit(Float64 redshift);
 
@@ -68,12 +68,12 @@ public:
   void enableLambdaOffsets() { m_enableLambdaOffsetsFit = true; }
 
   static std::shared_ptr<CAbstractFitter> makeFitter(
-      std::string fittingMethod, const CLMEltListVectorPtr &elementsVector,
+      std::string fittingMethod,
+      const std::shared_ptr<CLMEltListVector> &elementsVector,
       const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
-      const std::vector<std::shared_ptr<TLineModelElementParam>> &elementParam,
       const std::shared_ptr<Int32> &curObsPtr,
       bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
 
@@ -85,6 +85,7 @@ public:
   Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
                              const TInt32List &idxLine);
 
+  Float64 getModelErrorUnderElement(Int32 line_index, bool with_continuum);
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
@@ -112,22 +113,45 @@ protected:
                               bool enableOffsetFitting) const;
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
-  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
-  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
-  const CSpectrum &getSpectrum() { return *((*m_inputSpcs)[*m_curObs]); }
-  const TLambdaRange &getLambdaRange() { return *(m_lambdaRanges[*m_curObs]); }
+  CSpectrumModel &getModel() {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return (*m_models).at(*m_curObs);
+  }
+  const CSpectrumModel &getModel() const {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return (*m_models).at(*m_curObs);
+  }
+  const CSpectrum &getSpectrum() {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return *((*m_inputSpcs).at(*m_curObs));
+  }
+  const TLambdaRange &getLambdaRange() {
+    if (*m_curObs >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
+    return *(m_lambdaRanges.at(*m_curObs));
+  }
   CLineModelElementList &getElementList() {
-    return (*m_ElementsVector)[*m_curObs];
+    return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    return (*m_ElementsVector)[*m_curObs];
+    return m_ElementsVector->getElementList();
   }
-  CLMEltListVectorPtr m_ElementsVector;
-  std::vector<std::shared_ptr<TLineModelElementParam>> m_ElementParam;
+
+  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+    return m_ElementsVector->getElementParam();
+  }
+  bool isOutsideLambdaRange(Int32 elt_index);
+
+  Int32 m_nbElements;
+
   CCSpectrumVectorPtr m_inputSpcs;
   const CLineMap &m_RestLineList;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
+  std::shared_ptr<CLMEltListVector> m_ElementsVector;
 
   std::shared_ptr<Int32> m_curObs;
   // hard coded options

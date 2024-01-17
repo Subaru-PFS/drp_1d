@@ -114,7 +114,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                          TScopeStack &scope) {
 
   PopulateParameters(inputContext->GetParameterStore());
-  const CSpectrum &spc = *(inputContext->GetSpectrum(m_useloglambdasampling));
+
   Solve();
 
   auto result = resultStore->GetScopedGlobalResult("linemodel");
@@ -162,9 +162,9 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
+  const CSpectrum &spc = *(inputContext->GetSpectrum(m_useloglambdasampling));
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       m_linemodel.buildExtremaResults(
-          spc, *(Context.GetClampedLambdaRange(m_useloglambdasampling)),
           candidateResult->m_ranked_candidates,
           m_opt_continuumreest); // maybe it's better to pass
                                  // resultStore->GetGlobalResult so that we

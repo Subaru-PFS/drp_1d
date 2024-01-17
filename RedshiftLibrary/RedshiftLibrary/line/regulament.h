@@ -46,14 +46,14 @@
 
 namespace NSEpic {
 
-class CLineModelElementList;
+class CLMEltListVector;
 /**
  * \ingroup Redshift
  * \brief Control class for preparing and applying Linemodel rules.
  */
 class CRegulament {
 public:
-  void Apply(CLineModelElementList &LineModelElementList);
+  void Apply(CLMEltListVector &LineModelElementList);
   // void ApplyWithRedshift( std::vector<boost::shared_ptr<CLineModelElement>
   // > LinemodelElements, Float64 Redshift );
   bool CreateRulesFromJSONFiles(void);
