@@ -110,7 +110,8 @@
           "fittingmethod": "individual",
           "largegridstepratio": 10,
           "tplratio_ismfit": false,
-          "multiplecontinuumfit_disable": true
+          "multiplecontinuumfit_disable": true,
+          "extremaCount": 5
         },
         "secondpass": {
           "halfwindowsize": 0.002,

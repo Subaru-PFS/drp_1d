@@ -115,7 +115,8 @@
             "fittingMethod": "individual",
             "largeGridStepRatio": 10,
             "tplRatioIsmFit": false,
-            "multipleContinuumFitDisable": true
+            "multipleContinuumFitDisable": true,
+            "extremaCount": 5
           },
           "secondPass": {
             "halfWindowSize": 0.002,
