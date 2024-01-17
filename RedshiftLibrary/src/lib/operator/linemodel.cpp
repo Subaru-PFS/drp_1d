@@ -1270,7 +1270,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
                "  Operator-Linemodel: not allowed to use more than 1 "
                "group per E/A for "
                "more than 1 extremum (see .json "
-               "lineModel.extremacount)");
+               "lineModel.extremaCount)");
     } else {
       // create a dumb vector, condition enough to reach the fitting loop
       // idxVelfitGroups wont be used when m_enableWidthFitByGroups = false

@@ -39,8 +39,6 @@
 
 from typing import List
 
-import json
-
 
 class ParametersAccessor:
     def __init__(self, parameters: dict):
@@ -303,6 +301,9 @@ class ParametersAccessor:
     def get_linemodel_firstpass_tplratio_ismfit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemodel_firstpass_section(spectrum_model), "tplRatioIsmFit")
 
+    def get_linemodel_firstpass_extremacount(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_firstpass_section(spectrum_model), "extremaCount")
+
     def get_linemodel_skipsecondpass(self, spectrum_model: str) -> bool:
         return self._get_on_None(
             self.get_linemodel_solver_linemodel_section(spectrum_model), "skipSecondPass")
@@ -314,6 +315,9 @@ class ParametersAccessor:
         return self._get_on_None(
             self.get_linemodel_solver_linemodel_section(spectrum_model),
             "improveBalmerFit")
+
+    def get_linemodel_extremacount(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "extremaCount")
 
     def get_linemeas_linemodel_section(self, spectrum_model: str) -> dict:
         return self._get_on_None(self.get_linemeas_solve_section(spectrum_model), "lineModel")

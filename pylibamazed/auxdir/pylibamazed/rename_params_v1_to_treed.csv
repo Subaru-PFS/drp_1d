@@ -162,6 +162,7 @@ fittingmethod,fittingMethod,object.LineModelSolve.linemodel.firstpass,spectrumMo
 largegridstepratio,largeGridStepRatio,object.LineModelSolve.linemodel.firstpass,spectrumModel.redshiftSolver.lineModelSolve.lineModel.firstPass
 multiplecontinuumfit_disable,multipleContinuumFitDisable,object.LineModelSolve.linemodel.firstpass,spectrumModel.redshiftSolver.lineModelSolve.lineModel.firstPass
 tplratio_ismfit,tplRatioIsmFit,object.LineModelSolve.linemodel.firstpass,spectrumModel.redshiftSolver.lineModelSolve.lineModel.firstPass
+extremacount,extremaCount,object.LineModelSolve.linemodel.firstpass,spectrumModel.redshiftSolver.lineModelSolve.lineModel.firstpass
 
 lyafit,lyaFit,object.LineModelSolve.linemodel,spectrumModel.redshiftSolver.lineModelSolve.lineModel
 asymfitmax,asymFitMax,object.LineModelSolve.linemodel.lyafit,spectrumModel.redshiftSolver.lineModelSolve.lineModel.lyaFit

@@ -78,6 +78,8 @@ bool CLineModelSolve::PopulateParameters(
       parameterStore->GetScoped<Int32>("lineModel.extremaCount");
   m_opt_extremacountB =
       parameterStore->GetScoped<Int32>("lineModel.extremaCountB");
+  m_opt_maxCandidate =
+      parameterStore->GetScoped<Int32>("lineModel.firstPass.extremaCount");
 
   m_opt_stronglinesprior =
       parameterStore->GetScoped<Float64>("lineModel.strongLinesPrior");
@@ -503,10 +505,10 @@ void CLineModelSolve::Solve() {
   ChisquareArray chisquares = BuildChisquareArray(lmresult);
 
   // TODO deal with the case lmresult->Redshifts=1
-  Int32 extremacount = 5;
+  //   Int32 extremacount = 5;
   COperatorPdfz pdfz(m_opt_pdfcombination,
                      2 * m_opt_secondpass_halfwindowsize, // peak separation
-                     m_opt_candidatesLogprobaCutThreshold, extremacount,
+                     m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
                      m_redshiftSampling == "log", "FPE", true, 0);
 
   std::shared_ptr<PdfCandidatesZResult> candResult_fp =
@@ -549,10 +551,10 @@ void CLineModelSolve::Solve() {
     ChisquareArray chisquares = BuildChisquareArray(lmresult);
 
     // TODO deal with the case lmresult->Redshifts=1
-    Int32 extremacount = 5;
+    // Int32 extremacount = 5;
     COperatorPdfz pdfz(m_opt_pdfcombination,
                        2 * m_opt_secondpass_halfwindowsize, // peak separation
-                       m_opt_candidatesLogprobaCutThreshold, extremacount,
+                       m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
                        m_redshiftSampling == "log", "FPB", true, 0);
 
     std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares);
@@ -604,7 +606,8 @@ void CLineModelSolve::createRedshiftGrid(
 
   Int32 opt_twosteplargegridstep_ratio =
       inputContext->GetParameterStore()->GetScoped<Int32>(
-          "redshiftSolver.lineModelSolve.lineModel.firstPass.largeGridStepRatio");
+          "redshiftSolver.lineModelSolve.lineModel.firstPass."
+          "largeGridStepRatio");
 
   m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
 

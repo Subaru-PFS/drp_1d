@@ -102,6 +102,7 @@ private:
   std::string m_opt_pdfcombination;
   Int64 m_opt_extremacount;
   Int64 m_opt_extremacountB;
+  Int64 m_opt_maxCandidate;
 
   Float64 m_opt_stronglinesprior;
   Float64 m_opt_haPrior;

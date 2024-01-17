@@ -6,7 +6,8 @@
   "required": [
     "fittingmethod",
     "largegridstepratio",
-    "multiplecontinuumfit_disable"
+    "multiplecontinuumfit_disable",
+    "extremacount"
   ],
   "additionalProperties": false,
   "properties": {
@@ -37,6 +38,11 @@
       "type": "boolean",
       "title": "Wether to use only the best continuum template",
       "description": "Wether to overwrite the `continuumfit.count` parameter to keep only the best continuum template (true=> sets `continuumfit.count` to 1)"
+    },
+    "extremacount": {
+      "type": "integer",
+      "title": "Maximum number of first pass candidate to retain",
+      "description": "Maximum number of first pass candidate to retain"
     }
   }
 }
