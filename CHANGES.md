@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.0.0 (2024-01-17)
+## Added
+* The API is now checking the syntax of the json input parameter file, raising an error if the syntax is wrong or if some required parameters are missing, issueing a warning for each unused parameter
+* The API is now handling one lsf per observation (but the current multi-observation in interleave mode is only able to handle one lsf: the first of the list is chosen)
+* In full multi-observation mode, Amazed provides now one model per observation
+* "not and" operator have been added to filtering feature
+* A warning is raised when lambda range is clamped (it occurs when user lambda range is not compliant with the lambda grid of the input spectrum)
+* String vectors type are now available in Amazed output
+* The flux uncertainty with direct integration method is now available in Amazed output
+* The cumulative SNR for all emission lines is now available in Amazed output
+## Changed
+* Change line ID as line number in linecatalog, ensuring uniqueness of line name, wavelength (rounded to 2 decimals) and type (E or A)
+* Change version of LBFGSpp to v0.3.0
+* Changes the way of dealing with redshifts candidates with overlapping integration ranges. In case of overlap greater than 30%, only the best candidates (i.e. highest proba) is selected. In other case, the overlap is equally splitted and candidates are both kept
+## Fixed
+* The linemeas method is no more executed when redshift solver has failed
+* Better protect bad calibration directory content from segfault, and raise informative exceptions
+* The output of fitted Line ratio main amplitude of absorption lines is fixed
+* The output of fitted Lya asym parameters is fixed
+* The output of fitted photometric model is fixed
+* The computation of cumulative SNR of strong emmission lines is fixed
+
 ## 0.44.0 (2023-09-06)
 ### Added
 * [8033] : Read additional columns from input spectrum data and filter input spectrum based on column values
