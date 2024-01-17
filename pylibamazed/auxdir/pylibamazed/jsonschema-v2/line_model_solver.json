@@ -100,7 +100,7 @@
           "type": "string",
           "enum": [
             "combined",
-            "instumentDriven",
+            "instrumentDriven",
             "velocityDriven"
           ],
           "title": "Line width type",

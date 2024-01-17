@@ -202,7 +202,8 @@ class AbstractOutput:
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
             method = self.get_method(object_type, dataset)
-            return self.has_attribute_in_source(object_type, method, dataset, attribute, rank)
+            stage = self.parameters.get_stage_from_method(method)
+            return self.has_attribute_in_source(object_type, stage, method, dataset, attribute, rank)
         if not object_type:
             if dataset in self.root_results:
                 return attribute in self.root_results[dataset]
