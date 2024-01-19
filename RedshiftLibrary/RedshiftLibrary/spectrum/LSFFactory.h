@@ -80,12 +80,12 @@ private:
   FactoryMap m_FactoryMap;
 };
 inline CLSFFactory::CLSFFactory() {
-  Register("GaussianConstantWidth", &CLSFGaussianConstantWidth::make_LSF);
-  Register("GaussianConstantResolution",
+  Register("gaussianConstantWidth", &CLSFGaussianConstantWidth::make_LSF);
+  Register("gaussianConstantResolution",
            &CLSFGaussianConstantResolution::make_LSF);
-  Register("GaussianNISPSIM2016", &CLSFGaussianNISPSIM2016::make_LSF);
-  Register("GaussianNISPVSSPSF201707", &CLSFGaussianNISPVSSPSF201707::make_LSF);
-  Register("GaussianVariableWidth", &CLSFGaussianVariableWidth::make_LSF);
+  Register("gaussianNISPSIM2016", &CLSFGaussianNISPSIM2016::make_LSF);
+  Register("gaussianNISPVSSPSF201707", &CLSFGaussianNISPVSSPSF201707::make_LSF);
+  Register("gaussianVariableWidth", &CLSFGaussianVariableWidth::make_LSF);
 }
 
 inline void CLSFFactory::Register(const std::string &name,

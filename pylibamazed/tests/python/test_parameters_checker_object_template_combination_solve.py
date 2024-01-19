@@ -39,26 +39,27 @@
 import pytest
 from pylibamazed.Exception import APIException
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_object_level)
+                                make_parameter_dict_at_redshift_solver_level)
 
 
 class TestTemplateCombinationSolve:
 
     def _make_parameter_dict(self, **kwargs) -> dict:
-        kwargs["linemeas_method"] = kwargs.get("linemeas_method", "")
-        kwargs["method"] = kwargs.get("method", "TplcombinationSolve")
-        if kwargs["method"] == "TplCombinationSolve":
-            kwargs["template_dir"] == "sth"
-        return make_parameter_dict_at_object_level(**kwargs)
+        kwargs["method"] = kwargs.get("method", "tplCombinationSolve")
+
+        object_level_params = None
+        if kwargs["method"] == "tplCombinationSolve":
+            object_level_params = {"templateDir": "sth"}
+        return make_parameter_dict_at_redshift_solver_level(object_level_params, **kwargs)
 
     def test_error_if_method_is_TplcombinationSolve_and_section_is_absent(self):
         param_dict = self._make_parameter_dict(**{})
-        with pytest.raises(APIException, match=r"Missing parameter TplcombinationSolve"):
+        with pytest.raises(APIException, match=r"Missing parameter tplCombinationSolve"):
             check_from_parameter_dict(param_dict)
 
     def test_OK_if_method_is_templateCombinationSolve_and_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TplcombinationSolve": {}
+            "tplCombinationSolve": {}
         })
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning(zflag)
@@ -66,28 +67,28 @@ class TestTemplateCombinationSolve:
     def test_warning_if_method_is_not_templateCombinationSolve_but_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
-            "TplcombinationSolve": {}
+            "tplCombinationSolve": {}
         })
         check_from_parameter_dict(param_dict)
-        assert WarningUtils.has_any_warning(zflag)
+        assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
 
     def test_ok_if_method_is_not_templateCombinationSolve_and_section_is_absent(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_any_warning(zflag)
+        assert not WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
 
     def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
         param_dict = self._make_parameter_dict(**{
-            "TplcombinationSolve": {"ismfit": True}
+            "tplCombinationSolve": {"ismFit": True}
         })
         with pytest.raises(APIException, match=r"Missing parameter ebmv"):
             check_from_parameter_dict(param_dict)
 
     def test_ok_if_ismfit_enabled_and_ebmv_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TplcombinationSolve": {"ismfit": True}
+            "tplCombinationSolve": {"ismFit": True}
         })
         param_dict["ebmv"] = {}
         check_from_parameter_dict(param_dict)

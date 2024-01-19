@@ -139,7 +139,7 @@ class CalibrationLibrary:
         self.templates_ratios = dict()
         self.line_catalogs = dict()
         self.line_catalogs_df = dict()
-        for object_type in self.parameters.get_objects():
+        for object_type in self.parameters.get_spectrum_models():
             self.line_catalogs[object_type] = dict()
             self.line_catalogs_df[object_type] = dict()
 
@@ -276,7 +276,7 @@ class CalibrationLibrary:
 
     def load_line_ratio_catalog_list(self, object_type):
         logger = logging.getLogger("calibration_api")
-        tplratio_catalog = self.parameters.get_lineModelSolve_tplratio_catalog(object_type)
+        tplratio_catalog = self.parameters.get_linemodel_tplratio_catalog(object_type)
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                tplratio_catalog,
                                                "*.tsv")
@@ -288,11 +288,11 @@ class CalibrationLibrary:
 
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1
-        if self.parameters.get_lineModelSolve_tplratio_ismfit(object_type):
+        if self.parameters.get_linemodel_tplratio_ismfit(object_type):
             n_ebmv_coeffs = self.parameters.get_ebmv_count()
         prior = 1. / (n_ebmv_coeffs * len(line_ratio_catalog_list))
 
-        line_catalog_df = self.line_catalogs_df[object_type]["LineModelSolve"]
+        line_catalog_df = self.line_catalogs_df[object_type]["lineModelSolve"]
         line_ids = line_catalog_df["strId"].reset_index()
         line_ids["index"] = line_ids["index"].astype(pd.Int64Dtype())  # enable int missing value
         for f in line_ratio_catalog_list:
@@ -301,7 +301,7 @@ class CalibrationLibrary:
                                                "NominalAmplitude": float})
             name = f.split(os.sep)[-1][:-4]
             with open(os.path.join(self.calibration_dir,
-                                   self.parameters.get_lineModelSolve_tplratio_catalog(object_type),
+                                   self.parameters.get_linemodel_tplratio_catalog(object_type),
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
 
@@ -324,7 +324,7 @@ class CalibrationLibrary:
                 #      line ratio catalog")
 
             lr_catalog_df = (lr_catalog_df.loc[~missing_ids]).set_index("index")
-            lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["LineModelSolve"])
+            lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["lineModelSolve"])
             for index, row in lr_catalog_df.iterrows():
                 lr_catalog.setLineAmplitude(int(index), row.NominalAmplitude)
             lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
@@ -349,7 +349,7 @@ class CalibrationLibrary:
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
 
     def load_lsf(self):
-        if self.parameters.get_lsf_type() == "GaussianVariableWidth":
+        if self.parameters.get_lsf_type() == "gaussianVariableWidth":
             file = os.path.join(self.calibration_dir,
                                 self.parameters.get_lsf_width_file_name())
             if not os.path.isfile(file):
@@ -430,7 +430,7 @@ class CalibrationLibrary:
         meiksin = calibs == "all" or "meiksin" in calibs
         calzetti = calibs == "all" or "calzetti" in calibs
         templates = calibs == "all" or "templates" in calibs
-        linecatalogs = calibs == "all" or "linecatalogs" in calibs
+        linecatalogs = calibs == "all" or "lineCatalogs" in calibs
         lineratios = calibs == "all" or "lineratios" in calibs
         reliability = calibs == "all" or "reliability" in calibs
         try:
@@ -438,13 +438,13 @@ class CalibrationLibrary:
                 self.load_Meiksin()
             if calzetti:
                 self.load_calzetti()
-            for object_type in self.parameters.get_objects():
+            for object_type in self.parameters.get_spectrum_models():
                 if templates:
                     self.load_templates_catalog(object_type)
                 # load linecatalog for linemodelsolve
 
-                solve_method = self.parameters.get_solve_method(object_type)
-                if solve_method == "LineModelSolve":
+                solve_method = self.parameters.get_redshift_solver_method(object_type)
+                if solve_method == "lineModelSolve":
                     if linecatalogs:
                         self.load_linecatalog(object_type, solve_method)
 
@@ -453,10 +453,9 @@ class CalibrationLibrary:
                             self.load_line_ratio_catalog_list(object_type)
                             # load linecatalog for linemeassolve
                 linemeas_method = self.parameters.get_linemeas_method(object_type)
-                if linemeas_method == "LineMeasSolve":
+                if linemeas_method == "lineMeasSolve":
                     if linecatalogs:
                         self.load_linecatalog(object_type, linemeas_method)
-
                 # Load the reliability model
                 if self.parameters.get_reliability_enabled(object_type) and reliability:
                     model_path = os.path.join(self.calibration_dir,
@@ -467,7 +466,7 @@ class CalibrationLibrary:
                     self.reliability_models[object_type] = mp["model"]
                     self.reliability_parameters[object_type] = mp["parameters"]
 
-            if self.parameters.get_lsf_type() != "FROMSPECTRUMDATA":
+            if self.parameters.get_lsf_type() != "fromSpectrumData":
                 self.load_lsf()
 
             if self.parameters.get_photometry_transmission_dir() is not None:
@@ -490,7 +489,7 @@ class CalibrationLibrary:
         try:
             with open(os.path.join(
                 self.calibration_dir,
-                self.parameters.get_lineModelSolve_tplratio_catalog(object_type),
+                self.parameters.get_linemodel_tplratio_catalog(object_type),
                 line_ratio_catalog + ".json"
             )) as f:
                 tpl_ratio_conf = json.load(f)
@@ -507,10 +506,10 @@ class CalibrationLibrary:
                 continue
             if attr_parts[1] == "linemeas":
                 linemeas_object = attr_parts[0]
-                l_method = "LineMeasSolve"
+                l_method = "lineMeasSolve"
             elif attr_parts[1] == "fitted_lines":
                 linemeas_object = attr_parts[0]
-                l_method = "LineModelSolve"
+                l_method = "lineModelSolve"
             else:
                 continue
             if linemeas_object in self.line_catalogs_df \

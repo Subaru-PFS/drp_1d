@@ -62,12 +62,12 @@ CLineRatioManager::CLineRatioManager(
       m_continuumManager(continuumManager), m_RestLineList(restLineList),
       m_curObs(curObs) {
 
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  if (Context.GetCurrentMethod() == "LineModelSolve") {
-    m_opt_lya_forcefit = ps->GetScoped<bool>("lyaforcefit");
-    m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaforcedisablefit");
+  if (Context.GetCurrentMethod() == "lineModelSolve") {
+    m_opt_lya_forcefit = ps->GetScoped<bool>("lyaForceFit");
+    m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaForceDisableFit");
   }
   m_nbObs = m_inputSpcs->size();
   /*  *m_curObs = 0;
@@ -295,11 +295,11 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
     const std::shared_ptr<Int32> &curObs) {
   std::shared_ptr<CLineRatioManager> ret;
-  if (lineRatioType == "tplratio")
+  if (lineRatioType == "tplRatio")
     ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
                          continuumManager, restLineList, curObs));
-  else if (lineRatioType == "tplcorr")
+  else if (lineRatioType == "tplCorr")
     ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList, curObs));

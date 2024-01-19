@@ -47,15 +47,15 @@ using namespace std;
 
 std::shared_ptr<CAirVacuum>
 CAirVacuumConverter::Get(const std::string &converterName) {
-  if (converterName == "Edlen1953")
+  if (converterName == "edlen1953")
     return (std::make_shared<CAirVacEdlen1953>());
-  else if (converterName == "Edlen1966")
+  else if (converterName == "edlen1966")
     return (std::make_shared<CAirVacEdlen1966>());
   else if (converterName == "PeckReeder1972")
     return (std::make_shared<CAirVacPeckReeder1972>());
-  else if (converterName == "Ciddor1996")
+  else if (converterName == "ciddor1996")
     return (std::make_shared<CAirVacCiddor1996>());
-  else if (converterName == "Morton2000")
+  else if (converterName == "morton2000")
     return (std::make_shared<CAirVacMorton2000>());
   else {
     THROWG(INTERNAL_ERROR,

@@ -78,7 +78,7 @@ using namespace std;
  * \brief Prepares the state for Linemodel operation.
  * Loads the catalog.
  * Sets many state variables.
- * Sets the continuum either as a nocontinuum or a fromspectrum.
+ * Sets the continuum either as a nocontinuum or a fromSpectrum.
  **/
 CLineModelFitting::CLineModelFitting(
     const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
@@ -117,34 +117,34 @@ CLineModelFitting::CLineModelFitting(
   setLineRatioType(m_lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
-  setContinuumComponent("fromspectrum");
+  setContinuumComponent("fromSpectrum");
 }
 
 void CLineModelFitting::initParameters() {
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-  m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
-  m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampoffsetfit");
-  m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaoffsetfit");
+  m_fittingmethod = ps->GetScoped<std::string>("fittingMethod");
+  m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");
+  m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaOffsetFit");
 
   m_lineRatioType = ps->GetScoped<std::string>("lineRatioType");
 
-  if (Context.GetCurrentMethod() == "LineModelSolve") {
+  if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_opt_firstpass_fittingmethod =
-        ps->GetScoped<std::string>("firstpass.fittingmethod");
+        ps->GetScoped<std::string>("firstPass.fittingMethod");
     m_opt_secondpass_fittingmethod = m_fittingmethod;
     m_opt_firstpass_forcedisableMultipleContinuumfit =
-        ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
+        ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
   }
 
   std::string continuumComponent =
-      ps->GetScoped<std::string>("continuumcomponent");
-  if (continuumComponent == "tplfit" || continuumComponent == "tplfitauto") {
+      ps->GetScoped<std::string>("continuumComponent");
+  if (continuumComponent == "tplFit" || continuumComponent == "tplFitAuto") {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
-        ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
-    m_useloglambdasampling = ps->GetScoped<bool>("useloglambdasampling");
-    m_opt_fitcontinuum_maxN = ps->GetScoped<Int32>("continuumfit.count");
+        ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
+    m_useloglambdasampling = ps->GetScoped<bool>("useLogLambdaSampling");
+    m_opt_fitcontinuum_maxN = ps->GetScoped<Int32>("continuumFit.count");
   }
 }
 
@@ -191,12 +191,12 @@ void CLineModelFitting::logParameters() {
                 << m_opt_firstpass_forcedisableMultipleContinuumfit);
   Log.LogDetail(Formatter() << "m_opt_firstpass_fittingmethod "
                             << m_opt_firstpass_fittingmethod);
-  Log.LogDetail(Formatter() << "m_opt_secondpass_fittingmethod"
+  Log.LogDetail(Formatter() << "m_opt_secondpass_fittingMethod"
                             << m_opt_secondpass_fittingmethod);
 
   Log.LogDetail(Formatter() << "nominalWidthDefault=" << m_nominalWidthDefault);
 
-  Log.LogDetail(Formatter() << "fittingmethod=" << m_fittingmethod);
+  Log.LogDetail(Formatter() << "fittingMethod=" << m_fittingmethod);
 
   Log.LogDetail(Formatter() << "lineRatioType=" << m_lineRatioType);
 
@@ -299,14 +299,14 @@ bool CLineModelFitting::initDtd() {
   if (isContinuumComponentTplfitxx())
     m_dTransposeD = EstimateDTransposeD("raw");
   else
-    m_dTransposeD = EstimateDTransposeD("nocontinuum");
+    m_dTransposeD = EstimateDTransposeD("noContinuum");
 
   m_likelihood_cstLog = EstimateLikelihoodCstLog();
   return true;
 }
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
-  if (getContinuumComponent() == "nocontinuum")
+  if (getContinuumComponent() == "noContinuum")
     return;
 
   if (!isContinuumComponentTplfitxx()) {
@@ -323,7 +323,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
 
     getSpectrumModel().initObserveGridContinuumFlux(
         getSpectrum().GetSampleCount());
-    Int32 autoselect = getContinuumComponent() == "tplfitauto";
+    Int32 autoselect = getContinuumComponent() == "tplFitAuto";
     m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
   }
   //  *m_curObs = 0;
@@ -373,9 +373,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   for (Int32 k = 0; k < nContinuum; k++) {
 
     Float64 _merit = INFINITY;
-    Float64 _meritprior = 0.; // only relevant for "tplratio"
+    Float64 _meritprior = 0.; // only relevant for "tplRatio"
     prepareAndLoadContinuum(k, redshift);
-    if (getContinuumComponent() != "nocontinuum")
+    if (getContinuumComponent() != "noContinuum")
       computeSpectrumFluxWithoutContinuum();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
@@ -401,7 +401,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         m_lineRatioManager->saveResults(itratio);
       }
-      if (getContinuumComponent() == "nocontinuum") {
+      if (getContinuumComponent() == "noContinuum") {
         for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++)
           getSpectrumModel().reinitModel();
       }
@@ -414,7 +414,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (isContinuumComponentTplfitxx()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
       Int32 autoselect =
-          m_continuumManager->getContinuumComponent() == "tplfitauto";
+          m_continuumManager->getContinuumComponent() == "tplFitAuto";
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
 
@@ -431,7 +431,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                   m_fitContinuum_tplFitAmplitude);
     */
   }
-  if (m_lineRatioType == "tplratio") {
+  if (m_lineRatioType == "tplRatio") {
     m_lineRatioManager->resetToBestRatio(redshift);
     Int32 modelSolutionLevel = Int32(enableLogging);
     modelSolution = GetModelSolution(modelSolutionLevel);
@@ -1180,7 +1180,7 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
     Float64 imax =
         spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
     for (Int32 j = imin; j < imax; j++) {
-      if (spcComponent == "nocontinuum")
+      if (spcComponent == "noContinuum")
         flux = YspcNoContinuum[j];
       else
         flux = Yspc[j];

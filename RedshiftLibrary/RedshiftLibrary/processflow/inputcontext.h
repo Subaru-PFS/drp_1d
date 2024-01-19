@@ -90,9 +90,9 @@ public:
     return m_TemplateCatalog;
   }
   std::shared_ptr<const CLineCatalogsTplRatio>
-  GetTemplateRatioCatalog(const std::string &objectType) const;
+  GetTemplateRatioCatalog(const std::string &spectrumModel) const;
   std::shared_ptr<const CLineCatalog>
-  GetLineCatalog(const std::string &objectType,
+  GetLineCatalog(const std::string &spectrumModel,
                  const std::string &method) const;
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog() const {
     return m_photBandCatalog;
@@ -116,10 +116,10 @@ public:
     return m_TemplateCatalog;
   }
   const std::shared_ptr<CLineCatalogsTplRatio> &
-  GetTemplateRatioCatalog(const std::string &objectType);
+  GetTemplateRatioCatalog(const std::string &spectrumModel);
   const std::shared_ptr<CLineCatalog> &
-  GetLineCatalog(const std::string &objectType, const std::string &method);
-  const CLineMap GetFilteredLineMap(const std::string &objectType,
+  GetLineCatalog(const std::string &spectrumModel, const std::string &method);
+  const CLineMap GetFilteredLineMap(const std::string &spectrumModel,
                                     const std::string &method,
                                     const std::string &type,
                                     const std::string &force);
@@ -142,10 +142,10 @@ public:
   TStringList
       m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
-  void setLineCatalog(const std::string &objectType, const std::string &method,
+  void setLineCatalog(const std::string &spectrumModel, const std::string &method,
                       const std::shared_ptr<CLineCatalog> &catalog);
   void setLineRatioCatalogCatalog(
-      const std::string &objectType,
+      const std::string &spectrumModel,
       const std::shared_ptr<CLineCatalogsTplRatio> &catalog);
   void
   setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog) {
@@ -235,37 +235,37 @@ private:
 };
 
 inline std::shared_ptr<const CLineCatalog>
-CInputContext::GetLineCatalog(const std::string &objectType,
+CInputContext::GetLineCatalog(const std::string &spectrumModel,
                               const std::string &method) const {
-  return const_cast<CInputContext *>(this)->GetLineCatalog(objectType, method);
+  return const_cast<CInputContext *>(this)->GetLineCatalog(spectrumModel, method);
 }
 
 inline const std::shared_ptr<CLineCatalog> &
-CInputContext::GetLineCatalog(const std::string &objectType,
+CInputContext::GetLineCatalog(const std::string &spectrumModel,
                               const std::string &method) {
 
-  return m_lineCatalogs[objectType][method];
+  return m_lineCatalogs[spectrumModel][method];
 }
 
 inline const CLineMap CInputContext::GetFilteredLineMap(
-    const std::string &objectType, const std::string &method,
+    const std::string &spectrumModel, const std::string &method,
     const std::string &type, const std::string &force) {
 
-  return m_lineCatalogs[objectType][method]->GetFilteredList(type, force);
+  return m_lineCatalogs[spectrumModel][method]->GetFilteredList(type, force);
 }
 
 inline std::shared_ptr<const CLineCatalogsTplRatio>
-CInputContext::GetTemplateRatioCatalog(const std::string &objectType) const {
-  return const_cast<CInputContext *>(this)->GetTemplateRatioCatalog(objectType);
+CInputContext::GetTemplateRatioCatalog(const std::string &spectrumModel) const {
+  return const_cast<CInputContext *>(this)->GetTemplateRatioCatalog(spectrumModel);
 }
 
 inline const std::shared_ptr<CLineCatalogsTplRatio> &
-CInputContext::GetTemplateRatioCatalog(const std::string &objectType) {
-  //  if (std::findm_categories.find(objectType))
+CInputContext::GetTemplateRatioCatalog(const std::string &spectrumModel) {
+  //  if (std::findm_categories.find(spectrumModel))
   // throw
   // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetTemplateRatioCatalog:
   // invalid object type");
-  return m_lineRatioCatalogCatalogs[objectType];
+  return m_lineRatioCatalogCatalogs[spectrumModel];
 }
 
 } // namespace NSEpic

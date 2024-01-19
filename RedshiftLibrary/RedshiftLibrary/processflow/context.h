@@ -83,14 +83,14 @@ public:
   setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog) {
     m_inputContext->setPhotBandCatalog(photBandCatalog);
   }
-  void setLineCatalog(const std::string &objectType, const std::string &method,
+  void setLineCatalog(const std::string &spectrumModel, const std::string &method,
                       const std::shared_ptr<CLineCatalog> &catalog) {
-    m_inputContext->setLineCatalog(objectType, method, catalog);
+    m_inputContext->setLineCatalog(spectrumModel, method, catalog);
   }
   void setLineRatioCatalogCatalog(
-      const std::string &objectType,
+      const std::string &spectrumModel,
       const std::shared_ptr<CLineCatalogsTplRatio> &catalog) {
-    m_inputContext->setLineRatioCatalogCatalog(objectType, catalog);
+    m_inputContext->setLineRatioCatalogCatalog(spectrumModel, catalog);
   }
   void
   setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
@@ -120,9 +120,9 @@ public:
   }
 
   std::shared_ptr<const CLineCatalog>
-  GetLineCatalog(const std::string &objectType,
+  GetLineCatalog(const std::string &spectrumModel,
                  const std::string &method) const {
-    return m_inputContext->GetLineCatalog(objectType, method);
+    return m_inputContext->GetLineCatalog(spectrumModel, method);
   }
   std::shared_ptr<const CParameterStore> GetParameterStore() const {
     return m_inputContext->GetParameterStore();
@@ -151,9 +151,9 @@ public:
   }
 
   const std::string &GetCurrentMethod() const {
-    if (m_ScopeStack.size() < 2)
+    if (m_ScopeStack.size() < 3)
       THROWG(INTERNAL_ERROR, "Method unreachable at process flow begin or end");
-    return m_ScopeStack[1];
+    return m_ScopeStack[2];
   }
 
   const CLineMap getCLineMap();

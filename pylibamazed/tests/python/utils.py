@@ -80,15 +80,62 @@ def make_parameter_dict(**kwargs) -> dict:
 
 def make_parameter_dict_at_object_level(**kwargs) -> dict:
     param_dict = {
-        "objects": [default_object_type],
-        default_object_type: {}
+        "spectrumModels": [default_object_type],
+        default_object_type: kwargs
     }
+    return param_dict
 
-    for key, value in kwargs.items():
-        param_dict[default_object_type][key] = value
+
+def make_parameter_dict_at_redshift_solver_level(object_level_params=None, **redshift_kwargs) -> dict:
+    param_dict = {
+        "spectrumModels": [default_object_type],
+        default_object_type: {
+            "stages": ["redshiftSolver"],
+            "redshiftSolver": redshift_kwargs,
+        }
+    }
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[default_object_type][key] = val
+    return param_dict
+
+
+def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwargs) -> dict:
+    param_dict = {
+        "spectrumModels": [default_object_type],
+        default_object_type: {
+            "lineMeasDzHalf": 0.1,
+            "lineMeasRedshiftStep": 0.1,
+            "stages": ["lineMeasSolver"],
+            "lineMeasSolver": {
+                "method": "lineMeasSolve",
+                "lineMeasSolve": kwargs,
+            }
+        }
+    }
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[default_object_type][key] = val
+    return param_dict
+
+
+def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=None, **kwargs) -> dict:
+    param_dict = {
+        "spectrumModels": [default_object_type],
+        default_object_type: {
+            "stages": ["reliabilitySolver"],
+            "reliabilitySolver": {
+                "method": "deepLearningSolver",
+                "deepLearningSolver": kwargs,
+            }
+        }
+    }
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[default_object_type][key] = val
     return param_dict
 
 
 def check_from_parameter_dict(param_dict: dict):
     accessor = ParametersAccessor(param_dict)
-    ParametersChecker(accessor).custom_check()
+    ParametersChecker().custom_check(accessor)

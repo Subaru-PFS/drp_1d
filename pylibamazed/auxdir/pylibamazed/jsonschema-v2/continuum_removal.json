@@ -1,0 +1,31 @@
+{
+  "$id": "continuum-removal",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Continuum removal",
+  "type": "object",
+  "required": [
+    "method"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": [
+        "zero",
+        "irregularSamplingMedian",
+        "raw"
+      ],
+      "title": "Continuum estimation method"
+    },
+    "medianKernelWidth": {
+      "type": "number",
+      "title": "Median kernel width",
+      "description": "Only for irregularSamplingMedian method. In Angstroms."
+    },
+    "medianEvenReflection": {
+      "type": "boolean",
+      "title": "Media even reflection",
+      "description": "Only for irregularSamplingMedian method. Use even or odd reflection to extend the flux"
+    }
+  }
+}

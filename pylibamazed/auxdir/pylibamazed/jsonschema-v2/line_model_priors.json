@@ -1,0 +1,35 @@
+{
+  "$id": "priors-schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Priors",
+  "type": "object",
+  "required": [
+    "betaA",
+    "betaTE",
+    "betaZ",
+    "catalogDirpath"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "betaA": {
+      "type": "number",
+      "title": "Beta A",
+      "description": "Weight to amplitudes prior, strength (beta) of the penalty, the chi2 penalty is thus `-2 betaA log(P(a |z,TE))`. Negative or zero values => no penalty"
+    },
+    "betaTE": {
+      "type": "number",
+      "title": "Beta TE",
+      "description": "Weight to templates and ISM parameters (template index and tabulated Ebmv), the chi2 penalty is thus `-2 betaTE log(P(TE|z))`"
+    },
+    "betaZ": {
+      "type": "number",
+      "title": "Beta Z",
+      "description": "Weight to redshift prior (redshift bins), the chi2 penalty is thus `-2 betaZ log(P(z))`"
+    },
+    "catalogDirpath": {
+      "type": "string",
+      "title": "Catalog directory path",
+      "description": "Absolute path to the calibration file containing the parameters probability, empty string unset all priors"
+    }
+  }
+}

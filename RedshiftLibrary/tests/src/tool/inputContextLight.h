@@ -89,11 +89,11 @@ public:
   TFloat64List width = {1, 2, 3, 4, 5};
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianVarWidthArgs>(wave, width);
-  std::shared_ptr<CLSF> LSF = LSFFactory.Create("GaussianVariableWidth", args);
+  std::shared_ptr<CLSF> LSF = LSFFactory.Create("gaussianVariableWidth", args);
 };
 
 std::string jsonString_LSFConstantRes =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\" , \"resolution\" "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\" , \"resolution\" "
     ": 4300}}";
 class fixture_LSFGaussianConstantResolution {
 public:
@@ -102,7 +102,7 @@ public:
         std::make_shared<TLSFGaussianConstantResolutionArgs>(
             fixture_ParamStore(jsonString_LSFConstantRes, scopeStack)
                 .paramStore);
-    LSF = LSFFactory.Create("GaussianConstantResolution", args);
+    LSF = LSFFactory.Create("gaussianConstantResolution", args);
   }
   std::shared_ptr<CLSF> LSF;
 };
@@ -110,11 +110,11 @@ public:
 class fixture_LSFGaussianNISPSIM2016 {
 public:
   std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFArguments>();
-  std::shared_ptr<CLSF> LSF = LSFFactory.Create("GaussianNISPSIM2016", args);
+  std::shared_ptr<CLSF> LSF = LSFFactory.Create("gaussianNISPSIM2016", args);
 };
 
 std::string jsonString_LSFGaussian =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianNISPVSSPSF201707\" , \"sourcesize\" : "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianNISPVSSPSF201707\" , \"sourceSize\" : "
     "0.1}}";
 class fixture_LSFGaussianNISPVSSPSF201707 {
 public:
@@ -122,13 +122,13 @@ public:
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianNISPVSSPSF201707Args>(
             fixture_ParamStore(jsonString_LSFGaussian, scopeStack).paramStore);
-    LSF = LSFFactory.Create("GaussianNISPVSSPSF201707", args);
+    LSF = LSFFactory.Create("gaussianNISPVSSPSF201707", args);
   }
   std::shared_ptr<CLSF> LSF;
 };
 
 std::string jsonString_LSFConstantWidth =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantWidth\" , \"width\" : "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianConstantWidth\" , \"width\" : "
     "1.09}}";
 class fixture_LSFGaussianConstantWidth {
 public:
@@ -138,7 +138,7 @@ public:
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianConstantWidthArgs>(
             fixture_ParamStore(jsonStr, scopeStack).paramStore);
-    LSF = LSFFactory.Create("GaussianConstantWidth", args);
+    LSF = LSFFactory.Create("gaussianConstantWidth", args);
   }
   std::shared_ptr<CLSF> LSF;
 };
@@ -1305,7 +1305,7 @@ public:
     spc = fixture_SharedSpectrumLog().spc;
 
     ctx->m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-        paramStore->Get<TFloat64Range>("lambdarange")));
+        paramStore->Get<TFloat64Range>("lambdaRange")));
     ctx->addSpectrum(spc);
     ctx->m_logGridStep = spc->GetSpectralAxis().GetlogGridStep();
     ctx->addRebinSpectrum(spc);
@@ -1319,7 +1319,7 @@ public:
     std::shared_ptr<CSpectrum> spc;
     ctx = std::make_shared<CInputContext>(paramStore);
     ctx->m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-        paramStore->Get<TFloat64Range>("lambdarange")));
+        paramStore->Get<TFloat64Range>("lambdaRange")));
 
     spc = fixture_SharedSpectrum().spc;
     TFloat64List spcAxis =
@@ -1357,14 +1357,14 @@ public:
   }
 
   void
-  setLineRatioCatalogCatalog(std::string objectType,
+  setLineRatioCatalogCatalog(std::string spectrumModel,
                              std::shared_ptr<CLineCatalogsTplRatio> catalog) {
-    Context.setLineRatioCatalogCatalog(objectType, catalog);
+    Context.setLineRatioCatalogCatalog(spectrumModel, catalog);
   }
 
-  void setLineCatalog(std::string objectType, std::string method,
+  void setLineCatalog(std::string spectrumModel, std::string method,
                       std::shared_ptr<CLineCatalog> catalog) {
-    Context.setLineCatalog(objectType, method, catalog);
+    Context.setLineCatalog(spectrumModel, method, catalog);
   }
 
   void addSpectrum(std::shared_ptr<CSpectrum> spc, std::shared_ptr<CLSF> LSF) {

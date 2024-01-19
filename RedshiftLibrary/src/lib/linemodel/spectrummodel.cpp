@@ -383,7 +383,7 @@ void CSpectrumModel::setContinuumComponent(const std::string &component) {
 
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
 
-  if (component == "nocontinuum") {
+  if (component == "noContinuum") {
     // the continuum is set to zero and the observed spectrum is the spectrum
     // without continuum
     m_spcFluxAxisNoContinuum =
@@ -393,7 +393,7 @@ void CSpectrumModel::setContinuumComponent(const std::string &component) {
     m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
     m_ContinuumFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
   }
-  if (component == "fromspectrum") {
+  if (component == "fromSpectrum") {
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
     m_spcFluxAxisNoContinuum = m_inputSpc->GetWithoutContinuumFluxAxis();
@@ -401,7 +401,7 @@ void CSpectrumModel::setContinuumComponent(const std::string &component) {
     m_ContinuumFluxAxis = m_inputSpc->GetContinuumFluxAxis();
     m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
   }
-  if (component == "tplfit" || component == "tplfitauto") {
+  if (component == "tplFit" || component == "tplFitAuto") {
     // the continuum is set to zero and the observed spectrum is the raw
     // spectrum
     m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();

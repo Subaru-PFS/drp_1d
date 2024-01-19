@@ -45,8 +45,8 @@
 using namespace NSEpic;
 
 CClassificationSolve::CClassificationSolve(TScopeStack &scope,
-                                           std::string objectType)
-    : CSolve("classification", scope, objectType) {}
+                                           std::string spectrumModel)
+    : CSolve("classification", "classification", scope, spectrumModel) {}
 
 std::shared_ptr<CSolveResult>
 CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
@@ -56,38 +56,39 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   std::map<std::string, std::weak_ptr<const CPdfSolveResult>> results;
   std::map<std::string, Float64> logEvidences;
   std::map<std::string, bool> hasResult;
-  for (const std::string &category : inputContext->m_categories) {
+  std::string stage = "redshiftSolver";
+  for (const std::string &spectrumModel : inputContext->m_categories) {
     const std::string &method =
-        inputContext->GetParameterStore()->Get<std::string>(category +
+        inputContext->GetParameterStore()->Get<std::string>(spectrumModel + "." + stage +
                                                             ".method");
 
-    if (resultStore->hasSolveResult(category, method)) {
-      results[category] = std::dynamic_pointer_cast<const CPdfSolveResult>(
-          resultStore->GetSolveResult(category, method).lock());
-      hasResult[category] = true;
+    if (resultStore->hasSolveResult(spectrumModel, stage, method)) {
+      results[spectrumModel] = std::dynamic_pointer_cast<const CPdfSolveResult>(
+          resultStore->GetSolveResult(spectrumModel, stage, method).lock());
+      hasResult[spectrumModel] = true;
     } else
-      hasResult[category] = false;
+      hasResult[spectrumModel] = false;
 
-    logEvidences[category] = -INFINITY;
+    logEvidences[spectrumModel] = -INFINITY;
   }
   std::shared_ptr<CClassificationResult> classifResult =
       std::make_shared<CClassificationResult>();
   Float64 MaxLogEvidence = -DBL_MAX;
-  for (const std::string &category : inputContext->m_categories) {
-    if (hasResult[category]) {
-      logEvidences[category] = results[category].lock()->getEvidence();
-      if (logEvidences[category] > MaxLogEvidence) {
-        MaxLogEvidence = logEvidences[category];
-        typeLabel = category;
+  for (const std::string &spectrumModel : inputContext->m_categories) {
+    if (hasResult[spectrumModel]) {
+      logEvidences[spectrumModel] = results[spectrumModel].lock()->getEvidence();
+      if (logEvidences[spectrumModel] > MaxLogEvidence) {
+        MaxLogEvidence = logEvidences[spectrumModel];
+        typeLabel = spectrumModel;
       }
     }
   }
   Log.LogInfo("Setting object type: %s", typeLabel.c_str());
   Float64 sum = 0.;
 
-  for (const std::string &category : inputContext->m_categories) {
-    if (hasResult[category]) {
-      Float64 Proba = exp(logEvidences[category] - MaxLogEvidence);
+  for (const std::string &spectrumModel : inputContext->m_categories) {
+    if (hasResult[spectrumModel]) {
+      Float64 Proba = exp(logEvidences[spectrumModel] - MaxLogEvidence);
       sum += Proba;
     }
   }
@@ -95,15 +96,15 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
     THROWG(NO_CLASSIFICATION,
            "Classification failed, all probabilities undefined");
   }
-  for (const std::string &category : inputContext->m_categories) {
-    if (hasResult[category]) {
-      Float64 proba = exp(logEvidences[category] - MaxLogEvidence);
+  for (const std::string &spectrumModel : inputContext->m_categories) {
+    if (hasResult[spectrumModel]) {
+      Float64 proba = exp(logEvidences[spectrumModel] - MaxLogEvidence);
       proba /= sum;
-      classifResult->SetProba(category, proba);
-      classifResult->SetEvidence(category, logEvidences[category]);
+      classifResult->SetProba(spectrumModel, proba);
+      classifResult->SetEvidence(spectrumModel, logEvidences[spectrumModel]);
     } else {
-      classifResult->SetProba(category, 0.);
-      classifResult->SetEvidence(category, -INFINITY);
+      classifResult->SetProba(spectrumModel, 0.);
+      classifResult->SetEvidence(spectrumModel, -INFINITY);
     }
   }
   classifResult->SetTypeLabel(typeLabel);

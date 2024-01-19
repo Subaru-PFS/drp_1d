@@ -199,10 +199,10 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     TInt32Range lsf_indices = getWaveRangeIndices(lsf_range, true);
     if (lsf_indices.GetBegin() < 0 || lsf_indices.GetEnd() >= m_LambdaSize)
       THROWG(INTERNAL_ERROR,
-             "LSF kernel does not overlap meiksin curve samples");
+             "lsf kernel does not overlap meiksin curve samples");
     if (lsf_indices.GetLength() < 0)
       THROWG(INTERNAL_ERROR,
-             "LSF kernel smaller than Meiksin wavelength steps");
+             "lsf kernel smaller than Meiksin wavelength steps");
     TFloat64List lambdas_obs(lsf_indices.GetLength() + 1);
     std::transform(lambdas.cbegin() + lsf_indices.GetBegin(),
                    lambdas.cbegin() + lsf_indices.GetEnd() + 1,

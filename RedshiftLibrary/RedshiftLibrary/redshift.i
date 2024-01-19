@@ -515,35 +515,36 @@ class COperatorResultStore
   COperatorResultStore(const TScopeStack& scopeStack);
 
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
+                                                                       const std::string& stage,
                                                                        const std::string& method,
                                                                        const std::string& name ) const;
 
-  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType,
+  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType, const std::string& stage,
 									 const std::string& method,
                                                                        const std::string& name ) const;
 
-  std::shared_ptr<const CLogZPdfResult> GetLogZPdfResult(const std::string& objectType,
+  std::shared_ptr<const CLogZPdfResult> GetLogZPdfResult(const std::string& objectType, const std::string& stage,
 								    const std::string& method,
 								    const std::string& name ) const;
 
-  std::shared_ptr<const CFlagLogResult> GetFlagLogResult(const std::string& objectType,
+  std::shared_ptr<const CFlagLogResult> GetFlagLogResult(const std::string& objectType, const std::string& stage,
 							 const std::string& method,
 							 const std::string& name ) const;
 
-  std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
+  std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType, const std::string& stage,
 							     const std::string& method,
 							     const std::string& name ,
 							     const std::string &dataset,
 							     const int& rank,
                    bool firstpassResults
 							     ) const;
-  std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
+  std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType, const std::string& stage,
 										 const std::string& method,
 										 const std::string& name ,
 								     const std::string &dataset,
 										 const int& rank
 										 ) const;
-  std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType,
+  std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType, const std::string& stage,
 										 const std::string& method,
 										 const std::string& name ,
                      const std::string &dataset,
@@ -551,54 +552,54 @@ class COperatorResultStore
 									       ) const;
 
 
-  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType, const std::string& stage,
 								 const std::string& method,
 								 const std::string& name,
 								 const std::string &dataset,
 								 const int& rank 
 								 ) const  ;
 
-    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType, const std::string& stage,
 								 const std::string& method,
 								 const std::string& name 
 								 ) const  ;
 
-  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
+  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType, const std::string& stage,
 								     const std::string& method,
 								     const std::string& name ,
 								     const std::string &dataset,
 								     const int& rank
 								     ) const  ;
 
-  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
+  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType, const std::string& stage,
 								     const std::string& method,
 								     const std::string& name 
 								     ) const  ;
-  std::shared_ptr<const CModelPhotValueResult> GetModelPhotValueResult(const std::string &objectType,
+  std::shared_ptr<const CModelPhotValueResult> GetModelPhotValueResult(const std::string &objectType, const std::string& stage,
                                             const std::string &method,
                                             const std::string &name,
                                             const std::string &dataset,
                                             const int &rank) const;
 
-  const std::string&  GetGlobalResultType(const std::string& objectType,
+  const std::string&  GetGlobalResultType(const std::string& objectType, const std::string& stage,
                                           const std::string& method,
                                           const std::string& name ) const;
 
-    const std::string&  GetCandidateResultType(const std::string& objectType,
+    const std::string&  GetCandidateResultType(const std::string& objectType, const std::string& stage,
 					     const std::string& method,
 					     const std::string& name ,
 					     const std::string& dataset) const;
 
-      bool HasCandidateDataset(const std::string& objectType,
+      bool HasCandidateDataset(const std::string& objectType, const std::string& stage,
 			   const std::string& method,
 			   const std::string& name ,
 			   const std::string& dataset) const;
 
-      bool HasDataset(const std::string& objectType,
+      bool HasDataset(const std::string& objectType, const std::string& stage,
 			   const std::string& method,
 			   const std::string& name ) const;
 
-  int getNbRedshiftCandidates(const std::string& objectType,
+  int getNbRedshiftCandidates(const std::string& objectType, const std::string& stage,
 			      const std::string& method) const;
 
   void StoreFlagResult( const std::string& name, Int32  result );

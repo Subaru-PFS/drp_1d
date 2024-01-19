@@ -163,20 +163,22 @@ COperatorResultStore::GetScopedGlobalResult(const std::string &name) const {
 }
 
 std::weak_ptr<const COperatorResult>
-COperatorResultStore::GetGlobalResult(const std::string &objectType,
+COperatorResultStore::GetGlobalResult(const std::string &spectrumModel,
+                                      const std::string &stage,
                                       const std::string &method,
                                       const std::string &name) const {
   std::ostringstream oss;
-  oss << objectType << "." << method << "." << name;
+  oss << spectrumModel << "." << stage << "." << method << "." << name;
   return GetGlobalResult(oss.str());
 }
 
 std::shared_ptr<const CClassificationResult>
-COperatorResultStore::GetClassificationResult(const std::string &objectType,
+COperatorResultStore::GetClassificationResult(const std::string &spectrumModel,
+                                              const std::string &stage,
                                               const std::string &method,
                                               const std::string &name) const {
   std::ostringstream oss;
-  oss << objectType << "." << method << "." << name;
+  oss << spectrumModel << "." << stage << "." << method << "." << name;
   std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
   return std::dynamic_pointer_cast<const CClassificationResult>(
@@ -184,11 +186,12 @@ COperatorResultStore::GetClassificationResult(const std::string &objectType,
 }
 
 std::shared_ptr<const CReliabilityResult>
-COperatorResultStore::GetReliabilityResult(const std::string &objectType,
-                                           const std::string &method,
+COperatorResultStore::GetReliabilityResult(const std::string &spectrumModel,
+                                            const std::string &stage,
+                                            const std::string &method,
                                            const std::string &name) const {
   std::ostringstream oss;
-  oss << objectType << "." << method << "." << name;
+  oss << spectrumModel << "." << stage << "." << method << "." << name;
   std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
   return std::dynamic_pointer_cast<const CReliabilityResult>(
@@ -196,47 +199,44 @@ COperatorResultStore::GetReliabilityResult(const std::string &objectType,
 }
 
 std::shared_ptr<const CLogZPdfResult>
-COperatorResultStore::GetLogZPdfResult(const std::string &objectType,
+COperatorResultStore::GetLogZPdfResult(const std::string &spectrumModel,
+                                       const std::string &stage,
                                        const std::string &method,
                                        const std::string &name) const {
   std::ostringstream oss;
-  oss << objectType << "." << method << "." << name;
+  oss << spectrumModel << "." << stage << "." <<method << "." << name;
 
   return std::dynamic_pointer_cast<const CLogZPdfResult>(
       GetGlobalResult(oss.str()).lock());
 }
 
 std::shared_ptr<const CFlagLogResult>
-COperatorResultStore::GetFlagLogResult(const std::string &objectType,
+COperatorResultStore::GetFlagLogResult(const std::string &spectrumModel,
+                                      const std::string &stage,
                                        const std::string &method,
                                        const std::string &name) const {
   std::ostringstream oss;
-  if (objectType == name) {
+  if (spectrumModel == name) {
     oss << name;
   } else {
-    oss << objectType << "." << method << "." << name;
+    oss << spectrumModel << "." << stage << "." << method << "." << name;
   }
 
   std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
   return std::dynamic_pointer_cast<const CFlagLogResult>(
       GetGlobalResult(oss.str()).lock());
-}
-
-// std::shared_ptr<const CLineModelExtremaResult<TLineModelResult>>
-
-// TODO AA those getters should have an argument std::string dataset, rather
-// than hard coded values
+                                       }
 
 std::shared_ptr<const TLineModelResult>
 COperatorResultStore::GetLineModelResult(
-    const std::string &objectType, const std::string &method,
+    const std::string &spectrumModel, const std::string &stage, const std::string &method,
     const std::string &name, const std::string &dataset, const int &rank,
     bool firstpassCorrespondingResult) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
-      GetGlobalResult(objectType, method, name)
+      GetGlobalResult(spectrumModel,stage, method, name)
           .lock()
           ->getCandidate(rank, dataset, firstpassCorrespondingResult);
 
@@ -248,7 +248,8 @@ COperatorResultStore::GetLineModelResult(
 }
 
 std::shared_ptr<const TTplCombinationResult>
-COperatorResultStore::GetTplCombinationResult(const std::string &objectType,
+COperatorResultStore::GetTplCombinationResult(const std::string &spectrumModel,
+                                              const std::string &stage,
                                               const std::string &method,
                                               const std::string &name,
                                               const std::string &dataset,
@@ -256,7 +257,7 @@ COperatorResultStore::GetTplCombinationResult(const std::string &objectType,
 
 {
   std::shared_ptr<const COperatorResult> cop =
-      GetGlobalResult(objectType, method, name)
+      GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
           ->getCandidate(rank, dataset);
   std::shared_ptr<const TTplCombinationResult> ttc =
@@ -265,12 +266,12 @@ COperatorResultStore::GetTplCombinationResult(const std::string &objectType,
 }
 
 std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
-    const std::string &objectType, const std::string &method,
+    const std::string &spectrumModel, const std::string &stage, const std::string &method,
     const std::string &name, const std::string &dataset, const int &rank) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
-      GetGlobalResult(objectType, method, name)
+      GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
           ->getCandidate(rank, dataset);
   std::shared_ptr<const TExtremaResult> tlm =
@@ -279,15 +280,17 @@ std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
 }
 
 std::shared_ptr<const CLineModelSolution>
-COperatorResultStore::GetLineModelSolution(const std::string &objectType,
+COperatorResultStore::GetLineModelSolution(const std::string &spectrumModel,
+                                           const std::string &stage,
                                            const std::string &method,
                                            const std::string &name) const {
   return std::dynamic_pointer_cast<const CLineModelSolution>(
-      GetGlobalResult(objectType, method, name).lock());
+      GetGlobalResult(spectrumModel, stage, method, name).lock());
 }
 
 std::shared_ptr<const CModelSpectrumResult>
-COperatorResultStore::GetModelSpectrumResult(const std::string &objectType,
+COperatorResultStore::GetModelSpectrumResult(const std::string &spectrumModel,
+                                             const std::string &stage,
                                              const std::string &method,
                                              const std::string &name,
                                              const std::string &dataset,
@@ -295,13 +298,14 @@ COperatorResultStore::GetModelSpectrumResult(const std::string &objectType,
 
 {
   return std::dynamic_pointer_cast<const CModelSpectrumResult>(
-      GetGlobalResult(objectType, method, name)
+      GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
           ->getCandidate(rank, dataset));
 }
 
 std::shared_ptr<const CModelPhotValueResult>
-COperatorResultStore::GetModelPhotValueResult(const std::string &objectType,
+COperatorResultStore::GetModelPhotValueResult(const std::string &spectrumModel,
+                                              const std::string &stage,
                                               const std::string &method,
                                               const std::string &name,
                                               const std::string &dataset,
@@ -309,13 +313,14 @@ COperatorResultStore::GetModelPhotValueResult(const std::string &objectType,
 
 {
   return std::dynamic_pointer_cast<const CModelPhotValueResult>(
-      GetGlobalResult(objectType, method, name)
+      GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
           ->getCandidate(rank, dataset));
 }
 
 std::shared_ptr<const CLineModelSolution>
-COperatorResultStore::GetLineModelSolution(const std::string &objectType,
+COperatorResultStore::GetLineModelSolution(const std::string &spectrumModel,
+                                           const std::string &stage,
                                            const std::string &method,
                                            const std::string &name,
                                            const std::string &dataset,
@@ -323,52 +328,55 @@ COperatorResultStore::GetLineModelSolution(const std::string &objectType,
 
 {
   return std::dynamic_pointer_cast<const CLineModelSolution>(
-      GetGlobalResult(objectType, method, name)
+      GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
           ->getCandidate(rank, dataset));
 }
 
 std::shared_ptr<const CModelSpectrumResult>
-COperatorResultStore::GetModelSpectrumResult(const std::string &objectType,
+COperatorResultStore::GetModelSpectrumResult(const std::string &spectrumModel,
+                                             const std::string &stage,
                                              const std::string &method,
                                              const std::string &name) const
 
 {
   return std::dynamic_pointer_cast<const CModelSpectrumResult>(
-      GetGlobalResult(objectType, method, name).lock());
+      GetGlobalResult(spectrumModel, stage, method, name).lock());
 }
 
 const std::string &
-COperatorResultStore::GetGlobalResultType(const std::string &objectType,
+COperatorResultStore::GetGlobalResultType(const std::string &spectrumModel,
+                                          const std::string &stage,
                                           const std::string &method,
                                           const std::string &name) const {
-  return GetGlobalResult(objectType, method, name).lock()->getType();
+  return GetGlobalResult(spectrumModel, stage, method, name).lock()->getType();
 }
 
 const std::string &COperatorResultStore::GetCandidateResultType(
-    const std::string &objectType, const std::string &method,
+    const std::string &spectrumModel, const std::string &stage, const std::string &method,
     const std::string &name, const std::string &dataset) const {
-  return GetGlobalResult(objectType, method, name)
+  return GetGlobalResult(spectrumModel, stage, method, name)
       .lock()
       ->getCandidateDatasetType(dataset);
 }
 
 bool COperatorResultStore::HasCandidateDataset(
-    const std::string &objectType, const std::string &method,
+    const std::string &spectrumModel, const std::string &stage, const std::string &method,
     const std::string &name, const std::string &dataset) const {
-  if (HasDataset(objectType, method, name)) {
-    return GetGlobalResult(objectType, method, name)
+  if (HasDataset(spectrumModel, stage, method, name)) {
+    return GetGlobalResult(spectrumModel, stage, method, name)
         .lock()
         ->HasCandidateDataset(dataset);
   } else
     return false;
 }
 
-bool COperatorResultStore::HasDataset(const std::string &objectType,
+bool COperatorResultStore::HasDataset(const std::string &spectrumModel,
+                                      const std::string &stage,
                                       const std::string &method,
                                       const std::string &name) const {
   std::ostringstream oss;
-  oss << objectType << "." << method << "." << name;
+  oss << spectrumModel << "." << stage << "." << method << "." << name;
   TResultsMap::const_iterator it = m_GlobalResults.find(oss.str());
   return (it != m_GlobalResults.end());
 }
@@ -381,14 +389,14 @@ bool COperatorResultStore::hasContextWarningFlag() const {
 
 bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
   TResultsMap::const_iterator it =
-      m_GlobalResults.find(GetScopedNameAt("warningFlag", 2));
+      m_GlobalResults.find(GetScopedNameAt("warningFlag", 3));
   return (it != m_GlobalResults.end());
 }
 
 int COperatorResultStore::getNbRedshiftCandidates(
-    const std::string &objectType, const std::string &method) const {
+    const std::string &spectrumModel, const std::string &stage, const std::string &method) const {
   std::ostringstream oss;
-  oss << objectType << "." << method << ".extrema_results";
+  oss << spectrumModel << "." << stage << "." << method << ".extrema_results";
   std::shared_ptr<const COperatorResult> cor =
       GetGlobalResult(oss.str()).lock();
   std::string type = cor->getType();
@@ -429,12 +437,14 @@ void COperatorResultStore::StoreFlagResult(const std::string &name,
 }
 
 std::weak_ptr<const COperatorResult>
-COperatorResultStore::GetSolveResult(const std::string &objectType,
+COperatorResultStore::GetSolveResult(const std::string &spectrumModel,
+                                     const std::string &stage,
                                      const std::string &method) const {
-  return GetGlobalResult(objectType, method, "solveResult");
+  return GetGlobalResult(spectrumModel, stage, method, "solveResult");
 }
 
-bool COperatorResultStore::hasSolveResult(const std::string &objectType,
+bool COperatorResultStore::hasSolveResult(const std::string &spectrumModel,
+                                          const std::string &stage,
                                           const std::string &method) const {
-  return HasDataset(objectType, method, "solveResult");
+  return HasDataset(spectrumModel, stage, method, "solveResult");
 }

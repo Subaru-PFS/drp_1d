@@ -149,23 +149,23 @@ private:
   };
 
   const bool m_enableVelocityFitting =
-      Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit");
+      Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit");
 
   const Float64 m_velfitMinE = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.emvelocityfitmin");
+      "lineModel.emVelocityFitMin");
   const Float64 m_velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.emvelocityfitmax");
+      "lineModel.emVelocityFitMax");
   const Float64 m_velfitMinA = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.absvelocityfitmin");
+      "lineModel.absVelocityFitMin");
   const Float64 m_velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.absvelocityfitmax");
+      "lineModel.absVelocityFitMax");
 
   const Float64 m_velIniGuessE =
       Context.GetParameterStore()->GetScoped<Float64>(
-          "linemodel.velocityemission");
+          "lineModel.velocityEmission");
   const Float64 m_velIniGuessA =
       Context.GetParameterStore()->GetScoped<Float64>(
-          "linemodel.velocityabsorption");
+          "lineModel.velocityAbsorption");
 };
 } // namespace NSEpic
 #endif

@@ -121,7 +121,7 @@ void CRebinFineGrid::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     // precomputedfinegrid
     if (opt_error_interp != "no")
       THROWG(INTERNAL_ERROR,
-             "noise rebining not implemented for precomputedfinegrid");
+             "noise rebining not implemented for preComputedFineGrid");
 
     cursor++;
   }

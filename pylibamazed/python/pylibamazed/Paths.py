@@ -40,7 +40,6 @@ import os
 
 module_root_dir = os.path.split(__file__)[0]
 
-rspecifications = os.path.join(module_root_dir, "resources", "results_specifications.csv")
+results_specifications_filename = os.path.join(module_root_dir, "resources", "results_specifications.csv")
 
-jsonSchemaFilename = os.path.join(module_root_dir, "resources", "general.json")
-jsonSchemaPath = f"file:///{os.path.join(module_root_dir, 'resources')}/"
+v1_to_treed_filename = os.path.join(module_root_dir, "resources", "rename_params_v1_to_treed.csv")

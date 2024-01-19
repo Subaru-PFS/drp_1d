@@ -68,12 +68,14 @@ protected:
 
   const TStringList m_categoryList;
   TFloat64Range m_lambdaRange;
-  CAutoScope m_objectTypeScope;
+  CAutoScope m_spectrumModelScope;
+  const std::string m_stage;
   const std::string m_name;
-  const std::string m_objectType;
+  const std::string m_spectrumModel;
 
 public:
-  CSolve(std::string name, TScopeStack &scope, std::string objectType);
+  CSolve(std::string name, TScopeStack &scope, std::string spectrumModel);
+  CSolve(std::string stage, std::string name, TScopeStack &scope, std::string spectrumModel);
   virtual ~CSolve() = default;
   CSolve(CSolve const &other) = default;
   CSolve &operator=(CSolve const &other) = default;

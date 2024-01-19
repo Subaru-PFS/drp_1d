@@ -48,11 +48,7 @@ from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
 from tests.python.fake_parameters_checker import FakeParametersChecker
-
-module_root_dir = os.path.split(__file__)[0]
-test_dir = os.path.join(
-    module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
-)
+from tests.python.config import test_dir
 
 
 def read_photometry_fromfile(fname):
@@ -151,7 +147,7 @@ def save_output(output, config, observation):
 
 def test_ITLikeTest():
     config = make_config()
-    param = Parameters(get_parameters(config["parameters_file"]), FakeParametersChecker)
+    param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
     context = Context(config, param)  # vars returns the dict version of config
     observation = get_observation(config["input_file"])
 
@@ -179,6 +175,8 @@ def test_ITLikeTest():
                                ("galaxy", "reliability_solver"),
                                ("", "classification"),
                                ("", "load_result_store")):
+        if output.has_error(object_type, stage):
+            print("object_type", object_type, "stage", stage, output.get_error(object_type, stage))
         assert output.has_error(object_type, stage) is False
 
     # add calls to output

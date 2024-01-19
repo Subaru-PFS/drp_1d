@@ -1,0 +1,74 @@
+{
+  "$id": "template-combination-solve",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Template combination solve",
+  "type": "object",
+  "required": [
+    "overlapThreshold",
+    "spectrum",
+    "interpolation",
+    "extremaCount",
+    "igmFit",
+    "ismFit",
+    "pdfCombination"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "overlapThreshold": {
+      "type": "number",
+      "title": "Overlap threshold",
+      "description": "Minimal fraction of the spectrum to be covered by the redshifted template to proceed (at each redshift)"
+    },
+    "spectrum": {
+      "type": "object",
+      "title": "Spectrum",
+      "required": [
+        "component"
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "enum": [
+            "raw",
+            "noContinuum",
+            "continuum",
+            "all"
+          ],
+          "title": "Spectrum components to fit",
+          "description": "Component of the spectrum (and templates) to fit. \n * **raw**: full spectrum and templates \n * **nocontinuum**: continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods) \n * **continuum**: continuum of the spectrum and templates \n * **all**: computes all 3 (\"raw\", \"noContinuum\" and \"continuum\") options, i.e. 3 chi2(z) in the resultstore, but only one pdf corresponding to \"raw\" option"
+        }
+      }
+    },
+    "interpolation": {
+      "type": "string",
+      "enum": [
+        "preComputedFineGrid",
+        "lin"
+      ],
+      "title": "Interpolation method",
+      "description": "Interpolation method to use to redshift the template:  \n * **lin**: linear interpolation done at each redshift \n * **precomputefinegrid**: precompute linear interpolation on a fine grid (0.1 Angstr\u00f6m), then do nearest grid point interpolation from the fine grid at each redshift"
+    },
+    "extremaCount": {
+      "type": "integer",
+      "title": "Number of candidates to retain"
+    },
+    "igmFit": {
+      "type": "boolean",
+      "title": "Activate fit of IGM with Meiksin tables"
+    },
+    "ismFit": {
+      "type": "boolean",
+      "title": "Activate ISM fit",
+      "description": "Activate fit of ISM extinction ie. Ebv parameter from Calzetti profiles "
+    },
+    "pdfCombination": {
+      "type": "string",
+      "enum": [
+        "bestChi2",
+        "marg"
+      ],
+      "title": "Pdf combination method",
+      "description": "At each z: \n * **bestchi2**: select the max of the pdfs \n * **marg**: marginalize the pdfs (over templates and all parameters)"
+    }
+  }
+}

@@ -58,7 +58,7 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
     if (regularCatalog) {
       // load the regular catalog
       LoadCatalog();
-    } else { //"tplratio" and "tplcorr"
+    } else { //"tplRatio" and "tplCorr"
       // load the tplratio catalog with only 1 element for all lines
       // LoadCatalogOneMultiline(restLineList);
       // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
@@ -103,7 +103,7 @@ void CLMEltListVector::AddElement(CLineVector lines, Float64 velocityEmission,
   auto const ps = Context.GetParameterStore();
 
   getElementList().push_back(std::make_shared<CLineModelElement>(
-      m_ElementsParams[ig], ps->GetScoped<std::string>("linewidthtype")));
+      m_ElementsParams[ig], ps->GetScoped<std::string>("lineWidthType")));
 }
 
 /**
@@ -116,12 +116,12 @@ void CLMEltListVector::AddElement(CLineVector lines, Float64 velocityEmission,
  *this result in getElementList().
  **/
 void CLMEltListVector::LoadCatalog() {
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
+  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
   Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityabsorption");
+      ps->GetScoped<Float64>("velocityAbsorption");
   Int32 lastEltIndex = 0;
 
   auto const groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
@@ -134,12 +134,12 @@ void CLMEltListVector::LoadCatalog() {
 }
 
 void CLMEltListVector::LoadCatalogOneMultiline() {
-  CAutoScope const autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope const autoscope(Context.m_ScopeStack, "lineModel");
 
   auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
+  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
   Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityabsorption");
+      ps->GetScoped<Float64>("velocityAbsorption");
 
   CLineVector RestLineVector;
   RestLineVector.reserve(m_RestLineList.size());
@@ -151,12 +151,12 @@ void CLMEltListVector::LoadCatalogOneMultiline() {
 }
 
 void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityemission");
+  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
   Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityabsorption");
+      ps->GetScoped<Float64>("velocityAbsorption");
 
   std::vector<CLine::EType> const types = {CLine::EType::nType_Absorption,
                                            CLine::EType::nType_Emission};

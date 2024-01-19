@@ -301,7 +301,7 @@ void CSpectrum::EstimateContinuum() const {
   Log.LogDetail("Continuum estimation on input spectrum: using %s",
                 m_estimationMethod.c_str());
 
-  if (m_estimationMethod == "IrregularSamplingMedian") {
+  if (m_estimationMethod == "irregularSamplingMedian") {
     CContinuumIrregularSamplingMedian continuum;
     continuum.SetMedianKernelWidth(m_medianWindowSize);
     continuum.SetMeanKernelWidth(m_medianWindowSize);
@@ -471,7 +471,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
   Log.LogDetail("CSpectrum::ValidateFlux - checking on the configured "
-                "lambdarange = (%f, %f)",
+                "lambdaRange = (%f, %f)",
                 LambdaMin, LambdaMax);
   Log.LogDetail("CSpectrum::ValidateFlux - checking on the true observed "
                 "spectral axis lambdarange = (%f, %f)",
@@ -519,7 +519,7 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
   Log.LogDetail("CSpectrum::ValidateNoise - checking on the configured "
-                "lambdarange = (%f, %f)",
+                "lambdaRange = (%f, %f)",
                 LambdaMin, LambdaMax);
   Log.LogDetail("CSpectrum::ValidateNoise - checking on the true observed "
                 "spectral axis lambdarange = (%f, %f)",
@@ -586,7 +586,7 @@ void CSpectrum::SetFullPath(const char *nameP) { m_FullPath = nameP; }
 
 void CSpectrum::SetMedianWinsize(Float64 winsize) {
   if (m_medianWindowSize != winsize &&
-      m_estimationMethod == "IrregularSamplingMedian") {
+      m_estimationMethod == "irregularSamplingMedian") {
     ResetContinuum();
   }
   m_medianWindowSize = winsize;
@@ -594,7 +594,7 @@ void CSpectrum::SetMedianWinsize(Float64 winsize) {
 
 void CSpectrum::SetMedianEvenReflection(bool medianEvenReflection) {
   if (m_medianEvenReflection != medianEvenReflection &&
-      m_estimationMethod == "IrregularSamplingMedian") {
+      m_estimationMethod == "irregularSamplingMedian") {
     ResetContinuum();
   }
   m_medianEvenReflection = medianEvenReflection;
@@ -634,7 +634,7 @@ void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
 /// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and
 /// rebinedMask
 /// - opt_interp = 'lin' : linear interpolation is performed by default
-/// - opt_interp = 'precomputedfinegrid' : nearest grid point interpolation
+/// - opt_interp = 'preComputedFineGrid' : nearest grid point interpolation
 /// is performed using m_pfgFlux which is the precomputed fine grid
 /// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO -
 /// not tested)

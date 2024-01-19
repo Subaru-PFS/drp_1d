@@ -57,8 +57,8 @@ public:
 
   Float64 getContinuumScaleMargCorrection() const;
   bool isContinuumComponentTplfitxx() const {
-    return m_ContinuumComponent == "tplfit" ||
-           m_ContinuumComponent == "tplfitauto";
+    return m_ContinuumComponent == "tplFit" ||
+           m_ContinuumComponent == "tplFitAuto";
   }
   Float64 getFitContinuum_snr() const;
   CTplModelSolution GetContinuumModelSolutionCopy() const;

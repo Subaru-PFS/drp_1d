@@ -51,10 +51,10 @@ GlobalException::GlobalException(ErrorCode ec, const std::string &message,
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
 
-  if (resultStore->getScopeDepth() >= 2) {
+  if (resultStore->getScopeDepth() >= 3) {
     if (!resultStore->hasCurrentMethodWarningFlag()) {
       resultStore->StoreGlobalResult(
-          resultStore->GetScopedNameAt("warningFlag", 2),
+          resultStore->GetScopedNameAt("warningFlag", 3),
           std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
                                                  Flag.getListMessages()));
     } else

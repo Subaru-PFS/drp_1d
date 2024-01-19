@@ -183,7 +183,7 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
     Log.LogInfo("COperatorPdfz::CombinePDF: Marginalization");
     Marginalize(chisquarearray);
 
-  } else if (m_opt_combine == "bestchi2") {
+  } else if (m_opt_combine == "bestChi2") {
     Log.LogInfo("COperatorPdfz::CombinePDF: BestChi2");
     BestChi2(chisquarearray);
 

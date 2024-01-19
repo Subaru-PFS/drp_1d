@@ -1,0 +1,118 @@
+{
+  "$id": "linemeas_solver",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Linemeas solver",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "lineModel": {
+      "required": [
+        "polynomialDegree",
+        "lineCatalog",
+        "nSigmaSupport",
+        "lineWidthType",
+        "fittingMethod",
+        "velocityFit",
+        "lbdaOffsetFit",
+        "ampOffsetFit",
+        "lineRatioType"
+      ],
+      "type": "object",
+      "properties": {
+        "polynomialDegree": {
+          "type": "integer",
+          "title": "Polynomial degree",
+          "description": "Value between 0 and 2, referring to the polynom degree to represent the continuum below lines. Useful only if ampOffsetFit=True."
+        },
+        "lineCatalog": {
+          "type": "string",
+          "title": "Line catalog path",
+          "description": "Path to line catalog file"
+        },
+        "nSigmaSupport": {
+          "type": "number",
+          "title": "Support size",
+          "description": "Full (not half) size of each line support in sigma of the gaussian profile."
+        },
+        "lineWidthType": {
+          "type": "string",
+          "enum": [
+            "combined",
+            "instrumentDriven",
+            "velocityDriven"
+          ],
+          "title": "Line width type",
+          "description": "Selects which component are included in the line width \n * **instrumentDriven**: only instrument resolution (no intrinsic line width due to velocity dispersion) \n * **velocityDriven**: only line velocity dispersion (assuming negligible instrument PSF) \n * **combined**: both instrument resolution and velocity dispersion"
+        },
+        "fittingMethod": {
+          "type": "string",
+          "enum": [
+            "individual",
+            "svd",
+            "hybrid",
+            "lbfgsb"
+          ],
+          "title": "Line fitting method",
+          "description": "Line fitting method: \n* **individual**: independant fit of all lines amplitude \n * **svd**: joint fit of all lines amplitude (sparsity not exploited) \n * **hybrid**: svd only for groups of lines sharings pixels (eg. Ha and N2), independant fit for the other lines \n * **lbfgsb**: like hybrid but using non-linear least-square fit instead of svd to fit jointly the 3 Gaussian parameters (amplitude, position and width). Based on l-bfgs-b algorithm (bounded gradient descent). \n Note: it is not relevant when lineRatioType = tplRatio, because one set of ratio corresponds to a unique amplitude fitted for all lines, and thus it is using the individual fitter"
+        },
+        "velocityFit": {
+          "type": "boolean",
+          "title": "Wether to fit line width",
+          "discription": "Wether 2nd pass includes line width fitting. Used only if `fittingMethod=lbfgsb` (for linemeas)."
+        },
+        "emVelocityFitMin": {
+          "type": "number",
+          "title": "Emission lines velocity min",
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. To specify only if fittingMethod is lbfgsb."
+        },
+        "emVelocityFitMax": {
+          "type": "number",
+          "title": "Emission lines velocity max",
+          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for emission lines. To specify only if fittingMethod is lbfgsb."
+        },
+        "absVelocityFitMin": {
+          "type": "number",
+          "title": "Aborption lines velocity min",
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for absorption lines. To specify only if fittingMethod is lbfgsb."
+        },
+        "absVelocityFitMax": {
+          "type": "number",
+          "title": "Aborption lines velocity max",
+          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for absorption lines. To specify only if fittingMethod is lbfgsb."
+        },
+        "lbdaOffsetFit": {
+          "type": "boolean",
+          "title": "Wether to fit wavelength offset",
+          "description": "Wether to include wavelength offset fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+        },
+        "ampOffsetFit": {
+          "type": "boolean",
+          "title": "Wether to fit amplitude offset",
+          "description": "Wether to use line's polynomial offset in the profile fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+        },
+        "lineRatioType": {
+          "type": "string",
+          "enum": [
+            "tplRatio",
+            "rules",
+            "tplCorr"
+          ],
+          "title": "Line ratio type",
+          "description": "\n * **rules**: fit all lines amplitude independently with eventualy some constraints (see rules parameter below) \n * **tplRatio**: fit one amplitude with fixed line ratios coming from template-ratio catalogs"
+        },
+        "rules": {
+          "type": "string",
+          "enum": [
+            "all",
+            "no",
+            "strongWeak",
+            "balmerSingle",
+            "ratioRange"
+          ],
+          "title": "Rules",
+          "description": "Selects used rules (only for `lineRatioType=rules`)"
+        }
+      }
+    }
+  }
+}

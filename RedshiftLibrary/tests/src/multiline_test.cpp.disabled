@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(fitAmplitude) {
 
   TFloat64Range lambdaRange = TFloat64Range(0, 40);
 
-  CMultiLine element = CMultiLine(rs, "velocitydriven", 8.0, 0.9, velocity, 1.1,
+  CMultiLine element = CMultiLine(rs, "velocityDriven", 8.0, 0.9, velocity, 1.1,
                                   nominalAmplitudes, 10.2, catalogIndexes);
 
   element.prepareSupport(spectralAxis, redshift, lambdaRange);

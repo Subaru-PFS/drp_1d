@@ -115,7 +115,7 @@ Float64 CRebin::computeXStepCompensation(
 std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
   if (opt_interp == "lin")
     return std::unique_ptr<CRebin>(new CRebinLinear(std::move(*this)));
-  if (opt_interp == "precomputedfinegrid")
+  if (opt_interp == "preComputedFineGrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(std::move(*this)));
   if (opt_interp == "spline")
     return std::unique_ptr<CRebin>(new CRebinSpline(std::move(*this)));
@@ -124,14 +124,14 @@ std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
 
   THROWG(INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolve.interpolation");
+         "supported for TemplateFittingSolver.interpolation");
 }
 
 std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
                                        const CSpectrum &spectrum) {
   if (opt_interp == "lin")
     return std::unique_ptr<CRebin>(new CRebinLinear(spectrum));
-  if (opt_interp == "precomputedfinegrid")
+  if (opt_interp == "preComputedFineGrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(spectrum));
   if (opt_interp == "spline")
     return std::unique_ptr<CRebin>(new CRebinSpline(spectrum));
@@ -140,5 +140,5 @@ std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
 
   THROWG(INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolve.interpolation");
+         "supported for TemplateFittingSolver.interpolation");
 }

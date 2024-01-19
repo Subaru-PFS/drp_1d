@@ -26,18 +26,19 @@ CAbstractFitter::CAbstractFitter(
       m_enableAmplitudeOffsets(enableAmplitudeOffsets),
       m_enableLambdaOffsetsFit(enableLambdaOffsetsFit) {
   m_nbElements = m_ElementsVector->getNbElements();
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
-  if (Context.GetCurrentMethod() == "LineModelSolve") {
+
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
+  if (Context.GetCurrentMethod() == "lineModelSolve") {
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-    m_opt_lya_fit_asym_min = ps->GetScoped<Float64>("lyafit.asymfitmin");
-    m_opt_lya_fit_asym_max = ps->GetScoped<Float64>("lyafit.asymfitmax");
-    m_opt_lya_fit_asym_step = ps->GetScoped<Float64>("lyafit.asymfitstep");
-    m_opt_lya_fit_width_min = ps->GetScoped<Float64>("lyafit.widthfitmin");
-    m_opt_lya_fit_width_max = ps->GetScoped<Float64>("lyafit.widthfitmax");
-    m_opt_lya_fit_width_step = ps->GetScoped<Float64>("lyafit.widthfitstep");
-    m_opt_lya_fit_delta_min = ps->GetScoped<Float64>("lyafit.deltafitmin");
-    m_opt_lya_fit_delta_max = ps->GetScoped<Float64>("lyafit.deltafitmax");
-    m_opt_lya_fit_delta_step = ps->GetScoped<Float64>("lyafit.deltafitstep");
+    m_opt_lya_fit_asym_min = ps->GetScoped<Float64>("lyaFit.asymFitMin");
+    m_opt_lya_fit_asym_max = ps->GetScoped<Float64>("lyaFit.asymFitMax");
+    m_opt_lya_fit_asym_step = ps->GetScoped<Float64>("lyaFit.asymFitStep");
+    m_opt_lya_fit_width_min = ps->GetScoped<Float64>("lyaFit.widthFitMin");
+    m_opt_lya_fit_width_max = ps->GetScoped<Float64>("lyaFit.widthFitMax");
+    m_opt_lya_fit_width_step = ps->GetScoped<Float64>("lyaFit.widthFitStep");
+    m_opt_lya_fit_delta_min = ps->GetScoped<Float64>("lyaFit.deltaFitMin");
+    m_opt_lya_fit_delta_max = ps->GetScoped<Float64>("lyaFit.deltaFitMax");
+    m_opt_lya_fit_delta_step = ps->GetScoped<Float64>("lyaFit.deltaStepMax");
   }
 }
 

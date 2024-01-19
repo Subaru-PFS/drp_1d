@@ -120,7 +120,7 @@ public:
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
 
-  Int32 m_continnuum_fit_option = 0; // default to "retryall" templates
+  Int32 m_continnuum_fit_option = 0; // default to "retryAll" templates
   // candidates
   CLineModelPassExtremaResult m_firstpass_extremaResult;
 

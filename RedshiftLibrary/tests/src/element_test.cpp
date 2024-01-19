@@ -119,16 +119,16 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   TLineModelElementParam_ptr fdata_vd =
       std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
-  CLineModelElement elementID = CLineModelElement(fdata_id, "instrumentdriven");
+  CLineModelElement elementID = CLineModelElement(fdata_id, "instrumentDriven");
   CLineModelElement elementcombined = CLineModelElement(fdata_c, "combined");
-  CLineModelElement elementVD = CLineModelElement(fdata_vd, "velocitydriven");
+  CLineModelElement elementVD = CLineModelElement(fdata_vd, "velocityDriven");
 
   // setLSF on multiLines
-  std::string lsfType = "GaussianConstantResolution"; // TBC
+  std::string lsfType = "gaussianConstantResolution"; // TBC
   TScopeStack scopeStack;
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  store->Set("LSF.resolution", 0.9);
+  store->Set("lsf.resolution", 0.9);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
   std::shared_ptr<TLineModelElementParam> fdata =
       std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
-  CLineModelElement element = CLineModelElement(fdata, "velocitydriven");
+  CLineModelElement element = CLineModelElement(fdata, "velocityDriven");
 
   Float64 nsigmasupport = 8.;
   Float64 resolution = 0.9;

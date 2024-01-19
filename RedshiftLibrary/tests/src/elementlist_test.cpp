@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
   auto lineTypeFilter = CLine::EType::nType_Emission;
   auto forceFilter = CLine::EForce::nForce_Strong;
-  string opt_lineWidthType = "velocitydriven";
+  string opt_lineWidthType = "velocityDriven";
   Float64 opt_nsigmasupport = 8.;
   Float64 initVelocity = 50.0;
   Float64 opt_velocityEmission = initVelocity;
@@ -88,12 +88,12 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   noise.AddNoise(spectrum);
   */
 
-  std::string lsfType = "GaussianConstantWidth";
+  std::string lsfType = "gaussianConstantWidth";
   Float64 width = 13.;
   TScopeStack scopeStack;
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  store->Set("LSF.width", width);
+  store->Set("lsf.width", width);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);

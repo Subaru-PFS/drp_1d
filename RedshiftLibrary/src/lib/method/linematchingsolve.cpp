@@ -58,8 +58,8 @@ using namespace std;
  * with default values.
  */
 CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,
-                                       std::string objectType)
-    : CObjectSolve("LineMatchingSolve", scope, objectType) {
+                                       std::string spectrumModel)
+    : CObjectSolve("", "LineMatchingSolve", scope, spectrumModel) {
   Log.LogDebug("CLineMatchingSolve::CLineMatchingSolve()");
 
   // Peak Detection
@@ -92,7 +92,7 @@ CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   return Compute(*(resultStore.get()), inputContext->GetParameterStore(),
                  *(inputContext->GetSpectrum().get()), m_lambdaRange,
                  m_redshifts,
-                 *(inputContext->GetLineCatalog(m_objectType, m_name).get()));
+                 *(inputContext->GetLineCatalog(m_spectrumModel, m_name).get()));
 }
 
 /**
@@ -259,7 +259,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
           numberOfPeaksBestBypass || !m_dynamicLinematching) {
         Log.LogDebug("Storing %d lines from lineDetection in the result store.",
                      lineDetectionResult->LineCatalog.GetList().size());
-        resultStore.StoreScopedGlobalResult("linecatalog", lineDetectionResult);
+        resultStore.StoreScopedGlobalResult("lineCatalog", lineDetectionResult);
         // Since we know at least one peak that corresponds to a line, let's try
         // to match to a catalogued template.
         CLineMatching lineMatching;

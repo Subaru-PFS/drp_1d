@@ -36,13 +36,9 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import os
-
 import pandas as pd
 
-module_root_dir = os.path.split(__file__)[0]
+from pylibamazed.Paths import results_specifications_filename
 
-results_specifications = pd.read_csv(os.path.join(module_root_dir, "resources", "results_specifications.csv"),
-                                     sep='\t',
-                                     dtype={'format': object}
-                                     )
+
+results_specifications = pd.read_csv(results_specifications_filename, sep='\t', dtype={'format': object})

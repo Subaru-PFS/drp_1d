@@ -241,91 +241,92 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
   bool check_property;
 
   // HasTplIsmExtinction
-  store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
-  store.Set(object_type + ".TemplateFittingSolve.ismfit", true);
+  store.Set(object_type + ".redshiftSolver.method", std::string("templateFittingSolve"));
+  store.Set(object_type + ".redshiftSolver.templateFittingSolve.ismFit", true);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TemplateFittingSolve.ismfit", false);
+  store.Set(object_type + ".redshiftSolver.templateFittingSolve.ismFit", false);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
-  store.Set(object_type + ".method", std::string("TplcombinationSolve"));
-  store.Set(object_type + ".TplcombinationSolve.ismfit", true);
+  store.Set(object_type + ".redshiftSolver.method", std::string("tplCombinationSolve"));
+  store.Set(object_type + ".redshiftSolver.tplCombinationSolve.ismFit", true);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TplcombinationSolve.ismfit", false);
+  store.Set(object_type + ".redshiftSolver.tplCombinationSolve.ismFit", false);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
-  store.Set(object_type + ".method", std::string("LineModelSolve"));
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.ismfit",
+  store.Set(object_type + ".redshiftSolver.method", std::string("lineModelSolve"));
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumFit.ismFit",
             true);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.ismfit",
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumFit.ismFit",
             false);
   check_property = store.HasTplIsmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
   // HasTplIgmExtinction
-  store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
-  store.Set(object_type + ".TemplateFittingSolve.igmfit", true);
+  store.Set(object_type + ".redshiftSolver.method", std::string("templateFittingSolve"));
+  store.Set(object_type + ".redshiftSolver.templateFittingSolve.igmFit", true);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TemplateFittingSolve.igmfit", false);
+  store.Set(object_type + ".redshiftSolver.templateFittingSolve.igmFit", false);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
-  store.Set(object_type + ".method", std::string("TplcombinationSolve"));
-  store.Set(object_type + ".TplcombinationSolve.igmfit", true);
+  store.Set(object_type + ".redshiftSolver.method", std::string("tplCombinationSolve"));
+  store.Set(object_type + ".redshiftSolver.tplCombinationSolve.igmFit", true);
+  // Here
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TplcombinationSolve.igmfit", false);
+  store.Set(object_type + ".redshiftSolver.tplCombinationSolve.igmFit", false);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
-  store.Set(object_type + ".method", std::string("LineModelSolve"));
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.igmfit",
+  store.Set(object_type + ".redshiftSolver.method", std::string("lineModelSolve"));
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumFit.igmFit",
             true);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.igmfit",
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumFit.igmFit",
             false);
   check_property = store.HasTplIgmExtinction(object_type);
   BOOST_CHECK(check_property == false);
 
   // HasFFTProcessing
-  store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
-  store.Set(object_type + ".TemplateFittingSolve.fftprocessing", true);
+  store.Set(object_type + ".redshiftSolver.method", std::string("templateFittingSolve"));
+  store.Set(object_type + ".redshiftSolver.templateFittingSolve.fftProcessing", true);
   check_property = store.HasFFTProcessing(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".TemplateFittingSolve.fftprocessing", false);
-  store.Set(object_type + ".method", std::string("LineModelSolve"));
+  store.Set(object_type + ".redshiftSolver.templateFittingSolve.fftProcessing", false);
+  store.Set(object_type + ".redshiftSolver.method", std::string("lineModelSolve"));
   store.Set(object_type +
-                ".LineModelSolve.linemodel.continuumfit.fftprocessing",
+                ".redshiftSolver.lineModelSolve.lineModel.continuumFit.fftProcessing",
             true);
   check_property = store.HasFFTProcessing(object_type);
   BOOST_CHECK(check_property == true);
 
   store.Set(object_type +
-                ".LineModelSolve.linemodel.continuumfit.fftprocessing",
+                ".redshiftSolver.lineModelSolve.lineModel.continuumFit.fftProcessing",
             false);
   check_property = store.HasFFTProcessing(object_type);
   BOOST_CHECK(check_property == false);
 
   // hasToLogRebin
   store.Set(object_type +
-                ".LineModelSolve.linemodel.continuumfit.fftprocessing",
+                ".redshiftSolver.lineModelSolve.lineModel.continuumFit.fftProcessing",
             true);
   store.Set(object_type2 +
-                ".LineModelSolve.linemodel.continuumfit.fftprocessing",
+                ".redshiftSolver.lineModelSolve.lineModel.continuumFit.fftProcessing",
             true);
   std::map<std::string, bool> fft_processing;
   bool m_use_LogLambaSpectrum =
@@ -335,25 +336,25 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
   BOOST_CHECK(m_use_LogLambaSpectrum = true);
 
   // getMinZStepForFFTProcessing
-  store.Set(object_type + ".redshiftstep", 0.0005);
-  store.Set(object_type2 + ".redshiftstep", 0.0003);
+  store.Set(object_type + ".redshiftStep", 0.0005);
+  store.Set(object_type2 + ".redshiftStep", 0.0003);
   Float64 logGridStep = store.getMinZStepForFFTProcessing(fft_processing);
   BOOST_CHECK(logGridStep == 0.0003);
 
   // HasToOrthogonalizeTemplates
-  store.Set(object_type + ".method", std::string("LineModelSolve"));
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumcomponent",
-            std::string("tplfit"));
+  store.Set(object_type + ".redshiftSolver.method", std::string("lineModelSolve"));
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumComponent",
+            std::string("tplFit"));
   check_property = store.HasToOrthogonalizeTemplates(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumcomponent",
-            std::string("tplfitauto"));
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumComponent",
+            std::string("tplFitAuto"));
   check_property = store.HasToOrthogonalizeTemplates(object_type);
   BOOST_CHECK(check_property == true);
 
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumcomponent",
-            std::string("tplfitauto__"));
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumComponent",
+            std::string("tplFitAuto__"));
   check_property = store.HasToOrthogonalizeTemplates(object_type);
   BOOST_CHECK(check_property == false);
 
@@ -361,16 +362,16 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
   check_property = store.EnableTemplateOrthogonalization(object_type);
   BOOST_CHECK(check_property == false);
 
-  store.Set(object_type + ".LineModelSolve.linemodel.continuumcomponent",
-            std::string("tplfitauto"));
+  store.Set(object_type + ".redshiftSolver.lineModelSolve.lineModel.continuumComponent",
+            std::string("tplFitAuto"));
   store.Set(object_type +
-                ".LineModelSolve.linemodel.continuumfit.ignorelinesupport",
+                ".redshiftSolver.lineModelSolve.lineModel.continuumFit.ignoreLineSupport",
             false);
   check_property = store.EnableTemplateOrthogonalization(object_type);
   BOOST_CHECK(check_property == true);
 
   store.Set(object_type +
-                ".LineModelSolve.linemodel.continuumfit.ignorelinesupport",
+                ".redshiftSolver.lineModelSolve.lineModel.continuumFit.ignoreLineSupport",
             true);
   check_property = store.EnableTemplateOrthogonalization(object_type);
   BOOST_CHECK(check_property == false);

@@ -89,9 +89,10 @@ class Context:
     def init_context(self):
         self.process_flow_context = CProcessFlowContext.GetInstance()
         self.process_flow_context.reset()
-        for object_type in self.parameters.get_objects():
+        for object_type in self.parameters.get_spectrum_models():
             if object_type in self.calibration_library.line_catalogs:
                 for method in self.parameters.get_linemodel_methods(object_type):
+                    # Pb is here
                     self.process_flow_context.setLineCatalog(
                         object_type,
                         method,
@@ -102,7 +103,6 @@ class Context:
                     object_type,
                     self.calibration_library.line_ratio_catalog_lists[object_type]
                 )
-
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
         self.process_flow_context.setfluxCorrectionMeiksin(self.calibration_library.meiksin)
@@ -149,10 +149,10 @@ class Context:
             rso.load_root()
             return rso
 
-        for object_type in self.parameters.get_objects():
+        for object_type in self.parameters.get_spectrum_models():
             linemeas_params_from_solver = not self.config["linemeascatalog"] \
                 and object_type not in self.config["linemeascatalog"]
-            method = self.parameters.get_solve_method(object_type)
+            method = self.parameters.get_redshift_solver_method(object_type)
             if method:
                 self.run_redshift_solver(rso, object_type, "redshift_solver")
 
@@ -201,7 +201,7 @@ class Context:
     @run_method_exception_handler
     def run_redshift_solver(self, rso, object_type, stage):
         self.run_method(object_type,
-                        self.parameters.get_solve_method(object_type))
+                        self.parameters.get_redshift_solver_method(object_type))
 
     @run_method_exception_handler
     def run_linemeas_solver(self, rso, object_type, stage):
@@ -235,12 +235,12 @@ class Context:
 
         if self.parameters.is_a_redshift_solver_used():
             enable_classification = False
-            for obj in self.parameters.get_objects():
+            for obj in self.parameters.get_spectrum_models():
                 if not rso.has_error(obj, "redshift_solver"):
                     enable_classification = True
                     break
             if enable_classification:
-                self.run_method("classification", "ClassificationSolve")
+                self.run_method("classification", "classificationSolver")
             else:
                 raise APIException(ErrorCode.NO_CLASSIFICATION,
                                    "Classification not run because all redshift_solver failed")
@@ -250,9 +250,17 @@ class Context:
         rso.load_all()
 
     def run_method(self, object_type, method):
-        if "C" + method not in globals():
+        method_to_solver = {
+            "classificationSolver": "CClassificationSolve",
+            "lineMeasSolve": "CLineMeasSolve",
+            "lineModelSolve": "CLineModelSolve",
+            "reliabilitySolver": "CReliabilitySolve",
+            "templateFittingSolve": "CTemplateFittingSolve",
+            "tplCombinationSolve": "CTplCombinationSolve"
+        }
+        if method_to_solver[method] not in globals():
             raise APIException(ErrorCode.INVALID_PARAMETER, "Unknown method {}".format(method))
-        solver_method = globals()["C" + method]
+        solver_method = globals()[method_to_solver[method]]
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
         solver.Compute()

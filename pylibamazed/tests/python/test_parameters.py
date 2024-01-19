@@ -42,7 +42,6 @@ import pytest
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Exception import APIException
 from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.test_parameters_utils import TestParametersUtils
 
 # TODO see what should be removed here
@@ -50,7 +49,7 @@ from tests.python.test_parameters_utils import TestParametersUtils
 
 class TestParameters:
     generic_parameters: Parameters = Parameters(
-        TestParametersUtils().make_parameters_dict(), FakeParametersChecker)
+        TestParametersUtils().make_parameters_dict(), make_checks=False)
 
     def test_load_linemeas_parameters_from_catalog(self, mocker):
         source_id = 'some_source_id'
@@ -89,7 +88,7 @@ class TestParameters:
 
         # With other solve method
         parameters = Parameters(TestParametersUtils().make_parameters_dict(
-            **{"method": "other"}), FakeParametersChecker)
+            **{"method": "other"}), make_checks=False)
         parameters.is_tplratio_catalog_needed(TestParametersUtils.default_object_type)
 
     def test_stage_enabled(self):
@@ -117,18 +116,22 @@ class TestParameters:
                 "galaxy": {
                     "method": None
                 },
-                "objects": ["galaxy"]
+                "spectrumModels": ["galaxy"]
             }, make_checks=False)
             assert parameters.is_a_redshift_solver_used() is False
-    
+
         def test_true_if_an_object_has_a_redshift_solver(self):
             parameters: Parameters = Parameters({
+                "version": 2,
                 "galaxy": {
                     "method": None
                 },
                 "star": {
-                    "method": "linemodelsolve"
+                    "stages": ["redshiftSolver"],
+                    "redshiftSolver": {
+                        "method": "lineModelsolve"
+                    }
                 },
-                "objects": ["galaxy", "star"]
+                "spectrumModels": ["galaxy", "star"]
             }, make_checks=False)
             assert parameters.is_a_redshift_solver_used() is True

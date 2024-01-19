@@ -49,7 +49,7 @@ void TLineModelResult::updateFromContinuumModelSolution(
     std::shared_ptr<const CTplModelSolution> cms) {
   fittedTpl = *cms;
   fittedTpl.tplName =
-      fittedTpl.tplAmplitude ? fittedTpl.tplName : "nocontinuum";
+      fittedTpl.tplAmplitude ? fittedTpl.tplName : "noContinuum";
 }
 
 void TLineModelResult::updateFromLineModelSolution(

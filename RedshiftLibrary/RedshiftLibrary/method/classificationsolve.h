@@ -52,7 +52,7 @@ namespace NSEpic {
 class CClassificationSolve : public CSolve {
 
 public:
-  CClassificationSolve(TScopeStack &scope, std::string objectType);
+  CClassificationSolve(TScopeStack &scope, std::string spectrumModel);
 
 private:
   friend class classificationSolve_test::compute_test;

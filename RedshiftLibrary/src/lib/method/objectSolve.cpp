@@ -53,14 +53,14 @@ void CObjectSolve::InitRanges(
   //  must be present in parameters
   m_redshiftSampling =
       inputContext->GetParameterStore()->GetScoped<std::string>(
-          "redshiftsampling");
+          "redshiftSampling");
 
   TFloat64Range redshiftRange;
   // below is to be reviewed
   GetRedshiftSampling(inputContext, redshiftRange, m_redshiftStep);
 
   Log.LogInfo(Formatter() << "Init redshift range with " << redshiftRange
-                          << " and" << m_redshiftStep);
+                          << " and " << m_redshiftStep);
   createRedshiftGrid(inputContext, redshiftRange);
 }
 
@@ -75,7 +75,7 @@ void CObjectSolve::createRedshiftGrid(
 void CObjectSolve::GetRedshiftSampling(
     const std::shared_ptr<const CInputContext> &inputContext,
     TFloat64Range &redshiftRange, Float64 &redshiftStep) {
-  auto searchLogRebin = inputContext->m_logRebin.find(m_objectType);
+  auto searchLogRebin = inputContext->m_logRebin.find(m_spectrumModel);
   if (searchLogRebin != inputContext->m_logRebin.end()) {
     redshiftRange = searchLogRebin->second.zrange;
     redshiftStep = inputContext->getLogGridStep();
@@ -88,9 +88,9 @@ void CObjectSolve::GetRedshiftSampling(
   } else {
     // default is to read from the scoped paramStore
     redshiftRange = inputContext->GetParameterStore()->GetScoped<TFloat64Range>(
-        "redshiftrange");
+        "redshiftRange");
     redshiftStep =
-        inputContext->GetParameterStore()->GetScoped<Float64>("redshiftstep");
+        inputContext->GetParameterStore()->GetScoped<Float64>("redshiftStep");
   }
   return;
 }

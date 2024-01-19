@@ -1,4 +1,3 @@
-
 # ============================================================================
 #
 # This file is part of: AMAZED
@@ -43,46 +42,56 @@ import os
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
 from tests.python.fake_parameters_checker import FakeParametersChecker
+from tests.python.config import test_dir
 
-module_root_dir = os.path.split(__file__)[0]
-calibration_dir = os.path.join(module_root_dir, "..", "..", "auxdir", "pylibamazed", "test", "calibration")
+
+calibration_dir = os.path.join(test_dir, "calibration")
 
 
 def make_parameters() -> Parameters:
-    parameters_dict = dict()
-    parameters_dict["objects"] = ["galaxy"]
-    parameters_dict["ebmv"] = dict()
-    parameters_dict["ebmv"]["count"] = 3
-    parameters_dict["ebmv"]["start"] = 0.0
-    parameters_dict["ebmv"]["step"] = 0.5
-    parameters_dict["LSF"] = {"LSFType": "GaussianVariableWidth",
-                                         "GaussianVariablewidthFileName": "LSF/EuclidNISPVSSPSF201707.fits"}
-    parameters_dict["galaxy"] = dict()
-    parameters_dict["galaxy"]["template_dir"] = "templates/BC03_sdss_tremonti21"
-    parameters_dict["galaxy"]["LineModelSolve"] = dict()
-    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"] = dict()
-    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["linecatalog"] = \
-        "linecatalogs/linecatalogamazedvacuum_H0.tsv"
-    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_catalog"] = \
-        "lineratiocataloglists/lineratiocatalogs_v16/"
-    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_ismfit"] = True
-    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["nsigmasupport"] = 8
-    parameters_dict["galaxy"]["LineModelSolve"]["linemodel"]["igmfit"] = True
-    parameters_dict["photometryTransmissionDir"] = "photometric_transmission/EL-COSMOSv2/"
-    parameters_dict["photometryBand"] = ["H", "J", "Y", "riz"]
-    return Parameters(parameters_dict, FakeParametersChecker)
+
+    parameters_dict = {
+        "spectrumModels": ["galaxy"],
+        "ebmv": {
+            "count": 3,
+            "start": 0.0,
+            "step": 0.5
+        },
+        "lsf": {
+            "lsfType": "gaussianVariableWidth",
+            "gaussianVariableWidthFileName": "LSF/EuclidNISPVSSPSF201707.fits"
+        },
+        "galaxy": {
+            "stages": ["redshiftSolver"],
+            "templateDir": "templates/BC03_sdss_tremonti21",
+            "redshiftSolver": {
+                "lineModelSolve": {
+                    "lineModel": {
+                        "lineCatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
+                        "tplRatioCatalog": "lineratiocataloglists/lineratiocatalogs_v16/",
+                        "tplRatioIsmFit": True,
+                        "nSigmaSupport": 8,
+                        "igmFit": True
+                    }
+                }
+            }
+        },
+        "photometryTransmissionDir": "photometric_transmission/EL-COSMOSv2/",
+        "photometryBand": ["H", "J", "Y", "riz"]
+    }
+    return Parameters(parameters_dict, Checker=FakeParametersChecker)
 
 
 def test_calibration_linecatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters, calibration_dir)
-    cl.load_linecatalog("galaxy", "LineModelSolve")
+    cl.load_linecatalog("galaxy", "lineModelSolve")
 
 
 def test_calibration_lineratiocatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters, calibration_dir)
-    cl.load_linecatalog("galaxy", "LineModelSolve")
+    cl.load_linecatalog("galaxy", "lineModelSolve")
     cl.load_line_ratio_catalog_list("galaxy")
 
 

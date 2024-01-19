@@ -59,7 +59,7 @@ class CParameterStore;
 class CLineMatchingSolve : public CObjectSolve {
 
 public:
-  CLineMatchingSolve(TScopeStack &scope, std::string objectType);
+  CLineMatchingSolve(TScopeStack &scope, std::string spectrumModel);
   ~CLineMatchingSolve();
 
   std::shared_ptr<CSolveResult>

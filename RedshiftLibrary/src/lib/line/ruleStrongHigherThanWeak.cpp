@@ -49,7 +49,7 @@ CRuleStrongHigherThanWeak::CRuleStrongHigherThanWeak()
     : m_LineType(CLine::EType::nType_All) {}
 
 void CRuleStrongHigherThanWeak::SetUp(bool EnabledArgument, ...) {
-  Name = "strongweak";
+  Name = "strongWeak";
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start(Arguments, EnabledArgument);

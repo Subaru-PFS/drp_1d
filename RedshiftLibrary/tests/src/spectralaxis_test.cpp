@@ -96,21 +96,21 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   BOOST_CHECK(n31Axis[0] == 12500.);
 
   // with AirVacuum conversion
-  const CSpectrumSpectralAxis n32Axis(n3Array, "Morton2000");
+  const CSpectrumSpectralAxis n32Axis(n3Array, "morton2000");
   BOOST_CHECK(n32Axis.GetSamplesCount() == 1);
-  auto converter1 = CAirVacuumConverter::Get("Morton2000");
+  auto converter1 = CAirVacuumConverter::Get("morton2000");
   TFloat64List lambdaAir = converter1->VacToAir(n32Axis.GetSamplesVector());
   BOOST_CHECK_CLOSE(lambdaAir[0], n3Array[0], precision);
 
   // with move sample_in
-  const CSpectrumSpectralAxis n33Axis(TFloat64List{15000.}, "Morton2000");
+  const CSpectrumSpectralAxis n33Axis(TFloat64List{15000.}, "morton2000");
   BOOST_CHECK(n33Axis.GetSamplesCount() == 1);
   lambdaAir = converter1->VacToAir(n33Axis.GetSamplesVector());
   BOOST_CHECK_CLOSE(lambdaAir[0], 15000., precision);
 
   // with array_in
   Float64 Array1[1] = {16000.};
-  const CSpectrumSpectralAxis n34Axis(Array1, 1, "Morton2000");
+  const CSpectrumSpectralAxis n34Axis(Array1, 1, "morton2000");
   BOOST_CHECK(n34Axis.GetSamplesCount() == 1);
   lambdaAir = converter1->VacToAir(n34Axis.GetSamplesVector());
   BOOST_CHECK_CLOSE(lambdaAir[0], Array1[0], precision);

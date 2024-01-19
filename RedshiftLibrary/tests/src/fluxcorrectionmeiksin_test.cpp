@@ -55,15 +55,15 @@ namespace bfs = boost::filesystem;
 // //-----------------------------------------------------------------------------
 
 const std::string jsonString =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantWidth\" , \"width\" : 0.04},"
-    "\"galaxy\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
-    "\"qso\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianConstantWidth\" , \"width\" : 0.04},"
+    "\"galaxy\" : {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"qso\" : {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
     "\"templateCatalog\" : {\"continuumRemoval\" : "
     "{ \"medianKernelWidth\" : 40.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}}";
+    "\"method\" : \"irregularSamplingMedian\"}}}";
 
 class fixture_MeiskinCorrectionTest {
 public:
