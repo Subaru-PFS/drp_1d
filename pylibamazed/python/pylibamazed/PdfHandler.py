@@ -82,7 +82,7 @@ class BuilderPdfHandler:
         c_pdf_params = buildPdfParams(pdf_params, self.first_pass)
         pdf_proba = self.abstract_output.get_dataset(
             self.object_type, dataset_prefix + "pdf"
-        )[name_prefix + "PDFProbaLog"]
+        )[name_prefix + "LogZPdfNative"]
 
         return PdfHandler(c_pdf_params, self.logsampling, pdf_proba)
 
