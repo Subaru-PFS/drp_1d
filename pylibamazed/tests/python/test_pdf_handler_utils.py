@@ -71,7 +71,7 @@ class PdfHandlerTestUtils:
             'some_object_type': {
                 "pdf_params": PdfHandlerTestUtils.pdf_params(),
                 "pdf": {
-                    "PDFProbaLog": ""
+                    "LogZPdfNative": ""
                 }
             }
         }

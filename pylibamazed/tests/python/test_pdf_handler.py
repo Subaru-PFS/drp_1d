@@ -58,7 +58,7 @@ class TestBuildPdfhandler:
             "some_object_type": {
                 "firstpass_pdf_params": PdfHandlerTestUtils.pdf_params(),
                 "firstpass_pdf": {
-                    "FirstpassPDFProbaLog": ""
+                    "FirstpassLogZPdfNative": ""
                 }
             }
         }
@@ -72,7 +72,7 @@ class TestBuildPdfhandler:
             'some_object_type': {
                 "pdf_params": PdfHandlerTestUtils.pdf_params(),
                 "pdf": {
-                    "PDFProbaLog": ""
+                    "LogZPdfNative": ""
                 }
             }
         }
