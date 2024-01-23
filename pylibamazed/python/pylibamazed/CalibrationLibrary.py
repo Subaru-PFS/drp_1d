@@ -144,6 +144,7 @@ class CalibrationLibrary:
             self.line_catalogs_df[object_type] = dict()
 
         self.line_ratio_catalog_lists = dict()
+        self.lr_catalog_param = dict()
         self.lambda_offsets = dict()
         self.lsf = dict()
         try:
@@ -295,6 +296,7 @@ class CalibrationLibrary:
         line_catalog_df = self.line_catalogs_df[object_type]["lineModelSolve"]
         line_ids = line_catalog_df["strId"].reset_index()
         line_ids["index"] = line_ids["index"].astype(pd.Int64Dtype())  # enable int missing value
+        self.lr_catalog_param[object_type] = dict()
         for f in line_ratio_catalog_list:
             lr_catalog_df = pd.read_csv(f, sep='\t',
                                         dtype={"WaveLength": float, "Name": str, "Type": str,
@@ -305,6 +307,7 @@ class CalibrationLibrary:
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
 
+            self.lr_catalog_param[object_type][name] = line_ratio_catalog_parameter
             lr_catalog_df['strId'] = _get_linecatalog_strid(lr_catalog_df)
             if not lr_catalog_df.strId.is_unique:
                 raise APIException(ErrorCode.DUPLICATED_LINES, "some rows in the lineratio catalog are\
@@ -487,15 +490,10 @@ class CalibrationLibrary:
 
     def get_sub_type(self, object_type, line_ratio_catalog):
         try:
-            with open(os.path.join(
-                self.calibration_dir,
-                self.parameters.get_linemodel_tplratio_catalog(object_type),
-                line_ratio_catalog + ".json"
-            )) as f:
-                tpl_ratio_conf = json.load(f)
-                return tpl_ratio_conf["sub_type"]
-        except FileNotFoundError:
-            return ""
+            tpl_ratio_conf = self.lr_catalog_param[object_type][line_ratio_catalog]
+            return tpl_ratio_conf["sub_type"]
+        except KeyError:
+            raise Exception(f"Could not find {line_ratio_catalog} in tpl ratio catalog")
 
     def get_lines_ids(self, attributes):
         lines_ids = dict()
