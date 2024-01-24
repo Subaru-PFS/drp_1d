@@ -167,7 +167,7 @@ struct TLineModelElementParam {
     }
   }
 
-  Int32 size() { return m_Lines.size(); }
+  Int32 size() const { return m_Lines.size(); }
 
   Int32 getLineIndex(Int32 line_id) const;
   Int32 getLineIndex(const std::string &LineTagStr) const;
@@ -177,6 +177,25 @@ struct TLineModelElementParam {
   bool hasLine(const std::string &LineTagStr) const {
     return getLineIndex(LineTagStr) != undefIdx;
   };
+
+  const CLineProfile_ptr &getLineProfile(Int32 line_index) const {
+    return m_Lines[line_index].GetProfile();
+  }
+
+  void SetLineProfile(Int32 line_index, CLineProfile_ptr &&profile) {
+    m_Lines[line_index].SetProfile(std::move(profile));
+  }
+
+  Float64 GetElementAmplitude() const {
+    for (Int32 line_idx = 0; line_idx != size(); ++line_idx) {
+      auto const &nominal_amplitude = m_NominalAmplitudes[line_idx];
+      if (!std::isnan(m_FittedAmplitudes[line_idx]) &&
+          nominal_amplitude != 0.0) {
+        return m_FittedAmplitudes[line_idx] / nominal_amplitude;
+      }
+    }
+    return NAN;
+  }
 };
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
@@ -467,7 +486,7 @@ inline void CLineModelElement::SetLSF(const std::shared_ptr<const CLSF> &lsf) {
 
 inline const CLineProfile_ptr &
 CLineModelElement::getLineProfile(Int32 line_index) const {
-  return m_ElementParam->m_Lines[line_index].GetProfile();
+  return m_ElementParam->getLineProfile(line_index);
 }
 
 inline void CLineModelElement::setVelocity(Float64 vel) {
@@ -571,7 +590,7 @@ inline void CLineModelElement::SetOffset(Int32 line_index, Float64 val) {
 
 inline void CLineModelElement::SetLineProfile(Int32 line_index,
                                               CLineProfile_ptr &&profile) {
-  m_ElementParam->m_Lines[line_index].SetProfile(std::move(profile));
+  m_ElementParam->SetLineProfile(line_index, std::move(profile));
 }
 
 /**

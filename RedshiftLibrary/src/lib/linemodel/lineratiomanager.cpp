@@ -93,33 +93,38 @@ CLineRatioManager::CLineRatioManager(
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
                                       const CLineMap &catalog) {
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+  auto const indices_Igm = m_elementsVector->getIgmLinesIndices();
+  if (indices_Igm.empty())
+    return;
 
-    auto const indices_Igm = getElementList().getIgmLinesIndices();
-
-    if (indices_Igm.empty())
-      continue;
-
+  // ASymProfile
+  {
     // assuming only one asymfit/fixed profile
     auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
     Int32 line_idx_LyaE = line_indices_LyaE.front();
 
-    const auto &profile =
-        getElementList()[elt_idx_LyaE]->GetLines()[line_idx_LyaE].GetProfile();
+    auto const &param_LyaE = m_elementsVector->getElementParam()[elt_idx_LyaE];
+    auto const &profile = param_LyaE->getLineProfile(line_idx_LyaE);
+
     if (profile->isAsym())
       setAsymProfile(elt_idx_LyaE, line_idx_LyaE, redshift, catalog);
+  }
+  // SymIgm Profile
+  {
+    for (auto const &[elt_idx_igm, line_indices_igm] : indices_Igm) {
+      auto const &param_EltIgm =
+          m_elementsVector->getElementParam()[elt_idx_igm];
 
-    for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
-      const auto &elt = getElementList()[elt_idx_LyaE];
-      auto line_indices_filtered = line_indices_LyaE;
+      // const auto &elt = getElementList()[elt_idx_igm];
+      auto line_indices_filtered = line_indices_igm;
       auto end = std::remove_if(
           line_indices_filtered.begin(), line_indices_filtered.end(),
-          [&elt](Int32 idx) {
-            return !elt->GetLines()[idx].GetProfile()->isSymIgm();
+          [&param_EltIgm](Int32 idx) {
+            return !param_EltIgm->getLineProfile(idx)->isSymIgm();
           });
       line_indices_filtered.erase(end, line_indices_filtered.end());
       if (!line_indices_filtered.empty())
-        setSymIgmProfile(elt_idx_LyaE, line_indices_filtered, redshift);
+        setSymIgmProfile(elt_idx_igm, line_indices_filtered, redshift);
     }
   }
 }
@@ -127,7 +132,8 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
 void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
                                        Float64 redshift,
                                        const CLineMap &catalog) {
-  Int32 lineId = getElementList()[idxLyaE]->GetLines()[idxLineLyaE].GetID();
+  auto const &param_LyaE = m_elementsVector->getElementParam()[idxLyaE];
+  Int32 lineId = param_LyaE->m_Lines[idxLineLyaE].GetID();
   auto const &ref_line = catalog.at(lineId);
 
   // finding or setting the correct profile
@@ -144,12 +150,14 @@ void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
   else
     profile = ref_profile->Clone();
 
-  getElementList()[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
+  param_LyaE->SetLineProfile(idxLineLyaE, std::move(profile));
 }
 
 void CLineRatioManager::setSymIgmProfile(Int32 iElts,
                                          const TInt32List &idxLineIGM,
                                          Float64 redshift) {
+
+  auto const &param_EltIgm = m_elementsVector->getElementParam()[iElts];
 
   bool fixedIGM =
       m_continuumManager->isContinuumComponentTplfitxx() &&
@@ -158,10 +166,10 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
 
   if (fixedIGM) {
     Int32 igmidx = m_continuumManager->getFittedMeiksinIndex();
-    getElementList()[iElts]->SetSymIgmFit(false);
-    getElementList()[iElts]->SetSymIgmParams(TSymIgmParams(igmidx, redshift));
+    param_EltIgm->SetSymIgmFit(false);
+    param_EltIgm->SetSymIgmParams(TSymIgmParams(igmidx, redshift));
   } else {
-    getElementList()[iElts]->SetSymIgmFit(true);
+    param_EltIgm->SetSymIgmFit(true);
   }
 }
 

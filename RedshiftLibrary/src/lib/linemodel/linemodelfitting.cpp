@@ -848,7 +848,7 @@ void CLineModelFitting::LoadModelSolution(
     }
 
     if (modelSolution.LyaIgm != undefIdx) {
-      auto const indices_Igm = eltList.getIgmLinesIndices();
+      auto const indices_Igm = m_ElementsVector->getIgmLinesIndices();
       if (!indices_Igm.empty())
         for (auto const &[elt_idx, _] : indices_Igm)
           eltList[elt_idx]->SetSymIgmParams(

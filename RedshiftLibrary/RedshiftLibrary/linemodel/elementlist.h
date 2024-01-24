@@ -69,8 +69,6 @@ public:
       Float64 sigma_support, const CSpectrumSpectralAxis &spectralAxis,
       const TFloat64Range &lambdaRange, Float64 redshift) const;
 
-  std::vector<std::pair<Int32, TInt32List>> getIgmLinesIndices() const;
-
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
   void resetAmplitudeOffset();
@@ -148,6 +146,7 @@ public:
 
   TInt32List findElementTypeIndices(CLine::EType type) const;
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
+  std::vector<std::pair<Int32, TInt32List>> getIgmLinesIndices() const;
 
   CLineModelElementList &getElementList() {
     return m_ElementsVector.at(*m_curObs);

@@ -315,39 +315,6 @@ CLineModelElementList::findElementIndex(Int32 line_id) const {
   }
   return std::make_pair(elt_index, line_index);
 }
-/*
-std::pair<Int32, Int32>
-CLineModelElementList::findElementIndex(const std::string &LineTagStr,
-                                        CLine::EType linetype) const {
-  Int32 elt_index = undefIdx;
-  Int32 line_index = undefIdx;
-  auto it = std::find_if(begin(), end(),
-                         [&LineTagStr, &linetype](auto const &elt_ptr) {
-                           return elt_ptr->hasLine(LineTagStr) &&
-                                  (linetype == CLine::EType::nType_All ||
-                                   elt_ptr->GetElementType() == linetype);
-                         });
-  if (it != end()) {
-    elt_index = it - begin();
-    line_index = it->get()->getLineIndex(LineTagStr);
-  }
-  return std::make_pair(elt_index, line_index);
-}
-*/
-// first element returned is the list of element indices, then all remaining
-// elts are the list of line indices, for each element listed.
-std::vector<std::pair<Int32, TInt32List>>
-CLineModelElementList::getIgmLinesIndices() const {
-
-  std::vector<std::pair<Int32, TInt32List>> indices;
-
-  for (Int32 elt_idx = 0; elt_idx < m_Elements.size(); ++elt_idx) {
-    TInt32List const &line_indices = m_Elements[elt_idx]->getIgmLinesIndices();
-    if (!line_indices.empty())
-      indices.push_back({elt_idx, line_indices});
-  }
-  return indices;
-}
 
 /**
  * \brief Returns a sorted set of samples indices present in the supports of the

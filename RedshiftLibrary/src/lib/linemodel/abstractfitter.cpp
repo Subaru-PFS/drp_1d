@@ -166,58 +166,57 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   Int32 line_idx_LyaE;
   TInt32List line_indices_LyaE_copy;
 
-  *m_curObs = 0; // TODO this is simple and dirty implementation : we should
-                 // directly call getIgmLinesIndices and setasyfitparams on
-                 // TLineModelElementParam
-  auto const indices_Igm = getElementList().getIgmLinesIndices();
+  auto const indices_Igm = m_ElementsVector->getIgmLinesIndices();
 
   if (indices_Igm.empty())
     return;
 
-  auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
-  line_idx_LyaE = line_indices_LyaE.front();
+  // ASym Profile
+  {
+    auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
+    line_idx_LyaE = line_indices_LyaE.front();
 
-  auto &elt_LyaE = getElementList()[elt_idx_LyaE];
-  const auto &profile = elt_LyaE->getLineProfile(line_idx_LyaE);
+    auto const &param_LyaE = m_ElementsVector->getElementParam()[elt_idx_LyaE];
+    auto const &profile = param_LyaE->getLineProfile(line_idx_LyaE);
 
-  if (profile->isAsymFit() &&
-      !m_ElementsVector->isOutsideLambdaRange(elt_idx_LyaE, line_idx_LyaE)) {
-    // find the best width and asym coeff. parameters
-    TAsymParams const bestfitParams =
-        fitAsymParameters(redshift, elt_idx_LyaE, line_idx_LyaE);
+    if (profile->isAsymFit() &&
+        !m_ElementsVector->isOutsideLambdaRange(elt_idx_LyaE, line_idx_LyaE)) {
+      // find the best width and asym coeff. parameters
+      TAsymParams const bestfitParams =
+          fitAsymParameters(redshift, elt_idx_LyaE, line_idx_LyaE);
 
-    elt_LyaE->SetAsymfitParams(bestfitParams);
+      param_LyaE->SetAsymfitParams(bestfitParams);
+    }
   }
 
   // deal with symIgm profiles
-  std::vector<std::pair<Int32, TInt32List>> line_indices_tofit;
-  for (auto const &[elt_idx_igmLine, line_indices_LyaE] : indices_Igm) {
-    *m_curObs = 0;
-    const auto &elt = getElementList()[elt_idx_igmLine];
-    if (isOutsideLambdaRange(elt_idx_igmLine))
-      continue;
-    auto line_indices_filtered = line_indices_LyaE;
-    auto end = std::remove_if(
-        line_indices_filtered.begin(), line_indices_filtered.end(),
-        [this, elt_idx_igmLine](Int32 idx) {
-          return !getElementParam()[elt_idx_igmLine]
-                      ->m_Lines[idx]
-                      .GetProfile()
-                      ->isSymIgm() ||
-                 m_ElementsVector->isOutsideLambdaRange(elt_idx_igmLine, idx);
-        });
-    line_indices_filtered.erase(end, line_indices_filtered.end());
-    if (!line_indices_filtered.empty())
-      line_indices_tofit.push_back({elt_idx_igmLine, line_indices_filtered});
-  }
+  {
+    std::vector<std::pair<Int32, TInt32List>> line_indices_tofit;
+    for (auto const &[elt_idx_igmLine, line_indices_LyaE] : indices_Igm) {
+      auto const &param_EltIgm =
+          m_ElementsVector->getElementParam()[elt_idx_igmLine];
 
-  auto bestigmidx = line_indices_tofit.empty()
-                        ? undefIdx
-                        : fitAsymIGMCorrection(redshift, line_indices_tofit);
-  *m_curObs = 0;
-  for (auto const &[elt_idx, _] : line_indices_tofit) {
-    const auto &elt = getElementList()[elt_idx];
-    elt->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
+      if (isOutsideLambdaRange(elt_idx_igmLine))
+        continue;
+      auto line_indices_filtered = line_indices_LyaE;
+      auto end = std::remove_if(
+          line_indices_filtered.begin(), line_indices_filtered.end(),
+          [&](Int32 idx) {
+            return !param_EltIgm->getLineProfile(idx)->isSymIgmFit() ||
+                   m_ElementsVector->isOutsideLambdaRange(elt_idx_igmLine, idx);
+          });
+      line_indices_filtered.erase(end, line_indices_filtered.end());
+      if (!line_indices_filtered.empty())
+        line_indices_tofit.push_back({elt_idx_igmLine, line_indices_filtered});
+    }
+
+    auto bestigmidx = line_indices_tofit.empty()
+                          ? undefIdx
+                          : fitAsymIGMCorrection(redshift, line_indices_tofit);
+    for (auto const &[elt_idx, _] : line_indices_tofit) {
+      auto const &param_EltIgm = m_ElementsVector->getElementParam()[elt_idx];
+      param_EltIgm->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
+    }
   }
 }
 
@@ -421,10 +420,12 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
   Float64 deltaMax = m_opt_lya_fit_delta_max;
   Int32 nDeltaSteps = int((deltaMax - deltaMin) / deltaStep + 1.5);
 
-  TAsymParams bestparams{};
+  TAsymParams bestparams = ASYMF_DEFAULT_PARAMS;
   Float64 meritMin = DBL_MAX;
 
   TInt32List filterEltsIdxLya(1, idxLyaE);
+
+  auto const &param_LyaE = m_ElementsVector->getElementParam()[idxLyaE];
 
   for (Int32 iDelta = 0; iDelta < nDeltaSteps; iDelta++) {
     Float64 delta = deltaMin + deltaStep * iDelta;
@@ -432,16 +433,10 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
       Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep * iWidth;
       for (Int32 iAsym = 0; iAsym < nAsymSteps; iAsym++) {
         Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep * iAsym;
-        *m_curObs =
-            0; // TODO this is simple and dirty implementation : we should
-               // directly call setasyfitparams on TLineModelElementParam
-        getElementList()[idxLyaE]->SetAsymfitParams(
-            {asymWidthCoeff, asymAlphaCoeff, delta});
-
+        param_LyaE->SetAsymfitParams({asymWidthCoeff, asymAlphaCoeff, delta});
         fitAmplitude(idxLyaE, redshift, idxLineLyaE);
-        *m_curObs = 0;
-        bool fitIsvalid =
-            getElementList()[idxLyaE]->GetElementAmplitude() > 0.0;
+        bool fitIsvalid = param_LyaE->GetElementAmplitude() > 0.0;
+
         Float64 m = NAN;
         if (fitIsvalid) {
           if (1) {
@@ -449,20 +444,13 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
               getModel().refreshModelUnderElements(filterEltsIdxLya,
                                                    idxLineLyaE);
             m = getModelErrorUnderElements({idxLyaE}, true);
-            *m_curObs =
-                0; // TODO this is simple and dirty implementation : we should
-                   // directly call setasyfitparams on TLineModelElementParam
 
           } else {
             m = getLeastSquareMeritFast(idxLyaE);
           }
           if (m < meritMin) {
             meritMin = m;
-            *m_curObs =
-                0; // TODO this is simple and dirty implementation : we should
-                   // directly call setasyfitparams on TLineModelElementParam
-
-            bestparams = getElementList()[idxLyaE]->GetAsymfitParams(0);
+            bestparams = param_LyaE->GetAsymfitParams(0);
           }
         }
 
@@ -483,24 +471,19 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
     Float64 redshift,
     std::vector<std::pair<Int32, TInt32List>> const &idxLines) {
 
-  const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-  if (spectralAxis[0] / (1 + redshift) > RESTLAMBDA_LYA)
-    return undefIdx;
-
   Float64 meritMin = DBL_MAX;
   Int32 bestIgmIdx = undefIdx;
 
-  Int32 igmCount = getElementList()[idxLines.front().first]
+  Int32 igmCount = m_ElementsVector->getElementParam()[idxLines.front().first]
                        ->getLineProfile(idxLines.front().second.front())
                        ->getIGMIdxCount();
   for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
     bool fitIsValid = false;
     for (auto const &[elt_idx, _] : idxLines) {
-      m_ElementsVector->getElementParam()[elt_idx]->SetSymIgmParams(
-          TSymIgmParams(igmIdx, redshift));
+      auto const &param_EltIgm = m_ElementsVector->getElementParam()[elt_idx];
+      param_EltIgm->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
       fitAmplitude(elt_idx, redshift);
-      *m_curObs = 0;
-      fitIsValid |= getElementList()[elt_idx]->GetElementAmplitude() > 0.0;
+      fitIsValid |= param_EltIgm->GetElementAmplitude() > 0.0;
     }
     if (fitIsValid) {
       TInt32List elt_indices;
