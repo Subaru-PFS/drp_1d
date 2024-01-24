@@ -137,3 +137,14 @@ class TestTemplateFittingSolve:
         })
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning(zflag)
+
+    def test_error_if_both_fft_processing_and_photometry(self):
+        param_dict = self._make_parameter_dict(**{
+            "templateFittingSolve": {
+                "enablePhotometry": True,
+                "fftProcessing": True,
+                "photometry": {"weight": 1}
+            }
+        })
+        with pytest.raises(APIException, match=r"cannot activate both fft and photometry"):
+            check_from_parameter_dict(param_dict)

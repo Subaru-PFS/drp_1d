@@ -92,6 +92,18 @@ class TestLineModelSolve:
             param_dict["ebmv"] = {}
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)
+        
+        def test_error_if_fftprocessing_enabled_but_photometry_enabled(self):
+            param_dict = self._make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "continuumFit": {"fftProcessing": True},
+                    "enablePhotometry": True
+                }}
+            })
+            param_dict["photometryTransmissionDir"] = "sth"
+            param_dict["photometryBand"] = "sth"
+            with pytest.raises(APIException, match=r"cannot activate both fft and photometry"):
+                check_from_parameter_dict(param_dict)
 
     class TestFirstPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
