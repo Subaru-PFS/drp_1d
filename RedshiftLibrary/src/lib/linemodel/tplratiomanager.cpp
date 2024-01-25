@@ -81,8 +81,7 @@ void CTplratioManager::SetTplratio_PriorHelper() {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   m_tplratio_priorhelper = std::make_shared<CPriorHelper>();
-  m_tplratio_priorhelper->Init(ps->GetScoped<std::string>("catalogDirPath"),
-                               1);
+  m_tplratio_priorhelper->Init(ps->GetScoped<std::string>("catalogDirPath"), 1);
   m_tplratio_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_tplratio_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
   m_tplratio_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
@@ -174,12 +173,12 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_ScaleMargCorrTplratio.assign(s, NAN);
   m_StrongELPresentTplratio.assign(s, false);
   m_StrongHalphaELPresentTplratio.assign(s, false);
-  m_NLinesAboveSNRTplratio.assign(s, -1);
+  m_NLinesAboveSNRTplratio.assign(s, undefIdx);
   m_FittedAmpTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaAsymCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaWidthCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaDeltaCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
-  m_LyaIgmIdxTplratio.assign(s, TInt32List(elCount, -1));
+  m_LyaIgmIdxTplratio.assign(s, TInt32List(elCount, undefIdx));
   m_FittedErrorTplratio.assign(s, TFloat64List(elCount, NAN));
   m_MtmTplratio.assign(s, TFloat64List(elCount, NAN));
   m_DtmTplratio.assign(s, TFloat64List(elCount, NAN));
@@ -375,7 +374,6 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
          ++line_idx) {
       Float64 amp = m_elementsVector->getElementParam()[iElt]
                         ->m_FittedAmplitudes[line_idx];
-      // we need to take into case where lineratioAmplitude is NAN
       if (isnan(amp) || amp <= 0. || isOutsideLambdaRange(iElt, line_idx))
         continue;
       allampzero = false;

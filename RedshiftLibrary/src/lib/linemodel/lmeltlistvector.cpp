@@ -229,3 +229,15 @@ CLMEltListVector::findElementIndex(const std::string &LineTagStr,
   }
   return std::make_pair(elt_index, line_index);
 }
+
+std::vector<std::pair<Int32, TInt32List>>
+CLMEltListVector::getIgmLinesIndices() const {
+
+  std::vector<std::pair<Int32, TInt32List>> indices;
+  for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+    auto const &line_indices = m_ElementsParams[elt_idx]->m_asymLineIndices;
+    if (!line_indices.empty())
+      indices.push_back({elt_idx, line_indices});
+  }
+  return indices;
+}

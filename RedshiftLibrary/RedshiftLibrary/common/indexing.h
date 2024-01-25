@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
@@ -66,6 +67,7 @@ public:
   // value[index] can be equal or smaller than Z
   static bool getClosestLowerIndex(const std::vector<T> &ordered_values,
                                    const T &value, Int32 &i_min) {
+    i_min = undefIdx;
     if (value < ordered_values.front())
       return false;
 
@@ -102,6 +104,7 @@ public:
   // value[index] can be equal or higher than Z
   static bool getClosestUpperIndex(const std::vector<T> &ordered_values,
                                    const T &value, Int32 &i) {
+    i = undefIdx;
     if (value > ordered_values.back()) {
       return false;
     }

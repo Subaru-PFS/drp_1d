@@ -848,7 +848,7 @@ void CLineModelFitting::LoadModelSolution(
     }
 
     if (modelSolution.LyaIgm != undefIdx) {
-      auto const indices_Igm = eltList.getIgmLinesIndices();
+      auto const indices_Igm = m_ElementsVector->getIgmLinesIndices();
       if (!indices_Igm.empty())
         for (auto const &[elt_idx, _] : indices_Igm)
           eltList[elt_idx]->SetSymIgmParams(
@@ -933,7 +933,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
                    // and high level line properties
     {
       modelSolution.FittingError[iRestLine] =
-          m_fitter->getModelErrorUnderElement(eIdx, true);
+          m_fitter->getModelErrorUnderElements({eIdx}, true);
       if (m_enableAmplitudeOffsets) {
         const auto &polynom_coeffs =
             m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
