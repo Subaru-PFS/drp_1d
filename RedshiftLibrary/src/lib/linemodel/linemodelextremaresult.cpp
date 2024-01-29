@@ -147,28 +147,30 @@ void TLineModelResult::updateFromModel(
   // save the outsideLinesMask
   OutsideLinesMask = lmel->getOutsideLinesMask();
 
-  OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1);
-  OutsideLinesSTDError = lmel->getOutsideLinesSTD(2);
+  OutsideLinesResidualRMS = lmel->getOutsideLinesSTD(1);
+  OutsideLinesInputStDevRMS = lmel->getOutsideLinesSTD(2);
 
-  if (OutsideLinesSTDError > 0.0) {
-    Float64 ratioSTD = OutsideLinesSTDFlux / OutsideLinesSTDError;
+  if (OutsideLinesInputStDevRMS > 0.0) {
+    Float64 ratioSTD = OutsideLinesResidualRMS / OutsideLinesInputStDevRMS;
     Float64 ratio_thres = 1.5;
     if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
-      Flag.warning(WarningCode::STDESTIMATION_NO_MATCHING,
-                   Formatter()
-                       << "  TLineModelResult::" << __func__
-                       << ": STD estimations outside lines do not match: ratio="
-                       << ratioSTD << ", flux-STD=" << OutsideLinesSTDFlux
-                       << ", error-std=" << OutsideLinesSTDError);
+      Flag.warning(
+          WarningCode::STDESTIMATION_NO_MATCHING,
+          Formatter()
+              << "  TLineModelResult::" << __func__
+              << ": StDev estimation outside lines do not match: ratio = "
+              << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
+              << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
     } else {
-      Log.LogInfo("  Operator-Linemodel: STD estimations outside lines found "
-                  "matching: ratio=%e, flux-STD=%e, error-std=%e",
-                  ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
+      Log.LogInfo("  Operator-Linemodel: StDev estimations outside lines "
+                  "match: ratio = %e, residual RMS = %e, Input Noise RMS = %e",
+                  ratioSTD, OutsideLinesResidualRMS, OutsideLinesInputStDevRMS);
     }
   } else {
     Flag.warning(WarningCode::STDESTIMATION_FAILED,
                  Formatter() << "  TLineModelResult::" << __func__
-                             << ": unable to get STD estimations...");
+                             << ": unable to get spectrum mean Standard "
+                                "Deviation estimations...");
   }
 }
 
