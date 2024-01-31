@@ -64,14 +64,14 @@ public:
                      const TFloat64List &fittedAmplitudes,
                      const TFloat64List &fittedErrors,
                      TFloat64List &amplitudesCorrected,
-                     std::string &bestTplName) const;
+                     Int32 &bestTplRatio) const;
   CLineMap const &GetRestLinesList(Int32 index) const {
     return m_lineRatioCatalogs[index].GetList();
   };
   Int32 GetCatalogsCount() const { return m_lineRatioCatalogs.size(); }
 
   TFloat64List getCatalogsPriors() const;
-  std::string GetCatalogName(Int32 idx) const {
+  std::string const &GetCatalogName(Int32 idx) const {
     return m_lineRatioCatalogs.at(idx).getName();
   }
   Int32 GetIsmIndex(Int32 idx) const {

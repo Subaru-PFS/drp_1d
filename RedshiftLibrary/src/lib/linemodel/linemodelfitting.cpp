@@ -287,7 +287,7 @@ Int32 CLineModelFitting::getTplratio_count() const {
   return m_lineRatioManager->getTplratio_count();
 }
 
-TFloat64List CLineModelFitting::getTplratio_priors() {
+TFloat64List CLineModelFitting::getTplratio_priors() const {
   return m_lineRatioManager->getTplratio_priors();
 }
 
@@ -920,6 +920,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     Float64 ampError = m_ElementsVector->getElementParam()[eIdx]
                            ->m_FittedAmplitudeErrorSigmas[line_index];
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
+    if (getLineRatioType() == "rules")
+      modelSolution.SNR[iRestLine] = std::abs(amp) / ampError;
 
     modelSolution.LambdaObs[iRestLine] =
         firstEltList[eIdx]->GetObservedPosition(line_index,

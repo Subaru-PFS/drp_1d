@@ -81,7 +81,7 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
   TFloat64List correctedAmplitudes;
   m_CatalogTplRatio->GetBestFit(validLinesIndex, Amplitudes,
                                 AmplitudesUncertainties, correctedAmplitudes,
-                                m_tplratioBestTplName);
+                                m_savedIdxFitted);
 
   for (Int32 iValidLine = 0; iValidLine != validLinesIndex.size();
        ++iValidLine) {

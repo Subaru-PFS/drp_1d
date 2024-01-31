@@ -83,7 +83,7 @@ void CProcessFlowContext::reset() {
   m_inputContext->resetSpectrumSpecific();
 }
 
-const CLineMap CProcessFlowContext::getCLineMap() {
+CLineMap CProcessFlowContext::getCLineMap() {
   CAutoScope autoscope(m_ScopeStack, "lineModel");
   return m_inputContext->GetFilteredLineMap(
       GetCurrentCategory(), GetCurrentMethod(),

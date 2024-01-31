@@ -45,7 +45,7 @@ CLineModelSolution::CLineModelSolution(const CLineMap &restLineList)
       ElementId(restLineList.size(), undefIdx),
       Amplitudes(restLineList.size(), NAN),
       AmplitudesUncertainties(restLineList.size(), NAN),
-      FittingError(restLineList.size(), NAN),
+      SNR(restLineList.size(), NAN), FittingError(restLineList.size(), NAN),
       LambdaObs(restLineList.size(), NAN), Offset(restLineList.size(), NAN),
       Velocity(restLineList.size(), NAN),
       CenterContinuumFlux(restLineList.size(), NAN),

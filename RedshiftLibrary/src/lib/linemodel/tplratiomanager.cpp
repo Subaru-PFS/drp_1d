@@ -105,7 +105,8 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
       // prepare the lines prior data
       Int32 ebvfilter = m_CatalogTplRatio->GetIsmIndex(itratio);
 
-      std::string tplrationame = m_CatalogTplRatio->GetCatalogName(itratio);
+      std::string const &tplrationame =
+          m_CatalogTplRatio->GetCatalogName(itratio);
       m_logPriorDataTplRatio.push_back(m_tplratio_priorhelper->GetTZEPriorData(
           tplrationame, ebvfilter, redshift));
     }
@@ -119,13 +120,9 @@ bool CTplratioManager::init(Float64 redshift, Int32 itratio) {
     duplicateTplratioResult(itratio);
     return true;
   }
-  setTplratioModel(itratio, false);
 
-  // prepare the Lya width and asym coefficients if the asymfit profile
-  // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
-  // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
-  // tplratio can override the lyafitting, see m_opt_lya_forcefit
-  setLyaProfile(redshift, m_CatalogTplRatio->GetCatalog(itratio).GetList());
+  setTplratioModel(itratio, redshift, false);
+
   return false;
 }
 
@@ -165,9 +162,9 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
           m_elementsVector->getElementParam(), opt_tplratio_ismFit,
           m_continuumManager->getIsmCorrectionFromTpl());
   m_opt_dust_calzetti = opt_tplratio_ismFit;
-  m_tplratioBestTplName = undefStr;
   Int32 s = m_CatalogTplRatio->GetCatalogsCount();
   Int32 elCount = m_elementsVector->getElementParam().size();
+
   // Resize tplratio buffers
   m_MeritTplratio.assign(s, NAN);
   m_ScaleMargCorrTplratio.assign(s, NAN);
@@ -185,6 +182,72 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_LinesLogPriorTplratio.assign(s, TFloat64List(elCount, 0.));
 
   m_tplratioLeastSquareFast = false;
+
+  TInt32List idx_em =
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
+  if (!idx_em.empty())
+    m_EmEltIdx = idx_em.front();
+
+  TInt32List idx_abs =
+      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
+  if (!idx_abs.empty())
+    m_AbsEltIdx = idx_abs.front();
+}
+
+const std::string &CTplratioManager::getTplratio_bestTplName() const {
+  return m_CatalogTplRatio->GetCatalogName(m_savedIdxFitted);
+}
+
+Float64 CTplratioManager::getTplratio_bestTplIsmCoeff() const {
+  return GetIsmCoeff(m_savedIdxFitted);
+}
+
+Float64 CTplratioManager::getTplratio_bestAmplitudeEm() const {
+  if (m_EmEltIdx != undefIdx)
+    return m_FittedAmpTplratio[m_savedIdxFitted].at(m_EmEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestAmplitudeAbs() const {
+  if (m_AbsEltIdx != undefIdx)
+    return m_FittedAmpTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestAmplitudeUncertaintyEm() const {
+  if (m_EmEltIdx != undefIdx)
+    return m_FittedErrorTplratio[m_savedIdxFitted].at(m_EmEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestAmplitudeUncertaintyAbs() const {
+  if (m_AbsEltIdx != undefIdx)
+    return m_FittedErrorTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestDtmEm() const {
+  if (m_EmEltIdx != undefIdx)
+    return m_DtmTplratio[m_savedIdxFitted].at(m_EmEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestDtmAbs() const {
+  if (m_AbsEltIdx != undefIdx)
+    return m_DtmTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestMtmEm() const {
+  if (m_EmEltIdx != undefIdx)
+    return m_MtmTplratio[m_savedIdxFitted].at(m_EmEltIdx);
+  return NAN;
+}
+
+Float64 CTplratioManager::getTplratio_bestMtmAbs() const {
+  if (m_AbsEltIdx != undefIdx)
+    return m_MtmTplratio[m_savedIdxFitted].at(m_AbsEltIdx);
+  return NAN;
 }
 
 /**
@@ -222,22 +285,23 @@ void CTplratioManager::logParameters() {
                             << m_opt_firstpass_forcedisableTplratioISMfit);
   Log.LogDetail(Formatter() << "forcedisableTplratioISMfit="
                             << m_forcedisableTplratioISMfit);
-  Log.LogDetail(Formatter() << "tplRatioBestTplName=" << m_tplratioBestTplName);
   Log.LogDetail(Formatter()
-                << "tplRatioBestTplIsmCoeff=" << m_tplratioBestTplIsmCoeff);
+                << "tplRatioBestTplName=" << getTplratio_bestTplName());
+  Log.LogDetail(Formatter()
+                << "tplRatioBestTplIsmCoeff=" << getTplratio_bestTplIsmCoeff());
   Log.LogDetail(Formatter() << "tplRatioBestTplAmplitudeEm="
-                            << m_tplratioBestTplAmplitudeEm);
+                            << getTplratio_bestAmplitudeEm());
   Log.LogDetail(Formatter() << "tplRatioBestTplAmplitudeAbs="
-                            << m_tplratioBestTplAmplitudeAbs);
+                            << getTplratio_bestAmplitudeAbs());
   Log.LogDetail(Formatter()
-                << "tplRatioBestTplDtmEm=" << m_tplratioBestTplDtmEm);
+                << "tplRatioBestTplDtmEm=" << getTplratio_bestDtmEm());
   Log.LogDetail(Formatter()
-                << "tplRatioBestTplDtmAbs=" << m_tplratioBestTplDtmAbs);
+                << "tplRatioBestTplDtmAbs=" << getTplratio_bestDtmAbs());
 
   Log.LogDetail(Formatter()
-                << "tplRatioBestTplMtmEm=" << m_tplratioBestTplMtmEm);
+                << "tplRatioBestTplMtmEm=" << getTplratio_bestMtmEm());
   Log.LogDetail(Formatter()
-                << "tplRatioBestTplMtmAbs=" << m_tplratioBestTplMtmAbs);
+                << "tplRatioBestTplMtmAbs=" << getTplratio_bestMtmAbs());
   Log.LogDetail(
       Formatter()
       << "tplRatioLeastSquareFast="
@@ -261,7 +325,7 @@ Int32 CTplratioManager::getTplratio_count() const {
   return m_CatalogTplRatio->GetCatalogsCount();
 }
 
-TFloat64List CTplratioManager::getTplratio_priors() {
+TFloat64List CTplratioManager::getTplratio_priors() const {
   return m_CatalogTplRatio->getCatalogsPriors();
 }
 
@@ -481,14 +545,14 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
 void CTplratioManager::resetToBestRatio(Float64 redshift) {
 
   // first reinit all the elements:
-  init(redshift, m_savedIdxFitted);
+  setTplratioModel(m_savedIdxFitted, redshift);
 
   for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
        iElts++) {
     Log.LogDetail("    model - Linemodel: tplratio = %d (%s, with "
                   "ebmv=%.3f), and A=%e",
-                  m_savedIdxFitted, m_tplratioBestTplName.c_str(),
-                  m_tplratioBestTplIsmCoeff,
+                  m_savedIdxFitted, getTplratio_bestTplName().c_str(),
+                  getTplratio_bestTplIsmCoeff(),
                   m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
     m_elementsVector->getElementParam()[iElts]->setAmplitudes(
         m_FittedAmpTplratio[m_savedIdxFitted][iElts],
@@ -518,42 +582,6 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
   }
 }
 
-void CTplratioManager::saveResults(Int32 itratio) {
-  m_savedIdxFitted = itratio;
-  m_tplratioBestTplName = m_CatalogTplRatio->GetCatalogName(m_savedIdxFitted);
-  m_tplratioBestTplIsmCoeff = GetIsmCoeff(m_savedIdxFitted);
-  TInt32List idx_em =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Emission);
-  if (!idx_em.empty()) {
-    m_tplratioBestTplAmplitudeEm =
-        m_FittedAmpTplratio[m_savedIdxFitted]
-                           [idx_em.front()]; // Should be only 1 elt in tpl
-                                             // ratio mode...
-    m_tplratioBestTplDtmEm =
-        m_DtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
-                                                         // in tpl ratio mode...
-    m_tplratioBestTplMtmEm =
-        m_MtmTplratio[m_savedIdxFitted][idx_em.front()]; // Should be only 1 elt
-                                                         // in tpl ratio mode...
-  }
-  TInt32List idx_abs =
-      m_elementsVector->findElementTypeIndices(CLine::EType::nType_Absorption);
-  if (!idx_abs.empty()) {
-    m_tplratioBestTplAmplitudeAbs =
-        m_FittedAmpTplratio[m_savedIdxFitted]
-                           [idx_abs.front()]; // Should be only 1 elt in tpl
-                                              // ratio mode...
-    m_tplratioBestTplDtmAbs =
-        m_DtmTplratio[m_savedIdxFitted]
-                     [idx_abs.front()]; // Should be only 1 elt
-                                        // in tpl ratio mode...
-    m_tplratioBestTplMtmAbs =
-        m_MtmTplratio[m_savedIdxFitted]
-                     [idx_abs.front()]; // Should be only 1 elt
-                                        // in tpl ratio mode...
-  }
-}
-
 Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {
   if (m_continuumManager->getIsmCorrectionFromTpl() == nullptr &&
       m_opt_dust_calzetti)
@@ -565,7 +593,7 @@ Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {
       m_CatalogTplRatio->GetIsmIndex(idx));
 }
 
-bool CTplratioManager::setTplratioModel(Int32 itplratio,
+void CTplratioManager::setTplratioModel(Int32 itplratio, Float64 redshift,
                                         bool enableSetVelocity) {
   SetNominalAmplitudes(itplratio);
 
@@ -579,5 +607,9 @@ bool CTplratioManager::setTplratioModel(Int32 itplratio,
 
   Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
                m_CatalogTplRatio->GetCatalogName(itplratio).c_str());*/
-  return true;
+  // prepare the Lya width and asym coefficients if the asymfit profile
+  // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
+  // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
+  // tplratio can override the lyafitting, see m_opt_lya_forcefit
+  setLyaProfile(redshift, m_CatalogTplRatio->GetCatalog(itplratio).GetList());
 }

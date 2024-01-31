@@ -196,9 +196,9 @@ public:
   // we keep that getters temporarily, waiting for refactoring linemodel extrema
   // result
   Int32 getTplratio_count() const;
-  TFloat64List getTplratio_priors();
+  TFloat64List getTplratio_priors() const;
 
-  std::string getLineRatioType() { return m_lineRatioType; }
+  std::string const &getLineRatioType() const { return m_lineRatioType; }
 
   void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
 

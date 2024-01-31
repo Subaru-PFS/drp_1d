@@ -166,7 +166,7 @@ Float64 CLineCatalogsTplRatio::GetBestFit(const TInt32List &validLinesIndex,
                                           const TFloat64List &fittedAmplitudes,
                                           const TFloat64List &fittedErrors,
                                           TFloat64List &amplitudesCorrected,
-                                          std::string &bestTplName) const {
+                                          Int32 &bestTplRatio) const {
 
   Float64 coeffMin = -1.0;
   TFloat64List bestFitAmplitudes;
@@ -180,7 +180,8 @@ Float64 CLineCatalogsTplRatio::GetBestFit(const TInt32List &validLinesIndex,
   for (Int32 idx = 0; idx != validLinesIndex.size(); ++idx)
     mask.push_back(negativefittedValues(idx) ? false : true);
 
-  for (const auto &catalog : m_lineRatioCatalogs) {
+  for (size_t icat = 0; icat < m_lineRatioCatalogs.size(); ++icat) {
+    auto const &catalog = m_lineRatioCatalogs[icat];
 
     TFloat64List ampsCorrected;
     Float64 fit = getFitForOneCatalog(validLinesIndex, fittedAmplitudes,
@@ -189,7 +190,7 @@ Float64 CLineCatalogsTplRatio::GetBestFit(const TInt32List &validLinesIndex,
     if (fit > 0.0 && !std::isnan(fit) && (fit < coeffMin || coeffMin == -1.)) {
       coeffMin = fit;
       bestFitAmplitudes = std::move(ampsCorrected);
-      bestTplName = catalog.getName();
+      bestTplRatio = icat;
     }
   }
   // coeff min normalization

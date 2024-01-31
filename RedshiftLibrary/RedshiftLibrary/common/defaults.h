@@ -42,5 +42,7 @@ static const Float64 LSF_MAX_LAMBDA = 30000.0;
 static const Float64 OVERLAP_THRESHOLD_PDF_INTEGRATION = 0.3;
 
 static const Int32 N_MIN_VALUE_FOR_ERROR_ESTIMATION = 10;
+
+static const Float64 SNR_THRESHOLD_FOR_NLINESOVER = 3.0;
 } // namespace NSEpic
 #endif

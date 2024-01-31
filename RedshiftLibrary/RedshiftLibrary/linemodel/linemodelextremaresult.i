@@ -55,39 +55,39 @@ public:
                        const std::shared_ptr<const CLineModelResult> &lmresult,
                        bool estimateLeastSquareFast, int indx);
 
-  Float64 MeritContinuum; // best continum  chi2
-  Float64 Merit;          // fullmodel best chi2
+  Float64 MeritContinuum = NAN; // best continum  chi2
+  Float64 Merit = NAN;          // fullmodel best chi2
 
-  Float64 CorrScaleMarg; // extrema scale marg. correction
-  Int32 NDof;            // non zero elements in the lambdarange
-  Float64 snrHa;
-  Float64 lfHa;
-  Float64 snrHa_DI;
-  Float64 lfHa_DI;
-  Float64 snrOII;
-  Float64 lfOII;
-  Float64 snrOII_DI;
-  Float64 lfOII_DI;
-  Float64 LyaWidthCoeff;
-  Float64 LyaAlpha;
-  Float64 LyaDelta;
+  Float64 CorrScaleMarg = NAN; // extrema scale marg. correction
+  Int32 NDof = undefIdx;            // non zero elements in the lambdarange
+  Float64 snrHa = NAN;
+  Float64 lfHa = NAN;
+  Float64 snrHa_DI = NAN;
+  Float64 lfHa_DI = NAN;
+  Float64 snrOII = NAN;
+  Float64 lfOII = NAN;
+  Float64 snrOII_DI = NAN;
+  Float64 lfOII_DI = NAN;
+  Float64 LyaWidthCoeff = NAN;
+  Float64 LyaAlpha = NAN;
+  Float64 LyaDelta = NAN;
   Int32 LyaIgm = undefIdx;
 
-  Float64 NLinesOverThreshold;
+  Float64 NLinesOverThreshold = NAN;
 
-  Float64 ELSNR;
-  Float64 StrongELSNR;
+  Float64 ELSNR = NAN;
+  Float64 StrongELSNR = NAN;
   std::unordered_set<std::string> StrongELSNRAboveCut;
-  Float64 bic; // bayesian information criterion for each extrema
+  Float64 bic = NAN; // bayesian information criterion for each extrema
 
-  Float64 OutsideLinesSTDFlux; // STD measured on the spectrum continuum
+  Float64 OutsideLinesSTDFlux = NAN; // STD measured on the spectrum continuum
                                // substracted outside lines
   Float64
-      OutsideLinesSTDError; // STD measured on the error spectrum outside lines
+      OutsideLinesSTDError = NAN; // STD measured on the error spectrum outside lines
 
   // line width
-  Float64 Elv; // emission line width
-  Float64 Alv; // absorption line width
+  Float64 Elv = NAN; // emission line width
+  Float64 Alv = NAN; // absorption line width
 
   CMask OutsideLinesMask;
   // template ratio
@@ -95,7 +95,11 @@ public:
                                              // fitted for tplcorr/tplratio
   Float64 FittedTplratioAmplitudeEm = NAN;   // amp of the best template fitted
                                              // for tplcorr/tplratio
+  Float64 FittedTplratioAmplitudeUncertaintyEm = NAN;
+  Float64 FittedTplratioSNREm = NAN;
   Float64 FittedTplratioAmplitudeAbs = NAN;
+  Float64 FittedTplratioAmplitudeUncertaintyAbs = NAN;
+  Float64 FittedTplratioSNRAbs = NAN;
 
   Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template
                                         // fitted for tplcorr/tplratio
