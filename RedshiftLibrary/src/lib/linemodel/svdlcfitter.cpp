@@ -124,7 +124,7 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
                          0); // number of param to be fitted=nlines+continuum
 
   Int32 imin = -1, imax = -1;
-  bool b = getLambdaRange().getClosedIntervalIndices(
+  bool const b = getLambdaRange().getClosedIntervalIndices(
       spectralAxis.GetSamplesVector(), imin, imax);
   if (!b)
     return -1;
@@ -154,9 +154,9 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   fillMatrix(imin, imax, redshift, EltsIdx, spectralAxis, continuumfluxAxis, X);
 
   for (Int32 i = 0, idx = imin; idx <= imax; ++i, ++idx) {
-    Float64 yi = fluxAxis[idx] * normFactor;
-    Float64 ei = ErrorNoContinuum[idx] * normFactor;
-    Float64 ci = continuumfluxAxis[idx];
+    Float64 const yi = fluxAxis[idx] * normFactor;
+    Float64 const ei = ErrorNoContinuum[idx] * normFactor;
+    Float64 const ci = continuumfluxAxis[idx];
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, 1.0 / (ei * ei));
   }
@@ -198,7 +198,7 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   Int32 sameSign = 1;
   Float64 a0 = gsl_vector_get(c, 0) / normFactor;
   for (Int32 iddl = 1; iddl < EltsIdx.size(); iddl++) {
-    Float64 a = gsl_vector_get(c, iddl) / normFactor;
+    Float64 const a = gsl_vector_get(c, iddl) / normFactor;
     sameSign &= std::signbit(a0 * a);
   }
 
@@ -206,8 +206,8 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
                 sameSign);
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
-    Float64 cova = gsl_matrix_get(cov, iddl, iddl);
-    errorsfitted[iddl] = sqrt(cova) / normFactor;
+    Float64 const var = gsl_matrix_get(cov, iddl, iddl);
+    errorsfitted[iddl] = sqrt(var) / normFactor;
     ampsfitted[iddl] = gsl_vector_get(c, iddl) / normFactor;
     if (iddl < EltsIdx.size())
       getElementList().SetElementAmplitude(EltsIdx[iddl], ampsfitted[iddl],
@@ -216,7 +216,8 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
   if (m_fitc_polyOrder >= 0) {
     for (Int32 kCoeff = 0; kCoeff < m_fitc_polyOrder + 1; kCoeff++) {
-      Float64 p = gsl_vector_get(c, EltsIdx.size() + 1 + kCoeff) / normFactor;
+      Float64 const p =
+          gsl_vector_get(c, EltsIdx.size() + 1 + kCoeff) / normFactor;
       Log.LogDetail("# Found p%d poly amplitude = %+.5e", kCoeff, p);
     }
   }

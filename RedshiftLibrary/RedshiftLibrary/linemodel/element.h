@@ -70,7 +70,7 @@ struct TLineModelElementParam {
   Float64 m_VelocityEmission = NAN;
   Float64 m_VelocityAbsorption = NAN;
   TFloat64List m_FittedAmplitudes;
-  TFloat64List m_FittedAmplitudeErrorSigmas;
+  TFloat64List m_FittedAmplitudesStd;
   TFloat64List m_NominalAmplitudes;
   TFloat64List m_Offsets;
   TInt32Map m_LinesIds;
@@ -137,33 +137,33 @@ struct TLineModelElementParam {
         m_Lines[index].SetSymIgmFit(val);
   }
 
-  void setAmplitudes(Float64 A, Float64 SNR,
+  void setAmplitudes(Float64 A, Float64 AStd,
                      std::vector<bool> outsideLambdaRangeList,
                      bool outsideLambdaRange) {
     auto &fa = m_FittedAmplitudes;
-    auto &faes = m_FittedAmplitudeErrorSigmas;
+    auto &fastd = m_FittedAmplitudesStd;
     auto &na = m_NominalAmplitudes;
 
     if (std::isnan(A) || outsideLambdaRange) {
       fa.assign(size(), NAN);
-      faes.assign(size(), NAN);
+      fastd.assign(size(), NAN);
       return;
     }
 
     for (Int32 index = 0; index != size(); ++index) {
       if (outsideLambdaRangeList[index]) {
         fa[index] = NAN;
-        faes[index] = NAN;
+        fastd[index] = NAN;
         continue;
       }
-      fa[index] = A * m_NominalAmplitudes[index];
+      fa[index] = A * na[index];
       // limit the absorption to 0.0-1.0, so that it's never <0
       if (m_SignFactors[index] == -1 && m_absLinesLimit > 0.0 &&
           fa[index] > m_absLinesLimit) {
         fa[index] = m_absLinesLimit;
       }
 
-      faes[index] = SNR * na[index];
+      fastd[index] = AStd * na[index];
     }
   }
 
@@ -276,13 +276,13 @@ public:
   bool SetNominalAmplitude(Int32 line_index, Float64 nominalamp);
   Float64 GetMaxNominalAmplitude() const;
   Float64 GetFittedAmplitude(Int32 line_index) const;
-  Float64 GetFittedAmplitudeErrorSigma(Int32 line_index) const;
+  Float64 GetFittedAmplitudeStd(Int32 line_index) const;
   Float64 GetElementAmplitude() const;
   Float64 GetElementError() const;
   bool isAllAmplitudesNull() const;
 
-  void SetFittedAmplitude(Int32 line_index, Float64 A, Float64 SNR);
-  void SetElementAmplitude(Float64 A, Float64 SNR);
+  void SetFittedAmplitude(Int32 line_index, Float64 A, Float64 AStd);
+  void SetElementAmplitude(Float64 A, Float64 AStd);
   bool LimitFittedAmplitude(Int32 line_index, Float64 limit);
 
   bool SetAbsLinesLimit(Float64 limit);
@@ -460,8 +460,8 @@ inline bool CLineModelElement::isAllAmplitudesNull() const {
  * \brief Returns the fitted amplitude error for the argument index.
  **/
 inline Float64
-CLineModelElement::GetFittedAmplitudeErrorSigma(Int32 line_index) const {
-  return m_ElementParam->m_FittedAmplitudeErrorSigmas[line_index];
+CLineModelElement::GetFittedAmplitudeStd(Int32 line_index) const {
+  return m_ElementParam->m_FittedAmplitudesStd[line_index];
 }
 
 inline void CLineModelElement::SetVelocityEmission(Float64 vel) {

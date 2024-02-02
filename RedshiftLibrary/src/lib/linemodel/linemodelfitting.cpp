@@ -876,7 +876,7 @@ void CLineModelFitting::LoadModelSolution(
  *solutions.
  **/
 // this is not really a const method as spectrum model(s) have to be modified
-// (cf CSpectrumModel::getContinuumError)
+// (cf CSpectrumModel::getContinuumUncertainty)
 CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
@@ -918,7 +918,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
                       ->m_FittedAmplitudes[line_index];
     modelSolution.Amplitudes[iRestLine] = amp;
     Float64 ampError = m_ElementsVector->getElementParam()[eIdx]
-                           ->m_FittedAmplitudeErrorSigmas[line_index];
+                           ->m_FittedAmplitudesStd[line_index];
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
     if (getLineRatioType() == "rules")
       modelSolution.SNR[iRestLine] = std::abs(amp) / ampError;
@@ -934,8 +934,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     if (opt_level) // brief, to save processing time, do not estimate fluxes
                    // and high level line properties
     {
-      modelSolution.FittingError[iRestLine] =
-          m_fitter->getModelErrorUnderElements({eIdx}, true);
+      modelSolution.ResidualRMS[iRestLine] =
+          m_fitter->getModelResidualRmsUnderElements({eIdx}, true);
       if (m_enableAmplitudeOffsets) {
         const auto &polynom_coeffs =
             m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
@@ -944,11 +944,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
         modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
       }
 
-      Float64 cont =
-          getContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
+      auto const [cont, cont_std] =
+          GetMeanContinuumUnderLine(eIdx, line_index, modelSolution.Redshift);
       modelSolution.CenterContinuumFlux[iRestLine] = cont;
-      modelSolution.ContinuumError[iRestLine] =
-          getContinuumError(eIdx, line_index);
+      modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_std;
 
       Float64 mu = NAN;
       Float64 sigma = NAN;
@@ -964,8 +963,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       }
       if (!std::isnan(amp) && amp >= 0.0) {
         if (!isEmission) {
-          amp *= cont;
-          ampError *= cont;
+          Float64 const positive_cont = std::max(0.0, cont);
+          ampError *= positive_cont;
+          ampError += amp * cont_std; // add continuum error (will lead to a
+                                      // non-null error for a null continuum)
+          amp *= -positive_cont; // minus sign to get a negative flux for abs
         }
 
         for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
@@ -977,22 +979,20 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
             modelSolution.Sigmas[iRestLine] = sigma;
             const auto &profile = eltList[eIdx]->getLineProfile(line_index);
 
-            Float64 lineFlux = profile->GetLineFlux(mu, sigma);
+            Float64 const lineFlux = profile->GetLineFlux(mu, sigma);
+
             flux = amp * lineFlux;
             fluxError = ampError * lineFlux;
             break;
           }
         }
-
-        if (!isEmission)
-          flux = -flux;
       }
       auto [fluxDI, snrDI] = getFluxDirectIntegration(
           eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
-      modelSolution.Fluxs[iRestLine] = flux;
-      modelSolution.FluxErrors[iRestLine] = fluxError;
+      modelSolution.Flux[iRestLine] = flux;
+      modelSolution.FluxUncertainty[iRestLine] = fluxError;
       modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
-      modelSolution.FluxDirectIntegrationError[iRestLine] =
+      modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
           std::abs(fluxDI) / snrDI;
 
       // sum Ha complex fluxes
@@ -1258,42 +1258,47 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
-Float64 CLineModelFitting::getContinuumAtCenterProfile(Int32 eltIdx,
-                                                       Int32 line_index,
-                                                       Float64 redshift) {
-  Float64 cumCont = 0;
-  Int32 n_contAtCenter = 0;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    Float64 cur_cont = getElementList()[eltIdx]->GetContinuumAtCenterProfile(
-        line_index, getSpectrum().GetSpectralAxis(), redshift,
-        getSpectrumModel().getContinuumFluxAxis(), m_enableAmplitudeOffsets);
-    if (std::isnan(cur_cont))
-      continue;
-    cumCont += cur_cont;
-    n_contAtCenter++;
-  }
-  if (n_contAtCenter)
-    return cumCont / n_contAtCenter;
-  return NAN;
-}
+std::pair<Float64, Float64>
+CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
+                                             Float64 redshift) {
 
-Float64 CLineModelFitting::getContinuumError(Int32 eIdx, Int32 line_id) {
   Float64 error = NAN;
 
-  Float64 sumAll = 0.;
+  Float64 sumContinuumAll = 0.0;
+  Float64 sumWeightAll = 0.0;
+  Float64 sumSquaredWeightAll = 0.0;
+  Float64 sumResidualAll = 0.0;
   Int32 nsumAll = 0;
+  auto const &polynomCoeffs =
+      m_ElementsVector->getElementParam()[eltIdx]->m_ampOffsetsCoeffs;
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    auto [sum, nsum] =
-        getSpectrumModel().getContinuumQuadraticError(eIdx, line_id);
-    sumAll += sum;
+    auto &model = getSpectrumModel();
+    auto const &[indexRange, weights] =
+        model.GetLineRangeAndProfile(eltIdx, line_index, redshift);
+    auto [continuum_weighted_sum, sum_weight, sum_squared_weight] =
+        model.GetContinuumWeightedSumInRange(indexRange, weights,
+                                             polynomCoeffs);
+
+    sumContinuumAll += continuum_weighted_sum;
+    sumWeightAll += sum_weight;
+    sumSquaredWeightAll += sum_squared_weight;
+
+    auto const &[residual_sum, nsum] =
+        model.getContinuumSquaredResidualInRange(indexRange);
+    sumResidualAll += residual_sum;
     nsumAll += nsum;
   }
+  if (sumWeightAll == 0.0)
+    return std::make_pair(NAN, NAN);
 
-  if (nsumAll >= N_MIN_VALUE_FOR_ERROR_ESTIMATION) {
-    error = sqrt(sumAll / nsumAll);
-  }
+  Float64 const continuum = sumContinuumAll / sumWeightAll;
 
-  return error;
+  Float64 const std = nsumAll >= MIN_SAMPLE_NUMBER_CONTINUUMM_UNCERTAINTY
+                          ? sqrt(sumResidualAll / nsumAll) *
+                                sqrt(sumSquaredWeightAll) / sumWeightAll
+                          : NAN;
+
+  return std::make_pair(continuum, std);
 }
 
 std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
@@ -1303,7 +1308,7 @@ std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
   Float64 sumFlux = 0;
   Float64 sumErr = 0;
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    auto [flux, err] = getSpectrumModel().getFluxDirectIntegration(
+    auto const [flux, err] = getSpectrumModel().getFluxDirectIntegration(
         eIdx_list, subeIdx_list, substract_abslinesmodel, getLambdaRange());
     sumFlux += flux;
     sumErr += err;

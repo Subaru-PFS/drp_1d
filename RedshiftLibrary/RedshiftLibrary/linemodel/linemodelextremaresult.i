@@ -80,10 +80,10 @@ public:
   std::unordered_set<std::string> StrongELSNRAboveCut;
   Float64 bic = NAN; // bayesian information criterion for each extrema
 
-  Float64 OutsideLinesSTDFlux = NAN; // STD measured on the spectrum continuum
+  Float64 OutsideLinesResidualRMS = NAN; // STD measured on the spectrum continuum
                                // substracted outside lines
   Float64
-      OutsideLinesSTDError = NAN; // STD measured on the error spectrum outside lines
+      OutsideLinesInputStDevRMS = NAN; // STD measured on the error spectrum outside lines
 
   // line width
   Float64 Elv = NAN; // emission line width

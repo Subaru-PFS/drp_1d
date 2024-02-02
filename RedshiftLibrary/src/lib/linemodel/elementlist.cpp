@@ -254,9 +254,9 @@ TInt32List CLineModelElementList::getOverlappingElements(
  *that index calling its SetFittedAmplitude with arguments a and snr.
  **/
 void CLineModelElementList::SetElementAmplitude(Int32 j, Float64 a,
-                                                Float64 snr) {
+                                                Float64 astd) {
   if (j >= 0 && j < m_Elements.size()) {
-    m_Elements[j]->SetElementAmplitude(a, snr);
+    m_Elements[j]->SetElementAmplitude(a, astd);
   }
   return;
 }

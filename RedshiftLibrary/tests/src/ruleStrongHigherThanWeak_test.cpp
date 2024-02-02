@@ -73,11 +73,10 @@ CLineModelElement RuleStrongHigherThanWeak_fixture::createCLineModelElement(
       std::make_shared<TLineModelElementParam>(lines, 1.0, 1.1);
   CLineModelElement cLineModelElement(elementParam_ptr, "instrumentDriven");
 
-  vector<Float64> fittedAmplitudesErrorSigmas(lines.size());
   cLineModelElement.m_ElementParam->m_FittedAmplitudes = amps;
   cLineModelElement.m_ElementParam->m_NominalAmplitudes = amps;
-  cLineModelElement.m_ElementParam->m_FittedAmplitudeErrorSigmas =
-      fittedAmplitudesErrorSigmas;
+  cLineModelElement.m_ElementParam->m_FittedAmplitudesStd =
+      TFloat64List(lines.size());
 
   // Forces model elements to be included in lambda range
   cLineModelElement.m_OutsideLambdaRangeList.assign(lines.size(), false);

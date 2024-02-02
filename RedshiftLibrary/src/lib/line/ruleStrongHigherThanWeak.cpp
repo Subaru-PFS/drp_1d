@@ -79,8 +79,7 @@ void CRuleStrongHigherThanWeak::Correct(
   // Access strong line infos
   auto &minElement_ptr =
       LineModelElementList.getElementList()[minStrongEltIndex];
-  Float64 erStrong =
-      minElement_ptr->GetFittedAmplitudeErrorSigma(minStrongLineIndex);
+  Float64 erStrong = minElement_ptr->GetFittedAmplitudeStd(minStrongLineIndex);
   Float64 ampStrong = minElement_ptr->GetFittedAmplitude(minStrongLineIndex);
   std::string nameStrong =
       minElement_ptr->GetLines()[minStrongLineIndex].GetName();
@@ -192,7 +191,7 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
       }
 
       Float64 ampStrong = element_ptr->GetFittedAmplitude(iLineStrong);
-      Float64 erStrong = element_ptr->GetFittedAmplitudeErrorSigma(iLineStrong);
+      Float64 erStrong = element_ptr->GetFittedAmplitudeStd(iLineStrong);
       if (maxi < ampStrong /*&& lineSnr>validSNRCut*/) {
         maxi = ampStrong;
         er = erStrong;
