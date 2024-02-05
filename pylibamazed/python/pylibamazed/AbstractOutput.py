@@ -117,7 +117,7 @@ class AbstractOutput:
             self.load_candidate_level(object_type)
         self.cache = True
 
-    def get_attribute_short(self, attribute, lines_ids, pdf_builder=None):
+    def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
 
         attr_parts = attribute.split(".")
         root = attr_parts[0]
@@ -138,45 +138,50 @@ class AbstractOutput:
             return self.get_attribute(root, "warningFlag", attr_name)
         else:
             object_type = root
-        if len(attr_parts) < 4:
+            LINES_DATASETS = ['linemeas', 'fitted_lines']
             # Exception for pdf attributes : values may need a pdfHandler
             if "LogZPdf" in attr_name:
                 return self.get_pdf_attribute(object_type, attr_name, pdf_builder)
+            # If a rank is given, it is always the last element, therefore the attribute
+            # is the second-to-last element of the chain
+            if attr_name.isnumeric():
+                rank = int(attr_name)
+                attr_name = attr_parts[-2]
+            else:
+                rank = None
 
             specs = self.results_specifications
             # "attr_name" refers to the column "name" in the results.specifications,
             # we're looking for the corresponding details of that "name"
             attribute_specs = specs[specs['name'] == attr_name]
             dataset = attribute_specs["dataset"].values[0]
-            # Rank can be based on the attribute level (only candidates have a rank)
-            rank = None
-            if attribute_specs["level"].values[0] == "candidate":
-                # 0 means no rank was specified, taking the first one by default
-                rank = int(attr_parts[1]) if len(attr_parts) == 3 else 0
-            if self.has_attribute(object_type, dataset, attr_name, rank):
-                return self.get_attribute(object_type, dataset, attr_name, rank)
-        else:
-            dataset = attr_parts[1]
-            line_name = attr_parts[2]
-            col_name = attr_parts[3]
-            object_type = root
-            if line_name not in lines_ids:
-                raise APIException(ErrorCode.INTERNAL_ERROR,
-                                   f"Line {line_name}  not found in {lines_ids}")
-            if len(attr_parts) == 4:
-                rank = None
-                index_col = "LinemeasLineID"
+
+            if dataset == "model_parameters" and rank is None:
+                rank = 0   # Exception for model_parameters where no rank is actually rank 0
+            if dataset not in LINES_DATASETS:
+                if self.has_attribute(object_type, dataset, attr_name, rank):
+                    return self.get_attribute(object_type, dataset, attr_name, rank)
             else:
-                rank = int(attr_parts[4])
-                index_col = "FittedLineID"
-            fitted_lines_attr = self.get_attribute(
-                object_type, dataset, col_name, rank)
-            fitted_lines_idx = self.get_attribute(
-                object_type, dataset, index_col, rank)
-            df = pd.DataFrame(
-                {"idx": fitted_lines_idx, col_name: fitted_lines_attr}).set_index("idx")
-            return df.at[lines_ids[line_name], col_name]
-        return None
+                line_name = attr_parts[1]
+                col_name = attr_name
+                if line_name not in lines_ids:
+                    raise APIException(
+                        ErrorCode.INTERNAL_ERROR,
+                        f"Line {line_name}  not found in {lines_ids}"
+                    )
+                if dataset == 'linemeas':
+                    index_col = "LinemeasLineID"
+                else:
+                    index_col = "FittedLineID"
+                fitted_lines_attr = self.get_attribute(
+                    object_type, dataset, col_name, rank)
+                fitted_lines_idx = self.get_attribute(
+                    object_type, dataset, index_col, rank)
+                df = pd.DataFrame(
+                    {"idx": fitted_lines_idx, col_name: fitted_lines_attr}
+                ).set_index("idx")
+                return df.at[lines_ids[line_name], col_name]
+            return None
 
     def get_pdf_attribute(self, object_type, attribute, pdf_builder):
         """
