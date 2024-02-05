@@ -37,8 +37,22 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import pandas as pd
-
 from pylibamazed.Paths import results_specifications_filename
 
-
 results_specifications = pd.read_csv(results_specifications_filename, sep='\t', dtype={'format': object})
+
+
+class ResultsSpecifications:
+    def __init__(self, specs_path: str = results_specifications_filename):
+        self.rs = pd.read_csv(
+            specs_path, sep='\t', dtype={'format': object}
+        )
+
+    def get_by_dataset(self, dataset: str):
+        return self.rs[self.rs["dataset"] == dataset]
+
+    def get_by_level(self, level: str):
+        return self.rs[self.rs["level"] == level]
+
+    def get_by_name(self, name: str):
+        return self.rs[self.rs["name"] == name]
