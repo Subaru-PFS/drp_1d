@@ -236,6 +236,8 @@ class ParametersAccessor:
             igmfit = self.get_template_fitting_igmfit(spectrum_model)
         elif solve_method == "tplCombinationSolve":
             igmfit = self.get_template_combination_igmfit(spectrum_model)
+        elif solve_method == "lineMeasSolve":
+            igmfit = self.get_linemeas_igmfit(spectrum_model)
         return igmfit
 
     def get_linemodel_igmfit(self, spectrum_model: str) -> bool:
@@ -246,6 +248,9 @@ class ParametersAccessor:
 
     def get_template_fitting_igmfit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_template_fitting_section(spectrum_model), "igmFit")
+
+    def get_linemeas_igmfit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "igmFit")
 
     def get_linemodel_line_ratio_type(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemodel_solver_linemodel_section(spectrum_model), "lineRatioType")
