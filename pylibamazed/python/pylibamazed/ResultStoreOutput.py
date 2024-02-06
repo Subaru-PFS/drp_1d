@@ -93,24 +93,33 @@ class ResultStoreOutput(AbstractOutput):
         else:
             return attr
 
-    def get_attribute_from_source(self, object_type, stage, method, dataset, attribute,
-                                  rank=None, band_name=None, obs_id=None):
-        rs = self.results_specifications
-        rs = rs[rs["name"] == attribute]
+    def get_attribute_from_source(
+        self,
+        object_type,
+        stage,
+        method,
+        dataset,
+        attribute,
+        rank=None,
+        band_name=None,
+        obs_id=None
+    ):
+        rs = self.results_specifications.get_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
-        return self._get_attribute_from_result_store(object_type,
-                                                     stage,
-                                                     method,
-                                                     attribute_info,
-                                                     rank=rank,
-                                                     band_name=band_name,
-                                                     obs_id=obs_id)
+        return self._get_attribute_from_result_store(
+            object_type,
+            stage,
+            method,
+            attribute_info,
+            rank=rank,
+            band_name=band_name,
+            obs_id=obs_id
+        )
 
     def has_attribute_in_source(self, object_type, stage, method, dataset, attribute,
                                 rank=None, band_name=None, obs_id=None):
-        rs = self.results_specifications
-        rs = rs[rs["name"] == attribute]
+        rs = self.results_specifications.get_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
 
         attribute_info = rs.iloc[0]
@@ -118,11 +127,13 @@ class ResultStoreOutput(AbstractOutput):
             return False
         if rank is not None:
             method = self.parameters.get_redshift_solver_method(object_type)
-            if self.results_store.HasCandidateDataset(object_type,
-                                                      stage,
-                                                      method,
-                                                      attribute_info.ResultStore_key,
-                                                      attribute_info.dataset.replace("<ObsID>", "")):
+            if self.results_store.HasCandidateDataset(
+                object_type,
+                stage,
+                method,
+                attribute_info.ResultStore_key,
+                attribute_info.dataset.replace("<ObsID>", "")
+            ):
                 operator_result = self._get_operator_result(object_type, stage, method, attribute_info, rank)
             else:
                 return False
@@ -181,15 +192,16 @@ class ResultStoreOutput(AbstractOutput):
                                                  "solveResult")
 
     def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
-        rs = self.results_specifications
-        rs = rs[rs.dataset == dataset]
+        rs = self.results_specifications.get_by_dataset(dataset)
         rs_key = rs["ResultStore_key"].unique()[0]
 
-        return self.results_store.HasCandidateDataset(object_type,
-                                                      stage,
-                                                      method,
-                                                      rs_key,
-                                                      dataset.replace("<ObsID>", ""))
+        return self.results_store.HasCandidateDataset(
+            object_type,
+            stage,
+            method,
+            rs_key,
+            dataset.replace("<ObsID>", "")
+        )
 
     def get_nb_candidates_in_source(self, object_type, stage, method):
         return self.results_store.getNbRedshiftCandidates(object_type, stage, method)

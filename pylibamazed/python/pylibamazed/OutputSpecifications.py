@@ -39,8 +39,6 @@
 import pandas as pd
 from pylibamazed.Paths import results_specifications_filename
 
-results_specifications = pd.read_csv(results_specifications_filename, sep='\t', dtype={'format': object})
-
 
 class ResultsSpecifications:
     def __init__(self, specs_path: str = results_specifications_filename):

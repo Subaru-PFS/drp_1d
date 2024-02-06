@@ -39,6 +39,7 @@
 import numpy as np
 import pandas as pd
 from pylibamazed.Exception import APIException
+from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
@@ -56,18 +57,18 @@ zlog = CLog.GetInstance()
 
 class AbstractOutput:
 
-    def __init__(self,
-                 parameters: Parameters,
-                 results_specifications=results_specifications_filename,
-                 extended_results=True):
+    def __init__(
+        self,
+        parameters: Parameters,
+        specs_path=results_specifications_filename,
+        extended_results=True
+    ):
         self.parameters = parameters
         self.spectrum_id = ''
         self.root_results = dict()
         self.object_results = dict()
         self.extended_results = extended_results
-        self.results_specifications = pd.read_csv(results_specifications,
-                                                  sep='\t'
-                                                  )
+        self.results_specifications = ResultsSpecifications(specs_path)
         self.object_types = self.parameters.get_spectrum_models()
         self.errors = dict()
         for object_type in self.object_types:
@@ -150,11 +151,10 @@ class AbstractOutput:
             else:
                 rank = None
 
-            specs = self.results_specifications
             # "attr_name" refers to the column "name" in the results.specifications,
             # we're looking for the corresponding details of that "name"
-            attribute_specs = specs[specs['name'] == attr_name]
-            dataset = attribute_specs["dataset"].values[0]
+            attribute_entry = self.results_specifications.get_by_name(attr_name)
+            dataset = attribute_entry["dataset"].values[0]
 
             if dataset == "model_parameters" and rank is None:
                 rank = 0   # Exception for model_parameters where no rank is actually rank 0
@@ -324,14 +324,12 @@ class AbstractOutput:
             return 0
 
     def get_level(self, dataset):
-        rs = self.results_specifications
-        rs = rs[rs.dataset == dataset]
-        return rs.level.unique()[0]
+        dataset_entries = self.results_specifications.get_by_dataset(dataset)
+        return dataset_entries["level"].unique()[0]
 
     def filter_datasets(self, level):
-        rs = self.results_specifications
         # filter by level
-        rs = rs[rs["level"] == level]
+        rs = self.results_specifications.get_by_level(level)
         all_datasets = list(rs["dataset"].unique())
 
         # filter by extended_results
@@ -342,16 +340,17 @@ class AbstractOutput:
         filtered_datasets = []
         for ds in all_datasets:
             ds_attributes = rs[rs["dataset"] == ds]
-            extended_results = all(ds_row["extended_results"] for index,
-                                   ds_row in ds_attributes.iterrows())
+            extended_results = all(
+                ds_row["extended_results"] for index,
+                ds_row in ds_attributes.iterrows()
+            )
             if not extended_results:
                 filtered_datasets.append(ds)
 
         return rs, filtered_datasets
 
     def filter_dataset_attributes(self, ds_name, object_type=None, method=None):
-        rs = self.results_specifications
-        ds_attributes = rs[rs["dataset"] == ds_name]
+        ds_attributes = self.results_specifications.get_by_dataset(ds_name)
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:
