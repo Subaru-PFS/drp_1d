@@ -280,14 +280,18 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapFraction(
 /**
  *
  */
-bool CSpectrumSpectralAxis::ClampLambdaRange(
+void CSpectrumSpectralAxis::ClampLambdaRange(
     const TFloat64Range &range, TFloat64Range &clampedRange) const {
   TFloat64Range effectiveRange = GetLambdaRange();
 
   clampedRange = TFloat64Range();
 
-  if (range.GetIsEmpty() || effectiveRange.GetIsEmpty())
-    return false;
+  if (range.GetIsEmpty())
+    THROWG(INVALID_WAVELENGTH_RANGE, "lambda range is empty");
+
+  if (effectiveRange.GetIsEmpty())
+    THROWG(INVALID_SPECTRUM_WAVELENGTH,
+           "spectral axis has less than 2 samples");
 
   // Clamp lambda start
   Float64 start = range.GetBegin();
@@ -300,7 +304,10 @@ bool CSpectrumSpectralAxis::ClampLambdaRange(
     end = effectiveRange.GetEnd();
 
   clampedRange = TFloat64Range(start, end);
-  return true;
+
+  if (clampedRange.GetLength() <= 0.0)
+    THROWG(INVALID_WAVELENGTH_RANGE,
+           "lambda range clamped to spectral axis is empty");
 }
 
 /**

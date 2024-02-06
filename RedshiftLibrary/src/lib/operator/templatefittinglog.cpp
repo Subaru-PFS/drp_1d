@@ -41,6 +41,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
@@ -52,6 +53,7 @@
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 
+#include <boost/range/combine.hpp>
 #include <climits>
 
 using namespace NSEpic;
@@ -109,20 +111,16 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
   m_lambdaRanges.clear();
   m_spectra.reserve(Context.getSpectra().size());
   m_lambdaRanges.reserve(Context.getSpectra().size());
-  for (auto it =
-           std::make_tuple(Context.getRebinnedSpectra().cbegin(),
-                           Context.getRebinnedClampedLambdaRanges().cbegin());
-       std::get<0>(it) != Context.getRebinnedSpectra().cend();
-       ++std::get<0>(it), ++std::get<1>(it)) {
 
-    const CSpectrum &logSampledSpectrum = **(std::get<0>(it));
-    const TFloat64Range &logSampledLambdaRange = **(std::get<1>(it));
+  for (auto const &[logSampledSpectrum_ptr, logSampledLambdaRange_ptr] :
+       boost::combine(Context.getRebinnedSpectra(),
+                      Context.getRebinnedClampedLambdaRanges())) {
 
     TFloat64List mask_spc =
-        logSampledSpectrum.GetSpectralAxis().GetSubSamplingMask(
-            m_ssRatio, logSampledLambdaRange);
+        logSampledSpectrum_ptr->GetSpectralAxis().GetSubSamplingMask(
+            m_ssRatio, *logSampledLambdaRange_ptr);
     std::shared_ptr<CSpectrum> ssSpectrum =
-        std::make_shared<CSpectrum>(logSampledSpectrum, mask_spc);
+        std::make_shared<CSpectrum>(*logSampledSpectrum_ptr, mask_spc);
     // scale the variance by ssratio
     CSpectrumNoiseAxis scaledNoise = ssSpectrum->GetErrorAxis();
     scaledNoise *= 1. / sqrt(m_ssRatio);
@@ -137,7 +135,7 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
     // set the lambda range to the clamped subsampled spectrum
     std::shared_ptr<TFloat64Range> ssLambdaRange =
         std::make_shared<TFloat64Range>();
-    ssSpectrum->GetSpectralAxis().ClampLambdaRange(logSampledLambdaRange,
+    ssSpectrum->GetSpectralAxis().ClampLambdaRange(*logSampledLambdaRange_ptr,
                                                    *ssLambdaRange);
 
     m_spectra.push_back(std::move(ssSpectrum));

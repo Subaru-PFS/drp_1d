@@ -122,18 +122,17 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
  * rebinned: step1: construct the spectralAxis step2: do the rebin
  */
 std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
-    std::shared_ptr<const CSpectrum> spectrum,
-    std::string errorRebinMethod) const {
+    CSpectrum const &spectrum, std::string const &errorRebinMethod) const {
   TFloat64Range lambdaRange_spc;
   Int32 loglambda_count_spc;
-  if (spectrum->GetSpectralAxis().IsLogSampled()) {
+  if (spectrum.GetSpectralAxis().IsLogSampled()) {
     THROWG(INTERNAL_ERROR, Formatter() << "spectrum is already log-sampled");
   } else {
     // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on
     // reference grid) to be passed to computeTargetLogSpectralAxis in
     // loglambdaRebinSpectrum
-    spectrum->GetSpectralAxis().ClampLambdaRange(m_lambdaRange_ref,
-                                                 lambdaRange_spc);
+    spectrum.GetSpectralAxis().ClampLambdaRange(m_lambdaRange_ref,
+                                                lambdaRange_spc);
     Float64 loglambda_start_spc = log(lambdaRange_spc.GetBegin());
     Float64 loglambda_end_spc = log(lambdaRange_spc.GetEnd());
     Float64 loglambda_start_ref = log(m_lambdaRange_ref.GetBegin());
@@ -164,7 +163,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
   }
 
   // prepare return rebinned vector
-  auto spectrumRebinedLog = make_shared<CSpectrum>(spectrum->GetName());
+  auto spectrumRebinedLog = make_shared<CSpectrum>(spectrum.GetName());
   CMask mskRebinedLog;
 
   const CSpectrumSpectralAxis targetSpectralAxis =
@@ -175,9 +174,9 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
                                  0.5 * m_logGridStep);
 
   // rebin the spectrum
-  spectrum->setRebinInterpMethod(m_rebinMethod);
-  spectrum->Rebin(spcLbdaRange, targetSpectralAxis, *spectrumRebinedLog,
-                  mskRebinedLog, errorRebinMethod);
+  spectrum.setRebinInterpMethod(m_rebinMethod);
+  spectrum.Rebin(spcLbdaRange, targetSpectralAxis, *spectrumRebinedLog,
+                 mskRebinedLog, errorRebinMethod);
 
   spectrumRebinedLog->GetSpectralAxis().IsLogSampled(
       m_logGridStep); // double make sure that sampling is well done
@@ -307,9 +306,11 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
   if (m_inputContext.GetParameterStore()->Get<std::string>(
           spectrumModel + ".redshiftSolver.method") == "lineModelSolve" &&
       m_inputContext.GetParameterStore()->Has<Int32>(
-          spectrumModel + ".redshiftSolver.lineModelSolve.lineModel.firstPass.largeGridStepRatio"))
+          spectrumModel + ".redshiftSolver.lineModelSolve.lineModel.firstPass."
+                          "largeGridStepRatio"))
     SSratio = m_inputContext.GetParameterStore()->Get<Int32>(
-        spectrumModel + ".redshiftSolver.lineModelSolve.lineModel.firstPass.largeGridStepRatio");
+        spectrumModel + ".redshiftSolver.lineModelSolve.lineModel.firstPass."
+                        "largeGridStepRatio");
 
   // compute the effective zrange of the new redshift grid
   // set the min to the initial min
@@ -339,7 +340,8 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
   const Int32 ntpl = tplcat->GetTemplateCount(spectrumModel);
   if (ntpl > 0) {
     for (Int32 i = 0; i < ntpl; i++) {
-      std::shared_ptr<const CTemplate> tpl = tplcat->GetTemplate(spectrumModel, i);
+      std::shared_ptr<const CTemplate> tpl =
+          tplcat->GetTemplate(spectrumModel, i);
       bool needrebinning = isRebinningNeeded(tpl, lambdaRange_tpl);
       if (!needrebinning)
         continue;
@@ -349,8 +351,8 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
             " CInputContext::RebinInputs: need to rebin again the template: %s",
             tpl->GetName().c_str());
         tplcat->m_logsampling = false;
-        std::shared_ptr<const CTemplate> input_tpl =
-            tplcat->GetTemplateByName(TStringList{spectrumModel}, tpl->GetName());
+        std::shared_ptr<const CTemplate> input_tpl = tplcat->GetTemplateByName(
+            TStringList{spectrumModel}, tpl->GetName());
         tplcat->m_logsampling = true;
         tplcat->SetTemplate(
             loglambdaRebinTemplate(input_tpl, lambdaRange_tpl,

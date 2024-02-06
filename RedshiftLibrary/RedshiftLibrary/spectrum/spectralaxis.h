@@ -96,7 +96,7 @@ public:
   GetIndexesAtWaveLengthRange(const TFloat64Range &waveLengthRange) const;
 
   TLambdaRange GetLambdaRange() const;
-  bool ClampLambdaRange(const TFloat64Range &range,
+  void ClampLambdaRange(const TFloat64Range &range,
                         TFloat64Range &clampedRange) const;
   void GetMask(const TFloat64Range &range, CMask &mask) const;
   Float64
