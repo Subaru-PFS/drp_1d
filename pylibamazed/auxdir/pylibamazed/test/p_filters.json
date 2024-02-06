@@ -69,11 +69,12 @@
           "lineTypeFilter": "E",
           "lineForceFilter": "no",
           "fittingMethod": "individual",
-          "igmFit": false,
           "lineWidthType": "combined",
           "velocityEmission": 100,
           "velocityAbsorption": 100,
           "velocityFit": true,
+          "ampOffsetFit": false,
+          "lbdaOffsetFit": false,
           "pdfCombination": "marg",
           "emVelocityFitMin": 100,
           "emVelocityFitMax": 700,
@@ -81,21 +82,24 @@
           "absVelocityFitMin": 150,
           "absVelocityFitMax": 500,
           "absVelocityFitStep": 50,
-          "lyaForceFit": false,
-          "lyaForceDisableFit": false,
-          "lyaFit": {
-            "asymFitMin": 0,
-            "asymFitMax": 4,
-            "asymFitStep": 1,
-            "widthFitMin": 1,
-            "widthFitMax": 4,
-            "widthFitStep": 1,
-            "deltaFitMin": 0,
-            "deltaFitMax": 0,
-            "deltaFitStep": 1
+          "lya": {
+            "profile": "asym",
+            "asymProfile": {
+              "switchFixedToFit": false,
+              "switchFitToFixed": false,
+              "asymFitMin": 0,
+              "asymFitMax": 4,
+              "asymFitStep": 1,
+              "widthFitMin": 1,
+              "widthFitMax": 4,
+              "widthFitStep": 1,
+              "deltaFitMin": 0,
+              "deltaFitMax": 0,
+              "deltaStepMax": 1
+            }
           },
           "extremaCountB": 0,
-          "haPrior": -1,
+          "hAlphaPrior": -1,
           "lineRatioType": "tplRatio",
           "rules": "all",
           "improveBalmerFit": true,
@@ -129,14 +133,15 @@
           "firstPass": {
             "fittingMethod": "individual",
             "largeGridStepRatio": 10,
-            "tplRatio_ismFit": false,
-            "multipleContinuumFitDisable": true
+            "tplRatioIsmFit": false,
+            "multipleContinuumFitDisable": true,
+            "extremaCount": 5
           },
           "secondPass": {
             "halfWindowSize": 0.002,
             "continuumFit": "reFitFirstPass"
           },
-          "secondPasslcfittingMethod": -1,
+          "secondPassLcFittingMethod": -1,
           "strongLinesPrior": 0.001,
           "nOfZPriorStrength": -1,
           "tplRatio": {

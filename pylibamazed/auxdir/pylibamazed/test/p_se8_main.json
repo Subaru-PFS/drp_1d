@@ -47,7 +47,6 @@
         "linetypefilter": "E",
         "lineforcefilter": "no",
         "fittingmethod": "individual",
-        "igmfit": false,
         "linewidthtype": "combined",
         "velocityemission": 100,
         "velocityabsorption": 100,
@@ -61,18 +60,21 @@
         "absvelocityfitmin": 150,
         "absvelocityfitmax": 500,
         "absvelocityfitstep": 50,
-        "lyaforcefit": false,
-        "lyaforcedisablefit": false,
-        "lyafit": {
-          "asymfitmin": 0,
-          "asymfitmax": 4,
-          "asymfitstep": 1,
-          "widthfitmin": 1,
-          "widthfitmax": 4,
-          "widthfitstep": 1,
-          "deltafitmin": 0,
-          "deltafitmax": 0,
-          "deltafitstep": 1
+        "lya": {
+          "profile": "asym",
+          "asymProfile": {
+            "switchFixedToFit": false,
+            "switchFitToFixed": false,
+            "asymfitmin": 0,
+            "asymfitmax": 4,
+            "asymfitstep": 1,
+            "widthfitmin": 1,
+            "widthfitmax": 4,
+            "widthfitstep": 1,
+            "deltafitmin": 0,
+            "deltafitmax": 0,
+            "deltafitstep": 1
+          }
         },
         "extremacountB": 0,
         "haprior": -1,
@@ -153,9 +155,23 @@
         "velocityfit": false,
         "lineRatioType": "rules",
         "rules": "no",
-        "igmfit": false,
         "improveBalmerFit": true,
-        "lyaforcedisablefit": false
+        "lya": {
+          "profile": "asym",
+          "asymProfile": {
+            "switchFixedToFit": false,
+            "switchFitToFixed": false,
+            "asymfitmin": 0,
+            "asymfitmax": 4,
+            "asymfitstep": 1,
+            "widthfitmin": 1,
+            "widthfitmax": 4,
+            "widthfitstep": 1,
+            "deltafitmin": 0,
+            "deltafitmax": 0,
+            "deltafitstep": 1
+          }
+        }
       }
     },
     "enable_reliability": false,

@@ -65,9 +65,12 @@ CLineRatioManager::CLineRatioManager(
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  if (Context.GetCurrentMethod() == "lineModelSolve") {
-    m_opt_lya_forcefit = ps->GetScoped<bool>("lyaForceFit");
-    m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaForceDisableFit");
+  bool useAsymProfile = ps->GetScoped<std::string>("lya.profile") == "asym";
+  if (Context.GetCurrentMethod() == "lineModelSolve" && useAsymProfile) {
+    m_opt_lya_forcefit =
+        ps->GetScoped<bool>("lya.asymProfile.switchFixedToFit");
+    m_opt_lya_forcedisablefit =
+        ps->GetScoped<bool>("lya.asymProfile.switchFitToFixed");
   }
   m_nbObs = m_inputSpcs->size();
   /*  *m_curObs = 0;

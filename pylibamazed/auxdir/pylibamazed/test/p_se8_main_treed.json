@@ -52,7 +52,6 @@
           "lineTypeFilter": "E",
           "lineForceFilter": "no",
           "fittingMethod": "individual",
-          "igmFit": false,
           "lineWidthType": "combined",
           "velocityEmission": 100,
           "velocityAbsorption": 100,
@@ -66,18 +65,21 @@
           "absVelocityFitMin": 150,
           "absVelocityFitMax": 500,
           "absVelocityFitStep": 50,
-          "lyaForceFit": false,
-          "lyaForceDisableFit": false,
-          "lyaFit": {
-            "asymFitMin": 0,
-            "asymFitMax": 4,
-            "asymFitStep": 1,
-            "widthFitMin": 1,
-            "widthFitMax": 4,
-            "widthFitStep": 1,
-            "deltaFitMin": 0,
-            "deltaFitMax": 0,
-            "deltaStepMax": 1
+          "lya": {
+            "profile": "asym",
+            "asymProfile": {
+              "switchFixedToFit": false,
+              "switchFitToFixed": false,
+              "asymFitMin": 0,
+              "asymFitMax": 4,
+              "asymFitStep": 1,
+              "widthFitMin": 1,
+              "widthFitMax": 4,
+              "widthFitStep": 1,
+              "deltaFitMin": 0,
+              "deltaFitMax": 0,
+              "deltaStepMax": 1
+            }
           },
           "extremaCountB": 0,
           "hAlphaPrior": -1,
@@ -160,9 +162,23 @@
           "velocityFit": false,
           "lineRatioType": "rules",
           "rules": "no",
-          "igmFit": false,
           "improveBalmerFit": true,
-          "lyaForceDisableFit": false
+          "lya": {
+            "profile": "asym",
+            "asymProfile": {
+              "switchFixedToFit": false,
+              "switchFitToFixed": false,
+              "asymFitMin": 0,
+              "asymFitMax": 4,
+              "asymFitStep": 1,
+              "widthFitMin": 1,
+              "widthFitMax": 4,
+              "widthFitStep": 1,
+              "deltaFitMin": 0,
+              "deltaFitMax": 0,
+              "deltaStepMax": 1
+            }
+          }
         }
       }
     }

@@ -4,10 +4,18 @@
   "title": "Linemeas solver",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "lineModel"
+  ],
   "properties": {
     "lineModel": {
       "required": [
+        "continuumComponent",
+        "improveBalmerFit",
+        "lineTypeFilter",
+        "lineForceFilter",
         "polynomialDegree",
+        "lya",
         "lineCatalog",
         "nSigmaSupport",
         "lineWidthType",
@@ -18,11 +26,51 @@
         "lineRatioType"
       ],
       "type": "object",
+      "additionalProperties": false,
       "properties": {
+        "continuumComponent": {
+          "type": "string",
+          "enum": [
+            "fromSpectrum",
+            "tplFit",
+            "tplFitAuto",
+            "noContinuum"
+          ],
+          "title": "Continuum processing method",
+          "description": "Selects the method for processing the continuum: \n * **fromSpectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplFit\", but switch to \"fromSpectrum\" if the fitted continuum amplitude is found significantly negative (at all z)"
+        },
+        "improveBalmerFit": {
+          "type": "boolean",
+          "title": "Wether to improve Balmer fit",
+          "description": "Used only if `lineRatioType=rules`"
+        },
+        "lineTypeFilter": {
+          "type": "string",
+          "enum": [
+            "E",
+            "A",
+            "no"
+          ],
+          "title": "Filter on lines type",
+          "description": "Restrictions on the type of line to fit: \n * **E**: Emission \n * **A**: Absorption \n * **no**: fit all"
+        },
+        "lineForceFilter": {
+          "type": "string",
+          "enum": [
+            "W",
+            "S",
+            "no"
+          ],
+          "title": "Filter on lines force",
+          "description": "Restrict the strength category of lines to fit: \n * **W**: Weak \n * **S**: strong \n * **no**: fit all"
+        },
         "polynomialDegree": {
           "type": "integer",
           "title": "Polynomial degree",
           "description": "Value between 0 and 2, referring to the polynom degree to represent the continuum below lines. Useful only if ampOffsetFit=True."
+        },
+        "lya": {
+          "$ref": "lya_fit.json"
         },
         "lineCatalog": {
           "type": "string",

@@ -122,3 +122,48 @@ class TestLineMeasSolve:
             })
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning(zflag)
+
+    class TestLyaFit:
+        def _make_parameter_dict(self, **kwargs) -> dict:
+            kwargs["method"] = "lineModelSolve"
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**kwargs)
+            return param_dict
+
+        def test_error_if_lya_profile_is_asym_but_asym_section_absent(self):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {"profile": "asym"}}
+            })
+            with pytest.raises(
+                APIException,
+                match=r"Missing parameter lineMeasSolve linemodel lya asymProfile section"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        def test_warning_if_lya_profile_is_not_asym_but_asym_section_present(self, zflag):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {
+                    "profile": "igm",
+                    "asymProfile": {}
+                }}
+            })
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_any_warning(zflag)
+
+        def test_ok_if_lya_profile_is_asym_and_asym_section_present(self, zflag):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {
+                    "profile": "asym",
+                    "asymProfile": {}
+                }}
+            })
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning(zflag)
+
+        def test_ok_if_lya_profile_is_not_asym_and_asym_section_absent(self, zflag):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {
+                    "profile": "igm"
+                }}
+            })
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning(zflag)
