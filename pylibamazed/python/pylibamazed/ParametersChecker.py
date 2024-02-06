@@ -223,9 +223,10 @@ class ParametersChecker:
 
     def _check_template_dir(self, object_type: str) -> None:
         template_dir_presence_condition = \
-            self.accessor.get_redshift_solver_method(object_type) in ["templateFittingSolve", "tplCombinationSolve"] or (
-                self.accessor.get_redshift_solver_method(object_type) == "lineModelSolve" and
-                self.accessor.get_linemodel_continuum_component(object_type) in ["tplFit", "tplFitAuto"]
+            self.accessor.get_redshift_solver_method(object_type) in ["templateFittingSolve",
+                                                                      "tplCombinationSolve"] or (
+                self.accessor.get_redshift_solver_method(object_type) == "lineModelSolve"
+                and self.accessor.get_linemodel_continuum_component(object_type) in ["tplFit", "tplFitAuto"]
             )
         self._check_dependant_parameter_presence(
             template_dir_presence_condition,
@@ -318,6 +319,7 @@ class ParametersChecker:
         self._check_linemodelsolve_secondpass_section(object_type)
         self._check_linemodelsolve_secondpass_continuumfit(object_type)
         self._check_linemodelsolve_firstpass_tplratio_ismfit(object_type)
+        self._check_linemodelsolve_firstpass_extremacount(object_type)
 
         self._check_linemeassolve_lineratiotype_rules(object_type)
         self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(object_type)
@@ -417,6 +419,17 @@ class ParametersChecker:
             f"object {object_type} lineModelSolve firstpass tplRatioIsmFit",
             f"object {object_type} lineModelSolve firstpass tplRatioIsmFit"
         )
+
+    def _check_linemodelsolve_firstpass_extremacount(self, object_type: str):
+        lm_extremacount = self.accessor.get_linemodel_extremacount(object_type)
+        fp_extremacount = self.accessor.get_linemodel_firstpass_extremacount(object_type)
+        if lm_extremacount and fp_extremacount:
+            if fp_extremacount < lm_extremacount:
+                raise APIException(
+                    ErrorCode.INVALID_PARAMETER_FILE,
+                    "linemodel.firstpass.extremaCount is lower than linemodel.extremaCount for object "
+                    f"{object_type}"
+                )
 
     def _check_linemeassolve_lineratiotype_rules(self, object_type: str):
         self._check_dependant_parameter_presence(

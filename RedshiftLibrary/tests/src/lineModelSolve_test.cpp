@@ -120,7 +120,8 @@ const std::string jsonString =
     "\"firstPass\": { \"fittingMethod\" : \"individual\", "
     "\"tplRatioIsmFit\" : true,"
     "\"largeGridStepRatio\" : 6, "
-    "\"multipleContinuumFitDisable\": true},"
+    "\"multipleContinuumFitDisable\": true, "
+    "\"extremaCount\" : 6},"
     "\"secondPass\" : {\"halfWindowSize\" : 0.001, "
     "\"continuumFit\" : \"reFitFirstPass\"},";
 
@@ -193,7 +194,8 @@ const std::string jsonStringS =
     "\"firstPass\": { \"fittingMethod\" : \"individual\", "
     "\"tplRatioIsmFit\" : true,"
     "\"largeGridStepRatio\" : 10, "
-    "\"multipleContinuumFitDisable\": true},"
+    "\"multipleContinuumFitDisable\": true, "
+    "\"extremaCount\" : 6},"
     "\"secondPass\" : {\"halfWindowSize\" : 0.001, "
     "\"continuumFit\" : \"reFitFirstPass\"},";
 

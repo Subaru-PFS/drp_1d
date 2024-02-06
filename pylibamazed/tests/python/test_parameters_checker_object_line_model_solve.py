@@ -38,9 +38,8 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
-from tests.python.utils import (
-    WarningUtils, check_from_parameter_dict,
-    make_parameter_dict_at_redshift_solver_level)
+from tests.python.utils import (WarningUtils, check_from_parameter_dict,
+                                make_parameter_dict_at_redshift_solver_level)
 
 
 class TestLineModelSolve:
@@ -134,6 +133,31 @@ class TestLineModelSolve:
             })
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning(zflag)
+
+        def test_ok_extremacount(self):
+            param_dict = self._make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "extremaCount": 5,
+                    "lineRatioType": "sth",
+                    "firstPass": {"extremaCount": 5}
+                }}
+            })
+            assert check_from_parameter_dict(param_dict) is None
+
+        def test_error_extremacount(self):
+            param_dict = self._make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "extremaCount": 5,
+                    "lineRatioType": "sth",
+                    "firstPass": {"extremaCount": 3}
+                }}
+            })
+            with pytest.raises(
+                APIException,
+                match=r"INVALID_PARAMETER_FILE:linemodel.firstpass.extremaCount is lower than "
+                    "linemodel.extremaCount for object galaxy"
+            ):
+                check_from_parameter_dict(param_dict)
 
     class TestSkipSecondPass:
         def _make_parameter_dict(self, **kwargs) -> dict:

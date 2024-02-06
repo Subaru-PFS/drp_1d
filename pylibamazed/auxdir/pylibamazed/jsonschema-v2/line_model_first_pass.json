@@ -6,7 +6,8 @@
   "required": [
     "fittingMethod",
     "largeGridStepRatio",
-    "multipleContinuumFitDisable"
+    "multipleContinuumFitDisable",
+    "extremaCount"
   ],
   "additionalProperties": false,
   "properties": {
@@ -35,6 +36,11 @@
       "type": "boolean",
       "title": "Wether to use only the best continuum template",
       "description": "Wether to overwrite the `continuumFit.count` parameter to keep only the best continuum template (true=> sets `continuumFit.count` to 1)"
+    },
+    "extremaCount": {
+      "type": "integer",
+      "title": "Maximum number of first pass candidate to retain",
+      "description": "Maximum number of first pass candidate to retain (has to be >= linemodel.extremacount)"
     }
   }
 }
