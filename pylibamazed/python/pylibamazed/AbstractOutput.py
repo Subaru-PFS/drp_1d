@@ -153,7 +153,7 @@ class AbstractOutput:
 
             # "attr_name" refers to the column "name" in the results.specifications,
             # we're looking for the corresponding details of that "name"
-            attribute_entry = self.results_specifications.get_by_name(attr_name)
+            attribute_entry = self.results_specifications.get_df_by_name(attr_name)
             dataset = attribute_entry["dataset"].values[0]
 
             if dataset == "model_parameters" and rank is None:
@@ -324,12 +324,12 @@ class AbstractOutput:
             return 0
 
     def get_level(self, dataset):
-        dataset_entries = self.results_specifications.get_by_dataset(dataset)
+        dataset_entries = self.results_specifications.get_df_by_dataset(dataset)
         return dataset_entries["level"].unique()[0]
 
     def filter_datasets(self, level):
         # filter by level
-        rs = self.results_specifications.get_by_level(level)
+        rs = self.results_specifications.get_df_by_level(level)
         all_datasets = list(rs["dataset"].unique())
 
         # filter by extended_results
@@ -350,7 +350,7 @@ class AbstractOutput:
         return rs, filtered_datasets
 
     def filter_dataset_attributes(self, ds_name, object_type=None, method=None):
-        ds_attributes = self.results_specifications.get_by_dataset(ds_name)
+        ds_attributes = self.results_specifications.get_df_by_dataset(ds_name)
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:

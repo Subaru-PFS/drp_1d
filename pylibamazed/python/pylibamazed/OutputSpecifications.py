@@ -46,11 +46,11 @@ class ResultsSpecifications:
             specs_path, sep='\t', dtype={'format': object}
         )
 
-    def get_by_dataset(self, dataset: str):
+    def get_df_by_dataset(self, dataset: str):
         return self.rs[self.rs["dataset"] == dataset]
 
-    def get_by_level(self, level: str):
+    def get_df_by_level(self, level: str):
         return self.rs[self.rs["level"] == level]
 
-    def get_by_name(self, name: str):
+    def get_df_by_name(self, name: str):
         return self.rs[self.rs["name"] == name]

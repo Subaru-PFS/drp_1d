@@ -104,7 +104,7 @@ class ResultStoreOutput(AbstractOutput):
         band_name=None,
         obs_id=None
     ):
-        rs = self.results_specifications.get_by_name(attribute)
+        rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
         return self._get_attribute_from_result_store(
@@ -119,7 +119,7 @@ class ResultStoreOutput(AbstractOutput):
 
     def has_attribute_in_source(self, object_type, stage, method, dataset, attribute,
                                 rank=None, band_name=None, obs_id=None):
-        rs = self.results_specifications.get_by_name(attribute)
+        rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
 
         attribute_info = rs.iloc[0]
@@ -192,7 +192,7 @@ class ResultStoreOutput(AbstractOutput):
                                                  "solveResult")
 
     def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
-        rs = self.results_specifications.get_by_dataset(dataset)
+        rs = self.results_specifications.get_df_by_dataset(dataset)
         rs_key = rs["ResultStore_key"].unique()[0]
 
         return self.results_store.HasCandidateDataset(
