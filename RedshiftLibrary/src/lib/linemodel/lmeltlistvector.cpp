@@ -93,11 +93,24 @@ bool CLMEltListVector::isOutsideLambdaRange(Int32 elt_index, Int32 line_index) {
   return true;
 }
 
+bool CLMEltListVector::isOutsideLambdaRange(Int32 elt_index) {
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    if (!getElementList()[elt_index]->IsOutsideLambdaRange())
+      return false;
+  }
+  return true;
+}
+
 void CLMEltListVector::AddElement(CLineVector lines, Float64 velocityEmission,
                                   Float64 velocityAbsorption, Int32 ig) {
   if (*m_curObs == 0) {
+    size_t nb_lines = lines.size();
     m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
         std::move(lines), velocityEmission, velocityAbsorption));
+
+    m_globalOutsideLambdaRangeList.push_back(
+        std::vector<bool>(nb_lines, false));
+    m_globalOutsideLambdaRange.push_back(false);
   }
 
   auto const ps = Context.GetParameterStore();
@@ -242,6 +255,19 @@ CLMEltListVector::getIgmLinesIndices() const {
   return indices;
 }
 
+/**
+ * \brief If outside lambda range, sets fitted amplitudes and errors to -1. If
+ *inside, sets each line's fitted amplitude and error to -1 if line outside
+ *lambda range, or amplitude to A * nominal amplitude and error to SNR * nominal
+ *amplitude.
+ **/
+void CLMEltListVector::SetElementAmplitude(Int32 eltIndex, Float64 A,
+                                           Float64 AStd) {
+  m_ElementsParams[eltIndex]->setAmplitudes(
+      A, AStd, m_globalOutsideLambdaRangeList[eltIndex],
+      m_globalOutsideLambdaRange[eltIndex]);
+}
+
 void CLMEltListVector::resetLambdaOffsets() {
   for (auto &ep : m_ElementsParams)
     ep->resetLambdaOffsets();
@@ -258,5 +284,15 @@ void CLMEltListVector::resetElementsFittingParam(bool enableAmplitudeOffsets) {
     ep->resetFittingParams();
     if (enableAmplitudeOffsets)
       ep->resetAmplitudeOffset();
+  }
+}
+
+void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
+  for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+    m_globalOutsideLambdaRange[elt_idx] = isOutsideLambdaRange(elt_idx);
+    for (size_t line_idx = 0; line_idx < m_ElementsParams[elt_idx]->size();
+         ++line_idx)
+      m_globalOutsideLambdaRangeList[elt_idx][line_idx] =
+          isOutsideLambdaRange(elt_idx, line_idx);
   }
 }

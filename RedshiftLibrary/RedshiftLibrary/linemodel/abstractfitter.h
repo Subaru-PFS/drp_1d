@@ -98,6 +98,9 @@ protected:
   void resetElementsFittingParam();
 
   void resetLambdaOffsets() { m_ElementsVector->resetLambdaOffsets(); };
+  void setGlobalOutsideLambdaRangeFromSpectra() {
+    m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
+  }
 
   void fitLyaProfile(Float64 redshift);
 

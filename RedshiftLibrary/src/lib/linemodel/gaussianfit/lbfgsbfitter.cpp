@@ -90,6 +90,7 @@ void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
 
   CPolynomCoeffsNormalized pCoeffs = unpack(x);
 
+  *(m_fitter->m_curObs) = 0;
   val(0, 0) = ComputeLeastSquare(pCoeffs);
 
   Log.LogDebug(Formatter() << "LeastSquare = " << val(0, 0));
@@ -134,8 +135,8 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
   TFloat64List amps(x.begin(), x.begin() + m_EltsIdx->size());
   for (Int32 i = 0; i < m_EltsIdx->size(); ++i) {
     Log.LogDebug(Formatter() << "amplitude[" << i << "]= " << amps[i]);
-    auto &elt = m_fitter->getElementList()[(*m_EltsIdx)[i]];
-    elt->SetElementAmplitude(amps[i], 0.0);
+    m_fitter->m_ElementsVector->SetElementAmplitude((*m_EltsIdx)[i], amps[i],
+                                                    0.0);
   }
 
   if (m_fitter->m_enableVelocityFitting) {
@@ -188,6 +189,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
                             m_fitter->getLambdaRange());
   }
+  m_fitter->setGlobalOutsideLambdaRangeFromSpectra();
 
   CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -405,7 +407,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                              << " number of samples = " << n
                              << ", number of parameters to fit = " << nddl);
     for (Int32 eltIndex : EltsIdx)
-      getElementList().SetElementAmplitude(eltIndex, 0., INFINITY);
+      m_ElementsVector->SetElementAmplitude(eltIndex, 0., INFINITY);
     if (m_enableAmplitudeOffsets) {
       for (Int32 eltIndex : EltsIdx)
         m_ElementsVector->getElementParam()[eltIndex]->SetPolynomCoeffs(
@@ -609,8 +611,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // TODO SNR computation
   Float64 amp_std = NAN;
   for (Int32 i = 0; i < EltsIdx.size(); ++i)
-    getElementList()[EltsIdx[i]]->SetElementAmplitude(v_xResult[i] / normFactor,
-                                                      amp_std);
+    m_ElementsVector->SetElementAmplitude(EltsIdx[i], v_xResult[i] / normFactor,
+                                          amp_std);
 
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {

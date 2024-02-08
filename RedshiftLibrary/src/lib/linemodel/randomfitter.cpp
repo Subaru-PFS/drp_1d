@@ -78,7 +78,7 @@ void CRandomFitter::doFit(Float64 redshift) {
         maxNominalAmp = elt->GetNominalAmplitude(line_idx);
     }
 
-    getElementList().SetElementAmplitude(iElts, a / maxNominalAmp, err);
+    m_ElementsVector->SetElementAmplitude(iElts, a / maxNominalAmp, err);
   }
 }
 

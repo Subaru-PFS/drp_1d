@@ -119,13 +119,15 @@ void CHybridFitter::doFit(Float64 redshift) {
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
-  *m_curObs = 0; // dummy implementation
   if (m_enableAmplitudeOffsets)
     m_ElementsVector->resetAmplitudeOffsets();
+
+  *m_curObs = 0; // dummy implementation
 
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TInt32Set indexesFitted;
   for (Int32 iElts : validEltsIdx) {
+
     // skip if already fitted
     if (std::find(indexesFitted.cbegin(), indexesFitted.cend(), iElts) !=
         indexesFitted.cend())
@@ -137,7 +139,8 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     // setting the fitting group info
     for (Int32 overlapping_iElt : overlappingInds) {
       std::string fitGroupTag = boost::str(boost::format("hy%d") % iElts);
-      getElementList()[overlapping_iElt]->SetFittingGroupInfo(fitGroupTag);
+      m_ElementsVector->getElementParam()[overlapping_iElt]
+          ->SetFittingGroupInfo(fitGroupTag);
     }
 
     // Log.LogDebug( "Redshift: %f", redshift);
@@ -148,12 +151,15 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
                    ifit, overlappingInds[ifit]);
     }
     if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
+      *m_curObs = 0; // temporary multiobs implementation
       Log.LogDebug("    model: hybrid fit:     Individual fit");
       fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
       *m_curObs = 0; // temporary multiobs implementation
 
     } else {
+      *m_curObs = 0; // temporary multiobs implementation
+
       Log.LogDebug("    model: hybrid fit:     Joint fit");
       fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
                                            m_enableLambdaOffsetsFit, redshift);
@@ -302,16 +308,16 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
           getElementList()[iElt_lineA]->GetNominalAmplitude(lineA_id);
       Float64 nominal_ampE =
           getElementList()[iElt_lineE]->GetNominalAmplitude(lineE_id);
-      getElementList()[iElt_lineA]->SetElementAmplitude(
-          ampA / nominal_ampA, amp_errorA / nominal_ampA);
-      getElementList()[iElt_lineE]->SetElementAmplitude(
-          ampE / nominal_ampE, amp_errorE / nominal_ampE);
+      m_ElementsVector->SetElementAmplitude(iElt_lineA, ampA / nominal_ampA,
+                                            amp_errorA / nominal_ampA);
+      m_ElementsVector->SetElementAmplitude(iElt_lineE, ampE / nominal_ampE,
+                                            amp_errorE / nominal_ampE);
       for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
         Float64 nominal_ampMore =
             getElementList()[ilinesMore[imore]]->GetNominalAmplitude(
                 linesMoreIds[imore]);
-        getElementList()[ilinesMore[imore]]->SetElementAmplitude(
-            ampsMore[imore] / nominal_ampMore,
+        m_ElementsVector->SetElementAmplitude(
+            ilinesMore[imore], ampsMore[imore] / nominal_ampMore,
             ampErrorsMore[imore] / nominal_ampMore);
       }
     }
