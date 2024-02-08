@@ -106,7 +106,8 @@ bool CTemplatesOrthogonalization::prepareTplCatForOrthogonalization(
 
   // check if spectrumModel has never been orthogonalized
   samplingList = {0, 1};
-  bool first_time_ortho = !tplCatalog->GetTemplateCount(spectrumModel, true, false);
+  bool first_time_ortho =
+      !tplCatalog->GetTemplateCount(spectrumModel, true, false);
 
   // check if LSF has changed, if yes reorthog all
   bool differentLSF = false;
@@ -145,13 +146,14 @@ bool CTemplatesOrthogonalization::prepareTplCatForOrthogonalization(
 }
 
 bool CTemplatesOrthogonalization::hasLogRebinnedTemplatesChanged(
-    std::shared_ptr<CTemplateCatalog> &tplCatalog, std::string spectrumModel) const {
+    std::shared_ptr<CTemplateCatalog> &tplCatalog,
+    std::string spectrumModel) const {
 
   tplCatalog->m_logsampling = 1;
   tplCatalog->m_orthogonal = 0; // orig log
 
-  bool need_ortho_logsampling =
-      tplCatalog->GetTemplateCount(spectrumModel) > 0; // orig log list is not empty
+  bool need_ortho_logsampling = tplCatalog->GetTemplateCount(spectrumModel) >
+                                0; // orig log list is not empty
 
   if (!need_ortho_logsampling)
     return false;

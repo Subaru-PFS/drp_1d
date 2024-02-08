@@ -75,7 +75,8 @@ protected:
 
 public:
   CSolve(std::string name, TScopeStack &scope, std::string spectrumModel);
-  CSolve(std::string stage, std::string name, TScopeStack &scope, std::string spectrumModel);
+  CSolve(std::string stage, std::string name, TScopeStack &scope,
+         std::string spectrumModel);
   virtual ~CSolve() = default;
   CSolve(CSolve const &other) = default;
   CSolve &operator=(CSolve const &other) = default;

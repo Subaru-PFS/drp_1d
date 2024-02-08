@@ -44,7 +44,8 @@
 
 using namespace NSEpic;
 
-CReliabilitySolve::CReliabilitySolve(TScopeStack &scope, std::string spectrumModel)
+CReliabilitySolve::CReliabilitySolve(TScopeStack &scope,
+                                     std::string spectrumModel)
     : CSolve("reliabilitySolver", "deepLearningSolver", scope, spectrumModel) {}
 
 std::shared_ptr<CSolveResult>

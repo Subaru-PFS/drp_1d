@@ -89,10 +89,10 @@ std::shared_ptr<CSolveResult>
 CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                             std::shared_ptr<COperatorResultStore> resultStore,
                             TScopeStack &scope) {
-  return Compute(*(resultStore.get()), inputContext->GetParameterStore(),
-                 *(inputContext->GetSpectrum().get()), m_lambdaRange,
-                 m_redshifts,
-                 *(inputContext->GetLineCatalog(m_spectrumModel, m_name).get()));
+  return Compute(
+      *(resultStore.get()), inputContext->GetParameterStore(),
+      *(inputContext->GetSpectrum().get()), m_lambdaRange, m_redshifts,
+      *(inputContext->GetLineCatalog(m_spectrumModel, m_name).get()));
 }
 
 /**
