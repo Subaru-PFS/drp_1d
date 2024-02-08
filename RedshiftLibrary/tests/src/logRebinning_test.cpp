@@ -36,12 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 

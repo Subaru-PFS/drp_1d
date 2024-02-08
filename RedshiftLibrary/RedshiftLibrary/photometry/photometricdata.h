@@ -39,9 +39,9 @@
 #ifndef _REDSHIFT_PHOTOMETRY_PHOTOMETRICDATA_
 #define _REDSHIFT_PHOTOMETRY_PHOTOMETRICDATA_
 
-#include "RedshiftLibrary/common/datatypes.h"
-
 #include <map>
+
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
 

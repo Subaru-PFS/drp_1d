@@ -36,13 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/logZPdfResult.h"
+#include <algorithm>
+
+#include <gsl/gsl_interp.h>
+
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
-
-#include <algorithm>
-#include <gsl/gsl_interp.h>
 
 using namespace NSEpic;
 

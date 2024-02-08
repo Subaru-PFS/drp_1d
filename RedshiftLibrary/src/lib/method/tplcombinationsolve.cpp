@@ -36,22 +36,23 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/method/tplcombinationsolve.h"
+#include <cfloat>
+
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/tplcombinationresult.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/statistics/zprior.h"
 
-#include <cfloat>
-
 using namespace NSEpic;
 using namespace std;
 
 CTplcombinationSolve::CTplcombinationSolve(TScopeStack &scope,
                                            string spectrumModel)
-    : CObjectSolve("redshiftSolver", "tplCombinationSolve", scope, spectrumModel) {}
+    : CObjectSolve("redshiftSolver", "tplCombinationSolve", scope,
+                   spectrumModel) {}
 
 std::shared_ptr<CSolveResult>
 CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,

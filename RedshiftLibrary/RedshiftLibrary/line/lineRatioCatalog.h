@@ -39,16 +39,16 @@
 #ifndef _LINE_RATIO_CATALOG_H_
 #define _LINE_RATIO_CATALOG_H_
 
+#include <string>
+#include <vector>
+
+#include <boost/format.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
-
-#include <boost/format.hpp>
-
-#include <string>
-#include <vector>
 
 namespace NSEpic {
 

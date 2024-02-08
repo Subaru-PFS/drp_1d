@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_COMMON_FLAG_
 #define _REDSHIFT_COMMON_FLAG_
 
+#include <cstdarg>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mutex.h"
 #include "RedshiftLibrary/common/singleton.h"
-
-#include <cstdarg>
-#include <vector>
 
 #define Flag (CFlagWarning::GetInstance())
 

@@ -36,16 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/processflow/inputcontext.h"
+#include <climits>
+
+#include <boost/range/combine.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include <boost/range/combine.hpp>
-#include <climits>
+
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CParameterStore> paramStore)

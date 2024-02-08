@@ -39,6 +39,9 @@
 #ifndef _REDSHIFT_LINEMODEL_ELEMENT_
 #define _REDSHIFT_LINEMODEL_ELEMENT_
 
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/polynom.h"
@@ -46,9 +49,6 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
 
 class RuleStrongHigherThanWeak_fixture;
 

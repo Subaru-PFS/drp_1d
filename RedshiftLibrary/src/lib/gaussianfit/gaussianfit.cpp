@@ -36,9 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/gaussianfit/gaussianfit.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include <cmath>
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -48,7 +46,9 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_vector.h>
 
-#include <cmath>
+#include "RedshiftLibrary/gaussianfit/gaussianfit.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;
 

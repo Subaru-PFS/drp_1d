@@ -36,25 +36,25 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <climits>
 
-#include "RedshiftLibrary/operator/templatefittinglog.h"
+#include <gsl/gsl_interp.h>
+#include <gsl/gsl_spline.h>
+
+#include <boost/range/combine.hpp>
+
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-
-#include <gsl/gsl_interp.h>
-#include <gsl/gsl_spline.h>
-
-#include <boost/range/combine.hpp>
-#include <climits>
 
 using namespace NSEpic;
 using namespace std;

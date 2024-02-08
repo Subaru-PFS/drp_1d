@@ -39,13 +39,12 @@
 #ifndef _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 #define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-
-#include <boost/filesystem.hpp>
-#include <vector>
 
 namespace NSEpic {
 

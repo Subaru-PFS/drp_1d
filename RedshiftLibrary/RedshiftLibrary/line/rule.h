@@ -39,8 +39,9 @@
 #ifndef _REDSHIFT_LINE_RULE_
 #define _REDSHIFT_LINE_RULE_
 
-#include "RedshiftLibrary/common/datatypes.h"
 #include <boost/format.hpp>
+
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
 class CLMEltListVector;

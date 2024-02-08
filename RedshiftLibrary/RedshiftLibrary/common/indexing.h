@@ -38,13 +38,15 @@
 // ============================================================================
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
+
+#include <iostream>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
-#include <iostream>
-#include <vector>
 namespace NSEpic {
 
 /**

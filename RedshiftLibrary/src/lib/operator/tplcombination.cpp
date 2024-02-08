@@ -36,18 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/tplcombination.h"
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/mask.h"
-#include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/operator/tplcombinationresult.h"
-#include "RedshiftLibrary/spectrum/axis.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
+#include <algorithm> // std::sort
+#include <climits>
+#include <cmath>
+#include <numeric>
+#include <sstream>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
@@ -60,11 +53,18 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
 
-#include <algorithm> // std::sort
-#include <climits>
-#include <cmath>
-#include <numeric>
-#include <sstream>
+#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/tplcombination.h"
+#include "RedshiftLibrary/operator/tplcombinationresult.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;

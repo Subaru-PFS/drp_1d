@@ -39,6 +39,10 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRUM_
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/continuum/continuum.h"
@@ -47,10 +51,6 @@
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
 
 namespace Spectrum { // boost_test_suite
 // all boost_auto_test_case that use private method

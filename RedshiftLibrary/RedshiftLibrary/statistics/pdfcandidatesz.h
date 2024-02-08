@@ -39,15 +39,16 @@
 #ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZ_
 #define _REDSHIFT_STATISTICS_PDFCANDIDATESZ_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/processflow/result.h"
 #include <cmath>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/processflow/result.h"
 
 namespace Statistics_pdfcandidatesz { // boost_test_suite
 // all boost_auto_test_case that use private method

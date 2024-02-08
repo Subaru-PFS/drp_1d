@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/elementlist.h"
-#include "RedshiftLibrary/line/linetags.h"
-#include "RedshiftLibrary/linemodel/linemodelsolution.h"
-
 #include <cfloat>
 #include <cmath>
 #include <numeric>
+
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelsolution.h"
 
 using namespace NSEpic;
 using namespace std;

@@ -39,10 +39,11 @@
 #ifndef _REDSHIFT_LINE_RULESTRONGHIGHERTHANWEAK_
 #define _REDSHIFT_LINE_RULESTRONGHIGHERTHANWEAK_
 
+#include <boost/format.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/rule.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
-#include <boost/format.hpp>
 
 class RuleStrongHigherThanWeak_fixture;
 

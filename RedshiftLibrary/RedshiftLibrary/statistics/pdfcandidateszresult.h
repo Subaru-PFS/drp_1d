@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
 #define _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
 
+#include <ostream>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
-
-#include <ostream>
-#include <string>
 
 namespace NSEpic {
 template <class T> class CPdfCandidateszResult : public COperatorResult {

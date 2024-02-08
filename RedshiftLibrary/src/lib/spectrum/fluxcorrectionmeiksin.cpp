@@ -36,12 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include <algorithm>
+
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-
-#include <algorithm>
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 
 using namespace NSEpic;
 

@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_LOG_LOG_
 #define _REDSHIFT_LOG_LOG_
 
+#include <cstdarg>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/mutex.h"
 #include "RedshiftLibrary/common/singleton.h"
-
-#include <cstdarg>
 
 #define LOG_HANDLER_TABLE_SIZE 8
 #define LOG_HANDLER_HEADER_LENGTH 64

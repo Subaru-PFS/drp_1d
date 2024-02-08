@@ -36,12 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -89,18 +90,17 @@ const std::string jsonStringNoFFT =
     "\"pdfCombination\" : \"marg\","
     "\"enablePhotometry\" : false}}}}";
 
-const std::string jsonStringFFT =  
-    "\"method\" : \"templateFittingSolve\","
-    "\"templateFittingSolve\" : {"
-    "\"extremaCount\" : 5,"
-    "\"overlapThreshold\" : 1,"
-    "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftProcessing\" : true,"
-    "\"interpolation\" : \"preComputedFineGrid\","
-    "\"extinction\" : true,"
-    "\"dustfit\" : true,"
-    "\"pdfCombination\" : \"marg\","
-    "\"enablePhotometry\" : false}}}}";
+const std::string jsonStringFFT = "\"method\" : \"templateFittingSolve\","
+                                  "\"templateFittingSolve\" : {"
+                                  "\"extremaCount\" : 5,"
+                                  "\"overlapThreshold\" : 1,"
+                                  "\"spectrum\" : {\"component\" : \"raw\"},"
+                                  "\"fftProcessing\" : true,"
+                                  "\"interpolation\" : \"preComputedFineGrid\","
+                                  "\"extinction\" : true,"
+                                  "\"dustfit\" : true,"
+                                  "\"pdfCombination\" : \"marg\","
+                                  "\"enablePhotometry\" : false}}}}";
 
 const std::string jsonStringOrtho =
     "\"method\" : \"lineModelSolve\","
@@ -306,7 +306,8 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
 BOOST_AUTO_TEST_CASE(rebinInputs_test) {
   CInputContext inputCtx(paramStoreNoFFT);
   setInputData(inputCtx);
-  inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("spectrumModels");
+  inputCtx.m_categories =
+      paramStoreNoFFT->GetList<std::string>("spectrumModels");
   inputCtx.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
       paramStoreNoFFT->Get<TFloat64Range>("lambdaRange")));
 
@@ -316,7 +317,8 @@ BOOST_AUTO_TEST_CASE(rebinInputs_test) {
 
   CInputContext inputCtx2(paramStoreFFT);
   setInputData(inputCtx2);
-  inputCtx2.m_categories = paramStoreFFT->GetList<std::string>("spectrumModels");
+  inputCtx2.m_categories =
+      paramStoreFFT->GetList<std::string>("spectrumModels");
   inputCtx2.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
       paramStoreFFT->Get<TFloat64Range>("lambdaRange")));
   inputCtx2.m_rebinnedClampedLambdaRanges.push_back(
@@ -347,7 +349,8 @@ BOOST_AUTO_TEST_CASE(OrthogonalizeTemplates_test) {
   CInputContext inputCtx(paramStoreOrtho);
   setInputData(inputCtx);
 
-  inputCtx.m_categories = paramStoreNoFFT->GetList<std::string>("spectrumModels");
+  inputCtx.m_categories =
+      paramStoreNoFFT->GetList<std::string>("spectrumModels");
   inputCtx.m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
       paramStoreNoFFT->Get<TFloat64Range>("lambdaRange")));
   BOOST_CHECK(catalog->GetTemplateCount("galaxy", 1, 0) == 0);

@@ -1,11 +1,11 @@
 #ifndef __REDSHIFT_LM_SPECTRUM_MODEL__
 #define __REDSHIFT_LM_SPECTRUM_MODEL__
 
+#include <unordered_set>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <unordered_set>
 
 namespace NSEpic {
 

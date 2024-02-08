@@ -39,6 +39,10 @@
 #ifndef _REDSHIFT_OPERATOR_TEMPLATE_FITTING_WITHPHOT
 #define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_WITHPHOT
 
+#include <map>
+#include <memory>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/range.h"
@@ -48,10 +52,8 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
-#include <map>
-#include <memory>
-#include <string>
 namespace NSEpic {
+#include <string>
 
 class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
 

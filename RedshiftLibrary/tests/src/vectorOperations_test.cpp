@@ -36,14 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/vectorOperations.h"
-#include "RedshiftLibrary/operator/linemodelresult.h"
-#include <boost/test/execution_monitor.hpp>
-#include <boost/test/unit_test.hpp>
-
 #include <fstream>
 #include <iostream>
 #include <string>
+
+#include <boost/test/execution_monitor.hpp>
+#include <boost/test/unit_test.hpp>
+
+#include "RedshiftLibrary/common/vectorOperations.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
 
 using namespace NSEpic;
 

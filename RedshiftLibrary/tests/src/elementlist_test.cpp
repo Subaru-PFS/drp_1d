@@ -36,6 +36,10 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <iostream>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/log/consolehandler.h"
@@ -47,10 +51,6 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "test-config.h"
-
-#include <boost/test/unit_test.hpp>
-
-#include <iostream>
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;

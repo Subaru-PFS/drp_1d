@@ -39,6 +39,11 @@
 #ifndef _REDSHIFT_LINEMODEL_TEMPLATESORTHO_
 #define _REDSHIFT_LINEMODEL_TEMPLATESORTHO_
 
+#include <memory>
+
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
@@ -49,11 +54,6 @@
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
-
-#include <memory>
 
 namespace NSEpic {
 class CInputContext;

@@ -1,9 +1,9 @@
 #ifndef _DEFAULT_H
 #define _DEFAULT_H
 
-#include "RedshiftLibrary/common/datatypes.h"
-
 #include <gsl/gsl_const_mksa.h>
+
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
 static const Float64 N_SIGMA_SUPPORT = 8.;

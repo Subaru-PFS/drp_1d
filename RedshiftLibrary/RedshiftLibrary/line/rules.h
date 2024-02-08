@@ -39,13 +39,12 @@
 #ifndef _REDSHIFT_LINE_RULES_
 #define _REDSHIFT_LINE_RULES_
 
-#include "RedshiftLibrary/common/datatypes.h"
+#include <string>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/operator/linematchingresult.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <string>
 
 namespace NSEpic {
 

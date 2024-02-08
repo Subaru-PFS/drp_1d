@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/formatter.h"
+#include <cmath>
+#include <string>
 
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
-#include <string>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
 

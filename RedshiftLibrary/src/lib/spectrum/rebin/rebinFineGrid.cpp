@@ -36,11 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
-#include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 
 using namespace NSEpic;
 using namespace std;

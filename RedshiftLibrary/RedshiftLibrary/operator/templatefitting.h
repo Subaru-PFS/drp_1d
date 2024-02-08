@@ -39,23 +39,22 @@
 #ifndef _REDSHIFT_OPERATOR_TEMPLATE_FITTING_
 #define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_
 
+#include <cfloat>
+#include <climits>
+#include <numeric>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
-
-#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
-
-#include <cfloat>
-#include <climits>
-#include <numeric>
 
 namespace NSEpic {
 

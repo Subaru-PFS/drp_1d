@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include <boost/range/combine.hpp>
+
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/processflow/context.h"
-
-#include <boost/range/combine.hpp>
 
 using namespace NSEpic;
 using namespace std;

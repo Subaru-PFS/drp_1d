@@ -39,10 +39,10 @@
 #ifndef _REDSHIFT_LOG_FILEHANDLER_
 #define _REDSHIFT_LOG_FILEHANDLER_
 
+#include <fstream>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/log/handler.h"
-
-#include <fstream>
 
 namespace NSEpic {
 

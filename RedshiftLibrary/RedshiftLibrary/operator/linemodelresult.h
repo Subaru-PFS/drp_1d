@@ -39,18 +39,18 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODELRESULT_
 #define _REDSHIFT_OPERATOR_LINEMODELRESULT_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/processflow/result.h"
+#include <memory>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
+#include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/tplmodelsolution.h"
+#include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
-#include <memory>
 
 namespace NSEpic {
 

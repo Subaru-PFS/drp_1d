@@ -36,18 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/method/linemodelsolve.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/processflow/parameterstore.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-
-#include "RedshiftLibrary/operator/pdfz.h"
-#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
-#include "RedshiftLibrary/statistics/zprior.h"
 #include <fstream>
 #include <iostream>
 #include <string>
+
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/statistics/zprior.h"
+
 using namespace NSEpic;
 using namespace std;
 using namespace boost;

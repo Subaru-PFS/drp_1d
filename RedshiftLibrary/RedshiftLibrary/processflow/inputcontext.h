@@ -39,11 +39,12 @@
 #ifndef _INPUT_CONTEXT_H
 #define _INPUT_CONTEXT_H
 
+#include <memory>
+
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
-#include <memory>
 
 class fixture_InputContext;
 class fixture_InputContext2;
@@ -142,7 +143,8 @@ public:
   TStringList
       m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
-  void setLineCatalog(const std::string &spectrumModel, const std::string &method,
+  void setLineCatalog(const std::string &spectrumModel,
+                      const std::string &method,
                       const std::shared_ptr<CLineCatalog> &catalog);
   void setLineRatioCatalogCatalog(
       const std::string &spectrumModel,
@@ -237,7 +239,8 @@ private:
 inline std::shared_ptr<const CLineCatalog>
 CInputContext::GetLineCatalog(const std::string &spectrumModel,
                               const std::string &method) const {
-  return const_cast<CInputContext *>(this)->GetLineCatalog(spectrumModel, method);
+  return const_cast<CInputContext *>(this)->GetLineCatalog(spectrumModel,
+                                                           method);
 }
 
 inline const std::shared_ptr<CLineCatalog> &
@@ -250,12 +253,15 @@ CInputContext::GetLineCatalog(const std::string &spectrumModel,
 inline CLineMap CInputContext::GetFilteredLineMap(
     const std::string &spectrumModel, const std::string &method,
     const std::string &type, const std::string &force) const {
-  return m_lineCatalogs.at(spectrumModel).at(method)->GetFilteredList(type, force);
+  return m_lineCatalogs.at(spectrumModel)
+      .at(method)
+      ->GetFilteredList(type, force);
 }
 
 inline std::shared_ptr<const CLineCatalogsTplRatio>
 CInputContext::GetTemplateRatioCatalog(const std::string &spectrumModel) const {
-  return const_cast<CInputContext *>(this)->GetTemplateRatioCatalog(spectrumModel);
+  return const_cast<CInputContext *>(this)->GetTemplateRatioCatalog(
+      spectrumModel);
 }
 
 inline const std::shared_ptr<CLineCatalogsTplRatio> &

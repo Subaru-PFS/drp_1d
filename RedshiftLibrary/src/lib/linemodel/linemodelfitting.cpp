@@ -36,26 +36,10 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/linemodelfitting.h"
-#include "RedshiftLibrary/line/catalogsTplRatio.h"
-#include "RedshiftLibrary/line/line.h"
-#include "RedshiftLibrary/line/regulament.h"
-#include "RedshiftLibrary/linemodel/element.h"
-
-#include "RedshiftLibrary/linemodel/rulesmanager.h"
-#include "RedshiftLibrary/linemodel/tplcorrmanager.h"
-#include "RedshiftLibrary/linemodel/tplratiomanager.h"
-
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
-#include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
+#include <climits>
+#include <cmath>
+#include <memory>
+#include <numeric>
 
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
@@ -66,10 +50,24 @@
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_vector.h>
 
-#include <climits>
-#include <cmath>
-#include <memory>
-#include <numeric>
+#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/line/catalogsTplRatio.h"
+#include "RedshiftLibrary/line/line.h"
+#include "RedshiftLibrary/line/regulament.h"
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
+#include "RedshiftLibrary/linemodel/rulesmanager.h"
+#include "RedshiftLibrary/linemodel/tplcorrmanager.h"
+#include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
 using namespace std;

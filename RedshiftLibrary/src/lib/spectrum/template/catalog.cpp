@@ -36,15 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-
-#include "RedshiftLibrary/log/log.h"
+#include <string>
 
 #include <boost/filesystem.hpp>
 
-#include <string>
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
 using namespace std;

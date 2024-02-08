@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMATCHINGRESULT_
 #define _REDSHIFT_OPERATOR_LINEMATCHINGRESULT_
 
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <vector>
 
 namespace NSEpic {
 /**

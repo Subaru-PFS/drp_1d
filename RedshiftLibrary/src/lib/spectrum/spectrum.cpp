@@ -36,17 +36,18 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include <map>
+
+#include <gsl/gsl_fit.h>
+#include <gsl/gsl_interp.h>
+#include <gsl/gsl_spline.h>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
-
-#include <gsl/gsl_fit.h>
-#include <gsl/gsl_interp.h>
-#include <gsl/gsl_spline.h>
-#include <map>
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;
 using namespace std;

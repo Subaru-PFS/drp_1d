@@ -36,13 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/ruleOIIRatioRange.h"
-#include "RedshiftLibrary/log/log.h"
 #include <cstdarg>
 #include <iostream>
 
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+
+#include "RedshiftLibrary/line/ruleOIIRatioRange.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;

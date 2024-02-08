@@ -39,9 +39,9 @@
 #ifndef _SOLVE_RESULT_
 #define _SOLVE_RESULT_
 
-#include "RedshiftLibrary/processflow/result.h"
-
 #include <vector>
+
+#include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
 

@@ -39,15 +39,16 @@
 #ifndef _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 #define _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 
+#include <iostream>
+#include <map>
+#include <stdexcept>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include <iostream>
-#include <map>
-#include <stdexcept>
-#include <string>
 
 namespace Template { // boost_test_suite
 // all boost_auto_test_case that use private method

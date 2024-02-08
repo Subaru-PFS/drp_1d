@@ -37,6 +37,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
@@ -44,8 +46,6 @@
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -212,7 +212,8 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TExtremaResult");
 
   std::shared_ptr<const TExtremaResult> res =
@@ -243,7 +244,8 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TExtremaResult");
 
   std::shared_ptr<const TExtremaResult> res =

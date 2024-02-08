@@ -36,10 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <regex>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/operator/linemodel.h"
-#include <boost/test/unit_test.hpp>
-#include <regex>
+
 using namespace NSEpic;
 using namespace std;
 BOOST_AUTO_TEST_SUITE(Linemodel)
