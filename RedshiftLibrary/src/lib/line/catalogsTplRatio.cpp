@@ -101,7 +101,7 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
         auto const &catalog_line = catalog.GetList().at(line_id);
         Float64 nominalAmp = catalog_line.GetNominalAmplitude();
         Float64 const restLambda = catalog_line.GetPosition();
-        if (enableISMCalzetti) {
+        if (enableISMCalzetti && elt_param_ptr->m_isEmission == true) {
           Float64 dustCoeff = ismCorrectionCalzetti->GetDustCoeff(
               catalog.getIsmIndex(), restLambda);
           nominalAmp *= dustCoeff;
