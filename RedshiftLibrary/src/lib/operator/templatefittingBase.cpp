@@ -39,7 +39,6 @@
 #include <boost/range/combine.hpp>
 
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/processflow/context.h"
