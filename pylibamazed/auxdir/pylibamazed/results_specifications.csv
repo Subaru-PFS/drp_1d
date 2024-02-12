@@ -137,8 +137,6 @@ zmin	pdf_params	False	object	zmin	pdf	f8
 zmax	pdf_params	False	object	zmax	pdf	f8
 zstep	pdf_params	False	object	zstep	pdf	f8
 zcenter	pdf_params	False	object	zcenter	pdf	f8
-BestChi2	model_parameters	True	candidate	Merit	extrema_results	f8
-BestContinuumChi2	model_parameters	True	candidate	MeritContinuum	extrema_results	f8
 CorrScaleMarg	model_parameters	True	candidate	CorrScaleMarg	extrema_results	f8
 NDof	model_parameters	True	candidate	NDof	extrema_results	i
 NLinesOverThreshold	model_parameters	True	candidate	NLinesOverThreshold	extrema_results	f8
