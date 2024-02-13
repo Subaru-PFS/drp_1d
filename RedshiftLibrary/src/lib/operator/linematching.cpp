@@ -36,9 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/linematching.h"
-#include "RedshiftLibrary/log/log.h"
 #include <numeric>
+
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/linematching.h"
+
 using namespace NSEpic;
 
 /**

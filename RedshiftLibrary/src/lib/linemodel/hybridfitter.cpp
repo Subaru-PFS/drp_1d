@@ -265,7 +265,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // simulatneous fit with linsolve
-    Float64 modelErr_init = getModelResidualRmsUnderElements({iElt_lineA}, true);
+    Float64 modelErr_init =
+        getModelResidualRmsUnderElements({iElt_lineA}, true);
     Float64 ampA = getElementList()[iElt_lineA]->GetFittedAmplitude(lineA_id);
     Float64 amp_errorA =
         getElementList()[iElt_lineA]->GetFittedAmplitudeStd(lineA_id);

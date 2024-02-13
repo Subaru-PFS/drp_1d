@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_EXCEPTION_
 #define _REDSHIFT_EXCEPTION_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/log/log.h"
-
 #include <exception>
 #include <iostream>
 #include <string>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
 
 #define THROWG(code, msg)                                                      \
   throw GlobalException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)

@@ -36,14 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -52,9 +52,10 @@ BOOST_AUTO_TEST_SUITE(classificationSolve_test)
 Float64 precision = 1e-12;
 
 // JsonFile in string format
-std::string jsonString = "{\"galaxy\" : {\"redshiftSolver\": { \"method\" : \"lineModelSolve\" }}, "
-                         "\"star\" : {\"redshiftSolver\": { \"method\" : \"lineModelSolve\" }}, "
-                         "\"qso\" : {\"redshiftSolver\": { \"method\" : \"lineModelSolve\"}}}";
+std::string jsonString =
+    "{\"galaxy\" : {\"redshiftSolver\": { \"method\" : \"lineModelSolve\" }}, "
+    "\"star\" : {\"redshiftSolver\": { \"method\" : \"lineModelSolve\" }}, "
+    "\"qso\" : {\"redshiftSolver\": { \"method\" : \"lineModelSolve\"}}}";
 std::string type = "test";
 
 BOOST_AUTO_TEST_CASE(compute_test) {
@@ -80,13 +81,13 @@ BOOST_AUTO_TEST_CASE(compute_test) {
   // create OperatorResult
   std::shared_ptr<COperatorResultStore> resultStore =
       std::make_shared<COperatorResultStore>(scopeStack);
-  resultStore->StoreGlobalResult("galaxy.redshiftSolver.lineModelSolve", "solveResult",
-                                 result_in);
+  resultStore->StoreGlobalResult("galaxy.redshiftSolver.lineModelSolve",
+                                 "solveResult", result_in);
 
   // create Pdf solve result for star
   result_in = std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", 1.5);
-  resultStore->StoreGlobalResult("star.redshiftSolver.lineModelSolve", "solveResult",
-                                 result_in);
+  resultStore->StoreGlobalResult("star.redshiftSolver.lineModelSolve",
+                                 "solveResult", result_in);
 
   // qso has no results : compute function catch this and does not take count of
   // qso objects in classification
@@ -128,13 +129,13 @@ BOOST_AUTO_TEST_CASE(compute_test) {
   result_in = std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", 1.);
   std::shared_ptr<COperatorResultStore> resultStore_2 =
       std::make_shared<COperatorResultStore>(scopeStack);
-  resultStore_2->StoreGlobalResult("galaxy.redshiftSolver.lineModelSolve", "solveResult",
-                                   result_in);
+  resultStore_2->StoreGlobalResult("galaxy.redshiftSolver.lineModelSolve",
+                                   "solveResult", result_in);
 
   result_in =
       std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", -INFINITY);
-  resultStore_2->StoreGlobalResult("star.redshiftSolver.lineModelSolve", "solveResult",
-                                   result_in);
+  resultStore_2->StoreGlobalResult("star.redshiftSolver.lineModelSolve",
+                                   "solveResult", result_in);
 
   classifResult = cSolve.compute(inputContext, resultStore_2, scopeStack);
   resultStore->StoreGlobalResult("object.stage.method", "classification_2",
@@ -159,13 +160,13 @@ BOOST_AUTO_TEST_CASE(compute_test) {
       std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", -INFINITY);
   std::shared_ptr<COperatorResultStore> resultStore_3 =
       std::make_shared<COperatorResultStore>(scopeStack);
-  resultStore_3->StoreGlobalResult("galaxy.redshiftSolver.lineModelSolve", "solveResult",
-                                   result_in);
+  resultStore_3->StoreGlobalResult("galaxy.redshiftSolver.lineModelSolve",
+                                   "solveResult", result_in);
 
   result_in =
       std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", -INFINITY);
-  resultStore_3->StoreGlobalResult("star.redshiftSolver.lineModelSolve", "solveResult",
-                                   result_in);
+  resultStore_3->StoreGlobalResult("star.redshiftSolver.lineModelSolve",
+                                   "solveResult", result_in);
 
   BOOST_CHECK_THROW(cSolve.compute(inputContext, resultStore_3, scopeStack),
                     GlobalException);

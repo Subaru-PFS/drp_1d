@@ -39,9 +39,10 @@
 #ifndef _REDSHIFT_RAY_AIRVACUUM_
 #define _REDSHIFT_RAY_AIRVACUUM_
 
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include <vector>
 
 namespace NSEpic {
 class CAirVacuum {

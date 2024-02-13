@@ -36,23 +36,23 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/catalogsTplRatio.h"
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/line/linetags.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
-#include "RedshiftLibrary/log/log.h"
-
 #include <algorithm> // std::sort
+#include <fstream>
+#include <iostream>
+#include <numeric>
+#include <string>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-#include <fstream>
-#include <iostream>
-#include <numeric>
-#include <string>
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/line/catalogsTplRatio.h"
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/log/log.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;

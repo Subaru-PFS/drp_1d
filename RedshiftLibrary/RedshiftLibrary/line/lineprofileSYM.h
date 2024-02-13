@@ -38,11 +38,13 @@
 // ============================================================================
 #ifndef _REDSHIFT_LINE_PROFILE_SYM_
 #define _REDSHIFT_LINE_PROFILE_SYM_
+
+#include <cmath>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
-#include <cmath>
-#include <string>
 
 namespace lineProfile_test {
 class lineprofileSYM_test;

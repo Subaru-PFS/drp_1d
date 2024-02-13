@@ -36,15 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include <cmath>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
-
 #include "RedshiftLibrary/log/log.h"
-#include <cmath>
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 
 using namespace NSEpic;
 using namespace std;

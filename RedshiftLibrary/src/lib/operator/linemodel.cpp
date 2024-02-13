@@ -36,7 +36,10 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/linemodel.h"
+#include <boost/chrono/thread_clock.hpp>
+#include <boost/format.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
+
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
@@ -52,6 +55,7 @@
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/linemodel.h"
 #include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
@@ -66,9 +70,6 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
-#include <boost/chrono/thread_clock.hpp>
-#include <boost/format.hpp>
-#include <boost/numeric/conversion/bounds.hpp>
 
 using namespace NSEpic;
 using namespace std;

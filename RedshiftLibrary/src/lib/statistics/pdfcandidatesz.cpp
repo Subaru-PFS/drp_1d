@@ -36,22 +36,23 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_multifit_nlin.h>
+
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 
 using namespace NSEpic;
 using namespace std;
-
-#include <algorithm>
-#include <cmath>
-#include <fstream>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit_nlin.h>
-#include <iostream>
 
 CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID &candidates)
     : m_candidates(candidates) {}
@@ -117,19 +118,23 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
     Float64 &zHigh = candidates[candidateKeyHigh]->Redshift;
     Float64 &zLow = candidates[candidateKeyLow]->Redshift;
 
-    Float64 zSizeHighRange = ranges[candidateKeyHigh].GetEnd() - ranges[candidateKeyHigh].GetBegin();
-    Float64 zSizeLowRange = ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyLow].GetBegin();
+    Float64 zSizeHighRange =
+        ranges[candidateKeyHigh].GetEnd() - ranges[candidateKeyHigh].GetBegin();
+    Float64 zSizeLowRange =
+        ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyLow].GetBegin();
 
     Float64 overlap =
         ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyHigh].GetBegin();
-   
+
     if (overlap <= 0)
       continue;
 
-    // in the case of duplicates, split equally the overlap between both candidates
+    // in the case of duplicates, split equally the overlap between both
+    // candidates
     Float64 overlapHighRatio = overlap / zSizeHighRange;
     Float64 overlapLowRatio = overlap / zSizeLowRange;
-    if (overlapHighRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION && overlapLowRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION) {
+    if (overlapHighRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION &&
+        overlapLowRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION) {
       Log.LogDebug("    CPdfCandidatesZ::SetIntegrationRanges: integration "
                    "supports overlap for %f and %f",
                    zHigh, zLow);
@@ -141,7 +146,8 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
                   "candidates are identified %f and %f",
                   zHigh, zLow);
       std::string candidateKeyToRemove;
-      if (candidates[candidateKeyLow]->ValProba > candidates[candidateKeyHigh]->ValProba) {
+      if (candidates[candidateKeyLow]->ValProba >
+          candidates[candidateKeyHigh]->ValProba) {
         candidateKeyToRemove = candidateKeyHigh;
       } else {
         candidateKeyToRemove = candidateKeyLow;

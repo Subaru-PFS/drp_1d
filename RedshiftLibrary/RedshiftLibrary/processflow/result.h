@@ -39,12 +39,13 @@
 #ifndef _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 #define _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/continuum/indexes.h"
 #include <map>
 #include <ostream>
 #include <vector>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/continuum/indexes.h"
 
 namespace NSEpic {
 

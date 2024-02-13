@@ -36,12 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/consolehandler.h"
-
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 

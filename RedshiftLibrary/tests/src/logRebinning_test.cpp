@@ -36,12 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -59,7 +60,7 @@ const std::string jsonString =
     "0.0001, "
     "\"stages\": [\"redshiftSolver\"],"
     "\"redshiftSolver\": {"
-    "\"method\" : \"lineModelSolve\"," 
+    "\"method\" : \"lineModelSolve\","
     "\"lineModelSolve\" : {\"lineModel\" : { \"firstPass\" : { "
     "\"largeGridStepRatio\" : 1 },"
     "\"continuumFit\" : {\"fftProcessing\" : true }}}}, "
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
   CSpectrumLogRebinning logRebinning(*ctx_logSampled);
 
   BOOST_CHECK_THROW(
-      logRebinning.loglambdaRebinSpectrum(ctx_logSampled->GetSpectrum(), "no"),
+      logRebinning.loglambdaRebinSpectrum(*ctx_logSampled->GetSpectrum(), "no"),
       GlobalException);
 
   // create not logSampled spectrum
@@ -186,7 +187,7 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
 
   std::shared_ptr<CSpectrum> spcLogRebinning =
       logRebinningNotLog.loglambdaRebinSpectrum(
-          ctx_notLogSampled->GetSpectrum(), "no");
+          *ctx_notLogSampled->GetSpectrum(), "no");
   BOOST_CHECK(spcLogRebinning->GetName() == "spc_notLog");
   BOOST_CHECK(spcLogRebinning->GetSpectralAxis().IsLogSampled() == true);
   TFloat64Range lbdaRange(4680.4680234007774, 4711.9324472744638);
@@ -201,7 +202,7 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
       CSpectrumSpectralAxis(TFloat64List{1212, 1212.4, 1213}),
       CSpectrumFluxAxis(TFloat64List{0, 0, 0}));
   BOOST_CHECK_THROW(logRebinningNotLog.loglambdaRebinSpectrum(
-                        ctx_notLogSampled->GetSpectrum(), "no"),
+                        *ctx_notLogSampled->GetSpectrum(), "no"),
                     GlobalException);
 }
 

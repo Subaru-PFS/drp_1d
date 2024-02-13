@@ -36,15 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/statistics/deltaz.h"
+#include <fstream>
+#include <gsl/gsl_multifit.h>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
-
-#include <gsl/gsl_multifit.h>
-
-#include <fstream>
+#include "RedshiftLibrary/statistics/deltaz.h"
 
 using namespace NSEpic;
 using namespace std;

@@ -36,6 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/pdfz.h"
@@ -43,7 +45,6 @@
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/statistics/zprior.h"
 
-#include <boost/test/unit_test.hpp>
 using namespace NSEpic;
 using namespace std;
 
@@ -120,9 +121,12 @@ BOOST_AUTO_TEST_CASE(CPdfCandidatesZ_test) {
   BOOST_CHECK(zcand_candList.m_candidates["EXT1"]->Redshift == 2.0);
 }
 
-TStringList launchSetIntegrationRanges(TRedshiftList center_redshifts, TRedshiftList deltaz, TFloat64List valProba, TCandidateZRangebyID &ranges) {
+TStringList launchSetIntegrationRanges(TRedshiftList center_redshifts,
+                                       TRedshiftList deltaz,
+                                       TFloat64List valProba,
+                                       TCandidateZRangebyID &ranges) {
   TCandidateZbyID zcandidates = {{"EXT0", std::make_shared<TCandidateZ>()},
-                                {"EXT1", std::make_shared<TCandidateZ>()}};
+                                 {"EXT1", std::make_shared<TCandidateZ>()}};
   zcandidates["EXT0"]->Redshift = center_redshifts[0];
   zcandidates["EXT0"]->Deltaz = deltaz[0];
   zcandidates["EXT0"]->ValProba = valProba[0];
@@ -131,10 +135,10 @@ TStringList launchSetIntegrationRanges(TRedshiftList center_redshifts, TRedshift
   zcandidates["EXT1"]->ValProba = valProba[1];
 
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
-  TStringList duplicates = zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
+  TStringList duplicates =
+      zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges);
   return duplicates;
 }
-
 
 // No overlap
 BOOST_AUTO_TEST_CASE(Deltaz_nooverlapping) {
@@ -145,20 +149,18 @@ BOOST_AUTO_TEST_CASE(Deltaz_nooverlapping) {
                                          {"EXT1", {3.5, 4.5}}};
 
   TCandidateZRangebyID calculated_ranges;
-  TStringList duplicates = launchSetIntegrationRanges(center_redshifts, deltaz, valProba, calculated_ranges);
+  TStringList duplicates = launchSetIntegrationRanges(
+      center_redshifts, deltaz, valProba, calculated_ranges);
 
-  
-
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
-                    1E-4);
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(), correct_ranges["EXT1"].GetEnd(),
-                    1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(),
+                    correct_ranges["EXT0"].GetEnd(), 1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(),
+                    correct_ranges["EXT1"].GetEnd(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetBegin(),
                     correct_ranges["EXT0"].GetBegin(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetBegin(),
                     correct_ranges["EXT1"].GetBegin(), 1E-4);
 }
-
 
 // Overlap smaller than threshold => separation at mid overlap
 BOOST_AUTO_TEST_CASE(Deltaz_small_overlap) {
@@ -166,17 +168,17 @@ BOOST_AUTO_TEST_CASE(Deltaz_small_overlap) {
   TRedshiftList deltaz = {0.6 / 3, 0.7 / 3};
   TFloat64List valProba = {1, 2};
 
-
   TCandidateZRangebyID correct_ranges = {{"EXT0", {0.4, 1.45}},
                                          {"EXT1", {1.45, 2.7}}};
 
   TCandidateZRangebyID calculated_ranges;
-  TStringList duplicates = launchSetIntegrationRanges(center_redshifts, deltaz, valProba, calculated_ranges);
+  TStringList duplicates = launchSetIntegrationRanges(
+      center_redshifts, deltaz, valProba, calculated_ranges);
 
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
-                  1E-4);
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(), correct_ranges["EXT1"].GetEnd(),
-                    1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(),
+                    correct_ranges["EXT0"].GetEnd(), 1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(),
+                    correct_ranges["EXT1"].GetEnd(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetBegin(),
                     correct_ranges["EXT0"].GetBegin(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetBegin(),
@@ -195,12 +197,13 @@ BOOST_AUTO_TEST_CASE(Deltaz_big_overlap_probaHighStronger) {
   TStringList expected_duplicates = {"EXT0"};
 
   TCandidateZRangebyID calculated_ranges;
-  TStringList duplicates = launchSetIntegrationRanges(center_redshifts, deltaz, valProba, calculated_ranges);
+  TStringList duplicates = launchSetIntegrationRanges(
+      center_redshifts, deltaz, valProba, calculated_ranges);
 
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
-                  1E-4);
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(), correct_ranges["EXT1"].GetEnd(),
-                    1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(),
+                    correct_ranges["EXT0"].GetEnd(), 1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(),
+                    correct_ranges["EXT1"].GetEnd(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetBegin(),
                     correct_ranges["EXT0"].GetBegin(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetBegin(),
@@ -220,12 +223,13 @@ BOOST_AUTO_TEST_CASE(Deltaz_big_overlap_probaLowStronger) {
   TStringList expected_duplicates = {"EXT1"};
 
   TCandidateZRangebyID calculated_ranges;
-  TStringList duplicates = launchSetIntegrationRanges(center_redshifts, deltaz, valProba, calculated_ranges);
+  TStringList duplicates = launchSetIntegrationRanges(
+      center_redshifts, deltaz, valProba, calculated_ranges);
 
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(), correct_ranges["EXT0"].GetEnd(),
-                  1E-4);
-  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(), correct_ranges["EXT1"].GetEnd(),
-                    1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetEnd(),
+                    correct_ranges["EXT0"].GetEnd(), 1E-4);
+  BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetEnd(),
+                    correct_ranges["EXT1"].GetEnd(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT0"].GetBegin(),
                     correct_ranges["EXT0"].GetBegin(), 1E-4);
   BOOST_CHECK_CLOSE(calculated_ranges["EXT1"].GetBegin(),
@@ -233,8 +237,6 @@ BOOST_AUTO_TEST_CASE(Deltaz_big_overlap_probaLowStronger) {
 
   BOOST_CHECK(duplicates == expected_duplicates);
 }
-
-
 
 // Candidates too close
 BOOST_AUTO_TEST_CASE(Deltaz_overlapping_5) {

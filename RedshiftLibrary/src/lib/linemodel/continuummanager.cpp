@@ -44,8 +44,8 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   m_fitContinuum_priorhelper = std::make_shared<CPriorHelper>();
-  m_fitContinuum_priorhelper->Init(
-      ps->GetScoped<std::string>("catalogDirPath"), 0);
+  m_fitContinuum_priorhelper->Init(ps->GetScoped<std::string>("catalogDirPath"),
+                                   0);
   m_fitContinuum_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_fitContinuum_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
   m_fitContinuum_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));

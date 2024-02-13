@@ -39,12 +39,11 @@
 #ifndef _REDSHIFT_OPERATOR_PEAKDETECTION_
 #define _REDSHIFT_OPERATOR_PEAKDETECTION_
 
+#include <iterator>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-
-#include <iterator>
 
 namespace test_peakdetection { // boost_test_suite
 // all boost_auto_test_case that use private method

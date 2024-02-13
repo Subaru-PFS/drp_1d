@@ -36,17 +36,18 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/linemodelresult.h"
+#include <cfloat>
+#include <fstream>
+#include <string>
+
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
-#include <cfloat>
-#include <fstream>
-#include <string>
 
 using namespace NSEpic;
 

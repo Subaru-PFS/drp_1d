@@ -36,17 +36,20 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/pdfz.h"
-#include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/statistics/zprior.h"
-using namespace NSEpic;
-using namespace std;
 #include <algorithm>
 #include <cfloat>
 #include <fstream>
 #include <numeric>
+
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/zprior.h"
+
+using namespace NSEpic;
+using namespace std;
+
 COperatorPdfz::COperatorPdfz(const std::string &opt_combine,
                              Float64 peakSeparation, Float64 meritcut,
                              Int32 maxCandidate, bool redshiftLogSampling,

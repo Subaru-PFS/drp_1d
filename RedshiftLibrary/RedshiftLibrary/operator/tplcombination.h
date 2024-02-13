@@ -39,6 +39,8 @@
 #ifndef _REDSHIFT_OPERATOR_TPLCOMBINATION_
 #define _REDSHIFT_OPERATOR_TPLCOMBINATION_
 
+#include <gsl/gsl_matrix_double.h>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
@@ -51,8 +53,6 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
-
-#include <gsl/gsl_matrix_double.h>
 
 namespace NSEpic {
 class CSpectrum;

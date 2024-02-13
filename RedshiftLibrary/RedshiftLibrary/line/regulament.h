@@ -39,10 +39,10 @@
 #ifndef _REDSHIFT_RAY_REGULAMENT_
 #define _REDSHIFT_RAY_REGULAMENT_
 
+#include <boost/format.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/rule.h"
-
-#include <boost/format.hpp>
 
 namespace NSEpic {
 

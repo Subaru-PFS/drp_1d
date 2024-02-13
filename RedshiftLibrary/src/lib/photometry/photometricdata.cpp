@@ -36,11 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/photometry/photometricdata.h"
+#include <stdexcept>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
-
-#include <stdexcept>
+#include "RedshiftLibrary/photometry/photometricdata.h"
 
 using namespace NSEpic;
 

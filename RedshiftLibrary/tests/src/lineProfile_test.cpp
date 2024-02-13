@@ -36,14 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <cmath>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 #include "RedshiftLibrary/line/lineprofileASYMFIT.h"
 #include "RedshiftLibrary/line/lineprofileLOR.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "tests/src/tool/inputContextLight.h"
-
-#include <boost/test/unit_test.hpp>
-#include <cmath>
 
 using namespace NSEpic;
 

@@ -36,16 +36,17 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <iostream>
+
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "tests/src/tool/inputContextLight.h"
-
-#include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
-#include <iostream>
 
 using namespace NSEpic;
 using namespace std;

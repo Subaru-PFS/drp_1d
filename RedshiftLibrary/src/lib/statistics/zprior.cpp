@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/statistics/zprior.h"
+#include <climits>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/operator/pdfz.h"
-
 #include "RedshiftLibrary/log/log.h"
-#include <climits>
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/zprior.h"
 
 using namespace NSEpic;
 using namespace std;

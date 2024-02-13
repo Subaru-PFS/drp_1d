@@ -36,17 +36,17 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-
-#include <boost/test/unit_test.hpp>
-
-#include <algorithm>
-#include <cmath>
-#include <iterator>
 
 using namespace NSEpic;
 
@@ -400,36 +400,32 @@ BOOST_AUTO_TEST_CASE(ClampLambdaRange) {
   TFloat64Range crange;
   // Range [0.1 ... 0.9] inside axis range
   TFloat64Range irange10(0.1, 0.9);
-  BOOST_CHECK(axis.ClampLambdaRange(irange10, crange));
+  BOOST_CHECK_NO_THROW(axis.ClampLambdaRange(irange10, crange));
   BOOST_CHECK_CLOSE(crange.GetBegin(), 0.1, 1.e-12);
   BOOST_CHECK_CLOSE(crange.GetEnd(), 0.9, 1.e-12);
   // Range empty [0. ... 0.]
   TFloat64Range irange11(0., 0.);
-  BOOST_CHECK(~axis.ClampLambdaRange(irange11, crange));
-  BOOST_CHECK(axis.ClampLambdaRange(irange11, crange) == false);
+  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange11, crange), GlobalException);
   // Axis empty
-  const CSpectrumSpectralAxis n132Axis(2, false);
-  BOOST_CHECK(~n132Axis.ClampLambdaRange(irange10, crange));
+  const CSpectrumSpectralAxis n132Axis(2, 0.0);
+  BOOST_CHECK_THROW(n132Axis.ClampLambdaRange(irange10, crange),
+                    GlobalException);
   // Range [-1.0 ... 0.9] starts before axis [0. ... 1.]
   TFloat64Range irange12(-1.0, 0.9);
-  BOOST_CHECK(axis.ClampLambdaRange(irange12, crange));
+  BOOST_CHECK_NO_THROW(axis.ClampLambdaRange(irange12, crange));
   BOOST_CHECK_CLOSE(crange.GetBegin(), 0, 1.e-12);
   BOOST_CHECK_CLOSE(crange.GetEnd(), 0.9, 1.e-12);
   // Range [0.1 ... 1.1] ends after axis [0. ... 1.]
   TFloat64Range irange13(0.1, 1.1);
-  BOOST_CHECK(axis.ClampLambdaRange(irange13, crange));
+  BOOST_CHECK_NO_THROW(axis.ClampLambdaRange(irange13, crange));
   BOOST_CHECK_CLOSE(crange.GetBegin(), 0.1, 1.e-12);
   BOOST_CHECK_CLOSE(crange.GetEnd(), 1., 1.e-12);
   // Range [-2. ... -1.] outside and before axis range
   TFloat64Range irange14(-2., -1.);
-  BOOST_CHECK(axis.ClampLambdaRange(irange14, crange));
-  BOOST_CHECK_CLOSE(crange.GetBegin(), 0., 1.e-12);
-  BOOST_CHECK_CLOSE(crange.GetEnd(), -1., 1.e-12);
-  // Range [-2. ... -1.] outside and after axis range
+  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange14, crange), GlobalException);
+  // Range [2. ... 3.] outside and after axis range
   TFloat64Range irange15(2., 3.);
-  BOOST_CHECK(axis.ClampLambdaRange(irange15, crange));
-  BOOST_CHECK_CLOSE(crange.GetBegin(), 2., 1.e-12);
-  BOOST_CHECK_CLOSE(crange.GetEnd(), 1., 1.e-12);
+  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange15, crange), GlobalException);
 }
 
 BOOST_AUTO_TEST_CASE(isSorted) {

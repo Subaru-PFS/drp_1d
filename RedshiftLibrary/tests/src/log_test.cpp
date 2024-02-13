@@ -36,16 +36,16 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/log/consolehandler.h"
-#include "RedshiftLibrary/log/filehandler.h"
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
-#include <iostream>
-#include <string>
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/log/filehandler.h"
 
 using namespace NSEpic;
 

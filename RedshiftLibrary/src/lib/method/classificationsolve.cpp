@@ -59,8 +59,8 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   std::string stage = "redshiftSolver";
   for (const std::string &spectrumModel : inputContext->m_categories) {
     const std::string &method =
-        inputContext->GetParameterStore()->Get<std::string>(spectrumModel + "." + stage +
-                                                            ".method");
+        inputContext->GetParameterStore()->Get<std::string>(
+            spectrumModel + "." + stage + ".method");
 
     if (resultStore->hasSolveResult(spectrumModel, stage, method)) {
       results[spectrumModel] = std::dynamic_pointer_cast<const CPdfSolveResult>(
@@ -76,7 +76,8 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   Float64 MaxLogEvidence = -DBL_MAX;
   for (const std::string &spectrumModel : inputContext->m_categories) {
     if (hasResult[spectrumModel]) {
-      logEvidences[spectrumModel] = results[spectrumModel].lock()->getEvidence();
+      logEvidences[spectrumModel] =
+          results[spectrumModel].lock()->getEvidence();
       if (logEvidences[spectrumModel] > MaxLogEvidence) {
         MaxLogEvidence = logEvidences[spectrumModel];
         typeLabel = spectrumModel;

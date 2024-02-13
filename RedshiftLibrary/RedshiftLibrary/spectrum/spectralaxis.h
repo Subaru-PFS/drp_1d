@@ -39,11 +39,14 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 #define _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 
+#include <vector>
+
+#include <boost/logic/tribool.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/axis.h"
-#include <boost/logic/tribool.hpp>
-#include <vector>
+
 using namespace boost::logic;
 
 namespace spectralaxis_test { // boost_test_suite
@@ -96,7 +99,7 @@ public:
   GetIndexesAtWaveLengthRange(const TFloat64Range &waveLengthRange) const;
 
   TLambdaRange GetLambdaRange() const;
-  bool ClampLambdaRange(const TFloat64Range &range,
+  void ClampLambdaRange(const TFloat64Range &range,
                         TFloat64Range &clampedRange) const;
   void GetMask(const TFloat64Range &range, CMask &mask) const;
   Float64

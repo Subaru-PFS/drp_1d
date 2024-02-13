@@ -36,6 +36,10 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/method/classificationresult.h"
@@ -51,10 +55,6 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -162,8 +162,9 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK(store_1.GetScopedName("extremaResult") ==
               "spectrumModel.stage.method.extremaResult");
 
-  std::shared_ptr<const TExtremaResult> result_out = store_1.GetExtremaResult(
-      "spectrumModel", "stage", "method", "extremaResult", "model_parameters", 0);
+  std::shared_ptr<const TExtremaResult> result_out =
+      store_1.GetExtremaResult("spectrumModel", "stage", "method",
+                               "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
   BOOST_CHECK_THROW(store_1.StoreResult(store_1.m_GlobalResults,
@@ -201,8 +202,9 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
   BOOST_CHECK(store_1.GetScopedName("extremaResult") ==
               "spectrumModel.stage.method.extremaResult");
 
-  std::shared_ptr<const TExtremaResult> result_out = store_1.GetExtremaResult(
-      "spectrumModel", "stage", "method", "extremaResult", "model_parameters", 0);
+  std::shared_ptr<const TExtremaResult> result_out =
+      store_1.GetExtremaResult("spectrumModel", "stage", "method",
+                               "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 
   // test store outside context
@@ -237,8 +239,8 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
               "spectrumModel.stage.method.warningFlag");
   BOOST_CHECK(store_1.hasCurrentMethodWarningFlag() == true);
 
-  std::shared_ptr<const COperatorResult> result_out =
-      store_1.GetFlagLogResult("spectrumModel", "stage", "method", "warningFlag");
+  std::shared_ptr<const COperatorResult> result_out = store_1.GetFlagLogResult(
+      "spectrumModel", "stage", "method", "warningFlag");
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
 
   // test store flag outside context
@@ -331,7 +333,8 @@ BOOST_AUTO_TEST_CASE(GetMethods_test) {
       result_out = store.GetGlobalResult(store.GetScopedName("warningFlag__")),
       GlobalException);
 
-  result_out = store.GetGlobalResult("spectrumModel", "stage", "method", "warningFlag");
+  result_out =
+      store.GetGlobalResult("spectrumModel", "stage", "method", "warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
 }
 
@@ -345,11 +348,11 @@ BOOST_AUTO_TEST_CASE(GetGlobalResultType_test) {
   store.StoreScopedGlobalResult("warningFlag", result_in);
   std::weak_ptr<const COperatorResult> result_out =
       store.GetScopedGlobalResult("warningFlag");
-  BOOST_CHECK(store.GetGlobalResultType("spectrumModel", "stage", "method", "warningFlag") ==
-              "CFlagLogResult");
-  BOOST_CHECK_THROW(
-      store.GetGlobalResultType("spectrumModel", "stage", "method", "warningFlag__"),
-      GlobalException);
+  BOOST_CHECK(store.GetGlobalResultType("spectrumModel", "stage", "method",
+                                        "warningFlag") == "CFlagLogResult");
+  BOOST_CHECK_THROW(store.GetGlobalResultType("spectrumModel", "stage",
+                                              "method", "warningFlag__"),
+                    GlobalException);
 }
 
 //---------------------------------------------------------------
@@ -377,7 +380,8 @@ BOOST_AUTO_TEST_CASE(GetClassificationResult_test) {
   store.StoreScopedGlobalResult("classification", result_in);
 
   std::shared_ptr<const CClassificationResult> result_out =
-      store.GetClassificationResult("spectrumModel", "stage", "method", "classification");
+      store.GetClassificationResult("spectrumModel", "stage", "method",
+                                    "classification");
   BOOST_CHECK(result_out->getType() == "CClassificationResult");
   BOOST_CHECK(result_out->m_TypeLabel == "label");
 }
@@ -393,7 +397,8 @@ BOOST_AUTO_TEST_CASE(GetReliabilityResult_test) {
   store.StoreScopedGlobalResult("reliability", result_in);
 
   std::shared_ptr<const CReliabilityResult> result_out =
-      store.GetReliabilityResult("spectrumModel", "stage", "method", "reliability");
+      store.GetReliabilityResult("spectrumModel", "stage", "method",
+                                 "reliability");
   BOOST_CHECK(result_out->getType() == "CReliabilityResult");
   BOOST_CHECK(result_out->m_ReliabilityLabel == "C6");
 }
@@ -440,8 +445,8 @@ BOOST_AUTO_TEST_CASE(GetTplCombinationResult_test) {
   store.StoreScopedGlobalResult("tplCombination", result_in);
 
   std::shared_ptr<const TTplCombinationResult> result_out =
-      store.GetTplCombinationResult("spectrumModel", "stage", "method", "tplCombination",
-                                    "model_parameters", 0);
+      store.GetTplCombinationResult("spectrumModel", "stage", "method",
+                                    "tplCombination", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TTplCombinationResult");
 }
 
@@ -454,8 +459,9 @@ BOOST_AUTO_TEST_CASE(GetExtremaResult_test) {
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("extremaResult", result_in);
 
-  std::shared_ptr<const TExtremaResult> result_out = store.GetExtremaResult(
-      "spectrumModel", "stage", "method", "extremaResult", "model_parameters", 0);
+  std::shared_ptr<const TExtremaResult> result_out =
+      store.GetExtremaResult("spectrumModel", "stage", "method",
+                             "extremaResult", "model_parameters", 0);
   BOOST_CHECK(result_out->getType() == "TExtremaResult");
 }
 
@@ -469,7 +475,8 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test) {
   store.StoreScopedGlobalResult("lineModel", result_in);
 
   std::shared_ptr<const CLineModelSolution> result_out =
-      store.GetLineModelSolution("spectrumModel", "stage", "method", "lineModel");
+      store.GetLineModelSolution("spectrumModel", "stage", "method",
+                                 "lineModel");
   BOOST_CHECK(result_out->getType() == "CLineModelSolution");
 }
 
@@ -484,8 +491,8 @@ BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test) {
   store.StoreScopedGlobalResult("modelSpectrum", result_in);
 
   std::shared_ptr<const CModelSpectrumResult> result_out =
-      store.GetModelSpectrumResult("spectrumModel", "stage", "method", "modelSpectrum", "model",
-                                   0);
+      store.GetModelSpectrumResult("spectrumModel", "stage", "method",
+                                   "modelSpectrum", "model", 0);
   BOOST_CHECK(result_out->getType() == "CModelSpectrumResult");
 }
 
@@ -500,8 +507,8 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test_2) {
   store.StoreScopedGlobalResult("lineModel", result_in);
 
   std::shared_ptr<const CLineModelSolution> result_out =
-      store.GetLineModelSolution("spectrumModel", "stage", "method", "lineModel",
-                                 "fitted_lines", 0);
+      store.GetLineModelSolution("spectrumModel", "stage", "method",
+                                 "lineModel", "fitted_lines", 0);
 
   BOOST_CHECK(result_out->getType() == "CLineModelSolution");
 }
@@ -518,7 +525,8 @@ BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test_2) {
   store.StoreScopedGlobalResult("modelSpectrum", result_in);
 
   std::shared_ptr<const CModelSpectrumResult> result_out =
-      store.GetModelSpectrumResult("spectrumModel", "stage", "method", "modelSpectrum");
+      store.GetModelSpectrumResult("spectrumModel", "stage", "method",
+                                   "modelSpectrum");
   BOOST_CHECK(result_out->getType() == "CModelSpectrumResult");
 }
 
@@ -551,8 +559,8 @@ BOOST_AUTO_TEST_CASE(HasCandidateDataset_test) {
       "spectrumModel", "stage", "method", "tplCombination", "model_parameters");
   BOOST_CHECK(result_out == true);
 
-  result_out = store.HasCandidateDataset("spectrumModel", "stage", "method", "tplCombination_2",
-                                         "model");
+  result_out = store.HasCandidateDataset("spectrumModel", "stage", "method",
+                                         "tplCombination_2", "model");
   BOOST_CHECK(result_out == false);
 }
 
@@ -567,10 +575,12 @@ BOOST_AUTO_TEST_CASE(HasDataset_test) {
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("pdfMarg", result_in);
 
-  bool result_out = store.HasDataset("spectrumModel", "stage", "method", "pdfMarg");
+  bool result_out =
+      store.HasDataset("spectrumModel", "stage", "method", "pdfMarg");
   BOOST_CHECK(result_out == true);
 
-  result_out = store.HasDataset("spectrumModel", "stage", "method", "pdfMarg_2");
+  result_out =
+      store.HasDataset("spectrumModel", "stage", "method", "pdfMarg_2");
   BOOST_CHECK(result_out == false);
 }
 
@@ -585,7 +595,8 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   COperatorResultStore store(scopeStack);
   store.StoreScopedGlobalResult("extrema_results", result_in);
 
-  int result_out = store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
+  int result_out =
+      store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
   BOOST_CHECK(result_out == 0);
 
   std::shared_ptr<PdfCandidatesZResult> result_in_2 =
@@ -595,14 +606,16 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_2);
 
-  result_out = store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
+  result_out =
+      store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
   BOOST_CHECK(result_out == 1);
 
   std::shared_ptr<ExtremaResult> result_in_3 = getExtremaResult();
 
   store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_3);
-  result_out = store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
+  result_out =
+      store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
   BOOST_CHECK(result_out == 1);
 
   std::shared_ptr<LineModelExtremaResult> result_in_4 =
@@ -610,7 +623,8 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
 
   store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_4);
-  result_out = store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
+  result_out =
+      store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
   BOOST_CHECK(result_out == 1);
 
   std::shared_ptr<TplCombinationExtremaResult> result_in_5 =
@@ -618,7 +632,8 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
 
   store.reset();
   store.StoreScopedGlobalResult("extrema_results", result_in_5);
-  result_out = store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
+  result_out =
+      store.getNbRedshiftCandidates("spectrumModel", "stage", "method");
   BOOST_CHECK(result_out == 1);
 }
 

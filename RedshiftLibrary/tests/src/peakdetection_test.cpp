@@ -36,16 +36,17 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <iostream>
+#include <numeric>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/operator/peakdetection.h"
 #include "RedshiftLibrary/operator/peakdetectionresult.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include <boost/test/unit_test.hpp>
-
-#include <iostream>
-#include <numeric>
 
 using namespace NSEpic;
 

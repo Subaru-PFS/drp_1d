@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_CONTINUUM_MANAGER_H
 #define _REDSHIFT_CONTINUUM_MANAGER_H
 
+#include <cmath>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
-
-#include <cmath>
 
 namespace NSEpic
 

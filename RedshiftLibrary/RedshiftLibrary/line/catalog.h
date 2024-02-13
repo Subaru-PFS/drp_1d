@@ -39,12 +39,13 @@
 #ifndef _REDSHIFT_LINE_CATALOG_
 #define _REDSHIFT_LINE_CATALOG_
 
+#include <string>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/line/linedetected.h"
-#include <string>
-#include <vector>
 
 namespace NSEpic {
 class CSpectrumFluxCorrectionMeiksin;

@@ -36,11 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include <climits>
+
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
-
-#include <climits>
+#include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
 using namespace NSEpic;
 

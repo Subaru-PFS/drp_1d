@@ -36,14 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/svdfitter.h"
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/line/linetags.h"
-#include "RedshiftLibrary/processflow/context.h"
-
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_vector.h>
+
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/linemodel/svdfitter.h"
+#include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
 using namespace std;

@@ -39,11 +39,12 @@
 #ifndef _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 #define _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
+#include <vector>
 
 #include <boost/filesystem.hpp>
-#include <vector>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 class CSpectrumFluxCorrectionMeiksin;

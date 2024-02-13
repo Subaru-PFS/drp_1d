@@ -39,18 +39,18 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
+#include <map>
+#include <memory>
+#include <string>
+
+#include <gsl/gsl_errno.h>
+
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-
-#include <gsl/gsl_errno.h>
-
-#include <map>
-#include <memory>
-#include <string>
 
 #define Context (CProcessFlowContext::GetInstance())
 
@@ -83,7 +83,8 @@ public:
   setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog) {
     m_inputContext->setPhotBandCatalog(photBandCatalog);
   }
-  void setLineCatalog(const std::string &spectrumModel, const std::string &method,
+  void setLineCatalog(const std::string &spectrumModel,
+                      const std::string &method,
                       const std::shared_ptr<CLineCatalog> &catalog) {
     m_inputContext->setLineCatalog(spectrumModel, method, catalog);
   }

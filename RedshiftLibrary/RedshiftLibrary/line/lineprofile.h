@@ -39,12 +39,14 @@
 #ifndef _REDSHIFT_LINE_PROFILE_
 #define _REDSHIFT_LINE_PROFILE_
 
+#include <cmath>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
-#include <cmath>
-#include <string>
+
 namespace NSEpic {
 class CSpectrumFluxCorrectionMeiksin;
 /**

@@ -36,9 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include <boost/range/combine.hpp>
+
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
@@ -60,15 +63,12 @@ COperatorTemplateFittingBase::COperatorTemplateFittingBase(
 Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
 
   Float64 cstLog = 0.0;
-  for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin());
-       std::get<0>(it) != m_spectra.end();
-       ++std::get<0>(it), ++std::get<1>(it)) {
-    const auto &spectrum = **std::get<0>(it);
-    const auto &lambdaRange = **std::get<1>(it);
-    const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
+  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+       boost::combine(m_spectra, m_lambdaRanges)) {
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        spectrum_ptr->GetSpectralAxis();
     const TFloat64List &error =
-        spectrum.GetFluxAxis().GetError().GetSamplesVector();
-    ;
+        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
 
     Int32 numDevs = 0;
 
@@ -76,8 +76,8 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
 
     Int32 imin;
     Int32 imax;
-    lambdaRange.getClosedIntervalIndices(spcSpectralAxis.GetSamplesVector(),
-                                         imin, imax);
+    lambdaRange_ptr->getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
     for (Int32 j = imin; j <= imax; j++) {
       numDevs++;
       sumLogNoise += log(error[j]);

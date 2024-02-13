@@ -37,13 +37,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -168,7 +169,8 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver", "tplCombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
@@ -180,13 +182,14 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "redshiftSolver", "tplCombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);
@@ -200,7 +203,8 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver", "tplCombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
@@ -212,13 +216,14 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "redshiftSolver", "tplCombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1545691054521061, 1e-6);
@@ -232,7 +237,8 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver", "tplCombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
@@ -244,13 +250,14 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "redshiftSolver", "tplCombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);
@@ -263,7 +270,8 @@ BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver", "tplCombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
@@ -275,13 +283,14 @@ BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "redshiftSolver", "tplCombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);

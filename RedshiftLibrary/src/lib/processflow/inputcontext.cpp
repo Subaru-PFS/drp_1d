@@ -36,14 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/processflow/inputcontext.h"
+#include <climits>
+
+#include <boost/range/combine.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include <climits>
+
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CParameterStore> paramStore)
@@ -87,31 +92,26 @@ void CInputContext::RebinInputs() {
       m_ParameterStore->hasToLogRebin(m_categories, fft_processing);
   if (!m_use_LogLambaSpectrum)
     return;
-
-  auto lambdaRange = m_lambdaRanges.begin();
-  for (auto spectrum_it = m_spectra.begin(); spectrum_it != m_spectra.end();
-       ++spectrum_it, ++lambdaRange) {
-
-    auto spectrum = *spectrum_it;
-    if (spectrum->GetSpectralAxis().IsLogSampled()) {
-      addRebinSpectrum(std::make_shared<CSpectrum>(spectrum->GetName()));
-      CSpectrumSpectralAxis spcWav = spectrum->GetSpectralAxis();
+  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+       boost::combine(m_spectra, m_lambdaRanges)) {
+    if (spectrum_ptr->GetSpectralAxis().IsLogSampled()) {
+      addRebinSpectrum(std::make_shared<CSpectrum>(spectrum_ptr->GetName()));
+      CSpectrumSpectralAxis spcWav = spectrum_ptr->GetSpectralAxis();
       spcWav.RecomputePreciseLoglambda(); // in case input spectral values have
-      // been rounded
+                                          // been rounded
 
       // Intersect with input lambdaRange and get indexes
       Int32 kstart = -1;
       Int32 kend = -1;
-      bool ret = (*lambdaRange)
-                     ->getClosedIntervalIndices(spcWav.GetSamplesVector(),
-                                                kstart, kend);
+      bool ret = lambdaRange_ptr->getClosedIntervalIndices(
+          spcWav.GetSamplesVector(), kstart, kend);
       if (!ret)
         THROWG(INTERNAL_ERROR,
                "LambdaRange borders are outside the spectralAxis range");
       // save into the rebinnedSpectrum
       m_rebinnedSpectra.back()->SetSpectralAndFluxAxes(
           spcWav.extract(kstart, kend),
-          spectrum->GetFluxAxis().extract(kstart, kend));
+          spectrum_ptr->GetFluxAxis().extract(kstart, kend));
       m_logGridStep =
           m_rebinnedSpectra.back()->GetSpectralAxis().GetlogGridStep();
     } else {
@@ -120,20 +120,16 @@ void CInputContext::RebinInputs() {
     }
   }
   Log.LogInfo(Formatter() << "loggrid step=" << m_logGridStep);
-  std::string category;
-  std::string errorRebinMethod = "rebinVariance";
+  std::string const errorRebinMethod = "rebinVariance";
   CSpectrumLogRebinning logReb(*this);
 
-  for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
-                                 m_rebinnedClampedLambdaRanges.begin());
-       std::get<0>(it) != m_spectra.end();
-       ++std::get<0>(it), ++std::get<1>(it), ++std::get<2>(it)) {
-    auto spectrum = *std::get<0>(it);
-    auto lambdaRange = *std::get<1>(it);
-    auto rebinnedClampedLambdaRange = *std::get<2>(it);
-    if (!spectrum->GetSpectralAxis().IsLogSampled())
+  for (auto const &[spectrum_ptr, lambdaRange_ptr,
+                    rebinnedClampedLambdaRange_ptr] :
+       boost::combine(m_spectra, m_lambdaRanges,
+                      m_rebinnedClampedLambdaRanges)) {
+    if (!spectrum_ptr->GetSpectralAxis().IsLogSampled())
       addRebinSpectrum(
-          logReb.loglambdaRebinSpectrum(spectrum, errorRebinMethod));
+          logReb.loglambdaRebinSpectrum(*spectrum_ptr, errorRebinMethod));
 
     TFloat64Range zrange;
     for (std::string cat : m_categories) {
@@ -144,7 +140,7 @@ void CInputContext::RebinInputs() {
     }
     // Initialize rebinned clamped lambda range
     m_rebinnedSpectra.back()->GetSpectralAxis().ClampLambdaRange(
-        *(lambdaRange), *(rebinnedClampedLambdaRange));
+        *lambdaRange_ptr, *rebinnedClampedLambdaRange_ptr);
   }
   return;
 }
@@ -207,20 +203,26 @@ void CInputContext::Init() {
         m_rebinnedClampedLambdaRanges.back());
   }
 
+  // clamp spectral axis at lambdaRange
+  for (auto const &[spectrum_ptr, lambdaRange_ptr, clampedLambdaRange_ptr] :
+       boost::combine(m_spectra, m_lambdaRanges, m_clampedLambdaRanges)) {
+    spectrum_ptr->GetSpectralAxis().ClampLambdaRange(*lambdaRange_ptr,
+                                                     *clampedLambdaRange_ptr);
+  }
+
   // validate spectra and initialize spectra continuum removal
-  for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin());
-       std::get<0>(it) != m_spectra.end();
-       ++std::get<0>(it), ++std::get<1>(it)) {
-    auto spectrum = *std::get<0>(it);
-    auto lambdaRange = *std::get<1>(it);
-    spectrum->ValidateSpectrum(*(lambdaRange), enableInputSpcCorrect);
-    spectrum->InitSpectrumContinuum(*m_ParameterStore);
+  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+       boost::combine(m_spectra, m_lambdaRanges)) {
+    spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect);
+    spectrum_ptr->InitSpectrumContinuum(*m_ParameterStore);
     // convolve IGM by LSF
 
     if (!m_igmcorrectionMeiksin->isConvolved() ||
         m_ParameterStore->Get<std::string>("lsf.lsfType") == "fromSpectrumData")
-      m_igmcorrectionMeiksin->convolveByLSF(spectrum->GetLSF(), *(lambdaRange));
+      m_igmcorrectionMeiksin->convolveByLSF(spectrum_ptr->GetLSF(),
+                                            *lambdaRange_ptr);
   }
+
   // insert extinction correction objects if needed
   m_TemplateCatalog->m_logsampling = 0;
   m_TemplateCatalog->m_orthogonal = 0;
@@ -232,41 +234,15 @@ void CInputContext::Init() {
 
   // validate log-lambda resampled spectra
   if (m_use_LogLambaSpectrum) {
-    for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
-                                   m_rebinnedSpectra.begin());
-         std::get<0>(it) != m_spectra.end();
-         ++std::get<0>(it), ++std::get<1>(it), ++std::get<2>(it)) {
-      auto spectrum = *std::get<0>(it);
-      auto lambdaRange = *std::get<1>(it);
-
-      auto rspectrum = *std::get<2>(it);
-      rspectrum->ValidateSpectrum(*(lambdaRange), enableInputSpcCorrect);
-      rspectrum->SetLSF(spectrum->GetLSF());
+    for (auto const &[spectrum_ptr, lambdaRange_ptr, rebinedSpectrum_ptr] :
+         boost::combine(m_spectra, m_lambdaRanges, m_rebinnedSpectra)) {
+      rebinedSpectrum_ptr->ValidateSpectrum(*lambdaRange_ptr,
+                                            enableInputSpcCorrect);
+      rebinedSpectrum_ptr->SetLSF(spectrum_ptr->GetLSF());
     }
   }
   // template orthogonalisation with linemodel
-OrthogonalizeTemplates();
-
-  // clamp spectral axis at lambdaRange
-  for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin(),
-                                 m_clampedLambdaRanges.begin());
-       std::get<0>(it) != m_spectra.end();
-       ++std::get<0>(it), ++std::get<1>(it), ++std::get<2>(it)) {
-    auto spectrum = *std::get<0>(it);
-
-    auto lambdaRange = *std::get<1>(it);
-    auto clampedLambdaRange = *std::get<2>(it);
-
-    spectrum->GetSpectralAxis().ClampLambdaRange(*(lambdaRange),
-                                                 *(clampedLambdaRange));
-
-    Int32 kstart, kend;
-    bool b = clampedLambdaRange->getClosedIntervalIndices(
-        spectrum->GetSpectralAxis().GetSamplesVector(), kstart, kend);
-    if (!b)
-      THROWG(INTERNAL_ERROR,
-             "No intersecton between spectral axis and lambda range");
-  }
+  OrthogonalizeTemplates();
 }
 
 void CInputContext::resetSpectrumSpecific() {

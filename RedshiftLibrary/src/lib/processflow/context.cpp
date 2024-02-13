@@ -36,16 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
-#include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/processflow/resultstore.h"
+#include <boost/filesystem.hpp>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
-
-#include <boost/filesystem.hpp>
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
 namespace bfs = boost::filesystem;
 

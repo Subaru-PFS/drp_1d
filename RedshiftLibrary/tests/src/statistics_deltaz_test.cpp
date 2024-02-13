@@ -36,6 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <fstream>
+#include <iostream>
+#include <istream>
+
+#include <boost/filesystem.hpp>
+#include <boost/math/special_functions.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
@@ -45,13 +53,6 @@
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 
-#include <boost/filesystem.hpp>
-#include <boost/math/special_functions.hpp>
-#include <fstream>
-#include <iostream>
-#include <istream>
-
-#include <boost/test/unit_test.hpp>
 using namespace NSEpic;
 using namespace std;
 

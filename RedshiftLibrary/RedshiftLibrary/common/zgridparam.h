@@ -39,10 +39,10 @@
 #ifndef _REDSHIFT_COMMON_ZGRIDPARAM_
 #define _REDSHIFT_COMMON_ZGRIDPARAM_
 
+#include <tuple>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-
-#include <tuple>
 
 using namespace std;
 namespace NSEpic {

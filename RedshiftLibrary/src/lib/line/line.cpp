@@ -36,14 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/line.h"
+#include <fstream>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
-#include <fstream>
 
 const std::map<CLine::EType, std::string> CLine::ETypeString = {
     {EType::nType_Absorption, "Abs"},

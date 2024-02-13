@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include <cmath>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/line/airvacuum.h"
-
-#include <cmath>
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -280,14 +280,18 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapFraction(
 /**
  *
  */
-bool CSpectrumSpectralAxis::ClampLambdaRange(
+void CSpectrumSpectralAxis::ClampLambdaRange(
     const TFloat64Range &range, TFloat64Range &clampedRange) const {
   TFloat64Range effectiveRange = GetLambdaRange();
 
   clampedRange = TFloat64Range();
 
-  if (range.GetIsEmpty() || effectiveRange.GetIsEmpty())
-    return false;
+  if (range.GetIsEmpty())
+    THROWG(INVALID_WAVELENGTH_RANGE, "lambda range is empty");
+
+  if (effectiveRange.GetIsEmpty())
+    THROWG(INVALID_SPECTRUM_WAVELENGTH,
+           "spectral axis has less than 2 samples");
 
   // Clamp lambda start
   Float64 start = range.GetBegin();
@@ -300,7 +304,10 @@ bool CSpectrumSpectralAxis::ClampLambdaRange(
     end = effectiveRange.GetEnd();
 
   clampedRange = TFloat64Range(start, end);
-  return true;
+
+  if (clampedRange.GetLength() <= 0.0)
+    THROWG(INVALID_WAVELENGTH_RANGE,
+           "lambda range clamped to spectral axis is empty");
 }
 
 /**

@@ -36,15 +36,17 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_matrix_double.h>
+#include <gsl/gsl_multifit_nlin.h>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_matrix_double.h>
-#include <gsl/gsl_multifit_nlin.h>
 
 using namespace NSEpic;
 
@@ -126,7 +128,8 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(inputCtx->getSpectra().size() == 0);
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver", "templateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver",
+                                      "templateFittingSolve",
                                       "solveResult") == false);
 
   spc->SetLSF(LSF);
@@ -194,11 +197,13 @@ BOOST_AUTO_TEST_CASE(context_test) {
   CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
   templateFittingSolve.Compute();
 
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver", "templateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver",
+                                      "templateFittingSolve",
                                       "solveResult") == true);
   Context.reset();
   BOOST_CHECK(Context.getSpectra().size() == 0);
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver", "templateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver",
+                                      "templateFittingSolve",
                                       "solveResult") == false);
 
   // GSL error

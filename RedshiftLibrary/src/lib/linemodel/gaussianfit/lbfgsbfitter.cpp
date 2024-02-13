@@ -36,9 +36,9 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
-
 #include <unsupported/Eigen/NumericalDiff>
+
+#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
 
 using namespace std;
 using namespace Eigen;

@@ -39,6 +39,12 @@
 #ifndef _REDSHIFT_LINEMODEL_FITTING_
 #define _REDSHIFT_LINEMODEL_FITTING_
 
+#include <memory>
+#include <unordered_set>
+
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
@@ -53,13 +59,6 @@
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
-
-#include <boost/shared_ptr.hpp>
-#include <memory>
-#include <unordered_set>
 
 namespace NSEpic {
 

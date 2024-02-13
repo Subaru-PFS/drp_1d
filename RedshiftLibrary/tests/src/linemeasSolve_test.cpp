@@ -36,11 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -235,12 +236,13 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver", "lineMeasSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver",
+                                               "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolver", "lineMeasSolve",
-                                                     "linemeas");
+      Context.GetResultStore()->GetLineModelSolution(
+          "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII;
   BOOST_CHECK_CLOSE(snrOII, 16.196486940733053, 1e-6);
@@ -258,12 +260,13 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver", "lineMeasSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver",
+                                               "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "lineMeasSolver", "lineMeasSolve",
-                                                     "linemeas");
+      Context.GetResultStore()->GetLineModelSolution(
+          "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII_DI;
   BOOST_CHECK_CLOSE(snrOII, 21.480993641608535, 1e-2);

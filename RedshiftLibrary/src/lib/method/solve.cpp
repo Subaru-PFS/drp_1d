@@ -46,8 +46,10 @@
 
 using namespace NSEpic;
 
-CSolve::CSolve(std::string stage, std::string name, TScopeStack &scope, std::string spectrumModel)
-    : m_categoryList({spectrumModel}), m_spectrumModelScope(scope, spectrumModel),
+CSolve::CSolve(std::string stage, std::string name, TScopeStack &scope,
+               std::string spectrumModel)
+    : m_categoryList({spectrumModel}),
+      m_spectrumModelScope(scope, spectrumModel),
       m_spectrumModel(spectrumModel), m_name(name), m_stage(stage) {}
 void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext) {}
 

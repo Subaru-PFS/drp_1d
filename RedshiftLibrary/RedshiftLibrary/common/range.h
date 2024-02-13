@@ -39,14 +39,14 @@
 #ifndef _REDSHIFT_COMMON_RANGE_
 #define _REDSHIFT_COMMON_RANGE_
 
+#include <cmath>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
-
-#include <cmath>
-#include <vector>
 
 namespace NSEpic {
 

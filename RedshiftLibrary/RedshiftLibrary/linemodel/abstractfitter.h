@@ -87,8 +87,8 @@ public:
       std::vector<std::pair<Int32, TInt32List>> const &idxLines);
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
-                                    
-                                          bool with_continuum);
+                                           bool with_continuum);
+
   Int32 m_cont_reestim_iterations = 0;
 
 protected:

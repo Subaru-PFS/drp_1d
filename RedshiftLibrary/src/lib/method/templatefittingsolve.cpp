@@ -58,7 +58,8 @@ using namespace std;
 
 CTemplateFittingSolve::CTemplateFittingSolve(TScopeStack &scope,
                                              string spectrumModel)
-    : CObjectSolve("redshiftSolver", "templateFittingSolve", scope, spectrumModel) {}
+    : CObjectSolve("redshiftSolver", "templateFittingSolve", scope,
+                   spectrumModel) {}
 
 std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     std::shared_ptr<const CInputContext> inputContext,
@@ -360,10 +361,10 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
                   [kz][kism]
                   [kigm]; // + resultXXX->ScaleMargCorrectionTplratios[][]?;
         }
-        Log.LogDetail("    templatefittingsolver: Pdfz combine - prepared merit "
-                      " #%d for model : %s",
-                      chisquarearray.chisquares.size() - 1,
-                      ((*it).first).c_str());
+        Log.LogDetail(
+            "    templatefittingsolver: Pdfz combine - prepared merit "
+            " #%d for model : %s",
+            chisquarearray.chisquares.size() - 1, ((*it).first).c_str());
       }
     }
   }
