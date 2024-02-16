@@ -21,7 +21,7 @@ pylibamazed should work on Linux and OS X.
 The pylibamazed algorithms are mainly developped in C++ and wrapped in Python. These algorithms are dependant on the thirdparties listed below. It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install these thirdparties. To install third parties using pylibamazed internal script, refer to the related [third parties](#Third-parties-install-guide) section.
 
 Required third parties:
-* [boost](https://www.boost.org/) >=1.57
+* [boost](https://www.boost.org/) ==1.74
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8

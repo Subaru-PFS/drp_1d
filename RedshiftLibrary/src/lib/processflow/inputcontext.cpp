@@ -41,7 +41,6 @@
 #include <boost/range/combine.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/tuple_like_boost_tuple.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
