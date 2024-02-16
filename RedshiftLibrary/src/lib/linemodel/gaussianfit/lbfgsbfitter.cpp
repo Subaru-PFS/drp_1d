@@ -88,12 +88,9 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
 void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
                                              ValueType &val) const {
 
-  TFloat64List amps;
-  Float64 redshift;
-  CPolynomCoeffsNormalized pCoeffs;
-  std::tie(amps, redshift, pCoeffs) = unpack(x);
+  CPolynomCoeffsNormalized pCoeffs = unpack(x);
 
-  val(0, 0) = ComputeLeastSquare(amps, redshift, pCoeffs);
+  val(0, 0) = ComputeLeastSquare(pCoeffs);
 
   Log.LogDebug(Formatter() << "LeastSquare = " << val(0, 0));
 }
@@ -130,7 +127,7 @@ coeffs= "
 }
 */
 
-std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
+CPolynomCoeffsNormalized
 CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
   // unpack param vector
@@ -159,21 +156,36 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     }
   }
 
-  Float64 redshift = m_redshift;
   if (m_fitter->m_enableLambdaOffsetsFit) {
-    redshift += (1.0 + m_redshift) * x[m_lbdaOffset_idx] * m_normLbdaOffset;
+    const Float64 delta_offset = x[m_lbdaOffset_idx] * m_normLbdaOffset;
+    Log.LogDebug(Formatter() << "lambda offset = " << delta_offset);
+    Float64 const redshift = m_redshift + (1.0 + m_redshift) * delta_offset;
     Log.LogDebug(Formatter() << "redshift=" << redshift);
+    for (Int32 eltIndex : *m_EltsIdx) {
+      auto &elt = m_fitter->getElementList()[eltIndex];
+      for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
+        Float64 offset = elt->GetLines()[line_idx].GetOffset();
+        offset /= SPEED_OF_LIGHT_IN_VACCUM;
+        offset += (1 + offset) * delta_offset;
+        offset *= SPEED_OF_LIGHT_IN_VACCUM;
+        elt->SetOffset(line_idx, offset);
+
+        // set redshift in SYMIGM profiles
+        const TInt32List &igm_indices = elt->getIgmLinesIndices();
+        for (Int32 idx : igm_indices) {
+          auto igmp = elt->GetSymIgmParams();
+          igmp.m_redshift = redshift;
+          elt->SetSymIgmParams(igmp, idx);
+        }
+      }
+    }
   }
 
-  // set redshift in SYMIGM profiles
+  // reset the support (lines outside range)
   for (Int32 eltIndex : *m_EltsIdx) {
-    auto &elt = m_fitter->getElementList()[eltIndex];
-    const TInt32List &igm_indices = elt->getIgmLinesIndices();
-    for (Int32 idx : igm_indices) {
-      auto igmp = elt->GetSymIgmParams();
-      igmp.m_redshift = redshift;
-      elt->SetSymIgmParams(igmp, idx);
-    }
+    auto &elt_ptr = m_fitter->getElementList()[eltIndex];
+    elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
+                            m_fitter->getLambdaRange());
   }
 
   CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
@@ -185,11 +197,10 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
                              << pCoeffs.a1 << " " << pCoeffs.a2);
   }
 
-  return std::make_tuple(std::move(amps), redshift, std::move(pCoeffs));
+  return pCoeffs;
 }
 
 Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
-    const TFloat64List &amps, Float64 redshift,
     const CPolynomCoeffsNormalized &pCoeffs) const {
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
@@ -207,7 +218,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
       auto &elt = m_fitter->getElementList()[eltIndex];
       // linemodel value
       Float64 mval =
-          elt->getModelAtLambda(xi, redshift, (*m_continuumFluxAxis)[idx]);
+          elt->getModelAtLambda(xi, m_redshift, (*m_continuumFluxAxis)[idx]);
       fval += mval;
     }
 
@@ -454,6 +465,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
 
+  // TODO adapt bounds to lambdaRange (if line goes out of border #8669)
   if (m_enableLambdaOffsetsFit) {
     // offset bounds
     lb[lbdaOffset_param_idx] =
@@ -624,7 +636,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     for (Int32 eltIndex : EltsIdx) {
       auto &elt = getElementList()[eltIndex];
       for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-        Float64 offset = elt->GetOffset(line_idx);
+        Float64 offset = elt->GetLines()[line_idx].GetOffset();
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
         offset +=
             (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;

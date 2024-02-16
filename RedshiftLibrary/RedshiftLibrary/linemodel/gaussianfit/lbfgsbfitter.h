@@ -99,10 +99,8 @@ public:
     const CPolynomCoeffsNormalized &getPcoeffs() const { return m_pCoeffs; };
 
   private:
-    std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
-    unpack(const VectorXd &x) const;
-    Float64 ComputeLeastSquare(const TFloat64List &amps, Float64 redshift,
-                               const CPolynomCoeffsNormalized &pCoeffs) const;
+    CPolynomCoeffsNormalized unpack(const VectorXd &x) const;
+    Float64 ComputeLeastSquare(const CPolynomCoeffsNormalized &pCoeffs) const;
 
     Float64 ComputeLeastSquareAndGrad(const TFloat64List &amps,
                                       Float64 redshift,
