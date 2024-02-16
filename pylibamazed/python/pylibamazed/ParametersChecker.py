@@ -269,6 +269,7 @@ class ParametersChecker:
 
         self._check_templateFittingSolve_ism(object_type)
         self._check_templateFittingSolve_photometry_weight(object_type)
+        self._check_templateFittingSolve_exclusive_fft_photometry(object_type)
 
     def _check_templateFittingSolve_ism(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
@@ -284,6 +285,16 @@ class ParametersChecker:
             f"object {object_type} TemplateFittingSolve photometry weight",
             f"object {object_type} TemplateFittingSolve photometry weight"
         )
+
+    def _check_templateFittingSolve_exclusive_fft_photometry(self, object_type: str) -> None:
+        activateFft = self.accessor.get_template_fitting_fft(object_type)
+        activatePhotometry = self.accessor.get_template_fitting_photometry_enabled(
+            object_type)
+        if activateFft and activatePhotometry:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER_FILE,
+                f"Template fitting: cannot activate both fft and photometry. Please deactivate templateFittingSolve.fftProcessing or templateFittingSolve.enablePhotometry on spectrum model {object_type}"
+            )
 
     def _check_templateCombinationSolve_section(self, object_type: str) -> None:
         self._check_dependant_parameter_presence(
@@ -314,6 +325,7 @@ class ParametersChecker:
         self._check_linemodelsolve_continuumremoval(object_type)
         self._check_linemodelsolve_continuumreestimation(object_type)
 
+        self._check_lineModelSolve_exclusive_fft_photometry(object_type)
         self._check_linemodelsolve_continuumfit_section(object_type)
         self._check_linemodelsolve_continuumfit_ism(object_type)
         self._check_linemodelsolve_secondpass_section(object_type)
@@ -328,7 +340,7 @@ class ParametersChecker:
     def _check_linemodelsolve_section(self, object_type: str):
         self._check_dependant_parameter_presence(
             self.accessor.get_redshift_solver_method(object_type) == "lineModelSolve",
-            self.accessor.get_linemodel_solver_section(object_type) is not None,
+            self.accessor.get_linemodel_solve_section(object_type) is not None,
             error_message=f"lineModelSolve for object {object_type}",
             warning_message=f"object {object_type} lineModelSolve"
         )
@@ -382,6 +394,15 @@ class ParametersChecker:
             error_message=f"object {object_type} lineModelSolve continuumReestimation",
             warning_message=f"object {object_type} lineModelSolve continuumReestimation"
         )
+
+    def _check_lineModelSolve_exclusive_fft_photometry(self, object_type: str) -> None:
+        activateContinuumFft = self.accessor.get_linemodel_continuumfit_fft(object_type)
+        activatePhotometry = self.accessor.get_line_model_photometry(object_type)
+        if activateContinuumFft and activatePhotometry:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER_FILE,
+                f"Line model solve: cannot activate both fft and photometry. Please deactivate lineModelSolve.continuumFit.fftProcessing or lineModelSolve.enablePhotometry on spectrum model {object_type}"
+            )
 
     def _check_linemodelsolve_continuumfit_section(self, object_type):
         self._check_dependant_parameter_presence(

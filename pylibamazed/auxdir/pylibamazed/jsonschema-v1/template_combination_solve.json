@@ -69,10 +69,6 @@
       ],
       "title": "Pdf combination method",
       "description": "At each z: \n * **bestchi2**: select the max of the pdfs \n * **marg**: marginalize the pdfs (over templates and all parameters)"
-    },
-    "enablephotometry": {
-      "type": "boolean",
-      "description": "Enable the use of photometry data"
     }
   }
 }
