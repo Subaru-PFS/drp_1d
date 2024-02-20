@@ -97,7 +97,7 @@ protected:
 
   void resetElementsFittingParam();
 
-  void resetLambdaOffsets();
+  void resetLambdaOffsets() { m_ElementsVector->resetLambdaOffsets(); };
 
   void fitLyaProfile(Float64 redshift);
 

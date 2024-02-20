@@ -108,15 +108,15 @@ CLineModelElement::CLineModelElement(
   SetElementAmplitude(NAN, NAN);
 }
 
-void CLineModelElement::reset() {
-  // init the fitted amplitude values and related variables
-  m_ElementParam->m_FittedAmplitudes.assign(GetSize(), NAN);
-  m_ElementParam->m_FittedAmplitudesStd.assign(GetSize(), NAN);
+void TLineModelElementParam::resetFittingParams() {
 
-  SetFittingGroupInfo(undefStr);
-  m_ElementParam->m_sumGauss = NAN;
-  m_ElementParam->m_sumCross = NAN;
-  m_ElementParam->m_dtmFree = NAN;
+  m_FittedAmplitudes.assign(size(), NAN);
+  m_FittedAmplitudesStd.assign(size(), NAN);
+  m_fittingGroupInfo = undefStr;
+  m_ampOffsetsCoeffs = TPolynomCoeffs();
+  m_sumGauss = NAN;
+  m_sumCross = NAN;
+  m_dtmFree = NAN;
 }
 
 Int32 TLineModelElementParam::getLineIndex(Int32 line_id) const {

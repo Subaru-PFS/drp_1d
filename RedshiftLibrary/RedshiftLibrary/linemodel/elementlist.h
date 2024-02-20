@@ -158,6 +158,11 @@ public:
     return m_ElementsParams;
   }
 
+  void resetLambdaOffsets() {
+    for (auto param : m_ElementsParams)
+      param->resetOffset();
+  }
+
 private:
   std::vector<CLineModelElementList> m_ElementsVector;
   std::vector<TLineModelElementParam_ptr> m_ElementsParams;

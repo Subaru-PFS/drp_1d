@@ -91,6 +91,8 @@ struct TLineModelElementParam {
   CLine::EType m_type;
   bool m_isEmission;
 
+  void resetFittingParams();
+
   Float64 getVelocity() {
     return m_isEmission ? m_VelocityEmission : m_VelocityAbsorption;
   }
@@ -135,6 +137,13 @@ struct TLineModelElementParam {
     else
       for (auto index : m_asymLineIndices)
         m_Lines[index].SetSymIgmFit(val);
+  }
+
+  void SetOffset(Int32 line_index, Float64 val) { m_Offsets[line_index] = val; }
+
+  void resetOffset() {
+    for (Int32 line_idx = 0; line_idx != size(); ++line_idx)
+      SetOffset(line_idx, m_Lines[line_idx].GetOffset());
   }
 
   void setAmplitudes(Float64 A, Float64 AStd,
@@ -209,7 +218,7 @@ public:
   CLineModelElement(const TLineModelElementParam_ptr elementParam,
                     const std::string &widthType);
 
-  void reset();
+  void reset() { m_ElementParam->resetFittingParams(); };
 
   Float64 GetObservedPosition(Int32 line_index, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -585,7 +594,7 @@ inline void CLineModelElement::SetAllOffsetsEnabled(Float64 val) {
 }
 
 inline void CLineModelElement::SetOffset(Int32 line_index, Float64 val) {
-  m_ElementParam->m_Offsets[line_index] = val;
+  m_ElementParam->SetOffset(line_index, val);
 }
 
 inline void CLineModelElement::SetLineProfile(Int32 line_index,
