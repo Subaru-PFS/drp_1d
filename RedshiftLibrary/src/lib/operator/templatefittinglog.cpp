@@ -587,7 +587,6 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       result->LogPrior[fullResultIdx] = logprior;
       result->FitEbmvCoeff[fullResultIdx] = subresult->FitEbmvCoeff[isubz];
       result->FitMeiksinIdx[fullResultIdx] = subresult->FitMeiksinIdx[isubz];
-      result->Status[fullResultIdx] = subresult->Status[isubz];
 
       for (Int32 kism = 0;
            kism < result->ChiSquareIntermediate[fullResultIdx].size(); kism++) {
@@ -892,7 +891,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   }
   for (Int32 k = 0; k < result->Redshifts.size(); k++) {
     result->Overlap[k] = TFloat64List(1, 1.0);
-    result->Status[k] = nStatus_OK;
   }
   result->ChiSquare = bestChi2;
   result->FitAmplitude = bestFitAmp;

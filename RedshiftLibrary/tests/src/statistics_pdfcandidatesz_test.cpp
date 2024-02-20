@@ -373,6 +373,20 @@ BOOST_AUTO_TEST_CASE(getCandidateRobustGaussFit_test) {
                     precision);
 }
 
+BOOST_AUTO_TEST_CASE(getCandidateGaussFit_test) {
+  TFloat64List valprobalog = {0.2, 0.8, 0.2};
+  TFloat64Range zrange(2.1, 5.1);
+  std::shared_ptr<TCandidateZ> candidate = std::make_shared<TCandidateZ>();
+  candidate->Redshift = 1.;
+
+  // no enclosing interval
+  TRedshiftList center_redshifts = {2.0, 3.0, 5.0};
+  CPdfCandidatesZ zcand_op = CPdfCandidatesZ(center_redshifts);
+  BOOST_CHECK_THROW(zcand_op.getCandidateSumTrapez(
+                        center_redshifts, valprobalog, zrange, candidate),
+                    GlobalException);
+}
+
 BOOST_AUTO_TEST_CASE(computeCandidatesDeltaz) {
   TRedshiftList redshifts = {1.0, 2.0};
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(redshifts);

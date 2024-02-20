@@ -1244,7 +1244,6 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
     Int32 imax;
     getLambdaRange().getClosedIntervalIndices(
         spcSpectralAxis.GetSamplesVector(), imin, imax);
-
     Int32 numDevs = std::abs(imax - imin + 1);
     for (Int32 j = imin; j <= imax; j++)
       sumLogNoise += log(ErrorNoContinuum[j]);

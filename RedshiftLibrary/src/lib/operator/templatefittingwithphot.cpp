@@ -128,7 +128,6 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
             lambdaRange_restframe, mskRebined);
 
     if (overlapFraction < 1.0) {
-      // status = nStatus_NoOverlap;
       THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
              Formatter() << "tpl overlap too small: " << overlapFraction);
     }

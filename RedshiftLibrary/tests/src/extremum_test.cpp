@@ -84,14 +84,14 @@ BOOST_AUTO_TEST_CASE(Extremum1) {
   peaks1.SetMaxPeakCount(2);
   peaks1.SetXRange(TFloat64Range(-10.0, 10.0));
 
-  peaks1.Find(x, y, maxPoint);
+  peaks1.Find(x, y, false, maxPoint);
   check_points(maxPoint, TPointList({{0.4, 9}, {0.8, 8}}));
   maxPoint.clear();
-  peaks1.Find(x, y_2, maxPoint);
+  peaks1.Find(x, y_2, false, maxPoint);
   check_points(maxPoint, TPointList({{0.4, 9}, {0.8, 8}}));
 
   maxPoint.clear();
-  BOOST_CHECK_THROW(peaks1.Find(x_empty, y, maxPoint), GlobalException);
+  BOOST_CHECK_THROW(peaks1.Find(x_empty, y, true, maxPoint), GlobalException);
   print_point(maxPoint);
 }
 
@@ -111,20 +111,21 @@ BOOST_AUTO_TEST_CASE(Extremum_PlankDetection) {
   Float64 radius = 0.005;
   peaks1.SetMaxPeakCount(2);
   peaks1.SetXRange(TFloat64Range(-10.0, 10.0));
+  bool isFirstPass = false;
 
-  peaks1.Find(x, y_plank, maxPoint);
+  peaks1.Find(x, y_plank, isFirstPass, maxPoint);
   check_points(maxPoint, TPointList({{0.3, 9}, {0.8, 8}}));
 
   maxPoint.clear();
-  peaks1.Find(x, y_plank_chair, maxPoint);
+  peaks1.Find(x, y_plank_chair, isFirstPass, maxPoint);
   check_points(maxPoint, TPointList({{0.1, 9.5}, {0.8, 8}}));
 
   maxPoint.clear();
-  peaks1.Find(x, y_plank_stair, maxPoint);
+  peaks1.Find(x, y_plank_stair, isFirstPass, maxPoint);
   check_points(maxPoint, TPointList({{0.5, 9.5}, {0.8, 8}}));
 
   maxPoint.clear();
-  peaks1.Find(x, y_plank_low, maxPoint);
+  peaks1.Find(x, y_plank_low, isFirstPass, maxPoint);
   check_points(maxPoint, TPointList({{0.5, 9.5}, {0.8, 8}}));
 }
 

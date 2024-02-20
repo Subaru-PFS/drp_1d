@@ -65,7 +65,7 @@ public:
   void SetXRange(const TFloat64Range &r);
   void SetMeritCut(Float64 n);
   bool Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
-            TPointList &maxPoint) const;
+            const bool isFirstpass, TPointList &maxPoint) const;
   bool DefaultExtremum(const TFloat64List &xAxis, const TFloat64List &yAxis,
                        TPointList &maxPoint);
 

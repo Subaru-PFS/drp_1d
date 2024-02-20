@@ -238,14 +238,11 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
     minFlux = std::min(std::abs(m_Samples[i]), std::abs(minFlux));
   }
   if (minFlux == DBL_MAX) {
-    Flag.warning(WarningCode::CORRECT_SPECTRUM_NOMINFLUX,
-                 Formatter() << "CSpectrumFluxAxis::" << __func__
-                             << ": unable to set minFlux value (=" << minFlux
-                             << "). Setting it to 0.");
-    minFlux = 0.0;
+    THROWG(SPECTRUM_CORRECTION_ERROR,
+           Formatter() << "Unable to find a min flux value.");
   }
   if (maxNoise == -DBL_MAX)
-    THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
+    THROWG(SPECTRUM_CORRECTION_ERROR, "Unable to find a max noise value");
 
   for (Int32 i = iMin; i < iMax; i++) {
     // check noise & flux

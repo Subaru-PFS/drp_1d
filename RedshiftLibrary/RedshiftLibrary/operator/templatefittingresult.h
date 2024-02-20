@@ -93,7 +93,6 @@ public:
 
   Float64 CstLog = NAN;
   std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra
-  COperator::TStatusList Status;
 };
 
 } // namespace NSEpic

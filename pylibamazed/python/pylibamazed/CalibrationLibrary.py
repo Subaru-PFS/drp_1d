@@ -61,7 +61,7 @@ from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   CTemplateCatalog, ErrorCode, GlobalException,
                                   MeiksinCorrection, TAsymParams,
                                   VecMeiksinCorrection, VecTFloat64List,
-                                  WarningCode, undefStr)
+                                  undefStr)
 
 zflag = CFlagWarning.GetInstance()
 
@@ -320,12 +320,8 @@ class CalibrationLibrary:
             missing_ids = lr_catalog_df["index"].isnull()
             if np.any(missing_ids):
                 wrong_lines = ' ; '.join([lineid for lineid in lr_catalog_df.strId[missing_ids]])
-                zflag.warning(
-                    WarningCode.LINE_RATIO_UNKNOWN_LINE.value,
-                    f"unknown line(s) in lineratio catalog {name}: {wrong_lines}"
-                )
-                # raise APIException(ErrorCode.LINE_RATIO_UNKNOWN_LINE, "unknown line ratio line in\
-                #      line ratio catalog")
+                raise APIException(ErrorCode.LINE_RATIO_UNKNOWN_LINE, f"unknown line ratio line in\
+                     line ratio catalog : {wrong_lines}")
 
             lr_catalog_df = (lr_catalog_df.loc[~missing_ids]).set_index("index")
             lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["lineModelSolve"])

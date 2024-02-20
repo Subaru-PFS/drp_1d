@@ -329,21 +329,6 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
       chisquarearray.redshifts = meritResult->Redshifts;
     }
 
-    // check chi2 results status for this template
-    {
-      bool foundBadStatus = 0;
-      for (Int32 kz = 0; kz < meritResult->Redshifts.size(); kz++) {
-        if (meritResult->Status[kz] != COperator::nStatus_OK) {
-          foundBadStatus = 1;
-          break;
-        }
-      }
-      if (foundBadStatus) {
-        THROWG(INTERNAL_ERROR, Formatter() << " Bad status result for tpl="
-                                           << (*it).first.c_str());
-      }
-    }
-
     CZPrior zpriorhelper;
     for (Int32 kism = 0; kism < nISM; kism++) {
       for (Int32 kigm = 0; kigm < nIGM; kigm++) {
@@ -386,8 +371,6 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
   TOperatorResultMap results =
       store->GetScopedPerTemplateResult(scopeStr.c_str());
 
-  // bool foundRedshiftAtLeastOnce = false;
-
   Int32 extremumCount = ranked_zCandidates.size();
 
   auto firstResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
@@ -404,27 +387,12 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
                  << "Size do not match among templatefitting results, for tpl="
                  << r.first.c_str());
     }
-
-    bool foundBadStatus = false;
-    bool foundBadRedshift = false;
     for (Int32 kz = 0; kz < TplFitResult->Redshifts.size(); kz++) {
-      if (TplFitResult->Status[kz] != COperator::nStatus_OK) {
-        foundBadStatus = true;
-        break;
-      }
       if (TplFitResult->Redshifts[kz] != redshifts[kz]) {
-        foundBadRedshift = true;
-        break;
+        THROWG(INTERNAL_ERROR, Formatter()
+                                   << "redshift vector is not the same for tpl="
+                                   << r.first.c_str());
       }
-    }
-    if (foundBadStatus) {
-      THROWG(INTERNAL_ERROR, Formatter() << "Found bad status result for tpl="
-                                         << r.first.c_str());
-    }
-    if (foundBadRedshift) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "redshift vector is not the same for tpl="
-                                 << r.first.c_str());
     }
   }
 

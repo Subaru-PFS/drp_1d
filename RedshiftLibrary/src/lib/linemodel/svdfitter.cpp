@@ -107,7 +107,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     nddl += TPolynomCoeffs::degree + 1;
 
   if (n < nddl) {
-    Flag.warning(WarningCode::LINEARFIT_RANK_DEFICIENT,
+    Flag.warning(WarningCode::LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,
                  Formatter() << __func__ << " SVD ill ranked:"
                              << " number of samples = " << n
                              << ", number of parameters to fit = " << nddl);

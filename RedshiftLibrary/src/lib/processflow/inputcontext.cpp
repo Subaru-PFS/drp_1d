@@ -102,11 +102,8 @@ void CInputContext::RebinInputs() {
       // Intersect with input lambdaRange and get indexes
       Int32 kstart = -1;
       Int32 kend = -1;
-      bool ret = lambdaRange_ptr->getClosedIntervalIndices(
-          spcWav.GetSamplesVector(), kstart, kend);
-      if (!ret)
-        THROWG(INTERNAL_ERROR,
-               "LambdaRange borders are outside the spectralAxis range");
+      lambdaRange_ptr->getClosedIntervalIndices(spcWav.GetSamplesVector(),
+                                                kstart, kend);
       // save into the rebinnedSpectrum
       m_rebinnedSpectra.back()->SetSpectralAndFluxAxes(
           spcWav.extract(kstart, kend),

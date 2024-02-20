@@ -155,7 +155,7 @@ void TLineModelResult::updateFromModel(
     Float64 ratio_thres = 1.5;
     if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
       Flag.warning(
-          WarningCode::STDESTIMATION_NO_MATCHING,
+          WarningCode::ESTIMATED_STD_FAR_FROM_INPUT,
           Formatter()
               << "  TLineModelResult::" << __func__
               << ": StDev estimation outside lines do not match: ratio = "
@@ -167,10 +167,9 @@ void TLineModelResult::updateFromModel(
                   ratioSTD, OutsideLinesResidualRMS, OutsideLinesInputStDevRMS);
     }
   } else {
-    Flag.warning(WarningCode::STDESTIMATION_FAILED,
-                 Formatter() << "  TLineModelResult::" << __func__
-                             << ": unable to get spectrum mean Standard "
-                                "Deviation estimations...");
+    THROWG(STDESTIMATION_FAILED, Formatter()
+                                     << "Unable to get spectrum mean Standard "
+                                        "Deviation estimations");
   }
 }
 

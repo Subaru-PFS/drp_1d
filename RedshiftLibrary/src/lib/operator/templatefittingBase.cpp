@@ -60,7 +60,6 @@ COperatorTemplateFittingBase::COperatorTemplateFittingBase(
  * wavelength range
  **/
 Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
-
   Float64 cstLog = 0.0;
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
        boost::combine(m_spectra, m_lambdaRanges)) {
@@ -185,7 +184,6 @@ void COperatorTemplateFittingBase::RebinTemplate(
 
   // Check for overlap rate
   if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-    // status = nStatus_NoOverlap;
     THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
            Formatter() << "tpl overlap rate is too small: " << overlapFraction);
   }

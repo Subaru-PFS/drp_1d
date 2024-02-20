@@ -100,9 +100,19 @@ CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
   if (other.CheckIsmIgmEnabled()) {
     TFloat64Range otherRange(other.m_SpectralAxis[other.m_IsmIgm_kstart],
                              other.m_SpectralAxis[other.m_Ism_kend]);
-    bool ret = otherRange.getClosedIntervalIndices(
-        m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_Ism_kend, false);
-    if (!ret) // complete range is masked
+    bool rangeIsMasked = false;
+    try {
+      otherRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(),
+                                          m_IsmIgm_kstart, m_Ism_kend);
+    } catch (const GlobalException &exception) {
+      if (exception.getErrorCode() ==
+          ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE) {
+        rangeIsMasked = true;
+      } else {
+        throw exception;
+      }
+    }
+    if (rangeIsMasked) // complete range is masked
     {
       m_IsmIgm_kstart = -1;
       m_Ism_kend = -1;
@@ -284,11 +294,9 @@ void CTemplate::InitIsmIgmConfig(
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin) {
   Int32 kstart, kend;
-  bool ret = lbdaRange.getClosedIntervalIndices(
-      m_SpectralAxis.GetSamplesVector(), kstart, kend);
-  if (!ret) {
-    THROWG(INTERNAL_ERROR, "lambda range outside spectral axis");
-  }
+  lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart,
+                                     kend);
+
   InitIsmIgmConfig(kstart, kend, redshift, ismCorrectionCalzetti,
                    igmCorrectionMeiksin);
 }

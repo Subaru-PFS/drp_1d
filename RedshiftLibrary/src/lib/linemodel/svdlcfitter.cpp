@@ -107,12 +107,10 @@ void CSvdlcFitter::doFit(Float64 redshift) {
  *
  * WARNING: not sure about fitting abs. lines with this method...
  */
-Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
+void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
     TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
     Float64 redshift) {
-  // boost::chrono::thread_clock::time_point start_prep =
-  // boost::chrono::thread_clock::now();
   *m_curObs = 0; // TODO dummy impl
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
@@ -120,23 +118,23 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   const auto &ErrorNoContinuum = getSpectrum().GetFluxAxis().GetError();
 
   if (EltsIdx.size() < 1)
-    return -1;
+    THROWG(EMPTY_LIST, Formatter() << "Input elements list is empty");
   Int32 nddl = EltsIdx.size() + 1 +
                std ::max(m_fitc_polyOrder + 1,
                          0); // number of param to be fitted=nlines+continuum
 
   Int32 imin = -1, imax = -1;
-  bool const b = getLambdaRange().getClosedIntervalIndices(
-      spectralAxis.GetSamplesVector(), imin, imax);
-  if (!b)
-    return -1;
-
+  getLambdaRange().getClosedIntervalIndices(spectralAxis.GetSamplesVector(),
+                                            imin, imax);
   ampsfitted.resize(nddl, 0.0);
   errorsfitted.resize(nddl, 1e12);
 
   Int32 n = imax - imin + 1;
   if (n < nddl)
-    return -1;
+    THROWG(LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,
+           Formatter() << " SVD ill ranked:"
+                       << " number of samples = " << n
+                       << ", number of parameters to fit = " << nddl);
 
   for (Int32 eltIdx : EltsIdx)
     getElementList().SetElementAmplitude(eltIdx, 1.0, 0.0);
@@ -163,26 +161,9 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     gsl_vector_set(w, i, 1.0 / (ei * ei));
   }
 
-  //
-  // boost::chrono::thread_clock::time_point stop_prep =
-  // boost::chrono::thread_clock::now();
-  // Float64 duration_prep =
-  // boost::chrono::duration_cast<boost::chrono::microseconds>(stop_prep -
-  // start_prep).count();
-  // boost::chrono::thread_clock::time_point start_fit =
-  // boost::chrono::thread_clock::now();
-
   gsl_multifit_linear_workspace *work = gsl_multifit_linear_alloc(n, nddl);
   gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
   gsl_multifit_linear_free(work);
-
-  //
-  // boost::chrono::thread_clock::time_point stop_fit =
-  // boost::chrono::thread_clock::now(); Float64 duration_fit =
-  // boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit -
-  // start_fit).count(); Log.LogInfo("LineModel linear fit: prep = %.3f - fit
-  // =
-  // %.3f", duration_prep, duration_fit);
 
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
@@ -233,7 +214,6 @@ Int32 CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   gsl_matrix_free(cov);
 
   chisquare = chisq;
-  return sameSign;
 }
 
 void CSvdlcFitter::fillMatrix(Int32 imin, Int32 imax, Float64 redshift,

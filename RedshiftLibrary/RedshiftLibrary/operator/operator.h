@@ -49,17 +49,6 @@ namespace NSEpic {
 class COperator {
 
 public:
-  enum EStatus {
-    nStatus_OK = 0,
-    nStatus_DataError,
-    nStatus_LoopError,
-    nStatus_InvalidProductsError,
-    nStatus_NoOverlap,
-    nStatus_UnSet
-  };
-
-  typedef std::vector<EStatus> TStatusList;
-
   COperator();
   virtual ~COperator() = 0;
 
