@@ -184,7 +184,8 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
   for (auto const &elt_ptr : getElementList()) {
     elt_ptr->resetAsymfitParams();
-    elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange());
+    elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange(),
+                            m_enlarge_line_supports);
   }
 }
 

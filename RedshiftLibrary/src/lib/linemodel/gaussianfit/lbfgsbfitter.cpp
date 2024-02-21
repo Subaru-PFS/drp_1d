@@ -324,6 +324,7 @@ void CLbfgsbFitter::resetSupport(Float64 redshift) {
     for (Int32 j = 0; j < getElementList().size(); j++) {
       getElementParam()[j]->m_VelocityEmission = m_velfitMaxE;
       getElementParam()[j]->m_VelocityAbsorption = m_velfitMaxA;
+      m_enlarge_line_supports = MAX_LAMBDA_OFFSET;
     }
   }
 

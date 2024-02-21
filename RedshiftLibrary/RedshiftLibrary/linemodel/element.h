@@ -238,13 +238,15 @@ public:
   CLine::EType GetElementType() const { return m_ElementParam->m_type; };
   bool IsEmission() const { return m_ElementParam->m_isEmission; };
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
-                      Float64 redshift, const TFloat64Range &lambdaRange);
+                      Float64 redshift, const TFloat64Range &lambdaRange,
+                      Float64 max_offset = 0.0);
   TInt32RangeList getSupport() const;
   TInt32RangeList getTheoreticalSupport() const;
   void EstimateTheoreticalSupport(Int32 line_index,
                                   const CSpectrumSpectralAxis &spectralAxis,
                                   Float64 redshift,
-                                  const TFloat64Range &lambdaRange);
+                                  const TFloat64Range &lambdaRange,
+                                  Float64 max_offset = 0.0);
   void SetOutsideLambdaRange();
 
   TInt32Range getSupportSubElt(Int32 line_index) const;

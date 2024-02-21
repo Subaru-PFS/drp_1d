@@ -163,6 +163,7 @@ protected:
   Float64 m_LambdaOffsetMin = -MAX_LAMBDA_OFFSET;
   Float64 m_LambdaOffsetMax = MAX_LAMBDA_OFFSET;
   Float64 m_LambdaOffsetStep = LAMBDA_OFFSET_STEP;
+  Float64 m_enlarge_line_supports = 0.0;
 
   Float64 m_absLinesLimit = 1.0;
 
