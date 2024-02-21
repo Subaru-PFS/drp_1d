@@ -593,8 +593,14 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   try {
     // v_xResult will be overwritten to be the best point found
     int niter = solver.minimize(myfunc, v_xResult, fx, lb, ub);
+  } catch (const AmzException &e) {
+    // throw again, since the exception was thrown inside amazed
+    // CLbfgsbFitter::CLeastSquare
+    throw;
   } catch (const std::exception &e) {
-    Flag.warning(WarningCode::LBFGSPP_ERROR, Formatter() << e.what());
+    // the error was raised from lbfgsbpp
+    Flag.warning(WarningCode::LBFGSPP_ERROR, Formatter()
+                                                 << "in LBFGSPP, " << e.what());
     // reset the result to the initial guess
     v_xResult = v_xGuess;
   }
