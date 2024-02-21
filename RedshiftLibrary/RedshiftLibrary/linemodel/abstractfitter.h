@@ -160,9 +160,9 @@ protected:
   bool m_enableAmplitudeOffsets = false;
   bool m_enableLambdaOffsetsFit = false;
 
-  Float64 m_LambdaOffsetMin = -400.0;
-  Float64 m_LambdaOffsetMax = 400.0;
-  Float64 m_LambdaOffsetStep = 25.0;
+  Float64 m_LambdaOffsetMin = -MAX_LAMBDA_OFFSET;
+  Float64 m_LambdaOffsetMax = MAX_LAMBDA_OFFSET;
+  Float64 m_LambdaOffsetStep = LAMBDA_OFFSET_STEP;
 
   Float64 m_absLinesLimit = 1.0;
 
