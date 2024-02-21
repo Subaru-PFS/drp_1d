@@ -123,8 +123,8 @@ push-rc-38-osx:
   dependencies:
     - wheel38-osx
 
-# Manylinux stages
-.build-manylinux:
+# Linux stages
+.build-linux:
   stage: build
   script:
     - source /venv/p39/bin/activate
@@ -138,7 +138,7 @@ push-rc-38-osx:
     untracked: true
 
 
-.build-coverage-manylinux:
+.build-coverage-linux:
   stage: build-coverage
   when: manual
   script:
@@ -157,7 +157,7 @@ push-rc-38-osx:
       - build/index.html
     expire_in: 1 week
 
-.test-manylinux:
+.test-linux:
   stage: test
   script:
     - cd build
@@ -166,13 +166,13 @@ push-rc-38-osx:
     policy: pull
     untracked: true
 
-.wheel-manylinux:
+.wheel-linux:
   stage: build-wheel
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
-    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
     - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
     - cd /
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
@@ -187,11 +187,11 @@ push-rc-38-osx:
     policy: pull
     untracked: true
 
-.pytest-manylinux:
+.pytest-linux:
   stage: python-test
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
-    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
     - pytest
   after_script:
     - source /venv/p$PYTHON_VERSION/bin/activate
@@ -200,17 +200,17 @@ push-rc-38-osx:
     policy: pull
     untracked: true
 
-.push-rc-manylinux:
+.push-rc-linux:
   stage: push-rc
   when: manual
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
   cache:
     policy: pull
     untracked: true
 
-.sonar-manylinux:
+.sonar-linux:
   stage: sonar
   when: manual
   allow_failure: true
@@ -230,7 +230,7 @@ push-rc-38-osx:
         -Dsonar.exclusions=*.xml
         -Dsonar.cxx.coverage.reportPath=build/coverage.xml
 
-.pages-manylinux:
+.pages-linux:
   stage: deploy
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
@@ -261,12 +261,12 @@ push-rc-38-osx:
 build-manylinux2014:
   extends:
     - .manylinux2014
-    - .build-manylinux
+    - .build-linux
 
 test-manylinux2014:
   extends:
     - .manylinux2014
-    - .test-manylinux
+    - .test-linux
 
 wheel38-manylinux2014:
   variables:
@@ -274,14 +274,14 @@ wheel38-manylinux2014:
   when: manual
   extends:
     - .manylinux2014
-    - .wheel-manylinux
+    - .wheel-linux
 
 wheel39-manylinux2014:
   variables:
     PYTHON_VERSION: "39"
   extends:
     - .manylinux2014
-    - .wheel-manylinux
+    - .wheel-linux
 
 pytest38-manylinux2014:
   variables:
@@ -289,21 +289,21 @@ pytest38-manylinux2014:
   when: manual
   extends:
     - .manylinux2014
-    - .pytest-manylinux
+    - .pytest-linux
 
 pytest39-manylinux2014:
   variables:
     PYTHON_VERSION: "39"
   extends:
     - .manylinux2014
-    - .pytest-manylinux
+    - .pytest-linux
 
 push-rc-38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
   extends:
     - .manylinux2014
-    - .push-rc-manylinux
+    - .push-rc-linux
   dependencies:
     - wheel38-manylinux2014
 
@@ -312,19 +312,19 @@ push-rc-39-manylinux2014:
     PYTHON_VERSION: "39"
   extends:
     - .manylinux2014
-    - .push-rc-manylinux
+    - .push-rc-linux
   dependencies:
     - wheel39-manylinux2014
 
 coverage-manylinux2014:
   extends:
     - .manylinux2014
-    - .build-coverage-manylinux
+    - .build-coverage-linux
 
 sonar-scanner-manylinux2014:
   extends:
     - .manylinux2014
-    - .sonar-manylinux
+    - .sonar-linux
   dependencies:
     - coverage-manylinux2014
 
@@ -333,4 +333,59 @@ pages:
     PYTHON_VERSION: "39"
   extends:
     - .manylinux2014
-    - .pages-manylinux
+    - .pages-linux
+
+# Rockylinux9 stages (euclid-like)
+.rockylinux:
+  image: $IMAGE_BUILD_DIR/euclid-rockylinux-9
+  when: manual
+  variables:
+    PLATFORM: "linux_x86_64"
+  cache:
+    key: "rockylinux-$CI_COMMIT_REF_SLUG"
+
+build-rockylinux:
+  extends:
+    - .rockylinux
+    - .build-linux
+
+test-rockylinux:
+  extends:
+    - .rockylinux
+    - .test-linux
+
+wheel39-rockylinux:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .rockylinux
+    - .wheel-linux
+
+pytest39-rockylinux:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .rockylinux
+    - .pytest-linux
+
+push-rc-39-rockylinux:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .rockylinux
+    - .push-rc-linux
+  dependencies:
+    - wheel39-rockylinux
+
+coverage-rockylinux:
+  extends:
+    - .rockylinux
+    - .build-coverage-linux
+
+sonar-scanner-rockylinux:
+  extends:
+    - .rockylinux
+    - .sonar-linux
+  dependencies:
+    - coverage-rockylinux
+
