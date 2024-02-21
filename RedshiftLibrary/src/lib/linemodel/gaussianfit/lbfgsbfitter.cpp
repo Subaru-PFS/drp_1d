@@ -321,14 +321,9 @@ void CLbfgsbFitter::resetSupport(Float64 redshift) {
 
   // set velocity at max value (to set largest line overlapping)
   if (Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit")) {
-    const Float64 velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
-        "lineModel.emVelocityFitMax");
-    const Float64 velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
-        "lineModel.absVelocityFitMax");
-
     for (Int32 j = 0; j < getElementList().size(); j++) {
-      getElementParam()[j]->m_VelocityEmission = velfitMaxE;
-      getElementParam()[j]->m_VelocityAbsorption = velfitMaxA;
+      getElementParam()[j]->m_VelocityEmission = m_velfitMaxE;
+      getElementParam()[j]->m_VelocityAbsorption = m_velfitMaxA;
     }
   }
 
