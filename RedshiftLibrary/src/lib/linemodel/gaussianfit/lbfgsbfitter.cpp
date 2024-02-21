@@ -159,8 +159,8 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
   if (m_fitter->m_enableLambdaOffsetsFit) {
     const Float64 delta_offset = x[m_lbdaOffset_idx] * m_normLbdaOffset;
     Log.LogDebug(Formatter() << "lambda offset = " << delta_offset);
-    Float64 const redshift = m_redshift + (1.0 + m_redshift) * delta_offset;
-    Log.LogDebug(Formatter() << "redshift=" << redshift);
+    /* Float64 const redshift = m_redshift + (1.0 + m_redshift) * delta_offset;
+    Log.LogDebug(Formatter() << "redshift=" << redshift); */
     for (Int32 eltIndex : *m_EltsIdx) {
       auto &elt_param = m_fitter->getElementParam()[eltIndex];
 
@@ -171,13 +171,13 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
         elt_param->setLambdaOffset(line_idx, offset);
 
-        // set redshift in SYMIGM profiles
+        /* // set redshift in SYMIGM profiles
         const TInt32List &igm_indices = elt_param->m_asymLineIndices;
         for (Int32 idx : igm_indices) {
           auto igmp = elt_param->GetSymIgmParams();
           igmp.m_redshift = redshift;
           elt_param->SetSymIgmParams(igmp, idx);
-        }
+        } */
       }
     }
   }
