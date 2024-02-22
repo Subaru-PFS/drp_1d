@@ -39,7 +39,7 @@
 
 import numpy as np
 from pylibamazed.Exception import APIException
-from pylibamazed.PdfHandler import buildPdfHandler
+from pylibamazed.PdfHandler import BuilderPdfHandler
 from pylibamazed.redshift import ErrorCode
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 
@@ -70,7 +70,9 @@ class Reliability:
         logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
         output.load_object_level(self.object_type)
 
-        pdf = buildPdfHandler(output, self.object_type, logsampling)
+        pdf = BuilderPdfHandler().add_params(
+            output, self.object_type, logsampling
+        ).build()
         pdf.convertToRegular(True, c_zgrid_zend)
 
         zgrid = pdf.redshifts

@@ -48,6 +48,7 @@ import pandas as pd
 from astropy.io import ascii, fits
 from pylibamazed.Exception import (AmazedError, AmazedErrorFromGlobalException,
                                    APIException)
+from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
 from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   CLineCatalog, CLineCatalogsTplRatio,
@@ -498,14 +499,31 @@ class CalibrationLibrary:
     def get_lines_ids(self, attributes):
         lines_ids = dict()
         lines = None
+        specs = ResultsSpecifications()
         for attr in attributes:
             attr_parts = attr.split(".")
-            if len(attr_parts) == 1:
+            if (
+                len(attr_parts) == 1
+                or attr_parts[0] == "error"
+                or "WarningFlags" in attr_parts[-1]
+            ):
                 continue
-            if attr_parts[1] == "linemeas":
+
+            # Identifying attribute by dataset
+            attr_name = attr_parts[-1]
+            if attr_name.isnumeric():
+                attr_name = attr_parts[-2]
+
+            attr_entry = specs.get_df_by_name(attr_name)
+            try:
+                dataset = attr_entry["dataset"].values[0]
+            except IndexError:
+                continue
+
+            if dataset == "linemeas":
                 linemeas_object = attr_parts[0]
                 l_method = "lineMeasSolve"
-            elif attr_parts[1] == "fitted_lines":
+            elif dataset == "fitted_lines":
                 linemeas_object = attr_parts[0]
                 l_method = "lineModelSolve"
             else:
@@ -515,7 +533,7 @@ class CalibrationLibrary:
                 lines = self.line_catalogs_df[linemeas_object][l_method]
             if lines is not None:
                 try:
-                    line_name = attr_parts[2]
+                    line_name = attr_parts[1]
                     line_id = lines[lines["Name"] == line_name].index[0]
                     lines_ids[line_name] = line_id
                 except Exception:

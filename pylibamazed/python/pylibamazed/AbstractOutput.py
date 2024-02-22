@@ -39,6 +39,7 @@
 import numpy as np
 import pandas as pd
 from pylibamazed.Exception import APIException
+from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
@@ -56,18 +57,18 @@ zlog = CLog.GetInstance()
 
 class AbstractOutput:
 
-    def __init__(self,
-                 parameters: Parameters,
-                 results_specifications=results_specifications_filename,
-                 extended_results=True):
+    def __init__(
+        self,
+        parameters: Parameters,
+        specs_path=results_specifications_filename,
+        extended_results=True
+    ):
         self.parameters = parameters
         self.spectrum_id = ''
         self.root_results = dict()
         self.object_results = dict()
         self.extended_results = extended_results
-        self.results_specifications = pd.read_csv(results_specifications,
-                                                  sep='\t'
-                                                  )
+        self.results_specifications = ResultsSpecifications(specs_path)
         self.object_types = self.parameters.get_spectrum_models()
         self.errors = dict()
         for object_type in self.object_types:
@@ -117,13 +118,14 @@ class AbstractOutput:
             self.load_candidate_level(object_type)
         self.cache = True
 
-    def get_attribute_short(self, attribute, lines_ids):
+    def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
+
         attr_parts = attribute.split(".")
         root = attr_parts[0]
-        data = attr_parts[-1]
+        attr_name = attr_parts[-1]
         rank = None
         if root == "classification":
-            return self.get_attribute(None, "classification", data, None)
+            return self.get_attribute(None, "classification", attr_name, None)
         elif root == "error":
             if self.has_error(attr_parts[1], attr_parts[2]):
                 return self.get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
@@ -133,44 +135,79 @@ class AbstractOutput:
                 return None
         elif root == "ContextWarningFlags":
             return self.get_attribute(None, "context_warningFlag", "ContextWarningFlags")
-        elif "WarningFlags" in data:
-            return self.get_attribute(root, "warningFlag", data)
+        elif "WarningFlags" in attr_name:
+            return self.get_attribute(root, "warningFlag", attr_name)
         else:
             object_type = root
-            if len(attr_parts) == 2:
-                rank = 0
-            elif len(attr_parts) == 3:
-                rank = int(attr_parts[1])
-        if len(attr_parts) < 4:
-            if self.has_attribute(object_type, "model_parameters", data, rank):
-                return self.get_attribute(object_type, "model_parameters", data, rank)
+            LINES_DATASETS = ['linemeas', 'fitted_lines']
+            # Exception for pdf attributes : values may need a pdfHandler
+            if "LogZPdf" in attr_name:
+                return self.get_pdf_attribute(object_type, attr_name, pdf_builder)
+            # If a rank is given, it is always the last element, therefore the attribute
+            # is the second-to-last element of the chain
+            if attr_name.isnumeric():
+                rank = int(attr_name)
+                attr_name = attr_parts[-2]
             else:
                 rank = None
-                for dataset in ["linemeas_parameters", "reliability"]:
-                    if self.has_attribute(object_type, dataset, data, rank):
-                        return self.get_attribute(object_type, dataset, data, rank)
+
+            # "attr_name" refers to the column "name" in the results.specifications,
+            # we're looking for the corresponding details of that "name"
+            attribute_entry = self.results_specifications.get_df_by_name(attr_name)
+            dataset = attribute_entry["dataset"].values[0]
+
+            if dataset == "model_parameters" and rank is None:
+                rank = 0   # Exception for model_parameters where no rank is actually rank 0
+            if dataset not in LINES_DATASETS:
+                if self.has_attribute(object_type, dataset, attr_name, rank):
+                    return self.get_attribute(object_type, dataset, attr_name, rank)
+            else:
+                line_name = attr_parts[1]
+                col_name = attr_name
+                if line_name not in lines_ids:
+                    raise APIException(
+                        ErrorCode.INTERNAL_ERROR,
+                        f"Line {line_name}  not found in {lines_ids}"
+                    )
+                if dataset == 'linemeas':
+                    index_col = "LinemeasLineID"
+                else:
+                    index_col = "FittedLineID"
+                fitted_lines_attr = self.get_attribute(
+                    object_type, dataset, col_name, rank)
+                fitted_lines_idx = self.get_attribute(
+                    object_type, dataset, index_col, rank)
+                df = pd.DataFrame(
+                    {"idx": fitted_lines_idx, col_name: fitted_lines_attr}
+                ).set_index("idx")
+                return df.at[lines_ids[line_name], col_name]
+            return None
+
+    def get_pdf_attribute(self, object_type, attribute, pdf_builder):
+        """
+        Get a pdf related attribute and convert value to regular if necessary.
+
+        :param object_type: type of astronomical object (galaxy, star, qso, etc.)
+        :type object_type: str
+        :param attribute: name of the main attribute to extract
+        :type attribute: str
+        :param pdf_builder: builder for a PdfHandler object
+        :type pdf_builder: pylibamazed.pdfHandler.BuilderPdfHandler
+        """
+        if not self.cache:
+            self.load_object_level(object_type)
+        pdfHandle = pdf_builder.add_params(
+            self,
+            object_type,
+            self.parameters.get_redshift_sampling(object_type) == "log"
+        ).build()
+        if "Native" not in attribute:
+            pdfHandle.convertToRegular()
+        if "ZGrid" in attribute:
+            pdf_attribute = pdfHandle.redshifts
         else:
-            dataset = attr_parts[1]
-            line_name = attr_parts[2]
-            col_name = attr_parts[3]
-            object_type = root
-            if line_name not in lines_ids:
-                raise APIException(ErrorCode.INTERNAL_ERROR,
-                                   f"Line {line_name}  not found in {lines_ids}")
-            if len(attr_parts) == 4:
-                rank = None
-                index_col = "LinemeasLineID"
-            else:
-                rank = int(attr_parts[4])
-                index_col = "FittedLineID"
-            fitted_lines_attr = self.get_attribute(
-                object_type, dataset, col_name, rank)
-            fitted_lines_idx = self.get_attribute(
-                object_type, dataset, index_col, rank)
-            df = pd.DataFrame(
-                {"idx": fitted_lines_idx, col_name: fitted_lines_attr}).set_index("idx")
-            return df.at[lines_ids[line_name], col_name]
-        return None
+            pdf_attribute = pdfHandle.valProbaLog
+        return pdf_attribute
 
     def get_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
@@ -287,14 +324,12 @@ class AbstractOutput:
             return 0
 
     def get_level(self, dataset):
-        rs = self.results_specifications
-        rs = rs[rs.dataset == dataset]
-        return rs.level.unique()[0]
+        dataset_entries = self.results_specifications.get_df_by_dataset(dataset)
+        return dataset_entries["level"].unique()[0]
 
     def filter_datasets(self, level):
-        rs = self.results_specifications
         # filter by level
-        rs = rs[rs["level"] == level]
+        rs = self.results_specifications.get_df_by_level(level)
         all_datasets = list(rs["dataset"].unique())
 
         # filter by extended_results
@@ -305,16 +340,17 @@ class AbstractOutput:
         filtered_datasets = []
         for ds in all_datasets:
             ds_attributes = rs[rs["dataset"] == ds]
-            extended_results = all(ds_row["extended_results"] for index,
-                                   ds_row in ds_attributes.iterrows())
+            extended_results = all(
+                ds_row["extended_results"] for index,
+                ds_row in ds_attributes.iterrows()
+            )
             if not extended_results:
                 filtered_datasets.append(ds)
 
         return rs, filtered_datasets
 
     def filter_dataset_attributes(self, ds_name, object_type=None, method=None):
-        rs = self.results_specifications
-        ds_attributes = rs[rs["dataset"] == ds_name]
+        ds_attributes = self.results_specifications.get_df_by_dataset(ds_name)
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:

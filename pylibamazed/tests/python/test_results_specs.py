@@ -36,21 +36,53 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+
+
 import pandas as pd
-from pylibamazed.Paths import results_specifications_filename
+from pylibamazed.OutputSpecifications import ResultsSpecifications
+
+rs = ResultsSpecifications()
 
 
-class ResultsSpecifications:
-    def __init__(self, specs_path: str = results_specifications_filename):
-        self.rs = pd.read_csv(
-            specs_path, sep='\t', dtype={'format': object}
-        )
+def test_get_dataframe_by_criteria():
+    REDSHIFT_INDEX = [0]
+    MODEL_INDEXES = [50, 51]
+    METHOD_INDEX = [129]
+    name_data = {
+        "name": "Redshift",
+        "dataset": "model_parameters",
+        "extended_results": False,
+        "level": "candidate",
+        "OperatorResult_name": "Redshift",
+        "ResultStore_key": "extrema_results",
+        "hdf5_type": "f8"
+    }
+    name_df = pd.DataFrame(name_data, index=REDSHIFT_INDEX)
+    test_name_df = rs.get_df_by_name("Redshift")
+    assert test_name_df.equals(name_df)
 
-    def get_df_by_dataset(self, dataset: str):
-        return self.rs[self.rs["dataset"] == dataset]
+    dataset_data = {
+        "name": ["ModelLambda", "ModelFlux"],
+        "dataset": ["model<ObsID>", "model<ObsID>"],
+        "extended_results": [False, False],
+        "level": ["candidate", "candidate"],
+        "OperatorResult_name": ["ModelLambda[obs_id]", "ModelFlux[obs_id]"],
+        "ResultStore_key": ["extrema_results", "extrema_results"],
+        "hdf5_type": ["f8", "f8"]
+    }
+    dataset_df = pd.DataFrame(dataset_data, index=MODEL_INDEXES)
+    test_dataset_df = rs.get_df_by_dataset("model<ObsID>")
+    assert test_dataset_df.equals(dataset_df)
 
-    def get_df_by_level(self, level: str):
-        return self.rs[self.rs["level"] == level]
-
-    def get_df_by_name(self, name: str):
-        return self.rs[self.rs["name"] == name]
+    level_data = {
+        "name": "<MethodType>WarningFlags",
+        "dataset": "warningFlag",
+        "extended_results": False,
+        "level": "method",
+        "OperatorResult_name": "flagValue",
+        "ResultStore_key": "warningFlag",
+        "hdf5_type": "i"
+    }
+    level_df = pd.DataFrame(level_data, index=METHOD_INDEX)
+    test_level_df = rs.get_df_by_level("method")
+    assert test_level_df.equals(level_df)
