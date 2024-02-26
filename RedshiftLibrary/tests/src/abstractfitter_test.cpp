@@ -76,8 +76,8 @@ struct AbstractFitterFixture {
 
   CTestFitter initializeTestFitter(std::string method, std::string igmFit) {
     CAutoScope autoscope1(Context.m_ScopeStack, "l1");
-    CAutoScope autoscope2(Context.m_ScopeStack, "l2");
-    CAutoScope autoscope3(Context.m_ScopeStack, method);
+    CAutoScope autoscope2(Context.m_ScopeStack, "l2", ScopeType::STAGE);
+    CAutoScope autoscope3(Context.m_ScopeStack, method, ScopeType::METHOD);
     const std::string jsonString = createInputJson(method, igmFit);
     Context.LoadParameterStore(jsonString);
     CTestFitter testFitter(elementsVector, inputSpcs, lambdaRanges,

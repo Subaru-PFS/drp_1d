@@ -44,15 +44,12 @@
 
 using namespace NSEpic;
 
-CClassificationSolve::CClassificationSolve(TScopeStack &scope,
-                                           std::string spectrumModel)
-    : CSolve("classification", "classification", scope, spectrumModel) {}
+CClassificationSolve::CClassificationSolve() : CSolve("classification") {}
 
-std::shared_ptr<CSolveResult>
-CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                              std::shared_ptr<COperatorResultStore> resultStore,
-                              TScopeStack &scope) {
+std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
 
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
   std::map<std::string, std::weak_ptr<const CPdfSolveResult>> results;
   std::map<std::string, Float64> logEvidences;
   std::map<std::string, bool> hasResult;

@@ -90,7 +90,8 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
   std::string lsfType = "gaussianConstantWidth";
   Float64 width = 13.;
-  TScopeStack scopeStack;
+std:
+  shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
   store->Set("lsf.width", width);

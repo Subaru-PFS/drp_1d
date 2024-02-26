@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth) {
   CSpectrumSpectralAxis SpectralAxis(lbdaList);
   std::string lsfType = "gaussianConstantWidth";
   Float64 width = 1.09;
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
   store->Set("lsf.width", width);
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth) {
 }
 
 BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
   std::string lsfType = "gaussianConstantWidth";
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
   std::string lsfType = "gaussianConstantResolution";
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianNISPVSSPSF201707_test) {
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
   std::string lsfType = "gaussianNISPVSSPSF201707";

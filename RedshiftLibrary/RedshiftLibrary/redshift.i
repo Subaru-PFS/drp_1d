@@ -50,6 +50,7 @@
 %shared_ptr(CLog)
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CLogHandler)
+%shared_ptr(CScopeStack)
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CLineCatalog)
@@ -490,7 +491,7 @@ public:
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
-  TScopeStack  m_ScopeStack;
+  std::shared_ptr<CScopeStack>  m_ScopeStack;
 
  private:
     CProcessFlowContext();
@@ -498,10 +499,46 @@ public:
     
 };
 
+enum class ScopeType { UNDEFINED, SPECTRUMMODEL, STAGE, METHOD };
+
+class CScopeStack {
+public:
+  CScopeStack();
+  CScopeStack(const TScopeStack &scope);
+  CScopeStack(TScopeStack &&scope);
+  CScopeStack(std::initializer_list<std::string> init);
+  std::size_t size() const;
+  bool empty() const;
+  TStringList::const_iterator begin() const;
+  TStringList::const_iterator end() const;
+  std::string const &front() const;
+  std::string const &back() const;
+  std::string const &at(std::size_t pos) const;
+
+  void push_back(const std::string &value, ScopeType type = ScopeType::UNDEFINED);
+  void push_back(std::string &&value, ScopeType type = ScopeType::UNDEFINED);
+  void pop_back();
+
+  bool has_type(ScopeType type) const;
+  const std::string &get_type_value(ScopeType type) const;
+  size_t get_type_level(ScopeType type) const;
+  ScopeType get_current_type() const;
+};
+
+%extend CScopeStack {
+  std::string __getitem__(size_t pos) {
+    return (*($self))[pos];
+  }
+  // std::string __setitem__(size_t pos, const std::string &value) {
+  //     (*($self))[pos] = value;
+  //     return (*($self))[pos];
+  //   }
+}
+
 class CParameterStore : public CScopeStore
 {
   public:
-    CParameterStore(const TScopeStack& stack);
+    CParameterStore(const std::shared_ptr<const CScopeStack> &stack);
     void FromString(const std::string& json);
     template<typename T> T Get(const std::string& name) const;
 };
@@ -512,7 +549,7 @@ class COperatorResultStore
 {
 
  public:
-  COperatorResultStore(const TScopeStack& scopeStack);
+  COperatorResultStore(const std::shared_ptr<const CScopeStack> &scopeStack);
 
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
                                                                        const std::string& stage,
@@ -602,7 +639,7 @@ class COperatorResultStore
   int getNbRedshiftCandidates(const std::string& objectType, const std::string& stage,
 			      const std::string& method) const;
 
-  void StoreFlagResult( const std::string& name, Int32  result );
+  void StoreScopedFlagResult( const std::string& name);
 };
 
 
@@ -864,7 +901,7 @@ class CObjectSolve{
 
   public:
 
-    CClassificationSolve(TScopeStack &scope,std::string objectType);
+    CClassificationSolve();
 
   };
   class CReliabilitySolve:public CSolve
@@ -872,42 +909,42 @@ class CObjectSolve{
 
   public:
 
-    CReliabilitySolve(TScopeStack &scope,std::string objectType);
+    CReliabilitySolve();
   };
   class CLineModelSolve:public CObjectSolve
   {
 
   public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType);
+    CLineModelSolve();
   };
   class CLineMeasSolve:public CObjectSolve
   {
 
   public:
 
-    CLineMeasSolve(TScopeStack &scope,std::string objectType);
+    CLineMeasSolve();
   };
 
   class CTemplateFittingSolve : public CObjectSolve
 {
   public:
 
-    CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+    CTemplateFittingSolve();
   };
 
 class CTplCombinationSolve : public CObjectSolve
 {
 
  public:
-  CTplCombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplCombinationSolve();
 };
 
 class CLineMatchingSolve: public CObjectSolve
 {
 public:
 
-    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
+    CLineMatchingSolve();
 };
 
 typedef struct {
@@ -947,6 +984,7 @@ def redo(prefix):
     globals()[prefix] = Enum(prefix,tmpD)
 redo('ErrorCode')
 redo('WarningCode')
+redo('ScopeType')
 del redo  # cleaning up the namespace
 del Enum
 %}

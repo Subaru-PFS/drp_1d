@@ -43,7 +43,8 @@
 namespace bpt = boost::property_tree;
 
 namespace NSEpic {
-CParameterStore::CParameterStore(const TScopeStack &stack)
+CParameterStore::CParameterStore(
+    const std::shared_ptr<const CScopeStack> &stack)
     : CScopeStore(stack) {}
 
 void CParameterStore::Set(const std::string &name, const TFloat64List &v) {

@@ -161,7 +161,7 @@ public:
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -205,7 +205,7 @@ public:
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -234,7 +234,11 @@ public:
 BOOST_AUTO_TEST_SUITE(linemeasSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
-  CLineMeasSolve lineMeasSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "lineMeasSolver",
+                             ScopeType::STAGE);
+  CLineMeasSolve lineMeasSolve;
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -257,8 +261,11 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
 
 #ifdef LBFGSBFITTER
 BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
-
-  CLineMeasSolve lineMeasSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "lineMeasSolver",
+                             ScopeType::STAGE);
+  CLineMeasSolve lineMeasSolve;
   BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =

@@ -42,19 +42,18 @@
 
 namespace NSEpic {
 
-CLineMeasSolve::CLineMeasSolve(TScopeStack &scope, string spectrumModel)
-    : CObjectSolve("lineMeasSolver", "lineMeasSolve", scope, spectrumModel) {}
+CLineMeasSolve::CLineMeasSolve() : CObjectSolve("lineMeasSolve") {}
 
-void CLineMeasSolve::GetRedshiftSampling(
-    const std::shared_ptr<const CInputContext> &inputContext,
-    TFloat64Range &redshiftRange, Float64 &redshiftStep) {
+void CLineMeasSolve::GetRedshiftSampling(const CInputContext &inputContext,
+                                         TFloat64Range &redshiftRange,
+                                         Float64 &redshiftStep) {
   // default is to read from the scoped paramStore
-  Float64 rangeCenter =
-      inputContext->GetParameterStore()->GetScoped<Float64>("redshiftref");
-  Float64 halfRange =
-      inputContext->GetParameterStore()->GetScoped<Float64>("lineMeasDzHalf");
-  redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>(
-      "lineMeasRedshiftStep");
+  Float64 rangeCenter = inputContext.GetParameterStore()->GetScopedAt<Float64>(
+      "redshiftref", ScopeType::SPECTRUMMODEL);
+  Float64 halfRange = inputContext.GetParameterStore()->GetScopedAt<Float64>(
+      "lineMeasDzHalf", ScopeType::SPECTRUMMODEL);
+  redshiftStep = inputContext.GetParameterStore()->GetScopedAt<Float64>(
+      "lineMeasRedshiftStep", ScopeType::SPECTRUMMODEL);
 
   halfRange = std::ceil(halfRange / redshiftStep) * redshiftStep;
 
@@ -67,10 +66,9 @@ void CLineMeasSolve::GetRedshiftSampling(
   redshiftRange = TFloat64Range(rangeCenter - half_l, rangeCenter + half_r);
 }
 
-std::shared_ptr<CSolveResult>
-CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                        std::shared_ptr<COperatorResultStore> resultStore,
-                        TScopeStack &scope) {
+std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
 
   Float64 opt_nsigmasupport =
       inputContext->GetParameterStore()->GetScoped<Float64>(

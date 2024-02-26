@@ -44,44 +44,44 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(autoscope)
 
-TScopeStack scope;
+auto scope = std::make_shared<CScopeStack>();
 
 BOOST_AUTO_TEST_CASE(autoscope_test) {
   // First context
   {
     CAutoScope autoscope(scope, "level_1");
 
-    BOOST_CHECK(scope.size() == 1);
-    BOOST_CHECK(scope[0] == "level_1");
+    BOOST_CHECK(scope->size() == 1);
+    BOOST_CHECK((*scope)[0] == "level_1");
   }
-  BOOST_CHECK(scope.size() == 0);
+  BOOST_CHECK(scope->size() == 0);
 
   // Second context
   {
     CAutoScope autoscope(scope, "level_1");
 
-    BOOST_CHECK(scope.size() == 1);
-    BOOST_CHECK(scope[0] == "level_1");
+    BOOST_CHECK(scope->size() == 1);
+    BOOST_CHECK((*scope)[0] == "level_1");
 
     {
       CAutoScope autoscope_2(scope, "level_2");
-      BOOST_CHECK(scope.size() == 2);
-      BOOST_CHECK(scope[0] == "level_1");
-      BOOST_CHECK(scope[1] == "level_2");
+      BOOST_CHECK(scope->size() == 2);
+      BOOST_CHECK((*scope)[0] == "level_1");
+      BOOST_CHECK((*scope)[1] == "level_2");
     }
-    BOOST_CHECK(scope.size() == 1);
-    BOOST_CHECK(scope[0] == "level_1");
+    BOOST_CHECK(scope->size() == 1);
+    BOOST_CHECK((*scope)[0] == "level_1");
 
     {
       CAutoScope autoscope_2(scope, "level_3");
-      BOOST_CHECK(scope.size() == 2);
-      BOOST_CHECK(scope[0] == "level_1");
-      BOOST_CHECK(scope[1] == "level_3");
+      BOOST_CHECK(scope->size() == 2);
+      BOOST_CHECK((*scope)[0] == "level_1");
+      BOOST_CHECK((*scope)[1] == "level_3");
     }
-    BOOST_CHECK(scope.size() == 1);
-    BOOST_CHECK(scope[0] == "level_1");
+    BOOST_CHECK(scope->size() == 1);
+    BOOST_CHECK((*scope)[0] == "level_1");
   }
-  BOOST_CHECK(scope.size() == 0);
+  BOOST_CHECK(scope->size() == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

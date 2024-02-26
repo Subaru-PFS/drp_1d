@@ -57,9 +57,7 @@ using namespace std;
  * \brief This constructor will attribute values to this method's parameters
  * with default values.
  */
-CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,
-                                       std::string spectrumModel)
-    : CObjectSolve("", "LineMatchingSolve", scope, spectrumModel) {
+CLineMatchingSolve::CLineMatchingSolve() : CObjectSolve("LineMatchingSolve") {
   Log.LogDebug("CLineMatchingSolve::CLineMatchingSolve()");
 
   // Peak Detection
@@ -83,16 +81,6 @@ CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,
  */
 CLineMatchingSolve::~CLineMatchingSolve() {
   Log.LogDebug("CLineMatchingSolve::~CLineMatchingSolve()");
-}
-
-std::shared_ptr<CSolveResult>
-CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                            std::shared_ptr<COperatorResultStore> resultStore,
-                            TScopeStack &scope) {
-  return Compute(
-      *(resultStore.get()), inputContext->GetParameterStore(),
-      *(inputContext->GetSpectrum().get()), m_lambdaRange, m_redshifts,
-      *(inputContext->GetLineCatalog(m_spectrumModel, m_name).get()));
 }
 
 /**
@@ -121,11 +109,13 @@ CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
  * a threshold number of peaks is detected, or all parameters are exhaustively
  * searched, the algorithm continues as normal.
  */
-std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
-    COperatorResultStore &resultStore,
-    std::shared_ptr<const CParameterStore> paramStore, const CSpectrum &spc,
-    const TFloat64Range &lambdaRange, const TFloat64Range &redshiftsRange,
-    const CLineCatalog &restLineCatalog) {
+std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
+
+  auto &resultStore = *Context.GetResultStore();
+  auto const &paramStore = Context.GetParameterStore();
+  auto const &spc = *Context.GetInputContext()->GetSpectrum();
+  auto const &restLineCatalog =
+      *Context.GetInputContext()->GetLineCatalog(m_category, m_name);
 
   auto lineType = CLine::EType::nType_Emission;
   std::string linetypeStr = "E";
@@ -249,9 +239,9 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
     CLineDetection lineDetection(lineType, cutCurrent, strongcutCurrent,
                                  winsizeCurrent, minimumFwhhCurrent, m_maxsize,
                                  m_disablegaussianfitqualitycheck);
-    auto lineDetectionResult =
-        lineDetection.Compute(_spc, lambdaRange, peakDetectionResult->PeakList,
-                              peakDetectionResult->EnlargedPeakList);
+    auto lineDetectionResult = lineDetection.Compute(
+        _spc, m_lambdaRange, peakDetectionResult->PeakList,
+        peakDetectionResult->EnlargedPeakList);
     if (lineDetectionResult || !m_dynamicLinematching) {
       currentNumberOfPeaks = lineDetectionResult->LineCatalog.GetList().size();
       Log.LogDebug("Found %d peaks.", currentNumberOfPeaks);
@@ -265,10 +255,10 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
         CLineMatching lineMatching;
         Log.LogDebug("Now starting linematching");
         auto lineMatchingResult = lineMatching.Compute(
-            lineDetectionResult->LineCatalog, restLineCatalog, redshiftsRange,
+            lineDetectionResult->LineCatalog, restLineCatalog, m_redshifts,
             m_minMatchNum, m_tol, lineType);
         if (lineMatchingResult) {
-          lineMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
+          lineMatchingResult->FilterWithRules(_spc, m_lambdaRange, m_winsize);
           Log.LogDebug("CLineMatching yielded %d sets of solutions and %d sets "
                        "of filtered solutions.",
                        lineMatchingResult->SolutionSetList.size(),

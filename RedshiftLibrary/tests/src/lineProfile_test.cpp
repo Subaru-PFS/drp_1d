@@ -54,7 +54,7 @@ public:
     igmCorrectionMeiksin->convolveByLSF(LSF, TFloat64Range(1000, 12500));
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CLSF> LSF =

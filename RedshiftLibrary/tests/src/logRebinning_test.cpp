@@ -69,7 +69,7 @@ const std::string jsonString =
     "\"method\" : \"irregularSamplingMedian\"}}}";
 class fixture_logRebinningTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> paramStore =
       fixture_ParamStore(jsonString, scopeStack).paramStore;
   std::shared_ptr<CInputContext> ctx_logSampled =

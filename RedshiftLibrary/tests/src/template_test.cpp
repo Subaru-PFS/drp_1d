@@ -56,7 +56,7 @@ public:
     igmCorrectionMeiksin->convolveByLSF(LSF,
                                         fixture_MeiskinCorrection().lbdaRange);
   }
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   // CTemplate tplStar = fixture_TemplateStarLight().tplStarLight;
   CTemplate tplStar = fixture_TemplateStar().tplStar;
   // std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =

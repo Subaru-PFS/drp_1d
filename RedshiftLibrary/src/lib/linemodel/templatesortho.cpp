@@ -51,9 +51,12 @@ void CTemplatesOrthogonalization::Orthogonalize(
   m_enableOrtho =
       inputContext.GetParameterStore()->EnableTemplateOrthogonalization(
           spectrumModel);
-  CAutoScope autoscope_category(Context.m_ScopeStack, spectrumModel);
-  CAutoScope autoscope_solver(Context.m_ScopeStack, "redshiftSolver");
-  CAutoScope autoscope_method(Context.m_ScopeStack, "lineModelSolve");
+  CAutoScope autoscope_category(Context.m_ScopeStack, spectrumModel,
+                                ScopeType::SPECTRUMMODEL);
+  CAutoScope autoscope_solver(Context.m_ScopeStack, "redshiftSolver",
+                              ScopeType::STAGE);
+  CAutoScope autoscope_method(Context.m_ScopeStack, "lineModelSolve",
+                              ScopeType::METHOD);
 
   // retrieve templateCatalog
   std::shared_ptr<CTemplateCatalog> tplCatalog =

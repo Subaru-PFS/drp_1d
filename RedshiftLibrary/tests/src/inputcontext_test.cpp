@@ -136,7 +136,7 @@ const std::string jsonStringOrtho =
 
 class fixture_inputcontextTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> paramStoreNoFFT =
       fixture_ParamStore(jsonStringOneSpc + jsonString + jsonStringNoFFT,
                          scopeStack)
@@ -178,7 +178,7 @@ public:
     inputCtx.setTemplateCatalog(catalog);
     inputCtx.setPhotBandCatalog(photoBandCatalog);
     inputCtx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    scopeStack.push_back("galaxy");
+    scopeStack->push_back("galaxy");
     inputCtx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     inputCtx.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
     inputCtx.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
@@ -212,8 +212,8 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
   BOOST_CHECK(inputCtx.GetPhotBandCatalog() == photoBandCatalog);
 
   inputCtx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-  scopeStack.push_back("galaxy");
-  BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) ==
+  scopeStack->push_back("galaxy");
+  BOOST_CHECK(inputCtx.GetTemplateRatioCatalog((*scopeStack)[0]) ==
               lineRatioTplCatalog);
 
   inputCtx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
   BOOST_CHECK(inputCtx.GetSpectrum(0) != nullptr);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() != nullptr);
   BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolve") != nullptr);
-  BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) != nullptr);
+  BOOST_CHECK(inputCtx.GetTemplateRatioCatalog((*scopeStack)[0]) != nullptr);
   BOOST_CHECK(inputCtx.GetPhotBandCatalog() != nullptr);
 
   inputCtx.resetSpectrumSpecific();
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
   BOOST_CHECK(inputCtx.getSpectra().size() == 0);
   BOOST_CHECK(inputCtx.GetTemplateCatalog() == nullptr);
   BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolve") == nullptr);
-  BOOST_CHECK(inputCtx.GetTemplateRatioCatalog(scopeStack[0]) == nullptr);
+  BOOST_CHECK(inputCtx.GetTemplateRatioCatalog((*scopeStack)[0]) == nullptr);
   BOOST_CHECK(inputCtx.GetPhotBandCatalog() == nullptr);
 
   // rebined spectrum (FFT)

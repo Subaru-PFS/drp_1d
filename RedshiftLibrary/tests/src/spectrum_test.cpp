@@ -82,7 +82,7 @@ public:
     fluxAxis = fixture_FluxAxis().fluxAxis;
   }
 
-  TScopeStack scopeStack; // = fixture_ScopeStore().scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   CSpectrum spc = fixture_Spectrum().spc;
   CSpectrum spcWithVariableWidthLSF =
       fixture_SpectrumWithLSF().spcWithVariableWidthLSF;

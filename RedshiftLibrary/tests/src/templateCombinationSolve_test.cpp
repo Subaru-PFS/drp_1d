@@ -93,7 +93,7 @@ const std::string jsonStringSpcComponentAll =
 class fixture_TplCombinationTest {
 public:
   fixture_Context ctx;
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -165,7 +165,12 @@ public:
 BOOST_AUTO_TEST_SUITE(tplCombinationSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
-  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -199,7 +204,12 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
 
 BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
                         fixture_TplCombinationTestNoContinuum) {
-  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -233,7 +243,12 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
 
 BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
                         fixture_TplCombinationTestContinuum) {
-  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -266,7 +281,13 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
 }
 
 BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
-  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =

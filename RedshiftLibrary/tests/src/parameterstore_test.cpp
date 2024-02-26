@@ -74,7 +74,7 @@ boost::filesystem::path _path =
     boost::filesystem::unique_path("file_%%%%%%%%%%");
 
 BOOST_AUTO_TEST_CASE(ParameterStore_GetTest) {
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
 
   CParameterStore store = CParameterStore(scopeStack);
 
@@ -138,6 +138,16 @@ BOOST_AUTO_TEST_CASE(ParameterStore_GetTest) {
   float64_ = store.GetScoped<Float64>("Float64");
   BOOST_CHECK_CLOSE(float64_, 12.3, 1e-6);
 
+  // test getScopedAt
+  float64_ = store.GetScopedAt<Float64>("Float64", 0);
+  BOOST_CHECK_CLOSE(float64_, 12.3, 1e-6);
+
+  scopeStack->push_back("model1", ScopeType::SPECTRUMMODEL);
+  store.Set(store.GetScopedName("Float64"), float_val);
+  float64_ = store.GetScopedAt<Float64>("Float64", ScopeType::SPECTRUMMODEL);
+  BOOST_CHECK_CLOSE(float64_, 12.3, 1e-6);
+  scopeStack->pop_back();
+
   // test getList
   float64_list_ = store.GetList<Float64>("TFloat64List");
   BOOST_FOREACH (boost::tie(f, f_),
@@ -163,7 +173,7 @@ BOOST_AUTO_TEST_CASE(ParameterStore_GetTest) {
 }
 
 BOOST_AUTO_TEST_CASE(ParameterStore_HasTest) {
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   CParameterStore store(scopeStack);
   store.Set("bool", bool_val);
 
@@ -184,7 +194,7 @@ BOOST_AUTO_TEST_CASE(ParameterStore_HasTest) {
 
 BOOST_AUTO_TEST_CASE(ParameterStore_ReadJsonTest) {
   // Test reading json string
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   CParameterStore store(scopeStack);
 
   store.FromString(jsonString);
@@ -234,7 +244,7 @@ BOOST_AUTO_TEST_CASE(ParameterStore_ReadJsonTest) {
 }
 
 BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   CParameterStore store(scopeStack);
   std::string object_type = "galaxy";
   std::string object_type2 = "qso";
@@ -401,7 +411,7 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
 }
 
 BOOST_AUTO_TEST_CASE(ParameterStore_saveTest) {
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   CParameterStore store(scopeStack);
 
   try {

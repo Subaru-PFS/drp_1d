@@ -91,14 +91,16 @@ class GlobalException : public AmzException {
 public:
   GlobalException(ErrorCode ec, const std::string &message,
                   const char *filename_, const char *method_,
-                  int line_) noexcept;
+                  int line_) noexcept
+      : AmzException(ec, message, filename_, method_, line_){};
 };
 
 class InternalException : public AmzException {
 public:
   InternalException(ErrorCode ec, const std::string &message,
                     const char *filename_, const char *method_,
-                    int line_) noexcept;
+                    int line_) noexcept
+      : AmzException(ec, message, filename_, method_, line_){};
 };
 } // namespace NSEpic
 

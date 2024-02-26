@@ -98,7 +98,7 @@ public:
 
 private:
   std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
-  TStringList m_tplCategoryList;
+  std::string m_tplCategory;
 
   std::shared_ptr<CPriorHelper> m_fitContinuum_priorhelper;
 

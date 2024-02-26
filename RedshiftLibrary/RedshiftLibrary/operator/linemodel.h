@@ -101,7 +101,7 @@ public:
 
   Int32 m_maxModelSaveCount = 20;
   Float64 m_secondPass_halfwindowsize; // = 0.005;
-  TStringList m_tplCategoryList;
+  std::string m_tplCategory;
 
   bool m_opt_tplfit_fftprocessing =
       false; // we cant set it as the default since not taken into account when

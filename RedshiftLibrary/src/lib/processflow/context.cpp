@@ -59,11 +59,12 @@ static void NewHandler(const char *reason, const char *file, int line,
   return;
 }
 
-CProcessFlowContext::CProcessFlowContext() {
+CProcessFlowContext::CProcessFlowContext()
+    : m_ScopeStack(std::make_shared<CScopeStack>()),
+      m_ResultStore(std::make_shared<COperatorResultStore>(m_ScopeStack)),
+      m_parameterStore(::make_shared<CParameterStore>(m_ScopeStack)),
+      m_inputContext(std::make_shared<CInputContext>(m_parameterStore)) {
   gsl_set_error_handler(NewHandler);
-  m_parameterStore = std::make_shared<CParameterStore>(m_ScopeStack);
-  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
-  m_inputContext = std::make_shared<CInputContext>(m_parameterStore);
 }
 
 std::shared_ptr<const CParameterStore>
@@ -92,7 +93,8 @@ CLineMap CProcessFlowContext::getCLineMap() {
 
 std::shared_ptr<CLineCatalogsTplRatio>
 CProcessFlowContext::GetTplRatioCatalog() {
-  return m_inputContext->GetTemplateRatioCatalog(m_ScopeStack[0]);
+  return m_inputContext->GetTemplateRatioCatalog(
+      m_ScopeStack->get_type_value(ScopeType::SPECTRUMMODEL));
 }
 
 std::shared_ptr<const CPhotBandCatalog>
