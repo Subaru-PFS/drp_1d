@@ -126,7 +126,7 @@ LinemeasLyaIgm	linemeas_parameters	False	object	LyaIgm	linemeas	f8
 ModelLambda	linemeas_model<ObsID>	False	object	ModelLambda[obs_id]	linemeas_model	f8
 ModelFlux	linemeas_model<ObsID>	False	object	ModelFlux[obs_id]	linemeas_model	f8
 Reliability	reliability	False	object	m_ReliabilityLabel	solveResult	f8
-FirstpassPDFProbaLog	firstpass_pdf	True	object	valProbaLog	firstpass_pdf	f8
+FirstpassLogZPdfNative	firstpass_pdf	True	object	valProbaLog	firstpass_pdf	f8
 ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i
 <MethodType>WarningFlags	warningFlag	False	method	flagValue	warningFlag	i
 SubType	model_parameters	False	candidate			S10
