@@ -88,7 +88,6 @@ public:
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
                                            bool with_continuum);
-
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
@@ -167,15 +166,15 @@ protected:
 
   Float64 m_absLinesLimit = 1.0;
 
-  Float64 m_opt_lya_fit_asym_min = 0.0;
-  Float64 m_opt_lya_fit_asym_max = 4.0;
-  Float64 m_opt_lya_fit_asym_step = 1.0;
-  Float64 m_opt_lya_fit_width_min = 1.;
-  Float64 m_opt_lya_fit_width_max = 4.;
-  Float64 m_opt_lya_fit_width_step = 1.;
-  Float64 m_opt_lya_fit_delta_min = 0.;
-  Float64 m_opt_lya_fit_delta_max = 0.;
-  Float64 m_opt_lya_fit_delta_step = 1.;
+  Float64 m_opt_lya_fit_asym_min = NAN;
+  Float64 m_opt_lya_fit_asym_max = NAN;
+  Float64 m_opt_lya_fit_asym_step = NAN;
+  Float64 m_opt_lya_fit_width_min = NAN;
+  Float64 m_opt_lya_fit_width_max = NAN;
+  Float64 m_opt_lya_fit_width_step = NAN;
+  Float64 m_opt_lya_fit_delta_min = NAN;
+  Float64 m_opt_lya_fit_delta_max = NAN;
+  Float64 m_opt_lya_fit_delta_step = NAN;
 };
 } // namespace NSEpic
 

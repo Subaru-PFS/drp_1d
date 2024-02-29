@@ -222,12 +222,17 @@ class ParametersChecker:
         self._check_template_dir(object_type)
 
     def _check_template_dir(self, object_type: str) -> None:
-        template_dir_presence_condition = \
-            self.accessor.get_redshift_solver_method(object_type) in ["templateFittingSolve",
-                                                                      "tplCombinationSolve"] or (
-                self.accessor.get_redshift_solver_method(object_type) == "lineModelSolve"
-                and self.accessor.get_linemodel_continuum_component(object_type) in ["tplFit", "tplFitAuto"]
-            )
+
+        expected_by_method = self.accessor.get_redshift_solver_method(object_type) in [
+            "templateFittingSolve",
+            "tplCombinationSolve"
+        ]
+        expected_by_continuum = \
+            self.accessor.get_redshift_solver_method(object_type) == "lineModelSolve" and \
+            self.accessor.get_linemodel_continuum_component(object_type) in ["tplFit", "tplFitAuto"]
+        
+        template_dir_presence_condition = expected_by_method or expected_by_continuum
+
         self._check_dependant_parameter_presence(
             template_dir_presence_condition,
             self.accessor.get_template_dir(object_type) is not None,
@@ -313,7 +318,6 @@ class ParametersChecker:
             self._raise_missing_param_error("ebmv")
 
     def _check_lineModelSolve(self, object_type: str) -> None:
-
         self._check_linemodelsolve_section(object_type)
 
         self._check_linemodelsolve_improveBalmerFit(object_type)
@@ -332,10 +336,12 @@ class ParametersChecker:
         self._check_linemodelsolve_secondpass_continuumfit(object_type)
         self._check_linemodelsolve_firstpass_tplratio_ismfit(object_type)
         self._check_linemodelsolve_firstpass_extremacount(object_type)
+        self._check_linemodelsolve_lya_fit(object_type)
 
         self._check_linemeassolve_lineratiotype_rules(object_type)
         self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(object_type)
         self._check_linemeassolve_velocityfit_params(object_type)
+        self._check_linemeassolve_lya_fit(object_type)
 
     def _check_linemodelsolve_section(self, object_type: str):
         self._check_dependant_parameter_presence(
@@ -451,6 +457,14 @@ class ParametersChecker:
                     "linemodel.firstpass.extremaCount is lower than linemodel.extremaCount for object "
                     f"{object_type}"
                 )
+    def _check_linemodelsolve_lya_fit(self, object_type: str):
+        if self.accessor.get_redshift_solver_method(object_type) == "lineModelSolve":
+            self._check_dependant_parameter_presence(
+                self.accessor.get_linemodel_lya_profile(object_type) == "asym",
+                self.accessor.get_linemodel_lya_asym_section(object_type) is not None,
+                error_message=f"lineModelSolve linemodel lya asymProfile section for object {object_type}",
+                warning_message=f"object {object_type} lineModelSolve linemodel lya asymProfile section"
+            )
 
     def _check_linemeassolve_lineratiotype_rules(self, object_type: str):
         self._check_dependant_parameter_presence(
@@ -477,6 +491,15 @@ class ParametersChecker:
                 self.accessor.get_linemeas_velocity_fit_param(object_type, param) is not None,
                 error_message=f"lineMeasSolve {param} for object {object_type}",
                 warning_message=f"object {object_type} LineMeasSolve {param}"
+            )
+
+    def _check_linemeassolve_lya_fit(self, object_type: str):
+        if self.accessor.get_linemeas_method(object_type) == "lineMeasSolve":
+            self._check_dependant_parameter_presence(
+                self.accessor.get_linemeas_lya_profile(object_type) == "asym",
+                self.accessor.get_linemeas_lya_asym_section(object_type) is not None,
+                error_message=f"lineMeasSolve linemodel lya asymProfile section for object {object_type}",
+                warning_message=f"object {object_type} lineMeasSolve linemodel lya asymProfile section"
             )
 
     def _check_dependant_parameter_presence(self, triggering_condition: bool, dependant_condition: bool,

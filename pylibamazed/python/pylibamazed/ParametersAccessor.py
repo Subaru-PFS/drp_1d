@@ -232,31 +232,47 @@ class ParametersAccessor:
         return self._get_on_None(self.get_linemodel_solve_section(spectrum_model), "lineModel")
 
     def get_line_model_photometry(self, spectrum_model: str) -> bool:
-        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "enablePhotometry")
+        return self._get_on_None(
+            self.get_linemodel_solve_linemodel_section(spectrum_model),
+            "enablePhotometry"
+        )
 
     def get_solve_method_igm_fit(self, spectrum_model: str, solve_method: str) -> bool:
         igmfit = None
         if solve_method == "lineModelSolve":
-            igmfit = self.get_linemodel_igmfit(spectrum_model)
+            igmfit = self.get_linemodel_lya_profile(spectrum_model) == "igm"
         elif solve_method == "templateFittingSolve":
             igmfit = self.get_template_fitting_igmfit(spectrum_model)
         elif solve_method == "tplCombinationSolve":
             igmfit = self.get_template_combination_igmfit(spectrum_model)
         elif solve_method == "lineMeasSolve":
-            igmfit = self.get_linemeas_igmfit(spectrum_model)
+            igmfit = self.get_linemeas_lya_profile(spectrum_model) == "igm"
         return igmfit
 
-    def get_linemodel_igmfit(self, spectrum_model: str) -> bool:
-        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "igmFit")
+    def get_linemodel_lya_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(
+            self.get_linemodel_solve_linemodel_section(spectrum_model), "lya")
+
+    def get_linemodel_lya_profile(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemodel_lya_section(spectrum_model), "profile")
+
+    def get_linemodel_lya_asym_section(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemodel_lya_section(spectrum_model), "asymProfile")
+
+    def get_linemeas_lya_section(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lya")
+
+    def get_linemeas_lya_profile(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemeas_lya_section(spectrum_model), "profile")
+
+    def get_linemeas_lya_asym_section(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemeas_lya_section(spectrum_model), "asymProfile")
 
     def get_template_combination_igmfit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_template_combination_section(spectrum_model), "igmFit")
 
     def get_template_fitting_igmfit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_template_fitting_section(spectrum_model), "igmFit")
-
-    def get_linemeas_igmfit(self, spectrum_model: str) -> bool:
-        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "igmFit")
 
     def get_linemodel_line_ratio_type(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lineRatioType")

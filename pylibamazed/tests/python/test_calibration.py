@@ -41,9 +41,8 @@ import os
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.config import test_dir
-
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 calibration_dir = os.path.join(test_dir, "calibration")
 
@@ -71,7 +70,7 @@ def make_parameters() -> Parameters:
                         "tplRatioCatalog": "lineratiocataloglists/lineratiocatalogs_v16/",
                         "tplRatioIsmFit": True,
                         "nSigmaSupport": 8,
-                        "igmFit": True
+                        "lya": {"profile": "igm"}
                     }
                 }
             }

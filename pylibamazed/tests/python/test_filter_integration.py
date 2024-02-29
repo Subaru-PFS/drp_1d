@@ -68,4 +68,4 @@ class TestFilterIntegration:
         context.run(reader)  # passing spectra reader to launch amazed
 
         # # Checks that the number of waves kept has decreased (6 to 3) with filtering
-        # assert len(reader.get_wave()) == 3
+        assert len(reader.get_wave()) == 3
