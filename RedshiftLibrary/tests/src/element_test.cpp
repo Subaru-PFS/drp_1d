@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
 
   TAsymParams const params = {2.2, 2.3, 2.4};
   element.SetAsymfitParams(params);
-  TAsymParams const rparam = element.GetAsymfitParams(0);
+  TAsymParams const rparam = fdata->GetAsymfitParams(0);
 
   BOOST_CHECK_CLOSE(2.2, rparam.sigma, 0.01);
   BOOST_CHECK_CLOSE(2.3, rparam.alpha, 0.01);

@@ -121,7 +121,7 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
   *m_curObs = 0; // dummy implementation
   if (m_enableAmplitudeOffsets)
-    getElementList().resetAmplitudeOffset();
+    m_ElementsVector->resetAmplitudeOffsets();
 
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TInt32Set indexesFitted;

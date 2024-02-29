@@ -823,7 +823,8 @@ void CLineModelFitting::LoadModelSolution(
       elt->SetFittedAmplitude(elt_line_index,
                               modelSolution.Amplitudes[iRestLine],
                               modelSolution.AmplitudesUncertainties[iRestLine]);
-      elt->SetOffset(elt_line_index, modelSolution.Offset[iRestLine]);
+      m_ElementsVector->getElementParam()[eIdx]->setLambdaOffset(
+          elt_line_index, modelSolution.Offset[iRestLine]);
 
       if (element_done[eIdx])
         continue;
@@ -835,7 +836,8 @@ void CLineModelFitting::LoadModelSolution(
             modelSolution.continuum_pCoeff0[iRestLine],
             modelSolution.continuum_pCoeff1[iRestLine],
             modelSolution.continuum_pCoeff2[iRestLine]};
-        elt->SetPolynomCoeffs(std::move(contPolynomCoeffs));
+        m_ElementsVector->getElementParam()[eIdx]->SetPolynomCoeffs(
+            std::move(contPolynomCoeffs));
       }
 
       element_done[eIdx] = true;

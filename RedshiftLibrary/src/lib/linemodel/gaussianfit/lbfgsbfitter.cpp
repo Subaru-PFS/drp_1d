@@ -162,20 +162,21 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     Float64 const redshift = m_redshift + (1.0 + m_redshift) * delta_offset;
     Log.LogDebug(Formatter() << "redshift=" << redshift);
     for (Int32 eltIndex : *m_EltsIdx) {
-      auto &elt = m_fitter->getElementList()[eltIndex];
-      for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-        Float64 offset = elt->GetLines()[line_idx].GetOffset();
+      auto &elt_param = m_fitter->getElementParam()[eltIndex];
+
+      for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
+        Float64 offset = elt_param->m_Lines[line_idx].GetOffset();
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
         offset += (1 + offset) * delta_offset;
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
-        elt->SetOffset(line_idx, offset);
+        elt_param->setLambdaOffset(line_idx, offset);
 
         // set redshift in SYMIGM profiles
-        const TInt32List &igm_indices = elt->getIgmLinesIndices();
+        const TInt32List &igm_indices = elt_param->m_asymLineIndices;
         for (Int32 idx : igm_indices) {
-          auto igmp = elt->GetSymIgmParams();
+          auto igmp = elt_param->GetSymIgmParams();
           igmp.m_redshift = redshift;
-          elt->SetSymIgmParams(igmp, idx);
+          elt_param->SetSymIgmParams(igmp, idx);
         }
       }
     }
@@ -411,7 +412,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       getElementList().SetElementAmplitude(eltIndex, 0., INFINITY);
     if (m_enableAmplitudeOffsets) {
       for (Int32 eltIndex : EltsIdx)
-        getElementList()[eltIndex]->SetPolynomCoeffs({0., 0., 0.});
+        m_ElementsVector->getElementParam()[eltIndex]->SetPolynomCoeffs(
+            {0., 0., 0.});
     }
     return;
   }
@@ -634,14 +636,14 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // store velocity offset (line offset)
   if (m_enableLambdaOffsetsFit) {
     for (Int32 eltIndex : EltsIdx) {
-      auto &elt = getElementList()[eltIndex];
-      for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-        Float64 offset = elt->GetLines()[line_idx].GetOffset();
+      auto &elt_param = m_ElementsVector->getElementParam()[eltIndex];
+      for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
+        Float64 offset = elt_param->m_Lines[line_idx].GetOffset();
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
         offset +=
             (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
-        elt->SetOffset(line_idx, offset);
+        elt_param->setLambdaOffset(line_idx, offset);
       }
     }
   }
@@ -661,7 +663,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     Float64 a2 = 0.0;
     pCoeffsNormalized.getCoeffs(a0, a1, a2);
     for (Int32 eltIndex : EltsIdx)
-      getElementList()[eltIndex]->SetPolynomCoeffs(
+      m_ElementsVector->getElementParam()[eltIndex]->SetPolynomCoeffs(
           {a0 / normFactor, a1 / normFactor, a2 / normFactor});
   }
 }

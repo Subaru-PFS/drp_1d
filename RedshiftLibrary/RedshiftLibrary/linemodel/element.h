@@ -91,8 +91,6 @@ struct TLineModelElementParam {
   CLine::EType m_type;
   bool m_isEmission;
 
-  void resetFittingParams();
-
   Float64 getVelocity() {
     return m_isEmission ? m_VelocityEmission : m_VelocityAbsorption;
   }
@@ -137,13 +135,6 @@ struct TLineModelElementParam {
     else
       for (auto index : m_asymLineIndices)
         m_Lines[index].SetSymIgmFit(val);
-  }
-
-  void SetOffset(Int32 line_index, Float64 val) { m_Offsets[line_index] = val; }
-
-  void resetOffset() {
-    for (Int32 line_idx = 0; line_idx != size(); ++line_idx)
-      SetOffset(line_idx, m_Lines[line_idx].GetOffset());
   }
 
   void setAmplitudes(Float64 A, Float64 AStd,
@@ -204,6 +195,23 @@ struct TLineModelElementParam {
       }
     }
     return NAN;
+  }
+
+  void resetLambdaOffsets() {
+    for (Int32 line_idx = 0; line_idx != size(); ++line_idx)
+      setLambdaOffset(line_idx, m_Lines[line_idx].GetOffset());
+  }
+
+  void setLambdaOffset(Int32 line_index, Float64 val) {
+    m_Offsets[line_index] = val;
+  }
+  Float64 getLambdaOffset(Int32 line_index) { return m_Offsets[line_index]; }
+
+  void resetFittingParams();
+  void SetFittingGroupInfo(const std::string &val) { m_fittingGroupInfo = val; }
+  void resetAmplitudeOffset() { m_ampOffsetsCoeffs = TPolynomCoeffs(); }
+  void SetPolynomCoeffs(const TPolynomCoeffs &coeffs) {
+    m_ampOffsetsCoeffs = coeffs;
   }
 };
 
@@ -315,14 +323,13 @@ public:
   void
   SetSymIgmFit(bool val = true,
                Int32 line_index = undefIdx); // undefIdx means setting for all
-  TAsymParams GetAsymfitParams(Int32 asymIdx = 0) const;
-  TSymIgmParams GetSymIgmParams(Int32 asymIdx = 0) const;
 
   void resetAsymfitParams();
-
+  /*
   const TInt32List &getIgmLinesIndices() const {
     return m_ElementParam->m_asymLineIndices;
   };
+  */
   const CLineProfile_ptr &getLineProfile(Int32 line_index) const;
 
   Float64 GetSignFactor(Int32 line_index) const;
@@ -354,13 +361,8 @@ public:
   void SetFittingGroupInfo(const std::string &val);
 
   const TPolynomCoeffs &GetPolynomCoeffs() const;
-  void SetPolynomCoeffs(TPolynomCoeffs pCoeffs);
 
   void SetAllOffsetsEnabled(Float64 val);
-  void SetOffset(Int32 line_index, Float64 val);
-  Float64 GetOffset(Int32 line_index) const {
-    return m_ElementParam->m_Offsets[line_index];
-  }
 
   void SetLineProfile(Int32 line_index, CLineProfile_ptr &&profile);
 
@@ -534,18 +536,6 @@ inline void CLineModelElement::resetAsymfitParams() {
     m_ElementParam->m_Lines[index].resetAsymFitParams();
 }
 
-// wrapper function
-inline TAsymParams
-CLineModelElement::GetAsymfitParams(Int32 asym_line_index) const {
-  return m_ElementParam->GetAsymfitParams(asym_line_index);
-}
-
-// wrapper function
-inline TSymIgmParams
-CLineModelElement::GetSymIgmParams(Int32 sym_line_index) const {
-  return m_ElementParam->GetSymIgmParams(sym_line_index);
-}
-
 inline Float64 CLineModelElement::GetSumCross() const {
   return m_ElementParam->m_sumCross;
 }
@@ -582,19 +572,11 @@ inline const TPolynomCoeffs &CLineModelElement::GetPolynomCoeffs() const {
   return m_ElementParam->m_ampOffsetsCoeffs;
 }
 
-inline void CLineModelElement::SetPolynomCoeffs(TPolynomCoeffs pCoeffs) {
-  m_ElementParam->m_ampOffsetsCoeffs = std::move(pCoeffs);
-}
-
 inline void CLineModelElement::SetAllOffsetsEnabled(Float64 val) {
   for (Int32 index = 0; index != GetSize(); ++index) {
     if (GetLines()[index].IsOffsetFitEnabled())
       m_ElementParam->m_Offsets[index] = val;
   }
-}
-
-inline void CLineModelElement::SetOffset(Int32 line_index, Float64 val) {
-  m_ElementParam->SetOffset(line_index, val);
 }
 
 inline void CLineModelElement::SetLineProfile(Int32 line_index,

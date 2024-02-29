@@ -71,8 +71,6 @@ public:
 
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
-  void resetAmplitudeOffset();
-
   void addToSpectrumAmplitudeOffset(
       const CSpectrumSpectralAxis &spectralAxis,
       CSpectrumFluxAxis &modelfluxAxis, const TInt32List &eIdx_list = {},
@@ -158,10 +156,9 @@ public:
     return m_ElementsParams;
   }
 
-  void resetLambdaOffsets() {
-    for (auto param : m_ElementsParams)
-      param->resetOffset();
-  }
+  void resetLambdaOffsets();
+  void resetAmplitudeOffsets();
+  void resetElementsFittingParam(bool enableAmplitudeOffsets);
 
 private:
   std::vector<CLineModelElementList> m_ElementsVector;
