@@ -165,7 +165,7 @@ public:
 BOOST_AUTO_TEST_SUITE(tplCombinationSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -199,7 +199,7 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
 
 BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
                         fixture_TplCombinationTestNoContinuum) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -233,7 +233,7 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
 
 BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
                         fixture_TplCombinationTestContinuum) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -266,7 +266,7 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
 }
 
 BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
+  CTplCombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
   BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =

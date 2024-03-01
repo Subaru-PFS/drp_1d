@@ -51,7 +51,7 @@ from pylibamazed.redshift import CLineMeasSolve  # noqa F401
 from pylibamazed.redshift import CLineModelSolve  # noqa F401
 from pylibamazed.redshift import CReliabilitySolve  # noqa F401
 from pylibamazed.redshift import CTemplateFittingSolve  # noqa F401
-from pylibamazed.redshift import CTplcombinationSolve  # noqa F401
+from pylibamazed.redshift import CTplCombinationSolve  # noqa F401
 from pylibamazed.redshift import (CFlagWarning, CLog, CProcessFlowContext,
                                   ErrorCode, GlobalException)
 from pylibamazed.Reliability import Reliability
