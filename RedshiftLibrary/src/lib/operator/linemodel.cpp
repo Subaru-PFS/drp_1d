@@ -534,17 +534,20 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                          << ", amplitude/error = " << max_fitamplitudeSigma
                          << " & error = " << fitValues.tplAmplitudeError);
 
-    Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
-                 Formatter()
-                     << ": Switching to spectrum continuum since Negative "
-                        "continuum amplitude found at z="
-                     << max_fitamplitudeSigma_z << ": best continuum tpl "
-                     << fitValues.tplName
-                     << ", amplitude/error = " << max_fitamplitudeSigma
-                     << " & error = " << fitValues.tplAmplitudeError);
-    m_opt_continuumcomponent = "fromSpectrum";
-    m_fittingManager->setContinuumComponent("fromSpectrum");
-  } else if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold) {
+    if (m_fittingManager->GetPassNumber() == 1) {
+      Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
+                   Formatter()
+                       << ": Switching to spectrum continuum since Negative "
+                          "continuum amplitude found at z="
+                       << max_fitamplitudeSigma_z << ": best continuum tpl "
+                       << fitValues.tplName
+                       << ", amplitude/error = " << max_fitamplitudeSigma
+                       << " & error = " << fitValues.tplAmplitudeError);
+      m_opt_continuumcomponent = "fromSpectrum";
+      m_fittingManager->setContinuumComponent("fromSpectrum");
+    }
+  } else if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold &&
+             m_fittingManager->GetPassNumber() == 1) {
     // check if continuum is too weak comparing to the preset threshold, or
     // falls within [thres_neg; thresh_null], at all z
     Flag.warning(WarningCode::FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
