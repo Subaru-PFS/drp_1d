@@ -101,7 +101,7 @@ void COperatorTplcombination::BasicFit(
   boost::chrono::thread_clock::time_point start_prep =
       boost::chrono::thread_clock::now();
 
-  bool status_chisquareSetAtLeastOnce = false;
+  bool chisquareSetAtLeastOnce = false;
 
   const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
   const CSpectrumFluxAxis &spcFluxAxis = spectrum.GetFluxAxis();
@@ -120,12 +120,9 @@ void COperatorTplcombination::BasicFit(
 
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
   // I consider here that all templates share the same spectralAxis
-  bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
+  currentRange.getClosedIntervalIndices(
       m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
       kStart, kEnd);
-  if (!kStartEnd_ok)
-    THROWG(INTERNAL_ERROR, "Impossible to "
-                           "get valid kstart or kend");
 
   Int32 kStart_model =
       kStart; // mainly used at high redshifts, when desextincting spectrum is
@@ -328,7 +325,7 @@ void COperatorTplcombination::BasicFit(
         fittingResults.MeiksinIdx =
             igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
         fittingResults.EbmvCoeff = coeffEBMV;
-        status_chisquareSetAtLeastOnce = true;
+        chisquareSetAtLeastOnce = true;
       }
 
       // save the interm chisquares in the intermediate vector
@@ -360,10 +357,9 @@ void COperatorTplcombination::BasicFit(
   gsl_vector_free(c);
   gsl_matrix_free(cov);
 
-  if (status_chisquareSetAtLeastOnce) {
-    fittingResults.status = COperator::nStatus_OK;
-  } else {
-    fittingResults.status = COperator::nStatus_LoopError;
+  if (!chisquareSetAtLeastOnce) {
+    THROWG(INVALID_MERIT_VALUES,
+           Formatter() << "Not even one single valid fit/merit value found");
   }
 }
 
@@ -534,12 +530,6 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              fittingResults, -1, opt_extinction, opt_dustFitting,
              additional_spcMask, logp, MeiksinList, EbmvList);
 
-    if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "Invalid tplcombination products for z="
-                                 << redshift);
-    }
-
     result->ChiSquare[i] = fittingResults.chiSquare;
     result->Overlap[i] = fittingResults.overlapFraction;
     result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
@@ -550,7 +540,6 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     // result->LogPrior[i]=NAN: //not yet calculated
     result->FitEbmvCoeff[i] = fittingResults.EbmvCoeff;
     result->FitMeiksinIdx[i] = fittingResults.MeiksinIdx;
-    result->Status[i] = fittingResults.status;
     result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
     result->IsmEbmvCoeffIntermediate[i] = fittingResults.IsmCalzettiCoeffInterm;
     result->IgmMeiksinIdxIntermediate[i] = fittingResults.IgmMeiksinIdxInterm;
@@ -575,40 +564,6 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
       overlapValidSupZ != sortedRedshifts[sortedRedshifts.size() - 1]) {
     Log.LogInfo(" overlap warning for: minz=%.3f, maxz=%.3f", overlapValidInfZ,
                 overlapValidSupZ);
-  }
-
-  // only bad status warning
-  Int32 oneValidStatusFoundIndex = -1;
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
-    if (result->Status[i] == COperator::nStatus_OK) {
-      oneValidStatusFoundIndex = i;
-      Log.LogDebug(" STATUS VALID found at least at index=%d", i);
-      break;
-    }
-  }
-  if (oneValidStatusFoundIndex == -1) {
-    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
-                 Formatter() << "  COperatorTplcombination::" << __func__
-                             << ": STATUS WARNING: Not even one single valid "
-                                "fit/merit value found");
-  }
-
-  // loop error status warning
-  Int32 loopErrorStatusFoundIndex = -1;
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
-    if (result->Status[i] == COperator::nStatus_LoopError) {
-      loopErrorStatusFoundIndex = i;
-      Log.LogDebug(" STATUS Loop Error found at "
-                   "least at index=%d",
-                   i);
-      break;
-    }
-  }
-  if (loopErrorStatusFoundIndex != -1) {
-    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
-                 Formatter()
-                     << "    COperatorTplcombination::" << __func__
-                     << ": Loop Error - lst-square values not set even once");
   }
 
   // estimate CstLog for PDF estimation
@@ -639,22 +594,11 @@ COperatorTplcombination::ComputeSpectrumModel(
   TFloat64Range currentRange;
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
                 overlapFraction, overlapThreshold);
-  /*if( ret == -1 ){
-      //status = nStatus_NoOverlap;
-      return -1;
-  }
-  if( ret == -2 ){
-      //status = nStatus_DataError;
-      return -1;
-  }*/
   Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
 
-  bool kStartEnd_ok = currentRange.getClosedIntervalIndices(
+  currentRange.getClosedIntervalIndices(
       m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
       kStart, kEnd);
-  if (!kStartEnd_ok) {
-    THROWG(INTERNAL_ERROR, "impossible to get valid kstart or kend");
-  }
 
   // create identityTemplate on which we apply meiksin and ism, once for all
   // tpllist

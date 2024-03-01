@@ -319,10 +319,6 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 
   // check chi2 results status for this template
 
-  for (auto status : result->Status)
-    if (status != COperator::nStatus_OK)
-      THROWG(INTERNAL_ERROR, " Found bad status result");
-
   CZPrior zpriorhelper;
   for (Int32 kism = 0; kism < nISM; kism++) {
     for (Int32 kigm = 0; kigm < nIGM; kigm++) {

@@ -672,34 +672,37 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   BOOST_CHECK(myVector[i_min + 1] > range.GetBegin());
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
-  // Check warning
+  // Check errors
   range = TFloat64Range(9, 10.3);
-  bool result =
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(
+      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      GlobalException);
 
   range = TFloat64Range(6, 7.5);
-  result = range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(
+      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      GlobalException);
 
   range = TFloat64Range(0, 10.3);
-  result = range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(
+      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      GlobalException);
 
   range = TFloat64Range(6, 16);
-  result = range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(
+      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      GlobalException);
 
   // -- TEST WITHOUT TARGET --
 
-  // Check warning
+  // Check errors
   range = TFloat64Range(0, 10.3);
-  result = range.getEnclosingIntervalIndices(myVector, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
+                    GlobalException);
 
   range = TFloat64Range(6, 16);
-  result = range.getEnclosingIntervalIndices(myVector, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
+                    GlobalException);
 
   // TEST OK
   range = TFloat64Range(6.5, 10.3);
@@ -744,14 +747,14 @@ BOOST_AUTO_TEST_CASE(Closed_interval) {
   const Float64 target = 8.;
   Int32 i_min = -1, i_max = -1;
 
-  // Check warning
+  // Check errors
   TFloat64Range range = TFloat64Range(20, 25);
-  bool result = range.getClosedIntervalIndices(myVector, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(range.getClosedIntervalIndices(myVector, i_min, i_max),
+                    GlobalException);
 
   range = TFloat64Range(-10, -5);
-  result = range.getClosedIntervalIndices(myVector, i_min, i_max);
-  BOOST_CHECK(result == 0);
+  BOOST_CHECK_THROW(range.getClosedIntervalIndices(myVector, i_min, i_max),
+                    GlobalException);
 
   // range borders belong to orderded values
   range = TFloat64Range(6.5, 10.3);
@@ -802,8 +805,8 @@ BOOST_AUTO_TEST_CASE(maskedRange) {
   TFloat64Range otherRange(otherVector[range.GetBegin()],
                            otherVector[range.GetEnd()]);
   Int32 kstart = -1, kend = -1;
-  bool ret = otherRange.getClosedIntervalIndices(ssVector, kstart, kend);
-  BOOST_CHECK(ret == false);
+  BOOST_CHECK_THROW(otherRange.getClosedIntervalIndices(ssVector, kstart, kend),
+                    GlobalException);
 }
 BOOST_AUTO_TEST_CASE(maskedRange_oneCommon) {
   TInt32Range range(1, 5);
@@ -816,8 +819,8 @@ BOOST_AUTO_TEST_CASE(maskedRange_oneCommon) {
   TFloat64Range otherRange(otherVector[range.GetBegin()],
                            otherVector[range.GetEnd()]);
   Int32 kstart = -1, kend = -1;
-  Int32 ret = otherRange.getClosedIntervalIndices(ssVector, kstart, kend);
-  BOOST_CHECK(ret == true);
+  BOOST_CHECK_NO_THROW(
+      otherRange.getClosedIntervalIndices(ssVector, kstart, kend));
   BOOST_CHECK(kstart == 1);
   BOOST_CHECK(kend == 1);
 }

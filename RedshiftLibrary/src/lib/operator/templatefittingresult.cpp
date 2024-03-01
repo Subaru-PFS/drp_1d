@@ -48,7 +48,7 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n)
       FitAmplitudeSigma(n), FitEbmvCoeff(n), FitMeiksinIdx(n), FitDtM(n),
       FitMtM(n), LogPrior(n), ChiSquareIntermediate(n),
       IsmEbmvCoeffIntermediate(n), IgmMeiksinIdxIntermediate(n), SNR(n),
-      Overlap(n), Status(n) {}
+      Overlap(n) {}
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
                                                Int32 MeiksinListSize)
@@ -79,7 +79,6 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
   SNR[i] = SNRCalculation(FitDtM[i], FitMtM[i]);
   LogPrior[i] = val.logprior;
   Overlap[i] = val.overlapFraction;
-  Status[i] = val.status;
 
   ChiSquareIntermediate[i] = std::move(val.ChiSquareInterm);
   IsmEbmvCoeffIntermediate[i] = std::move(val.IsmCalzettiCoeffInterm);

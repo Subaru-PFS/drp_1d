@@ -289,24 +289,23 @@ public:
 
   // enclosed refers to having i_max referring to m_End or higher and i_min
   // referring to m_Begin or lower
-  bool getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
-                                   const T &value, Int32 &i_min, Int32 &i_max,
-                                   bool warning = true) const {
+  void getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
+                                   const T &value, Int32 &i_min,
+                                   Int32 &i_max) const {
     if (value < m_Begin || value > m_End) {
-      if (warning)
-        Flag.warning(WarningCode::CRANGE_VALUE_OUTSIDERANGE,
-                     Formatter()
-                         << "CRange::" << __func__ << ": value " << value
-                         << " not inside ]" << m_Begin << "," << m_End << "[");
-      return false;
-    } else if (m_Begin < ordered_values.front() ||
-               m_End > ordered_values.back()) {
-      if (warning)
-        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
-                     Formatter()
-                         << "CRange::" << __func__ << ": ]" << m_Begin << ","
-                         << m_End << "[ not inside ordered_values");
-      return false;
+      THROWG(CRANGE_VALUE_OUTSIDERANGE,
+             Formatter() << "Value " << value << " not inside ]" << m_Begin
+                         << "," << m_End << "[");
+    }
+
+    if (ordered_values.size() == 0) {
+      THROWG(EMPTY_LIST, "Input ordered values is an empty vector.");
+    }
+
+    if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
+      THROWG(CRANGE_VECTBORDERS_OUTSIDERANGE,
+             Formatter() << "]" << m_Begin << "," << m_End
+                         << "[ not inside ordered_values");
     }
     typename std::vector<T>::const_iterator it =
         std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
@@ -320,19 +319,18 @@ public:
 
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
-    return true;
   }
 
-  bool getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
-                                   Int32 &i_min, Int32 &i_max,
-                                   bool warning = true) const {
+  void getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
+                                   Int32 &i_min, Int32 &i_max) const {
+
+    if (ordered_values.size() == 0) {
+      THROWG(EMPTY_LIST, "Input ordered values is an empty vector.");
+    }
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
-      if (warning)
-        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
-                     Formatter()
-                         << "CRange::" << __func__ << ": ]" << m_Begin << ","
-                         << m_End << "[ not inside ordered_values");
-      return false;
+      THROWG(CRANGE_VECTBORDERS_OUTSIDERANGE,
+             Formatter() << "]" << m_Begin << "," << m_End
+                         << "[ not inside ordered_values");
     }
 
     typename std::vector<T>::const_iterator it_min =
@@ -345,21 +343,19 @@ public:
 
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
-    return true;
   }
 
   // closed refers to having i_min referring to m_Begin index or higher and
   // i_max referring to m_End index or lower
-  bool getClosedIntervalIndices(const std::vector<T> &ordered_values,
-                                Int32 &i_min, Int32 &i_max,
-                                bool warning = true) const {
+  void getClosedIntervalIndices(const std::vector<T> &ordered_values,
+                                Int32 &i_min, Int32 &i_max) const {
+    if (ordered_values.size() == 0) {
+      THROWG(EMPTY_LIST, "Input ordered values is an empty vector.");
+    }
     if (m_End < ordered_values.front() || m_Begin > ordered_values.back()) {
-      if (warning)
-        Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
-                     Formatter()
-                         << "CRange::" << __func__ << ": ]" << m_Begin << ","
-                         << m_End << "[ not inside ordered_values");
-      return false;
+      THROWG(CRANGE_VECTBORDERS_OUTSIDERANGE,
+             Formatter() << "]" << m_Begin << "," << m_End
+                         << "[ not inside ordered_values");
     }
 
     typename std::vector<T>::const_iterator it_min =
@@ -375,16 +371,10 @@ public:
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
     if (i_min > i_max) {
-      if (warning)
-        Flag.warning(
-            WarningCode::CRANGE_NO_INTERSECTION,
-            Formatter()
-                << "CRange::" << __func__
-                << ": There is no sample inside range (min,max indices=["
-                << i_min << "," << i_max << "]");
-      return false;
+      THROWG(CRANGE_NO_INTERSECTION,
+             Formatter() << "There is no sample inside range (min,max indices=["
+                         << i_min << "," << i_max << "]");
     }
-    return true;
   }
 
   static bool HasIntersection(const CRange<T> &a, const CRange<T> &b) {
@@ -420,6 +410,10 @@ public:
 
   static std::vector<CRange<T>>
   joinIntersections(std::vector<CRange<T>> ranges) {
+
+    if (ranges.size() == 0) {
+      THROWG(EMPTY_LIST, "Input ranges is an empty vector.");
+    }
 
     if (ranges.size() == 1)
       return ranges;

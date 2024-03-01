@@ -73,7 +73,6 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
   }
 
   Int32 nResults = redshifts.size();
-  Status.assign(nResults, COperator::nStatus_UnSet);
   ChiSquare.assign(nResults, NAN);
   ScaleMargCorrection.assign(nResults, NAN);
   Redshifts = std::move(redshifts);
@@ -112,7 +111,6 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
 
 void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
 
-  insertWithDuplicates(Status, idx, count, COperator::nStatus_UnSet, ndup);
   insertWithDuplicates<Float64>(ChiSquare, idx, count, NAN, ndup);
   insertWithDuplicates<Float64>(ScaleMargCorrection, idx, count, NAN, ndup);
   insertWithDuplicates(LineModelSolutions, idx, count, CLineModelSolution(),

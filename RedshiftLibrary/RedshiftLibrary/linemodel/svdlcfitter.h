@@ -61,7 +61,7 @@ public:
 
 private:
   void doFit(Float64 redshift) override;
-  Int32 fitAmplitudesLinesAndContinuumLinSolve(
+  void fitAmplitudesLinesAndContinuumLinSolve(
       const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
       TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
       Float64 redshift);

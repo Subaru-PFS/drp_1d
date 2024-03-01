@@ -55,8 +55,6 @@ namespace NSEpic {
 class AmzException : public std::exception {
 
 public:
-  //#include "RedshiftLibrary/common/errorcodes.i"
-  //  AmzException(ErrorCode ec, std::string message);
   AmzException(ErrorCode ec, const std::string &message, const char *filename_,
                const char *method_, int line_)
       : _msg(message), code(ec), filename(filename_), method(method_),
@@ -102,7 +100,6 @@ public:
                     const char *filename_, const char *method_,
                     int line_) noexcept;
 };
-
 } // namespace NSEpic
 
 #endif

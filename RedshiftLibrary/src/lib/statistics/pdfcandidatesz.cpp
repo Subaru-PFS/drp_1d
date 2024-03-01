@@ -271,13 +271,8 @@ void CPdfCandidatesZ::getCandidateSumTrapez(
   // redshifts[kmin]:redshifts[kmax] ]
   Int32 kmin = -1;
   Int32 kmax = -1;
-  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift,
-                                               kmin, kmax);
-
-  if (!ok || kmin == -1 || kmax == -1) {
-    THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
-  }
-
+  zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift, kmin,
+                                     kmax);
   TFloat64List ZinRange =
       TFloat64List(redshifts.begin() + kmin, redshifts.begin() + kmax + 1);
   candidate->ValSumProbaZmin = ZinRange.front();
@@ -388,11 +383,9 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   // redshifts[kmin]:redshifts[kmax] ]
   Int32 kmin = -1;
   Int32 kmax = -1;
-  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift,
-                                               kmin, kmax);
 
-  if (!ok || kmin == -1 || kmax == -1)
-    THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
+  zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift, kmin,
+                                     kmax);
 
   // initialize GSL
   const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;

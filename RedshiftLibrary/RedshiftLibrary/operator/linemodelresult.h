@@ -125,7 +125,6 @@ public:
   std::vector<CLineModelSolution> LineModelSolutions;
   std::vector<CTplModelSolution> ContinuumModelSolutions;
 
-  COperator::TStatusList Status;
   CLineMap restLineList;
   Int32 nSpcSamples = 0;
   Float64 dTransposeD = 0.0;

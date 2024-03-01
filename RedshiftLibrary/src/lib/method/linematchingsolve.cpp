@@ -351,11 +351,10 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
   }; // while
 
   if (iCmpt == cmptMax) {
-    Flag.warning(
-        WarningCode::LINEMATCHING_REACHED_ENDLOOP,
-        Formatter()
-            << "CMethodLineMatchingSolve::" << __func__
-            << ": Warning. Stopped the linematching dynamic cut loop...");
+    Flag.warning(WarningCode::LINEMATCHING_REACHED_ENDLOOP,
+                 Formatter()
+                     << "CMethodLineMatchingSolve::" << __func__
+                     << ": Stopped the linematching dynamic cut loop...");
   }
   return std::make_shared<CLineMatchingSolveResult>();
 }

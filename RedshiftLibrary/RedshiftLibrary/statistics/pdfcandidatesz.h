@@ -55,6 +55,7 @@ namespace Statistics_pdfcandidatesz { // boost_test_suite
 class SortByValSumProbaInt_test;
 class getCandidateSumTrapez_test;
 class getCandidateRobustGaussFit_test;
+class getCandidateGaussFit_test;
 } // namespace Statistics_pdfcandidatesz
 namespace NSEpic {
 
@@ -93,6 +94,7 @@ private:
   friend class Statistics_pdfcandidatesz::SortByValSumProbaInt_test;
   friend class Statistics_pdfcandidatesz::getCandidateSumTrapez_test;
   friend class Statistics_pdfcandidatesz::getCandidateRobustGaussFit_test;
+  friend class Statistics_pdfcandidatesz::getCandidateGaussFit_test;
 
   void getCandidateSumTrapez(const TRedshiftList &redshifts,
                              const TFloat64List &valprobalog,

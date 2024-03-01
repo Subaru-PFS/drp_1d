@@ -146,7 +146,7 @@ void COperatorPdfz::checkWindowSize(const TFloat64Range &integration_range,
 
   if (integration_range.GetBegin() < window_range.GetBegin() ||
       integration_range.GetEnd() > window_range.GetEnd()) {
-    Flag.warning(WarningCode::WINDOW_TOO_SMALL,
+    Flag.warning(WarningCode::PDF_INTEGRATION_WINDOW_TOO_SMALL,
                  Formatter()
                      << "COperatorPdfz::" << __func__
                      << " Window is too small : \n"
@@ -219,20 +219,18 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
     CExtremum extremum_op = CExtremum(
         m_maxPeakCount_per_window, m_peakSeparation, m_meritcut,
         invertForMinSearch, m_allow_extrema_at_border, redshiftsRange);
-    bool findok =
-        extremum_op.Find(zgrid, m_postmargZResult->valProbaLog, extremumList);
+    bool isFirstPass = m_candidatesZRanges.size() == 1;
+    bool findok = extremum_op.Find(zgrid, m_postmargZResult->valProbaLog,
+                                   isFirstPass, extremumList);
     if (!findok) {
-      if (m_candidatesZRanges.size() == 1)
-        THROWG(INTERNAL_ERROR, " Failed to identify pdf candidates");
-
-      // we are in 2nd pass (several redshift ranges)
+      // we are in 2nd pass (several redshift ranges) (error in Find if first
+      // pass with not findok)
       Log.LogInfo("COperatorPdfz::searchMaxPDFcandidates: Second-pass "
                   "fitting degenerates the first-pass results of "
                   "candidate:%s in range [%f , %f]\n",
                   cand.first.c_str(), redshiftsRange.GetBegin(),
                   redshiftsRange.GetEnd());
       Log.LogInfo(" Flag - Eliminating a second-pass candidate");
-      continue;
     }
     Int32 i = 0;
     const std::string Id_prefix =
@@ -486,11 +484,6 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   // marginalize: ie sum all PDFS
   TInt32List nSum(zsize, 0);
   for (Int32 km = 0; km < nmodel; km++) {
-    /*Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
-                 km);*/
-
-    // Todo: Check if the status is OK ?
-    // meritResult->Status[i] == COperator::nStatus_OK
     const TFloat64List &logProba = logProbaList[km];
     const Float64 logWeight =
         LogEvidencesWPriorM[km] - m_postmargZResult->valMargEvidenceLog;
@@ -532,9 +525,6 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   for (Int32 km = 0; km < meritResults.size(); km++) {
     Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d", km);
 
-    // Todo: Check if the status is OK ?
-    // meritResult->Status[i] == COperator::nStatus_OK
-
     TFloat64List logProba;
     Float64 logEvidence;
     ComputePdf(meritResults[km], redshifts, cstLog, zPriors[km], logProba,
@@ -545,16 +535,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
       THROWG(INTERNAL_ERROR, "z-bins comparison failed");
 
     for (Int32 k = 0; k < redshifts.size(); k++)
-      if (true /*meritResult->Status[k]== COperator::nStatus_OK*/) // todo:
-                                                                   // check
-                                                                   // (temporarily
-                                                                   // considers
-                                                                   // status is
-                                                                   // always OK
-                                                                   // for
-                                                                   // linemodel
-                                                                   // tplratio)
-
+      if (true)
         m_postmargZResult->valProbaLog[k] =
             std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
   }

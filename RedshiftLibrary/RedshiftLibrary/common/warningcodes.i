@@ -1,31 +1,22 @@
 enum class WarningCode {
   WARNING_NONE = 0,
-  AIR_VACCUM_CONVERSION_IGNORED,             // 1
-  CRANGE_VALUE_OUTSIDERANGE,                 // 2
-  CRANGE_VECTBORDERS_OUTSIDERANGE,           // 3
-  CRANGE_NO_INTERSECTION,                    // 4
-  FINDER_NO_PEAKS,                           // 5
-  STDESTIMATION_NO_MATCHING,                 // 6
-  STDESTIMATION_FAILED,                      // 7
-  MULTIROLL_STRTAG_NOTFOUND,                 // 8
-  LINEMATCHING_REACHED_ENDLOOP,              // 9
-  IGNORELINESSUPPORT_DISABLED_FFT,           // 10
-  FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,       // 11
-  INVALID_MERIT_VALUES,                      // 12
-  AIR_VACCUM_REACHED_MAX_ITERATIONS,         // 13
-  ASYMFIT_NAN_PARAMS,                        // 14
-  DELTAZ_COMPUTATION_FAILED,                 // 15
-  INVALID_FOLDER_PATH,                       // 16
-  TPL_NAME_EMPTY,                            // 17
-  FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,       // 18
-  TEMPLATEFITTINGLOG_NO_MASK,                // 19
-  CORRECT_SPECTRUM_NOMINFLUX,                // 20
-  DEACTIVATE_CONTREESTIMATION_SKIPSECONDPASS, // 21
-  LINEARFIT_RANK_DEFICIENT,                   // 22
-  LBFGSPP_ERROR,                              // 23
-  WINDOW_TOO_SMALL,                           // 24
-  UNUSED_PARAMETER,                           // 25
-  TIGHT_SPECTRUM_WAVELENGTH,                  // 26
-  LINE_RATIO_UNKNOWN_LINE,                    // 27
-    ARBITRARY_LSF                             // 28
+  AIR_VACUUM_CONVERSION_IGNORED,                // 1
+  PDF_PEAK_NOT_FOUND,                                  // 2
+  ESTIMATED_STD_FAR_FROM_INPUT,                 // 3
+  LINEMATCHING_REACHED_ENDLOOP,                 // 4
+  FORCED_IGNORELINESUPPORT_TO_FALSE,            // 5
+  FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,   // 6
+  AIR_VACUUM_REACHED_MAX_ITERATIONS,            // 7   --
+  ASYMFIT_NAN_PARAMS,                           // 8
+  DELTAZ_COMPUTATION_FAILED,                    // 9
+  INVALID_FOLDER_PATH,                          // 10
+  FORCED_CONTINUUM_TO_NOCONTINUUM,              // 11
+  FORCED_CONTINUUM_REESTIMATION_TO_NO,          // 12
+  LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,      // 13
+  LBFGSPP_ERROR,                                // 14
+  PDF_INTEGRATION_WINDOW_TOO_SMALL,                           
+  // Python
+  UNUSED_PARAMETER,                             // 15
+  SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,       // 16 
+  MULTI_OBS_ARBITRARY_LSF                       // 17
 };

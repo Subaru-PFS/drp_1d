@@ -107,7 +107,7 @@ bool CExtremum::DefaultExtremum(const TFloat64List &xAxis,
  * interval limits.
  */
 bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
-                     TPointList &maxPoint) const {
+                     const bool isFirstPass, TPointList &maxPoint) const {
   Int32 n = xAxis.size();
 
   if (n == 0) {
@@ -123,27 +123,25 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
 
   // Find index in xAxis that correspond to the boundary specified by m_XRange
   if (!m_XRange.GetIsEmpty()) {
-    bool rangeok;
-    rangeok = m_XRange.getClosedIntervalIndices(xAxis, BeginIndex, EndIndex);
-    if (!rangeok)
-      THROWG(INTERNAL_ERROR, Formatter() << "bad range [" << m_XRange.GetBegin()
-                                         << ", " << m_XRange.GetEnd()
-                                         << "] for Xaxis: [" << xAxis.front()
-                                         << ", " << xAxis.back() << "]");
+    m_XRange.getClosedIntervalIndices(xAxis, BeginIndex, EndIndex);
   }
 
   TFloat64List maxX, minX;
   TFloat64List maxY, minY;
-  bool method = FindAllPeaks(xAxis, yAxis, BeginIndex, EndIndex, maxX, maxY);
+  FindAllPeaks(xAxis, yAxis, BeginIndex, EndIndex, maxX, maxY);
 
   if (maxX.size() == 0) {
-    // we should not raise an exception here
-    // (we can accept a missing candidate in second pass window)
-    // The boolean return has to be tested by the caller
-    Flag.warning(WarningCode::FINDER_NO_PEAKS,
-                 Formatter() << "          CExtremum::" << __func__
-                             << ": FindAllPeaks returned empty MaxX");
-    return false;
+    if (isFirstPass) {
+      THROWG(PDF_PEAK_NOT_FOUND, Formatter()
+                                     << "CExtremum::" << __func__
+                                     << " Failed to identify pdf candidates ");
+    } else {
+      // we should not raise an exception here
+      // (we can accept a missing candidate in second pass window)
+      Flag.warning(WarningCode::PDF_PEAK_NOT_FOUND,
+                   Formatter() << "          CExtremum::" << __func__
+                               << ": FindAllPeaks returned empty MaxX");
+    }
   }
 
   // TODO: add a boolean referring to the metric to use for the sort
@@ -152,17 +150,15 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
 
   Int32 keepMinN = 1;
   if (m_meritCut > 0.0 && maxX.size() > keepMinN) {
-    bool v = Cut_Threshold(maxX, maxY, keepMinN);
+    Cut_Threshold(maxX, maxY, keepMinN);
   }
 
   // refine: eliminate very close candidates when possible.
-  bool b;
   if (m_PeakSeparationActive) {
-    b = FilterOutNeighboringPeaksAndTruncate(maxX, maxY, keepMinN, maxPoint);
+    FilterOutNeighboringPeaksAndTruncate(maxX, maxY, keepMinN, maxPoint);
 
     // verify that peaks are well separated by at least secondpassradius
-    bool verified = verifyPeakSeparation(maxPoint);
-
+    verifyPeakSeparation(maxPoint);
   } else {
     Truncate(maxX, maxY, maxPoint);
   }
@@ -269,7 +265,10 @@ bool CExtremum::FilterOutNeighboringPeaksAndTruncate(
                              (1 + m_extrema_separation / 2);
     TFloat64Range window(wind_low, wind_high);
     Int32 i_min = i, i_max = i;
-    bool ret = window.getClosedIntervalIndices(maxX, i_min, i_max, false);
+    try {
+      window.getClosedIntervalIndices(maxX, i_min, i_max);
+    } catch (const GlobalException &exception) {
+    }
     for (Int32 j = i_min; j <= i_max; j++) {
       if (j == i)
         continue;

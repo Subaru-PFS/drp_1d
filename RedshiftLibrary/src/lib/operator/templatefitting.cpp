@@ -82,7 +82,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
   bool amplForcePositive = true;
-  bool status_chisquareSetAtLeastOnce = false;
+  bool chisquareSetAtLeastOnce = false;
 
   Int32 EbmvListSize = EbmvList.size();
   Int32 MeiksinListSize = MeiksinList.size();
@@ -103,16 +103,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
     RebinTemplate(tpl, redshift, currentRanges[spcIndex],
                   result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
-
-    bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
+    currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart[spcIndex], m_kEnd[spcIndex]);
-    if (!kStartEnd_ok)
-      THROWG(INTERNAL_ERROR, "Impossible to "
-                             "get valid kstart or kend");
-    if (m_kStart[spcIndex] == -1 || m_kEnd[spcIndex] == -1)
-      THROWG(INTERNAL_ERROR, Formatter() << "kStart=" << m_kStart[spcIndex]
-                                         << ", kEnd=" << m_kEnd[spcIndex]);
   }
   if (opt_dustFitting || opt_extinction)
     InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
@@ -189,15 +182,15 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         result.EbmvCoeff = coeffEBMV;
         result.MeiksinIdx =
             igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
-        status_chisquareSetAtLeastOnce = true;
+        chisquareSetAtLeastOnce = true;
       }
     }
   }
 
-  if (status_chisquareSetAtLeastOnce) {
-    result.status = nStatus_OK;
-  } else {
-    result.status = nStatus_LoopError;
+  if (!chisquareSetAtLeastOnce) {
+    THROWG(INVALID_MERIT_VALUES,
+           Formatter() << "Template " << tpl->GetName().c_str()
+                       << ": Not even one single valid fit/merit value found");
   }
 
   return result;
@@ -337,8 +330,6 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
     ampl_err = 0.0;
     fit = sumS;
     ampl_sigma = 0.0;
-    // status = nStatus_DataError;
-    // return;
   } else {
 
     ampl = sumCross / sumT;
@@ -436,11 +427,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
                  opt_dustFitting, logp, MeiksinList, EbmvList);
 
     result->set_at_redshift(i, std::move(result_z));
-
-    if (result->Status[i] == nStatus_InvalidProductsError)
-      THROWG(INTERNAL_ERROR, Formatter() << "found invalid chisquare "
-                                            "products for z="
-                                         << redshift);
   }
 
   // overlap warning
@@ -469,43 +455,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     Log.LogInfo("  Operator-TemplateFitting: overlap warning for %s: "
                 "minz=%.3f, maxz=%.3f",
                 tpl->GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
-  }
-
-  // only bad status warning
-  Int32 oneValidStatusFoundIndex = -1;
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    if (result->Status[i] == nStatus_OK) {
-      oneValidStatusFoundIndex = i;
-      Log.LogDebug("  Operator-TemplateFitting: STATUS VALID found for %s: at "
-                   "least at index=%d",
-                   tpl->GetName().c_str(), i);
-      break;
-    }
-  }
-  if (oneValidStatusFoundIndex == -1) {
-    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
-                 Formatter()
-                     << "  COperatorTemplateFitting::" << __func__
-                     << ": STATUS WARNING for " << tpl->GetName().c_str()
-                     << ": Not even one single valid fit/merit value found");
-  }
-
-  // loop error status warning
-  Int32 loopErrorStatusFoundIndex = -1;
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    if (result->Status[i] == nStatus_LoopError) {
-      loopErrorStatusFoundIndex = i;
-      Log.LogDebug("  Operator-TemplateFitting: STATUS Loop Error found for "
-                   "%s: at least at index=%d",
-                   tpl->GetName().c_str(), i);
-      break;
-    }
-  }
-  if (loopErrorStatusFoundIndex != -1) {
-    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
-                 Formatter()
-                     << "    COperatorTemplateFitting::" << __func__
-                     << ": Loop Error - chisquare values not set even once");
   }
 
   // estimate CstLog for PDF estimation

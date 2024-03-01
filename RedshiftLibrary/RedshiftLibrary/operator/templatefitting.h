@@ -103,7 +103,6 @@ struct TFittingIsmIgmResult : TFittingResult {
   std::vector<TFloat64List> ChiSquareInterm;
   std::vector<TFloat64List> IsmCalzettiCoeffInterm;
   std::vector<TInt32List> IgmMeiksinIdxInterm;
-  COperator::EStatus status = COperator::EStatus::nStatus_UnSet;
 };
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {

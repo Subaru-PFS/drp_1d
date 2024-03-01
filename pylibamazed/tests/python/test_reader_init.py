@@ -266,7 +266,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
             })
             fsr.init()
 
-            assert WarningUtils.has_warning(zflag, "TIGHT_SPECTRUM_WAVELENGTH")
+            assert WarningUtils.has_warning(zflag, "SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM")
 
         def test_warning_if_parameters_lambdarange_begins_lower_than_spectrum(self, zflag):
             self._init_fsr(
@@ -305,7 +305,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
             })
             fsr.init()
 
-            assert not WarningUtils.has_warning(zflag, "TIGHT_SPECTRUM_WAVELENGTH")
+            assert not WarningUtils.has_warning(zflag, "SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM")
 
         def test_OK_if_parameters_lambdarange_boundaries_are_equal_to_spectrum(self, zflag):
             self._init_fsr(
