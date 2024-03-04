@@ -4,7 +4,8 @@
   "title": "Spectrum model",
   "type": "object",
   "required": [
-    "method"
+    "method",
+    "deepLearningSolver"
   ],
   "additionalProperties": false,
   "properties": {
@@ -21,6 +22,10 @@
     },
     "deepLearningSolver": {
       "title": "Deep learning solver",
+      "required": [
+        "reliabilityModel"
+      ],
+      "additionalProperties": false,
       "properties": {
         "reliabilityModel": {
           "type": "string",

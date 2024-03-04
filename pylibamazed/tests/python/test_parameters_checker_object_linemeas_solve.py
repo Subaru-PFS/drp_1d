@@ -39,10 +39,32 @@
 import pytest
 from pylibamazed.Exception import APIException
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_linemeas_solve_level)
+                                make_parameter_dict_at_linemeas_solve_level,
+                                make_parameter_dict_at_object_level)
 
 
 class TestLineMeasSolve:
+
+    class TestLineMeasSolverSection:
+        def test_error_if_stage_but_not_section(self):
+            param_dict = make_parameter_dict_at_object_level(**{"stages": ["lineMeasSolver"]})
+            param_dict["lsf"] = {}
+            with pytest.raises(APIException, match=r"Missing parameter galaxy lineMeasSolver"):
+                check_from_parameter_dict(param_dict)
+
+        def test_warning_if_not_stage_but_section(self, zflag):
+            param_dict = make_parameter_dict_at_object_level(**{"lineMeasSolver": {}})
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+
+        def test_ok_if_both(self, zflag):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "stages": ["lineMeasSolver"],
+                "lineMeasSolver": {}
+            })
+            param_dict["lsf"] = {}
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
 
     class TestLineRatioType:
 

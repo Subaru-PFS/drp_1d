@@ -46,10 +46,10 @@ class TestParametersUtils:
         input_parameters = {
             self.default_object_type: {
                 "version": 2,
-                "method": kwargs.get("method", "lineModelSolve"),
                 "redshiftSampling": "some redshift sampling",
                 "stages": ["redshiftSolver", "lineMeasSolver"],
                 "redshiftSolver": {
+                    "method": kwargs.get("method", "lineModelSolve"),
                     "lineModelSolve": {
                         "lineModel": {
                             "skipSecondPass": True,

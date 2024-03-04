@@ -44,26 +44,28 @@ from pylibamazed.Exception import APIException
 from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.ParametersConverter import ParametersConverterSelector
+from pylibamazed.ParametersExtender import ParametersExtender
 from pylibamazed.redshift import ErrorCode
 
 
 class Parameters(ParametersAccessor):
     def __init__(self, raw_params: dict, make_checks=True, Checker=ParametersChecker,
-                 ConverterSelector=ParametersConverterSelector):
+                 ConverterSelector=ParametersConverterSelector,
+                 Extender=ParametersExtender):
 
-        self.checker = Checker()
         version = self.get_json_schema_version(raw_params)
 
         if make_checks:
-            self.checker.json_schema_check(raw_params, version)
+            Checker(raw_params).json_schema_check(version)
 
         converter = ConverterSelector().get_converter(version)
-        self.parameters = converter().convert(raw_params)
+        converted_parameters = converter().convert(raw_params)
 
         if make_checks:
-            accessor = ParametersAccessor(self.parameters)
+            Checker(converted_parameters).custom_check()
 
-            self.checker.custom_check(accessor)
+        extended_parameters = Extender().extend(converted_parameters)
+        self.parameters = extended_parameters
 
     def get_json_schema_version(self, raw_parameters: dict):
         version = raw_parameters.get("version")
@@ -180,9 +182,6 @@ class Parameters(ParametersAccessor):
             return self.is_tplratio_catalog_needed(spectrum_model)
         else:
             raise Exception("Unknown stage {stage}")
-
-    def set_lsf_type(self, lsf_type):
-        self.parameters["lsf"]["lsfType"] = lsf_type
 
     def set_lsf_param(self, param_name, data):
         self.parameters["lsf"][param_name] = data
