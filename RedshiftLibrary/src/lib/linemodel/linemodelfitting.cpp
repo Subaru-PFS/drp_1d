@@ -156,8 +156,8 @@ void CLineModelFitting::initMembers(
   m_ElementsVector = std::make_shared<CLMEltListVector>(CLMEltListVector(
       m_lambdaRanges, m_curObs, m_RestLineList, m_lineRatioType == "rules"));
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    Log.LogDetail("    model: Continuum winsize found is %.2f A",
-                  getSpectrum().GetMedianWinsize());
+    Log.LogDetail(Formatter() << "    model: Continuum winsize found is "
+                              << getSpectrum().GetMedianWinsize() << " A");
     m_models->push_back(CSpectrumModel(
         std::make_shared<CLineModelElementList>(getElementList()),
         getSpectrumPtr(), m_RestLineList, m_continuumFitValues, TFOperator,
@@ -245,22 +245,27 @@ void CLineModelFitting::LogCatalogInfos() {
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
     Log.LogDetail("\n");
-    Log.LogDetail("LineModel Infos: %d elements", getElementList().size());
+    Log.LogDetail(Formatter() << "LineModel Infos:" << getElementList().size()
+                              << " elements");
     for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
       auto const &elt = getElementList()[iElts];
       Int32 nLines = elt->GetSize();
       if (nLines < 1) {
-        Log.LogDetail("LineModel ctlg: elt %d (%s): no lines", iElts,
-                      CLine::ETypeString.at(elt->GetElementType()).c_str());
+        Log.LogDetail(Formatter()
+                      << "LineModel ctlg: elt " << iElts << " ("
+                      << CLine::ETypeString.at(elt->GetElementType()).c_str()
+                      << "): no lines");
       }
       for (Int32 index = 0; index != elt->GetSize(); ++index) {
         std::string nominalAmpStr = "";
         nominalAmpStr = boost::str(boost::format("(nominal amp = %.4e)") %
                                    elt->GetNominalAmplitude(index));
-        Log.LogDetail("LineModel ctlg: elt %d (%s): line %d = %s %s", iElts,
-                      CLine::ETypeString.at(elt->GetElementType()).c_str(),
-                      index, elt->GetLineName(index).c_str(),
-                      nominalAmpStr.c_str());
+        Log.LogDetail(Formatter()
+                      << "LineModel ctlg: elt " << iElts << " ("
+                      << CLine::ETypeString.at(elt->GetElementType()).c_str()
+                      << "): line " << index << " = "
+                      << elt->GetLineName(index).c_str()
+                      << nominalAmpStr.c_str());
       }
     }
   }
@@ -421,13 +426,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       }
       //*m_curObs = 0;
     }
-    /*
-    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
-                  "ebmv=%.3f), and A=%e",
-                  savedIdxContinuumFitted, m_fitContinuum_tplName.c_str(),
-                  m_fitContinuum_tplFitEbmvCoeff,
-                  m_fitContinuum_tplFitAmplitude);
-    */
   }
   if (m_lineRatioType == "tplRatio") {
     m_lineRatioManager->resetToBestRatio(redshift);
@@ -1200,7 +1198,8 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
 
       dtd += (flux * flux) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     }
-    Log.LogDebug("CLineModelFitting::EstimateDTransposeD val = %f", dtd);
+    Log.LogDebug(Formatter()
+                 << "CLineModelFitting::EstimateDTransposeD val = " << dtd);
   }
   return dtd;
 }
@@ -1230,7 +1229,6 @@ Float64 CLineModelFitting::EstimateMTransposeM()
       diff = spcFluxAxis[j];
       mtm += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     }
-    // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
   }
   return mtm;
 }
@@ -1260,8 +1258,6 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
     Int32 numDevs = std::abs(imax - imin + 1);
     for (Int32 j = imin; j <= imax; j++)
       sumLogNoise += log(ErrorNoContinuum[j]);
-
-    // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
 
     cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
   }

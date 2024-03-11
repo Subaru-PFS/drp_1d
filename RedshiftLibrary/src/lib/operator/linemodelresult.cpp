@@ -411,8 +411,9 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
           linemodelsols[solutionIdx].OutsideLambdaRange[j])
         continue;
 
-      Log.LogDebug("    linemodelresult: using line for max amp search=%s",
-                   restLineList.at(line_id).GetName().c_str());
+      Log.LogDebug(Formatter()
+                   << "    linemodelresult: using line for max amp search="
+                   << restLineList.at(line_id).GetName().c_str());
       if (linemodelsols[solutionIdx].Amplitudes[j] > ampMax) {
         ampMax = linemodelsols[solutionIdx].Amplitudes[j];
         ampMaxLineTag = restLineList.at(line_id).GetName().c_str();
@@ -422,9 +423,10 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
     isHaStrongest[solutionIdx] = (!std::isnan(ampMax) && ampMax > 0. &&
                                   ampMaxLineTag == linetags::halpha_em);
     if (isHaStrongest[solutionIdx]) {
-      Log.LogDebug("CLineModelResult::GetModelHaStrongest:  z=%f found to be "
-                   "true with ampMax=%e (for line=Halpha)",
-                   linemodelsols[solutionIdx].Redshift, ampMax);
+      Log.LogDebug(Formatter() << "CLineModelResult::GetModelHaStrongest:  z="
+                               << linemodelsols[solutionIdx].Redshift
+                               << " found to be true with ampMax=" << ampMax
+                               << " (for line=Halpha)");
     }
   }
 

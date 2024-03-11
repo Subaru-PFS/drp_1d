@@ -147,7 +147,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       maxabsval = std::abs(fluxAxis[idx]);
   }
   Float64 normFactor = 1.0 / maxabsval;
-  Log.LogDetail("normFactor = '%.3e'\n", normFactor);
+  Log.LogDetail(Formatter() << "normFactor = '" << normFactor << "'\n");
 
   // Prepare the fit data
   for (Int32 i = 0; i < n; i++) {
@@ -164,7 +164,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       fval = getElementList()[EltsIdxToFit[iddl]]->getModelAtLambda(
           xi, redshift, continuumfluxAxis[idx]);
       gsl_matrix_set(X, i, iddl, fval);
-      Log.LogDebug("fval = '%.3e'", fval);
+      Log.LogDebug(Formatter() << "fval = '" << fval << "'");
     }
 
     if (useAmpOffset) {
@@ -186,7 +186,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     Float64 const a = gsl_vector_get(c, iddl) / normFactor;
-    Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
+    Log.LogDetail(Formatter() << "# Found amplitude " << iddl << ": " << a);
   }
 
   bool allPositive = true;

@@ -50,10 +50,10 @@ void CRandomFitter::doFit(Float64 redshift) {
   Float64 coeffAmpEmission = pow(10.0, randNumFloat * 3.0 - 1.0);
   randNumFloat = (Float64)rand() / (Float64)(RAND_MAX);
   Float64 coeffAmpAbsorption = pow(10.0, randNumFloat * 1.0 - 1.0);
-  Log.LogInfo("\nLineModel simulation: coeffAmpEmission = %.2f",
-              coeffAmpEmission);
-  Log.LogInfo("LineModel simulation: coeffAmpAbsorption = %.2f",
-              coeffAmpAbsorption);
+  Log.LogInfo(Formatter() << "\nLineModel simulation: coeffAmpEmission ="
+                          << coeffAmpEmission);
+  Log.LogInfo(Formatter() << "LineModel simulation: coeffAmpAbsorption ="
+                          << coeffAmpAbsorption);
   // fit the model amplitudes individually
   for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);

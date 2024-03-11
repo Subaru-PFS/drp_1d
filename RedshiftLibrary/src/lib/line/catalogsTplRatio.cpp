@@ -146,12 +146,13 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
             LineModelElementsParams[elt_index]->m_Lines[line_index].GetID();
         std::string const &lineName =
             GetCatalog(k).GetList().at(line_id).GetStrID();
-        Log.LogDebug("    CatalogsTplRatio - "
-                     "linesCorrespondingNominalAmp, "
-                     "iCatalog=%d, iElt=%d, iLine=%d with name=%s, ebv=%f: "
-                     "NominalAmpFound = "
-                     "%e",
-                     k, elt_index, line_index, lineName.c_str(), ebv, nomAmp);
+        Log.LogDebug(Formatter() << "    CatalogsTplRatio - "
+                                 << "linesCorrespondingNominalAmp, "
+                                 << "iCatalog=" << k << ", iElt=" << elt_index
+                                 << ", iLine=" << line_index
+                                 << " with name=" << lineName.c_str()
+                                 << " , ebv=" << ebv << " : "
+                                 << "NominalAmpFound = " << nomAmp);
       }
     }
   }

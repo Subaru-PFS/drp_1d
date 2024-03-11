@@ -96,7 +96,7 @@ void COperatorTplcombination::BasicFit(
     Float64 forcedAmplitude, bool opt_extinction, bool opt_dustFitting,
     CMask spcMaskAdditional, const CPriorHelper::TPriorEList &logpriore,
     const TInt32List &MeiksinList, const TInt32List &EbmvList) {
-  Log.LogDebug(" BasicFit - for z=%f", redshift);
+  Log.LogDebug(Formatter() << " BasicFit - for z=" << redshift);
 
   boost::chrono::thread_clock::time_point start_prep =
       boost::chrono::thread_clock::now();
@@ -143,10 +143,15 @@ void COperatorTplcombination::BasicFit(
 
   // Linear fit
   Int32 n = kEnd - kStart + 1;
-  Log.LogDebug(" prep. linear fitting with n=%d "
-               "samples in the clamped lambdarange spectrum (imin=%d, "
-               "lbda_min=%.3f - imax=%d, lbda_max=%.3f)",
-               n, kStart, spcSpectralAxis[kStart], kEnd, spcSpectralAxis[kEnd]);
+  Log.LogDebug(
+      Formatter() << " prep. linear fitting with n=" << n
+                  << " "
+                     "samples in the clamped lambdarange spectrum (imin="
+                  << kStart
+                  << ", "
+                     "lbda_min="
+                  << spcSpectralAxis[kStart] << " - imax=" << kEnd
+                  << ", lbda_max=" << spcSpectralAxis[kEnd] << ")");
 
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
@@ -161,9 +166,9 @@ void COperatorTplcombination::BasicFit(
   // Normalizing factor
   Float64 normFactor = GetNormFactor(spcFluxAxis, kStart, n);
 
-  Log.LogDetail(" Linear fitting, found "
-                "normalization Factor=%e",
-                normFactor);
+  Log.LogDetail(Formatter() << " Linear fitting, found "
+                               "normalization Factor="
+                            << normFactor);
 
   bool option_igmFastProcessing =
       (MeiksinList.size() == 1 ? false : true); // TODO
@@ -251,9 +256,9 @@ void COperatorTplcombination::BasicFit(
           boost::chrono::duration_cast<boost::chrono::microseconds>(stop_prep -
                                                                     start_prep)
               .count();
-      Log.LogDebug(" Linear fitting, preparation "
-                   "time = %.3f microsec",
-                   duration_prep);
+      Log.LogDebug(Formatter() << " Linear fitting, preparation "
+                                  "time = "
+                               << duration_prep << " microsec");
       boost::chrono::thread_clock::time_point start_fit =
           boost::chrono::thread_clock::now();
       {
@@ -271,24 +276,26 @@ void COperatorTplcombination::BasicFit(
           boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit -
                                                                     start_fit)
               .count();
-      Log.LogDebug(" Linear fitting, fit = %.3f microsec", duration_fit);
+      Log.LogDebug(Formatter()
+                   << " Linear fitting, fit = " << duration_fit << " microsec");
       boost::chrono::thread_clock::time_point start_postprocess =
           boost::chrono::thread_clock::now();
 
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-      Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-      Log.LogDebug("# covariance matrix:");
-      Log.LogDebug("[");
-      Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-      Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
-      Log.LogDebug("]");
-      Log.LogDebug("# chisq/n = %g", chisq / n);
+      Log.LogDebug(Formatter() << "# best fit: Y = " << C(0) << " X1 + " << C(1)
+                               << " X2 ...");
+      Log.LogDebug(Formatter() << "# covariance matrix:");
+      Log.LogDebug(Formatter() << "[");
+      Log.LogDebug(Formatter() << "  " << COV(0, 0) << ", " << COV(0, 1));
+      Log.LogDebug(Formatter() << "  " << COV(1, 0) << "," << COV(1, 1));
+      Log.LogDebug(Formatter() << "]");
+      Log.LogDebug(Formatter() << "# chisq/n = " << chisq / n);
 
       for (Int32 iddl = 0; iddl < nddl; iddl++) {
         Float64 a = gsl_vector_get(c, iddl) * normFactor;
-        Log.LogDebug("# Found amplitude %d: %+.5e +- %.5e", iddl, a,
-                     COV(iddl, iddl) * normFactor);
+        Log.LogDebug(Formatter() << "# Found amplitude " << iddl << ": " << a
+                                 << " +- " << COV(iddl, iddl) * normFactor);
       }
 
       // save the fitted amps and fitErrors, etc...
@@ -314,9 +321,11 @@ void COperatorTplcombination::BasicFit(
         }
       }
       if (fittingResults.fittingAmplitudes.size() != nddl) {
-        Log.LogDebug(" Found nfittedamps(=%d) "
-                     "different than nddl(=%d)",
-                     fittingResults.fittingAmplitudes.size(), nddl);
+        Log.LogDebug(Formatter() << " Found nfittedamps(="
+                                 << fittingResults.fittingAmplitudes.size()
+                                 << ") "
+                                    "different than nddl(="
+                                 << nddl << ")");
       }
 
       if (chisq < fittingResults.chiSquare) {
@@ -340,9 +349,9 @@ void COperatorTplcombination::BasicFit(
           boost::chrono::duration_cast<boost::chrono::microseconds>(
               stop_postprocess - start_postprocess)
               .count();
-      Log.LogDebug(" Linear fitting, postprocess = "
-                   "%.3f microsec",
-                   duration_postprocess);
+      Log.LogDebug(Formatter() << " Linear fitting, postprocess = "
+                                  ""
+                               << duration_postprocess << " microsec");
 
     } // end iterating over ISM
   }   // end iterating over IGM
@@ -413,10 +422,13 @@ void COperatorTplcombination::RebinTemplate(
     const CSpectrumSpectralAxis &itplTplSpectralAxis =
         itplTplSpectrum.GetSpectralAxis();
     Log.LogDebug(
-        " Rebinned template #%d has n=%d samples in "
-        "lambdaRange: %.2f - %.2f",
-        ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0],
-        itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount() - 1]);
+        Formatter()
+        << " Rebinned template #" << ktpl
+        << " has n=" << itplTplSpectralAxis.GetSamplesCount()
+        << " samples in "
+           "lambdaRange: "
+        << itplTplSpectralAxis[0] << "  - "
+        << itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount() - 1]);
 
     overlapFraction =
         m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapFraction(
@@ -447,7 +459,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
   Int32 componentCount = tplList.size();
-  Log.LogInfo(" starting computation with N-template = %d", componentCount);
+  Log.LogInfo(Formatter() << " starting computation with N-template = "
+                          << componentCount);
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
@@ -458,7 +471,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     }
   }
 
-  Log.LogDebug(" allocating memory for buffers (N = %d)", componentCount);
+  Log.LogDebug(Formatter() << " allocating memory for buffers (N = "
+                           << componentCount << ")");
 
   BasicFit_preallocateBuffers(spectrum, tplList);
 
@@ -486,8 +500,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
       FitMeiksinIdx);
   Int32 MeiksinListSize = MeiksinList.size();
   Int32 EbmvListSize = EbmvList.size();
-  Log.LogDebug(" prepare N ism coeffs = %d", EbmvListSize);
-  Log.LogDebug(" prepare N igm coeffs = %d", MeiksinListSize);
+  Log.LogDebug(Formatter() << " prepare N ism coeffs = " << EbmvListSize);
+  Log.LogDebug(Formatter() << " prepare N igm coeffs = " << MeiksinListSize);
   std::shared_ptr<CTplCombinationResult> result =
       make_shared<CTplCombinationResult>(sortedRedshifts.size(), EbmvListSize,
                                          MeiksinListSize, componentCount);
@@ -562,8 +576,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   }
   if (overlapValidInfZ != sortedRedshifts[0] ||
       overlapValidSupZ != sortedRedshifts[sortedRedshifts.size() - 1]) {
-    Log.LogInfo(" overlap warning for: minz=%.3f, maxz=%.3f", overlapValidInfZ,
-                overlapValidSupZ);
+    Log.LogInfo(Formatter() << " overlap warning for: minz=" << overlapValidInfZ
+                            << ", maxz=" << overlapValidSupZ);
   }
 
   // estimate CstLog for PDF estimation
@@ -582,9 +596,11 @@ COperatorTplcombination::ComputeSpectrumModel(
     Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
     const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
     const Float64 overlapThreshold) {
-  Log.LogDetail("  Operator-COperatorTplCombination: building spectrum model "
-                "tptCombination for candidate Zcand=%f",
-                redshift);
+  Log.LogDetail(
+      Formatter()
+      << "  Operator-COperatorTplCombination: building spectrum model "
+         "tptCombination for candidate Zcand="
+      << redshift);
 
   BasicFit_preallocateBuffers(spectrum, tplList);
   Int32 nddl = tplList.size();
@@ -670,7 +686,6 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(
     numDevs++;
     sumLogNoise += log(error[j]);
   }
-  // Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
 
   cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
 

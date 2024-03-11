@@ -56,7 +56,7 @@ public:
   CLogFileHandler(const char *filePath);
   ~CLogFileHandler();
 
-  void LogEntry(Int32 lvl, const char *header, const char *msg);
+  void LogEntry(Int32 logLevel, const std::string &message);
 
 private:
   std::fstream m_OutputStream;

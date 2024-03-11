@@ -162,9 +162,11 @@ void TLineModelResult::updateFromModel(
               << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
               << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
     } else {
-      Log.LogInfo("  Operator-Linemodel: StDev estimations outside lines "
-                  "match: ratio = %e, residual RMS = %e, Input Noise RMS = %e",
-                  ratioSTD, OutsideLinesResidualRMS, OutsideLinesInputStDevRMS);
+      Log.LogInfo(Formatter()
+                  << "  Operator-Linemodel: StDev estimations outside lines "
+                     "match: ratio = "
+                  << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
+                  << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
     }
   } else {
     THROWG(STDESTIMATION_FAILED, Formatter()

@@ -90,8 +90,6 @@ TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(
   for (Int32 kz = 0; kz < nz; kz++) {
     if (nlinesAboveSNR[kz] >= nlinesThres) {
       logzPrior[kz] = logprobaPresent;
-      // Log.LogDetail("ZPrior: Prior: nlinesAboveSNR[kz] >= nlinesThres for
-      // kz=%d", kz);
     }
   }
 
@@ -137,7 +135,8 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
     maxP = std::max(maxP, logzPrior[kz]);
   }
 
-  Log.LogDebug("Pdfz: log zPrior: using HalphaZPrior max=%e", maxP);
+  Log.LogDebug(Formatter() << "Pdfz: log zPrior: using HalphaZPrior max="
+                           << maxP);
 
   Float64 log_dynamicCut = -log(1e12);
   if (maxP == maxP && maxP != -INFINITY) // test NAN & -inf

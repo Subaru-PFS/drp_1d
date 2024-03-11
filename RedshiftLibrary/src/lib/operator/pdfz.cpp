@@ -70,7 +70,7 @@ COperatorPdfz::COperatorPdfz(const std::string &opt_combine,
  */
 std::shared_ptr<PdfCandidatesZResult>
 COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
-  Log.LogInfo("%s: Pdfz computation", __func__);
+  Log.LogInfo(Formatter() << __func__ << ": Pdfz computation");
 
   if (chisquarearray.zgridParams.size() !=
       chisquarearray.parentCandidates.size())
@@ -225,11 +225,13 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
     if (!findok) {
       // we are in 2nd pass (several redshift ranges) (error in Find if first
       // pass with not findok)
-      Log.LogInfo("COperatorPdfz::searchMaxPDFcandidates: Second-pass "
-                  "fitting degenerates the first-pass results of "
-                  "candidate:%s in range [%f , %f]\n",
-                  cand.first.c_str(), redshiftsRange.GetBegin(),
-                  redshiftsRange.GetEnd());
+      Log.LogInfo(Formatter()
+                  << "COperatorPdfz::searchMaxPDFcandidates: Second-pass "
+                     "fitting degenerates the first-pass results of "
+                     "candidate:"
+                  << cand.first.c_str() << " in range ["
+                  << redshiftsRange.GetBegin() << " , "
+                  << redshiftsRange.GetEnd() << "]\n");
       Log.LogInfo(" Flag - Eliminating a second-pass candidate");
     }
     Int32 i = 0;
@@ -287,10 +289,6 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
                                     // when summing exponential of small values
     }
   }
-  /*
-    Log.LogDebug("COperatorPdfz::logSumExpTrick: using common factor value for "
-                 "log-sum-exp trick=%e",
-                 logfactor);*/
 
   Float64 sumModifiedExp = 0.0;
   Float64 modifiedEXPO_previous = exp(valproba[0] - logfactor);
@@ -423,9 +421,10 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
 
   if (modelPriors.empty()) {
     const Float64 priorModelCst = 1.0 / Float64(meritResults.size());
-    Log.LogInfo("COperatorPdfz::ComputeAllPdfs: no priors loaded, using "
-                "constant priors (=%f)",
-                priorModelCst);
+    Log.LogInfo(Formatter()
+                << "COperatorPdfz::ComputeAllPdfs: no priors loaded, using "
+                   "constant priors (="
+                << priorModelCst << ")");
     logPriorModel = TFloat64List(meritResults.size(), log(priorModelCst));
   } else {
     if (modelPriors.size() != meritResults.size())
@@ -440,7 +439,8 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
         logPriorModel.begin(), logPriorModel.end(), 0.0,
         [](Float64 sum, Float64 logprior) { return sum + exp(logprior); });
 
-    Log.LogInfo("COperatorPdfz::ComputeAllPdfs: sumPriors=%f", sumPriors);
+    Log.LogInfo(Formatter()
+                << "COperatorPdfz::ComputeAllPdfs: sumPriors=" << sumPriors);
     if (sumPriors > 1.1 || sumPriors < 0.9)
       THROWG(INTERNAL_ERROR, "sumPriors should be between ]0.9;1.1[");
   }
@@ -473,13 +473,13 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   ComputeAllPdfs(chisquarearray, logProbaList, LogEvidencesWPriorM,
                  logPriorModel, MaxiLogEvidence);
 
-  Log.LogDebug("COperatorPdfz::Marginalize: MaxiLogEvidence=%e",
-               MaxiLogEvidence);
+  Log.LogDebug(Formatter() << "COperatorPdfz::Marginalize: MaxiLogEvidence="
+                           << MaxiLogEvidence);
 
   m_postmargZResult->valEvidenceLog = m_postmargZResult->valMargEvidenceLog;
 
-  Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e",
-               m_postmargZResult->valMargEvidenceLog);
+  Log.LogDebug(Formatter() << "COperatorPdfz::Marginalize: logSumEvidence="
+                           << m_postmargZResult->valMargEvidenceLog);
 
   // marginalize: ie sum all PDFS
   TInt32List nSum(zsize, 0);
@@ -523,7 +523,9 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   const Float64 &cstLog = chisquarearray.cstLog;
 
   for (Int32 km = 0; km < meritResults.size(); km++) {
-    Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d", km);
+    Log.LogDebug(Formatter()
+                 << "COperatorPdfz::BestProba: processing chi2-result km="
+                 << km);
 
     TFloat64List logProba;
     Float64 logEvidence;
@@ -571,8 +573,10 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
 
   Float64 logEvidence = maxi + log(sumModifiedExp) + log(zstep);
 
-  Log.LogDebug("COperatorPdfz::BestProba: using logEvidence=%e", logEvidence);
-  Log.LogDebug("COperatorPdfz::BestProba: using log(zstep)=%e", log(zstep));
+  Log.LogDebug(Formatter() << "COperatorPdfz::BestProba: using logEvidence="
+                           << logEvidence);
+  Log.LogDebug(Formatter() << "COperatorPdfz::BestProba: using log(zstep)="
+                           << log(zstep));
 
   std::transform(m_postmargZResult->valProbaLog.cbegin(),
                  m_postmargZResult->valProbaLog.cend(),
@@ -614,8 +618,6 @@ void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
       for (Int32 km = 0; km < nmodel; km++)
       {
           if (verbose)
-              Log.LogDebug("COperatorPdfz::BestChi2: processing chi2-result
-     km=%d", km);
 
           // rescale the pdf by the evidence
           const Float64 &logev = LogEvidencesWPriorM[km];

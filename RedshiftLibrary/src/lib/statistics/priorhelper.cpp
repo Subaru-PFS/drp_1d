@@ -274,7 +274,8 @@ void CPriorHelper::loadFileEZ(const char *filePath,
 }
 
 void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
-  Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
+  Log.LogDetail(Formatter()
+                << "    CPriorHelper: start load prior file: " << filePath);
   std::ifstream file;
   file.open(filePath, std::ifstream::in);
   bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;

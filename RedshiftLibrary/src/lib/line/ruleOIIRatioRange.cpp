@@ -78,8 +78,9 @@ void CRuleRatioRange::Correct(CLMEltListVector &LineModelElementList) {
       LineModelElementList.findElementIndex(m_LineA, m_LineType);
   if (iEltA == undefIdx ||
       LineModelElementList.getElementList()[iEltA]->GetSize() < 1) {
-    Log.LogDebug("Rule %s: line %s not found or line has size <1", Name.c_str(),
-                 m_LineA.c_str());
+    Log.LogDebug(Formatter()
+                 << "Rule " << Name.c_str() << ": line " << m_LineA.c_str()
+                 << " not found or line has size <1");
     return;
   }
 
@@ -87,8 +88,9 @@ void CRuleRatioRange::Correct(CLMEltListVector &LineModelElementList) {
       LineModelElementList.findElementIndex(m_LineB, m_LineType);
   if (iEltB == undefIdx ||
       LineModelElementList.getElementList()[iEltB]->GetSize() < 1) {
-    Log.LogDebug("Rule %s: line %s not found or line has size <1", Name.c_str(),
-                 m_LineB.c_str());
+    Log.LogDebug(Formatter()
+                 << "Rule " << Name.c_str() << ": line " << m_LineB.c_str()
+                 << " not found or line has size <1");
     return;
   }
 

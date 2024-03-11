@@ -113,7 +113,7 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
            Formatter() << "Log-sampled spectrum has wrong logGridStep : "
                        << m_logGridStep);
   }
-  Log.LogDetail("  Log-Rebin: logGridStep = %f", m_logGridStep);
+  Log.LogDetail(Formatter() << "  Log-Rebin: logGridStep = " << m_logGridStep);
   return;
 }
 
@@ -209,15 +209,14 @@ Int32 CSpectrumLogRebinning::inferTemplateRebinningSetup(
   Float64 tgt_loglbdamin =
       loglbdamax - (loglambda_count_tpl - 1) * m_logGridStep;
   lambdaRange_tpl = TFloat64Range(exp(tgt_loglbdamin), exp(tgt_loglbdamax));
-  Log.LogDetail("  Operator-TemplateFittingLog: Log-Rebin: tpl raw "
-                "loglbdamin=%f : raw loglbdamax=%f",
-                loglbdamin, loglbdamax);
-  Log.LogDetail(
-      "  Operator-TemplateFittingLog: zmin_new = %f, tpl->lbdamax = %f",
-      zrange.GetBegin(), exp(loglbdamax));
-  Log.LogDetail(
-      "  Operator-TemplateFittingLog: zmax_new = %f, tpl->lbdamin = %f",
-      zrange.GetEnd(), exp(loglbdamin));
+  Log.LogDetail(Formatter() << "loglbdamin=" << loglbdamin
+                            << " : raw loglbdamax=" << loglbdamax);
+  Log.LogDetail(Formatter()
+                << "  Operator-TemplateFittingLog: zmin_new = "
+                << zrange.GetBegin() << ", tpl->lbdamax = " << exp(loglbdamax));
+  Log.LogDetail(Formatter()
+                << "  Operator-TemplateFittingLog: zmax_new = "
+                << zrange.GetEnd() << ", tpl->lbdamin = " << exp(loglbdamin));
   return loglambda_count_tpl;
 }
 /**
@@ -233,9 +232,10 @@ Int32 CSpectrumLogRebinning::inferTemplateRebinningSetup(
 std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
     std::shared_ptr<const CTemplate> tpl, TFloat64Range &lambdaRange_tpl,
     const Int32 loglambda_count_tpl) const {
-  Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling "
-              "START for template %s",
-              tpl->GetName().c_str());
+  Log.LogInfo(Formatter()
+              << "  Operator-TemplateFittingLog: Log-regular lambda resampling "
+                 "START for template "
+              << tpl->GetName().c_str());
   // check template coverage is enough for zrange and spectrum coverage
   bool overlapFull = true;
   if (lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
@@ -348,8 +348,9 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
 
       {
         Log.LogDetail(
-            " CInputContext::RebinInputs: need to rebin again the template: %s",
-            tpl->GetName().c_str());
+            Formatter()
+            << " CInputContext::RebinInputs: need to rebin again the template: "
+            << tpl->GetName().c_str());
         tplcat->m_logsampling = false;
         std::shared_ptr<const CTemplate> input_tpl = tplcat->GetTemplateByName(
             TStringList{spectrumModel}, tpl->GetName());

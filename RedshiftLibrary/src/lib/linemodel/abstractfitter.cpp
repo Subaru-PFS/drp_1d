@@ -287,10 +287,12 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   }
 
   if (num == 0 || getElementParam()[eltIndex]->m_sumGauss == 0) {
-    Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
-                 " num=%d, mtm=%f at line index %d of elt %d",
-                 num, getElementParam()[eltIndex]->m_sumGauss, lineIdx,
-                 eltIndex);
+    Log.LogDebug(
+        Formatter()
+        << "CLineModelElement::fitAmplitude: Could not fit amplitude:    "
+           " num="
+        << num << ", mtm=" << getElementParam()[eltIndex]->m_sumGauss
+        << " at line index " << lineIdx << " of elt " << eltIndex);
     getElementParam()[eltIndex]->m_sumGauss = NAN;
     getElementParam()[eltIndex]->m_dtmFree = NAN;
     getElementParam()[eltIndex]->m_sumCross = NAN;
@@ -377,7 +379,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
     Log.LogDebug("    multiline: no offsets to fit");
     nSteps = 1;
   } else {
-    Log.LogDebug("    multiline: offsets to fit n=%d", nSteps);
+    Log.LogDebug(Formatter() << "    multiline: offsets to fit n=" << nSteps);
   }
 
   Float64 bestMerit = DBL_MAX;
@@ -431,7 +433,9 @@ Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
     fit += term1 + term2;
   }
 
-  Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit fast = %f", fit);
+  Log.LogDebug(
+      Formatter() << "CLineModelFitting::getLeastSquareMerit fit fast = "
+                  << fit);
   return fit;
 }
 
@@ -487,16 +491,18 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
           }
         }
 
-        Log.LogDebug("Fitting Lya Profile: width=%f, asym=%f, delta=%f",
-                     asymWidthCoeff, asymAlphaCoeff, delta);
-        Log.LogDebug("Fitting Lya Profile: merit=%e", m);
-        Log.LogDebug("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d", idxLyaE,
-                     idxLineLyaE);
+        Log.LogDebug(Formatter()
+                     << "Fitting Lya Profile: width=" << asymWidthCoeff
+                     << ", asym=" << asymAlphaCoeff << ", delta=" << delta);
+        Log.LogDebug(Formatter() << "Fitting Lya Profile: merit=%" << m);
+        Log.LogDebug(Formatter() << "Fitting Lya Profile: idxLyaE=" << idxLyaE
+                                 << ", idxLineLyaE=" << idxLineLyaE);
       }
     }
   }
-  Log.LogDebug("Lya Profile found: width=%f, asym=%f, delta=%f",
-               bestparams.sigma, bestparams.alpha, bestparams.delta);
+  Log.LogDebug(Formatter() << "Lya Profile found: width=" << bestparams.sigma
+                           << ", asym=" << bestparams.alpha
+                           << ", delta=" << bestparams.delta);
   return bestparams;
 }
 

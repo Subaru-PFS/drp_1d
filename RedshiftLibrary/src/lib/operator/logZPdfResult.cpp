@@ -96,10 +96,13 @@ CZGridListParams CLogZPdfResult::getZGridParams() const {
 }
 
 void CLogZPdfResult::interpolateOnGrid(TFloat64List targetGrid) {
-  Log.LogDetail("interp FROM initial grid z0=%f to zEnd=%f (n=%d)",
-                redshifts.front(), redshifts.back(), redshifts.size());
-  Log.LogDetail("interp TO final grid z0=%f to zEnd=%f (n=%d)",
-                targetGrid.front(), targetGrid.back(), targetGrid.size());
+  Log.LogDetail(Formatter()
+                << "interp FROM initial grid z0=" << redshifts.front()
+                << " to zEnd=" << redshifts.back() << " (n=" << redshifts.size()
+                << ")");
+  Log.LogDetail(Formatter() << "interp TO final grid z0=" << targetGrid.front()
+                            << " to zEnd=" << targetGrid.back()
+                            << " (n=" << targetGrid.size() << ")");
 
   TFloat64List outputValues(targetGrid.size(), NAN);
 
@@ -188,8 +191,9 @@ void CLogZPdfResult::checkPdfSum() const {
   // check pdf sum=1
   Float64 sumTrapez = getSumTrapez();
   Log.LogDetail(
-      "CLogZPdfResult::checkPdfSum: Pdfz normalization - sum trapz. = %e",
-      sumTrapez);
+      Formatter()
+      << "CLogZPdfResult::checkPdfSum: Pdfz normalization - sum trapz. = "
+      << sumTrapez);
   if (abs(sumTrapez - 1.0) > 1e-1)
     THROWG(INTERNAL_ERROR,
            Formatter()

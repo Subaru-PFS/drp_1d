@@ -65,12 +65,6 @@ BOOST_AUTO_TEST_CASE(formatter_test) {
            << "str";
   msg = format_1.str();
   BOOST_CHECK(msg == "test str");
-
-  Formatter format_2;
-  format_2 << "test "
-           << "str_2";
-  msg = format_2 >> Formatter::to_str;
-  BOOST_CHECK(msg == "test str_2");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

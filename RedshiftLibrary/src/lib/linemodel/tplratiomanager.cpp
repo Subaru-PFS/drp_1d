@@ -447,8 +447,9 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
       Float64 nominal_amp = m_elementsVector->getElementParam()[iElt]
                                 ->m_NominalAmplitudes[line_idx];
       m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
-      Log.LogDebug("    model : fit tplratio mode, tplratio_fittedamp: %e",
-                   m_FittedAmpTplratio[idx][iElt]);
+      Log.LogDebug(Formatter()
+                   << "    model : fit tplratio mode, tplratio_fittedamp: "
+                   << m_FittedAmpTplratio[idx][iElt]);
 
       m_FittedErrorTplratio[idx][iElt] = amp_error / nominal_amp;
       m_DtmTplratio[idx][iElt] =
@@ -549,11 +550,11 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
 
   for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
        iElts++) {
-    Log.LogDetail("    model - Linemodel: tplratio = %d (%s, with "
-                  "ebmv=%.3f), and A=%e",
-                  m_savedIdxFitted, getTplratio_bestTplName().c_str(),
-                  getTplratio_bestTplIsmCoeff(),
-                  m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
+    Log.LogDetail(Formatter()
+                  << "    model - Linemodel: tplratio = " << m_savedIdxFitted
+                  << " (" << getTplratio_bestTplName().c_str() << ", with ebmv="
+                  << getTplratio_bestTplIsmCoeff() << "), and A="
+                  << m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
     m_elementsVector->getElementParam()[iElts]->setAmplitudes(
         m_FittedAmpTplratio[m_savedIdxFitted][iElts],
         m_FittedErrorTplratio[m_savedIdxFitted][iElts],
@@ -604,9 +605,7 @@ void CTplratioManager::setTplratioModel(Int32 itplratio, Float64 redshift,
                                            m_velocityAbsorption);
   }
 
-
-  Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
-               m_CatalogTplRatio->GetCatalogName(itplratio).c_str());*/
+  */
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
   // catalog files, for the lyaE profile, as of 2016-01-11 INFO:

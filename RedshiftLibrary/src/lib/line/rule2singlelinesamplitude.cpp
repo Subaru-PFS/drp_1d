@@ -72,28 +72,31 @@ void CRule2SingleLinesAmplitude::Correct(
   auto [iEltA, idA] =
       LineModelElementList.findElementIndex(m_LineA, m_LineType);
   if (iEltA == undefIdx) {
-    Log.LogDebug("Rule %s: line %s not found.", Name.c_str(), m_LineA.c_str());
+    Log.LogDebug(Formatter() << "Rule " << Name.c_str() << ": line "
+                             << m_LineA.c_str() << " not found.");
     return;
   }
   if (LineModelElementList.getElementList()[iEltA]->GetSize() > 1) {
-    Log.LogDebug("Rule %s: line %s has size < 1.", Name.c_str(),
-                 m_LineA.c_str());
+    Log.LogDebug(Formatter() << "Rule" << Name.c_str() << ": line "
+                             << m_LineA.c_str() << " has size < 1.");
     iEltA = undefIdx;
   }
   auto [iEltB, idB] =
       LineModelElementList.findElementIndex(m_LineB, m_LineType);
   if (iEltB == undefIdx) {
-    Log.LogDebug("Rule %s: line %s not found.", Name.c_str(), m_LineB.c_str());
+    Log.LogDebug(Formatter() << "Rule " << Name.c_str() << ": line "
+                             << m_LineB.c_str() << " not found.");
     return;
   }
   if (LineModelElementList.getElementList()[iEltB]->GetSize() > 1) {
-    Log.LogDebug("Rule %s: line %s has size < 1.", Name.c_str(),
-                 m_LineB.c_str());
+    Log.LogDebug(Formatter() << "Rule " << Name.c_str() << ": line "
+                             << m_LineB.c_str() << " has size < 1.");
     iEltB = undefIdx;
   }
   if (iEltA == undefIdx || iEltB == undefIdx || iEltA == iEltB) {
-    Log.LogDebug("Rule %s: line %s has same index as line %s.", Name.c_str(),
-                 m_LineA.c_str(), m_LineB.c_str());
+    Log.LogDebug(Formatter()
+                 << "Rule " << Name.c_str() << ": line " << m_LineA.c_str()
+                 << " has same index as line " << m_LineB.c_str());
     return;
   }
   if (LineModelElementList.getElementList()[iEltA]->IsOutsideLambdaRange() ==

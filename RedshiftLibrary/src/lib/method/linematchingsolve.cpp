@@ -150,15 +150,16 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
 
   Log.LogDebug("Final parameters read:");
   {
-    Log.LogDebug("m_cut = %f", m_cut);
+    Log.LogDebug(Formatter() << "m_cut =" << m_cut);
     if (m_dynamicLinematching) {
       Log.LogDebug(
           "m_dynamicLinematching is true (any value, except 0, on json)");
     } else {
       Log.LogDebug("m_dynamicLinematching is false (value 0 on json)");
     }
-    Log.LogDebug("m_detectioncut = %f", m_detectioncut);
-    Log.LogDebug("m_detectionnoiseoffset = %f", m_detectionnoiseoffset);
+    Log.LogDebug(Formatter() << "m_detectioncut =" << m_detectioncut);
+    Log.LogDebug(Formatter()
+                 << "m_detectionnoiseoffset =" << m_detectionnoiseoffset);
     if (m_disablegaussianfitqualitycheck) {
       Log.LogDebug("m_disablegaussianfitqualitycheck is true (any value, "
                    "except 0, in json)");
@@ -166,14 +167,14 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
       Log.LogDebug(
           "m_disablegaussianfitqualitycheck is false (value 0 in json)");
     }
-    Log.LogDebug("m_enlargeRate = %f", m_enlargeRate);
-    Log.LogDebug("linetype = %s", linetypeStr.c_str());
-    Log.LogDebug("m_minMatchNum = %d", m_minMatchNum);
-    Log.LogDebug("m_minsize = %f", m_minsize);
-    Log.LogDebug("m_maxsize = %f", m_maxsize);
-    Log.LogDebug("m_strongcut = %f", m_strongcut);
-    Log.LogDebug("m_tol = %f", m_tol);
-    Log.LogDebug("m_winsize = %f", m_winsize);
+    Log.LogDebug(Formatter() << "m_enlargeRate = " << m_enlargeRate);
+    Log.LogDebug(Formatter() << "linetype = " << linetypeStr.c_str());
+    Log.LogDebug(Formatter() << "m_minMatchNum = " << m_minMatchNum);
+    Log.LogDebug(Formatter() << "m_minsize = " << m_minsize);
+    Log.LogDebug(Formatter() << "m_maxsize = " << m_maxsize);
+    Log.LogDebug(Formatter() << "m_strongcut = " << m_strongcut);
+    Log.LogDebug(Formatter() << "m_tol = " << m_tol);
+    Log.LogDebug(Formatter() << "m_winsize = " << m_winsize);
   }
 
   CPeakDetection peakDetection(m_winsize, m_detectioncut, 1, m_enlargeRate,
@@ -190,8 +191,9 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
 
   auto peakDetectionResult = peakDetection.Compute(_spc);
   if (peakDetectionResult) {
-    Log.LogDebug("Storing %d peaks from PeakList in the result store.",
-                 peakDetectionResult->PeakList.size());
+    Log.LogDebug(Formatter()
+                 << "Storing " << peakDetectionResult->PeakList.size()
+                 << " peaks from PeakList in the result store.");
     resultStore.StoreScopedGlobalResult("peakdetection", peakDetectionResult);
   } else {
     THROWG(INTERNAL_ERROR, "No peak detected");
@@ -232,10 +234,10 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
   Int32 iCmpt = 0;
   while (iCmpt < cmptMax) {
     Log.LogDebug("*************************");
-    Log.LogDebug("cutCurrent == %f", cutCurrent);
-    Log.LogDebug("minimumFwhhCurrent == %f", minimumFwhhCurrent);
-    Log.LogDebug("strongcutCurrent == %f", strongcutCurrent);
-    Log.LogDebug("winsizeCurrent == %f", winsizeCurrent);
+    Log.LogDebug(Formatter() << "cutCurrent == " << cutCurrent);
+    Log.LogDebug(Formatter() << "minimumFwhhCurrent == " << minimumFwhhCurrent);
+    Log.LogDebug(Formatter() << "strongcutCurrent == " << strongcutCurrent);
+    Log.LogDebug(Formatter() << "winsizeCurrent == " << winsizeCurrent);
     CLineDetection lineDetection(lineType, cutCurrent, strongcutCurrent,
                                  winsizeCurrent, minimumFwhhCurrent, m_maxsize,
                                  m_disablegaussianfitqualitycheck);
@@ -244,11 +246,14 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
         peakDetectionResult->EnlargedPeakList);
     if (lineDetectionResult || !m_dynamicLinematching) {
       currentNumberOfPeaks = lineDetectionResult->LineCatalog.GetList().size();
-      Log.LogDebug("Found %d peaks.", currentNumberOfPeaks);
+      Log.LogDebug(Formatter()
+                   << "Found " << currentNumberOfPeaks << " peaks.");
       if (currentNumberOfPeaks >= minimumNumberOfPeaks ||
           numberOfPeaksBestBypass || !m_dynamicLinematching) {
-        Log.LogDebug("Storing %d lines from lineDetection in the result store.",
-                     lineDetectionResult->LineCatalog.GetList().size());
+        Log.LogDebug(Formatter()
+                     << "Storing "
+                     << lineDetectionResult->LineCatalog.GetList().size()
+                     << " lines from lineDetection in the result store.");
         resultStore.StoreScopedGlobalResult("lineCatalog", lineDetectionResult);
         // Since we know at least one peak that corresponds to a line, let's try
         // to match to a catalogued template.
@@ -258,17 +263,20 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
             lineDetectionResult->LineCatalog, restLineCatalog, m_redshifts,
             m_minMatchNum, m_tol, lineType);
         if (lineMatchingResult) {
-          lineMatchingResult->FilterWithRules(_spc, m_lambdaRange, m_winsize);
-          Log.LogDebug("CLineMatching yielded %d sets of solutions and %d sets "
-                       "of filtered solutions.",
-                       lineMatchingResult->SolutionSetList.size(),
-                       lineMatchingResult->FilteredSolutionSetList.size());
+          lineMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
+          Log.LogDebug(Formatter()
+                       << "CLineMatching yielded "
+                       << lineMatchingResult->SolutionSetList.size()
+                       << " sets of solutions and "
+                       << lineMatchingResult->FilteredSolutionSetList.size()
+                       << " sets of filtered solutions.");
           // Store matching results
           resultStore.StoreScopedGlobalResult("linematching",
                                               lineMatchingResult);
           lineMatchingResult->GetBestRedshift(bestRedshift, bestMatchingNumber);
-          Log.LogDebug("bestRedshift == %f, bestMatchingNumber == %d",
-                       bestRedshift, bestMatchingNumber);
+          Log.LogDebug(Formatter()
+                       << "bestRedshift == " << bestRedshift
+                       << ", bestMatchingNumber == " << bestMatchingNumber);
           if (bestRedshift != -1.0) {
             Log.LogDebug(
                 "return std::shared_ptr<const CLineMatchingSolveResult>( new "

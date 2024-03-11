@@ -76,8 +76,7 @@ BOOST_AUTO_TEST_CASE(consoleHandler_test) {
 
   // Log
   Log.LogWarning(message);
-  Log.LogWarning("test log %d", 2);
-  console_handler.LogEntry(80, "Warning:  ", message.c_str());
+  console_handler.LogEntry(80, "Warning" + message);
 
   console_handler.SetLevelMask(65);
   BOOST_CHECK(console_handler.GetLevelMask() == Log.nLevel_Detail);
@@ -99,23 +98,18 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
   std::string message;
   message = Formatter() << "test log warning";
   Log.LogWarning(message);
-  Log.LogWarning("test log %s", "warning");
 
   message = Formatter() << "test log info";
   Log.LogInfo(message);
-  Log.LogInfo("test log %s", "info");
 
   message = Formatter() << "test log error";
   Log.LogError(message);
-  Log.LogError("test log %s", "error");
 
   message = Formatter() << "test log detail";
   Log.LogDetail(message);
-  Log.LogDetail("test log %s", "detail");
 
   message = Formatter() << "test log debug";
   Log.LogDebug(message);
-  Log.LogDebug("test log %s", "debug");
 
   message = Formatter() << "test log none";
   Log.log(message, Log.nLevel_None);
@@ -123,21 +117,8 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
   message = Formatter() << "test log critical";
   Log.log(message, Log.nLevel_Critical);
 
-  CMutex &mutex = Log.GetSynchMutex();
-
-  Log.UnIndent();
   message = Formatter() << "test log warning";
-  Log.log(message, Log.nLevel_Warning);
-
-  Log.Indent();
-  message = Formatter() << "test log warning";
-  Log.log(message, Log.nLevel_Warning);
-
-  Log.UnIndent();
-  message = Formatter() << "test log warning";
-  Log.log(message, Log.nLevel_Warning);
-
-  file_handler.LogEntry(80, "Warning:  ", message.c_str());
+  file_handler.LogEntry(80, "Warning: " + message);
 
   std::string line;
   std::ifstream myfile(logFile.c_str());
@@ -152,24 +133,22 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
 
   std::string line_ref;
   for (Int32 i = 0; i < lines.size(); i++) {
-    if (i == 0 || i == 1)
-      line_ref = "Warning:  test log warning";
-    else if (i == 2 || i == 3)
-      line_ref = "Info:  test log info";
-    else if (i == 4 || i == 5)
-      line_ref = "Error:  test log error";
-    else if (i == 6 || i == 7)
-      line_ref = "Detail:  test log detail";
-    else if (i == 8 || i == 9)
+    if (i == 0)
+      line_ref = "Warning: test log warning";
+    else if (i == 1)
+      line_ref = "Info: test log info";
+    else if (i == 2)
+      line_ref = "Error: test log error";
+    else if (i == 3)
+      line_ref = "Detail: test log detail";
+    else if (i == 4)
       line_ref = "Debug: test log debug";
-    else if (i == 10)
+    else if (i == 5)
       line_ref = "test log none";
-    else if (i == 11)
-      line_ref = "test log critical";
-    else if (i == 12 || i == 14 || i == 15)
-      line_ref = "Warning:  test log warning";
-    else if (i == 13)
-      line_ref = "Warning: \t test log warning";
+    else if (i == 6)
+      line_ref = "Critical: test log critical";
+    else if (i == 7)
+      line_ref = "Warning: test log warning";
     BOOST_CHECK(lines[i] == line_ref);
   }
 

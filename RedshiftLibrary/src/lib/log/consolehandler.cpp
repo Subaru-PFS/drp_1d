@@ -37,16 +37,13 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/consolehandler.h"
+#include <iostream>
 
 using namespace NSEpic;
 
 /**
  * Prints log message in stdout.
  */
-void CLogConsoleHandler::LogEntry(Int32 lvl, const char *header,
-                                  const char *msg) {
-  if (header)
-    printf("%s", header);
-
-  printf("%s\n", msg);
+void CLogConsoleHandler::LogEntry(Int32 log_level, const std::string &message) {
+  std::cout << message;
 }
