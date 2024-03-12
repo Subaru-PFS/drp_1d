@@ -788,12 +788,20 @@ void CLineModelFitting::LoadModelSolution(
 
   setRedshift(modelSolution.Redshift, false);
 
+  // reset before loading
+  for (auto param_ptr : m_ElementsVector->getElementParam()) {
+    param_ptr->resetFittingParams();
+    param_ptr->m_VelocityAbsorption = NAN;
+    param_ptr->m_VelocityEmission = NAN;
+  }
+  m_ElementsVector->resetLambdaOffsets();
+
+  // should also reset nominal amplitudes...
+  // but not touched without using template-ratio
+
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
     auto &eltList = getElementList();
-
-    if (m_enableAmplitudeOffsets)
-      eltList.resetAmplitudeOffset();
 
     TBoolList element_done(eltList.size(), false);
     for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
@@ -815,7 +823,8 @@ void CLineModelFitting::LoadModelSolution(
       elt->SetFittedAmplitude(elt_line_index,
                               modelSolution.Amplitudes[iRestLine],
                               modelSolution.AmplitudesUncertainties[iRestLine]);
-      elt->SetOffset(elt_line_index, modelSolution.Offset[iRestLine]);
+      m_ElementsVector->getElementParam()[eIdx]->setLambdaOffset(
+          elt_line_index, modelSolution.Offset[iRestLine]);
 
       if (element_done[eIdx])
         continue;
@@ -827,7 +836,8 @@ void CLineModelFitting::LoadModelSolution(
             modelSolution.continuum_pCoeff0[iRestLine],
             modelSolution.continuum_pCoeff1[iRestLine],
             modelSolution.continuum_pCoeff2[iRestLine]};
-        elt->SetPolynomCoeffs(std::move(contPolynomCoeffs));
+        m_ElementsVector->getElementParam()[eIdx]->SetPolynomCoeffs(
+            std::move(contPolynomCoeffs));
       }
 
       element_done[eIdx] = true;

@@ -97,7 +97,7 @@ protected:
 
   void resetElementsFittingParam();
 
-  void resetLambdaOffsets();
+  void resetLambdaOffsets() { m_ElementsVector->resetLambdaOffsets(); };
 
   void fitLyaProfile(Float64 redshift);
 
@@ -160,9 +160,10 @@ protected:
   bool m_enableAmplitudeOffsets = false;
   bool m_enableLambdaOffsetsFit = false;
 
-  Float64 m_LambdaOffsetMin = -400.0;
-  Float64 m_LambdaOffsetMax = 400.0;
-  Float64 m_LambdaOffsetStep = 25.0;
+  Float64 m_LambdaOffsetMin = -MAX_LAMBDA_OFFSET;
+  Float64 m_LambdaOffsetMax = MAX_LAMBDA_OFFSET;
+  Float64 m_LambdaOffsetStep = LAMBDA_OFFSET_STEP;
+  Float64 m_enlarge_line_supports = 0.0;
 
   Float64 m_absLinesLimit = 1.0;
 

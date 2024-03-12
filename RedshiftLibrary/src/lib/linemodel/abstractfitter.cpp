@@ -184,26 +184,14 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
   for (auto const &elt_ptr : getElementList()) {
     elt_ptr->resetAsymfitParams();
-    elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange());
+    elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange(),
+                            m_enlarge_line_supports);
   }
 }
 
 void CAbstractFitter::resetElementsFittingParam() {
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
-
-    auto &eltList = getElementList();
-    for (auto const &elt_ptr : eltList)
-      elt_ptr->reset();
-
-    if (m_enableAmplitudeOffsets)
-      eltList.resetAmplitudeOffset();
-  }
-}
-
-void CAbstractFitter::resetLambdaOffsets() {
-  for (auto &elt_ptr : getElementList())
-    for (Int32 line_idx = 0; line_idx != elt_ptr->GetSize(); ++line_idx)
-      elt_ptr->SetOffset(line_idx, elt_ptr->GetLines()[line_idx].GetOffset());
+  for (auto param_ptr : m_ElementsVector->getElementParam())
+    param_ptr->resetFittingParams();
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {

@@ -61,7 +61,7 @@ void CSvdFitter::doFit(Float64 redshift) {
     getElementList()[idx]->SetFittingGroupInfo(fitGroupTag);
 
   if (m_enableAmplitudeOffsets)
-    getElementList().resetAmplitudeOffset();
+    m_ElementsVector->resetAmplitudeOffsets();
 
   fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, m_enableLambdaOffsetsFit,
                                        redshift);
@@ -117,7 +117,8 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       getElementList().SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
     if (useAmpOffset) {
       for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
-        getElementList()[EltsIdx[iddl]]->SetPolynomCoeffs({0., 0., 0.});
+        m_ElementsVector->getElementParam()[EltsIdx[iddl]]->SetPolynomCoeffs(
+            {0., 0., 0.});
     }
     return true;
   }
@@ -214,7 +215,8 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     // set the polynomial coeffs for all elements, even those not fitted and
     // fixed at zero
     for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
-      getElementList()[EltsIdx[iddl]]->SetPolynomCoeffs({x0, x1, x2});
+      m_ElementsVector->getElementParam()[EltsIdx[iddl]]->SetPolynomCoeffs(
+          {x0, x1, x2});
   }
 
   gsl_matrix_free(X);

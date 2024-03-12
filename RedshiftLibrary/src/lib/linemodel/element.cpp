@@ -108,15 +108,15 @@ CLineModelElement::CLineModelElement(
   SetElementAmplitude(NAN, NAN);
 }
 
-void CLineModelElement::reset() {
-  // init the fitted amplitude values and related variables
-  m_ElementParam->m_FittedAmplitudes.assign(GetSize(), NAN);
-  m_ElementParam->m_FittedAmplitudesStd.assign(GetSize(), NAN);
+void TLineModelElementParam::resetFittingParams() {
 
-  SetFittingGroupInfo(undefStr);
-  m_ElementParam->m_sumGauss = NAN;
-  m_ElementParam->m_sumCross = NAN;
-  m_ElementParam->m_dtmFree = NAN;
+  m_FittedAmplitudes.assign(size(), NAN);
+  m_FittedAmplitudesStd.assign(size(), NAN);
+  m_fittingGroupInfo = undefStr;
+  m_ampOffsetsCoeffs = TPolynomCoeffs();
+  m_sumGauss = NAN;
+  m_sumCross = NAN;
+  m_dtmFree = NAN;
 }
 
 Int32 TLineModelElementParam::getLineIndex(Int32 line_id) const {
@@ -253,7 +253,7 @@ Float64 CLineModelElement::GetContinuumAtCenterProfile(
  **/
 void CLineModelElement::EstimateTheoreticalSupport(
     Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
-    Float64 redshift, const TFloat64Range &lambdaRange) {
+    Float64 redshift, const TFloat64Range &lambdaRange, Float64 max_offset) {
   Float64 mu = GetObservedPosition(line_index, redshift);
   if (!m_LSF->checkAvailability(mu)) {
     m_OutsideLambdaRangeList[line_index] = true;
@@ -261,6 +261,7 @@ void CLineModelElement::EstimateTheoreticalSupport(
   }
   Float64 sigma = GetLineWidth(mu, IsEmission());
   Float64 winsize = getLineProfile(line_index)->GetNSigmaSupport() * sigma;
+  winsize += 2 * (max_offset / SPEED_OF_LIGHT_IN_VACCUM) * mu;
   TInt32Range supportRange =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
@@ -341,7 +342,7 @@ void CLineModelElement::SetOutsideLambdaRange() {
  **/
 void CLineModelElement::prepareSupport(
     const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
-    const TFloat64Range &lambdaRange) {
+    const TFloat64Range &lambdaRange, Float64 max_offset) {
 
   Int32 nLines = GetSize();
   m_OutsideLambdaRange = true;
@@ -353,7 +354,8 @@ void CLineModelElement::prepareSupport(
   m_LineIsActiveOnSupport.assign(nLines, TBoolList(nLines, false));
 
   for (Int32 index = 0; index != nLines; ++index) {
-    EstimateTheoreticalSupport(index, spectralAxis, redshift, lambdaRange);
+    EstimateTheoreticalSupport(index, spectralAxis, redshift, lambdaRange,
+                               max_offset);
     // set the lines active on their own support
     m_LineIsActiveOnSupport[index][index] = true;
   }

@@ -374,12 +374,6 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
   }
 }
 
-void CLineModelElementList::resetAmplitudeOffset() {
-  for (auto &elt : m_Elements) {
-    elt->SetPolynomCoeffs(TPolynomCoeffs());
-  }
-}
-
 /**
  * \brief Get the scale marginalization correction
  *
