@@ -55,7 +55,7 @@ class CResultStore;
 /**
  * \ingroup Redshift
  */
-class CTplcombinationSolve : public CObjectSolve {
+class CTplCombinationSolve : public CObjectSolve {
 
 public:
   enum EType {
@@ -65,7 +65,7 @@ public:
     nType_all = 4,
   };
 
-  CTplcombinationSolve(TScopeStack &scope, std::string spectrumModel);
+  CTplCombinationSolve(TScopeStack &scope, std::string spectrumModel);
 
   std::shared_ptr<CSolveResult>
   compute(std::shared_ptr<const CInputContext> inputContext,

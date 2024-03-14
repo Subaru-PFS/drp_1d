@@ -49,13 +49,13 @@
 using namespace NSEpic;
 using namespace std;
 
-CTplcombinationSolve::CTplcombinationSolve(TScopeStack &scope,
+CTplCombinationSolve::CTplCombinationSolve(TScopeStack &scope,
                                            string spectrumModel)
     : CObjectSolve("redshiftSolver", "tplCombinationSolve", scope,
                    spectrumModel) {}
 
 std::shared_ptr<CSolveResult>
-CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+CTplCombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                               std::shared_ptr<COperatorResultStore> resultStore,
                               TScopeStack &scope)
 
@@ -155,7 +155,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   return solveResult;
 }
 
-bool CTplcombinationSolve::Solve(
+bool CTplCombinationSolve::Solve(
     std::shared_ptr<COperatorResultStore> resultStore, const CSpectrum &spc,
     const CTemplateCatalog &tplCatalog, const TFloat64Range &lambdaRange,
     const TFloat64List &redshifts, Float64 overlapThreshold,
@@ -243,7 +243,7 @@ bool CTplcombinationSolve::Solve(
   return true;
 }
 
-void CTplcombinationSolve::checkTemplates(
+void CTplCombinationSolve::checkTemplates(
     const TTemplateConstRefList &tplList) const {
   if (tplList.empty())
     THROWG(BAD_TEMPLATECATALOG, Formatter()
@@ -264,7 +264,7 @@ void CTplcombinationSolve::checkTemplates(
   }
 }
 
-std::string CTplcombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
+std::string CTplCombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
   if (_spctype == CSpectrum::nType_continuumOnly)
     // use continuum only
     return "tplcombination_continuum";
@@ -280,7 +280,7 @@ std::string CTplcombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
     THROWG(INTERNAL_ERROR, "Unknown spectrum component");
 }
 
-ChisquareArray CTplcombinationSolve::BuildChisquareArray(
+ChisquareArray CTplCombinationSolve::BuildChisquareArray(
     std::shared_ptr<COperatorResultStore> store,
     const std::string &scopeStr) const {
 
@@ -344,7 +344,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 }
 
 std::shared_ptr<const TplCombinationExtremaResult>
-CTplcombinationSolve::buildExtremaResults(
+CTplCombinationSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
@@ -431,7 +431,7 @@ CTplcombinationSolve::buildExtremaResults(
   return extremaResult;
 }
 
-void CTplcombinationSolve::StoreExtremaResults(
+void CTplCombinationSolve::StoreExtremaResults(
     std::shared_ptr<COperatorResultStore> resultStore,
     std::shared_ptr<const TplCombinationExtremaResult> &extremaResult) const {
   resultStore->StoreScopedGlobalResult("extrema_results", extremaResult);

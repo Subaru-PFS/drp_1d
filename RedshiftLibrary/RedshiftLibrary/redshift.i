@@ -896,11 +896,11 @@ class CObjectSolve{
     CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
   };
 
-class CTplcombinationSolve : public CObjectSolve
+class CTplCombinationSolve : public CObjectSolve
 {
 
  public:
-  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplCombinationSolve(TScopeStack &scope,std::string objectType);
 };
 
 class CLineMatchingSolve: public CObjectSolve
