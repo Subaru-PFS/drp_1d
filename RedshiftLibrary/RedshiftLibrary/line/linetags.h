@@ -74,7 +74,7 @@ public:
   static constexpr const char *lya_em = "LyAE";
 
   static constexpr const char *niia_em = "[NII](doublet-1)";
-  static constexpr const char *niib_em = "[NII](doublet-1/2.95)";
+  static constexpr const char *niib_em = "[NII](doublet-1/3)";
 };
 
 } // namespace NSEpic
