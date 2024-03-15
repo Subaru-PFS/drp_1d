@@ -149,9 +149,8 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
         Log.LogDebug(Formatter() << "    CatalogsTplRatio - "
                                  << "linesCorrespondingNominalAmp, "
                                  << "iCatalog=" << k << ", iElt=" << elt_index
-                                 << ", iLine=" << line_index
-                                 << " with name=" << lineName.c_str()
-                                 << " , ebv=" << ebv << " : "
+                                 << ", iLine=" << line_index << " with name="
+                                 << lineName << " , ebv=" << ebv << " : "
                                  << "NominalAmpFound = " << nomAmp);
       }
     }

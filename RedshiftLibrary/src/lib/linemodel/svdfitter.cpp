@@ -147,7 +147,8 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       maxabsval = std::abs(fluxAxis[idx]);
   }
   Float64 normFactor = 1.0 / maxabsval;
-  Log.LogDetail(Formatter() << "normFactor = '" << normFactor << "'\n");
+  Log.LogDetail(Formatter() << "normFactor = '" << std::fixed
+                            << std::setprecision(3) << normFactor << "'");
 
   // Prepare the fit data
   for (Int32 i = 0; i < n; i++) {

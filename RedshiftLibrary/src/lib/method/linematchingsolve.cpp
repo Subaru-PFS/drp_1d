@@ -168,7 +168,7 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
           "m_disablegaussianfitqualitycheck is false (value 0 in json)");
     }
     Log.LogDebug(Formatter() << "m_enlargeRate = " << m_enlargeRate);
-    Log.LogDebug(Formatter() << "linetype = " << linetypeStr.c_str());
+    Log.LogDebug(Formatter() << "linetype = " << linetypeStr);
     Log.LogDebug(Formatter() << "m_minMatchNum = " << m_minMatchNum);
     Log.LogDebug(Formatter() << "m_minsize = " << m_minsize);
     Log.LogDebug(Formatter() << "m_maxsize = " << m_maxsize);
@@ -263,7 +263,7 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
             lineDetectionResult->LineCatalog, restLineCatalog, m_redshifts,
             m_minMatchNum, m_tol, lineType);
         if (lineMatchingResult) {
-          lineMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
+          lineMatchingResult->FilterWithRules(_spc, m_lambdaRange, m_winsize);
           Log.LogDebug(Formatter()
                        << "CLineMatching yielded "
                        << lineMatchingResult->SolutionSetList.size()

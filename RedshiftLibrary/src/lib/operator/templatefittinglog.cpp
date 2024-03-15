@@ -995,7 +995,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
   Log.LogDetail(Formatter() << "starting computation for template: "
-                            << logSampledTpl->GetName().c_str());
+                            << logSampledTpl->GetName());
 
   if (opt_dustFitting && logSampledTpl->CalzettiInitFailed())
     THROWG(INTERNAL_ERROR, "ISM is no initialized");
@@ -1098,7 +1098,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   if (overlapValidInfZ != m_redshifts.front() ||
       overlapValidSupZ != m_redshifts.back()) {
     Log.LogInfo(Formatter()
-                << "overlap warning for " << logSampledTpl->GetName().c_str()
+                << "overlap warning for " << logSampledTpl->GetName()
                 << ": minz=" << overlapValidInfZ
                 << ", maxz=" << overlapValidSupZ);
   }

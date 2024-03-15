@@ -552,7 +552,7 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
        iElts++) {
     Log.LogDetail(Formatter()
                   << "    model - Linemodel: tplratio = " << m_savedIdxFitted
-                  << " (" << getTplratio_bestTplName().c_str() << ", with ebmv="
+                  << " (" << getTplratio_bestTplName() << ", with ebmv="
                   << getTplratio_bestTplIsmCoeff() << "), and A="
                   << m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
     m_elementsVector->getElementParam()[iElts]->setAmplitudes(

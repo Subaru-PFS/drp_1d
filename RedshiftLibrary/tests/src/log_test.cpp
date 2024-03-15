@@ -42,6 +42,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
+#include <regex>
 
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/consolehandler.h"
@@ -51,17 +52,16 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(Log_test)
 
-// enum ELevel {
-//   nLevel_Critical = 100,
-//   nLevel_Error = 90,
-//   nLevel_Warning = 80, --> default level
-//   nLevel_Info = 70,
-//   nLevel_Detail = 65,
-//   nLevel_Debug = 60,
-//   nLevel_None = 0
-// };
-
 namespace bfs = boost::filesystem;
+
+std::pair<std::string, std::string> splitString(int n,
+                                                const std::string &input) {
+  if (input.size() <= n) {
+    return {input, ""};
+  } else {
+    return {input.substr(0, n), input.substr(n)};
+  }
+}
 
 BOOST_AUTO_TEST_CASE(consoleHandler_test) {
 
@@ -112,13 +112,18 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
   Log.LogDebug(message);
 
   message = Formatter() << "test log none";
-  Log.log(message, Log.nLevel_None);
+  Log.logEntry(message, Log.nLevel_None);
 
   message = Formatter() << "test log critical";
-  Log.log(message, Log.nLevel_Critical);
+  Log.logEntry(message, Log.nLevel_Critical);
 
   message = Formatter() << "test log warning";
   file_handler.LogEntry(80, "Warning: " + message);
+
+  message = Formatter() << "test log warning without timestamp";
+  Log.logEntry(message, Log.nLevel_Warning, false);
+
+  CMutex &mutex = Log.GetSynchMutex();
 
   std::string line;
   std::ifstream myfile(logFile.c_str());
@@ -132,6 +137,10 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
   }
 
   std::string line_ref;
+  std::string timestamp;
+  std::string logMessage;
+  std::regex timestampPattern(
+      "\\b\\w{3} \\w{3}\\s{1,2}\\d{1,2} \\d{2}:\\d{2}:\\d{2} \\d{4}\\b");
   for (Int32 i = 0; i < lines.size(); i++) {
     if (i == 0)
       line_ref = "Warning: test log warning";
@@ -149,7 +158,19 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
       line_ref = "Critical: test log critical";
     else if (i == 7)
       line_ref = "Warning: test log warning";
-    BOOST_CHECK(lines[i] == line_ref);
+    else if (i == 8)
+      line_ref = "Warning: test log warning without timestamp";
+
+    if (i < 7) {
+      // Remove all timestamps for logs containing one
+      auto parts = splitString(25, lines[i]);
+      timestamp = parts.first;
+      logMessage = parts.second;
+      BOOST_CHECK(std::regex_search(timestamp, timestampPattern));
+    } else {
+      logMessage = lines[i];
+    }
+    BOOST_CHECK_EQUAL(logMessage, line_ref);
   }
 
   bfs::remove_all(logFile);

@@ -229,9 +229,8 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
                   << "COperatorPdfz::searchMaxPDFcandidates: Second-pass "
                      "fitting degenerates the first-pass results of "
                      "candidate:"
-                  << cand.first.c_str() << " in range ["
-                  << redshiftsRange.GetBegin() << " , "
-                  << redshiftsRange.GetEnd() << "]\n");
+                  << cand.first << " in range [" << redshiftsRange.GetBegin()
+                  << " , " << redshiftsRange.GetEnd() << "]\n");
       Log.LogInfo(" Flag - Eliminating a second-pass candidate");
     }
     Int32 i = 0;

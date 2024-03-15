@@ -270,7 +270,7 @@ void COperatorLineModel::fitContinuumTemplates(
   Log.LogDetail(Formatter()
                 << "COperatorLineModel::PrecomputeContinuumFit: fitContinuum "
                    "opt_interp = "
-                << opt_interp.c_str());
+                << opt_interp);
   TInt32List meiksinIndices;
   TInt32List ebmvIndices;
   TTemplateConstRefList tplList;
@@ -823,7 +823,7 @@ void COperatorLineModel::ComputeSecondPass(
       m_opt_secondpasslcfittingmethod == "svdlcp2") {
     Log.LogInfo(Formatter()
                 << "  Operator-Linemodel: now computing second-pass "
-                << m_opt_secondpasslcfittingmethod.c_str()
+                << m_opt_secondpasslcfittingmethod
                 << " on each secondPass candidate (n="
                 << m_firstpass_extremaResult.size() << ")");
     bool useSecondPassRedshiftValue = true;
@@ -898,7 +898,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
         THROWG(INTERNAL_ERROR,
                Formatter() << "Impossible to find the first pass extrema "
                               "id corresponding to 2nd pass extrema "
-                           << Id.c_str());
+                           << Id);
       }
     }
 
@@ -946,7 +946,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       }
       Log.LogInfo(Formatter()
                   << "    Operator-Linemodel: saveResults with groups alv="
-                  << alv_list_str.c_str());
+                  << alv_list_str);
       // emission
       idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
           CLine::EType::nType_Emission);
@@ -961,7 +961,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       }
       Log.LogInfo(Formatter()
                   << "    Operator-Linemodel: saveResults with groups elv="
-                  << elv_list_str.c_str());
+                  << elv_list_str);
     } else {
       // m_fittingManager->SetVelocityEmission(m_firstpass_extremaResult.Elv[i_1pass]);
       // m_fittingManager->SetVelocityAbsorption(m_firstpass_extremaResult.Alv[i_1pass]);
@@ -1441,7 +1441,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
       }
       Log.LogInfo(Formatter()
                   << "    Operator-Linemodel: recompute with groups alv="
-                  << alv_list_str.c_str());
+                  << alv_list_str);
       // emission
       idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
           CLine::EType::nType_Emission);
@@ -1454,7 +1454,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
       }
       Log.LogInfo(Formatter()
                   << "    Operator-Linemodel: recompute with groups elv="
-                  << elv_list_str.c_str());
+                  << elv_list_str);
 
     } else {
       m_fittingManager->SetVelocityEmission(extremaResult.Elv[i]);

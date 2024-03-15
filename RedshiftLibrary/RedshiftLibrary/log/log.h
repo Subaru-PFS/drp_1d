@@ -86,11 +86,11 @@ public:
   friend void CFlagWarning::warning(WarningCode c, std::string message);
   friend void CFlagWarning::warning(WarningCode c, const char *format, ...);
 
-  void LogInfo(const std::string &s);
-  void LogDetail(const std::string &s);
-  void LogDebug(const std::string &s);
+  void LogInfo(const std::string &s, bool withTimestamp = true);
+  void LogDetail(const std::string &s, bool withTimestamp = true);
+  void LogDebug(const std::string &s, bool withTimestamp = true);
 
-  void log(const std::string &s, CLog::ELevel l);
+  CMutex &GetSynchMutex();
 
 private:
   friend class CSingleton<CLog>;
@@ -102,19 +102,23 @@ private:
   CLog();
   ~CLog();
 
+  void logEntry(const std::string &s, CLog::ELevel l,
+                bool withTimestamp = true);
+
   // LogError and LogWarning are private to be called from friend classes only
   // (CFlagWarning and AmzException)
 
-  void LogError(const std::string &s);
-  void LogWarning(const std::string &s);
+  void LogError(const std::string &s, bool withTimestamp = true);
+  void LogWarning(const std::string &s, bool withTimestamp = true);
 
   void AddHandler(CLogHandler &handler);
   void RemoveHandler(CLogHandler &handler);
   std::string GetHeader(CLog::ELevel logLevel);
+  std::string timeStampString();
 
   // Attributes
   CLogHandler *m_HandlerTable[LOG_HANDLER_TABLE_SIZE];
-  Char *m_WorkingBuffer;
+  CMutex m_Mutex;
 };
 
 } // namespace NSEpic

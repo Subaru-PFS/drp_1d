@@ -9,7 +9,6 @@ namespace NSEpic {
 static const Float64 N_SIGMA_SUPPORT = 8.;
 static const Float64 N_SIGMA_SUPPORT_DI = 6.;
 
-static const Int32 LOG_WORKING_BUFFER_SIZE = 4096;
 static const Int32 NOT_OVERLAP_VALUE = 20;
 // for CExtremum
 static const Int32 PEAKS_MIN_THRESHOLD = 3;

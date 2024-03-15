@@ -189,7 +189,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
   if (!chisquareSetAtLeastOnce) {
     THROWG(INVALID_MERIT_VALUES,
-           Formatter() << "Template " << tpl->GetName().c_str()
+           Formatter() << "Template " << tpl->GetName()
                        << ": Not even one single valid fit/merit value found");
   }
 
@@ -381,7 +381,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   Log.LogDetail(
       Formatter()
       << "  Operator-TemplateFitting: starting computation for template: "
-      << tpl->GetName().c_str());
+      << tpl->GetName());
 
   if (opt_dustFitting && tpl->CalzettiInitFailed())
     THROWG(INTERNAL_ERROR, "ISM is not initialized");
@@ -455,7 +455,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
       overlapValidSupZ != m_redshifts[m_redshifts.size() - 1]) {
     Log.LogInfo(Formatter()
                 << "  Operator-TemplateFitting: overlap warning for "
-                << tpl->GetName().c_str()
+                << tpl->GetName()
                 << ": "
                    "minz="
                 << overlapValidInfZ << ", maxz=" << overlapValidSupZ);

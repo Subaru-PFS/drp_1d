@@ -120,7 +120,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
   //*m_curObs = 0;
 
   Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded: "
-                           << m_fitContinuum->tplName.c_str());
+                           << m_fitContinuum->tplName);
   Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with A="
                            << m_fitContinuum->tplAmplitude << ", with A_error="
                            << m_fitContinuum->tplAmplitudeError);

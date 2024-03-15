@@ -47,30 +47,60 @@ using namespace NSEpic;
  */
 CLog::CLog() {
   Int32 i;
-
-  m_WorkingBuffer = new Char[LOG_WORKING_BUFFER_SIZE];
   for (i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
     m_HandlerTable[i] = NULL;
   }
 }
 
-CLog::~CLog() { delete[] m_WorkingBuffer; }
+CLog::~CLog() {}
 
-void CLog::log(const std::string &msg, CLog::ELevel logLevel) {
+void CLog::logEntry(const std::string &msg, CLog::ELevel logLevel,
+                    bool withTimestamp) {
+  m_Mutex.Lock();
+  std::string messageToLog = GetHeader(logLevel) + msg;
+  if (withTimestamp)
+    messageToLog = timeStampString() + messageToLog;
   for (int i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
     if (m_HandlerTable[i]) {
       if (m_HandlerTable[i]->GetLevelMask() <= logLevel) {
-        m_HandlerTable[i]->LogEntry(logLevel, GetHeader(logLevel) + msg);
+        m_HandlerTable[i]->LogEntry(logLevel, messageToLog);
       }
     }
   }
+  m_Mutex.Unlock();
 }
 
-void CLog::LogError(const std::string &msg) { log(msg, nLevel_Error); }
-void CLog::LogDebug(const std::string &msg) { log(msg, nLevel_Debug); }
-void CLog::LogInfo(const std::string &msg) { log(msg, nLevel_Info); }
-void CLog::LogWarning(const std::string &msg) { log(msg, nLevel_Warning); }
-void CLog::LogDetail(const std::string &msg) { log(msg, nLevel_Detail); }
+std::string CLog::timeStampString() {
+  // Get the current system time point
+  auto now = std::chrono::system_clock::now();
+
+  // Convert the time point to a time_t object (C-style time)
+  std::time_t time = std::chrono::system_clock::to_time_t(now);
+
+  // Convert to string
+  std::string timeString = std::ctime(&time);
+
+  // Remove last character (newline)
+  timeString = timeString.erase(timeString.size() - 1) + " ";
+
+  return timeString;
+}
+
+void CLog::LogError(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Error, withTimestamp);
+}
+void CLog::LogDebug(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Debug, withTimestamp);
+}
+void CLog::LogInfo(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Info, withTimestamp);
+}
+void CLog::LogWarning(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Warning, withTimestamp);
+}
+void CLog::LogDetail(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Detail, withTimestamp);
+}
 
 /**
  * Remove the reference for the input handler if it exists in the handler table.
@@ -100,6 +130,8 @@ void CLog::AddHandler(CLogHandler &handler) {
     }
   }
 }
+
+CMutex &CLog::GetSynchMutex() { return m_Mutex; }
 
 /**
  * Given a message priority level, returns an appropriate prefix to the message.

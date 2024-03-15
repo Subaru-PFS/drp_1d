@@ -413,7 +413,7 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
 
       Log.LogDebug(Formatter()
                    << "    linemodelresult: using line for max amp search="
-                   << restLineList.at(line_id).GetName().c_str());
+                   << restLineList.at(line_id).GetName());
       if (linemodelsols[solutionIdx].Amplitudes[j] > ampMax) {
         ampMax = linemodelsols[solutionIdx].Amplitudes[j];
         ampMaxLineTag = restLineList.at(line_id).GetName().c_str();

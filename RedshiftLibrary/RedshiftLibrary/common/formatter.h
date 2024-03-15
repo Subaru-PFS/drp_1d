@@ -49,8 +49,7 @@ public:
   Formatter(const Formatter &) = delete;
   Formatter &operator=(Formatter &) = delete;
 
-  // Overloads the insertion operator
-  // Allows to insert various types of data
+  // Insertion operator - Allows to insert various types of data
   template <typename Type> Formatter &operator<<(const Type &value) {
     stream_ << value;
     return *this;

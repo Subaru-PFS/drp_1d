@@ -300,7 +300,7 @@ bool CSpectrum::RemoveContinuum(CContinuum &remover) const {
  */
 void CSpectrum::EstimateContinuum() const {
   Log.LogDetail(Formatter() << "Continuum estimation on input spectrum: using "
-                            << m_estimationMethod.c_str());
+                            << m_estimationMethod);
 
   if (m_estimationMethod == "irregularSamplingMedian") {
     CContinuumIrregularSamplingMedian continuum;

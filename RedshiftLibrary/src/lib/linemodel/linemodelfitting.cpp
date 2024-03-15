@@ -157,6 +157,7 @@ void CLineModelFitting::initMembers(
       m_lambdaRanges, m_curObs, m_RestLineList, m_lineRatioType == "rules"));
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     Log.LogDetail(Formatter() << "    model: Continuum winsize found is "
+                              << std::fixed << std::setprecision(2)
                               << getSpectrum().GetMedianWinsize() << " A");
     m_models->push_back(CSpectrumModel(
         std::make_shared<CLineModelElementList>(getElementList()),
@@ -253,7 +254,7 @@ void CLineModelFitting::LogCatalogInfos() {
       if (nLines < 1) {
         Log.LogDetail(Formatter()
                       << "LineModel ctlg: elt " << iElts << " ("
-                      << CLine::ETypeString.at(elt->GetElementType()).c_str()
+                      << CLine::ETypeString.at(elt->GetElementType())
                       << "): no lines");
       }
       for (Int32 index = 0; index != elt->GetSize(); ++index) {
@@ -262,10 +263,9 @@ void CLineModelFitting::LogCatalogInfos() {
                                    elt->GetNominalAmplitude(index));
         Log.LogDetail(Formatter()
                       << "LineModel ctlg: elt " << iElts << " ("
-                      << CLine::ETypeString.at(elt->GetElementType()).c_str()
-                      << "): line " << index << " = "
-                      << elt->GetLineName(index).c_str()
-                      << nominalAmpStr.c_str());
+                      << CLine::ETypeString.at(elt->GetElementType())
+                      << "): line " << index << " = " << elt->GetLineName(index)
+                      << nominalAmpStr);
       }
     }
   }

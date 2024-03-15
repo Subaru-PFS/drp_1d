@@ -106,9 +106,9 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
   }
 
   Log.LogInfo(Formatter() << "Method parameters:");
-  Log.LogInfo(Formatter() << "    -interpolation: " << opt_interp.c_str());
+  Log.LogInfo(Formatter() << "    -interpolation: " << opt_interp);
   Log.LogInfo(Formatter() << "    -overlapThreshold: " << overlapThreshold);
-  Log.LogInfo(Formatter() << "    -component: " << opt_spcComponent.c_str());
+  Log.LogInfo(Formatter() << "    -component: " << opt_spcComponent);
   Log.LogInfo(Formatter() << "    -IGM extinction: "
                           << (opt_extinction ? "true" : "false"));
   Log.LogInfo(Formatter() << "    -ISM dust-fit: "

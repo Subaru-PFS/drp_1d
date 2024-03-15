@@ -235,7 +235,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
   Log.LogInfo(Formatter()
               << "  Operator-TemplateFittingLog: Log-regular lambda resampling "
                  "START for template "
-              << tpl->GetName().c_str());
+              << tpl->GetName());
   // check template coverage is enough for zrange and spectrum coverage
   bool overlapFull = true;
   if (lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
@@ -246,7 +246,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
   if (!overlapFull) {
     THROWG(INTERNAL_ERROR,
            Formatter() << "overlap found to be lower than 1.0 for template "
-                       << tpl->GetName().c_str());
+                       << tpl->GetName());
   }
 
   const CSpectrumSpectralAxis targetSpectralAxis =
@@ -350,7 +350,7 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
         Log.LogDetail(
             Formatter()
             << " CInputContext::RebinInputs: need to rebin again the template: "
-            << tpl->GetName().c_str());
+            << tpl->GetName());
         tplcat->m_logsampling = false;
         std::shared_ptr<const CTemplate> input_tpl = tplcat->GetTemplateByName(
             TStringList{spectrumModel}, tpl->GetName());

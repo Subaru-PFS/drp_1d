@@ -81,7 +81,7 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
       }
     }
   }
-  Log.LogInfo(Formatter() << "Setting object type: " << typeLabel.c_str());
+  Log.LogInfo(Formatter() << "Setting object type: " << typeLabel);
   Float64 sum = 0.;
 
   for (const std::string &spectrumModel : inputContext->m_categories) {

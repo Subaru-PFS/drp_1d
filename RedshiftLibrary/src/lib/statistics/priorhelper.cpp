@@ -59,7 +59,7 @@ void CPriorHelper::Init(std::string priorDirPath, Int32 type) {
       Flag.warning(WarningCode::INVALID_FOLDER_PATH,
                    Formatter() << "    CPriorHelper::" << __func__
                                << ": rootFolder path does not exist: "
-                               << rootFolder.string().c_str());
+                               << rootFolder.string());
       Log.LogDetail("    CPriorHelper: priors won't be used");
     }
     mInitFailed = true;

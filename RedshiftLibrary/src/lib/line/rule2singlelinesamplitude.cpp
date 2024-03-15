@@ -72,31 +72,30 @@ void CRule2SingleLinesAmplitude::Correct(
   auto [iEltA, idA] =
       LineModelElementList.findElementIndex(m_LineA, m_LineType);
   if (iEltA == undefIdx) {
-    Log.LogDebug(Formatter() << "Rule " << Name.c_str() << ": line "
-                             << m_LineA.c_str() << " not found.");
+    Log.LogDebug(Formatter()
+                 << "Rule " << Name << ": line " << m_LineA << " not found.");
     return;
   }
   if (LineModelElementList.getElementList()[iEltA]->GetSize() > 1) {
-    Log.LogDebug(Formatter() << "Rule" << Name.c_str() << ": line "
-                             << m_LineA.c_str() << " has size < 1.");
+    Log.LogDebug(Formatter()
+                 << "Rule" << Name << ": line " << m_LineA << " has size < 1.");
     iEltA = undefIdx;
   }
   auto [iEltB, idB] =
       LineModelElementList.findElementIndex(m_LineB, m_LineType);
   if (iEltB == undefIdx) {
-    Log.LogDebug(Formatter() << "Rule " << Name.c_str() << ": line "
-                             << m_LineB.c_str() << " not found.");
+    Log.LogDebug(Formatter()
+                 << "Rule " << Name << ": line " << m_LineB << " not found.");
     return;
   }
   if (LineModelElementList.getElementList()[iEltB]->GetSize() > 1) {
-    Log.LogDebug(Formatter() << "Rule " << Name.c_str() << ": line "
-                             << m_LineB.c_str() << " has size < 1.");
+    Log.LogDebug(Formatter() << "Rule " << Name << ": line " << m_LineB
+                             << " has size < 1.");
     iEltB = undefIdx;
   }
   if (iEltA == undefIdx || iEltB == undefIdx || iEltA == iEltB) {
-    Log.LogDebug(Formatter()
-                 << "Rule " << Name.c_str() << ": line " << m_LineA.c_str()
-                 << " has same index as line " << m_LineB.c_str());
+    Log.LogDebug(Formatter() << "Rule " << Name << ": line " << m_LineA
+                             << " has same index as line " << m_LineB);
     return;
   }
   if (LineModelElementList.getElementList()[iEltA]->IsOutsideLambdaRange() ==
@@ -118,12 +117,12 @@ void CRule2SingleLinesAmplitude::Correct(
         {
           std::string strTmp0 = boost::str(
               (boost::format("correct - %-10s") % "2_SINGLE_LINES_AMPLITUDE"));
-          Logs.append(strTmp0.c_str());
+          Logs.append(strTmp0);
           std::string strTmp =
               boost::str((boost::format("\n\tlineWeak=%-10s, lineStrong=%-10s, "
                                         "previousAmp=%.4e, correctedAmp=%.4e") %
                           m_LineB % m_LineA % ampB % maxB));
-          Logs.append(strTmp.c_str());
+          Logs.append(strTmp);
         }
       }
       //*/

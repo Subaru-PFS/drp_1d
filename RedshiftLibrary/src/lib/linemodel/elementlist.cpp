@@ -152,8 +152,8 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
 
   // print the groups
   for (auto const &[tag, group] : tag_groups) {
-    Log.LogDebug(Formatter() << "    model: Group " << tag.c_str()
-                             << ": nlines=" << group.size());
+    Log.LogDebug(Formatter()
+                 << "    model: Group " << tag << ": nlines=" << group.size());
     for (auto const &element : group) {
       Log.LogDebug(Formatter() << "    model: \t iElt=" << element);
     }
@@ -413,7 +413,7 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
         Log.LogDebug(Formatter()
                      << "    model: GetModelStrongEmissionLinePresent - found. "
                         "Strong EL: "
-                     << line.GetName().c_str());
+                     << line.GetName());
         return true;
       }
     }
