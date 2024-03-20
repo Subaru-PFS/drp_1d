@@ -47,13 +47,16 @@ namespace NSEpic {
 class CAutoScope {
 public:
   CAutoScope(const std::shared_ptr<CScopeStack> &scopeStack,
-             const std::string &name, ScopeType type = ScopeType::UNDEFINED);
+             const std::string &name, ScopeType type = ScopeType::UNDEFINED,
+             bool do_logging = true);
   CAutoScope(CAutoScope const &) = delete;
   CAutoScope &operator=(CAutoScope const &) = delete;
   ~CAutoScope();
 
 private:
   const std::shared_ptr<CScopeStack> m_scopeStack;
+  const bool m_do_logging;
+  std::string m_log_msg;
 };
 } // namespace NSEpic
 #endif
