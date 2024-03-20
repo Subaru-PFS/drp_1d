@@ -47,7 +47,7 @@ import numpy as np
 import pandas as pd
 from astropy.io import ascii, fits
 from pylibamazed.Exception import (AmazedError, AmazedErrorFromGlobalException,
-                                   APIException)
+                                   APIException, exception_decorator)
 from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
 from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
@@ -423,6 +423,7 @@ class CalibrationLibrary:
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)
 
+    @exception_decorator
     def load_all(self, calibs="all"):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters
         content
@@ -471,14 +472,8 @@ class CalibrationLibrary:
 
             if self.parameters.get_photometry_transmission_dir() is not None:
                 self.load_photometric_bands()
-        except GlobalException as e:
-            raise AmazedErrorFromGlobalException(e)
         except FileNotFoundError as e:
-            raise AmazedError(ErrorCode.INVALID_FILEPATH, str(e))
-        except APIException as e:
-            raise AmazedError(e.errCode, e.message)
-        except Exception as e:
-            raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
+            raise AmazedError(ErrorCode.INVALID_FILEPATH, str(e)) from e
 
     def init(self):
         """Initialize templates (init continuum removal, init ism/igm and lsf if lsf is not spectrum dependent

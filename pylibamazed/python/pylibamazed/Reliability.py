@@ -44,7 +44,7 @@ from pylibamazed.redshift import ErrorCode
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 
 
-class Reliability:
+class ReliabilitySolve:
     def __init__(self, object_type, parameters, calibration):
         self.object_type = object_type
         self.parameters = parameters

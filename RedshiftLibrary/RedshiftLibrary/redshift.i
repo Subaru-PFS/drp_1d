@@ -491,6 +491,10 @@ public:
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
+  const std::string &GetCurrentCategory() const;
+  const std::string &GetCurrentStage() const;
+  const std::string &GetCurrentMethod() const;
+
   std::shared_ptr<CScopeStack>  m_ScopeStack;
 
  private:
@@ -500,6 +504,10 @@ public:
 };
 
 enum class ScopeType { UNDEFINED, SPECTRUMMODEL, STAGE, METHOD };
+
+%pythonappend CScopeStack::get_current_type() const %{
+    return ScopeType(val)
+%}
 
 class CScopeStack {
 public:
@@ -534,6 +542,9 @@ public:
   //     return (*($self))[pos];
   //   }
 }
+
+
+
 
 class CParameterStore : public CScopeStore
 {

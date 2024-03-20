@@ -36,6 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+import functools
 import sys
 import traceback
 
@@ -43,9 +44,9 @@ from pylibamazed.redshift import AmzException, ErrorCode
 
 
 class AmazedError(AmzException):
-    def __init__(self, errCode, message, line=-1, method="", filename=""):
+    def __init__(self, errCode, message, line=None, method=None, filename=None):
         self.errCode = errCode  # we keep the python enum for further use
-        if line == -1:
+        if line is None:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             frame = traceback.extract_tb(exc_traceback)[-1]
             AmzException.__init__(self,
@@ -57,7 +58,8 @@ class AmazedError(AmzException):
         else:
             AmzException.__init__(self, errCode.value, message, filename, method, line)
 
-        self.LogError(self.__str__())
+    def LogError(self):
+        AmzException.LogError(self, self.__str__())
 
     def __str__(self):
         ret = self.errCode.name + ": " + self.getMessage() + " ["
@@ -83,3 +85,18 @@ class APIException(Exception):
 
     def __str__(self):
         return '{}:{}'.format(self.errCode.name, self.message)
+
+
+def exception_decorator(func):
+    @functools.wraps(func)
+    def inner_function(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except AmzException as e:
+            raise AmazedErrorFromGlobalException(e) from e
+        except APIException as e:
+            raise AmazedError(e.errCode, e.message) from e
+        except Exception as e:
+            raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)) from e
+
+    return inner_function
