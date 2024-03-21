@@ -47,9 +47,7 @@
 #include "RedshiftLibrary/log/log.h"
 
 #define THROWG(code, msg)                                                      \
-  throw GlobalException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
-#define THROWI(code, msg)                                                      \
-  throw InternalException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
+  throw AmzException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
 namespace NSEpic {
 
 class AmzException : public std::exception {
@@ -75,7 +73,9 @@ public:
   const std::string &getFileName() const { return filename; }
   const std::string &getMethod() const { return method; }
   int getLine() const { return line; }
-  void LogError(const std::string &msg) const { Log.LogError(msg); };
+  void LogError(const std::string &msg = std::string()) const {
+    Log.LogError(msg.empty() ? _msg : msg);
+  };
 
 protected:
   std::string _msg;
@@ -85,23 +85,6 @@ protected:
   int line = -1;
 };
 
-// A solve exception stops the whole pipeline
-// This exception should be caught only from pylibamazed or a client
-class GlobalException : public AmzException {
-public:
-  GlobalException(ErrorCode ec, const std::string &message,
-                  const char *filename_, const char *method_,
-                  int line_) noexcept
-      : AmzException(ec, message, filename_, method_, line_){};
-};
-
-class InternalException : public AmzException {
-public:
-  InternalException(ErrorCode ec, const std::string &message,
-                    const char *filename_, const char *method_,
-                    int line_) noexcept
-      : AmzException(ec, message, filename_, method_, line_){};
-};
 } // namespace NSEpic
 
 #endif

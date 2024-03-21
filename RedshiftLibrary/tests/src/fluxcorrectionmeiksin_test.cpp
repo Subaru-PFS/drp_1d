@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(overall_test) {
                         TFloat64List{},
                         igmCorrectionMeiksin->m_rawCorrections[0].lbda,
                         finelbdaGrid, zbin, LSFConstantWidth),
-                    GlobalException);
+                    AmzException);
 
   // no overlapping range
   zbin.Set(0.5, 1.0);
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
   lambdaRest = 1214.;
   BOOST_CHECK_THROW(
       igmCorrectionMeiksin->getCorrection(redshift, meiksinIdx, lambdaRest),
-      GlobalException);
+      AmzException);
 
   redshift = 1.5;
   meiksinIdx = 0;

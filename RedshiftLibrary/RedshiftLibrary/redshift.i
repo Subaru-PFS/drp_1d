@@ -143,7 +143,6 @@
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
-static PyObject* pGlobalException;
 static PyObject* pAmzException;
  %}
 
@@ -151,13 +150,9 @@ static PyObject* pAmzException;
 
 %init %{
   import_array();
-  pGlobalException = PyErr_NewException("redshift_.GlobalException", 0, 0);
-  Py_INCREF(pGlobalException);
-  PyModule_AddObject(m, "GlobalException", pGlobalException);
   pAmzException = PyErr_NewException("redshift_.AmzException", 0, 0);
   Py_INCREF(pAmzException);
   PyModule_AddObject(m, "AmzException", pAmzException);
-
 %}
 
 %{
@@ -175,7 +170,6 @@ static PyObject* pAmzException;
 
 // should be in "derived first" order
 #define FOR_EACH_EXCEPTION(ACTION) \
-   ACTION(GlobalException) \
    ACTION(AmzException) \
 /**/
 %}
@@ -506,7 +500,7 @@ public:
 enum class ScopeType { UNDEFINED, SPECTRUMMODEL, STAGE, METHOD };
 
 %pythonappend CScopeStack::get_current_type() const %{
-    return ScopeType(val)
+    val = ScopeType(val)
 %}
 
 class CScopeStack {
@@ -867,6 +861,15 @@ public:
 %include "common/errorcodes.i"
 %include "common/warningcodes.i"
 
+%pythonappend AmzException::getErrorCode() const %{
+    val = ErrorCode(val)
+%}
+
+%pythonprepend AmzException::LogError() const %{
+    if not args:
+      args = (self.__str__(), )
+%}
+
 class AmzException : public std::exception
 {
 
@@ -878,23 +881,28 @@ class AmzException : public std::exception
   virtual ~AmzException();
  
   ErrorCode getErrorCode() const;
-  virtual const char* what() ;
+  virtual const char* what() const noexcept override;
   const std::string &getMessage() const;
 
   const std::string &getFileName() const;
   const std::string &getMethod() const;
   int getLine() const;
 
-  void LogError(const std::string &msg) const;
+  void LogError(const std::string &msg = std::string()) const;
 
 };
 
+%pythoncode %{
+  def _AmzException__str__(self):
+    msg = f"{self.getErrorCode().name}:{self.getMessage()}"
+    filename = self.getFileName()
+    if filename:
+      msg += f" [{filename}:{self.getLine()}:{self.getMethod()}]"
+    return msg
 
-class GlobalException: public AmzException
-{
- public:
-  using AmzException::AmzException;
-};
+  AmzException.__str__ = _AmzException__str__
+%}
+
 class CSolve{
  public:
   CSolve()=delete;

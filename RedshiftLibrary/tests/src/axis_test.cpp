@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(SpectrumAxis_test) {
 
   n6Mask.resize(5);
   BOOST_CHECK_THROW(n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector()),
-                    GlobalException);
+                    AmzException);
 
   // test MaskAxis
   n6Mask.resize(6);

@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ScopeStore_test) {
   BOOST_CHECK(store.getCurrentScopeNameAt(0) == "");
   BOOST_CHECK(store.getCurrentScopeNameAt(1) == "scope_1");
   BOOST_CHECK(store.getCurrentScopeNameAt(2) == "scope_1.scope_2");
-  BOOST_CHECK_THROW(store.getCurrentScopeNameAt(3), GlobalException);
+  BOOST_CHECK_THROW(store.getCurrentScopeNameAt(3), AmzException);
   BOOST_CHECK(store.GetScopedNameAt("new_last_level", 2) ==
               "scope_1.scope_2.new_last_level");
   BOOST_CHECK(store.GetScopedNameAt("new_last_level", ScopeType::STAGE) ==

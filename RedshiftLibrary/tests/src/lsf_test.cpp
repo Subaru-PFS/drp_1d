@@ -53,7 +53,7 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(LSF_test)
 
-bool correctMessage(const GlobalException &ex) {
+bool correctMessage(const AmzException &ex) {
   BOOST_CHECK_EQUAL(ex.what(), std::string("Size do not match "));
   return true;
 }
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   BOOST_CHECK(std::isnan(res_4));
 
   BOOST_CHECK_THROW(LSF_3->getNormalizedProfileVector(lambdas_obs, lambda0_obs),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
@@ -300,11 +300,11 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
   TFloat64List widthList_2(n + 1, 0.5);
   args = std::make_shared<TLSFGaussianVarWidthArgs>(spcAxis, widthList_2);
 
-  BOOST_CHECK_THROW(LSFFactory.Create(lsfType, args), GlobalException);
+  BOOST_CHECK_THROW(LSFFactory.Create(lsfType, args), AmzException);
 
   widthList_2.resize(0);
   args = std::make_shared<TLSFGaussianVarWidthArgs>(spcAxis, widthList_2);
-  BOOST_CHECK_THROW(LSFFactory.Create(lsfType, args), GlobalException);
+  BOOST_CHECK_THROW(LSFFactory.Create(lsfType, args), AmzException);
 
   TFloat64List widthList_3(n, 0.0);
   args = std::make_shared<TLSFGaussianVarWidthArgs>(spcAxis, widthList_3);
@@ -314,6 +314,6 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
   bool available = LSF_2->checkAvailability(99.);
   BOOST_CHECK(available == false);
 
-  BOOST_CHECK_THROW(LSF->GetWidth(99.), GlobalException);
+  BOOST_CHECK_THROW(LSF->GetWidth(99.), AmzException);
 }
 }

@@ -38,8 +38,8 @@
 # ============================================================================
 from contextlib import contextmanager
 
-from pylibamazed.redshift import (CFlagWarning, CLog, CProcessFlowContext,
-                                  ErrorCode, GlobalException, ScopeType)
+from pylibamazed.redshift import (AmzException, CFlagWarning, CLog,
+                                  CProcessFlowContext, ErrorCode, ScopeType)
 
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
@@ -60,9 +60,8 @@ def get_scope_type(scopetype):
 def get_scope_SpectrumModel():
     try:
         spectrum_model = ProcessFlowContext.GetCurrentCategory()
-    except GlobalException as e:
-        errCode = ErrorCode(e.getErrorCode())
-        if (errCode.value != ErrorCode.SCOPESTACK_ERROR):
+    except AmzException as e:
+        if (e.getErrorCode.value != ErrorCode.SCOPESTACK_ERROR):
             raise e from None
         spectrum_model = None
 
@@ -75,9 +74,8 @@ def get_scope_SpectrumModel():
 def get_scope_stage():
     try:
         stage = ProcessFlowContext.GetCurrentStage()
-    except GlobalException as e:
-        errCode = ErrorCode(e.getErrorCode())
-        if (errCode.value != ErrorCode.SCOPESTACK_ERROR):
+    except AmzException as e:
+        if (e.getErrorCode.value != ErrorCode.SCOPESTACK_ERROR):
             raise e from None
         stage = None
 

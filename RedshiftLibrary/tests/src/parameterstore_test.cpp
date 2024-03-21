@@ -165,11 +165,11 @@ BOOST_AUTO_TEST_CASE(ParameterStore_GetTest) {
   }
 
   // test throw
-  BOOST_CHECK_THROW(store.Get<Float64>("Float64_"), GlobalException);
-  BOOST_CHECK_THROW(store.GetScoped<Float64>("Float64_"), GlobalException);
-  BOOST_CHECK_THROW(store.GetList<Float64>("TFloat64List_"), GlobalException);
+  BOOST_CHECK_THROW(store.Get<Float64>("Float64_"), AmzException);
+  BOOST_CHECK_THROW(store.GetScoped<Float64>("Float64_"), AmzException);
+  BOOST_CHECK_THROW(store.GetList<Float64>("TFloat64List_"), AmzException);
   BOOST_CHECK_THROW(store.GetListScoped<Float64>("TFloat64List_"),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(ParameterStore_HasTest) {

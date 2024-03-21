@@ -188,11 +188,11 @@ BOOST_AUTO_TEST_CASE(context_test) {
                   .back());
 
   Context.m_ScopeStack->pop_back();
-  BOOST_CHECK_THROW(Context.GetCurrentMethod(), GlobalException);
+  BOOST_CHECK_THROW(Context.GetCurrentMethod(), AmzException);
 
   Context.m_ScopeStack->pop_back();
   Context.m_ScopeStack->pop_back();
-  BOOST_CHECK_THROW(Context.GetCurrentCategory(), GlobalException);
+  BOOST_CHECK_THROW(Context.GetCurrentCategory(), AmzException);
 
   CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
                                      ScopeType::SPECTRUMMODEL);
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   // GSL error
   Int32 dim = 1;
   gsl_matrix *covarMatrix = gsl_matrix_alloc(dim, dim);
-  BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), GlobalException);
+  BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), AmzException);
   gsl_matrix_free(covarMatrix);
 }
 

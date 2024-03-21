@@ -72,14 +72,14 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   BOOST_CHECK(rebin->getType() == "spline");
   BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("ngp"));
   BOOST_CHECK(rebin->getType() == "ngp");
-  BOOST_CHECK_THROW(std::move(*rebin).convert("linn"), GlobalException);
+  BOOST_CHECK_THROW(std::move(*rebin).convert("linn"), AmzException);
 
   // test create
   BOOST_CHECK_NO_THROW(CRebin::create("lin", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("preComputedFineGrid", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("spline", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("ngp", spc));
-  BOOST_CHECK_THROW(CRebin::create("linn", spc), GlobalException);
+  BOOST_CHECK_THROW(CRebin::create("linn", spc), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(rebinLinear_test) {
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   TFloat64Range range2(9., 11.);
   BOOST_CHECK_THROW(rebin->compute(range2, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 
   // interp = "lin" et errorRebinMethod = "rebin
   rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
@@ -205,13 +205,13 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
   errorRebinMethod = "rebin";
   BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 
   // check throw : bad RebinFineGrid
   rebin->m_pfgFlux = {};
   BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 
   // RebinFinegrid
   rebin->rebinFineGrid();
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(rebinSpline_test) {
   errorRebinMethod = "rebin";
   BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(rebinNgp_test) {

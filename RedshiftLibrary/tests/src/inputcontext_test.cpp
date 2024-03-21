@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(rebinInputs_test) {
   BOOST_CHECK(inputCtx2.GetRebinnedSpectrum() != nullptr);
 
   inputCtx2.m_lambdaRanges[0]->Set(1000, 2000);
-  BOOST_CHECK_THROW(inputCtx2.RebinInputs(), GlobalException);
+  BOOST_CHECK_THROW(inputCtx2.RebinInputs(), AmzException);
 
   inputCtx2.resetSpectrumSpecific();
   spc->SetSpectralAxis(CSpectrumSpectralAxis(linLambdaList));

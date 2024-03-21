@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_6) {
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(zcandidates);
 
   BOOST_CHECK_THROW(zcand_op.SetIntegrationRanges(TFloat64Range(pdfz), ranges),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(SortByValSumProbaInt_test) {
@@ -336,13 +336,13 @@ BOOST_AUTO_TEST_CASE(getCandidateSumTrapez_test) {
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(center_redshifts);
   BOOST_CHECK_THROW(zcand_op.getCandidateSumTrapez(
                         center_redshifts, valprobalog, zrange, candidate),
-                    GlobalException);
+                    AmzException);
 
   // no enclosing interval
   center_redshifts = {2.0, 3.0, 5.0};
   BOOST_CHECK_THROW(zcand_op.getCandidateSumTrapez(
                         center_redshifts, valprobalog, zrange, candidate),
-                    GlobalException);
+                    AmzException);
 
   // Test OK
   TFloat64Range zrange_2(gaussZ.front() + 1e-6, gaussZ.back() - 1e-6);
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(getCandidateGaussFit_test) {
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(center_redshifts);
   BOOST_CHECK_THROW(zcand_op.getCandidateSumTrapez(
                         center_redshifts, valprobalog, zrange, candidate),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(computeCandidatesDeltaz) {

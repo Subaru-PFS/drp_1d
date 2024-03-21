@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
   TLineModelElementParam_ptr fdata =
       std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
-  BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), GlobalException);
+  BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), AmzException);
 
   CLineModelElement element = CLineModelElement(fdata, "combined");
   BOOST_CHECK_CLOSE(1.0, element.getVelocityEmission(), 0.01);

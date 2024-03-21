@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK_THROW(store_1.StoreResult(store_1.m_GlobalResults,
                                         store_1.GetCurrentScopeName(),
                                         "extremaResult", result_in),
-                    GlobalException);
+                    AmzException);
 
   // test store outside context
   Flag.warning(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, "Test code 4");
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
       store.GetScopedPerTemplateResult(tpl, "warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
   BOOST_CHECK_THROW(store.GetScopedPerTemplateResult(tpl, "warningFlag_"),
-                    GlobalException);
+                    AmzException);
 
   TOperatorResultMap result_out_2 =
       store.GetScopedPerTemplateResult("warningFlag");
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(GetMethods_test) {
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
   BOOST_CHECK_THROW(
       result_out = store.GetGlobalResult(store.GetScopedName("warningFlag__")),
-      GlobalException);
+      AmzException);
 
   result_out =
       store.GetGlobalResult("spectrumModel", "stage", "method", "warningFlag");
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(GetGlobalResultType_test) {
                                         "warningFlag") == "CFlagLogResult");
   BOOST_CHECK_THROW(store.GetGlobalResultType("spectrumModel", "stage",
                                               "method", "warningFlag__"),
-                    GlobalException);
+                    AmzException);
 }
 
 //---------------------------------------------------------------

@@ -42,8 +42,7 @@ import os.path
 from contextlib import contextmanager
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
-from pylibamazed.Exception import (AmazedError, AmazedErrorFromGlobalException,
-                                   APIException, exception_decorator)
+from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.Parameters import Parameters
 # NB: DO NOT REMOVE - these libs are used in globals
 from pylibamazed.redshift import CClassificationSolve  # noqa F401
@@ -52,8 +51,8 @@ from pylibamazed.redshift import CLineMeasSolve  # noqa F401
 from pylibamazed.redshift import CLineModelSolve  # noqa F401
 from pylibamazed.redshift import CTemplateFittingSolve  # noqa F401
 from pylibamazed.redshift import CTplCombinationSolve  # noqa F401
-from pylibamazed.redshift import (CFlagWarning, CLog, CProcessFlowContext,
-                                  ErrorCode, GlobalException, ScopeType)
+from pylibamazed.redshift import (AmzException, CFlagWarning, CLog,
+                                  CProcessFlowContext, ErrorCode, ScopeType)
 from pylibamazed.Reliability import ReliabilitySolve
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.ScopeManager import (get_scope_level, get_scope_SpectrumModel,
@@ -70,7 +69,7 @@ class ProcessFlowException(Exception):
 
 class Context:
 
-    @exception_decorator
+    @exception_decorator(logging=True)
     def __init__(self, config, parameters: Parameters):
         _check_config(config)
         self.parameters = parameters
@@ -86,7 +85,7 @@ class Context:
 
         self.extended_results = config["extended_results"]
 
-    @exception_decorator
+    @exception_decorator(logging=True)
     def run(self, spectrum_reader):
         resultStore = self.process_flow_context.GetResultStore()
         rso = ResultStoreOutput(resultStore,
@@ -154,25 +153,13 @@ class Context:
                 try:
                     rso = args[0]
                     return func(self, *args, **kwargs)
-                except GlobalException as e:
-                    amze = AmazedErrorFromGlobalException(e)
-                    amze.LogError()
-                    rso.store_error(amze, self.scope_SpectrumModel, self.scope_stage)
-                    if raise_processFlowException:
-                        raise ProcessFlowException from e
-                except AmazedError as amze:
-                    amze.LogError()
-                    rso.store_error(amze, self.scope_SpectrumModel, self.scope_stage)
-                    if raise_processFlowException:
-                        raise ProcessFlowException from amze
-                except APIException as e:
-                    amze = AmazedError(e.errCode, e.message)
-                    amze.LogError()
-                    rso.store_error(amze, self.scope_SpectrumModel, self.scope_stage)
+                except AmzException as e:
+                    e.LogError()
+                    rso.store_error(e, self.scope_SpectrumModel, self.scope_stage)
                     if raise_processFlowException:
                         raise ProcessFlowException from e
                 except Exception as e:
-                    amze = AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
+                    amze = APIException.fromException(e)
                     amze.LogError()
                     rso.store_error(amze,
                                     self.scope_SpectrumModel,

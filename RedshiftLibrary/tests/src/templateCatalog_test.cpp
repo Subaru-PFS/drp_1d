@@ -165,8 +165,7 @@ BOOST_AUTO_TEST_CASE(Add) {
 
   // check throw
   category = "";
-  BOOST_CHECK_THROW(catalog.Add(CreateTemplate("T4", category)),
-                    GlobalException);
+  BOOST_CHECK_THROW(catalog.Add(CreateTemplate("T4", category)), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(SetTemplate) {
@@ -388,8 +387,7 @@ BOOST_AUTO_TEST_CASE(Getter_test) {
   std::shared_ptr<const CTemplate> tpl =
       catalog.GetTemplateByName(categories, "T1");
   BOOST_CHECK(tpl->GetCategory() == "galaxy");
-  BOOST_CHECK_THROW(catalog.GetTemplateByName(categories, "T4"),
-                    GlobalException);
+  BOOST_CHECK_THROW(catalog.GetTemplateByName(categories, "T4"), AmzException);
 
   // get all template for actual m_logsampling & m_orthogonal
   TTemplateRefList refList = catalog.GetTemplateList(categories);

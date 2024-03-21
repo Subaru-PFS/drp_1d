@@ -46,8 +46,7 @@ import h5py
 import numpy as np
 import pandas as pd
 from astropy.io import ascii, fits
-from pylibamazed.Exception import (AmazedError, AmazedErrorFromGlobalException,
-                                   APIException, exception_decorator)
+from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
 from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
@@ -58,7 +57,7 @@ from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   CSpectrumFluxCorrectionCalzetti,
                                   CSpectrumFluxCorrectionMeiksin,
                                   CSpectrumSpectralAxis, CTemplate,
-                                  CTemplateCatalog, ErrorCode, GlobalException,
+                                  CTemplateCatalog, ErrorCode,
                                   MeiksinCorrection, TAsymParams,
                                   VecMeiksinCorrection, VecTFloat64List,
                                   undefStr)
@@ -133,6 +132,7 @@ class CalibrationLibrary:
     :type calibration_dir: path
     """
 
+    @exception_decorator
     def __init__(self, parameters: Parameters, calibration_dir):
         self.parameters = parameters
         self.calibration_dir = os.path.expanduser(calibration_dir)
@@ -148,10 +148,8 @@ class CalibrationLibrary:
         self.lr_catalog_param = dict()
         self.lambda_offsets = dict()
         self.lsf = dict()
-        try:
-            self.photometric_bands = CPhotBandCatalog()
-        except GlobalException as e:
-            raise AmazedErrorFromGlobalException(e)
+
+        self.photometric_bands = CPhotBandCatalog()
 
         self.calzetti = None
         self.meiksin = None
@@ -235,10 +233,11 @@ class CalibrationLibrary:
                        }
             )
         except pd.errors.ParserError as e:
-            raise AmazedError(ErrorCode.BAD_FILEFORMAT,
-                              "bad line catalog {0} cause :{1}".format(line_catalog_file, e))
+            raise APIException(ErrorCode.BAD_FILEFORMAT,
+                               "bad line catalog {0} cause :{1}".format(line_catalog_file, e)) from None
         except Exception as e:
-            raise Exception("bad line catalog " + line_catalog_file + " cause :" + "{}".format(e))
+            raise APIException(ErrorCode.PYTHON_API_ERROR, "bad line catalog " + line_catalog_file
+                               + " cause :" + "{}".format(e)) from e
 
         # force "-1" to undefStr (for compatibility)
         line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName"] = undefStr
@@ -473,7 +472,7 @@ class CalibrationLibrary:
             if self.parameters.get_photometry_transmission_dir() is not None:
                 self.load_photometric_bands()
         except FileNotFoundError as e:
-            raise AmazedError(ErrorCode.INVALID_FILEPATH, str(e)) from e
+            raise APIException(ErrorCode.INVALID_FILEPATH, str(e)) from e
 
     def init(self):
         """Initialize templates (init continuum removal, init ism/igm and lsf if lsf is not spectrum dependent

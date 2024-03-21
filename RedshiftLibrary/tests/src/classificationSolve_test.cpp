@@ -211,7 +211,7 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_classificationSolveTest) {
   resultStore->StoreGlobalResult("star.redshiftSolver.templateFittingSolve",
                                  "solveResult", result_in);
 
-  BOOST_CHECK_THROW(cSolve.compute(), GlobalException);
+  BOOST_CHECK_THROW(cSolve.compute(), AmzException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

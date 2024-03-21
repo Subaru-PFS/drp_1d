@@ -39,7 +39,7 @@
 
 import pandas as pd
 from pylibamazed.AbstractOutput import ObjectStages, RootStages
-from pylibamazed.Exception import AmazedError
+from pylibamazed.Exception import APIException
 from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
@@ -143,7 +143,7 @@ class H5Writer():
                         self.write_error(object_results, object_type, stage)
 
         except Exception as e:
-            raise AmazedError(ErrorCode.EXTERNAL_LIB_ERROR, f"Failed writing h5: {e}")
+            raise APIException(ErrorCode.EXTERNAL_LIB_ERROR, f"Failed writing h5: {e}") from e
 
     def write_error(self, hdf5_object_node, object_type, stage):
         error = hdf5_object_node.create_group(stage + "_error")

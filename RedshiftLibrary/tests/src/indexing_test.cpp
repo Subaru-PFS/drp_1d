@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float) {
   BOOST_CHECK(myVector[idx] == target);
 }
 
-bool correctMessage(const GlobalException &ex) {
+bool correctMessage(const AmzException &ex) {
   BOOST_CHECK_EQUAL(ex.what(), std::string("Could not find index for 2"));
   return true;
 }
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float_erro) {
                            4.5, 5.0, 5.5, 6.0, 6.5};
   const Float64 target = 2.0;
   BOOST_CHECK_EXCEPTION(CIndexing<Float64>::getIndex(myVector, target),
-                        GlobalException, correctMessage);
+                        AmzException, correctMessage);
 }
 
 BOOST_AUTO_TEST_CASE(LowerIndex) {

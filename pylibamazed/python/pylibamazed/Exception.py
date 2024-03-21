@@ -39,64 +39,53 @@
 import functools
 import sys
 import traceback
+from os.path import basename
 
 from pylibamazed.redshift import AmzException, ErrorCode
 
-
-class AmazedError(AmzException):
-    def __init__(self, errCode, message, line=None, method=None, filename=None):
-        self.errCode = errCode  # we keep the python enum for further use
-        if line is None:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            frame = traceback.extract_tb(exc_traceback)[-1]
-            AmzException.__init__(self,
-                                  errCode.value,
-                                  message,
-                                  frame.filename.split("/")[-1],
-                                  frame.name,
-                                  frame.lineno)
-        else:
-            AmzException.__init__(self, errCode.value, message, filename, method, line)
-
-    def LogError(self):
-        AmzException.LogError(self, self.__str__())
-
-    def __str__(self):
-        ret = self.errCode.name + ": " + self.getMessage() + " ["
-        ret = ret + self.getFileName() + ":" + str(self.getLine()) + ":" + self.getMethod() + "]"
-        return ret
+AmazedError = AmzException  # for amazed clients compatibility reason, should be removed later
 
 
-def AmazedErrorFromGlobalException(global_exception):
-    errCode = ErrorCode(global_exception.getErrorCode())
-    ae = AmazedError(errCode,
-                     global_exception.getMessage(),
-                     line=global_exception.getLine(),
-                     filename=global_exception.getFileName(),
-                     method=global_exception.getMethod())
-
-    return ae
-
-
-class APIException(Exception):
+class APIException(AmzException):
     def __init__(self, errCode, message):
-        self.errCode = errCode
-        self.message = message
+        filename = ""
+        name = ""
+        line = 0
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        if exc_traceback is not None:
+            frame = traceback.extract_tb(exc_traceback)[-1]
+            filename = basename(frame.filename)
+            name = frame.name
+            line = frame.lineno
+        super().__init__(errCode.value,
+                         message,
+                         filename,
+                         name,
+                         line)
 
-    def __str__(self):
-        return '{}:{}'.format(self.errCode.name, self.message)
+    @classmethod
+    def fromException(cls, exception):
+        return cls(ErrorCode.PYTHON_API_ERROR, str(exception))
 
 
-def exception_decorator(func):
-    @functools.wraps(func)
-    def inner_function(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except AmzException as e:
-            raise AmazedErrorFromGlobalException(e) from e
-        except APIException as e:
-            raise AmazedError(e.errCode, e.message) from e
-        except Exception as e:
-            raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e)) from e
-
-    return inner_function
+# decorator to convert any non-amazed exception to AmzException
+#  with the optional ErrorLogging
+def exception_decorator(fn=None, *, logging=False):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except AmzException as e:  # will catch both AmzException and derived
+                if logging:
+                    e.LogError()
+                raise e from None
+            except Exception as e:
+                amze = APIException.fromException(e)
+                if logging:
+                    amze.LogError()
+                raise amze from e
+        return wrapper
+    if fn:
+        return decorator(fn)
+    return decorator

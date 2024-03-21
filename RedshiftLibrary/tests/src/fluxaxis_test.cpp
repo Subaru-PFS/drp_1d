@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
 
   Float64 Array2b[10] = {2, 4, 6, 8, 10, 12, 14, 16, 18};
   BOOST_CHECK_THROW(CSpectrumFluxAxis object_FluxAxis4_b(Array1, 10, Array2, 9),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(basic_function_test) {
@@ -140,8 +140,7 @@ BOOST_AUTO_TEST_CASE(basic_function_test) {
   TAxisSampleList noise = spectrumNoiseAxis.GetSamplesVector();
   noise.pop_back();
   spectrumNoiseAxis.setSamplesVector(noise);
-  BOOST_CHECK_THROW(object_FluxAxis.setError(spectrumNoiseAxis),
-                    GlobalException);
+  BOOST_CHECK_THROW(object_FluxAxis.setError(spectrumNoiseAxis), AmzException);
   noise.push_back(20);
   spectrumNoiseAxis.setSamplesVector(noise);
 
@@ -291,7 +290,7 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
   CMask mask(5);
   BOOST_CHECK_THROW(
       object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev),
-      GlobalException);
+      AmzException);
 
   // 2nd case : mask = 0
   mask.SetSize(10);
@@ -330,7 +329,7 @@ BOOST_AUTO_TEST_CASE(ComputeRMSDiff_test) {
   CSpectrumFluxAxis object_FluxAxisB(sampleB);
 
   BOOST_CHECK_THROW(object_FluxAxisA.ComputeRMSDiff(object_FluxAxisB),
-                    GlobalException);
+                    AmzException);
 
   // size of sampleA = size of sampleB
   sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18., 20};
@@ -371,8 +370,7 @@ BOOST_AUTO_TEST_CASE(Subtract_test) {
   TFloat64List sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18.};
   CSpectrumFluxAxis object_FluxAxisB(sampleB);
 
-  BOOST_CHECK_THROW(object_FluxAxisA.Subtract(object_FluxAxisB),
-                    GlobalException);
+  BOOST_CHECK_THROW(object_FluxAxisA.Subtract(object_FluxAxisB), AmzException);
 
   // size of sampleA = size of sampleB
   sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18., 20};
@@ -424,8 +422,7 @@ BOOST_AUTO_TEST_CASE(CorrectFluxAndNoiseAxis_test) {
   CSpectrumFluxAxis fluxAxis(sample_ref.data(), 10, error_ref.data(), 10);
 
   // noise is 0
-  BOOST_CHECK_THROW(fluxAxis.correctFluxAndNoiseAxis(0, 9, 10.),
-                    GlobalException);
+  BOOST_CHECK_THROW(fluxAxis.correctFluxAndNoiseAxis(0, 9, 10.), AmzException);
 
   // 1st value of noise is not valid
   error_ref = TFloat64List(10, 0.1);

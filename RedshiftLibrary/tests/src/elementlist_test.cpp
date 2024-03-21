@@ -104,7 +104,7 @@ std:
   TAsymParams asymP;
   /* //TODO restore this test , for the moment if linecatalog is not empty, test
     will fail with follogin message: fatal error: in
-    "test_elementlist/Constructor": NSEpic::GlobalException: Could not find
+    "test_elementlist/Constructor": NSEpic::AmzException: Could not find
     template with name fromspectrum
 
     lineCatalog.AddLineFromParams("Halpha",6562.8,"E","S","SYM",asymP,"",1.,"E1",INFINITY,false,0,"Halpha_,6562.8_E");

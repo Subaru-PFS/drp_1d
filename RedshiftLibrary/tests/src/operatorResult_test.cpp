@@ -51,9 +51,9 @@ BOOST_AUTO_TEST_CASE(operatorResult_test) {
   BOOST_CHECK(type == "COperatorResult");
 
   // virtual function
-  BOOST_CHECK_THROW(result.getCandidateDatasetType("dataset"), GlobalException);
-  BOOST_CHECK_THROW(result.getCandidate(0, "dataset"), GlobalException);
-  BOOST_CHECK_THROW(result.HasCandidateDataset("dataset"), GlobalException);
+  BOOST_CHECK_THROW(result.getCandidateDatasetType("dataset"), AmzException);
+  BOOST_CHECK_THROW(result.getCandidate(0, "dataset"), AmzException);
+  BOOST_CHECK_THROW(result.HasCandidateDataset("dataset"), AmzException);
 
   // copy and copy assignement
   COperatorResult result2(result);
