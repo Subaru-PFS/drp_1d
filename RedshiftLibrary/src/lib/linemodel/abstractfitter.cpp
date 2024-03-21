@@ -179,11 +179,11 @@ void CAbstractFitter::initFit(Float64 redshift) {
 void CAbstractFitter::resetSupport(Float64 redshift) {
 
   m_ElementsVector->resetLambdaOffsets();
-
+  m_ElementsVector->resetAsymfitParams();
   // prepare the elements support
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
   for (auto const &elt_ptr : getElementList()) {
-    elt_ptr->resetAsymfitParams();
+
     elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange(),
                             m_enlarge_line_supports);
   }
@@ -301,7 +301,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
 
   bool allNaN = true;
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
-    if (!std::isnan(getElementList()[eltIndex]->GetSumGauss())) {
+    if (!std::isnan(getElementParam()[eltIndex]->getSumGauss())) {
       allNaN = false;
       break;
     }
@@ -326,7 +326,7 @@ void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
 
   Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
   for (Int32 iE : EltsIdx)
-    getElementList()[iE]->SetAllOffsetsEnabled(offset);
+    getElementParam()[iE]->SetAllOffsetsEnabled(offset);
 
   return;
 }
@@ -336,7 +336,7 @@ bool CAbstractFitter::HasLambdaOffsetFitting(TInt32List EltsIdx,
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
     for (Int32 iE : EltsIdx)
-      for (const auto &line : getElementList()[iE]->GetLines())
+      for (const auto &line : getElementParam()[iE]->GetLines())
         // check if the line is to be fitted
         if (line.IsOffsetFitEnabled()) {
           atLeastOneOffsetToFit = true;
@@ -424,8 +424,8 @@ Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
     iend = eltIdx + 1;
   }
   for (Int32 iElts = istart; iElts < iend; iElts++) {
-    Float64 dtm = getElementList()[iElts]->GetSumCross();
-    Float64 mtm = getElementList()[iElts]->GetSumGauss();
+    Float64 dtm = getElementParam()[iElts]->getSumCross();
+    Float64 mtm = getElementParam()[iElts]->getSumGauss();
     Float64 a = getElementList().GetElementAmplitude(
         iElts); //[iElts]->GetFitAmplitude();
     Float64 term1 = a * a * mtm;

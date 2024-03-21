@@ -69,14 +69,15 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
     if (elt_idx == undefIdx)
       continue;
     auto const &elt_ptr = getElementList()[elt_idx];
+    auto const &elt_param_ptr = elt_ptr->getElementParam();
     if (elt_ptr->IsOutsideLambdaRange(elt_line_idx))
       continue;
     eIdxList.push_back(std::pair(
         elt_idx, elt_line_idx)); // save elt_idx, line_idx for next loop
     validLinesIndex.push_back(i_lineCatalog);
-    Amplitudes.push_back(elt_ptr->GetFittedAmplitude(elt_line_idx));
+    Amplitudes.push_back(elt_param_ptr->GetFittedAmplitude(elt_line_idx));
     AmplitudesUncertainties.push_back(
-        elt_ptr->GetFittedAmplitudeStd(elt_line_idx));
+        elt_param_ptr->GetFittedAmplitudeStd(elt_line_idx));
   }
   TFloat64List correctedAmplitudes;
   m_CatalogTplRatio->GetBestFit(validLinesIndex, Amplitudes,
@@ -87,11 +88,12 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
        ++iValidLine) {
     auto const [elt_idx, line_idx] = eIdxList[iValidLine];
     auto const &elt_ptr = getElementList()[elt_idx];
+    auto const &elt_param_ptr = elt_ptr->getElementParam();
 
     Float64 const er =
         AmplitudesUncertainties[iValidLine]; // not modifying the fitting error
                                              // for now
-    Float64 const nominalAmp = elt_ptr->GetNominalAmplitude(line_idx);
+    Float64 const nominalAmp = elt_param_ptr->GetNominalAmplitude(line_idx);
     m_elementsVector->SetElementAmplitude(
         elt_idx, correctedAmplitudes[iValidLine] / nominalAmp, er);
   }

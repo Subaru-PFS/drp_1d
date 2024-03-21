@@ -287,6 +287,12 @@ void CLMEltListVector::resetElementsFittingParam(bool enableAmplitudeOffsets) {
   }
 }
 
+void CLMEltListVector::resetAsymfitParams() {
+  for (auto const &ep : m_ElementsParams) {
+    ep->resetAsymfitParams();
+  }
+}
+
 void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
   for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
     m_globalOutsideLambdaRange[elt_idx] = isOutsideLambdaRange(elt_idx);

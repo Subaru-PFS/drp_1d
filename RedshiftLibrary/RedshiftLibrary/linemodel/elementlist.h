@@ -156,12 +156,16 @@ public:
   std::vector<TLineModelElementParam_ptr> &getElementParam() {
     return m_ElementsParams;
   }
+  const std::vector<TLineModelElementParam_ptr> &getElementParam() const {
+    return m_ElementsParams;
+  }
 
   void SetElementAmplitude(Int32 eltIndex, Float64 A, Float64 AStd);
 
   void resetLambdaOffsets();
   void resetAmplitudeOffsets();
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
+  void resetAsymfitParams();
 
   void setGlobalOutsideLambdaRangeFromSpectra();
 

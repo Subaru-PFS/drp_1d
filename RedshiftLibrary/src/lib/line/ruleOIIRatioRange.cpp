@@ -100,13 +100,13 @@ void CRuleRatioRange::Correct(CLMEltListVector &LineModelElementList) {
     return;
 
   Float64 ampA =
-      LineModelElementList.getElementList()[iEltA]->GetFittedAmplitude(idA);
+      LineModelElementList.getElementParam()[iEltA]->GetFittedAmplitude(idA);
   Float64 erA =
-      LineModelElementList.getElementList()[iEltA]->GetFittedAmplitudeStd(idA);
+      LineModelElementList.getElementParam()[iEltA]->GetFittedAmplitudeStd(idA);
   Float64 ampB =
-      LineModelElementList.getElementList()[iEltB]->GetFittedAmplitude(idB);
+      LineModelElementList.getElementParam()[iEltB]->GetFittedAmplitude(idB);
   Float64 erB =
-      LineModelElementList.getElementList()[iEltB]->GetFittedAmplitudeStd(idB);
+      LineModelElementList.getElementParam()[iEltB]->GetFittedAmplitudeStd(idB);
   Int32 i1 = iEltA;
   Int32 i2 = iEltB;
   Float64 amp1 = ampA;

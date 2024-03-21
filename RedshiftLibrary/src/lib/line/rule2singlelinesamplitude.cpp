@@ -101,9 +101,9 @@ void CRule2SingleLinesAmplitude::Correct(
   if (LineModelElementList.getElementList()[iEltA]->IsOutsideLambdaRange() ==
       false) {
     Float64 ampA =
-        LineModelElementList.getElementList()[iEltA]->GetFittedAmplitude(idA);
+        LineModelElementList.getElementParam()[iEltA]->GetFittedAmplitude(idA);
     Float64 ampB =
-        LineModelElementList.getElementList()[iEltB]->GetFittedAmplitude(idB);
+        LineModelElementList.getElementParam()[iEltB]->GetFittedAmplitude(idB);
 
     if (!(ampA <= 0.0 && ampB <= 0.0)) {
       //*
@@ -111,7 +111,7 @@ void CRule2SingleLinesAmplitude::Correct(
       // account
       Float64 maxB = (m_Coefficient * ampA);
       if (maxB == std::min(maxB, ampB)) {
-        LineModelElementList.getElementList()[iEltB]->LimitFittedAmplitude(
+        LineModelElementList.getElementParam()[iEltB]->LimitFittedAmplitude(
             idB, maxB);
         // log the correction
         {

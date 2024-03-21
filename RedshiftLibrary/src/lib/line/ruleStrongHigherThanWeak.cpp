@@ -78,7 +78,7 @@ void CRuleStrongHigherThanWeak::Correct(
 
   // Access strong line infos
   auto &minElement_ptr =
-      LineModelElementList.getElementList()[minStrongEltIndex];
+      LineModelElementList.getElementParam()[minStrongEltIndex];
   Float64 erStrong = minElement_ptr->GetFittedAmplitudeStd(minStrongLineIndex);
   Float64 ampStrong = minElement_ptr->GetFittedAmplitude(minStrongLineIndex);
   std::string nameStrong =
@@ -88,9 +88,10 @@ void CRuleStrongHigherThanWeak::Correct(
   for (Int32 iElement = 0;
        iElement < LineModelElementList.getElementList().size(); iElement++) {
     auto &element_ptr = LineModelElementList.getElementList()[iElement];
+    auto const &element_param_ptr = element_ptr->getElementParam();
 
     // Consider only desired line types
-    if (element_ptr->GetElementType() != m_LineType)
+    if (element_param_ptr->GetElementType() != m_LineType)
       continue;
     correctLineModelElement(*element_ptr, maxAmp, nameStrong);
   }
@@ -101,13 +102,14 @@ void CRuleStrongHigherThanWeak::correctLineModelElement(
     CLineModelElement &element, Float64 maxAmplitude,
     const std::string &nameStrong) {
 
+  const auto &elt_param_ptr = element.getElementParam();
   for (Int32 iLine = 0; iLine != element.GetSize(); ++iLine) {
     if (element.IsOutsideLambdaRange(iLine))
       continue;
-    auto const &line = element.GetLines()[iLine];
+    auto const &line = elt_param_ptr->GetLines()[iLine];
     if (line.IsWeak()) {
-      Float64 fittedAmplitude = element.GetFittedAmplitude(iLine);
-      bool limited = element.LimitFittedAmplitude(iLine, maxAmplitude);
+      Float64 fittedAmplitude = elt_param_ptr->GetFittedAmplitude(iLine);
+      bool limited = elt_param_ptr->LimitFittedAmplitude(iLine, maxAmplitude);
       if (limited)
         constructLogMsg(line.GetName(), nameStrong, fittedAmplitude,
                         maxAmplitude);
@@ -181,17 +183,21 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
   for (Int32 iedx = 0; iedx < LineModelElementList.getElementList().size();
        iedx++) {
     const auto &element_ptr = LineModelElementList.getElementList()[iedx];
+    const auto &element_param_ptr =
+        LineModelElementList.getElementParam()[iedx];
     for (Int32 iLineStrong = 0; iLineStrong != element_ptr->GetSize();
          ++iLineStrong) {
-      auto const &lineStrong = element_ptr->GetLines()[iLineStrong];
+      auto const &lineStrong = element_param_ptr->GetLines()[iLineStrong];
       if (element_ptr->IsOutsideLambdaRange(iLineStrong) ||
           lineStrong.GetForce() != CLine::EForce::nForce_Strong ||
-          element_ptr->GetElementType() != m_LineType) {
+          element_param_ptr->GetElementType() != m_LineType) {
         continue;
       }
 
-      Float64 ampStrong = element_ptr->GetFittedAmplitude(iLineStrong);
-      Float64 erStrong = element_ptr->GetFittedAmplitudeStd(iLineStrong);
+      Float64 ampStrong =
+          element_ptr->getElementParam()->GetFittedAmplitude(iLineStrong);
+      Float64 erStrong =
+          element_ptr->getElementParam()->GetFittedAmplitudeStd(iLineStrong);
       if (maxi < ampStrong /*&& lineSnr>validSNRCut*/) {
         maxi = ampStrong;
         er = erStrong;
@@ -210,16 +216,19 @@ std::pair<Int32, Int32> CRuleStrongHigherThanWeak::FindLowestStrongLineIndex(
   for (Int32 iElement = 0;
        iElement < LineModelElementList.getElementList().size(); iElement++) {
     const auto &element_ptr = LineModelElementList.getElementList()[iElement];
-    if (element_ptr->GetElementType() != m_LineType)
+    const auto &element_param_ptr =
+        LineModelElementList.getElementParam()[iElement];
+    if (element_param_ptr->GetElementType() != m_LineType)
       continue;
 
     for (Int32 iLine = 0; iLine != element_ptr->GetSize(); ++iLine) {
-      auto const &line = element_ptr->GetLines()[iLine];
+      auto const &line = element_param_ptr->GetLines()[iLine];
       if (element_ptr->IsOutsideLambdaRange(iLine))
         continue;
 
       if (line.IsStrong()) {
-        Float64 lineAmplitude = element_ptr->GetFittedAmplitude(iLine);
+        Float64 lineAmplitude =
+            element_ptr->getElementParam()->GetFittedAmplitude(iLine);
         if (lineAmplitude < amplitudeMin) {
           amplitudeMin = lineAmplitude;
           iLineMin = iLine;

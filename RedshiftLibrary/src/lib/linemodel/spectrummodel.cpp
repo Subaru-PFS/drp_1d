@@ -110,7 +110,8 @@ void CSpectrumModel::refreshModel(CLine::EType lineTypeFilter) {
   // create spectrum model
   Int32 nElements = m_Elements->size();
   for (Int32 iElts = 0; iElts < nElements; iElts++) {
-    auto const lineType = (*m_Elements)[iElts]->GetElementType();
+    auto const lineType =
+        (*m_Elements)[iElts]->getElementParam()->GetElementType();
     if (lineTypeFilter == CLine::EType::nType_All ||
         lineTypeFilter == lineType) {
       (*m_Elements)[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis,
@@ -296,7 +297,7 @@ CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
   elt->getObservedPositionAndLineWidth(line_id, redshift, mu, sigma);
 
   // compute averaged continuum under line, weighted by the line profile
-  auto const &profile = elt->getLineProfile(line_id);
+  auto const &profile = elt->getElementParam()->getLineProfile(line_id);
   // auto const &polynomCoeffs = elt->GetPolynomCoeffs();
 
   Float64 const winsize = profile->GetNSigmaSupport() * sigma;
@@ -652,7 +653,7 @@ CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
     const auto &elt = (*m_Elements)[eIdx];
     elt->initSpectrumModel(modelfluxAxis, getContinuumFluxAxis());
 
-    auto const lineType = elt->GetElementType();
+    auto const lineType = elt->getElementParam()->GetElementType();
     if (lineTypeFilter == CLine::EType::nType_All || lineTypeFilter == lineType)
       elt->addToSpectrumModel(spectralAxis, modelfluxAxis,
                               getContinuumFluxAxis(), m_Redshift);

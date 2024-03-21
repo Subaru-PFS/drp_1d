@@ -178,6 +178,9 @@ public:
   const CLineModelElementList &getElementList() const {
     return m_ElementsVector->getElementList();
   }
+  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+    return m_ElementsVector->getElementParam();
+  }
 
   const TLambdaRange &getLambdaRange() const {
     return *(m_lambdaRanges.at(*m_curObs));

@@ -273,18 +273,18 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     // simulatneous fit with linsolve
     Float64 modelErr_init =
         getModelResidualRmsUnderElements({iElt_lineA}, true);
-    Float64 ampA = getElementList()[iElt_lineA]->GetFittedAmplitude(lineA_id);
+    Float64 ampA = getElementParam()[iElt_lineA]->GetFittedAmplitude(lineA_id);
     Float64 amp_errorA =
-        getElementList()[iElt_lineA]->GetFittedAmplitudeStd(lineA_id);
-    Float64 ampE = getElementList()[iElt_lineE]->GetFittedAmplitude(lineE_id);
+        getElementParam()[iElt_lineA]->GetFittedAmplitudeStd(lineA_id);
+    Float64 ampE = getElementParam()[iElt_lineE]->GetFittedAmplitude(lineE_id);
     Float64 amp_errorE =
-        getElementList()[iElt_lineE]->GetFittedAmplitudeStd(lineE_id);
+        getElementParam()[iElt_lineE]->GetFittedAmplitudeStd(lineE_id);
     TFloat64List ampsMore;
     TFloat64List ampErrorsMore;
     for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
-      Float64 amp = getElementList()[ilinesMore[imore]]->GetFittedAmplitude(0);
+      Float64 amp = getElementParam()[ilinesMore[imore]]->GetFittedAmplitude(0);
       Float64 ampErr =
-          getElementList()[ilinesMore[imore]]->GetFittedAmplitudeStd(0);
+          getElementParam()[ilinesMore[imore]]->GetFittedAmplitudeStd(0);
       ampsMore.push_back(amp);
       ampErrorsMore.push_back(ampErr);
     }
@@ -305,16 +305,16 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
         getModelResidualRmsUnderElements({iElt_lineA}, true);
     if (modelErr_withfit > modelErr_init) {
       Float64 nominal_ampA =
-          getElementList()[iElt_lineA]->GetNominalAmplitude(lineA_id);
+          getElementParam()[iElt_lineA]->GetNominalAmplitude(lineA_id);
       Float64 nominal_ampE =
-          getElementList()[iElt_lineE]->GetNominalAmplitude(lineE_id);
+          getElementParam()[iElt_lineE]->GetNominalAmplitude(lineE_id);
       m_ElementsVector->SetElementAmplitude(iElt_lineA, ampA / nominal_ampA,
                                             amp_errorA / nominal_ampA);
       m_ElementsVector->SetElementAmplitude(iElt_lineE, ampE / nominal_ampE,
                                             amp_errorE / nominal_ampE);
       for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
         Float64 nominal_ampMore =
-            getElementList()[ilinesMore[imore]]->GetNominalAmplitude(
+            getElementParam()[ilinesMore[imore]]->GetNominalAmplitude(
                 linesMoreIds[imore]);
         m_ElementsVector->SetElementAmplitude(
             ilinesMore[imore], ampsMore[imore] / nominal_ampMore,
