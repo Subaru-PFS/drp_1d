@@ -169,6 +169,8 @@ public:
 
   void setGlobalOutsideLambdaRangeFromSpectra();
 
+  std::vector<bool> getOutsideLambdaRangeList(Int32 elt_index);
+
 private:
   std::vector<CLineModelElementList> m_ElementsVector;
   std::vector<TLineModelElementParam_ptr> m_ElementsParams;

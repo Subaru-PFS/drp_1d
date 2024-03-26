@@ -327,36 +327,6 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
   return ret;
 }
 
-bool CLineRatioManager::isOutsideLambdaRange(Int32 elt_index,
-                                             Int32 line_index) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    if (!getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index))
-      return false;
-  }
-  return true;
-}
-
-bool CLineRatioManager::isOutsideLambdaRange(Int32 elt_index) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    if (!getElementList()[elt_index]->IsOutsideLambdaRange())
-      return false;
-  }
-  return true;
-}
-
-std::vector<bool>
-CLineRatioManager::getOutsideLambdaRangeList(Int32 elt_index) {
-
-  std::vector<bool> ret(m_elementsVector->getElementParam()[elt_index]->size());
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    for (Int32 line_index = 0;
-         line_index < m_elementsVector->getElementParam()[elt_index]->size();
-         line_index++)
-      ret[line_index] =
-          getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index);
-  }
-  return ret;
-}
 void CLineRatioManager::refreshAllModels() {
   for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
     getModel().refreshModel();

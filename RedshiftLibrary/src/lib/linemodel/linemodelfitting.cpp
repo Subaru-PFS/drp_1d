@@ -865,11 +865,10 @@ void CLineModelFitting::LoadModelSolution(
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-      getElementList()[iElts]->SetOutsideLambdaRange();
+      getElementList()[iElts]->computeOutsideLambdaRange();
 
-      if (!getElementList()[iElts]
-               ->IsOutsideLambdaRange()) // !!! What's the purpose of testing
-                                         // something we just set ?!!
+      if (!getElementList()[iElts]->IsOutsideLambdaRange())
+
         getElementList()[iElts]->prepareSupport(
             spectralAxis, modelSolution.Redshift, getLambdaRange());
     }

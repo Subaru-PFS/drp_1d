@@ -87,7 +87,7 @@ public:
                                   Float64 redshift,
                                   const TFloat64Range &lambdaRange,
                                   Float64 max_offset = 0.0);
-  void SetOutsideLambdaRange();
+  void computeOutsideLambdaRange();
 
   TInt32Range getSupportSubElt(Int32 line_index) const;
   TInt32Range getTheoreticalSupportSubElt(Int32 line_id) const;

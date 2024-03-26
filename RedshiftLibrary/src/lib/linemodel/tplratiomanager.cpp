@@ -438,7 +438,8 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
          ++line_idx) {
       Float64 amp = m_elementsVector->getElementParam()[iElt]
                         ->m_FittedAmplitudes[line_idx];
-      if (isnan(amp) || amp <= 0. || isOutsideLambdaRange(iElt, line_idx))
+      if (isnan(amp) || amp <= 0. ||
+          m_elementsVector->isOutsideLambdaRangeLine(iElt, line_idx))
         continue;
       allampzero = false;
 
@@ -559,7 +560,8 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
     m_elementsVector->getElementParam()[iElts]->setAmplitudes(
         m_FittedAmpTplratio[m_savedIdxFitted][iElts],
         m_FittedErrorTplratio[m_savedIdxFitted][iElts],
-        getOutsideLambdaRangeList(iElts), isOutsideLambdaRange(iElts));
+        m_elementsVector->getOutsideLambdaRangeList(iElts),
+        m_elementsVector->isOutsideLambdaRange(iElts));
     m_elementsVector->getElementParam()[iElts]->m_sumCross =
         m_DtmTplratio[m_savedIdxFitted][iElts];
     m_elementsVector->getElementParam()[iElts]->m_sumGauss =

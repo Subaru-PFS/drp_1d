@@ -280,3 +280,15 @@ void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
           isOutsideLambdaRangeLine(elt_idx, line_idx);
   }
 }
+
+std::vector<bool> CLMEltListVector::getOutsideLambdaRangeList(Int32 elt_index) {
+
+  std::vector<bool> ret(getElementParam()[elt_index]->size());
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    for (Int32 line_index = 0;
+         line_index < getElementParam()[elt_index]->size(); line_index++)
+      ret[line_index] =
+          getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index);
+  }
+  return ret;
+}

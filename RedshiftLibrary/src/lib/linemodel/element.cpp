@@ -262,10 +262,8 @@ TInt32Range CLineModelElement::EstimateIndexRange(
   return supportRange;
 }
 
-// set the global outside lambda range
-// TODO Rename this, it's not a setter ->
-// DeduceGlobalOutsideLambdaRangeFromLines
-void CLineModelElement::SetOutsideLambdaRange() {
+// rename to DeduceGlobalOutsideLambdaRangeFromLines ?
+void CLineModelElement::computeOutsideLambdaRange() {
   m_OutsideLambdaRange = true;
   for (auto const &outside_lambda_range_id : m_OutsideLambdaRangeList)
     m_OutsideLambdaRange = m_OutsideLambdaRange && outside_lambda_range_id;
@@ -295,7 +293,7 @@ void CLineModelElement::prepareSupport(
     // set the lines active on their own support
     m_LineIsActiveOnSupport[index][index] = true;
   }
-  SetOutsideLambdaRange();
+  computeOutsideLambdaRange();
 
   bool supportNoOverlap_has_duplicates = true;
   Int32 x1 = 0;
