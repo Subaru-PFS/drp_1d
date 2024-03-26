@@ -49,7 +49,7 @@ using namespace NSEpic;
 
 const std::string lambdaString = "{\"lambdaRange\" : [ 4680, 4712 ],";
 const std::string multiLambdaString =
-    "{\"lambdaRange\" : { \"A\" : [ 4680, 4697 ], \"B\" : [4695, 4712]},";
+    "{\"lambdaRange\" : { \"A\" : [ 4680, 4695 ], \"B\" : [4695, 4712]},";
 
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
@@ -364,7 +364,7 @@ public:
   fixture_LineModelSolveTestMultiNoContTplRatio() {
     fillCatalog();
     ctx.loadParameterStore(multiLambdaString + jsonStringS +
-                           jsonStringTplFitTplRatio);
+                           jsonStringnoContinuumTplRatio);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);

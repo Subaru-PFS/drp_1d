@@ -42,13 +42,15 @@
 #include <climits>
 
 #include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/processflow/context.h"
 
 using namespace std;
 using namespace NSEpic;
 
 TLineModelElementParam::TLineModelElementParam(CLineVector lines,
                                                Float64 velocityEmission,
-                                               Float64 velocityAbsorption)
+                                               Float64 velocityAbsorption,
+                                               const std::string &lineWidthType)
     : m_Lines(std::move(lines)), m_VelocityEmission(velocityEmission),
       m_VelocityAbsorption(velocityAbsorption),
       m_FittedAmplitudes(m_Lines.size(), NAN),
@@ -67,7 +69,11 @@ TLineModelElementParam::TLineModelElementParam(CLineVector lines,
 
   m_type = first_line.GetType();
   m_isEmission = first_line.IsEmission();
+  auto const ps = Context.GetParameterStore();
+  init(lineWidthType);
 }
+
+// for unit test
 
 void TLineModelElementParam::init(const std::string &widthType) {
   if (widthType == "instrumentDriven") {

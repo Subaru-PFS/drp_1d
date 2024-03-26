@@ -70,7 +70,7 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
       continue;
     auto const &elt_ptr = getElementList()[elt_idx];
     auto const &elt_param_ptr = elt_ptr->getElementParam();
-    if (elt_ptr->IsOutsideLambdaRange(elt_line_idx))
+    if (elt_ptr->IsOutsideLambdaRangeLine(elt_line_idx))
       continue;
     eIdxList.push_back(std::pair(
         elt_idx, elt_line_idx)); // save elt_idx, line_idx for next loop

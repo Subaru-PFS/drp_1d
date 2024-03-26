@@ -52,20 +52,22 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
       m_RestLineList(restLineList) {
   m_nbObs = m_lambdaRanges.size();
 
+  if (regularCatalog) {
+    // load the regular catalog
+    LoadCatalog();
+  } else { //"tplRatio" and "tplCorr"
+    // load the tplratio catalog with only 1 element for all lines
+    // LoadCatalogOneMultiline(restLineList);
+    // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
+    // the Abs lines
+    LoadCatalogTwoMultilinesAE();
+  }
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
     m_ElementsVector.push_back(CLineModelElementList());
-    if (regularCatalog) {
-      // load the regular catalog
-      LoadCatalog();
-    } else { //"tplRatio" and "tplCorr"
-      // load the tplratio catalog with only 1 element for all lines
-      // LoadCatalogOneMultiline(restLineList);
-      // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
-      // the Abs lines
-      LoadCatalogTwoMultilinesAE();
-    }
+    fillElements();
   }
+  *m_curObs = 0;
 }
 
 CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
@@ -77,6 +79,7 @@ CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
   for (auto elt : m_ElementsVector[0])
     m_ElementsParams.push_back(elt->getElementParam());
 }
+
 Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() {
   Int32 nddl = 0;
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
@@ -85,9 +88,10 @@ Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() {
   return nddl;
 }
 
-bool CLMEltListVector::isOutsideLambdaRange(Int32 elt_index, Int32 line_index) {
+bool CLMEltListVector::isOutsideLambdaRangeLine(Int32 elt_index,
+                                                Int32 line_index) {
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    if (!getElementList()[elt_index]->IsOutsideLambdaRange(line_index))
+    if (!getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index))
       return false;
   }
   return true;
@@ -101,24 +105,26 @@ bool CLMEltListVector::isOutsideLambdaRange(Int32 elt_index) {
   return true;
 }
 
-void CLMEltListVector::AddElement(CLineVector lines, Float64 velocityEmission,
-                                  Float64 velocityAbsorption, Int32 ig) {
-  if (*m_curObs == 0) {
-    size_t nb_lines = lines.size();
-    m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
-        std::move(lines), velocityEmission, velocityAbsorption));
+void CLMEltListVector::AddElementParam(CLineVector lines) {
+  size_t nb_lines = lines.size();
 
-    m_globalOutsideLambdaRangeList.push_back(
-        std::vector<bool>(nb_lines, false));
-    m_globalOutsideLambdaRange.push_back(false);
-  }
-
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   auto const ps = Context.GetParameterStore();
+  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
+  Float64 const velocityAbsorption =
+      ps->GetScoped<Float64>("velocityAbsorption");
+  std::string lineWidthType = ps->GetScoped<std::string>("lineWidthType");
+  m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
+      std::move(lines), velocityEmission, velocityAbsorption, lineWidthType));
 
-  getElementList().push_back(std::make_shared<CLineModelElement>(
-      m_ElementsParams[ig], ps->GetScoped<std::string>("lineWidthType")));
+  m_globalOutsideLambdaRangeList.push_back(std::vector<bool>(nb_lines, false));
+  m_globalOutsideLambdaRange.push_back(false);
 }
 
+void CLMEltListVector::fillElements() {
+  for (auto &ep : m_ElementsParams)
+    getElementList().push_back(std::make_shared<CLineModelElement>(ep));
+}
 /**
  * \brief For each line in each group of the argument, finds the associated
  *line in the catalog and saves this information to getElementList(). Converts
@@ -129,52 +135,26 @@ void CLMEltListVector::AddElement(CLineVector lines, Float64 velocityEmission,
  *this result in getElementList().
  **/
 void CLMEltListVector::LoadCatalog() {
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-
-  auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityAbsorption");
-  Int32 lastEltIndex = 0;
-
   auto const groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
-
   for (auto [_, lines] : groupList) {
-    AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-               lastEltIndex);
-    lastEltIndex++;
+    AddElementParam(std::move(lines));
   }
 }
 
 void CLMEltListVector::LoadCatalogOneMultiline() {
-  CAutoScope const autoscope(Context.m_ScopeStack, "lineModel");
-
-  auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityAbsorption");
-
   CLineVector RestLineVector;
   RestLineVector.reserve(m_RestLineList.size());
   for (auto const &[_, line] : m_RestLineList)
     RestLineVector.push_back(line);
 
-  AddElement(std::move(RestLineVector), velocityEmission, velocityAbsorption,
-             0);
+  AddElementParam(std::move(RestLineVector));
 }
 
 void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-
-  auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityAbsorption");
 
   std::vector<CLine::EType> const types = {CLine::EType::nType_Absorption,
                                            CLine::EType::nType_Emission};
 
-  Int32 lastEltIndex = 0;
   for (auto type : types) {
     CLineVector lines;
     for (auto const &[id, line] : m_RestLineList) {
@@ -183,9 +163,7 @@ void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
     }
 
     if (lines.size() > 0) {
-      AddElement(std::move(lines), velocityEmission, velocityAbsorption,
-                 lastEltIndex);
-      lastEltIndex++;
+      AddElementParam(std::move(lines));
     }
   }
 }
@@ -299,6 +277,6 @@ void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
     for (size_t line_idx = 0; line_idx < m_ElementsParams[elt_idx]->size();
          ++line_idx)
       m_globalOutsideLambdaRangeList[elt_idx][line_idx] =
-          isOutsideLambdaRange(elt_idx, line_idx);
+          isOutsideLambdaRangeLine(elt_idx, line_idx);
   }
 }

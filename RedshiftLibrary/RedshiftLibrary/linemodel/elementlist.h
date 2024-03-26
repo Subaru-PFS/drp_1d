@@ -134,7 +134,7 @@ public:
   CLMEltListVector() = delete;
 
   Int32 GetModelNonZeroElementsNDdl();
-  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
+  bool isOutsideLambdaRangeLine(Int32 elt_index, Int32 line_index);
   bool isOutsideLambdaRange(Int32 elt_index);
   std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
   std::pair<Int32, Int32>
@@ -180,8 +180,8 @@ private:
   std::vector<bool> m_globalOutsideLambdaRange;
   std::vector<std::vector<bool>> m_globalOutsideLambdaRangeList;
 
-  void AddElement(CLineVector lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, Int32 ig);
+  void AddElementParam(CLineVector lines);
+  void fillElements();
   void LoadCatalog();
   void LoadCatalogOneMultiline();
   void LoadCatalogTwoMultilinesAE();

@@ -214,12 +214,12 @@ TInt32List CLineModelElementList::getOverlappingElements(
 
     for (Int32 eltLineIdx = 0; eltLineIdx != element.GetSize(); ++eltLineIdx) {
       auto eltLine = linesElt[eltLineIdx];
-      if (element.IsOutsideLambdaRange(eltLineIdx))
+      if (element.IsOutsideLambdaRangeLine(eltLineIdx))
         continue;
       for (Int32 refLineIdx = 0; refLineIdx != refLinesList.size();
            ++refLineIdx) {
         auto const &refLine = refLinesList[refLineIdx];
-        if (refElement.IsOutsideLambdaRange(refLineIdx))
+        if (refElement.IsOutsideLambdaRangeLine(refLineIdx))
           continue;
         const Float64 muRef = refLine.GetPosition() * (1 + redshift);
         const Float64 sigmaRef = refElement.GetLineWidth(muRef);

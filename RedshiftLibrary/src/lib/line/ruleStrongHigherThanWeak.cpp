@@ -104,7 +104,7 @@ void CRuleStrongHigherThanWeak::correctLineModelElement(
 
   const auto &elt_param_ptr = element.getElementParam();
   for (Int32 iLine = 0; iLine != element.GetSize(); ++iLine) {
-    if (element.IsOutsideLambdaRange(iLine))
+    if (element.IsOutsideLambdaRangeLine(iLine))
       continue;
     auto const &line = elt_param_ptr->GetLines()[iLine];
     if (line.IsWeak()) {
@@ -188,7 +188,7 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
     for (Int32 iLineStrong = 0; iLineStrong != element_ptr->GetSize();
          ++iLineStrong) {
       auto const &lineStrong = element_param_ptr->GetLines()[iLineStrong];
-      if (element_ptr->IsOutsideLambdaRange(iLineStrong) ||
+      if (element_ptr->IsOutsideLambdaRangeLine(iLineStrong) ||
           lineStrong.GetForce() != CLine::EForce::nForce_Strong ||
           element_param_ptr->GetElementType() != m_LineType) {
         continue;
@@ -223,7 +223,7 @@ std::pair<Int32, Int32> CRuleStrongHigherThanWeak::FindLowestStrongLineIndex(
 
     for (Int32 iLine = 0; iLine != element_ptr->GetSize(); ++iLine) {
       auto const &line = element_param_ptr->GetLines()[iLine];
-      if (element_ptr->IsOutsideLambdaRange(iLine))
+      if (element_ptr->IsOutsideLambdaRangeLine(iLine))
         continue;
 
       if (line.IsStrong()) {

@@ -52,7 +52,7 @@ using namespace NSEpic;
  *defaults.
  **/
 CLineModelElement::CLineModelElement(
-    const TLineModelElementParam_ptr elementParam, const std::string &widthType)
+    const TLineModelElementParam_ptr elementParam)
     : m_ElementParam(std::move(elementParam)),
       m_OutsideLambdaRangeOverlapThreshold(
           0.33), // 33% overlap minimum in order to keep the line
@@ -62,11 +62,7 @@ CLineModelElement::CLineModelElement(
                 // lambda range
 
 {
-
   m_size = m_ElementParam->size();
-
-  m_ElementParam->init(widthType);
-  // TODO move all these lines to TLineModelElementParam
 }
 
 void TLineModelElementParam::resetFittingParams() {
@@ -940,6 +936,9 @@ Int32 CLineModelElement::computeCrossProducts(
     if (line_index != undefIdx && !isLineActiveOnSupport(line_index, index))
       continue;
 
+    //    Log.LogDebug(Formatter()<<"redshift="<<redshift<<"
+    //    line_index="<<line_index<<
+    //    "start="<<getStartNoOverlap(index)<<"end="<<getEndNoOverlap(index));
     for (Int32 i = getStartNoOverlap(index); i <= getEndNoOverlap(index); i++) {
       c = continuumfluxAxis[i];
       y = noContinuumfluxAxis[i];
@@ -952,7 +951,7 @@ Int32 CLineModelElement::computeCrossProducts(
         if (m_OutsideLambdaRangeList[index2] ||
             !m_LineIsActiveOnSupport[index][index2])
           continue;
-
+        //	Log.LogDebug(Formatter()<<"Add on "<< i<<","<<index2);
         Int32 sf = m_ElementParam->getSignFactor(index2);
         if (sf == -1) {
           yg += sf * c * nominalAmplitudes[index2] *

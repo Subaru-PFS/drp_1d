@@ -85,7 +85,7 @@ void CRuleSuperStrong::Correct(CLMEltListVector &LineModelElementList) {
     for (Int32 iLineWeak = 0; iLineWeak != elt_ptr->GetSize(); ++iLineWeak) {
       auto const &lineWeak = elt_param_ptr->GetLines()[iLineWeak];
       if (elt_param_ptr->GetElementType() != m_LineType ||
-          elt_ptr->IsOutsideLambdaRange(iLineWeak) ||
+          elt_ptr->IsOutsideLambdaRangeLine(iLineWeak) ||
           std::find(m_SuperStrongTags.begin(), m_SuperStrongTags.end(),
                     lineWeak.GetName()) != m_SuperStrongTags.end())
         continue;
@@ -156,7 +156,7 @@ Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp(
       auto const &lineStrong = elt_param_ptr->GetLines()[iLineStrong];
       if (lineStrong.GetForce() != CLine::EForce::nForce_Strong ||
           elt_param_ptr->GetElementType() != m_LineType ||
-          elt_ptr->IsOutsideLambdaRange(iLineStrong))
+          elt_ptr->IsOutsideLambdaRangeLine(iLineStrong))
         continue;
 
       if (std::find(superstrongTags.begin(), superstrongTags.end(),

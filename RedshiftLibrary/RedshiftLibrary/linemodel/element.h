@@ -68,8 +68,7 @@ using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
 class CLineModelElement {
 
 public:
-  CLineModelElement(const TLineModelElementParam_ptr elementParam,
-                    const std::string &widthType);
+  CLineModelElement(const TLineModelElementParam_ptr elementParam);
 
   Float64 GetObservedPosition(Int32 line_index, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -138,7 +137,7 @@ public:
 
   bool IsOutsideLambdaRange() const;
   Float64 GetLineWidth(Float64 lambda) const;
-  bool IsOutsideLambdaRange(Int32 line_index) const;
+  bool IsOutsideLambdaRangeLine(Int32 line_index) const;
   void SetOutsideLambdaRangeList(Int32 line_index);
 
   void SetLineProfile(Int32 line_index, CLineProfile_ptr &&profile);
@@ -199,7 +198,8 @@ inline bool CLineModelElement::IsOutsideLambdaRange() const {
  * \brief Returns whether the line with id line_id is outside the lambda
  *range.
  **/
-inline bool CLineModelElement::IsOutsideLambdaRange(Int32 line_index) const {
+inline bool
+CLineModelElement::IsOutsideLambdaRangeLine(Int32 line_index) const {
   return m_OutsideLambdaRangeList[line_index];
 }
 

@@ -500,7 +500,7 @@ Float64 CTplratioManager::computelogLinePriorMerit(
     bool foundAmp = false;
     for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
       Float64 amp = elt->getElementParam()->GetFittedAmplitude(line_idx);
-      if (amp <= 0. || elt->IsOutsideLambdaRange(line_idx))
+      if (amp <= 0. || elt->IsOutsideLambdaRangeLine(line_idx))
         continue;
       Float64 nominal_amp =
           elt->getElementParam()->GetNominalAmplitude(line_idx);

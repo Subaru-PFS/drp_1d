@@ -54,7 +54,8 @@ enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 struct TLineModelElementParam {
 
   TLineModelElementParam(CLineVector lines, Float64 velocityEmission,
-                         Float64 velocityAbsorption);
+                         Float64 velocityAbsorption,
+                         const std::string &lineWidthType);
 
   CLineVector m_Lines;
   Float64 m_VelocityEmission =

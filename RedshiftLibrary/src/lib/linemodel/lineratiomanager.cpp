@@ -330,7 +330,7 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
 bool CLineRatioManager::isOutsideLambdaRange(Int32 elt_index,
                                              Int32 line_index) {
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    if (!getElementList()[elt_index]->IsOutsideLambdaRange(line_index))
+    if (!getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index))
       return false;
   }
   return true;
@@ -353,7 +353,7 @@ CLineRatioManager::getOutsideLambdaRangeList(Int32 elt_index) {
          line_index < m_elementsVector->getElementParam()[elt_index]->size();
          line_index++)
       ret[line_index] =
-          getElementList()[elt_index]->IsOutsideLambdaRange(line_index);
+          getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index);
   }
   return ret;
 }

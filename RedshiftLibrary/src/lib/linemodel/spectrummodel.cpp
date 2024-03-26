@@ -562,7 +562,7 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
 
   auto isElementInvalid = [this](Int32 eIdx, Int32 line_index) {
     return eIdx < 0 || line_index < 0 ||
-           (*m_Elements)[eIdx]->IsOutsideLambdaRange(line_index);
+           (*m_Elements)[eIdx]->IsOutsideLambdaRangeLine(line_index);
   };
 
   const auto lineList = {linetags::halpha_em,   linetags::oIIIa_em,

@@ -680,7 +680,7 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
     if (!elt_param->IsEmission())
       continue;
     for (Int32 index = 0; index != elt->GetSize(); ++index) {
-      if (elt->IsOutsideLambdaRange(index))
+      if (elt->IsOutsideLambdaRangeLine(index))
         continue;
       auto const &line = elt_param->GetLines()[index];
       isStrongList.push_back(line.IsStrong());
@@ -919,7 +919,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     auto [eIdx, line_index] = m_ElementsVector->findElementIndex(line_id);
     modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || line_index == undefIdx ||
-        m_ElementsVector->isOutsideLambdaRange(eIdx, line_index)) {
+        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index)) {
       continue; // data already set to its default values
     }
 
@@ -981,7 +981,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
 
         for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
           const auto &eltList = getElementList();
-          if (!eltList[eIdx]->IsOutsideLambdaRange(line_index)) {
+          if (!eltList[eIdx]->IsOutsideLambdaRangeLine(line_index)) {
             eltList[eIdx]->getObservedPositionAndLineWidth(
                 line_index, modelSolution.Redshift, mu, sigma,
                 false); // do not apply Lya asym offset
