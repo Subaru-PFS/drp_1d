@@ -130,12 +130,15 @@ bool CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
 
   // if chi2 val is the lowest, and condition on tplName, insert at position
   // ipos
-  auto ipos =
-      std::upper_bound(m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
-                       tmpCContinuumModelSolution.tplMerit,
-                       [](Float64 val, const CTplModelSolution &lhs) {
-                         return (val < lhs.tplMerit);
-                       });
+  auto ipos = std::upper_bound(
+      m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
+      std::make_pair(tmpCContinuumModelSolution.tplMerit,
+                     std::abs(tmpCContinuumModelSolution.tplAmplitudeSigma)),
+      [](std::pair<Float64, Float64> const &val, CTplModelSolution const &lhs) {
+        if (val.first != lhs.tplMerit)
+          return (val.first < lhs.tplMerit);
+        return val.second > std::abs(lhs.tplAmplitudeSigma);
+      });
 
   Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at pos=%d "
                "(merit=%e, ebmv=%e, imeiksin=%d)",
