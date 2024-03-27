@@ -168,11 +168,11 @@ def test_ITLikeTest():
 
     # check results (no errors)
     for spectrum_model, stage in (("", "init"),
-                                  ("galaxy", "redshift_solver"),
+                                  ("galaxy", "redshiftSolver"),
                                   ("galaxy", "linemeas_catalog_load"),
-                                  ("galaxy", "linemeas_solver"),
-                                  ("galaxy", "sub_classif_solver"),
-                                  ("galaxy", "reliability_solver"),
+                                  ("galaxy", "lineMeasSolver"),
+                                  ("galaxy", "subClassifSolver"),
+                                  ("galaxy", "reliabilitySolver"),
                                   ("", "classification"),
                                   ("", "load_result_store")):
         if output.has_error(spectrum_model, stage):

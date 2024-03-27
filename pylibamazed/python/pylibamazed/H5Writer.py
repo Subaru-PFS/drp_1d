@@ -38,7 +38,7 @@
 # ============================================================================
 
 import pandas as pd
-from pylibamazed.AbstractOutput import ObjectStages, RootStages
+from pylibamazed.AbstractOutput import root_stages, spectrum_model_stages
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import CLog, ErrorCode
 
@@ -127,7 +127,7 @@ class H5Writer():
             obs = hdf5_root.create_group(spectrum_id)
             self.write_hdf5_root(obs)
 
-            for stage in RootStages:
+            for stage in root_stages:
                 if self.output.has_error(None, stage):
                     self.write_error(obs, None, stage)
             if self.output.has_error(None, "init"):
@@ -138,7 +138,7 @@ class H5Writer():
 #                self.write_hdf5_method_level(object_type, object_results)
                 if self.output.get_nb_candidates(object_type) > 0:
                     self.write_hdf5_candidate_level(object_type, object_results)
-                for stage in ObjectStages:
+                for stage in spectrum_model_stages:
                     if self.output.has_error(object_type, stage):
                         self.write_error(object_results, object_type, stage)
 

@@ -39,7 +39,7 @@
 import os
 
 import numpy as np
-from pylibamazed.AbstractOutput import AbstractOutput, ObjectStages
+from pylibamazed.AbstractOutput import AbstractOutput, spectrum_model_stages
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import CLog, ErrorCode
 
@@ -274,21 +274,18 @@ class ResultStoreOutput(AbstractOutput):
         self.errors[full_name]["filename"] = fn_path
         self.errors[full_name]["method"] = amz_exception.getMethod()
 
+        # propagate errors to dependant stages
         if not object_type and stage == "init":
             for ot in self.object_types:
-                for o_stage in ObjectStages:
-                    if self.parameters.stage_enabled(ot, o_stage):
-                        self.store_consequent_error(ot, o_stage, stage)
-        else:
-            for i in range(len(ObjectStages)):
-                if stage == ObjectStages[i]:
-                    for j in range(i + 1, len(ObjectStages)):
-                        o_stage = ObjectStages[j]
-                        if self.parameters.stage_enabled(object_type, o_stage):
-                            self.store_consequent_error(object_type, o_stage, stage)
+                for dependant_stage in spectrum_model_stages:
+                    if self.parameters.stage_enabled(ot, dependant_stage):
+                        self.store_consequent_error(ot, dependant_stage, stage)
+        elif object_type is not None:
+            for dependant_stage in spectrum_model_stages[stage]:
+                if self.parameters.stage_enabled(object_type, dependant_stage):
+                    self.store_consequent_error(object_type, dependant_stage, stage)
 
     def store_consequent_error(self, object_type, stage, causing_stage):
-
         full_name = self.get_error_full_name(object_type, stage)
         self.errors[full_name] = dict()
         self.errors[full_name]["code"] = ErrorCode(ErrorCode.STAGE_NOT_RUN_BECAUSE_OF_PREVIOUS_FAILURE).name
