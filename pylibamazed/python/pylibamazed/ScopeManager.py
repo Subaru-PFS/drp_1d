@@ -43,23 +43,23 @@ from pylibamazed.redshift import (AmzException, CFlagWarning, CLog,
 
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
-ProcessFlowContext = CProcessFlowContext.GetInstance()
+process_flow_context = CProcessFlowContext.GetInstance()
 
 
-scopeStack = ProcessFlowContext.m_ScopeStack
+scope_stack = process_flow_context.m_ScopeStack
 
 
 def get_scope_level():
-    return scopeStack.size()
+    return scope_stack.size()
 
 
-def get_scope_type(scopetype):
-    return scopeStack.get_type_value(scopetype.value)
+def get_scope_type(scope_type):
+    return scope_stack.get_type_value(scope_type.value)
 
 
-def get_scope_SpectrumModel():
+def get_scope_spectrum_model():
     try:
-        spectrum_model = ProcessFlowContext.GetCurrentCategory()
+        spectrum_model = process_flow_context.GetCurrentCategory()
     except AmzException as e:
         if (e.getErrorCode.value != ErrorCode.SCOPESTACK_ERROR):
             raise e from None
@@ -73,23 +73,23 @@ def get_scope_SpectrumModel():
 
 def get_scope_stage():
     try:
-        stage = ProcessFlowContext.GetCurrentStage()
+        stage = process_flow_context.GetCurrentStage()
     except AmzException as e:
         if (e.getErrorCode.value != ErrorCode.SCOPESTACK_ERROR):
             raise e from None
         stage = None
 
     # handle the init stage (root scope)
-    if get_scope_SpectrumModel() is None and stage is None:
+    if get_scope_spectrum_model() is None and stage is None:
         stage = "init"
     return stage
 
 
 def log_scope(ending=False):
-    scope_type = scopeStack.get_current_type()
+    scope_type = scope_stack.get_current_type()
     if scope_type == ScopeType.UNDEFINED:
         return
-    scope = scopeStack.back()
+    scope = scope_stack.back()
     prefix = "Starting" if not ending else "Ending"
     message = f"{prefix} {scope_type.name}: {scope}"
     zlog.LogInfo(message)
@@ -98,13 +98,13 @@ def log_scope(ending=False):
 @contextmanager
 def push_scope(scope, scope_type=None):
     if scope_type is None:
-        scopeStack.push_back(scope)
+        scope_stack.push_back(scope)
     else:
-        scopeStack.push_back(scope, scope_type.value)
+        scope_stack.push_back(scope, scope_type.value)
         log_scope()
     try:
         yield
     finally:
         if scope_type is not None:
             log_scope(ending=True)
-        scopeStack.pop_back()
+        scope_stack.pop_back()

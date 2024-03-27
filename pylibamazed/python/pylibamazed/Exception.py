@@ -70,22 +70,21 @@ class APIException(AmzException):
 
 # decorator to convert any non-amazed exception to AmzException
 #  with the optional ErrorLogging
-def exception_decorator(fn=None, *, logging=False):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except AmzException as e:  # will catch both AmzException and derived
-                if logging:
-                    e.LogError()
-                raise e from None
-            except Exception as e:
-                amze = APIException.fromException(e)
-                if logging:
-                    amze.LogError()
-                raise amze from e
-        return wrapper
-    if fn:
-        return decorator(fn)
-    return decorator
+def exception_decorator(func=None, *, logging=False):
+    if func is None:
+        return functools.partial(exception_decorator, logging=logging)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except AmzException as e:  # will catch both AmzException and derived
+            if logging:
+                e.LogError()
+            raise e from None
+        except Exception as e:
+            api_exception = APIException.fromException(e)
+            if logging:
+                api_exception.LogError()
+            raise api_exception from e
+    return wrapper

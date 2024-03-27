@@ -234,10 +234,10 @@ class CalibrationLibrary:
             )
         except pd.errors.ParserError as e:
             raise APIException(ErrorCode.BAD_FILEFORMAT,
-                               "bad line catalog {0} cause :{1}".format(line_catalog_file, e)) from None
+                               f"bad line catalog {line_catalog_file} cause :{e}") from None
         except Exception as e:
-            raise APIException(ErrorCode.PYTHON_API_ERROR, "bad line catalog " + line_catalog_file
-                               + " cause :" + "{}".format(e)) from e
+            raise APIException(ErrorCode.PYTHON_API_ERROR,
+                               f"bad line catalog {line_catalog_file} cause :{e}") from e
 
         # force "-1" to undefStr (for compatibility)
         line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName"] = undefStr
