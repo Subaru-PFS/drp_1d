@@ -164,9 +164,9 @@ void CAbstractFitter::fit(Float64 redshift) {
 };
 
 void CAbstractFitter::initFit(Float64 redshift) {
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
-    resetSupport(redshift);
-  }
+
+  resetSupport(redshift);
+
   m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
@@ -180,12 +180,15 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
 
   m_ElementsVector->resetLambdaOffsets();
   m_ElementsVector->resetAsymfitParams();
-  // prepare the elements support
-  const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-  for (auto const &elt_ptr : getElementList()) {
 
-    elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange(),
-                            m_enlarge_line_supports);
+  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+    // prepare the elements support
+    const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
+    for (auto const &elt_ptr : getElementList()) {
+
+      elt_ptr->prepareSupport(spectralAxis, redshift, getLambdaRange(),
+                              m_enlarge_line_supports);
+    }
   }
 }
 

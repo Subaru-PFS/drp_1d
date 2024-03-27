@@ -69,7 +69,6 @@ TLineModelElementParam::TLineModelElementParam(CLineVector lines,
 
   m_type = first_line.GetType();
   m_isEmission = first_line.IsEmission();
-  auto const ps = Context.GetParameterStore();
   init(lineWidthType);
 }
 

@@ -110,8 +110,9 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
         m_opt_fitcontinuum_neg_threshold)
       m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
   }
-  //  for (; *m_curObs < m_models->size(); (*m_curObs)++) {
-  getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+    getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
+  }
   setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                m_fitContinuum->tplAmplitudeError,
                                m_fitContinuum->pCoeffs);
@@ -147,7 +148,7 @@ void CContinuumManager::setFitContinuum_tplAmplitude(
   m_fitContinuum->tplAmplitude = tplAmp;
   m_fitContinuum->tplAmplitudeError = tplAmpErr;
   m_fitContinuum->pCoeffs = polyCoeffs;
-  for (; *m_curObs < m_models->size(); (*m_curObs)++) {
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
     getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
   }
 }

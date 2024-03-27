@@ -1058,6 +1058,8 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
                     ->GetModelRulesLog());
       }
 
+      std::shared_ptr<CModelSpectrumResult> baselineResult =
+          std::make_shared<CModelSpectrumResult>();
       for (m_fittingManager->resetCurObs(); m_fittingManager->remainsObs();
            m_fittingManager->incrementCurObs()) {
 
@@ -1066,17 +1068,13 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
         const CSpectrumFluxAxis &modelContinuumFluxAxis =
             m_fittingManager->getSpectrumModel().GetModelContinuum();
 
-        std::shared_ptr<CModelSpectrumResult> baselineResult =
-            std::make_shared<CModelSpectrumResult>();
         baselineResult->addModel(
             CSpectrum(m_fittingManager->getSpectrum().GetSpectralAxis(),
                       modelContinuumFluxAxis),
             m_fittingManager->getSpectrum().getObsID());
-
-        ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
-
-        savedModels++;
       }
+      ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
+      savedModels++;
     }
 
     // code here has been moved to TLineModelResult::updateFromModel
