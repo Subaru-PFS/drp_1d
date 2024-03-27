@@ -154,10 +154,8 @@ void CRuleRatioRange::Correct(CLMEltListVector &LineModelElementList) {
   constructLogMsg(m_LineA, ampA, correctedA);
   constructLogMsg(m_LineB, ampB, correctedB);
 
-  LineModelElementList.getElementList()[i1]->SetElementAmplitude(corrected1,
-                                                                 er1);
-  LineModelElementList.getElementList()[i2]->SetElementAmplitude(corrected2,
-                                                                 er2);
+  LineModelElementList.SetElementAmplitude(i1, corrected1, er1);
+  LineModelElementList.SetElementAmplitude(i2, corrected2, er2);
 }
 
 void CRuleRatioRange::constructLogMsg(const std::string &lineStrA, Float64 ampA,

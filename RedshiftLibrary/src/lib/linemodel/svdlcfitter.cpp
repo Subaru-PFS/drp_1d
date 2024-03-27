@@ -137,7 +137,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
                        << ", number of parameters to fit = " << nddl);
 
   for (Int32 eltIdx : EltsIdx)
-    getElementList().SetElementAmplitude(eltIdx, 1.0, 0.0);
+    m_ElementsVector->SetElementAmplitude(eltIdx, 1.0, 0.0);
 
   // Linear fit
   double chisq;
@@ -193,8 +193,8 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     errorsfitted[iddl] = sqrt(var) / normFactor;
     ampsfitted[iddl] = gsl_vector_get(c, iddl) / normFactor;
     if (iddl < EltsIdx.size())
-      getElementList().SetElementAmplitude(EltsIdx[iddl], ampsfitted[iddl],
-                                           errorsfitted[iddl]);
+      m_ElementsVector->SetElementAmplitude(EltsIdx[iddl], ampsfitted[iddl],
+                                            errorsfitted[iddl]);
   }
 
   if (m_fitc_polyOrder >= 0) {

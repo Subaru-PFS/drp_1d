@@ -830,7 +830,8 @@ void CLineModelFitting::LoadModelSolution(
         continue;
 
       elt->setVelocity(modelSolution.Velocity[iRestLine]);
-      elt->SetFittingGroupInfo(modelSolution.fittingGroupInfo[iRestLine]);
+      m_ElementsVector->getElementParam()[eIdx]->SetFittingGroupInfo(
+          modelSolution.fittingGroupInfo[iRestLine]);
       if (m_enableAmplitudeOffsets) {
         TPolynomCoeffs contPolynomCoeffs = {
             modelSolution.continuum_pCoeff0[iRestLine],
@@ -868,7 +869,9 @@ void CLineModelFitting::LoadModelSolution(
     for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
       getElementList()[iElts]->SetOutsideLambdaRange();
 
-      if (!getElementList()[iElts]->IsOutsideLambdaRange())
+      if (!getElementList()[iElts]
+               ->IsOutsideLambdaRange()) // !!! What's the purpose of testing
+                                         // something we just set ?!!
         getElementList()[iElts]->prepareSupport(
             spectralAxis, modelSolution.Redshift, getLambdaRange());
     }

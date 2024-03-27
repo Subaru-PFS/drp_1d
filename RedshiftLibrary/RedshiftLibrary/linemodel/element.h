@@ -301,7 +301,6 @@ public:
   bool isAllAmplitudesNull() const;
 
   void SetFittedAmplitude(Int32 line_index, Float64 A, Float64 AStd);
-  void SetElementAmplitude(Float64 A, Float64 AStd);
   bool LimitFittedAmplitude(Int32 line_index, Float64 limit);
 
   bool SetAbsLinesLimit(Float64 limit);
@@ -360,7 +359,6 @@ public:
   Float64 GetSumGauss() const;
   void SetSumGauss(Float64 val);
   const std::string &GetFittingGroupInfo() const;
-  void SetFittingGroupInfo(const std::string &val);
 
   const TPolynomCoeffs &GetPolynomCoeffs() const;
 
@@ -564,10 +562,6 @@ inline void CLineModelElement::SetSumGauss(Float64 val) {
 
 inline const std::string &CLineModelElement::GetFittingGroupInfo() const {
   return m_ElementParam->m_fittingGroupInfo;
-}
-
-inline void CLineModelElement::SetFittingGroupInfo(const std::string &val) {
-  m_ElementParam->m_fittingGroupInfo = val;
 }
 
 inline const TPolynomCoeffs &CLineModelElement::GetPolynomCoeffs() const {

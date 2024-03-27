@@ -167,18 +167,18 @@ void CAbstractFitter::initFit(Float64 redshift) {
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     resetSupport(redshift);
   }
-
+  m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
 
   fitLyaProfile(redshift);
 
-  resetElementsFittingParam();
+  m_ElementsVector->resetElementsFittingParam(m_enableAmplitudeOffsets);
 }
 
 void CAbstractFitter::resetSupport(Float64 redshift) {
 
-  resetLambdaOffsets();
+  m_ElementsVector->resetLambdaOffsets();
 
   // prepare the elements support
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
@@ -314,7 +314,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   Float64 const A = getElementParam()[eltIndex]->m_sumCross /
                     getElementParam()[eltIndex]->m_sumGauss;
   Float64 const Astd = 1.0 / sqrt(getElementParam()[eltIndex]->m_sumGauss);
-  getElementList()[eltIndex]->SetElementAmplitude(A, Astd);
+  m_ElementsVector->SetElementAmplitude(eltIndex, A, Astd);
 
   return;
 }

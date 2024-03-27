@@ -104,16 +104,15 @@ CLineModelElement::CLineModelElement(
     if (getLineProfile(index)->isAsym() || getLineProfile(index)->isSymIgm())
       m_ElementParam->m_asymLineIndices.push_back(index);
   }
-
-  SetElementAmplitude(NAN, NAN);
 }
 
 void TLineModelElementParam::resetFittingParams() {
-
+  // init the fitted amplitude values and related variables
   m_FittedAmplitudes.assign(size(), NAN);
   m_FittedAmplitudesStd.assign(size(), NAN);
   m_fittingGroupInfo = undefStr;
   m_ampOffsetsCoeffs = TPolynomCoeffs();
+
   m_sumGauss = NAN;
   m_sumCross = NAN;
   m_dtmFree = NAN;
@@ -329,6 +328,8 @@ TInt32Range CLineModelElement::EstimateIndexRange(
 }
 
 // set the global outside lambda range
+// TODO Rename this, it's not a setter ->
+// DeduceGlobalOutsideLambdaRangeFromLines
 void CLineModelElement::SetOutsideLambdaRange() {
   m_OutsideLambdaRange = true;
   for (auto const &outside_lambda_range_id : m_OutsideLambdaRangeList)
@@ -635,17 +636,6 @@ void CLineModelElement::SetFittedAmplitude(Int32 index, Float64 fittedAmp,
   }
 
   m_ElementParam->m_FittedAmplitudesStd[index] = fittedAmpStd;
-}
-
-/**
- * \brief If outside lambda range, sets fitted amplitudes and errors to -1. If
- *inside, sets each line's fitted amplitude and error to -1 if line outside
- *lambda range, or amplitude to A * nominal amplitude and error to SNR * nominal
- *amplitude.
- **/
-void CLineModelElement::SetElementAmplitude(Float64 A, Float64 AStd) {
-  m_ElementParam->setAmplitudes(A, AStd, m_OutsideLambdaRangeList,
-                                m_OutsideLambdaRange);
 }
 
 /**

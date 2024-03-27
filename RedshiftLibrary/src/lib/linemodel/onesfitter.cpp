@@ -45,11 +45,8 @@ using namespace std;
 
 // set all the amplitudes to 1.0
 void COnesFitter::doFit(Float64 redshift) {
-  // appears at first as unefficient multiobs implementation but
-  // CLineModelElement::SetElementAmplitude is more complex than it appears
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
-    for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-      getElementList()[iElts]->SetElementAmplitude(1.0, 1.0);
-    }
+
+  for (Int32 iElts = 0; iElts < m_ElementsVector->getNbElements(); iElts++) {
+    m_ElementsVector->SetElementAmplitude(iElts, 1.0, 1.0);
   }
 }

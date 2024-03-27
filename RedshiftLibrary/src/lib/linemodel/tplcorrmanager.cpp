@@ -92,8 +92,8 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
         AmplitudesUncertainties[iValidLine]; // not modifying the fitting error
                                              // for now
     Float64 const nominalAmp = elt_ptr->GetNominalAmplitude(line_idx);
-    elt_ptr->SetElementAmplitude(correctedAmplitudes[iValidLine] / nominalAmp,
-                                 er);
+    m_elementsVector->SetElementAmplitude(
+        elt_idx, correctedAmplitudes[iValidLine] / nominalAmp, er);
   }
   getModel().refreshModel();
   return getLeastSquareMerit();

@@ -52,7 +52,7 @@ public:
 
   TInt32List GetModelValidElementsIndexes() const;
   TInt32List getValidElementIndices(CLine::EType lineTypeFilter) const;
-  void SetElementAmplitude(Int32 j, Float64 a, Float64 astd);
+
   Float64 GetElementAmplitude(Int32 j) const;
 
   TInt32List getOverlappingElements(Int32 ind, const TInt32Set &excludedInd,
@@ -135,6 +135,7 @@ public:
 
   Int32 GetModelNonZeroElementsNDdl();
   bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
+  bool isOutsideLambdaRange(Int32 elt_index);
   std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
   std::pair<Int32, Int32>
   findElementIndex(const std::string &LineTagStr,
@@ -156,9 +157,13 @@ public:
     return m_ElementsParams;
   }
 
+  void SetElementAmplitude(Int32 eltIndex, Float64 A, Float64 AStd);
+
   void resetLambdaOffsets();
   void resetAmplitudeOffsets();
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
+
+  void setGlobalOutsideLambdaRangeFromSpectra();
 
 private:
   std::vector<CLineModelElementList> m_ElementsVector;
@@ -167,6 +172,9 @@ private:
   Int32 m_nbObs;
   std::shared_ptr<Int32> m_curObs;
   const CLineMap &m_RestLineList;
+
+  std::vector<bool> m_globalOutsideLambdaRange;
+  std::vector<std::vector<bool>> m_globalOutsideLambdaRangeList;
 
   void AddElement(CLineVector lines, Float64 velocityEmission,
                   Float64 velocityAbsorption, Int32 ig);

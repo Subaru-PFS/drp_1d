@@ -58,7 +58,7 @@ void CSvdFitter::doFit(Float64 redshift) {
 
   std::string fitGroupTag = "svd";
   for (Int32 idx : validEltsIdx)
-    getElementList()[idx]->SetFittingGroupInfo(fitGroupTag);
+    m_ElementsVector->getElementParam()[idx]->SetFittingGroupInfo(fitGroupTag);
 
   if (m_enableAmplitudeOffsets)
     m_ElementsVector->resetAmplitudeOffsets();
@@ -114,7 +114,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     ampsfitted.assign(EltsIdx.size(), 0.0);
     errorsfitted.assign(EltsIdx.size(), INFINITY);
     for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
-      getElementList().SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
+      m_ElementsVector->SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
     if (useAmpOffset) {
       for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
         m_ElementsVector->getElementParam()[EltsIdx[iddl]]->SetPolynomCoeffs(
@@ -124,7 +124,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   }
 
   for (auto const iElt : EltsIdxToFit)
-    getElementList().SetElementAmplitude(iElt, 1.0, 0.0);
+    m_ElementsVector->SetElementAmplitude(iElt, 1.0, 0.0);
 
   const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
 
@@ -199,7 +199,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       allPositive = false;
     Float64 const var = gsl_matrix_get(cov, iddl, iddl);
     Float64 const std = sqrt(var) / normFactor;
-    getElementList().SetElementAmplitude(EltsIdxToFit[iddl], a, std);
+    m_ElementsVector->SetElementAmplitude(EltsIdxToFit[iddl], a, std);
     ampsfitted[iddl] = a;
     errorsfitted[iddl] = std;
   }
@@ -244,8 +244,8 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     TInt32List idx_positive;
     for (Int32 ifit = 0; ifit < EltsIdx.size(); ifit++) {
       if (ampsfitted[ifit] < 0) {
-        getElementList().SetElementAmplitude(EltsIdx[ifit], 0.0,
-                                             errorsfitted[ifit]);
+        m_ElementsVector->SetElementAmplitude(EltsIdx[ifit], 0.0,
+                                              errorsfitted[ifit]);
       } else {
         idx_positive.push_back(ifit);
       }
@@ -262,8 +262,8 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
           if (ampsfitted[irefit] > 0) {
             fitAmplitude(EltsIdx[idx_positive[irefit]], redshift, undefIdx);
           } else {
-            getElementList().SetElementAmplitude(EltsIdx[idx_positive[irefit]],
-                                                 0.0, errorsfitted[irefit]);
+            m_ElementsVector->SetElementAmplitude(EltsIdx[idx_positive[irefit]],
+                                                  0.0, errorsfitted[irefit]);
           }
         }
       }

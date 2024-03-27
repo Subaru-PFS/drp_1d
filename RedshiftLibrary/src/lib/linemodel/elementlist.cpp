@@ -65,6 +65,7 @@ Int32 CLineModelElementList::GetModelValidElementsNDdl() const {
  * \brief Returns the number of elements that have only subelements with
  *non-positive amplitude.
  **/
+// TODO move to CLMElementListVector and use global outsidelambdarange
 Int32 CLineModelElementList::GetModelNonZeroElementsNDdl() const {
   Int32 nddl = 0;
   for (auto const &elt : m_Elements) {
@@ -247,18 +248,6 @@ TInt32List CLineModelElementList::getOverlappingElements(
   indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
 
   return indexes;
-}
-
-/**
- * \brief If argument j is a valid index of m_Elements, updates the element in
- *that index calling its SetFittedAmplitude with arguments a and snr.
- **/
-void CLineModelElementList::SetElementAmplitude(Int32 j, Float64 a,
-                                                Float64 astd) {
-  if (j >= 0 && j < m_Elements.size()) {
-    m_Elements[j]->SetElementAmplitude(a, astd);
-  }
-  return;
 }
 
 /**
