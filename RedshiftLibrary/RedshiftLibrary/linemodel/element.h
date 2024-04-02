@@ -62,6 +62,9 @@ namespace NSEpic {
 
 using TLineModelElementParam_ptr = std::shared_ptr<TLineModelElementParam>;
 
+using ConstTLineModelElementParam_ptr =
+    std::shared_ptr<const TLineModelElementParam>;
+
 /**
  * \ingroup Redshift
  */
@@ -150,7 +153,7 @@ public:
   void dumpElement(std::ostream &os) const;
 
   TLineModelElementParam_ptr getElementParam() { return m_ElementParam; }
-  const TLineModelElementParam_ptr &getElementParam() const {
+  ConstTLineModelElementParam_ptr getElementParam() const {
     return m_ElementParam;
   }
 

@@ -67,7 +67,6 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
     m_ElementsVector.push_back(CLineModelElementList());
     fillElements();
   }
-  *m_curObs = 0;
 }
 
 CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,

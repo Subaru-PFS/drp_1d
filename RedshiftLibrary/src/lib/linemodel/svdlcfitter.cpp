@@ -71,9 +71,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // prepare continuum on the observed grid
 
   // re-interpolate the continuum on the grid
-  *m_curObs = 0;
   m_continuumManager->reinterpolateContinuumResetAmp();
-  *m_curObs = 0;
 
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
@@ -85,8 +83,8 @@ void CSvdlcFitter::doFit(Float64 redshift) {
                                          redshift);
 
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
-  *m_curObs = 0;
-  getModel().initModelWithContinuum();
+  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++)
+    getModel().initModelWithContinuum();
 }
 
 /**

@@ -164,7 +164,6 @@ void CLineModelFitting::initMembers(
         getSpectrumPtr(), m_RestLineList, m_continuumFitValues, TFOperator,
         *m_curObs));
   }
-  //*m_curObs = 0;
 
   m_continuumManager = std::make_shared<CContinuumManager>(
       m_models, m_continuumFitValues, m_curObs);
@@ -296,6 +295,7 @@ bool CLineModelFitting::initDtd() {
   //  m_dTransposeDLambdaRange = TLambdaRange(*(m_lambdaRange));
   *m_curObs = 0; // we choose arbitrarily first obs to check if dtd is already
                  // initialized
+                 // TODO check statement above
   m_dTransposeDLambdaRange = getLambdaRange();
   if (isContinuumComponentTplfitxx())
     m_dTransposeD = EstimateDTransposeD("raw");
@@ -314,7 +314,6 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
     for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
       getSpectrumModel().setContinuumToInputSpc();
     }
-    //    *m_curObs = 0;
     return;
   }
 
@@ -327,7 +326,6 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
     Int32 autoselect = getContinuumComponent() == "tplFitAuto";
     m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
   }
-  //  *m_curObs = 0;
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
@@ -418,11 +416,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           m_continuumManager->getContinuumComponent() == "tplFitAuto";
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
-
         m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted,
                                              autoselect, redshift);
       }
-      //*m_curObs = 0;
     }
   }
   if (m_lineRatioType == "tplRatio") {
@@ -466,7 +462,7 @@ void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
  *lines
  **/
 CMask CLineModelFitting::getOutsideLinesMask() const {
-  // TODO temp basic impl
+  // TODO temp basic impl -> #8796
   *m_curObs = 0;
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
@@ -587,7 +583,6 @@ Int32 CLineModelFitting::getSpcNSamples() const {
     imax = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
     nSamples += abs(imax - imin);
   }
-  //*m_curObs = 0;
 
   return nSamples;
 }
@@ -669,7 +664,7 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const {
  **/
 std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
 
-  *m_curObs = 0; // TODO
+  *m_curObs = 0; // TODO #8797
   // Retrieve all the strone emission lines supports in a list of range
   TInt32RangeList supportList;
   TBoolList isStrongList;
@@ -873,8 +868,6 @@ void CLineModelFitting::LoadModelSolution(
             spectralAxis, modelSolution.Redshift, getLambdaRange());
     }
   }
-  *m_curObs = 0; // temp hack for linemeas
-                 // (COperatorLineModel::getFittedModelWithoutContinuum)
 
   return;
 }

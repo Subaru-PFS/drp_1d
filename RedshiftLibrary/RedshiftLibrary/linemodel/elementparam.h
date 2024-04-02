@@ -234,7 +234,7 @@ struct TLineModelElementParam {
    * @param eIdx
    * @return TPolynomCoeffs
    */
-  const TPolynomCoeffs &GetPolynomCoeffs() { return m_ampOffsetsCoeffs; }
+  const TPolynomCoeffs &GetPolynomCoeffs() const { return m_ampOffsetsCoeffs; }
 
   CLine::EType GetElementType() const { return m_type; };
   bool IsEmission() const { return m_isEmission; };

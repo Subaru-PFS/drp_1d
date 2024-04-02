@@ -88,21 +88,22 @@ void CRuleStrongHigherThanWeak::Correct(
   for (Int32 iElement = 0;
        iElement < LineModelElementList.getElementList().size(); iElement++) {
     auto &element_ptr = LineModelElementList.getElementList()[iElement];
-    auto const &element_param_ptr = element_ptr->getElementParam();
+    const TLineModelElementParam_ptr &element_param_ptr =
+        LineModelElementList.getElementParam()[iElement];
 
     // Consider only desired line types
     if (element_param_ptr->GetElementType() != m_LineType)
       continue;
-    correctLineModelElement(*element_ptr, maxAmp, nameStrong);
+    correctLineModelElement(*element_ptr, element_param_ptr, maxAmp,
+                            nameStrong);
   }
   Log.LogInfo(Logs);
 }
 
 void CRuleStrongHigherThanWeak::correctLineModelElement(
-    CLineModelElement &element, Float64 maxAmplitude,
-    const std::string &nameStrong) {
+    CLineModelElement &element, const TLineModelElementParam_ptr &elt_param_ptr,
+    Float64 maxAmplitude, const std::string &nameStrong) {
 
-  const auto &elt_param_ptr = element.getElementParam();
   for (Int32 iLine = 0; iLine != element.GetSize(); ++iLine) {
     if (element.IsOutsideLambdaRangeLine(iLine))
       continue;
