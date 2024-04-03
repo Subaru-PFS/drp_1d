@@ -139,16 +139,6 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
   return sigma;
 }
 
-// TODO remove this when the return NAN is explained
-/*
-Float64 CLineModelElement::getVelocity() const {
-  if (!GetSize())
-    return NAN;
-
-  return m_ElementParam->getVelocity();
-}
-*/
-
 /**
  * @brief GetContinuumAtCenterProfile
  * @param line_id
@@ -262,7 +252,6 @@ TInt32Range CLineModelElement::EstimateIndexRange(
   return supportRange;
 }
 
-// rename to DeduceGlobalOutsideLambdaRangeFromLines ?
 void CLineModelElement::computeOutsideLambdaRange() {
   m_OutsideLambdaRange = true;
   for (auto const &outside_lambda_range_id : m_OutsideLambdaRangeList)
@@ -614,7 +603,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(
     if (m_OutsideLambdaRangeList[index])
       continue;
 
-    if ((emissionLine ^ getElementParam()->IsEmission()))
+    if ((emissionLine != getElementParam()->IsEmission()))
       continue;
 
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
@@ -968,15 +957,3 @@ Int32 CLineModelElement::computeCrossProducts(
 
   return num;
 }
-
-/*
-void CLineModelElement::fitAmplitude(
-    Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
-    const CSpectrumFluxAxis &noContinuumfluxAxis,
-    const CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index) {
-
-
-  computeCrossProducts(redshift, spectralAxis, noContinuumfluxAxis,
-                       continuumfluxAxis, line_index);
-}
-*/

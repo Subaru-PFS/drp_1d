@@ -228,8 +228,7 @@ std::pair<Int32, Int32> CRuleStrongHigherThanWeak::FindLowestStrongLineIndex(
         continue;
 
       if (line.IsStrong()) {
-        Float64 lineAmplitude =
-            element_ptr->getElementParam()->GetFittedAmplitude(iLine);
+        Float64 lineAmplitude = element_param_ptr->GetFittedAmplitude(iLine);
         if (lineAmplitude < amplitudeMin) {
           amplitudeMin = lineAmplitude;
           iLineMin = iLine;

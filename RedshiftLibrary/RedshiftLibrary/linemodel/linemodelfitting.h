@@ -230,6 +230,8 @@ public:
   void incrementCurObs() { (*m_curObs)++; }
   Int32 remainsObs() { return *m_curObs < m_nbObs; }
 
+  void refreshAllModels();
+
 private:
   void SetLSF();
 

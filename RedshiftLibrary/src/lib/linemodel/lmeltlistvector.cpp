@@ -79,16 +79,19 @@ CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
     m_ElementsParams.push_back(elt->getElementParam());
 }
 
-Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() {
+Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() const {
   Int32 nddl = 0;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    nddl += getElementList().GetModelNonZeroElementsNDdl();
+  for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {
+    if (isOutsideLambdaRange(elt_index))
+      continue;
+    if (!m_ElementsParams[elt_index]->isAllAmplitudesNull())
+      nddl++;
   }
   return nddl;
 }
 
-bool CLMEltListVector::isOutsideLambdaRangeLine(Int32 elt_index,
-                                                Int32 line_index) {
+bool CLMEltListVector::computeOutsideLambdaRangeLine(Int32 elt_index,
+                                                     Int32 line_index) {
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index))
       return false;
@@ -96,7 +99,7 @@ bool CLMEltListVector::isOutsideLambdaRangeLine(Int32 elt_index,
   return true;
 }
 
-bool CLMEltListVector::isOutsideLambdaRange(Int32 elt_index) {
+bool CLMEltListVector::computeOutsideLambdaRange(Int32 elt_index) {
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRange())
       return false;
@@ -272,22 +275,16 @@ void CLMEltListVector::resetAsymfitParams() {
 
 void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
   for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
-    m_globalOutsideLambdaRange[elt_idx] = isOutsideLambdaRange(elt_idx);
+    m_globalOutsideLambdaRange[elt_idx] = computeOutsideLambdaRange(elt_idx);
     for (size_t line_idx = 0; line_idx < m_ElementsParams[elt_idx]->size();
          ++line_idx)
       m_globalOutsideLambdaRangeList[elt_idx][line_idx] =
-          isOutsideLambdaRangeLine(elt_idx, line_idx);
+          computeOutsideLambdaRangeLine(elt_idx, line_idx);
   }
 }
 
-std::vector<bool> CLMEltListVector::getOutsideLambdaRangeList(Int32 elt_index) {
+const std::vector<bool> &
+CLMEltListVector::getOutsideLambdaRangeList(Int32 elt_index) const {
 
-  std::vector<bool> ret(getElementParam()[elt_index]->size());
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
-    for (Int32 line_index = 0;
-         line_index < getElementParam()[elt_index]->size(); line_index++)
-      ret[line_index] =
-          getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index);
-  }
-  return ret;
+  return m_globalOutsideLambdaRangeList[elt_index];
 }

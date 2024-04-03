@@ -114,16 +114,18 @@ CLineModelElementList RuleStrongHigherThanWeak_fixture::makeSomeElementList(
   CLineModelElement weakElement1 =
       RuleStrongHigherThanWeak_fixture::createCLineModelElement(
           {lineWeak1, lineWeak2}, {weak1Amp, weak2Amp});
+  weakElement1.computeOutsideLambdaRange();
   CLineModelElement strongElement1 =
       RuleStrongHigherThanWeak_fixture::createCLineModelElement(
           {lineStrong1, lineStrong2}, {strong1Amp, strong2Amp});
-
+  strongElement1.computeOutsideLambdaRange();
   CLineModelElementList elementList =
       RuleStrongHigherThanWeak_fixture::createElementList(
           {weakElement1, strongElement1}, 2);
 
   CRuleStrongHigherThanWeak rule;
   CLMEltListVector lmeltlistv = CLMEltListVector(elementList, lm);
+  // compute outside lambdarange list here
   rule.SetUp(true, CLine::EType::nType_Emission);
   rule.Correct(lmeltlistv);
   return elementList;

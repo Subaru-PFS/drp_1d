@@ -1318,3 +1318,10 @@ std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
   Float64 snrdi = std::abs(sumFlux) / sqrt(sumErr);
   return std::make_pair(sumFlux, snrdi);
 }
+
+void CLineModelFitting::refreshAllModels() {
+
+  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+    getSpectrumModel().refreshModel();
+  }
+}

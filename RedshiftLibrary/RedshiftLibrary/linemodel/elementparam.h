@@ -149,7 +149,7 @@ struct TLineModelElementParam {
   }
 
   void setAmplitudes(Float64 A, Float64 AStd,
-                     std::vector<bool> outsideLambdaRangeList,
+                     const std::vector<bool> &outsideLambdaRangeList,
                      bool outsideLambdaRange) {
     auto &fa = m_FittedAmplitudes;
     auto &fastd = m_FittedAmplitudesStd;

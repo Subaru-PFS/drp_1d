@@ -62,22 +62,6 @@ Int32 CLineModelElementList::GetModelValidElementsNDdl() const {
 }
 
 /**
- * \brief Returns the number of elements that have only subelements with
- *non-positive amplitude.
- **/
-// TODO move to CLMElementListVector and use global outsidelambdarange
-Int32 CLineModelElementList::GetModelNonZeroElementsNDdl() const {
-  Int32 nddl = 0;
-  for (auto const &elt : m_Elements) {
-    if (elt->IsOutsideLambdaRange())
-      continue;
-    if (!elt->getElementParam()->isAllAmplitudesNull())
-      nddl++;
-  }
-  return nddl;
-}
-
-/**
  * \brief Returns the list of indexes of elements that fail
  *IsOutsideLambdaRange.
  **/
@@ -173,7 +157,10 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
  * \brief Returns a sorted, de-duplicated list of indices of lines whose support
  *overlap ind's support and are not listed in the argument excludedInd.
  **/
-
+// TODO move this to LMElementListVector ( #8798 )
+// la difficulté viendra avec des LSF différentes, qui donc engendre un overlap
+// différent: il faudra prendre l'overlap le plus important, ie si ça overlap
+// dans un spectre alors ça overlap globalement (il faut faire un fit joint)
 TInt32List CLineModelElementList::getOverlappingElements(
     Int32 ind, const TInt32Set &excludedInd, Float64 redshift,
     Float64 overlapThres) const {

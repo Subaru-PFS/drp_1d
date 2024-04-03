@@ -1815,6 +1815,7 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   // make sure polynom info are correctly set. it s up to refresh model to use
   // these coeffs
   m_fittingManager->LoadModelSolution(bestModelSolution);
-  m_fittingManager->getSpectrumModel().refreshModel();
+  m_fittingManager->refreshAllModels();
+  m_fittingManager->resetCurObs(); // TODO dummy implementation
   return m_fittingManager->getSpectrumModel().GetModelSpectrum();
 }
