@@ -375,9 +375,10 @@ bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const {
   m_regularLogSamplingStep =
       log(m_Samples.back() / m_Samples.front()) / (GetSamplesCount() - 1);
   m_isLogSampled = true;
-  Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs "
-                "Relative Error (log lbda step)= %f",
-                maxAbsRelativeError);
+  Log.LogDetail(Formatter()
+                << "   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs "
+                   "Relative Error (log lbda step)= "
+                << maxAbsRelativeError);
 
   return true;
 }

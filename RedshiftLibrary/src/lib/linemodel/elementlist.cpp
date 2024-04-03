@@ -152,9 +152,10 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
 
   // print the groups
   for (auto const &[tag, group] : tag_groups) {
-    Log.LogDebug("    model: Group %s: nlines=%d", tag.c_str(), group.size());
+    Log.LogDebug(Formatter()
+                 << "    model: Group " << tag << ": nlines=" << group.size());
     for (auto const &element : group) {
-      Log.LogDebug("    model: \t iElt=%d", element);
+      Log.LogDebug(Formatter() << "    model: \t iElt=" << element);
     }
   }
 
@@ -343,7 +344,8 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
 
   const auto ampOffsetGroups = getFittingGroups(eIdx_list, lineTypeFilter);
 
-  Log.LogDetail("Elementlist: Adding n=%d ampOffsets", ampOffsetGroups.size());
+  Log.LogDetail(Formatter() << "Elementlist: Adding n="
+                            << ampOffsetGroups.size() << " ampOffsets");
 
   // need to avoid overlapping polynomes since the ovelapping condition is
   // computed unsing the lambda range support of the lines that intersect with a
@@ -408,9 +410,10 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
 
       Float64 amp = elt->GetFittedAmplitude(index);
       if (amp > 0.0) {
-        Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found "
-                     "Strong EL: %s",
-                     line.GetName().c_str());
+        Log.LogDebug(Formatter()
+                     << "    model: GetModelStrongEmissionLinePresent - found. "
+                        "Strong EL: "
+                     << line.GetName());
         return true;
       }
     }
@@ -447,9 +450,10 @@ bool CLineModelElementList::GetModelHaStrongest() const {
   bool isHaStrongest = (!std::isnan(ampMax) && ampMax > 0. &&
                         ampMaxLineTag == linetags::halpha_em);
   if (isHaStrongest) {
-    Log.LogDebug("    model: GetModelHaStrongest - found to be true with "
-                 "ampMax=%e (for line=Halpha)",
-                 ampMax);
+    Log.LogDebug(Formatter()
+                 << "    model: GetModelHaStrongest - found to be true with "
+                    "ampMax="
+                 << ampMax << " (for line=Halpha)");
   }
   return isHaStrongest;
 }

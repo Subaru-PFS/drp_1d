@@ -273,17 +273,19 @@ void CLineMatchingResult::FilterWithRules(CSpectrum spc,
 
   CRules rules(spc, m_DetectedCatalog, m_RestCatalog, lambdaRange, winsize);
   TSolutionSetList _solutionSetList;
-  Log.LogDebug("There are %d solutions to test.", SolutionSetList.size());
+  Log.LogDebug(Formatter() << "There are " << SolutionSetList.size()
+                           << " solutions to test.");
   for (Int32 i = 0; i < SolutionSetList.size(); i++) {
     TSolutionSet currentSet = SolutionSetList[i];
     Float64 z = GetMeanRedshiftSolution(currentSet);
     Int32 ruleId = rules.check(z, currentSet);
 
     if (ruleId <= 0) {
-      Log.LogDebug("Solution %d passed!", i);
+      Log.LogDebug(Formatter() << "Solution " << i << " passed!");
       _solutionSetList.push_back(currentSet);
     } else {
-      Log.LogDebug("Solution %d failed rule %d", i, ruleId);
+      Log.LogDebug(Formatter()
+                   << "Solution " << i << " failed rule " << ruleId);
       FilteredSolutionSetList.push_back(currentSet);
       FilterTypeList.push_back(ruleId);
     }

@@ -157,8 +157,8 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   for (Int32 i = 0; i < n; i++) {
     xi = redshifts[i + izmin];
     yi = merits[i + izmin];
-    Log.LogDebug("  y = %+.5e ]\n", yi);
-    Log.LogDebug("  x = %+.5e ]\n", xi);
+    Log.LogDebug(Formatter() << "  y = " << yi << " ]\n");
+    Log.LogDebug(Formatter() << "  x = " << xi << " ]\n");
     ei = 1.0; // todo, estimate weighting ?
     gsl_matrix_set(X, i, 0, 1.0);
     gsl_matrix_set(X, i, 1, xi - x0);
@@ -184,16 +184,19 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
   // Float64 logK = ( -(a - b2sur4c)/2.0 );
   // Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
-  Log.LogDebug("Center Redshift: %g", x0);
-  Log.LogDebug("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
+  Log.LogDebug(Formatter() << "Center Redshift: " << x0 << "");
+  Log.LogDebug(Formatter() << "# best fit: Y = " << C(0) << " + " << C(1)
+                           << " X + " << C(2) << " X^2");
   Log.LogDebug("# covariance matrix:\n");
-  Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1), COV(0, 2));
-  Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1), COV(1, 2));
-  Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1), COV(2, 2));
-  Log.LogDebug("# chisq/n = %g", chisq / n);
-  Log.LogDebug("# zcorr = %g", zcorr);
-  Log.LogDebug("# sigma = %g", sigma);
-  // Log.LogDebug("# logarea = %g", logarea);
+  Log.LogDebug(Formatter() << "[ " << COV(0, 0) << ", " << COV(0, 1) << ", "
+                           << COV(0, 2) << "  \n");
+  Log.LogDebug(Formatter() << "  " << COV(1, 0) << ", " << COV(1, 1) << ", "
+                           << COV(1, 2) << "  \n");
+  Log.LogDebug(Formatter() << "  " << COV(2, 0) << ", " << COV(2, 1) << ", "
+                           << COV(2, 2) << " ]\n");
+  Log.LogDebug(Formatter() << "# chisq/n = " << chisq / n);
+  Log.LogDebug(Formatter() << "# zcorr = " << zcorr);
+  Log.LogDebug(Formatter() << "# sigma = " << sigma);
   Log.LogDebug("\n");
 
   gsl_matrix_free(X);

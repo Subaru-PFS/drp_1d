@@ -69,8 +69,6 @@ void CSvdlcFitter::doFit(Float64 redshift) {
 
   // 1. fit only the current continuum
   // prepare continuum on the observed grid
-  // Log.LogDebug("    model: fitting svdlc, with continuum-tpl=%s",
-  //	       m_fitContinuum_tplName.c_str());
 
   // re-interpolate the continuum on the grid
   *m_curObs = 0;
@@ -167,15 +165,17 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-  Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-  Log.LogDebug("# covariance matrix:");
-  Log.LogDebug("[ %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-  Log.LogDebug("  %+.5e, %+.5e ]", COV(1, 0), COV(1, 1));
-  Log.LogDebug("# chisq = %g, chisq/n = %g", chisq, chisq / n);
+  Log.LogDebug(Formatter() << "# best fit: Y = " << C(0) << " X1 + " << C(1)
+                           << " X2 ...");
+  Log.LogDebug(Formatter() << "# covariance matrix:");
+  Log.LogDebug(Formatter() << "[ " << COV(0, 0) << ", " << COV(0, 1));
+  Log.LogDebug(Formatter() << "  " << COV(1, 0) << ", " << COV(1, 1) << " ]");
+  Log.LogDebug(Formatter() << "# chisq = " << chisq
+                           << ", chisq/n = " << chisq / n);
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     Float64 a = gsl_vector_get(c, iddl) / normFactor;
-    Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
+    Log.LogDetail(Formatter() << "# Found amplitude " << iddl << ": " << a);
   }
 
   Int32 sameSign = 1;
@@ -185,8 +185,8 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     sameSign &= std::signbit(a0 * a);
   }
 
-  Log.LogDetail("# Found n=%d amplitudes with sameSign=%d", EltsIdx.size(),
-                sameSign);
+  Log.LogDetail(Formatter() << "# Found n=" << EltsIdx.size()
+                            << " amplitudes with sameSign=" << sameSign);
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     Float64 const var = gsl_matrix_get(cov, iddl, iddl);
@@ -201,11 +201,13 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     for (Int32 kCoeff = 0; kCoeff < m_fitc_polyOrder + 1; kCoeff++) {
       Float64 const p =
           gsl_vector_get(c, EltsIdx.size() + 1 + kCoeff) / normFactor;
-      Log.LogDetail("# Found p%d poly amplitude = %+.5e", kCoeff, p);
+      Log.LogDetail(Formatter()
+                    << "# Found p" << kCoeff << " poly amplitude = " << p);
     }
   }
 
-  Log.LogDetail("# Returning (L+C) n=%d amplitudes", ampsfitted.size());
+  Log.LogDetail(Formatter() << "# Returning (L+C) n=" << ampsfitted.size()
+                            << " amplitudes");
 
   gsl_matrix_free(X);
   gsl_vector_free(y);

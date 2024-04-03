@@ -217,11 +217,9 @@ public:
 
   static CLog& GetInstance();
 
-  void LogInfo( const char* format, ... );
-  void LogDetail( const char* format, ... );
-  void LogDebug( const char* format, ... );
-  void Indent();
-  void UnIndent();
+  void LogInfo(const std::string &s);
+  void LogDetail(const std::string &s);
+  void LogDebug(const std::string &s);
 
 private:
    CLog();

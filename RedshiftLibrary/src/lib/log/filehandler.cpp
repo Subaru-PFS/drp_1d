@@ -47,10 +47,6 @@ CLogFileHandler::CLogFileHandler(const char *filePath) {
 
 CLogFileHandler::~CLogFileHandler() { m_OutputStream.close(); }
 
-void CLogFileHandler::LogEntry(Int32 lvl, const char *header, const char *msg) {
-  if (header) {
-    m_OutputStream << header;
-  }
-
-  m_OutputStream << msg << std::endl;
+void CLogFileHandler::LogEntry(Int32 logLevel, const std::string &message) {
+  m_OutputStream << message << std::endl;
 }

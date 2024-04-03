@@ -179,10 +179,10 @@ void CRegulament::EnableRulesAccordingToParameters(std::string Parameters) {
   for (unique_ptr<CRule> &rule : m_RulesVector) {
     bool enableRule = Parameters.find(rule->Name) != std::string::npos;
     if (Parameters == "all" || enableRule) {
-      Log.LogDebug("Enabling rule %s.", rule->Name.c_str());
+      Log.LogDebug(Formatter() << "Enabling rule " << rule->Name);
       rule->Enabled = true;
     } else {
-      Log.LogDebug("Disabling rule %s.", rule->Name.c_str());
+      Log.LogDebug(Formatter() << "Disabling rule " << rule->Name);
       rule->Enabled = false;
     }
   }

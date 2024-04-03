@@ -200,8 +200,9 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
     m_forceDisableLyaFitting = m_opt_lya_forcedisablefit;
     m_forceLyaFitting = m_opt_lya_forcefit;
     Log.LogDetail(
-        "    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d",
-        m_forceLyaFitting);
+        Formatter()
+        << "    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : "
+        << m_forceLyaFitting);
   }
   if (iPass == 3) {
     m_forceDisableLyaFitting = false;
@@ -234,51 +235,51 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
     for (Int32 j = imin; j < imax; j++) {
       diff = (Yspc[j] - Ymodel[j]);
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
-      //        if ( 1E6 * diff < ErrorNoContinuum[j] )
-      //        {
-      //            Log.LogDebug( "Warning: noise is at least 6 orders greater
-      //            than the residue!" ); Log.LogDebug(
-      //            "CLineModelFitting::getLeastSquareMerit diff = %f", diff );
-      //            Log.LogDebug( "CLineModelFitting::getLeastSquareMerit
-      //            ErrorNoContinuum[%d] = %f", j, ErrorNoContinuum[j] );
-      //        }
     }
     if (std::isnan(fit)) {
       Log.LogDetail(
-          "CLineModelFitting::getLeastSquareMerit: NaN value found on "
-          "the lambdarange = (%f, %f)",
-          getLambdaRange().GetBegin(), getLambdaRange().GetEnd());
+          Formatter()
+          << "CLineModelFitting::getLeastSquareMerit: NaN value found on "
+             "the lambdarange = ("
+          << getLambdaRange().GetBegin() << ", " << getLambdaRange().GetEnd()
+          << ")");
       Log.LogDetail(
-          "CLineModelFitting::getLeastSquareMerit: NaN value found on "
-          "the true observed spectral axis lambdarange = (%f, %f)",
-          spcSpectralAxis[imin], spcSpectralAxis[imax]);
+          Formatter()
+          << "CLineModelFitting::getLeastSquareMerit: NaN value found on "
+             "the true observed spectral axis lambdarange = ("
+          << spcSpectralAxis[imin] << ", " << spcSpectralAxis[imax] << ")");
       for (Int32 j = imin; j < imax; j++) {
         if (std::isnan(Yspc[j])) {
           Log.LogDetail(
-              "CLineModelFitting::getLeastSquareMerit: NaN value found "
-              "for the observed spectrum at lambda=%f",
-              spcSpectralAxis[j]);
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: NaN value found "
+                 "for the observed spectrum at lambda="
+              << spcSpectralAxis[j]);
           break;
         }
         if (std::isnan(Ymodel[j])) {
           Log.LogDetail(
-              "CLineModelFitting::getLeastSquareMerit: NaN value found "
-              "for the model at lambda=%f",
-              spcSpectralAxis[j]);
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: NaN value found "
+                 "for the model at lambda="
+              << spcSpectralAxis[j]);
           break;
         }
 
         if (std::isnan(ErrorNoContinuum[j])) {
           Log.LogDetail(
-              "CLineModelFitting::getLeastSquareMerit: NaN value found "
-              "for the sqrt(variance) at lambda=%f",
-              spcSpectralAxis[j]);
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: NaN value found "
+                 "for the sqrt(variance) at lambda="
+              << spcSpectralAxis[j]);
           break;
         }
         if (ErrorNoContinuum[j] == 0.0) {
-          Log.LogDetail("CLineModelFitting::getLeastSquareMerit: 0 value found "
-                        "for the sqrt(variance) at lambda=%f",
-                        spcSpectralAxis[j]);
+          Log.LogDetail(
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: 0 value found "
+                 "for the sqrt(variance) at lambda="
+              << spcSpectralAxis[j]);
           break;
         }
       }

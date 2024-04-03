@@ -189,7 +189,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
   if (!chisquareSetAtLeastOnce) {
     THROWG(INVALID_MERIT_VALUES,
-           Formatter() << "Template " << tpl->GetName().c_str()
+           Formatter() << "Template " << tpl->GetName()
                        << ": Not even one single valid fit/merit value found");
   }
 
@@ -379,8 +379,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
   Log.LogDetail(
-      "  Operator-TemplateFitting: starting computation for template: %s",
-      tpl->GetName().c_str());
+      Formatter()
+      << "  Operator-TemplateFitting: starting computation for template: "
+      << tpl->GetName());
 
   if (opt_dustFitting && tpl->CalzettiInitFailed())
     THROWG(INTERNAL_ERROR, "ISM is not initialized");
@@ -452,9 +453,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
   if (overlapValidInfZ != m_redshifts[0] ||
       overlapValidSupZ != m_redshifts[m_redshifts.size() - 1]) {
-    Log.LogInfo("  Operator-TemplateFitting: overlap warning for %s: "
-                "minz=%.3f, maxz=%.3f",
-                tpl->GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
+    Log.LogInfo(Formatter()
+                << "  Operator-TemplateFitting: overlap warning for "
+                << tpl->GetName()
+                << ": "
+                   "minz="
+                << overlapValidInfZ << ", maxz=" << overlapValidSupZ);
   }
 
   // estimate CstLog for PDF estimation

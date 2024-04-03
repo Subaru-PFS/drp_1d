@@ -132,7 +132,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       m_linemodel.m_firstpass_extremaResult.m_ranked_candidates);
 
   /*
-  Log.LogDetail("    linemodelsolve: Storing priors (size=%d)",
   zpriorResult->Redshifts.size());
 
   resultStore->StoreScopedGlobalResult( "priorpdf", zpriorResult); //TODO review
@@ -157,7 +156,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       pdfz.Compute(chisquares);
 
   // store PDF results
-  Log.LogInfo("%s: Storing PDF results", __func__);
+  Log.LogInfo(Formatter() << __func__ << ": Storing PDF results");
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   // TODO: clean below line once #7646 is solved
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
@@ -192,37 +191,45 @@ void CLineModelSolve::GetZpriorsOptions(
     bool &zPriorEuclidNHa) const {
   zPriorStrongLinePresence = (m_opt_stronglinesprior > 0.0);
   if (zPriorStrongLinePresence) {
-    Log.LogDetail("%s: StrongLinePresence prior enabled: factor=%e", __func__,
-                  m_opt_stronglinesprior);
+    Log.LogDetail(Formatter()
+                  << __func__ << ": StrongLinePresence prior enabled: factor="
+                  << m_opt_stronglinesprior);
   } else {
-    Log.LogDetail("%s: StrongLinePresence prior disabled", __func__);
+    Log.LogDetail(Formatter()
+                  << __func__ << ": StrongLinePresence prior disabled");
   }
 
   zPriorHaStrongestLine = (m_opt_haPrior > 0.0);
   if (zPriorHaStrongestLine) {
-    Log.LogDetail("%s: Ha strongest line prior enabled: factor=%e", __func__,
-                  m_opt_haPrior);
+    Log.LogDetail(Formatter()
+                  << __func__ << ": Ha strongest line prior enabled: factor="
+                  << m_opt_haPrior);
   } else {
-    Log.LogDetail("%s: Ha strongest line prior disabled", __func__);
+    Log.LogDetail(Formatter()
+                  << __func__ << ": Ha strongest line prior disabled");
   }
 
   opt_nlines_snr_penalization_factor = -1;
   zPriorNLineSNR = (opt_nlines_snr_penalization_factor > 0.0);
   if (zPriorNLineSNR) {
-    Log.LogDetail("%s: N lines snr>cut prior enabled: factor=%e", __func__,
-                  opt_nlines_snr_penalization_factor);
+    Log.LogDetail(Formatter()
+                  << __func__ << ": N lines snr>cut prior enabled: factor="
+                  << opt_nlines_snr_penalization_factor);
   } else {
-    Log.LogDetail("%s: N lines snr>cut prior disabled", __func__);
+    Log.LogDetail(Formatter()
+                  << __func__ << ": N lines snr>cut prior disabled");
   }
 
   // hardcoded Euclid-NHaZprior parameter
   zPriorEuclidNHa = false;
   if (m_opt_euclidNHaEmittersPriorStrength > 0.0) {
     zPriorEuclidNHa = true;
-    Log.LogDetail("%s: EuclidNHa prior enabled, with strength-coeff: %e",
-                  __func__, m_opt_euclidNHaEmittersPriorStrength);
+    Log.LogDetail(Formatter()
+                  << __func__
+                  << ": EuclidNHa prior enabled, with strength-coeff: "
+                  << m_opt_euclidNHaEmittersPriorStrength);
   } else {
-    Log.LogDetail("%s: EuclidNHa prior disabled", __func__);
+    Log.LogDetail(Formatter() << __func__ << "EuclidNHa prior disabled");
   }
 }
 
@@ -320,7 +327,8 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
     chisquarearray.parentCandidates = parentZCand;
 
   chisquarearray.cstLog = result->cstLog;
-  Log.LogDetail("%s: using cstLog = %f", __func__, chisquarearray.cstLog);
+  Log.LogDetail(Formatter()
+                << __func__ << ": using cstLog = " << chisquarearray.cstLog);
 
   chisquarearray.redshifts = result->Redshifts;
 
@@ -410,13 +418,13 @@ void CLineModelSolve::fillChisquareArrayForTplRatio(
   const Int32 ntplratios = result->ChiSquareTplratios.size();
 
   bool zPriorLines = false;
-  Log.LogDetail("%s: PriorLinesTplratios.size()=%d", __func__,
-                result->PriorLinesTplratios.size());
+  Log.LogDetail(Formatter() << __func__ << ": PriorLinesTplratios.size()="
+                            << result->PriorLinesTplratios.size());
   if (result->PriorLinesTplratios.size() == ntplratios) {
     zPriorLines = true;
-    Log.LogDetail("%s: Lines Prior enabled", __func__);
+    Log.LogDetail(Formatter() << __func__ << ": Lines Prior enabled");
   } else {
-    Log.LogDetail("%s: Lines Prior disabled", __func__);
+    Log.LogDetail(Formatter() << __func__ << ": Lines Prior disabled");
   }
 
   chisquares.reserve(ntplratios);
@@ -438,8 +446,6 @@ void CLineModelSolve::fillChisquareArrayForTplRatio(
     result->ScaleMargCorrectionTplratios[k][kz]) maxscalemargcorr =
     result->ScaleMargCorrectionTplratios[k][kz];
 
-        Log.LogDetail("%s: maxscalemargcorr= %e", __func__,
-    maxscalemargcorr); for ( Int32 kz=0; kz<zsize; kz++ )
             if(result->ScaleMargCorrectionTplratios[k][kz]!=0) //warning,
     this is experimental. logLikelihoodCorrected[kz] +=
     result->ScaleMargCorrectionTplratios[k][kz] - maxscalemargcorr;
@@ -616,13 +622,15 @@ void CLineModelSolve::createRedshiftGrid(const CInputContext &inputContext,
     m_coarseRedshiftStep = m_redshiftStep;
     CObjectSolve::createRedshiftGrid(
         inputContext, redshiftRange); // fall back to creating fine grid
-    Log.LogInfo("Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
-                "raw %d redshifts will be calculated",
-                m_redshifts.size());
+    Log.LogInfo(Formatter()
+                << "Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
+                   "raw "
+                << m_redshifts.size() << " redshifts will be calculated");
   } else {
-    Log.LogInfo(
-        "Operator-Linemodel: 1st pass coarse zgrid enabled: %d redshifts "
-        "will be calculated on the coarse grid",
-        m_redshifts.size());
+    Log.LogInfo(Formatter()
+                << "Operator-Linemodel: 1st pass coarse zgrid enabled: "
+                << m_redshifts.size()
+                << " redshifts "
+                   "will be calculated on the coarse grid");
   }
 }

@@ -105,13 +105,14 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
     THROWG(INTERNAL_ERROR, "interpolation parameter must be 'lin'");
   }
 
-  Log.LogInfo("Method parameters:");
-  Log.LogInfo("    -interpolation: %s", opt_interp.c_str());
-  Log.LogInfo("    -overlapThreshold: %.3f", overlapThreshold);
-  Log.LogInfo("    -component: %s", opt_spcComponent.c_str());
-  Log.LogInfo("    -IGM extinction: %s", opt_extinction ? "true" : "false");
-  Log.LogInfo("    -ISM dust-fit: %s", opt_dustFit ? "true" : "false");
-  // Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
+  Log.LogInfo(Formatter() << "Method parameters:");
+  Log.LogInfo(Formatter() << "    -interpolation: " << opt_interp);
+  Log.LogInfo(Formatter() << "    -overlapThreshold: " << overlapThreshold);
+  Log.LogInfo(Formatter() << "    -component: " << opt_spcComponent);
+  Log.LogInfo(Formatter() << "    -IGM extinction: "
+                          << (opt_extinction ? "true" : "false"));
+  Log.LogInfo(Formatter() << "    -ISM dust-fit: "
+                          << (opt_dustFit ? "true" : "false"));
   Log.LogInfo("");
 
   Solve(resultStore, spc, tplCatalog, m_lambdaRange, m_redshifts,
@@ -296,8 +297,8 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
 
   if (chisquarearray.cstLog == -1) {
     chisquarearray.cstLog = result->CstLog;
-    Log.LogInfo("tplcombinationsolver: using cstLog = %f",
-                chisquarearray.cstLog);
+    Log.LogInfo(Formatter() << "tplcombinationsolver: using cstLog = "
+                            << chisquarearray.cstLog);
   } else if (chisquarearray.cstLog != result->CstLog)
     THROWG(INTERNAL_ERROR, Formatter()
                                << "cstLog values do not match in results: val1="
@@ -325,9 +326,12 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
             result->ChiSquareIntermediate
                 [kz][kism]
                 [kigm]; // + resultXXX->ScaleMargCorrectionTplshapes[][]?;
-      Log.LogDetail("    tplcombinationsolver: Pdfz combine - prepared merit "
-                    "#%d for ism=%d, igm=%d",
-                    chisquarearray.chisquares.size() - 1, kism, kigm);
+      Log.LogDetail(
+          Formatter()
+          << "    tplcombinationsolver: Pdfz combine - prepared merit "
+             "#"
+          << chisquarearray.chisquares.size() - 1 << " for ism=" << kism
+          << ", igm=" << kigm);
     }
   }
   return chisquarearray;

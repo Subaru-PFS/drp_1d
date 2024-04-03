@@ -63,7 +63,8 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
  */
 void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
                                          Float64 redshift) {
-  Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
+  Log.LogDebug(Formatter() << "Elementlist, m_fitContinuum_option="
+                           << m_fitContinuum_option);
   /*if (m_observeGridContinuumFlux.empty())
     THROWG(INTERNAL_ERROR,
            "Cannot loadfitcontinuum without precomputedGridTplFlux");
@@ -118,21 +119,21 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
   //}
   //*m_curObs = 0;
 
-  Log.LogDebug("    model : LoadFitContinuum, loaded: %s",
-               m_fitContinuum->tplName.c_str());
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded: "
+                           << m_fitContinuum->tplName);
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with A="
+                           << m_fitContinuum->tplAmplitude << ", with A_error="
+                           << m_fitContinuum->tplAmplitudeError);
   Log.LogDebug(
-      "    model : LoadFitContinuum, loaded with A=%e, with A_error=%e",
-      m_fitContinuum->tplAmplitude, m_fitContinuum->tplAmplitudeError);
-  Log.LogDebug("    model : LoadFitContinuum, loaded with DustCoeff=%e, with "
-               "MeiksinIdx=%d",
-               m_fitContinuum->tplEbmvCoeff, m_fitContinuum->tplMeiksinIdx);
-  Log.LogDebug("    model : LoadFitContinuum, loaded with dtm=%e, with mtm=%e, "
-               "with logprior=%e",
-               m_fitContinuum->tplDtM, m_fitContinuum->tplMtM,
-               m_fitContinuum->tplLogPrior);
-
-  Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e",
-               m_fitContinuum->tplSNR);
+      Formatter() << "    model : LoadFitContinuum, loaded with DustCoeff="
+                  << m_fitContinuum->tplEbmvCoeff
+                  << ", with MeiksinIdx=" << m_fitContinuum->tplMeiksinIdx);
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with dtm="
+                           << m_fitContinuum->tplDtM
+                           << ", with mtm=" << m_fitContinuum->tplMtM
+                           << "with logprior=" << m_fitContinuum->tplLogPrior);
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with snr="
+                           << m_fitContinuum->tplSNR);
 }
 
 void CContinuumManager::setFitContinuum_tplAmplitude(

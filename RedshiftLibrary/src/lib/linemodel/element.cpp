@@ -314,7 +314,6 @@ TInt32Range CLineModelElement::EstimateIndexRange(
   supportRange.SetEnd(spectralAxis.GetIndexAtWaveLength(lambda_end));
 
   // correct the end value if higher then lambdaRange end
-  // Log.LogDebug( "    multiline: spectralAxis[supportRange.GetEnd()] = %f",
   // spectralAxis[supportRange.GetEnd()]);
   if (spectralAxis[supportRange.GetEnd()] > lambdaRange.GetEnd()) {
     supportRange.SetEnd(supportRange.GetEnd() - 1);

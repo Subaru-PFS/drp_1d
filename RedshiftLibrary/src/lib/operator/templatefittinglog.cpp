@@ -181,9 +181,9 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
 
   Int32 nPadBeforeSpc = nPadded - nSpc;
 
-  Log.LogDebug("FitAllz: Processing spc-fft "
-               "with n=%d, padded to n=%d",
-               nSpc, nPadded);
+  Log.LogDebug(Formatter() << "FitAllz: Processing spc-fft "
+                              "with n="
+                           << nSpc << ", padded to n=" << nPadded);
 
   bool computeSpcFFT = true;
   if ((precomputedFFT == 0 && precomputedFFT_spcFluxOverErr2 != 0) ||
@@ -191,8 +191,9 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
     computeSpcFFT = false;
 
   if (computeSpcFFT) {
-    Log.LogDebug("FitAllz: Processing spc-fft with nPadBeforeSpc=%d",
-                 nPadBeforeSpc);
+    Log.LogDebug(Formatter()
+                 << "FitAllz: Processing spc-fft with nPadBeforeSpc="
+                 << nPadBeforeSpc);
     for (Int32 k = 0; k < nPadBeforeSpc; k++)
       inSpc[k] = 0.0;
     for (Int32 k = nPadBeforeSpc; k < nPadBeforeSpc + nSpc; k++)
@@ -238,8 +239,8 @@ void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
       }
   }
 
-  Log.LogDebug("FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl,
-               nPadded);
+  Log.LogDebug(Formatter() << "FitAllz: Processing tpl-fft with n=" << nTpl
+                           << ", padded to n=" << nPadded);
 
   for (Int32 k = 0; k < nTpl; k++) {
     inTpl[k] = Y[k];
@@ -389,13 +390,13 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
       }
     }
 
-    Log.LogDebug("FitAllz: indexes for full "
-                 "LstSquare calculation, count = %d",
-                 zsplit.size());
+    Log.LogDebug(Formatter() << "FitAllz: indexes for full "
+                                "LstSquare calculation, count = "
+                             << zsplit.size());
     for (Int32 k = 0; k < zsplit.size(); k++) {
-      Log.LogDebug("FitAllz: indexes ranges: "
-                   "for i=%d, zsplit=%d",
-                   k, zsplit[k]);
+      Log.LogDebug(Formatter() << "FitAllz: indexes ranges: "
+                                  "for i="
+                               << k << ", zsplit=" << zsplit[k]);
     }
   }
 
@@ -407,14 +408,15 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
   Int32 izmax = redshifts.size() - 1;
   izrangelist.push_back(TInt32Range(izmin, izmax));
 
-  Log.LogDebug("FitAllz: indexes - "
-               "izrangelist calculation, count = %d",
-               izrangelist.size());
+  Log.LogDebug(Formatter() << "FitAllz: indexes - "
+                              "izrangelist calculation, count = "
+                           << izrangelist.size());
   for (Int32 k = 0; k < izrangelist.size(); k++) {
-    Log.LogDebug("FitAllz: indexes ranges: "
-                 "for i=%d, zmin=%f, zmax=%f",
-                 k, redshifts[izrangelist[k].GetBegin()],
-                 redshifts[izrangelist[k].GetEnd()]);
+    Log.LogDebug(Formatter()
+                 << "FitAllz: indexes ranges: "
+                    "for i="
+                 << k << ", zmin=" << redshifts[izrangelist[k].GetBegin()]
+                 << ", zmax=" << redshifts[izrangelist[k].GetEnd()]);
   }
 
   return izrangelist;
@@ -477,21 +479,19 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     }
 
     TInt32Range ilbda = FindTplSpectralIndex(zrange);
-    Log.LogDebug("FitAllz: zrange min=%f, max=%f", zrange.GetBegin(),
-                 zrange.GetEnd());
-    Log.LogDebug("FitAllz: full zmin=%f, full zmax=%f", result->Redshifts[0],
-                 result->Redshifts[result->Redshifts.size() - 1]);
-    Log.LogDebug("FitAllz: indexes tpl crop: "
-                 "lbda min=%d, max=%d",
-                 ilbda.GetBegin(), ilbda.GetEnd());
-    Log.LogDebug("FitAllz: indexes tpl full: "
-                 "lbda min=%d, max=%d",
-                 0, m_templateRebined_bf[0].GetSampleCount() - 1);
-    /*Log.LogDebug("FitAllz: tpl lbda "
-                 "min*zmax=%f, max*zmin=%f",
-                 tplRebinedLambdaGlobal[ilbda.GetBegin()] * (1.0 +
-       zrange.GetEnd()), tplRebinedLambdaGlobal[ilbda.GetEnd()] * (1.0 +
-       zrange.GetBegin()));*/
+    Log.LogDebug(Formatter() << "FitAllz: zrange min=" << zrange.GetBegin()
+                             << ", max=" << zrange.GetEnd());
+    Log.LogDebug(Formatter()
+                 << "FitAllz: full zmin=" << result->Redshifts[0]
+                 << ", full zmax="
+                 << result->Redshifts[result->Redshifts.size() - 1]);
+    Log.LogDebug(Formatter() << "FitAllz: indexes tpl crop: "
+                                "lbda min="
+                             << ilbda.GetBegin() << ", max=" << ilbda.GetEnd());
+    Log.LogDebug(Formatter() << "FitAllz: indexes tpl full: "
+                                "lbda min="
+                             << 0 << ", max="
+                             << m_templateRebined_bf[0].GetSampleCount() - 1);
 
     FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd);
 
@@ -543,12 +543,14 @@ Int32 COperatorTemplateFittingLog::FitAllz(
             ampl_err = sqrt(1. / result->FitMtM[fullResultIdx]);
           }
 
-          Log.LogDebug("update the amplitude "
-                       "(a_mean=%e, a_sigma=%e)",
-                       pTZE.A_mean, pTZE.A_sigma);
-          Log.LogDebug("update the amplitude "
-                       "(ampl was = %e, updated to %e)",
-                       result->FitAmplitude[fullResultIdx], ampl);
+          Log.LogDebug(Formatter()
+                       << "update the amplitude "
+                          "(a_mean="
+                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
+          Log.LogDebug(Formatter() << "update the amplitude "
+                                      "(ampl was = "
+                                   << result->FitAmplitude[fullResultIdx]
+                                   << ", updated to " << ampl);
 
           // check negative amplitude
           ampl_sigma = ampl / ampl_err;
@@ -570,9 +572,10 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           }
           logprior += logPa;
         } else {
-          Log.LogDebug("NOT updating the "
-                       "amplitude (a_mean=%e, a_sigma=%e)",
-                       pTZE.A_mean, pTZE.A_sigma);
+          Log.LogDebug(Formatter()
+                       << "NOT updating the "
+                          "amplitude (a_mean="
+                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
         }
         if (std::isnan(logprior) || logprior != logprior ||
             std::isinf(logprior)) {
@@ -653,26 +656,31 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
   Float64 redshiftValueMeiksin = result->Redshifts[0];
 
-  Log.LogDebug("FitRangez: redshiftValueMeiksin = %f", redshiftValueMeiksin);
-  Log.LogDebug("FitRangez: spc[0] = %f", spectrumRebinedLambda[0]);
-  Log.LogDebug("FitRangez: spc[max] = %f", spectrumRebinedLambda[nSpc - 1]);
-  Log.LogDebug("FitRangez: tpl[0]*zmax = %f",
-               tplRebinedLambdaGlobal[kstart] *
-                   (1.0 + result->Redshifts[result->Redshifts.size() - 1]));
-  Log.LogDebug("FitRangez: tpl[max]*zmin = %f",
-               tplRebinedLambdaGlobal[kstart + nTpl - 1] *
-                   (1 + result->Redshifts[0]));
+  Log.LogDebug(Formatter() << "FitRangez: redshiftValueMeiksin = "
+                           << redshiftValueMeiksin);
+  Log.LogDebug(Formatter() << "FitRangez: spc[0] = "
+                           << spectrumRebinedLambda[0]);
+  Log.LogDebug(Formatter() << "FitRangez: spc[max] = "
+                           << spectrumRebinedLambda[nSpc - 1]);
+  Log.LogDebug(Formatter()
+               << "FitRangez: tpl[0]*zmax = "
+               << tplRebinedLambdaGlobal[kstart] *
+                      (1.0 + result->Redshifts[result->Redshifts.size() - 1]));
+  Log.LogDebug(Formatter() << "FitRangez: tpl[max]*zmin = "
+                           << tplRebinedLambdaGlobal[kstart + nTpl - 1] *
+                                  (1 + result->Redshifts[0]));
 
   Int32 nshifts = nTpl - nSpc + 1;
   m_nPaddedSamples = ceil(nTpl / 2.0) * 2;
 
-  Log.LogDetail("Now fitting using the FFT on "
-                "nshifts=%d values, for Meiksin redshift=%f",
-                nshifts, redshiftValueMeiksin);
+  Log.LogDetail(Formatter() << "Now fitting using the FFT on "
+                               "nshifts="
+                            << nshifts << " values, for Meiksin redshift="
+                            << redshiftValueMeiksin);
 
-  Log.LogDebug("FitRangez: initializing FFT "
-               "with n = %d points",
-               m_nPaddedSamples);
+  Log.LogDebug(Formatter() << "FitRangez: initializing FFT "
+                              "with n = "
+                           << m_nPaddedSamples << " points");
   InitFFT(m_nPaddedSamples);
 
   TFloat64List z_vect = result->Redshifts;
@@ -690,7 +698,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     if (relative_zgrid_error > relative_zgrid_error_max)
       relative_zgrid_error_max = relative_zgrid_error;
   }
-  Log.LogDebug("FitRangez: max diff in zgrid=%e", relative_zgrid_error_max);
+  Log.LogDebug(Formatter() << "FitRangez: max diff in zgrid="
+                           << relative_zgrid_error_max);
   if (relative_zgrid_error_max > 5E-7) {
     THROWG(INTERNAL_ERROR, "z_vect and z_vect_verification do not correspond.");
   }
@@ -710,9 +719,9 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     overrideNIGMTobesaved = nIGM;
     nIGM = 1;
     enableIGM = 0;
-    Log.LogDebug("FitRangez: IGM disabled, "
-                 "min-tpl-lbda=%f",
-                 tplRebinedLambdaGlobal[kstart]);
+    Log.LogDebug(Formatter() << "FitRangez: IGM disabled, "
+                                "min-tpl-lbda="
+                             << tplRebinedLambdaGlobal[kstart]);
   }
 
   // prepare best fit data buffer
@@ -749,7 +758,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   }
   for (Int32 kIGM = 0; kIGM < nIGM; kIGM++) {
     if (enableIGM) {
-      Log.LogDebug("FitRangez: IGM index=%d", kIGM);
+      Log.LogDebug(Formatter() << "FitRangez: IGM index=" << kIGM);
     }
 
     if (enableIGM) {
@@ -759,7 +768,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
     for (Int32 kISM = 0; kISM < nISM; kISM++) {
       if (m_enableISM) {
-        Log.LogDebug("FitRangez: ISM index =%d", kISM);
+        Log.LogDebug(Formatter() << "FitRangez: ISM index =" << kISM);
       }
 
       if (m_enableISM) {
@@ -795,7 +804,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       TFloat64List mtm_vec;
       EstimateXtY(inv_err2, tpl2RebinedFlux, mtm_vec, 1);
 
-      Log.LogDebug("FitRangez: dtd = %e", dtd);
+      Log.LogDebug(Formatter() << "FitRangez: dtd = " << dtd);
 
       // Estimate Chi2
       if (mtm_vec.size() != dtm_vec_size) {
@@ -804,8 +813,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(
                Formatter() << "xty vector size do not match: dtm size = "
                            << dtm_vec_size << ", mtm size =" << mtm_vec.size());
       }
-      // Log.LogDetail(FitRangez: kISM = %d,
-      // kIGM = %d", kISM, kIGM);
       TFloat64List chi2(dtm_vec_size, DBL_MAX);
       TFloat64List amp(dtm_vec_size, DBL_MAX);
       TFloat64List amp_sigma(dtm_vec_size);
@@ -824,8 +831,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(
           chi2[k] =
               dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
         }
-        // Log.LogDetail(FitRangez: chi2[%d] =
-        // %f", k, chi2[k]);
       }
 
       for (Int32 k = 0; k < dtm_vec_size; k++) {
@@ -858,12 +863,14 @@ Int32 COperatorTemplateFittingLog::FitRangez(
         }
       }
 
-      Log.LogDebug("FitRangez: spc lbda 0 =%f", spectrumRebinedLambda[0]);
-      Log.LogDebug("FitRangez: tpl lbda 0 =%f", tplRebinedLambdaGlobal[kstart]);
+      Log.LogDebug(Formatter()
+                   << "FitRangez: spc lbda 0 =" << spectrumRebinedLambda[0]);
+      Log.LogDebug(Formatter() << "FitRangez: tpl lbda 0 ="
+                               << tplRebinedLambdaGlobal[kstart]);
       Float64 z_O =
           (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[kstart]) /
           tplRebinedLambdaGlobal[kstart];
-      Log.LogDebug("FitRangez: z 0 =%f", z_O);
+      Log.LogDebug(Formatter() << "FitRangez: z 0 =" << z_O);
     }
   }
 
@@ -987,8 +994,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     bool opt_dustFitting, Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
-  Log.LogDetail("starting computation for template: %s",
-                logSampledTpl->GetName().c_str());
+  Log.LogDetail(Formatter() << "starting computation for template: "
+                            << logSampledTpl->GetName());
 
   if (opt_dustFitting && logSampledTpl->CalzettiInitFailed())
     THROWG(INTERNAL_ERROR, "ISM is no initialized");
@@ -1090,10 +1097,10 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   }
   if (overlapValidInfZ != m_redshifts.front() ||
       overlapValidSupZ != m_redshifts.back()) {
-    Log.LogInfo("overlap warning for %s: "
-                "minz=%.3f, maxz=%.3f",
-                logSampledTpl->GetName().c_str(), overlapValidInfZ,
-                overlapValidSupZ);
+    Log.LogInfo(Formatter()
+                << "overlap warning for " << logSampledTpl->GetName()
+                << ": minz=" << overlapValidInfZ
+                << ", maxz=" << overlapValidSupZ);
   }
 
   // estimate CstLog for PDF estimation

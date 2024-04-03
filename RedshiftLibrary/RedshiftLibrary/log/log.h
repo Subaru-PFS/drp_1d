@@ -86,19 +86,11 @@ public:
   friend void CFlagWarning::warning(WarningCode c, std::string message);
   friend void CFlagWarning::warning(WarningCode c, const char *format, ...);
 
-  void LogInfo(const char *format, ...);
-  void LogDetail(const char *format, ...);
-  void LogDebug(const char *format, ...);
+  void LogInfo(const std::string &s, bool withTimestamp = true);
+  void LogDetail(const std::string &s, bool withTimestamp = true);
+  void LogDebug(const std::string &s, bool withTimestamp = true);
 
-  void LogInfo(const std::string &s);
-  void LogDetail(const std::string &s);
-  void LogDebug(const std::string &s);
-
-  void log(const std::string &s, CLog::ELevel l);
   CMutex &GetSynchMutex();
-
-  void Indent();
-  void UnIndent();
 
 private:
   friend class CSingleton<CLog>;
@@ -110,26 +102,22 @@ private:
   CLog();
   ~CLog();
 
+  void logEntry(const std::string &s, CLog::ELevel l,
+                bool withTimestamp = true);
+
   // LogError and LogWarning are private to be called from friend classes only
   // (CFlagWarning and AmzException)
-  void LogError(const char *format, ...);
-  void LogWarning(const char *format, ...);
 
-  void LogError(const std::string &s);
-  void LogWarning(const std::string &s);
+  void LogError(const std::string &s, bool withTimestamp = true);
+  void LogWarning(const std::string &s, bool withTimestamp = true);
 
-  void LogEntry(ELevel lvl, const char *format, va_list &args);
   void AddHandler(CLogHandler &handler);
   void RemoveHandler(CLogHandler &handler);
-  const char *GetHeader(CLog::ELevel lvl);
+  std::string GetHeader(CLog::ELevel logLevel);
+  std::string timeStampString();
 
   // Attributes
   CLogHandler *m_HandlerTable[LOG_HANDLER_TABLE_SIZE];
-  Char m_CurrentHeader[LOG_HANDLER_HEADER_LENGTH];
-  Char *m_WorkingBuffer;
-  Char m_IndentBuffer[128];
-  Int32 m_IndentCount;
-
   CMutex m_Mutex;
 };
 

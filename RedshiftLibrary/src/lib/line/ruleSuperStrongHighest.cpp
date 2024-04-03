@@ -169,6 +169,5 @@ Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp(
       }
     }
   }
-  // Log.LogDebug( "Highest strong line amplitude = %f", maxi );
   return maxi;
 }

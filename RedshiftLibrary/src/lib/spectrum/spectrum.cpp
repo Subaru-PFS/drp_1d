@@ -299,8 +299,8 @@ bool CSpectrum::RemoveContinuum(CContinuum &remover) const {
  * Estimate the continuum component
  */
 void CSpectrum::EstimateContinuum() const {
-  Log.LogDetail("Continuum estimation on input spectrum: using %s",
-                m_estimationMethod.c_str());
+  Log.LogDetail(Formatter() << "Continuum estimation on input spectrum: using "
+                            << m_estimationMethod);
 
   if (m_estimationMethod == "irregularSamplingMedian") {
     CContinuumIrregularSamplingMedian continuum;
@@ -308,8 +308,8 @@ void CSpectrum::EstimateContinuum() const {
     continuum.SetMeanKernelWidth(m_medianWindowSize);
     continuum.SetMedianEvenReflection(m_medianEvenReflection);
     RemoveContinuum(continuum);
-    Log.LogDetail("Continuum estimation - medianKernelWidth = %.2f",
-                  m_medianWindowSize);
+    Log.LogDetail(Formatter() << "Continuum estimation - medianKernelWidth ="
+                              << m_medianWindowSize);
   } else if (m_estimationMethod == "raw") {
     Int32 nbSamples = this->GetSampleCount();
     m_WithoutContinuumFluxAxis.SetSize(nbSamples);
@@ -471,12 +471,14 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-  Log.LogDetail("CSpectrum::ValidateFlux - checking on the configured "
-                "lambdaRange = (%f, %f)",
-                LambdaMin, LambdaMax);
-  Log.LogDetail("CSpectrum::ValidateFlux - checking on the true observed "
-                "spectral axis lambdarange = (%f, %f)",
-                m_SpectralAxis[iMin], m_SpectralAxis[iMax]);
+  Log.LogDetail(Formatter()
+                << "CSpectrum::ValidateFlux - checking on the configured "
+                   "lambdaRange = ("
+                << LambdaMin << ", " << LambdaMax << ")");
+  Log.LogDetail(Formatter()
+                << "CSpectrum::ValidateFlux - checking on the true observed "
+                   "spectral axis lambdarange = ("
+                << m_SpectralAxis[iMin] << ", " << m_SpectralAxis[iMax] << ")");
 
   const CSpectrumFluxAxis &flux = GetFluxAxis();
   std::map<string, int> invalidElements = {};
@@ -519,12 +521,14 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   const TFloat64List &error = GetFluxAxis().GetError().GetSamplesVector();
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-  Log.LogDetail("CSpectrum::ValidateNoise - checking on the configured "
-                "lambdaRange = (%f, %f)",
-                LambdaMin, LambdaMax);
-  Log.LogDetail("CSpectrum::ValidateNoise - checking on the true observed "
-                "spectral axis lambdarange = (%f, %f)",
-                m_SpectralAxis[iMin], m_SpectralAxis[iMax]);
+  Log.LogDetail(Formatter()
+                << "CSpectrum::ValidateNoise - checking on the configured "
+                   "lambdaRange = ("
+                << LambdaMin << ", " << LambdaMax << ")");
+  Log.LogDetail(Formatter()
+                << "CSpectrum::ValidateNoise - checking on the true observed "
+                   "spectral axis lambdarange = ("
+                << m_SpectralAxis[iMin] << ", " << m_SpectralAxis[iMax] << ")");
 
   std::map<string, int> invalidElements = {};
 
@@ -542,9 +546,8 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
     for (auto &itr : invalidElements) {
       errorMessage += itr.first + " : " + to_string(itr.second) + "\n";
     }
-    Log.LogDetail(
-        "    CSpectrum::ValidateNoise - Found %d invalid noise samples",
-        nInvalid);
+    Log.LogDetail(Formatter() << "    CSpectrum::ValidateNoise - Found "
+                              << nInvalid << " invalid noise samples");
     THROWG(INTERNAL_ERROR, errorMessage);
   }
 }
@@ -558,9 +561,6 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-  // Log.LogDebug("    CSpectrum::correctSpectrum - debug - iMin=%d and
-  // wmin=%f, iMax=%d and wmax=%f", iMin, m_SpectralAxis[iMin], iMax,
-  // m_SpectralAxis[iMax]);
 
   bool corrected =
       GetFluxAxis_().correctFluxAndNoiseAxis(iMin, iMax, coeffCorr);
@@ -675,9 +675,10 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   TFloat64Range clampedlambdaRange;
   m_SpectralAxis.ClampLambdaRange(lambdaRange, clampedlambdaRange);
-  Log.LogInfo("Validate spectrum: (clamped lambda range: %f-%f:%f)",
-              clampedlambdaRange.GetBegin(), clampedlambdaRange.GetEnd(),
-              GetResolution());
+  Log.LogInfo(Formatter() << "Validate spectrum: (clamped lambda range: "
+                          << clampedlambdaRange.GetBegin() << "-"
+                          << clampedlambdaRange.GetEnd() << ":"
+                          << GetResolution() << ")");
 
   Float64 lmin = clampedlambdaRange.GetBegin();
   Float64 lmax = clampedlambdaRange.GetEnd();
@@ -685,21 +686,22 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
   // Check if the Spectrum is valid on the clamped lambdarange
   if (enableInputSpcCorrect)
     if (correctSpectrum(lmin, lmax))
-      Log.LogInfo(
-          "Successfully corrected noise on wavelength range (%.1f ; %.1f)",
-          lmin, lmax);
+      Log.LogInfo(Formatter()
+                  << "Successfully corrected noise on wavelength range (%."
+                  << lmin << " ; %." << lmax << ")");
 
   ValidateSpectralAxis(lmin, lmax);
   ValidateFlux(lmin, lmax);
-  Log.LogDetail("Successfully validated spectrum flux, on wavelength range "
-                "(%.1f ; %.1f)",
-                lmin, lmax);
+  Log.LogDetail(Formatter()
+                << "Successfully validated spectrum flux, on wavelength range "
+                   "(%."
+                << lmin << " ; %." << lmax << ")");
 
   // Check if the noise is valid in the clamped lambdaRange
   ValidateNoise(lmin, lmax);
-  Log.LogDetail(
-      "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin,
-      lmax);
+  Log.LogDetail(Formatter()
+                << "Successfully validated noise on wavelength range (%."
+                << lmin << " ; %." << lmax << ")");
 
   if (!m_LSF)
     return;

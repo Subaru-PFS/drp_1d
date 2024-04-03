@@ -143,12 +143,12 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
           ->SetFittingGroupInfo(fitGroupTag);
     }
 
-    // Log.LogDebug( "Redshift: %f", redshift);
-    Log.LogDebug("    model: hybrid fit: #%d - N overlapping=%d", iElts,
-                 overlappingInds.size());
+    Log.LogDebug(Formatter() << "    model: hybrid fit: #" << iElts
+                             << " - N overlapping=" << overlappingInds.size());
     for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-      Log.LogDebug("    model: hybrid fit:     overlapping #%d - eltIdx=%d",
-                   ifit, overlappingInds[ifit]);
+      Log.LogDebug(Formatter()
+                   << "    model: hybrid fit:     overlapping #" << ifit
+                   << " - eltIdx=" << overlappingInds[ifit]);
     }
     if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
       *m_curObs = 0; // temporary multiobs implementation
@@ -250,8 +250,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     ilinesMore.erase(std::unique(ilinesMore.begin(), ilinesMore.end()),
                      ilinesMore.end());
     for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
-      Log.LogDebug("    model: balmerImprove more tags = %d",
-                   ilinesMore[imore]);
+      Log.LogDebug(Formatter() << "    model: balmerImprove more tags = "
+                               << ilinesMore[imore]);
     }
 
     // try if the width is significantly different: abs > em

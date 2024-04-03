@@ -146,12 +146,14 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
           "pdfCombination");
 
   Log.LogInfo("Method parameters:");
-  Log.LogInfo("    -overlapThreshold: %.3f", overlapThreshold);
-  Log.LogInfo("    -component: %s", opt_spcComponent.c_str());
-  Log.LogInfo("    -interp: %s", opt_interp.c_str());
-  Log.LogInfo("    -IGM extinction: %s", opt_extinction ? "true" : "false");
-  Log.LogInfo("    -ISM dust-fit: %s", opt_dustFit ? "true" : "false");
-  Log.LogInfo("    -pdfcombination: %s", m_opt_pdfcombination.c_str());
+  Log.LogInfo(Formatter() << "    -overlapThreshold: " << overlapThreshold);
+  Log.LogInfo(Formatter() << "    -component: " << opt_spcComponent);
+  Log.LogInfo(Formatter() << "    -interp: " << opt_interp);
+  Log.LogInfo(Formatter() << "    -IGM extinction: "
+                          << (opt_extinction ? "true" : "false"));
+  Log.LogInfo(Formatter() << "    -ISM dust-fit: "
+                          << (opt_dustFit ? "true" : "false"));
+  Log.LogInfo(Formatter() << "    -pdfcombination: " << m_opt_pdfcombination);
   Log.LogInfo("");
 
   if (tplCatalog.GetTemplateCount(m_category) == 0) {
@@ -159,10 +161,12 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
                                     << "Empty template catalog for category "
                                     << m_category[0]);
   }
-  Log.LogInfo("Iterating over %d tplCategories", m_category.size());
+  Log.LogInfo(Formatter() << "Iterating over " << m_category.size()
+                          << " tplCategories");
 
-  Log.LogInfo("   trying %s (%d templates)", m_category.c_str(),
-              tplCatalog.GetTemplateCount(m_category));
+  Log.LogInfo(Formatter() << "Trying " << m_category.c_str() << " ("
+                          << tplCatalog.GetTemplateCount(m_category)
+                          << " templates)");
   for (Int32 j = 0; j < tplCatalog.GetTemplateCount(m_category); j++) {
     std::shared_ptr<const CTemplate> tpl =
         tplCatalog.GetTemplate(m_category, j);
@@ -311,8 +315,8 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
     }
     if (chisquarearray.cstLog == -1) {
       chisquarearray.cstLog = meritResult->CstLog;
-      Log.LogInfo("templatefittingsolver: using cstLog = %f",
-                  chisquarearray.cstLog);
+      Log.LogInfo(Formatter() << "templatefittingsolver: using cstLog = "
+                              << chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != meritResult->CstLog) {
       THROWG(INTERNAL_ERROR, Formatter()
                                  << "cstLog values do not correspond: val1="
@@ -341,9 +345,10 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
                   [kigm]; // + resultXXX->ScaleMargCorrectionTplratios[][]?;
         }
         Log.LogDetail(
-            "    templatefittingsolver: Pdfz combine - prepared merit "
-            " #%d for model : %s",
-            chisquarearray.chisquares.size() - 1, ((*it).first).c_str());
+            Formatter()
+            << "    templatefittingsolver: Pdfz combine - prepared merit #"
+            << chisquarearray.chisquares.size() - 1
+            << " for model : " << ((*it).first));
       }
     }
   }
@@ -362,8 +367,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
                 << "    templatefittingsolve:r using results in scope: "
                 << store->GetScopedName(scopeStr));
 
-  TOperatorResultMap results =
-      store->GetScopedPerTemplateResult(scopeStr.c_str());
+  TOperatorResultMap results = store->GetScopedPerTemplateResult(scopeStr);
 
   Int32 extremumCount = ranked_zCandidates.size();
 
@@ -379,13 +383,13 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
       THROWG(INTERNAL_ERROR,
              Formatter()
                  << "Size do not match among templatefitting results, for tpl="
-                 << r.first.c_str());
+                 << r.first);
     }
     for (Int32 kz = 0; kz < TplFitResult->Redshifts.size(); kz++) {
       if (TplFitResult->Redshifts[kz] != redshifts[kz]) {
         THROWG(INTERNAL_ERROR, Formatter()
                                    << "redshift vector is not the same for tpl="
-                                   << r.first.c_str());
+                                   << r.first);
       }
     }
   }
