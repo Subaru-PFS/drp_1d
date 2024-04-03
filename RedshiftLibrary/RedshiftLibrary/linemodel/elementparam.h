@@ -148,6 +148,19 @@ struct TLineModelElementParam {
         m_Lines[index].SetSymIgmFit(val);
   }
 
+  void setFittedAmplitude(Int32 index, Float64 fittedAmp, Float64 fittedAmpStd,
+                          Float64 nominalAmplitude = 1.0) {
+    auto &fa = m_FittedAmplitudes;
+    auto &fastd = m_FittedAmplitudesStd;
+    fa[index] = fittedAmp * nominalAmplitude;
+    // limit the absorption to 0.0-1.0, so that it's never <0
+    if (m_SignFactors[index] == -1 && m_absLinesLimit > 0.0 &&
+        fa[index] > m_absLinesLimit) {
+      fa[index] = m_absLinesLimit;
+    }
+    fastd[index] = fittedAmpStd * nominalAmplitude;
+  }
+
   void setAmplitudes(Float64 A, Float64 AStd,
                      const std::vector<bool> &outsideLambdaRangeList,
                      bool outsideLambdaRange) {
@@ -167,14 +180,7 @@ struct TLineModelElementParam {
         fastd[index] = NAN;
         continue;
       }
-      fa[index] = A * na[index];
-      // limit the absorption to 0.0-1.0, so that it's never <0
-      if (m_SignFactors[index] == -1 && m_absLinesLimit > 0.0 &&
-          fa[index] > m_absLinesLimit) {
-        fa[index] = m_absLinesLimit;
-      }
-
-      fastd[index] = AStd * na[index];
+      setFittedAmplitude(index, A, AStd, na[index]);
     }
   }
 

@@ -132,7 +132,7 @@ void COperatorLineModel::ComputeFirstPass() {
     tplCatalog->m_orthogonal = 0;
   }
 
-  m_result->nSpcSamples = m_fittingManager->getSpcNSamples();
+  m_result->nSpcSamples = m_fittingManager->computeSpcNSamples();
   m_result->dTransposeD = m_fittingManager->getDTransposeD();
   m_result->cstLog = m_fittingManager->getLikelihood_cstLog();
 
@@ -1816,6 +1816,7 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   // these coeffs
   m_fittingManager->LoadModelSolution(bestModelSolution);
   m_fittingManager->refreshAllModels();
-  m_fittingManager->resetCurObs(); // TODO dummy implementation
+  m_fittingManager
+      ->resetCurObs(); // TODO dummy implementation, should return all models
   return m_fittingManager->getSpectrumModel().GetModelSpectrum();
 }

@@ -159,7 +159,6 @@ public:
 
   Float64 GetElementAmplitude() const;
   Float64 GetElementError() const;
-  void SetFittedAmplitude(Int32 line_index, Float64 A, Float64 AStd);
 
   Int32 computeCrossProducts(Float64 redshift,
                              const CSpectrumSpectralAxis &spectralAxis,

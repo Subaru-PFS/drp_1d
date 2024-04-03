@@ -89,7 +89,7 @@ public:
                    CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
   std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
 
-  std::vector<std::shared_ptr<CLineModelElement>> getVector() {
+  std::vector<std::shared_ptr<CLineModelElement>> &getElements() {
     return m_Elements;
   }
 

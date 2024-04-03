@@ -532,29 +532,6 @@ Float64 CLineModelElement::GetElementError() const {
   return NAN;
 }
 
-void CLineModelElement::SetFittedAmplitude(Int32 index, Float64 fittedAmp,
-                                           Float64 fittedAmpStd) {
-
-  if (m_OutsideLambdaRangeList[index] || std::isnan(fittedAmp)) {
-    m_ElementParam->m_FittedAmplitudes[index] = NAN;
-    m_ElementParam->m_FittedAmplitudesStd[index] = NAN;
-    return;
-  }
-
-  m_ElementParam->m_FittedAmplitudes[index] = fittedAmp;
-
-  // limit the absorption to 0.0-1.0, so that it's never <0
-  //*
-  if (m_ElementParam->m_SignFactors[index] == -1 &&
-      m_ElementParam->m_absLinesLimit > 0.0 &&
-      m_ElementParam->m_FittedAmplitudes[index] >
-          m_ElementParam->m_absLinesLimit) {
-    m_ElementParam->m_FittedAmplitudes[index] = m_ElementParam->m_absLinesLimit;
-  }
-
-  m_ElementParam->m_FittedAmplitudesStd[index] = fittedAmpStd;
-}
-
 /**
  * \brief Adds to the model's flux, at each line not outside lambda range, the
  *value contained in the corresponding lambda for each catalog line.

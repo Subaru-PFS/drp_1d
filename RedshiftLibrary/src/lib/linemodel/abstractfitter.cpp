@@ -398,6 +398,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 
     // check fitting
     if (atLeastOneOffsetToFit) {
+      *m_curObs = 0;
       Float64 fit = getLeastSquareMeritFast(eltIndex);
       if (fit < bestMerit) {
         bestMerit = fit;
@@ -422,7 +423,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
   Float64 fit = 0.; // TODO restore getLeastSquareContinuumMeritFast();
   Int32 istart = 0;
-  Int32 iend = getElementList().size();
+  Int32 iend = getElementParam().size();
   if (eltIdx != undefIdx) {
     istart = eltIdx;
     iend = eltIdx + 1;
@@ -430,8 +431,7 @@ Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
   for (Int32 iElts = istart; iElts < iend; iElts++) {
     Float64 dtm = getElementParam()[iElts]->getSumCross();
     Float64 mtm = getElementParam()[iElts]->getSumGauss();
-    Float64 a = getElementList().GetElementAmplitude(
-        iElts); //[iElts]->GetFitAmplitude();
+    Float64 a = getElementParam()[iElts]->GetElementAmplitude();
     Float64 term1 = a * a * mtm;
     Float64 term2 = -2. * a * dtm;
     fit += term1 + term2;
@@ -487,6 +487,8 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
             m = getModelResidualRmsUnderElements({idxLyaE}, true);
 
           } else {
+            *m_curObs =
+                0; // TODO dummy implementation, even if this line is disabled
             m = getLeastSquareMeritFast(idxLyaE);
           }
           if (m < meritMin) {

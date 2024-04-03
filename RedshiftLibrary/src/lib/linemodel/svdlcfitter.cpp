@@ -73,6 +73,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // re-interpolate the continuum on the grid
   m_continuumManager->reinterpolateContinuumResetAmp();
 
+  *m_curObs = 0; // TODO dummy impl
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;

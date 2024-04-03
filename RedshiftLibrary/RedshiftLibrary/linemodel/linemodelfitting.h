@@ -120,16 +120,14 @@ public:
   CMask getOutsideLinesMask() const;
   Float64 getOutsideLinesSTD(Int32 which) const;
 
-  Int32 getSpcNSamples() const;
+  Int32 computeSpcNSamples() const;
 
   Float64 getLeastSquareContinuumMeritFast() const;
   Float64 getLeastSquareContinuumMerit() const;
-  Float64 getLeastSquareMeritUnderElements() const;
+
   Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const {
     return m_ElementsVector->getScaleMargCorrection(Eltidx);
   }
-
-  Float64 getStrongerMultipleELAmpCoeff() const;
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
     // TODO temp basic impl
