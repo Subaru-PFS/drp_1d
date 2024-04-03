@@ -104,7 +104,7 @@ CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
     try {
       otherRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(),
                                           m_IsmIgm_kstart, m_Ism_kend);
-    } catch (const GlobalException &exception) {
+    } catch (const AmzException &exception) {
       if (exception.getErrorCode() ==
           ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE) {
         rangeIsMasked = true;

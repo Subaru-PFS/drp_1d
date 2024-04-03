@@ -44,21 +44,17 @@
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/processflow/scopestack.h"
 
 namespace NSEpic {
 
 class CSolve {
 protected:
-  virtual std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope) = 0;
+  virtual std::shared_ptr<CSolveResult> compute() = 0;
 
-  virtual void InitRanges(std::shared_ptr<const CInputContext> inputContext);
+  virtual void InitRanges(const CInputContext &inputContext){};
 
-  virtual void
-  saveToResultStore(std::shared_ptr<CSolveResult>,
-                    std::shared_ptr<COperatorResultStore> resultStore) const;
+  virtual void saveToResultStore(std::shared_ptr<CSolveResult> const &) const;
 
   // this method should implement at least populateParameters
   virtual void checkOrInit() {
@@ -66,17 +62,12 @@ protected:
     // in local variables or into operators, lineCatalog and/or tplCatalog can
     // also be checked
 
-  const TStringList m_categoryList;
+  const std::string m_category;
   TFloat64Range m_lambdaRange;
-  CAutoScope m_spectrumModelScope;
-  const std::string m_stage;
   const std::string m_name;
-  const std::string m_spectrumModel;
 
 public:
-  CSolve(std::string name, TScopeStack &scope, std::string spectrumModel);
-  CSolve(std::string stage, std::string name, TScopeStack &scope,
-         std::string spectrumModel);
+  CSolve(const std::string &name);
   virtual ~CSolve() = default;
   CSolve(CSolve const &other) = default;
   CSolve &operator=(CSolve const &other) = default;
@@ -84,6 +75,20 @@ public:
   CSolve &operator=(CSolve &&other) = default;
 
   void Compute();
+};
+
+// automatically save flag to resultstore when leaving scope, even with
+// exceptions
+class CAutoSaveFlagToResultStore {
+public:
+  CAutoSaveFlagToResultStore() = default;
+  ~CAutoSaveFlagToResultStore() {
+    Context.GetResultStore()->StoreScopedFlagResult("warningFlag");
+    Flag.resetFlag();
+  };
+  CAutoSaveFlagToResultStore(CAutoSaveFlagToResultStore const &) = delete;
+  CAutoSaveFlagToResultStore &
+  operator=(CAutoSaveFlagToResultStore const &) = delete;
 };
 
 } // namespace NSEpic

@@ -40,17 +40,23 @@
 #define _AUTO_SCOPE_H
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/scopestack.h"
 
 namespace NSEpic {
 
 class CAutoScope {
 public:
-  CAutoScope(TScopeStack &scopeStack, const std::string &name);
+  CAutoScope(const std::shared_ptr<CScopeStack> &scopeStack,
+             const std::string &name, ScopeType type = ScopeType::UNDEFINED,
+             bool do_logging = true);
+  CAutoScope(CAutoScope const &) = delete;
+  CAutoScope &operator=(CAutoScope const &) = delete;
   ~CAutoScope();
 
 private:
-  TScopeStack &m_scopeStack;
+  const std::shared_ptr<CScopeStack> m_scopeStack;
+  const bool m_do_logging;
+  std::string m_log_msg;
 };
 } // namespace NSEpic
 #endif

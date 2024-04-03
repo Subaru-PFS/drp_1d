@@ -44,9 +44,15 @@ from pylibamazed.Parameters import Parameters
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
 
-RootStages = ["init", "classification", "load_result_store"]
-ObjectStages = ["redshift_solver", "linemeas_catalog_load",
-                "linemeas_solver", "reliability_solver", "sub_classif_solver"]
+root_stages = ["init", "classification", "load_result_store"]
+
+# for each stage key, value is the list of stages which depend upon it
+spectrum_model_stages = {"redshiftSolver": ["lineMeasSolver", "reliabilitySolver", "subClassifSolver"],
+                         "linemeas_catalog_load": ["lineMeasSolver"],
+                         "lineMeasSolver": [],
+                         "reliabilitySolver": [],
+                         "subClassifSolver": []
+                         }
 
 zlog = CLog.GetInstance()
 

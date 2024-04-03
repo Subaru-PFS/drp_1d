@@ -79,7 +79,7 @@ public:
       TResultsMap;
   typedef std::map<std::string, TResultsMap> TPerTemplateResultsMap;
 
-  COperatorResultStore(const TScopeStack &scopeStack);
+  COperatorResultStore(const std::shared_ptr<const CScopeStack> &scopeStack);
 
   void StorePerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                               const std::string &path, const std::string &name,
@@ -194,7 +194,7 @@ public:
                                std::shared_ptr<const COperatorResult> result);
   void StoreScopedGlobalResult(const std::string &name,
                                std::shared_ptr<const COperatorResult> result);
-  void StoreFlagResult(const std::string &name, Int32 result);
+  void StoreScopedFlagResult(const std::string &name);
 
   void reset() {
     m_GlobalResults.clear();

@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(Extremum1) {
   check_points(maxPoint, TPointList({{0.4, 9}, {0.8, 8}}));
 
   maxPoint.clear();
-  BOOST_CHECK_THROW(peaks1.Find(x_empty, y, true, maxPoint), GlobalException);
+  BOOST_CHECK_THROW(peaks1.Find(x_empty, y, true, maxPoint), AmzException);
   print_point(maxPoint);
 }
 

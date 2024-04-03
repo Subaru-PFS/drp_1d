@@ -49,17 +49,12 @@
 using namespace NSEpic;
 using namespace std;
 
-CTplCombinationSolve::CTplCombinationSolve(TScopeStack &scope,
-                                           string spectrumModel)
-    : CObjectSolve("redshiftSolver", "tplCombinationSolve", scope,
-                   spectrumModel) {}
+CTplCombinationSolve::CTplCombinationSolve()
+    : CObjectSolve("tplCombinationSolve") {}
 
-std::shared_ptr<CSolveResult>
-CTplCombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                              std::shared_ptr<COperatorResultStore> resultStore,
-                              TScopeStack &scope)
-
-{
+std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
 
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
@@ -181,12 +176,8 @@ bool CTplCombinationSolve::Solve(
   }
 
   // prepare the list of components/templates
-  if (m_categoryList.size() > 1)
-    THROWG(INTERNAL_ERROR, "Multiple categories are passed for "
-                           "tplcombinationsolver. Only one is required");
-
   const TTemplateConstRefList &tplList =
-      tplCatalog.GetTemplateList(m_categoryList);
+      tplCatalog.GetTemplateList(TStringList{m_category});
   checkTemplates(tplList);
 
   // case: nType_all
@@ -246,9 +237,8 @@ bool CTplCombinationSolve::Solve(
 void CTplCombinationSolve::checkTemplates(
     const TTemplateConstRefList &tplList) const {
   if (tplList.empty())
-    THROWG(BAD_TEMPLATECATALOG, Formatter()
-                                    << "Empty template catalog for category "
-                                    << m_categoryList[0]);
+    THROWG(BAD_TEMPLATECATALOG,
+           Formatter() << "Empty template catalog for category " << m_category);
 
   // check all templates have same spectralAxis
   const CSpectrumSpectralAxis &refSpcAxis = tplList[0]->GetSpectralAxis();
@@ -378,13 +368,8 @@ CTplCombinationSolve::buildExtremaResults(
   }
 
   // prepare the list of components/templates
-  if (m_categoryList.size() > 1) {
-    THROWG(INTERNAL_ERROR, "Multiple categories are passed for "
-                           "tplcombinationsolver. Only one is required");
-  }
-
   const TTemplateConstRefList &tplList =
-      tplCatalog.GetTemplateList(m_categoryList);
+      tplCatalog.GetTemplateList(TStringList{m_category});
 
   std::shared_ptr<TplCombinationExtremaResult> extremaResult =
       make_shared<TplCombinationExtremaResult>(ranked_zCandidates);

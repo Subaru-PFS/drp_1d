@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(ShiftByWaveLength_test) {
   BOOST_CHECK_THROW(
       spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, -2.,
                                        CSpectrumSpectralAxis::nShiftForward),
-      GlobalException);
+      AmzException);
 
   // ShiftByWaveLength linear forward
   spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 10.1,
@@ -405,11 +405,10 @@ BOOST_AUTO_TEST_CASE(ClampLambdaRange) {
   BOOST_CHECK_CLOSE(crange.GetEnd(), 0.9, 1.e-12);
   // Range empty [0. ... 0.]
   TFloat64Range irange11(0., 0.);
-  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange11, crange), GlobalException);
+  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange11, crange), AmzException);
   // Axis empty
   const CSpectrumSpectralAxis n132Axis(2, 0.0);
-  BOOST_CHECK_THROW(n132Axis.ClampLambdaRange(irange10, crange),
-                    GlobalException);
+  BOOST_CHECK_THROW(n132Axis.ClampLambdaRange(irange10, crange), AmzException);
   // Range [-1.0 ... 0.9] starts before axis [0. ... 1.]
   TFloat64Range irange12(-1.0, 0.9);
   BOOST_CHECK_NO_THROW(axis.ClampLambdaRange(irange12, crange));
@@ -422,10 +421,10 @@ BOOST_AUTO_TEST_CASE(ClampLambdaRange) {
   BOOST_CHECK_CLOSE(crange.GetEnd(), 1., 1.e-12);
   // Range [-2. ... -1.] outside and before axis range
   TFloat64Range irange14(-2., -1.);
-  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange14, crange), GlobalException);
+  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange14, crange), AmzException);
   // Range [2. ... 3.] outside and after axis range
   TFloat64Range irange15(2., 3.);
-  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange15, crange), GlobalException);
+  BOOST_CHECK_THROW(axis.ClampLambdaRange(irange15, crange), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(isSorted) {
@@ -514,7 +513,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
 
   // IsLogSampled KO
   spcAxisLinear[2] = exp(3.5);
-  BOOST_CHECK_THROW(spcAxisLinear.GetlogGridStep(), GlobalException);
+  BOOST_CHECK_THROW(spcAxisLinear.GetlogGridStep(), AmzException);
 
   // GetLogSamplingIntegerRatio
   //---------------------------
@@ -538,7 +537,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   // IsLogSampled KO
   spcAxisLinear[2] = exp(3.5);
   BOOST_CHECK_THROW(spcAxisLinear.GetLogSamplingIntegerRatio(1.8, modulo);
-                    , GlobalException);
+                    , AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
@@ -549,17 +548,14 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   // not LogSampled
   spcAxis[2] = 3.5;
   ssratio = 1;
-  BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range),
-                    GlobalException);
+  BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range), AmzException);
 
   // range bound KO
   spcAxis[2] = exp(3.);
   TInt32Range range2(-5., 2.);
-  BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range2),
-                    GlobalException);
+  BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range2), AmzException);
   TInt32Range range3(0., 8.);
-  BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range3),
-                    GlobalException);
+  BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range3), AmzException);
 
   // ssratio = 1
   TFloat64List mask = spcAxis.GetSubSamplingMask(ssratio, range);
@@ -589,11 +585,11 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
   // axis not logSampled
   TFloat64List wrong_samples = {exp(1), exp(2.2), exp(3)};
   CSpectrumSpectralAxis wrong_spcAxis(wrong_samples);
-  BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), GlobalException);
+  BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), AmzException);
 
   // not enough points
   wrong_spcAxis[1] = exp(2);
-  BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), GlobalException);
+  BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), AmzException);
 
   //
   TFloat64Range range(10, 10000);

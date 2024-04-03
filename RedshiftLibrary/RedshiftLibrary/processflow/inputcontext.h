@@ -268,7 +268,7 @@ inline const std::shared_ptr<CLineCatalogsTplRatio> &
 CInputContext::GetTemplateRatioCatalog(const std::string &spectrumModel) {
   //  if (std::findm_categories.find(spectrumModel))
   // throw
-  // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetTemplateRatioCatalog:
+  // AmzException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetTemplateRatioCatalog:
   // invalid object type");
   return m_lineRatioCatalogCatalogs[spectrumModel];
 }

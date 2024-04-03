@@ -267,7 +267,7 @@ bool CExtremum::FilterOutNeighboringPeaksAndTruncate(
     Int32 i_min = i, i_max = i;
     try {
       window.getClosedIntervalIndices(maxX, i_min, i_max);
-    } catch (const GlobalException &exception) {
+    } catch (const AmzException &exception) {
     }
     for (Int32 j = i_min; j <= i_max; j++) {
       if (j == i)

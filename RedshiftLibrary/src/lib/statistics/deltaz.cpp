@@ -69,7 +69,7 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
       dz = gslfit ? Compute3ddl(pdf, redshifts, iz, izmin, izmax)
                   : Compute(pdf, redshifts, iz, izmin, izmax);
       break;
-    } catch (InternalException &e) {
+    } catch (AmzException &e) {
       Flag.warning(WarningCode::DELTAZ_COMPUTATION_FAILED,
                    Formatter() << "  CDeltaz::" << __func__
                                << ": Deltaz computation failed for half range "
@@ -124,7 +124,7 @@ Float64 CDeltaz::Compute(const TFloat64List &merits,
   }
   c0 = sum / sum2;
   if (c0 <= 0)
-    THROWI(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
 
   sigma = sqrt(1.0 / c0);
   return sigma;
@@ -206,6 +206,6 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // results.SigmaZ[indz] = sigma;
   // results.LogAreaCorrectedExtrema[indz] = zcorr;
   if (c2 <= 0)
-    THROWI(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
   return sigma;
 }

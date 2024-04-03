@@ -55,7 +55,8 @@
 
 using namespace NSEpic;
 
-COperatorResultStore::COperatorResultStore(const TScopeStack &scope)
+COperatorResultStore::COperatorResultStore(
+    const std::shared_ptr<const CScopeStack> &scope)
     : CScopeStore(scope) {}
 
 void COperatorResultStore::StoreResult(
@@ -385,7 +386,7 @@ bool COperatorResultStore::hasContextWarningFlag() const {
 
 bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
   TResultsMap::const_iterator it =
-      m_GlobalResults.find(GetScopedNameAt("warningFlag", 3));
+      m_GlobalResults.find(GetScopedNameAt("warningFlag", ScopeType::METHOD));
   return (it != m_GlobalResults.end());
 }
 
@@ -426,11 +427,9 @@ void COperatorResultStore::StoreGlobalResult(
   StoreGlobalResult("", name, result);
 }
 
-void COperatorResultStore::StoreFlagResult(const std::string &name,
-                                           Int32 result) {
-  TWarningMsgList msgList = Flag.getListMessages();
-  StoreGlobalResult(name,
-                    std::make_shared<const CFlagLogResult>(result, msgList));
+void COperatorResultStore::StoreScopedFlagResult(const std::string &name) {
+  StoreScopedGlobalResult(name, std::make_shared<const CFlagLogResult>(
+                                    Flag.getBitMask(), Flag.getListMessages()));
 }
 
 std::weak_ptr<const COperatorResult>

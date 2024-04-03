@@ -93,11 +93,11 @@ class TestParameters:
 
     def test_stage_enabled(self):
         for stage in [
-            "redshift_solver",
-            "linemeas_solver",
+            "redshiftSolver",
+            "lineMeasSolver",
             "linemeas_catalog_load",
-            "reliability_solver",
-            "sub_classif_solver"
+            "reliabilitySolver",
+            "subClassifSolver"
         ]:
             self.generic_parameters.stage_enabled(
                 TestParametersUtils.default_object_type,

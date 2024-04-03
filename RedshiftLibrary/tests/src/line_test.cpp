@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(LoadLineRatioCatalog) {
   //    BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR
   //    "LineTestCase/linecatalog_OK1.txt" )); BOOST_CHECK_THROW(catalog.Load(
   //    DATA_ROOT_DIR "LineTestCase/linecatalog_NOK1.txt" ),
-  //		      GlobalException);
+  //		      AmzException);
 }
 
 // load a simple EL catalog and test the match with a redshifted version of

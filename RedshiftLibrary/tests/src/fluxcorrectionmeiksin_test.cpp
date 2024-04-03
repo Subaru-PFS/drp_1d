@@ -68,7 +68,7 @@ const std::string jsonString =
 
 class fixture_MeiskinCorrectionTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CLSF> LSFConstantWidth =
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(overall_test) {
                         TFloat64List{},
                         igmCorrectionMeiksin->m_rawCorrections[0].lbda,
                         finelbdaGrid, zbin, LSFConstantWidth),
-                    GlobalException);
+                    AmzException);
 
   // no overlapping range
   zbin.Set(0.5, 1.0);
@@ -182,7 +182,6 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
 
   // test convolve with kernel = 1
   TFloat64Range lbdaRange(1000, 12500);
-  TScopeStack scopeStack;
   igmCorrectionMeiksin->convolveByLSF(LSFConstantWidth, lbdaRange);
 
   //  range [2.0, 2.5]
@@ -229,7 +228,7 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
   lambdaRest = 1214.;
   BOOST_CHECK_THROW(
       igmCorrectionMeiksin->getCorrection(redshift, meiksinIdx, lambdaRest),
-      GlobalException);
+      AmzException);
 
   redshift = 1.5;
   meiksinIdx = 0;

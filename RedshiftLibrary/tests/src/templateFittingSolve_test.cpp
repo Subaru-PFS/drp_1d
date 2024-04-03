@@ -123,7 +123,7 @@ public:
     ctx.initContext();
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -156,7 +156,7 @@ public:
     ctx.initContext();
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -195,7 +195,13 @@ BOOST_AUTO_TEST_SUITE(templateFittingSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
                         fixture_TemplateFittingSolveTestNoFFT) {
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTemplateFittingSolve templateFittingSolve;
   BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -227,7 +233,12 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
 }
 
 BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTemplateFittingSolve templateFittingSolve;
   BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -260,8 +271,13 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
 }
 
 BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
   // Creation of useful objects
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  CTemplateFittingSolve templateFittingSolve;
   templateFittingSolve.Compute();
 
   Float64 precision = 1e-12;

@@ -42,21 +42,19 @@
 
 using namespace NSEpic;
 
-void CObjectSolve::InitRanges(
-    std::shared_ptr<const CInputContext> inputContext) {
-  m_lambdaRange =
-      TFloat64Range(*(inputContext->getLambdaRange())); // non-clamped
+void CObjectSolve::InitRanges(const CInputContext &inputContext) {
+  m_lambdaRange = TFloat64Range(*inputContext.getLambdaRange()); // non-clamped
 
   // m_redshiftSampling could be overwritten if fftprocessing is activated
   //  Warning for LineMeas :  we consider linemeas use the same redshiftsampling
   //  as the objectMethod if linemeas is called in standalone, redshiftsampling
   //  must be present in parameters
   m_redshiftSampling =
-      inputContext->GetParameterStore()->GetScoped<std::string>(
-          "redshiftSampling");
+      inputContext.GetParameterStore()->GetScopedAt<std::string>(
+          "redshiftSampling", ScopeType::SPECTRUMMODEL);
 
   TFloat64Range redshiftRange;
-  // below is to be reviewed
+
   GetRedshiftSampling(inputContext, redshiftRange, m_redshiftStep);
 
   Log.LogInfo(Formatter() << "Init redshift range with " << redshiftRange
@@ -65,20 +63,19 @@ void CObjectSolve::InitRanges(
 }
 
 // common for all except linemodelsolve
-void CObjectSolve::createRedshiftGrid(
-    const std::shared_ptr<const CInputContext> &inputContext,
-    const TFloat64Range &redshiftRange) {
+void CObjectSolve::createRedshiftGrid(const CInputContext &inputContext,
+                                      const TFloat64Range &redshiftRange) {
   CZGridParam zp(redshiftRange, m_redshiftStep);
   m_redshifts = zp.getZGrid(m_redshiftSampling == "log");
 }
 
-void CObjectSolve::GetRedshiftSampling(
-    const std::shared_ptr<const CInputContext> &inputContext,
-    TFloat64Range &redshiftRange, Float64 &redshiftStep) {
-  auto searchLogRebin = inputContext->m_logRebin.find(m_spectrumModel);
-  if (searchLogRebin != inputContext->m_logRebin.end()) {
+void CObjectSolve::GetRedshiftSampling(const CInputContext &inputContext,
+                                       TFloat64Range &redshiftRange,
+                                       Float64 &redshiftStep) {
+  auto searchLogRebin = inputContext.m_logRebin.find(m_category);
+  if (searchLogRebin != inputContext.m_logRebin.end()) {
     redshiftRange = searchLogRebin->second.zrange;
-    redshiftStep = inputContext->getLogGridStep();
+    redshiftStep = inputContext.getLogGridStep();
     if (m_redshiftSampling == "lin")
       THROWG(BAD_PARAMETER_VALUE,
              Formatter() << "CSolve::" << __func__
@@ -87,10 +84,11 @@ void CObjectSolve::GetRedshiftSampling(
 
   } else {
     // default is to read from the scoped paramStore
-    redshiftRange = inputContext->GetParameterStore()->GetScoped<TFloat64Range>(
-        "redshiftRange");
-    redshiftStep =
-        inputContext->GetParameterStore()->GetScoped<Float64>("redshiftStep");
+    redshiftRange =
+        inputContext.GetParameterStore()->GetScopedAt<TFloat64Range>(
+            "redshiftRange", ScopeType::SPECTRUMMODEL);
+    redshiftStep = inputContext.GetParameterStore()->GetScopedAt<Float64>(
+        "redshiftStep", ScopeType::SPECTRUMMODEL);
   }
   return;
 }

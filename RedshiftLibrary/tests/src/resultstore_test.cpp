@@ -69,11 +69,11 @@ typedef std::map<std::string, TResultsMap> TPerTemplateResultsMap;
 //---------------------------------------------------------------
 
 // Create scopeStack for tests
-TScopeStack getScopeStack() {
-  TScopeStack scopeStack;
-  scopeStack.push_back("spectrumModel");
-  scopeStack.push_back("stage");
-  scopeStack.push_back("method");
+std::shared_ptr<CScopeStack> getScopeStack() {
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
+  scopeStack->push_back("spectrumModel", ScopeType::SPECTRUMMODEL);
+  scopeStack->push_back("stage", ScopeType::STAGE);
+  scopeStack->push_back("method", ScopeType::METHOD);
   return scopeStack;
 };
 
@@ -150,7 +150,7 @@ std::shared_ptr<ExtremaResult> getExtremaResult() {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(StoreResult_test) {
-  TScopeStack scopeStack_1 = getScopeStack();
+  auto scopeStack_1 = getScopeStack();
 
   std::shared_ptr<ExtremaResult> result_in = getExtremaResult();
 
@@ -170,12 +170,12 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK_THROW(store_1.StoreResult(store_1.m_GlobalResults,
                                         store_1.GetCurrentScopeName(),
                                         "extremaResult", result_in),
-                    GlobalException);
+                    AmzException);
 
   // test store outside context
   Flag.warning(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, "Test code 4");
 
-  TScopeStack scopeStack_2;
+  std::shared_ptr<CScopeStack> scopeStack_2 = std::make_shared<CScopeStack>();
   COperatorResultStore store_2(scopeStack_2);
 
   store_2.StoreResult(store_2.m_GlobalResults, "", "warningFlag",
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
-  TScopeStack scopeStack_1 = getScopeStack();
+  auto scopeStack_1 = getScopeStack();
 
   std::shared_ptr<ExtremaResult> result_in = getExtremaResult();
 
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
   // test store outside context
   Flag.warning(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, "Test code 4");
 
-  TScopeStack scopeStack_2;
+  std::shared_ptr<CScopeStack> scopeStack_2 = std::make_shared<CScopeStack>();
   COperatorResultStore store_2(scopeStack_2);
 
   store_2.StoreGlobalResult("", "warningFlag",
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
-  TScopeStack scopeStack_1 = getScopeStack();
+  auto scopeStack_1 = getScopeStack();
 
   Flag.warning(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, "Test code 4");
   std::shared_ptr<const CFlagLogResult> result_in = getFlagResult();
@@ -244,11 +244,11 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
 
   // test store flag outside context
-  TScopeStack scopeStack_2;
+  std::shared_ptr<CScopeStack> scopeStack_2 = std::make_shared<CScopeStack>();
   COperatorResultStore store_2(scopeStack_2);
 
   BOOST_CHECK(store_2.hasContextWarningFlag() == false);
-  store_2.StoreFlagResult("context_warningFlag", Flag.getBitMask());
+  store_2.StoreScopedFlagResult("context_warningFlag");
   BOOST_CHECK(store_2.GetScopedName("context_warningFlag") ==
               "context_warningFlag");
   BOOST_CHECK(store_2.hasContextWarningFlag() == true);
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   Flag.warning(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, "Test code 4");
 
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
       store.GetScopedPerTemplateResult(tpl, "warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
   BOOST_CHECK_THROW(store.GetScopedPerTemplateResult(tpl, "warningFlag_"),
-                    GlobalException);
+                    AmzException);
 
   TOperatorResultMap result_out_2 =
       store.GetScopedPerTemplateResult("warningFlag");
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
   BOOST_CHECK(result_out_2.size() == 0);
 
   // test store and get outside context
-  TScopeStack scopeStack_2;
+  std::shared_ptr<CScopeStack> scopeStack_2 = std::make_shared<CScopeStack>();
   COperatorResultStore store_2(scopeStack_2);
   store_2.StoreScopedPerTemplateResult(tpl, "warningFlag", result_in);
 
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
 
 // //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetMethods_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   Flag.warning(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, "Test code 4");
 
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(GetMethods_test) {
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
   BOOST_CHECK_THROW(
       result_out = store.GetGlobalResult(store.GetScopedName("warningFlag__")),
-      GlobalException);
+      AmzException);
 
   result_out =
       store.GetGlobalResult("spectrumModel", "stage", "method", "warningFlag");
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(GetMethods_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetGlobalResultType_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<const CFlagLogResult> result_in = getFlagResult();
 
@@ -352,12 +352,12 @@ BOOST_AUTO_TEST_CASE(GetGlobalResultType_test) {
                                         "warningFlag") == "CFlagLogResult");
   BOOST_CHECK_THROW(store.GetGlobalResultType("spectrumModel", "stage",
                                               "method", "warningFlag__"),
-                    GlobalException);
+                    AmzException);
 }
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetSolveResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<const CFlagLogResult> result_in = getFlagResult();
 
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(GetSolveResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetClassificationResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<CClassificationResult> result_in =
       std::make_shared<CClassificationResult>();
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(GetClassificationResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetReliabilityResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<const CReliabilityResult> result_in =
       std::make_shared<const CReliabilityResult>();
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(GetReliabilityResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetLogZPdfResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   TZGridListParams zparams;
   std::shared_ptr<const CLogZPdfResult> result_in =
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(GetLogZPdfResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetLineModelResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<LineModelExtremaResult> result_in =
       getLineModelExtremaResult();
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(GetLineModelResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetTplCombinationResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<TplCombinationExtremaResult> result_in =
       getTplCombinationExtremaResult();
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(GetTplCombinationResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetExtremaResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<ExtremaResult> result_in = getExtremaResult();
 
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(GetExtremaResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetLineModelSolution_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<CLineModelSolution> result_in = getLineModelSolution();
 
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test) {
 
 //---------------------------------------------------------------v
 BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<LineModelExtremaResult> result_in =
       getLineModelExtremaResult();
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetLineModelSolution_test_2) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<LineModelExtremaResult> result_in =
       getLineModelExtremaResult();
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(GetLineModelSolution_test_2) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test_2) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   CSpectrum spc;
   std::shared_ptr<const CModelSpectrumResult> result_in =
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(GetModelSpectrumResult_test_2) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(GetCandidateResultType_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<const TplCombinationExtremaResult> result_in =
       getTplCombinationExtremaResult();
@@ -547,7 +547,7 @@ BOOST_AUTO_TEST_CASE(GetCandidateResultType_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(HasCandidateDataset_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   std::shared_ptr<const TplCombinationExtremaResult> result_in =
       getTplCombinationExtremaResult();
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(HasCandidateDataset_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(HasDataset_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   TZGridListParams zparams;
   std::shared_ptr<const CLogZPdfResult> result_in =
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(HasDataset_test) {
 
 //---------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
-  TScopeStack scopeStack = getScopeStack();
+  auto scopeStack = getScopeStack();
 
   TZGridListParams zparams;
   std::shared_ptr<CLogZPdfResult> result_in =

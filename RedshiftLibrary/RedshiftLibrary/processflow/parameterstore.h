@@ -59,7 +59,7 @@ namespace NSEpic {
 class CParameterStore : public CScopeStore {
 
 public:
-  CParameterStore(const TScopeStack &stack);
+  CParameterStore(const std::shared_ptr<const CScopeStack> &stack);
   template <typename T> bool Has(const std::string &name) const {
     boost::optional<T> property = m_PropertyTree.get_optional<T>(name);
     if (!property.is_initialized()) {
@@ -73,6 +73,10 @@ public:
 
   template <typename T> bool HasScoped(const std::string &name) const {
     return Has<T>(GetScopedName(name));
+  }
+
+  template <typename T> bool HasScopedAt(const std::string &name, int depth) {
+    return Has<T>(GetScopedNameAt(name, depth));
   }
 
   bool HasTplIsmExtinction(const std::string &spectrumModel) const;
@@ -94,11 +98,28 @@ public:
   }
 
   template <typename T> T GetScoped(const std::string &name) const {
-    if (HasScoped<T>(name))
-      return Get<T>(GetScopedName(name));
+    auto const scopedName = GetScopedName(name);
+    if (Has<T>(scopedName))
+      return Get<T>(scopedName);
     else
-      THROWG(MISSING_PARAMETER,
-             Formatter() << "Missing parameter " << GetScopedName(name));
+      THROWG(MISSING_PARAMETER, Formatter()
+                                    << "Missing parameter " << scopedName);
+  }
+
+  template <typename T>
+  T GetScopedAt(const std::string &name, ScopeType type) const {
+    auto depth = m_ScopeStack->get_type_level(type) + 1;
+    return GetScopedAt<T>(name, depth);
+  }
+
+  template <typename T>
+  T GetScopedAt(const std::string &name, int depth) const {
+    auto const scopedName = GetScopedNameAt(name, depth);
+    if (Has<T>(scopedName))
+      return Get<T>(scopedName);
+    else
+      THROWG(MISSING_PARAMETER, Formatter()
+                                    << "Missing parameter " << scopedName);
   }
 
   template <typename T> std::vector<T> GetList(const std::string &name) const {

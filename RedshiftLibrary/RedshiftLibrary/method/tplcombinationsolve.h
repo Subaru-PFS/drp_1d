@@ -65,12 +65,9 @@ public:
     nType_all = 4,
   };
 
-  CTplCombinationSolve(TScopeStack &scope, std::string spectrumModel);
+  CTplCombinationSolve();
 
-  std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope);
+  std::shared_ptr<CSolveResult> compute() override;
 
 private:
   bool Solve(std::shared_ptr<COperatorResultStore> resultStore,

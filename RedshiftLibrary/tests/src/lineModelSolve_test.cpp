@@ -275,7 +275,7 @@ const std::string jsonStringFromSpectrum =
 class fixture_LineModelSolveTest {
 public:
   fixture_Context ctx;
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -402,8 +402,11 @@ BOOST_AUTO_TEST_SUITE(lineModelSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
                         fixture_LineModelSolveTestTplFitRules) {
-
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
   BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -437,7 +440,11 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
                         fixture_LineModelSolveTestTplFitTplRatio) {
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
   BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -476,7 +483,11 @@ BOOST_FIXTURE_TEST_CASE(computeNoContTplRatio_test,
   CLogFileHandler file_handler(logFile.c_str());
   file_handler.SetLevelMask(60);
 
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
   BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -513,7 +524,11 @@ BOOST_FIXTURE_TEST_CASE(computeMultiNoContTplRatio_test,
   CLogFileHandler file_handler(logFile.c_str());
   file_handler.SetLevelMask(60);
 
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
   BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
@@ -544,7 +559,11 @@ BOOST_FIXTURE_TEST_CASE(computeMultiNoContTplRatio_test,
 
 BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
                         fixture_LineModelSolveTestFromSpectrum) {
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
   BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =

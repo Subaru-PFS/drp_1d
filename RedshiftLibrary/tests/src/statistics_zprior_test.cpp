@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(NormalizePrior_test) {
   TFloat64List redshifts = genRedshifts(1);
   CZPrior zprior = CZPrior(true, redshifts);
   TFloat64List logzPrior(redshifts.size(), 0.0);
-  BOOST_CHECK_THROW(zprior.NormalizePrior(logzPrior), GlobalException);
+  BOOST_CHECK_THROW(zprior.NormalizePrior(logzPrior), AmzException);
 
   // Range >= 2 -> OK
   redshifts = genRedshifts(5);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(CombineLogZPrior_test) {
   // size of logzPrior_2 different from size of logzPrior_1
   TFloat64List logzPrior_2 = {0, 0, 0, 0};
   BOOST_CHECK_THROW(zprior.CombineLogZPrior(logzPrior, logzPrior_2),
-                    GlobalException);
+                    AmzException);
 
   // size of logzPrior_2 equal to size of logzPrior_1
   logzPrior_2 = zprior.GetConstantLogZPrior(redshifts.size());
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(GetEuclidNhaLogZPrior_test) {
 
   Float64 aCoeff = 0.;
   BOOST_CHECK_THROW(zprior.GetEuclidNhaLogZPrior(redshifts, aCoeff),
-                    GlobalException);
+                    AmzException);
 
   aCoeff = 0.5;
   TFloat64List logzPrior = zprior.GetEuclidNhaLogZPrior(redshifts, aCoeff);

@@ -56,15 +56,13 @@
 using namespace NSEpic;
 using namespace std;
 
-CTemplateFittingSolve::CTemplateFittingSolve(TScopeStack &scope,
-                                             string spectrumModel)
-    : CObjectSolve("redshiftSolver", "templateFittingSolve", scope,
-                   spectrumModel) {}
+CTemplateFittingSolve::CTemplateFittingSolve()
+    : CObjectSolve("templateFittingSolve") {}
 
-std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
-    std::shared_ptr<const CInputContext> inputContext,
-    std::shared_ptr<COperatorResultStore> resultStore, TScopeStack &scope) {
+std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
 
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
@@ -156,27 +154,23 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   Log.LogInfo("    -pdfcombination: %s", m_opt_pdfcombination.c_str());
   Log.LogInfo("");
 
-  if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0) {
+  if (tplCatalog.GetTemplateCount(m_category) == 0) {
     THROWG(BAD_TEMPLATECATALOG, Formatter()
                                     << "Empty template catalog for category "
-                                    << m_categoryList[0]);
+                                    << m_category[0]);
   }
-  Log.LogInfo("Iterating over %d tplCategories", m_categoryList.size());
+  Log.LogInfo("Iterating over %d tplCategories", m_category.size());
 
-  for (Int32 i = 0; i < m_categoryList.size(); i++) {
-    std::string category = m_categoryList[i];
+  Log.LogInfo("   trying %s (%d templates)", m_category.c_str(),
+              tplCatalog.GetTemplateCount(m_category));
+  for (Int32 j = 0; j < tplCatalog.GetTemplateCount(m_category); j++) {
+    std::shared_ptr<const CTemplate> tpl =
+        tplCatalog.GetTemplate(m_category, j);
 
-    Log.LogInfo("   trying %s (%d templates)", category.c_str(),
-                tplCatalog.GetTemplateCount(category));
-    for (Int32 j = 0; j < tplCatalog.GetTemplateCount(category); j++) {
-      std::shared_ptr<const CTemplate> tpl =
-          tplCatalog.GetTemplate(category, j);
+    Solve(resultStore, tpl, overlapThreshold, maskList, _type, opt_interp,
+          opt_extinction, opt_dustFit);
 
-      Solve(resultStore, tpl, overlapThreshold, maskList, _type, opt_interp,
-            opt_extinction, opt_dustFit);
-
-      storeResult = true;
-    }
+    storeResult = true;
   }
 
   if (!storeResult)
@@ -451,7 +445,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;
     std::shared_ptr<const CTemplate> tpl =
-        tplCatalog.GetTemplateByName(m_categoryList, tplName);
+        tplCatalog.GetTemplateByName({m_category}, tplName);
 
     std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
         std::make_shared<CModelSpectrumResult>();

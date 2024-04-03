@@ -167,16 +167,16 @@ class Parameters(ParametersAccessor):
             return False
 
     def stage_enabled(self, spectrum_model, stage):
-        if stage == "redshift_solver":
+        if stage == "redshiftSolver":
             return self.get_redshift_solver_method(spectrum_model) is not None
-        elif stage == "linemeas_solver":
+        elif stage == "lineMeasSolver":
             return self.get_linemeas_method(spectrum_model) is not None
         elif stage == "linemeas_catalog_load":
             return self.get_linemeas_method(spectrum_model) is not None \
                 and self.get_redshift_solver_method(spectrum_model) is None
-        elif stage == "reliability_solver":
+        elif stage == "reliabilitySolver":
             return self.get_reliability_enabled(spectrum_model)
-        elif stage == "sub_classif_solver":
+        elif stage == "subClassifSolver":
             return self.is_tplratio_catalog_needed(spectrum_model)
         else:
             raise Exception("Unknown stage {stage}")

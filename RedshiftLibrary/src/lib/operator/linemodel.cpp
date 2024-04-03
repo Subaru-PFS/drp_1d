@@ -99,8 +99,7 @@ void COperatorLineModel::ComputeFirstPass() {
   Int32 nfitcontinuum = 0;
   if (m_opt_continuumcomponent == "tplFit" ||
       m_opt_continuumcomponent == "tplFitAuto")
-    for (const auto &category : m_tplCategoryList)
-      nfitcontinuum += tplCatalog->GetTemplateCount(category);
+    nfitcontinuum = tplCatalog->GetTemplateCount(m_tplCategory);
   m_result->Init(m_Redshifts, Context.getCLineMap(), nfitcontinuum,
                  m_fittingManager->getTplratio_count(),
                  m_fittingManager->getTplratio_priors());
@@ -277,7 +276,7 @@ void COperatorLineModel::fitContinuumTemplates(
     getContinuumInfoFromFirstpassFitStore(candidateIdx, meiksinIndices,
                                           ebmvIndices, tplList);
   } else {
-    tplList = tplCatalog->GetTemplateList(m_tplCategoryList);
+    tplList = tplCatalog->GetTemplateList(TStringList{m_tplCategory});
     meiksinIndices.assign(tplList.size(), undefIdx);
     ebmvIndices.assign(tplList.size(), undefIdx);
   }
@@ -341,8 +340,8 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     CTplModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
 
-    tplList.push_back(
-        tplCatalog->GetTemplateByName(m_tplCategoryList, fitValue.tplName));
+    tplList.push_back(tplCatalog->GetTemplateByName(TStringList{m_tplCategory},
+                                                    fitValue.tplName));
 
     if (m_opt_tplfit_extinction)
       meiksinIndices[icontinuum] = fitValue.tplMeiksinIdx;
@@ -350,7 +349,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     // access any template and retrieve the ismcorrection object
     if (m_opt_tplfit_dustFit)
       ebmvIndices[icontinuum] =
-          tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
+          tplCatalog->GetTemplate(m_tplCategory, 0)
               ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.tplEbmvCoeff);
   }
   return;
@@ -1519,7 +1518,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
 void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
                               const std::string &redshiftSampling) {
 
-  m_tplCategoryList = {Context.GetCurrentCategory()};
+  m_tplCategory = Context.GetCurrentCategory();
   // initialize empty results so that it can be returned anyway in case of an
   // error
   m_result = std::make_shared<CLineModelResult>();

@@ -50,6 +50,7 @@
 %shared_ptr(CLog)
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CLogHandler)
+%shared_ptr(CScopeStack)
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CLineCatalog)
@@ -142,7 +143,6 @@
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
-static PyObject* pGlobalException;
 static PyObject* pAmzException;
  %}
 
@@ -150,13 +150,9 @@ static PyObject* pAmzException;
 
 %init %{
   import_array();
-  pGlobalException = PyErr_NewException("redshift_.GlobalException", 0, 0);
-  Py_INCREF(pGlobalException);
-  PyModule_AddObject(m, "GlobalException", pGlobalException);
   pAmzException = PyErr_NewException("redshift_.AmzException", 0, 0);
   Py_INCREF(pAmzException);
   PyModule_AddObject(m, "AmzException", pAmzException);
-
 %}
 
 %{
@@ -174,7 +170,6 @@ static PyObject* pAmzException;
 
 // should be in "derived first" order
 #define FOR_EACH_EXCEPTION(ACTION) \
-   ACTION(GlobalException) \
    ACTION(AmzException) \
 /**/
 %}
@@ -490,7 +485,11 @@ public:
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
-  TScopeStack  m_ScopeStack;
+  const std::string &GetCurrentCategory() const;
+  const std::string &GetCurrentStage() const;
+  const std::string &GetCurrentMethod() const;
+
+  std::shared_ptr<CScopeStack>  m_ScopeStack;
 
  private:
     CProcessFlowContext();
@@ -498,10 +497,53 @@ public:
     
 };
 
+enum class ScopeType { UNDEFINED, SPECTRUMMODEL, STAGE, METHOD };
+
+%pythonappend CScopeStack::get_current_type() const %{
+    val = ScopeType(val)
+%}
+
+class CScopeStack {
+public:
+  CScopeStack();
+  CScopeStack(const TScopeStack &scope);
+  CScopeStack(TScopeStack &&scope);
+  CScopeStack(std::initializer_list<std::string> init);
+  std::size_t size() const;
+  bool empty() const;
+  TStringList::const_iterator begin() const;
+  TStringList::const_iterator end() const;
+  std::string const &front() const;
+  std::string const &back() const;
+  std::string const &at(std::size_t pos) const;
+
+  void push_back(const std::string &value, ScopeType type = ScopeType::UNDEFINED);
+  void push_back(std::string &&value, ScopeType type = ScopeType::UNDEFINED);
+  void pop_back();
+
+  bool has_type(ScopeType type) const;
+  const std::string &get_type_value(ScopeType type) const;
+  size_t get_type_level(ScopeType type) const;
+  ScopeType get_current_type() const;
+};
+
+%extend CScopeStack {
+  std::string __getitem__(size_t pos) {
+    return (*($self))[pos];
+  }
+  // std::string __setitem__(size_t pos, const std::string &value) {
+  //     (*($self))[pos] = value;
+  //     return (*($self))[pos];
+  //   }
+}
+
+
+
+
 class CParameterStore : public CScopeStore
 {
   public:
-    CParameterStore(const TScopeStack& stack);
+    CParameterStore(const std::shared_ptr<const CScopeStack> &stack);
     void FromString(const std::string& json);
     template<typename T> T Get(const std::string& name) const;
 };
@@ -512,7 +554,7 @@ class COperatorResultStore
 {
 
  public:
-  COperatorResultStore(const TScopeStack& scopeStack);
+  COperatorResultStore(const std::shared_ptr<const CScopeStack> &scopeStack);
 
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
                                                                        const std::string& stage,
@@ -602,7 +644,7 @@ class COperatorResultStore
   int getNbRedshiftCandidates(const std::string& objectType, const std::string& stage,
 			      const std::string& method) const;
 
-  void StoreFlagResult( const std::string& name, Int32  result );
+  void StoreScopedFlagResult( const std::string& name);
 };
 
 
@@ -819,6 +861,15 @@ public:
 %include "common/errorcodes.i"
 %include "common/warningcodes.i"
 
+%pythonappend AmzException::getErrorCode() const %{
+    val = ErrorCode(val)
+%}
+
+%pythonprepend AmzException::LogError() const %{
+    if not args:
+      args = (self.__str__(), )
+%}
+
 class AmzException : public std::exception
 {
 
@@ -830,23 +881,28 @@ class AmzException : public std::exception
   virtual ~AmzException();
  
   ErrorCode getErrorCode() const;
-  virtual const char* what() ;
+  virtual const char* what() const noexcept override;
   const std::string &getMessage() const;
 
   const std::string &getFileName() const;
   const std::string &getMethod() const;
   int getLine() const;
 
-  void LogError(const std::string &msg) const;
+  void LogError(const std::string &msg = std::string()) const;
 
 };
 
+%pythoncode %{
+  def _AmzException__str__(self):
+    msg = f"{self.getErrorCode().name}:{self.getMessage()}"
+    filename = self.getFileName()
+    if filename:
+      msg += f" [{filename}:{self.getLine()}:{self.getMethod()}]"
+    return msg
 
-class GlobalException: public AmzException
-{
- public:
-  using AmzException::AmzException;
-};
+  AmzException.__str__ = _AmzException__str__
+%}
+
 class CSolve{
  public:
   CSolve()=delete;
@@ -864,7 +920,7 @@ class CObjectSolve{
 
   public:
 
-    CClassificationSolve(TScopeStack &scope,std::string objectType);
+    CClassificationSolve();
 
   };
   class CReliabilitySolve:public CSolve
@@ -872,42 +928,42 @@ class CObjectSolve{
 
   public:
 
-    CReliabilitySolve(TScopeStack &scope,std::string objectType);
+    CReliabilitySolve();
   };
   class CLineModelSolve:public CObjectSolve
   {
 
   public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType);
+    CLineModelSolve();
   };
   class CLineMeasSolve:public CObjectSolve
   {
 
   public:
 
-    CLineMeasSolve(TScopeStack &scope,std::string objectType);
+    CLineMeasSolve();
   };
 
   class CTemplateFittingSolve : public CObjectSolve
 {
   public:
 
-    CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+    CTemplateFittingSolve();
   };
 
 class CTplCombinationSolve : public CObjectSolve
 {
 
  public:
-  CTplCombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplCombinationSolve();
 };
 
 class CLineMatchingSolve: public CObjectSolve
 {
 public:
 
-    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
+    CLineMatchingSolve();
 };
 
 typedef struct {
@@ -947,6 +1003,7 @@ def redo(prefix):
     globals()[prefix] = Enum(prefix,tmpD)
 redo('ErrorCode')
 redo('WarningCode')
+redo('ScopeType')
 del redo  # cleaning up the namespace
 del Enum
 %}

@@ -53,14 +53,14 @@ void testConstructor(CScopeStore store_ref, CScopeStore store_test) {
 }
 
 BOOST_AUTO_TEST_CASE(ScopeStore_test) {
-  TScopeStack scopeStack;
+  auto scopeStack = std::make_shared<CScopeStack>();
 
   BOOST_CHECK_NO_THROW(CScopeStore store = CScopeStore(scopeStack));
 
   CScopeStore store = CScopeStore(scopeStack);
   BOOST_CHECK(store.GetCurrentScopeName() == "");
 
-  scopeStack.push_back("scope_1");
+  scopeStack->push_back("scope_1");
 
   // Test copy constructor
   CScopeStore store_2(store);
@@ -79,13 +79,17 @@ BOOST_AUTO_TEST_CASE(ScopeStore_test) {
   testConstructor(store, store_5);
 
   // Methods
-  scopeStack.push_back("scope_2");
+  scopeStack->push_back("scope_2", ScopeType::STAGE);
   BOOST_CHECK(store.GetCurrentScopeName() == "scope_1.scope_2");
   BOOST_CHECK(store.GetScopedName("last_level") ==
               "scope_1.scope_2.last_level");
+  BOOST_CHECK(store.getCurrentScopeNameAt(0) == "");
+  BOOST_CHECK(store.getCurrentScopeNameAt(1) == "scope_1");
   BOOST_CHECK(store.getCurrentScopeNameAt(2) == "scope_1.scope_2");
-  BOOST_CHECK_THROW(store.getCurrentScopeNameAt(3), GlobalException);
+  BOOST_CHECK_THROW(store.getCurrentScopeNameAt(3), AmzException);
   BOOST_CHECK(store.GetScopedNameAt("new_last_level", 2) ==
+              "scope_1.scope_2.new_last_level");
+  BOOST_CHECK(store.GetScopedNameAt("new_last_level", ScopeType::STAGE) ==
               "scope_1.scope_2.new_last_level");
   BOOST_CHECK(store.getScopeDepth() == 2);
 }

@@ -37,12 +37,23 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
-CAutoScope::CAutoScope(TScopeStack &scopeStack, const std::string &name)
-    : m_scopeStack(scopeStack) {
+CAutoScope::CAutoScope(const std::shared_ptr<CScopeStack> &scopeStack,
+                       const std::string &name, ScopeType type, bool do_logging)
+    : m_scopeStack(scopeStack),
+      m_do_logging(do_logging && type != ScopeType::UNDEFINED),
+      m_log_msg(Formatter() << type << ": " << name) {
 
-  m_scopeStack.push_back(name);
+  m_scopeStack->push_back(name, type);
+  if (m_do_logging)
+    Log.LogInfo(Formatter() << "Starting " << m_log_msg);
 }
 
-CAutoScope::~CAutoScope() { m_scopeStack.pop_back(); }
+CAutoScope::~CAutoScope() {
+  if (m_do_logging)
+    Log.LogInfo(Formatter() << "Ending " << m_log_msg);
+  m_scopeStack->pop_back();
+}

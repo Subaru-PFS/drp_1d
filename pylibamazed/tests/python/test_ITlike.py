@@ -47,8 +47,8 @@ from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.config import test_dir
+from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 def read_photometry_fromfile(fname):
@@ -167,17 +167,17 @@ def test_ITLikeTest():
     output = context.run(reader)  # passing spectra reader to launch amazed
 
     # check results (no errors)
-    for object_type, stage in (("", "init"),
-                               ("galaxy", "redshift_solver"),
-                               ("galaxy", "linemeas_catalog_load"),
-                               ("galaxy", "linemeas_solver"),
-                               ("galaxy", "sub_classif_solver"),
-                               ("galaxy", "reliability_solver"),
-                               ("", "classification"),
-                               ("", "load_result_store")):
-        if output.has_error(object_type, stage):
-            print("object_type", object_type, "stage", stage, output.get_error(object_type, stage))
-        assert output.has_error(object_type, stage) is False
+    for spectrum_model, stage in (("", "init"),
+                                  ("galaxy", "redshiftSolver"),
+                                  ("galaxy", "linemeas_catalog_load"),
+                                  ("galaxy", "lineMeasSolver"),
+                                  ("galaxy", "subClassifSolver"),
+                                  ("galaxy", "reliabilitySolver"),
+                                  ("", "classification"),
+                                  ("", "load_result_store")):
+        if output.has_error(spectrum_model, stage):
+            print("object_type", spectrum_model, "stage", stage, output.get_error(spectrum_model, stage))
+        assert output.has_error(spectrum_model, stage) is False
 
     # add calls to output
     # accessOutputData(output)

@@ -73,7 +73,8 @@ static TFloat64List myNoiseListLight = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4};
 
 class fixture_ParamStore {
 public:
-  fixture_ParamStore(std::string jsonString, TScopeStack &scopeStack) {
+  fixture_ParamStore(std::string jsonString,
+                     const std::shared_ptr<const CScopeStack> &scopeStack) {
     paramStore = std::make_shared<CParameterStore>(scopeStack);
     paramStore->FromString(jsonString);
   }
@@ -97,7 +98,8 @@ std::string jsonString_LSFConstantRes =
     ": 4300}}";
 class fixture_LSFGaussianConstantResolution {
 public:
-  fixture_LSFGaussianConstantResolution(TScopeStack scopeStack) {
+  fixture_LSFGaussianConstantResolution(
+      const std::shared_ptr<const CScopeStack> &scopeStack) {
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianConstantResolutionArgs>(
             fixture_ParamStore(jsonString_LSFConstantRes, scopeStack)
@@ -118,7 +120,8 @@ std::string jsonString_LSFGaussian =
     "0.1}}";
 class fixture_LSFGaussianNISPVSSPSF201707 {
 public:
-  fixture_LSFGaussianNISPVSSPSF201707(TScopeStack scopeStack) {
+  fixture_LSFGaussianNISPVSSPSF201707(
+      const std::shared_ptr<const CScopeStack> &scopeStack) {
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianNISPVSSPSF201707Args>(
             fixture_ParamStore(jsonString_LSFGaussian, scopeStack).paramStore);
@@ -133,7 +136,7 @@ std::string jsonString_LSFConstantWidth =
 class fixture_LSFGaussianConstantWidth {
 public:
   fixture_LSFGaussianConstantWidth(
-      TScopeStack scopeStack,
+      const std::shared_ptr<const CScopeStack> &scopeStack,
       std::string jsonStr = jsonString_LSFConstantWidth) {
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianConstantWidthArgs>(

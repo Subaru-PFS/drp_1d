@@ -69,7 +69,7 @@ const std::string jsonString =
     "\"method\" : \"irregularSamplingMedian\"}}}";
 class fixture_logRebinningTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> paramStore =
       fixture_ParamStore(jsonString, scopeStack).paramStore;
   std::shared_ptr<CInputContext> ctx_logSampled =
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(setupRebinning_test) {
 
   logRebinning.m_logGridStep = 0.1;
   BOOST_CHECK_THROW(logRebinning.setupRebinning(spc_1, lbdaRange),
-                    GlobalException);
+                    AmzException);
 
   logRebinning.m_logGridStep = 1.;
   logRebinning.setupRebinning(spc_1, lbdaRange);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
     BOOST_CHECK_CLOSE(tgtAxis.GetSamplesVector()[i], tgtRef[i], 1e-6);
 
   BOOST_CHECK_THROW(logRebinning.computeTargetLogSpectralAxis(lbdaRange, 8),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
 
   BOOST_CHECK_THROW(
       logRebinning.loglambdaRebinSpectrum(*ctx_logSampled->GetSpectrum(), "no"),
-      GlobalException);
+      AmzException);
 
   // create not logSampled spectrum
   CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
       CSpectrumFluxAxis(TFloat64List{0, 0, 0}));
   BOOST_CHECK_THROW(logRebinningNotLog.loglambdaRebinSpectrum(
                         *ctx_notLogSampled->GetSpectrum(), "no"),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(isRebinningNeeded_test) {
@@ -310,12 +310,12 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinTemplate_test) {
   lbdaRange.Set(4679., 4712);
   BOOST_CHECK_THROW(logRebinning.loglambdaRebinTemplate(
                         tplStar_logSampled, lbdaRange, loglambda_count_tpl),
-                    GlobalException);
+                    AmzException);
 
   lbdaRange.Set(4680.282, 4713);
   BOOST_CHECK_THROW(logRebinning.loglambdaRebinTemplate(
                         tplStar_logSampled, lbdaRange, loglambda_count_tpl),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(logRebinTemplateCatalog_test) {

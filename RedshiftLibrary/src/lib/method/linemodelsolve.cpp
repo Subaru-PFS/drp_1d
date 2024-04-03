@@ -55,8 +55,7 @@ using namespace boost;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve(TScopeStack &scope, string spectrumModel)
-    : CObjectSolve("redshiftSolver", "lineModelSolve", scope, spectrumModel) {}
+CLineModelSolve::CLineModelSolve() : CObjectSolve("lineModelSolve") {}
 
 /**
  * \brief
@@ -111,10 +110,9 @@ bool CLineModelSolve::PopulateParameters(
  * Return a pointer to an empty CLineModelSolveResult. (The results for
  *Linemodel will reside in the linemodel.linemodel result).
  **/
-std::shared_ptr<CSolveResult>
-CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                         std::shared_ptr<COperatorResultStore> resultStore,
-                         TScopeStack &scope) {
+std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
 
   PopulateParameters(inputContext->GetParameterStore());
 
@@ -127,7 +125,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   std::shared_ptr<const CLineModelResult> lmresult =
       std::dynamic_pointer_cast<const CLineModelResult>(result.lock());
 
-  //  suggestion : CSolve::GetCurrentScopeName(TScopeStack)
+  //  suggestion : CSolve::GetCurrentScopeName(CScopeStack)
   //  prepare the linemodel chisquares and prior results for pdf computation
   ChisquareArray chisquares = BuildChisquareArray(
       lmresult, m_linemodel.getSPZGridParams(),
@@ -601,13 +599,12 @@ void CLineModelSolve::Solve() {
   // computation
 }
 
-void CLineModelSolve::createRedshiftGrid(
-    const std::shared_ptr<const CInputContext> &inputContext,
-    const TFloat64Range &redshiftRange) {
+void CLineModelSolve::createRedshiftGrid(const CInputContext &inputContext,
+                                         const TFloat64Range &redshiftRange) {
 
   Int32 opt_twosteplargegridstep_ratio =
-      inputContext->GetParameterStore()->GetScoped<Int32>(
-          "redshiftSolver.lineModelSolve.lineModel.firstPass."
+      inputContext.GetParameterStore()->GetScoped<Int32>(
+          "lineModelSolve.lineModel.firstPass."
           "largeGridStepRatio");
 
   m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;

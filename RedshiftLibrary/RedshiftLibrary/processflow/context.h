@@ -48,6 +48,7 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/scopestack.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
@@ -145,16 +146,27 @@ public:
   }
 
   const std::string &GetCurrentCategory() const {
-    if (m_ScopeStack.empty())
-      THROWG(INTERNAL_ERROR,
-             "Category unreachable at process flow begin or end");
-    return m_ScopeStack[0];
+    if (!m_ScopeStack->has_type(ScopeType::SPECTRUMMODEL))
+      THROWG(SCOPESTACK_ERROR, Formatter() << "cannot get current "
+                                           << ScopeType::SPECTRUMMODEL
+                                           << " since not in scope");
+    return m_ScopeStack->get_type_value(ScopeType::SPECTRUMMODEL);
+  }
+
+  const std::string &GetCurrentStage() const {
+    if (!m_ScopeStack->has_type(ScopeType::STAGE))
+      THROWG(SCOPESTACK_ERROR, Formatter()
+                                   << "cannot get current " << ScopeType::STAGE
+                                   << " since not in scope");
+    return m_ScopeStack->get_type_value(ScopeType::STAGE);
   }
 
   const std::string &GetCurrentMethod() const {
-    if (m_ScopeStack.size() < 3)
-      THROWG(INTERNAL_ERROR, "Method unreachable at process flow begin or end");
-    return m_ScopeStack[2];
+    if (!m_ScopeStack->has_type(ScopeType::METHOD))
+      THROWG(SCOPESTACK_ERROR, Formatter()
+                                   << "cannot get current " << ScopeType::METHOD
+                                   << " since not in scope");
+    return m_ScopeStack->get_type_value(ScopeType::METHOD);
   }
 
   CLineMap getCLineMap();
@@ -187,7 +199,7 @@ public:
     return m_inputContext->getRebinnedSpectra();
   }
 
-  TScopeStack m_ScopeStack;
+  std::shared_ptr<CScopeStack> m_ScopeStack;
 
 private:
   friend class CSingleton<CProcessFlowContext>;

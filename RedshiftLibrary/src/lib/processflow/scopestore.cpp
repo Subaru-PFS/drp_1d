@@ -40,42 +40,43 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
+#include <numeric>
 
 using namespace NSEpic;
 std::string CScopeStore::GetCurrentScopeName() const {
-  // TODO ugly, more elegant ways to do this
-  std::string n;
 
-  TScopeStack::const_iterator it;
+  std::string name;
 
-  if (m_ScopeStack.size() == 0)
-    return n;
+  if (m_ScopeStack->size() == 0)
+    return name;
 
-  n = m_ScopeStack[0];
-  it = m_ScopeStack.begin();
-  ++it;
+  auto dot_fold = [](std::string a, std::string b) {
+    return std::move(a) + '.' + std::move(b);
+  };
 
-  for (; it != m_ScopeStack.end(); ++it) {
-    n.append(".");
-    n.append((*it));
-  }
+  name = std::accumulate(std::next(m_ScopeStack->begin()), m_ScopeStack->end(),
+                         m_ScopeStack->front(), dot_fold);
 
-  return n;
+  return name;
 }
 
 std::string CScopeStore::getCurrentScopeNameAt(int depth) const {
-  // TODO ugly, more elegant ways to do this
-  std::string n;
-  if (m_ScopeStack.size() < depth)
+  std::string name;
+  if (m_ScopeStack->size() < depth)
     THROWG(INTERNAL_ERROR, Formatter() << "Scope smaller than" << depth);
 
-  n = m_ScopeStack[0];
-  for (UInt8 i = 1; i < depth; i++) {
-    n.append(".");
-    n.append(m_ScopeStack[i]);
-  }
+  if (depth == 0)
+    return name;
 
-  return n;
+  auto dot_fold = [](std::string a, std::string b) {
+    return std::move(a) + '.' + std::move(b);
+  };
+
+  name =
+      std::accumulate(m_ScopeStack->begin() + 1, m_ScopeStack->begin() + depth,
+                      m_ScopeStack->front(), dot_fold);
+
+  return name;
 }
 
 std::string CScopeStore::GetScopedName(const std::string &name) const {
@@ -88,6 +89,12 @@ std::string CScopeStore::GetScopedName(const std::string &name) const {
   scopedName.append(name);
 
   return scopedName;
+}
+
+std::string CScopeStore::GetScopedNameAt(const std::string &name,
+                                         ScopeType type) const {
+  auto depth = m_ScopeStack->get_type_level(type) + 1;
+  return GetScopedNameAt(name, depth);
 }
 
 std::string CScopeStore::GetScopedNameAt(const std::string &name,

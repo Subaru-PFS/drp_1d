@@ -41,7 +41,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import GlobalException
+from pylibamazed.redshift import AmzException
 from tests.python.spectrum_reader_utils import TestSpectrumReaderUtils
 from tests.python.utils import WarningUtils
 
@@ -134,12 +134,12 @@ class TestReaderInit(TestSpectrumReaderUtils):
 
         fsr = self.initialize_fsr_with_data()
         fsr.set_air()
-        with pytest.raises(GlobalException):
+        with pytest.raises(AmzException):
             fsr.init()
 
         fsr = self.initialize_fsr_with_data(**{"airVacuumMethod": "default"})
         fsr.set_air()
-        with pytest.raises(GlobalException):
+        with pytest.raises(AmzException):
             fsr.init()
 
     def test_lsf_args(self):

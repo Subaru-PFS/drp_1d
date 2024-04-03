@@ -186,12 +186,12 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   range = TInt32Range(0, 10);
   BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask,
                                                 &maxFluxnoContinuum, &noise),
-                    GlobalException);
+                    AmzException);
 
   range = TInt32Range(-2, 9);
   BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask,
                                                 &maxFluxnoContinuum, &noise),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {

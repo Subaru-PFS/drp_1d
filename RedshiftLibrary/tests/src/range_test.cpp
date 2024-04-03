@@ -676,33 +676,33 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   range = TFloat64Range(9, 10.3);
   BOOST_CHECK_THROW(
       range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      GlobalException);
+      AmzException);
 
   range = TFloat64Range(6, 7.5);
   BOOST_CHECK_THROW(
       range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      GlobalException);
+      AmzException);
 
   range = TFloat64Range(0, 10.3);
   BOOST_CHECK_THROW(
       range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      GlobalException);
+      AmzException);
 
   range = TFloat64Range(6, 16);
   BOOST_CHECK_THROW(
       range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      GlobalException);
+      AmzException);
 
   // -- TEST WITHOUT TARGET --
 
   // Check errors
   range = TFloat64Range(0, 10.3);
   BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
-                    GlobalException);
+                    AmzException);
 
   range = TFloat64Range(6, 16);
   BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
-                    GlobalException);
+                    AmzException);
 
   // TEST OK
   range = TFloat64Range(6.5, 10.3);
@@ -750,11 +750,11 @@ BOOST_AUTO_TEST_CASE(Closed_interval) {
   // Check errors
   TFloat64Range range = TFloat64Range(20, 25);
   BOOST_CHECK_THROW(range.getClosedIntervalIndices(myVector, i_min, i_max),
-                    GlobalException);
+                    AmzException);
 
   range = TFloat64Range(-10, -5);
   BOOST_CHECK_THROW(range.getClosedIntervalIndices(myVector, i_min, i_max),
-                    GlobalException);
+                    AmzException);
 
   // range borders belong to orderded values
   range = TFloat64Range(6.5, 10.3);
@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(maskedRange) {
                            otherVector[range.GetEnd()]);
   Int32 kstart = -1, kend = -1;
   BOOST_CHECK_THROW(otherRange.getClosedIntervalIndices(ssVector, kstart, kend),
-                    GlobalException);
+                    AmzException);
 }
 BOOST_AUTO_TEST_CASE(maskedRange_oneCommon) {
   TInt32Range range(1, 5);
@@ -907,8 +907,8 @@ BOOST_AUTO_TEST_CASE(signCheck) {
   Float64 offset = 1;
   Float64 delta = 1;
   BOOST_CHECK(a.isSameSign(offset) == false);
-  BOOST_CHECK_THROW(a.SpreadOverLog(delta), GlobalException);
-  BOOST_CHECK_THROW(a.SpreadOverLog_backward(delta), GlobalException);
+  BOOST_CHECK_THROW(a.SpreadOverLog(delta), AmzException);
+  BOOST_CHECK_THROW(a.SpreadOverLog_backward(delta), AmzException);
 
   BOOST_CHECK(b.isSameSign(offset) == true);
 }

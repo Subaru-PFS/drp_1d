@@ -14,7 +14,7 @@ CContinuumManager::CContinuumManager(const CSpcModelVectorPtr &models,
                                      std::shared_ptr<CTplModelSolution> tfv,
                                      std::shared_ptr<Int32> curObs)
     : m_tplCatalog(Context.GetTemplateCatalog()),
-      m_tplCategoryList({Context.GetCurrentCategory()}), m_models(models),
+      m_tplCategory(Context.GetCurrentCategory()), m_models(models),
       m_fitContinuum(tfv), m_curObs(curObs) {
 
   // NB: fitContinuum_option: this is the initialization (default value),
@@ -93,8 +93,8 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
                                << m_fitContinuum_option);
 
   // Retrieve the best template, otherwise Getter throws an error
-  std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-      m_tplCategoryList, m_fitContinuum->tplName);
+  std::shared_ptr<const CTemplate> tpl =
+      m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->tplName);
 
   if (autoSelect) {
     // Float64 contsnr = getFitContinuum_snr();
@@ -198,8 +198,7 @@ Float64 CContinuumManager::getContinuumScaleMargCorrection() const {
 
 std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
 CContinuumManager::getIsmCorrectionFromTpl() {
-  return m_tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
-      ->m_ismCorrectionCalzetti;
+  return m_tplCatalog->GetTemplate(m_tplCategory, 0)->m_ismCorrectionCalzetti;
 }
 
 void CContinuumManager::logParameters() {
@@ -267,7 +266,7 @@ void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
   for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
 
     std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-        m_tplCategoryList, m_fitContinuum->tplName);
+        {m_tplCategory}, m_fitContinuum->tplName);
     getModel().ApplyContinuumOnGrid(tpl, redshift);
   }
 }

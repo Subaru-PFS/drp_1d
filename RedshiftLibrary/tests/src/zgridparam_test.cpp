@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(mixedGrid_check_error_on_single_element_test) {
   TZGridListParams zparams = {
       CZGridParam(TFloat64Range(1, 10), 3, NAN), // 1, 4, 7, 10
       CZGridParam(TFloat64Range(4., 5.), 0.5, 4.5)};
-  BOOST_CHECK_THROW(CZGridListParams(zparams).getZGrid(true), GlobalException);
+  BOOST_CHECK_THROW(CZGridListParams(zparams).getZGrid(true), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(mixedGrid_truncated_subgrids_test) {

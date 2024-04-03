@@ -96,7 +96,7 @@ const std::string jsonString =
 
 class fixture_processflowcontextTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -148,14 +148,14 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.GetPhotBandCatalog() == photoBandCatalog);
 
   Context.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-  Context.m_ScopeStack.push_back("galaxy");
+  Context.m_ScopeStack->push_back("galaxy", ScopeType::SPECTRUMMODEL);
   BOOST_CHECK(Context.GetTplRatioCatalog() == lineRatioTplCatalog);
 
   Context.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
   BOOST_CHECK(Context.GetLineCatalog("galaxy", "lineModelSolve") ==
               lineCatalog);
-  Context.m_ScopeStack.push_back("redshiftSolver");
-  Context.m_ScopeStack.push_back("lineModelSolve");
+  Context.m_ScopeStack->push_back("redshiftSolver", ScopeType::STAGE);
+  Context.m_ScopeStack->push_back("lineModelSolve", ScopeType::METHOD);
   BOOST_CHECK(Context.getCLineMap().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
@@ -187,14 +187,18 @@ BOOST_AUTO_TEST_CASE(context_test) {
                   .GetSamplesVector()
                   .back());
 
-  Context.m_ScopeStack.pop_back();
-  BOOST_CHECK_THROW(Context.GetCurrentMethod(), GlobalException);
+  Context.m_ScopeStack->pop_back();
+  BOOST_CHECK_THROW(Context.GetCurrentMethod(), AmzException);
 
-  Context.m_ScopeStack.pop_back();
-  Context.m_ScopeStack.pop_back();
-  BOOST_CHECK_THROW(Context.GetCurrentCategory(), GlobalException);
+  Context.m_ScopeStack->pop_back();
+  Context.m_ScopeStack->pop_back();
+  BOOST_CHECK_THROW(Context.GetCurrentCategory(), AmzException);
 
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CTemplateFittingSolve templateFittingSolve;
   templateFittingSolve.Compute();
 
   BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver",
@@ -209,7 +213,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   // GSL error
   Int32 dim = 1;
   gsl_matrix *covarMatrix = gsl_matrix_alloc(dim, dim);
-  BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), GlobalException);
+  BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), AmzException);
   gsl_matrix_free(covarMatrix);
 }
 

@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
   TLineModelElementParam_ptr fdata =
       std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
 
-  BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), GlobalException);
+  BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), AmzException);
 
   CLineModelElement element = CLineModelElement(fdata, "combined");
   BOOST_CHECK_CLOSE(1.0, element.getVelocityEmission(), 0.01);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
 
   // setLSF on multiLines
   std::string lsfType = "gaussianConstantResolution"; // TBC
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
   store->Set("lsf.resolution", 0.9);

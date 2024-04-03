@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(overall_test) {
   TFloat64List lbda = {1., 2., 3., 4., 5.};
   TFloat64List flux = {0.1, 0.2, 0.5, 0.3, 0.8};
 
-  BOOST_CHECK_THROW(CalzettiCorrection(lbda_bad, flux), GlobalException);
+  BOOST_CHECK_THROW(CalzettiCorrection(lbda_bad, flux), AmzException);
 
   CalzettiCorrection calzettiCorr(lbda, flux);
   CSpectrumFluxCorrectionCalzetti spcCorrCalzetti(calzettiCorr, 0., 0.1, 10);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(overall_test) {
   Float64 dustCoeff = spcCorrCalzetti.GetDustCoeff(1, 4.);
   BOOST_CHECK_CLOSE(dustCoeff, 0.9727472237769651, 1e-12);
 
-  BOOST_CHECK_THROW(spcCorrCalzetti.GetDustCoeff(10, 4.), GlobalException);
+  BOOST_CHECK_THROW(spcCorrCalzetti.GetDustCoeff(10, 4.), AmzException);
 
   Float64 lambdaMin = spcCorrCalzetti.getLambdaMin();
   BOOST_CHECK(lambdaMin == 1.);
