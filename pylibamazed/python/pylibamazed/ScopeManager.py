@@ -61,7 +61,7 @@ def get_scope_spectrum_model():
     try:
         spectrum_model = process_flow_context.GetCurrentCategory()
     except AmzException as e:
-        if (e.getErrorCode.value != ErrorCode.SCOPESTACK_ERROR):
+        if (e.getErrorCode() != ErrorCode.SCOPESTACK_ERROR):
             raise e from None
         spectrum_model = None
 
@@ -75,7 +75,7 @@ def get_scope_stage():
     try:
         stage = process_flow_context.GetCurrentStage()
     except AmzException as e:
-        if (e.getErrorCode.value != ErrorCode.SCOPESTACK_ERROR):
+        if (e.getErrorCode() != ErrorCode.SCOPESTACK_ERROR):
             raise e from None
         stage = None
 
