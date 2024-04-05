@@ -4,6 +4,7 @@ stages:
   - build-wheel
   - python-test
   - build-coverage
+  - pytest-coverage
   - sonar
   - push-rc
   - deploy
@@ -140,7 +141,6 @@ push-rc-38-osx:
 
 .build-coverage-linux:
   stage: build-coverage
-  when: manual
   script:
     - source /venv/p39/bin/activate
     - mkdir -p build
@@ -148,7 +148,7 @@ push-rc-38-osx:
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
     - make -j4
     - make test
-    - gcovr --filter ../RedshiftLibrary/src/lib/ --xml --exclude-unreachable-branches --print-summary -o coverage.xml --root .
+    - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
     - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --html -o index.html --root .
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
@@ -156,6 +156,10 @@ push-rc-38-osx:
       - build/coverage.xml
       - build/index.html
     expire_in: 1 week
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: build/coverage.xml
 
 .test-linux:
   stage: test
@@ -196,6 +200,29 @@ push-rc-38-osx:
   after_script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - pip uninstall -y pylibamazed
+  cache:
+    policy: pull
+    untracked: true
+
+.pytest-coverage-linux:
+  stage: pytest-coverage
+  script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
+    - cd pylibamazed
+    - coverage run --source=pylibamazed -m pytest
+    - coverage report
+    - coverage xml
+    - sed -i 's@/venv/p'"$PYTHON_VERSION"'/lib/python3.9/site-packages@pylibamazed/python@g' coverage.xml
+  after_script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - pip uninstall -y pylibamazed
+  coverage: /TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: pylibamazed/coverage.xml
   cache:
     policy: pull
     untracked: true
@@ -314,6 +341,35 @@ pytest311-manylinux2014:
     - .manylinux2014
     - .pytest-linux
 
+pytest38-coverage-manylinux2014:
+  variables:
+    PYTHON_VERSION: "38"
+  when: manual
+  extends:
+    - .manylinux2014
+    - .pytest-coverage-linux
+
+pytest39-coverage-manylinux2014: 
+  rules :
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $COVERAGE == "true"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: manual
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux2014
+    - .pytest-coverage-linux
+
+pytest311-coverage-manylinux2014:
+  variables:
+    PYTHON_VERSION: "311"
+  when: manual
+  extends:
+    - .manylinux2014
+    - .pytest-coverage-linux
+
 push-rc-38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
@@ -342,6 +398,12 @@ push-rc-311-manylinux2014:
     - wheel311-manylinux2014
 
 coverage-manylinux2014:
+  rules :
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $COVERAGE == "true"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: manual
   extends:
     - .manylinux2014
     - .build-coverage-linux
@@ -392,6 +454,13 @@ pytest39-rockylinux:
   extends:
     - .rockylinux
     - .pytest-linux
+
+pytest39-coverage-rockylinux:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .rockylinux
+    - .pytest-coverage-linux
 
 push-rc-39-rockylinux:
   variables:
