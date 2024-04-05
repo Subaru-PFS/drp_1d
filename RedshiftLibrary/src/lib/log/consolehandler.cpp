@@ -45,5 +45,5 @@ using namespace NSEpic;
  * Prints log message in stdout.
  */
 void CLogConsoleHandler::LogEntry(Int32 log_level, const std::string &message) {
-  std::cout << message;
+  std::cout << message << std::endl;
 }
