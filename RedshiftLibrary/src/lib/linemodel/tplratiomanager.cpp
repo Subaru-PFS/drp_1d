@@ -510,19 +510,15 @@ Float64 CTplratioManager::computelogLinePriorMerit(
       foundAmp = true;
       break;
     }
+    if (foundAmp) {
+      _meritprior += logPriorDataTplRatio[itratio].betaA *
+                    (ampl - logPriorDataTplRatio[itratio].A_mean) *
+                    (ampl - logPriorDataTplRatio[itratio].A_mean) /
+                    (logPriorDataTplRatio[itratio].A_sigma *
+                      logPriorDataTplRatio[itratio].A_sigma);
+    }
     elt_index++;
-    /*if (foundAmp)
-      break;
-      //Didier: probably this is missing here??? I suppose we are
-      // looking for the first non-null and valid amplitude?
-     */
   }
-
-  _meritprior += logPriorDataTplRatio[itratio].betaA *
-                 (ampl - logPriorDataTplRatio[itratio].A_mean) *
-                 (ampl - logPriorDataTplRatio[itratio].A_mean) /
-                 (logPriorDataTplRatio[itratio].A_sigma *
-                  logPriorDataTplRatio[itratio].A_sigma);
 
   return _meritprior;
 }
