@@ -66,11 +66,11 @@ struct AbstractFitterFixture {
   CTLambdaRangePtrVector lambdaRanges;
   std::shared_ptr<Int32> curObsPtr = std::make_shared<Int32>(0);
   CLineMap restLineList = CLineMap();
-  bool regularCatalog = false;
 
   std::shared_ptr<CLMEltListVector> elementsVector =
-      std::make_shared<CLMEltListVector>(lambdaRanges, curObsPtr, restLineList,
-                                         regularCatalog);
+      std::make_shared<CLMEltListVector>(
+          lambdaRanges, curObsPtr, restLineList,
+          ElementComposition::EmissionAbsorption);
   CCSpectrumVectorPtr inputSpcs;
   CSpcModelVectorPtr spectrumModels;
 

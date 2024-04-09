@@ -88,7 +88,7 @@ CLineCatalogBase<TLine>::GetFilteredList(const std::string &typeFilter,
 }
 
 template <typename TLine>
-const std::map<std::string, typename CLineCatalogBase<TLine>::TLineVector>
+std::map<std::string, typename CLineCatalogBase<TLine>::TLineVector>
 CLineCatalogBase<TLine>::ConvertToGroupList(
     const CLineCatalogBase<TLine>::TLineMap &filteredList) {
 

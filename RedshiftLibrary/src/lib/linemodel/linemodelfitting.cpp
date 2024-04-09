@@ -79,7 +79,8 @@ using namespace std;
  * Sets the continuum either as a nocontinuum or a fromSpectrum.
  **/
 CLineModelFitting::CLineModelFitting(
-    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator)
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+    ElementComposition element_composition)
     : m_RestLineList(Context.getCLineMap()) {
   initParameters();
 
@@ -89,7 +90,7 @@ CLineModelFitting::CLineModelFitting(
                    // TLambdaRange>>>(
       Context.getClampedLambdaRanges(m_useloglambdasampling);
 
-  initMembers(TFOperator);
+  initMembers(TFOperator, element_composition);
   setLineRatioType(m_lineRatioType);
   if (m_lineRatioType == "rules")
     dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
@@ -111,7 +112,7 @@ CLineModelFitting::CLineModelFitting(
   // temporary options override to be removed when full tpl ortho is implemented
   m_lineRatioType = "rules";
 
-  initMembers(TFOperator);
+  initMembers(TFOperator, ElementComposition::Default);
   setLineRatioType(m_lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
@@ -147,14 +148,18 @@ void CLineModelFitting::initParameters() {
 }
 
 void CLineModelFitting::initMembers(
-    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator) {
+    const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+    ElementComposition element_composition) {
   m_nbObs = m_inputSpcs->size();
   m_curObs = std::make_shared<Int32>(0);
   m_nominalWidthDefault = 13.4; // euclid 1 px
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
   m_models = std::make_shared<std::vector<CSpectrumModel>>();
-  m_ElementsVector = std::make_shared<CLMEltListVector>(CLMEltListVector(
-      m_lambdaRanges, m_curObs, m_RestLineList, m_lineRatioType == "rules"));
+  if (element_composition == ElementComposition::Default &&
+      (m_lineRatioType == "tplRatio" || m_lineRatioType == "tplCorr"))
+    element_composition = ElementComposition::EmissionAbsorption;
+  m_ElementsVector = std::make_shared<CLMEltListVector>(
+      m_lambdaRanges, m_curObs, m_RestLineList, element_composition);
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
     Log.LogDetail(Formatter() << "    model: Continuum winsize found is "
                               << std::fixed << std::setprecision(2)

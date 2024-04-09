@@ -1765,8 +1765,8 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
 
   makeTFOperator(m_Redshifts);
 
-  m_fittingManager =
-      std::make_shared<CLineModelFitting>(m_templateFittingOperator);
+  m_fittingManager = std::make_shared<CLineModelFitting>(
+      m_templateFittingOperator, ElementComposition::OneLine);
 
   // TODO handle igm coeff
 

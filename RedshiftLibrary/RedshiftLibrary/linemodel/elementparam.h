@@ -51,6 +51,15 @@ namespace NSEpic {
 // TODO should be defined elsewhere
 enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 
+enum class ElementComposition {
+  Default, // follow input linecatalog using AmplitudeGroupName: one amplitude
+           // by element
+  EmissionAbsorption, // for tpl_ratio: all emission lines in one element, all
+                      // abs lines in a 2nd element
+  OneLine // for linemeas, one unique line by element, ie. don't follow input
+          // linecatalog AmplitudeGroupName
+};
+
 struct TLineModelElementParam {
 
   TLineModelElementParam(CLineVector lines, Float64 velocityEmission,
