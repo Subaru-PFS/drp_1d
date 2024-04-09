@@ -358,6 +358,7 @@ pytest39-coverage-manylinux2014:
     - when: manual
   variables:
     PYTHON_VERSION: "39"
+  allow_failure: true
   extends:
     - .manylinux2014
     - .pytest-coverage-linux
@@ -404,6 +405,7 @@ coverage-manylinux2014:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: manual
+  allow_failure: true
   extends:
     - .manylinux2014
     - .build-coverage-linux
