@@ -51,7 +51,7 @@ CMask COutsideLineMaskBuilder::getMask(
     const Float64 &redshift) {
   // prepare the elements support
   for (Int32 iElts = 0; iElts < m_elements.size(); iElts++) {
-    m_elements[iElts]->resetAsymfitParams();
+    m_elements[iElts]->getElementParam()->resetAsymfitParams();
     m_elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
   }
 

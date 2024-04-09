@@ -68,37 +68,37 @@ BOOST_AUTO_TEST_CASE(Instance) {
   rs.push_back(std::move(lineAsym));
 
   TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "combined");
 
-  BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), AmzException);
+  // BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), AmzException);
 
-  CLineModelElement element = CLineModelElement(fdata, "combined");
-  BOOST_CHECK_CLOSE(1.0, element.getVelocityEmission(), 0.01);
-  BOOST_CHECK_CLOSE(1.1, element.getVelocityAbsorption(), 0.01);
-  BOOST_CHECK(element.GetElementType() == CLine::EType::nType_Emission);
-  BOOST_CHECK(element.IsEmission());
+  CLineModelElement element = CLineModelElement(fdata);
+  BOOST_CHECK_CLOSE(1.0, fdata->getVelocityEmission(), 0.01);
+  BOOST_CHECK_CLOSE(1.1, fdata->getVelocityAbsorption(), 0.01);
+  BOOST_CHECK(fdata->GetElementType() == CLine::EType::nType_Emission);
+  BOOST_CHECK(fdata->IsEmission());
   BOOST_CHECK(element.GetSize() == 2);
-  element.SetVelocityEmission(2.0);
-  BOOST_CHECK_CLOSE(2.0, element.getVelocityEmission(), 0.01);
+  fdata->SetVelocityEmission(2.0);
+  BOOST_CHECK_CLOSE(2.0, fdata->getVelocityEmission(), 0.01);
 
-  element.SetVelocityAbsorption(2.1);
-  BOOST_CHECK_CLOSE(2.1, element.getVelocityAbsorption(), 0.01);
+  fdata->SetVelocityAbsorption(2.1);
+  BOOST_CHECK_CLOSE(2.1, fdata->getVelocityAbsorption(), 0.01);
 
   TAsymParams const params = {2.2, 2.3, 2.4};
-  element.SetAsymfitParams(params);
+  fdata->SetAsymfitParams(params);
   TAsymParams const rparam = fdata->GetAsymfitParams(0);
 
   BOOST_CHECK_CLOSE(2.2, rparam.sigma, 0.01);
   BOOST_CHECK_CLOSE(2.3, rparam.alpha, 0.01);
   BOOST_CHECK_CLOSE(2.4, rparam.delta, 0.01);
 
-  element.SetSumCross(2.5);
-  BOOST_CHECK_CLOSE(2.5, element.GetSumCross(), 0.01);
+  fdata->SetSumCross(2.5);
+  BOOST_CHECK_CLOSE(2.5, fdata->getSumCross(), 0.01);
 
-  element.SetSumGauss(2.6);
-  BOOST_CHECK_CLOSE(2.6, element.GetSumGauss(), 0.01);
+  fdata->SetSumGauss(2.6);
+  BOOST_CHECK_CLOSE(2.6, fdata->getSumGauss(), 0.01);
 
-  BOOST_CHECK(std::isnan(element.GetFittedAmplitude(0)));
+  BOOST_CHECK(std::isnan(fdata->GetFittedAmplitude(0)));
 }
 
 BOOST_AUTO_TEST_CASE(GetLineWidth) {
@@ -113,15 +113,16 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   rs.push_back(std::move(line));
 
   TLineModelElementParam_ptr fdata_id =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1,
+                                               "instrumentDriven");
   TLineModelElementParam_ptr fdata_c =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "combined");
   TLineModelElementParam_ptr fdata_vd =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "velocityDriven");
 
-  CLineModelElement elementID = CLineModelElement(fdata_id, "instrumentDriven");
-  CLineModelElement elementcombined = CLineModelElement(fdata_c, "combined");
-  CLineModelElement elementVD = CLineModelElement(fdata_vd, "velocityDriven");
+  CLineModelElement elementID = CLineModelElement(fdata_id);      //,
+  CLineModelElement elementcombined = CLineModelElement(fdata_c); //,
+  CLineModelElement elementVD = CLineModelElement(fdata_vd);      //
 
   // setLSF on multiLines
   std::string lsfType = "gaussianConstantResolution"; // TBC
@@ -137,14 +138,12 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   elementcombined.SetLSF(lsf);
   elementVD.SetLSF(lsf);
 
-  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., true), 0.001);
-  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000., false), 0.001);
+  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000.), 0.001);
 
-  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., true), 0.001);
-  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000., false),
-                    0.001);
-  BOOST_CHECK_CLOSE(0.0333564, elementVD.GetLineWidth(10000., true), 0.001);
-  BOOST_CHECK_CLOSE(0.0366920, elementVD.GetLineWidth(10000., false), 0.001);
+  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000.), 0.001);
+
+  BOOST_CHECK_CLOSE(0.0333564, elementVD.GetLineWidth(10000.), 0.001);
+  //  BOOST_CHECK_CLOSE(0.0366920, elementVD.GetLineWidth(10000.), 0.001);
 }
 
 BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
@@ -164,9 +163,9 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
   TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "combined");
 
-  CLineModelElement element = CLineModelElement(fdata, "combined");
+  CLineModelElement element = CLineModelElement(fdata);
 
   CLineProfile_ptr profilelor{
       std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(nsigmasupport))};
@@ -204,9 +203,9 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   std::shared_ptr<TLineModelElementParam> fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1);
+      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "velocityDriven");
 
-  CLineModelElement element = CLineModelElement(fdata, "velocityDriven");
+  CLineModelElement element = CLineModelElement(fdata);
 
   Float64 nsigmasupport = 8.;
   Float64 resolution = 0.9;

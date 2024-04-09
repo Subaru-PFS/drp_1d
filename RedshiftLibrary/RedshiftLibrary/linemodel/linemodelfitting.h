@@ -120,16 +120,14 @@ public:
   CMask getOutsideLinesMask() const;
   Float64 getOutsideLinesSTD(Int32 which) const;
 
-  Int32 getSpcNSamples() const;
+  Int32 computeSpcNSamples() const;
 
   Float64 getLeastSquareContinuumMeritFast() const;
   Float64 getLeastSquareContinuumMerit() const;
-  Float64 getLeastSquareMeritUnderElements() const;
+
   Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const {
     return m_ElementsVector->getScaleMargCorrection(Eltidx);
   }
-
-  Float64 getStrongerMultipleELAmpCoeff() const;
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
     // TODO temp basic impl
@@ -177,6 +175,9 @@ public:
   }
   const CLineModelElementList &getElementList() const {
     return m_ElementsVector->getElementList();
+  }
+  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+    return m_ElementsVector->getElementParam();
   }
 
   const TLambdaRange &getLambdaRange() const {
@@ -226,6 +227,8 @@ public:
   void resetCurObs() { *m_curObs = 0; }
   void incrementCurObs() { (*m_curObs)++; }
   Int32 remainsObs() { return *m_curObs < m_nbObs; }
+
+  void refreshAllModels();
 
 private:
   void SetLSF();

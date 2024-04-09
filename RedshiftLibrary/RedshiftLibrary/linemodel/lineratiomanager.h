@@ -120,9 +120,7 @@ protected:
   const CLineModelElementList &getElementList() const {
     return m_elementsVector->getElementList();
   }
-  bool isOutsideLambdaRange(Int32 elt_index, Int32 line_index);
-  bool isOutsideLambdaRange(Int32 elt_index);
-  std::vector<bool> getOutsideLambdaRangeList(Int32 elt_index);
+
   void refreshAllModels();
 
   std::shared_ptr<CLMEltListVector> m_elementsVector;
@@ -131,7 +129,6 @@ protected:
   CSpcModelVectorPtr m_models;
   std::shared_ptr<Int32> m_curObs;
   Int32 m_nbObs;
-  std::vector<std::vector<bool>> m_outsideLambdaRangeList;
 
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;

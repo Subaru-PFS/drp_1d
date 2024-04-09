@@ -148,6 +148,9 @@ protected:
   std::vector<TLineModelElementParam_ptr> &getElementParam() {
     return m_ElementsVector->getElementParam();
   }
+  const std::vector<TLineModelElementParam_ptr> &getElementParam() const {
+    return m_ElementsVector->getElementParam();
+  }
   bool isOutsideLambdaRange(Int32 elt_index);
 
   Int32 m_nbElements;

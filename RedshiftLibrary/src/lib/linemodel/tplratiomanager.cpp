@@ -438,7 +438,8 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
          ++line_idx) {
       Float64 amp = m_elementsVector->getElementParam()[iElt]
                         ->m_FittedAmplitudes[line_idx];
-      if (isnan(amp) || amp <= 0. || isOutsideLambdaRange(iElt, line_idx))
+      if (isnan(amp) || amp <= 0. ||
+          m_elementsVector->isOutsideLambdaRangeLine(iElt, line_idx))
         continue;
       allampzero = false;
 
@@ -496,23 +497,27 @@ Float64 CTplratioManager::computelogLinePriorMerit(
     return _meritprior;
 
   Float64 ampl = 0.0;
-  for (const auto &elt : getElementList()) {
+  Int32 elt_index = 0;
+  for (const auto &elt_param : m_elementsVector->getElementParam()) {
     bool foundAmp = false;
-    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-      Float64 amp = elt->GetFittedAmplitude(line_idx);
-      if (amp <= 0. || elt->IsOutsideLambdaRange(line_idx))
+    for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
+      Float64 amp = elt_param->GetFittedAmplitude(line_idx);
+      if (amp <= 0. ||
+          m_elementsVector->isOutsideLambdaRangeLine(elt_index, line_idx))
         continue;
-      Float64 nominal_amp = elt->GetNominalAmplitude(line_idx);
+      Float64 nominal_amp = elt_param->GetNominalAmplitude(line_idx);
       ampl = amp / nominal_amp;
       foundAmp = true;
       break;
     }
+    elt_index++;
     /*if (foundAmp)
       break;
       //Didier: probably this is missing here??? I suppose we are
       // looking for the first non-null and valid amplitude?
      */
   }
+
   _meritprior += logPriorDataTplRatio[itratio].betaA *
                  (ampl - logPriorDataTplRatio[itratio].A_mean) *
                  (ampl - logPriorDataTplRatio[itratio].A_mean) /
@@ -558,7 +563,8 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
     m_elementsVector->getElementParam()[iElts]->setAmplitudes(
         m_FittedAmpTplratio[m_savedIdxFitted][iElts],
         m_FittedErrorTplratio[m_savedIdxFitted][iElts],
-        getOutsideLambdaRangeList(iElts), isOutsideLambdaRange(iElts));
+        m_elementsVector->getOutsideLambdaRangeList(iElts),
+        m_elementsVector->isOutsideLambdaRange(iElts));
     m_elementsVector->getElementParam()[iElts]->m_sumCross =
         m_DtmTplratio[m_savedIdxFitted][iElts];
     m_elementsVector->getElementParam()[iElts]->m_sumGauss =

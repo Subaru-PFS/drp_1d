@@ -132,7 +132,7 @@ void COperatorLineModel::ComputeFirstPass() {
     tplCatalog->m_orthogonal = 0;
   }
 
-  m_result->nSpcSamples = m_fittingManager->getSpcNSamples();
+  m_result->nSpcSamples = m_fittingManager->computeSpcNSamples();
   m_result->dTransposeD = m_fittingManager->getDTransposeD();
   m_result->cstLog = m_fittingManager->getLikelihood_cstLog();
 
@@ -1058,6 +1058,8 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
                     ->GetModelRulesLog());
       }
 
+      std::shared_ptr<CModelSpectrumResult> baselineResult =
+          std::make_shared<CModelSpectrumResult>();
       for (m_fittingManager->resetCurObs(); m_fittingManager->remainsObs();
            m_fittingManager->incrementCurObs()) {
 
@@ -1066,17 +1068,13 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
         const CSpectrumFluxAxis &modelContinuumFluxAxis =
             m_fittingManager->getSpectrumModel().GetModelContinuum();
 
-        std::shared_ptr<CModelSpectrumResult> baselineResult =
-            std::make_shared<CModelSpectrumResult>();
         baselineResult->addModel(
             CSpectrum(m_fittingManager->getSpectrum().GetSpectralAxis(),
                       modelContinuumFluxAxis),
             m_fittingManager->getSpectrum().getObsID());
-
-        ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
-
-        savedModels++;
       }
+      ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
+      savedModels++;
     }
 
     // code here has been moved to TLineModelResult::updateFromModel
@@ -1817,6 +1815,8 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   // make sure polynom info are correctly set. it s up to refresh model to use
   // these coeffs
   m_fittingManager->LoadModelSolution(bestModelSolution);
-  m_fittingManager->getSpectrumModel().refreshModel();
+  m_fittingManager->refreshAllModels();
+  m_fittingManager
+      ->resetCurObs(); // TODO dummy implementation, should return all models
   return m_fittingManager->getSpectrumModel().GetModelSpectrum();
 }

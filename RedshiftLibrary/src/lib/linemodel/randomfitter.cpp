@@ -61,7 +61,7 @@ void CRandomFitter::doFit(Float64 redshift) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
-    if (getElementList()[iElts]->GetElementType() ==
+    if (getElementParam()[iElts]->GetElementType() ==
         CLine::EType::nType_Absorption) {
       amax = meanContinuum * 0.5 * coeffAmpAbsorption;
     } else {
@@ -76,8 +76,8 @@ void CRandomFitter::doFit(Float64 redshift) {
     Float64 maxNominalAmp = -1.0;
     auto const &elt = getElementList()[iElts];
     for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-      if (maxNominalAmp < elt->GetNominalAmplitude(line_idx))
-        maxNominalAmp = elt->GetNominalAmplitude(line_idx);
+      if (maxNominalAmp < elt->getElementParam()->GetNominalAmplitude(line_idx))
+        maxNominalAmp = elt->getElementParam()->GetNominalAmplitude(line_idx);
     }
 
     m_ElementsVector->SetElementAmplitude(iElts, a / maxNominalAmp, err);

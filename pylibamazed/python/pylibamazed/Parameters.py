@@ -217,3 +217,25 @@ class Parameters(ParametersAccessor):
                         "Cannot run LineMeasSolve from catalog when sequencial processing is selected"
                         "simultaneously."
                     )
+
+    def get_lambda_range_min(self):
+        if self.get_multiobs_method() != "full":
+            return self.get_lambda_range()[0]
+        else:
+            ret = 10 ^ 9
+            for obs_id in self.get_observation_ids():
+                cur = self.get_lambda_range(obs_id)[0]
+                if cur < ret:
+                    ret = cur
+            return ret
+
+    def get_lambda_range_max(self):
+        if self.get_multiobs_method() != "full":
+            return self.get_lambda_range()[0]
+        else:
+            ret = 0
+            for obs_id in self.get_observation_ids():
+                cur = self.get_lambda_range(obs_id)[1]
+                if cur > ret:
+                    ret = cur
+            return ret

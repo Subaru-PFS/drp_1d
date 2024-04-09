@@ -73,7 +73,9 @@ private:
                        const std::string &strongName, Float64 ampB,
                        Float64 maxB);
   Float64 maxAmplitude(Float64 ampStrong, Float64 erStrong);
-  void correctLineModelElement(CLineModelElement &element, Float64 maxAmplitude,
+  void correctLineModelElement(CLineModelElement &element,
+                               const TLineModelElementParam_ptr &elt_param_ptr,
+                               Float64 maxAmplitude,
                                const std::string &nameStrong);
 };
 } // namespace NSEpic
