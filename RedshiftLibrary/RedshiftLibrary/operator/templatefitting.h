@@ -140,9 +140,8 @@ protected:
                        &igmCorrectionMeiksin,
                    Int32 EbmvListSize);
 
-  virtual bool
-  CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const {
-    return currentRange.GetBegin() > RESTLAMBDA_LYA;
+  virtual bool igmIsInRange(const TFloat64Range &currentRange) const {
+    return currentRange.GetBegin() <= RESTLAMBDA_LYA;
   };
 
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,

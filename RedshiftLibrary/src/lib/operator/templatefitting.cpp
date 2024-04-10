@@ -139,10 +139,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
 
         // check if lya belongs to current range.
-        if (CheckLyaIsInCurrentRange(currentRanges[spcIndex]))
-          igmCorrectionAppliedOnce = false;
-        else
-          igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx, spcIndex);
+        if (igmIsInRange(currentRanges[spcIndex]))
+          if (ApplyMeiksinCoeff(meiksinIdx, spcIndex))
+            igmCorrectionAppliedOnce = true;
       }
       if (!igmCorrectionAppliedOnce)
         igmLoopUseless_WavelengthRange = true;

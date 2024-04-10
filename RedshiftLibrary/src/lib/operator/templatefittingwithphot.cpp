@@ -155,13 +155,13 @@ void COperatorTemplateFittingPhot::InitIsmIgmConfig(
   m_sumT_outsideIGM_phot.resize(EbmvListSize);
 }
 
-bool COperatorTemplateFittingPhot::CheckLyaIsInCurrentRange(
+bool COperatorTemplateFittingPhot::igmIsInRange(
     const TFloat64Range &currentRange) const {
 
-  bool ret = COperatorTemplateFitting::CheckLyaIsInCurrentRange(currentRange);
+  bool ret = COperatorTemplateFitting::igmIsInRange(currentRange);
   for (const auto &band : m_templateRebined_phot)
-    ret = ret || COperatorTemplateFitting::CheckLyaIsInCurrentRange(
-                     band.second.GetLambdaRange());
+    ret = ret &&
+          COperatorTemplateFitting::igmIsInRange(band.second.GetLambdaRange());
   return ret;
 }
 
