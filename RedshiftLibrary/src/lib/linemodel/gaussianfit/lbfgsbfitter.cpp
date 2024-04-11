@@ -186,6 +186,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
   }
 
   // reset the support (lines outside range)
+  *(m_fitter->m_curObs) = 0;
   for (Int32 eltIndex : *m_EltsIdx) {
     auto &elt_ptr = m_fitter->getElementList()[eltIndex];
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
@@ -505,6 +506,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
+  *m_curObs = 0; // dummy reset, TO BE CORRECTED for full multiobs
   Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
     // fitAmplitude(EltsIdx[i], redshift);
@@ -612,8 +614,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     v_xResult = v_xGuess;
   }
 
-  // store fitted amplitude
-  // TODO SNR computation
+  // store fitted amplitude, with temporary unknown SNR
   Float64 amp_std = NAN;
   for (Int32 i = 0; i < EltsIdx.size(); ++i)
     m_ElementsVector->SetElementAmplitude(EltsIdx[i], v_xResult[i] / normFactor,
@@ -674,5 +675,62 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     for (Int32 eltIndex : EltsIdx)
       m_ElementsVector->getElementParam()[eltIndex]->SetPolynomCoeffs(
           {a0 / normFactor, a1 / normFactor, a2 / normFactor});
+  }
+
+  // compute snr (analytical formula from doi:10.1364/AO.46.005374)
+  // --------------------------------------------------------------
+  //  Var(amp) = 3/2 * var(spectra) /
+  //       (sqrt(pi) * sigma_in_wavelength_unit * pixsize_in_wavelength_unit)
+  //
+  // note: this is only for one line (one Gaussian profile)
+  // Thus it does not take into account the correlation between overlapping
+  // lines, and possibly underestimate the uncertainty in such a case
+  // reset the support (lines outside range)
+  *m_curObs = 0;
+  for (Int32 eltIndex : EltsIdx) {
+    auto &elt_ptr = getElementList()[eltIndex];
+    elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
+                            getLambdaRange());
+  }
+  setGlobalOutsideLambdaRangeFromSpectra();
+  *m_curObs = 0;
+  getModel().refreshModel(); // recompute model with estimated params (needed
+                             // for noise estimation from residual)
+
+  for (Int32 i = 0; i < EltsIdx.size(); ++i) {
+    *m_curObs = 0;
+    auto const &elt = getElementList()[EltsIdx[i]];
+    Float64 const amp = v_xResult[i] / normFactor;
+
+    if (elt->IsOutsideLambdaRange()) {
+      m_ElementsVector->SetElementAmplitude(EltsIdx[i], NAN, NAN);
+      break;
+    }
+
+    auto const &[_, sigma] = elt->getObservedPositionAndLineWidth(redshift);
+    Float64 const noise_stdev =
+        getModelResidualRmsUnderElements({EltsIdx[i]}, true, false);
+    Float64 pixsize = 0.0;
+    Int32 nlines = 0;
+    for (Int32 line_idx = 0; line_idx < elt->GetSize(); ++line_idx) {
+      if (elt->IsOutsideLambdaRangeLine(line_idx))
+        continue;
+      auto const range = elt->getSupportSubElt(line_idx);
+      *m_curObs = 0; // dummy reset, TO BE CORRECTED for full multiobs
+      pixsize += getSpectrum().GetSpectralAxis().GetMeanResolution(range);
+      ++nlines;
+    }
+    pixsize /= nlines;
+    Float64 const amp_std =
+        noise_stdev * sqrt(3.0 / (2.0 * sigma * pixsize * sqrt(M_PI)));
+
+    m_ElementsVector->SetElementAmplitude(EltsIdx[i], amp, amp_std);
+
+    // we should divide the amplitude uncertainty by the nominal amp,  since it
+    // has been multplied by it in SetElementAmplitude....
+    auto const &param = m_ElementsVector->getElementParam()[EltsIdx[i]];
+    for (Int32 line_idx = 0; line_idx < elt->GetSize(); ++line_idx)
+      param->m_FittedAmplitudesStd[line_idx] /=
+          param->m_NominalAmplitudes[line_idx];
   }
 }

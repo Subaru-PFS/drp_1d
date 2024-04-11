@@ -868,8 +868,6 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       modelSolution.CenterContinuumFlux[iRestLine] = cont;
       modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_std;
 
-      Float64 mu = NAN;
-      Float64 sigma = NAN;
       Float64 flux = NAN;
       Float64 fluxError = NAN;
       TInt32List eIdx_line(1, eIdx);
@@ -892,9 +890,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
         for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
           const auto &eltList = getElementList();
           if (!eltList[eIdx]->IsOutsideLambdaRangeLine(line_index)) {
-            eltList[eIdx]->getObservedPositionAndLineWidth(
-                line_index, modelSolution.Redshift, mu, sigma,
-                false); // do not apply Lya asym offset
+            auto const &[mu, sigma] =
+                eltList[eIdx]->getObservedPositionAndLineWidth(
+                    modelSolution.Redshift, line_index,
+                    false); // do not apply Lya asym offset
             modelSolution.Sigmas[iRestLine] = sigma;
             const auto &profile =
                 eltList[eIdx]->getElementParam()->getLineProfile(line_index);

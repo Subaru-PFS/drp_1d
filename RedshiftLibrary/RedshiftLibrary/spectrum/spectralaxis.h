@@ -86,7 +86,10 @@ public:
   CSpectrumSpectralAxis extract(Int32 startIdx, Int32 endIdx) const;
 
   Float64 GetResolution(Float64 atWavelength = -1.0) const;
-  Float64 GetMeanResolution() const;
+  Float64 GetMeanResolution(TInt32Range const &index_range) const;
+  Float64 GetMeanResolution() const {
+    return GetMeanResolution(TInt32Range(0, GetSamplesCount() - 1));
+  };
 
   void ShiftByWaveLength(const CSpectrumSpectralAxis &origin,
                          Float64 wavelengthOffset, EShiftDirection direction);

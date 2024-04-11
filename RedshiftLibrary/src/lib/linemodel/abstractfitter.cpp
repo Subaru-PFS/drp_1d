@@ -548,15 +548,14 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
   return bestIgmIdx;
 }
 
-Float64
-CAbstractFitter::getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
-                                                  bool with_continuum) {
+Float64 CAbstractFitter::getModelResidualRmsUnderElements(
+    TInt32List const &EltsIdx, bool with_continuum, bool with_weight) {
   Float64 fit_allObs = 0;
   Float64 sumErr_allObs = 0;
   Int32 nb_nan = 0;
   for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
     auto [fit, sumErr] = getModel().getModelSquaredResidualUnderElements(
-        EltsIdx, with_continuum);
+        EltsIdx, with_continuum, with_weight);
     if (fit == 0.0)
       continue;
     if (std::isnan(fit)) {
