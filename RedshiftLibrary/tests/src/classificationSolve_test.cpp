@@ -82,6 +82,7 @@ public:
   fixture_Context ctx;
   fixture_classificationSolveTest() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -142,7 +143,8 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_classificationSolveTest) {
                              ScopeType::STAGE);
   CClassificationSolve cSolve;
 
-  std::shared_ptr<CSolveResult> classifResult = cSolve.compute();
+  std::shared_ptr<CSolveResult> classifResult;
+  BOOST_REQUIRE_NO_THROW(classifResult = cSolve.compute());
   resultStore->StoreGlobalResult("object.stage.method", "classification",
                                  classifResult);
 

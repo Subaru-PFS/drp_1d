@@ -114,6 +114,7 @@ public:
   fixture_Context ctx;
   fixture_TemplateFittingSolveTestNoFFT() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringNoFFT);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -149,6 +150,7 @@ public:
   fixture_Context ctx;
   fixture_TemplateFittingSolveTestFFT() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringFFT);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -202,7 +204,7 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
                              ScopeType::STAGE);
 
   CTemplateFittingSolve templateFittingSolve;
-  BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
@@ -239,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
                              ScopeType::STAGE);
 
   CTemplateFittingSolve templateFittingSolve;
-  BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
@@ -278,7 +280,7 @@ BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
 
   // Creation of useful objects
   CTemplateFittingSolve templateFittingSolve;
-  templateFittingSolve.Compute();
+  BOOST_REQUIRE_NO_THROW(templateFittingSolve.Compute());
 
   Float64 precision = 1e-12;
 

@@ -307,6 +307,7 @@ class fixture_LineModelSolveTestTplFitRules
 public:
   fixture_LineModelSolveTestTplFitRules() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(lambdaString + jsonString + jsonStringTplFitRules);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -325,6 +326,7 @@ class fixture_LineModelSolveTestTplFitTplRatio
 public:
   fixture_LineModelSolveTestTplFitTplRatio() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(lambdaString + jsonString +
                            jsonStringTplFitTplRatio);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
@@ -344,6 +346,7 @@ class fixture_LineModelSolveTestNoContTplRatio
 public:
   fixture_LineModelSolveTestNoContTplRatio() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(lambdaString + jsonStringS +
                            jsonStringnoContinuumTplRatio);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
@@ -363,6 +366,7 @@ class fixture_LineModelSolveTestMultiNoContTplRatio
 public:
   fixture_LineModelSolveTestMultiNoContTplRatio() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(multiLambdaString + jsonStringS +
                            jsonStringnoContinuumTplRatio);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
@@ -385,6 +389,7 @@ class fixture_LineModelSolveTestFromSpectrum
 public:
   fixture_LineModelSolveTestFromSpectrum() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(lambdaString + jsonString + jsonStringFromSpectrum);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -407,7 +412,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
                              ScopeType::STAGE);
   CLineModelSolve lineModelSolve;
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
@@ -445,7 +450,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
                              ScopeType::STAGE);
   CLineModelSolve lineModelSolve;
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
@@ -488,7 +493,7 @@ BOOST_FIXTURE_TEST_CASE(computeNoContTplRatio_test,
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
                              ScopeType::STAGE);
   CLineModelSolve lineModelSolve;
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
@@ -529,7 +534,7 @@ BOOST_FIXTURE_TEST_CASE(computeMultiNoContTplRatio_test,
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
                              ScopeType::STAGE);
   CLineModelSolve lineModelSolve;
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
@@ -564,7 +569,7 @@ BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
                              ScopeType::STAGE);
   CLineModelSolve lineModelSolve;
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",

@@ -149,6 +149,7 @@ public:
 
   fixture_LinemeasSolveTest() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -193,6 +194,7 @@ public:
 
   fixture_LinemeasSolveLbfgsbTest() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString_lbfgsb);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -239,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
   CAutoScope stage_autoscope(Context.m_ScopeStack, "lineMeasSolver",
                              ScopeType::STAGE);
   CLineMeasSolve lineMeasSolve;
-  BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver",
@@ -266,7 +268,7 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
   CAutoScope stage_autoscope(Context.m_ScopeStack, "lineMeasSolver",
                              ScopeType::STAGE);
   CLineMeasSolve lineMeasSolve;
-  BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver",

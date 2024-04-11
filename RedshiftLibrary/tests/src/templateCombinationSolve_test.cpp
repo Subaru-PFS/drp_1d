@@ -117,6 +117,7 @@ class fixture_TplCombinationTestRaw : public fixture_TplCombinationTest {
 public:
   fixture_TplCombinationTestRaw() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentRaw);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -130,6 +131,7 @@ class fixture_TplCombinationTestNoContinuum
 public:
   fixture_TplCombinationTestNoContinuum() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentNoContinuum);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -142,6 +144,7 @@ class fixture_TplCombinationTestContinuum : public fixture_TplCombinationTest {
 public:
   fixture_TplCombinationTestContinuum() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentContinuum);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -154,6 +157,7 @@ class fixture_TplCombinationTestAll : public fixture_TplCombinationTest {
 public:
   fixture_TplCombinationTestAll() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentAll);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -171,7 +175,7 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
                              ScopeType::STAGE);
 
   CTplCombinationSolve tplcombinationSolve;
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
@@ -210,7 +214,7 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
                              ScopeType::STAGE);
 
   CTplCombinationSolve tplcombinationSolve;
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
@@ -249,7 +253,7 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
                              ScopeType::STAGE);
 
   CTplCombinationSolve tplcombinationSolve;
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
@@ -288,7 +292,7 @@ BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
                              ScopeType::STAGE);
 
   CTplCombinationSolve tplcombinationSolve;
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
       Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
