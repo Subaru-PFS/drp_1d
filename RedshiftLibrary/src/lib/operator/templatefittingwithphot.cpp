@@ -160,7 +160,7 @@ bool COperatorTemplateFittingPhot::igmIsInRange(
 
   bool ret = COperatorTemplateFitting::igmIsInRange(currentRange);
   for (const auto &band : m_templateRebined_phot)
-    ret = ret &&
+    ret = ret ||
           COperatorTemplateFitting::igmIsInRange(band.second.GetLambdaRange());
   return ret;
 }
@@ -230,7 +230,7 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
   auto EndLoop = m_option_igmFastProcessing && kM > 0 ? IgmEnd : End;
 
   // compute photometric Leastquare
-  for (auto it = Start; it < EndLoop; it++) {
+  for (auto it = Start; it != EndLoop; it++) {
 
     if (m_option_igmFastProcessing && !sumsIgmSaved && it > IgmEnd) {
       // store intermediate sums for IGM range

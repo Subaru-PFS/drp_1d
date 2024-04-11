@@ -238,8 +238,6 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   Int32 sumsIgmSaved = 0;
 
   Float64 err2 = 0.0;
-  Int32 numDevs = 0;
-  Int32 numDevsFull = 0;
   const CSpectrumNoiseAxis &error = spcFluxAxis.GetError();
 
   Int32 kIgmEnd = m_option_igmFastProcessing
@@ -256,11 +254,8 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
       sumsIgmSaved = 1;
     }
 
-    numDevsFull++;
-
     if (spcMaskAdditional[j]) {
 
-      numDevs++;
       err2 = 1.0 / (error[j] * error[j]);
 
       // Tonry&Davis formulation
@@ -302,7 +297,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
     }
   }
 
-  if (numDevs == 0) {
+  if (sumT == 0.0) {
     THROWG(INTERNAL_ERROR, "empty leastsquare sum");
   }
 
