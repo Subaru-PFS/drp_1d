@@ -102,6 +102,16 @@ protected:
                              Float64 &overlapFraction,
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);
+  virtual void
+  InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
+                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+                       &ismCorrectionCalzetti,
+                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
+                       &igmCorrectionMeiksin,
+                   Int32 spcIndex) {
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
+        kstart, kend, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+  };
 
   virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) {
     return m_templateRebined_bf[spcIndex].ApplyMeiksinCoeff(meiksinIdx);

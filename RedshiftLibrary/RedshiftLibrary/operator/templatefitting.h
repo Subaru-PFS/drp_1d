@@ -132,13 +132,7 @@ protected:
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
 
-  virtual void
-  InitIsmIgmConfig(Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin,
-                   Int32 EbmvListSize);
+  virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
   virtual bool igmIsInRange(const TFloat64Range &currentRange) const {
     return currentRange.GetBegin() <= RESTLAMBDA_LYA;

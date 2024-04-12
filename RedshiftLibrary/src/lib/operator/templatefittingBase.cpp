@@ -106,9 +106,13 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
       m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
 
   if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
-    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-        currentRange, redshift, tpl->m_ismCorrectionCalzetti,
-        tpl->m_igmCorrectionMeiksin);
+    Int32 kstart = undefIdx;
+    Int32 kend = undefIdx;
+    currentRange.getClosedIntervalIndices(
+        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
+        kstart, kend);
+    InitIsmIgmConfig(redshift, kstart, kend, tpl->m_ismCorrectionCalzetti,
+                     tpl->m_igmCorrectionMeiksin, spcIndex);
   }
 
   if (EbmvCoeff > 0.) {

@@ -135,24 +135,41 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
 }
 
 void COperatorTemplateFittingPhot::InitIsmIgmConfig(
-    Float64 redshift,
+    Float64 redshift, Int32 kstart, Int32 kend,
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
-    Int32 EbmvListSize) {
+    Int32 spcIndex) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(
-      redshift, ismCorrectionCalzetti, igmCorrectionMeiksin, EbmvListSize);
+  COperatorTemplateFitting::InitIsmIgmConfig(redshift, kstart, kend,
+                                             ismCorrectionCalzetti,
+                                             igmCorrectionMeiksin, spcIndex);
+
+  if (spcIndex > 0)
+    return;
 
   // init ism on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
     band.second.InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
                                  igmCorrectionMeiksin);
+}
 
-  m_sumCross_outsideIGM_phot.resize(EbmvListSize);
-  m_sumS_outsideIGM_phot.resize(EbmvListSize);
-  m_sumT_outsideIGM_phot.resize(EbmvListSize);
+void COperatorTemplateFittingPhot::init_fast_igm_processing(
+    Int32 EbmvListSize) {
+
+  COperatorTemplateFitting::init_fast_igm_processing(EbmvListSize);
+
+  // determine last band not impacted by IGM
+  m_BandIgmEnd = std::find_if(
+      m_sortedBandNames.cbegin(), m_sortedBandNames.cend(),
+      [this](std::string const &s) {
+        return m_templateRebined_phot.at(s).GetIgmEndIndex() == undefIdx;
+      });
+
+  m_sumCross_outsideIGM_phot.assign(EbmvListSize, 0.0);
+  m_sumS_outsideIGM_phot.assign(EbmvListSize, 0.0);
+  m_sumT_outsideIGM_phot.assign(EbmvListSize, 0.0);
 }
 
 bool COperatorTemplateFittingPhot::igmIsInRange(
@@ -168,17 +185,27 @@ bool COperatorTemplateFittingPhot::igmIsInRange(
 bool COperatorTemplateFittingPhot::ApplyMeiksinCoeff(Int32 meiksinIdx,
                                                      Int32 spcIndex) {
   bool ret = COperatorTemplateFitting::ApplyMeiksinCoeff(meiksinIdx, spcIndex);
+
+  if (spcIndex > 0)
+    return ret;
+
   for (auto &band : m_templateRebined_phot)
-    ret = ret || band.second.ApplyMeiksinCoeff(
-                     meiksinIdx); // will return true if at list igm is applied
-                                  // on one template
+    if (band.second.ApplyMeiksinCoeff(meiksinIdx))
+      ret = true;
+
   return ret;
 }
 
 bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
   bool ret = COperatorTemplateFitting::ApplyDustCoeff(kEbmv, spcIndex);
+
+  if (spcIndex > 0)
+    return ret;
+
   for (auto &band : m_templateRebined_phot)
-    ret = ret || band.second.ApplyDustCoeff(kEbmv);
+    if (band.second.ApplyDustCoeff(kEbmv))
+      ret = true;
+
   return ret;
 }
 
@@ -207,9 +234,9 @@ void COperatorTemplateFittingPhot::ComputeAmplitudeAndChi2(
 void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
     Int32 kM, Int32 kEbmv_, TCrossProductResult &fitResult) {
 
-  Float64 sumCross_phot = 0.0;
-  Float64 sumT_phot = 0.0;
-  Float64 sumS_phot = 0.0;
+  Float64 &sumCross_phot = fitResult.sumCross_phot;
+  Float64 &sumT_phot = fitResult.sumT_phot;
+  Float64 &sumS_phot = fitResult.sumS_phot;
 
   Float64 sumCross_IGM = 0.0;
   Float64 sumT_IGM = 0.0;
@@ -221,22 +248,17 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
   // determine bands impacted by IGM
   const auto &Start = m_sortedBandNames.cbegin();
   const auto &End = m_sortedBandNames.cend();
-  const auto IgmEnd =
-      std::lower_bound(m_sortedBandNames.cbegin(), m_sortedBandNames.cend(),
-                       RESTLAMBDA_LYA, [this](const std::string &s, Float64 v) {
-                         return m_photBandCat->at(s).GetMinLambda() < v;
-                       });
 
-  auto EndLoop = m_option_igmFastProcessing && kM > 0 ? IgmEnd : End;
+  auto EndLoop = m_option_igmFastProcessing && kM > 0 ? m_BandIgmEnd : End;
 
   // compute photometric Leastquare
   for (auto it = Start; it != EndLoop; it++) {
 
-    if (m_option_igmFastProcessing && !sumsIgmSaved && it > IgmEnd) {
+    if (m_option_igmFastProcessing && !sumsIgmSaved && it == m_BandIgmEnd) {
       // store intermediate sums for IGM range
-      sumCross_IGM = fitResult.sumCross_phot;
-      sumT_IGM = fitResult.sumT_phot;
-      sumS_IGM = fitResult.sumS_phot;
+      sumCross_IGM = sumCross_phot;
+      sumT_IGM = sumT_phot;
+      sumS_IGM = sumS_phot;
       sumsIgmSaved = true;
     }
 
@@ -260,9 +282,9 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
                                  << "found invalid inverse variance : err2="
                                  << oneOverErr2 << ", for band=" << bandName);
 
-    fitResult.sumCross_phot += d * integ_flux * oneOverErr2;
-    fitResult.sumT_phot += integ_flux * integ_flux * oneOverErr2;
-    fitResult.sumS_phot += fluxOverErr2;
+    sumCross_phot += d * integ_flux * oneOverErr2;
+    sumT_phot += integ_flux * integ_flux * oneOverErr2;
+    sumS_phot += fluxOverErr2;
   }
 
   if (m_option_igmFastProcessing) {
@@ -271,14 +293,16 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
       m_sumT_outsideIGM_phot[kEbmv_] = sumT_phot - sumT_IGM;
       m_sumS_outsideIGM_phot[kEbmv_] = sumS_phot - sumS_IGM;
     } else {
-      fitResult.sumCross_phot += m_sumCross_outsideIGM_phot[kEbmv_];
-      fitResult.sumT_phot += m_sumT_outsideIGM_phot[kEbmv_];
-      fitResult.sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
+      sumCross_phot += m_sumCross_outsideIGM_phot[kEbmv_];
+      sumT_phot += m_sumT_outsideIGM_phot[kEbmv_];
+      sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
     }
   }
-  fitResult.sumCross += fitResult.sumCross_phot;
-  fitResult.sumT += fitResult.sumT_phot;
-  fitResult.sumS += fitResult.sumS_phot;
+
+  // add photometric terms to spectroscopic ones
+  fitResult.sumCross += sumCross_phot;
+  fitResult.sumT += sumT_phot;
+  fitResult.sumS += sumS_phot;
 }
 
 Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {

@@ -106,10 +106,15 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart[spcIndex], m_kEnd[spcIndex]);
+
+    if (opt_dustFitting || opt_extinction)
+      InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
+                       tpl->m_ismCorrectionCalzetti,
+                       tpl->m_igmCorrectionMeiksin, spcIndex);
   }
-  if (opt_dustFitting || opt_extinction)
-    InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
-                     tpl->m_igmCorrectionMeiksin, EbmvListSize);
+
+  if (m_option_igmFastProcessing)
+    init_fast_igm_processing(EbmvListSize);
 
   CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
@@ -195,18 +200,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   return result;
 }
 
-void COperatorTemplateFitting::InitIsmIgmConfig(
-    Float64 redshift,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin,
-    Int32 EbmvListSize) {
-
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
-    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-        m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
-        igmCorrectionMeiksin);
+void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {
 
   m_sumCross_outsideIGM.assign(m_spectra.size(),
                                TFloat64List(EbmvListSize, 0.0));
