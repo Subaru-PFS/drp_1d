@@ -84,7 +84,7 @@ private:
 
   void init_fast_igm_processing(Int32 EbmvListSize) override;
 
-  bool igmIsInRange(const TFloat64Range &currentRange) const override;
+  bool igmIsInRange(const TFloat64RangeList &ranges) const override;
 
   bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
   bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;

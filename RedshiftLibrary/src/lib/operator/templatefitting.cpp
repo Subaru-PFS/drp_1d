@@ -106,11 +106,17 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart[spcIndex], m_kEnd[spcIndex]);
+  }
 
-    if (opt_dustFitting || opt_extinction)
+  if (opt_extinction)
+    opt_extinction = igmIsInRange(currentRanges);
+
+  if (opt_dustFitting || opt_extinction) {
+    for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
       InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
                        tpl->m_ismCorrectionCalzetti,
                        tpl->m_igmCorrectionMeiksin, spcIndex);
+    }
   }
 
   if (m_option_igmFastProcessing)
@@ -119,9 +125,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
   // Loop on the meiksin Idx
-  bool igmLoopUseless_WavelengthRange = false;
+  bool skip_igm_loop = true;
   for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
-    if (igmLoopUseless_WavelengthRange) {
+    if (kM > 0 && skip_igm_loop) {
       // Now copy from the already calculated k>0 igm values
       for (Int32 kism = 0; kism < result.ChiSquareInterm.size(); kism++) {
         for (Int32 kigm = 1; kigm < result.ChiSquareInterm[kism].size();
@@ -136,21 +142,16 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       break;
     }
     Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
-    // being the median extinction value)
+                                        // being the median extinction value)
 
-    bool igmCorrectionAppliedOnce = false;
     // Meiksin IGM extinction
     if (opt_extinction) {
       for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-
-        // check if lya belongs to current range.
-        if (igmIsInRange(currentRanges[spcIndex]))
-          if (ApplyMeiksinCoeff(meiksinIdx, spcIndex))
-            igmCorrectionAppliedOnce = true;
+        if (ApplyMeiksinCoeff(meiksinIdx, spcIndex) && kM == 0)
+          skip_igm_loop = false;
       }
-      if (!igmCorrectionAppliedOnce)
-        igmLoopUseless_WavelengthRange = true;
     }
+
     // Loop on the EBMV dust coeff
     for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
       Int32 kEbmv = EbmvList[kEbmv_];
@@ -184,8 +185,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         // TFittingIsmIGmResult members
 
         result.EbmvCoeff = coeffEBMV;
-        result.MeiksinIdx =
-            igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
+        result.MeiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
         chisquareSetAtLeastOnce = true;
       }
     }
@@ -206,6 +206,15 @@ void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {
                                TFloat64List(EbmvListSize, 0.0));
   m_sumT_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
   m_sumS_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
+}
+
+bool COperatorTemplateFitting::igmIsInRange(
+    const TFloat64RangeList &ranges) const {
+  for (auto const &range : ranges) {
+    if (range.GetBegin() <= RESTLAMBDA_LYA)
+      return true;
+  }
+  return false;
 }
 
 TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(

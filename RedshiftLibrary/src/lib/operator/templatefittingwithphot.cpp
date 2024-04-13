@@ -149,7 +149,7 @@ void COperatorTemplateFittingPhot::InitIsmIgmConfig(
   if (spcIndex > 0)
     return;
 
-  // init ism on all rebined photometric templates
+  // init ism & igm on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
     band.second.InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
                                  igmCorrectionMeiksin);
@@ -173,13 +173,16 @@ void COperatorTemplateFittingPhot::init_fast_igm_processing(
 }
 
 bool COperatorTemplateFittingPhot::igmIsInRange(
-    const TFloat64Range &currentRange) const {
+    const TFloat64RangeList &ranges) const {
 
-  bool ret = COperatorTemplateFitting::igmIsInRange(currentRange);
+  if (COperatorTemplateFitting::igmIsInRange(ranges))
+    return true;
+
   for (const auto &band : m_templateRebined_phot)
-    ret = ret ||
-          COperatorTemplateFitting::igmIsInRange(band.second.GetLambdaRange());
-  return ret;
+    if (COperatorTemplateFitting::igmIsInRange({band.second.GetLambdaRange()}))
+      return true;
+
+  return false;
 }
 
 bool COperatorTemplateFittingPhot::ApplyMeiksinCoeff(Int32 meiksinIdx,

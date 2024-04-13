@@ -134,9 +134,7 @@ protected:
 
   virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
-  virtual bool igmIsInRange(const TFloat64Range &currentRange) const {
-    return currentRange.GetBegin() <= RESTLAMBDA_LYA;
-  };
+  virtual bool igmIsInRange(const TFloat64RangeList &ranges) const;
 
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                                                    Float64 redshift,
