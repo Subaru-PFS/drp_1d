@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 namespace NSEpic {
 
@@ -61,7 +62,7 @@ public:
                     const CTLambdaRangePtrVector &lambdaRanges,
                     std::shared_ptr<CContinuumManager> continuumManager,
                     const CLineMap &restLineList,
-                    const std::shared_ptr<Int32> &curObs);
+                    const CSpectraGlobalIndex &spcIndex);
   CLineRatioManager() = delete;
   virtual ~CLineRatioManager() {}
   CLineRatioManager(CLineRatioManager const &other) = default;
@@ -96,7 +97,7 @@ public:
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
       const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
-      const std::shared_ptr<Int32> &curObs);
+      const CSpectraGlobalIndex &spcIndex);
 
 protected:
   void setLyaProfile(Float64 redshift, const CLineMap &lineList);
@@ -108,11 +109,17 @@ protected:
 
   Float64 getLeastSquareMerit() const;
 
-  CSpectrumModel &getModel() { return m_models->at(*m_curObs); }
-  const CSpectrumModel &getModel() const { return m_models->at(*m_curObs); }
-  const CSpectrum &getSpectrum() const { return *(m_inputSpcs->at(*m_curObs)); }
+  CSpectrumModel &getModel() {
+    return m_models->at(m_spectraIndex.getCurObs());
+  }
+  const CSpectrumModel &getModel() const {
+    return m_models->at(m_spectraIndex.getCurObs());
+  }
+  const CSpectrum &getSpectrum() const {
+    return *(m_inputSpcs->at(m_spectraIndex.getCurObs()));
+  }
   const TLambdaRange &getLambdaRange() const {
-    return *(m_lambdaRanges.at(*m_curObs));
+    return *(m_lambdaRanges.at(m_spectraIndex.getCurObs()));
   }
   CLineModelElementList &getElementList() {
     return m_elementsVector->getElementList();
@@ -127,8 +134,7 @@ protected:
   CCSpectrumVectorPtr m_inputSpcs;
   CTLambdaRangePtrVector m_lambdaRanges;
   CSpcModelVectorPtr m_models;
-  std::shared_ptr<Int32> m_curObs;
-  Int32 m_nbObs;
+  mutable CSpectraGlobalIndex m_spectraIndex;
 
   std::shared_ptr<CContinuumManager> m_continuumManager;
   std::shared_ptr<CAbstractFitter> m_fitter;

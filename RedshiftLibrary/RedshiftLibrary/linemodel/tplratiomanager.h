@@ -56,7 +56,7 @@ public:
                    const CTLambdaRangePtrVector &lambdaRanges,
                    std::shared_ptr<CContinuumManager> continuumManager,
                    const CLineMap &restLineList,
-                   const std::shared_ptr<Int32> &curObs);
+                   const CSpectraGlobalIndex &spcIndex);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
   CTplratioManager(CTplratioManager const &other) = default;

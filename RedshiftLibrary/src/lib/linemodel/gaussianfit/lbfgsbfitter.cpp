@@ -90,8 +90,8 @@ void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
 
   CPolynomCoeffsNormalized pCoeffs = unpack(x);
 
-  *(m_fitter->m_curObs) =
-      0; // temporary multiobs implementation (might be useless -> investigate)
+  //  *(m_fitter->m_curObs) =
+  //   0; // temporary multiobs implementation (might be useless -> investigate)
   val(0, 0) = ComputeLeastSquare(pCoeffs);
 
   Log.LogDebug(Formatter() << "LeastSquare = " << val(0, 0));
@@ -186,7 +186,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
   }
 
   // reset the support (lines outside range)
-  *(m_fitter->m_curObs) = 0;
+  m_fitter->m_spectraIndex.reset();
   for (Int32 eltIndex : *m_EltsIdx) {
     auto &elt_ptr = m_fitter->getElementList()[eltIndex];
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
@@ -506,7 +506,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
-  *m_curObs = 0; // dummy reset, TO BE CORRECTED for full multiobs
+  m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
   Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
     // fitAmplitude(EltsIdx[i], redshift);
@@ -686,19 +686,19 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // Thus it does not take into account the correlation between overlapping
   // lines, and possibly underestimate the uncertainty in such a case
   // reset the support (lines outside range)
-  *m_curObs = 0;
+  m_spectraIndex.reset();
   for (Int32 eltIndex : EltsIdx) {
     auto &elt_ptr = getElementList()[eltIndex];
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
   setGlobalOutsideLambdaRangeFromSpectra();
-  *m_curObs = 0;
+  m_spectraIndex.reset();
   getModel().refreshModel(); // recompute model with estimated params (needed
                              // for noise estimation from residual)
 
   for (Int32 i = 0; i < EltsIdx.size(); ++i) {
-    *m_curObs = 0;
+    m_spectraIndex.reset();
     auto const &elt = getElementList()[EltsIdx[i]];
     Float64 const amp = v_xResult[i] / normFactor;
 
@@ -716,7 +716,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       if (elt->IsOutsideLambdaRangeLine(line_idx))
         continue;
       auto const range = elt->getSupportSubElt(line_idx);
-      *m_curObs = 0; // dummy reset, TO BE CORRECTED for full multiobs
+      m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
       pixsize += getSpectrum().GetSpectralAxis().GetMeanResolution(range);
       ++nlines;
     }

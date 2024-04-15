@@ -51,11 +51,11 @@ CSvdlcFitter::CSvdlcFitter(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-    const shared_ptr<Int32> &curObsPtr,
+    const CSpectraGlobalIndex &spcIndex,
     std::shared_ptr<CContinuumManager> continuumManager, Int32 polyOrder,
     bool enableAmplitudeOffset, bool enableLambdaOffsetsFit)
     : CAbstractFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
-                      restLineList, curObsPtr, enableAmplitudeOffset,
+                      restLineList, spcIndex, enableAmplitudeOffset,
                       enableLambdaOffsetsFit),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
       m_spectralAxis(getSpectrum().GetSpectralAxis())
@@ -73,7 +73,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // re-interpolate the continuum on the grid
   m_continuumManager->reinterpolateContinuumResetAmp();
 
-  *m_curObs = 0; // TODO dummy impl
+  m_spectraIndex.reset(); // TODO dummy impl
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
@@ -84,7 +84,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
                                          redshift);
 
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++)
+  for (auto &spcIndex : m_spectraIndex)
     getModel().initModelWithContinuum();
 }
 
@@ -108,7 +108,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
     TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
     Float64 redshift) {
-  *m_curObs = 0; // TODO dummy impl
+  m_spectraIndex.reset(); // TODO dummy impl
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();

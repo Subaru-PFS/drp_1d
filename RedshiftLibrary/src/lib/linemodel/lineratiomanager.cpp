@@ -56,11 +56,11 @@ CLineRatioManager::CLineRatioManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
+    const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : m_elementsVector(elementsVector), m_models(models),
       m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
       m_continuumManager(continuumManager), m_RestLineList(restLineList),
-      m_curObs(curObs) {
+      m_spectraIndex(spcIndex) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -72,12 +72,6 @@ CLineRatioManager::CLineRatioManager(
     m_opt_lya_forcedisablefit =
         ps->GetScoped<bool>("lya.asymProfile.switchFitToFixed");
   }
-  m_nbObs = m_inputSpcs->size();
-  /*  *m_curObs = 0;
-  for (auto& elt=getElementList().begin();elt!=getElementList().end();elt++)
-    {
-      m_ElementParam.push_back(elt->getElementParam());
-      }*/
 }
 
 /**
@@ -216,7 +210,7 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
 Float64 CLineRatioManager::getLeastSquareMerit() const {
   Float64 fit = 0.0;
 
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
@@ -305,20 +299,20 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
-    const std::shared_ptr<Int32> &curObs) {
+    const CSpectraGlobalIndex &spcIndex) {
   std::shared_ptr<CLineRatioManager> ret;
   if (lineRatioType == "tplRatio")
     ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                         continuumManager, restLineList, curObs));
+                         continuumManager, restLineList, spcIndex));
   else if (lineRatioType == "tplCorr")
     ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList, curObs));
+                        continuumManager, restLineList, spcIndex));
   else if (lineRatioType == "rules")
     ret = std::make_shared<CRulesManager>(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
-                      continuumManager, restLineList, curObs));
+                      continuumManager, restLineList, spcIndex));
   else
     THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
                               "supported for linemodel.lineRatioType");
@@ -328,7 +322,7 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
 }
 
 void CLineRatioManager::refreshAllModels() {
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     getModel().refreshModel();
   }
 }

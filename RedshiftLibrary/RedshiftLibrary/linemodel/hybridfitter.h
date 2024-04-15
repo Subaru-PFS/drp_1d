@@ -53,7 +53,7 @@ public:
                 const CTLambdaRangePtrVector &lambdaRanges,
                 const CSpcModelVectorPtr &spectrumModels,
                 const CLineMap &restLineList,
-                const std::shared_ptr<Int32> &curObsPtr,
+                const CSpectraGlobalIndex &spcIndex,
                 bool enableAmplitudeOffsets = false,
                 bool enableLambdaOffsetsFit = false);
 

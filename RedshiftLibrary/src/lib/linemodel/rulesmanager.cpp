@@ -49,9 +49,9 @@ CRulesManager::CRulesManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
+    const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList, curObs) {}
+                        continuumManager, restLineList, spcIndex) {}
 
 Float64 CRulesManager::computeMerit(Int32 iratio) {
   applyRules(true);
@@ -69,7 +69,7 @@ Float64 CRulesManager::computeMerit(Int32 iratio) {
  *emission and then for absorption.
  **/
 void CRulesManager::applyRules(bool enableLogs) {
-  *m_curObs = 0; // dummy implementation
+  m_spectraIndex.reset(); // dummy implementation
   if (m_rulesoption == "no") {
     return;
   }

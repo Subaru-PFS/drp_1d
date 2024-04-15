@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/individualfitter.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -65,11 +66,13 @@ struct AbstractFitterFixture {
   // Creates necessary objects
   CTLambdaRangePtrVector lambdaRanges;
   std::shared_ptr<Int32> curObsPtr = std::make_shared<Int32>(0);
+  Int32 nb_spectra = 1;
+  CSpectraGlobalIndex *spcIndex = new CSpectraGlobalIndex(nb_spectra);
   CLineMap restLineList = CLineMap();
 
   std::shared_ptr<CLMEltListVector> elementsVector =
       std::make_shared<CLMEltListVector>(
-          lambdaRanges, curObsPtr, restLineList,
+          lambdaRanges, *spcIndex, restLineList,
           ElementComposition::EmissionAbsorption);
   CCSpectrumVectorPtr inputSpcs;
   CSpcModelVectorPtr spectrumModels;
@@ -81,7 +84,7 @@ struct AbstractFitterFixture {
     const std::string jsonString = createInputJson(method, igmFit);
     Context.LoadParameterStore(jsonString);
     CTestFitter testFitter(elementsVector, inputSpcs, lambdaRanges,
-                           spectrumModels, restLineList, curObsPtr);
+                           spectrumModels, restLineList, *spcIndex);
     return testFitter;
   }
 

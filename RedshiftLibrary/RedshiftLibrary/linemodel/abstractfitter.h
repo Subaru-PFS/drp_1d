@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
@@ -56,7 +57,7 @@ public:
                   const CTLambdaRangePtrVector &lambdaRanges,
                   const CSpcModelVectorPtr &spectrumModels,
                   const CLineMap &restLineList,
-                  const std::shared_ptr<Int32> &curObsPtr,
+                  const CSpectraGlobalIndex &spcIndex,
                   bool enableAmplitudeOffsets = false,
                   bool enableLambdaOffsetsFit = false);
 
@@ -74,8 +75,8 @@ public:
       const CTLambdaRangePtrVector &lambdaRanges,
       const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
       std::shared_ptr<CContinuumManager> continuumManager,
-      const std::shared_ptr<Int32> &curObsPtr,
-      bool enableAmplitudeOffsets = false, bool enableLambdaOffsetsFit = false);
+      const CSpectraGlobalIndex &spcIndex, bool enableAmplitudeOffsets = false,
+      bool enableLambdaOffsetsFit = false);
 
   void logParameters();
 
@@ -120,24 +121,24 @@ protected:
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
   CSpectrumModel &getModel() {
-    if (*m_curObs >= m_inputSpcs->size())
+    if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())
       THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models).at(*m_curObs);
+    return (*m_models).at(m_spectraIndex.getCurObs());
   }
   const CSpectrumModel &getModel() const {
-    if (*m_curObs >= m_inputSpcs->size())
+    if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())
       THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models).at(*m_curObs);
+    return (*m_models).at(m_spectraIndex.getCurObs());
   }
   const CSpectrum &getSpectrum() {
-    if (*m_curObs >= m_inputSpcs->size())
+    if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())
       THROWG(INTERNAL_ERROR, " obs does not exist");
-    return *((*m_inputSpcs).at(*m_curObs));
+    return *((*m_inputSpcs).at(m_spectraIndex.getCurObs()));
   }
   const TLambdaRange &getLambdaRange() {
-    if (*m_curObs >= m_inputSpcs->size())
+    if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())
       THROWG(INTERNAL_ERROR, " obs does not exist");
-    return *(m_lambdaRanges.at(*m_curObs));
+    return *(m_lambdaRanges.at(m_spectraIndex.getCurObs()));
   }
   CLineModelElementList &getElementList() {
     return m_ElementsVector->getElementList();
@@ -162,7 +163,7 @@ protected:
   CSpcModelVectorPtr m_models;
   std::shared_ptr<CLMEltListVector> m_ElementsVector;
 
-  std::shared_ptr<Int32> m_curObs;
+  CSpectraGlobalIndex m_spectraIndex;
   // hard coded options
   bool m_enableAmplitudeOffsets = false;
   bool m_enableLambdaOffsetsFit = false;

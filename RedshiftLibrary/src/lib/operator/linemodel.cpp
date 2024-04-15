@@ -457,7 +457,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                                 "fftProcessing. ignoreLinesSupport disabled");
   }
   if (ignoreLinesSupport) {
-    m_fittingManager->resetCurObs(); // TODO multiobs, dummy implementation
+    m_fittingManager->getSpectraIndex()
+        .reset(); // TODO multiobs, dummy implementation
     m_templateFittingOperator->setMaskBuilder(
         std::make_shared<COutsideLineMaskBuilder>(
             m_fittingManager->getElementList()));
@@ -1011,8 +1012,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       // 0=save model, (DEFAULT)
       // 1=save model with lines removed,
       // 2=save model with only Em. lines removed.
-      for (m_fittingManager->resetCurObs(); m_fittingManager->remainsObs();
-           m_fittingManager->incrementCurObs()) {
+      for (auto &obs : m_fittingManager->getSpectraIndex()) {
 
         if (overrideModelSavedType == 0) {
           resultspcmodel->addModel(
@@ -1040,7 +1040,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
             "photometry cannot be applied for fromspectrum or noContinuum");
 
       } else {
-        m_fittingManager->resetCurObs();
+        m_fittingManager->getSpectraIndex().reset();
         phot_values = m_fittingManager->getSpectrumModel().getPhotValues();
       }
       ExtremaResult->m_modelPhotValues[i] =
@@ -1060,8 +1060,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
 
       std::shared_ptr<CModelSpectrumResult> baselineResult =
           std::make_shared<CModelSpectrumResult>();
-      for (m_fittingManager->resetCurObs(); m_fittingManager->remainsObs();
-           m_fittingManager->incrementCurObs()) {
+      for (auto &obs : m_fittingManager->getSpectraIndex()) {
 
         // Save the reestimated continuum, only the first
         // n=maxSaveNLinemodelContinua extrema
@@ -1816,7 +1815,7 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   // these coeffs
   m_fittingManager->LoadModelSolution(bestModelSolution);
   m_fittingManager->refreshAllModels();
-  m_fittingManager
-      ->resetCurObs(); // TODO dummy implementation, should return all models
+  m_fittingManager->getSpectraIndex()
+      .reset(); // TODO dummy implementation, should return all models
   return m_fittingManager->getSpectrumModel().GetModelSpectrum();
 }

@@ -12,10 +12,10 @@ using namespace std;
 
 CContinuumManager::CContinuumManager(const CSpcModelVectorPtr &models,
                                      std::shared_ptr<CTplModelSolution> tfv,
-                                     std::shared_ptr<Int32> curObs)
+                                     const CSpectraGlobalIndex &spcGlobIndex)
     : m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategory(Context.GetCurrentCategory()), m_models(models),
-      m_fitContinuum(tfv), m_curObs(curObs) {
+      m_fitContinuum(tfv), m_spectraIndex(spcGlobIndex) {
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
@@ -96,7 +96,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   std::shared_ptr<const CTemplate> tpl =
       m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->tplName);
 
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
   }
   setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
@@ -134,7 +134,7 @@ void CContinuumManager::setFitContinuum_tplAmplitude(
   m_fitContinuum->tplAmplitude = tplAmp;
   m_fitContinuum->tplAmplitudeError = tplAmpErr;
   m_fitContinuum->pCoeffs = polyCoeffs;
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
   }
 }
@@ -233,7 +233,7 @@ bool CContinuumManager::isContFittedToNull() {
 
 void CContinuumManager::setContinuumComponent(std::string component) {
   m_ContinuumComponent = std::move(component);
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     getModel().setContinuumComponent(m_ContinuumComponent);
   }
   *m_fitContinuum = {};
@@ -251,8 +251,7 @@ void CContinuumManager::setContinuumComponent(std::string component) {
 }
 
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
-
+  for (auto &spcIndex : m_spectraIndex) {
     std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
         {m_tplCategory}, m_fitContinuum->tplName);
     getModel().ApplyContinuumOnGrid(tpl, redshift);

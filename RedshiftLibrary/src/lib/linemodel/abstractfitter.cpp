@@ -58,11 +58,11 @@ CAbstractFitter::CAbstractFitter(
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-    const shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
+    const CSpectraGlobalIndex &spcIndex, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
     : m_ElementsVector(elementsVector), m_inputSpcs(inputSpcs),
       m_RestLineList(restLineList), m_lambdaRanges(lambdaRanges),
-      m_models(spectrumModels), m_curObs(curObsPtr),
+      m_models(spectrumModels), m_spectraIndex(spcIndex),
       m_enableAmplitudeOffsets(enableAmplitudeOffsets),
       m_enableLambdaOffsetsFit(enableLambdaOffsetsFit) {
   m_nbElements = m_ElementsVector->getNbElements();
@@ -95,43 +95,43 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
+    const CSpectraGlobalIndex &spcIndex, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit) {
   if (fittingMethod == "hybrid")
     return std::make_shared<CHybridFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        curObsPtr, enableAmplitudeOffsets, enableLambdaOffsetsFit);
+        spcIndex, enableAmplitudeOffsets, enableLambdaOffsetsFit);
 #ifdef LBFGSBFITTER
   else if (fittingMethod == "lbfgsb")
     return std::make_shared<CLbfgsbFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        curObsPtr, enableAmplitudeOffsets, enableLambdaOffsetsFit);
+        spcIndex, enableAmplitudeOffsets, enableLambdaOffsetsFit);
 #endif
   else if (fittingMethod == "svd")
     return std::make_shared<CSvdFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        curObsPtr, enableAmplitudeOffsets, enableLambdaOffsetsFit);
+        spcIndex, enableAmplitudeOffsets, enableLambdaOffsetsFit);
   else if (fittingMethod == "svdlc")
     return std::make_shared<CSvdlcFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        curObsPtr, continuumManager);
+        spcIndex, continuumManager);
   else if (fittingMethod == "svdlcp2")
     return std::make_shared<CSvdlcFitter>(
         elementsVector, inputSpcs, lambdaRanges, spectrumModels, restLineList,
-        curObsPtr, continuumManager, 2);
+        spcIndex, continuumManager, 2);
 
   else if (fittingMethod == "ones")
     return std::make_shared<COnesFitter>(elementsVector, inputSpcs,
                                          lambdaRanges, spectrumModels,
-                                         restLineList, curObsPtr);
+                                         restLineList, spcIndex);
   else if (fittingMethod == "random")
     return std::make_shared<CRandomFitter>(elementsVector, inputSpcs,
                                            lambdaRanges, spectrumModels,
-                                           restLineList, curObsPtr);
+                                           restLineList, spcIndex);
   else if (fittingMethod == "individual")
     return std::make_shared<CIndividualFitter>(elementsVector, inputSpcs,
                                                lambdaRanges, spectrumModels,
-                                               restLineList, curObsPtr);
+                                               restLineList, spcIndex);
   else
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Unknown fitting method " << fittingMethod);
@@ -181,7 +181,7 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
   m_ElementsVector->resetLambdaOffsets();
   m_ElementsVector->resetAsymfitParams();
 
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     // prepare the elements support
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     for (auto const &elt_ptr : getElementList()) {
@@ -278,7 +278,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   getElementParam()[eltIndex]->m_FittedAmplitudesStd.assign(nLines, NAN);
 
   Int32 num = 0;
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     const CSpectrumFluxAxis &noContinuumfluxAxis =
         getModel().getSpcFluxAxisNoContinuum();
@@ -304,7 +304,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   }
 
   bool allNaN = true;
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     if (!std::isnan(getElementParam()[eltIndex]->getSumGauss())) {
       allNaN = false;
       break;
@@ -398,7 +398,8 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 
     // check fitting
     if (atLeastOneOffsetToFit) {
-      *m_curObs = 0;
+      //*m_curObs = 0; TODO is this one necessary ? is this section active,
+      // knowing that least square merit fast is bugged ?
       Float64 fit = getLeastSquareMeritFast(eltIndex);
       if (fit < bestMerit) {
         bestMerit = fit;
@@ -481,14 +482,14 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
         Float64 m = NAN;
         if (fitIsvalid) {
           if (1) {
-            for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++)
+            for (auto &spcIndex : m_spectraIndex)
               getModel().refreshModelUnderElements(filterEltsIdxLya,
                                                    idxLineLyaE);
             m = getModelResidualRmsUnderElements({idxLyaE}, true);
 
           } else {
-            *m_curObs =
-                0; // TODO dummy implementation, even if this line is disabled
+            m_spectraIndex.reset(); // TODO dummy implementation, even if this
+                                    // line is disabled
             m = getLeastSquareMeritFast(idxLyaE);
           }
           if (m < meritMin) {
@@ -534,7 +535,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
       TInt32List elt_indices;
       for (auto const [elt_idx, _] : idxLines)
         elt_indices.push_back(elt_idx);
-      for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++)
+      for (auto &spcIndex : m_spectraIndex)
         getModel().refreshModelUnderElements(elt_indices);
       Float64 m = getModelResidualRmsUnderElements(elt_indices, true);
 
@@ -553,7 +554,7 @@ Float64 CAbstractFitter::getModelResidualRmsUnderElements(
   Float64 fit_allObs = 0;
   Float64 sumErr_allObs = 0;
   Int32 nb_nan = 0;
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     auto [fit, sumErr] = getModel().getModelSquaredResidualUnderElements(
         EltsIdx, with_continuum, with_weight);
     if (fit == 0.0)
@@ -573,7 +574,7 @@ Float64 CAbstractFitter::getModelResidualRmsUnderElements(
 bool CAbstractFitter::isOutsideLambdaRange(Int32 elt_index) {
 
   bool allOutsideLambdaRange = true;
-  for (*m_curObs = 0; *m_curObs < m_inputSpcs->size(); (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRange()) {
       allOutsideLambdaRange = false;
       break;

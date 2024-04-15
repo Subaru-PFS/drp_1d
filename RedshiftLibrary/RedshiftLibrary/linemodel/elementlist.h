@@ -40,6 +40,7 @@
 #define _REDSHIFT_LINEMODEL_ELEMENTLIST_
 
 #include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 
 namespace NSEpic {
 class CLineModelSolution;
@@ -129,7 +130,7 @@ public:
 class CLMEltListVector {
 public:
   CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
-                   const std::shared_ptr<Int32> &curObs,
+                   const CSpectraGlobalIndex &spcIndex,
                    const CLineMap &restLineList,
                    ElementComposition element_composition);
   CLMEltListVector(CLineModelElementList eltlist,
@@ -157,10 +158,10 @@ public:
   const std::vector<bool> &getOutsideLambdaRangeList(Int32 elt_index) const;
 
   CLineModelElementList &getElementList() {
-    return m_ElementsVector.at(*m_curObs);
+    return m_ElementsVector.at(m_spectraIndex.getCurObs());
   }
   const CLineModelElementList &getElementList() const {
-    return m_ElementsVector.at(*m_curObs);
+    return m_ElementsVector.at(m_spectraIndex.getCurObs());
   }
   std::vector<TLineModelElementParam_ptr> &getElementParam() {
     return m_ElementsParams;
@@ -184,8 +185,8 @@ private:
   std::vector<CLineModelElementList> m_ElementsVector;
   std::vector<TLineModelElementParam_ptr> m_ElementsParams;
   CTLambdaRangePtrVector m_lambdaRanges;
-  Int32 m_nbObs;
-  std::shared_ptr<Int32> m_curObs;
+  mutable CSpectraGlobalIndex m_spectraIndex;
+
   const CLineMap &m_RestLineList;
 
   std::vector<bool> m_globalOutsideLambdaRange;
