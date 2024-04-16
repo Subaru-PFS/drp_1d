@@ -49,7 +49,7 @@ public:
   const std::shared_ptr<const CTemplatesFitStore> &
   GetFitContinuum_FitStore() const;
   std::shared_ptr<CPriorHelper> SetFitContinuum_PriorHelper();
-  void LoadFitContinuum(Int32 icontinuum, Int32 autoSelect, Float64 redshift);
+  void LoadFitContinuum(Int32 icontinuum, Float64 redshift);
 
   void SetFitContinuum_FitValues(const CTplModelSolution &cms) {
     *m_fitContinuum = cms;
