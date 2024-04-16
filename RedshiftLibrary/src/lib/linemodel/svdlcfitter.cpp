@@ -71,6 +71,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // prepare continuum on the observed grid
 
   // re-interpolate the continuum on the grid
+  // TODO multiobs loop here
   m_continuumManager->reinterpolateContinuumResetAmp();
 
   m_spectraIndex.reset(); // TODO dummy impl
@@ -82,7 +83,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx, m_spectralAxis,
                                          ampsfitted, errorsfitted, chi2_cl,
                                          redshift);
-
+  // TODO multiobs loop here
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
   for (auto &spcIndex : m_spectraIndex)
     getModel().initModelWithContinuum();

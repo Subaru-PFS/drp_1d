@@ -96,9 +96,8 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   std::shared_ptr<const CTemplate> tpl =
       m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->tplName);
 
-  for (auto &spcIndex : m_spectraIndex) {
-    getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
-  }
+  getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
+
   setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                m_fitContinuum->tplAmplitudeError,
                                m_fitContinuum->pCoeffs);
@@ -134,9 +133,7 @@ void CContinuumManager::setFitContinuum_tplAmplitude(
   m_fitContinuum->tplAmplitude = tplAmp;
   m_fitContinuum->tplAmplitudeError = tplAmpErr;
   m_fitContinuum->pCoeffs = polyCoeffs;
-  for (auto &spcIndex : m_spectraIndex) {
-    getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
-  }
+  getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
 }
 
 Int32 CContinuumManager::SetFitContinuum_FitStore(
