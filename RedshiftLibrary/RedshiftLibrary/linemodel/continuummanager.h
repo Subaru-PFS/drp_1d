@@ -30,16 +30,9 @@ public:
                     const CSpectraGlobalIndex &spcGlobIndex);
 
   const CSpectrumModel &getModel() const {
-    if (m_spectraIndex.getCurObs() > m_models->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-
-    return (*m_models)[m_spectraIndex.getCurObs()];
+    return m_models->getSpectrumModel();
   }
-  CSpectrumModel &getModel() {
-    if (m_spectraIndex.getCurObs() > m_models->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models)[m_spectraIndex.getCurObs()];
-  }
+  CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);

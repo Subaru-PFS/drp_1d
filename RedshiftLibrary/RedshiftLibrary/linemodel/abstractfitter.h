@@ -89,7 +89,10 @@ public:
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
                                            bool with_continuum,
-                                           bool with_weight = true);
+                                           bool with_weight = true) {
+    return m_models->getModelResidualRmsUnderElements(EltsIdx, with_continuum,
+                                                      with_weight);
+  }
   Int32 m_cont_reestim_iterations = 0;
 
 protected:
@@ -120,15 +123,9 @@ protected:
                               bool enableOffsetFitting) const;
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
-  CSpectrumModel &getModel() {
-    if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models).at(m_spectraIndex.getCurObs());
-  }
+  CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
   const CSpectrumModel &getModel() const {
-    if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models).at(m_spectraIndex.getCurObs());
+    return m_models->getSpectrumModel();
   }
   const CSpectrum &getSpectrum() {
     if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())

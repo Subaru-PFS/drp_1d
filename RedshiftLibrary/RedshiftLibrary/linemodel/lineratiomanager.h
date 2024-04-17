@@ -109,11 +109,9 @@ protected:
 
   Float64 getLeastSquareMerit() const;
 
-  CSpectrumModel &getModel() {
-    return m_models->at(m_spectraIndex.getCurObs());
-  }
+  CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
   const CSpectrumModel &getModel() const {
-    return m_models->at(m_spectraIndex.getCurObs());
+    return m_models->getSpectrumModel();
   }
   const CSpectrum &getSpectrum() const {
     return *(m_inputSpcs->at(m_spectraIndex.getCurObs()));

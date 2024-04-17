@@ -113,6 +113,59 @@ private:
   TPhotVal m_photValues;
 };
 
-using CSpcModelVectorPtr = std::shared_ptr<std::vector<CSpectrumModel>>;
+class CSpcModelVector {
+public:
+  CSpcModelVector(const CSpectraGlobalIndex &spcIndex)
+      : m_spectraIndex(spcIndex) {}
+  void push_back(const CSpectrumModel &model) { m_models.push_back(model); }
+  CSpectrumModel &getSpectrumModel() {
+    return m_models.at(m_spectraIndex.getCurObs());
+  }
+
+  const CSpectrumModel &getSpectrumModel() const {
+    return m_models.at(m_spectraIndex.getCurObs());
+  }
+
+  void refreshModels() {
+    for (auto &spcIndex : m_spectraIndex) {
+      getSpectrumModel().refreshModel();
+    }
+  }
+  void refreshModelsUnderElements(const TInt32List &filterEltsIdx,
+                                  Int32 line_index = undefIdx) {
+    for (auto &spcIndex : m_spectraIndex) {
+      getSpectrumModel().refreshModelUnderElements(filterEltsIdx, line_index);
+    }
+  }
+
+  Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
+                                           bool with_continuum,
+                                           bool with_weight = true) {
+    Float64 fit_allObs = 0;
+    Float64 sumErr_allObs = 0;
+    Int32 nb_nan = 0;
+    for (auto &spcIndex : m_spectraIndex) {
+      auto [fit, sumErr] =
+          getSpectrumModel().getModelSquaredResidualUnderElements(
+              EltsIdx, with_continuum, with_weight);
+      if (fit == 0.0)
+        continue;
+      if (std::isnan(fit)) {
+        nb_nan++;
+        continue;
+      }
+      fit_allObs += fit;
+      sumErr_allObs += sumErr;
+    }
+    if (nb_nan == m_models.size())
+      return NAN;
+    return sumErr_allObs != 0.0 ? sqrt(fit_allObs / sumErr_allObs) : NAN;
+  }
+
+private:
+  std::vector<CSpectrumModel> m_models;
+  mutable CSpectraGlobalIndex m_spectraIndex;
+};
+using CSpcModelVectorPtr = std::shared_ptr<CSpcModelVector>;
 } // namespace NSEpic
 #endif

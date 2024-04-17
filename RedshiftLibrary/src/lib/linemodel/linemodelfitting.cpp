@@ -154,7 +154,7 @@ void CLineModelFitting::initMembers(
 
   m_nominalWidthDefault = 13.4; // euclid 1 px
   m_continuumFitValues = std::make_shared<CTplModelSolution>();
-  m_models = std::make_shared<std::vector<CSpectrumModel>>();
+  m_models = std::make_shared<CSpcModelVector>(m_spectraIndex);
   if (element_composition == ElementComposition::Default &&
       (m_lineRatioType == "tplRatio" || m_lineRatioType == "tplCorr"))
     element_composition = ElementComposition::EmissionAbsorption;

@@ -482,9 +482,7 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
         Float64 m = NAN;
         if (fitIsvalid) {
           if (1) {
-            for (auto &spcIndex : m_spectraIndex)
-              getModel().refreshModelUnderElements(filterEltsIdxLya,
-                                                   idxLineLyaE);
+            m_models->refreshModelsUnderElements(filterEltsIdxLya, idxLineLyaE);
             m = getModelResidualRmsUnderElements({idxLyaE}, true);
 
           } else {
@@ -535,8 +533,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
       TInt32List elt_indices;
       for (auto const [elt_idx, _] : idxLines)
         elt_indices.push_back(elt_idx);
-      for (auto &spcIndex : m_spectraIndex)
-        getModel().refreshModelUnderElements(elt_indices);
+      m_models->refreshModelsUnderElements(elt_indices);
       Float64 m = getModelResidualRmsUnderElements(elt_indices, true);
 
       if (m < meritMin) {
@@ -547,28 +544,6 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
   }
 
   return bestIgmIdx;
-}
-
-Float64 CAbstractFitter::getModelResidualRmsUnderElements(
-    TInt32List const &EltsIdx, bool with_continuum, bool with_weight) {
-  Float64 fit_allObs = 0;
-  Float64 sumErr_allObs = 0;
-  Int32 nb_nan = 0;
-  for (auto &spcIndex : m_spectraIndex) {
-    auto [fit, sumErr] = getModel().getModelSquaredResidualUnderElements(
-        EltsIdx, with_continuum, with_weight);
-    if (fit == 0.0)
-      continue;
-    if (std::isnan(fit)) {
-      nb_nan++;
-      continue;
-    }
-    fit_allObs += fit;
-    sumErr_allObs += sumErr;
-  }
-  if (nb_nan == m_inputSpcs->size())
-    return NAN;
-  return sumErr_allObs != 0.0 ? sqrt(fit_allObs / sumErr_allObs) : NAN;
 }
 
 bool CAbstractFitter::isOutsideLambdaRange(Int32 elt_index) {

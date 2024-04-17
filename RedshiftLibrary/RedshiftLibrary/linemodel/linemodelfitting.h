@@ -167,12 +167,10 @@ public:
     return (*m_inputSpcs).at(m_spectraIndex.getCurObs());
   }
 
-  CSpectrumModel &getSpectrumModel() {
-    return (*m_models).at(m_spectraIndex.getCurObs());
-  }
+  CSpectrumModel &getSpectrumModel() { return m_models->getSpectrumModel(); }
 
   const CSpectrumModel &getSpectrumModel() const {
-    return (*m_models).at(m_spectraIndex.getCurObs());
+    return m_models->getSpectrumModel();
   }
 
   CLineModelElementList &getElementList() {
