@@ -457,13 +457,17 @@ class AbstractOutput:
                     "<ObsID>", obs_id)][attr_name] = attr
 
     def load_method_level(self, object_type):
-        stage = "redshiftSolver"
+
         level = "method"
         rs, object_datasets = self.filter_datasets(level)
         for ds in object_datasets:
             methods = self.parameters.get_solve_methods(object_type)
             self.object_results[object_type][ds] = dict()
             for method in methods:
+                if method == "lineMeasSolve":
+                    stage = "lineMeasSolver"
+                else:
+                    stage = "redshiftSolver"
                 if self.has_dataset_in_source(object_type,
                                               stage,
                                               method,
