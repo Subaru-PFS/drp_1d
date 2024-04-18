@@ -166,16 +166,6 @@ class TestLineModelSolve:
             param_dict = make_parameter_dict_at_redshift_solver_level(object_level_params, **kwargs)
             return param_dict
 
-        def test_error_if_continuumcomponent_is_fromspectrum_but_continuumremoval_is_absent(self):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "continuumComponent": "fromSpectrum",
-
-                }}
-            })
-            with pytest.raises(APIException, match=r"Missing parameter continuumRemoval"):
-                check_from_parameter_dict(param_dict)
-
         def test_error_if_continuumcomponent_is_fromspectrum_but_continuumreestimation_absent(self):
             param_dict = self._make_parameter_dict(**{
                 "lineModelSolve": {"lineModel": {
@@ -183,6 +173,7 @@ class TestLineModelSolve:
                 }}
             })
             param_dict["continuumRemoval"] = {}
+
             with pytest.raises(
                 APIException,
                 match=r"Missing parameter object galaxy lineModelSolve continuumReestimation"
@@ -197,6 +188,7 @@ class TestLineModelSolve:
                     "continuumReestimation": "sth"
                 }}
             })
+            param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning(zflag)
 
@@ -235,11 +227,12 @@ class TestLineModelSolve:
             param_dict = self._make_parameter_dict(**{
                 "lineModelSolve": {"lineModel": {
                     "continuumComponent": continuum_component,
-                    "continuumFit": {}
+                    "continuumFit": {},
+                    "secondPass": {}
                 }},
-                "templateDir": "sth"
             })
             param_dict["continuumRemoval"] = {}
+            param_dict["galaxy"]["templateDir"] = "sth"
 
             with pytest.raises(
                 APIException,
@@ -257,6 +250,8 @@ class TestLineModelSolve:
                     "secondPass": {"continuumFit": ""}
                 }}}
             )
-            param_dict["continuumRemoval"] = {}
+            if continuum_component == "tplFitAuto":
+                param_dict["continuumRemoval"] = {}
+            param_dict["galaxy"]["templateDir"] = "sth"
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)

@@ -36,7 +36,6 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.redshift import CFlagWarning
 from pylibamazed.Warning import extract_warning_flags
@@ -86,17 +85,36 @@ def make_parameter_dict_at_object_level(**kwargs) -> dict:
     return param_dict
 
 
-def make_parameter_dict_at_redshift_solver_level(object_level_params=None, **redshift_kwargs) -> dict:
+def make_parameter_dict_at_redshift_solver_level(
+        object_level_params=None,
+        object_type=None,
+        **redshift_kwargs
+) -> dict:
+    if object_type is None:
+        object_type = default_object_type
     param_dict = {
-        "spectrumModels": [default_object_type],
-        default_object_type: {
+        "spectrumModels": [object_type],
+        object_type: {
             "stages": ["redshiftSolver"],
             "redshiftSolver": redshift_kwargs,
         }
     }
     if object_level_params is not None:
         for key, val in object_level_params.items():
-            param_dict[default_object_type][key] = val
+            param_dict[object_type][key] = val
+    if redshift_kwargs.get("method") == "lineModelSolve":
+        if param_dict.get("lsf") is None:
+            param_dict["lsf"] = {}
+    return param_dict
+
+
+def make_parameter_dict_at_linemodelsolve_level(**kwargs):
+    param_dict = make_parameter_dict_at_redshift_solver_level()
+    param_dict[default_object_type]["redshiftSolver"] = {
+        "method": "lineModelSolve",
+        "lineModelSolve": {"lineModel": kwargs},
+    }
+    param_dict["lsf"] = {}
     return param_dict
 
 
@@ -113,6 +131,7 @@ def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwar
             }
         }
     }
+    param_dict["lsf"] = {}
     if object_level_params is not None:
         for key, val in object_level_params.items():
             param_dict[default_object_type][key] = val
@@ -137,5 +156,4 @@ def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=N
 
 
 def check_from_parameter_dict(param_dict: dict):
-    accessor = ParametersAccessor(param_dict)
-    ParametersChecker().custom_check(accessor)
+    ParametersChecker(param_dict).custom_check()

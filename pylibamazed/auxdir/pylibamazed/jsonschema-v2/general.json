@@ -10,8 +10,7 @@
     "extremaRedshiftSeparation",
     "smoothWidth",
     "autoCorrectInput",
-    "spectrumModels",
-    "lsf"
+    "spectrumModels"
   ],
   "additionalProperties": false,
   "patternProperties": {
@@ -28,7 +27,7 @@
     "calibrationDir": {
       "description": "To be removed"
     },
-    "multiObsMethod": { 
+    "multiObsMethod": {
       "type": "string",
       "title": "Multi obs method",
       "enum": [

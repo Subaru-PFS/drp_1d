@@ -91,7 +91,7 @@ class TestLineModelSolve:
             param_dict["ebmv"] = {}
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)
-        
+
         def test_error_if_fftprocessing_enabled_but_photometry_enabled(self):
             param_dict = self._make_parameter_dict(**{
                 "lineModelSolve": {"lineModel": {
@@ -252,3 +252,90 @@ class TestLineModelSolve:
             })
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)
+
+    class TestUseLogLambdaSampling:
+
+        def make_parameter_dict(self, **kwargs) -> dict:
+            kwargs["method"] = "lineModelSolve"
+            param_dict = make_parameter_dict_at_redshift_solver_level(**kwargs)
+            param_dict["galaxy"]["templateDir"] = "sth"
+            return param_dict
+
+        def test_must_be_present_if_fftprocessing_and_tplfit(self):
+            param_dict = self.make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "continuumComponent": "tplFit",
+                    "continuumFit": {
+                        "fftProcessing": True,
+                    },
+                    "secondPass": {"continuumFit": {}}
+                }}
+            })
+            param_dict["continuumRemoval"] = {}
+            with pytest.raises(
+                APIException,
+                match=r"Missing parameter galaxy lineModelSolve lineModel useLogLambdaSampling"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        def test_must_be_present_if_fftprocessing_and_tplfitauto(self):
+            param_dict = self.make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "continuumComponent": "tplFitAuto",
+                    "continuumFit": {
+                        "fftProcessing": True,
+                    },
+                    "secondPass": {"continuumFit": {}}
+                }}
+            })
+            param_dict["continuumRemoval"] = {}
+
+            with pytest.raises(
+                APIException,
+                match=r"Missing parameter galaxy lineModelSolve lineModel useLogLambdaSampling"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        def test_unused_warning_if_present_but_no_fftprocessing(self, zflag):
+            param_dict = self.make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "continuumComponent": "tplFit",
+                    "continuumFit": {
+                        "fftProcessing": False,
+                    },
+                    "secondPass": {"continuumFit": {}},
+                    "useLogLambdaSampling": True
+                }}
+            })
+            param_dict["continuumRemoval"] = {}
+
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+
+        def test_unused_warning_if_present_but_no_tplfit(self, zflag):
+            param_dict = self.make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "continuumComponent": "sth",
+                    "continuumFit": {
+                        "fftProcessing": True,
+                    },
+                    "useLogLambdaSampling": True
+                }}
+            })
+            param_dict["continuumRemoval"] = {}
+
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+
+        def test_ok_if_all_present(self, zflag):
+            param_dict = self.make_parameter_dict(**{
+                "lineModelSolve": {"lineModel": {
+                    "continuumComponent": "tplFit",
+                    "continuumFit": {
+                        "fftProcessing": True,
+                    },
+                    "useLogLambdaSampling": True,
+                }}
+            })
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")

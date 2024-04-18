@@ -67,6 +67,7 @@ bool CLineModelSolve::PopulateParameters(
 
   m_opt_lineratiotype =
       parameterStore->GetScoped<std::string>("lineModel.lineRatioType");
+
   m_opt_continuumreest =
       parameterStore->GetScoped<std::string>("lineModel.continuumReestimation");
   m_opt_continuumcomponent =

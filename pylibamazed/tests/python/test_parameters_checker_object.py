@@ -39,9 +39,8 @@
 import pytest
 from pylibamazed.Exception import APIException
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_object_level,
                                 make_parameter_dict_at_linemeas_solve_level,
-                                make_parameter_dict_at_reliability_deep_learning_level,
+                                make_parameter_dict_at_object_level,
                                 make_parameter_dict_at_redshift_solver_level)
 
 
@@ -57,14 +56,6 @@ class TestParametersCheckerObject:
             del param_dict["galaxy"]["lineMeasDzHalf"]
             with pytest.raises(APIException, match=r"Missing parameter lineMeasDzHalf for object"):
                 check_from_parameter_dict(param_dict)
-
-        def test_ok_if_not_linemeas_stage_and_dzhalf_not_defined(self, zflag):
-            param_dict = self._make_param_dict(**{})
-            param_dict["galaxy"]["stages"] = []
-            del param_dict["galaxy"]["lineMeasDzHalf"]
-            del param_dict["galaxy"]["lineMeasRedshiftStep"]
-            check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
 
         def test_ok_if_linemeas_stage_and_dzhalf_defined(self, zflag):
             param_dict = self._make_param_dict(**{})
@@ -89,14 +80,6 @@ class TestParametersCheckerObject:
             with pytest.raises(APIException, match=r"Missing parameter lineMeasRedshiftStep for object"):
                 check_from_parameter_dict(param_dict)
 
-        def test_ok_if_not_linemeas_stage_and_redshift_step_not_defined(self, zflag):
-            param_dict = self._make_param_dict(**{})
-            param_dict["galaxy"]["stages"] = []
-            del param_dict["galaxy"]["lineMeasDzHalf"]
-            del param_dict["galaxy"]["lineMeasRedshiftStep"]
-            check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
-
         def test_ok_if_linemeas_stage_and_redshift_step_defined(self, zflag):
             param_dict = self._make_param_dict(**{})
             check_from_parameter_dict(param_dict)
@@ -112,19 +95,30 @@ class TestParametersCheckerObject:
     class TestObjectReliability:
 
         def _make_parameter_dict(self, **kwargs) -> dict:
-            return make_parameter_dict_at_reliability_deep_learning_level(**kwargs)
+            return make_parameter_dict_at_object_level(**kwargs)
 
-        def test_error_if_reliability_enabled_without_reliability_model(self):
-            param_dict = self._make_parameter_dict(**{})
-            with pytest.raises(APIException, match=r"Missing parameter reliabilityModel"):
+        def test_error_if_reliability_enabled_without_corresponding_section(self):
+            param_dict = self._make_parameter_dict(**{
+                "stages": ["reliabilitySolver"]
+            })
+            with pytest.raises(APIException, match=r"Missing parameter galaxy reliabilitySolver"):
                 check_from_parameter_dict(param_dict)
 
-        def test_OK_if_reliability_enabled_with_reliability_model(self, zflag):
+        def test_OK_if_reliability_enabled_with_corresponding_section(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "reliabilityModel": "sth"
+                "stages": ["reliabilitySolver"],
+                "reliabilitySolver": {}
             })
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning(zflag)
+
+        def test_warning_if_reliability_disabled_but_section_is_present(self, zflag):
+            param_dict = self._make_parameter_dict(**{
+                "stages": ["redshiftSolver"],
+                "reliabilitySolver": {}
+            })
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
 
     class TestTemplateDir:
 
@@ -155,6 +149,7 @@ class TestParametersCheckerObject:
                     }
                 }
             })
+            param_dict["continuumRemoval"] = {}
             with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
@@ -196,5 +191,6 @@ class TestParametersCheckerObject:
                     }
                 }
             })
+            param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")

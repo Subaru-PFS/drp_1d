@@ -44,8 +44,6 @@ from pylibamazed.Exception import APIException
 from pylibamazed.Parameters import Parameters
 from tests.python.test_parameters_utils import TestParametersUtils
 
-# TODO see what should be removed here
-
 
 class TestParameters:
     generic_parameters: Parameters = Parameters(
