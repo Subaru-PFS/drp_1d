@@ -129,6 +129,7 @@ push-rc-38-osx:
   stage: build
   script:
     - source /venv/p39/bin/activate
+    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/gcc-toolset-10/enable; fi
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
@@ -143,6 +144,7 @@ push-rc-38-osx:
   stage: build-coverage
   script:
     - source /venv/p39/bin/activate
+    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/gcc-toolset-10/enable; fi
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
@@ -279,6 +281,7 @@ push-rc-38-osx:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PLATFORM: "manylinux2014_x86_64"
+    ENABLE_GCC10: "False"
   cache:
     key: "manylinux2014-$CI_COMMIT_REF_SLUG"
 
@@ -421,12 +424,135 @@ pages:
     - .manylinux2014
     - .pages-linux
 
+# Manylinux_2_28 stages
+.manylinux_2_28:
+  image: $IMAGE_BUILD_DIR/amazed-manylinux_2_28
+  when: manual
+  variables:
+    PLATFORM: "linux_x86_64"
+    ENABLE_GCC10: "True"
+  cache:
+    key: "manylinux_2_28-$CI_COMMIT_REF_SLUG"
+
+build-manylinux_2_28:
+  extends:
+    - .manylinux_2_28
+    - .build-linux
+
+test-manylinux_2_28:
+  extends:
+    - .manylinux_2_28
+    - .test-linux
+
+wheel38-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "38"
+  extends:
+    - .manylinux_2_28
+    - .wheel-linux
+
+wheel39-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux_2_28
+    - .wheel-linux
+
+wheel311-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .manylinux_2_28
+    - .wheel-linux
+
+pytest38-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "38"
+  extends:
+    - .manylinux_2_28
+    - .pytest-linux
+
+pytest39-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux_2_28
+    - .pytest-linux
+
+pytest311-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .manylinux_2_28
+    - .pytest-linux
+
+pytest38-coverage-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "38"
+  extends:
+    - .manylinux_2_28
+    - .pytest-coverage-linux
+
+pytest39-coverage-manylinux_2_28: 
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux_2_28
+    - .pytest-coverage-linux
+
+pytest311-coverage-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .manylinux_2_28
+    - .pytest-coverage-linux
+
+push-rc-38-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "38"
+  extends:
+    - .manylinux_2_28
+    - .push-rc-linux
+  dependencies:
+    - wheel38-manylinux_2_28
+
+push-rc-39-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .manylinux_2_28
+    - .push-rc-linux
+  dependencies:
+    - wheel39-manylinux_2_28
+
+push-rc-311-manylinux_2_28:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .manylinux_2_28
+    - .push-rc-linux
+  dependencies:
+    - wheel311-manylinux_2_28
+
+coverage-manylinux_2_28:
+  extends:
+    - .manylinux_2_28
+    - .build-coverage-linux
+
+sonar-scanner-manylinux_2_28:
+  extends:
+    - .manylinux_2_28
+    - .sonar-linux
+  dependencies:
+    - coverage-manylinux_2_28
+
 # Rockylinux9 stages (euclid-like)
 .rockylinux:
   image: $IMAGE_BUILD_DIR/euclid-rockylinux-9
   when: manual
   variables:
     PLATFORM: "linux_x86_64"
+    ENABLE_GCC10: "False"
   cache:
     key: "rockylinux-$CI_COMMIT_REF_SLUG"
 
