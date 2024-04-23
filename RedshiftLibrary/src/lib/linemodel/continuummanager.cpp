@@ -102,9 +102,6 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
                                m_fitContinuum->tplAmplitudeError,
                                m_fitContinuum->pCoeffs);
 
-  //}
-  //*m_curObs = 0;
-
   Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded: "
                            << m_fitContinuum->tplName);
   Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with A="

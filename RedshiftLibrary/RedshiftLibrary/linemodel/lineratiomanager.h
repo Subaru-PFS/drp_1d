@@ -114,10 +114,10 @@ protected:
     return m_models->getSpectrumModel();
   }
   const CSpectrum &getSpectrum() const {
-    return *(m_inputSpcs->at(m_spectraIndex.getCurObs()));
+    return *(m_inputSpcs->at(m_spectraIndex.get()));
   }
   const TLambdaRange &getLambdaRange() const {
-    return *(m_lambdaRanges.at(m_spectraIndex.getCurObs()));
+    return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
   CLineModelElementList &getElementList() {
     return m_elementsVector->getElementList();

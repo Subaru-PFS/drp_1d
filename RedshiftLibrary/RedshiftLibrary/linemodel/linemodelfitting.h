@@ -161,10 +161,10 @@ public:
   }
 
   const CSpectrum &getSpectrum() const {
-    return *((*m_inputSpcs).at(m_spectraIndex.getCurObs()));
+    return *((*m_inputSpcs).at(m_spectraIndex.get()));
   }
   shared_ptr<const CSpectrum> getSpectrumPtr() {
-    return (*m_inputSpcs).at(m_spectraIndex.getCurObs());
+    return (*m_inputSpcs).at(m_spectraIndex.get());
   }
 
   CSpectrumModel &getSpectrumModel() { return m_models->getSpectrumModel(); }
@@ -184,7 +184,7 @@ public:
   }
 
   const TLambdaRange &getLambdaRange() const {
-    return *(m_lambdaRanges.at(m_spectraIndex.getCurObs()));
+    return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
 
   const std::string &getFittingMethod() const { return m_fittingmethod; }

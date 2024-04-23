@@ -158,10 +158,10 @@ public:
   const std::vector<bool> &getOutsideLambdaRangeList(Int32 elt_index) const;
 
   CLineModelElementList &getElementList() {
-    return m_ElementsVector.at(m_spectraIndex.getCurObs());
+    return m_ElementsVector.at(m_spectraIndex.get());
   }
   const CLineModelElementList &getElementList() const {
-    return m_ElementsVector.at(m_spectraIndex.getCurObs());
+    return m_ElementsVector.at(m_spectraIndex.get());
   }
   std::vector<TLineModelElementParam_ptr> &getElementParam() {
     return m_ElementsParams;

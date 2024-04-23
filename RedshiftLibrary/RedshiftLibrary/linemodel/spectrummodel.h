@@ -119,20 +119,27 @@ public:
       : m_spectraIndex(spcIndex) {}
   void push_back(const CSpectrumModel &model) { m_models.push_back(model); }
   CSpectrumModel &getSpectrumModel() {
-    return m_models.at(m_spectraIndex.getCurObs());
+    return m_models.at(m_spectraIndex.get());
   }
 
   const CSpectrumModel &getSpectrumModel() const {
-    return m_models.at(m_spectraIndex.getCurObs());
+    return m_models.at(m_spectraIndex.get());
   }
 
-  void refreshModels() {
+  void refreshAllModels() {
     for (auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().refreshModel();
     }
   }
-  void refreshModelsUnderElements(const TInt32List &filterEltsIdx,
-                                  Int32 line_index = undefIdx) {
+
+  void reinitAllModels() {
+    for (auto &spcIndex : m_spectraIndex) {
+      getSpectrumModel().reinitModel();
+    }
+  }
+
+  void refreshAllModelsUnderElements(const TInt32List &filterEltsIdx,
+                                     Int32 line_index = undefIdx) {
     for (auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().refreshModelUnderElements(filterEltsIdx, line_index);
     }
@@ -160,6 +167,12 @@ public:
     if (nb_nan == m_models.size())
       return NAN;
     return sumErr_allObs != 0.0 ? sqrt(fit_allObs / sumErr_allObs) : NAN;
+  }
+
+  void setEnableAmplitudeOffsets(bool enableAmplitudeOffsets) {
+    for (auto &spcIndex : m_spectraIndex) {
+      getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;
+    }
   }
 
 private:

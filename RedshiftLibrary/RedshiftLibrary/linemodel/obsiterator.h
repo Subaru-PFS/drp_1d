@@ -54,13 +54,14 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = Int32;
-    using pointer = std::shared_ptr<Int32>; // or also value_type*
-    using reference = Int32 &;              // or also value_type&
+    using pointer = std::shared_ptr<Int32>;
+    using const_pointer = std::shared_ptr<const Int32>;
+    using reference = const Int32 &;
 
     Iterator(pointer ptr) : m_ptr(ptr) {}
 
     reference operator*() const { return *m_ptr; }
-    pointer operator->() { return m_ptr; }
+    const_pointer operator->() { return m_ptr; }
     Iterator &operator++() {
       (*m_ptr)++;
       return *this;
@@ -82,24 +83,26 @@ public:
   };
 
   Iterator begin() {
-    *m_curObs = 0;
-    return Iterator(m_curObs);
+    *m_currentIndex = 0;
+    return Iterator(m_currentIndex);
   }
-  Iterator end() { return m_endObs; }
+  Iterator end() { return m_endIndex; }
 
-  Int32 getCurObs() const { return *m_curObs; }
+  Int32 get() const { return *m_currentIndex; }
 
-  void reset() { *m_curObs = 0; }
+  Iterator current() const { return Iterator(m_currentIndex); }
+
+  bool isValid() const { return *m_currentIndex < *m_endIndex; }
+  void reset() { *m_currentIndex = 0; }
 
   CSpectraGlobalIndex(Int32 nbObs) {
-    m_curObs = std::make_shared<Int32>(0);
-    m_endObs = std::make_shared<Int32>(nbObs);
+    m_currentIndex = std::make_shared<Int32>(0);
+    m_endIndex = std::make_shared<Int32>(nbObs);
   }
 
 private:
-  std::shared_ptr<Int32> m_curObs;
-  std::shared_ptr<Int32> m_endObs;
-  // Int32 m_nbObs;
+  std::shared_ptr<Int32> m_currentIndex;
+  std::shared_ptr<Int32> m_endIndex;
 };
 
 } // namespace NSEpic

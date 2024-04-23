@@ -90,8 +90,8 @@ void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
 
   CPolynomCoeffsNormalized pCoeffs = unpack(x);
 
-  //  *(m_fitter->m_curObs) =
-  //   0; // temporary multiobs implementation (might be useless -> investigate)
+  //  m_spectraIndex.reset();// temporary multiobs implementation (might be
+  //  useless -> investigate)
   val(0, 0) = ComputeLeastSquare(pCoeffs);
 
   Log.LogDebug(Formatter() << "LeastSquare = " << val(0, 0));

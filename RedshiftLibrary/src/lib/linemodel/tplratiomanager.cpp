@@ -580,7 +580,7 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
     m_elementsVector->getElementParam()[iElts]->SetSymIgmParams(
         TSymIgmParams(m_LyaIgmIdxTplratio[m_savedIdxFitted][iElts], redshift));
 
-  m_models->refreshModels();
+  m_models->refreshAllModels();
 }
 
 Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {

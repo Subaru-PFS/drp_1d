@@ -398,8 +398,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 
     // check fitting
     if (atLeastOneOffsetToFit) {
-      //*m_curObs = 0; TODO is this one necessary ? is this section active,
-      // knowing that least square merit fast is bugged ?
+      m_spectraIndex.reset(); // TODO dummy implementation for hybridfitter
       Float64 fit = getLeastSquareMeritFast(eltIndex);
       if (fit < bestMerit) {
         bestMerit = fit;
@@ -482,7 +481,8 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
         Float64 m = NAN;
         if (fitIsvalid) {
           if (1) {
-            m_models->refreshModelsUnderElements(filterEltsIdxLya, idxLineLyaE);
+            m_models->refreshAllModelsUnderElements(filterEltsIdxLya,
+                                                    idxLineLyaE);
             m = getModelResidualRmsUnderElements({idxLyaE}, true);
 
           } else {
@@ -533,7 +533,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
       TInt32List elt_indices;
       for (auto const [elt_idx, _] : idxLines)
         elt_indices.push_back(elt_idx);
-      m_models->refreshModelsUnderElements(elt_indices);
+      m_models->refreshAllModelsUnderElements(elt_indices);
       Float64 m = getModelResidualRmsUnderElements(elt_indices, true);
 
       if (m < meritMin) {

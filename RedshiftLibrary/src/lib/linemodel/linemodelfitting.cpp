@@ -167,7 +167,7 @@ void CLineModelFitting::initMembers(
     m_models->push_back(CSpectrumModel(
         std::make_shared<CLineModelElementList>(getElementList()),
         getSpectrumPtr(), m_RestLineList, m_continuumFitValues, TFOperator,
-        m_spectraIndex.getCurObs()));
+        m_spectraIndex.get()));
   }
 
   m_continuumManager = std::make_shared<CContinuumManager>(
@@ -405,8 +405,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         m_lineRatioManager->saveResults(itratio);
       }
       if (getContinuumComponent() == "noContinuum") {
-        for (auto &spcIndex : m_spectraIndex)
-          getSpectrumModel().reinitModel();
+        m_models->reinitAllModels();
       }
     }
   }
@@ -441,9 +440,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
       fitMethod, m_ElementsVector, m_inputSpcs, m_lambdaRanges, m_models,
       m_RestLineList, m_continuumManager, m_spectraIndex,
       enableAmplitudeOffsets, enableLambdaOffsetsFit);
-  for (auto &spcIndex : m_spectraIndex) {
-    getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;
-  }
+  m_models->setEnableAmplitudeOffsets(enableAmplitudeOffsets);
 }
 
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
@@ -906,7 +903,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
             break;
           }
         }
-        if (m_spectraIndex.getCurObs() >= m_inputSpcs->size())
+        if (!m_spectraIndex.isValid())
           THROWG(INTERNAL_ERROR,
                  Formatter() << "Failed finding a spectrum containing"
                              << line_index << " at " << modelSolution.Redshift);
@@ -1043,10 +1040,6 @@ Float64 CLineModelFitting::GetVelocityEmission() const {
 
 Float64 CLineModelFitting::GetVelocityAbsorption() const {
   return m_ElementsVector->getElementParam()[0]->m_VelocityAbsorption;
-}
-
-Float64 CLineModelFitting::GetRedshift() const {
-  return getSpectrumModel().m_Redshift;
 }
 
 /**
@@ -1246,9 +1239,4 @@ std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
   return std::make_pair(sumFlux, snrdi);
 }
 
-void CLineModelFitting::refreshAllModels() {
-
-  for (auto &spcIndex : m_spectraIndex) {
-    getSpectrumModel().refreshModel();
-  }
-}
+void CLineModelFitting::refreshAllModels() { m_models->refreshAllModels(); }
