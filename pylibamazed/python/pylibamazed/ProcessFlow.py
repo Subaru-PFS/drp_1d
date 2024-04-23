@@ -123,7 +123,7 @@ class ProcessFlow:
                 self.initialize(rso, spectrum_reader)
         except ProcessFlowException:
             rso.load_root()
-            return
+            return rso
 
         # loop on spectrum models (galaxy, star, qso, ...)
         for spectrum_model in self.parameters.get_spectrum_models():
