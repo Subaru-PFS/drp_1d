@@ -79,7 +79,7 @@ public:
                   CLine::EForce forceFilter = CLine::EForce::nForce_All) const;
   TLineMap GetFilteredList(const std::string &typeFilter,
                            const std::string &forceFilter) const;
-  static const std::map<std::string, TLineVector>
+  static std::map<std::string, TLineVector>
   ConvertToGroupList(const TLineMap &filteredList);
 
   void setAsymProfileAndParams(const std::string &profile, TAsymParams params);

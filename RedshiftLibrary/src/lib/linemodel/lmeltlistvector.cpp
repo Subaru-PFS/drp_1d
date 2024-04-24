@@ -47,20 +47,27 @@ using namespace std;
 CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
                                    const std::shared_ptr<Int32> &curObs,
                                    const CLineMap &restLineList,
-                                   bool regularCatalog)
+                                   ElementComposition element_composition)
     : m_lambdaRanges(lambdaranges), m_curObs(curObs),
       m_RestLineList(restLineList) {
   m_nbObs = m_lambdaRanges.size();
 
-  if (regularCatalog) {
+  switch (element_composition) {
+  case ElementComposition::Default:
     // load the regular catalog
     LoadCatalog();
-  } else { //"tplRatio" and "tplCorr"
+    break;
+  case ElementComposition::EmissionAbsorption:
+    //"tplRatio" and "tplCorr"
     // load the tplratio catalog with only 1 element for all lines
     // LoadCatalogOneMultiline(restLineList);
     // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
     // the Abs lines
     LoadCatalogTwoMultilinesAE();
+    break;
+  case ElementComposition::OneLine:
+    // load each line alone in one element (linemeas)
+    LoadCatalogOneLineByElement();
   }
   for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
 
@@ -137,9 +144,15 @@ void CLMEltListVector::fillElements() {
  *this result in getElementList().
  **/
 void CLMEltListVector::LoadCatalog() {
-  auto const groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
-  for (auto [_, lines] : groupList) {
+  auto groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
+  for (auto &[_, lines] : groupList) {
     AddElementParam(std::move(lines));
+  }
+}
+
+void CLMEltListVector::LoadCatalogOneLineByElement() {
+  for (auto const &[_, line] : m_RestLineList) {
+    AddElementParam(CLineVector{line});
   }
 }
 

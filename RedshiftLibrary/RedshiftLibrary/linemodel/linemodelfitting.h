@@ -68,7 +68,8 @@ class CLineModelFitting {
 
 public:
   CLineModelFitting(
-      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
+      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+      ElementComposition element_composition = ElementComposition::Default);
   CLineModelFitting(
       const std::shared_ptr<const CSpectrum> &template_,
       const TLambdaRange &lambdaRange,
@@ -79,7 +80,8 @@ public:
 
   void initParameters();
   void
-  initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
+  initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+              ElementComposition element_composition);
 
   void LogCatalogInfos();
 

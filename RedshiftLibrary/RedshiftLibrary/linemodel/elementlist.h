@@ -130,7 +130,8 @@ class CLMEltListVector {
 public:
   CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
                    const std::shared_ptr<Int32> &curObs,
-                   const CLineMap &restLineList, bool regularCatalog);
+                   const CLineMap &restLineList,
+                   ElementComposition element_composition);
   CLMEltListVector(CLineModelElementList eltlist,
                    const CLineMap &restLineList); // for unit test
 
@@ -193,6 +194,7 @@ private:
   void AddElementParam(CLineVector lines);
   void fillElements();
   void LoadCatalog();
+  void LoadCatalogOneLineByElement();
   void LoadCatalogOneMultiline();
   void LoadCatalogTwoMultilinesAE();
   bool computeOutsideLambdaRangeLine(Int32 elt_index, Int32 line_index);
