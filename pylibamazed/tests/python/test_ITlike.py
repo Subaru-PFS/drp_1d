@@ -44,9 +44,9 @@ import tempfile
 import h5py
 import pandas as pd
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
-from pylibamazed.Context import Context
 from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ProcessFlow import ProcessFlow
 from tests.python.config import test_dir
 from tests.python.fake_parameters_checker import FakeParametersChecker
 
@@ -148,7 +148,7 @@ def save_output(output, config, observation):
 def test_ITLikeTest():
     config = make_config()
     param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
-    context = Context(config, param)  # vars returns the dict version of config
+    process_flow = ProcessFlow(config, param)
     observation = get_observation(config["input_file"])
 
     # read and load spectra using spectra reader
@@ -157,14 +157,14 @@ def test_ITLikeTest():
     reader = ASCIISpectrumReader(
         observation_id=observation.ProcessingID[0],
         parameters=param,
-        calibration_library=context,
+        calibration_library=process_flow.calibration_library,
         source_id=observation.ProcessingID[0],
     )
 
     reader.load_all(spectra)
     add_photometry_to_reader(config, observation, reader)
 
-    output = context.run(reader)  # passing spectra reader to launch amazed
+    output = process_flow.run(reader)  # passing spectra reader to launch amazed
 
     # check results (no errors)
     for spectrum_model, stage in (("", "init"),

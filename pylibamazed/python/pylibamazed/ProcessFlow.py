@@ -93,7 +93,7 @@ def store_exception_handler(func=None, *, raise_process_flow_exception=False):
     return wrapper
 
 
-class Context:
+class ProcessFlow:
 
     @exception_decorator(logging=True)
     def __init__(self, config, parameters: Parameters):
@@ -123,22 +123,24 @@ class Context:
                 self.initialize(rso, spectrum_reader)
         except ProcessFlowException:
             rso.load_root()
-            return
+            return rso
 
+        # loop on spectrum models (galaxy, star, qso, ...)
         for spectrum_model in self.parameters.get_spectrum_models():
             with push_scope(spectrum_model, ScopeType.SPECTRUMMODEL):
                 try:
-                    self.process_object(rso)
+                    self.process_spectrum_model(rso)
                 except ProcessFlowException:
                     pass
 
-        self.run_classification_solver(rso)
+        if self.parameters.is_a_redshift_solver_used():
+            self.run_classification_solver(rso)
 
         self.load_result_store(rso)
 
         return rso
 
-    def process_object(self, rso):
+    def process_spectrum_model(self, rso):
         spectrum_model = self.scope_spectrum_model
 
         redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
@@ -250,24 +252,22 @@ class Context:
             rso.object_results[self.scope_spectrum_model]['model_parameters'][rank]['SubType'] \
                 = sub_types[rank]
 
-    def can_process_classification(self, rso):
-        enable_classification = False
+    def all_redshift_solver_failed(self, rso):
+        answer = True
         for obj in self.parameters.get_spectrum_models():
             if not rso.has_error(obj, "redshiftSolver"):
-                enable_classification = True
+                answer = False
                 break
-        return enable_classification
+        return answer
 
     @push_scope("classification", ScopeType.SPECTRUMMODEL)
     @push_scope("classification", ScopeType.STAGE)
     @store_exception_handler
     def run_classification_solver(self, rso):
-        if self.parameters.is_a_redshift_solver_used():
-            if self.can_process_classification(rso):
-                self.run_method("classificationSolve")
-            else:
-                raise APIException(ErrorCode.NO_CLASSIFICATION,
-                                   "Classification not run because all redshiftSolver failed")
+        if self.all_redshift_solver_failed(rso):
+            raise APIException(ErrorCode.NO_CLASSIFICATION,
+                               "Classification not run because all redshiftSolver failed")
+        self.run_method("classificationSolve")
 
     @push_scope("load_result_store", ScopeType.STAGE)
     @store_exception_handler
