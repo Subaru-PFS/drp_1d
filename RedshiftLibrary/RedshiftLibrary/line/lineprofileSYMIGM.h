@@ -80,6 +80,9 @@ public:
 
   void resetParams() override;
   Int32 getIGMIdxCount() const override;
+  Int32 GetIgmIdx() const {
+    return m_igmidx != undefIdx ? m_igmidx : 3;
+  }; // use median extinction curve if undefined
 
 private:
   friend class lineProfile_test::lineprofileSYMIGM_test;
@@ -93,7 +96,7 @@ private:
 
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   Float64 m_redshift = NAN;
-  Int32 m_igmidx = -1;
+  Int32 m_igmidx = undefIdx;
   bool m_igmFit = false;
 };
 } // namespace NSEpic
