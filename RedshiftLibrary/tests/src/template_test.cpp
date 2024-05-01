@@ -252,9 +252,7 @@ BOOST_AUTO_TEST_CASE(ApplyMeiksinCoeff_test) {
 
   BOOST_CHECK_THROW(tplStar.GetIgmCoeff(), AmzException);
   BOOST_CHECK_THROW(tplStar.GetIgmEndIndex(), AmzException);
-  Int32 begin;
-  Int32 ismEnd;
-  BOOST_CHECK_THROW(tplStar.GetIsmIgmRangeIndex(begin, ismEnd), AmzException);
+  BOOST_CHECK_THROW(tplStar.GetIsmIgmRangeIndex(), AmzException);
 
   tplStar.InitIsmIgmConfig(spcAxisSize - 2, spcAxisSize - 1, 2.86,
                            ismCorrectionCalzetti, igmCorrectionMeiksin);
@@ -284,7 +282,7 @@ BOOST_AUTO_TEST_CASE(ApplyMeiksinCoeff_test) {
   BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxAxisList);
   BOOST_CHECK(tplStar.GetIgmCoeff() == -2);
   BOOST_CHECK(tplStar.GetIgmEndIndex() == lastIdx);
-  tplStar.GetIsmIgmRangeIndex(begin, ismEnd);
+  auto const &[begin, ismEnd] = tplStar.GetIsmIgmRangeIndex();
   BOOST_CHECK(begin == 0);
   BOOST_CHECK(ismEnd == spcAxisSize - 1);
 

@@ -100,7 +100,7 @@ public:
   const TFloat64List &GetcomputedDustCoeffs() const;
   const TFloat64List &GetcomputedMeiksinCoeffs() const;
 
-  void GetIsmIgmRangeIndex(Int32 &begin, Int32 &end) const;
+  std::pair<Int32, Int32> GetIsmIgmRangeIndex() const;
   Int32 GetIgmEndIndex() const;
   Int32 GetIgmEndIndex(Int32 kstart, Int32 kend) const;
 
@@ -235,12 +235,11 @@ inline Int32 CTemplate::GetIgmCoeff() const {
   return m_meiksinIdx;
 }
 
-inline void CTemplate::GetIsmIgmRangeIndex(Int32 &begin, Int32 &ismend) const {
+inline std::pair<Int32, Int32> CTemplate::GetIsmIgmRangeIndex() const {
   if (!CheckIsmIgmEnabled()) {
     THROWG(INTERNAL_ERROR, "ism not initialized");
   }
-  begin = m_IsmIgm_kstart;
-  ismend = m_Ism_kend;
+  return std::make_pair(m_IsmIgm_kstart, m_Ism_kend);
 }
 
 inline Int32 CTemplate::GetIgmEndIndex() const {
