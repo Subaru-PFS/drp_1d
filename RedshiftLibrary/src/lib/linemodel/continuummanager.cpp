@@ -61,8 +61,7 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
  * will be injected in the class whenever required !
  * TODO: study this possibility before doing the change
  */
-void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
-                                         Float64 redshift) {
+void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   Log.LogDebug(Formatter() << "Elementlist, m_fitContinuum_option="
                            << m_fitContinuum_option);
   /*if (m_observeGridContinuumFlux.empty())
@@ -97,19 +96,6 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
   std::shared_ptr<const CTemplate> tpl =
       m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->tplName);
 
-  if (autoSelect) {
-    // Float64 contsnr = getFitContinuum_snr();
-    /*Float64 contsnr = m_fitContinuum->tplSNRMax;
-    m_fitContinuum->tplAlpha = 1.0;
-    if(contsnr>50.)
-    {
-        m_fitContinuum->tplAlpha=0.0;
-    }*/
-    m_fitContinuum_tplFitAlpha = 0.0;
-    if (m_fitContinuumMaxValues->fitAmplitudeSigmaMAX <
-        m_opt_fitcontinuum_neg_threshold)
-      m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
-  }
   for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
     getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
   }

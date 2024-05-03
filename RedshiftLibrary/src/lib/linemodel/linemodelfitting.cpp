@@ -328,8 +328,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
 
     getSpectrumModel().initObserveGridContinuumFlux(
         getSpectrum().GetSampleCount());
-    Int32 autoselect = getContinuumComponent() == "tplFitAuto";
-    m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
+    m_continuumManager->LoadFitContinuum(k, redshift);
   }
 }
 
@@ -417,12 +416,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   if (isContinuumComponentTplfitxx()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
-      Int32 autoselect =
-          m_continuumManager->getContinuumComponent() == "tplFitAuto";
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
-        m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted,
-                                             autoselect, redshift);
+        m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, redshift);
       }
     }
   }
