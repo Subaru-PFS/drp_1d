@@ -66,10 +66,6 @@ public:
   getLinesAboveSNR(const TFloat64Range &lambdaRange,
                    Float64 snrcut = 3.5) const;
 
-  void integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
-                                   const TInt32RangeList &indexRangeList,
-                                   Float64 &sumFlux, Float64 &sumErr) const;
-
   bool m_enableAmplitudeOffsets = false;
   Float64 m_Redshift = 0.;
   // new methods

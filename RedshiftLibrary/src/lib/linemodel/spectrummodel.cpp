@@ -512,10 +512,8 @@ std::pair<Float64, Float64> CSpectrumModel::getFluxDirectIntegration(
 
   // estimate the integrated flux between obs. spectrum and continuum:
   // trapezoidal intg
-  Float64 sumFlux = 0.0;
-  Float64 sumErr = 0.0;
-  integrateFluxes_usingTrapez(fluxMinusContinuum, indexRangeList, sumFlux,
-                              sumErr);
+  auto const &[sumFlux, sumErr] = CSpectrum::integrateFluxes_usingTrapez(
+      m_inputSpc->GetSpectralAxis(), fluxMinusContinuum, indexRangeList);
 
   return std::make_pair(sumFlux, sumErr);
 }
@@ -660,42 +658,6 @@ CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
   }
 
   return modelfluxAxis;
-}
-
-/**
- * @brief Construct a new clinemodelfitting::integratefluxes usingtrapez
- * object
- *
- * @param fluxMinusContinuum
- * @param indexRangeList
- * @param sumFlux
- * @param sumErr
- */
-void CSpectrumModel::integrateFluxes_usingTrapez(
-    const CSpectrumFluxAxis &fluxMinusContinuum,
-    const TInt32RangeList &indexRangeList, Float64 &sumFlux,
-    Float64 &sumErr) const {
-
-  sumFlux = 0.0;
-  sumErr = 0.0;
-
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-  if (spectralAxis.GetSamplesCount() < 2)
-    THROWG(INTERNAL_ERROR, "Not enough samples in spectral axis");
-
-  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
-  for (auto &r : indexRangeList) {
-    for (Int32 t = r.GetBegin(), e = r.GetEnd(); t < e; t++) {
-      Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
-      sumFlux +=
-          trapweight * (fluxMinusContinuum[t + 1] + fluxMinusContinuum[t]);
-
-      Float64 ea = ErrorNoContinuum[t] * ErrorNoContinuum[t];
-      Float64 eb = ErrorNoContinuum[t + 1] * ErrorNoContinuum[t + 1];
-      sumErr += trapweight * trapweight * (eb + ea);
-    }
-  }
-  return;
 }
 
 /**

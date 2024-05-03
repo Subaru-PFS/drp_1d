@@ -76,7 +76,11 @@ public:
   }; // harcoded value from the number of cols in the ascii files
   Int32 getRedshiftIndex(Float64 z) const;
   Int32 getWaveIndex(Float64 w) const;
-  TFloat64List getWaveVector(const TFloat64Range &wrange) const;
+
+  std::pair<TFloat64List, TFloat64List>
+  getWaveAndCorrectionVector(const TFloat64Range &wrange, Float64 redshift,
+                             Int32 meiksinIdx) const;
+
   Float64 getCorrection(Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
     return m_corrections[zIdx].fluxcorr[meiksinIdx].at(lbdaIdx);
   };
@@ -105,6 +109,7 @@ private:
 
   TInt32Range getWaveRangeIndices(const TFloat64Range &wrange, bool raw) const;
   TFloat64List getWaveVector(const TFloat64Range &wrange, bool raw) const;
+  TFloat64List getWaveVector(const TInt32Range &wrange, bool raw) const;
 
   TFloat64List m_zbins;
   std::vector<MeiksinCorrection> m_rawCorrections;

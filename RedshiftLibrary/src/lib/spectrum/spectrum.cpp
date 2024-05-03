@@ -712,3 +712,31 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
                                << lmin << ";" << lmax << "]");
   }
 }
+
+std::pair<Float64, Float64> CSpectrum::integrateFluxes_usingTrapez(
+    CSpectrumSpectralAxis const &spectralAxis,
+    CSpectrumFluxAxis const &fluxAxis, TInt32RangeList const &indexRangeList) {
+
+  Float64 sumFlux = 0.0;
+  Float64 sumErr = 0.0;
+
+  if (spectralAxis.GetSamplesCount() < 2)
+    THROWG(INTERNAL_ERROR, "Not enough samples to integrate flux");
+
+  if (spectralAxis.GetSamplesCount() != fluxAxis.GetSamplesCount())
+    THROWG(INTERNAL_ERROR,
+           "spectral axis and flux axis have different samples number");
+
+  const auto &Error = fluxAxis.GetError();
+  for (auto &r : indexRangeList) {
+    for (Int32 t = r.GetBegin(), e = r.GetEnd(); t < e; t++) {
+      Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
+      sumFlux += trapweight * (fluxAxis[t + 1] + fluxAxis[t]);
+
+      Float64 ea = Error[t] * Error[t];
+      Float64 eb = Error[t + 1] * Error[t + 1];
+      sumErr += trapweight * trapweight * (eb + ea);
+    }
+  }
+  return std::make_pair(sumFlux, sumErr);
+}

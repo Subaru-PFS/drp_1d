@@ -125,20 +125,43 @@ Int32 CSpectrumFluxCorrectionMeiksin::getWaveIndex(Float64 w) const {
 }
 
 // get wave vector inside range and aligned to fine lambda grid
-TFloat64List CSpectrumFluxCorrectionMeiksin::getWaveVector(
-    const TFloat64Range &wrange) const {
-  return getWaveVector(wrange, false);
+std::pair<TFloat64List, TFloat64List>
+CSpectrumFluxCorrectionMeiksin::getWaveAndCorrectionVector(
+    const TFloat64Range &wrange, Float64 redshift, Int32 meiksinIdx) const {
+
+  auto const indices = getWaveRangeIndices(wrange, false);
+  auto const wave = getWaveVector(indices, false);
+  if (wave.empty())
+    THROWG(INTERNAL_ERROR, "not enough IGM extinction samples inside range");
+
+  Int32 zIdx = getRedshiftIndex(redshift);
+  if (zIdx == undefIdx)
+    return std::make_pair(wave, TFloat64List(wave.size(), 1.0));
+
+  TFloat64List correction(wave.size());
+  auto const idx_vector = indices.SpreadOver(1);
+  std::transform(idx_vector.begin(), idx_vector.end(), correction.begin(),
+                 [zIdx, meiksinIdx, this](Int32 lbdaIdx) {
+                   return getCorrection(zIdx, meiksinIdx, lbdaIdx);
+                 });
+  return std::make_pair(wave, correction);
 }
 
 TFloat64List
 CSpectrumFluxCorrectionMeiksin::getWaveVector(const TFloat64Range &wrange,
                                               bool raw) const {
-  TFloat64List waves;
-  Float64 step = raw ? IGM_RAW_STEP : m_finegridstep;
   TInt32Range indices = getWaveRangeIndices(wrange, raw);
+  return getWaveVector(indices, raw);
+}
+
+TFloat64List
+CSpectrumFluxCorrectionMeiksin::getWaveVector(const TInt32Range &indices,
+                                              bool raw) const {
+  TFloat64List waves;
   if (indices.GetLength() < 0)
     return waves;
   waves.resize(indices.GetLength() + 1);
+  Float64 step = raw ? IGM_RAW_STEP : m_finegridstep;
   for (std::size_t i = 0; i < waves.size(); ++i)
     waves[i] = getLambdaMin() + step * (indices.GetBegin() + i);
 

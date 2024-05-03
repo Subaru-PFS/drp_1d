@@ -167,6 +167,11 @@ public:
 
   void setRebinInterpMethod(const std::string &opt_interp) const;
 
+  static std::pair<Float64, Float64>
+  integrateFluxes_usingTrapez(CSpectrumSpectralAxis const &spectralAxis,
+                              CSpectrumFluxAxis const &fluxAxis,
+                              TInt32RangeList const &indexRangeList);
+
 protected:
   friend CRebin;
   friend class Spectrum::constructor_test;

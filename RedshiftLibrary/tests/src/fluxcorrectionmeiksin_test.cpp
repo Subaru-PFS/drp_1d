@@ -152,17 +152,10 @@ BOOST_AUTO_TEST_CASE(overall_test) {
               igmCorrectionMeiksin->m_rawCorrections[0].lbda.size() - 1);
 
   // test getWaveVector :
-  TFloat64Range w_range(1213., 1213.2);
-  TFloat64List w_vec = igmCorrectionMeiksin->getWaveVector(w_range);
-
   TFloat64List w_vec_ref = {1213.02999999983, 1213.07999999983,
                             1213.12999999983, 1213.17999999983};
-  for (std::size_t i = 0; i < w_vec.size(); i++) {
-    BOOST_CHECK_CLOSE(w_vec[i], w_vec_ref[i], 1e-8);
-  }
-
   TFloat64Range w_range_raw(1213., 1213.2);
-  w_vec = igmCorrectionMeiksin->getWaveVector(w_range_raw, true);
+  TFloat64List w_vec = igmCorrectionMeiksin->getWaveVector(w_range_raw, true);
   for (std::size_t i = 0; i < w_vec.size(); i++) {
     BOOST_CHECK_CLOSE(w_vec[i], w_vec_ref[i], 1e-8);
   }
@@ -246,6 +239,23 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
     else
       BOOST_CHECK_CLOSE(
           corr, igmCorrectionMeiksin->m_rawCorrections[0].fluxcorr[0][i], 1e-6);
+  }
+
+  TFloat64Range w_range(1213., 1213.2);
+  auto [w_vec, cor] =
+      igmCorrectionMeiksin->getWaveAndCorrectionVector(w_range, 2.5, 3);
+
+  TFloat64List w_vec_ref = {1213.02999999983, 1213.07999999983,
+                            1213.12999999983, 1213.17999999983};
+
+  Int32 zIdx = igmCorrectionMeiksin->getRedshiftIndex(2.5);
+  auto const indices =
+      igmCorrectionMeiksin->getWaveRangeIndices(w_range, false);
+  auto const idx_vector = indices.SpreadOver(1);
+  for (std::size_t i = 0; i < w_vec.size(); i++) {
+    BOOST_CHECK_CLOSE(w_vec[i], w_vec_ref[i], 1e-8);
+    BOOST_CHECK(cor[i] ==
+                igmCorrectionMeiksin->getCorrection(zIdx, 3, idx_vector[i]));
   }
 }
 
