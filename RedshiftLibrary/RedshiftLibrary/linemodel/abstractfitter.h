@@ -125,6 +125,8 @@ protected:
 
   CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
   const CSpectrumModel &getModel() const {
+    if (m_spectraIndex.get() >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return m_models->getSpectrumModel();
   }
   const CSpectrum &getSpectrum() {
@@ -138,9 +140,13 @@ protected:
     return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
   CLineModelElementList &getElementList() {
+    if (m_spectraIndex.get() >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
+    if (m_spectraIndex.get() >= m_inputSpcs->size())
+      THROWG(INTERNAL_ERROR, " obs does not exist");
     return m_ElementsVector->getElementList();
   }
 

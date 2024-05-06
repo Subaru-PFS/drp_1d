@@ -90,7 +90,8 @@ void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
 
   CPolynomCoeffsNormalized pCoeffs = unpack(x);
 
-  //  m_spectraIndex.reset();// temporary multiobs implementation (might be
+  m_fitter->m_spectraIndex
+      .reset(); // temporary multiobs implementation (might be
   //  useless -> investigate)
   val(0, 0) = ComputeLeastSquare(pCoeffs);
 

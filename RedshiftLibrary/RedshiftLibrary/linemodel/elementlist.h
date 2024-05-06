@@ -163,6 +163,7 @@ public:
   const CLineModelElementList &getElementList() const {
     return m_ElementsVector.at(m_spectraIndex.get());
   }
+  // TODO Rename to getElementsParams
   std::vector<TLineModelElementParam_ptr> &getElementParam() {
     return m_ElementsParams;
   }
