@@ -54,6 +54,7 @@
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
@@ -133,7 +134,7 @@ public:
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
     // TODO temp basic impl
-    *m_curObs = 0;
+    m_spectraIndex.reset();
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
@@ -160,16 +161,16 @@ public:
   }
 
   const CSpectrum &getSpectrum() const {
-    return *((*m_inputSpcs).at(*m_curObs));
+    return *((*m_inputSpcs).at(m_spectraIndex.get()));
   }
   shared_ptr<const CSpectrum> getSpectrumPtr() {
-    return (*m_inputSpcs).at(*m_curObs);
+    return (*m_inputSpcs).at(m_spectraIndex.get());
   }
 
-  CSpectrumModel &getSpectrumModel() { return (*m_models).at(*m_curObs); }
+  CSpectrumModel &getSpectrumModel() { return m_models->getSpectrumModel(); }
 
   const CSpectrumModel &getSpectrumModel() const {
-    return (*m_models).at(*m_curObs);
+    return m_models->getSpectrumModel();
   }
 
   CLineModelElementList &getElementList() {
@@ -183,7 +184,7 @@ public:
   }
 
   const TLambdaRange &getLambdaRange() const {
-    return *(m_lambdaRanges.at(*m_curObs));
+    return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
 
   const std::string &getFittingMethod() const { return m_fittingmethod; }
@@ -226,10 +227,8 @@ public:
   getFluxDirectIntegration(const TInt32List &eIdx_list,
                            const TInt32List &subeIdx_list,
                            bool substract_abslinesmodel) const;
-  void resetCurObs() { *m_curObs = 0; }
-  void incrementCurObs() { (*m_curObs)++; }
-  Int32 remainsObs() { return *m_curObs < m_nbObs; }
 
+  CSpectraGlobalIndex &getSpectraIndex() { return m_spectraIndex; }
   void refreshAllModels();
 
 private:
@@ -269,8 +268,8 @@ private:
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
-  Int32 m_nbObs;
-  std::shared_ptr<Int32> m_curObs;
+
+  mutable CSpectraGlobalIndex m_spectraIndex;
 };
 
 } // namespace NSEpic

@@ -45,12 +45,11 @@ using namespace NSEpic;
 using namespace std;
 
 CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
-                                   const std::shared_ptr<Int32> &curObs,
+                                   const CSpectraGlobalIndex &spcIndex,
                                    const CLineMap &restLineList,
                                    ElementComposition element_composition)
-    : m_lambdaRanges(lambdaranges), m_curObs(curObs),
+    : m_lambdaRanges(lambdaranges), m_spectraIndex(spcIndex),
       m_RestLineList(restLineList) {
-  m_nbObs = m_lambdaRanges.size();
 
   switch (element_composition) {
   case ElementComposition::Default:
@@ -69,7 +68,7 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
     // load each line alone in one element (linemeas)
     LoadCatalogOneLineByElement();
   }
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
 
     m_ElementsVector.push_back(CLineModelElementList());
     fillElements();
@@ -78,10 +77,10 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
 
 CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
                                    const CLineMap &restLineList)
-    : m_RestLineList(restLineList) { // for unit test
+    : m_RestLineList(restLineList), m_spectraIndex(1) { // for unit test
 
   m_ElementsVector.push_back(eltlist);
-  m_curObs = std::make_shared<int>(0);
+
   for (auto elt : m_ElementsVector[0])
     m_ElementsParams.push_back(elt->getElementParam());
 }
@@ -99,7 +98,7 @@ Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() const {
 
 bool CLMEltListVector::computeOutsideLambdaRangeLine(Int32 elt_index,
                                                      Int32 line_index) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index))
       return false;
   }
@@ -107,7 +106,7 @@ bool CLMEltListVector::computeOutsideLambdaRangeLine(Int32 elt_index,
 }
 
 bool CLMEltListVector::computeOutsideLambdaRange(Int32 elt_index) {
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRange())
       return false;
   }
@@ -185,7 +184,8 @@ void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
 
 Float64 CLMEltListVector::getScaleMargCorrection(Int32 Eltidx) const {
   Float64 smc = 0;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
+
     smc += getElementList().getScaleMargCorrection(Eltidx);
   }
   return smc;

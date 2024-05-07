@@ -36,45 +36,74 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_SVDLC_ELEMENTLIST_
-#define _REDSHIFT_SVDLC_ELEMENTLIST_
+#ifndef _REDSHIFT_SPECTRUM_ITERATOR_
+#define _REDSHIFT_SPECTRUM_ITERATOR_
 
-#include "RedshiftLibrary/linemodel/abstractfitter.h"
-#include "RedshiftLibrary/linemodel/continuummanager.h"
+#include <cstddef>  // For std::ptrdiff_t
+#include <iterator> // For std::forward_iterator_tag
+#include <memory>
 
-namespace NSEpic
+#include "RedshiftLibrary/common/datatypes.h"
 
-{
+namespace NSEpic {
 
-// class CRegulament;
-class CSvdlcFitter : public CAbstractFitter {
+class CSpectraGlobalIndex {
+
 public:
-  CSvdlcFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
-               const CCSpectrumVectorPtr &inputSpcs,
-               const CTLambdaRangePtrVector &lambdaRanges,
-               const CSpcModelVectorPtr &spectrumModels,
-               const CLineMap &restLineList,
-               const CSpectraGlobalIndex &spcIndex,
-               std::shared_ptr<CContinuumManager> continuumManager,
-               Int32 polyOrder = -1, bool enableAmplitudeOffsets = false,
-               bool enableLambdaOffsetsFit = false);
+  struct Iterator {
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = Int32;
+    using pointer = std::shared_ptr<Int32>;
+    using const_pointer = std::shared_ptr<const Int32>;
+    using reference = const Int32 &;
+
+    Iterator(pointer ptr) : m_ptr(ptr) {}
+
+    reference operator*() const { return *m_ptr; }
+    const_pointer operator->() { return m_ptr; }
+    Iterator &operator++() {
+      (*m_ptr)++;
+      return *this;
+    }
+    Iterator operator++(int) {
+      Iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+    friend bool operator==(const Iterator &a, const Iterator &b) {
+      return *(a.m_ptr) == *(b.m_ptr);
+    };
+    friend bool operator!=(const Iterator &a, const Iterator &b) {
+      return *(a.m_ptr) != *(b.m_ptr);
+    };
+
+  private:
+    pointer m_ptr;
+  };
+
+  Iterator begin() {
+    *m_currentIndex = 0;
+    return Iterator(m_currentIndex);
+  }
+  Iterator end() { return m_endIndex; }
+
+  Int32 get() const { return *m_currentIndex; }
+
+  Iterator current() const { return Iterator(m_currentIndex); }
+
+  bool isValid() const { return *m_currentIndex < *m_endIndex; }
+  void reset() { *m_currentIndex = 0; }
+
+  CSpectraGlobalIndex(Int32 nbObs) {
+    m_currentIndex = std::make_shared<Int32>(0);
+    m_endIndex = std::make_shared<Int32>(nbObs);
+  }
 
 private:
-  void doFit(Float64 redshift) override;
-  void fitAmplitudesLinesAndContinuumLinSolve(
-      const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-      TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
-      Float64 redshift);
-
-  void fillMatrix(Int32 imin, Int32 imax, Float64 redshift,
-                  const TInt32List &EltsIdx,
-                  const CSpectrumSpectralAxis &spectralAxis,
-                  const CSpectrumFluxAxis &continuumfluxAxis,
-                  gsl_matrix *X) const;
-  Int32 m_fitc_polyOrder = -1;
-
-  std::shared_ptr<CContinuumManager> m_continuumManager;
-  const CSpectrumSpectralAxis &m_spectralAxis;
+  std::shared_ptr<Int32> m_currentIndex;
+  std::shared_ptr<Int32> m_endIndex;
 };
+
 } // namespace NSEpic
 #endif

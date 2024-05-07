@@ -57,7 +57,7 @@ void CRandomFitter::doFit(Float64 redshift) {
                           << std::fixed << std::setprecision(2)
                           << coeffAmpAbsorption);
   // fit the model amplitudes individually
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
+  for (Int32 iElts = 0; iElts < getElementParam().size(); iElts++) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
@@ -74,10 +74,10 @@ void CRandomFitter::doFit(Float64 redshift) {
     }
     // get the max nominal amplitude
     Float64 maxNominalAmp = -1.0;
-    auto const &elt = getElementList()[iElts];
-    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-      if (maxNominalAmp < elt->getElementParam()->GetNominalAmplitude(line_idx))
-        maxNominalAmp = elt->getElementParam()->GetNominalAmplitude(line_idx);
+    auto const &elt_param = getElementParam()[iElts];
+    for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
+      if (maxNominalAmp < elt_param->GetNominalAmplitude(line_idx))
+        maxNominalAmp = elt_param->GetNominalAmplitude(line_idx);
     }
 
     m_ElementsVector->SetElementAmplitude(iElts, a / maxNominalAmp, err);

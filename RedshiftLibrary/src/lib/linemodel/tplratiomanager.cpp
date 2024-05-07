@@ -52,9 +52,9 @@ CTplratioManager::CTplratioManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
+    const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList, curObs) {
+                        continuumManager, restLineList, spcIndex) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
@@ -374,7 +374,7 @@ void CTplratioManager::fillHalphaArray(Int32 idx) {
   if (m_opt_haprior <= 0.)
     return;
   bool ha_strongest = false;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     if (getElementList().GetModelHaStrongest()) {
       ha_strongest = true;
       break;
@@ -400,7 +400,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   m_ScaleMargCorrTplratio[idx] = m_elementsVector->getScaleMargCorrection();
 
   m_StrongELPresentTplratio[idx] = false;
-  for (*m_curObs = 0; *m_curObs < m_nbObs; (*m_curObs)++) {
+  for (auto &spcIndex : m_spectraIndex) {
     if (getElementList().GetModelStrongEmissionLinePresent()) {
       m_StrongELPresentTplratio[idx] = true;
       break;
@@ -580,9 +580,7 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
     m_elementsVector->getElementParam()[iElts]->SetSymIgmParams(
         TSymIgmParams(m_LyaIgmIdxTplratio[m_savedIdxFitted][iElts], redshift));
 
-  for (*m_curObs = 0; *m_curObs < m_models->size(); (*m_curObs)++) {
-    getModel().refreshModel();
-  }
+  m_models->refreshAllModels();
 }
 
 Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {

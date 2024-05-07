@@ -50,7 +50,7 @@ using namespace std;
 
 // set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
-  *m_curObs = 0; // dummy implementation
+  m_spectraIndex.reset(); // dummy implementation
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
 
   if (validEltsIdx.empty())
@@ -254,7 +254,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     // refit the positive elements together
     if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
       fitAmplitude(EltsIdx[idx_positive.front()], redshift, undefIdx);
-      *m_curObs = 0; // dummy implementation
+      m_spectraIndex.reset(); // dummy implementation
     } else if (idx_positive.size() > 0) {
       bool const allPositive2 = fitAmplitudesLinSolve(
           EltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
@@ -263,7 +263,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
         for (Int32 irefit = 0; irefit < idx_positive.size(); ++irefit) {
           if (ampsfitted[irefit] > 0) {
             fitAmplitude(EltsIdx[idx_positive[irefit]], redshift, undefIdx);
-            *m_curObs = 0; // dummy implementation
+            m_spectraIndex.reset(); // dummy implementation
           } else {
             m_ElementsVector->SetElementAmplitude(EltsIdx[idx_positive[irefit]],
                                                   0.0, errorsfitted[irefit]);

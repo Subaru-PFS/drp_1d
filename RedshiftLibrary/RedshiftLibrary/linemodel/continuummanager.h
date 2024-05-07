@@ -5,6 +5,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
@@ -26,19 +27,12 @@ class CContinuumManager {
 public:
   CContinuumManager(const CSpcModelVectorPtr &models,
                     std::shared_ptr<CTplModelSolution>,
-                    std::shared_ptr<Int32> curObs);
+                    const CSpectraGlobalIndex &spcGlobIndex);
 
   const CSpectrumModel &getModel() const {
-    if (*m_curObs > m_models->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-
-    return (*m_models)[*m_curObs];
+    return m_models->getSpectrumModel();
   }
-  CSpectrumModel &getModel() {
-    if (*m_curObs > m_models->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
-    return (*m_models)[*m_curObs];
-  }
+  CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);
@@ -105,7 +99,8 @@ private:
   std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
 
   CSpcModelVectorPtr m_models;
-  std::shared_ptr<Int32> m_curObs;
+
+  CSpectraGlobalIndex m_spectraIndex;
 
   std::string m_ContinuumComponent;
   Int32 m_fitContinuum_option;

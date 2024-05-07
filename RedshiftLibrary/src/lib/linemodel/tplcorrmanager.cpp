@@ -48,12 +48,12 @@ CTplCorrManager::CTplCorrManager(
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, const std::shared_ptr<Int32> &curObs)
+    const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                       continuumManager, restLineList, curObs) {}
+                       continuumManager, restLineList, spcIndex) {}
 
 Float64 CTplCorrManager::computeMerit(Int32 itratio) {
-  *m_curObs = 0; // dummy implementation
+  m_spectraIndex.reset(); // dummy implementation
 
   getModel().refreshModel();
   TFloat64List Amplitudes;
