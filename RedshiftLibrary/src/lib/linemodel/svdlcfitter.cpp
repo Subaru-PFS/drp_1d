@@ -71,7 +71,6 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // prepare continuum on the observed grid
 
   // re-interpolate the continuum on the grid
-  // TODO multiobs loop here
   m_continuumManager->reinterpolateContinuumResetAmp();
 
   m_spectraIndex.reset(); // TODO dummy impl

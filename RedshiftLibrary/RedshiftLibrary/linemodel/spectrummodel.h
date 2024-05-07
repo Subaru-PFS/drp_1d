@@ -119,10 +119,14 @@ public:
       : m_spectraIndex(spcIndex) {}
   void push_back(const CSpectrumModel &model) { m_models.push_back(model); }
   CSpectrumModel &getSpectrumModel() {
+    if (!m_spectraIndex.isValid())
+      THROWG(INTERNAL_ERROR, "Invalid spectrum index");
     return m_models.at(m_spectraIndex.get());
   }
 
   const CSpectrumModel &getSpectrumModel() const {
+    if (!m_spectraIndex.isValid())
+      THROWG(INTERNAL_ERROR, "Invalid spectrum index");
     return m_models.at(m_spectraIndex.get());
   }
 

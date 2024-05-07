@@ -257,9 +257,11 @@ void CContinuumManager::reinterpolateContinuumResetAmp() {
   m_fitContinuum->tplAmplitude = 1.0;
   m_fitContinuum->tplAmplitudeError = 1.0;
   TFloat64List polyCoeffs_unused;
-  setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
-                               m_fitContinuum->tplAmplitudeError,
-                               polyCoeffs_unused);
+  for (auto &spcIndex : m_spectraIndex) {
+    setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
+                                 m_fitContinuum->tplAmplitudeError,
+                                 polyCoeffs_unused);
+  }
 }
 
 void CContinuumManager::setFitContinuumFromFittedAmps(
