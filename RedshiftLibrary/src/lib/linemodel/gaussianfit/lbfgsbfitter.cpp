@@ -514,7 +514,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     auto &elt = getElementList()[EltsIdx[i]];
     v_xGuess[i] = elt->GetElementAmplitude() * normFactor;
     if (std::isnan(v_xGuess[i]))
-      THROWG(INTERNAL_ERROR, "NAN amplitude");
+      THROWG(INTERNAL_ERROR, "NAN amplitude for LBFGSB fitter initial guess");
     // retrive max SNR amplitude:
     auto sigma = (elt->GetElementError() * normFactor);
     auto snr = v_xGuess[i] / sigma;

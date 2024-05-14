@@ -215,7 +215,7 @@ void COperatorLineModel::ComputeFirstPass() {
   bool checkAllAmplitudes =
       AllAmplitudesAreZero(allAmplitudesZero, m_result->Redshifts.size());
   if (checkAllAmplitudes == true)
-    THROWG(INTERNAL_ERROR, "Null amplitudes (continuum & model) at all z");
+    THROWG(NULL_MODEL, "Null amplitudes (continuum & model) at all z");
 
   boost::chrono::thread_clock::time_point stop_mainloop =
       boost::chrono::thread_clock::now();
@@ -481,7 +481,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       if (chisquareResult->SNR[i] > bestTplFitSNR)
         bestTplFitSNR = chisquareResult->SNR[i];
 
-      bool retAdd = tplfitStore->Add(
+      tplfitStore->Add(
           chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
           chisquareResult->FitMeiksinIdx[i], redshift,
           chisquareResult->ChiSquare[i], chisquareResult->ChiSquarePhot[i],
@@ -490,8 +490,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
           chisquareResult->FitAmplitudeSigma[i], chisquareResult->FitDtM[i],
           chisquareResult->FitMtM[i], chisquareResult->LogPrior[i],
           chisquareResult->SNR[i]);
-      if (!retAdd)
-        THROWG(INTERNAL_ERROR, "Failed to add continuum fit to store");
     }
   }
   tplfitStore->setSNRMax(bestTplFitSNR);
@@ -541,7 +539,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
       tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
   if (max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
     if (m_opt_continuumcomponent != "tplFitAuto")
-      THROWG(INTERNAL_ERROR,
+      THROWG(NEGATIVE_CONTINUUM,
              Formatter() << "Negative "
                             "continuum amplitude found at z="
                          << max_fitamplitudeSigma_z << ": best continuum tpl "
@@ -1753,14 +1751,14 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       inputContext->GetParameterStore();
   if (params->GetScoped<bool>("lineModel.velocityFit") &&
       params->GetScoped<std::string>("lineModel.fittingMethod") != "lbfgsb")
-    THROWG(INTERNAL_ERROR,
+    THROWG(INVALID_PARAMETER,
            "velocityFit implemented only for lbfgsb ftting method");
 
   Int32 amplitudeOffsetsDegree =
       params->GetScoped<Int32>("lineModel.polynomialDegree");
   if (amplitudeOffsetsDegree < 0 || amplitudeOffsetsDegree > 2)
-    THROWG(INTERNAL_ERROR, "the polynomial degree "
-                           "parameter should be between 0 and 2");
+    THROWG(INVALID_PARAMETER, "the polynomial degree "
+                              "parameter should be between 0 and 2");
 
   makeTFOperator(m_Redshifts);
 

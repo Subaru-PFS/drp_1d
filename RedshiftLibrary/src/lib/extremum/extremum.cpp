@@ -126,7 +126,7 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
     maxPoint = FilterOutNeighboringPeaksAndTruncate(maxX, maxY, keepMinN);
 
     // verify that peaks are well separated by at least secondpassradius
-    verifyPeakSeparation(maxPoint);
+    assertPeakSeparation(maxPoint);
   } else {
     maxPoint = Truncate(maxX, maxY);
   }
@@ -134,7 +134,7 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   return maxPoint;
 }
 
-void CExtremum::verifyPeakSeparation(TFloat64List &maxX) const {
+void CExtremum::assertPeakSeparation(TFloat64List &maxX) const {
 
   std::sort(maxX.begin(), maxX.end());
   for (Int32 i = 0; i < maxX.size() - 1; i++) {
@@ -154,11 +154,11 @@ void CExtremum::verifyPeakSeparation(TFloat64List &maxX) const {
   }
 }
 
-void CExtremum::verifyPeakSeparation(TPointList &maxPoint) const {
+void CExtremum::assertPeakSeparation(TPointList &maxPoint) const {
   TFloat64List maxX(maxPoint.size());
   for (Int32 i = 0; i < maxPoint.size(); i++)
     maxX[i] = maxPoint[i].X;
-  verifyPeakSeparation(maxX);
+  assertPeakSeparation(maxX);
 }
 
 /**

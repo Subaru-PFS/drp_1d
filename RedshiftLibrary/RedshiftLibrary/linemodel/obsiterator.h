@@ -93,6 +93,10 @@ public:
   Iterator current() const { return Iterator(m_currentIndex); }
 
   bool isValid() const { return *m_currentIndex < *m_endIndex; }
+  void AssertIsValid() const {
+    if (!isValid())
+      THROWG(INVALID_SPECTRUM_INDEX, "Invalid spectrum index");
+  };
   void reset() { *m_currentIndex = 0; }
 
   CSpectraGlobalIndex(Int32 nbObs) {

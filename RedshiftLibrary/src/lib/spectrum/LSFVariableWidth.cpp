@@ -61,7 +61,7 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
     lambda = getSpectralRange().Clamp(lambda);
 
   if (!checkAvailability(lambda))
-    THROWG(INTERNAL_ERROR, " lambda outside spectralAxis range");
+    THROWG(INSUFFICIENT_LSF_COVERAGE, " lambda outside spectralAxis range");
 
   Int32 idx = undefIdx;
   TFloat64Index::getClosestLowerIndex(m_spcAxis.GetSamplesVector(), lambda,

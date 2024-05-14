@@ -195,11 +195,10 @@ void CLogZPdfResult::checkPdfSum() const {
       << "CLogZPdfResult::checkPdfSum: Pdfz normalization - sum trapz. = "
       << sumTrapez);
   if (abs(sumTrapez - 1.0) > 1e-1)
-    THROWG(INTERNAL_ERROR,
-           Formatter()
-               << "CLogZPdfResult::checkPdfSum: Pdfz normalization failed, "
-                  "trapzesum = "
-               << sumTrapez);
+    THROWG(PDF_NORMALIZATION_FAILED, Formatter()
+                                         << "Pdfz normalization failed, "
+                                            "trapzesum = "
+                                         << sumTrapez);
 }
 
 void CLogZPdfResult::isPdfValid() const {
@@ -214,7 +213,7 @@ void CLogZPdfResult::isPdfValid() const {
   const Float64 maxVal = *minmax_it.second;
 
   if (minVal == maxVal)
-    THROWG(INTERNAL_ERROR, "PDF is flat");
+    THROWG(FLAT_ZPDF, "PDF is flat");
 
   // is pdf any value nan ?
   for (Int32 k = 0; k < valProbaLog.size(); k++)

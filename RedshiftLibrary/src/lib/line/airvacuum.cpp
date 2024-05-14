@@ -58,7 +58,7 @@ CAirVacuumConverter::Get(const std::string &converterName) {
   else if (converterName == "morton2000")
     return (std::make_shared<CAirVacMorton2000>());
   else {
-    THROWG(INTERNAL_ERROR,
+    THROWG(UNKNOWN_AIR_VACUUM_CONVERSION,
            Formatter() << "unknown air->vacuum conversion: " << converterName);
   }
 }

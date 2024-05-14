@@ -37,12 +37,12 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import json
-
-from pylibamazed.Exception import APIException
-from pylibamazed.redshift import ErrorCode
-from pylibamazed.Paths import v1_to_treed_filename
 from abc import ABC, abstractmethod
+
 import pandas as pd
+from pylibamazed.Exception import APIException
+from pylibamazed.Paths import v1_to_treed_filename
+from pylibamazed.redshift import ErrorCode
 
 
 class ParametersConverter(ABC):
@@ -61,7 +61,7 @@ class ParametersConverterSelector:
         elif version == 2:
             Converter = ParametersConverterV2
         else:
-            raise APIException(ErrorCode.INTERNAL_ERROR,
+            raise APIException(ErrorCode.INVALID_PARAMETER_FILE,
                                f"Unexpected parameters version {version}")
         return Converter
 

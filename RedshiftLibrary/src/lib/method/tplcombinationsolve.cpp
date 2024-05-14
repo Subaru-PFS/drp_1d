@@ -365,12 +365,6 @@ CTplCombinationSolve::buildExtremaResults(
     THROWG(INTERNAL_ERROR, "Size do not match among templatefitting results");
   }
 
-  bool foundBadStatus = false;
-
-  if (foundBadStatus) {
-    THROWG(INTERNAL_ERROR, "Bad status result");
-  }
-
   // prepare the list of components/templates
   const TTemplateConstRefList &tplList =
       tplCatalog.GetTemplateList(TStringList{m_category});

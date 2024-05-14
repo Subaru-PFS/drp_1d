@@ -95,8 +95,9 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
           "photometry.weight");
   }
   if (fft_processing && use_photometry)
-    THROWG(INTERNAL_ERROR, "fftProcessing not "
-                           "implemented with photometry enabled");
+    THROWG(FFT_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+           "fftProcessing not "
+           "implemented with photometry enabled");
 
   if (fft_processing) {
     m_templateFittingOperator =

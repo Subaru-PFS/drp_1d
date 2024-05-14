@@ -250,7 +250,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   }
 
   if (candidates.empty()) {
-    THROWG(INTERNAL_ERROR, " Failed to identify pdf candidates");
+    THROWG(PDF_PEAK_NOT_FOUND, " Failed to identify pdf candidates");
   }
 
   return candidates;

@@ -63,8 +63,8 @@ CLine::EType CLine::string2Type(std::string const &stype) {
   if (ctype == 'A')
     return EType::nType_Absorption;
 
-  THROWG(INTERNAL_ERROR,
-         Formatter() << "Bad line type, should be in {A,E} : " << ctype);
+  THROWG(BAD_LINE_TYPE, Formatter()
+                            << "Bad line type, should be in {A,E} : " << ctype);
 }
 
 CLine::EForce CLine::string2Force(std::string const &sforce) {
@@ -76,7 +76,7 @@ CLine::EForce CLine::string2Force(std::string const &sforce) {
   if (cforce == 'S')
     return EForce::nForce_Strong;
 
-  THROWG(INTERNAL_ERROR,
+  THROWG(BAD_LINE_FORCE,
          Formatter() << "Bad line force, should be in {S,W} : " << cforce);
 }
 

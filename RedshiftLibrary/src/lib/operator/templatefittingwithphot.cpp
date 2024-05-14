@@ -50,7 +50,8 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
       m_weight(weight) {
 
   if (m_spectra.size() > 1)
-    THROWG(INTERNAL_ERROR, "Photometry not supported with multiobs");
+    THROWG(MULTIOBS_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+           "Photometry not supported with multiobs");
   // check availability and coherence of photometric bands & data
   checkInputPhotometry();
 
@@ -68,19 +69,21 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
-    THROWG(INTERNAL_ERROR, "Photometric band "
-                           "transmision not available");
+    THROWG(MISSING_PHOTOMETRIC_TRANSMISSION, "Photometric band "
+                                             "transmision not available");
   if (m_photBandCat->empty())
-    THROWG(INTERNAL_ERROR, "Empty photometric band transmission");
+    THROWG(MISSING_PHOTOMETRIC_TRANSMISSION,
+           "Empty photometric band transmission");
 
   if (m_spectra[0]->GetPhotData() == nullptr)
-    THROWG(INTERNAL_ERROR, "photometric data not available in spectrum");
+    THROWG(MISSING_PHOTOMETRIC_DATA,
+           "photometric data not available in spectrum");
 
   const auto &dataNames = m_spectra[0]->GetPhotData()->GetNameList();
   for (const auto &bandName : m_photBandCat->GetNameList())
     if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
         dataNames.cend())
-      THROWG(INTERNAL_ERROR,
+      THROWG(MISSING_PHOTOMETRIC_DATA,
              Formatter() << " "
                             "photometry point for band name: "
                          << bandName << " is not available in the spectrum");

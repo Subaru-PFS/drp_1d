@@ -99,7 +99,7 @@ Int32 CTemplatesFitStore::getClosestLowerRedshiftIndex(Float64 z) const {
  * value
  * @return False if there was a problem.
  */
-bool CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
+void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
                              Int32 igmMeiksinIdx, Float64 redshift,
                              Float64 merit, Float64 chiSquare_phot,
                              Float64 fitAmplitude, Float64 fitAmplitudeError,
@@ -122,12 +122,9 @@ bool CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
 
   //
   Int32 idxz = GetRedshiftIndex(redshift);
-  if (idxz < 0) {
-    Log.LogDebug(Formatter()
-                 << "CTemplatesFitStore::Unable to find z index for redshift="
-                 << redshift);
-    return false;
-  }
+  if (idxz < 0)
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Unable to find z index for redshift=" << redshift);
 
   // if chi2 val is the lowest, and condition on tplName, insert at position
   // ipos
@@ -162,8 +159,6 @@ bool CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
                  << "CTemplatesFitStore::n_continuum_candidates set to "
                  << n_continuum_candidates << ")");
   }
-
-  return true;
 }
 
 Int32 CTemplatesFitStore::GetContinuumCount() const {

@@ -110,8 +110,8 @@ private:
 
   void SortIndexes(TFloat64List const &maxY) const;
 
-  void verifyPeakSeparation(TFloat64List &maxX) const;
-  void verifyPeakSeparation(TPointList &maxPoint) const;
+  void assertPeakSeparation(TFloat64List &maxX) const;
+  void assertPeakSeparation(TPointList &maxPoint) const;
   void getFirstandLastnonNANElementIndices(const TFloat64List &yAxis,
                                            Int32 &BeginIndex,
                                            Int32 &EndIndex) const;
