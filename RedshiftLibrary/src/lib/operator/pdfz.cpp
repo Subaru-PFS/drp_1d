@@ -210,7 +210,6 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   TCandidateZbyID candidates;
   const TFloat64List zgrid = m_postmargZResult->redshifts;
   for (const auto &cand : m_candidatesZRanges) {
-    TPointList extremumList;
     const TFloat64Range &redshiftsRange = cand.second;
     std::string id = cand.first;
 
@@ -220,9 +219,9 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
         m_maxPeakCount_per_window, m_peakSeparation, m_meritcut,
         invertForMinSearch, m_allow_extrema_at_border, redshiftsRange);
     bool isFirstPass = m_candidatesZRanges.size() == 1;
-    bool findok = extremum_op.Find(zgrid, m_postmargZResult->valProbaLog,
-                                   isFirstPass, extremumList);
-    if (!findok) {
+    TPointList extremumList =
+        extremum_op.Find(zgrid, m_postmargZResult->valProbaLog, isFirstPass);
+    if (!isFirstPass && extremumList.empty()) {
       // we are in 2nd pass (several redshift ranges) (error in Find if first
       // pass with not findok)
       Log.LogInfo(Formatter()
