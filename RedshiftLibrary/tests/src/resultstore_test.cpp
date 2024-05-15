@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(StoreResult_test) {
   BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
 
   std::shared_ptr<const COperatorResult> result_out_2 =
-      store_2.GetFlagLogResult("warningFlag", "", "", "warningFlag");
+      store_2.GetFlagLogResult("", "", "", "warningFlag");
   BOOST_CHECK(result_out_2->getType() == "CFlagLogResult");
 }
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(StoreGlobalResult_test) {
   BOOST_CHECK(store_2.GetScopedName("warningFlag") == "warningFlag");
 
   std::shared_ptr<const COperatorResult> result_out_2 =
-      store_2.GetFlagLogResult("warningFlag", "", "", "warningFlag");
+      store_2.GetFlagLogResult("", "", "", "warningFlag");
   BOOST_CHECK(result_out_2->getType() == "CFlagLogResult");
 }
 
@@ -253,8 +253,7 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
               "context_warningFlag");
   BOOST_CHECK(store_2.hasContextWarningFlag() == true);
 
-  result_out = store_2.GetFlagLogResult("context_warningFlag", "", "",
-                                        "context_warningFlag");
+  result_out = store_2.GetFlagLogResult("", "", "", "context_warningFlag");
   BOOST_CHECK(result_out->getType() == "CFlagLogResult");
 }
 

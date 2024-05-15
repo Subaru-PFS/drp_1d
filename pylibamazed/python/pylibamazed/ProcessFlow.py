@@ -55,8 +55,7 @@ from pylibamazed.redshift import (AmzException, CFlagWarning, CLog,
                                   CProcessFlowContext, ErrorCode, ScopeType)
 from pylibamazed.Reliability import ReliabilitySolve
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
-from pylibamazed.ScopeManager import (get_scope_level,
-                                      get_scope_spectrum_model,
+from pylibamazed.ScopeManager import (get_scope_spectrum_model,
                                       get_scope_stage, push_scope)
 from pylibamazed.SubType import SubType
 
@@ -103,6 +102,7 @@ class ProcessFlow:
                                                       config["calibration_dir"])
         self.calibration_library.load_all()
         self.process_flow_context = CProcessFlowContext.GetInstance()
+        self.process_flow_context.reset()
         self.config = config
         if "linemeascatalog" not in self.config:
             self.config["linemeascatalog"] = {}
@@ -110,6 +110,12 @@ class ProcessFlow:
             _check_LinemeasValidity(config, parameters)
 
         self.extended_results = config["extended_results"]
+
+        self.store_flags(name="context_warningFlag")
+
+        # save context warning flag to reinject at each spectrum
+        resultStore = self.process_flow_context.GetResultStore()
+        self.context_warning_Flag = resultStore.GetFlagLogResult("", "", "", "context_warningFlag")
 
     @exception_decorator(logging=True)
     def run(self, spectrum_reader):
@@ -119,7 +125,7 @@ class ProcessFlow:
                                 auto_load=False,
                                 extended_results=self.extended_results)
         try:
-            with self.store_flags_handler():
+            with self.store_flags_handler(name="init_warningFlag"):
                 self.initialize(rso, spectrum_reader)
         except ProcessFlowException:
             rso.load_root()
@@ -174,22 +180,25 @@ class ProcessFlow:
     def scope_stage(self):
         return get_scope_stage()
 
-    def store_flags(self):
-        name = "warningFlag" if get_scope_level() != 0 else "context_warningFlag"
+    def store_flags(self, name="warningFlag"):
         resultStore = self.process_flow_context.GetResultStore()
         resultStore.StoreScopedFlagResult(name)
         zflag.resetFlag()
 
     @contextmanager
-    def store_flags_handler(self):
+    def store_flags_handler(self, name="warningFlag"):
         try:
             yield
         finally:
-            self.store_flags()
+            self.store_flags(name)
 
     @store_exception_handler(raise_process_flow_exception=True)
     def initialize(self, rso, spectrum_reader):
         self.process_flow_context.reset()
+
+        # inject in the clean resultStore the contextFlag
+        rso.results_store.StoreScopedGlobalResult("context_warningFlag", self.context_warning_Flag)
+
         for object_type in self.parameters.get_spectrum_models():
             if object_type in self.calibration_library.line_catalogs:
                 for method in self.parameters.get_linemodel_methods(object_type):

@@ -53,6 +53,7 @@
 %shared_ptr(CScopeStack)
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
+%shared_ptr(COperatorResult)
 %shared_ptr(CLineCatalog)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
@@ -643,6 +644,10 @@ class COperatorResultStore
 			      const std::string& method) const;
 
   void StoreScopedFlagResult( const std::string& name);
+
+  void StoreScopedGlobalResult(const std::string &name,
+                               std::shared_ptr<const COperatorResult> result);
+
 };
 
 

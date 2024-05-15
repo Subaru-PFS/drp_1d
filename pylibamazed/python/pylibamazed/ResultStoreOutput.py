@@ -40,7 +40,7 @@ import os
 
 import numpy as np
 from pylibamazed.AbstractOutput import AbstractOutput, spectrum_model_stages
-from pylibamazed.Exception import APIException
+from pylibamazed.Exception import AmzException, APIException
 from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
@@ -134,14 +134,18 @@ class ResultStoreOutput(AbstractOutput):
                 attribute_info.ResultStore_key,
                 attribute_info.dataset.replace("<ObsID>", "")
             ):
-                operator_result = self._get_operator_result(object_type, stage, method, attribute_info, rank)
+                try:
+                    operator_result = self._get_operator_result(object_type, stage, method, attribute_info,
+                                                                rank)
+                except AmzException:
+                    return False
             else:
                 return False
         else:
             try:
                 operator_result = self._get_operator_result(
                     object_type, stage, method, attribute_info, rank=None)
-            except Exception:
+            except AmzException:
                 return False
         if "[object_type]" in attribute_info.OperatorResult_name:
             or_name = attribute_info.OperatorResult_name.replace("[object_type]", "")
@@ -180,16 +184,15 @@ class ResultStoreOutput(AbstractOutput):
             return hasattr(operator_result, attribute_info.OperatorResult_name)
 
     def has_dataset_in_source(self, object_type, stage, method, dataset):
-        if object_type:
-            return self.results_store.HasDataset(object_type,
-                                                 stage,
-                                                 method,
-                                                 dataset)
-        else:
+        if dataset == "classification":
             return self.results_store.HasDataset(dataset,
                                                  dataset,
                                                  dataset,
                                                  "solveResult")
+        return self.results_store.HasDataset(object_type or '',
+                                             stage or '',
+                                             method or '',
+                                             dataset)
 
     def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
         rs = self.results_specifications.get_df_by_dataset(dataset)
@@ -208,24 +211,24 @@ class ResultStoreOutput(AbstractOutput):
 
     def _get_operator_result(self, object_type, stage, method, attribute_info, rank=None):
         if attribute_info.level == "root":
-            if attribute_info.ResultStore_key in ["context_warningFlag", "warningFlag"]:
-                return self.results_store.GetFlagLogResult(attribute_info.dataset,
-                                                           attribute_info.dataset,
-                                                           attribute_info.dataset,
+            if attribute_info.ResultStore_key in ["init_warningFlag", "context_warningFlag", "warningFlag"]:
+                dataset = "" if attribute_info.dataset != "classification" else "classification"
+                return self.results_store.GetFlagLogResult(dataset,
+                                                           dataset,
+                                                           dataset,
                                                            attribute_info.ResultStore_key)
+            or_type = self.results_store.GetGlobalResultType(attribute_info.dataset,
+                                                             attribute_info.dataset,
+                                                             attribute_info.dataset,
+                                                             attribute_info.ResultStore_key)
+            if or_type == "CClassificationResult":
+                return self.results_store.GetClassificationResult(attribute_info.dataset,
+                                                                  attribute_info.dataset,
+                                                                  attribute_info.dataset,
+                                                                  attribute_info.ResultStore_key)
             else:
-                or_type = self.results_store.GetGlobalResultType(attribute_info.dataset,
-                                                                 attribute_info.dataset,
-                                                                 attribute_info.dataset,
-                                                                 attribute_info.ResultStore_key)
-                if or_type == "CClassificationResult":
-                    return self.results_store.GetClassificationResult(attribute_info.dataset,
-                                                                      attribute_info.dataset,
-                                                                      attribute_info.dataset,
-                                                                      attribute_info.ResultStore_key)
-                else:
-                    raise APIException(ErrorCode.OUTPUT_READER_ERROR,
-                                       "Unknown OperatorResult type {}".format(str(or_type)))
+                raise APIException(ErrorCode.OUTPUT_READER_ERROR,
+                                   "Unknown OperatorResult type {}".format(str(or_type)))
         elif attribute_info.level == "object" or attribute_info.level == "method":
             or_type = self.results_store.GetGlobalResultType(object_type,
                                                              stage,

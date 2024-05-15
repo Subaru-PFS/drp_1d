@@ -39,7 +39,6 @@
 
 import glob
 import json
-import logging
 import os
 
 import h5py
@@ -51,7 +50,7 @@ from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
 from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   CLineCatalog, CLineCatalogsTplRatio,
-                                  CLineRatioCatalog, CPhotBandCatalog,
+                                  CLineRatioCatalog, CLog, CPhotBandCatalog,
                                   CPhotometricBand,
                                   CSpectrumFluxAxis_withSpectrum,
                                   CSpectrumFluxCorrectionCalzetti,
@@ -63,6 +62,7 @@ from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   undefStr)
 
 zflag = CFlagWarning.GetInstance()
+zlog = CLog.GetInstance()
 
 
 def _strid(waveLength, name, ltype):
@@ -212,7 +212,6 @@ class CalibrationLibrary:
         self._load_templates("all", template_dir)
 
     def load_linecatalog(self, object_type, solve_method):
-        logger = logging.getLogger("calibration_api")
         line_catalog_file = os.path.join(
             self.calibration_dir,
             self.parameters.get_linecatalog(object_type, solve_method)
@@ -220,7 +219,7 @@ class CalibrationLibrary:
         if not os.path.exists(line_catalog_file):
             raise APIException(ErrorCode.INVALID_FILEPATH, "{} cannot be found".format(line_catalog_file))
 
-        logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
+        zlog.LogInfo(f"Loading {object_type} linecatalog: {line_catalog_file}")
 
         nsigmasupport = self.parameters.get_nsigmasupport(object_type, solve_method)
         self.line_catalogs[object_type][solve_method] = CLineCatalog(nsigmasupport)
@@ -276,7 +275,6 @@ class CalibrationLibrary:
             self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)
 
     def load_line_ratio_catalog_list(self, object_type):
-        logger = logging.getLogger("calibration_api")
         tplratio_catalog = self.parameters.get_linemodel_tplratio_catalog(object_type)
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                tplratio_catalog,
@@ -285,7 +283,7 @@ class CalibrationLibrary:
         if not line_ratio_catalog_list:
             raise APIException(ErrorCode.INVALID_FILEPATH, "Template ratio catalog empty")
         line_ratio_catalog_list.sort()
-        logger.info("Loading {} line ratio catalogs: {}".format(object_type, tplratio_catalog))
+        zlog.LogInfo(f"Loading {object_type} line ratio catalogs: {tplratio_catalog}")
 
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1

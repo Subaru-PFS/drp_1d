@@ -165,12 +165,25 @@ COperatorResultStore::GetScopedGlobalResult(const std::string &name) const {
   return GetGlobalResult(GetScopedName(name));
 }
 
+std::string COperatorResultStore::buildFullname(
+    const std::string &spectrumModel, const std::string &stage,
+    const std::string &method, const std::string &name) {
+
+  std::ostringstream oss;
+  if (!spectrumModel.empty())
+    oss << spectrumModel << ".";
+  if (!stage.empty())
+    oss << stage << ".";
+  if (!method.empty())
+    oss << method << ".";
+  oss << name;
+  return oss.str();
+}
+
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name) const {
-  std::ostringstream oss;
-  oss << spectrumModel << "." << stage << "." << method << "." << name;
-  return GetGlobalResult(oss.str());
+  return GetGlobalResult(buildFullname(spectrumModel, stage, method, name));
 }
 
 std::shared_ptr<const CClassificationResult>
@@ -178,12 +191,9 @@ COperatorResultStore::GetClassificationResult(const std::string &spectrumModel,
                                               const std::string &stage,
                                               const std::string &method,
                                               const std::string &name) const {
-  std::ostringstream oss;
-  oss << spectrumModel << "." << stage << "." << method << "." << name;
-  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
-
   return std::dynamic_pointer_cast<const CClassificationResult>(
-      GetGlobalResult(oss.str()).lock());
+      GetGlobalResult(buildFullname(spectrumModel, stage, method, name))
+          .lock());
 }
 
 std::shared_ptr<const CReliabilityResult>
@@ -191,38 +201,26 @@ COperatorResultStore::GetReliabilityResult(const std::string &spectrumModel,
                                            const std::string &stage,
                                            const std::string &method,
                                            const std::string &name) const {
-  std::ostringstream oss;
-  oss << spectrumModel << "." << stage << "." << method << "." << name;
-  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
-
   return std::dynamic_pointer_cast<const CReliabilityResult>(
-      GetGlobalResult(oss.str()).lock());
+      GetGlobalResult(buildFullname(spectrumModel, stage, method, name))
+          .lock());
 }
 
 std::shared_ptr<const CLogZPdfResult> COperatorResultStore::GetLogZPdfResult(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name) const {
-  std::ostringstream oss;
-  oss << spectrumModel << "." << stage << "." << method << "." << name;
-
   return std::dynamic_pointer_cast<const CLogZPdfResult>(
-      GetGlobalResult(oss.str()).lock());
+      GetGlobalResult(buildFullname(spectrumModel, stage, method, name))
+          .lock());
 }
 
 std::shared_ptr<const CFlagLogResult> COperatorResultStore::GetFlagLogResult(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name) const {
   std::ostringstream oss;
-  if (spectrumModel == name) {
-    oss << name;
-  } else {
-    oss << spectrumModel << "." << stage << "." << method << "." << name;
-  }
-
-  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
-
   return std::dynamic_pointer_cast<const CFlagLogResult>(
-      GetGlobalResult(oss.str()).lock());
+      GetGlobalResult(buildFullname(spectrumModel, stage, method, name))
+          .lock());
 }
 
 std::shared_ptr<const TLineModelResult>
@@ -374,15 +372,20 @@ bool COperatorResultStore::HasDataset(const std::string &spectrumModel,
                                       const std::string &stage,
                                       const std::string &method,
                                       const std::string &name) const {
-  std::ostringstream oss;
-  oss << spectrumModel << "." << stage << "." << method << "." << name;
-  TResultsMap::const_iterator it = m_GlobalResults.find(oss.str());
+  TResultsMap::const_iterator it =
+      m_GlobalResults.find(buildFullname(spectrumModel, stage, method, name));
   return (it != m_GlobalResults.end());
 }
 
 bool COperatorResultStore::hasContextWarningFlag() const {
 
   TResultsMap::const_iterator it = m_GlobalResults.find("context_warningFlag");
+  return (it != m_GlobalResults.end());
+}
+
+bool COperatorResultStore::hasInitWarningFlag() const {
+
+  TResultsMap::const_iterator it = m_GlobalResults.find("init_warningFlag");
   return (it != m_GlobalResults.end());
 }
 
@@ -395,10 +398,10 @@ bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
 int COperatorResultStore::getNbRedshiftCandidates(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method) const {
-  std::ostringstream oss;
-  oss << spectrumModel << "." << stage << "." << method << ".extrema_results";
   std::shared_ptr<const COperatorResult> cor =
-      GetGlobalResult(oss.str()).lock();
+      GetGlobalResult(
+          buildFullname(spectrumModel, stage, method, "extrema_results"))
+          .lock();
   std::string type = cor->getType();
   if (type == "PdfCandidatesZResult")
     return std::dynamic_pointer_cast<const PdfCandidatesZResult>(cor)->size();

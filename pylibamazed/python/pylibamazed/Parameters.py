@@ -40,7 +40,7 @@
 import json
 
 import pandas as pd
-from pylibamazed.Exception import APIException
+from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.ParametersConverter import ParametersConverterSelector
@@ -49,6 +49,7 @@ from pylibamazed.redshift import ErrorCode
 
 
 class Parameters(ParametersAccessor):
+    @exception_decorator(logging=True)
     def __init__(self, raw_params: dict, make_checks=True, Checker=ParametersChecker,
                  ConverterSelector=ParametersConverterSelector,
                  Extender=ParametersExtender):
@@ -181,7 +182,7 @@ class Parameters(ParametersAccessor):
         elif stage == "subClassifSolver":
             return self.is_tplratio_catalog_needed(spectrum_model)
         else:
-            raise Exception("Unknown stage {stage}")
+            raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown stage {stage}")
 
     def set_lsf_param(self, param_name, data):
         self.parameters["lsf"][param_name] = data

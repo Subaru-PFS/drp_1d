@@ -141,6 +141,8 @@ class AbstractOutput:
                 return None
         elif root == "ContextWarningFlags":
             return self.get_attribute(None, "context_warningFlag", "ContextWarningFlags")
+        elif root == "InitWarningFlags":
+            return self.get_attribute(None, "init_warningFlag", "InitWarningFlags")
         elif "WarningFlags" in attr_name:
             return self.get_attribute(root, "warningFlag", attr_name)
         else:
@@ -256,7 +258,7 @@ class AbstractOutput:
             if rank is None:
                 return attribute in self.object_results[object_type][dataset]
             else:
-                if type(self.object_results[object_type][dataset]) == list:
+                if type(self.object_results[object_type][dataset]) is list:
                     if len(self.object_results[object_type][dataset]) > rank:
                         return attribute in self.object_results[object_type][dataset][rank]
                     else:
@@ -283,7 +285,7 @@ class AbstractOutput:
                     iter(self.object_results[object_type][dataset][rank].values()))
         if first_attr is None:
             return 0
-        if type(first_attr) == np.ndarray:
+        if type(first_attr) is np.ndarray:
             return len(first_attr)
         else:
             return 1
@@ -294,13 +296,13 @@ class AbstractOutput:
         elif level == "object":
             datasets = []
             for d in self.object_results[object_type].keys():
-                if type(self.object_results[object_type][d]) == dict:
+                if type(self.object_results[object_type][d]) is dict:
                     datasets.append(d)
             return datasets
         elif level == "candidate":
             datasets = []
             for d in self.object_results[object_type].keys():
-                if type(self.object_results[object_type][d]) == list:
+                if type(self.object_results[object_type][d]) is list:
                     datasets.append(d)
             return datasets
         else:
@@ -386,7 +388,6 @@ class AbstractOutput:
         rs, root_datasets = self.filter_datasets(level)
         for ds in root_datasets:
             skip = not self.has_dataset_in_source(None, None, None, ds)
-            skip = skip and "warning" not in ds
             if skip:
                 zlog.LogDebug("skipping " + ds)
                 continue
