@@ -69,10 +69,21 @@ CTemplateCatalog::const_TTemplateRefList_cast(const TTemplateRefList &list) {
  */
 TTemplateRefList
 CTemplateCatalog::GetTemplateList_(const TStringList &categoryList) const {
+
+  return GetTemplateList_(categoryList, m_orthogonal, m_logsampling);
+}
+
+/**
+ * Returns a list containing all templates as enumerated in the categoryList
+ * input.
+ */
+TTemplateRefList
+CTemplateCatalog::GetTemplateList_(const TStringList &categoryList,
+                                   bool opt_ortho, bool opt_logsampling) const {
   TTemplateRefList list;
 
   for (const auto &cat : categoryList) {
-    const auto &map = GetList();
+    const auto &map = GetList(opt_ortho, opt_logsampling);
     if (!map.count(cat))
       continue;
     for (const auto &tpl : map.at(cat))
@@ -83,9 +94,10 @@ CTemplateCatalog::GetTemplateList_(const TStringList &categoryList) const {
 
 std::shared_ptr<const CTemplate>
 CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
-                                    const std::string tplName) const {
+                                    const std::string tplName, bool opt_ortho,
+                                    bool opt_logsampling) const {
   for (const auto &cat : tplCategoryList) {
-    const auto &map = GetList();
+    const auto &map = GetList(opt_ortho, opt_logsampling);
     if (!map.count(cat))
       continue;
     for (const auto &tpl : map.at(cat))
@@ -94,6 +106,13 @@ CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
   }
   THROWG(ErrorCode::INTERNAL_ERROR,
          Formatter() << "Could not find template with name " << tplName);
+}
+
+std::shared_ptr<const CTemplate>
+CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
+                                    const std::string tplName) const {
+  return GetTemplateByName(tplCategoryList, tplName, m_orthogonal,
+                           m_logsampling);
 }
 
 /**

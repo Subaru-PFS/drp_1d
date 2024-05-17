@@ -58,9 +58,17 @@ public:
 
   std::shared_ptr<const CTemplate> GetTemplate(const std::string &category,
                                                Int32 i) const;
+  std::shared_ptr<const CTemplate> GetTemplate(const std::string &category,
+                                               Int32 i, bool opt_ortho,
+                                               bool opt_logsampling) const;
+  std::shared_ptr<const CTemplate>
+  GetTemplateByName(const TStringList &tplCategoryList,
+                    const std::string tplName, bool opt_ortho,
+                    bool opt_logsampling) const;
   std::shared_ptr<const CTemplate>
   GetTemplateByName(const TStringList &tplCategoryList,
                     const std::string tplName) const;
+
   void SetTemplate(const std::shared_ptr<CTemplate> &tpl, Int32 i);
   void ClearTemplates(const std::string &category, bool opt_ortho,
                       bool opt_logsampling, Int32 i, bool alltemplates = false);
@@ -73,6 +81,9 @@ public:
 
   TTemplateConstRefList GetTemplateList(const TStringList &categoryList) const;
   TTemplateRefList GetTemplateList(const TStringList &categoryList);
+
+  TTemplateConstRefList GetOrthoTemplateList(const TStringList &categoryList,
+                                             bool logsampling) const;
 
   static TTemplateConstRefList
   const_TTemplateRefList_cast(const TTemplateRefList &list);
@@ -96,6 +107,8 @@ public:
 private:
   // this const version must stay private, since it returns non const templates.
   TTemplateRefList GetTemplateList_(const TStringList &categoryList) const;
+  TTemplateRefList GetTemplateList_(const TStringList &categoryList,
+                                    bool opt_ortho, bool opt_logsampling) const;
 
   Int32 GetNonNullTemplateCount(const std::string &category, bool opt_ortho,
                                 bool opt_logsampling) const;
@@ -121,6 +134,12 @@ CTemplateCatalog::GetTemplate(const std::string &category, Int32 i) const {
   return GetList().at(category).at(i);
 }
 
+inline std::shared_ptr<const CTemplate>
+CTemplateCatalog::GetTemplate(const std::string &category, Int32 i,
+                              bool opt_ortho, bool opt_logsampling) const {
+  return GetList(opt_ortho, opt_logsampling).at(category).at(i);
+}
+
 // non const getter returning mutable templates
 inline TTemplateRefList
 CTemplateCatalog::GetTemplateList(const TStringList &categoryList) {
@@ -131,6 +150,14 @@ CTemplateCatalog::GetTemplateList(const TStringList &categoryList) {
 inline TTemplateConstRefList
 CTemplateCatalog::GetTemplateList(const TStringList &categoryList) const {
   return const_TTemplateRefList_cast(GetTemplateList_(categoryList));
+}
+
+//  const getter returning const templates
+inline TTemplateConstRefList
+CTemplateCatalog::GetOrthoTemplateList(const TStringList &categoryList,
+                                       bool logsampling) const {
+  return const_TTemplateRefList_cast(
+      GetTemplateList_(categoryList, true, logsampling));
 }
 
 // below functions aim at avoid using if..else to access the right categoryList
