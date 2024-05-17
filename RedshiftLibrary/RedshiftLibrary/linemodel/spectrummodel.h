@@ -129,20 +129,20 @@ public:
   }
 
   void refreshAllModels() {
-    for (auto &spcIndex : m_spectraIndex) {
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().refreshModel();
     }
   }
 
   void reinitAllModels() {
-    for (auto &spcIndex : m_spectraIndex) {
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().reinitModel();
     }
   }
 
   void refreshAllModelsUnderElements(const TInt32List &filterEltsIdx,
                                      Int32 line_index = undefIdx) {
-    for (auto &spcIndex : m_spectraIndex) {
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().refreshModelUnderElements(filterEltsIdx, line_index);
     }
   }
@@ -152,8 +152,8 @@ public:
                                            bool with_weight = true) {
     Float64 fit_allObs = 0;
     Float64 sumErr_allObs = 0;
-    Int32 nb_nan = 0;
-    for (auto &spcIndex : m_spectraIndex) {
+    std::size_t nb_nan = 0;
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       auto [fit, sumErr] =
           getSpectrumModel().getModelSquaredResidualUnderElements(
               EltsIdx, with_continuum, with_weight);
@@ -172,7 +172,7 @@ public:
   }
 
   void setEnableAmplitudeOffsets(bool enableAmplitudeOffsets) {
-    for (auto &spcIndex : m_spectraIndex) {
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;
     }
   }
