@@ -169,9 +169,9 @@ void TLineModelResult::updateFromModel(
                   << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
     }
   } else {
-    THROWG(STDESTIMATION_FAILED, Formatter()
-                                     << "Unable to get spectrum mean Standard "
-                                        "Deviation estimations");
+    THROWG(ErrorCode::STDESTIMATION_FAILED,
+           Formatter() << "Unable to get spectrum mean Standard "
+                          "Deviation estimations");
   }
 }
 
@@ -193,7 +193,7 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[rank];
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
@@ -210,7 +210,7 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[0]->getType();
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 bool LineModelExtremaResult::HasCandidateDataset(
@@ -229,5 +229,5 @@ LineModelExtremaResult::getCandidateParent(const int &rank,
   }
 
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
 }

@@ -125,28 +125,23 @@ protected:
 
   CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
   const CSpectrumModel &getModel() const {
-    if (m_spectraIndex.get() >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
+    m_spectraIndex.AssertIsValid();
     return m_models->getSpectrumModel();
   }
   const CSpectrum &getSpectrum() {
-    if (m_spectraIndex.get() >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
+    m_spectraIndex.AssertIsValid();
     return *((*m_inputSpcs).at(m_spectraIndex.get()));
   }
   const TLambdaRange &getLambdaRange() {
-    if (m_spectraIndex.get() >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
+    m_spectraIndex.AssertIsValid();
     return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
   CLineModelElementList &getElementList() {
-    if (m_spectraIndex.get() >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
+    m_spectraIndex.AssertIsValid();
     return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    if (m_spectraIndex.get() >= m_inputSpcs->size())
-      THROWG(INTERNAL_ERROR, " obs does not exist");
+    m_spectraIndex.AssertIsValid();
     return m_ElementsVector->getElementList();
   }
 

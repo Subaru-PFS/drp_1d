@@ -91,7 +91,7 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
     }
   }
   if (sum <= 0) {
-    THROWG(NO_CLASSIFICATION,
+    THROWG(ErrorCode::NO_CLASSIFICATION,
            "Classification failed, all probabilities undefined");
   }
   for (const std::string &spectrumModel : inputContext->m_categories) {

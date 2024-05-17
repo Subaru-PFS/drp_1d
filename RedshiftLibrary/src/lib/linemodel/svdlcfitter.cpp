@@ -115,7 +115,8 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   const auto &ErrorNoContinuum = getSpectrum().GetFluxAxis().GetError();
 
   if (EltsIdx.size() < 1)
-    THROWG(EMPTY_LIST, Formatter() << "Input elements list is empty");
+    THROWG(ErrorCode::EMPTY_LIST, Formatter()
+                                      << "Input elements list is empty");
   Int32 nddl = EltsIdx.size() + 1 +
                std ::max(m_fitc_polyOrder + 1,
                          0); // number of param to be fitted=nlines+continuum
@@ -128,7 +129,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
   Int32 n = imax - imin + 1;
   if (n < nddl)
-    THROWG(LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,
+    THROWG(ErrorCode::LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,
            Formatter() << " SVD ill ranked:"
                        << " number of samples = " << n
                        << ", number of parameters to fit = " << nddl);

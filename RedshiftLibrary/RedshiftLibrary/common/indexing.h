@@ -60,7 +60,8 @@ public:
     typename std::vector<T>::const_iterator itr =
         std::find(list.begin(), list.end(), z);
     if (itr == list.end())
-      THROWG(INTERNAL_ERROR, Formatter() << "Could not find index for " << z);
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "Could not find index for " << z);
 
     return (itr - list.begin());
   }

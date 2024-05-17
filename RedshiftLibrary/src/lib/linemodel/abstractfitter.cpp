@@ -133,8 +133,8 @@ std::shared_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
                                                lambdaRanges, spectrumModels,
                                                restLineList, spcIndex);
   else
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Unknown fitting method " << fittingMethod);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Unknown fitting method " << fittingMethod);
 }
 
 void CAbstractFitter::logParameters() {

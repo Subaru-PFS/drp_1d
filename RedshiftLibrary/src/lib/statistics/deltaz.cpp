@@ -53,7 +53,7 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
                            const Int32 gslfit) {
   Float64 dz = NAN;
   if (!redshifts.size())
-    THROWG(INTERNAL_ERROR, "Redshift range is empty");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Redshift range is empty");
   Int32 ret = -1;
   Int32 deltaz_i = 0;
   Int32 maxIter = 2;
@@ -93,9 +93,9 @@ Int32 CDeltaz::GetIndices(const TFloat64List &redshifts, const Float64 redshift,
 
   iz = iiz - redshifts.begin();
   if (iiz == redshifts.end() || *iiz != redshift)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "impossible to get redshift index for z="
-                               << redshift);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "impossible to get redshift index for z="
+                       << redshift);
 
   izmin = max(iz - HalfNbSamples, 0);
   izmax = min(iz + HalfNbSamples, Int32(redshifts.size() - 1));
@@ -124,7 +124,8 @@ Float64 CDeltaz::Compute(const TFloat64List &merits,
   }
   c0 = sum / sum2;
   if (c0 <= 0)
-    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
+    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
+                                             << "impossible to compute sigma");
 
   sigma = sqrt(1.0 / c0);
   return sigma;
@@ -143,7 +144,8 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
 
   Int32 n = izmax - izmin + 1;
   if (n < 3)
-    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
+    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
+                                             << "impossible to compute sigma");
 
   X = gsl_matrix_alloc(n, 3);
   y = gsl_vector_alloc(n);
@@ -209,6 +211,7 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // results.SigmaZ[indz] = sigma;
   // results.LogAreaCorrectedExtrema[indz] = zcorr;
   if (c2 <= 0)
-    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
+    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
+                                             << "impossible to compute sigma");
   return sigma;
 }

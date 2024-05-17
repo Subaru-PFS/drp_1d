@@ -55,7 +55,7 @@ CLineProfileSYMIGM::CLineProfileSYMIGM(
 
 void CLineProfileSYMIGM::CheckMeiksinInit() const {
   if (!m_igmCorrectionMeiksin) {
-    THROWG(INTERNAL_ERROR, "m_igmCorrectionMeiksin is nullptr");
+    THROWG(ErrorCode::INTERNAL_ERROR, "m_igmCorrectionMeiksin is nullptr");
   }
 }
 
@@ -99,7 +99,7 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
       m_igmCorrectionMeiksin->getWaveAndCorrectionVector(range_rest, m_redshift,
                                                          GetIgmIdx());
   if (xlist_rest.empty())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "not enough IGM extinction samples inside line profile to compute "
            "flux, increase IGM extinction curves resolution.");
 

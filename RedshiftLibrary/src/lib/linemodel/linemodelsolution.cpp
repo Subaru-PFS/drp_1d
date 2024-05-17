@@ -67,6 +67,6 @@ CLineModelSolution::CLineModelSolution(const CLineMap &restLineList)
 
 bool CLineModelSolution::isLineValid(Int32 lineIdx) const {
   if (!lineId.size())
-    THROWG(INTERNAL_ERROR, "lineModelSolution is empty");
+    THROWG(ErrorCode::INTERNAL_ERROR, "lineModelSolution is empty");
   return !OutsideLambdaRange[lineIdx] & Amplitudes[lineIdx] > 0.0;
 }

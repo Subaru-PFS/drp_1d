@@ -54,7 +54,7 @@ ExtremaResult::getCandidate(const int &rank, const std::string &dataset,
   // m_savedModelContinuumSpectrumResults[rank];
 
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 const std::string &
@@ -68,7 +68,7 @@ ExtremaResult::getCandidateDatasetType(const std::string &dataset) const {
   // else if (dataset == "continuum")  return
   // m_savedModelContinuumSpectrumResults[0]->getType();
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 bool ExtremaResult::HasCandidateDataset(const std::string &dataset) const {

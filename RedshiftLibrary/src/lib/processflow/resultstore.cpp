@@ -71,7 +71,8 @@ void COperatorResultStore::StoreResult(
 
   TResultsMap::iterator it = map.find(scopedName);
   if (it != map.end()) {
-    THROWG(INTERNAL_ERROR, "Can not store results: result already exists");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Can not store results: result already exists");
   }
   map[scopedName] = result;
 }
@@ -105,8 +106,8 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
     }
   }
 
-  THROWG(INTERNAL_ERROR, Formatter()
-                             << "Not found result for template " << name);
+  THROWG(ErrorCode::INTERNAL_ERROR,
+         Formatter() << "Not found result for template " << name);
   return std::weak_ptr<const COperatorResult>();
 }
 
@@ -155,7 +156,8 @@ COperatorResultStore::GetGlobalResult(const std::string &name) const {
   if (it != m_GlobalResults.end()) {
     return (*it).second;
   } else
-    THROWG(UNKNOWN_ATTRIBUTE, Formatter() << "Unknown global result:" << name);
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE,
+           Formatter() << "Unknown global result:" << name);
 }
 
 std::weak_ptr<const COperatorResult>
@@ -239,7 +241,7 @@ COperatorResultStore::GetLineModelResult(
   std::shared_ptr<const TLineModelResult> tlm =
       std::dynamic_pointer_cast<const TLineModelResult>(cop);
   if (tlm == nullptr && cop != nullptr)
-    THROWG(INTERNAL_ERROR, "tlm is nullptr from GetLineModelResult");
+    THROWG(ErrorCode::INTERNAL_ERROR, "tlm is nullptr from GetLineModelResult");
   return tlm;
 }
 

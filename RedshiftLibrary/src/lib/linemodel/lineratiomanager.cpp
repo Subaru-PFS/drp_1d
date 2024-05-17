@@ -277,7 +277,7 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
           break;
         }
       }
-      THROWG(INTERNAL_ERROR, "computed fit is NaN");
+      THROWG(ErrorCode::INTERNAL_ERROR, "computed fit is NaN");
     }
   }
   fit += m_continuumManager->getFitSum();
@@ -314,8 +314,9 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
                       continuumManager, restLineList, spcIndex));
   else
-    THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
-                              "supported for linemodel.lineRatioType");
+    THROWG(ErrorCode::INVALID_PARAMETER,
+           "Only {tplratio, rules, tpcorr} values are "
+           "supported for linemodel.lineRatioType");
   ret->setFitter(fitter);
 
   return ret;

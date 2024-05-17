@@ -493,13 +493,13 @@ std::pair<Float64, Float64> CSpectrumModel::getFluxDirectIntegration(
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   Int32 nlines = eIdx_list.size();
   if (nlines != subeIdx_list.size())
-    THROWG(INTERNAL_ERROR, " index sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR, " index sizes do not match");
   TInt32RangeList indexRangeList = m_Elements->getlambdaIndexesUnderLines(
       eIdx_list, subeIdx_list, N_SIGMA_SUPPORT_DI, spectralAxis, lambdaRange,
       m_Redshift);
 
   if (!indexRangeList.size())
-    THROWG(INTERNAL_ERROR, "empty indexRanges ");
+    THROWG(ErrorCode::INTERNAL_ERROR, "empty indexRanges ");
 
   const CSpectrumFluxAxis continuumFlux = getContinuumUnderLines(
       indexRangeList, eIdx_list, substract_abslinesmodel);
@@ -672,7 +672,8 @@ Int32 CSpectrumModel::ApplyContinuumOnGrid(
   Int32 idxDust = -1;
   if (m_fitContinuum->tplEbmvCoeff > 0.) {
     if (tpl->CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "  no calzetti calib. file in template");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "  no calzetti calib. file in template");
     }
     idxDust = tpl->m_ismCorrectionCalzetti->GetEbmvIndex(
         m_fitContinuum->tplEbmvCoeff);
@@ -690,7 +691,7 @@ Int32 CSpectrumModel::ApplyContinuumOnGrid(
       m_fitContinuum->tplMeiksinIdx, amplitude, overlapThreshold, m_spcIndex,
       spcmodel);
   if (spcmodel == nullptr)
-    THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Couldnt compute spectrum model");
 
   // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not
   // AxisSampleList

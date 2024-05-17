@@ -97,12 +97,12 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
   } else if (opt_spcComponent == "all") {
     _type = nType_all;
   } else {
-    THROWG(INTERNAL_ERROR, "Unknown spectrum component");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
   }
 
   // for now interp must be 'lin'. pfg not availbale for now...
   if (opt_interp != "lin") {
-    THROWG(INTERNAL_ERROR, "interpolation parameter must be 'lin'");
+    THROWG(ErrorCode::INTERNAL_ERROR, "interpolation parameter must be 'lin'");
   }
 
   Log.LogInfo(Formatter() << "Method parameters:");
@@ -238,7 +238,7 @@ bool CTplCombinationSolve::Solve(
 void CTplCombinationSolve::checkTemplates(
     const TTemplateConstRefList &tplList) const {
   if (tplList.empty())
-    THROWG(BAD_TEMPLATECATALOG,
+    THROWG(ErrorCode::BAD_TEMPLATECATALOG,
            Formatter() << "Empty template catalog for category " << m_category);
 
   // check all templates have same spectralAxis
@@ -247,11 +247,12 @@ void CTplCombinationSolve::checkTemplates(
   for (const auto &tpl : tplList) {
     const CSpectrumSpectralAxis &currentSpcAxis = tpl->GetSpectralAxis();
     if (axisSize != tpl->GetSampleCount())
-      THROWG(INTERNAL_ERROR, "templates do not have same size");
+      THROWG(ErrorCode::INTERNAL_ERROR, "templates do not have same size");
 
     for (Int32 i = 0; i < axisSize; i++)
       if (std::abs(refSpcAxis[i] - currentSpcAxis[i]) > 1E-8)
-        THROWG(INTERNAL_ERROR, "templates do not have same spectralAxis");
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               "templates do not have same spectralAxis");
   }
 }
 
@@ -268,7 +269,7 @@ std::string CTplCombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
     // use spectrum without continuum
     return "tplcombination_nocontinuum";
   else
-    THROWG(INTERNAL_ERROR, "Unknown spectrum component");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
 }
 
 ChisquareArray CTplCombinationSolve::BuildChisquareArray(
@@ -282,7 +283,8 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
 
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired())
-    THROWG(INTERNAL_ERROR, "Unable to retrieve tplcombination results");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Unable to retrieve tplcombination results");
 
   std::shared_ptr<const CTplCombinationResult> result =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -300,10 +302,10 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
     Log.LogInfo(Formatter() << "tplcombinationsolver: using cstLog = "
                             << chisquarearray.cstLog);
   } else if (chisquarearray.cstLog != result->CstLog)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "cstLog values do not match in results: val1="
-                               << chisquarearray.cstLog
-                               << " != val2=" << result->CstLog);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "cstLog values do not match in results: val1="
+                       << chisquarearray.cstLog
+                       << " != val2=" << result->CstLog);
 
   if (!chisquarearray.redshifts.size())
     chisquarearray.redshifts = result->Redshifts;
@@ -353,7 +355,8 @@ CTplCombinationSolve::buildExtremaResults(
   // tplCombination
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
-    THROWG(INTERNAL_ERROR, "Unable to retrieve tplcombination results");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Unable to retrieve tplcombination results");
   }
   auto TplFitResult =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -362,13 +365,8 @@ CTplCombinationSolve::buildExtremaResults(
   bool foundRedshiftAtLeastOnce = false;
 
   if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-    THROWG(INTERNAL_ERROR, "Size do not match among templatefitting results");
-  }
-
-  bool foundBadStatus = false;
-
-  if (foundBadStatus) {
-    THROWG(INTERNAL_ERROR, "Bad status result");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Size do not match among templatefitting results");
   }
 
   // prepare the list of components/templates
@@ -413,7 +411,7 @@ CTplCombinationSolve::buildExtremaResults(
             lambdaRange, overlapThreshold);
     tplCatalog.m_logsampling = currentSampling;
     if (spcmodelPtr == nullptr)
-      THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
+      THROWG(ErrorCode::INTERNAL_ERROR, "Couldnt compute spectrum model");
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
   }
 

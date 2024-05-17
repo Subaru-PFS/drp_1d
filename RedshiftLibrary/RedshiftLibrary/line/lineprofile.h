@@ -144,8 +144,8 @@ typedef std::unique_ptr<CLineProfile> CLineProfile_ptr;
 typedef std::vector<CLineProfile_ptr> TProfileList;
 
 inline Int32 CLineProfile::getIGMIdxCount() const {
-  THROWG(INTERNAL_ERROR, "getIGMIdxCount is not defined "
-                         "for non-SYMIGM lineprofile");
+  THROWG(ErrorCode::INTERNAL_ERROR, "getIGMIdxCount is not defined "
+                                    "for non-SYMIGM lineprofile");
 }
 } // namespace NSEpic
 #endif

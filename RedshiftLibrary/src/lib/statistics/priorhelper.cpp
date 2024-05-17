@@ -116,7 +116,7 @@ void CPriorHelper::Init(std::string priorDirPath, Int32 type) {
   std::string z_filepath = "prior_" + part + "_hist_Z.txt";
   bfs::path pz_fpath = rootFolder / z_dirpath.c_str() / z_filepath.c_str();
   if (!bfs::exists(pz_fpath))
-    THROWG(INVALID_FILEPATH,
+    THROWG(ErrorCode::INVALID_FILEPATH,
            Formatter() << "Pz path does not exist: " << pz_fpath.string());
 
   TFloat64List read_buffer;
@@ -149,9 +149,9 @@ const TStringList CPriorHelper::loadfilesPathList(
     const TStringList &EZTfilesPathList, const bfs::path &rootFolder,
     const std::string &part, const std::string &sigma_mean) const {
   if (sigma_mean != "mean" && sigma_mean != "sigma")
-    THROWG(INTERNAL_ERROR, "Invalid argument");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid argument");
   if (part != "continuum" && part != "lines")
-    THROWG(INTERNAL_ERROR, "Invalid argument");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid argument");
 
   std::string ezt_tag = "prior_" + part + "_hist_Ebmvc_Z_Tplc_";
   std::string a_tag = "prior_" + part + "_gauss" + sigma_mean + "_Ac_Z_Tplc_";
@@ -167,7 +167,7 @@ const TStringList CPriorHelper::loadfilesPathList(
     bfs::path agaussfpath =
         rootFolder / a_dirpath.c_str() / bfs::path(fNameStr);
     if (!bfs::exists(agaussfpath)) {
-      THROWG(INVALID_FILEPATH,
+      THROWG(ErrorCode::INVALID_FILEPATH,
              Formatter() << "path does not exist: " << agaussfpath.string());
     }
     AGaussfilesPathList.push_back(agaussfpath.string());
@@ -198,7 +198,8 @@ void CPriorHelper::loadFromFileList(const std::string &sigma_mean,
 
 void CPriorHelper::setTNameData(Int32 k, std::string tname) {
   if (k >= m_tplnames.size())
-    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Out-of-bound index k=" << k);
 
   m_tplnames[k] = tname;
 }
@@ -206,7 +207,8 @@ void CPriorHelper::setTNameData(Int32 k, std::string tname) {
 void CPriorHelper::setEZTData(Int32 k,
                               const std::vector<TFloat64List> &ezt_data) {
   if (k >= m_data.size())
-    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Out-of-bound index k=" << k);
 
   for (Int32 kz = 0; kz < m_nZ; kz++)
     for (Int32 ke = 0; ke < m_nEbv; ke++)
@@ -216,7 +218,8 @@ void CPriorHelper::setEZTData(Int32 k,
 void CPriorHelper::setAGaussmeanData(
     Int32 k, const std::vector<TFloat64List> &agaussmean_data) {
   if (k >= m_data.size())
-    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Out-of-bound index k=" << k);
 
   for (Int32 kz = 0; kz < m_nZ; kz++)
     for (Int32 ke = 0; ke < m_nEbv; ke++)
@@ -226,7 +229,8 @@ void CPriorHelper::setAGaussmeanData(
 void CPriorHelper::setAGausssigmaData(
     Int32 k, const std::vector<TFloat64List> &agausssigma_data) {
   if (k >= m_data.size())
-    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Out-of-bound index k=" << k);
 
   for (Int32 kz = 0; kz < m_nZ; kz++)
     for (Int32 ke = 0; ke < m_nEbv; ke++)
@@ -235,7 +239,7 @@ void CPriorHelper::setAGausssigmaData(
 
 void CPriorHelper::setPzData(const TFloat64List &z_data) {
   if (z_data.size() != m_data_pz.size())
-    THROWG(INTERNAL_ERROR, " Data and prior sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR, " Data and prior sizes do not match");
 
   std::copy(z_data.cbegin(), z_data.cbegin() + m_nZ, m_data_pz.begin());
 }
@@ -248,9 +252,9 @@ void CPriorHelper::loadFileEZ(const char *filePath,
   file.open(filePath, std::ifstream::in);
   bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
   if (fileOpenFailed)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Unable to load the prior data from file: "
-                               << filePath);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Unable to load the prior data from file: "
+                       << filePath);
 
   Int32 nlinesRead = 0;
   std::string line;
@@ -280,9 +284,9 @@ void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
   file.open(filePath, std::ifstream::in);
   bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
   if (fileOpenFailed)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Unable to load the prior data from file: "
-                               << filePath);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Unable to load the prior data from file: "
+                       << filePath);
   Int32 nlinesRead = 0;
   std::string line;
   // Read file line by line
@@ -302,7 +306,8 @@ void CPriorHelper::loadFileZ(const char *filePath, TFloat64List &data) {
   file.close();
 
   if (nlinesRead != m_nZ)
-    THROWG(INTERNAL_ERROR, Formatter() << "read n=" << nlinesRead << " lines");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "read n=" << nlinesRead << " lines");
 }
 
 /**
@@ -319,9 +324,10 @@ void CPriorHelper::GetTplPriorData(const std::string &tplname,
                                    TPriorZEList &zePriorData,
                                    Int32 outsideZRangeExtensionMode) const {
   if (m_betaA <= 0.0 && m_betaTE <= 0.0 && m_betaZ <= 0.0)
-    THROWG(INTERNAL_ERROR, Formatter() << "beta coeffs are all zero (betaA="
-                                       << m_betaA << ", betaTE=" << m_betaTE
-                                       << ", betaZ=" << m_betaZ << ")");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "beta coeffs are all zero (betaA=" << m_betaA
+                       << ", betaTE=" << m_betaTE << ", betaZ=" << m_betaZ
+                       << ")");
 
   if (mInitFailed) {
     Log.LogDetail(
@@ -348,7 +354,7 @@ void CPriorHelper::fillPriorDataPerZ(TPriorEList &dataz, Int32 idz) const {
 
   for (auto &dataz_i : dataz) {
     if (dataz_i.priorTZE <= 0.0)
-      THROWG(INTERNAL_ERROR, "P_TZE cannot be null");
+      THROWG(ErrorCode::INTERNAL_ERROR, "P_TZE cannot be null");
 
     Float64 logPA = dataz_i.A_sigma > 0.0
                         ? -0.5 * log(2 * M_PI) - log(dataz_i.A_sigma)
@@ -357,7 +363,7 @@ void CPriorHelper::fillPriorDataPerZ(TPriorEList &dataz, Int32 idz) const {
     Float64 logPTE = log(dataz_i.priorTZE);
 
     if (!isValidFloat(logPTE))
-      THROWG(INTERNAL_ERROR, "logP_TZE is NAN or inf, or invalid");
+      THROWG(ErrorCode::INTERNAL_ERROR, "logP_TZE is NAN or inf, or invalid");
 
     Float64 logPZ = m_data_pz[idz] > 0.0 ? log(m_data_pz[idz] / m_dz) : 0.;
 
@@ -375,8 +381,9 @@ CPriorHelper::GetTZEPriorData(const std::string &tplname, Int32 EBVIndexfilter,
                               Float64 redshift,
                               Int32 outsideZRangeExtensionMode) const {
   if (EBVIndexfilter < 0 || EBVIndexfilter > m_nEbv - 1)
-    THROWG(INTERNAL_ERROR, Formatter() << "Bad EBV index requested ="
-                                       << EBVIndexfilter << " nEBV=" << m_nEbv);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Bad EBV index requested =" << EBVIndexfilter
+                       << " nEBV=" << m_nEbv);
 
   TFloat64List redshifts(1, redshift);
   TPriorZEList zePriorData;
@@ -389,7 +396,7 @@ Int32 CPriorHelper::getTemplateIndex(const std::string &tplname) const {
 
   auto itr = std::find(m_tplnames.begin(), m_tplnames.end(), tplname);
   if (itr == m_tplnames.end())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "unable to match this tplname in prior names list : "
                        << tplname);
 
@@ -401,7 +408,7 @@ Int32 CPriorHelper::getRedshiftIndex(Float64 redshift,
   Int32 idz = Int32((redshift - m_z0) / m_dz);
   if (outsideZRangeExtensionMode == 1) {
     if (idz < 0 || idz >= m_nZ)
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              Formatter() << "unable to match this redshift in prior list:"
                          << redshift);
   }

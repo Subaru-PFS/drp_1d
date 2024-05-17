@@ -45,7 +45,7 @@ using namespace NSEpic;
 
 TPolynomCoeffs::TPolynomCoeffs(const TFloat64List &coeffs) {
   if (coeffs.size() <= degree)
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter()
                << "input array too small to initialize a polynomial of degree "
                << degree);

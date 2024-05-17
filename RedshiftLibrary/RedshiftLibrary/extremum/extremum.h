@@ -46,6 +46,18 @@
 #include "RedshiftLibrary/common/range.h"
 
 using namespace std;
+
+namespace Extremum_test {
+class Extremum_cut_isolated;
+class Extremum_cut_onePeak;
+class Extremum_FilterOutNeighboringPeaks;
+class Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks;
+class Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2;
+class Extremum_FilterOutNeighboringPeaks_increasingPDF;
+class Extremum_FilterOutNeighboringPeaks2;
+class Extremum_FilterOutNeighboringPeaks_negativeX;
+class Extremum_Truncate;
+} // namespace Extremum_test
 namespace NSEpic {
 
 /**
@@ -61,31 +73,45 @@ public:
             bool allow_extrema_at_border = true,
             const TFloat64Range &xRange = TFloat64Range());
 
-  void SetMaxPeakCount(Int32 n);
-  void SetXRange(const TFloat64Range &r);
-  void SetMeritCut(Float64 n);
-  bool Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
-            const bool isFirstpass, TPointList &maxPoint) const;
-  bool DefaultExtremum(const TFloat64List &xAxis, const TFloat64List &yAxis,
-                       TPointList &maxPoint);
-
-  bool Cut_Threshold(TFloat64List &maxX, TFloat64List &maxY,
-                     Int32 keepMinN) const;
-  // made public to do unit tests
-  bool Truncate(TFloat64List &xAxis, TFloat64List &yAxis,
-                TPointList &maxPoint) const;
-  bool FilterOutNeighboringPeaksAndTruncate(TFloat64List &maxX,
-                                            TFloat64List &maxY, Int32 keepmin,
-                                            TPointList &maxPoint) const;
-  void SortIndexes(TFloat64List &maxY) const;
+  void SetMaxPeakCount(Int32 n) { m_MaxPeakCount = n; };
+  void SetXRange(const TFloat64Range &r) { m_XRange = r; };
+  void SetMeritCut(Float64 n) { m_meritCut = n; };
+  TPointList Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
+                  const bool isFirstpass) const;
 
 private:
-  bool FindAllPeaks(const TFloat64List &xAxis, const TFloat64List &yAxis,
-                    Int32 BeginIndex, Int32 EndIndex, TFloat64List &maxX,
-                    TFloat64List &maxY, bool invertSearch = false) const;
+  // for unit testing private methods
+  friend class Extremum_test::Extremum_cut_isolated;
+  friend class Extremum_test::Extremum_cut_onePeak;
+  friend class Extremum_test::Extremum_FilterOutNeighboringPeaks;
+  friend class Extremum_test::
+      Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks;
+  friend class Extremum_test::
+      Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2;
+  friend class Extremum_test::Extremum_FilterOutNeighboringPeaks_increasingPDF;
+  friend class Extremum_test::Extremum_FilterOutNeighboringPeaks2;
+  friend class Extremum_test::Extremum_FilterOutNeighboringPeaks_negativeX;
+  friend class Extremum_test::Extremum_Truncate;
 
-  bool verifyPeakSeparation(TFloat64List &maxX) const;
-  bool verifyPeakSeparation(TPointList &maxPoint) const;
+  std::pair<TFloat64List, TFloat64List>
+  FindAllPeaks(const TFloat64List &xAxis, const TFloat64List &yAxis,
+               Int32 BeginIndex, Int32 EndIndex,
+               bool invertSearch = false) const;
+
+  TPointList FilterOutNeighboringPeaksAndTruncate(TFloat64List const &maxX,
+                                                  TFloat64List const &maxY,
+                                                  Int32 keepmin) const;
+
+  TPointList Truncate(TFloat64List const &xAxis,
+                      TFloat64List const &yAxis) const;
+
+  void Cut_Threshold(TFloat64List &maxX, TFloat64List &maxY,
+                     Int32 keepMinN) const;
+
+  void SortIndexes(TFloat64List const &maxY) const;
+
+  void assertPeakSeparation(TFloat64List &maxX) const;
+  void assertPeakSeparation(TPointList &maxPoint) const;
   void getFirstandLastnonNANElementIndices(const TFloat64List &yAxis,
                                            Int32 &BeginIndex,
                                            Int32 &EndIndex) const;

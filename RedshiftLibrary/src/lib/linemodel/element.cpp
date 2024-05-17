@@ -114,7 +114,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
   const Float64 pfsSimuCompensationFactor = 1.0;
 
   if (!m_LSF)
-    THROWG(INTERNAL_ERROR, "lsf object is not initailized.");
+    THROWG(ErrorCode::INTERNAL_ERROR, "lsf object is not initailized.");
   Float64 instrumentSigma = m_LSF->GetWidth(redshiftedlambda);
 
   Float64 velocitySigma = pfsSimuCompensationFactor * v / c *
@@ -130,8 +130,9 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
     break;
   default:
     // TODO this should not happen here, but at parameter setting stage
-    THROWG(INTERNAL_ERROR, Formatter() << "Invalid LSF type "
-                                       << m_ElementParam->m_LineWidthType);
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Invalid LSF type "
+                                          << m_ElementParam->m_LineWidthType);
   }
 
   Float64 sigma =
@@ -458,7 +459,8 @@ std::pair<Float64, Float64> CLineModelElement::getObservedPositionAndLineWidth(
                          : GetObservedPosition(index, redshift, doAsymfitdelta);
 
   if (!m_LSF->checkAvailability(mu))
-    THROWG(INTERNAL_ERROR, "Line position does not belong to LSF range");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Line position does not belong to LSF range");
   Float64 const sigma = GetLineWidth(mu);
   return std::make_pair(mu, sigma);
 }
@@ -493,8 +495,9 @@ Float64 CLineModelElement::GetObservedPosition(Float64 redshift,
     ++nvalid;
   }
   if (nvalid == 0)
-    THROWG(INTERNAL_ERROR, "Trying to get mean position of an element with "
-                           "all lines outside range");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Trying to get mean position of an element with "
+           "all lines outside range");
   mu /= nvalid;
   return mu;
 }
@@ -575,7 +578,7 @@ void CLineModelElement::addToSpectrumModel(
           getModelAtLambda(lambda, redshift, continuumfluxAxis[i], index);
       modelfluxAxis[i] += Yi;
       if (std::isnan(modelfluxAxis[i]))
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "addToSpectrumModel has a NaN flux Line" << index
                            << ": ContinuumFlux " << continuumfluxAxis[i]
                            << ", ModelAtLambda Yi = " << Yi << " for range ["
@@ -604,7 +607,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       continue;
-    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");//to be uncommented
 
     for (Int32 i = m_StartNoOverlap[index]; i <= m_EndNoOverlap[index]; i++) {
@@ -649,7 +652,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       continue;
-    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
     if (A < 0.)
       continue;
@@ -660,7 +663,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
                                                      : fluxval;
 
     if (std::isnan(Yi))
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              Formatter() << "NaN fluxval for Line nb: " << index
                          << " and GetLineProfileAtRedshift: "
                          << GetLineProfileAtRedshift(index, redshift, x));
@@ -705,7 +708,7 @@ CLineModelElement::GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
     Float64 const A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       continue;
-    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
     if (A < 0.)
       continue;
@@ -745,7 +748,7 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       continue;
-    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
     Yi += m_ElementParam->m_SignFactors[index] * continuumFluxUnscale * A *
@@ -773,7 +776,7 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
     Float64 const A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       continue;
-    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
     auto const &[mu, sigma] =

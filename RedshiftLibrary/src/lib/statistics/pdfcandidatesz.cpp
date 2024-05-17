@@ -169,7 +169,7 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
     if (candidates[candidateKey]->Redshift < ranges[candidateKey].GetBegin() ||
         candidates[candidateKey]->Redshift > ranges[candidateKey].GetEnd())
       THROWG(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           Formatter() << "Failed to identify a range including the candidate "
                       << candidates[candidateKey]->Redshift);
   }
@@ -268,7 +268,8 @@ void CPdfCandidatesZ::getCandidateSumTrapez(
     std::shared_ptr<TCandidateZ> &candidate) const {
   // check that redshifts are sorted
   if (!std::is_sorted(redshifts.begin(), redshifts.end()))
-    THROWG(INTERNAL_ERROR, Formatter() << "redshifts are not sorted");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "redshifts are not sorted");
 
   // find indexes kmin, kmax so that zmin and zmax are inside [
   // redshifts[kmin]:redshifts[kmax] ]
@@ -381,7 +382,8 @@ void CPdfCandidatesZ::getCandidateGaussFit(
 
   // check that redshifts are sorted
   if (!std::is_sorted(redshifts.begin(), redshifts.end()))
-    THROWG(INTERNAL_ERROR, Formatter() << "redshifts are not sorted");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "redshifts are not sorted");
 
   // find indexes kmin, kmax so that zmin and zmax are inside [
   // redshifts[kmin]:redshifts[kmax] ]
@@ -402,7 +404,8 @@ void CPdfCandidatesZ::getCandidateGaussFit(
       Formatter() << "    CPdfCandidatesZ::getCandidateSumGaussFit - n=" << n
                   << ", p=" << p);
   if (n < p)
-    THROWG(INTERNAL_ERROR, "LMfit has not enough samples on support");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "LMfit has not enough samples on support");
 
   gsl_matrix *J = gsl_matrix_alloc(n, p);
   gsl_matrix *covar = gsl_matrix_alloc(p, p);
@@ -453,7 +456,7 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   if (s == 0) {
     gsl_matrix_free(covar);
     gsl_matrix_free(J);
-    THROWG(INTERNAL_ERROR, "Unable to allocate the multifit solver");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unable to allocate the multifit solver");
   }
 
   /* initialize solver with starting point and weights */

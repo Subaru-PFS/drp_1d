@@ -50,7 +50,8 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
       m_weight(weight) {
 
   if (m_spectra.size() > 1)
-    THROWG(INTERNAL_ERROR, "Photometry not supported with multiobs");
+    THROWG(ErrorCode::MULTIOBS_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+           "Photometry not supported with multiobs");
   // check availability and coherence of photometric bands & data
   checkInputPhotometry();
 
@@ -68,19 +69,22 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
-    THROWG(INTERNAL_ERROR, "Photometric band "
-                           "transmision not available");
+    THROWG(ErrorCode::MISSING_PHOTOMETRIC_TRANSMISSION,
+           "Photometric band "
+           "transmision not available");
   if (m_photBandCat->empty())
-    THROWG(INTERNAL_ERROR, "Empty photometric band transmission");
+    THROWG(ErrorCode::MISSING_PHOTOMETRIC_TRANSMISSION,
+           "Empty photometric band transmission");
 
   if (m_spectra[0]->GetPhotData() == nullptr)
-    THROWG(INTERNAL_ERROR, "photometric data not available in spectrum");
+    THROWG(ErrorCode::MISSING_PHOTOMETRIC_DATA,
+           "photometric data not available in spectrum");
 
   const auto &dataNames = m_spectra[0]->GetPhotData()->GetNameList();
   for (const auto &bandName : m_photBandCat->GetNameList())
     if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
         dataNames.cend())
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::MISSING_PHOTOMETRIC_DATA,
              Formatter() << " "
                             "photometry point for band name: "
                          << bandName << " is not available in the spectrum");
@@ -128,7 +132,7 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
             lambdaRange_restframe, mskRebined);
 
     if (overlapFraction < 1.0) {
-      THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+      THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
              Formatter() << "tpl overlap too small: " << overlapFraction);
     }
   }
@@ -281,9 +285,9 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
         photData->GetFluxOverErr2(bandName) * m_weight * m_weight;
 
     if (std::isinf(oneOverErr2) || std::isnan(oneOverErr2))
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "found invalid inverse variance : err2="
-                                 << oneOverErr2 << ", for band=" << bandName);
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "found invalid inverse variance : err2="
+                         << oneOverErr2 << ", for band=" << bandName);
 
     sumCross_phot += d * integ_flux * oneOverErr2;
     sumT_phot += integ_flux * integ_flux * oneOverErr2;

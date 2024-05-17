@@ -357,7 +357,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                                   Float64 redshift) {
 
   if (EltsIdx.size() < 1)
-    THROWG(INTERNAL_ERROR, "empty Line element list to fit");
+    THROWG(ErrorCode::INTERNAL_ERROR, "empty Line element list to fit");
 
   Int32 nddl = EltsIdx.size();
   Int32 param_idx = nddl;
@@ -394,7 +394,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   TInt32List xInds = getElementList().getSupportIndexes(EltsIdx);
   if (xInds.size() < 1)
-    THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "no observed samples for the line Element to fit");
 
   Int32 pCoeff_param_idx =
       undefIdx; // position of polynomial coeffs in the param vector
@@ -514,7 +515,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     auto &elt = getElementList()[EltsIdx[i]];
     v_xGuess[i] = elt->GetElementAmplitude() * normFactor;
     if (std::isnan(v_xGuess[i]))
-      THROWG(INTERNAL_ERROR, "NAN amplitude");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "NAN amplitude for LBFGSB fitter initial guess");
     // retrive max SNR amplitude:
     auto sigma = (elt->GetElementError() * normFactor);
     auto snr = v_xGuess[i] / sigma;

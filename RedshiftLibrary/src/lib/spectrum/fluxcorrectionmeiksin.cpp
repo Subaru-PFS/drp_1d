@@ -60,7 +60,7 @@ Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
     return 1.;
 
   if (meiksinIdx == undefIdx)
-    THROWG(INTERNAL_ERROR, "igmIdx undefined");
+    THROWG(ErrorCode::INTERNAL_ERROR, "igmIdx undefined");
   Int32 zIdx = getRedshiftIndex(redshift);
   if (zIdx == undefIdx)
     return 1.;
@@ -77,7 +77,7 @@ CSpectrumFluxCorrectionMeiksin::getCorrectionAndDerivLbdaRest(
     return std::make_tuple(1., 0.);
 
   if (meiksinIdx == -1)
-    THROWG(INTERNAL_ERROR, "igmIdx cannot be negative");
+    THROWG(ErrorCode::INTERNAL_ERROR, "igmIdx cannot be negative");
   Int32 zIdx = getRedshiftIndex(redshift);
   if (zIdx == undefIdx)
     return std::make_tuple(1., 0.);
@@ -132,7 +132,8 @@ CSpectrumFluxCorrectionMeiksin::getWaveAndCorrectionVector(
   auto const indices = getWaveRangeIndices(wrange, false);
   auto const wave = getWaveVector(indices, false);
   if (wave.empty())
-    THROWG(INTERNAL_ERROR, "not enough IGM extinction samples inside range");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "not enough IGM extinction samples inside range");
 
   Int32 zIdx = getRedshiftIndex(redshift);
   if (zIdx == undefIdx)
@@ -192,7 +193,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     const TFloat64List &fineLambdas, const TFloat64Range &zbin,
     const std::shared_ptr<const CLSF> &lsf) const {
   if (!arr.size()) {
-    THROWG(INTERNAL_ERROR, "Cannot convolve: array is empty. ");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot convolve: array is empty. ");
   }
 
   Int32 n = arr.size();
@@ -221,10 +222,10 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
                             lambda0 + half_lsf_range); // restframe
     TInt32Range lsf_indices = getWaveRangeIndices(lsf_range, true);
     if (lsf_indices.GetBegin() < 0 || lsf_indices.GetEnd() >= m_LambdaSize)
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              "lsf kernel does not overlap meiksin curve samples");
     if (lsf_indices.GetLength() < 0)
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              "lsf kernel smaller than Meiksin wavelength steps");
     TFloat64List lambdas_obs(lsf_indices.GetLength() + 1);
     std::transform(lambdas.cbegin() + lsf_indices.GetBegin(),

@@ -149,9 +149,9 @@ void CSpectrumSpectralAxis::ShiftByWaveLength(
     const CSpectrumSpectralAxis &origin, Float64 wavelengthOffset,
     EShiftDirection direction) {
   if (wavelengthOffset < 0.)
-    THROWG(INTERNAL_ERROR, "wavelengthOffset can not be negative");
+    THROWG(ErrorCode::INTERNAL_ERROR, "wavelengthOffset can not be negative");
   if (!(direction == nShiftForward || direction == nShiftBackward))
-    THROWG(INTERNAL_ERROR, "Unknown shift direction");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown shift direction");
 
   *this = origin;
   if (wavelengthOffset == 0.0)
@@ -284,10 +284,10 @@ void CSpectrumSpectralAxis::ClampLambdaRange(
   clampedRange = TFloat64Range();
 
   if (range.GetIsEmpty())
-    THROWG(INVALID_WAVELENGTH_RANGE, "lambda range is empty");
+    THROWG(ErrorCode::INVALID_WAVELENGTH_RANGE, "lambda range is empty");
 
   if (effectiveRange.GetIsEmpty())
-    THROWG(INVALID_SPECTRUM_WAVELENGTH,
+    THROWG(ErrorCode::INVALID_SPECTRUM_WAVELENGTH,
            "spectral axis has less than 2 samples");
 
   // Clamp lambda start
@@ -303,7 +303,7 @@ void CSpectrumSpectralAxis::ClampLambdaRange(
   clampedRange = TFloat64Range(start, end);
 
   if (clampedRange.GetLength() <= 0.0)
-    THROWG(INVALID_WAVELENGTH_RANGE,
+    THROWG(ErrorCode::INVALID_WAVELENGTH_RANGE,
            "lambda range clamped to spectral axis is empty");
 }
 
@@ -408,7 +408,7 @@ bool CSpectrumSpectralAxis::IsLogSampled() const {
 
 Float64 CSpectrumSpectralAxis::GetlogGridStep() const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, " axis is not logsampled");
+    THROWG(ErrorCode::INTERNAL_ERROR, " axis is not logsampled");
   }
 
   return m_regularLogSamplingStep;
@@ -431,12 +431,12 @@ TFloat64List
 CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
                                           const TInt32Range &ilbda) const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, "Cannot subsample spectrum");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot subsample spectrum");
   }
   if (ilbda.GetBegin() < 0)
-    THROWG(INTERNAL_ERROR, "range's lower bound < 0");
+    THROWG(ErrorCode::INTERNAL_ERROR, "range's lower bound < 0");
   if (ilbda.GetEnd() > m_Samples.size() - 1)
-    THROWG(INTERNAL_ERROR, "range's upper bound > samples size");
+    THROWG(ErrorCode::INTERNAL_ERROR, "range's upper bound > samples size");
 
   Int32 s = GetSamplesCount();
   if (ssratio == 1)
@@ -462,7 +462,7 @@ CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
 Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep,
                                                         Float64 &modulo) const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "axis is not logsampled, thus cannot get integer ratio");
   }
 
@@ -473,7 +473,7 @@ Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep,
 
 void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, "axis is not logsampled");
+    THROWG(ErrorCode::INTERNAL_ERROR, "axis is not logsampled");
   }
   TFloat64Range lrange = GetLambdaRange();
   TFloat64List new_Samples =
@@ -484,7 +484,8 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
   const Int32 nm1 = m_Samples.size() - 1;
   bs = min(100, nm1 / 10);
   if (bs < 30) {
-    THROWG(INTERNAL_ERROR, "not enough points to recompute logLambda");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "not enough points to recompute logLambda");
   }
 
   Float64 bias_start = 0., bias_end = 0.;
