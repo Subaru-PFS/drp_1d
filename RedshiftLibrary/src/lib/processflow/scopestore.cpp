@@ -63,7 +63,8 @@ std::string CScopeStore::GetCurrentScopeName() const {
 std::string CScopeStore::getCurrentScopeNameAt(int depth) const {
   std::string name;
   if (m_ScopeStack->size() < depth)
-    THROWG(INTERNAL_ERROR, Formatter() << "Scope smaller than" << depth);
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Scope smaller than" << depth);
 
   if (depth == 0)
     return name;

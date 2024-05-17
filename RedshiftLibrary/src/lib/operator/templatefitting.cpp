@@ -192,7 +192,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   }
 
   if (!chisquareSetAtLeastOnce) {
-    THROWG(INVALID_MERIT_VALUES,
+    THROWG(ErrorCode::INVALID_MERIT_VALUES,
            Formatter() << "Template " << tpl->GetName()
                        << ": Not even one single valid fit/merit value found");
   }
@@ -267,23 +267,23 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
       sumS += Yspc[j] * Yspc[j] * err2;
 
       if (std::isinf(err2) || std::isnan(err2)) {
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "found invalid inverse variance : err2=" << err2
                            << ", for index=" << j
                            << " at restframe wl=" << Xtpl[j]);
       }
 
       if (std::isinf(sumS) || std::isnan(sumS) || sumS != sumS)
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "Invalid dtd value: dtd=" << sumS
                            << ", Yspc=" << Yspc[j] << ", err2=" << err2
                            << ", error=" << error[j] << ", for index=" << j
                            << " at restframe wl=" << Xtpl[j]);
 
       if (std::isinf(sumT) || std::isnan(sumT)) {
-        THROWG(INTERNAL_ERROR, Formatter() << "Invalid mtm value:" << sumT
-                                           << " for index=" << j
-                                           << " at restframe wl=" << Xtpl[j]);
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "Invalid mtm value:" << sumT << " for index=" << j
+                           << " at restframe wl=" << Xtpl[j]);
       }
     }
   }
@@ -301,7 +301,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   }
 
   if (sumT == 0.0) {
-    THROWG(INTERNAL_ERROR, "empty leastsquare sum");
+    THROWG(ErrorCode::INTERNAL_ERROR, "empty leastsquare sum");
   }
 
   return fitResult;
@@ -381,19 +381,19 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
       << tpl->GetName());
 
   if (opt_dustFitting && tpl->CalzettiInitFailed())
-    THROWG(INTERNAL_ERROR, "ISM is not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
 
   if (opt_dustFitting &&
       FitEbmvIdx >= tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs())
     THROWG(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter() << "Invalid calzetti index. (FitEbmvIdx=" << FitEbmvIdx
                     << ", while NPrecomputedEbmvCoeffs="
                     << tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()
                     << ")");
 
   if (opt_extinction && tpl->MeiksinInitFailed()) {
-    THROWG(INTERNAL_ERROR, "IGM is not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
@@ -407,7 +407,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   result->Redshifts = m_redshifts;
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "prior list size(" << logpriorze.size()
                        << ") does not match the input redshift-list size :"
                        << m_redshifts.size());

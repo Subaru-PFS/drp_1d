@@ -81,10 +81,11 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   Int32 n = xAxis.size();
 
   if (n == 0)
-    THROWG(INTERNAL_ERROR, "input X vector is empty");
+    THROWG(ErrorCode::INTERNAL_ERROR, "input X vector is empty");
 
   if (n != yAxis.size())
-    THROWG(INTERNAL_ERROR, "input X and Y vector do not have the same size");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "input X and Y vector do not have the same size");
 
   TPointList maxPoint;
 
@@ -99,9 +100,9 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
 
   if (maxX.size() == 0) {
     if (isFirstPass) {
-      THROWG(PDF_PEAK_NOT_FOUND, Formatter()
-                                     << "CExtremum::" << __func__
-                                     << " Failed to identify pdf candidates ");
+      THROWG(ErrorCode::PDF_PEAK_NOT_FOUND,
+             Formatter() << "CExtremum::" << __func__
+                         << " Failed to identify pdf candidates ");
     } else {
       // we should not raise an exception here
       // (we can accept a missing candidate in second pass window)
@@ -148,9 +149,9 @@ void CExtremum::assertPeakSeparation(TFloat64List &maxX) const {
     Float64 overlap;
     overlap = windowh.GetBegin() - windowl.GetEnd();
     if (overlap < 0)
-      THROWG(INTERNAL_ERROR, Formatter() << " Peaks " << maxX[i] << " and "
-                                         << maxX[i + 1]
-                                         << " are not enough separated.");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << " Peaks " << maxX[i] << " and " << maxX[i + 1]
+                         << " are not enough separated.");
   }
 }
 
@@ -171,7 +172,7 @@ void CExtremum::assertPeakSeparation(TPointList &maxPoint) const {
 void CExtremum::Cut_Threshold(TFloat64List &maxX, TFloat64List &maxY,
                               Int32 keepMinN) const {
   if (maxX.size() == 0)
-    THROWG(INTERNAL_ERROR, " empty MaxX arg");
+    THROWG(ErrorCode::INTERNAL_ERROR, " empty MaxX arg");
 
   if (maxX.size() <= keepMinN)
     return;
@@ -259,7 +260,7 @@ void CExtremum::getFirstandLastnonNANElementIndices(const TFloat64List &yAxis,
 
   // check at least 3 points left (to get an extrema)
   if ((EndIndex - BeginIndex) < 2)
-    THROWG(INTERNAL_ERROR, "less than 3 contiguous non nan values");
+    THROWG(ErrorCode::INTERNAL_ERROR, "less than 3 contiguous non nan values");
 }
 
 TFloat64List CExtremum::applySign(const TFloat64List &yAxis,

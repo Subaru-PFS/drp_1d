@@ -93,7 +93,8 @@ public:
   template <typename T> T Get(const std::string &name) const {
     boost::optional<T> property = m_PropertyTree.get_optional<T>(name);
     if (!property.is_initialized())
-      THROWG(MISSING_PARAMETER, Formatter() << "Missing parameter " << name);
+      THROWG(ErrorCode::MISSING_PARAMETER, Formatter()
+                                               << "Missing parameter " << name);
     return *property;
   }
 
@@ -102,8 +103,8 @@ public:
     if (Has<T>(scopedName))
       return Get<T>(scopedName);
     else
-      THROWG(MISSING_PARAMETER, Formatter()
-                                    << "Missing parameter " << scopedName);
+      THROWG(ErrorCode::MISSING_PARAMETER,
+             Formatter() << "Missing parameter " << scopedName);
   }
 
   template <typename T>
@@ -118,15 +119,16 @@ public:
     if (Has<T>(scopedName))
       return Get<T>(scopedName);
     else
-      THROWG(MISSING_PARAMETER, Formatter()
-                                    << "Missing parameter " << scopedName);
+      THROWG(ErrorCode::MISSING_PARAMETER,
+             Formatter() << "Missing parameter " << scopedName);
   }
 
   template <typename T> std::vector<T> GetList(const std::string &name) const {
     boost::optional<bpt::ptree &> property =
         m_PropertyTree.get_child_optional(name);
     if (!property.is_initialized())
-      THROWG(MISSING_PARAMETER, Formatter() << "Missing parameter " << name);
+      THROWG(ErrorCode::MISSING_PARAMETER, Formatter()
+                                               << "Missing parameter " << name);
     std::vector<T> ret = std::vector<T>((*property).size());
 
     bpt::ptree::const_iterator it;

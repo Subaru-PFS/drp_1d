@@ -85,12 +85,13 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   bool useAmpOffset = m_enableAmplitudeOffsets;
 
   if (EltsIdx.size() < 1)
-    THROWG(INTERNAL_ERROR, "empty Line element list to fit");
+    THROWG(ErrorCode::INTERNAL_ERROR, "empty Line element list to fit");
 
   TInt32List xInds = getElementList().getSupportIndexes(EltsIdx);
   Int32 n = xInds.size();
   if (n < 1)
-    THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "no observed samples for the line Element to fit");
 
   // list of elements to fit
   TInt32List EltsIdxToFit;

@@ -487,8 +487,8 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
   m_spectraIndex.reset();
 
   if (which != 1 && which != 2)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "wrong argument, which (1 or 2): " << which);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "wrong argument, which (1 or 2): " << which);
 
   CMask _mask = getOutsideLinesMask();
 
@@ -904,7 +904,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
           }
         }
         if (!m_spectraIndex.isValid())
-          THROWG(INTERNAL_ERROR,
+          THROWG(ErrorCode::INTERNAL_ERROR,
                  Formatter() << "Failed finding a spectrum containing"
                              << line_index << " at " << modelSolution.Redshift);
       }
@@ -994,10 +994,10 @@ void CLineModelFitting::SetLSF() {
     const std::shared_ptr<const CLSF> &lsf = getSpectrum().GetLSF();
 
     if (lsf == nullptr) {
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              "Cannot enable LSF, LSF spectrum member is not initialized");
     } else if (!lsf->IsValid()) {
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              " Cannot enable LSF, LSF spectrum member is not valid");
     }
     for (Int32 j = 0; j < getElementList().size(); j++) {

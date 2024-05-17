@@ -65,7 +65,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   Log.LogDebug(Formatter() << "Elementlist, m_fitContinuum_option="
                            << m_fitContinuum_option);
   /*if (m_observeGridContinuumFlux.empty())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "Cannot loadfitcontinuum without precomputedGridTplFlux");
   */
   if (m_fitContinuum_option ==
@@ -73,7 +73,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
     CTplModelSolution fitValues =
         m_fitContinuum_tplfitStore->GetFitValues(redshift, icontinuum);
     if (fitValues.tplName.empty()) {
-      THROWG(INTERNAL_ERROR, "Empty template name");
+      THROWG(ErrorCode::INTERNAL_ERROR, "Empty template name");
     }
 
     *m_fitContinuum = fitValues;
@@ -83,14 +83,14 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   } else if (m_fitContinuum_option == 2) {
     // values unmodified nothing to do
   } else {
-    THROWG(INTERNAL_ERROR, "Cannot parse fitContinuum_option");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot parse fitContinuum_option");
   }
 
   // check that continuum is well loaded
   if (m_fitContinuum->tplName.empty())
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Failed to load-fit continuum for cfitopt="
-                               << m_fitContinuum_option);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Failed to load-fit continuum for cfitopt="
+                       << m_fitContinuum_option);
 
   // Retrieve the best template, otherwise Getter throws an error
   std::shared_ptr<const CTemplate> tpl =

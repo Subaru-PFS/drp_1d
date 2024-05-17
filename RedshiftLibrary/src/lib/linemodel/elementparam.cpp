@@ -64,7 +64,7 @@ TLineModelElementParam::TLineModelElementParam(CLineVector lines,
     m_LinesIds[line.GetID()] = index;
   }
   if (m_Lines.empty())
-    THROWG(INTERNAL_ERROR, "Empty line vector");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Empty line vector");
   auto const &first_line = m_Lines.front();
 
   m_type = first_line.GetType();
@@ -82,7 +82,8 @@ void TLineModelElementParam::init(const std::string &widthType) {
   } else if (widthType == "velocityDriven") {
     m_LineWidthType = VELOCITYDRIVEN;
   } else {
-    THROWG(INTERNAL_ERROR, Formatter() << "Unknown LineWidthType" << widthType);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Unknown LineWidthType" << widthType);
   }
 
   Float64 sign = IsEmission() ? 1.0 : -1.0;
@@ -163,7 +164,8 @@ TLineModelElementParam::getLineProfile(Int32 line_index) const {
 void TLineModelElementParam::setVelocity(Float64 vel) {
 #ifdef DEBUG
   if (!GetSize())
-    THROWG(INTERNAL_ERROR, "Empty line model element, could not set velocity");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Empty line model element, could not set velocity");
 #endif
 
   if (IsEmission()) {
@@ -289,7 +291,7 @@ Float64 TLineModelElementParam::GetLineProfileDerivVel(
   case VELOCITYDRIVEN:
     return v_to_sigma * profile_derivSigma;
   default:
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Invalid LineWidthType : " << m_LineWidthType);
   }
   return 0.0;

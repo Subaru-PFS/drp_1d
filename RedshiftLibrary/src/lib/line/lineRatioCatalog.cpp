@@ -51,7 +51,7 @@ CLineRatioCatalog::CLineRatioCatalog(const std::string &name,
 
 void CLineRatioCatalog::addVelocity(const std::string &name, Float64 value) {
   if (!m_Velocities.emplace(name, value).second)
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Velocity for group " << name << " already exists");
 }
 

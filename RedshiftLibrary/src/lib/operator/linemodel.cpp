@@ -215,7 +215,8 @@ void COperatorLineModel::ComputeFirstPass() {
   bool checkAllAmplitudes =
       AllAmplitudesAreZero(allAmplitudesZero, m_result->Redshifts.size());
   if (checkAllAmplitudes == true)
-    THROWG(NULL_MODEL, "Null amplitudes (continuum & model) at all z");
+    THROWG(ErrorCode::NULL_MODEL,
+           "Null amplitudes (continuum & model) at all z");
 
   boost::chrono::thread_clock::time_point stop_mainloop =
       boost::chrono::thread_clock::now();
@@ -304,10 +305,10 @@ void COperatorLineModel::fitContinuumTemplates(
                 meiksinIndices[i]));
 
     if (!templatefittingResult) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "Failed "
-                                    "to compute chisquare value for tpl=%"
-                                 << tplname);
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "Failed "
+                            "to compute chisquare value for tpl=%"
+                         << tplname);
     } else {
       chisquareResultsAllTpl.push_back(templatefittingResult);
       chisquareResultsTplName.push_back(tplname);
@@ -330,7 +331,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     return;
 
   if (candidateIdx < 0 || candidateIdx >= m_firstpass_extremaResult.size())
-    THROWG(INTERNAL_ERROR, "Candidate index is out of range");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Candidate index is out of range");
 
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
@@ -502,7 +503,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       << tplfitStore->GetContinuumCount());
 
   if (tplfitStore->GetContinuumCount() < m_opt_fitcontinuum_maxN) {
-    THROWG(INTERNAL_ERROR, "Couldn't compute the required continuum count");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Couldn't compute the required continuum count");
   }
 
   m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
@@ -539,7 +541,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
       tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
   if (max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
     if (m_opt_continuumcomponent != "tplFitAuto")
-      THROWG(NEGATIVE_CONTINUUM,
+      THROWG(ErrorCode::NEGATIVE_CONTINUUM,
              Formatter() << "Negative "
                             "continuum amplitude found at z="
                          << max_fitamplitudeSigma_z << ": best continuum tpl "
@@ -715,7 +717,7 @@ void COperatorLineModel::Combine_firstpass_candidates(
         startIdx + keb, contModel);
 
     if (contModel.tplName == "") {
-      THROWG(TPL_NAME_EMPTY,
+      THROWG(ErrorCode::TPL_NAME_EMPTY,
              Formatter() << "Saving first pass extremum. "
                          << "ContinuumModelSolutions tplname="
                          << m_result->ContinuumModelSolutions[idx].tplName
@@ -762,8 +764,9 @@ void COperatorLineModel::ComputeSecondPass(
   } else {
     // TODO this should be a parameterException thrown at parameter setting
     // stage
-    THROWG(INTERNAL_ERROR, Formatter() << "Invalid continnuum_fit_option: "
-                                       << m_continnuum_fit_option);
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Invalid continnuum_fit_option: "
+                                          << m_continnuum_fit_option);
   }
 
   // upcast LineModelExtremaResult to TCandidateZ
@@ -867,9 +870,10 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
 
   Int32 extremumCount = zCandidates.size();
   if (extremumCount > m_maxModelSaveCount) {
-    THROWG(INTERNAL_ERROR, Formatter() << "ExtremumCount " << extremumCount
-                                       << " is greater than maxModelSaveCount "
-                                       << m_maxModelSaveCount);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "ExtremumCount " << extremumCount
+                       << " is greater than maxModelSaveCount "
+                       << m_maxModelSaveCount);
   }
 
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
@@ -894,7 +898,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
         if (m_firstpass_extremaResult.ID(j) == parentId)
           i_1pass = j;
       if (i_1pass == -1) {
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "Impossible to find the first pass extrema "
                               "id corresponding to 2nd pass extrema "
                            << Id);
@@ -991,10 +995,10 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
             ->getContinuumScaleMargCorrection();
     if (m != m_result->ChiSquare[idx] &&
         m_fittingManager->getFittingMethod() != "random")
-      THROWG(INTERNAL_ERROR, Formatter() << "COperatorLineModel::" << __func__
-                                         << ": m (" << m << " for idx=" << idx
-                                         << ") !=chi2 ("
-                                         << m_result->ChiSquare[idx] << ")");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "COperatorLineModel::" << __func__ << ": m (" << m
+                         << " for idx=" << idx << ") !=chi2 ("
+                         << m_result->ChiSquare[idx] << ")");
     m = m_result->ChiSquare[idx];
     // save the model result
     // WARNING: saving results TODO: this is currently wrong !! the model
@@ -1284,7 +1288,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
                     << "  Operator-Linemodel: VelfitGroups " << lineTypeStr
                     << " - n = " << idxVelfitGroups.size());
       if (m_firstpass_extremaResult.size() > 1 && idxVelfitGroups.size() > 1)
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                "  Operator-Linemodel: not allowed to use more than 1 "
                "group per E/A for "
                "more than 1 extremum (see .json "
@@ -1402,7 +1406,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
     const bool overrideRecomputeOnlyOnTheCandidate) {
   CLineModelPassExtremaResult &extremaResult = m_firstpass_extremaResult;
   if (extremaResult.size() < 1) {
-    THROWG(INTERNAL_ERROR, "ExtremaResult is empty");
+    THROWG(ErrorCode::INTERNAL_ERROR, "ExtremaResult is empty");
   }
 
   Log.LogInfo("");
@@ -1751,14 +1755,14 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       inputContext->GetParameterStore();
   if (params->GetScoped<bool>("lineModel.velocityFit") &&
       params->GetScoped<std::string>("lineModel.fittingMethod") != "lbfgsb")
-    THROWG(INVALID_PARAMETER,
+    THROWG(ErrorCode::INVALID_PARAMETER,
            "velocityFit implemented only for lbfgsb ftting method");
 
   Int32 amplitudeOffsetsDegree =
       params->GetScoped<Int32>("lineModel.polynomialDegree");
   if (amplitudeOffsetsDegree < 0 || amplitudeOffsetsDegree > 2)
-    THROWG(INVALID_PARAMETER, "the polynomial degree "
-                              "parameter should be between 0 and 2");
+    THROWG(ErrorCode::INVALID_PARAMETER, "the polynomial degree "
+                                         "parameter should be between 0 and 2");
 
   makeTFOperator(m_Redshifts);
 

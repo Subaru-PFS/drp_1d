@@ -95,7 +95,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
           "photometry.weight");
   }
   if (fft_processing && use_photometry)
-    THROWG(FFT_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+    THROWG(ErrorCode::FFT_WITH_PHOTOMETRY_NOTIMPLEMENTED,
            "fftProcessing not "
            "implemented with photometry enabled");
 
@@ -137,7 +137,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
   } else if (opt_spcComponent == "all") {
     _type = nType_all;
   } else {
-    THROWG(INTERNAL_ERROR, "Unknown spectrum component");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
   }
 
   m_opt_maxCandidate =
@@ -158,9 +158,9 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
   Log.LogInfo("");
 
   if (tplCatalog.GetTemplateCount(m_category) == 0) {
-    THROWG(BAD_TEMPLATECATALOG, Formatter()
-                                    << "Empty template catalog for category "
-                                    << m_category[0]);
+    THROWG(ErrorCode::BAD_TEMPLATECATALOG,
+           Formatter() << "Empty template catalog for category "
+                       << m_category[0]);
   }
   Log.LogInfo(Formatter() << "Iterating over " << m_category.size()
                           << " tplCategories");
@@ -179,7 +179,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
   }
 
   if (!storeResult)
-    THROWG(INTERNAL_ERROR, "no result for any template");
+    THROWG(ErrorCode::INTERNAL_ERROR, "no result for any template");
 
   COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
                      m_opt_maxCandidate, m_redshiftSampling == "log");
@@ -263,7 +263,7 @@ void CTemplateFittingSolve::Solve(
       opt_dustFitting = false;
     } else {
       // unknown type
-      THROWG(INTERNAL_ERROR, "Unknown spectrum component");
+      THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
     }
 
     // Compute merit function
@@ -274,7 +274,8 @@ void CTemplateFittingSolve::Solve(
                                                opt_dustFitting));
 
     if (!templateFittingResult)
-      THROWG(INTERNAL_ERROR, "no results returned by templateFittingOperator");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "no results returned by templateFittingOperator");
 
     // Store results
     resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
@@ -319,10 +320,10 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
       Log.LogInfo(Formatter() << "templatefittingsolver: using cstLog = "
                               << chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != meritResult->CstLog) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "cstLog values do not correspond: val1="
-                                 << chisquarearray.cstLog
-                                 << " != val2=" << meritResult->CstLog);
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "cstLog values do not correspond: val1="
+                         << chisquarearray.cstLog
+                         << " != val2=" << meritResult->CstLog);
     }
     if (chisquarearray.redshifts.size() == 0) {
       chisquarearray.redshifts = meritResult->Redshifts;
@@ -381,16 +382,16 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     auto TplFitResult =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
     if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              Formatter()
                  << "Size do not match among templatefitting results, for tpl="
                  << r.first);
     }
     for (Int32 kz = 0; kz < TplFitResult->Redshifts.size(); kz++) {
       if (TplFitResult->Redshifts[kz] != redshifts[kz]) {
-        THROWG(INTERNAL_ERROR, Formatter()
-                                   << "redshift vector is not the same for tpl="
-                                   << r.first);
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "redshift vector is not the same for tpl="
+                           << r.first);
       }
     }
   }
@@ -464,8 +465,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
           spcmodelPtr);
 
       if (spcmodelPtr == nullptr)
-        THROWG(INTERNAL_ERROR, "Could not "
-                               "compute spectrum model");
+        THROWG(ErrorCode::INTERNAL_ERROR, "Could not "
+                                          "compute spectrum model");
       tplCatalog.m_logsampling = currentSampling;
 
       extremaResult->m_modelPhotValues[iExtremum] =

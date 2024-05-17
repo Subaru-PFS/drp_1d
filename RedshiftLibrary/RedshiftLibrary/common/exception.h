@@ -47,7 +47,7 @@
 #include "RedshiftLibrary/log/log.h"
 
 #define THROWG(code, msg)                                                      \
-  throw AmzException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
+  throw AmzException(code, msg, __FILE__, __func__, __LINE__)
 namespace NSEpic {
 
 class AmzException : public std::exception {

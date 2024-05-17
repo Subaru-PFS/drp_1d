@@ -56,8 +56,8 @@ void CRebin::compute(const TFloat64Range &range,
   // find start/end indexs for both axes
   if (spectralAxis[0] > range.GetBegin() ||
       spectralAxis[spectralAxis.GetSamplesCount() - 1] < range.GetEnd()) {
-    THROWG(INTERNAL_ERROR, "input spectral range is not "
-                           "included in spectral axis");
+    THROWG(ErrorCode::INTERNAL_ERROR, "input spectral range is not "
+                                      "included in spectral axis");
   }
 
   CSpectrumFluxAxis rebinedFluxAxis =
@@ -122,7 +122,7 @@ std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
   if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(std::move(*this)));
 
-  THROWG(INVALID_PARAMETER,
+  THROWG(ErrorCode::INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
          "supported for TemplateFittingSolver.interpolation");
 }
@@ -138,7 +138,7 @@ std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
   if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(spectrum));
 
-  THROWG(INVALID_PARAMETER,
+  THROWG(ErrorCode::INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
          "supported for TemplateFittingSolver.interpolation");
 }

@@ -306,14 +306,15 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
   const CSpectrumSpectralAxis &specAxis = spc.GetSpectralAxis();
   // Range must be included in fluxAxis
   if (range.GetEnd() >= fluxAxis.GetSamplesCount())
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Upper bound of range " << range.GetEnd()
-                               << " is >= to fluxAxis length "
-                               << fluxAxis.GetSamplesCount());
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Upper bound of range " << range.GetEnd()
+                       << " is >= to fluxAxis length "
+                       << fluxAxis.GetSamplesCount());
 
   if (range.GetBegin() < 0)
-    THROWG(INTERNAL_ERROR, Formatter() << "Lower bound of range "
-                                       << range.GetEnd() << " is < 0");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Lower bound of range "
+                                          << range.GetEnd() << " is < 0");
 
   // if no mask, then set it to 1
   if (mask.empty())
@@ -327,7 +328,7 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
       maxIndex = k;
     }
   if (maxIndex == undefIdx)
-    THROWG(INTERNAL_ERROR, "maxIndex is not valid");
+    THROWG(ErrorCode::INTERNAL_ERROR, "maxIndex is not valid");
   // strong/weak test to do
   CMedian<Float64> medianProcessor;
   // reg. sampling, TAG: IRREGULAR_SAMPLING

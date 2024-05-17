@@ -140,12 +140,14 @@ Float64 CRuleStrongHigherThanWeak::maxAmplitude(Float64 ampStrong,
   Float64 COEFF = 1.0;
   Float64 N_SIGMA = 1.0;
   if (isnan(erStrong)) {
-    THROWG(INTERNAL_ERROR, Formatter() << "CRuleStrongHigherThanWeak"
-                                       << __func__ << " erStrong is Nan");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "CRuleStrongHigherThanWeak"
+                                          << __func__ << " erStrong is Nan");
   }
   if (isnan(ampStrong)) {
-    THROWG(INTERNAL_ERROR, Formatter() << "CRuleStrongHigherThanWeak"
-                                       << __func__ << " ampStrong is Nan");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "CRuleStrongHigherThanWeak"
+                                          << __func__ << " ampStrong is Nan");
   }
 
   // Method 1 is used here

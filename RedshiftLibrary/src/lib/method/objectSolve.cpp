@@ -77,7 +77,7 @@ void CObjectSolve::GetRedshiftSampling(const CInputContext &inputContext,
     redshiftRange = searchLogRebin->second.zrange;
     redshiftStep = inputContext.getLogGridStep();
     if (m_redshiftSampling == "lin")
-      THROWG(BAD_PARAMETER_VALUE,
+      THROWG(ErrorCode::BAD_PARAMETER_VALUE,
              Formatter() << "CSolve::" << __func__
                          << ": redshiftsampling param should be set to log "
                             "since FFTprocessing is used");

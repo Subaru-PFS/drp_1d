@@ -95,8 +95,9 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
   if (!m_tplratio_priorhelper->mInitFailed) {
     // prior initilization for tplratio EL only
     if (getElementList().size() > 1)
-      THROWG(INTERNAL_ERROR, "model: Unable to use tplratio line priors "
-                             "with nElts>1 for now");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "model: Unable to use tplratio line priors "
+             "with nElts>1 for now");
     // NB: this could be done if the EL element idx in searched (see later
     // in the itratio loop, UV Abs lines would be not affected by priors
     // then)
@@ -261,8 +262,8 @@ Float64 CTplratioManager::getTplratio_bestMtmAbs() const {
  */
 void CTplratioManager::SetNominalAmplitudes(Int32 iCatalog) {
   if (iCatalog < 0 || iCatalog >= m_CatalogTplRatio->GetCatalogsCount())
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "wrong line catalog index: " << iCatalog);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "wrong line catalog index: " << iCatalog);
   for (Int32 elt_index = 0;
        elt_index != m_elementsVector->getElementParam().size(); ++elt_index) {
 
@@ -512,9 +513,9 @@ Float64 CTplratioManager::computelogLinePriorMerit(
     }
     if (foundAmp) {
       _meritprior += logPriorDataTplRatio[itratio].betaA *
-                    (ampl - logPriorDataTplRatio[itratio].A_mean) *
-                    (ampl - logPriorDataTplRatio[itratio].A_mean) /
-                    (logPriorDataTplRatio[itratio].A_sigma *
+                     (ampl - logPriorDataTplRatio[itratio].A_mean) *
+                     (ampl - logPriorDataTplRatio[itratio].A_mean) /
+                     (logPriorDataTplRatio[itratio].A_sigma *
                       logPriorDataTplRatio[itratio].A_sigma);
     }
     elt_index++;
@@ -586,8 +587,9 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
 Float64 CTplratioManager::GetIsmCoeff(Int32 idx) const {
   if (m_continuumManager->getIsmCorrectionFromTpl() == nullptr &&
       m_opt_dust_calzetti)
-    THROWG(INTERNAL_ERROR, "ismCorrectionCalzetti is not loaded while "
-                           "tplRatio_ism is activated");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "ismCorrectionCalzetti is not loaded while "
+           "tplRatio_ism is activated");
   if (!m_opt_dust_calzetti)
     return NAN;
   return m_continuumManager->getIsmCorrectionFromTpl()->GetEbmvValue(

@@ -95,10 +95,10 @@ BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
       auto _j = std::distance(m_Redshifts.begin(), it);
 
       if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
-        THROWG(INTERNAL_ERROR, "lineModel vector is not sorted");
+        THROWG(ErrorCode::INTERNAL_ERROR, "lineModel vector is not sorted");
 
     if (m_result->Redshifts.size() != m_Redshifts.size())
-      THROWG(INTERNAL_ERROR, "lineModel sizes do not match");
+      THROWG(ErrorCode::INTERNAL_ERROR, "lineModel sizes do not match");
   */
 }
 BOOST_AUTO_TEST_SUITE_END()

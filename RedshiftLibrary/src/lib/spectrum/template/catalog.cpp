@@ -92,7 +92,7 @@ CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
       if (tpl->GetName() == tplName)
         return tpl;
   }
-  THROWG(INTERNAL_ERROR,
+  THROWG(ErrorCode::INTERNAL_ERROR,
          Formatter() << "Could not find template with name " << tplName);
 }
 
@@ -149,7 +149,7 @@ Int32 CTemplateCatalog::GetNonNullTemplateCount(const std::string &category,
  */
 void CTemplateCatalog::Add(const std::shared_ptr<CTemplate> &r) {
   if (r->GetCategory().empty())
-    THROWG(INTERNAL_ERROR, "Template has no category");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Template has no category");
 
   GetList()[r->GetCategory()].push_back(r);
 }

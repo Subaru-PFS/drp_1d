@@ -55,7 +55,7 @@ CalzettiCorrection::CalzettiCorrection(TFloat64List _lbda,
         std::abs((_lbdaGridStep - lbdaGridStep) / lbdaGridStep);
 
     if (relativeErrAbs > relativeLbdaGridStepTol)
-      THROWG(BAD_CALZETTICORR, "lambdas are not regular sampled");
+      THROWG(ErrorCode::BAD_CALZETTICORR, "lambdas are not regular sampled");
   }
   step = lbdaGridStep;
 }
@@ -91,7 +91,7 @@ Float64
 CSpectrumFluxCorrectionCalzetti::GetDustCoeff(Int32 kDust,
                                               Float64 restLambda) const {
   if (kDust >= m_nEbmvCoeff)
-    THROWG(INTERNAL_ERROR, "ebmv index > nbEbmv ");
+    THROWG(ErrorCode::INTERNAL_ERROR, "ebmv index > nbEbmv ");
   Float64 coeffDust = 1.0;
   if (restLambda >= m_LambdaMin && restLambda < m_LambdaMax) {
     Int32 kCalzetti = Int32(round((restLambda - m_LambdaMin) / m_step));

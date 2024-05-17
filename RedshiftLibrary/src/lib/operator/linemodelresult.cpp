@@ -66,7 +66,7 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
                             TFloat64List tplratiosPriors) {
   if (tplratiosPriors.size() != nTplratios) {
     THROWG(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter()
             << "Sizes do not match between tplratioprior and tplratios vectors:"
             << tplratiosPriors.size() << " vs " << nTplratios);
@@ -144,7 +144,7 @@ void CLineModelResult::SetChisquareTplContinuumResult(
   const auto index_z_in_store =
       tplFitStore->GetRedshiftIndex(Redshifts[index_z]);
   if (index_z_in_store == -1)
-    THROWG(INTERNAL_ERROR, "Redshift not in fitstore");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Redshift not in fitstore");
 
   for (Int32 k = 0; k < tplFitStore->GetContinuumCount();
        k++) { // TODO: handle the use of more than one continuum in linemodel
@@ -167,7 +167,7 @@ void CLineModelResult::SetChisquareTplratioResult(
     return;
 
   if (index_z >= Redshifts.size())
-    THROWG(INTERNAL_ERROR, "Invalid z index");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
 
   if (tplratioManager->GetChisquareTplratio().size() !=
           ChiSquareTplratios.size() ||
@@ -179,7 +179,7 @@ void CLineModelResult::SetChisquareTplratioResult(
           tplratioManager->GetNLinesAboveSNRTplratio().size() ||
       tplratioManager->GetChisquareTplratio().size() !=
           tplratioManager->GetPriorLinesTplratio().size())
-    THROWG(INTERNAL_ERROR, "vector sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR, "vector sizes do not match");
 
   for (Int32 k = 0; k < tplratioManager->GetChisquareTplratio().size(); k++) {
     ChiSquareTplratios[k][index_z] = tplratioManager->GetChisquareTplratio()[k];
@@ -200,7 +200,7 @@ void CLineModelResult::SetChisquareTplratioResult(
 void CLineModelResult::SetChisquareTplratioResultFromPrevious(Int32 index_z) {
 
   if (index_z >= Redshifts.size())
-    THROWG(INTERNAL_ERROR, "Invalid z index");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
 
   auto previous = index_z - 1;
 

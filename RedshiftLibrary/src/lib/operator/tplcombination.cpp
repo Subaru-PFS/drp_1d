@@ -108,7 +108,7 @@ void COperatorTplcombination::BasicFit(
   const CSpectrumNoiseAxis &spcError = spcFluxAxis.GetError();
 
   if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "spcMaskAdditional does not "
                           "have the same size as the spectrum flux vector... ("
                        << spcMaskAdditional.GetMasksCount() << " vs "
@@ -367,7 +367,7 @@ void COperatorTplcombination::BasicFit(
   gsl_matrix_free(cov);
 
   if (!chisquareSetAtLeastOnce) {
-    THROWG(INVALID_MERIT_VALUES,
+    THROWG(ErrorCode::INVALID_MERIT_VALUES,
            Formatter() << "Not even one single valid fit/merit value found");
   }
 }
@@ -436,7 +436,7 @@ void COperatorTplcombination::RebinTemplate(
 
     // Check for overlap rate
     if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-      THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+      THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
              Formatter() << "overlapFraction of " << overlapFraction);
     }
   }
@@ -464,10 +464,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "ISM is not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
     }
     if (opt_extinction && tplList[ktpl]->MeiksinInitFailed()) {
-      THROWG(INTERNAL_ERROR, "IGM is not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
     }
   }
 
@@ -517,10 +517,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "masks-list and redshift size do not match: "
-                               << additional_spcMasks.size()
-                               << "!=" << sortedRedshifts.size());
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "masks-list and redshift size do not match: "
+                       << additional_spcMasks.size()
+                       << "!=" << sortedRedshifts.size());
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);

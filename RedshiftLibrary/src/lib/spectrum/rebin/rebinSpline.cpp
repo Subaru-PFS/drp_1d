@@ -77,7 +77,7 @@ void CRebinSpline::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     if (opt_error_interp != "no") {
       gsl_spline_free(spline);
       gsl_interp_accel_free(accelerator);
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              "noise rebining not implemented for spline interp");
     }
 

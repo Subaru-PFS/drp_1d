@@ -117,7 +117,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (EbmvCoeff > 0.) {
     if (m_templateRebined_bf[spcIndex].CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "ISM is not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
@@ -130,7 +130,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf[spcIndex].MeiksinInitFailed()) {
-      THROWG(INTERNAL_ERROR, "IGM in not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM in not initialized");
     }
     ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   }
@@ -190,7 +190,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
 
   // Check for overlap rate
   if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-    THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+    THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
            Formatter() << "tpl overlap rate is too small: " << overlapFraction);
   }
 

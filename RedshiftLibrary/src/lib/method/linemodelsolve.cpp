@@ -121,7 +121,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
 
   auto result = resultStore->GetScopedGlobalResult("lineModel");
   if (result.expired())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "lineModelsolve: Unable to retrieve linemodel results");
   std::shared_ptr<const CLineModelResult> lmresult =
       std::dynamic_pointer_cast<const CLineModelResult>(result.lock());
@@ -316,7 +316,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
 
   if (m_opt_pdfcombination != "bestChi2" &&
       m_opt_pdfcombination != "bestproba" && m_opt_pdfcombination != "marg")
-    THROWG(BAD_PARAMETER_VALUE,
+    THROWG(ErrorCode::BAD_PARAMETER_VALUE,
            "PdfCombination can only be {bestchi2, bestproba, marg");
 
   ChisquareArray chisquarearray;
@@ -597,7 +597,7 @@ void CLineModelSolve::Solve() {
           m_linemodel.getResult());
 
   if (!result)
-    THROWG(INTERNAL_ERROR, "Failed to get linemodel result");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Failed to get linemodel result");
 
   // save linemodel chisquare results
   resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);

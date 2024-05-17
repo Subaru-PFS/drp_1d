@@ -196,7 +196,7 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
                  << " peaks from PeakList in the result store.");
     resultStore.StoreScopedGlobalResult("peakdetection", peakDetectionResult);
   } else {
-    THROWG(INTERNAL_ERROR, "No peak detected");
+    THROWG(ErrorCode::INTERNAL_ERROR, "No peak detected");
   }
 
   // Since we detected at least one peak, try to detect lines related to those
@@ -301,12 +301,12 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
         winsizeBest = winsizeCurrent;
       }
       if (currentNumberOfPeaks < previousNumberOfPeaks && !newValues)
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                "Dynamic logic failed - number of peaks is falling.");
 
       previousNumberOfPeaks = currentNumberOfPeaks;
       if (!m_dynamicLinematching)
-        THROWG(INTERNAL_ERROR, "No result found");
+        THROWG(ErrorCode::INTERNAL_ERROR, "No result found");
 
       newValues = false;
       if (minimumFwhhCurrent > minimumFwhhMinimum) {

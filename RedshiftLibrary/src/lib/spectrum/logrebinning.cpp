@@ -109,7 +109,7 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
         exp(loglambda_end_ref)); // this is the effective lambda range, to be
                                  // used in inferTemplateRebinningSetup
   } else {
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Log-sampled spectrum has wrong logGridStep : "
                        << m_logGridStep);
   }
@@ -126,7 +126,8 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
   TFloat64Range lambdaRange_spc;
   Int32 loglambda_count_spc;
   if (spectrum.GetSpectralAxis().IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, Formatter() << "spectrum is already log-sampled");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "spectrum is already log-sampled");
   } else {
     // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on
     // reference grid) to be passed to computeTargetLogSpectralAxis in
@@ -156,9 +157,9 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
     loglambda_count_spc = round(count_) + 1;
 
     if (loglambda_count_spc < 2) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "Cannot rebin spectrum of a grid of size:  "
-                                 << loglambda_count_spc << "<2");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "Cannot rebin spectrum of a grid of size:  "
+                         << loglambda_count_spc << "<2");
     }
   }
 
@@ -200,7 +201,7 @@ Int32 CSpectrumLogRebinning::inferTemplateRebinningSetup(
       (loglbdamax - loglbdamin) / m_logGridStep +
       1; // we expect to get an int value with no need to any rounding
   if (std::abs(_round - _neat) > 1E-8) {
-    THROWG(INTERNAL_ERROR, "Problem in logrebinning setup");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Problem in logrebinning setup");
   }
   Int32 loglambda_count_tpl =
       std::round((loglbdamax - loglbdamin) / m_logGridStep) + 1;
@@ -244,7 +245,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
       tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
     overlapFull = false;
   if (!overlapFull) {
-    THROWG(INSUFFICIENT_TEMPLATE_COVERAGE,
+    THROWG(ErrorCode::INSUFFICIENT_TEMPLATE_COVERAGE,
            Formatter() << "overlap found to be lower than 1.0 for template "
                        << tpl->GetName());
   }
@@ -253,7 +254,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
       computeTargetLogSpectralAxis(lambdaRange_tpl, loglambda_count_tpl);
 
   if (targetSpectralAxis[loglambda_count_tpl - 1] < targetSpectralAxis[0])
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            " Last element of the target spectral axis is not valid. Template "
            "count is not well computed due to exp/conversions");
 
@@ -281,7 +282,7 @@ CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(
     Int32 count) const { // spreadoverlog expects m_Begin to be non-log value
   TFloat64List axis = lambdarange.SpreadOverLogEpsilon(m_logGridStep);
   if (axis.size() != count) {
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "computed axis does not have the expected samples number");
   }
   CSpectrumSpectralAxis targetSpectralAxis(std::move(axis));

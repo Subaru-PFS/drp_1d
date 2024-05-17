@@ -140,8 +140,9 @@ void CLineCatalog::AddLineFromParams(
     profile = std::unique_ptr<CLineProfileSYMIGM>(
         new CLineProfileSYMIGM(igmcorrection, m_nSigmaSupport));
   else {
-    THROWG(INTERNAL_ERROR, Formatter() << "Profile name " << profileName
-                                       << " is no recognized.");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Profile name " << profileName
+                                          << " is no recognized.");
   }
 
   Add(CLine(name, position, etype, std::move(profile), eforce, velocityOffset,
@@ -157,8 +158,9 @@ void CLineCatalogBase<TLine>::setLineAmplitude(Int32 id,
   if (search != m_List.end())
     search->second.setNominalAmplitude(nominalAmplitude);
   else
-    THROWG(INTERNAL_ERROR, Formatter() << " Line with id " << id
-                                       << " does not exist in catalog");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << " Line with id " << id
+                                          << " does not exist in catalog");
 }
 
 /**
