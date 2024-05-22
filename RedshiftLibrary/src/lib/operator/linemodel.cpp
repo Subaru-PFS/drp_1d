@@ -125,11 +125,9 @@ void COperatorLineModel::ComputeFirstPass() {
   ////////////////////
   if (m_opt_continuumcomponent == "tplFit" ||
       m_opt_continuumcomponent == "tplFitAuto") {
-    tplCatalog->m_orthogonal = 1;
-    Log.LogInfo(Formatter() << "Precompuute continuum fit ortho="
-                            << tplCatalog->m_orthogonal);
+
+    Log.LogInfo(Formatter() << "Precompuute continuum fit ortho");
     m_tplfitStore_firstpass = PrecomputeContinuumFit(m_Redshifts);
-    tplCatalog->m_orthogonal = 0;
   }
 
   m_result->nSpcSamples = m_fittingManager->computeSpcNSamples();
@@ -275,14 +273,16 @@ void COperatorLineModel::fitContinuumTemplates(
   TInt32List meiksinIndices;
   TInt32List ebmvIndices;
   TTemplateConstRefList tplList;
-
+  bool fftprocessing = isfftprocessingActive(redshiftsTplFit.size());
   if (m_fittingManager->GetPassNumber() == 2 && m_continnuum_fit_option == 3) {
     // case where we only want to refit around the m_opt_fitcontinuum_maxN
     // best continuum from firstpass
     getContinuumInfoFromFirstpassFitStore(candidateIdx, meiksinIndices,
-                                          ebmvIndices, tplList);
+                                          ebmvIndices, tplList, fftprocessing);
   } else {
-    tplList = tplCatalog->GetTemplateList(TStringList{m_tplCategory});
+
+    tplList = tplCatalog->GetOrthoTemplateList(TStringList{m_tplCategory},
+                                               fftprocessing);
     meiksinIndices.assign(tplList.size(), undefIdx);
     ebmvIndices.assign(tplList.size(), undefIdx);
   }
@@ -321,7 +321,7 @@ void COperatorLineModel::fitContinuumTemplates(
 // returns vectors of these entities
 void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
-    TTemplateConstRefList &tplList) const {
+    TTemplateConstRefList &tplList, bool fft) const {
 
   meiksinIndices.assign(m_opt_fitcontinuum_maxN, undefIdx);
   ebmvIndices.assign(m_opt_fitcontinuum_maxN, undefIdx);
@@ -346,8 +346,8 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     CTplModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
 
-    tplList.push_back(tplCatalog->GetTemplateByName(TStringList{m_tplCategory},
-                                                    fitValue.tplName));
+    tplList.push_back(tplCatalog->GetTemplateByName(
+        TStringList{m_tplCategory}, fitValue.tplName, true, fft));
 
     if (m_opt_tplfit_extinction)
       meiksinIndices[icontinuum] = fitValue.tplMeiksinIdx;
@@ -355,7 +355,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     // access any template and retrieve the ismcorrection object
     if (m_opt_tplfit_dustFit)
       ebmvIndices[icontinuum] =
-          tplCatalog->GetTemplate(m_tplCategory, 0)
+          tplCatalog->GetTemplate(m_tplCategory, 0, true, fft)
               ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.tplEbmvCoeff);
   }
   return;
@@ -433,8 +433,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                     "redshift list["
                  << i << "] = " << redshiftsTplFit[i]);
 
-  bool currentSampling = tplCatalog->m_logsampling;
-
   Log.LogInfo(Formatter()
               << "COperatorLineModel::PrecomputeContinuumFit: fftprocessing = "
               << fftprocessing);
@@ -447,7 +445,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       << "COperatorLineModel::PrecomputeContinuumFit: fitContinuum_igm = "
       << m_opt_tplfit_extinction);
 
-  tplCatalog->m_logsampling = fftprocessing;
   makeTFOperator(redshifts);
 
   if (fftprocessing && ignoreLinesSupport == true) {
@@ -509,7 +506,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
   m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
       tplfitStore);
-  tplCatalog->m_logsampling = currentSampling;
 
   boost::chrono::thread_clock::time_point stop_tplfitprecompute =
       boost::chrono::thread_clock::now();
@@ -787,7 +783,6 @@ void COperatorLineModel::ComputeSecondPass(
     // tplfitStore
     if (m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3) {
       m_tplfitStore_secondpass.resize(m_firstpass_extremaResult.size());
-      tplCatalog->m_orthogonal = 1;
       for (Int32 i = 0; i < m_firstpass_extremaResult.size(); i++) {
         m_tplfitStore_secondpass[i] = PrecomputeContinuumFit(
             m_firstpass_extremaResult.ExtendedRedshifts[i], i);
@@ -795,7 +790,6 @@ void COperatorLineModel::ComputeSecondPass(
           break; // when set to "fromSpectrum" by PrecomputeContinuumFit
                  // because negative continuum with tplfitauto
       }
-      tplCatalog->m_orthogonal = 0; // finish using orthogTemplates
     } else {
       // since precompute is not called all the time, secondpass candidates do
       // not have systematically a tplfitstore_secondpass copy the firstpass

@@ -169,9 +169,11 @@ private:
                         std::vector<std::shared_ptr<CTemplateFittingResult>>
                             &chisquareResultsAllTpl,
                         TStringList &chisquareResultsTplName);
-  void getContinuumInfoFromFirstpassFitStore(
-      Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
-      TTemplateConstRefList &tplList) const;
+  void getContinuumInfoFromFirstpassFitStore(Int32 candidateIdx,
+                                             TInt32List &meiksinIndices,
+                                             TInt32List &ebmvIndices,
+                                             TTemplateConstRefList &tplList,
+                                             bool fft) const;
   void updateRedshiftGridAndResults();
   void makeTFOperator(const TFloat64List &redshifts);
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
