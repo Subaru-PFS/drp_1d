@@ -84,7 +84,7 @@ FirstpassFittedTemplateDtM	model_parameters	True	candidate	fittedTpl.tplDtM	extr
 FirstpassFittedTemplateMtM	model_parameters	True	candidate	fittedTpl.tplMtM	extrema_results	f8
 FirstpassVelocityEmission	model_parameters	True	candidate	Elv	extrema_results	f8
 FirstpassVelocityAbsorption	model_parameters	True	candidate	Alv	extrema_results	f8
-<ObjectType>Evidence	classification	False	root	m_evidences[object_type]	solveResult	f8
+<ObjectType>LogEvidence	classification	False	root	m_evidences[object_type]	solveResult	f8
 <ObjectType>Proba	classification	False	root	m_proba[object_type]	solveResult	f8
 Type	classification	False	root	m_TypeLabel	solveResult	S1
 WarningFlags	classification	False	root	flagValue	warningFlag	i
