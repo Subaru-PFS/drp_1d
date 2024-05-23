@@ -269,6 +269,11 @@ class AbstractSpectrumReader:
         for obs_id in self.waves.keys():
             [params_lambda_min, params_lambda_max] = self.parameters.get_lambda_range(obs_id)
             obs_waves = np.array(self.waves.get(obs_id))
+            if obs_waves.size == 0:
+                raise APIException(
+                    ErrorCode.INVALID_SPECTRUM,
+                    "Filtered spectrum is empty"
+                )
             spectrum_lambda_min = obs_waves[0]
             spectrum_lambda_max = obs_waves[-1]
 
