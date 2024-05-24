@@ -190,7 +190,7 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
     }
   }
 
-  m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
+  m_ElementsVector->computeGlobalOutsideLambdaRange();
   m_ElementsVector->setNullNominalAmplitudesNotFittable();
   m_ElementsVector->setAbsLinesNullContinuumNotFittable(m_models);
 }

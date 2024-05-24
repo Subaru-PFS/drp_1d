@@ -727,11 +727,18 @@ void CLineModelFitting::LoadModelSolution(
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue; // TODO should throw exception here
-    if (modelSolution.OutsideLambdaRange[iRestLine])
+    auto const &elt_param = getElementParam()[eIdx];
+    if (modelSolution.NotFitted[iRestLine]) {
+      // set outsidelambdrarangeList
+      for ([[maybe_unused]] auto const spcIndex : m_spectraIndex) {
+        auto const &elt_ptr = getElementList()[eIdx];
+        for (Int32 line_idx = 0; line_idx < elt_ptr->GetSize(); ++line_idx)
+          elt_ptr->SetOutsideLambdaRangeList(line_idx);
+      }
       continue;
+    }
     Int32 line_id = modelSolution.lineId[iRestLine];
 
-    auto const &elt_param = getElementParam()[eIdx];
     Int32 elt_line_index = elt_param->getLineIndex(line_id);
     if (elt_line_index == undefIdx)
       continue; // or throw an exception ?
@@ -739,8 +746,7 @@ void CLineModelFitting::LoadModelSolution(
     elt_param->setFittedAmplitude(
         elt_line_index, modelSolution.Amplitudes[iRestLine],
         modelSolution.AmplitudesUncertainties[iRestLine]);
-    m_ElementsVector->getElementParam()[eIdx]->setLambdaOffset(
-        elt_line_index, modelSolution.Offset[iRestLine]);
+    elt_param->setLambdaOffset(elt_line_index, modelSolution.Offset[iRestLine]);
 
     if (element_done[eIdx])
       continue;
@@ -779,15 +785,14 @@ void CLineModelFitting::LoadModelSolution(
 
   for (auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-    for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-      getElementList()[iElts]->computeOutsideLambdaRange();
-
-      if (!getElementList()[iElts]->IsOutsideLambdaRange())
-
-        getElementList()[iElts]->prepareSupport(
-            spectralAxis, modelSolution.Redshift, getLambdaRange());
+    for (auto const &elt_ptr : getElementList()) {
+      elt_ptr->computeOutsideLambdaRange();
+      if (!elt_ptr->IsOutsideLambdaRange())
+        elt_ptr->prepareSupport(spectralAxis, modelSolution.Redshift,
+                                getLambdaRange());
     }
   }
+  m_ElementsVector->computeGlobalOutsideLambdaRange();
 
   return;
 }
@@ -1003,7 +1008,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.Offset[iRestLine] =
         m_ElementsVector->getElementParam()[eIdx]->m_Offsets[line_index];
 
-    modelSolution.OutsideLambdaRange[iRestLine] = false;
+    modelSolution.NotFitted[iRestLine] = false;
   }
 
   std::unordered_set<std::string>

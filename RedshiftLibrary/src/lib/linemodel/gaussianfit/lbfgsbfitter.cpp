@@ -193,7 +193,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
                             m_fitter->getLambdaRange());
   }
-  m_fitter->m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
+  m_fitter->m_ElementsVector->computeGlobalOutsideLambdaRange();
 
   CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -695,7 +695,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
+  m_ElementsVector->computeGlobalOutsideLambdaRange();
   m_spectraIndex.reset();
   getModel().refreshModel(); // recompute model with estimated params (needed
                              // for noise estimation from residual)

@@ -277,7 +277,7 @@ void CLMEltListVector::resetAsymfitParams() {
   }
 }
 
-void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
+void CLMEltListVector::computeGlobalOutsideLambdaRange() {
   for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
     m_ElementsParams[elt_idx]->m_globalOutsideLambdaRange =
         computeOutsideLambdaRange(elt_idx);

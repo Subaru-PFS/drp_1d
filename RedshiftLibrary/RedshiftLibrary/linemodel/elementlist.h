@@ -170,7 +170,7 @@ public:
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
   void resetAsymfitParams();
 
-  void setGlobalOutsideLambdaRangeFromSpectra();
+  void computeGlobalOutsideLambdaRange();
   void setNullNominalAmplitudesNotFittable();
   void setAbsLinesNullContinuumNotFittable(
       std::shared_ptr<CSpcModelVector> const &models);
