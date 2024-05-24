@@ -48,7 +48,9 @@ CLSFGaussianConstantResolution::CLSFGaussianConstantResolution(
     : CLSF(GaussianConstantResolution,
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
       m_Resolution(resolution) {
-  IsValid();
+  if (!IsValid())
+    THROWG(ErrorCode::INVALID_LSF,
+           Formatter() << "invalid LSF, resolution=" << m_Resolution);
 }
 
 Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda,
