@@ -113,36 +113,37 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   rs.push_back(std::move(line));
 
   TLineModelElementParam_ptr fdata_id =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1,
-                                               "instrumentDriven");
-  TLineModelElementParam_ptr fdata_c =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "combined");
+      std::make_shared<TLineModelElementParam>(
+          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., 3000, "instrumentDriven");
+  TLineModelElementParam_ptr fdata_c = std::make_shared<TLineModelElementParam>(
+      rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., 3000, "combined");
   TLineModelElementParam_ptr fdata_vd =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "velocityDriven");
+      std::make_shared<TLineModelElementParam>(
+          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., 3000, "velocityDriven");
 
   CLineModelElement elementID = CLineModelElement(fdata_id);      //,
   CLineModelElement elementcombined = CLineModelElement(fdata_c); //,
   CLineModelElement elementVD = CLineModelElement(fdata_vd);      //
 
   // setLSF on multiLines
-  std::string lsfType = "gaussianConstantResolution"; // TBC
+  std::string lsfType = "gaussianConstantWidth";
   std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  store->Set("lsf.resolution", 0.9);
+  store->Set("lsf.width", 1.0);
   std::shared_ptr<TLSFArguments> args =
-      std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
+      std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   elementID.SetLSF(lsf);
   elementcombined.SetLSF(lsf);
   elementVD.SetLSF(lsf);
 
-  BOOST_CHECK_CLOSE(4718.09, elementID.GetLineWidth(10000.), 0.001);
+  BOOST_CHECK_CLOSE(1.0, elementID.GetLineWidth(1000.), 1e-7);
 
-  BOOST_CHECK_CLOSE(4718.09, elementcombined.GetLineWidth(10000.), 0.001);
+  BOOST_CHECK_CLOSE(sqrt(2.), elementcombined.GetLineWidth(1000.), 1e-7);
 
-  BOOST_CHECK_CLOSE(0.0333564, elementVD.GetLineWidth(10000.), 0.001);
+  BOOST_CHECK_CLOSE(1.0, elementVD.GetLineWidth(1000.), 1e-7);
   //  BOOST_CHECK_CLOSE(0.0366920, elementVD.GetLineWidth(10000.), 0.001);
 }
 

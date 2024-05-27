@@ -51,7 +51,8 @@ CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(
     : CLSF(GaussianVariableWidth,
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
       m_width(args->width), m_spcAxis(args->lambdas) {
-  IsValid();
+  if (!IsValid())
+    THROWG(ErrorCode::INVALID_LSF, "invalid LSF");
 }
 
 Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,

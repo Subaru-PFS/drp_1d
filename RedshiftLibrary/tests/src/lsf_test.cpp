@@ -170,14 +170,8 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   width = 0.0;
   store->Set("lsf.width", width);
   args = std::make_shared<TLSFGaussianConstantWidthArgs>(store);
-  std::shared_ptr<CLSF> LSF_3 = LSFFactory.Create(lsfType, args);
-  BOOST_CHECK(LSF_3->IsValid() == false);
-  BOOST_CHECK(LSF_3->GetWidth(lambda) == 0.0);
-
-  Float64 res_4 = LSF_3->GetProfileVal(0., 0.);
-  BOOST_CHECK(std::isnan(res_4));
-
-  BOOST_CHECK_THROW(LSF_3->getNormalizedProfileVector(lambdas_obs, lambda0_obs),
+  BOOST_CHECK_THROW(std::shared_ptr<CLSF> LSF_3 =
+                        LSFFactory.Create(lsfType, args),
                     AmzException);
 }
 
@@ -218,9 +212,9 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
   resolution = 0.5;
   store->Set("lsf.resolution", resolution);
   args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
-  std::shared_ptr<CLSF> LSF_3 = LSFFactory.Create(lsfType, args);
-  BOOST_CHECK(LSF_3->IsValid() == false);
-  BOOST_CHECK(LSF_3->GetWidth(0.0) == 0.0);
+  BOOST_CHECK_THROW(std::shared_ptr<CLSF> LSF_3 =
+                        LSFFactory.Create(lsfType, args),
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(LSF_GaussianNISPVSSPSF201707_test) {
@@ -308,11 +302,9 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
 
   TFloat64List widthList_3(n, 0.0);
   args = std::make_shared<TLSFGaussianVarWidthArgs>(spcAxis, widthList_3);
-  std::shared_ptr<CLSF> LSF_2 = LSFFactory.Create(lsfType, args);
-  BOOST_CHECK(LSF_2->IsValid() == false);
-
-  bool available = LSF_2->checkAvailability(99.);
-  BOOST_CHECK(available == false);
+  BOOST_CHECK_THROW(std::shared_ptr<CLSF> LSF_2 =
+                        LSFFactory.Create(lsfType, args),
+                    AmzException);
 
   BOOST_CHECK_THROW(LSF->GetWidth(99.), AmzException);
 }
