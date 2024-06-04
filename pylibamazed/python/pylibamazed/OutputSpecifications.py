@@ -44,7 +44,7 @@ class ResultsSpecifications:
     def __init__(self, specs_path: str = results_specifications_filename):
         self.rs = pd.read_csv(
             specs_path, sep='\t', dtype={'format': object}
-        )
+        ).set_index("name")
 
     def get_df_by_dataset(self, dataset: str):
         return self.rs[self.rs["dataset"] == dataset]
@@ -53,4 +53,4 @@ class ResultsSpecifications:
         return self.rs[self.rs["level"] == level]
 
     def get_df_by_name(self, name: str):
-        return self.rs[self.rs["name"] == name]
+        return self.rs[self.rs.index == name]
