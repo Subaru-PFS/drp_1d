@@ -75,7 +75,7 @@ class TestContinuumRemoval:
                 "medianEvenReflection": 1,
             }}
             ParametersChecker(param_dict).custom_check()
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         @pytest.mark.parametrize('nesting', [None, "templateCatalog"])
         def test_error_if_method_is_IrregularSamplingMedian_without_medianKernelWidth(self, nesting):
@@ -110,7 +110,7 @@ class TestContinuumRemoval:
             }, nesting)
 
             ParametersChecker(parametersDict).custom_check()
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestMedianEvenReflection:
         @pytest.mark.parametrize('nesting', [None, "templateCatalog"])
@@ -123,7 +123,7 @@ class TestContinuumRemoval:
             }, nesting)
 
             ParametersChecker(parametersDict).custom_check()
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
 
 class TestBaseContinuumRemoval:

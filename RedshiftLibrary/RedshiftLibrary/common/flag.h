@@ -52,7 +52,7 @@ namespace NSEpic {
 
 class CFlagWarning : public CSingleton<CFlagWarning> {
 public:
-  void warning(WarningCode c, std::string message);
+  void warning(WarningCode c, const std::string &message);
   void warning(WarningCode c, const char *format, ...);
 
   const std::vector<std::pair<WarningCode, std::string>> &getListMessages();

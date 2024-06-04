@@ -447,7 +447,7 @@ class ParametersChecker:
         lineRatioType = self.accessor.get_linemodel_line_ratio_type(spectrum_model)
         if improveBalmerFit and lineRatioType != "rules":
             zflag.warning(
-                WarningCode.UNUSED_PARAMETER.value,
+                WarningCode.UNUSED_PARAMETER,
                 f"object {spectrum_model} lineModelSolve lineRatioType must be rules to "
                 "activate improveBalmerFit"
             )
@@ -619,7 +619,7 @@ class ParametersChecker:
             if warning_message is not None:
                 if custom_warning_message:
                     zflag.warning(
-                        WarningCode.UNUSED_PARAMETER.value,
+                        WarningCode.UNUSED_PARAMETER,
                         warning_message
                     )
                 else:
@@ -627,7 +627,7 @@ class ParametersChecker:
 
     def _add_unused_parameter_warning(self, param_name):
         zflag.warning(
-            WarningCode.UNUSED_PARAMETER.value,
+            WarningCode.UNUSED_PARAMETER,
             f"Unused parameter {param_name}"
         )
 

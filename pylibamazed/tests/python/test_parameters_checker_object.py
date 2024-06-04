@@ -38,6 +38,7 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
+from pylibamazed.redshift import WarningCode
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
                                 make_parameter_dict_at_linemeas_solve_level,
                                 make_parameter_dict_at_object_level,
@@ -60,14 +61,14 @@ class TestParametersCheckerObject:
         def test_ok_if_linemeas_stage_and_dzhalf_defined(self, zflag):
             param_dict = self._make_param_dict(**{})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_not_linemeas_stage_and_dzhalf_defined(self, zflag):
             param_dict = self._make_param_dict(**{})
             param_dict["galaxy"]["stages"] = []
             del param_dict["galaxy"]["lineMeasRedshiftStep"]
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestObjectLinemeasredshiftStep:
 
@@ -83,14 +84,14 @@ class TestParametersCheckerObject:
         def test_ok_if_linemeas_stage_and_redshift_step_defined(self, zflag):
             param_dict = self._make_param_dict(**{})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_not_linemeas_stage_and_redshift_step_defined(self, zflag):
             param_dict = self._make_param_dict(**{})
             param_dict["galaxy"]["stages"] = []
             del param_dict["galaxy"]["lineMeasDzHalf"]
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestObjectReliability:
 
@@ -110,7 +111,7 @@ class TestParametersCheckerObject:
                 "reliabilitySolver": {}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_reliability_disabled_but_section_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -118,7 +119,7 @@ class TestParametersCheckerObject:
                 "reliabilitySolver": {}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
     class TestTemplateDir:
 
@@ -176,7 +177,7 @@ class TestParametersCheckerObject:
                 "templateDir": "sth"
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
         def test_warning_if_template_dir_is_present_but_linemodelsolve_without_tplfit(self, zflag):
             param_dict = make_parameter_dict_at_redshift_solver_level(**{
@@ -193,4 +194,4 @@ class TestParametersCheckerObject:
             })
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)

@@ -38,6 +38,7 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
+from pylibamazed.redshift import WarningCode
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
                                 make_parameter_dict_at_redshift_solver_level)
 
@@ -60,7 +61,7 @@ class TestLineModelSolve:
                 "lineRatioType": "sth"
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
         def test_OK_if_improveBalmerFit_True_and_lineRatioType_is_rules(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -69,7 +70,7 @@ class TestLineModelSolve:
                 "rules": ""
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
     class TestContinuumFit:
         def _make_parameter_dict(self, **kwargs) -> dict:
@@ -90,7 +91,7 @@ class TestLineModelSolve:
             })
             param_dict["ebmv"] = {}
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_error_if_fftprocessing_enabled_but_photometry_enabled(self):
             param_dict = self._make_parameter_dict(**{
@@ -133,7 +134,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_tplratio_imsfit_defined_but_lineratiotype_is_not_tpl(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -143,7 +144,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
         def test_ok_extremacount(self):
             param_dict = self._make_parameter_dict(**{
@@ -196,7 +197,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_skipsecondpass_true_but_secondpass_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -206,7 +207,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestLyaFit:
         def _make_parameter_dict(self, **kwargs) -> dict:
@@ -232,7 +233,7 @@ class TestLineModelSolve:
                 }}}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
         def test_ok_if_lya_profile_is_asym_and_asym_section_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -242,7 +243,7 @@ class TestLineModelSolve:
                 }}}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_ok_if_lya_profile_is_not_asym_and_asym_section_absent(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -251,7 +252,7 @@ class TestLineModelSolve:
                 }}}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
     class TestUseLogLambdaSampling:
 
@@ -310,7 +311,7 @@ class TestLineModelSolve:
             param_dict["continuumRemoval"] = {}
 
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
         def test_unused_warning_if_present_but_no_tplfit(self, zflag):
             param_dict = self.make_parameter_dict(**{
@@ -325,7 +326,7 @@ class TestLineModelSolve:
             param_dict["continuumRemoval"] = {}
 
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
         def test_ok_if_all_present(self, zflag):
             param_dict = self.make_parameter_dict(**{
@@ -338,4 +339,4 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert not WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)

@@ -227,13 +227,20 @@ private:
    ~CLog();
 };
 
+%pythonprepend CFlagWarning::warning(WarningCode c, const std::string &message) %{
+    c = c.bit
+%} 
+
+%pythonappend CFlagWarning::getBitMask() %{
+    val = WarningCode(val)
+%}
+
 class CFlagWarning {
 public:
 
   static CFlagWarning& GetInstance();
 
-  void warning(WarningCode c, std::string message);
-  void warning(WarningCode c, const char* format, ... );
+  void warning(WarningCode c, const std::string &message);
   Int32 getBitMask();
   void resetFlag();
 
@@ -443,6 +450,8 @@ public:
 %include "operator/modelspectrumresult.i"
 %include "operator/modelphotvalueresult.i"
 %include "linemodel/linemodelsolution.i"
+%include "common/errorcodes.i"
+%include "common/warningcodes.i"
 
 struct CTplModelSolution {
 
@@ -861,9 +870,6 @@ public:
     TStringList GetNameListSortedByLambda() const;
 };
 
-%include "common/errorcodes.i"
-%include "common/warningcodes.i"
-
 %pythonappend AmzException::getErrorCode() const %{
     val = ErrorCode(val)
 %}
@@ -996,18 +1002,33 @@ class CSpectrumFluxCorrectionCalzetti
 //code that runs after the cpp mapping takes place, it transfroms the cpp enum into python enum
 
 %pythoncode %{
-from enum import Enum
-def redo(prefix):
+from enum import Enum, Flag
+def redo(prefix, flag=False):
     tmpD = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
     for k,v in tmpD.items():
         del globals()[k]
-    tmpD = {k[len(prefix)+1:]:v for k,v in tmpD.items()}
-    # globals()[prefix] = type(prefix,(),tmpD) # pre-Enum support
-    globals()[prefix] = Enum(prefix,tmpD)
+    if flag:    
+      tmpD = {k[len(prefix)+1:]:1<<v for k,v in tmpD.items()}
+      flag = Flag(prefix,tmpD)
+      for f in flag:
+        f.bit = f.value.bit_length() - 1
+      # python 3.9:  
+      flag.bit_list = property(lambda self: [f.bit for f in flag if self.__contains__(f)])
+      # python 3.11:
+      # flag.bit_list = property(lambda self: [f.bit for f in self])
+      # python 3.9:
+      flag.name_list = property(lambda self: [f.name for f in flag if self.__contains__(f)]) 
+      # python 3.11:
+      # flag.name_list = flag.name.split('|') # only since python 3.11 (name is defined for aliases)
+      globals()[prefix] = flag
+    else:
+      tmpD = {k[len(prefix)+1:]:v for k,v in tmpD.items()}
+      globals()[prefix] = Enum(prefix,tmpD)
 redo('ErrorCode')
-redo('WarningCode')
+redo('WarningCode', flag=True)
 redo('ScopeType')
 del redo  # cleaning up the namespace
 del Enum
+del Flag
 %}
 

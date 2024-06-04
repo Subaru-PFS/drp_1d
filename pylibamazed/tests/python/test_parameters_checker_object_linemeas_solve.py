@@ -38,6 +38,7 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
+from pylibamazed.redshift import WarningCode
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
                                 make_parameter_dict_at_linemeas_solve_level,
                                 make_parameter_dict_at_object_level)
@@ -55,7 +56,7 @@ class TestLineMeasSolve:
         def test_warning_if_not_stage_but_section(self, zflag):
             param_dict = make_parameter_dict_at_object_level(**{"lineMeasSolver": {}})
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
         def test_ok_if_both(self, zflag):
             param_dict = make_parameter_dict_at_object_level(**{
@@ -64,7 +65,7 @@ class TestLineMeasSolve:
             })
             param_dict["lsf"] = {}
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert not WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
     class TestLineRatioType:
 
@@ -82,12 +83,12 @@ class TestLineMeasSolve:
         def test_ok_if_lineRatioType_is_rules_and_rules_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"lineRatioType": "rules", "rules": "sth"})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_lineRatioType_is_not_rules_but_rules_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"rules": "sth"})
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestFittingMethod:
         def _make_parameter_dict(self, **kwargs):
@@ -104,12 +105,12 @@ class TestLineMeasSolve:
         def test_ok_if_fittingmethod_is_lbfgsb_and_velocityfit_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb", "velocityFit": False})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_fitting_method_is_not_lbfgsb_but_velocityfit_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"velocityFit": False})
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestVelocityFit:
         def _make_parameter_dict(self, **kwargs):
@@ -135,7 +136,7 @@ class TestLineMeasSolve:
                 "absVelocityFitMax": 1,
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_velocityfit_is_false_but_some_velocity_params_are_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -143,7 +144,7 @@ class TestLineMeasSolve:
                 "emVelocityFitMin": 1,
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestLyaFit:
         def _make_parameter_dict(self, **kwargs) -> dict:
@@ -169,7 +170,7 @@ class TestLineMeasSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
         def test_ok_if_lya_profile_is_asym_and_asym_section_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -179,7 +180,7 @@ class TestLineMeasSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_ok_if_lya_profile_is_not_asym_and_asym_section_absent(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -188,4 +189,4 @@ class TestLineMeasSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
