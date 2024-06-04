@@ -49,6 +49,7 @@ def test_get_dataframe_by_criteria():
     MODEL_INDEXES = ["ModelLambda", "ModelFlux"]
     METHOD_INDEX = ["<MethodType>WarningFlags"]
     name_data = {
+        "name": "Redshift",
         "dataset": "model_parameters",
         "extended_results": False,
         "level": "candidate",
@@ -61,6 +62,7 @@ def test_get_dataframe_by_criteria():
     assert test_name_df.equals(name_df)
 
     dataset_data = {
+        "name": ["ModelLambda", "ModelFlux"],
         "dataset": ["model<ObsID>", "model<ObsID>"],
         "extended_results": [False, False],
         "level": ["candidate", "candidate"],
@@ -73,6 +75,7 @@ def test_get_dataframe_by_criteria():
     assert test_dataset_df.equals(dataset_df)
 
     level_data = {
+        "name": "<MethodType>WarningFlags",
         "dataset": "warningFlag",
         "extended_results": False,
         "level": "method",
