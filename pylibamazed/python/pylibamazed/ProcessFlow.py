@@ -98,9 +98,11 @@ class ProcessFlow:
     def __init__(self, config, parameters: Parameters):
         _check_config(config)
         self.parameters = parameters
+        zlog.LogInfo("Loading all needed calibration files :")
         self.calibration_library = CalibrationLibrary(parameters,
                                                       config["calibration_dir"])
         self.calibration_library.load_all()
+        zlog.LogInfo("Calibration files loaded.")
         self.process_flow_context = CProcessFlowContext.GetInstance()
         self.process_flow_context.reset()
         self.config = config
@@ -194,6 +196,7 @@ class ProcessFlow:
 
     @store_exception_handler(raise_process_flow_exception=True)
     def initialize(self, rso, spectrum_reader):
+        zlog.LogInfo("Context initialization")
         self.process_flow_context.reset()
 
         # inject in the clean resultStore the contextFlag
