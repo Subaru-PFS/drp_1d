@@ -149,14 +149,22 @@ private:
   const bool m_enableVelocityFitting =
       Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit");
 
-  const Float64 m_velfitMinE = Context.GetParameterStore()->GetScoped<Float64>(
-      "lineModel.emVelocityFitMin");
-  const Float64 m_velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
-      "lineModel.emVelocityFitMax");
-  const Float64 m_velfitMinA = Context.GetParameterStore()->GetScoped<Float64>(
-      "lineModel.absVelocityFitMin");
-  const Float64 m_velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
-      "lineModel.absVelocityFitMax");
+  const Float64 m_velfitMinE =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.emVelocityFitMin")
+                              : NAN;
+  const Float64 m_velfitMaxE =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.emVelocityFitMax")
+                              : NAN;
+  const Float64 m_velfitMinA =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.absVelocityFitMin")
+                              : NAN;
+  const Float64 m_velfitMaxA =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.absVelocityFitMax")
+                              : NAN;
 
   const Float64 m_velIniGuessE =
       Context.GetParameterStore()->GetScoped<Float64>(
