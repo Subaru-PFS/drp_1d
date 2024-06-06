@@ -504,7 +504,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
     for (auto &itr : invalidElements) {
       errorMessage += itr.first + " : " + to_string(itr.second) + "\n";
     }
-    THROWG(ErrorCode::INTERNAL_ERROR, errorMessage);
+    THROWG(ErrorCode::INTERNAL_SPECTRUM_FLUX, errorMessage);
   }
 
   if (allzero) {
@@ -549,7 +549,7 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
     }
     Log.LogDetail(Formatter() << "    CSpectrum::ValidateNoise - Found "
                               << nInvalid << " invalid noise samples");
-    THROWG(ErrorCode::INTERNAL_ERROR, errorMessage);
+    THROWG(ErrorCode::INVALID_NOISE, errorMessage);
   }
 }
 
@@ -612,6 +612,7 @@ void CSpectrum::SetContinuumEstimationMethod(std::string method) const {
 /*
  *  force manual setting of the continuum
  */
+// TODO clean ? never called
 void CSpectrum::SetContinuumEstimationMethod(
     const CSpectrumFluxAxis &ContinuumFluxAxis) {
   m_estimationMethod = "manual";
@@ -709,12 +710,13 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
     return;
   // check if spectrum LSF spectralAxis covers clamped lambdaRange
   if (!m_LSF->checkAvailability(lmin) || !m_LSF->checkAvailability(lmax)) {
-    THROWG(ErrorCode::INTERNAL_ERROR,
+    THROWG(ErrorCode::INVALID_LSF,
            Formatter() << "Failed to validate lsf on wavelength range [" << lmin
                        << ";" << lmax << "]");
   }
 }
 
+// TODO should be a static method, or defined outside CSpectrum
 std::pair<Float64, Float64> CSpectrum::integrateFluxes_usingTrapez(
     CSpectrumSpectralAxis const &spectralAxis,
     CSpectrumFluxAxis const &fluxAxis, TInt32RangeList const &indexRangeList) {
@@ -726,7 +728,7 @@ std::pair<Float64, Float64> CSpectrum::integrateFluxes_usingTrapez(
     THROWG(ErrorCode::INTERNAL_ERROR, "Not enough samples to integrate flux");
 
   if (spectralAxis.GetSamplesCount() != fluxAxis.GetSamplesCount())
-    THROWG(ErrorCode::INTERNAL_ERROR,
+    THROWG(ErrorCode::INVALID_SPECTRUM,
            "spectral axis and flux axis have different samples number");
 
   const auto &Error = fluxAxis.GetError();
