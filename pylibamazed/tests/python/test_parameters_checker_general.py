@@ -51,7 +51,7 @@ class TestParametersCheckGeneral:
                     "filters": [{"key": "Err", "instruction": "^", "value": "8"}]
                 }
                 ParametersChecker(parametersDict).custom_check()
-                assert not WarningUtils.has_any_warning(zflag)
+                assert not WarningUtils.has_any_warning()
 
             def test_error_if_filters_is_not_a_list(self):
                 parametersDict = {
@@ -78,7 +78,7 @@ class TestParametersCheckGeneral:
             def test_no_error_if_no_filter(self, zflag):
                 parametersDict = {}
                 ParametersChecker(parametersDict).custom_check()
-                assert not WarningUtils.has_any_warning(zflag)
+                assert not WarningUtils.has_any_warning()
 
             def test_error_if_filter_uses_an_unknown_column(self):
                 parametersDict = {
@@ -98,7 +98,7 @@ class TestParametersCheckGeneral:
                 }
 
                 ParametersChecker(parametersDict).custom_check()
-                assert not WarningUtils.has_any_warning(zflag)
+                assert not WarningUtils.has_any_warning()
 
     class TestPhotometryTransmissionDir:
 
@@ -129,13 +129,13 @@ class TestParametersCheckGeneral:
             param_dict = self._make_param_dict(**{"enablePhotometry": True})
             param_dict["photometryTransmissionDir"] = "sth"
             ParametersChecker(param_dict).custom_check()
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{"enablePhotometry": False})
             param_dict["photometryTransmissionDir"] = "sth"
             ParametersChecker(param_dict).custom_check()
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestPhotometryBand:
 
@@ -168,10 +168,10 @@ class TestParametersCheckGeneral:
             param_dict = self._make_param_dict(**{"enablePhotometry": True})
             param_dict["photometryBand"] = "sth"
             ParametersChecker(param_dict).custom_check()
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{"enablePhotometry": False})
             param_dict["photometryBand"] = "sth"
             ParametersChecker(param_dict).custom_check()
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()

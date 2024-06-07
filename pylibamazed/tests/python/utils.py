@@ -37,8 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 from pylibamazed.ParametersChecker import ParametersChecker
-from pylibamazed.redshift import CFlagWarning
-from pylibamazed.Warning import extract_warning_flags
+from pylibamazed.redshift import CFlagWarning, WarningCode
 
 default_object_type = "galaxy"
 
@@ -53,11 +52,11 @@ class ComparisonUtils:
 
 class WarningUtils:
     @staticmethod
-    def has_any_warning(zflag: CFlagWarning):
-        return zflag.getBitMask() != 0
+    def has_any_warning():
+        return bool(CFlagWarning.GetInstance().getBitMask())
 
-    def has_warning(zflag: CFlagWarning, warning_name):
-        return warning_name in extract_warning_flags(zflag.getBitMask())
+    def has_warning(warning: WarningCode):
+        return warning in CFlagWarning.GetInstance().getBitMask()
 
 
 class DictUtils:

@@ -281,7 +281,7 @@ class AbstractSpectrumReader:
                 and spectrum_lambda_max >= params_lambda_max
             if not params_lambda_range_in_spectrum_lambdas:
                 zflag.warning(
-                    WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM.value,
+                    WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,
                     f"Parameters lambda range ([{params_lambda_min}, {params_lambda_max}])is not "
                     f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])"
                 )
@@ -402,7 +402,7 @@ class AbstractSpectrumReader:
 
         elif airvacuum_method != "" and self.w_frame == "vacuum":
             zflag.warning(
-                WarningCode.AIR_VACUUM_CONVERSION_IGNORED.value,
+                WarningCode.AIR_VACUUM_CONVERSION_IGNORED,
                 f"Air vacuum method {airvacuum_method} ignored, spectrum already in vacuum"
             )
             airvacuum_method = ""
@@ -422,7 +422,7 @@ class AbstractSpectrumReader:
                                    "parameter cannot be applied")
             obs_id = lsf_obs_ids[0]
             if len(lsf_obs_ids) > 1:
-                zflag.warning(WarningCode.MULTI_OBS_ARBITRARY_LSF.value,
+                zflag.warning(WarningCode.MULTI_OBS_ARBITRARY_LSF,
                               f"lsf of observation {obs_id} chosen, other lsf ignored")
             if self.lsf_type != "gaussianVariableWidth":
                 self.parameters.set_lsf_param(LSFParameters[self.lsf_type],

@@ -39,7 +39,6 @@
 
 import glob
 import json
-import logging
 import os
 
 import h5py
@@ -51,7 +50,7 @@ from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
 from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   CLineCatalog, CLineCatalogsTplRatio,
-                                  CLineRatioCatalog, CPhotBandCatalog,
+                                  CLineRatioCatalog, CLog, CPhotBandCatalog,
                                   CPhotometricBand,
                                   CSpectrumFluxAxis_withSpectrum,
                                   CSpectrumFluxCorrectionCalzetti,
@@ -63,6 +62,7 @@ from pylibamazed.redshift import (CalzettiCorrection, CFlagWarning,
                                   undefStr)
 
 zflag = CFlagWarning.GetInstance()
+zlog = CLog.GetInstance()
 
 
 def _strid(waveLength, name, ltype):
@@ -77,6 +77,7 @@ def _get_linecatalog_strid(lineCatalog_df):
 
 
 def load_reliability_model(model_path, parameters: Parameters, object_type):
+    zlog.LogInfo(f"Loading reliability neural network for {object_type}")
     try:
         # to avoid annoying messages about gpu/cuda availability
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -205,6 +206,9 @@ class CalibrationLibrary:
     def load_templates_catalog(self, object_type):
         self.templates_catalogs[object_type] = CTemplateCatalog()
         template_dir = self.parameters.get_template_dir(object_type)
+
+        zlog.LogInfo(f"Loading {object_type} templates: {template_dir}")
+
         self._load_templates(object_type, template_dir)
         # Temporary hack before handling process flow in api
         if "all" not in self.templates_catalogs:
@@ -212,7 +216,6 @@ class CalibrationLibrary:
         self._load_templates("all", template_dir)
 
     def load_linecatalog(self, object_type, solve_method):
-        logger = logging.getLogger("calibration_api")
         line_catalog_file = os.path.join(
             self.calibration_dir,
             self.parameters.get_linecatalog(object_type, solve_method)
@@ -220,7 +223,7 @@ class CalibrationLibrary:
         if not os.path.exists(line_catalog_file):
             raise APIException(ErrorCode.INVALID_FILEPATH, "{} cannot be found".format(line_catalog_file))
 
-        logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
+        zlog.LogInfo(f"Loading {object_type} linecatalog: {line_catalog_file}")
 
         nsigmasupport = self.parameters.get_nsigmasupport(object_type, solve_method)
         self.line_catalogs[object_type][solve_method] = CLineCatalog(nsigmasupport)
@@ -276,7 +279,6 @@ class CalibrationLibrary:
             self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)
 
     def load_line_ratio_catalog_list(self, object_type):
-        logger = logging.getLogger("calibration_api")
         tplratio_catalog = self.parameters.get_linemodel_tplratio_catalog(object_type)
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                tplratio_catalog,
@@ -285,7 +287,8 @@ class CalibrationLibrary:
         if not line_ratio_catalog_list:
             raise APIException(ErrorCode.INVALID_FILEPATH, "Template ratio catalog empty")
         line_ratio_catalog_list.sort()
-        logger.info("Loading {} line ratio catalogs: {}".format(object_type, tplratio_catalog))
+
+        zlog.LogInfo(f"Loading {object_type} line ratio catalogs: {tplratio_catalog}")
 
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1
@@ -353,6 +356,8 @@ class CalibrationLibrary:
                                 self.parameters.get_lsf_width_file_name())
             if not os.path.isfile(file):
                 raise APIException(ErrorCode.INVALID_FILEPATH, f"wrong LSF file {file}")
+
+            zlog.LogInfo(f"Loading wavelength variable LSF: {file}")
             with fits.open(file) as hdulist:
                 try:
                     lsf_hdu = hdulist[1]
@@ -371,6 +376,7 @@ class CalibrationLibrary:
         if not band_paths:
             raise APIException(ErrorCode.INVALID_FILEPATH, "Photometric transmission dir empty")
         for f in band_paths:
+            zlog.LogInfo(f"Loading photometric transmission: {f}")
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
             if band in bands:
@@ -390,6 +396,7 @@ class CalibrationLibrary:
         if not os.path.isfile(path):
             raise APIException(ErrorCode.INVALID_FILEPATH,
                                f"ISM extinction file not found: {path}")
+        zlog.LogInfo(f"Loading Calzetti ism extinction: {path}")
         df = ascii.read(path)
         _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
         self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti,
@@ -406,6 +413,7 @@ class CalibrationLibrary:
         meiksin_root_path = os.path.join(self.calibration_dir, "igm",
                                                                "IGM_variation_curves_meiksin_v3.1")
         filename_pattern = os.path.join(meiksin_root_path, "Meiksin_Var_curves_[2-7].[0,5].txt")
+        zlog.LogInfo(f"Loading Meiksin igm extinction: {filename_pattern}")
         filenames = glob.glob(filename_pattern)
         if not filenames:
             raise APIException(ErrorCode.INVALID_FILEPATH,

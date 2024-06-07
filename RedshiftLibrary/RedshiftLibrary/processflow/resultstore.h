@@ -79,6 +79,11 @@ public:
       TResultsMap;
   typedef std::map<std::string, TResultsMap> TPerTemplateResultsMap;
 
+  static std::string buildFullname(const std::string &spectrumModel,
+                                   const std::string &stage,
+                                   const std::string &method,
+                                   const std::string &name);
+
   COperatorResultStore(const std::shared_ptr<const CScopeStack> &scopeStack);
 
   void StorePerTemplateResult(const std::shared_ptr<const CTemplate> &t,
@@ -112,6 +117,7 @@ public:
   bool HasDataset(const std::string &spectrumModel, const std::string &stage,
                   const std::string &method, const std::string &name) const;
   bool hasContextWarningFlag() const;
+  bool hasInitWarningFlag() const;
   bool hasCurrentMethodWarningFlag() const;
 
   std::shared_ptr<const CClassificationResult>

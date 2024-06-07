@@ -60,7 +60,7 @@ class TestLineModelSolve:
                 "lineModelSolve": {}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_OK_if_lineRatioType_is_rules_and_rules_section_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -71,7 +71,7 @@ class TestLineModelSolve:
             })
 
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
     class TestLineRatioType:
 
@@ -101,7 +101,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
         def test_OK_if_lineRatioType_is_not_rules_and_rules_section_is_absent(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -109,7 +109,7 @@ class TestLineModelSolve:
                 }
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         @pytest.mark.parametrize('tpl_ratio', ["tplRatio", "tplCorr"])
         def test_OK_if_lineRatioType_is_tplratio_and_tplratio_params_are_present(self, zflag, tpl_ratio):
@@ -121,7 +121,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         @pytest.mark.parametrize('tpl_ratio', ["tplRatio", "tplCorr"])
         def test_error_if_lineRatioType_is_tplratio_and_missing_tplratio_catalog(self, tpl_ratio):
@@ -155,7 +155,7 @@ class TestLineModelSolve:
                 }}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestContinuumComponent:
         def _make_parameter_dict(self, object_level_params=None, **kwargs):
@@ -190,7 +190,7 @@ class TestLineModelSolve:
             })
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
         def test_OK_if_continuumcomponent_is_fromspectrum_and_mandatory_fields_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
@@ -201,7 +201,7 @@ class TestLineModelSolve:
             })
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         @pytest.mark.parametrize('continuum_component', ["tplFit", "tplFitAuto"])
         def test_error_if_continuumcomponent_is_tplfit_but_continuumfit_is_absent(
@@ -254,4 +254,4 @@ class TestLineModelSolve:
                 param_dict["continuumRemoval"] = {}
             param_dict["galaxy"]["templateDir"] = "sth"
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()

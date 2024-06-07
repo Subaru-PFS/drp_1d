@@ -47,7 +47,7 @@ rs = ResultsSpecifications()
 def test_get_dataframe_by_criteria():
     REDSHIFT_INDEX = [0]
     MODEL_INDEXES = [50, 51]
-    METHOD_INDEX = [129]
+    METHOD_INDEX = [130]
     name_data = {
         "name": "Redshift",
         "dataset": "model_parameters",
