@@ -63,8 +63,10 @@ void CSpectrumNoiseAxis::SetSize(Int32 s, Float64 valueDef) {
 const TBoolList CSpectrumNoiseAxis::checkNoise() const {
   TBoolList isValid(m_Samples.size(), true);
   for (std::size_t i = 0; i < m_Samples.size(); i++) {
+    Float64 err2 = 1 / (m_Samples[i] * m_Samples[i]);
     if (m_Samples[i] < DBL_MIN || std::isnan(m_Samples[i]) ||
-        std::isinf(m_Samples[i]) || m_Samples[i] != m_Samples[i])
+        std::isinf(m_Samples[i]) || m_Samples[i] != m_Samples[i] ||
+        std::isinf(err2) || std::isnan(err2))
       isValid[i] = false;
   }
   return isValid;
