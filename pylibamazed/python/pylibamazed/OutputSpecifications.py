@@ -45,6 +45,8 @@ class ResultsSpecifications:
         self.rs = pd.read_csv(
             specs_path, sep='\t', dtype={'format': object}
         )
+        self.rs["index_col"] = self.rs["name"]
+        self.rs.set_index("index_col", inplace=True)
 
     def get_df_by_dataset(self, dataset: str):
         return self.rs[self.rs["dataset"] == dataset]
