@@ -474,16 +474,16 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
 
   if (nInvalid > 0) {
     string errorMessage = "Failed to validate spectrum flux. " +
-                          to_string(nInvalid) + " invalid values:\n";
+                          to_string(nInvalid) + " invalid values:";
     for (auto &itr : invalidElements) {
-      errorMessage += itr.first + " : " + to_string(itr.second) + "\n";
+      errorMessage += itr.first + " : " + to_string(itr.second);
     }
     THROWG(ErrorCode::INVALID_SPECTRUM_FLUX, errorMessage);
   }
 
   if (allzero) {
     THROWG(ErrorCode::INVALID_SPECTRUM_FLUX,
-           "Failed to validate spectrum flux: all values are zeroes.\n");
+           "Failed to validate spectrum flux: all values are zeroes.");
   }
 }
 
@@ -517,9 +517,9 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   }
   if (nInvalid > 0) {
     string errorMessage = "Failed to validate spectrum noise. " +
-                          to_string(nInvalid) + " invalid values:\n";
+                          to_string(nInvalid) + " invalid values:";
     for (auto &itr : invalidElements) {
-      errorMessage += itr.first + " : " + to_string(itr.second) + "\n";
+      errorMessage += itr.first + " : " + to_string(itr.second);
     }
     Log.LogDetail(Formatter() << "    CSpectrum::ValidateNoise - Found "
                               << nInvalid << " invalid noise samples");
@@ -586,7 +586,7 @@ void CSpectrum::SetContinuumEstimationMethod(std::string method) const {
 /*
  *  force manual setting of the continuum
  */
-// TODO clean ? never called
+
 void CSpectrum::SetContinuumEstimationMethod(
     const CSpectrumFluxAxis &ContinuumFluxAxis) {
   m_estimationMethod = "manual";
