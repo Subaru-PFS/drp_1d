@@ -437,13 +437,6 @@ void CSpectrum::SetType(const CSpectrum::EType type) const {
   }
 }
 
-const bool CSpectrum::ValidateSpectralAxis(Float64 LambdaMin,
-                                           Float64 LambdaMax) const {
-  // TODO check values (no negative values, physically coherent) , check
-  // ordering, remove lambdaMin and LambdaMax arguments
-  return true;
-}
-
 void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
   if (IsFluxEmpty())
     THROWG(ErrorCode::INVALID_SPECTRUM_FLUX, "Invalid spectrum: empty flux");
@@ -674,7 +667,6 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
                   << "Successfully corrected noise on wavelength range (%."
                   << lmin << " ; %." << lmax << ")");
 
-  ValidateSpectralAxis(lmin, lmax);
   ValidateFlux(lmin, lmax);
   Log.LogDetail(Formatter()
                 << "Successfully validated spectrum flux, on wavelength range "

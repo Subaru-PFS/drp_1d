@@ -562,15 +562,6 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   CSpectrum object_CSpectrum2b(m_SpectralAxis, _FluxAxis7);
 
   //--------------------//
-  // test ValidateSpectralAxis //
-  BOOST_CHECK_THROW(object_CSpectrum.ValidateSpectralAxis(11, 14.1),
-                    AmzException); // cas où l'intervalle est à l'extérieur
-  BOOST_CHECK_THROW(
-      object_CSpectrum.ValidateSpectralAxis(10, 14.1),
-      AmzException); // cas où borne sup de l'intervalle est à l'extérieur
-  BOOST_CHECK_THROW(
-      object_CSpectrum.ValidateSpectralAxis(0, 10) == false,
-      AmzException); // cas où borne inf de l'intervalle est à l'extérieur
 
   //--------------------//
   // test ValidateFlux
