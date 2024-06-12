@@ -224,14 +224,14 @@ void CLineModelElement::EstimateTheoreticalSupport(
 TInt32Range CLineModelElement::EstimateIndexRange(
     const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
     const TFloat64Range &lambdaRange, Float64 winsizeAngstrom) {
-  TInt32Range supportRange;
+
+  Int32 imin, imax;
   Float64 winsize = winsizeAngstrom;
 
   Float64 lambda_start = mu - winsize / 2.0;
   if (lambda_start < lambdaRange.GetBegin()) {
     lambda_start = lambdaRange.GetBegin();
   }
-  supportRange.SetBegin(spectralAxis.GetIndexAtWaveLength(lambda_start));
 
   Float64 lambda_end = mu + winsize / 2.0;
   if (lambda_end > lambdaRange.GetEnd()) {

@@ -298,12 +298,9 @@ void CSpectrumSpectralAxis::ClampLambdaRange(
  */
 TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange(
     const TFloat64Range &waveLengthRange) const {
-  TInt32Range r;
-
-  r.SetBegin(GetIndexAtWaveLength(waveLengthRange.GetBegin()));
-  r.SetEnd(GetIndexAtWaveLength(waveLengthRange.GetEnd()));
-
-  return r;
+  Int32 min, max;
+  waveLengthRange.getClosedIntervalIndices(GetSamplesVector(), min, max);
+  return TInt32Range(min, max);
 }
 
 /**

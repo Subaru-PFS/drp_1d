@@ -519,8 +519,10 @@ CLineModelFitting::getOutsideLinesRMS(CMask const &_mask) const {
   Float64 sum2_flux = 0.0;
   Float64 sum2_error = 0.0;
   Int32 nsum = 0;
-  Int32 imin = spectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-  Int32 imax = spectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+  Int32 imin, imax;
+  getLambdaRange().getClosedIntervalIndices(spectralAxis.GetSamplesVector(),
+                                            imin, imax);
+
   const auto &spcFluxAxisNoContinuum =
       getSpectrumModel().getSpcFluxAxisNoContinuum();
   const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
@@ -551,10 +553,10 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
     const CSpectrumFluxAxis &YCont = getSpectrumModel().getContinuumFluxAxis();
     Float64 diff = 0.0;
 
-    Float64 imin =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-    Float64 imax =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    Int32 imin, imax;
+    getLambdaRange().getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
+
     for (Int32 j = imin; j < imax; j++) {
       diff = (Yspc[j] - YCont[j]);
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
@@ -596,8 +598,9 @@ Int32 CLineModelFitting::computeSpcNSamples() const {
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
-    imin = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-    imax = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    getLambdaRange().getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
+
     nSamples += abs(imax - imin);
   }
 
@@ -1187,10 +1190,9 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
         getSpectrumModel().getSpcFluxAxisNoContinuum();
     const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
 
-    Float64 imin =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-    Float64 imax =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    Int32 imin, imax;
+    getLambdaRange().getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
     for (Int32 j = imin; j < imax; j++) {
       if (spcComponent == "noContinuum")
         flux = YspcNoContinuum[j];
@@ -1222,10 +1224,10 @@ Float64 CLineModelFitting::EstimateMTransposeM()
 
     Float64 diff = 0.0;
 
-    Float64 imin =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-    Float64 imax =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    Int32 imin, imax;
+    getLambdaRange().getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
+
     for (Int32 j = imin; j < imax; j++) {
       diff = spcFluxAxis[j];
       mtm += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
