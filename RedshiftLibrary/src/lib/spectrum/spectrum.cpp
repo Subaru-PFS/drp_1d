@@ -451,7 +451,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
 
   // check flux
   TBoolList validSamples = flux.checkFlux();
-  for (Int32 i = iMin; i < iMax; i++) {
+  for (Int32 i = iMin; i <= iMax; i++) {
     // collect invalid values
     if (!checkCorrectness(validSamples[i], i)) {
       ++nInvalid;
@@ -525,9 +525,6 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
 
   TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(
       TFloat64Range(LambdaMin, LambdaMax));
-
-  Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
-  Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
 
   bool corrected = GetFluxAxis_().correctFluxAndNoiseAxis(
       iRange.GetBegin(), iRange.GetEnd(), coeffCorr);

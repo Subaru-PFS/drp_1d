@@ -234,7 +234,7 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
   TBoolList isNoiseValid = error.checkNoise();
   TBoolList isFluxValid = checkFlux();
 
-  for (Int32 i = iMin; i < iMax; i++) {
+  for (Int32 i = iMin; i <= iMax; i++) {
     if (!isNoiseValid[i] || !isFluxValid[i])
       continue;
 
@@ -249,7 +249,7 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
     THROWG(ErrorCode::SPECTRUM_CORRECTION_ERROR,
            "Unable to find a max noise value");
 
-  for (Int32 i = iMin; i < iMax; i++) {
+  for (Int32 i = iMin; i <= iMax; i++) {
     // check noise & flux
     bool validSample = isNoiseValid[i] && isFluxValid[i];
 
