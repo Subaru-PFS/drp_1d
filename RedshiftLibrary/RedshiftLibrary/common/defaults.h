@@ -47,5 +47,8 @@ static const Float64 SNR_THRESHOLD_FOR_NLINESOVER = 3.0;
 static const Float64 MAX_LAMBDA_OFFSET = 400.0; // km/s
 static const Float64 LAMBDA_OFFSET_STEP = 25.0; // km/s;
 
+// For QSO power law calculation, lambda at which the power law coefs change
+static const Float64 POWER_LOW_WAVELENGTH_CUT = 5400;
+
 } // namespace NSEpic
 #endif

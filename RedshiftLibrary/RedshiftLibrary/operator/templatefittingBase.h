@@ -67,7 +67,14 @@ public:
   COperatorTemplateFittingBase(const TFloat64List &redshifts = TFloat64List());
 
   virtual ~COperatorTemplateFittingBase() = default;
+  COperatorTemplateFittingBase(COperatorTemplateFittingBase const &other) =
+      default;
+  COperatorTemplateFittingBase &
+  operator=(COperatorTemplateFittingBase const &other) = default;
 
+  COperatorTemplateFittingBase(COperatorTemplateFittingBase &&other) = default;
+  COperatorTemplateFittingBase &
+  operator=(COperatorTemplateFittingBase &&other) = default;
   virtual void SetRedshifts(TFloat64List redshifts) {
     m_redshifts = std::move(redshifts);
   };

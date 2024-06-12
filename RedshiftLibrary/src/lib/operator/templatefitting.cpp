@@ -93,16 +93,16 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       (logpriore.size() ==
        tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
 
-  Int32 iEbmvCoeffMin = EbmvList.front();
-  Int32 iEbmvCoeffMax = EbmvList.back();
-
   TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize, m_spectra.size());
 
   TFloat64RangeList currentRanges(m_spectra.size()); // restframe
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size();
+       spcIndex++) { // loop for multi obs
+    // Adapts template bin
     RebinTemplate(tpl, redshift, currentRanges[spcIndex],
                   result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
+    // Sets template indexes between which data is of interest for this given
+    // spectrum / redshift
     currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart[spcIndex], m_kEnd[spcIndex]);
@@ -163,14 +163,19 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
           ApplyDustCoeff(kEbmv, spcIndex);
       }
 
+      // Priors
       const CPriorHelper::SPriorTZE &logpriorTZE =
           apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
+
       TFittingResult fitRes;
+
+      // Chi2 calculation
       for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
         fitRes.cross_result +=
             ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
       }
       ComputeAmplitudeAndChi2(fitRes, logpriorTZE);
+
       Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
                                << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
                                << " meiksinIdx=" << meiksinIdx);
@@ -179,6 +184,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
       result.IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
 
+      // if minimizes chi2, sets it as the result
       if (fitRes.chiSquare < result.chiSquare) {
         TFittingResult &result_base = result; // upcasting (slicing)
         result_base = fitRes;                 // slicing, preserving specific

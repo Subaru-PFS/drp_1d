@@ -385,9 +385,8 @@ void COperatorTplcombination::RebinTemplate(
                                       lambdaRange.GetEnd() / onePlusRedshift);
 
   // redshift in restframe the tgtSpectralAxis,
-  m_spcSpectralAxis_restframe.ShiftByWaveLength(
-      spectrum.GetSpectralAxis(), onePlusRedshift,
-      CSpectrumSpectralAxis::nShiftBackward);
+  m_spcSpectralAxis_restframe = spectrum.GetSpectralAxis().ShiftByWaveLength(
+      onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
   m_spcSpectralAxis_restframe.ClampLambdaRange(lambdaRange_restframe,
                                                spcLambdaRange_restframe);
 
@@ -643,7 +642,6 @@ COperatorTplcombination::ComputeSpectrumModel(
   const CSpectrumFluxAxis &extinction = identityTemplate.GetFluxAxis();
 
   Int32 modelSize = spectrum.GetSampleCount();
-  CSpectrumSpectralAxis modelSpcAxis = spectrum.GetSpectralAxis();
 
   CSpectrumFluxAxis modelFlux(modelSize, 0.0);
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
@@ -652,8 +650,9 @@ COperatorTplcombination::ComputeSpectrumModel(
       modelFlux[k] += amplitudes[iddl] * tmp[k] * extinction[k];
     }
   }
-  modelSpcAxis.ShiftByWaveLength((1.0 + redshift),
-                                 CSpectrumSpectralAxis::nShiftForward);
+  CSpectrumSpectralAxis modelSpcAxis =
+      spectrum.GetSpectralAxis().ShiftByWaveLength(
+          (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
 
   // Deallocate the rebined template and mask buffers
   m_templatesRebined_bf.clear();

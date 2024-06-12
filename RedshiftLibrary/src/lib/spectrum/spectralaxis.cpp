@@ -84,16 +84,6 @@ void CSpectrumSpectralAxis::convertToVacuum(std::string const &AirVacuum) {
   }
 }
 
-/**
- * Constructor, shifts origin along direction an offset distance.
- */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(
-    const CSpectrumSpectralAxis &origin, Float64 wavelengthOffset,
-    EShiftDirection direction)
-    : CSpectrumAxis(origin.GetSamplesCount()) {
-  ShiftByWaveLength(origin, wavelengthOffset, direction);
-}
-
 CSpectrumSpectralAxis::CSpectrumSpectralAxis(Int32 n, Float64 value)
     : CSpectrumAxis(n, value) {}
 
@@ -133,35 +123,24 @@ void CSpectrumSpectralAxis::SetSize(Int32 s) {
       resetAxisProperties();
   }
 }
-/**
- * Shift current axis the input offset in the input direction.
- */
-void CSpectrumSpectralAxis::ShiftByWaveLength(Float64 wavelengthOffset,
-                                              EShiftDirection direction) {
-  ShiftByWaveLength(*this, wavelengthOffset, direction);
-}
-
-/**
- * Copy the input axis samples and shift the axis the specified offset in the
- * specidifed direction.
- */
-void CSpectrumSpectralAxis::ShiftByWaveLength(
-    const CSpectrumSpectralAxis &origin, Float64 wavelengthOffset,
-    EShiftDirection direction) {
+CSpectrumSpectralAxis
+CSpectrumSpectralAxis::ShiftByWaveLength(Float64 wavelengthOffset,
+                                         EShiftDirection direction) const {
   if (wavelengthOffset < 0.)
     THROWG(ErrorCode::INTERNAL_ERROR, "wavelengthOffset can not be negative");
   if (!(direction == nShiftForward || direction == nShiftBackward))
     THROWG(ErrorCode::INTERNAL_ERROR, "Unknown shift direction");
 
-  *this = origin;
-  if (wavelengthOffset == 0.0)
-    return;
+  auto shiftedAxis = *this;
 
-  if (direction == nShiftForward) {
-    operator*=(wavelengthOffset);
-  } else if (direction == nShiftBackward) {
-    operator/=(wavelengthOffset);
+  if (wavelengthOffset != 0.0) {
+    if (direction == nShiftForward) {
+      shiftedAxis *= (wavelengthOffset);
+    } else if (direction == nShiftBackward) {
+      shiftedAxis /= (wavelengthOffset);
+    }
   }
+  return shiftedAxis;
 }
 
 void CSpectrumSpectralAxis::ApplyOffset(Float64 wavelengthOffset) {
@@ -530,4 +509,11 @@ void CSpectrumSpectralAxis::resetAxisProperties() {
   // reset states since m_Samples is going to change
   m_isSorted = indeterminate;
   m_isLogSampled = indeterminate;
+}
+// TODO add tests
+CSpectrumSpectralAxis CSpectrumSpectralAxis::blueShift(Float64 z) const {
+  return ShiftByWaveLength(1 + z, nShiftBackward);
+};
+CSpectrumSpectralAxis CSpectrumSpectralAxis::redShift(Float64 z) const {
+  return ShiftByWaveLength(1 + z, nShiftForward);
 }

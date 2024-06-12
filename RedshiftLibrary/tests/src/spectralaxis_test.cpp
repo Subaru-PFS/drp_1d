@@ -121,8 +121,8 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   // ShiftByWaveLength linear forward
   const TFloat64List n7Array{2., 3.};
   const CSpectrumSpectralAxis n7Axis(n7Array);
-  const CSpectrumSpectralAxis n7ShiftForward(
-      n7Axis, 10.1, CSpectrumSpectralAxis::nShiftForward);
+  const CSpectrumSpectralAxis n7ShiftForward =
+      n7Axis.ShiftByWaveLength(10.1, CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(n7ShiftForward.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(n7ShiftForward[0], 20.2, 1.e-12);
   BOOST_CHECK_CLOSE(n7ShiftForward[1], 30.3, 1.e-12);
@@ -134,37 +134,37 @@ BOOST_AUTO_TEST_CASE(ShiftByWaveLength_test) {
   CSpectrumSpectralAxis spcAxisShifted;
 
   // test wavelengthOffset < 0.
-  BOOST_CHECK_THROW(
-      spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, -2.,
-                                       CSpectrumSpectralAxis::nShiftForward),
-      AmzException);
+  BOOST_CHECK_THROW(spcAxisOrigin.ShiftByWaveLength(
+                        -2., CSpectrumSpectralAxis::nShiftForward),
+                    AmzException);
 
   // ShiftByWaveLength linear forward
-  spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 10.1,
-                                   CSpectrumSpectralAxis::nShiftForward);
+  spcAxisShifted = spcAxisOrigin.ShiftByWaveLength(
+      10.1, CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted[0], 20.2, 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 30.3, 1.e-12);
   spcAxisShifted.clear();
 
   // ShiftByWaveLength linear backward
-  spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 2,
-                                   CSpectrumSpectralAxis::nShiftBackward);
+  spcAxisShifted =
+      spcAxisOrigin.ShiftByWaveLength(2, CSpectrumSpectralAxis::nShiftBackward);
   BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted[0], 1., 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 3. / 2, 1.e-12);
   spcAxisShifted.clear();
 
   // ShiftByWaveLength zero shift
-  spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 0.,
-                                   CSpectrumSpectralAxis::nShiftForward);
+  spcAxisShifted =
+      spcAxisOrigin.ShiftByWaveLength(0., CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted[0], 2., 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 3., 1.e-12);
 
   // ShiftByWaveLength
   CSpectrumSpectralAxis spcAxisShifted2(spcAxisOrigin);
-  spcAxisShifted2.ShiftByWaveLength(8., CSpectrumSpectralAxis::nShiftForward);
+  spcAxisShifted2 = spcAxisShifted2.ShiftByWaveLength(
+      8., CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(spcAxisShifted2.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted2[0], 16., 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted2[1], 24., 1.e-12);

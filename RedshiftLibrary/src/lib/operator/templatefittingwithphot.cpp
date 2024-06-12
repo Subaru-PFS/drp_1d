@@ -117,9 +117,8 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
 
     CSpectrumSpectralAxis photSpectralaxis = bandLambda;
 
-    photSpectralAxis_restframe.ShiftByWaveLength(
-        photSpectralaxis, onePlusRedshift,
-        CSpectrumSpectralAxis::nShiftBackward);
+    photSpectralAxis_restframe = photSpectralaxis.ShiftByWaveLength(
+        onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
 
     CMask mskRebined;
     const TFloat64Range lambdaRange_restframe =

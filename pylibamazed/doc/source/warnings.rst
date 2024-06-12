@@ -72,6 +72,10 @@ Possible warning codes list
    If this warning appears many times, consider increasing in the parameter
    second pass `halfWindowSize` value.
 
+**FORCED_POWERLAW_TO_ZERO**
+   For QSO power law fitting: many samples have fluxes too low compared to SNR to be taken into account.
+   Power law coefficients are set to zero.
+
 **UNUSED_PARAMETER**
    A parameter has been defined in the parameters file but it is not used. 
    NB: Some parameters are usefull only under some conditions.

@@ -140,10 +140,8 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   const CSpectrumFluxAxis &modelflux =
       m_templateRebined_bf[spcIndex].GetFluxAxis();
   CSpectrumSpectralAxis modelwav =
-      m_templateRebined_bf[spcIndex]
-          .GetSpectralAxis(); // needs a copy to be shifted
-  modelwav.ShiftByWaveLength((1.0 + redshift),
-                             CSpectrumSpectralAxis::nShiftForward);
+      m_templateRebined_bf[spcIndex].GetSpectralAxis().ShiftByWaveLength(
+          (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
   models->addModel(CSpectrum(std::move(modelwav), modelflux),
                    m_spectra[spcIndex]->getObsID());
   return spcIndex > 0 ? TPhotVal() : getIntegratedFluxes();
@@ -162,10 +160,9 @@ void COperatorTemplateFittingBase::RebinTemplate(
       m_lambdaRanges[spcIndex]->GetEnd() / onePlusRedshift);
 
   // redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
-  // Shouldn't ShiftByWaveLength be static ?
-  m_spcSpectralAxis_restframe[spcIndex].ShiftByWaveLength(
-      Context.getSpectra()[spcIndex]->GetSpectralAxis(), onePlusRedshift,
-      CSpectrumSpectralAxis::nShiftBackward);
+  m_spcSpectralAxis_restframe[spcIndex] =
+      Context.getSpectra()[spcIndex]->GetSpectralAxis().ShiftByWaveLength(
+          onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
   m_spcSpectralAxis_restframe[spcIndex].ClampLambdaRange(
       lambdaRange_restframe, spcLambdaRange_restframe);
 

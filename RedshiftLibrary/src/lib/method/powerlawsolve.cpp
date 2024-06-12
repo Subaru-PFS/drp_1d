@@ -36,77 +36,22 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_COMMON_DATATYPES_
-#define _REDSHIFT_COMMON_DATATYPES_
+#include "RedshiftLibrary/method/powerlawsolve.h"
+#include "RedshiftLibrary/operator/powerlaw.h"
 
-#include <cfloat>
-#include <cmath>
-#include <map>
-#include <memory>
-#include <set>
-#include <string>
-#include <type_traits>
-#include <vector>
-namespace NSEpic {
-#ifndef NULL
-#define NULL (0)
-#endif
+using namespace NSEpic;
+using namespace std;
 
-typedef long long Int64;
-typedef int Int32;
-typedef short Int16;
-typedef unsigned char UInt8;
-typedef float Float32;
-typedef double Float64;
-typedef char Char;
-typedef unsigned char Byte;
-typedef const char *String;
+CPowerLawSolve::CPowerLawSolve() : CObjectSolve("powerLawSolve") {}
 
-typedef std::vector<Float64> TFloat64List;
-typedef std::map<Int32, Float64> TFloat64Map;
-typedef std::pair<Float64, Float64> TFloat64Pair;
-typedef std::vector<Float32> TFloat32List;
-typedef std::vector<Int64> TInt64List;
-typedef std::vector<bool> TBoolList;
-typedef std::map<Int32, bool> TBoolMap;
-typedef std::vector<Int32> TInt32List;
-typedef std::map<Int32, Int32> TInt32Map;
-typedef std::set<Int32> TInt32Set;
-typedef std::pair<Int16, Int16> TInt16Pair;
-typedef std::pair<Int32, Int32> TInt32Pair;
-typedef std::vector<std::string> TStringList;
-typedef TStringList TScopeStack;
+std::shared_ptr<CSolveResult>
+CPowerLawSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+                        std::shared_ptr<COperatorResultStore> resultStore,
+                        TScopeStack &scope) {
 
-struct SPoint {
-  SPoint() {
-    X = 0.0;
-    Y = 0.0;
-  }
+  m_powerLawOperator = std::make_shared<COperatorPowerLaw>(m_redshifts);
 
-  SPoint(Float64 x, Float64 y) {
-    X = x;
-    Y = y;
-  }
-  Float64 X;
-  Float64 Y;
-};
-
-typedef std::vector<SPoint> TPointList;
-
-typedef UInt8 Mask;
-typedef Float64 Redshift;
-typedef Float64 Sample;
-typedef std::vector<Mask> TMaskList;
-typedef std::vector<Redshift> TRedshiftList;
-typedef std::vector<Sample> TAxisSampleList;
-typedef std::vector<std::vector<TFloat64List>> T3DFloatList;
-typedef std::vector<std::vector<Float64>> T2DFloatList;
-typedef std::vector<std::vector<std::vector<bool>>> T3DBoolList;
-typedef std::vector<std::vector<bool>> T2DBoolList;
-
-#include "RedshiftLibrary/common/errorcodes.i"
-#include "RedshiftLibrary/common/warningcodes.i"
-
-} // namespace NSEpic
-
-#endif
+  std::shared_ptr<CPowerLawSolveResult> PowerLawSolveResult =
+      std::make_shared<CPowerLawSolveResult>();
+  return PowerLawSolveResult;
+}
