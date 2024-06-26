@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.2.0 (2024-06-26)
+## Added
+* [8312] : Change all the structure of the code to fit jointly several spectra of the same source to a unique model
+* [8117] : Implement amplitude uncertainty in lbfgsbfitter
+* [8641] : Add new error codes
+* [8235] : Set max number of candidates to retain after 1st pass to a dedicated parameter `lineModel.firstPass.extremaCount`
+* [8471] : Add new warning output `InitWarningFlags` related to warning raised during spectrum preprocessing stage
+## Changed
+* [8219] : Changes input parameters file structure. Keeps compatibility with old parameters file
+* [8536] : Improve the estimation of the continuum flux level and uncertainty under a line by averaging the fitted continuum weighted by the line profile and using the residual for the uncertainty. This has an impact on the estimated flux level and uncertainty of absorption lines since they depend on the estimated continuum level
+* [8470] : Upgrade boost version to 1.74
+* [8435] : Change Lya section in parameters 
+* [8588] : Clean warnings (enhance naming, convert some warnings into errors, adds documentation)
+* [8596] : Adds timestamp in logs
+* [8813] : Relax line doublet and triplet constrain in linemeas
+* [8734] : Context renamed in ProcessFlow
+* [8867] : Rename output "Evidence" to "LogEvidence"
+* [8005] : Do not switch to nocontinuum or fromspectrum in second pass continuum refit
+* [8528] : Change amazed output access API to retrieve fitted line fluxes, linemeas fluxes and PDF
+## Removed
+* [8541] : Remove line individual SNR for template ratio fitting
+* [6459] : Remove ism extinction application on amplitude of absorption lines
+## Fixed
+* [8634] : Check spectra is in lambda range before validating its samples
+* [8476] : Fix parameter checker
+* [8669] : In linemeas, better deals with line offsets to ensure the lines remains in the wavelength range where the LSF is available
+* [8664] : Throw amazed exception when catching exceptions in lbfgsbpp
+* [8748] : Fix continum template sorting by merit for line model
+* [8778] : Fix flux estimation for Lya profile (gaussian+IGM)
+* [8441] : Refactor process flow, error and warning handling
+* [8812] : Fix IGM fitting and photometry fitting
+* [8914] : Fix border effect for next spectrum affecting templates when continuum fitting fails (negative amplitude)
+
 ## 1.0.0 (2024-01-17)
 ## Added
 * The API is now checking the syntax of the json input parameter file, raising an error if the syntax is wrong or if some required parameters are missing, issueing a warning for each unused parameter
