@@ -79,7 +79,12 @@ public:
       TResultsMap;
   typedef std::map<std::string, TResultsMap> TPerTemplateResultsMap;
 
-  COperatorResultStore(const TScopeStack &scopeStack);
+  static std::string buildFullname(const std::string &spectrumModel,
+                                   const std::string &stage,
+                                   const std::string &method,
+                                   const std::string &name);
+
+  COperatorResultStore(const std::shared_ptr<const CScopeStack> &scopeStack);
 
   void StorePerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                               const std::string &path, const std::string &name,
@@ -93,85 +98,97 @@ public:
   std::weak_ptr<const COperatorResult>
   GetScopedGlobalResult(const std::string &name) const;
 
-  const std::string &GetGlobalResultType(const std::string &objectType,
+  const std::string &GetGlobalResultType(const std::string &spectrumModel,
+                                         const std::string &stage,
                                          const std::string &method,
                                          const std::string &name) const;
 
-  const std::string &GetCandidateResultType(const std::string &objectType,
+  const std::string &GetCandidateResultType(const std::string &spectrumModel,
+                                            const std::string &stage,
                                             const std::string &method,
                                             const std::string &name,
                                             const std::string &dataset) const;
 
-  bool HasCandidateDataset(const std::string &objectType,
-                           const std::string &method, const std::string &name,
+  bool HasCandidateDataset(const std::string &spectrumModel,
+                           const std::string &stage, const std::string &method,
+                           const std::string &name,
                            const std::string &dataset) const;
 
-  bool HasDataset(const std::string &objectType, const std::string &method,
-                  const std::string &name) const;
+  bool HasDataset(const std::string &spectrumModel, const std::string &stage,
+                  const std::string &method, const std::string &name) const;
   bool hasContextWarningFlag() const;
+  bool hasInitWarningFlag() const;
   bool hasCurrentMethodWarningFlag() const;
 
   std::shared_ptr<const CClassificationResult>
-  GetClassificationResult(const std::string &objectType,
-                          const std::string &method,
+  GetClassificationResult(const std::string &spectrumModel,
+                          const std::string &stage, const std::string &method,
                           const std::string &name) const;
 
   std::shared_ptr<const CReliabilityResult>
-  GetReliabilityResult(const std::string &objectType, const std::string &method,
+  GetReliabilityResult(const std::string &spectrumModel,
+                       const std::string &stage, const std::string &method,
                        const std::string &name) const;
 
   std::shared_ptr<const CLogZPdfResult>
-  GetLogZPdfResult(const std::string &objectType, const std::string &method,
-                   const std::string &name) const;
+  GetLogZPdfResult(const std::string &spectrumModel, const std::string &stage,
+                   const std::string &method, const std::string &name) const;
 
   std::shared_ptr<const CFlagLogResult>
-  GetFlagLogResult(const std::string &objectType, const std::string &method,
-                   const std::string &name) const;
+  GetFlagLogResult(const std::string &spectrumModel, const std::string &stage,
+                   const std::string &method, const std::string &name) const;
 
   std::shared_ptr<const TLineModelResult>
-  GetLineModelResult(const std::string &objectType, const std::string &method,
-                     const std::string &name, const std::string &dataset,
-                     const int &rank,
+  GetLineModelResult(const std::string &spectrumModel, const std::string &stage,
+                     const std::string &method, const std::string &name,
+                     const std::string &dataset, const int &rank,
                      bool firstpassCorrespondingResult = false) const;
 
   std::shared_ptr<const TTplCombinationResult>
-  GetTplCombinationResult(const std::string &objectType,
-                          const std::string &method, const std::string &name,
-                          const std::string &dataset, const int &rank) const;
+  GetTplCombinationResult(const std::string &spectrumModel,
+                          const std::string &stage, const std::string &method,
+                          const std::string &name, const std::string &dataset,
+                          const int &rank) const;
   std::shared_ptr<const TExtremaResult>
-  GetExtremaResult(const std::string &objectType, const std::string &method,
-                   const std::string &name, const std::string &dataset,
-                   const int &rank) const;
+  GetExtremaResult(const std::string &spectrumModel, const std::string &stage,
+                   const std::string &method, const std::string &name,
+                   const std::string &dataset, const int &rank) const;
 
   std::shared_ptr<const CLineModelSolution>
-  GetLineModelSolution(const std::string &objectType, const std::string &method,
+  GetLineModelSolution(const std::string &spectrumModel,
+                       const std::string &stage, const std::string &method,
                        const std::string &name) const;
 
   std::shared_ptr<const CLineModelSolution>
-  GetLineModelSolution(const std::string &objectType, const std::string &method,
+  GetLineModelSolution(const std::string &spectrumModel,
+                       const std::string &stage, const std::string &method,
                        const std::string &name, const std::string &dataset,
                        const int &rank) const;
 
   std::shared_ptr<const CModelSpectrumResult>
-  GetModelSpectrumResult(const std::string &objectType,
-                         const std::string &method, const std::string &name,
-                         const std::string &dataset, const int &rank) const;
+  GetModelSpectrumResult(const std::string &spectrumModel,
+                         const std::string &stage, const std::string &method,
+                         const std::string &name, const std::string &dataset,
+                         const int &rank) const;
   std::shared_ptr<const CModelSpectrumResult>
-  GetModelSpectrumResult(const std::string &objectType,
-                         const std::string &method,
+  GetModelSpectrumResult(const std::string &spectrumModel,
+                         const std::string &stage, const std::string &method,
                          const std::string &name) const;
 
   std::shared_ptr<const CModelPhotValueResult>
-  GetModelPhotValueResult(const std::string &objectType,
-                          const std::string &method, const std::string &name,
-                          const std::string &dataset, const int &rank) const;
-  int getNbRedshiftCandidates(const std::string &objectType,
+  GetModelPhotValueResult(const std::string &spectrumModel,
+                          const std::string &stage, const std::string &method,
+                          const std::string &name, const std::string &dataset,
+                          const int &rank) const;
+  int getNbRedshiftCandidates(const std::string &spectrumModel,
+                              const std::string &stage,
                               const std::string &method) const;
 
   std::weak_ptr<const COperatorResult>
-  GetSolveResult(const std::string &objectType,
+  GetSolveResult(const std::string &spectrumModel, const std::string &stage,
                  const std::string &method) const;
-  bool hasSolveResult(const std::string &objectType,
+  bool hasSolveResult(const std::string &spectrumModel,
+                      const std::string &stage,
                       const std::string &method) const;
   // From DataStore, above should be removed and integrated into these
   void StoreGlobalResult(const std::string &name,
@@ -183,7 +200,7 @@ public:
                                std::shared_ptr<const COperatorResult> result);
   void StoreScopedGlobalResult(const std::string &name,
                                std::shared_ptr<const COperatorResult> result);
-  void StoreFlagResult(const std::string &name, Int32 result);
+  void StoreScopedFlagResult(const std::string &name);
 
   void reset() {
     m_GlobalResults.clear();
@@ -201,8 +218,8 @@ private:
   std::weak_ptr<const COperatorResult>
   GetGlobalResult(const std::string &name) const;
   std::weak_ptr<const COperatorResult>
-  GetGlobalResult(const std::string &objectType, const std::string &method,
-                  const std::string &name) const;
+  GetGlobalResult(const std::string &spectrumModel, const std::string &stage,
+                  const std::string &method, const std::string &name) const;
 
 protected:
   friend class ResultStore::CreateResultStorage_test;

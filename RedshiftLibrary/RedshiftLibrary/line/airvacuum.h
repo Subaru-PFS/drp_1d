@@ -39,9 +39,10 @@
 #ifndef _REDSHIFT_RAY_AIRVACUUM_
 #define _REDSHIFT_RAY_AIRVACUUM_
 
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include <vector>
 
 namespace NSEpic {
 class CAirVacuum {
@@ -81,7 +82,7 @@ class CAirVacEdlen1953 : public CAirVacuum {
 public:
   CAirVacEdlen1953()
       : CAirVacuum(6.4328E-5, 2.94981E-2, 2.5540E-4, 146.0, 41.0,
-                   "Edlen1953"){};
+                   "edlen1953"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
 };
 
@@ -89,7 +90,7 @@ class CAirVacEdlen1966 : public CAirVacuum {
 public:
   CAirVacEdlen1966()
       : CAirVacuum(8.34213E-5, 2.406030E-2, 1.5997E-4, 130.0, 38.9,
-                   "Edlen1966"){};
+                   "edlen1966"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
 };
 
@@ -117,7 +118,7 @@ class CAirVacMorton2000 : public CAirVacuum {
 public:
   CAirVacMorton2000()
       : CAirVacuum(8.34254e-5, 2.406147e-2, 1.5998e-4, 130.0, 38.9,
-                   "Morton2000"){};
+                   "morton2000"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
   TFloat64List AirToVac(const TFloat64List &waveAir) const override;
 };

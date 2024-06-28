@@ -36,18 +36,18 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/linedetection.h"
+#include <cfloat>
+#include <climits>
+
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/gaussianfit/gaussianfit.h"
 #include "RedshiftLibrary/line/linedetected.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/linedetection.h"
 #include "RedshiftLibrary/operator/linedetectionresult.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <cfloat>
-#include <climits>
 
 using namespace NSEpic;
 
@@ -107,7 +107,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
     if (status != NSEpic::CGaussianFit::nStatus_Success) {
       std::string status =
           (boost::format("Peak_%1% : Fitting failed") % j).str();
-      Log.LogDebug("Peak_%d : Fitting failed", j);
+      Log.LogDebug(Formatter() << "Peak_" << j << " : Fitting failed");
       result->PeakListDetectionStatus.push_back(status);
       continue;
     }
@@ -129,7 +129,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
       toAdd = false;
       std::string status =
           (boost::format("Peak_%1% : GaussAmp negative") % j).str();
-      Log.LogDebug("Peak_%d : GaussAmp negative", j);
+      Log.LogDebug(Formatter() << "Peak_" << j << " : GaussAmp negative");
       result->PeakListDetectionStatus.push_back(status);
     }
 
@@ -139,7 +139,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
         toAdd = false;
         std::string status =
             (boost::format("Peak_%1% : GaussWidth negative") % j).str();
-        Log.LogDebug("Peak_%d : GaussWidth negative", j);
+        Log.LogDebug(Formatter() << "Peak_" << j << " : GaussWidth negative");
         result->PeakListDetectionStatus.push_back(status);
       } else {
         Float64 fwhm = FWHM_FACTOR * gaussWidth;
@@ -147,14 +147,14 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
           toAdd = false;
           std::string status =
               (boost::format("Peak_%1% : fwhm<m_minsize") % j).str();
-          Log.LogDebug("Peak_%d : fwhm<m_minsize", j);
+          Log.LogDebug(Formatter() << "Peak_" << j << " : fwhm<m_minsize");
           result->PeakListDetectionStatus.push_back(status);
         }
         if (fwhm > m_maxsize) {
           toAdd = false;
           std::string status =
               (boost::format("Peak_%1% : fwhm>m_maxsize") % j).str();
-          Log.LogDebug("Peak_%d : fwhm>m_maxsize", j);
+          Log.LogDebug(Formatter() << "Peak_" << j << " : fwhm>m_maxsize");
           result->PeakListDetectionStatus.push_back(status);
         }
       }
@@ -183,7 +183,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
             (boost::format("Peak_%1% : gaussAmp far from spectrum max_value") %
              j)
                 .str();
-        Log.LogDebug("Peak_%d : gaussAmp far from spectrum max_value", j);
+        Log.LogDebug(Formatter() << "Peak_" << j
+                                 << " : gaussAmp far from spectrum max_value");
         result->PeakListDetectionStatus.push_back(status);
       }
 
@@ -195,8 +196,9 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
                                             "spectrum max_value (Angstrom)") %
                               j)
                                  .str();
-        Log.LogDebug(
-            "Peak_%d : gaussAmp far from spectrum max_value (Angstrom)", j);
+        Log.LogDebug(Formatter()
+                     << "Peak_" << j
+                     << " : gaussAmp far from spectrum max_value (Angstrom)");
         result->PeakListDetectionStatus.push_back(status);
       }
     } // Check if gaussian fit is very different from peak itself
@@ -212,7 +214,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
             (boost::format("Peak_%d : ratioAmp<m_cut (%f<%f)") % j % ratioAmp %
              m_cut)
                 .str();
-        Log.LogDebug("Peak_%d : ratioAmp<m_cut (%f<%f)", j, ratioAmp, m_cut);
+        Log.LogDebug(Formatter() << "Peak_" << j << " : ratioAmp<m_cut ("
+                                 << ratioAmp << "<" << m_cut << ")");
         result->PeakListDetectionStatus.push_back(status);
         // add this peak range to retest list
         retestPeaks.push_back(resPeaks[j]);
@@ -303,14 +306,15 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
   const CSpectrumSpectralAxis &specAxis = spc.GetSpectralAxis();
   // Range must be included in fluxAxis
   if (range.GetEnd() >= fluxAxis.GetSamplesCount())
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Upper bound of range " << range.GetEnd()
-                               << " is >= to fluxAxis length "
-                               << fluxAxis.GetSamplesCount());
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Upper bound of range " << range.GetEnd()
+                       << " is >= to fluxAxis length "
+                       << fluxAxis.GetSamplesCount());
 
   if (range.GetBegin() < 0)
-    THROWG(INTERNAL_ERROR, Formatter() << "Lower bound of range "
-                                       << range.GetEnd() << " is < 0");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Lower bound of range "
+                                          << range.GetEnd() << " is < 0");
 
   // if no mask, then set it to 1
   if (mask.empty())
@@ -324,7 +328,7 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
       maxIndex = k;
     }
   if (maxIndex == undefIdx)
-    THROWG(INTERNAL_ERROR, "maxIndex is not valid");
+    THROWG(ErrorCode::INTERNAL_ERROR, "maxIndex is not valid");
   // strong/weak test to do
   CMedian<Float64> medianProcessor;
   // reg. sampling, TAG: IRREGULAR_SAMPLING
@@ -407,8 +411,9 @@ void CLineDetection::Retest(CLineDetectionResult &result,
                             TGaussParamsList const &retestGaussParams,
                             CLineDetectedMap const &strongLines, Int32 winsize,
                             Float64 cut) {
-  Log.LogDebug("Retest %d peaks, winsize = %d, strongLines.size() = %d.",
-               retestPeaks.size(), winsize, strongLines.size());
+  Log.LogDebug(Formatter() << "Retest " << retestPeaks.size()
+                           << " peaks, winsize = " << winsize
+                           << ", strongLines.size() = " << strongLines.size());
 
   TGaussParamsList selectedgaussparams;
   TInt32RangeList selectedretestPeaks;
@@ -424,15 +429,19 @@ void CLineDetection::Retest(CLineDetectionResult &result,
       Float64 const position = line.GetPosition();
       if (position - winsize / 2.0 < center &&
           position + winsize / 2.0 > center) {
-        Log.LogDebug("The strongLine[%d].GetPosition() == %f is within "
-                     "winsize centered on %f.",
-                     id, position, center);
+        Log.LogDebug(Formatter() << "The strongLine[" << id
+                                 << "].GetPosition() == " << position
+                                 << " is within "
+                                    "winsize centered on "
+                                 << center << ".");
         selectedretestPeaks.push_back(retestPeaks[k]);
         selectedgaussparams.push_back(retestGaussParams[k]);
       } else {
-        Log.LogDebug("The strongLine[%d].GetPosition() == %f is not within "
-                     "winsize centered on %f.",
-                     id, position, center);
+        Log.LogDebug(Formatter() << "The strongLine[" << id
+                                 << "].GetPosition() == " << position
+                                 << " is not within "
+                                    "winsize centered on "
+                                 << center << ".");
       }
     }
   }

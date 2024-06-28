@@ -39,21 +39,23 @@
 #ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZ_
 #define _REDSHIFT_STATISTICS_PDFCANDIDATESZ_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/processflow/result.h"
 #include <cmath>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/processflow/result.h"
+
 namespace Statistics_pdfcandidatesz { // boost_test_suite
 // all boost_auto_test_case that use private method
 class SortByValSumProbaInt_test;
 class getCandidateSumTrapez_test;
 class getCandidateRobustGaussFit_test;
+class getCandidateGaussFit_test;
 } // namespace Statistics_pdfcandidatesz
 namespace NSEpic {
 
@@ -92,6 +94,7 @@ private:
   friend class Statistics_pdfcandidatesz::SortByValSumProbaInt_test;
   friend class Statistics_pdfcandidatesz::getCandidateSumTrapez_test;
   friend class Statistics_pdfcandidatesz::getCandidateRobustGaussFit_test;
+  friend class Statistics_pdfcandidatesz::getCandidateGaussFit_test;
 
   void getCandidateSumTrapez(const TRedshiftList &redshifts,
                              const TFloat64List &valprobalog,

@@ -45,13 +45,13 @@
 using namespace NSEpic;
 
 CRulesManager::CRulesManager(
-    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
-    const CCSpectrumVectorPtr &inputSpcs,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
+    const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList) {}
+                        continuumManager, restLineList, spcIndex) {}
 
 Float64 CRulesManager::computeMerit(Int32 iratio) {
   applyRules(true);
@@ -63,18 +63,19 @@ Float64 CRulesManager::computeMerit(Int32 iratio) {
  * /brief Calls the rules' methods depending on the JSON options.
  * If m_rulesoption is "no", do nothing.
  * If either "balmer" or "all" is in the rules string, call
- *ApplyBalmerRuleLinSolve. If "all" or "ratiorange" is in the rules string,
+ *ApplyBalmerRuleLinSolve. If "all" or "ratioRange" is in the rules string,
  *call ApplyAmplitudeRatioRangeRule parameterized for OII. If "all" or
- *"strongweak" is in the rules string, call ApplyStrongHigherWeakRule for
+ *"strongWeak" is in the rules string, call ApplyStrongHigherWeakRule for
  *emission and then for absorption.
  **/
 void CRulesManager::applyRules(bool enableLogs) {
+  m_spectraIndex.reset(); // dummy implementation
   if (m_rulesoption == "no") {
     return;
   }
 
   m_Regulament.EnableLogs(enableLogs);
-  m_Regulament.Apply(getElementList());
+  m_Regulament.Apply(*m_elementsVector);
 }
 
 const TStringList &CRulesManager::GetModelRulesLog() const {
@@ -85,7 +86,7 @@ void CRulesManager::setRulesOption(std::string rulesOption) {
 
   m_Regulament.CreateRulesFromJSONFiles();
   if (rulesOption == "") {
-    CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+    CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
     m_rulesoption = ps->GetScoped<std::string>("rules");
   } else

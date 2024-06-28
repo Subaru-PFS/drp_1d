@@ -39,9 +39,9 @@
 #ifndef _REDSHIFT_COMMON_MUTEX_
 #define _REDSHIFT_COMMON_MUTEX_
 
-#include "RedshiftLibrary/common/datatypes.h"
-
 #include <boost/thread.hpp>
+
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
 

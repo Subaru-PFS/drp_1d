@@ -38,39 +38,53 @@
 # ============================================================================
 
 import json
+import os
 
 from jsonschema import RefResolver, validate
 from jsonschema.exceptions import ValidationError
 from pylibamazed.Exception import APIException
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
 from pylibamazed.ParametersAccessor import ParametersAccessor
-from pylibamazed.r_specifications import jsonSchemaFilename, jsonSchemaPath
+from pylibamazed.Paths import module_root_dir
 from pylibamazed.redshift import CFlagWarning, ErrorCode, WarningCode
 
 zflag = CFlagWarning.GetInstance()
 
 
-class ParametersChecker:
-
-    def __init__(self, accessor: ParametersAccessor, FilterLoader=ParamJsonFilterLoader):
-        self.jsonSchema = self._get_json_schema()
-        self.accessor = accessor
-        self.filter_loader = FilterLoader()
-
-    def check(self):
-        self.json_schema_check()
-        self.custom_check()
-
-    def _get_json_schema(self):
-        with open(jsonSchemaFilename) as schemaFile:
+class JsonSchemaFileAccessor:
+    def get_json_schema(self, version: dict) -> dict:
+        with open(self.json_schema_filename(version)) as schemaFile:
             jsonSchema = json.load(schemaFile)
         return jsonSchema
 
-    def json_schema_check(self) -> None:
+    def json_schema_filename(self, version: str) -> str:
+        return os.path.join(self._json_schema_path(version), "general.json")
+
+    def json_schema_filesystem_path(self, version: str) -> str:
+        return f"file:///{self._json_schema_path(version)}/"
+
+    def _json_schema_path(self, version: str) -> str:
+        return os.path.join(module_root_dir, "resources", f"jsonschema-v{version}")
+
+
+class ParametersChecker:
+
+    jsonSchemaFilename = os.path.join(module_root_dir, "resources", "jsonschema-v1", "general.json")
+
+    def __init__(self, parameters: dict, FilterLoader=ParamJsonFilterLoader,
+                 FileAccessor=JsonSchemaFileAccessor, Accessor=ParametersAccessor):
+        self.filter_loader = FilterLoader()
+        self.file_accesor = FileAccessor()
+        self.accessor = Accessor(parameters)
+
+    def json_schema_check(self, version: int) -> None:
+        # Parameters dict must be at "raw parameters dict"
         # How to link the different json schema files
-        resolver = RefResolver(jsonSchemaPath, self.jsonSchema)
+        jsonSchema = self.file_accesor.get_json_schema(version)
+        resolver = RefResolver(self.file_accesor.json_schema_filesystem_path(version), jsonSchema)
+
         try:
-            validate(instance=self.accessor.parameters, schema=self.jsonSchema, resolver=resolver)
+            validate(instance=self.accessor.parameters, schema=jsonSchema, resolver=resolver)
         except ValidationError as e:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
@@ -81,8 +95,8 @@ class ParametersChecker:
         self._check_general()
         self._check_lsf()
         self._check_continuum_removal()
-        self._check_continuum_removal("templateCatalog")
-        for object in self.accessor.get_objects([]):
+        self._check_templateCatalog_continuum_removal()
+        for object in self.accessor.get_spectrum_models([]):
             self._check_object(object)
 
     def _check_general(self):
@@ -126,7 +140,7 @@ class ParametersChecker:
                 )
 
     def _check_filters_format(self, json: json) -> None:
-        if type(json) != list:
+        if type(json) is not list:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Input filters json must be a list"
@@ -143,294 +157,444 @@ class ParametersChecker:
                 )
 
     def _check_lsf(self) -> None:
+        self._check_lsf_section()
         self._check_GaussianConstantWidth_lsf_type()
         self._check_GaussianNISPSIM_lsf_type()
         self._check_GaussianConstantResolution_lsf_type()
         self._check_GaussianVariablewidth_FileName()
 
+    def _check_lsf_section(self) -> None:
+        lsf_needed = False
+        for spectrum_model in self.accessor.get_spectrum_models([]):
+            if self.accessor.get_redshift_solver_method(spectrum_model) == "lineModelSolve" \
+                    or ("lineMeasSolver" in self.accessor.get_stages(spectrum_model)):
+                lsf_needed = True
+        self._check_dependant_parameter_presence(
+            lsf_needed,
+            self.accessor.get_lsf() is not None,
+            "lsf",
+            "lsf"
+        )
+
     def _check_GaussianNISPSIM_lsf_type(self):
         self._check_dependant_parameter_presence(
             self.accessor.get_lsf_type() == "GaussianNISPSIM201707",
             self.accessor.get_lsf_sourcesize() is not None,
-            "LSF sourcesize",
-            "LSF sourcesize"
+            "lsf sourceSize",
+            "lsf sourceSize"
         )
 
     def _check_GaussianConstantWidth_lsf_type(self):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lsf_type() == "GaussianConstantWidth",
+            self.accessor.get_lsf_type() == "gaussianConstantWidth",
             self.accessor.get_lsf_width() is not None,
-            "LSF width",
-            "LSF width"
+            "lsf width",
+            "lsf width"
         )
 
     def _check_GaussianConstantResolution_lsf_type(self):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lsf_type() == "GaussianConstantResolution",
+            self.accessor.get_lsf_type() == "gaussianConstantResolution",
             self.accessor.get_lsf_resolution() is not None,
-            "LSF resolution",
-            "LSF resolution"
+            "lsf resolution",
+            "lsf resolution"
         )
 
     def _check_GaussianVariablewidth_FileName(self):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lsf_type() == "GaussianVariablewidth",
+            self.accessor.get_lsf_type() == "gaussianVariableWidth",
             self.accessor.get_lsf_width_file_name() is not None,
-            "LSF GaussianVariablewidthFileName",
-            "LSF GaussianVariablewidthFileName"
+            "lsf gaussianVariableWidthFileName",
+            "lsf gaussianVariableWidthFileName"
         )
 
-    def _check_continuum_removal(self, nested=None) -> None:
-        self._check_IrregularSamplingMedian_kernel_width(nested)
-        self._check_IrregularSamplingMedian_kernel_reflection(nested)
+    def _check_continuum_removal(self, fromTemplateCatalog=False) -> None:
+        self._check_continuum_removal_section_presence()
+        self._check_IrregularSamplingMedian_kernel_width(fromTemplateCatalog)
+        self._check_IrregularSamplingMedian_kernel_reflection(fromTemplateCatalog)
 
-    def _check_IrregularSamplingMedian_kernel_width(self, nested=None):
+    def _check_templateCatalog_continuum_removal(self) -> None:
+        self._check_templateCatalog_continuum_removal_section_presence()
+        self._check_IrregularSamplingMedian_kernel_width("templateCatalog")
+        self._check_IrregularSamplingMedian_kernel_reflection("templateCatalog")
+
+    def _check_templateCatalog_continuum_removal_section_presence(self):
+        continuum_removal_necessity = self.template_catalog_continuum_removal_presence_condition()
         self._check_dependant_parameter_presence(
-            self.accessor.get_continuum_removal_method(nested) == "IrregularSamplingMedian",
-            self.accessor.get_continuum_removal_median_kernel_width(nested) is not None,
+            continuum_removal_necessity,
+            self.accessor.get_continuum_removal_section("templateCatalog") is not None,
+            "templateCatalog continuumRemoval",
+            "templateCatalog continuumRemoval"
+        )
+
+    def template_catalog_continuum_removal_presence_condition(self) -> bool:
+        continuum_removal_necessity = False
+        for spectrum_model in self.accessor.get_spectrum_models([]):
+            if self.accessor.get_template_fitting_spectrum_component(spectrum_model) not in [None, "raw"] \
+                    or self.accessor.get_template_combination_spectrum_component(spectrum_model) not in [
+                        None, "raw"]:
+                continuum_removal_necessity = True
+        return continuum_removal_necessity
+
+    def continuum_removal_presence_condition(self) -> bool:
+        continuum_removal_necessity = False
+        for spectrum_model in self.accessor.get_spectrum_models([]):
+            template_fitting_spectrum_component = \
+                self.accessor.get_template_fitting_spectrum_component(spectrum_model)
+            template_combination_spectrum_component = \
+                self.accessor.get_template_combination_spectrum_component(spectrum_model)
+            linemodel_continuum_component = \
+                self.accessor.get_linemodel_continuum_component(spectrum_model)
+            linemodel_continuum_reestimation = \
+                self.accessor.get_linemodel_continuum_reestimation(spectrum_model)
+
+            if template_fitting_spectrum_component not in [None, "raw"] \
+                or template_combination_spectrum_component not in [None, "raw"] \
+                    or linemodel_continuum_component in ["fromSpectrum", "tplFitAuto"] \
+                    or linemodel_continuum_reestimation not in [None, "never"]:
+                continuum_removal_necessity = True
+        return continuum_removal_necessity
+
+    def _check_continuum_removal_section_presence(self):
+        continuum_removal_necessity = self.continuum_removal_presence_condition()
+        self._check_dependant_parameter_presence(
+            continuum_removal_necessity,
+            self.accessor.get_continuum_removal_section() is not None,
+            "continuumRemoval",
+            "continuumRemoval"
+        )
+
+    def median_kernel_presence_condition(self, fromTemplateCatalog):
+        return self.accessor.get_continuum_removal_method(fromTemplateCatalog) == "irregularSamplingMedian"
+
+    def _check_IrregularSamplingMedian_kernel_width(self, fromTemplateCatalog=False):
+        self._check_dependant_parameter_presence(
+            self.median_kernel_presence_condition(fromTemplateCatalog),
+            self.accessor.get_continuum_removal_median_kernel_width(fromTemplateCatalog),
             "continuumRemoval medianKernelWidth",
             "continuumRemoval medianKernelWidth"
         )
 
-    def _check_IrregularSamplingMedian_kernel_reflection(self, nested=None):
+    def _check_IrregularSamplingMedian_kernel_reflection(self, fromTemplateCatalog=False):
         self._check_dependant_parameter_presence(
-            self.accessor.get_continuum_removal_method(nested) == "IrregularSamplingMedian",
-            self.accessor.get_continuum_median_kernel_reflection(nested) is not None,
+            self.median_kernel_presence_condition(fromTemplateCatalog),
+            self.accessor.get_continuum_median_kernel_reflection(fromTemplateCatalog),
             "continuumRemoval medianEvenReflection",
             "continuumRemoval medianEvenReflection"
         )
 
-    def _check_object(self, object_type: str) -> None:
-        self._check_linemeassolve_dzhalf(object_type)
-        self._check_linemeassolve_redshiftstep(object_type)
-        self._check_object_reliability(object_type)
-        self._check_templateFittingSolve_section(object_type)
-        self._check_templateCombinationSolve_section(object_type)
-        self._check_lineModelSolve(object_type)
-        self._check_template_dir(object_type)
+    def _check_object(self, spectrum_model: str) -> None:
+        self._check_linemeassolve(spectrum_model)
+        self._check_object_reliability(spectrum_model)
+        self._check_templateFittingSolve_section(spectrum_model)
+        self._check_templateCombinationSolve_section(spectrum_model)
+        self._check_lineModelSolve(spectrum_model)
+        self._check_template_dir(spectrum_model)
 
-    def _check_template_dir(self, object_type: str) -> None:
-        template_dir_presence_condition = \
-            self.accessor.get_solve_method(object_type) in ["TemplateFittingSolve", "TplCombinationSolve"] or (
-                self.accessor.get_solve_method(object_type) == "LineModelSolve" and
-                self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplfit", "tplfitauto"]
-            )
+    def _check_linemeassolve(self, spectrum_model: str) -> None:
+        self._check_linemeassolver_section(spectrum_model)
+        self._check_linemeassolve_dzhalf(spectrum_model)
+        self._check_linemeassolve_redshiftstep(spectrum_model)
+        self._check_linemeassolve_lineratiotype_rules(spectrum_model)
+        self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(spectrum_model)
+        self._check_linemeassolve_velocityfit_params(spectrum_model)
+        self._check_linemeassolve_lya_fit(spectrum_model)
+
+    def _check_linemeassolver_section(self, spectrum_model: str) -> None:
+        self._check_dependant_parameter_presence(
+            "lineMeasSolver" in self.accessor.get_stages(spectrum_model),
+            self.accessor.get_linemeas_solver_section(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolver",
+            f"{spectrum_model} lineMeasSolver",
+        )
+
+    def _check_template_dir(self, spectrum_model: str) -> None:
+
+        expected_by_method = self.accessor.get_redshift_solver_method(spectrum_model) in [
+            "templateFittingSolve",
+            "tplCombinationSolve"
+        ]
+        expected_by_continuum = \
+            self.accessor.get_redshift_solver_method(spectrum_model) == "lineModelSolve" and \
+            self.accessor.get_linemodel_continuum_component(spectrum_model) in ["tplFit", "tplFitAuto"]
+
+        template_dir_presence_condition = expected_by_method or expected_by_continuum
+
         self._check_dependant_parameter_presence(
             template_dir_presence_condition,
-            self.accessor.get_template_dir(object_type) is not None,
-            f"{object_type} template_dir",
-            f"{object_type} template_dir"
+            self.accessor.get_template_dir(spectrum_model) is not None,
+            f"{spectrum_model} templateDir",
+            f"{spectrum_model} templateDir"
         )
 
-    def _check_linemeassolve_dzhalf(self, object_type: str) -> None:
+    def _check_linemeassolve_dzhalf(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_linemeas_method(object_type) is not None,
-            self.accessor.get_linemeas_dzhalf(object_type) is not None,
-            f"linemeas_dzhalf for object {object_type}",
-            f"object {object_type} linemeas_dzhalf"
+            self.accessor.get_linemeas_method(spectrum_model) is not None,
+            self.accessor.get_linemeas_dzhalf(spectrum_model) is not None,
+            f"lineMeasDzHalf for object {spectrum_model}",
+            f"object {spectrum_model} lineMeasDzHalf"
         )
 
-    def _check_linemeassolve_redshiftstep(self, object_type: str) -> None:
+    def _check_linemeassolve_redshiftstep(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_linemeas_method(object_type) is not None,
-            self.accessor.get_linemeas_redshiftstep(object_type) is not None,
-            f"lineameas_redshiftstep for object {object_type}",
-            f"object {object_type} linemeas_redshiftstep"
+            self.accessor.get_linemeas_method(spectrum_model) is not None,
+            self.accessor.get_linemeas_redshiftstep(spectrum_model) is not None,
+            f"lineMeasRedshiftStep for object {spectrum_model}",
+            f"object {spectrum_model} lineMeasRedshiftStep"
         )
 
-    def _check_object_reliability(self, object_type: str) -> None:
+    def _check_object_reliability(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_reliability_enabled(object_type),
-            self.accessor.get_reliability_model(object_type) is not None,
-            error_message=f"reliability_model for object {object_type}",
-            warning_message=f"object {object_type} reliability_enabled"
+            self.accessor.get_reliability_enabled(spectrum_model),
+            self.accessor.get_reliability_section(spectrum_model) is not None,
+            f"{spectrum_model} reliabilitySolver",
+            f"{spectrum_model} reliabilitySolver"
         )
 
-    def _check_templateFittingSolve_section(self, object_type: str) -> None:
+    def _check_templateFittingSolve_section(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_solve_method(object_type) == "TemplateFittingSolve",
-            self.accessor.get_templateFittingSolve_section(object_type) is not None,
-            error_message=f"TemplateFittingSolve for object {object_type}",
-            warning_message=f"object {object_type} TemplateFittingSolve"
+            self.accessor.get_redshift_solver_method(spectrum_model) == "templateFittingSolve",
+            self.accessor.get_template_fitting_section(spectrum_model) is not None,
+            error_message=f"templateFittingSolve for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} templateFittingSolve"
         )
+        self._check_templateFittingSolve_ism(spectrum_model)
+        self._check_templateFittingSolve_photometry_weight(spectrum_model)
+        self._check_templateFittingSolve_exclusive_fft_photometry(spectrum_model)
 
-        self._check_templateFittingSolve_ism(object_type)
-        self._check_templateFittingSolve_photometry_weight(object_type)
-
-    def _check_templateFittingSolve_ism(self, object_type: str) -> None:
+    def _check_templateFittingSolve_ism(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_templateFittingSolve_ism(object_type),
+            self.accessor.get_template_fitting_ism(spectrum_model),
             self.accessor.get_ebmv_section() is not None,
             "ebmv"
         )
 
-    def _check_templateFittingSolve_photometry_weight(self, object_type: str) -> None:
+    def _check_templateFittingSolve_photometry_weight(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_templateFittingSolve_photometry_enabled(object_type),
-            self.accessor.get_templateFittingSolve_photometry_weight(object_type) is not None,
-            f"object {object_type} TemplateFittingSolve photometry weight",
-            f"object {object_type} TemplateFittingSolve photometry weight"
+            self.accessor.get_template_fitting_photometry_enabled(spectrum_model),
+            self.accessor.get_template_fitting_photometry_weight(spectrum_model) is not None,
+            f"object {spectrum_model} TemplateFittingSolve photometry weight",
+            f"object {spectrum_model} TemplateFittingSolve photometry weight"
         )
 
-    def _check_templateCombinationSolve_section(self, object_type: str) -> None:
-        self._check_dependant_parameter_presence(
-            self.accessor.get_solve_method(object_type) == "TplcombinationSolve",
-            self.accessor.get_templateCombinationSolve_section(object_type) is not None,
-            error_message=f"TplcombinationSolve for object {object_type}",
-            warning_message=f"object {object_type} TplcombinationSolve"
-        )
-        self._check_templateCombinationSolve_ism(object_type)
+    def _check_templateFittingSolve_exclusive_fft_photometry(self, spectrum_model: str) -> None:
+        activateFft = self.accessor.get_template_fitting_fft(spectrum_model)
+        activatePhotometry = self.accessor.get_template_fitting_photometry_enabled(
+            spectrum_model)
+        if activateFft and activatePhotometry:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER_FILE,
+                "Template fitting: cannot activate both fft and photometry. Please deactivate "
+                "templateFittingSolve.fftProcessing or templateFittingSolve.enablePhotometry "
+                f"on spectrum model {spectrum_model}"
+            )
 
-    def _check_templateCombinationSolve_ism(self, object_type: str) -> None:
-        ism = self.accessor.get_templateCombinationSolve_ism(object_type)
+    def _check_templateCombinationSolve_section(self, spectrum_model: str) -> None:
+        self._check_dependant_parameter_presence(
+            self.accessor.get_redshift_solver_method(spectrum_model) == "tplCombinationSolve",
+            self.accessor.get_template_combination_section(spectrum_model) is not None,
+            error_message=f"tplCombinationSolve for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} tplCombinationSolve"
+        )
+        self._check_templateCombinationSolve_ism(spectrum_model)
+
+    def _check_templateCombinationSolve_ism(self, spectrum_model: str) -> None:
+        ism = self.accessor.get_template_combination_ism(spectrum_model)
         ebmv = self.accessor.get_ebmv_section()
 
         if ism and ebmv is None:
             self._raise_missing_param_error("ebmv")
 
-    def _check_lineModelSolve(self, object_type: str) -> None:
+    def _check_lineModelSolve(self, spectrum_model: str) -> None:
+        self._check_linemodelsolve_section(spectrum_model)
 
-        self._check_linemodelsolve_section(object_type)
+        self._check_linemodelsolve_improveBalmerFit(spectrum_model)
+        self._check_linemodelsolve_lineratiotype_rules(spectrum_model)
 
-        self._check_linemodelsolve_improveBalmerFit(object_type)
-        self._check_linemodelsolve_lineratiotype_rules(object_type)
+        self._check_lineratiotype_tplratio_catalog(spectrum_model)
+        self._check_lineratiotype_tplratio_ismfit(spectrum_model)
 
-        self._check_lineratiotype_tplratio_catalog(object_type)
-        self._check_lineratiotype_tplratio_ismfit(object_type)
+        self._check_linemodelsolve_continuumreestimation(spectrum_model)
 
-        self._check_linemodelsolve_continuumremoval(object_type)
-        self._check_linemodelsolve_continuumreestimation(object_type)
+        self._check_lineModelSolve_exclusive_fft_photometry(spectrum_model)
+        self._check_linemodelsolve_continuumfit_section(spectrum_model)
+        self._check_linemodelsolve_continuumfit_ism(spectrum_model)
+        self._check_linemodelsolve_secondpass_section(spectrum_model)
+        self._check_linemodelsolve_secondpass_continuumfit(spectrum_model)
+        self._check_linemodelsolve_firstpass_tplratio_ismfit(spectrum_model)
+        self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
+        self._check_linemodelsolve_lya_fit(spectrum_model)
+        self._check_linemodelsolve_useloglambdasampling(spectrum_model)
 
-        self._check_linemodelsolve_continuumfit_section(object_type)
-        self._check_linemodelsolve_continuumfit_ism(object_type)
-        self._check_linemodelsolve_secondpass_section(object_type)
-        self._check_linemodelsolve_secondpass_continuumfit(object_type)
-        self._check_linemodelsolve_firstpass_tplratio_ismfit(object_type)
-
-        self._check_linemeassolve_lineratiotype_rules(object_type)
-        self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(object_type)
-        self._check_linemeassolve_velocityfit_params(object_type)
-
-    def _check_linemodelsolve_section(self, object_type: str):
+    def _check_linemodelsolve_section(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
-            self.accessor.get_solve_method(object_type) == "LineModelSolve",
-            self.accessor.get_lineModelSolve_section(object_type) is not None,
-            error_message=f"LineModelSolve for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve"
+            self.accessor.get_redshift_solver_method(spectrum_model) == "lineModelSolve",
+            self.accessor.get_linemodel_solve_section(spectrum_model) is not None,
+            error_message=f"lineModelSolve for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} lineModelSolve"
         )
 
-    def _check_linemodelsolve_lineratiotype_rules(self, object_type: str):
+    def _check_linemodelsolve_lineratiotype_rules(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_lineRatioType(object_type) == "rules",
-            self.accessor.get_lineModelSolve_rules(object_type) is not None,
-            error_message=f"LineModelSolve rules for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve rules"
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model) == "rules",
+            self.accessor.get_linemodel_rules(spectrum_model) is not None,
+            error_message=f"lineModelSolve rules for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} lineModelSolve rules"
         )
 
-    def _check_linemodelsolve_improveBalmerFit(self, object_type: str):
-        improveBalmerFit = self.accessor.get_lineModelSolve_improveBalmerFit(object_type)
-        lineRatioType = self.accessor.get_lineModelSolve_lineRatioType(object_type)
+    def _check_linemodelsolve_improveBalmerFit(self, spectrum_model: str):
+        improveBalmerFit = self.accessor.get_linemodel_improve_balmer_fit(spectrum_model)
+        lineRatioType = self.accessor.get_linemodel_line_ratio_type(spectrum_model)
         if improveBalmerFit and lineRatioType != "rules":
             zflag.warning(
-                WarningCode.UNUSED_PARAMETER.value,
-                f"object {object_type} LineModelSolve lineRatioType must be rules to "
+                WarningCode.UNUSED_PARAMETER,
+                f"object {spectrum_model} lineModelSolve lineRatioType must be rules to "
                 "activate improveBalmerFit"
             )
 
-    def _check_lineratiotype_tplratio_catalog(self, object_type):
+    def _check_lineratiotype_tplratio_catalog(self, spectrum_model):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"],
-            self.accessor.get_lineModelSolve_tplratio_catalog(object_type) is not None,
-            error_message=f"LineModelSolve tplratio_catalog for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve tplratio_catalog"
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_tplratio_catalog(spectrum_model) is not None,
+            error_message=f"lineModelSolve tplRatioCatalog for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} lineModelSolve tplRatioCatalog"
         )
 
-    def _check_lineratiotype_tplratio_ismfit(self, object_type):
+    def _check_lineratiotype_tplratio_ismfit(self, spectrum_model):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"],
-            self.accessor.get_lineModelSolve_tplratio_ismfit(object_type) is not None,
-            error_message=f"LineModelSolve tplratio_ismfit for object {object_type}",
-            warning_message=f"object {object_type} LineModelSolve tplratio_ismfit"
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_tplratio_ismfit(spectrum_model) is not None,
+            error_message=f"lineModelSolve tplRatioIsmFit for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} lineModelSolve tplRatioIsmFit"
         )
 
-    def _check_linemodelsolve_continuumremoval(self, object_type):
+    def linemodelsolve_continuumreestimation_presence_condition(self, spectrum_model):
+        return self.accessor.get_linemodel_fitting_method(spectrum_model) == "hybrid"
+
+    def _check_linemodelsolve_continuumreestimation(self, spectrum_model):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) in [
-                "fromspectrum", "tplfitauto"],
-            self.accessor.get_continuum_removal() is not None,
-            error_message="continuumRemoval"
+            self.accessor.get_linemodel_continuum_component(spectrum_model) == "fromSpectrum",
+            self.accessor.get_linemodel_continuum_reestimation(spectrum_model) is not None,
+            error_message=f"object {spectrum_model} lineModelSolve continuumReestimation",
+            warning_message=f"object {spectrum_model} lineModelSolve continuumReestimation"
         )
 
-    def _check_linemodelsolve_continuumreestimation(self, object_type):
+    def _check_lineModelSolve_exclusive_fft_photometry(self, spectrum_model: str) -> None:
+        activateContinuumFft = self.accessor.get_linemodel_continuumfit_fft(spectrum_model)
+        activatePhotometry = self.accessor.get_line_model_photometry(spectrum_model)
+        if activateContinuumFft and activatePhotometry:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER_FILE,
+                "Line model solve: cannot activate both fft and photometry. Please deactivate "
+                "lineModelSolve.continuumFit.fftProcessing or lineModelSolve.enablePhotometry "
+                f"on spectrum model {spectrum_model}"
+            )
+
+    def _check_linemodelsolve_continuumfit_section(self, spectrum_model):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) == "fromspectrum",
-            self.accessor.get_lineModelSolve_continuumreestimation(object_type) is not None,
-            error_message=f"object {object_type} LineModelSolve continuumreestimation",
-            warning_message=f"object {object_type} LineModelSolve continuumreestimation"
+            self.accessor.get_linemodel_continuum_component(spectrum_model) in ["tplFit", "tplFitAuto"],
+            self.accessor.get_linemodel_continuumfit_section(spectrum_model) is not None,
+            error_message=f"object {spectrum_model} lineModelSolve continuumFit"
         )
 
-    def _check_linemodelsolve_continuumfit_section(self, object_type):
+    def _check_linemodelsolve_secondpass_section(self, spectrum_model):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplfit", "tplfitauto"],
-            self.accessor.get_lineModelSolve_continuumfit_section(object_type) is not None,
-            error_message=f"object {object_type} LineModelSolve continuumfit"
+            self.accessor.get_linemodel_skipsecondpass(spectrum_model) is False,
+            self.accessor.get_linemodel_secondpass_section(spectrum_model) is not None,
+            f"object {spectrum_model} lineModelSolve secondPass",
+            f"object {spectrum_model} lineModelSolve secondPass"
         )
 
-    def _check_linemodelsolve_secondpass_section(self, object_type):
+    def _check_linemodelsolve_secondpass_continuumfit(self, spectrum_model):
+        condition = self.accessor.get_linemodel_secondpass_section(spectrum_model) is not None and \
+            self.accessor.get_linemodel_continuum_component(spectrum_model) in ["tplFit", "tplFitAuto"]
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_skipsecondpass(object_type) is False,
-            self.accessor.get_lineModelSolve_secondpass_section(object_type) is not None,
-            f"object {object_type} LineModelSolve secondpass",
-            f"object {object_type} LineModelSolve secondpass"
+            condition,
+            self.accessor.get_linemodel_secondpass_continuumfit(spectrum_model) is not None,
+            error_message=f"object {spectrum_model} lineModelSolve secondpass continuumFit"
         )
 
-    def _check_linemodelsolve_secondpass_continuumfit(self, object_type):
+    def _check_linemodelsolve_continuumfit_ism(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumComponent(object_type) in ["tplfit", "tplfitauto"],
-            self.accessor.get_lineModelSolve_secondpass_continuumfit(object_type) is not None,
-            error_message=f"object {object_type} LineModelSolve secondpass continuumfit"
-        )
-
-    def _check_linemodelsolve_continuumfit_ism(self, object_type: str) -> None:
-        self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_continuumfit_ismfit(object_type),
+            self.accessor.get_linemodel_continuumfit_ismfit(spectrum_model),
             self.accessor.get_ebmv_section() is not None,
             "ebmv"
         )
 
-    def _check_linemodelsolve_firstpass_tplratio_ismfit(self, object_type: str):
+    def _check_linemodelsolve_firstpass_tplratio_ismfit(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineModelSolve_lineRatioType(object_type) in ["tplratio", "tplcorr"],
-            self.accessor.get_lineModelSolve_firstpass_tplratio_ismfit(object_type) is not None,
-            f"object {object_type} LineModelSolve firstpass tplratio_ismfit",
-            f"object {object_type} LineModelSolve firstpass tplratio_ismfit"
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_firstpass_tplratio_ismfit(spectrum_model) is not None,
+            f"object {spectrum_model} lineModelSolve firstpass tplRatioIsmFit",
+            f"object {spectrum_model} lineModelSolve firstpass tplRatioIsmFit"
         )
 
-    def _check_linemeassolve_lineratiotype_rules(self, object_type: str):
+    def _check_linemodelsolve_firstpass_extremacount(self, spectrum_model: str):
+        lm_extremacount = self.accessor.get_linemodel_extremacount(spectrum_model)
+        fp_extremacount = self.accessor.get_linemodel_firstpass_extremacount(spectrum_model)
+        if lm_extremacount and fp_extremacount:
+            if fp_extremacount < lm_extremacount:
+                raise APIException(
+                    ErrorCode.INVALID_PARAMETER_FILE,
+                    "linemodel.firstpass.extremaCount is lower than linemodel.extremaCount for object "
+                    f"{spectrum_model}"
+                )
+
+    def _check_linemodelsolve_lya_fit(self, spectrum_model: str):
+        if self.accessor.get_redshift_solver_method(spectrum_model) == "lineModelSolve":
+            self._check_dependant_parameter_presence(
+                self.accessor.get_linemodel_lya_profile(spectrum_model) == "asym",
+                self.accessor.get_linemodel_lya_asym_section(spectrum_model) is not None,
+                error_message=f"lineModelSolve linemodel lya asymProfile section for object {spectrum_model}",
+                warning_message=f"object {spectrum_model} lineModelSolve lineModel lya asymProfile section"
+            )
+
+    def useloglambdasampling_presence_condition(self, spectrum_model):
+        return self.accessor.get_linemodel_continuum_component(spectrum_model) in ["tplFit", "tplFitAuto"] \
+            and self.accessor.get_linemodel_continuumfit_fftprocessing(spectrum_model)
+
+    def _check_linemodelsolve_useloglambdasampling(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineMeasSolve_lineRatioType(object_type) == "rules",
-            self.accessor.get_lineMeasSolve_rules(object_type) is not None,
-            error_message=f"LineMeasSolve rules for object {object_type}",
-            warning_message=f"object {object_type} LineMeasSolve rules"
+            self.useloglambdasampling_presence_condition(spectrum_model),
+            self.accessor.get_linemodel_useloglambdasampling(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling",
+            f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling"
         )
 
-    def _check_linemeassolve_fittingmethod_lbfgsb_velocityfit(self, object_type: str):
+    def _check_linemeassolve_lineratiotype_rules(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
-            self.accessor.get_lineMeasSolve_fittingmethod(object_type) == "lbfgsb",
-            self.accessor.get_lineMeasSolve_velocityfit(object_type) is not None,
-            error_message=f"LineMeasSolve velocityfit for object {object_type}",
-            warning_message=f"object {object_type} LineMeasSolve velocityfit"
+            self.accessor.get_linemeas_line_ratio_type(spectrum_model) == "rules",
+            self.accessor.get_linemeas_rules(spectrum_model) is not None,
+            error_message=f"lineMeasSolve rules for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} LineMeasSolve rules"
         )
 
-    def _check_linemeassolve_velocityfit_params(self, object_type: str):
-        params = ["emvelocityfitmin", "emvelocityfitmax", "absvelocityfitmin", "absvelocityfitmax"]
-        velocityfit: bool = self.accessor.get_lineMeasSolve_velocityfit(object_type)
+    def _check_linemeassolve_fittingmethod_lbfgsb_velocityfit(self, spectrum_model: str):
+        self._check_dependant_parameter_presence(
+            self.accessor.get_linemeas_fitting_method(spectrum_model) == "lbfgsb",
+            self.accessor.get_linemeas_velocity_fit(spectrum_model) is not None,
+            error_message=f"lineMeasSolve velocityFit for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} LineMeasSolve velocityFit"
+        )
+
+    def _check_linemeassolve_velocityfit_params(self, spectrum_model: str):
+        params = ["emVelocityFitMin", "emVelocityFitMax", "absVelocityFitMin", "absVelocityFitMax"]
+        velocityfit: bool = self.accessor.get_linemeas_velocity_fit(spectrum_model)
         for param in params:
             self._check_dependant_parameter_presence(
                 velocityfit,
-                self.accessor.get_lineMeasSolve_velocityfit_param(object_type, param) is not None,
-                error_message=f"LineMeasSolve {param} for object {object_type}",
-                warning_message=f"object {object_type} LineMeasSolve {param}"
+                self.accessor.get_linemeas_velocity_fit_param(spectrum_model, param) is not None,
+                error_message=f"lineMeasSolve {param} for object {spectrum_model}",
+                warning_message=f"object {spectrum_model} LineMeasSolve {param}"
+            )
+
+    def _check_linemeassolve_lya_fit(self, spectrum_model: str):
+        if self.accessor.get_linemeas_method(spectrum_model) == "lineMeasSolve":
+            self._check_dependant_parameter_presence(
+                self.accessor.get_linemeas_lya_profile(spectrum_model) == "asym",
+                self.accessor.get_linemeas_lya_asym_section(spectrum_model) is not None,
+                error_message=f"lineMeasSolve linemodel lya asymProfile section for object {spectrum_model}",
+                warning_message=f"object {spectrum_model} lineMeasSolve linemodel lya asymProfile section"
             )
 
     def _check_dependant_parameter_presence(self, triggering_condition: bool, dependant_condition: bool,
@@ -455,7 +619,7 @@ class ParametersChecker:
             if warning_message is not None:
                 if custom_warning_message:
                     zflag.warning(
-                        WarningCode.UNUSED_PARAMETER.value,
+                        WarningCode.UNUSED_PARAMETER,
                         warning_message
                     )
                 else:
@@ -463,7 +627,7 @@ class ParametersChecker:
 
     def _add_unused_parameter_warning(self, param_name):
         zflag.warning(
-            WarningCode.UNUSED_PARAMETER.value,
+            WarningCode.UNUSED_PARAMETER,
             f"Unused parameter {param_name}"
         )
 

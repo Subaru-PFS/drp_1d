@@ -42,19 +42,18 @@
 
 namespace NSEpic {
 
-CLineMeasSolve::CLineMeasSolve(TScopeStack &scope, string objectType)
-    : CObjectSolve("LineMeasSolve", scope, objectType) {}
+CLineMeasSolve::CLineMeasSolve() : CObjectSolve("lineMeasSolve") {}
 
-void CLineMeasSolve::GetRedshiftSampling(
-    const std::shared_ptr<const CInputContext> &inputContext,
-    TFloat64Range &redshiftRange, Float64 &redshiftStep) {
+void CLineMeasSolve::GetRedshiftSampling(const CInputContext &inputContext,
+                                         TFloat64Range &redshiftRange,
+                                         Float64 &redshiftStep) {
   // default is to read from the scoped paramStore
-  Float64 rangeCenter =
-      inputContext->GetParameterStore()->GetScoped<Float64>("redshiftref");
-  Float64 halfRange =
-      inputContext->GetParameterStore()->GetScoped<Float64>("linemeas_dzhalf");
-  redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>(
-      "linemeas_redshiftstep");
+  Float64 rangeCenter = inputContext.GetParameterStore()->GetScopedAt<Float64>(
+      "redshiftref", ScopeType::SPECTRUMMODEL);
+  Float64 halfRange = inputContext.GetParameterStore()->GetScopedAt<Float64>(
+      "lineMeasDzHalf", ScopeType::SPECTRUMMODEL);
+  redshiftStep = inputContext.GetParameterStore()->GetScopedAt<Float64>(
+      "lineMeasRedshiftStep", ScopeType::SPECTRUMMODEL);
 
   halfRange = std::ceil(halfRange / redshiftStep) * redshiftStep;
 
@@ -67,16 +66,15 @@ void CLineMeasSolve::GetRedshiftSampling(
   redshiftRange = TFloat64Range(rangeCenter - half_l, rangeCenter + half_r);
 }
 
-std::shared_ptr<CSolveResult>
-CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                        std::shared_ptr<COperatorResultStore> resultStore,
-                        TScopeStack &scope) {
+std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
 
   Float64 opt_nsigmasupport =
       inputContext->GetParameterStore()->GetScoped<Float64>(
-          "linemodel.nsigmasupport"); // try with 16 (-> parameters.json)
+          "lineModel.nSigmaSupport"); // try with 16 (-> parameters.json)
   const std::string &opt_continuumcomponent =
-      "nocontinuum"; // params->GetScoped<std::string>("continuumcomponent");
+      "noContinuum"; // params->GetScoped<std::string>("continuumComponent");
 
   m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 

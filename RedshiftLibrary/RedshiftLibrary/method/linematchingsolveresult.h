@@ -39,10 +39,10 @@
 #ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 #define _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/solveresult.h"
-
-#include <vector>
 
 namespace NSEpic {
 

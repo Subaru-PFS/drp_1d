@@ -39,18 +39,19 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/line/line.h"
-#include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-
-#include <gsl/gsl_errno.h>
-
 #include <map>
 #include <memory>
 #include <string>
+
+#include <gsl/gsl_errno.h>
+
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/line.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/scopestack.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 #define Context (CProcessFlowContext::GetInstance())
 
@@ -83,14 +84,15 @@ public:
   setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog) {
     m_inputContext->setPhotBandCatalog(photBandCatalog);
   }
-  void setLineCatalog(const std::string &objectType, const std::string &method,
+  void setLineCatalog(const std::string &spectrumModel,
+                      const std::string &method,
                       const std::shared_ptr<CLineCatalog> &catalog) {
-    m_inputContext->setLineCatalog(objectType, method, catalog);
+    m_inputContext->setLineCatalog(spectrumModel, method, catalog);
   }
   void setLineRatioCatalogCatalog(
-      const std::string &objectType,
+      const std::string &spectrumModel,
       const std::shared_ptr<CLineCatalogsTplRatio> &catalog) {
-    m_inputContext->setLineRatioCatalogCatalog(objectType, catalog);
+    m_inputContext->setLineRatioCatalogCatalog(spectrumModel, catalog);
   }
   void
   setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
@@ -120,9 +122,9 @@ public:
   }
 
   std::shared_ptr<const CLineCatalog>
-  GetLineCatalog(const std::string &objectType,
+  GetLineCatalog(const std::string &spectrumModel,
                  const std::string &method) const {
-    return m_inputContext->GetLineCatalog(objectType, method);
+    return m_inputContext->GetLineCatalog(spectrumModel, method);
   }
   std::shared_ptr<const CParameterStore> GetParameterStore() const {
     return m_inputContext->GetParameterStore();
@@ -144,19 +146,30 @@ public:
   }
 
   const std::string &GetCurrentCategory() const {
-    if (m_ScopeStack.empty())
-      THROWG(INTERNAL_ERROR,
-             "Category unreachable at process flow begin or end");
-    return m_ScopeStack[0];
+    if (!m_ScopeStack->has_type(ScopeType::SPECTRUMMODEL))
+      THROWG(ErrorCode::SCOPESTACK_ERROR,
+             Formatter() << "cannot get current " << ScopeType::SPECTRUMMODEL
+                         << " since not in scope");
+    return m_ScopeStack->get_type_value(ScopeType::SPECTRUMMODEL);
+  }
+
+  const std::string &GetCurrentStage() const {
+    if (!m_ScopeStack->has_type(ScopeType::STAGE))
+      THROWG(ErrorCode::SCOPESTACK_ERROR, Formatter() << "cannot get current "
+                                                      << ScopeType::STAGE
+                                                      << " since not in scope");
+    return m_ScopeStack->get_type_value(ScopeType::STAGE);
   }
 
   const std::string &GetCurrentMethod() const {
-    if (m_ScopeStack.size() < 2)
-      THROWG(INTERNAL_ERROR, "Method unreachable at process flow begin or end");
-    return m_ScopeStack[1];
+    if (!m_ScopeStack->has_type(ScopeType::METHOD))
+      THROWG(ErrorCode::SCOPESTACK_ERROR, Formatter() << "cannot get current "
+                                                      << ScopeType::METHOD
+                                                      << " since not in scope");
+    return m_ScopeStack->get_type_value(ScopeType::METHOD);
   }
 
-  const CLineMap getCLineMap();
+  CLineMap getCLineMap();
   std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
 
@@ -186,7 +199,7 @@ public:
     return m_inputContext->getRebinnedSpectra();
   }
 
-  TScopeStack m_ScopeStack;
+  std::shared_ptr<CScopeStack> m_ScopeStack;
 
 private:
   friend class CSingleton<CProcessFlowContext>;

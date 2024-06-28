@@ -1,0 +1,60 @@
+{
+    "lambdaRange": [
+        4680,
+        4712
+    ],
+    "smoothWidth": 0.0,
+    "templateCatalog": {
+        "continuumRemoval": {
+            "method": "zero",
+            "medianKernelWidth": 75,
+            "medianEvenReflection": true
+        }
+    },
+    "continuumRemoval": {
+        "method": "irregularSamplingMedian",
+        "medianKernelWidth": 400,
+        "medianEvenReflection": true,
+        "decompScales": 9
+    },
+    "lsf": {
+        "lsfType": "gaussianConstantResolution",
+        "resolution": 4300
+    },
+    "spectrumModels": [
+        "galaxy"
+    ],
+    "autoCorrectInput": false,
+    "galaxy": {
+        "redshiftSampling": "log",
+        "method": null,
+        "linemeas_method": "lineMeasSolve",
+        "lineMeasDzHalf": 0.0,
+        "lineMeasRedshiftStep": 0.0001,
+        "redshiftref": 0.25969245809934272,
+        "lineMeasSolve": {
+            "lineModel": {
+                "velocityEmission": 30.0,
+                "velocityAbsorption": 150.0,
+                "continuumComponent": "noContinuum",
+                "lineTypeFilter": "E",
+                "lineForceFilter": "no",
+                "nSigmaSupport": 14,
+                "lineWidthType": "combined",
+                "fittingMethod": "lbfgsb",
+                "polynomialDegree": 2,
+                "velocityFit": true,
+                "ampOffsetFit": "true",
+                "lbdaOffsetFit": "true",
+                "emVelocityFitMin": 10,
+                "emVelocityFitMax": 400,
+                "absVelocityFitMin": 150,
+                "absVelocityFitMax": 500,
+                "lineRatioType": "rules",
+                "rules": "no",
+                "improveBalmerFit": true,
+                "lyaForceDisableFit": false
+            }
+        }
+    }
+}

@@ -36,11 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/axis.h"
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/log/log.h"
 #include <algorithm>
 #include <numeric>
+
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/axis.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -78,7 +79,7 @@ TFloat64List CSpectrumAxis::maskVector(const TFloat64List &mask,
                                        const TFloat64List &inputVector) {
   TFloat64List outputVector;
   if (mask.size() != inputVector.size()) {
-    THROWG(INTERNAL_ERROR, "mask and vector sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR, "mask and vector sizes do not match");
   }
   Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
   outputVector.clear();

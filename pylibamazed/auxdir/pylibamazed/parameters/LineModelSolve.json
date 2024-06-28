@@ -1,0 +1,90 @@
+{
+  "LineModelSolve": {
+    "linemodel": {
+      "linecatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
+      "linetypefilter": null,
+      "lineforcefilter": "no",
+      "fittingmethod": "individual",
+      "igmfit": null,
+      "linewidthtype": null,
+      "velocityemission": 100,
+      "velocityabsorption": 100,
+      "velocityfit": true,
+      "pdfcombination": "marg",
+      "emvelocityfitmin": 10,
+      "emvelocityfitmax": 400,
+      "emvelocityfitstep": 20,
+      "absvelocityfitmin": 150,
+      "absvelocityfitmax": 500,
+      "absvelocityfitstep": 50,
+      "lyaforcefit": false,
+      "lyaforcedisablefit": false,
+      "lya": {
+        "asymfitmin": 0,
+        "asymfitmax": 4,
+        "asymfitstep": 1,
+        "widthfitmin": 1,
+        "widthfitmax": 4,
+        "widthfitstep": 1,
+        "deltafitmin": 0,
+        "deltafitmax": 0,
+        "deltafitstep": 1
+      },
+      "extremacountB": 0,
+      "haprior": -1,
+      "lineRatioType": "tplratio",
+      "rules": "all",
+      "improveBalmerFit": true,
+      "tplratio_catalog": "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v16_emission",
+      "tplratio_ismfit": true,
+      "continuumcomponent": "tplfit",
+      "continuumreestimation": "no",
+      "continuumfit": {
+        "negativethreshold": -5.0,
+        "nullthreshold": 3,
+        "fftprocessing": null,
+        "ismfit": true,
+        "igmfit": null,
+        "count": 1,
+        "ignorelinesupport": false,
+        "priors": {
+          "betaA": 1,
+          "betaTE": 1,
+          "betaZ": 1,
+          "catalog_dirpath": ""
+        }
+      },
+      "useloglambdasampling": false,
+      "skipsecondpass": false,
+      "extremacount": 5,
+      "extremacutprobathreshold": -1,
+      "pdf": {
+        "margampcorr": false,
+        "bestzoption": "maxintproba"
+      },
+      "firstpass": {
+        "fittingmethod": "individual",
+        "largegridstepratio": null,
+        "tplratio_ismfit": false,
+        "multiplecontinuumfit_disable": true
+      },
+      "secondpass": {
+        "halfwindowsize": null,
+        "continuumfit": "refitfirstpass"
+      },
+      "secondpasslcfittingmethod": -1,
+      "stronglinesprior": -1,
+      "euclidnhaemittersStrength": -1,
+      "tplratio": {
+        "priors": {
+          "betaA": 1,
+          "betaTE": 1,
+          "betaZ": 1,
+          "catalog_dirpath": ""
+        }
+      },
+      "nsigmasupport": 8,
+      "enablephotometry": false
+    }
+  }
+}

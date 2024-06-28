@@ -39,6 +39,12 @@
 #ifndef _REDSHIFT_LINEMODEL_FITTING_
 #define _REDSHIFT_LINEMODEL_FITTING_
 
+#include <memory>
+#include <unordered_set>
+
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
@@ -48,18 +54,12 @@
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
-
-#include <boost/shared_ptr.hpp>
-#include <memory>
-#include <unordered_set>
 
 namespace NSEpic {
 
@@ -69,7 +69,8 @@ class CLineModelFitting {
 
 public:
   CLineModelFitting(
-      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
+      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+      ElementComposition element_composition = ElementComposition::Default);
   CLineModelFitting(
       const std::shared_ptr<const CSpectrum> &template_,
       const TLambdaRange &lambdaRange,
@@ -80,7 +81,8 @@ public:
 
   void initParameters();
   void
-  initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator);
+  initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+              ElementComposition element_composition);
 
   void LogCatalogInfos();
 
@@ -96,8 +98,6 @@ public:
   Float64 EstimateLikelihoodCstLog() const;
   Float64 getDTransposeD();
   Float64 getLikelihood_cstLog();
-
-  Int32 GetNElements() const;
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
@@ -123,18 +123,18 @@ public:
   CMask getOutsideLinesMask() const;
   Float64 getOutsideLinesSTD(Int32 which) const;
 
-  Int32 getSpcNSamples() const;
+  Int32 computeSpcNSamples() const;
 
   Float64 getLeastSquareContinuumMeritFast() const;
   Float64 getLeastSquareContinuumMerit() const;
-  Float64 getLeastSquareMeritUnderElements() const;
+
   Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const {
-    return getElementList().getScaleMargCorrection(Eltidx);
+    return m_ElementsVector->getScaleMargCorrection(Eltidx);
   }
 
-  Float64 getStrongerMultipleELAmpCoeff() const;
-
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
+    // TODO temp basic impl
+    m_spectraIndex.reset();
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
@@ -156,26 +156,35 @@ public:
     return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
-  const CSpectrum &getSpectrum() const { return *((*m_inputSpcs)[*m_curObs]); }
-  shared_ptr<const CSpectrum> getSpectrumPtr() {
-    return (*m_inputSpcs)[*m_curObs];
+  Int32 GetModelNonZeroElementsNDdl() const {
+    return m_ElementsVector->GetModelNonZeroElementsNDdl();
   }
 
-  CSpectrumModel &getSpectrumModel() { return (*m_models)[*m_curObs]; }
+  const CSpectrum &getSpectrum() const {
+    return *((*m_inputSpcs).at(m_spectraIndex.get()));
+  }
+  shared_ptr<const CSpectrum> getSpectrumPtr() {
+    return (*m_inputSpcs).at(m_spectraIndex.get());
+  }
+
+  CSpectrumModel &getSpectrumModel() { return m_models->getSpectrumModel(); }
 
   const CSpectrumModel &getSpectrumModel() const {
-    return (*m_models)[*m_curObs];
+    return m_models->getSpectrumModel();
   }
 
   CLineModelElementList &getElementList() {
-    return (*m_ElementsVector)[*m_curObs];
+    return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    return (*m_ElementsVector)[*m_curObs];
+    return m_ElementsVector->getElementList();
+  }
+  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+    return m_ElementsVector->getElementParam();
   }
 
   const TLambdaRange &getLambdaRange() const {
-    return *(m_lambdaRanges[*m_curObs]);
+    return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
 
   const std::string &getFittingMethod() const { return m_fittingmethod; }
@@ -190,9 +199,9 @@ public:
   // we keep that getters temporarily, waiting for refactoring linemodel extrema
   // result
   Int32 getTplratio_count() const;
-  TFloat64List getTplratio_priors();
+  TFloat64List getTplratio_priors() const;
 
-  std::string getLineRatioType() { return m_lineRatioType; }
+  std::string const &getLineRatioType() const { return m_lineRatioType; }
 
   void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
 
@@ -209,13 +218,20 @@ public:
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
 
-private:
-  void AddElement(CLineVector lines, Float64 velocityEmission,
-                  Float64 velocityAbsorption, Int32 ig);
-  void LoadCatalog();
-  void LoadCatalogOneMultiline();
-  void LoadCatalogTwoMultilinesAE();
+  // Multi obs combination/aggregation methods on elements Lists
 
+  std::pair<Float64, Float64>
+  GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index, Float64 redshift);
+
+  std::pair<Float64, Float64>
+  getFluxDirectIntegration(const TInt32List &eIdx_list,
+                           const TInt32List &subeIdx_list,
+                           bool substract_abslinesmodel) const;
+
+  CSpectraGlobalIndex &getSpectraIndex() { return m_spectraIndex; }
+  void refreshAllModels();
+
+private:
   void SetLSF();
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
@@ -232,10 +248,6 @@ private:
 
   // Float64* m_unscaleContinuumFluxAxisDerivZ;
 
-  std::string m_LineWidthType;
-
-  std::vector<TLineModelElementParam_ptr> m_ElementParam;
-
   Float64 m_nominalWidthDefault;
 
   std::string m_fittingmethod;
@@ -246,7 +258,7 @@ private:
 
   CTLambdaRangePtrVector m_lambdaRanges;
   CCSpectrumVectorPtr m_inputSpcs;
-  CLMEltListVectorPtr m_ElementsVector;
+  std::shared_ptr<CLMEltListVector> m_ElementsVector;
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;
@@ -256,8 +268,8 @@ private:
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
-  Int32 m_nbObs;
-  std::shared_ptr<Int32> m_curObs;
+
+  mutable CSpectraGlobalIndex m_spectraIndex;
 };
 
 } // namespace NSEpic

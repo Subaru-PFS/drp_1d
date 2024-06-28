@@ -44,15 +44,19 @@
 
 using namespace NSEpic;
 void CTemplatesOrthogonalization::Orthogonalize(
-    CInputContext &inputContext, const std::string category,
+    CInputContext &inputContext, const std::string spectrumModel,
     std::shared_ptr<const CLSF> lsf) {
   // retrieve params from InputContext
   m_LSF = lsf;
   m_enableOrtho =
       inputContext.GetParameterStore()->EnableTemplateOrthogonalization(
-          category);
-  CAutoScope autoscope_category(Context.m_ScopeStack, category);
-  CAutoScope autoscope_method(Context.m_ScopeStack, "LineModelSolve");
+          spectrumModel);
+  CAutoScope autoscope_category(Context.m_ScopeStack, spectrumModel,
+                                ScopeType::SPECTRUMMODEL, false);
+  CAutoScope autoscope_solver(Context.m_ScopeStack, "redshiftSolver",
+                              ScopeType::STAGE, false);
+  CAutoScope autoscope_method(Context.m_ScopeStack, "lineModelSolve",
+                              ScopeType::METHOD, false);
 
   // retrieve templateCatalog
   std::shared_ptr<CTemplateCatalog> tplCatalog =
@@ -61,7 +65,7 @@ void CTemplatesOrthogonalization::Orthogonalize(
   TBoolList samplingList{0, 1};
 
   bool needOrthogonalization = prepareTplCatForOrthogonalization(
-      tplCatalog, inputContext, category, samplingList);
+      tplCatalog, inputContext, spectrumModel, samplingList);
 
   if (!needOrthogonalization) {
     tplCatalog->m_logsampling = currentsampling;
@@ -75,14 +79,14 @@ void CTemplatesOrthogonalization::Orthogonalize(
     tplCatalog->m_orthogonal = 0;
     const TTemplateConstRefList TplList =
         std::const_pointer_cast<const CTemplateCatalog>(tplCatalog)
-            ->GetTemplateList(TStringList{category});
+            ->GetTemplateList(TStringList{spectrumModel});
     tplCatalog->m_orthogonal = 1;
-    bool partial = (sampling && tplCatalog->GetTemplateCount(category))
+    bool partial = (sampling && tplCatalog->GetTemplateCount(spectrumModel))
                        ? true
                        : false; // need to replace only some of the ortho
     for (Int32 i = 0; i < TplList.size(); i++) {
       const CTemplate tpl = *TplList[i];
-      if (partial && tplCatalog->GetTemplate(category, i))
+      if (partial && tplCatalog->GetTemplate(spectrumModel, i))
         break; // ortho template  is already there
       Log.LogDetail(Formatter()
                     << "    TplOrthogonalization: now processing tpl"
@@ -101,11 +105,12 @@ void CTemplatesOrthogonalization::Orthogonalize(
 
 bool CTemplatesOrthogonalization::prepareTplCatForOrthogonalization(
     std::shared_ptr<CTemplateCatalog> &tplCatalog, CInputContext &inputContext,
-    const std::string category, TBoolList &samplingList) const {
+    const std::string spectrumModel, TBoolList &samplingList) const {
 
-  // check if category has never been orthogonalized
+  // check if spectrumModel has never been orthogonalized
   samplingList = {0, 1};
-  bool first_time_ortho = !tplCatalog->GetTemplateCount(category, true, false);
+  bool first_time_ortho =
+      !tplCatalog->GetTemplateCount(spectrumModel, true, false);
 
   // check if LSF has changed, if yes reorthog all
   bool differentLSF = false;
@@ -125,9 +130,9 @@ bool CTemplatesOrthogonalization::prepareTplCatForOrthogonalization(
                  // other than lsfwidth
 
   if (differentLSF) {
-    tplCatalog->ClearTemplateList(category, 1,
+    tplCatalog->ClearTemplateList(spectrumModel, 1,
                                   0); // clear orthog templates - non-rebinned
-    tplCatalog->ClearTemplateList(category, 1,
+    tplCatalog->ClearTemplateList(spectrumModel, 1,
                                   1); // clear orthog templates - rebinned
     return true; // no need to continue analysis since we cleared all
                  // templates
@@ -135,7 +140,7 @@ bool CTemplatesOrthogonalization::prepareTplCatForOrthogonalization(
 
   // check if log-sampled templates have changed and need ortho
   bool need_ortho_logsampling =
-      hasLogRebinnedTemplatesChanged(tplCatalog, category);
+      hasLogRebinnedTemplatesChanged(tplCatalog, spectrumModel);
 
   if (need_ortho_logsampling) // need ortho recompute,
     samplingList = {1};
@@ -144,13 +149,14 @@ bool CTemplatesOrthogonalization::prepareTplCatForOrthogonalization(
 }
 
 bool CTemplatesOrthogonalization::hasLogRebinnedTemplatesChanged(
-    std::shared_ptr<CTemplateCatalog> &tplCatalog, std::string category) const {
+    std::shared_ptr<CTemplateCatalog> &tplCatalog,
+    std::string spectrumModel) const {
 
   tplCatalog->m_logsampling = 1;
   tplCatalog->m_orthogonal = 0; // orig log
 
-  bool need_ortho_logsampling =
-      tplCatalog->GetTemplateCount(category) > 0; // orig log list is not empty
+  bool need_ortho_logsampling = tplCatalog->GetTemplateCount(spectrumModel) >
+                                0; // orig log list is not empty
 
   if (!need_ortho_logsampling)
     return false;
@@ -159,11 +165,11 @@ bool CTemplatesOrthogonalization::hasLogRebinnedTemplatesChanged(
   // has it changed for all or some templates ? (if changed, the orthog
   // template will be cleared)
   tplCatalog->m_orthogonal = 1;
-  Int32 tpl_log_ortho_count = tplCatalog->GetTemplateCount(category);
+  Int32 tpl_log_ortho_count = tplCatalog->GetTemplateCount(spectrumModel);
   if (tpl_log_ortho_count > 0) // log-ortho list still there
   {
     // check if ortho missing for some templates only
-    Int32 nonNullCount = tplCatalog->GetNonNullTemplateCount(category);
+    Int32 nonNullCount = tplCatalog->GetNonNullTemplateCount(spectrumModel);
     if (nonNullCount == tpl_log_ortho_count)
       need_ortho_logsampling = false; // no need to recompute ortho
   }
@@ -187,11 +193,11 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   if (!m_enableOrtho)
     return tplOrtho;
 
-  std::string opt_continuumcomponent = "fromspectrum";
+  std::string opt_continuumcomponent = "fromSpectrum";
   Float64 opt_continuum_neg_threshold =
-      -INFINITY; // not relevant in the "fromspectrum" case
+      -INFINITY; // not relevant in the "fromSpectrum" case
   Float64 opt_continuum_nullamp_threshold =
-      0.; // not relevant in the "fromspectrum" case;
+      0.; // not relevant in the "fromSpectrum" case;
   tplOrtho->SetLSF(m_LSF);
 
   std::string saveContinuumEstimationMethod =
@@ -220,6 +226,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   Float64 mtm = model.EstimateMTransposeM();
 
   // Subtract the fitted model from the original template
+  model.getSpectraIndex().reset();
   model.getSpectrumModel().refreshModel();
   CSpectrum modelSpc = model.getSpectrumModel().GetModelSpectrum();
   /*//debug:

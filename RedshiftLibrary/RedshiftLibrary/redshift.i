@@ -50,8 +50,10 @@
 %shared_ptr(CLog)
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CLogHandler)
+%shared_ptr(CScopeStack)
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
+%shared_ptr(COperatorResult)
 %shared_ptr(CLineCatalog)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
@@ -142,7 +144,6 @@
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
-static PyObject* pGlobalException;
 static PyObject* pAmzException;
  %}
 
@@ -150,13 +151,9 @@ static PyObject* pAmzException;
 
 %init %{
   import_array();
-  pGlobalException = PyErr_NewException("redshift_.GlobalException", 0, 0);
-  Py_INCREF(pGlobalException);
-  PyModule_AddObject(m, "GlobalException", pGlobalException);
   pAmzException = PyErr_NewException("redshift_.AmzException", 0, 0);
   Py_INCREF(pAmzException);
   PyModule_AddObject(m, "AmzException", pAmzException);
-
 %}
 
 %{
@@ -174,7 +171,6 @@ static PyObject* pAmzException;
 
 // should be in "derived first" order
 #define FOR_EACH_EXCEPTION(ACTION) \
-   ACTION(GlobalException) \
    ACTION(AmzException) \
 /**/
 %}
@@ -222,24 +218,29 @@ public:
 
   static CLog& GetInstance();
 
-  void LogInfo( const char* format, ... );
-  void LogDetail( const char* format, ... );
-  void LogDebug( const char* format, ... );
-  void Indent();
-  void UnIndent();
+  void LogInfo(const std::string &s);
+  void LogDetail(const std::string &s);
+  void LogDebug(const std::string &s);
 
 private:
    CLog();
    ~CLog();
 };
 
+%pythonprepend CFlagWarning::warning(WarningCode c, const std::string &message) %{
+    c = c.bit
+%} 
+
+%pythonappend CFlagWarning::getBitMask() %{
+    val = WarningCode(val)
+%}
+
 class CFlagWarning {
 public:
 
   static CFlagWarning& GetInstance();
 
-  void warning(WarningCode c, std::string message);
-  void warning(WarningCode c, const char* format, ... );
+  void warning(WarningCode c, const std::string &message);
   Int32 getBitMask();
   void resetFlag();
 
@@ -449,6 +450,8 @@ public:
 %include "operator/modelspectrumresult.i"
 %include "operator/modelphotvalueresult.i"
 %include "linemodel/linemodelsolution.i"
+%include "common/errorcodes.i"
+%include "common/warningcodes.i"
 
 struct CTplModelSolution {
 
@@ -490,7 +493,11 @@ public:
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
-  TScopeStack  m_ScopeStack;
+  const std::string &GetCurrentCategory() const;
+  const std::string &GetCurrentStage() const;
+  const std::string &GetCurrentMethod() const;
+
+  std::shared_ptr<CScopeStack>  m_ScopeStack;
 
  private:
     CProcessFlowContext();
@@ -498,10 +505,53 @@ public:
     
 };
 
+enum class ScopeType { UNDEFINED, SPECTRUMMODEL, STAGE, METHOD };
+
+%pythonappend CScopeStack::get_current_type() const %{
+    val = ScopeType(val)
+%}
+
+class CScopeStack {
+public:
+  CScopeStack();
+  CScopeStack(const TScopeStack &scope);
+  CScopeStack(TScopeStack &&scope);
+  CScopeStack(std::initializer_list<std::string> init);
+  std::size_t size() const;
+  bool empty() const;
+  TStringList::const_iterator begin() const;
+  TStringList::const_iterator end() const;
+  std::string const &front() const;
+  std::string const &back() const;
+  std::string const &at(std::size_t pos) const;
+
+  void push_back(const std::string &value, ScopeType type = ScopeType::UNDEFINED);
+  void push_back(std::string &&value, ScopeType type = ScopeType::UNDEFINED);
+  void pop_back();
+
+  bool has_type(ScopeType type) const;
+  const std::string &get_type_value(ScopeType type) const;
+  size_t get_type_level(ScopeType type) const;
+  ScopeType get_current_type() const;
+};
+
+%extend CScopeStack {
+  std::string __getitem__(size_t pos) {
+    return (*($self))[pos];
+  }
+  // std::string __setitem__(size_t pos, const std::string &value) {
+  //     (*($self))[pos] = value;
+  //     return (*($self))[pos];
+  //   }
+}
+
+
+
+
 class CParameterStore : public CScopeStore
 {
   public:
-    CParameterStore(const TScopeStack& stack);
+    CParameterStore(const std::shared_ptr<const CScopeStack> &stack);
     void FromString(const std::string& json);
     template<typename T> T Get(const std::string& name) const;
 };
@@ -512,38 +562,39 @@ class COperatorResultStore
 {
 
  public:
-  COperatorResultStore(const TScopeStack& scopeStack);
+  COperatorResultStore(const std::shared_ptr<const CScopeStack> &scopeStack);
 
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
+                                                                       const std::string& stage,
                                                                        const std::string& method,
                                                                        const std::string& name ) const;
 
-  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType,
+  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType, const std::string& stage,
 									 const std::string& method,
                                                                        const std::string& name ) const;
 
-  std::shared_ptr<const CLogZPdfResult> GetLogZPdfResult(const std::string& objectType,
+  std::shared_ptr<const CLogZPdfResult> GetLogZPdfResult(const std::string& objectType, const std::string& stage,
 								    const std::string& method,
 								    const std::string& name ) const;
 
-  std::shared_ptr<const CFlagLogResult> GetFlagLogResult(const std::string& objectType,
+  std::shared_ptr<const CFlagLogResult> GetFlagLogResult(const std::string& objectType, const std::string& stage,
 							 const std::string& method,
 							 const std::string& name ) const;
 
-  std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
+  std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType, const std::string& stage,
 							     const std::string& method,
 							     const std::string& name ,
 							     const std::string &dataset,
 							     const int& rank,
                    bool firstpassResults
 							     ) const;
-  std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
+  std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType, const std::string& stage,
 										 const std::string& method,
 										 const std::string& name ,
 								     const std::string &dataset,
 										 const int& rank
 										 ) const;
-  std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType,
+  std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType, const std::string& stage,
 										 const std::string& method,
 										 const std::string& name ,
                      const std::string &dataset,
@@ -551,57 +602,61 @@ class COperatorResultStore
 									       ) const;
 
 
-  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType, const std::string& stage,
 								 const std::string& method,
 								 const std::string& name,
 								 const std::string &dataset,
 								 const int& rank 
 								 ) const  ;
 
-    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType, const std::string& stage,
 								 const std::string& method,
 								 const std::string& name 
 								 ) const  ;
 
-  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
+  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType, const std::string& stage,
 								     const std::string& method,
 								     const std::string& name ,
 								     const std::string &dataset,
 								     const int& rank
 								     ) const  ;
 
-  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
+  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType, const std::string& stage,
 								     const std::string& method,
 								     const std::string& name 
 								     ) const  ;
-  std::shared_ptr<const CModelPhotValueResult> GetModelPhotValueResult(const std::string &objectType,
+  std::shared_ptr<const CModelPhotValueResult> GetModelPhotValueResult(const std::string &objectType, const std::string& stage,
                                             const std::string &method,
                                             const std::string &name,
                                             const std::string &dataset,
                                             const int &rank) const;
 
-  const std::string&  GetGlobalResultType(const std::string& objectType,
+  const std::string&  GetGlobalResultType(const std::string& objectType, const std::string& stage,
                                           const std::string& method,
                                           const std::string& name ) const;
 
-    const std::string&  GetCandidateResultType(const std::string& objectType,
+    const std::string&  GetCandidateResultType(const std::string& objectType, const std::string& stage,
 					     const std::string& method,
 					     const std::string& name ,
 					     const std::string& dataset) const;
 
-      bool HasCandidateDataset(const std::string& objectType,
+      bool HasCandidateDataset(const std::string& objectType, const std::string& stage,
 			   const std::string& method,
 			   const std::string& name ,
 			   const std::string& dataset) const;
 
-      bool HasDataset(const std::string& objectType,
+      bool HasDataset(const std::string& objectType, const std::string& stage,
 			   const std::string& method,
 			   const std::string& name ) const;
 
-  int getNbRedshiftCandidates(const std::string& objectType,
+  int getNbRedshiftCandidates(const std::string& objectType, const std::string& stage,
 			      const std::string& method) const;
 
-  void StoreFlagResult( const std::string& name, Int32  result );
+  void StoreScopedFlagResult( const std::string& name);
+
+  void StoreScopedGlobalResult(const std::string &name,
+                               std::shared_ptr<const COperatorResult> result);
+
 };
 
 
@@ -815,8 +870,14 @@ public:
     TStringList GetNameListSortedByLambda() const;
 };
 
-%include "common/errorcodes.i"
-%include "common/warningcodes.i"
+%pythonappend AmzException::getErrorCode() const %{
+    val = ErrorCode(val)
+%}
+
+%pythonprepend AmzException::LogError() const %{
+    if not args:
+      args = (self.__str__(), )
+%}
 
 class AmzException : public std::exception
 {
@@ -829,23 +890,28 @@ class AmzException : public std::exception
   virtual ~AmzException();
  
   ErrorCode getErrorCode() const;
-  virtual const char* what() ;
+  virtual const char* what() const noexcept override;
   const std::string &getMessage() const;
 
   const std::string &getFileName() const;
   const std::string &getMethod() const;
   int getLine() const;
 
-  void LogError(const std::string &msg) const;
+  void LogError(const std::string &msg = std::string()) const;
 
 };
 
+%pythoncode %{
+  def _AmzException__str__(self):
+    msg = f"{self.getErrorCode().name}:{self.getMessage()}"
+    filename = self.getFileName()
+    if filename:
+      msg += f" [{filename}:{self.getLine()}:{self.getMethod()}]"
+    return msg
 
-class GlobalException: public AmzException
-{
- public:
-  using AmzException::AmzException;
-};
+  AmzException.__str__ = _AmzException__str__
+%}
+
 class CSolve{
  public:
   CSolve()=delete;
@@ -863,7 +929,7 @@ class CObjectSolve{
 
   public:
 
-    CClassificationSolve(TScopeStack &scope,std::string objectType);
+    CClassificationSolve();
 
   };
   class CReliabilitySolve:public CSolve
@@ -871,42 +937,42 @@ class CObjectSolve{
 
   public:
 
-    CReliabilitySolve(TScopeStack &scope,std::string objectType);
+    CReliabilitySolve();
   };
   class CLineModelSolve:public CObjectSolve
   {
 
   public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType);
+    CLineModelSolve();
   };
   class CLineMeasSolve:public CObjectSolve
   {
 
   public:
 
-    CLineMeasSolve(TScopeStack &scope,std::string objectType);
+    CLineMeasSolve();
   };
 
   class CTemplateFittingSolve : public CObjectSolve
 {
   public:
 
-    CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+    CTemplateFittingSolve();
   };
 
-class CTplcombinationSolve : public CObjectSolve
+class CTplCombinationSolve : public CObjectSolve
 {
 
  public:
-  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplCombinationSolve();
 };
 
 class CLineMatchingSolve: public CObjectSolve
 {
 public:
 
-    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
+    CLineMatchingSolve();
 };
 
 typedef struct {
@@ -936,17 +1002,33 @@ class CSpectrumFluxCorrectionCalzetti
 //code that runs after the cpp mapping takes place, it transfroms the cpp enum into python enum
 
 %pythoncode %{
-from enum import Enum
-def redo(prefix):
+from enum import Enum, Flag
+def redo(prefix, flag=False):
     tmpD = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
     for k,v in tmpD.items():
         del globals()[k]
-    tmpD = {k[len(prefix)+1:]:v for k,v in tmpD.items()}
-    # globals()[prefix] = type(prefix,(),tmpD) # pre-Enum support
-    globals()[prefix] = Enum(prefix,tmpD)
+    if flag:    
+      tmpD = {k[len(prefix)+1:]:1<<v for k,v in tmpD.items()}
+      flag = Flag(prefix,tmpD)
+      for f in flag:
+        f.bit = f.value.bit_length() - 1
+      # python 3.9:  
+      flag.bit_list = property(lambda self: [f.bit for f in flag if self.__contains__(f)])
+      # python 3.11:
+      # flag.bit_list = property(lambda self: [f.bit for f in self])
+      # python 3.9:
+      flag.name_list = property(lambda self: [f.name for f in flag if self.__contains__(f)]) 
+      # python 3.11:
+      # flag.name_list = flag.name.split('|') # only since python 3.11 (name is defined for aliases)
+      globals()[prefix] = flag
+    else:
+      tmpD = {k[len(prefix)+1:]:v for k,v in tmpD.items()}
+      globals()[prefix] = Enum(prefix,tmpD)
 redo('ErrorCode')
-redo('WarningCode')
+redo('WarningCode', flag=True)
+redo('ScopeType')
 del redo  # cleaning up the namespace
 del Enum
+del Flag
 %}
 

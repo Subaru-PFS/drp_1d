@@ -36,10 +36,8 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersChecker import ParametersChecker
-from pylibamazed.redshift import CFlagWarning
-from pylibamazed.Warning import extract_warning_flags
+from pylibamazed.redshift import CFlagWarning, WarningCode
 
 default_object_type = "galaxy"
 
@@ -54,11 +52,11 @@ class ComparisonUtils:
 
 class WarningUtils:
     @staticmethod
-    def has_any_warning(zflag: CFlagWarning):
-        return zflag.getBitMask() != 0
+    def has_any_warning():
+        return bool(CFlagWarning.GetInstance().getBitMask())
 
-    def has_warning(zflag: CFlagWarning, warning_name):
-        return warning_name in extract_warning_flags(zflag.getBitMask())
+    def has_warning(warning: WarningCode):
+        return warning in CFlagWarning.GetInstance().getBitMask()
 
 
 class DictUtils:
@@ -80,15 +78,81 @@ def make_parameter_dict(**kwargs) -> dict:
 
 def make_parameter_dict_at_object_level(**kwargs) -> dict:
     param_dict = {
-        "objects": [default_object_type],
-        default_object_type: {}
+        "spectrumModels": [default_object_type],
+        default_object_type: kwargs
     }
+    return param_dict
 
-    for key, value in kwargs.items():
-        param_dict[default_object_type][key] = value
+
+def make_parameter_dict_at_redshift_solver_level(
+        object_level_params=None,
+        object_type=None,
+        **redshift_kwargs
+) -> dict:
+    if object_type is None:
+        object_type = default_object_type
+    param_dict = {
+        "spectrumModels": [object_type],
+        object_type: {
+            "stages": ["redshiftSolver"],
+            "redshiftSolver": redshift_kwargs,
+        }
+    }
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[object_type][key] = val
+    if redshift_kwargs.get("method") == "lineModelSolve":
+        if param_dict.get("lsf") is None:
+            param_dict["lsf"] = {}
+    return param_dict
+
+
+def make_parameter_dict_at_linemodelsolve_level(**kwargs):
+    param_dict = make_parameter_dict_at_redshift_solver_level()
+    param_dict[default_object_type]["redshiftSolver"] = {
+        "method": "lineModelSolve",
+        "lineModelSolve": {"lineModel": kwargs},
+    }
+    param_dict["lsf"] = {}
+    return param_dict
+
+
+def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwargs) -> dict:
+    param_dict = {
+        "spectrumModels": [default_object_type],
+        default_object_type: {
+            "lineMeasDzHalf": 0.1,
+            "lineMeasRedshiftStep": 0.1,
+            "stages": ["lineMeasSolver"],
+            "lineMeasSolver": {
+                "method": "lineMeasSolve",
+                "lineMeasSolve": kwargs,
+            }
+        }
+    }
+    param_dict["lsf"] = {}
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[default_object_type][key] = val
+    return param_dict
+
+
+def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=None, **kwargs) -> dict:
+    param_dict = {
+        "spectrumModels": [default_object_type],
+        default_object_type: {
+            "stages": ["reliabilitySolver"],
+            "reliabilitySolver": {
+                "method": "deepLearningSolver",
+                "deepLearningSolver": kwargs,
+            }
+        }
+    }
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[default_object_type][key] = val
     return param_dict
 
 
 def check_from_parameter_dict(param_dict: dict):
-    accessor = ParametersAccessor(param_dict)
-    ParametersChecker(accessor).custom_check()
+    ParametersChecker(param_dict).custom_check()

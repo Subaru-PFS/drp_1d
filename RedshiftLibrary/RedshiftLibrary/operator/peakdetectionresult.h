@@ -39,11 +39,11 @@
 #ifndef _REDSHIFT_OPERATOR_PEAKDETECTIONRESULT_
 #define _REDSHIFT_OPERATOR_PEAKDETECTIONRESULT_
 
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/processflow/result.h"
-
-#include <vector>
 
 namespace NSEpic {
 

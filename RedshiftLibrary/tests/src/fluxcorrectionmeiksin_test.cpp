@@ -36,16 +36,17 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <iostream>
+
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "tests/src/tool/inputContextLight.h"
-
-#include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
-#include <iostream>
 
 using namespace NSEpic;
 using namespace std;
@@ -55,19 +56,19 @@ namespace bfs = boost::filesystem;
 // //-----------------------------------------------------------------------------
 
 const std::string jsonString =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantWidth\" , \"width\" : 0.04},"
-    "\"galaxy\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
-    "\"qso\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianConstantWidth\" , \"width\" : 0.04},"
+    "\"galaxy\" : {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
+    "\"qso\" : {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"dustfit\" : true, \"extinction\" : true}}, "
     "\"templateCatalog\" : {\"continuumRemoval\" : "
     "{ \"medianKernelWidth\" : 40.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}}";
+    "\"method\" : \"irregularSamplingMedian\"}}}";
 
 class fixture_MeiskinCorrectionTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CLSF> LSFConstantWidth =
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE(overall_test) {
                         TFloat64List{},
                         igmCorrectionMeiksin->m_rawCorrections[0].lbda,
                         finelbdaGrid, zbin, LSFConstantWidth),
-                    GlobalException);
+                    AmzException);
 
   // no overlapping range
   zbin.Set(0.5, 1.0);
@@ -151,17 +152,10 @@ BOOST_AUTO_TEST_CASE(overall_test) {
               igmCorrectionMeiksin->m_rawCorrections[0].lbda.size() - 1);
 
   // test getWaveVector :
-  TFloat64Range w_range(1213., 1213.2);
-  TFloat64List w_vec = igmCorrectionMeiksin->getWaveVector(w_range);
-
   TFloat64List w_vec_ref = {1213.02999999983, 1213.07999999983,
                             1213.12999999983, 1213.17999999983};
-  for (std::size_t i = 0; i < w_vec.size(); i++) {
-    BOOST_CHECK_CLOSE(w_vec[i], w_vec_ref[i], 1e-8);
-  }
-
   TFloat64Range w_range_raw(1213., 1213.2);
-  w_vec = igmCorrectionMeiksin->getWaveVector(w_range_raw, true);
+  TFloat64List w_vec = igmCorrectionMeiksin->getWaveVector(w_range_raw, true);
   for (std::size_t i = 0; i < w_vec.size(); i++) {
     BOOST_CHECK_CLOSE(w_vec[i], w_vec_ref[i], 1e-8);
   }
@@ -181,7 +175,6 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
 
   // test convolve with kernel = 1
   TFloat64Range lbdaRange(1000, 12500);
-  TScopeStack scopeStack;
   igmCorrectionMeiksin->convolveByLSF(LSFConstantWidth, lbdaRange);
 
   //  range [2.0, 2.5]
@@ -228,7 +221,7 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
   lambdaRest = 1214.;
   BOOST_CHECK_THROW(
       igmCorrectionMeiksin->getCorrection(redshift, meiksinIdx, lambdaRest),
-      GlobalException);
+      AmzException);
 
   redshift = 1.5;
   meiksinIdx = 0;
@@ -246,6 +239,23 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
     else
       BOOST_CHECK_CLOSE(
           corr, igmCorrectionMeiksin->m_rawCorrections[0].fluxcorr[0][i], 1e-6);
+  }
+
+  TFloat64Range w_range(1213., 1213.2);
+  auto [w_vec, cor] =
+      igmCorrectionMeiksin->getWaveAndCorrectionVector(w_range, 2.5, 3);
+
+  TFloat64List w_vec_ref = {1213.02999999983, 1213.07999999983,
+                            1213.12999999983, 1213.17999999983};
+
+  Int32 zIdx = igmCorrectionMeiksin->getRedshiftIndex(2.5);
+  auto const indices =
+      igmCorrectionMeiksin->getWaveRangeIndices(w_range, false);
+  auto const idx_vector = indices.SpreadOver(1);
+  for (std::size_t i = 0; i < w_vec.size(); i++) {
+    BOOST_CHECK_CLOSE(w_vec[i], w_vec_ref[i], 1e-8);
+    BOOST_CHECK(cor[i] ==
+                igmCorrectionMeiksin->getCorrection(zIdx, 3, idx_vector[i]));
   }
 }
 

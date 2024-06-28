@@ -36,22 +36,22 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/line/lineprofile.h"
-#include "RedshiftLibrary/line/linetags.h"
-#include "RedshiftLibrary/log/log.h"
-
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-
 #include <algorithm> // std::sort
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <string>
+
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
+
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/lineprofile.h"
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -88,7 +88,7 @@ CLineCatalogBase<TLine>::GetFilteredList(const std::string &typeFilter,
 }
 
 template <typename TLine>
-const std::map<std::string, typename CLineCatalogBase<TLine>::TLineVector>
+std::map<std::string, typename CLineCatalogBase<TLine>::TLineVector>
 CLineCatalogBase<TLine>::ConvertToGroupList(
     const CLineCatalogBase<TLine>::TLineMap &filteredList) {
 
@@ -140,8 +140,9 @@ void CLineCatalog::AddLineFromParams(
     profile = std::unique_ptr<CLineProfileSYMIGM>(
         new CLineProfileSYMIGM(igmcorrection, m_nSigmaSupport));
   else {
-    THROWG(INTERNAL_ERROR, Formatter() << "Profile name " << profileName
-                                       << " is no recognized.");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Profile name " << profileName
+                                          << " is no recognized.");
   }
 
   Add(CLine(name, position, etype, std::move(profile), eforce, velocityOffset,
@@ -157,8 +158,9 @@ void CLineCatalogBase<TLine>::setLineAmplitude(Int32 id,
   if (search != m_List.end())
     search->second.setNominalAmplitude(nominalAmplitude);
   else
-    THROWG(INTERNAL_ERROR, Formatter() << " Line with id " << id
-                                       << " does not exist in catalog");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << " Line with id " << id
+                                          << " does not exist in catalog");
 }
 
 /**

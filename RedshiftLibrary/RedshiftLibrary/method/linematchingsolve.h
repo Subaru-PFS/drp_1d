@@ -59,20 +59,10 @@ class CParameterStore;
 class CLineMatchingSolve : public CObjectSolve {
 
 public:
-  CLineMatchingSolve(TScopeStack &scope, std::string objectType);
+  CLineMatchingSolve();
   ~CLineMatchingSolve();
 
-  std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope) override;
-
-  std::shared_ptr<CLineMatchingSolveResult>
-  Compute(COperatorResultStore &resultStore,
-          std::shared_ptr<const CParameterStore> paramStore,
-          const CSpectrum &spc, const TFloat64Range &lambdaRange,
-          const TFloat64Range &redshiftsRange,
-          const CLineCatalog &restLineCatalog);
+  std::shared_ptr<CSolveResult> compute() override;
 
 private:
   // Peak Detection

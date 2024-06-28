@@ -38,11 +38,14 @@
 // ============================================================================
 #ifndef _REDSHIFT_SPECTRUM_LSFFACTORY_
 #define _REDSHIFT_SPECTRUM_LSFFACTORY_
+
 #define LSFFactory (CLSFFactory::GetInstance())
 //#define LSFArgsFactory (CLSFArgsFactory::GetInstance())
-#include "RedshiftLibrary/common/singleton.h"
+
+#include <map>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/singleton.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
@@ -50,7 +53,6 @@
 #include "RedshiftLibrary/spectrum/LSFVariableWidth.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
-#include <map>
 
 namespace NSEpic {
 class CLSF;
@@ -80,12 +82,12 @@ private:
   FactoryMap m_FactoryMap;
 };
 inline CLSFFactory::CLSFFactory() {
-  Register("GaussianConstantWidth", &CLSFGaussianConstantWidth::make_LSF);
-  Register("GaussianConstantResolution",
+  Register("gaussianConstantWidth", &CLSFGaussianConstantWidth::make_LSF);
+  Register("gaussianConstantResolution",
            &CLSFGaussianConstantResolution::make_LSF);
-  Register("GaussianNISPSIM2016", &CLSFGaussianNISPSIM2016::make_LSF);
-  Register("GaussianNISPVSSPSF201707", &CLSFGaussianNISPVSSPSF201707::make_LSF);
-  Register("GaussianVariableWidth", &CLSFGaussianVariableWidth::make_LSF);
+  Register("gaussianNISPSIM2016", &CLSFGaussianNISPSIM2016::make_LSF);
+  Register("gaussianNISPVSSPSF201707", &CLSFGaussianNISPVSSPSF201707::make_LSF);
+  Register("gaussianVariableWidth", &CLSFGaussianVariableWidth::make_LSF);
 }
 
 inline void CLSFFactory::Register(const std::string &name,

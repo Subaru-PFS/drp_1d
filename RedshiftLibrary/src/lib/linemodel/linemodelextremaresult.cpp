@@ -49,7 +49,7 @@ void TLineModelResult::updateFromContinuumModelSolution(
     std::shared_ptr<const CTplModelSolution> cms) {
   fittedTpl = *cms;
   fittedTpl.tplName =
-      fittedTpl.tplAmplitude ? fittedTpl.tplName : "nocontinuum";
+      fittedTpl.tplAmplitude ? fittedTpl.tplName : "noContinuum";
 }
 
 void TLineModelResult::updateFromLineModelSolution(
@@ -64,6 +64,14 @@ void TLineModelResult::updateTplRatioFromModel(
   FittedTplratioIsmCoeff = ratioMgr->getTplratio_bestTplIsmCoeff();
   FittedTplratioAmplitudeEm = ratioMgr->getTplratio_bestAmplitudeEm();
   FittedTplratioAmplitudeAbs = ratioMgr->getTplratio_bestAmplitudeAbs();
+  FittedTplratioAmplitudeUncertaintyEm =
+      ratioMgr->getTplratio_bestAmplitudeUncertaintyEm();
+  FittedTplratioAmplitudeUncertaintyAbs =
+      ratioMgr->getTplratio_bestAmplitudeUncertaintyAbs();
+  FittedTplratioSNREm = std::abs(FittedTplratioAmplitudeEm) /
+                        FittedTplratioAmplitudeUncertaintyEm;
+  FittedTplratioSNRAbs = std::abs(FittedTplratioAmplitudeAbs) /
+                         FittedTplratioAmplitudeUncertaintyAbs;
 }
 
 void TLineModelResult::updateFromModel(
@@ -83,16 +91,20 @@ void TLineModelResult::updateFromModel(
   }
 
   // store model Ha SNR & Flux
-  snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa = lmresult->LineModelSolutions[idx].lfHa;
-  snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa_DI = lmresult->LineModelSolutions[idx].lfHa_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
 
   // store model OII SNR & Flux
-  snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
-  snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII_DI = lmresult->LineModelSolutions[idx].lfOII_DI;
+  if (lmel->getLineRatioType() == "rules")
+    snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
 
   // store Lya fitting parameters
   LyaWidthCoeff = lmresult->LineModelSolutions[idx].LyaWidthCoeff;
@@ -104,27 +116,21 @@ void TLineModelResult::updateFromModel(
   Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
   CorrScaleMarg = corrScaleMarg;
 
-  static Float64 cutThres = 3.0;
-  Int32 nValidLines =
-      lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
-  NLinesOverThreshold = nValidLines;
+  Float64 static const cutThres = SNR_THRESHOLD_FOR_NLINESOVER;
+  if (lmel->getLineRatioType() == "rules")
+    NLinesOverThreshold =
+        lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
+
   std::tie(ELSNR, StrongELSNR) = lmel->getCumulSNRStrongEL();
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  Int32 nddl =
-      lmel->GetNElements(); // get the total number of elements in the model
+  NDof = lmel->GetModelNonZeroElementsNDdl();
 
-  nddl = lmresult->LineModelSolutions[idx]
-             .nDDL; // override nddl by the actual number of elements in
-                    // the fitted model
-
-  NDof = lmel->getElementList().GetModelNonZeroElementsNDdl();
-
-  Float64 _bic =
-      lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
+  Int32 const nddl = lmresult->LineModelSolutions[idx].nDDL;
+  bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
   // Float64 aic = m + 2*nddl; //AIC
-  bic = _bic;
+
   // lmresult->bic = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
   // //AICc, better when nsamples small
 
@@ -141,28 +147,31 @@ void TLineModelResult::updateFromModel(
   // save the outsideLinesMask
   OutsideLinesMask = lmel->getOutsideLinesMask();
 
-  OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1);
-  OutsideLinesSTDError = lmel->getOutsideLinesSTD(2);
+  OutsideLinesResidualRMS = lmel->getOutsideLinesSTD(1);
+  OutsideLinesInputStDevRMS = lmel->getOutsideLinesSTD(2);
 
-  if (OutsideLinesSTDError > 0.0) {
-    Float64 ratioSTD = OutsideLinesSTDFlux / OutsideLinesSTDError;
+  if (OutsideLinesInputStDevRMS > 0.0) {
+    Float64 ratioSTD = OutsideLinesResidualRMS / OutsideLinesInputStDevRMS;
     Float64 ratio_thres = 1.5;
     if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
-      Flag.warning(WarningCode::STDESTIMATION_NO_MATCHING,
-                   Formatter()
-                       << "  TLineModelResult::" << __func__
-                       << ": STD estimations outside lines do not match: ratio="
-                       << ratioSTD << ", flux-STD=" << OutsideLinesSTDFlux
-                       << ", error-std=" << OutsideLinesSTDError);
+      Flag.warning(
+          WarningCode::ESTIMATED_STD_FAR_FROM_INPUT,
+          Formatter()
+              << "  TLineModelResult::" << __func__
+              << ": StDev estimation outside lines do not match: ratio = "
+              << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
+              << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
     } else {
-      Log.LogInfo("  Operator-Linemodel: STD estimations outside lines found "
-                  "matching: ratio=%e, flux-STD=%e, error-std=%e",
-                  ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
+      Log.LogInfo(Formatter()
+                  << "  Operator-Linemodel: StDev estimations outside lines "
+                     "match: ratio = "
+                  << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
+                  << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
     }
   } else {
-    Flag.warning(WarningCode::STDESTIMATION_FAILED,
-                 Formatter() << "  TLineModelResult::" << __func__
-                             << ": unable to get STD estimations...");
+    THROWG(ErrorCode::STDESTIMATION_FAILED,
+           Formatter() << "Unable to get spectrum mean Standard "
+                          "Deviation estimations");
   }
 }
 
@@ -184,7 +193,7 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[rank];
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
@@ -201,7 +210,7 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[0]->getType();
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 bool LineModelExtremaResult::HasCandidateDataset(
@@ -220,5 +229,5 @@ LineModelExtremaResult::getCandidateParent(const int &rank,
   }
 
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
 }

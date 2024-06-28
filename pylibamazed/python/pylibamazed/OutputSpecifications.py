@@ -36,13 +36,23 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import os
-
 import pandas as pd
+from pylibamazed.Paths import results_specifications_filename
 
-module_root_dir = os.path.split(__file__)[0]
 
-results_specifications = pd.read_csv(os.path.join(module_root_dir, "resources", "results_specifications.csv"),
-                                     sep='\t',
-                                     dtype={'format': object}
-                                     )
+class ResultsSpecifications:
+    def __init__(self, specs_path: str = results_specifications_filename):
+        self.rs = pd.read_csv(
+            specs_path, sep='\t', dtype={'format': object}
+        )
+        self.rs["index_col"] = self.rs["name"]
+        self.rs.set_index("index_col", inplace=True)
+
+    def get_df_by_dataset(self, dataset: str):
+        return self.rs[self.rs["dataset"] == dataset]
+
+    def get_df_by_level(self, level: str):
+        return self.rs[self.rs["level"] == level]
+
+    def get_df_by_name(self, name: str):
+        return self.rs[self.rs["name"] == name]

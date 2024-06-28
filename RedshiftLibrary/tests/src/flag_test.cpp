@@ -36,12 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/consolehandler.h"
-
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -57,10 +56,10 @@ BOOST_AUTO_TEST_CASE(some_test) {
   // Create one warning with digit 3
   std::string message(Formatter()
                       << "test log warning : code "
-                      << (int)WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE);
+                      << (int)WarningCode::AIR_VACUUM_CONVERSION_IGNORED);
   listMsg_ref.push_back(
-      std::make_pair(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE, message));
-  Flag.warning(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE, message);
+      std::make_pair(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, message));
+  Flag.warning(WarningCode::AIR_VACUUM_CONVERSION_IGNORED, message);
 
   // Recover flagList
   TWarningMsgList listMsg = Flag.getListMessages();
@@ -70,14 +69,14 @@ BOOST_AUTO_TEST_CASE(some_test) {
   }
 
   // Create one warning with digit 11
-  message =
-      Formatter() << "test log warning : code "
-                  << (int)WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP;
+  message = Formatter()
+            << "test log warning : code "
+            << (int)WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM;
   listMsg_ref.push_back(std::make_pair(
-      WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP, message));
-  Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
+      WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM, message));
+  Flag.warning(WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
                "test log warning : code %d",
-               WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP);
+               WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM);
 
   // Recover flagList
   listMsg = Flag.getListMessages();
@@ -86,19 +85,21 @@ BOOST_AUTO_TEST_CASE(some_test) {
     BOOST_CHECK(listMsg[i].second == listMsg_ref[i].second);
   }
 
-  Int32 refVal = 1 << int(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP) |
-                 1 << int(WarningCode::CRANGE_VECTBORDERS_OUTSIDERANGE);
+  Int32 refVal =
+      1 << int(WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM) |
+      1 << int(WarningCode::AIR_VACUUM_CONVERSION_IGNORED);
 
   // Recover flag value
   BOOST_CHECK(Flag.getBitMask() == refVal); // 2056 or 00001000 00001000
 
   // Create one warning with another digit 12
-  message =
-      Formatter() << "test log warning 2 : code "
-                  << (int)WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP;
+  message = Formatter()
+            << "test log warning 2 : code "
+            << (int)WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM;
   listMsg_ref.push_back(std::make_pair(
-      WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP, message));
-  Flag.warning(WarningCode::FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP, message);
+      WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM, message));
+  Flag.warning(WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
+               message);
 
   // Recover flagList
   listMsg = Flag.getListMessages();

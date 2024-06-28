@@ -26,7 +26,7 @@ pylibamazed is a Python package wrapping numerical algorithms for the analysis o
 ## Dependencies
 
 `pylibamazed` depends on following third parties:
-* [boost](https://www.boost.org/) >=1.57
+* [boost](https://www.boost.org/) >=1.74
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8

@@ -50,16 +50,18 @@ void CRandomFitter::doFit(Float64 redshift) {
   Float64 coeffAmpEmission = pow(10.0, randNumFloat * 3.0 - 1.0);
   randNumFloat = (Float64)rand() / (Float64)(RAND_MAX);
   Float64 coeffAmpAbsorption = pow(10.0, randNumFloat * 1.0 - 1.0);
-  Log.LogInfo("\nLineModel simulation: coeffAmpEmission = %.2f",
-              coeffAmpEmission);
-  Log.LogInfo("LineModel simulation: coeffAmpAbsorption = %.2f",
-              coeffAmpAbsorption);
+  Log.LogInfo(Formatter() << "\nLineModel simulation: coeffAmpEmission ="
+                          << std::fixed << std::setprecision(2)
+                          << coeffAmpEmission);
+  Log.LogInfo(Formatter() << "LineModel simulation: coeffAmpAbsorption ="
+                          << std::fixed << std::setprecision(2)
+                          << coeffAmpAbsorption);
   // fit the model amplitudes individually
-  for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
+  for (Int32 iElts = 0; iElts < getElementParam().size(); iElts++) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
-    if (getElementList()[iElts]->GetElementType() ==
+    if (getElementParam()[iElts]->GetElementType() ==
         CLine::EType::nType_Absorption) {
       amax = meanContinuum * 0.5 * coeffAmpAbsorption;
     } else {
@@ -72,13 +74,13 @@ void CRandomFitter::doFit(Float64 redshift) {
     }
     // get the max nominal amplitude
     Float64 maxNominalAmp = -1.0;
-    auto const &elt = getElementList()[iElts];
-    for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-      if (maxNominalAmp < elt->GetNominalAmplitude(line_idx))
-        maxNominalAmp = elt->GetNominalAmplitude(line_idx);
+    auto const &elt_param = getElementParam()[iElts];
+    for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
+      if (maxNominalAmp < elt_param->GetNominalAmplitude(line_idx))
+        maxNominalAmp = elt_param->GetNominalAmplitude(line_idx);
     }
 
-    getElementList().SetElementAmplitude(iElts, a / maxNominalAmp, err);
+    m_ElementsVector->SetElementAmplitude(iElts, a / maxNominalAmp, err);
   }
 }
 

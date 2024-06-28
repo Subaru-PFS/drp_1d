@@ -36,15 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include <cmath>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
-
 #include "RedshiftLibrary/log/log.h"
-#include <cmath>
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -75,13 +74,15 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
                                      const Float64 *error, const Int32 m)
     : CSpectrumAxis(samples, n), m_StdError(error, m) {
   if (m != n) {
-    THROWG(INTERNAL_ERROR, "FluxAxis and NoiseAxis sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "FluxAxis and NoiseAxis sizes do not match");
   }
 }
 
 void CSpectrumFluxAxis::setError(CSpectrumNoiseAxis otherError) {
   if (otherError.GetSamplesCount() != m_StdError.GetSamplesCount())
-    THROWG(INTERNAL_ERROR, "FluxAxis and NoiseAxis sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "FluxAxis and NoiseAxis sizes do not match");
   m_StdError = std::move(otherError);
 }
 
@@ -157,7 +158,8 @@ Float64 CSpectrumFluxAxis::computeMaxAbsValue(Int32 imin, Int32 imax) const {
 bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
                                            Float64 &sdev) const {
   if (mask.GetMasksCount() != GetSamplesCount())
-    THROWG(INTERNAL_ERROR, "mask.GetMasksCount() != GetSamplesCount()");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "mask.GetMasksCount() != GetSamplesCount()");
 
   const CSpectrumNoiseAxis &error = GetError();
 
@@ -168,7 +170,7 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
   for (j = 0; j < GetSamplesCount(); j++) {
 #ifdef DEBUG_BUILD
     if (!(mask[j] == 1 || mask[j] == 0))
-      THROWG(INTERNAL_ERROR, "bad mask");
+      THROWG(ErrorCode::INTERNAL_ERROR, "bad mask");
 #endif
 
     weight = 1.0 / (error[j] * error[j]);
@@ -197,7 +199,8 @@ Float64 CSpectrumFluxAxis::ComputeRMSDiff(const CSpectrumFluxAxis &other) {
   Float64 er = 0.f;
 
   if (other.GetSamplesCount() != GetSamplesCount())
-    THROWG(INTERNAL_ERROR, "other.GetSamplesCount() != GetSamplesCount()");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "other.GetSamplesCount() != GetSamplesCount()");
 
   int n = GetSamplesCount();
   Float64 weight = (Float64)n;
@@ -239,14 +242,12 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
     minFlux = std::min(std::abs(m_Samples[i]), std::abs(minFlux));
   }
   if (minFlux == DBL_MAX) {
-    Flag.warning(WarningCode::CORRECT_SPECTRUM_NOMINFLUX,
-                 Formatter() << "CSpectrumFluxAxis::" << __func__
-                             << ": unable to set minFlux value (=" << minFlux
-                             << "). Setting it to 0.");
-    minFlux = 0.0;
+    THROWG(ErrorCode::SPECTRUM_CORRECTION_ERROR,
+           Formatter() << "Unable to find a min flux value.");
   }
   if (maxNoise == -DBL_MAX)
-    THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
+    THROWG(ErrorCode::SPECTRUM_CORRECTION_ERROR,
+           "Unable to find a max noise value");
 
   for (Int32 i = iMin; i < iMax; i++) {
     // check noise & flux
@@ -273,7 +274,8 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
 
 bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis &other) {
   if (other.GetSamplesCount() != GetSamplesCount())
-    THROWG(INTERNAL_ERROR, "other.GetSamplesCount() != GetSamplesCount()");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "other.GetSamplesCount() != GetSamplesCount()");
 
   Int32 N = GetSamplesCount();
   for (Int32 i = 0; i < N; i++) {

@@ -36,13 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/rules.h"
+#include <fstream>
+
 #include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/line/rules.h"
 #include "RedshiftLibrary/operator/linedetection.h"
 
 using namespace NSEpic;
 using namespace std;
-#include <fstream>
 
 CRules::CRules(CSpectrum &spc, CLineDetectedCatalog &detectedCatalog,
                CLineCatalog &restCatalog, TFloat64Range &lambdaRange,

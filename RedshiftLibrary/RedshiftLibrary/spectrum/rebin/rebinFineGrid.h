@@ -69,7 +69,7 @@ protected:
   void rebinFineGrid();
   void clearFineGrid();
 
-  const std::string m_type = "precomputedfinegrid";
+  const std::string m_type = "preComputedFineGrid";
 };
 
 } // namespace NSEpic

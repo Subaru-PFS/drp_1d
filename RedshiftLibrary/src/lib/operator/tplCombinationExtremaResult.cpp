@@ -51,7 +51,7 @@ TplCombinationExtremaResult::getCandidate(const int &rank,
   else if (dataset == "model")
     return m_savedModelSpectrumResults[rank];
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 const std::string &TplCombinationExtremaResult::getCandidateDatasetType(
@@ -62,7 +62,7 @@ const std::string &TplCombinationExtremaResult::getCandidateDatasetType(
   else if (dataset == "model")
     return m_savedModelSpectrumResults[0]->getType();
   else
-    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 bool TplCombinationExtremaResult::HasCandidateDataset(

@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_OPERATORRESULT_LINEMODEL_
 #define _REDSHIFT_OPERATORRESULT_LINEMODEL_
 
+#include <unordered_set>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
-
-#include <unordered_set>
 
 namespace NSEpic {
 

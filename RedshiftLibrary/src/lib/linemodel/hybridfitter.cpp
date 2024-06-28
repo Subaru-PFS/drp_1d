@@ -44,27 +44,27 @@ using namespace NSEpic;
 using namespace std;
 
 CHybridFitter::CHybridFitter(
-    const CLMEltListVectorPtr &elementsVector,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     const CSpcModelVectorPtr &spectrumModels, const CLineMap &restLineList,
-    const std::vector<TLineModelElementParam_ptr> &elementParam,
-    const std::shared_ptr<Int32> &curObsPtr, bool enableAmplitudeOffsets,
+    const CSpectraGlobalIndex &spcIndex, bool enableAmplitudeOffsets,
     bool enableLambdaOffsetsFit)
     : CSvdFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
-                 restLineList, elementParam, curObsPtr, enableAmplitudeOffsets,
+                 restLineList, spcIndex, enableAmplitudeOffsets,
                  enableLambdaOffsetsFit)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  if (ps->GetScoped<std::string>("linemodel.lineRatioType") == "rules")
+  if (ps->GetScoped<std::string>("lineModel.lineRatioType") == "rules")
     m_opt_enable_improveBalmerFit =
-        ps->GetScoped<bool>("linemodel.improveBalmerFit");
+        ps->GetScoped<bool>("lineModel.improveBalmerFit");
 }
 
 void CHybridFitter::doFit(Float64 redshift) {
 
+  m_spectraIndex.reset(); // temporary multiobs implementation
   // fit the amplitudes of each element independently, unless there is overlap
   fitAmplitudesHybrid(redshift);
 
@@ -120,11 +120,14 @@ void CHybridFitter::doFit(Float64 redshift) {
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
   if (m_enableAmplitudeOffsets)
-    getElementList().resetAmplitudeOffset();
+    m_ElementsVector->resetAmplitudeOffsets();
+
+  m_spectraIndex.reset(); // dummy implementation
 
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
   TInt32Set indexesFitted;
   for (Int32 iElts : validEltsIdx) {
+
     // skip if already fitted
     if (std::find(indexesFitted.cbegin(), indexesFitted.cend(), iElts) !=
         indexesFitted.cend())
@@ -136,24 +139,31 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     // setting the fitting group info
     for (Int32 overlapping_iElt : overlappingInds) {
       std::string fitGroupTag = boost::str(boost::format("hy%d") % iElts);
-      getElementList()[overlapping_iElt]->SetFittingGroupInfo(fitGroupTag);
+      m_ElementsVector->getElementParam()[overlapping_iElt]
+          ->SetFittingGroupInfo(fitGroupTag);
     }
 
-    // Log.LogDebug( "Redshift: %f", redshift);
-    Log.LogDebug("    model: hybrid fit: #%d - N overlapping=%d", iElts,
-                 overlappingInds.size());
+    Log.LogDebug(Formatter() << "    model: hybrid fit: #" << iElts
+                             << " - N overlapping=" << overlappingInds.size());
     for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-      Log.LogDebug("    model: hybrid fit:     overlapping #%d - eltIdx=%d",
-                   ifit, overlappingInds[ifit]);
+      Log.LogDebug(Formatter()
+                   << "    model: hybrid fit:     overlapping #" << ifit
+                   << " - eltIdx=" << overlappingInds[ifit]);
     }
     if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
+      m_spectraIndex.reset(); // temporary multiobs implementation
       Log.LogDebug("    model: hybrid fit:     Individual fit");
       fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
+      m_spectraIndex.reset(); // temporary multiobs implementation
+
     } else {
+      m_spectraIndex.reset(); // temporary multiobs implementation
+
       Log.LogDebug("    model: hybrid fit:     Joint fit");
       fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
                                            m_enableLambdaOffsetsFit, redshift);
+      m_spectraIndex.reset(); // temporary multiobs implementation
     }
 
     // update the already fitted list
@@ -205,9 +215,9 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     std::string tagA = linetagsA[itag];
 
     auto const &[iElt_lineE, lineE_id] =
-        getElementList().findElementIndex(tagE, CLine::EType::nType_Emission);
-    auto const &[iElt_lineA, lineA_id] =
-        getElementList().findElementIndex(tagA, CLine::EType::nType_Absorption);
+        m_ElementsVector->findElementIndex(tagE, CLine::EType::nType_Emission);
+    auto const &[iElt_lineA, lineA_id] = m_ElementsVector->findElementIndex(
+        tagA, CLine::EType::nType_Absorption);
     // Were the lines indexes found ?
     if (iElt_lineE == undefIdx || iElt_lineA == undefIdx)
       continue;
@@ -228,8 +238,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     for (Int32 imore = 0; imore < linetagsMore[itag].size(); imore++) {
       std::string tagMore = linetagsMore[itag][imore];
       auto const &[iElt_lineMore, lineMore_id] =
-          getElementList().findElementIndex(tagMore,
-                                            CLine::EType::nType_Emission);
+          m_ElementsVector->findElementIndex(tagMore,
+                                             CLine::EType::nType_Emission);
       if (iElt_lineMore == undefIdx)
         continue;
 
@@ -240,41 +250,39 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     ilinesMore.erase(std::unique(ilinesMore.begin(), ilinesMore.end()),
                      ilinesMore.end());
     for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
-      Log.LogDebug("    model: balmerImprove more tags = %d",
-                   ilinesMore[imore]);
+      Log.LogDebug(Formatter() << "    model: balmerImprove more tags = "
+                               << ilinesMore[imore]);
     }
 
     // try if the width is significantly different: abs > em
-    Float64 AbsVSEmWidthCoeffThreshold = 2.0;
-    Float64 muE = NAN;
-    Float64 muA = NAN;
-    Float64 sigmaE = NAN;
-    Float64 sigmaA = NAN;
-    getElementList()[iElt_lineE]->getObservedPositionAndLineWidth(
-        lineE_id, redshift, muE, sigmaE,
-        false); // do not apply Lya asym offset
-    getElementList()[iElt_lineA]->getObservedPositionAndLineWidth(
-        lineA_id, redshift, muA, sigmaA,
-        false); // do not apply Lya asym offset
+    Float64 const AbsVSEmWidthCoeffThreshold = 2.0;
+    auto const &[muE, sigmaE] =
+        getElementList()[iElt_lineE]->getObservedPositionAndLineWidth(
+            redshift, lineE_id,
+            false); // do not apply Lya asym offset
+    auto const &[muA, sigmaA] =
+        getElementList()[iElt_lineA]->getObservedPositionAndLineWidth(
+            redshift, lineA_id,
+            false); // do not apply Lya asym offset
     if (sigmaA < AbsVSEmWidthCoeffThreshold * sigmaE) {
       continue;
     }
 
     // simulatneous fit with linsolve
-    Float64 modelErr_init = getModel().getModelErrorUnderElement(
-        iElt_lineA, getModel().getSpcFluxAxis());
-    Float64 ampA = getElementList()[iElt_lineA]->GetFittedAmplitude(lineA_id);
+    Float64 modelErr_init =
+        getModelResidualRmsUnderElements({iElt_lineA}, true);
+    Float64 ampA = getElementParam()[iElt_lineA]->GetFittedAmplitude(lineA_id);
     Float64 amp_errorA =
-        getElementList()[iElt_lineA]->GetFittedAmplitudeErrorSigma(lineA_id);
-    Float64 ampE = getElementList()[iElt_lineE]->GetFittedAmplitude(lineE_id);
+        getElementParam()[iElt_lineA]->GetFittedAmplitudeStd(lineA_id);
+    Float64 ampE = getElementParam()[iElt_lineE]->GetFittedAmplitude(lineE_id);
     Float64 amp_errorE =
-        getElementList()[iElt_lineE]->GetFittedAmplitudeErrorSigma(lineE_id);
+        getElementParam()[iElt_lineE]->GetFittedAmplitudeStd(lineE_id);
     TFloat64List ampsMore;
     TFloat64List ampErrorsMore;
     for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
-      Float64 amp = getElementList()[ilinesMore[imore]]->GetFittedAmplitude(0);
+      Float64 amp = getElementParam()[ilinesMore[imore]]->GetFittedAmplitude(0);
       Float64 ampErr =
-          getElementList()[ilinesMore[imore]]->GetFittedAmplitudeErrorSigma(0);
+          getElementParam()[ilinesMore[imore]]->GetFittedAmplitudeStd(0);
       ampsMore.push_back(amp);
       ampErrorsMore.push_back(ampErr);
     }
@@ -291,23 +299,23 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
 
     // decide if the fit is better than previous amps
     getModel().refreshModelUnderElements(eltsIdx);
-    Float64 modelErr_withfit = getModel().getModelErrorUnderElement(
-        iElt_lineA, getModel().getSpcFluxAxis());
+    Float64 modelErr_withfit =
+        getModelResidualRmsUnderElements({iElt_lineA}, true);
     if (modelErr_withfit > modelErr_init) {
       Float64 nominal_ampA =
-          getElementList()[iElt_lineA]->GetNominalAmplitude(lineA_id);
+          getElementParam()[iElt_lineA]->GetNominalAmplitude(lineA_id);
       Float64 nominal_ampE =
-          getElementList()[iElt_lineE]->GetNominalAmplitude(lineE_id);
-      getElementList()[iElt_lineA]->SetElementAmplitude(
-          ampA / nominal_ampA, amp_errorA / nominal_ampA);
-      getElementList()[iElt_lineE]->SetElementAmplitude(
-          ampE / nominal_ampE, amp_errorE / nominal_ampE);
+          getElementParam()[iElt_lineE]->GetNominalAmplitude(lineE_id);
+      m_ElementsVector->SetElementAmplitude(iElt_lineA, ampA / nominal_ampA,
+                                            amp_errorA / nominal_ampA);
+      m_ElementsVector->SetElementAmplitude(iElt_lineE, ampE / nominal_ampE,
+                                            amp_errorE / nominal_ampE);
       for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
         Float64 nominal_ampMore =
-            getElementList()[ilinesMore[imore]]->GetNominalAmplitude(
+            getElementParam()[ilinesMore[imore]]->GetNominalAmplitude(
                 linesMoreIds[imore]);
-        getElementList()[ilinesMore[imore]]->SetElementAmplitude(
-            ampsMore[imore] / nominal_ampMore,
+        m_ElementsVector->SetElementAmplitude(
+            ilinesMore[imore], ampsMore[imore] / nominal_ampMore,
             ampErrorsMore[imore] / nominal_ampMore);
       }
     }

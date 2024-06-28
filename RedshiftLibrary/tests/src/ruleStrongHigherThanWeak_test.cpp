@@ -36,11 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/ruleStrongHigherThanWeak.h"
-#include <boost/test/unit_test.hpp>
-
 #include <cmath>
 #include <iostream>
+
+#include <boost/test/unit_test.hpp>
+
+#include "RedshiftLibrary/line/ruleStrongHigherThanWeak.h"
 
 using namespace std;
 using namespace boost;
@@ -70,14 +71,14 @@ CLine RuleStrongHigherThanWeak_fixture::createLine(std::string name,
 CLineModelElement RuleStrongHigherThanWeak_fixture::createCLineModelElement(
     CLineVector lines, std::vector<Float64> amps) {
   TLineModelElementParam_ptr elementParam_ptr =
-      std::make_shared<TLineModelElementParam>(lines, 1.0, 1.1);
-  CLineModelElement cLineModelElement(elementParam_ptr, "instrumentdriven");
+      std::make_shared<TLineModelElementParam>(lines, 1.0, 1.1,
+                                               "instrumentDriven");
+  CLineModelElement cLineModelElement(elementParam_ptr);
 
-  vector<Float64> fittedAmplitudesErrorSigmas(lines.size());
   cLineModelElement.m_ElementParam->m_FittedAmplitudes = amps;
   cLineModelElement.m_ElementParam->m_NominalAmplitudes = amps;
-  cLineModelElement.m_ElementParam->m_FittedAmplitudeErrorSigmas =
-      fittedAmplitudesErrorSigmas;
+  cLineModelElement.m_ElementParam->m_FittedAmplitudesStd =
+      TFloat64List(lines.size());
 
   // Forces model elements to be included in lambda range
   cLineModelElement.m_OutsideLambdaRangeList.assign(lines.size(), false);
@@ -109,21 +110,24 @@ CLineModelElementList RuleStrongHigherThanWeak_fixture::makeSomeElementList(
       "LineStrong1", CLine::EForce::nForce_Strong, 2);
   CLine lineStrong2 = RuleStrongHigherThanWeak_fixture::createLine(
       "LineStrong2", CLine::EForce::nForce_Strong, 3);
-
+  CLineMap lm;
   CLineModelElement weakElement1 =
       RuleStrongHigherThanWeak_fixture::createCLineModelElement(
           {lineWeak1, lineWeak2}, {weak1Amp, weak2Amp});
+  weakElement1.computeOutsideLambdaRange();
   CLineModelElement strongElement1 =
       RuleStrongHigherThanWeak_fixture::createCLineModelElement(
           {lineStrong1, lineStrong2}, {strong1Amp, strong2Amp});
-
+  strongElement1.computeOutsideLambdaRange();
   CLineModelElementList elementList =
       RuleStrongHigherThanWeak_fixture::createElementList(
           {weakElement1, strongElement1}, 2);
 
   CRuleStrongHigherThanWeak rule;
+  CLMEltListVector lmeltlistv = CLMEltListVector(elementList, lm);
+  // compute outside lambdarange list here
   rule.SetUp(true, CLine::EType::nType_Emission);
-  rule.Correct(elementList);
+  rule.Correct(lmeltlistv);
   return elementList;
 }
 

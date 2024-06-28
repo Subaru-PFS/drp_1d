@@ -12,10 +12,10 @@ using namespace std;
 
 CContinuumManager::CContinuumManager(const CSpcModelVectorPtr &models,
                                      std::shared_ptr<CTplModelSolution> tfv,
-                                     std::shared_ptr<Int32> curObs)
+                                     const CSpectraGlobalIndex &spcGlobIndex)
     : m_tplCatalog(Context.GetTemplateCatalog()),
-      m_tplCategoryList({Context.GetCurrentCategory()}), m_models(models),
-      m_fitContinuum(tfv), m_curObs(curObs) {
+      m_tplCategory(Context.GetCurrentCategory()), m_models(models),
+      m_fitContinuum(tfv), m_spectraIndex(spcGlobIndex) {
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
@@ -24,28 +24,28 @@ CContinuumManager::CContinuumManager(const CSpcModelVectorPtr &models,
       0; // 0=interactive fitting, 1=use precomputed fit store, 2=use fixed
   // values (typical use for second pass recompute)
 
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-  setContinuumComponent(ps->GetScoped<std::string>("continuumcomponent"));
+  setContinuumComponent(ps->GetScoped<std::string>("continuumComponent"));
 
-  if (m_ContinuumComponent != "nocontinuum") {
+  if (m_ContinuumComponent != "noContinuum") {
     m_opt_fitcontinuum_neg_threshold =
-        ps->GetScoped<Float64>("continuumfit.negativethreshold");
+        ps->GetScoped<Float64>("continuumFit.negativeThreshold");
     m_opt_fitcontinuum_null_amp_threshold =
-        ps->GetScoped<Float64>("continuumfit.nullthreshold");
+        ps->GetScoped<Float64>("continuumFit.nullThreshold");
   }
 }
 
 std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
-  CAutoScope a = CAutoScope(Context.m_ScopeStack, "linemodel");
-  CAutoScope b = CAutoScope(Context.m_ScopeStack, "continuumfit");
+  CAutoScope a = CAutoScope(Context.m_ScopeStack, "lineModel");
+  CAutoScope b = CAutoScope(Context.m_ScopeStack, "continuumFit");
   CAutoScope c = CAutoScope(Context.m_ScopeStack, "priors");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   m_fitContinuum_priorhelper = std::make_shared<CPriorHelper>();
-  m_fitContinuum_priorhelper->Init(
-      ps->GetScoped<std::string>("catalog_dirpath"), 0);
+  m_fitContinuum_priorhelper->Init(ps->GetScoped<std::string>("catalogDirPath"),
+                                   0);
   m_fitContinuum_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
   m_fitContinuum_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
   m_fitContinuum_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
@@ -61,11 +61,11 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
  * will be injected in the class whenever required !
  * TODO: study this possibility before doing the change
  */
-void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
-                                         Float64 redshift) {
-  Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
+void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
+  Log.LogDebug(Formatter() << "Elementlist, m_fitContinuum_option="
+                           << m_fitContinuum_option);
   /*if (m_observeGridContinuumFlux.empty())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "Cannot loadfitcontinuum without precomputedGridTplFlux");
   */
   if (m_fitContinuum_option ==
@@ -73,7 +73,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
     CTplModelSolution fitValues =
         m_fitContinuum_tplfitStore->GetFitValues(redshift, icontinuum);
     if (fitValues.tplName.empty()) {
-      THROWG(INTERNAL_ERROR, "Empty template name");
+      THROWG(ErrorCode::INTERNAL_ERROR, "Empty template name");
     }
 
     *m_fitContinuum = fitValues;
@@ -83,32 +83,18 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
   } else if (m_fitContinuum_option == 2) {
     // values unmodified nothing to do
   } else {
-    THROWG(INTERNAL_ERROR, "Cannot parse fitContinuum_option");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot parse fitContinuum_option");
   }
 
   // check that continuum is well loaded
   if (m_fitContinuum->tplName.empty())
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Failed to load-fit continuum for cfitopt="
-                               << m_fitContinuum_option);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Failed to load-fit continuum for cfitopt="
+                       << m_fitContinuum_option);
 
   // Retrieve the best template, otherwise Getter throws an error
-  std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-      m_tplCategoryList, m_fitContinuum->tplName);
-
-  if (autoSelect) {
-    // Float64 contsnr = getFitContinuum_snr();
-    /*Float64 contsnr = m_fitContinuum->tplSNRMax;
-    m_fitContinuum->tplAlpha = 1.0;
-    if(contsnr>50.)
-    {
-        m_fitContinuum->tplAlpha=0.0;
-    }*/
-    m_fitContinuum_tplFitAlpha = 0.0;
-    if (m_fitContinuumMaxValues->fitAmplitudeSigmaMAX <
-        m_opt_fitcontinuum_neg_threshold)
-      m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
-  }
+  std::shared_ptr<const CTemplate> tpl =
+      m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->tplName);
 
   getModel().ApplyContinuumOnGrid(tpl, m_fitContinuum->tplRedshift);
 
@@ -116,21 +102,21 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
                                m_fitContinuum->tplAmplitudeError,
                                m_fitContinuum->pCoeffs);
 
-  Log.LogDebug("    model : LoadFitContinuum, loaded: %s",
-               m_fitContinuum->tplName.c_str());
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded: "
+                           << m_fitContinuum->tplName);
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with A="
+                           << m_fitContinuum->tplAmplitude << ", with A_error="
+                           << m_fitContinuum->tplAmplitudeError);
   Log.LogDebug(
-      "    model : LoadFitContinuum, loaded with A=%e, with A_error=%e",
-      m_fitContinuum->tplAmplitude, m_fitContinuum->tplAmplitudeError);
-  Log.LogDebug("    model : LoadFitContinuum, loaded with DustCoeff=%e, with "
-               "MeiksinIdx=%d",
-               m_fitContinuum->tplEbmvCoeff, m_fitContinuum->tplMeiksinIdx);
-  Log.LogDebug("    model : LoadFitContinuum, loaded with dtm=%e, with mtm=%e, "
-               "with logprior=%e",
-               m_fitContinuum->tplDtM, m_fitContinuum->tplMtM,
-               m_fitContinuum->tplLogPrior);
-
-  Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e",
-               m_fitContinuum->tplSNR);
+      Formatter() << "    model : LoadFitContinuum, loaded with DustCoeff="
+                  << m_fitContinuum->tplEbmvCoeff
+                  << ", with MeiksinIdx=" << m_fitContinuum->tplMeiksinIdx);
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with dtm="
+                           << m_fitContinuum->tplDtM
+                           << ", with mtm=" << m_fitContinuum->tplMtM
+                           << "with logprior=" << m_fitContinuum->tplLogPrior);
+  Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with snr="
+                           << m_fitContinuum->tplSNR);
 }
 
 void CContinuumManager::setFitContinuum_tplAmplitude(
@@ -194,8 +180,7 @@ Float64 CContinuumManager::getContinuumScaleMargCorrection() const {
 
 std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
 CContinuumManager::getIsmCorrectionFromTpl() {
-  return m_tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
-      ->m_ismCorrectionCalzetti;
+  return m_tplCatalog->GetTemplate(m_tplCategory, 0)->m_ismCorrectionCalzetti;
 }
 
 void CContinuumManager::logParameters() {
@@ -242,26 +227,29 @@ bool CContinuumManager::isContFittedToNull() {
 
 void CContinuumManager::setContinuumComponent(std::string component) {
   m_ContinuumComponent = std::move(component);
-  getModel().setContinuumComponent(m_ContinuumComponent);
-
+  for (auto &spcIndex : m_spectraIndex) {
+    getModel().setContinuumComponent(m_ContinuumComponent);
+  }
   *m_fitContinuum = {};
 
-  if (m_ContinuumComponent == "nocontinuum") {
-    m_fitContinuum->tplName = "nocontinuum"; // to keep track in resultstore
+  if (m_ContinuumComponent == "noContinuum") {
+    m_fitContinuum->tplName = "noContinuum"; // to keep track in resultstore
     // the continuum is set to zero and the observed spectrum is the spectrum
     // without continuum
   }
-  if (m_ContinuumComponent == "fromspectrum") {
-    m_fitContinuum->tplName = "fromspectrum"; // to keep track in resultstore
+  if (m_ContinuumComponent == "fromSpectrum") {
+    m_fitContinuum->tplName = "fromSpectrum"; // to keep track in resultstore
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
   }
 }
 
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
-  std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-      m_tplCategoryList, m_fitContinuum->tplName);
-  getModel().ApplyContinuumOnGrid(tpl, redshift);
+  for (auto &spcIndex : m_spectraIndex) {
+    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
+        {m_tplCategory}, m_fitContinuum->tplName);
+    getModel().ApplyContinuumOnGrid(tpl, redshift);
+  }
 }
 
 void CContinuumManager::reinterpolateContinuumResetAmp() {
@@ -269,9 +257,11 @@ void CContinuumManager::reinterpolateContinuumResetAmp() {
   m_fitContinuum->tplAmplitude = 1.0;
   m_fitContinuum->tplAmplitudeError = 1.0;
   TFloat64List polyCoeffs_unused;
-  setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
-                               m_fitContinuum->tplAmplitudeError,
-                               polyCoeffs_unused);
+  for (auto &spcIndex : m_spectraIndex) {
+    setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
+                                 m_fitContinuum->tplAmplitudeError,
+                                 polyCoeffs_unused);
+  }
 }
 
 void CContinuumManager::setFitContinuumFromFittedAmps(

@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_COMMON_FLAG_
 #define _REDSHIFT_COMMON_FLAG_
 
+#include <cstdarg>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mutex.h"
 #include "RedshiftLibrary/common/singleton.h"
-
-#include <cstdarg>
-#include <vector>
 
 #define Flag (CFlagWarning::GetInstance())
 
@@ -52,7 +52,7 @@ namespace NSEpic {
 
 class CFlagWarning : public CSingleton<CFlagWarning> {
 public:
-  void warning(WarningCode c, std::string message);
+  void warning(WarningCode c, const std::string &message);
   void warning(WarningCode c, const char *format, ...);
 
   const std::vector<std::pair<WarningCode, std::string>> &getListMessages();

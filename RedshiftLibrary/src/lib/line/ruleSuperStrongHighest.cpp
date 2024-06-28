@@ -36,6 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/range/combine.hpp>
 #include <cstdarg>
 #include <iostream>
 
@@ -70,7 +71,7 @@ void CRuleSuperStrong::SetUp(bool EnabledArgument, ...) {
  *entry to the maximum amplitude for super strong lines
  **/
 // duplicate with ruleStrongHigherThanWeak
-void CRuleSuperStrong::Correct(CLineModelElementList &LineModelElementList) {
+void CRuleSuperStrong::Correct(CLMEltListVector &LineModelElementList) {
   Float64 coeff = 1.0;
   Float64 erStrong = -1.0;
   std::string strongName = undefStr;
@@ -79,11 +80,14 @@ void CRuleSuperStrong::Correct(CLineModelElementList &LineModelElementList) {
   if (maxiStrong == -1)
     return;
 
-  for (auto const &elt_ptr : LineModelElementList) {
+  for (auto const &[elt_ptr, elt_param_ptr] :
+       boost::combine(LineModelElementList.getElementList().getElements(),
+                      LineModelElementList.getElementParam())) {
+
     for (Int32 iLineWeak = 0; iLineWeak != elt_ptr->GetSize(); ++iLineWeak) {
-      auto const &lineWeak = elt_ptr->GetLines()[iLineWeak];
-      if (elt_ptr->GetElementType() != m_LineType ||
-          elt_ptr->IsOutsideLambdaRange(iLineWeak) ||
+      auto const &lineWeak = elt_param_ptr->GetLines()[iLineWeak];
+      if (elt_param_ptr->GetElementType() != m_LineType ||
+          elt_ptr->IsOutsideLambdaRangeLine(iLineWeak) ||
           std::find(m_SuperStrongTags.begin(), m_SuperStrongTags.end(),
                     lineWeak.GetName()) != m_SuperStrongTags.end())
         continue;
@@ -91,7 +95,7 @@ void CRuleSuperStrong::Correct(CLineModelElementList &LineModelElementList) {
       Float64 nSigma = 1.0;
       Float64 ampA = maxiStrong;
       Float64 erA = erStrong;
-      Float64 ampB = elt_ptr->GetFittedAmplitude(iLineWeak);
+      Float64 ampB = elt_param_ptr->GetFittedAmplitude(iLineWeak);
 
       // Method 0 : no noise taken into acccount
       // Float64 maxB = (coeff*ampA);
@@ -111,7 +115,7 @@ void CRuleSuperStrong::Correct(CLineModelElementList &LineModelElementList) {
         continue; // no correction
                   // correct and log correction
 
-      elt_ptr->LimitFittedAmplitude(iLineWeak, maxB);
+      elt_param_ptr->LimitFittedAmplitude(iLineWeak, maxB);
       constructLogMsg(lineWeak.GetName(), strongName, ampB, maxB);
     }
   }
@@ -134,7 +138,7 @@ void CRuleSuperStrong::constructLogMsg(const std::string &nameWeak,
   return;
 }
 
-bool CRuleSuperStrong::Check(CLineModelElementList &LineModelElementList) {
+bool CRuleSuperStrong::Check(CLMEltListVector &LineModelElementList) {
   return false;
 }
 
@@ -145,23 +149,24 @@ bool CRuleSuperStrong::Check(CLineModelElementList &LineModelElementList) {
  **/
 Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp(
     TStringList superstrongTags, Float64 &er, std::string &name,
-    CLineModelElementList &LineModelElementList) {
+    CLMEltListVector &LineModelElementList) {
   Float64 maxi = -1.0;
-  for (auto const &elt_ptr : LineModelElementList) {
+  for (auto const &elt_ptr : LineModelElementList.getElementList()) {
+    auto const &elt_param_ptr = elt_ptr->getElementParam();
     for (Int32 iLineStrong = 0; iLineStrong != elt_ptr->GetSize();
          ++iLineStrong) { // loop on the strong lines
-      auto const &lineStrong = elt_ptr->GetLines()[iLineStrong];
+      auto const &lineStrong = elt_param_ptr->GetLines()[iLineStrong];
       if (lineStrong.GetForce() != CLine::EForce::nForce_Strong ||
-          elt_ptr->GetElementType() != m_LineType ||
-          elt_ptr->IsOutsideLambdaRange(iLineStrong))
+          elt_param_ptr->GetElementType() != m_LineType ||
+          elt_ptr->IsOutsideLambdaRangeLine(iLineStrong))
         continue;
 
       if (std::find(superstrongTags.begin(), superstrongTags.end(),
                     lineStrong.GetName()) == superstrongTags.end())
         continue;
 
-      Float64 ampStrong = elt_ptr->GetFittedAmplitude(iLineStrong);
-      Float64 erStrong = elt_ptr->GetFittedAmplitudeErrorSigma(iLineStrong);
+      Float64 ampStrong = elt_param_ptr->GetFittedAmplitude(iLineStrong);
+      Float64 erStrong = elt_param_ptr->GetFittedAmplitudeStd(iLineStrong);
       if (maxi < ampStrong /*&& lineSnr>validSNRCut*/) {
         maxi = ampStrong;
         er = erStrong;
@@ -169,6 +174,5 @@ Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp(
       }
     }
   }
-  // Log.LogDebug( "Highest strong line amplitude = %f", maxi );
   return maxi;
 }

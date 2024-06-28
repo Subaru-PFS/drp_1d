@@ -39,67 +39,68 @@
 import pytest
 from pylibamazed.Exception import APIException
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_object_level)
+                                make_parameter_dict_at_redshift_solver_level)
 
 
 class TestTemplateFittingSolve:
 
     def _make_parameter_dict(self, **kwargs) -> dict:
         kwargs["linemeas_method"] = kwargs.get("linemeas_method", "")
-        kwargs["method"] = kwargs.get("method", "TemplateFittingSolve")
-        if kwargs["method"] == "TemplateFittingSolve":
-            kwargs["template_dir"] = "sth"
-        param_dict = make_parameter_dict_at_object_level(**kwargs)
-        if kwargs.get("TemplateFittingSolve", {}).get("enablephotometry"):
+        kwargs["method"] = kwargs.get("method", "templateFittingSolve")
+        object_level_params = None
+        if kwargs["method"] == "templateFittingSolve":
+            object_level_params = {"templateDir": "sth"}
+        param_dict = make_parameter_dict_at_redshift_solver_level(object_level_params, **kwargs)
+        if kwargs.get("templateFittingSolve", {}).get("enablePhotometry"):
             param_dict["photometryTransmissionDir"] = "sth"
             param_dict["photometryBand"] = ["someBand"]
         return param_dict
 
     def test_error_if_method_is_templateFittingSolve_and_section_is_absent(self):
         param_dict = self._make_parameter_dict(**{})
-        with pytest.raises(APIException, match=r"Missing parameter TemplateFittingSolve"):
+        with pytest.raises(APIException, match=r"Missing parameter templateFittingSolve"):
             check_from_parameter_dict(param_dict)
 
     def test_OK_if_method_is_templateFittingSolve_and_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {}
+            "templateFittingSolve": {}
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_any_warning(zflag)
+        assert not WarningUtils.has_any_warning()
 
     def test_warning_if_method_is_not_templateFittingSolve_but_section_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
-            "TemplateFittingSolve": {}
+            "templateFittingSolve": {}
         })
         check_from_parameter_dict(param_dict)
-        assert WarningUtils.has_any_warning(zflag)
+        assert WarningUtils.has_any_warning()
 
     def test_ok_if_method_is_not_templateFittingSolve_and_section_is_absent(self, zflag):
         param_dict = self._make_parameter_dict(**{
             "method": "sth",
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_any_warning(zflag)
+        assert not WarningUtils.has_any_warning()
 
     def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {"ismfit": True}
+            "templateFittingSolve": {"ismFit": True}
         })
         with pytest.raises(APIException, match=r"Missing parameter ebmv"):
             check_from_parameter_dict(param_dict)
 
     def test_ok_if_ismfit_enabled_and_ebmv_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {"ismfit": True}
+            "templateFittingSolve": {"ismFit": True}
         })
         param_dict["ebmv"] = {}
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_any_warning(zflag)
+        assert not WarningUtils.has_any_warning()
 
     def test_error_if_photometry_is_enabled_but_photometry_weight_is_absent(self):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {"enablephotometry": True}
+            "templateFittingSolve": {"enablePhotometry": True}
         })
         with pytest.raises(
             APIException,
@@ -109,30 +110,41 @@ class TestTemplateFittingSolve:
 
     def test_ok_if_photometry_is_enabled_and_photometry_weight_too(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {
-                "enablephotometry": True,
+            "templateFittingSolve": {
+                "enablePhotometry": True,
                 "photometry": {"weight": 1}
             }
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_any_warning(zflag)
+        assert not WarningUtils.has_any_warning()
 
     def test_warning_if_photometry_is_disabled_but_photometry_weight_is_present(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {
-                "enablephotometry": False,
+            "templateFittingSolve": {
+                "enablePhotometry": False,
                 "photometry": {"weight": 1}
             }
         })
         check_from_parameter_dict(param_dict)
-        assert WarningUtils.has_any_warning(zflag)
+        assert WarningUtils.has_any_warning()
 
     def test_ok_if_photometry_is_disabled_and_photometry_weight_is_absent(self, zflag):
         param_dict = self._make_parameter_dict(**{
-            "TemplateFittingSolve": {
-                "enablephotometry": False,
+            "templateFittingSolve": {
+                "enablePhotometry": False,
                 "photometry": {}
             }
         })
         check_from_parameter_dict(param_dict)
-        assert not WarningUtils.has_any_warning(zflag)
+        assert not WarningUtils.has_any_warning()
+
+    def test_error_if_both_fft_processing_and_photometry(self):
+        param_dict = self._make_parameter_dict(**{
+            "templateFittingSolve": {
+                "enablePhotometry": True,
+                "fftProcessing": True,
+                "photometry": {"weight": 1}
+            }
+        })
+        with pytest.raises(APIException, match=r"cannot activate both fft and photometry"):
+            check_from_parameter_dict(param_dict)

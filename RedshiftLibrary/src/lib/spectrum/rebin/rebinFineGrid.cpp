@@ -36,11 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
-#include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -50,7 +51,8 @@ void CRebinFineGrid::rebinFineGrid() {
   // method
   Int32 n = m_spectrum.GetSampleCount();
   if (!n)
-    THROWG(INVALID_SPECTRUM, "Invalid spectrum : spectral axis is empty");
+    THROWG(ErrorCode::INVALID_SPECTRUM,
+           "Invalid spectrum : spectral axis is empty");
 
   const CSpectrumSpectralAxis &spectralAxis = m_spectrum.GetSpectralAxis();
 
@@ -100,7 +102,7 @@ void CRebinFineGrid::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     rebinFineGrid();
 
   if (m_pfgFlux.size() == 0 && m_FineGridInterpolated == true) {
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "Problem finegrid interpolatted buffer couldnt be computed");
   }
 
@@ -120,8 +122,8 @@ void CRebinFineGrid::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     // implemented for
     // precomputedfinegrid
     if (opt_error_interp != "no")
-      THROWG(INTERNAL_ERROR,
-             "noise rebining not implemented for precomputedfinegrid");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "noise rebining not implemented for preComputedFineGrid");
 
     cursor++;
   }

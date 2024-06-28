@@ -40,16 +40,19 @@
 #define _SCOPE_STORE_H
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/processflow/scopestack.h"
 
 namespace NSEpic {
 
 /**
  * \ingroup Redshift
  */
+
 // abstract class
 class CScopeStore {
 public:
-  CScopeStore(const TScopeStack &scopeStack) : m_ScopeStack(scopeStack) {}
+  CScopeStore(const std::shared_ptr<const CScopeStack> &scopeStack)
+      : m_ScopeStack(scopeStack) {}
 
   CScopeStore(CScopeStore const &other) = default;
   CScopeStore &operator=(CScopeStore const &other) = default;
@@ -60,12 +63,13 @@ public:
   std::string GetCurrentScopeName() const;
   std::string getCurrentScopeNameAt(int depth) const;
   std::string GetScopedName(const std::string &name) const;
+  std::string GetScopedNameAt(const std::string &name, ScopeType type) const;
   std::string GetScopedNameAt(const std::string &name, int depth) const;
-  UInt8 getScopeDepth() const { return m_ScopeStack.size(); }
+  UInt8 getScopeDepth() const { return m_ScopeStack->size(); }
   //  std::string GetScope(const COperatorResult& result) const;
 
 protected:
-  const TScopeStack &m_ScopeStack;
+  const std::shared_ptr<const CScopeStack> m_ScopeStack;
 };
 
 } // namespace NSEpic

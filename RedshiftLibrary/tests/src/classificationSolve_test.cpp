@@ -36,14 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-
-#include <boost/test/unit_test.hpp>
+#include "tests/src/tool/inputContextLight.h"
 
 using namespace NSEpic;
 
@@ -52,23 +53,69 @@ BOOST_AUTO_TEST_SUITE(classificationSolve_test)
 Float64 precision = 1e-12;
 
 // JsonFile in string format
-std::string jsonString = "{\"galaxy\" : { \"method\" : \"LineModelSolve\" }, "
-                         "\"star\" : { \"method\" : \"LineModelSolve\" }, "
-                         "\"qso\" : { \"method\" : \"LineModelSolve\"}}";
+std::string jsonString =
+    "{\"lambdaRange\" : [ 4630, 4815 ],"
+    "\"smoothWidth\" : 0.0,"
+    "\"templateCatalog\" : {"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"zero\","
+    "\"medianKernelWidth\" : 75,"
+    "\"medianEvenReflection\" : true}},"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"irregularSamplingMedian\","
+    "\"medianKernelWidth\" : 400,"
+    "\"medianEvenReflection\" : true,"
+    "\"decompScales\" : 9},"
+    "\"autoCorrectInput\" : false,"
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", \"resolution\" : "
+    "4300},"
+    "\"spectrumModels\" : [\"galaxy\", \"star\", \"qso\"],"
+    "\"galaxy\" : {\"redshiftSolver\": { \"method\" : \"templateFittingSolve\" "
+    "}}, "
+    "\"star\" : {\"redshiftSolver\": { \"method\" : \"templateFittingSolve\" "
+    "}}, "
+    "\"qso\" : {\"redshiftSolver\": { \"method\" : \"templateFittingSolve\"}}}";
 std::string type = "test";
 
-BOOST_AUTO_TEST_CASE(compute_test) {
-  // Create scopeStack for tests
-  TScopeStack scopeStack = {"param"};
+class fixture_classificationSolveTest {
+public:
+  fixture_Context ctx;
+  fixture_classificationSolveTest() {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(jsonString);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.addSpectrum(spc, LSF);
+    ctx.initContext();
+  }
 
-  std::shared_ptr<CParameterStore> paramStore =
-      std::make_shared<CParameterStore>(scopeStack);
-  paramStore.get()->FromString(jsonString);
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
+  std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
+      fixture_PhotoBandCatalog().photoBandCatalog;
+  std::shared_ptr<CPhotometricData> photoData = fixture_PhotoData().photoData;
 
-  // create InputContext
-  std::shared_ptr<CInputContext> inputContext =
-      std::make_shared<CInputContext>(paramStore);
-  inputContext.get()->m_categories = {"galaxy", "star", "qso"};
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      fixture_MeiskinCorrection().igmCorrectionMeiksin;
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
+      fixture_CalzettiCorrection().ismCorrectionCalzetti;
+  std::shared_ptr<CLSF> LSF =
+      fixture_LSFGaussianConstantResolution(scopeStack).LSF;
+  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
+  std::shared_ptr<CTemplateCatalog> catalog =
+      fixture_sharedTemplateCatalog().catalog;
+
+  void fillCatalog() {
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+    catalog->m_logsampling = 1;
+    catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+  }
+};
+
+BOOST_FIXTURE_TEST_CASE(compute_test, fixture_classificationSolveTest) {
+
+  // CAutoScope scope_test(Context.m_ScopeStack, "param");
+  auto const &resultStore = Context.GetResultStore();
 
   // create candidateZ
   std::shared_ptr<TCandidateZ> candidateZ = std::make_shared<TCandidateZ>();
@@ -78,30 +125,31 @@ BOOST_AUTO_TEST_CASE(compute_test) {
       std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", 1.);
 
   // create OperatorResult
-  std::shared_ptr<COperatorResultStore> resultStore =
-      std::make_shared<COperatorResultStore>(scopeStack);
-  resultStore->StoreGlobalResult("galaxy.LineModelSolve", "solveResult",
-                                 result_in);
+  resultStore->StoreGlobalResult("galaxy.redshiftSolver.templateFittingSolve",
+                                 "solveResult", result_in);
 
   // create Pdf solve result for star
   result_in = std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", 1.5);
-  resultStore->StoreGlobalResult("star.LineModelSolve", "solveResult",
-                                 result_in);
+  resultStore->StoreGlobalResult("star.redshiftSolver.templateFittingSolve",
+                                 "solveResult", result_in);
 
   // qso has no results : compute function catch this and does not take count of
   // qso objects in classification
   // create Classification solve
-  std::string objectType = "galaxy";
-  CClassificationSolve cSolve(scopeStack, objectType);
+  std::string spectrumModel = "galaxy";
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, spectrumModel,
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "classification",
+                             ScopeType::STAGE);
+  CClassificationSolve cSolve;
 
-  std::shared_ptr<CSolveResult> classifResult =
-      cSolve.compute(inputContext, resultStore, scopeStack);
-  resultStore->StoreGlobalResult("object.method", "classification",
+  std::shared_ptr<CSolveResult> classifResult;
+  BOOST_REQUIRE_NO_THROW(classifResult = cSolve.compute());
+  resultStore->StoreGlobalResult("object.stage.method", "classification",
                                  classifResult);
 
-  std::shared_ptr<const CClassificationResult> result_out =
-      resultStore->GetClassificationResult("object", "method",
-                                           "classification");
+  auto result_out = resultStore->GetClassificationResult(
+      "object", "stage", "method", "classification");
 
   // check results
   Float64 logEvidence_ref_1 = 1.;
@@ -126,20 +174,19 @@ BOOST_AUTO_TEST_CASE(compute_test) {
 
   // Test with one probabilitie undefined
   result_in = std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", 1.);
-  std::shared_ptr<COperatorResultStore> resultStore_2 =
-      std::make_shared<COperatorResultStore>(scopeStack);
-  resultStore_2->StoreGlobalResult("galaxy.LineModelSolve", "solveResult",
-                                   result_in);
+  resultStore->reset();
+  resultStore->StoreGlobalResult("galaxy.redshiftSolver.templateFittingSolve",
+                                 "solveResult", result_in);
 
   result_in =
       std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", -INFINITY);
-  resultStore_2->StoreGlobalResult("star.LineModelSolve", "solveResult",
-                                   result_in);
+  resultStore->StoreGlobalResult("star.redshiftSolver.templateFittingSolve",
+                                 "solveResult", result_in);
 
-  classifResult = cSolve.compute(inputContext, resultStore_2, scopeStack);
-  resultStore->StoreGlobalResult("object.method", "classification_2",
+  classifResult = cSolve.compute();
+  resultStore->StoreGlobalResult("object.stage.method", "classification_2",
                                  classifResult);
-  result_out = resultStore->GetClassificationResult("object", "method",
+  result_out = resultStore->GetClassificationResult("object", "stage", "method",
                                                     "classification_2");
 
   logEvidence_ref_1 = 1.;
@@ -157,18 +204,16 @@ BOOST_AUTO_TEST_CASE(compute_test) {
   // Test with all probabilitie undefined
   result_in =
       std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", -INFINITY);
-  std::shared_ptr<COperatorResultStore> resultStore_3 =
-      std::make_shared<COperatorResultStore>(scopeStack);
-  resultStore_3->StoreGlobalResult("galaxy.LineModelSolve", "solveResult",
-                                   result_in);
+  resultStore->reset();
+  resultStore->StoreGlobalResult("galaxy.redshiftSolver.templateFittingSolve",
+                                 "solveResult", result_in);
 
   result_in =
       std::make_shared<CPdfSolveResult>(type, candidateZ, "marg", -INFINITY);
-  resultStore_3->StoreGlobalResult("star.LineModelSolve", "solveResult",
-                                   result_in);
+  resultStore->StoreGlobalResult("star.redshiftSolver.templateFittingSolve",
+                                 "solveResult", result_in);
 
-  BOOST_CHECK_THROW(cSolve.compute(inputContext, resultStore_3, scopeStack),
-                    GlobalException);
+  BOOST_CHECK_THROW(cSolve.compute(), AmzException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

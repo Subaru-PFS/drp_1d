@@ -46,32 +46,23 @@
 
 using namespace NSEpic;
 
-CSolve::CSolve(std::string name, TScopeStack &scope, std::string objectType)
-    : m_categoryList({objectType}), m_objectTypeScope(scope, objectType),
-      m_objectType(objectType), m_name(name) {}
-void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext) {}
+CSolve::CSolve(const std::string &name)
+    : m_category(Context.GetCurrentCategory()), m_name(name) {}
 
 void CSolve::Compute() {
-  std::shared_ptr<const CInputContext> inputContext = Context.GetInputContext();
-  std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
-  TScopeStack &scope = Context.m_ScopeStack;
+  auto const &inputContext = *Context.GetInputContext();
+  auto &scope = Context.m_ScopeStack;
   InitRanges(inputContext);
-  std::shared_ptr<CSolveResult> result = std::shared_ptr<CSolveResult>(nullptr);
   {
-    CAutoScope autoscope(scope, m_name);
-    result = compute(inputContext, resultStore, scope);
-
-    resultStore->StoreScopedGlobalResult(
-        "warningFlag", std::make_shared<const CFlagLogResult>(
-                           Flag.getBitMask(), Flag.getListMessages()));
-    Flag.resetFlag();
-
-    saveToResultStore(result, resultStore);
+    CAutoScope method_autoscope(scope, m_name, ScopeType::METHOD);
+    CAutoSaveFlagToResultStore saveflag;
+    auto const &result = compute();
+    saveToResultStore(result);
   }
 }
 
 void CSolve::saveToResultStore(
-    std::shared_ptr<CSolveResult> result,
-    std::shared_ptr<COperatorResultStore> resultStore) const {
+    std::shared_ptr<CSolveResult> const &result) const {
+  auto const &resultStore = Context.GetResultStore();
   resultStore->StoreScopedGlobalResult("solveResult", result);
 }

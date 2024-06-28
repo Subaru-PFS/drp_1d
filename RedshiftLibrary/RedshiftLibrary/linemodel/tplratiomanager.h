@@ -50,12 +50,13 @@ class CLineCatalogsTplRatio;
 
 class CTplratioManager : public CLineRatioManager {
 public:
-  CTplratioManager(const CLMEltListVectorPtr &elementsVector,
+  CTplratioManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
                    const CSpcModelVectorPtr &models,
                    const CCSpectrumVectorPtr &inputSpcs,
                    const CTLambdaRangePtrVector &lambdaRanges,
                    std::shared_ptr<CContinuumManager> continuumManager,
-                   const CLineMap &restLineList);
+                   const CLineMap &restLineList,
+                   const CSpectraGlobalIndex &spcIndex);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
   CTplratioManager(CTplratioManager const &other) = default;
@@ -70,15 +71,17 @@ public:
   Float64 computeMerit(Int32 itratio) override;
   void resetToBestRatio(Float64 redshift) override;
   void setPassMode(Int32 iPass) override;
-  void saveResults(Int32 itratio) override;
+  void saveResults(Int32 itratio) override { m_savedIdxFitted = itratio; };
   Int32 getTplratio_count() const override;
-  TFloat64List getTplratio_priors() override;
+  TFloat64List getTplratio_priors() const override;
 
   void logParameters() override;
   const std::string &getTplratio_bestTplName() const;
   Float64 getTplratio_bestTplIsmCoeff() const;
   Float64 getTplratio_bestAmplitudeEm() const;
   Float64 getTplratio_bestAmplitudeAbs() const;
+  Float64 getTplratio_bestAmplitudeUncertaintyEm() const;
+  Float64 getTplratio_bestAmplitudeUncertaintyAbs() const;
   Float64 getTplratio_bestDtmEm() const;
   Float64 getTplratio_bestDtmAbs() const;
   Float64 getTplratio_bestMtmEm() const;
@@ -90,7 +93,8 @@ public:
   const TBoolList &getHaELPresentTplratio() const;
   const TInt32List &GetNLinesAboveSNRTplratio() const;
 
-  bool setTplratioModel(Int32 itplratio, bool enableSetVelocity = false);
+  void setTplratioModel(Int32 itplratio, Float64 redshift,
+                        bool enableSetVelocity = false);
   void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
   void SetForcedisableTplratioISMfit(bool opt);
@@ -112,7 +116,7 @@ protected:
   Float64 GetIsmCoeff(Int32 idx) const;
 
   std::vector<std::vector<TFloat64List>> m_LineCatalogCorrespondingNominalAmp;
-  Int32 m_savedIdxFitted = -1; // for rigidity=tplratio
+  Int32 m_savedIdxFitted = undefIdx;
   TFloat64List m_MeritTplratio;
   TFloat64List m_PriorMeritTplratio;
   std::vector<CPriorHelper::SPriorTZE> m_logPriorDataTplRatio;
@@ -126,18 +130,11 @@ protected:
   std::vector<TFloat64List> m_LyaDeltaCoeffTplratio;
   std::vector<TInt32List> m_LyaIgmIdxTplratio;
   std::vector<TFloat64List> m_LinesLogPriorTplratio;
-
-  std::string m_tplratioBestTplName = undefStr;
-  Float64 m_tplratioBestTplIsmCoeff = NAN;
-  Float64 m_tplratioBestTplAmplitudeEm = NAN;
-  Float64 m_tplratioBestTplAmplitudeAbs = NAN;
-  Float64 m_tplratioBestTplDtmEm = NAN;
-  Float64 m_tplratioBestTplDtmAbs = NAN;
-  Float64 m_tplratioBestTplMtmEm = NAN;
-  Float64 m_tplratioBestTplMtmAbs = NAN;
-
   Int32 m_tplratioLeastSquareFast =
       0; // for rigidity=tplratio: switch to use fast least square estimation
+
+  Int32 m_EmEltIdx = undefIdx;
+  Int32 m_AbsEltIdx = undefIdx;
 
   TFloat64List m_ScaleMargCorrTplratio;
   TBoolList m_StrongELPresentTplratio;
@@ -155,38 +152,6 @@ protected:
 private:
   void fillHalphaArray(Int32 idx);
 };
-
-inline const std::string &CTplratioManager::getTplratio_bestTplName() const {
-  return m_tplratioBestTplName;
-}
-
-inline Float64 CTplratioManager::getTplratio_bestTplIsmCoeff() const {
-  return m_tplratioBestTplIsmCoeff;
-}
-
-inline Float64 CTplratioManager::getTplratio_bestAmplitudeEm() const {
-  return m_tplratioBestTplAmplitudeEm;
-}
-
-inline Float64 CTplratioManager::getTplratio_bestAmplitudeAbs() const {
-  return m_tplratioBestTplAmplitudeAbs;
-}
-
-inline Float64 CTplratioManager::getTplratio_bestDtmEm() const {
-  return m_tplratioBestTplDtmEm;
-}
-
-inline Float64 CTplratioManager::getTplratio_bestDtmAbs() const {
-  return m_tplratioBestTplDtmAbs;
-}
-
-inline Float64 CTplratioManager::getTplratio_bestMtmEm() const {
-  return m_tplratioBestTplMtmEm;
-}
-
-inline Float64 CTplratioManager::getTplratio_bestMtmAbs() const {
-  return m_tplratioBestTplMtmAbs;
-}
 
 } // namespace NSEpic
 

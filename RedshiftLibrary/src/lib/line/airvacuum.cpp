@@ -47,18 +47,18 @@ using namespace std;
 
 std::shared_ptr<CAirVacuum>
 CAirVacuumConverter::Get(const std::string &converterName) {
-  if (converterName == "Edlen1953")
+  if (converterName == "edlen1953")
     return (std::make_shared<CAirVacEdlen1953>());
-  else if (converterName == "Edlen1966")
+  else if (converterName == "edlen1966")
     return (std::make_shared<CAirVacEdlen1966>());
   else if (converterName == "PeckReeder1972")
     return (std::make_shared<CAirVacPeckReeder1972>());
-  else if (converterName == "Ciddor1996")
+  else if (converterName == "ciddor1996")
     return (std::make_shared<CAirVacCiddor1996>());
-  else if (converterName == "Morton2000")
+  else if (converterName == "morton2000")
     return (std::make_shared<CAirVacMorton2000>());
   else {
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::UNKNOWN_AIR_VACUUM_CONVERSION,
            Formatter() << "unknown air->vacuum conversion: " << converterName);
   }
 }
@@ -116,7 +116,7 @@ TFloat64List CAirVacuum::AirToVac(const TFloat64List &waveAir) const {
   } while (++iter < maxiter);
 
   if (iter == maxiter) {
-    Flag.warning(WarningCode::AIR_VACCUM_REACHED_MAX_ITERATIONS,
+    Flag.warning(WarningCode::AIR_VACUUM_REACHED_MAX_ITERATIONS,
                  Formatter()
                      << "CAirVacuum::" << __func__
                      << " reach max iteration, with precision: " << precision);
@@ -177,69 +177,69 @@ TFloat64List CAirVacuum::AirRefractiveIndex(const TFloat64List &waveVac) const {
 void CAirVacEdlen1953::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    THROWG(INTERNAL_ERROR, " Empty vector");
+    THROWG(ErrorCode::INTERNAL_ERROR, " Empty vector");
 
   if (*it < 2000.0) {
-    THROWG(INTERNAL_ERROR, " some wavelengths "
-                           "are below 2000 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, " some wavelengths "
+                                      "are below 2000 Angstroem");
   }
 }
 
 void CAirVacEdlen1966::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    THROWG(INTERNAL_ERROR, "Empty vector");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Empty vector");
 
   if (*it < 2000.0) {
-    THROWG(INTERNAL_ERROR, "some wavelengths "
-                           "are below 2000 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, "some wavelengths "
+                                      "are below 2000 Angstroem");
   }
 }
 
 void CAirVacPeckReeder1972::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    THROWG(INTERNAL_ERROR, "Empty vector");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Empty vector");
 
   if (*it < 3000.0) {
-    THROWG(INTERNAL_ERROR, "some "
-                           "wavelengths are below 2300 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, "some "
+                                      "wavelengths are below 2300 Angstroem");
   }
 
   if (*std::max_element(wave.begin(), wave.end()) > 19000.) {
-    THROWG(INTERNAL_ERROR, "some "
-                           "wavelengths are above 16900 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, "some "
+                                      "wavelengths are above 16900 Angstroem");
   }
 }
 
 void CAirVacCiddor1996::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    THROWG(INTERNAL_ERROR, "Empty vector");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Empty vector");
 
   if (*it < 3000.0) {
-    THROWG(INTERNAL_ERROR, "some "
-                           "wavelengths are below 3000 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, "some "
+                                      "wavelengths are below 3000 Angstroem");
   }
 
   if (*std::max_element(wave.begin(), wave.end()) > 19000.) {
-    THROWG(INTERNAL_ERROR, "some "
-                           "wavelengths are above 16900 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, "some "
+                                      "wavelengths are above 16900 Angstroem");
   }
 }
 
 void CAirVacMorton2000::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    THROWG(INTERNAL_ERROR, "Empty vector");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Empty vector");
 
   if (*it < 3000.0) {
-    THROWG(INTERNAL_ERROR, "some wavelengths "
-                           "are below 3000 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, "some wavelengths "
+                                      "are below 3000 Angstroem");
   }
 
   if (*std::max_element(wave.begin(), wave.end()) > 19000.) {
-    THROWG(INTERNAL_ERROR, "some wavelengths "
-                           "are above 16900 Angstroem");
+    THROWG(ErrorCode::INTERNAL_ERROR, "some wavelengths "
+                                      "are above 16900 Angstroem");
   }
 }

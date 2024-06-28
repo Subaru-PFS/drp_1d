@@ -39,6 +39,10 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRUM_
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/continuum/continuum.h"
@@ -47,10 +51,6 @@
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
 
 namespace Spectrum { // boost_test_suite
 // all boost_auto_test_case that use private method
@@ -140,7 +140,6 @@ public:
   bool GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const;
 
   bool RemoveContinuum(CContinuum &remover) const;
-  const bool ValidateSpectralAxis(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;
   bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
@@ -166,6 +165,11 @@ public:
   CSpectrum extract(Int32 startIdx, Int32 endIdx) const;
 
   void setRebinInterpMethod(const std::string &opt_interp) const;
+
+  static std::pair<Float64, Float64>
+  integrateFluxes_usingTrapez(CSpectrumSpectralAxis const &spectralAxis,
+                              CSpectrumFluxAxis const &fluxAxis,
+                              TInt32RangeList const &indexRangeList);
 
 protected:
   friend CRebin;

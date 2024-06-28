@@ -39,23 +39,22 @@
 #ifndef _REDSHIFT_OPERATOR_TEMPLATE_FITTING_
 #define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_
 
+#include <cfloat>
+#include <climits>
+#include <numeric>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
-
-#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
-
-#include <cfloat>
-#include <climits>
-#include <numeric>
 
 namespace NSEpic {
 
@@ -104,7 +103,6 @@ struct TFittingIsmIgmResult : TFittingResult {
   std::vector<TFloat64List> ChiSquareInterm;
   std::vector<TFloat64List> IsmCalzettiCoeffInterm;
   std::vector<TInt32List> IgmMeiksinIdxInterm;
-  COperator::EStatus status = COperator::EStatus::nStatus_UnSet;
 };
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
@@ -134,18 +132,9 @@ protected:
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
 
-  virtual void
-  InitIsmIgmConfig(Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin,
-                   Int32 EbmvListSize);
+  virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
-  virtual bool
-  CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const {
-    return currentRange.GetBegin() > RESTLAMBDA_LYA;
-  };
+  virtual bool igmIsInRange(const TFloat64RangeList &ranges) const;
 
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                                                    Float64 redshift,

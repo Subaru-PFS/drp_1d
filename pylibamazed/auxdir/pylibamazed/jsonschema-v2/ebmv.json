@@ -1,0 +1,29 @@
+{
+  "$id": "ebmv",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ebmv",
+  "type": "object",
+  "required": [
+    "start",
+    "step",
+    "count"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "start": {
+      "type": "number",
+      "title": "Starting value",
+      "minimum": 0,
+      "exclusiveMaximum": 1
+    },
+    "step": {
+      "type": "number",
+      "title": "Step",
+      "description": "Distance between two consecutive ebmvCoeff"
+    },
+    "count": {
+      "type": "integer",
+      "title": "Number of ebmv coeff "
+    }
+  }
+}

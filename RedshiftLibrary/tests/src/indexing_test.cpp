@@ -36,11 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/indexing.h"
+#include <vector>
+
 #include <boost/test/execution_monitor.hpp>
 #include <boost/test/unit_test.hpp>
-#include <vector>
+
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/indexing.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -63,7 +65,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float) {
   BOOST_CHECK(myVector[idx] == target);
 }
 
-bool correctMessage(const GlobalException &ex) {
+bool correctMessage(const AmzException &ex) {
   BOOST_CHECK_EQUAL(ex.what(), std::string("Could not find index for 2"));
   return true;
 }
@@ -72,7 +74,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float_erro) {
                            4.5, 5.0, 5.5, 6.0, 6.5};
   const Float64 target = 2.0;
   BOOST_CHECK_EXCEPTION(CIndexing<Float64>::getIndex(myVector, target),
-                        GlobalException, correctMessage);
+                        AmzException, correctMessage);
 }
 
 BOOST_AUTO_TEST_CASE(LowerIndex) {

@@ -39,7 +39,7 @@
 
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Parameters import Parameters
-from pylibamazed.PdfHandler import buildPdfHandler
+from pylibamazed.PdfHandler import BuilderPdfHandler
 from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
@@ -58,7 +58,7 @@ class PdfHandlerTestUtils:
 
     @staticmethod
     def parameters():
-        return Parameters({"objects": []}, FakeParametersChecker)
+        return Parameters({"spectrumModels": []}, Checker=FakeParametersChecker)
 
     @staticmethod
     def abstract_output():
@@ -71,9 +71,11 @@ class PdfHandlerTestUtils:
             'some_object_type': {
                 "pdf_params": PdfHandlerTestUtils.pdf_params(),
                 "pdf": {
-                    "PDFProbaLog": ""
+                    "LogZPdfNative": ""
                 }
             }
         }
-        pdf_handler = buildPdfHandler(abstract_output, "some_object_type", True)
+        pdf_handler = BuilderPdfHandler().add_params(
+            abstract_output, "some_object_type", True
+        ).build()
         return pdf_handler

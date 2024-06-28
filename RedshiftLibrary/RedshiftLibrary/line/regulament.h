@@ -39,21 +39,21 @@
 #ifndef _REDSHIFT_RAY_REGULAMENT_
 #define _REDSHIFT_RAY_REGULAMENT_
 
+#include <boost/format.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/rule.h"
 
-#include <boost/format.hpp>
-
 namespace NSEpic {
 
-class CLineModelElementList;
+class CLMEltListVector;
 /**
  * \ingroup Redshift
  * \brief Control class for preparing and applying Linemodel rules.
  */
 class CRegulament {
 public:
-  void Apply(CLineModelElementList &LineModelElementList);
+  void Apply(CLMEltListVector &LineModelElementList);
   // void ApplyWithRedshift( std::vector<boost::shared_ptr<CLineModelElement>
   // > LinemodelElements, Float64 Redshift );
   bool CreateRulesFromJSONFiles(void);

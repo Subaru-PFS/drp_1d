@@ -39,10 +39,11 @@
 #ifndef _REDSHIFT_LINE_RULE2SINGLELINESAMPLITUDE_
 #define _REDSHIFT_LINE_RULE2SINGLELINESAMPLITUDE_
 
+#include <boost/format.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/rule.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
-#include <boost/format.hpp>
 
 namespace NSEpic {
 /**
@@ -53,7 +54,7 @@ class CRule2SingleLinesAmplitude : public CRule {
 public:
   CRule2SingleLinesAmplitude();
 
-  bool Check(CLineModelElementList &LineModelElementList);
+  bool Check(CLMEltListVector &LineModelElementList);
   void SetUp(bool EnabledArgument, ...);
 
 private:
@@ -61,7 +62,7 @@ private:
   std::string m_LineA;
   std::string m_LineB;
   Float64 m_Coefficient;
-  void Correct(CLineModelElementList &LineModelElementList);
+  void Correct(CLMEltListVector &LineModelElementList);
 };
 } // namespace NSEpic
 

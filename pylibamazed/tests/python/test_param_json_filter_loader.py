@@ -50,7 +50,7 @@ class TestParamJsonFilterLoader:
         params = Parameters({"filters": [
             {"key": "col1", "instruction": "<", "value": 2},
             {"key": "col2", "instruction": ">=", "value": 2}
-        ]}, FakeParametersChecker)
+        ]}, Checker=FakeParametersChecker)
         assert jsonFilterLoader.get_filters(params) == FilterList([
             SpectrumFilterItem("col1", "<", 2),
             SpectrumFilterItem("col2", ">=", 2)

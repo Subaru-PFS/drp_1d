@@ -38,8 +38,11 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
+from pylibamazed.redshift import WarningCode
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_object_level)
+                                make_parameter_dict_at_linemeas_solve_level,
+                                make_parameter_dict_at_object_level,
+                                make_parameter_dict_at_redshift_solver_level)
 
 
 class TestParametersCheckerObject:
@@ -47,183 +50,148 @@ class TestParametersCheckerObject:
     class TestObjectLinemeasDzhalf:
 
         def _make_param_dict(self, **kwargs):
-            if kwargs.get("linemeas_method") not in ["", None]:
-                kwargs["linemeas_redshiftstep"] = 1
-            return make_parameter_dict_at_object_level(**kwargs)
+            return make_parameter_dict_at_linemeas_solve_level(**kwargs)
 
-        def test_error_if_method_not_null_and_dzhalf_not_defined(self):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": "sth"
-            })
-            with pytest.raises(APIException, match=r"Missing parameter linemeas_dzhalf for object"):
+        def test_error_if_linemeas_stage_and_dzhalf_not_defined(self):
+            param_dict = self._make_param_dict(**{})
+            del param_dict["galaxy"]["lineMeasDzHalf"]
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasDzHalf for object"):
                 check_from_parameter_dict(param_dict)
 
-        def test_ok_if_method_null_and_dzhalf_not_defined(self, zflag):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": ""
-            })
+        def test_ok_if_linemeas_stage_and_dzhalf_defined(self, zflag):
+            param_dict = self._make_param_dict(**{})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
-        def test_ok_if_method_not_null_and_dzhalf_defined(self, zflag):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": "sth",
-                "linemeas_dzhalf": 1
-            })
+        def test_warning_if_not_linemeas_stage_and_dzhalf_defined(self, zflag):
+            param_dict = self._make_param_dict(**{})
+            param_dict["galaxy"]["stages"] = []
+            del param_dict["galaxy"]["lineMeasRedshiftStep"]
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
-
-        def test_warning_if_method_null_and_dzhalf_defined(self, zflag):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": "",
-                "linemeas_dzhalf": 1
-            })
-            check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestObjectLinemeasredshiftStep:
 
         def _make_param_dict(self, **kwargs):
-            if kwargs.get("linemeas_method") not in ["", None]:
-                kwargs["linemeas_dzhalf"] = 1
-            return make_parameter_dict_at_object_level(**kwargs)
+            return make_parameter_dict_at_linemeas_solve_level(**kwargs)
 
-        def test_error_if_method_not_null_and_redshift_not_defined(self):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": "sth"
-            })
-            with pytest.raises(APIException, match=r"Missing parameter lineameas_redshiftstep for object"):
+        def test_error_if_linemeas_stage_and_redshift_step_not_defined(self):
+            param_dict = self._make_param_dict(**{})
+            del param_dict["galaxy"]["lineMeasRedshiftStep"]
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasRedshiftStep for object"):
                 check_from_parameter_dict(param_dict)
 
-        def test_ok_if_method_null_and_redshift_not_defined(self, zflag):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": ""
-            })
+        def test_ok_if_linemeas_stage_and_redshift_step_defined(self, zflag):
+            param_dict = self._make_param_dict(**{})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
-        def test_ok_if_method_not_null_and_redshift_defined(self, zflag):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": "sth",
-                "linemeas_redshiftstep": 1
-            })
+        def test_warning_if_not_linemeas_stage_and_redshift_step_defined(self, zflag):
+            param_dict = self._make_param_dict(**{})
+            param_dict["galaxy"]["stages"] = []
+            del param_dict["galaxy"]["lineMeasDzHalf"]
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
-
-        def test_warning_if_method_null_and_redshift_defined(self, zflag):
-            param_dict = self._make_param_dict(**{
-                "linemeas_method": "",
-                "linemeas_redshiftstep": 1
-            })
-            check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestObjectReliability:
 
         def _make_parameter_dict(self, **kwargs) -> dict:
-            kwargs["linemeas_method"] = ""
             return make_parameter_dict_at_object_level(**kwargs)
 
-        def test_error_if_reliability_enabled_without_reliability_model(self):
+        def test_error_if_reliability_enabled_without_corresponding_section(self):
             param_dict = self._make_parameter_dict(**{
-                "enable_reliability": True
+                "stages": ["reliabilitySolver"]
             })
-            with pytest.raises(APIException, match=r"Missing parameter reliability_model"):
+            with pytest.raises(APIException, match=r"Missing parameter galaxy reliabilitySolver"):
                 check_from_parameter_dict(param_dict)
 
-        def test_OK_if_reliability_enabled_with_reliability_model(self, zflag):
-
+        def test_OK_if_reliability_enabled_with_corresponding_section(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "enable_reliability": True,
-                "reliability_model": "sth"
+                "stages": ["reliabilitySolver"],
+                "reliabilitySolver": {}
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
-        def test_warning_if_reliability_model_without_enable_reliability(self, zflag):
+        def test_warning_if_reliability_disabled_but_section_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "enable_reliability": False,
-                "reliability_model": "sth"
+                "stages": ["redshiftSolver"],
+                "reliabilitySolver": {}
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
-
-        def test_OK_if_reliability_disabled_without_reliability_model(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "enable_reliability": False,
-            })
-            check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
     class TestTemplateDir:
 
         def test_error_if_templateFittingSolve_without_template_dir(self):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "method": "TemplateFittingSolve", "TemplateFittingSolve": {}
+            param_dict = make_parameter_dict_at_redshift_solver_level(**{
+                "method": "templateFittingSolve", "templateFittingSolve": {}
             })
-            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+            with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_error_if_templateCombinationSolve_without_template_dir(self):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "method": "TplCombinationSolve", "TplCombinationSolve": {}
+            param_dict = make_parameter_dict_at_redshift_solver_level(**{
+                "method": "tplCombinationSolve", "tplCombinationSolve": {}
             })
-            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+            with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_error_if_lineModelSolve_and_continuum_tplfit_without_template_dir(self):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "method": "LineModelSolve",
-                "LineModelSolve": {
-                    "linemodel": {
-                        "continuumcomponent": "tplfit", # This is the important line
-                        "continuumfit": {},
-                        "secondpass": {
-                            "continuumfit": "sth"
+            param_dict = make_parameter_dict_at_redshift_solver_level(**{
+                "method": "lineModelSolve",
+                "lineModelSolve": {
+                    "lineModel": {
+                        "continuumComponent": "tplFit",  # This is the important line
+                        "continuumFit": {},
+                        "secondPass": {
+                            "continuumFit": "sth"
                         }
                     }
                 }
             })
-            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+            param_dict["continuumRemoval"] = {}
+            with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_error_if_lineModelSolve_and_continuum_tplfitauto_without_template_dir(self):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "method": "LineModelSolve",
-                "LineModelSolve": {
-                    "linemodel": {
-                        "continuumcomponent": "tplfitauto",  # This is the important line
-                        "continuumfit": {},
-                        "secondpass": {
-                            "continuumfit": "sth"
+            param_dict = make_parameter_dict_at_redshift_solver_level(**{
+                "method": "lineModelSolve",
+                "lineModelSolve": {
+                    "lineModel": {
+                        "continuumComponent": "tplFitAuto",  # This is the important line
+                        "continuumFit": {},
+                        "secondPass": {
+                            "continuumFit": "sth"
                         },
                     }
                 }
             })
             param_dict["continuumRemoval"] = {}
-            with pytest.raises(APIException, match=r"Missing parameter galaxy template_dir"):
+            with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_warning_if_template_dir_is_present_but_no_solve_method(self, zflag):
             param_dict = make_parameter_dict_at_object_level(**{
-                "method": "",
-                "template_dir": "sth"
+                "stages": [],
+                "templateDir": "sth"
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
         def test_warning_if_template_dir_is_present_but_linemodelsolve_without_tplfit(self, zflag):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "method": "LineModelSolve",
-                "LineModelSolve": {
-                    "linemodel": {
-                        "continuumcomponent": "sth",  # This is the important line
-                        "continuumfit": {},
-                        "secondpass": {
-                            "continuumfit": "sth"
+            param_dict = make_parameter_dict_at_redshift_solver_level(**{
+                "method": "lineModelSolve",
+                "lineModelSolve": {
+                    "lineModel": {
+                        "continuumComponent": "sth",  # This is the important line
+                        "continuumFit": {},
+                        "secondPass": {
+                            "continuumFit": "sth"
                         },
                     }
                 }
             })
+            param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_warning(zflag, "UNUSED_PARAMETER")
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)

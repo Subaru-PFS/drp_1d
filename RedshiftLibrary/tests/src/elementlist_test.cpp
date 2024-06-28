@@ -36,6 +36,10 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <iostream>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/log/consolehandler.h"
@@ -47,10 +51,6 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "test-config.h"
-
-#include <boost/test/unit_test.hpp>
-
-#include <iostream>
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
   auto lineTypeFilter = CLine::EType::nType_Emission;
   auto forceFilter = CLine::EForce::nForce_Strong;
-  string opt_lineWidthType = "velocitydriven";
+  string opt_lineWidthType = "velocityDriven";
   Float64 opt_nsigmasupport = 8.;
   Float64 initVelocity = 50.0;
   Float64 opt_velocityEmission = initVelocity;
@@ -88,12 +88,13 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   noise.AddNoise(spectrum);
   */
 
-  std::string lsfType = "GaussianConstantWidth";
+  std::string lsfType = "gaussianConstantWidth";
   Float64 width = 13.;
-  TScopeStack scopeStack;
+std:
+  shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
-  store->Set("LSF.width", width);
+  store->Set("lsf.width", width);
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   TAsymParams asymP;
   /* //TODO restore this test , for the moment if linecatalog is not empty, test
     will fail with follogin message: fatal error: in
-    "test_elementlist/Constructor": NSEpic::GlobalException: Could not find
+    "test_elementlist/Constructor": NSEpic::AmzException: Could not find
     template with name fromspectrum
 
     lineCatalog.AddLineFromParams("Halpha",6562.8,"E","S","SYM",asymP,"",1.,"E1",INFINITY,false,0,"Halpha_,6562.8_E");

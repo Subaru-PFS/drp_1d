@@ -57,9 +57,7 @@ using namespace std;
  * \brief This constructor will attribute values to this method's parameters
  * with default values.
  */
-CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,
-                                       std::string objectType)
-    : CObjectSolve("LineMatchingSolve", scope, objectType) {
+CLineMatchingSolve::CLineMatchingSolve() : CObjectSolve("LineMatchingSolve") {
   Log.LogDebug("CLineMatchingSolve::CLineMatchingSolve()");
 
   // Peak Detection
@@ -83,16 +81,6 @@ CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,
  */
 CLineMatchingSolve::~CLineMatchingSolve() {
   Log.LogDebug("CLineMatchingSolve::~CLineMatchingSolve()");
-}
-
-std::shared_ptr<CSolveResult>
-CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                            std::shared_ptr<COperatorResultStore> resultStore,
-                            TScopeStack &scope) {
-  return Compute(*(resultStore.get()), inputContext->GetParameterStore(),
-                 *(inputContext->GetSpectrum().get()), m_lambdaRange,
-                 m_redshifts,
-                 *(inputContext->GetLineCatalog(m_objectType, m_name).get()));
 }
 
 /**
@@ -121,11 +109,13 @@ CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
  * a threshold number of peaks is detected, or all parameters are exhaustively
  * searched, the algorithm continues as normal.
  */
-std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
-    COperatorResultStore &resultStore,
-    std::shared_ptr<const CParameterStore> paramStore, const CSpectrum &spc,
-    const TFloat64Range &lambdaRange, const TFloat64Range &redshiftsRange,
-    const CLineCatalog &restLineCatalog) {
+std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
+
+  auto &resultStore = *Context.GetResultStore();
+  auto const &paramStore = Context.GetParameterStore();
+  auto const &spc = *Context.GetInputContext()->GetSpectrum();
+  auto const &restLineCatalog =
+      *Context.GetInputContext()->GetLineCatalog(m_category, m_name);
 
   auto lineType = CLine::EType::nType_Emission;
   std::string linetypeStr = "E";
@@ -160,15 +150,16 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
 
   Log.LogDebug("Final parameters read:");
   {
-    Log.LogDebug("m_cut = %f", m_cut);
+    Log.LogDebug(Formatter() << "m_cut =" << m_cut);
     if (m_dynamicLinematching) {
       Log.LogDebug(
           "m_dynamicLinematching is true (any value, except 0, on json)");
     } else {
       Log.LogDebug("m_dynamicLinematching is false (value 0 on json)");
     }
-    Log.LogDebug("m_detectioncut = %f", m_detectioncut);
-    Log.LogDebug("m_detectionnoiseoffset = %f", m_detectionnoiseoffset);
+    Log.LogDebug(Formatter() << "m_detectioncut =" << m_detectioncut);
+    Log.LogDebug(Formatter()
+                 << "m_detectionnoiseoffset =" << m_detectionnoiseoffset);
     if (m_disablegaussianfitqualitycheck) {
       Log.LogDebug("m_disablegaussianfitqualitycheck is true (any value, "
                    "except 0, in json)");
@@ -176,14 +167,14 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
       Log.LogDebug(
           "m_disablegaussianfitqualitycheck is false (value 0 in json)");
     }
-    Log.LogDebug("m_enlargeRate = %f", m_enlargeRate);
-    Log.LogDebug("linetype = %s", linetypeStr.c_str());
-    Log.LogDebug("m_minMatchNum = %d", m_minMatchNum);
-    Log.LogDebug("m_minsize = %f", m_minsize);
-    Log.LogDebug("m_maxsize = %f", m_maxsize);
-    Log.LogDebug("m_strongcut = %f", m_strongcut);
-    Log.LogDebug("m_tol = %f", m_tol);
-    Log.LogDebug("m_winsize = %f", m_winsize);
+    Log.LogDebug(Formatter() << "m_enlargeRate = " << m_enlargeRate);
+    Log.LogDebug(Formatter() << "linetype = " << linetypeStr);
+    Log.LogDebug(Formatter() << "m_minMatchNum = " << m_minMatchNum);
+    Log.LogDebug(Formatter() << "m_minsize = " << m_minsize);
+    Log.LogDebug(Formatter() << "m_maxsize = " << m_maxsize);
+    Log.LogDebug(Formatter() << "m_strongcut = " << m_strongcut);
+    Log.LogDebug(Formatter() << "m_tol = " << m_tol);
+    Log.LogDebug(Formatter() << "m_winsize = " << m_winsize);
   }
 
   CPeakDetection peakDetection(m_winsize, m_detectioncut, 1, m_enlargeRate,
@@ -200,11 +191,12 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
 
   auto peakDetectionResult = peakDetection.Compute(_spc);
   if (peakDetectionResult) {
-    Log.LogDebug("Storing %d peaks from PeakList in the result store.",
-                 peakDetectionResult->PeakList.size());
+    Log.LogDebug(Formatter()
+                 << "Storing " << peakDetectionResult->PeakList.size()
+                 << " peaks from PeakList in the result store.");
     resultStore.StoreScopedGlobalResult("peakdetection", peakDetectionResult);
   } else {
-    THROWG(INTERNAL_ERROR, "No peak detected");
+    THROWG(ErrorCode::INTERNAL_ERROR, "No peak detected");
   }
 
   // Since we detected at least one peak, try to detect lines related to those
@@ -242,43 +234,49 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
   Int32 iCmpt = 0;
   while (iCmpt < cmptMax) {
     Log.LogDebug("*************************");
-    Log.LogDebug("cutCurrent == %f", cutCurrent);
-    Log.LogDebug("minimumFwhhCurrent == %f", minimumFwhhCurrent);
-    Log.LogDebug("strongcutCurrent == %f", strongcutCurrent);
-    Log.LogDebug("winsizeCurrent == %f", winsizeCurrent);
+    Log.LogDebug(Formatter() << "cutCurrent == " << cutCurrent);
+    Log.LogDebug(Formatter() << "minimumFwhhCurrent == " << minimumFwhhCurrent);
+    Log.LogDebug(Formatter() << "strongcutCurrent == " << strongcutCurrent);
+    Log.LogDebug(Formatter() << "winsizeCurrent == " << winsizeCurrent);
     CLineDetection lineDetection(lineType, cutCurrent, strongcutCurrent,
                                  winsizeCurrent, minimumFwhhCurrent, m_maxsize,
                                  m_disablegaussianfitqualitycheck);
-    auto lineDetectionResult =
-        lineDetection.Compute(_spc, lambdaRange, peakDetectionResult->PeakList,
-                              peakDetectionResult->EnlargedPeakList);
+    auto lineDetectionResult = lineDetection.Compute(
+        _spc, m_lambdaRange, peakDetectionResult->PeakList,
+        peakDetectionResult->EnlargedPeakList);
     if (lineDetectionResult || !m_dynamicLinematching) {
       currentNumberOfPeaks = lineDetectionResult->LineCatalog.GetList().size();
-      Log.LogDebug("Found %d peaks.", currentNumberOfPeaks);
+      Log.LogDebug(Formatter()
+                   << "Found " << currentNumberOfPeaks << " peaks.");
       if (currentNumberOfPeaks >= minimumNumberOfPeaks ||
           numberOfPeaksBestBypass || !m_dynamicLinematching) {
-        Log.LogDebug("Storing %d lines from lineDetection in the result store.",
-                     lineDetectionResult->LineCatalog.GetList().size());
-        resultStore.StoreScopedGlobalResult("linecatalog", lineDetectionResult);
+        Log.LogDebug(Formatter()
+                     << "Storing "
+                     << lineDetectionResult->LineCatalog.GetList().size()
+                     << " lines from lineDetection in the result store.");
+        resultStore.StoreScopedGlobalResult("lineCatalog", lineDetectionResult);
         // Since we know at least one peak that corresponds to a line, let's try
         // to match to a catalogued template.
         CLineMatching lineMatching;
         Log.LogDebug("Now starting linematching");
         auto lineMatchingResult = lineMatching.Compute(
-            lineDetectionResult->LineCatalog, restLineCatalog, redshiftsRange,
+            lineDetectionResult->LineCatalog, restLineCatalog, m_redshifts,
             m_minMatchNum, m_tol, lineType);
         if (lineMatchingResult) {
-          lineMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
-          Log.LogDebug("CLineMatching yielded %d sets of solutions and %d sets "
-                       "of filtered solutions.",
-                       lineMatchingResult->SolutionSetList.size(),
-                       lineMatchingResult->FilteredSolutionSetList.size());
+          lineMatchingResult->FilterWithRules(_spc, m_lambdaRange, m_winsize);
+          Log.LogDebug(Formatter()
+                       << "CLineMatching yielded "
+                       << lineMatchingResult->SolutionSetList.size()
+                       << " sets of solutions and "
+                       << lineMatchingResult->FilteredSolutionSetList.size()
+                       << " sets of filtered solutions.");
           // Store matching results
           resultStore.StoreScopedGlobalResult("linematching",
                                               lineMatchingResult);
           lineMatchingResult->GetBestRedshift(bestRedshift, bestMatchingNumber);
-          Log.LogDebug("bestRedshift == %f, bestMatchingNumber == %d",
-                       bestRedshift, bestMatchingNumber);
+          Log.LogDebug(Formatter()
+                       << "bestRedshift == " << bestRedshift
+                       << ", bestMatchingNumber == " << bestMatchingNumber);
           if (bestRedshift != -1.0) {
             Log.LogDebug(
                 "return std::shared_ptr<const CLineMatchingSolveResult>( new "
@@ -303,12 +301,12 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
         winsizeBest = winsizeCurrent;
       }
       if (currentNumberOfPeaks < previousNumberOfPeaks && !newValues)
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                "Dynamic logic failed - number of peaks is falling.");
 
       previousNumberOfPeaks = currentNumberOfPeaks;
       if (!m_dynamicLinematching)
-        THROWG(INTERNAL_ERROR, "No result found");
+        THROWG(ErrorCode::INTERNAL_ERROR, "No result found");
 
       newValues = false;
       if (minimumFwhhCurrent > minimumFwhhMinimum) {
@@ -351,11 +349,10 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
   }; // while
 
   if (iCmpt == cmptMax) {
-    Flag.warning(
-        WarningCode::LINEMATCHING_REACHED_ENDLOOP,
-        Formatter()
-            << "CMethodLineMatchingSolve::" << __func__
-            << ": Warning. Stopped the linematching dynamic cut loop...");
+    Flag.warning(WarningCode::LINEMATCHING_REACHED_ENDLOOP,
+                 Formatter()
+                     << "CMethodLineMatchingSolve::" << __func__
+                     << ": Stopped the linematching dynamic cut loop...");
   }
   return std::make_shared<CLineMatchingSolveResult>();
 }

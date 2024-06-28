@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_LBFGSB_FITTER_
 #define _REDSHIFT_LBFGSB_FITTER_
 
+#include <Eigen/Core>
+#include <LBFGSB.h>
+
 #include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
 #include "RedshiftLibrary/processflow/context.h"
-
-#include <Eigen/Core>
-#include <LBFGSB.h>
 
 using Eigen::VectorXd;
 
@@ -99,10 +99,8 @@ public:
     const CPolynomCoeffsNormalized &getPcoeffs() const { return m_pCoeffs; };
 
   private:
-    std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
-    unpack(const VectorXd &x) const;
-    Float64 ComputeLeastSquare(const TFloat64List &amps, Float64 redshift,
-                               const CPolynomCoeffsNormalized &pCoeffs) const;
+    CPolynomCoeffsNormalized unpack(const VectorXd &x) const;
+    Float64 ComputeLeastSquare(const CPolynomCoeffsNormalized &pCoeffs) const;
 
     Float64 ComputeLeastSquareAndGrad(const TFloat64List &amps,
                                       Float64 redshift,
@@ -149,23 +147,31 @@ private:
   };
 
   const bool m_enableVelocityFitting =
-      Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit");
+      Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit");
 
-  const Float64 m_velfitMinE = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.emvelocityfitmin");
-  const Float64 m_velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.emvelocityfitmax");
-  const Float64 m_velfitMinA = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.absvelocityfitmin");
-  const Float64 m_velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
-      "linemodel.absvelocityfitmax");
+  const Float64 m_velfitMinE =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.emVelocityFitMin")
+                              : NAN;
+  const Float64 m_velfitMaxE =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.emVelocityFitMax")
+                              : NAN;
+  const Float64 m_velfitMinA =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.absVelocityFitMin")
+                              : NAN;
+  const Float64 m_velfitMaxA =
+      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
+                                    "lineModel.absVelocityFitMax")
+                              : NAN;
 
   const Float64 m_velIniGuessE =
       Context.GetParameterStore()->GetScoped<Float64>(
-          "linemodel.velocityemission");
+          "lineModel.velocityEmission");
   const Float64 m_velIniGuessA =
       Context.GetParameterStore()->GetScoped<Float64>(
-          "linemodel.velocityabsorption");
+          "lineModel.velocityAbsorption");
 };
 } // namespace NSEpic
 #endif

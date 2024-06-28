@@ -49,11 +49,13 @@ namespace NSEpic {
 class CLSFGaussianConstantWidth : public CLSF {
 
 public:
-  CLSFGaussianConstantWidth(const Float64 width = 0.)
+  CLSFGaussianConstantWidth(const Float64 width)
       : CLSF(GaussianConstantWidth,
              std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
         m_width(width) {
-    IsValid();
+    if (!IsValid())
+      THROWG(ErrorCode::INVALID_LSF, Formatter()
+                                         << "invalid LSF, width=" << m_width);
   };
 
   Float64 GetWidth(Float64 lambda, bool cliplambda = false) const override {

@@ -39,10 +39,10 @@
 #ifndef _REDSHIFT_PHOTOMETRY_PHOTOMETRICBAND_
 #define _REDSHIFT_PHOTOMETRY_PHOTOMETRICBAND_
 
+#include <map>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
-
-#include <map>
 
 namespace NSEpic {
 

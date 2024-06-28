@@ -36,43 +36,78 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/operator/flagResult.h"
-#include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/processflow/resultstore.h"
+#ifndef _REDSHIFT_SPECTRUM_ITERATOR_
+#define _REDSHIFT_SPECTRUM_ITERATOR_
 
-using namespace NSEpic;
+#include <cstddef>  // For std::ptrdiff_t
+#include <iterator> // For std::forward_iterator_tag
+#include <memory>
 
-GlobalException::GlobalException(ErrorCode ec, const std::string &message,
-                                 const char *filename_, const char *method_,
-                                 int line_) noexcept
-    : AmzException(ec, message, filename_, method_, line_) {
+#include "RedshiftLibrary/common/datatypes.h"
 
-  std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
+namespace NSEpic {
 
-  if (resultStore->getScopeDepth() >= 2) {
-    if (!resultStore->hasCurrentMethodWarningFlag()) {
-      resultStore->StoreGlobalResult(
-          resultStore->GetScopedNameAt("warningFlag", 2),
-          std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
-                                                 Flag.getListMessages()));
-    } else
-      LogError(Formatter() << "Warning flag already exists for "
-                           << resultStore->getCurrentScopeNameAt(2));
-  } else {
-    if (!resultStore->hasContextWarningFlag()) {
-      resultStore->StoreGlobalResult(
-          "context_warningFlag",
-          std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
-                                                 Flag.getListMessages()));
-    } else
-      LogError("Context warning flag already exists");
+class CSpectraGlobalIndex {
+
+public:
+  struct Iterator {
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = Int32;
+    using pointer = std::shared_ptr<Int32>;
+    using const_pointer = std::shared_ptr<const Int32>;
+    using reference = const Int32 &;
+
+    Iterator(pointer ptr) : m_ptr(ptr) {}
+
+    reference operator*() const { return *m_ptr; }
+    const_pointer operator->() { return m_ptr; }
+    Iterator &operator++() {
+      (*m_ptr)++;
+      return *this;
+    }
+    Iterator operator++(int) {
+      Iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+    friend bool operator==(const Iterator &a, const Iterator &b) {
+      return *(a.m_ptr) == *(b.m_ptr);
+    };
+    friend bool operator!=(const Iterator &a, const Iterator &b) {
+      return *(a.m_ptr) != *(b.m_ptr);
+    };
+
+  private:
+    pointer m_ptr;
+  };
+
+  Iterator begin() {
+    *m_currentIndex = 0;
+    return Iterator(m_currentIndex);
   }
-  Flag.resetFlag();
-}
+  Iterator end() { return m_endIndex; }
 
-InternalException::InternalException(ErrorCode ec, const std::string &message,
-                                     const char *filename_, const char *method_,
-                                     int line_) noexcept
-    : AmzException(ec, message, filename_, method_, line_) {}
+  Int32 get() const { return *m_currentIndex; }
+
+  Iterator current() const { return Iterator(m_currentIndex); }
+
+  bool isValid() const { return *m_currentIndex < *m_endIndex; }
+  void AssertIsValid() const {
+    if (!isValid())
+      THROWG(ErrorCode::INVALID_SPECTRUM_INDEX, "Invalid spectrum index");
+  };
+  void reset() { *m_currentIndex = 0; }
+
+  CSpectraGlobalIndex(Int32 nbObs) {
+    m_currentIndex = std::make_shared<Int32>(0);
+    m_endIndex = std::make_shared<Int32>(nbObs);
+  }
+
+private:
+  std::shared_ptr<Int32> m_currentIndex;
+  std::shared_ptr<Int32> m_endIndex;
+};
+
+} // namespace NSEpic
+#endif

@@ -38,8 +38,8 @@
 # ============================================================================
 
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
-from pylibamazed.Context import Context
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ProcessFlow import ProcessFlow
 from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.test_ITlike import (get_observation, get_parameters,
                                       get_spectra, make_config)
@@ -51,8 +51,8 @@ class TestFilterIntegration:
 
         # Creates a "real" configuration
         config = make_config(**{"config_filename": "config_filters.json"})
-        param = Parameters(get_parameters(config["parameters_file"]), FakeParametersChecker)
-        context = Context(config, param)  # vars returns the dict version of config
+        param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
+        process_flow = ProcessFlow(config, param)  # vars returns the dict version of config
         observation = get_observation(config["input_file"])
 
         # Read and load spectra using spectra reader
@@ -60,12 +60,12 @@ class TestFilterIntegration:
         reader = ASCIISpectrumReader(
             observation_id=observation.ProcessingID[0],
             parameters=param,
-            calibration_library=context,
+            calibration_library=process_flow.calibration_library,
             source_id=observation.ProcessingID[0],
         )
 
         reader.load_all(spectra)
-        context.run(reader)  # passing spectra reader to launch amazed
+        process_flow.run(reader)  # passing spectra reader to launch amazed
 
-        # Checks that the number of waves kept has decreased (6 to 3) with filtering
+        # # Checks that the number of waves kept has decreased (6 to 3) with filtering
         assert len(reader.get_wave()) == 3

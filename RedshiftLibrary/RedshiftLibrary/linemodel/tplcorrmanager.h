@@ -50,12 +50,13 @@ class CLineCatalogsTplRatio;
 
 class CTplCorrManager : public CTplratioManager {
 public:
-  CTplCorrManager(const CLMEltListVectorPtr &elementsVector,
+  CTplCorrManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
                   const CSpcModelVectorPtr &models,
                   const CCSpectrumVectorPtr &inputSpcs,
                   const CTLambdaRangePtrVector &lambdaRanges,
                   std::shared_ptr<CContinuumManager> continuumManager,
-                  const CLineMap &restLineList);
+                  const CLineMap &restLineList,
+                  const CSpectraGlobalIndex &spcIndex);
   CTplCorrManager() = delete;
   CTplCorrManager(CTplCorrManager const &other) = default;
   CTplCorrManager &operator=(CTplCorrManager const &other) = default;

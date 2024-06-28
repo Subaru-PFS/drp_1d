@@ -45,16 +45,17 @@ public:
   TInt32List ElementId; // id of the linemodel element it is part of
   TFloat64List Amplitudes;
   TFloat64List AmplitudesUncertainties; // noise sigma
-  TFloat64List FittingError; // ModelLeastSquare error under each line
+  TFloat64List SNR;
+  TFloat64List ResidualRMS; // rms of residual (model-spectrum) under each line
   TFloat64List
       CenterContinuumFlux; // Continuum flux value at the center of each line
-  TFloat64List ContinuumError;        // Continuum error value for each line
-  TFloat64List Sigmas;                // width for each line
-  TFloat64List Fluxs;                 // Flux for each line
-  TFloat64List FluxErrors;            // Flux error for each line
+  TFloat64List CenterContinuumFluxUncertainty;        // Continuum error value for each line
+  TFloat64List Sigmas;                // width (Gaussian sigma) for each line
+  TFloat64List Flux;                 // Flux for each line
+  TFloat64List FluxUncertainty;            // Flux uncertainty for each line
   TFloat64List FluxDirectIntegration; // Flux obtained by direct integration for
                                       // each line
-  TFloat64List FluxDirectIntegrationError; // Flux obtained by direct
+  TFloat64List FluxDirectIntegrationUncertainty; // Flux uncertainty by direct
                                            // integration for each line
   TInt32List lineId;
 

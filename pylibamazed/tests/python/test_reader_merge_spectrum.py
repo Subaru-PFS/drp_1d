@@ -65,7 +65,7 @@ class TestMergeSpectrumInDataframe(TestSpectrumReaderUtils):
 
     def _initialize_fsr(self):
         # Initializes empty fake spectrum reader
-        parameters = Parameters(self.make_parameters_dict(), FakeParametersChecker)
+        parameters = Parameters(self.make_parameters_dict(), Checker=FakeParametersChecker)
         cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
         fsr = FakeSpectrumReader("000", parameters, cl, "000", "range")
 

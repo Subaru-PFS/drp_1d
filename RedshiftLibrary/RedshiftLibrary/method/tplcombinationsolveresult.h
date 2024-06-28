@@ -39,15 +39,15 @@
 #ifndef _REDSHIFT_METHOD_TPLCOMBINATIONSOLVERESULT_
 #define _REDSHIFT_METHOD_TPLCOMBINATIONSOLVERESULT_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/method/solveresult.h"
-#include "RedshiftLibrary/operator/extremaresult.h"
-
 #include <cmath>
 #include <memory>
 #include <unordered_map>
 #include <vector>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 
 namespace NSEpic {
 

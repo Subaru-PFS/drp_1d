@@ -36,14 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <cmath>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 #include "RedshiftLibrary/line/lineprofileASYMFIT.h"
 #include "RedshiftLibrary/line/lineprofileLOR.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "tests/src/tool/inputContextLight.h"
-
-#include <boost/test/unit_test.hpp>
-#include <cmath>
 
 using namespace NSEpic;
 
@@ -53,7 +54,7 @@ public:
     igmCorrectionMeiksin->convolveByLSF(LSF, TFloat64Range(1000, 12500));
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CLSF> LSF =
@@ -106,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(lineprofile_test, fixture_LineProfileTest) {
   profileLOR.SetSymIgmParams(igmParams);
   profileLOR.resetParams();
 
-  BOOST_CHECK_THROW(profileLOR.getIGMIdxCount(), GlobalException);
+  BOOST_CHECK_THROW(profileLOR.getIGMIdxCount(), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(lineprofileSYM_test) {
@@ -193,7 +194,7 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
   // CheckMeiksinInit
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> nullIgm;
   CLineProfileSYMIGM profileSYMIGM_badIgm = CLineProfileSYMIGM(nullIgm, 4.0);
-  BOOST_CHECK_THROW(profileSYMIGM_badIgm.CheckMeiksinInit(), GlobalException);
+  BOOST_CHECK_THROW(profileSYMIGM_badIgm.CheckMeiksinInit(), AmzException);
 
   // igmIdx, redshift
   TSymIgmParams params = {1, 2.1};
@@ -254,10 +255,9 @@ BOOST_FIXTURE_TEST_CASE(lineprofileSYMIGM_test, fixture_LineProfileTest) {
 
   // GetLineFlux
   val = profileSYMIGM.GetLineFlux(x0, sigma, 1);
-  BOOST_CHECK_CLOSE(val, 297.44547483232265, 1e-12);
+  BOOST_CHECK_CLOSE(val, 1.2946314601440352, 1e-12);
 
-  BOOST_CHECK_THROW(profileSYMIGM.GetLineFlux(x0 - 2., 0.001, 1),
-                    GlobalException);
+  BOOST_CHECK_THROW(profileSYMIGM.GetLineFlux(x0 - 2., 0.001, 1), AmzException);
 
   val = profileSYMIGM.GetLineFlux(x0 + 50., sigma, 1);
   val2 = profileSYM.GetLineFlux(x0 + 50., sigma, 1);
@@ -284,11 +284,11 @@ BOOST_AUTO_TEST_CASE(lineprofileLOR_test) {
 
   // GetLineProfileDerivX0
   BOOST_CHECK_THROW(profileLOR.GetLineProfileDerivX0(10.0, x0, sigma),
-                    GlobalException);
+                    AmzException);
 
   // GetLineProfileDerivSigma
   BOOST_CHECK_THROW(profileLOR.GetLineProfileDerivSigma(10.0, x0, sigma),
-                    GlobalException);
+                    AmzException);
 
   // GetLineFlux
   val = profileLOR.GetLineFlux(x0, sigma, 1.);
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(lineprofileASYM_test) {
   BOOST_CHECK(xsurc == 0.);
 
   BOOST_CHECK_THROW(profileASYM_badDelta.GetXSurc(0., sigma, xsurc),
-                    GlobalException);
+                    AmzException);
 
   // GetLineProfileVal
   val = profileASYM.GetLineProfileVal(10.0, x0, sigma);
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(lineprofileASYM_test) {
   BOOST_CHECK(val == 1.0);
 
   BOOST_CHECK_THROW(profileASYM_badParam.GetLineProfileVal(10.0, x0, sigma),
-                    GlobalException);
+                    AmzException);
 
   // GetLineProfileDerivX0
   val = profileSYM.GetLineProfileDerivX0(10.0, x0, sigma);
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(lineprofileASYM_test) {
   BOOST_CHECK(val == -val2);
 
   BOOST_CHECK_THROW(profileASYM_badParam.GetLineProfileDerivX0(10.0, x0, sigma),
-                    GlobalException);
+                    AmzException);
 
   // GetLineProfileDerivSigma
   val = profileSYM.GetLineProfileDerivSigma(10.0, x0, sigma);
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(lineprofileASYM_test) {
 
   BOOST_CHECK_THROW(
       profileASYM_badParam.GetLineProfileDerivSigma(10.0, x0, sigma),
-      GlobalException);
+      AmzException);
 
   // GetLineFlux
   val = profileASYM.GetLineFlux(x0, sigma, 1.);

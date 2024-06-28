@@ -36,9 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/log/log.h"
+#include <chrono>
+
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/log/handler.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 
@@ -47,139 +49,59 @@ using namespace NSEpic;
  */
 CLog::CLog() {
   Int32 i;
-  m_IndentCount = 0;
-
-  m_WorkingBuffer = new Char[LOG_WORKING_BUFFER_SIZE];
   for (i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
     m_HandlerTable[i] = NULL;
   }
-
-  m_IndentBuffer[0] = 0;
 }
 
-CLog::~CLog() { delete[] m_WorkingBuffer; }
+CLog::~CLog() {}
 
-/**
- * Calls LogEntry with an Error message.
- */
-void CLog::LogError(const char *format, ...) {
+void CLog::logEntry(const std::string &msg, CLog::ELevel logLevel,
+                    bool withTimestamp) {
   m_Mutex.Lock();
-
-  va_list args;
-  va_start(args, format);
-  LogEntry(nLevel_Error, format, args);
-  va_end(args);
-
-  m_Mutex.Unlock();
-}
-
-/**
- * Calls LogEntry with a Warning message.
- */
-void CLog::LogWarning(const char *format, ...) {
-  m_Mutex.Lock();
-
-  va_list args;
-  va_start(args, format);
-  LogEntry(nLevel_Warning, format, args);
-  va_end(args);
-
-  m_Mutex.Unlock();
-}
-
-/**
- * Calls LogEntry with an Information message.
- */
-void CLog::LogInfo(const char *format, ...) {
-  m_Mutex.Lock();
-
-  va_list args;
-  va_start(args, format);
-  LogEntry(nLevel_Info, format, args);
-  va_end(args);
-
-  m_Mutex.Unlock();
-}
-
-/**
- * Calls LogEntry with an Information message.
- */
-void CLog::LogDetail(const char *format, ...) {
-  m_Mutex.Lock();
-
-  va_list args;
-  va_start(args, format);
-  LogEntry(nLevel_Detail, format, args);
-  va_end(args);
-
-  m_Mutex.Unlock();
-}
-
-/**
- * Calls LogEntry with a Debug message.
- */
-void CLog::LogDebug(const char *format, ...) {
-  m_Mutex.Lock();
-
-  va_list args;
-  va_start(args, format);
-  LogEntry(nLevel_Debug, format, args);
-  va_end(args);
-
-  m_Mutex.Unlock();
-}
-
-void CLog::log(const std::string &msg, CLog::ELevel lvl) {
-  m_Mutex.Lock();
+  std::string messageToLog = GetHeader(logLevel) + msg;
+  if (withTimestamp)
+    messageToLog = timeStampString() + messageToLog;
   for (int i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
     if (m_HandlerTable[i]) {
-      if (m_HandlerTable[i]->GetLevelMask() <= lvl) {
-        m_HandlerTable[i]->LogEntry(lvl, GetHeader(lvl), msg.c_str());
+      if (m_HandlerTable[i]->GetLevelMask() <= logLevel) {
+        m_HandlerTable[i]->LogEntry(logLevel, messageToLog);
       }
     }
   }
   m_Mutex.Unlock();
 }
 
-void CLog::LogError(const std::string &msg) { log(msg, nLevel_Error); }
-void CLog::LogDebug(const std::string &msg) { log(msg, nLevel_Debug); }
-void CLog::LogInfo(const std::string &msg) { log(msg, nLevel_Info); }
-void CLog::LogWarning(const std::string &msg) { log(msg, nLevel_Warning); }
-void CLog::LogDetail(const std::string &msg) { log(msg, nLevel_Detail); }
+std::string CLog::timeStampString() {
+  // Get the current system time point
+  auto now = std::chrono::system_clock::now();
 
-/**
- * Calls LogEntry in every handler registered on the table with the input
- * message, if the handler has a level mask <= the message level.
- */
-void CLog::LogEntry(ELevel lvl, const char *format, va_list &args) {
-  Int32 i;
+  // Convert the time point to a time_t object (C-style time)
+  std::time_t time = std::chrono::system_clock::to_time_t(now);
 
-  vsnprintf(m_WorkingBuffer, LOG_WORKING_BUFFER_SIZE, format, args);
+  // Convert to string
+  std::string timeString = std::ctime(&time);
 
-  for (i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
-    if (m_HandlerTable[i]) {
-      if (m_HandlerTable[i]->GetLevelMask() <= lvl) {
-        m_HandlerTable[i]->LogEntry(lvl, GetHeader(lvl), m_WorkingBuffer);
-      }
-    }
-  }
+  // Remove last character (newline)
+  timeString = timeString.erase(timeString.size() - 1) + " ";
+
+  return timeString;
 }
 
-CMutex &CLog::GetSynchMutex() { return m_Mutex; }
-
-void CLog::Indent() {
-
-  m_IndentBuffer[m_IndentCount] = '\t';
-  m_IndentCount++;
-  m_IndentBuffer[m_IndentCount] = 0;
+void CLog::LogError(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Error, withTimestamp);
 }
-void CLog::UnIndent() {
-  if (m_IndentCount == 0)
-    return;
-
-  m_IndentBuffer[m_IndentCount] = 0;
-  m_IndentCount--;
-  m_IndentBuffer[m_IndentCount] = 0;
+void CLog::LogDebug(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Debug, withTimestamp);
+}
+void CLog::LogInfo(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Info, withTimestamp);
+}
+void CLog::LogWarning(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Warning, withTimestamp);
+}
+void CLog::LogDetail(const std::string &msg, bool withTimestamp) {
+  logEntry(msg, nLevel_Detail, withTimestamp);
 }
 
 /**
@@ -211,32 +133,38 @@ void CLog::AddHandler(CLogHandler &handler) {
   }
 }
 
+CMutex &CLog::GetSynchMutex() { return m_Mutex; }
+
 /**
  * Given a message priority level, returns an appropriate prefix to the message.
  */
-const char *CLog::GetHeader(CLog::ELevel lvl) {
-  switch (lvl) {
+std::string CLog::GetHeader(CLog::ELevel logLevel) {
+  std::string header;
+  switch (logLevel) {
+  case nLevel_Critical:
+    header = "Critical: ";
+    break;
   case nLevel_Error:
-    sprintf(m_CurrentHeader, "Error: %s ", m_IndentBuffer);
+    header = "Error: ";
     break;
   case nLevel_Warning:
-    sprintf(m_CurrentHeader, "Warning: %s ", m_IndentBuffer);
+    header = "Warning: ";
     break;
   case nLevel_Info:
-    sprintf(m_CurrentHeader, "Info: %s ", m_IndentBuffer);
+    header = "Info: ";
     break;
   case nLevel_Detail:
-    sprintf(m_CurrentHeader, "Detail: %s ", m_IndentBuffer);
+    header = "Detail: ";
     break;
   case nLevel_Debug:
-    sprintf(m_CurrentHeader, "Debug: %s", m_IndentBuffer);
+    header = "Debug: ";
     break;
   case nLevel_None:
-    sprintf(m_CurrentHeader, "%s", m_IndentBuffer);
+    header = "";
     break;
   default:
     return NULL;
   }
 
-  return m_CurrentHeader;
+  return header;
 }

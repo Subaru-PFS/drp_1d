@@ -1,12 +1,13 @@
 #ifndef _REDSHIFT_CONTINUUM_MANAGER_H
 #define _REDSHIFT_CONTINUUM_MANAGER_H
 
+#include <cmath>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
-
-#include <cmath>
 
 namespace NSEpic
 
@@ -26,10 +27,12 @@ class CContinuumManager {
 public:
   CContinuumManager(const CSpcModelVectorPtr &models,
                     std::shared_ptr<CTplModelSolution>,
-                    std::shared_ptr<Int32> curObs);
+                    const CSpectraGlobalIndex &spcGlobIndex);
 
-  const CSpectrumModel &getModel() const { return (*m_models)[*m_curObs]; }
-  CSpectrumModel &getModel() { return (*m_models)[*m_curObs]; }
+  const CSpectrumModel &getModel() const {
+    return m_models->getSpectrumModel();
+  }
+  CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);
@@ -40,7 +43,7 @@ public:
   const std::shared_ptr<const CTemplatesFitStore> &
   GetFitContinuum_FitStore() const;
   std::shared_ptr<CPriorHelper> SetFitContinuum_PriorHelper();
-  void LoadFitContinuum(Int32 icontinuum, Int32 autoSelect, Float64 redshift);
+  void LoadFitContinuum(Int32 icontinuum, Float64 redshift);
 
   void SetFitContinuum_FitValues(const CTplModelSolution &cms) {
     *m_fitContinuum = cms;
@@ -48,8 +51,8 @@ public:
 
   Float64 getContinuumScaleMargCorrection() const;
   bool isContinuumComponentTplfitxx() const {
-    return m_ContinuumComponent == "tplfit" ||
-           m_ContinuumComponent == "tplfitauto";
+    return m_ContinuumComponent == "tplFit" ||
+           m_ContinuumComponent == "tplFitAuto";
   }
   Float64 getFitContinuum_snr() const;
   CTplModelSolution GetContinuumModelSolutionCopy() const;
@@ -89,14 +92,15 @@ public:
 
 private:
   std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
-  TStringList m_tplCategoryList;
+  std::string m_tplCategory;
 
   std::shared_ptr<CPriorHelper> m_fitContinuum_priorhelper;
 
   std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
 
   CSpcModelVectorPtr m_models;
-  std::shared_ptr<Int32> m_curObs;
+
+  CSpectraGlobalIndex m_spectraIndex;
 
   std::string m_ContinuumComponent;
   Int32 m_fitContinuum_option;

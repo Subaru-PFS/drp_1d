@@ -39,15 +39,14 @@
 #ifndef _REDSHIFT_OPERATOR_PDFZ_
 #define _REDSHIFT_OPERATOR_PDFZ_
 
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/operator/operator.h"
-
 #include "RedshiftLibrary/operator/logZPdfResult.h"
+#include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
-
-#include <string>
 
 namespace Pdfz_test { // boost_test_suite
 class checkWindowSize_test;

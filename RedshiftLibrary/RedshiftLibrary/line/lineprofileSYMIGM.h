@@ -38,13 +38,15 @@
 // ============================================================================
 #ifndef _REDSHIFT_LINE_PROFILE_SYMIGM_
 #define _REDSHIFT_LINE_PROFILE_SYMIGM_
+
+#include <cmath>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
-#include <cmath>
-#include <string>
 
 namespace lineProfile_test {
 class lineprofileSYMIGM_test;
@@ -78,6 +80,9 @@ public:
 
   void resetParams() override;
   Int32 getIGMIdxCount() const override;
+  Int32 GetIgmIdx() const {
+    return m_igmidx != undefIdx ? m_igmidx : 3;
+  }; // use median extinction curve if undefined
 
 private:
   friend class lineProfile_test::lineprofileSYMIGM_test;
@@ -91,7 +96,7 @@ private:
 
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   Float64 m_redshift = NAN;
-  Int32 m_igmidx = -1;
+  Int32 m_igmidx = undefIdx;
   bool m_igmFit = false;
 };
 } // namespace NSEpic

@@ -36,17 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/templatefitting.h"
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/mask.h"
-#include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/operator/templatefittingresult.h"
-#include "RedshiftLibrary/spectrum/axis.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
+#include <algorithm> // std::sort
+#include <climits>
+#include <cmath>
+#include <iostream>
+#include <sstream>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -56,11 +50,17 @@
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 
-#include <algorithm> // std::sort
-#include <climits>
-#include <cmath>
-#include <iostream>
-#include <sstream>
+#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -82,7 +82,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
   bool amplForcePositive = true;
-  bool status_chisquareSetAtLeastOnce = false;
+  bool chisquareSetAtLeastOnce = false;
 
   Int32 EbmvListSize = EbmvList.size();
   Int32 MeiksinListSize = MeiksinList.size();
@@ -103,27 +103,31 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
     RebinTemplate(tpl, redshift, currentRanges[spcIndex],
                   result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
-
-    bool kStartEnd_ok = currentRanges[spcIndex].getClosedIntervalIndices(
+    currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart[spcIndex], m_kEnd[spcIndex]);
-    if (!kStartEnd_ok)
-      THROWG(INTERNAL_ERROR, "Impossible to "
-                             "get valid kstart or kend");
-    if (m_kStart[spcIndex] == -1 || m_kEnd[spcIndex] == -1)
-      THROWG(INTERNAL_ERROR, Formatter() << "kStart=" << m_kStart[spcIndex]
-                                         << ", kEnd=" << m_kEnd[spcIndex]);
   }
-  if (opt_dustFitting || opt_extinction)
-    InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
-                     tpl->m_igmCorrectionMeiksin, EbmvListSize);
+
+  if (opt_extinction)
+    opt_extinction = igmIsInRange(currentRanges);
+
+  if (opt_dustFitting || opt_extinction) {
+    for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+      InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
+                       tpl->m_ismCorrectionCalzetti,
+                       tpl->m_igmCorrectionMeiksin, spcIndex);
+    }
+  }
+
+  if (m_option_igmFastProcessing)
+    init_fast_igm_processing(EbmvListSize);
 
   CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
   // Loop on the meiksin Idx
-  bool igmLoopUseless_WavelengthRange = false;
+  bool skip_igm_loop = true;
   for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
-    if (igmLoopUseless_WavelengthRange) {
+    if (kM > 0 && skip_igm_loop) {
       // Now copy from the already calculated k>0 igm values
       for (Int32 kism = 0; kism < result.ChiSquareInterm.size(); kism++) {
         for (Int32 kigm = 1; kigm < result.ChiSquareInterm[kism].size();
@@ -138,22 +142,16 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       break;
     }
     Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
-    // being the median extinction value)
+                                        // being the median extinction value)
 
-    bool igmCorrectionAppliedOnce = false;
     // Meiksin IGM extinction
     if (opt_extinction) {
       for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-
-        // check if lya belongs to current range.
-        if (CheckLyaIsInCurrentRange(currentRanges[spcIndex]))
-          igmCorrectionAppliedOnce = false;
-        else
-          igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx, spcIndex);
+        if (ApplyMeiksinCoeff(meiksinIdx, spcIndex) && kM == 0)
+          skip_igm_loop = false;
       }
-      if (!igmCorrectionAppliedOnce)
-        igmLoopUseless_WavelengthRange = true;
     }
+
     // Loop on the EBMV dust coeff
     for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
       Int32 kEbmv = EbmvList[kEbmv_];
@@ -187,39 +185,36 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         // TFittingIsmIGmResult members
 
         result.EbmvCoeff = coeffEBMV;
-        result.MeiksinIdx =
-            igmCorrectionAppliedOnce == true ? meiksinIdx : undefIdx;
-        status_chisquareSetAtLeastOnce = true;
+        result.MeiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
+        chisquareSetAtLeastOnce = true;
       }
     }
   }
 
-  if (status_chisquareSetAtLeastOnce) {
-    result.status = nStatus_OK;
-  } else {
-    result.status = nStatus_LoopError;
+  if (!chisquareSetAtLeastOnce) {
+    THROWG(ErrorCode::INVALID_MERIT_VALUES,
+           Formatter() << "Template " << tpl->GetName()
+                       << ": Not even one single valid fit/merit value found");
   }
 
   return result;
 }
 
-void COperatorTemplateFitting::InitIsmIgmConfig(
-    Float64 redshift,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin,
-    Int32 EbmvListSize) {
-
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
-    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-        m_kStart[spcIndex], m_kEnd[spcIndex], redshift, ismCorrectionCalzetti,
-        igmCorrectionMeiksin);
+void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {
 
   m_sumCross_outsideIGM.assign(m_spectra.size(),
                                TFloat64List(EbmvListSize, 0.0));
   m_sumT_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
   m_sumS_outsideIGM.assign(m_spectra.size(), TFloat64List(EbmvListSize, 0.0));
+}
+
+bool COperatorTemplateFitting::igmIsInRange(
+    const TFloat64RangeList &ranges) const {
+  for (auto const &range : ranges) {
+    if (range.GetBegin() <= RESTLAMBDA_LYA)
+      return true;
+  }
+  return false;
 }
 
 TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
@@ -246,8 +241,6 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   Int32 sumsIgmSaved = 0;
 
   Float64 err2 = 0.0;
-  Int32 numDevs = 0;
-  Int32 numDevsFull = 0;
   const CSpectrumNoiseAxis &error = spcFluxAxis.GetError();
 
   Int32 kIgmEnd = m_option_igmFastProcessing
@@ -264,11 +257,8 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
       sumsIgmSaved = 1;
     }
 
-    numDevsFull++;
-
     if (spcMaskAdditional[j]) {
 
-      numDevs++;
       err2 = 1.0 / (error[j] * error[j]);
 
       // Tonry&Davis formulation
@@ -277,23 +267,23 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
       sumS += Yspc[j] * Yspc[j] * err2;
 
       if (std::isinf(err2) || std::isnan(err2)) {
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "found invalid inverse variance : err2=" << err2
                            << ", for index=" << j
                            << " at restframe wl=" << Xtpl[j]);
       }
 
       if (std::isinf(sumS) || std::isnan(sumS) || sumS != sumS)
-        THROWG(INTERNAL_ERROR,
+        THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "Invalid dtd value: dtd=" << sumS
                            << ", Yspc=" << Yspc[j] << ", err2=" << err2
                            << ", error=" << error[j] << ", for index=" << j
                            << " at restframe wl=" << Xtpl[j]);
 
       if (std::isinf(sumT) || std::isnan(sumT)) {
-        THROWG(INTERNAL_ERROR, Formatter() << "Invalid mtm value:" << sumT
-                                           << " for index=" << j
-                                           << " at restframe wl=" << Xtpl[j]);
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "Invalid mtm value:" << sumT << " for index=" << j
+                           << " at restframe wl=" << Xtpl[j]);
       }
     }
   }
@@ -310,8 +300,8 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
     }
   }
 
-  if (numDevs == 0) {
-    THROWG(INTERNAL_ERROR, "empty leastsquare sum");
+  if (sumT == 0.0) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "empty leastsquare sum");
   }
 
   return fitResult;
@@ -337,8 +327,6 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
     ampl_err = 0.0;
     fit = sumS;
     ampl_sigma = 0.0;
-    // status = nStatus_DataError;
-    // return;
   } else {
 
     ampl = sumCross / sumT;
@@ -388,23 +376,24 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
   Log.LogDetail(
-      "  Operator-TemplateFitting: starting computation for template: %s",
-      tpl->GetName().c_str());
+      Formatter()
+      << "  Operator-TemplateFitting: starting computation for template: "
+      << tpl->GetName());
 
   if (opt_dustFitting && tpl->CalzettiInitFailed())
-    THROWG(INTERNAL_ERROR, "ISM is not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
 
   if (opt_dustFitting &&
       FitEbmvIdx >= tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs())
     THROWG(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter() << "Invalid calzetti index. (FitEbmvIdx=" << FitEbmvIdx
                     << ", while NPrecomputedEbmvCoeffs="
                     << tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()
                     << ")");
 
   if (opt_extinction && tpl->MeiksinInitFailed()) {
-    THROWG(INTERNAL_ERROR, "IGM is not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
@@ -418,7 +407,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   result->Redshifts = m_redshifts;
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "prior list size(" << logpriorze.size()
                        << ") does not match the input redshift-list size :"
                        << m_redshifts.size());
@@ -436,11 +425,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
                  opt_dustFitting, logp, MeiksinList, EbmvList);
 
     result->set_at_redshift(i, std::move(result_z));
-
-    if (result->Status[i] == nStatus_InvalidProductsError)
-      THROWG(INTERNAL_ERROR, Formatter() << "found invalid chisquare "
-                                            "products for z="
-                                         << redshift);
   }
 
   // overlap warning
@@ -466,46 +450,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
   if (overlapValidInfZ != m_redshifts[0] ||
       overlapValidSupZ != m_redshifts[m_redshifts.size() - 1]) {
-    Log.LogInfo("  Operator-TemplateFitting: overlap warning for %s: "
-                "minz=%.3f, maxz=%.3f",
-                tpl->GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
-  }
-
-  // only bad status warning
-  Int32 oneValidStatusFoundIndex = -1;
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    if (result->Status[i] == nStatus_OK) {
-      oneValidStatusFoundIndex = i;
-      Log.LogDebug("  Operator-TemplateFitting: STATUS VALID found for %s: at "
-                   "least at index=%d",
-                   tpl->GetName().c_str(), i);
-      break;
-    }
-  }
-  if (oneValidStatusFoundIndex == -1) {
-    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
-                 Formatter()
-                     << "  COperatorTemplateFitting::" << __func__
-                     << ": STATUS WARNING for " << tpl->GetName().c_str()
-                     << ": Not even one single valid fit/merit value found");
-  }
-
-  // loop error status warning
-  Int32 loopErrorStatusFoundIndex = -1;
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    if (result->Status[i] == nStatus_LoopError) {
-      loopErrorStatusFoundIndex = i;
-      Log.LogDebug("  Operator-TemplateFitting: STATUS Loop Error found for "
-                   "%s: at least at index=%d",
-                   tpl->GetName().c_str(), i);
-      break;
-    }
-  }
-  if (loopErrorStatusFoundIndex != -1) {
-    Flag.warning(WarningCode::INVALID_MERIT_VALUES,
-                 Formatter()
-                     << "    COperatorTemplateFitting::" << __func__
-                     << ": Loop Error - chisquare values not set even once");
+    Log.LogInfo(Formatter()
+                << "  Operator-TemplateFitting: overlap warning for "
+                << tpl->GetName()
+                << ": "
+                   "minz="
+                << overlapValidInfZ << ", maxz=" << overlapValidSupZ);
   }
 
   // estimate CstLog for PDF estimation

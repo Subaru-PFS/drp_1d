@@ -39,12 +39,13 @@
 #ifndef _REDSHIFT_LINE_CATALOG_
 #define _REDSHIFT_LINE_CATALOG_
 
+#include <string>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/line/linedetected.h"
-#include <string>
-#include <vector>
 
 namespace NSEpic {
 class CSpectrumFluxCorrectionMeiksin;
@@ -78,7 +79,7 @@ public:
                   CLine::EForce forceFilter = CLine::EForce::nForce_All) const;
   TLineMap GetFilteredList(const std::string &typeFilter,
                            const std::string &forceFilter) const;
-  static const std::map<std::string, TLineVector>
+  static std::map<std::string, TLineVector>
   ConvertToGroupList(const TLineMap &filteredList);
 
   void setAsymProfileAndParams(const std::string &profile, TAsymParams params);

@@ -51,7 +51,7 @@ namespace NSEpic {
 class CLogConsoleHandler : public CLogHandler {
 
 public:
-  void LogEntry(Int32 lvl, const char *header, const char *msg);
+  void LogEntry(Int32 logLevel, const std::string &message);
 
 private:
 };

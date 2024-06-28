@@ -36,17 +36,18 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/linemodelresult.h"
+#include <cfloat>
+#include <fstream>
+#include <string>
+
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
-#include <cfloat>
-#include <fstream>
-#include <string>
 
 using namespace NSEpic;
 
@@ -65,14 +66,13 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
                             TFloat64List tplratiosPriors) {
   if (tplratiosPriors.size() != nTplratios) {
     THROWG(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter()
             << "Sizes do not match between tplratioprior and tplratios vectors:"
             << tplratiosPriors.size() << " vs " << nTplratios);
   }
 
   Int32 nResults = redshifts.size();
-  Status.assign(nResults, COperator::nStatus_UnSet);
   ChiSquare.assign(nResults, NAN);
   ScaleMargCorrection.assign(nResults, NAN);
   Redshifts = std::move(redshifts);
@@ -111,7 +111,6 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
 
 void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
 
-  insertWithDuplicates(Status, idx, count, COperator::nStatus_UnSet, ndup);
   insertWithDuplicates<Float64>(ChiSquare, idx, count, NAN, ndup);
   insertWithDuplicates<Float64>(ScaleMargCorrection, idx, count, NAN, ndup);
   insertWithDuplicates(LineModelSolutions, idx, count, CLineModelSolution(),
@@ -145,7 +144,7 @@ void CLineModelResult::SetChisquareTplContinuumResult(
   const auto index_z_in_store =
       tplFitStore->GetRedshiftIndex(Redshifts[index_z]);
   if (index_z_in_store == -1)
-    THROWG(INTERNAL_ERROR, "Redshift not in fitstore");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Redshift not in fitstore");
 
   for (Int32 k = 0; k < tplFitStore->GetContinuumCount();
        k++) { // TODO: handle the use of more than one continuum in linemodel
@@ -168,7 +167,7 @@ void CLineModelResult::SetChisquareTplratioResult(
     return;
 
   if (index_z >= Redshifts.size())
-    THROWG(INTERNAL_ERROR, "Invalid z index");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
 
   if (tplratioManager->GetChisquareTplratio().size() !=
           ChiSquareTplratios.size() ||
@@ -180,7 +179,7 @@ void CLineModelResult::SetChisquareTplratioResult(
           tplratioManager->GetNLinesAboveSNRTplratio().size() ||
       tplratioManager->GetChisquareTplratio().size() !=
           tplratioManager->GetPriorLinesTplratio().size())
-    THROWG(INTERNAL_ERROR, "vector sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR, "vector sizes do not match");
 
   for (Int32 k = 0; k < tplratioManager->GetChisquareTplratio().size(); k++) {
     ChiSquareTplratios[k][index_z] = tplratioManager->GetChisquareTplratio()[k];
@@ -201,7 +200,7 @@ void CLineModelResult::SetChisquareTplratioResult(
 void CLineModelResult::SetChisquareTplratioResultFromPrevious(Int32 index_z) {
 
   if (index_z >= Redshifts.size())
-    THROWG(INTERNAL_ERROR, "Invalid z index");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
 
   auto previous = index_z - 1;
 
@@ -333,12 +332,13 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
         !restLineList.at(line_id).IsEmission())
       continue;
 
-    Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
+    Float64 const noise =
+        LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
     if (noise <= 0)
       continue;
-    Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
-    Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
-                         LineModelSolutions[solutionIdx].FittingError[j];
+    Float64 const snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
+    Float64 const Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
+                               LineModelSolutions[solutionIdx].ResidualRMS[j];
     if (snr >= snrThres && Fittingsnr >= fitThres) {
       nSol++;
       indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
@@ -411,8 +411,9 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
           linemodelsols[solutionIdx].OutsideLambdaRange[j])
         continue;
 
-      Log.LogDebug("    linemodelresult: using line for max amp search=%s",
-                   restLineList.at(line_id).GetName().c_str());
+      Log.LogDebug(Formatter()
+                   << "    linemodelresult: using line for max amp search="
+                   << restLineList.at(line_id).GetName());
       if (linemodelsols[solutionIdx].Amplitudes[j] > ampMax) {
         ampMax = linemodelsols[solutionIdx].Amplitudes[j];
         ampMaxLineTag = restLineList.at(line_id).GetName().c_str();
@@ -422,9 +423,10 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
     isHaStrongest[solutionIdx] = (!std::isnan(ampMax) && ampMax > 0. &&
                                   ampMaxLineTag == linetags::halpha_em);
     if (isHaStrongest[solutionIdx]) {
-      Log.LogDebug("CLineModelResult::GetModelHaStrongest:  z=%f found to be "
-                   "true with ampMax=%e (for line=Halpha)",
-                   linemodelsols[solutionIdx].Redshift, ampMax);
+      Log.LogDebug(Formatter() << "CLineModelResult::GetModelHaStrongest:  z="
+                               << linemodelsols[solutionIdx].Redshift
+                               << " found to be true with ampMax=" << ampMax
+                               << " (for line=Halpha)");
     }
   }
 

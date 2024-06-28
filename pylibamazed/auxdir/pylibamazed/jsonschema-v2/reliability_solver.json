@@ -1,0 +1,38 @@
+{
+  "$id": "reliability_solver",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spectrum model",
+  "type": "object",
+  "required": [
+    "method",
+    "deepLearningSolver"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "method": {
+      "title": "Method",
+      "description": "Name of the method to apply for reliability estimation.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "deepLearningSolver"
+        ]
+      }
+    },
+    "deepLearningSolver": {
+      "title": "Deep learning solver",
+      "required": [
+        "reliabilityModel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "reliabilityModel": {
+          "type": "string",
+          "title": "Reliability path",
+          "description": "Relative path to the neural network model"
+        }
+      }
+    }
+  }
+}

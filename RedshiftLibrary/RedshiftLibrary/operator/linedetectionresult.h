@@ -39,9 +39,10 @@
 #ifndef _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
 #define _REDSHIFT_OPERATOR_LINEDETECTIONRESULT_
 
+#include <vector>
+
 #include "RedshiftLibrary/line/linedetected.h"
 #include "RedshiftLibrary/processflow/result.h"
-#include <vector>
 
 namespace NSEpic {
 

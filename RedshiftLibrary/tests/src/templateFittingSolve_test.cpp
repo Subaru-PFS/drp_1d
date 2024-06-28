@@ -37,6 +37,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
@@ -45,12 +47,10 @@
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
 
-#include <boost/test/unit_test.hpp>
-
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4680, 4712 ],"
+    "{\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -59,59 +59,62 @@ const std::string jsonString =
     "\"medianEvenReflection\" : true}},"
     "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
     "\"continuumRemoval\" : {"
-    "\"method\" : \"IrregularSamplingMedian\","
+    "\"method\" : \"irregularSamplingMedian\","
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", \"resolution\" : "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", \"resolution\" : "
     "4300},"
-    "\"extremaredshiftseparation\" : 0.01,"
-    "\"objects\" : [\"galaxy\"],"
-    "\"autocorrectinput\" : false,"
-    "\"airvacuum_method\" : \"default\",";
+    "\"extremaRedshiftSeparation\" : 0.01,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
+    "\"airVacuumMethod\" : \"default\",";
 
 const std::string jsonStringFFT = {
     "\"galaxy\" : {"
-    "\"redshiftrange\" : [ 2.84, 2.88 ],"
-    "\"redshiftstep\" : 0.0001,"
-    "\"redshiftsampling\" : \"log\","
-    "\"method\" : \"TemplateFittingSolve\","
+    "\"redshiftRange\" : [ 2.84, 2.88 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
     "\"linemeas_method\" : null,"
-    "\"TemplateFittingSolve\" : {"
-    "\"extremacount\" : 5,"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"templateFittingSolve\","
+    "\"templateFittingSolve\" : {"
+    "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : true,"
-    "\"interpolation\" : \"precomputedfinegrid\","
-    "\"igmfit\" : true,"
-    "\"ismfit\" : true,"
-    "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : false}}}"};
+    "\"fftProcessing\" : true,"
+    "\"interpolation\" : \"preComputedFineGrid\","
+    "\"igmFit\" : true,"
+    "\"ismFit\" : true,"
+    "\"pdfCombination\" : \"marg\","
+    "\"enablePhotometry\" : false}}}}"};
 
 const std::string jsonStringNoFFT = {
     "\"galaxy\" : {"
-    "\"redshiftrange\" : [ 2.84, 2.88 ],"
-    "\"redshiftstep\" : 0.0001,"
-    "\"redshiftsampling\" : \"log\","
-    "\"method\" : \"TemplateFittingSolve\","
+    "\"redshiftRange\" : [ 2.84, 2.88 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
     "\"linemeas_method\" : null,"
-    "\"TemplateFittingSolve\" : {"
-    "\"extremacount\" : 5,"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"templateFittingSolve\","
+    "\"templateFittingSolve\" : {"
+    "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : false,"
-    "\"interpolation\" : \"precomputedfinegrid\","
-    "\"igmfit\" : true,"
-    "\"ismfit\" : true,"
-    "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : true,"
-    "\"photometry\": {\"weight\" : 1.0}}}}"};
+    "\"fftProcessing\" : false,"
+    "\"interpolation\" : \"preComputedFineGrid\","
+    "\"igmFit\" : true,"
+    "\"ismFit\" : true,"
+    "\"pdfCombination\" : \"marg\","
+    "\"enablePhotometry\" : true,"
+    "\"photometry\": {\"weight\" : 1.0}}}}}"};
 
 class fixture_TemplateFittingSolveTestNoFFT {
 public:
   fixture_Context ctx;
   fixture_TemplateFittingSolveTestNoFFT() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringNoFFT);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -121,7 +124,7 @@ public:
     ctx.initContext();
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -147,6 +150,7 @@ public:
   fixture_Context ctx;
   fixture_TemplateFittingSolveTestFFT() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringFFT);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -154,7 +158,7 @@ public:
     ctx.initContext();
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -193,29 +197,36 @@ BOOST_AUTO_TEST_SUITE(templateFittingSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
                         fixture_TemplateFittingSolveTestNoFFT) {
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
+
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTemplateFittingSolve templateFittingSolve;
+  BOOST_REQUIRE_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy",
-                                               "TemplateFittingSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "templateFittingSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTemplateFittingSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "TemplateFittingSolve", "pdf");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "TemplateFittingSolve", "pdf_params");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "TemplateFittingSolve", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TExtremaResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "TemplateFittingSolve", "extrema_results",
+          "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
           "model_parameters", 0);
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 2.8604060282076706, 1e-6);
@@ -224,29 +235,35 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
 }
 
 BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(templateFittingSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTemplateFittingSolve templateFittingSolve;
+  BOOST_REQUIRE_NO_THROW(templateFittingSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy",
-                                               "TemplateFittingSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "templateFittingSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTemplateFittingSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "TemplateFittingSolve", "pdf");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "TemplateFittingSolve", "pdf_params");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "TemplateFittingSolve", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TExtremaResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "TemplateFittingSolve", "extrema_results",
+          "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
@@ -256,9 +273,14 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
 }
 
 BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
   // Creation of useful objects
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
-  templateFittingSolve.Compute();
+  CTemplateFittingSolve templateFittingSolve;
+  BOOST_REQUIRE_NO_THROW(templateFittingSolve.Compute());
 
   Float64 precision = 1e-12;
 

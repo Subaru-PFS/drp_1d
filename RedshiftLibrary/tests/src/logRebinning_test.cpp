@@ -36,34 +36,40 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [4680.0, 4712.0], "
+    "{\"lambdaRange\" : [4680.0, 4712.0], "
     "\"smoothWidth\" : 0.5, "
-    "\"redshiftstep\" : 0.001, "
-    "\"star\" : { \"redshiftrange\" : [ 2.84, 2.88 ], "
-    "\"method\" : \"LineModelSolve\", "
-    "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
-    "\"largegridstepratio\" : 1 }}}}, "
-    "\"galaxy\" : { \"redshiftrange\" : [ 2.84, 2.88 ], \"redshiftstep\" : "
-    "0.0001, \"method\" : \"LineModelSolve\", "
-    "\"LineModelSolve\" : {\"linemodel\" : { \"firstpass\" : { "
-    "\"largegridstepratio\" : 1 },"
-    "\"continuumfit\" : {\"fftprocessing\" : true }}}}, "
+    "\"redshiftStep\" : 0.001, "
+    "\"star\" : { \"redshiftRange\" : [ 2.84, 2.88 ], "
+    "\"stages\": [\"redshiftSolver\"],"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"lineModelSolve\", "
+    "\"lineModelSolve\" : {\"lineModel\" : { \"firstPass\" : { "
+    "\"largeGridStepRatio\" : 1 }}}}}, "
+    "\"galaxy\" : { \"redshiftRange\" : [ 2.84, 2.88 ], \"redshiftStep\" : "
+    "0.0001, "
+    "\"stages\": [\"redshiftSolver\"],"
+    "\"redshiftSolver\": {"
+    "\"method\" : \"lineModelSolve\","
+    "\"lineModelSolve\" : {\"lineModel\" : { \"firstPass\" : { "
+    "\"largeGridStepRatio\" : 1 },"
+    "\"continuumFit\" : {\"fftProcessing\" : true }}}}, "
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}}";
+    "\"method\" : \"irregularSamplingMedian\"}}}";
 class fixture_logRebinningTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> paramStore =
       fixture_ParamStore(jsonString, scopeStack).paramStore;
   std::shared_ptr<CInputContext> ctx_logSampled =
@@ -114,7 +120,7 @@ BOOST_AUTO_TEST_CASE(setupRebinning_test) {
 
   logRebinning.m_logGridStep = 0.1;
   BOOST_CHECK_THROW(logRebinning.setupRebinning(spc_1, lbdaRange),
-                    GlobalException);
+                    AmzException);
 
   logRebinning.m_logGridStep = 1.;
   logRebinning.setupRebinning(spc_1, lbdaRange);
@@ -164,7 +170,7 @@ BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
     BOOST_CHECK_CLOSE(tgtAxis.GetSamplesVector()[i], tgtRef[i], 1e-6);
 
   BOOST_CHECK_THROW(logRebinning.computeTargetLogSpectralAxis(lbdaRange, 8),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
@@ -172,8 +178,8 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
   CSpectrumLogRebinning logRebinning(*ctx_logSampled);
 
   BOOST_CHECK_THROW(
-      logRebinning.loglambdaRebinSpectrum(ctx_logSampled->GetSpectrum(), "no"),
-      GlobalException);
+      logRebinning.loglambdaRebinSpectrum(*ctx_logSampled->GetSpectrum(), "no"),
+      AmzException);
 
   // create not logSampled spectrum
   CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled);
@@ -181,7 +187,7 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
 
   std::shared_ptr<CSpectrum> spcLogRebinning =
       logRebinningNotLog.loglambdaRebinSpectrum(
-          ctx_notLogSampled->GetSpectrum(), "no");
+          *ctx_notLogSampled->GetSpectrum(), "no");
   BOOST_CHECK(spcLogRebinning->GetName() == "spc_notLog");
   BOOST_CHECK(spcLogRebinning->GetSpectralAxis().IsLogSampled() == true);
   TFloat64Range lbdaRange(4680.4680234007774, 4711.9324472744638);
@@ -196,8 +202,8 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
       CSpectrumSpectralAxis(TFloat64List{1212, 1212.4, 1213}),
       CSpectrumFluxAxis(TFloat64List{0, 0, 0}));
   BOOST_CHECK_THROW(logRebinningNotLog.loglambdaRebinSpectrum(
-                        ctx_notLogSampled->GetSpectrum(), "no"),
-                    GlobalException);
+                        *ctx_notLogSampled->GetSpectrum(), "no"),
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(isRebinningNeeded_test) {
@@ -304,12 +310,12 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinTemplate_test) {
   lbdaRange.Set(4679., 4712);
   BOOST_CHECK_THROW(logRebinning.loglambdaRebinTemplate(
                         tplStar_logSampled, lbdaRange, loglambda_count_tpl),
-                    GlobalException);
+                    AmzException);
 
   lbdaRange.Set(4680.282, 4713);
   BOOST_CHECK_THROW(logRebinning.loglambdaRebinTemplate(
                         tplStar_logSampled, lbdaRange, loglambda_count_tpl),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(logRebinTemplateCatalog_test) {

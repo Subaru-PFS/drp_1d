@@ -36,7 +36,6 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================using
-// namespace std;
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 
@@ -79,9 +78,7 @@ std::tuple<Int32, Int32> CZGridListParams::insertSubgrid(TFloat64List &subgrid,
   range_epsilon.IntersectWith(zgrid);
   Int32 imin = -1;
   Int32 imax = -1;
-  bool b = range_epsilon.getClosedIntervalIndices(zgrid, imin, imax, false);
-  if (!b) // range not included in the main range
-    THROWG(INTERNAL_ERROR, "range not inside base grid ");
+  range_epsilon.getClosedIntervalIndices(zgrid, imin, imax);
 
   // deal with subgrid front or end
   // if truncated by intersection with zgrid

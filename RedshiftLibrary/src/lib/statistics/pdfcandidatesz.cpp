@@ -36,22 +36,23 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_multifit_nlin.h>
+
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 
 using namespace NSEpic;
 using namespace std;
-
-#include <algorithm>
-#include <cmath>
-#include <fstream>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit_nlin.h>
-#include <iostream>
 
 CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID &candidates)
     : m_candidates(candidates) {}
@@ -117,31 +118,38 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
     Float64 &zHigh = candidates[candidateKeyHigh]->Redshift;
     Float64 &zLow = candidates[candidateKeyLow]->Redshift;
 
-    Float64 zSizeHighRange = ranges[candidateKeyHigh].GetEnd() - ranges[candidateKeyHigh].GetBegin();
-    Float64 zSizeLowRange = ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyLow].GetBegin();
+    Float64 zSizeHighRange =
+        ranges[candidateKeyHigh].GetEnd() - ranges[candidateKeyHigh].GetBegin();
+    Float64 zSizeLowRange =
+        ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyLow].GetBegin();
 
     Float64 overlap =
         ranges[candidateKeyLow].GetEnd() - ranges[candidateKeyHigh].GetBegin();
-   
+
     if (overlap <= 0)
       continue;
 
-    // in the case of duplicates, split equally the overlap between both candidates
+    // in the case of duplicates, split equally the overlap between both
+    // candidates
     Float64 overlapHighRatio = overlap / zSizeHighRange;
     Float64 overlapLowRatio = overlap / zSizeLowRange;
-    if (overlapHighRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION && overlapLowRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION) {
-      Log.LogDebug("    CPdfCandidatesZ::SetIntegrationRanges: integration "
-                   "supports overlap for %f and %f",
-                   zHigh, zLow);
+    if (overlapHighRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION &&
+        overlapLowRatio < OVERLAP_THRESHOLD_PDF_INTEGRATION) {
+      Log.LogDebug(Formatter()
+                   << "    CPdfCandidatesZ::SetIntegrationRanges: integration "
+                      "supports overlap for "
+                   << zHigh << " and " << zLow);
       Float64 midOverlap = ranges[candidateKeyLow].GetEnd() - 0.5 * overlap;
       ranges[candidateKeyLow].SetEnd(midOverlap);
       ranges[candidateKeyHigh].SetBegin(midOverlap);
     } else {
-      Log.LogInfo(" CPdfCandidatesZ::SetIntegrationRanges: very close "
-                  "candidates are identified %f and %f",
-                  zHigh, zLow);
+      Log.LogInfo(Formatter()
+                  << " CPdfCandidatesZ::SetIntegrationRanges: very close "
+                     "candidates are identified "
+                  << zHigh << " and " << zLow);
       std::string candidateKeyToRemove;
-      if (candidates[candidateKeyLow]->ValProba > candidates[candidateKeyHigh]->ValProba) {
+      if (candidates[candidateKeyLow]->ValProba >
+          candidates[candidateKeyHigh]->ValProba) {
         candidateKeyToRemove = candidateKeyHigh;
       } else {
         candidateKeyToRemove = candidateKeyLow;
@@ -161,7 +169,7 @@ CPdfCandidatesZ::SetIntegrationRanges(const TFloat64Range PdfZRange,
     if (candidates[candidateKey]->Redshift < ranges[candidateKey].GetBegin() ||
         candidates[candidateKey]->Redshift > ranges[candidateKey].GetEnd())
       THROWG(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           Formatter() << "Failed to identify a range including the candidate "
                       << candidates[candidateKey]->Redshift);
   }
@@ -188,9 +196,10 @@ std::shared_ptr<PdfCandidatesZResult>
 CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
                          TFloat64List const &PdfProbaLog) {
   Log.LogInfo(
-      "    CPdfCandidatesZ::Compute pdf peaks using method= %d {0:direct "
-      "integration; 1:gaussian fitting}",
-      m_optMethod);
+      Formatter() << "    CPdfCandidatesZ::Compute pdf peaks using method= "
+                  << m_optMethod
+                  << " {0:direct "
+                     "integration; 1:gaussian fitting}");
   computeCandidatesDeltaz(PdfRedshifts, PdfProbaLog);
   TCandidateZRangebyID zranges;
   TStringList duplicates =
@@ -259,19 +268,15 @@ void CPdfCandidatesZ::getCandidateSumTrapez(
     std::shared_ptr<TCandidateZ> &candidate) const {
   // check that redshifts are sorted
   if (!std::is_sorted(redshifts.begin(), redshifts.end()))
-    THROWG(INTERNAL_ERROR, Formatter() << "redshifts are not sorted");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "redshifts are not sorted");
 
   // find indexes kmin, kmax so that zmin and zmax are inside [
   // redshifts[kmin]:redshifts[kmax] ]
   Int32 kmin = -1;
   Int32 kmax = -1;
-  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift,
-                                               kmin, kmax);
-
-  if (!ok || kmin == -1 || kmax == -1) {
-    THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
-  }
-
+  zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift, kmin,
+                                     kmax);
   TFloat64List ZinRange =
       TFloat64List(redshifts.begin() + kmin, redshifts.begin() + kmax + 1);
   candidate->ValSumProbaZmin = ZinRange.front();
@@ -301,11 +306,12 @@ bool CPdfCandidatesZ::getCandidateRobustGaussFit(
         std::abs(candidate->GaussSigma / candidate->GaussSigmaErr) > 1e-2) {
       fitSuccessful = true;
     } else {
-      Log.LogDebug(
-          "    CPdfCandidatesZ::getCandidateRobustSumGaussFit - "
-          "iTry=%d, for zcandidate=%.5f. Found gaussAmp=%e and gaussSigma=%e",
-          iTry, candidate->Redshift, candidate->GaussAmp,
-          candidate->GaussSigma);
+      Log.LogDebug(Formatter()
+                   << "    CPdfCandidatesZ::getCandidateRobustSumGaussFit - "
+                      "iTry="
+                   << iTry << ", for zcandidate=" << candidate->Redshift
+                   << ". Found gaussAmp=" << candidate->GaussAmp
+                   << " and gaussSigma=" << candidate->GaussSigma);
 
       Log.LogDebug("Retrying with different parameters");
     }
@@ -376,17 +382,16 @@ void CPdfCandidatesZ::getCandidateGaussFit(
 
   // check that redshifts are sorted
   if (!std::is_sorted(redshifts.begin(), redshifts.end()))
-    THROWG(INTERNAL_ERROR, Formatter() << "redshifts are not sorted");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "redshifts are not sorted");
 
   // find indexes kmin, kmax so that zmin and zmax are inside [
   // redshifts[kmin]:redshifts[kmax] ]
   Int32 kmin = -1;
   Int32 kmax = -1;
-  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift,
-                                               kmin, kmax);
 
-  if (!ok || kmin == -1 || kmax == -1)
-    THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
+  zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift, kmin,
+                                     kmax);
 
   // initialize GSL
   const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
@@ -395,10 +400,12 @@ void CPdfCandidatesZ::getCandidateGaussFit(
              1; // n samples on the support, /* number of data points to fit */
   size_t p = 2; // DOF = 1.amplitude + 2.width
 
-  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - n=%d, p=%d", n,
-               p);
+  Log.LogDebug(
+      Formatter() << "    CPdfCandidatesZ::getCandidateSumGaussFit - n=" << n
+                  << ", p=" << p);
   if (n < p)
-    THROWG(INTERNAL_ERROR, "LMfit has not enough samples on support");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "LMfit has not enough samples on support");
 
   gsl_matrix *J = gsl_matrix_alloc(n, p);
   gsl_matrix *covar = gsl_matrix_alloc(p, p);
@@ -417,8 +424,8 @@ void CPdfCandidatesZ::getCandidateGaussFit(
                        zrange.GetEnd() - candidate->Redshift) /
               2.0;
   Log.LogDebug(
-      "    CPdfCandidatesZ::getCandidateSumGaussFit - init a=%e, sigma=%e",
-      x_init[0], x_init[1]);
+      Formatter() << "    CPdfCandidatesZ::getCandidateSumGaussFit - init a="
+                  << x_init[0] << ", sigma=" << x_init[1]);
 
   TFloat64List weights(n, 1.0); // no weights
   gsl_vector_view x = gsl_vector_view_array(x_init.data(), p);
@@ -441,14 +448,15 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   f.params = &d;
 
   Log.LogDebug(
-      "    CPdfCandidatesZ::getCandidateSumGaussFit - LMfit data ready");
+      Formatter()
+      << "    CPdfCandidatesZ::getCandidateSumGaussFit - LMfit data ready");
 
   gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, n, p);
 
   if (s == 0) {
     gsl_matrix_free(covar);
     gsl_matrix_free(J);
-    THROWG(INTERNAL_ERROR, "Unable to allocate the multifit solver");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unable to allocate the multifit solver");
   }
 
   /* initialize solver with starting point and weights */
@@ -476,28 +484,21 @@ void CPdfCandidatesZ::getCandidateGaussFit(
 #define FIT(i) gsl_vector_get(s->x, i)
 #define ERR(i) sqrt(gsl_matrix_get(covar, i, i))
 
+  Log.LogDebug(Formatter() << "summary from method '"
+                           << gsl_multifit_fdfsolver_name(s)
+                           << "': status = " << gsl_strerror(status) << " ("
+                           << status << "), number of iterations: "
+                           << gsl_multifit_fdfsolver_niter(s));
+  Log.LogDebug(Formatter() << "function evaluations: " << f.nevalf
+                           << " , Jacobian evaluations: " << f.nevaldf);
   Log.LogDebug(
-      "summary from method '%s': status = %s (%d), number of iterations: %zu",
-      gsl_multifit_fdfsolver_name(s), gsl_strerror(status), status,
-      gsl_multifit_fdfsolver_niter(s));
-  Log.LogDebug("function evaluations: %zu , Jacobian evaluations: %zu",
-               f.nevalf, f.nevaldf);
-  Log.LogDebug("reason for stopping: %d where {1:small step size, 2:small "
-               "gradient, small change in f }",
-               info);
-  Log.LogDebug("initial |f(x)| = %g", "final   |f(x)| = %g", chi0, chi);
+      Formatter()
+      << "reason for stopping: " << info
+      << " where {1:small step size, 2:small gradient, small change in f }");
+  Log.LogDebug(Formatter() << "initial |f(x)| = " << chi0
+                           << "final   |f(x)| = " << chi);
 
-  {
-    Log.LogDebug("chisq/dof = %g", pow(chi, 2.0) / dof);
-    /*
-    for (Int32 k = 0; k < p; k++) {
-      if (FIT(k) < 1e-3) {
-        Log.LogDebug("A %d     = %.3e +/- %.8f", k, FIT(k), c * ERR(k));
-      } else {
-        Log.LogDebug("A %d     = %.5f +/- %.8f", k, FIT(k), c * ERR(k));
-      }
-    }*/
-  }
+  { Log.LogDebug(Formatter() << "chisq/dof = " << pow(chi, 2.0) / dof); }
   candidate->GaussAmp = gsl_vector_get(s->x, 0) * normFactor;
   candidate->GaussAmpErr = c * ERR(0) * normFactor;
   candidate->GaussSigma = abs(gsl_vector_get(s->x, 1));

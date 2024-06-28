@@ -36,9 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include <boost/range/combine.hpp>
+
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
@@ -58,17 +60,13 @@ COperatorTemplateFittingBase::COperatorTemplateFittingBase(
  * wavelength range
  **/
 Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
-
   Float64 cstLog = 0.0;
-  for (auto it = std::make_tuple(m_spectra.begin(), m_lambdaRanges.begin());
-       std::get<0>(it) != m_spectra.end();
-       ++std::get<0>(it), ++std::get<1>(it)) {
-    const auto &spectrum = **std::get<0>(it);
-    const auto &lambdaRange = **std::get<1>(it);
-    const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
+  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+       boost::combine(m_spectra, m_lambdaRanges)) {
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        spectrum_ptr->GetSpectralAxis();
     const TFloat64List &error =
-        spectrum.GetFluxAxis().GetError().GetSamplesVector();
-    ;
+        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
 
     Int32 numDevs = 0;
 
@@ -76,8 +74,8 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
 
     Int32 imin;
     Int32 imax;
-    lambdaRange.getClosedIntervalIndices(spcSpectralAxis.GetSamplesVector(),
-                                         imin, imax);
+    lambdaRange_ptr->getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
     for (Int32 j = imin; j <= imax; j++) {
       numDevs++;
       sumLogNoise += log(error[j]);
@@ -93,9 +91,11 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
     Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
     const Float64 overlapThreshold, Int32 spcIndex,
     const std::shared_ptr<CModelSpectrumResult> &models) {
-  Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model "
-                "templateFitting for candidate Zcand=%f",
-                redshift);
+  Log.LogDetail(
+      Formatter()
+      << "  Operator-COperatorTemplateFitting: building spectrum model "
+         "templateFitting for candidate Zcand="
+      << redshift << " and obs n° " << spcIndex);
 
   Float64 overlapFraction = 0.0;
   TFloat64Range currentRange;
@@ -106,14 +106,18 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
       m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
 
   if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
-    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-        currentRange, redshift, tpl->m_ismCorrectionCalzetti,
-        tpl->m_igmCorrectionMeiksin);
+    Int32 kstart = undefIdx;
+    Int32 kend = undefIdx;
+    currentRange.getClosedIntervalIndices(
+        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
+        kstart, kend);
+    InitIsmIgmConfig(redshift, kstart, kend, tpl->m_ismCorrectionCalzetti,
+                     tpl->m_igmCorrectionMeiksin, spcIndex);
   }
 
   if (EbmvCoeff > 0.) {
     if (m_templateRebined_bf[spcIndex].CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "ISM is not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
@@ -126,7 +130,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf[spcIndex].MeiksinInitFailed()) {
-      THROWG(INTERNAL_ERROR, "IGM in not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM in not initialized");
     }
     ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   }
@@ -186,8 +190,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
 
   // Check for overlap rate
   if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-    // status = nStatus_NoOverlap;
-    THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+    THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
            Formatter() << "tpl overlap rate is too small: " << overlapFraction);
   }
 

@@ -39,13 +39,12 @@
 #ifndef _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 #define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-
-#include <boost/filesystem.hpp>
-#include <vector>
 
 namespace NSEpic {
 
@@ -58,7 +57,7 @@ class CTemplatesFitStore {
 public:
   CTemplatesFitStore(const TFloat64List &redshifts);
 
-  bool Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
+  void Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
            Float64 redshift, Float64 merit, Float64 chiSquare_phot,
            Float64 fitAmplitude, Float64 fitAmplitudeError,
            Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,

@@ -36,17 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <cmath>
+#include <iostream>
+#include <numeric>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 
-#include <boost/test/unit_test.hpp>
-#include <cmath>
-#include <iostream>
-#include <numeric>
 using namespace NSEpic;
 
-BOOST_AUTO_TEST_SUITE(Extremum)
+BOOST_AUTO_TEST_SUITE(Extremum_test)
 
 void print_point(TPointList points) {
   for (SPoint p : points) {
@@ -82,14 +84,13 @@ BOOST_AUTO_TEST_CASE(Extremum1) {
   peaks1.SetMaxPeakCount(2);
   peaks1.SetXRange(TFloat64Range(-10.0, 10.0));
 
-  peaks1.Find(x, y, maxPoint);
-  check_points(maxPoint, TPointList({{0.4, 9}, {0.8, 8}}));
-  maxPoint.clear();
-  peaks1.Find(x, y_2, maxPoint);
+  maxPoint = peaks1.Find(x, y, false);
   check_points(maxPoint, TPointList({{0.4, 9}, {0.8, 8}}));
 
-  maxPoint.clear();
-  BOOST_CHECK_THROW(peaks1.Find(x_empty, y, maxPoint), GlobalException);
+  maxPoint = peaks1.Find(x, y_2, false);
+  check_points(maxPoint, TPointList({{0.4, 9}, {0.8, 8}}));
+
+  BOOST_CHECK_THROW(maxPoint = peaks1.Find(x_empty, y, true), AmzException);
   print_point(maxPoint);
 }
 
@@ -109,20 +110,18 @@ BOOST_AUTO_TEST_CASE(Extremum_PlankDetection) {
   Float64 radius = 0.005;
   peaks1.SetMaxPeakCount(2);
   peaks1.SetXRange(TFloat64Range(-10.0, 10.0));
+  bool isFirstPass = false;
 
-  peaks1.Find(x, y_plank, maxPoint);
+  maxPoint = peaks1.Find(x, y_plank, isFirstPass);
   check_points(maxPoint, TPointList({{0.3, 9}, {0.8, 8}}));
 
-  maxPoint.clear();
-  peaks1.Find(x, y_plank_chair, maxPoint);
+  maxPoint = peaks1.Find(x, y_plank_chair, isFirstPass);
   check_points(maxPoint, TPointList({{0.1, 9.5}, {0.8, 8}}));
 
-  maxPoint.clear();
-  peaks1.Find(x, y_plank_stair, maxPoint);
+  maxPoint = peaks1.Find(x, y_plank_stair, isFirstPass);
   check_points(maxPoint, TPointList({{0.5, 9.5}, {0.8, 8}}));
 
-  maxPoint.clear();
-  peaks1.Find(x, y_plank_low, maxPoint);
+  maxPoint = peaks1.Find(x, y_plank_low, isFirstPass);
   check_points(maxPoint, TPointList({{0.5, 9.5}, {0.8, 8}}));
 }
 
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_isolated) {
 
   peaks1.SortIndexes(y);
 
-  bool v = peaks1.Cut_Threshold(x, y, 2);
+  peaks1.Cut_Threshold(x, y, 2);
   for (Int32 i = 0; i < x.size(); i++) {
     maxPoint.push_back(SPoint(x[i], y[i]));
   }
@@ -159,7 +158,7 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_onePeak) {
 
   peaks1.SortIndexes(y);
 
-  bool v = peaks1.Cut_Threshold(x, y, 2);
+  peaks1.Cut_Threshold(x, y, 2);
   for (Int32 i = 0; i < x.size(); i++) {
     maxPoint.push_back(SPoint(x[i], y[i]));
   }
@@ -167,20 +166,18 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_onePeak) {
 }
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks) {
 
-  TPointList maxPoint;
   TFloat64List x = {0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
   TFloat64List y = {1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0};
 
   Float64 radius = 0.2;
   CExtremum peaks1(5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
   peaks1.SortIndexes(y);
-  peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+  TPointList maxPoint = peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2);
   check_points(maxPoint, TPointList({{0.8, 8}, {0.1, 5.0}, {0.4, 1.0}}));
 }
 
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks) {
 
-  TPointList maxPoint;
   TFloat64List x = {0.01, 0.02, 0.025, 0.03, 0.04, 0.05,
                     0.06, 0.07, 0.08,  0.09, 0.1};
   TFloat64List y = {1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0};
@@ -188,13 +185,12 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks) {
   Float64 radius = 0.05;
   CExtremum peaks1(5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
   peaks1.SortIndexes(y);
-  peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+  TPointList maxPoint = peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2);
   check_points(maxPoint, TPointList({{0.08, 8}, {0.02, 5}}));
 }
 
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2) {
 
-  TPointList maxPoint;
   TFloat64List x = {0.01, 0.02, 0.025, 0.03, 0.04, 0.05,
                     0.06, 0.07, 0.08,  0.09, 0.1};
   TFloat64List y = {1.0, 3.0, 0.0, 4.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0};
@@ -202,7 +198,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2) {
   Float64 radius = 0.005;
   CExtremum peaks1(5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
   peaks1.SortIndexes(y);
-  peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+  TPointList maxPoint = peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2);
   check_points(
       maxPoint,
       TPointList({{0.08, 8},
@@ -215,7 +211,6 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2) {
 
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF) {
 
-  TPointList maxPoint;
   TFloat64List x = {0.01, 0.02, 0.025, 0.03, 0.04, 0.05,
                     0.06, 0.07, 0.08,  0.09, 0.1};
   TFloat64List y = {1.0, 3.0, 4.0, 5.0, 6.0, 7.1, 8.0, 9.5, 10.0, 11.0, 14.0};
@@ -223,7 +218,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF) {
   Float64 radius = 0.005;
   CExtremum peaks1(5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
   peaks1.SortIndexes(y);
-  peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+  TPointList maxPoint = peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2);
 
   check_points(
       maxPoint,
@@ -236,8 +231,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF) {
 
   // bigger radius
   radius = 0.1;
-  maxPoint = {};
-  peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+  maxPoint = peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2);
   check_points(
       maxPoint,
       TPointList({{0.1, 14.0},
@@ -250,7 +244,6 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF) {
 // testing case where nb of peaks = keepmin
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks2) {
 
-  TPointList maxPoint;
   TFloat64List x = {0.01, 0.1};
   TFloat64List y = {1.0, 5.0};
 
@@ -259,7 +252,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks2) {
   peaks1.SortIndexes(y);
   // testing only the sliding window algo
   Int32 keepmin = 2;
-  peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, keepmin, maxPoint);
+  TPointList maxPoint =
+      peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, keepmin);
   check_points(
       maxPoint,
       TPointList({{0.1, 5.0},
@@ -270,7 +264,6 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks2) {
 // testing case where nb of peaks = keepmin
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_negativeX) {
 
-  TPointList maxPoint;
   TFloat64List x = {-0.000750, -0.000650};
   TFloat64List y = {3.0, 4.0};
 
@@ -280,7 +273,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_negativeX) {
   peaks1.SortIndexes(y);
   // testing only the sliding window algo
   Int32 keepmin = 1;
-  peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, keepmin, maxPoint);
+  TPointList maxPoint =
+      peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, keepmin);
   check_points(
       maxPoint,
       TPointList(
@@ -290,7 +284,6 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_negativeX) {
 
 BOOST_AUTO_TEST_CASE(Extremum_Truncate) {
 
-  TPointList maxPoint;
   TFloat64List x = {0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
   TFloat64List y = {1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0};
 
@@ -298,7 +291,7 @@ BOOST_AUTO_TEST_CASE(Extremum_Truncate) {
   CExtremum peaks1(maxCount, 0.005 * 2, -1, false, true,
                    TFloat64Range(-10.0, 10.0));
   peaks1.SortIndexes(y);
-  peaks1.Truncate(x, y, maxPoint);
+  TPointList maxPoint = peaks1.Truncate(x, y);
 
   check_points(maxPoint, TPointList({{0.8, 8}, {0.6, 6}}));
 }

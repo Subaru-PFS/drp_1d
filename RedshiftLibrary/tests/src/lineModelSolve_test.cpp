@@ -36,16 +36,22 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
+const std::string lambdaString = "{\"lambdaRange\" : [ 4680, 4712 ],";
+const std::string multiLambdaString =
+    "{\"lambdaRange\" : { \"A\" : [ 4680, 4695 ], \"B\" : [4695, 4712]},";
+
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -54,128 +60,222 @@ const std::string jsonString =
     "\"medianEvenReflection\" : true}},"
     "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
     "\"continuumRemoval\" : {"
-    "\"method\" : \"IrregularSamplingMedian\","
+    "\"method\" : \"irregularSamplingMedian\","
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", "
     "\"resolution\" : "
     "4300},"
-    "\"extremaredshiftseparation\" : 0.01,"
-    "\"objects\" : [\"galaxy\"],"
-    "\"autocorrectinput\" : false,"
-    "\"airvacuum_method\" : \"default\","
+    "\"extremaRedshiftSeparation\" : 0.01,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
+    "\"airVacuumMethod\" : \"default\","
     "\"galaxy\" : {"
-    "\"redshiftrange\" : [ 0.24, 0.3 ],"
-    "\"redshiftstep\" : 0.0001,"
-    "\"redshiftsampling\" : \"log\","
-    "\"method\" : \"LineModelSolve\","
-    "\"LineModelSolve\" : {"
-    "\"linemodel\" : {"
-    "\"continuumreestimation\" : \"no\","
-    "\"velocityfit\" : true,"
-    "\"emvelocityfitmin\" : 100,"
-    "\"emvelocityfitmax\" : 700, "
-    "\"emvelocityfitstep\" : 20,"
-    "\"absvelocityfitmin\" : 150,"
-    "\"absvelocityfitmax\" : 500, "
-    "\"absvelocityfitstep\" : 50,"
-    "\"ampoffsetfit\": \"false\","
-    "\"lbdaoffsetfit\": \"false\","
-    "\"extremacount\" : 5,"
-    "\"extremacountB\" : 3,"
-    "\"nsigmasupport\" : 8,"
-    "\"haprior\" : 0.5,"
-    "\"euclidnhaemittersStrength\" : 1.0,"
-    "\"extremacutprobathreshold\" : -1,"
-    "\"skipsecondpass\" : false,"
-    "\"secondpasslcfittingmethod\" : -1,"
-    "\"useloglambdasampling\": false,"
-    "\"lyaforcefit\": false,"
-    "\"lyaforcedisablefit\": false,"
-    "\"stronglinesprior\" : 1.0,"
-    "\"fittingmethod\": \"svd\","
-    "\"linewidthtype\": \"combined\","
-    "\"velocityemission\" : 100,"
-    "\"velocityabsorption\": 100,"
-    "\"linetypefilter\" : \"no\","
-    "\"lineforcefilter\" : \"no\","
-    "\"lyafit\": {"
-    "\"asymfitmin\" : 0,"
-    "\"asymfitmax\" : 4, \"asymfitstep\" : 1, "
-    "\"widthfitmin\" : 1,"
-    "\"widthfitmax\" : 4, \"widthfitstep\" : 1, "
-    "\"deltafitmin\" : 0,"
-    "\"deltafitmax\" : 0, \"deltafitstep\" : 1}, "
-    "\"tplratio\": { \"priors\": {"
+    "\"redshiftRange\" : [ 0.24, 0.3 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
+    "\"stages\" : [\"redshiftSolver\"],"
+    "\"redshiftSolver\" : {"
+    "\"method\" : \"lineModelSolve\","
+    "\"lineModelSolve\" : {"
+    "\"lineModel\" : {"
+    "\"continuumReestimation\" : \"no\","
+    "\"velocityFit\" : true,"
+    "\"emVelocityFitMin\" : 100,"
+    "\"emVelocityFitMax\" : 700, "
+    "\"emVelocityFitStep\" : 20,"
+    "\"absVelocityFitMin\" : 150,"
+    "\"absVelocityFitMax\" : 500, "
+    "\"absVelocityFitStep\" : 50,"
+    "\"ampOffsetFit\": \"false\","
+    "\"lbdaOffsetFit\": \"false\","
+    "\"extremaCount\" : 5,"
+    "\"extremaCountB\" : 3,"
+    "\"nSigmaSupport\" : 8,"
+    "\"hAlphaPrior\" : 0.5,"
+    "\"nOfZPriorStrength\" : 1.0,"
+    "\"extremaCutProbaThreshold\" : -1,"
+    "\"skipSecondPass\" : false,"
+    "\"secondPassLcFittingMethod\" : -1,"
+    "\"useLogLambdaSampling\": false,"
+    "\"strongLinesPrior\" : 1.0,"
+    "\"fittingMethod\": \"svd\","
+    "\"lineWidthType\": \"combined\","
+    "\"velocityEmission\" : 100,"
+    "\"velocityAbsorption\": 100,"
+    "\"lineTypeFilter\" : \"no\","
+    "\"lineForceFilter\" : \"no\","
+    "\"lya\": {"
+    "\"profile\": \"asym\","
+    "\"asymProfile\": {"
+    "\"switchFixedToFit\": false,"
+    "\"switchFitToFixed\": false,"
+    "\"asymFitMin\" : 0,"
+    "\"asymFitMax\" : 4, \"asymFitStep\" : 1, "
+    "\"widthFitMin\" : 1,"
+    "\"widthFitMax\" : 4, \"widthFitStep\" : 1, "
+    "\"deltaFitMin\" : 0,"
+    "\"deltaFitMax\" : 0, \"deltaStepMax\" : 1}}, "
+    "\"tplRatio\": { \"priors\": {"
     "\"betaA\" : 1,    \"betaTE\" : 1, \"betaZ\" : 1, "
-    "\"catalog_dirpath\" : \"\"}}, "
-    "\"firstpass\": { \"fittingmethod\" : \"individual\", "
-    "\"tplratio_ismfit\" : true,"
-    "\"largegridstepratio\" : 6, "
-    "\"multiplecontinuumfit_disable\": true},"
-    "\"secondpass\" : {\"halfwindowsize\" : 0.001, "
-    "\"continuumfit\" : \"refitfirstpass\"},";
+    "\"catalogDirPath\" : \"\"}}, "
+    "\"firstPass\": { \"fittingMethod\" : \"individual\", "
+    "\"tplRatioIsmFit\" : true,"
+    "\"largeGridStepRatio\" : 6, "
+    "\"multipleContinuumFitDisable\": true, "
+    "\"extremaCount\" : 6},"
+    "\"secondPass\" : {\"halfWindowSize\" : 0.001, "
+    "\"continuumFit\" : \"reFitFirstPass\"},";
+
+const std::string jsonStringS =
+    "\"smoothWidth\" : 0.0,"
+    "\"templateCatalog\" : {"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"zero\","
+    "\"medianKernelWidth\" : 75,"
+    "\"medianEvenReflection\" : true}},"
+    "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
+    "\"continuumRemoval\" : {"
+    "\"method\" : \"irregularSamplingMedian\","
+    "\"medianKernelWidth\" : 400,"
+    "\"medianEvenReflection\" : true,"
+    "\"decompScales\" : 9},"
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\","
+    "\"resolution\" : "
+    "4300},"
+    "\"extremaRedshiftSeparation\" : 0.01,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
+    "\"airVacuumMethod\" : \"default\","
+    "\"galaxy\" : {"
+    "\"redshiftRange\" : [ 0.24, 0.3 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
+    "\"stages\" : [\"redshiftSolver\"],"
+    "\"redshiftSolver\" : {"
+    "\"method\" : \"lineModelSolve\","
+    "\"lineModelSolve\" : {"
+    "\"lineModel\" : {"
+    "\"continuumReestimation\" : \"no\","
+    "\"velocityFit\" : true,"
+    "\"emVelocityFitMin\" : 100,"
+    "\"emVelocityFitMax\" : 200, "
+    "\"emVelocityFitStep\" : 50,"
+    "\"absVelocityFitMin\" : 150,"
+    "\"absVelocityFitMax\" : 200, "
+    "\"absVelocityFitStep\" : 50,"
+    "\"ampOffsetFit\": \"false\","
+    "\"lbdaOffsetFit\": \"false\","
+    "\"extremaCount\" : 5,"
+    "\"extremaCountB\" : 3,"
+    "\"nSigmaSupport\" : 8,"
+    "\"hAlphaPrior\" : 0.5,"
+    "\"nOfZPriorStrength\" : 1.0,"
+    "\"extremaCutProbaThreshold\" : -1,"
+    "\"secondPassLcFittingMethod\" : -1,"
+    "\"useLogLambdaSampling\": false,"
+    "\"strongLinesPrior\" : 1.0,"
+    "\"fittingMethod\": \"individual\","
+    "\"lineWidthType\": \"combined\","
+    "\"velocityEmission\" : 100,"
+    "\"velocityAbsorption\": 100,"
+    "\"lineTypeFilter\" : \"no\","
+    "\"lineForceFilter\" : \"no\","
+    "\"lya\": {\"profile\": \"igm\"},"
+    "\"tplRatio\": { \"priors\": {"
+    "\"betaA\" : 1,    \"betaTE\" : 1, \"betaZ\" : 1, "
+    "\"catalogDirPath\" : \"\"}}, "
+    "\"firstPass\": { \"fittingMethod\" : \"individual\", "
+    "\"tplRatioIsmFit\" : true,"
+    "\"largeGridStepRatio\" : 10, "
+    "\"multipleContinuumFitDisable\": true, "
+    "\"extremaCount\" : 6},"
+    "\"secondPass\" : {\"halfWindowSize\" : 0.001, "
+    "\"continuumFit\" : \"reFitFirstPass\"},";
 
 const std::string jsonStringTplFitRules =
-    "\"continuumcomponent\" : \"tplfit\","
-    "\"pdfcombination\" : \"marg\","
-    "\"tplratio_ismfit\" : true,"
+    "\"skipSecondPass\" : false,"
+    "\"continuumComponent\" : \"tplFit\","
+    "\"pdfCombination\" : \"marg\","
+    "\"tplRatioIsmFit\" : true,"
     "\"rules\" : \"all\","
     "\"improveBalmerFit\" : true,"
     "\"lineRatioType\": \"rules\","
-    "\"enablephotometry\" : true, "
+    "\"enablePhotometry\" : true, "
     "\"photometry\" : {\"weight\" : 1},"
-    "\"continuumfit\" : { \"ignorelinesupport\": false,"
-    "\"negativethreshold\": -5.0,"
+    "\"continuumFit\" : { \"ignoreLineSupport\": false,"
+    "\"negativeThreshold\": -5.0,"
     "\"count\" : 1,"
-    "\"nullthreshold\": 3,"
-    "\"ismfit\" : true,"
-    "\"igmfit\" : true,"
-    "\"fftprocessing\": false, "
+    "\"nullThreshold\": 3,"
+    "\"ismFit\" : true,"
+    "\"igmFit\" : true,"
+    "\"fftProcessing\": false, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
-    "\"catalog_dirpath\" : \"\"}}}}}}";
+    "\"catalogDirPath\" : \"\"}}}}}}}";
 
+//
 const std::string jsonStringTplFitTplRatio =
-    "\"continuumcomponent\" : \"tplfit\","
-    "\"pdfcombination\" : \"marg\","
-    "\"tplratio_ismfit\" : true,"
+    "\"skipSecondPass\" : false,"
+    "\"continuumComponent\" : \"noContinuum\","
+    "\"pdfCombination\" : \"marg\","
+    "\"tplRatioIsmFit\" : true,"
     "\"rules\" : \"all\","
     "\"improveBalmerFit\" : true,"
-    "\"lineRatioType\": \"tplratio\","
-    "\"enablephotometry\" : true, "
-    "\"photometry\" : {\"weight\" : 1},"
-    "\"continuumfit\" : { \"ignorelinesupport\": false,"
-    "\"negativethreshold\": -5.0,"
+    "\"lineRatioType\": \"tplRatio\","
+    "\"enablePhotometry\" : false, "
+    "\"continuumFit\" : { \"ignoreLineSupport\": false,"
+    "\"negativeThreshold\": -5.0,"
     "\"count\" : 1,"
-    "\"nullthreshold\": 3,"
-    "\"ismfit\" : true,"
-    "\"igmfit\" : true,"
-    "\"fftprocessing\": false, "
+    "\"nullThreshold\": 3,"
+    "\"ismFit\" : true,"
+    "\"igmFit\" : true,"
+    "\"fftProcessing\": false, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
-    "\"catalog_dirpath\" : \"\"}}}}}}";
+    "\"catalogDirPath\" : \"\"}}}}}}}";
+
+const std::string jsonStringnoContinuumTplRatio =
+    "\"skipSecondPass\" : true,"
+    "\"continuumComponent\" : \"noContinuum\","
+    "\"pdfCombination\" : \"marg\","
+    "\"tplRatioIsmFit\" : true,"
+    "\"rules\" : \"all\","
+    "\"improveBalmerFit\" : true,"
+    "\"lineRatioType\": \"tplRatio\","
+    "\"enablePhotometry\" : false, "
+    "\"photometry\" : {\"weight\" : 1},"
+    "\"continuumFit\" : { \"ignoreLineSupport\": false,"
+    "\"negativeThreshold\": -5.0,"
+    "\"count\" : 1,"
+    "\"nullThreshold\": 3,"
+    "\"ismFit\" : true,"
+    "\"igmFit\" : true,"
+    "\"fftProcessing\": false, "
+    "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
+    "\"catalogDirPath\" : \"\"}}}}}}}";
 
 const std::string jsonStringFromSpectrum =
-    "\"continuumcomponent\" : \"fromspectrum\","
-    "\"pdfcombination\" : \"bestchi2\","
-    "\"tplratio_ismfit\" : true,"
-    "\"rules\" : \"balmersingle\","
+    "\"skipSecondPass\" : false,"
+    "\"continuumComponent\" : \"fromSpectrum\","
+    "\"pdfCombination\" : \"bestChi2\","
+    "\"tplRatioIsmFit\" : true,"
+    "\"rules\" : \"balmerSingle\","
     "\"improveBalmerFit\" : true,"
-    "\"lineRatioType\": \"tplratio\","
-    "\"continuumfit\" : { \"ignorelinesupport\": false,"
-    "\"negativethreshold\": -5.0,"
+    "\"lineRatioType\": \"tplRatio\","
+    "\"continuumFit\" : { \"ignoreLineSupport\": false,"
+    "\"negativeThreshold\": -5.0,"
     "\"count\" : 1,"
-    "\"nullthreshold\": 3,"
-    "\"ismfit\" : true,"
-    "\"igmfit\" : true,"
-    "\"fftprocessing\": true, "
+    "\"nullThreshold\": 3,"
+    "\"ismFit\" : true,"
+    "\"igmFit\" : true,"
+    "\"fftProcessing\": true, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
-    "\"catalog_dirpath\" : \"\"}}}}}}";
+    "\"catalogDirPath\" : \"\"}}}}}}}";
 
 class fixture_LineModelSolveTest {
 public:
   fixture_Context ctx;
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -183,6 +283,8 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CSpectrum> spcA = fixture_SharedMultiSpectrum().spcA;
+  std::shared_ptr<CSpectrum> spcB = fixture_SharedMultiSpectrum().spcB;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -205,14 +307,15 @@ class fixture_LineModelSolveTestTplFitRules
 public:
   fixture_LineModelSolveTestTplFitRules() {
     fillCatalog();
-    ctx.loadParameterStore(jsonString + jsonStringTplFitRules);
+    ctx.reset();
+    ctx.loadParameterStore(lambdaString + jsonString + jsonStringTplFitRules);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -223,14 +326,59 @@ class fixture_LineModelSolveTestTplFitTplRatio
 public:
   fixture_LineModelSolveTestTplFitTplRatio() {
     fillCatalog();
-    ctx.loadParameterStore(jsonString + jsonStringTplFitTplRatio);
+    ctx.reset();
+    ctx.loadParameterStore(lambdaString + jsonString +
+                           jsonStringTplFitTplRatio);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
+class fixture_LineModelSolveTestNoContTplRatio
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestNoContTplRatio() {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(lambdaString + jsonStringS +
+                           jsonStringnoContinuumTplRatio);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
+class fixture_LineModelSolveTestMultiNoContTplRatio
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestMultiNoContTplRatio() {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(multiLambdaString + jsonStringS +
+                           jsonStringnoContinuumTplRatio);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+
+    spcA->setObsID("A");
+    spcB->setObsID("B");
+    ctx.addSpectrum(spcA, LSF);
+    ctx.addSpectrum(spcB, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -241,14 +389,15 @@ class fixture_LineModelSolveTestFromSpectrum
 public:
   fixture_LineModelSolveTestFromSpectrum() {
     fillCatalog();
-    ctx.loadParameterStore(jsonString + jsonStringFromSpectrum);
+    ctx.reset();
+    ctx.loadParameterStore(lambdaString + jsonString + jsonStringFromSpectrum);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
@@ -258,28 +407,35 @@ BOOST_AUTO_TEST_SUITE(lineModelSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
                         fixture_LineModelSolveTestTplFitRules) {
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "LineModelSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "lineModelSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "LineModelSolve", "pdf");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "LineModelSolve", "pdf_params");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "LineModelSolve", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
@@ -289,28 +445,35 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
                         fixture_LineModelSolveTestTplFitTplRatio) {
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "LineModelSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "lineModelSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "LineModelSolve", "pdf");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "LineModelSolve", "pdf_params");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "LineModelSolve", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
@@ -318,30 +481,118 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
   ctx.reset();
 }
 
-BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
-                        fixture_LineModelSolveTestFromSpectrum) {
-  CLineModelSolve lineModelSolve(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(lineModelSolve.Compute());
+BOOST_FIXTURE_TEST_CASE(computeNoContTplRatio_test,
+                        fixture_LineModelSolveTestNoContTplRatio) {
+
+  bfs::path logFile = bfs::unique_path("/tmp/log_nocont_tplRatio");
+  CLogFileHandler file_handler(logFile.c_str());
+  file_handler.SetLevelMask(60);
+
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "LineModelSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "lineModelSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "LineModelSolve", "pdf");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "galaxy", "LineModelSolve", "pdf_params");
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "galaxy", "LineModelSolve", "extrema_results", "model_parameters");
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
   std::shared_ptr<const TExtremaResult> res =
       Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "LineModelSolve", "extrema_results", "model_parameters", 0);
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0);
+
+  Float64 z = res->Redshift;
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(computeMultiNoContTplRatio_test,
+                        fixture_LineModelSolveTestMultiNoContTplRatio) {
+  bfs::path logFile = bfs::unique_path("/tmp/log_multi_nocont_tplRatio");
+  CLogFileHandler file_handler(logFile.c_str());
+  file_handler.SetLevelMask(60);
+
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "lineModelSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters");
+  BOOST_CHECK(resType == "TLineModelResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
+                        fixture_LineModelSolveTestFromSpectrum) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "lineModelSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters");
+  BOOST_CHECK(resType == "TLineModelResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1e-6);

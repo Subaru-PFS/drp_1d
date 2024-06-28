@@ -36,9 +36,9 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
-
 #include <unsupported/Eigen/NumericalDiff>
+
+#include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
 
 using namespace std;
 using namespace Eigen;
@@ -88,12 +88,12 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
 void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
                                              ValueType &val) const {
 
-  TFloat64List amps;
-  Float64 redshift;
-  CPolynomCoeffsNormalized pCoeffs;
-  std::tie(amps, redshift, pCoeffs) = unpack(x);
+  CPolynomCoeffsNormalized pCoeffs = unpack(x);
 
-  val(0, 0) = ComputeLeastSquare(amps, redshift, pCoeffs);
+  m_fitter->m_spectraIndex
+      .reset(); // temporary multiobs implementation (might be
+  //  useless -> investigate)
+  val(0, 0) = ComputeLeastSquare(pCoeffs);
 
   Log.LogDebug(Formatter() << "LeastSquare = " << val(0, 0));
 }
@@ -130,15 +130,15 @@ coeffs= "
 }
 */
 
-std::tuple<TFloat64List, Float64, CPolynomCoeffsNormalized>
+CPolynomCoeffsNormalized
 CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
   // unpack param vector
   TFloat64List amps(x.begin(), x.begin() + m_EltsIdx->size());
   for (Int32 i = 0; i < m_EltsIdx->size(); ++i) {
     Log.LogDebug(Formatter() << "amplitude[" << i << "]= " << amps[i]);
-    auto &elt = m_fitter->getElementList()[(*m_EltsIdx)[i]];
-    elt->SetElementAmplitude(amps[i], 0.0);
+    m_fitter->m_ElementsVector->SetElementAmplitude((*m_EltsIdx)[i], amps[i],
+                                                    0.0);
   }
 
   if (m_fitter->m_enableVelocityFitting) {
@@ -151,30 +151,49 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
                    << "velocity Em  = " << x[m_velE_idx] * m_normVel);
 
     for (Int32 eltIndex : *m_EltsIdx) {
-      auto &elt = m_fitter->getElementList()[eltIndex];
-      if (elt->IsEmission())
-        elt->SetVelocityEmission(x[m_velE_idx] * m_normVel);
+      auto &elt_param = m_fitter->getElementParam()[eltIndex];
+
+      if (elt_param->IsEmission())
+        elt_param->SetVelocityEmission(x[m_velE_idx] * m_normVel);
       else
-        elt->SetVelocityAbsorption(x[m_velA_idx] * m_normVel);
+        elt_param->SetVelocityAbsorption(x[m_velA_idx] * m_normVel);
     }
   }
 
-  Float64 redshift = m_redshift;
   if (m_fitter->m_enableLambdaOffsetsFit) {
-    redshift += (1.0 + m_redshift) * x[m_lbdaOffset_idx] * m_normLbdaOffset;
-    Log.LogDebug(Formatter() << "redshift=" << redshift);
-  }
+    const Float64 delta_offset = x[m_lbdaOffset_idx] * m_normLbdaOffset;
+    Log.LogDebug(Formatter() << "lambda offset = " << delta_offset);
+    /* Float64 const redshift = m_redshift + (1.0 + m_redshift) * delta_offset;
+    Log.LogDebug(Formatter() << "redshift=" << redshift); */
+    for (Int32 eltIndex : *m_EltsIdx) {
+      auto &elt_param = m_fitter->getElementParam()[eltIndex];
 
-  // set redshift in SYMIGM profiles
-  for (Int32 eltIndex : *m_EltsIdx) {
-    auto &elt = m_fitter->getElementList()[eltIndex];
-    const TInt32List &igm_indices = elt->getIgmLinesIndices();
-    for (Int32 idx : igm_indices) {
-      auto igmp = elt->GetSymIgmParams();
-      igmp.m_redshift = redshift;
-      elt->SetSymIgmParams(igmp, idx);
+      for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
+        Float64 offset = elt_param->m_Lines[line_idx].GetOffset();
+        offset /= SPEED_OF_LIGHT_IN_VACCUM;
+        offset += (1 + offset) * delta_offset;
+        offset *= SPEED_OF_LIGHT_IN_VACCUM;
+        elt_param->setLambdaOffset(line_idx, offset);
+
+        /* // set redshift in SYMIGM profiles
+        const TInt32List &igm_indices = elt_param->m_asymLineIndices;
+        for (Int32 idx : igm_indices) {
+          auto igmp = elt_param->GetSymIgmParams();
+          igmp.m_redshift = redshift;
+          elt_param->SetSymIgmParams(igmp, idx);
+        } */
+      }
     }
   }
+
+  // reset the support (lines outside range)
+  m_fitter->m_spectraIndex.reset();
+  for (Int32 eltIndex : *m_EltsIdx) {
+    auto &elt_ptr = m_fitter->getElementList()[eltIndex];
+    elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
+                            m_fitter->getLambdaRange());
+  }
+  m_fitter->setGlobalOutsideLambdaRangeFromSpectra();
 
   CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -185,11 +204,10 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
                              << pCoeffs.a1 << " " << pCoeffs.a2);
   }
 
-  return std::make_tuple(std::move(amps), redshift, std::move(pCoeffs));
+  return pCoeffs;
 }
 
 Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
-    const TFloat64List &amps, Float64 redshift,
     const CPolynomCoeffsNormalized &pCoeffs) const {
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
@@ -207,7 +225,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
       auto &elt = m_fitter->getElementList()[eltIndex];
       // linemodel value
       Float64 mval =
-          elt->getModelAtLambda(xi, redshift, (*m_continuumFluxAxis)[idx]);
+          elt->getModelAtLambda(xi, m_redshift, (*m_continuumFluxAxis)[idx]);
       fval += mval;
     }
 
@@ -245,6 +263,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
     auto amps_it = amps.cbegin();
     for (auto &eltIndex : *m_EltsIdx) {
       auto &elt = m_fitter->getElementList()[eltIndex];
+      const auto &elt_param = elt->getElementParam();
       // linemodel value &  amplitude derivative
       Float64 mval =
           elt->getModelAtLambda(xi, redshift, (*m_continuumFluxAxis)[idx]);
@@ -256,7 +275,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
       // velocity derivative
       if (m_fitter->m_enableVelocityFitting) {
-        if (elt->GetElementType() == CLine::EType::nType_Absorption) {
+        if (elt_param->GetElementType() == CLine::EType::nType_Absorption) {
           velocityAGrad += elt->GetModelDerivVelAtLambda(
               xi, redshift, (*m_continuumFluxAxis)[idx]);
         } else {
@@ -283,7 +302,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
       // squared diff derivative wrt velocity
       if (m_fitter->m_enableVelocityFitting) {
-        if (m_fitter->getElementList()[eltIndex]->GetElementType() ==
+        if (m_fitter->getElementParam()[eltIndex]->GetElementType() ==
             CLine::EType::nType_Absorption) {
           grad[m_velA_idx] += residual * velocityAGrad;
         } else {
@@ -308,15 +327,11 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 void CLbfgsbFitter::resetSupport(Float64 redshift) {
 
   // set velocity at max value (to set largest line overlapping)
-  if (Context.GetParameterStore()->GetScoped<bool>("linemodel.velocityfit")) {
-    const Float64 velfitMaxE = Context.GetParameterStore()->GetScoped<Float64>(
-        "linemodel.emvelocityfitmax");
-    const Float64 velfitMaxA = Context.GetParameterStore()->GetScoped<Float64>(
-        "linemodel.absvelocityfitmax");
-
+  if (Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit")) {
     for (Int32 j = 0; j < getElementList().size(); j++) {
-      m_ElementParam[j]->m_VelocityEmission = velfitMaxE;
-      m_ElementParam[j]->m_VelocityAbsorption = velfitMaxA;
+      getElementParam()[j]->m_VelocityEmission = m_velfitMaxE;
+      getElementParam()[j]->m_VelocityAbsorption = m_velfitMaxA;
+      m_enlarge_line_supports = MAX_LAMBDA_OFFSET;
     }
   }
 
@@ -342,7 +357,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                                   Float64 redshift) {
 
   if (EltsIdx.size() < 1)
-    THROWG(INTERNAL_ERROR, "empty Line element list to fit");
+    THROWG(ErrorCode::INTERNAL_ERROR, "empty Line element list to fit");
 
   Int32 nddl = EltsIdx.size();
   Int32 param_idx = nddl;
@@ -355,13 +370,13 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     Int32 velocity_param_idx = param_idx++;
 
     // check if mixed types (Abs & Em)
-    lineType = getElementList()[EltsIdx.front()]->GetElementType();
+    lineType = getElementParam()[EltsIdx.front()]->GetElementType();
     if (lineType == CLine::EType::nType_Absorption)
       velA_idx = velocity_param_idx;
     else
       velE_idx = velocity_param_idx;
     for (Int32 eltIndex : EltsIdx)
-      if (lineType != getElementList()[eltIndex]->GetElementType()) {
+      if (lineType != getElementParam()[eltIndex]->GetElementType()) {
         lineType = CLine::EType::nType_All;
         ++nddl; // 2 velocity parameter
         velA_idx = velocity_param_idx;
@@ -379,7 +394,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   TInt32List xInds = getElementList().getSupportIndexes(EltsIdx);
   if (xInds.size() < 1)
-    THROWG(INTERNAL_ERROR, "no observed samples for the line Element to fit");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "no observed samples for the line Element to fit");
 
   Int32 pCoeff_param_idx =
       undefIdx; // position of polynomial coeffs in the param vector
@@ -392,15 +408,16 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // check N DOF
   Int32 n = xInds.size();
   if (n < nddl) {
-    Flag.warning(WarningCode::LINEARFIT_RANK_DEFICIENT,
+    Flag.warning(WarningCode::LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,
                  Formatter() << __func__ << " LBFGSB ill ranked:"
                              << " number of samples = " << n
                              << ", number of parameters to fit = " << nddl);
     for (Int32 eltIndex : EltsIdx)
-      getElementList().SetElementAmplitude(eltIndex, 0., INFINITY);
+      m_ElementsVector->SetElementAmplitude(eltIndex, 0., INFINITY);
     if (m_enableAmplitudeOffsets) {
       for (Int32 eltIndex : EltsIdx)
-        getElementList()[eltIndex]->SetPolynomCoeffs({0., 0., 0.});
+        m_ElementsVector->getElementParam()[eltIndex]->SetPolynomCoeffs(
+            {0., 0., 0.});
     }
     return;
   }
@@ -432,10 +449,11 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   lb(amp_indices) = VectorXd::Zero(EltsIdx.size());
   for (size_t i = 0; i < EltsIdx.size(); ++i) {
     Float64 ampMax = INFINITY;
-    auto &elt = getElementList()[EltsIdx[i]];
-    if (elt->GetElementType() == CLine::EType::nType_Absorption &&
-        elt->GetAbsLinesLimit() > 0.0)
-      ampMax = elt->GetAbsLinesLimit() / elt->GetMaxNominalAmplitude();
+    auto &elt_param = getElementParam()[EltsIdx[i]];
+    if (elt_param->GetElementType() == CLine::EType::nType_Absorption &&
+        elt_param->GetAbsLinesLimit() > 0.0)
+      ampMax =
+          elt_param->GetAbsLinesLimit() / elt_param->GetMaxNominalAmplitude();
     ub[i] = ampMax;
   }
 
@@ -454,6 +472,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
 
+  // TODO adapt bounds to lambdaRange (if line goes out of border #8669)
   if (m_enableLambdaOffsetsFit) {
     // offset bounds
     lb[lbdaOffset_param_idx] =
@@ -480,22 +499,24 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   // amplitudes initial guess
   for (auto eltIndex : EltsIdx) {
-    auto &elt = getElementList()[eltIndex];
+    auto &elt_param = getElementParam()[eltIndex];
     // set velocity guess
-    if (elt->GetElementType() == CLine::EType::nType_Absorption) {
-      elt->SetVelocityAbsorption(m_velIniGuessA);
+    if (elt_param->GetElementType() == CLine::EType::nType_Absorption) {
+      elt_param->SetVelocityAbsorption(m_velIniGuessA);
     } else {
-      elt->SetVelocityEmission(m_velIniGuessE);
+      elt_param->SetVelocityEmission(m_velIniGuessE);
     }
   }
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
+  m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
   Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
     // fitAmplitude(EltsIdx[i], redshift);
     auto &elt = getElementList()[EltsIdx[i]];
     v_xGuess[i] = elt->GetElementAmplitude() * normFactor;
     if (std::isnan(v_xGuess[i]))
-      THROWG(INTERNAL_ERROR, "NAN amplitude");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "NAN amplitude for LBFGSB fitter initial guess");
     // retrive max SNR amplitude:
     auto sigma = (elt->GetElementError() * normFactor);
     auto snr = v_xGuess[i] / sigma;
@@ -510,7 +531,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   // polynomial coeffs initial guess
   if (m_enableAmplitudeOffsets) {
-    const auto &pCoeffs = getElementList()[EltsIdx.front()]->GetPolynomCoeffs();
+    const auto &pCoeffs =
+        getElementParam()[EltsIdx.front()]->GetPolynomCoeffs();
     auto pCoeffsNormalized = func.getPcoeffs();
     pCoeffsNormalized.setCoeffs(pCoeffs.a0 * normFactor,
                                 pCoeffs.a1 * normFactor,
@@ -583,18 +605,23 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   try {
     // v_xResult will be overwritten to be the best point found
     int niter = solver.minimize(myfunc, v_xResult, fx, lb, ub);
+  } catch (const AmzException &e) {
+    // throw again, since the exception was thrown inside amazed
+    // CLbfgsbFitter::CLeastSquare
+    throw;
   } catch (const std::exception &e) {
-    Flag.warning(WarningCode::LBFGSPP_ERROR, Formatter() << e.what());
+    // the error was raised from lbfgsbpp
+    Flag.warning(WarningCode::LBFGSPP_ERROR, Formatter()
+                                                 << "in LBFGSPP, " << e.what());
     // reset the result to the initial guess
     v_xResult = v_xGuess;
   }
 
-  // store fitted amplitude
-  // TODO SNR computation
-  Float64 snr = NAN;
+  // store fitted amplitude, with temporary unknown SNR
+  Float64 amp_std = NAN;
   for (Int32 i = 0; i < EltsIdx.size(); ++i)
-    getElementList()[EltsIdx[i]]->SetElementAmplitude(v_xResult[i] / normFactor,
-                                                      snr);
+    m_ElementsVector->SetElementAmplitude(EltsIdx[i], v_xResult[i] / normFactor,
+                                          amp_std);
 
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {
@@ -602,34 +629,34 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       Float64 velocityA = v_xResult[velA_idx] * normVel;
       Float64 velocityE = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx) {
-        auto &elt = getElementList()[eltIndex];
-        if (elt->GetElementType() == CLine::EType::nType_Absorption)
-          elt->SetVelocityAbsorption(velocityA);
+        auto &elt_param = getElementParam()[eltIndex];
+        if (elt_param->GetElementType() == CLine::EType::nType_Absorption)
+          elt_param->SetVelocityAbsorption(velocityA);
         else
-          elt->SetVelocityEmission(velocityE);
+          elt_param->SetVelocityEmission(velocityE);
       }
     } else if (lineType == CLine::EType::nType_Absorption) {
       Float64 velocity = v_xResult[velA_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
-        getElementList()[eltIndex]->SetVelocityAbsorption(velocity);
+        getElementParam()[eltIndex]->SetVelocityAbsorption(velocity);
     } else {
       Float64 velocity = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
-        getElementList()[eltIndex]->SetVelocityEmission(velocity);
+        getElementParam()[eltIndex]->SetVelocityEmission(velocity);
     }
   }
 
   // store velocity offset (line offset)
   if (m_enableLambdaOffsetsFit) {
     for (Int32 eltIndex : EltsIdx) {
-      auto &elt = getElementList()[eltIndex];
-      for (Int32 line_idx = 0; line_idx != elt->GetSize(); ++line_idx) {
-        Float64 offset = elt->GetOffset(line_idx);
+      auto &elt_param = m_ElementsVector->getElementParam()[eltIndex];
+      for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
+        Float64 offset = elt_param->m_Lines[line_idx].GetOffset();
         offset /= SPEED_OF_LIGHT_IN_VACCUM;
         offset +=
             (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
         offset *= SPEED_OF_LIGHT_IN_VACCUM;
-        elt->SetOffset(line_idx, offset);
+        elt_param->setLambdaOffset(line_idx, offset);
       }
     }
   }
@@ -649,7 +676,64 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     Float64 a2 = 0.0;
     pCoeffsNormalized.getCoeffs(a0, a1, a2);
     for (Int32 eltIndex : EltsIdx)
-      getElementList()[eltIndex]->SetPolynomCoeffs(
+      m_ElementsVector->getElementParam()[eltIndex]->SetPolynomCoeffs(
           {a0 / normFactor, a1 / normFactor, a2 / normFactor});
+  }
+
+  // compute snr (analytical formula from doi:10.1364/AO.46.005374)
+  // --------------------------------------------------------------
+  //  Var(amp) = 3/2 * var(spectra) /
+  //       (sqrt(pi) * sigma_in_wavelength_unit * pixsize_in_wavelength_unit)
+  //
+  // note: this is only for one line (one Gaussian profile)
+  // Thus it does not take into account the correlation between overlapping
+  // lines, and possibly underestimate the uncertainty in such a case
+  // reset the support (lines outside range)
+  m_spectraIndex.reset();
+  for (Int32 eltIndex : EltsIdx) {
+    auto &elt_ptr = getElementList()[eltIndex];
+    elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
+                            getLambdaRange());
+  }
+  setGlobalOutsideLambdaRangeFromSpectra();
+  m_spectraIndex.reset();
+  getModel().refreshModel(); // recompute model with estimated params (needed
+                             // for noise estimation from residual)
+
+  for (Int32 i = 0; i < EltsIdx.size(); ++i) {
+    m_spectraIndex.reset();
+    auto const &elt = getElementList()[EltsIdx[i]];
+    Float64 const amp = v_xResult[i] / normFactor;
+
+    if (elt->IsOutsideLambdaRange()) {
+      m_ElementsVector->SetElementAmplitude(EltsIdx[i], NAN, NAN);
+      break;
+    }
+
+    auto const &[_, sigma] = elt->getObservedPositionAndLineWidth(redshift);
+    Float64 const noise_stdev =
+        getModelResidualRmsUnderElements({EltsIdx[i]}, true, false);
+    Float64 pixsize = 0.0;
+    Int32 nlines = 0;
+    for (Int32 line_idx = 0; line_idx < elt->GetSize(); ++line_idx) {
+      if (elt->IsOutsideLambdaRangeLine(line_idx))
+        continue;
+      auto const range = elt->getSupportSubElt(line_idx);
+      m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
+      pixsize += getSpectrum().GetSpectralAxis().GetMeanResolution(range);
+      ++nlines;
+    }
+    pixsize /= nlines;
+    Float64 const amp_std =
+        noise_stdev * sqrt(3.0 / (2.0 * sigma * pixsize * sqrt(M_PI)));
+
+    m_ElementsVector->SetElementAmplitude(EltsIdx[i], amp, amp_std);
+
+    // we should divide the amplitude uncertainty by the nominal amp,  since it
+    // has been multplied by it in SetElementAmplitude....
+    auto const &param = m_ElementsVector->getElementParam()[EltsIdx[i]];
+    for (Int32 line_idx = 0; line_idx < elt->GetSize(); ++line_idx)
+      param->m_FittedAmplitudesStd[line_idx] /=
+          param->m_NominalAmplitudes[line_idx];
   }
 }
