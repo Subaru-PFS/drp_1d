@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/statistics/zprior.h"
+#include <climits>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/operator/pdfz.h"
-
 #include "RedshiftLibrary/log/log.h"
-#include <climits>
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/zprior.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -90,8 +90,6 @@ TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(
   for (Int32 kz = 0; kz < nz; kz++) {
     if (nlinesAboveSNR[kz] >= nlinesThres) {
       logzPrior[kz] = logprobaPresent;
-      // Log.LogDetail("ZPrior: Prior: nlinesAboveSNR[kz] >= nlinesThres for
-      // kz=%d", kz);
     }
   }
 
@@ -104,8 +102,8 @@ TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(
 TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
                                             const Float64 aCoeff) const {
   if (aCoeff <= 0.0)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Invalid aCoeff (<=0) value:" << aCoeff);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Invalid aCoeff (<=0) value:" << aCoeff);
 
   TFloat64List zPrior(redshifts.size(), 0.0);
   TFloat64List logzPrior(redshifts.size(), -INFINITY);
@@ -137,7 +135,8 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
     maxP = std::max(maxP, logzPrior[kz]);
   }
 
-  Log.LogDebug("Pdfz: log zPrior: using HalphaZPrior max=%e", maxP);
+  Log.LogDebug(Formatter() << "Pdfz: log zPrior: using HalphaZPrior max="
+                           << maxP);
 
   Float64 log_dynamicCut = -log(1e12);
   if (maxP == maxP && maxP != -INFINITY) // test NAN & -inf
@@ -164,7 +163,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
 TFloat64List CZPrior::CombineLogZPrior(const TFloat64List &logprior1,
                                        const TFloat64List &logprior2) const {
   if (logprior1.size() != logprior2.size()) {
-    THROWG(INTERNAL_ERROR, "zpriors vector sizes do not match");
+    THROWG(ErrorCode::INTERNAL_ERROR, "zpriors vector sizes do not match");
   }
   Int32 n = logprior1.size();
 

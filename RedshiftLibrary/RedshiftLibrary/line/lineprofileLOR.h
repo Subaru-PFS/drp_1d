@@ -38,12 +38,15 @@
 // ============================================================================
 #ifndef _REDSHIFT_LINE_PROFILE_LOR_
 #define _REDSHIFT_LINE_PROFILE_LOR_
+
+#include <cmath>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/log/log.h"
-#include <cmath>
-#include <string>
+
 namespace NSEpic {
 /**
  * \ingroup Redshift

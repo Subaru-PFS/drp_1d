@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/formatter.h"
+#include <cmath>
+#include <string>
 
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
-#include <string>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
 
@@ -65,12 +65,6 @@ BOOST_AUTO_TEST_CASE(formatter_test) {
            << "str";
   msg = format_1.str();
   BOOST_CHECK(msg == "test str");
-
-  Formatter format_2;
-  format_2 << "test "
-           << "str_2";
-  msg = format_2 >> Formatter::to_str;
-  BOOST_CHECK(msg == "test str_2");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

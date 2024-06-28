@@ -38,12 +38,15 @@
 // ============================================================================
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
+
+#include <iostream>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
-#include <iostream>
-#include <vector>
 namespace NSEpic {
 
 /**
@@ -57,7 +60,8 @@ public:
     typename std::vector<T>::const_iterator itr =
         std::find(list.begin(), list.end(), z);
     if (itr == list.end())
-      THROWG(INTERNAL_ERROR, Formatter() << "Could not find index for " << z);
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "Could not find index for " << z);
 
     return (itr - list.begin());
   }
@@ -66,6 +70,7 @@ public:
   // value[index] can be equal or smaller than Z
   static bool getClosestLowerIndex(const std::vector<T> &ordered_values,
                                    const T &value, Int32 &i_min) {
+    i_min = undefIdx;
     if (value < ordered_values.front())
       return false;
 
@@ -102,6 +107,7 @@ public:
   // value[index] can be equal or higher than Z
   static bool getClosestUpperIndex(const std::vector<T> &ordered_values,
                                    const T &value, Int32 &i) {
+    i = undefIdx;
     if (value > ordered_values.back()) {
       return false;
     }

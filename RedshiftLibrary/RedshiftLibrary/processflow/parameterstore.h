@@ -39,15 +39,16 @@
 #ifndef _REDSHIFT_PROCESSFLOW_PARAMETERSTORE_
 #define _REDSHIFT_PROCESSFLOW_PARAMETERSTORE_
 
+#include <boost/property_tree/ptree.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+#include <boost/property_tree/json_parser.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/processflow/scopestore.h"
-#include <boost/property_tree/ptree.hpp>
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
-#include <boost/property_tree/json_parser.hpp>
-#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 
 namespace bpt = boost::property_tree;
 namespace NSEpic {
@@ -58,7 +59,7 @@ namespace NSEpic {
 class CParameterStore : public CScopeStore {
 
 public:
-  CParameterStore(const TScopeStack &stack);
+  CParameterStore(const std::shared_ptr<const CScopeStack> &stack);
   template <typename T> bool Has(const std::string &name) const {
     boost::optional<T> property = m_PropertyTree.get_optional<T>(name);
     if (!property.is_initialized()) {
@@ -74,37 +75,60 @@ public:
     return Has<T>(GetScopedName(name));
   }
 
-  bool HasTplIsmExtinction(const std::string &objectType) const;
-  bool HasTplIgmExtinction(const std::string &objectType) const;
-  bool HasFFTProcessing(const std::string &objectType) const;
+  template <typename T> bool HasScopedAt(const std::string &name, int depth) {
+    return Has<T>(GetScopedNameAt(name, depth));
+  }
+
+  bool HasTplIsmExtinction(const std::string &spectrumModel) const;
+  bool HasTplIgmExtinction(const std::string &spectrumModel) const;
+  bool HasFFTProcessing(const std::string &spectrumModel) const;
   bool hasToLogRebin(const TStringList &categories,
                      std::map<std::string, bool> &fft_processing)
       const; // wrapper for HasFFTProcessing
   Float64
   getMinZStepForFFTProcessing(std::map<std::string, bool> fftprocessing) const;
-  bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
-  bool EnableTemplateOrthogonalization(const std::string &objectType) const;
+  bool HasToOrthogonalizeTemplates(const std::string &spectrumModel) const;
+  bool EnableTemplateOrthogonalization(const std::string &spectrumModel) const;
 
   template <typename T> T Get(const std::string &name) const {
     boost::optional<T> property = m_PropertyTree.get_optional<T>(name);
     if (!property.is_initialized())
-      THROWG(MISSING_PARAMETER, Formatter() << "Missing parameter " << name);
+      THROWG(ErrorCode::MISSING_PARAMETER, Formatter()
+                                               << "Missing parameter " << name);
     return *property;
   }
 
   template <typename T> T GetScoped(const std::string &name) const {
-    if (HasScoped<T>(name))
-      return Get<T>(GetScopedName(name));
+    auto const scopedName = GetScopedName(name);
+    if (Has<T>(scopedName))
+      return Get<T>(scopedName);
     else
-      THROWG(MISSING_PARAMETER,
-             Formatter() << "Missing parameter " << GetScopedName(name));
+      THROWG(ErrorCode::MISSING_PARAMETER,
+             Formatter() << "Missing parameter " << scopedName);
+  }
+
+  template <typename T>
+  T GetScopedAt(const std::string &name, ScopeType type) const {
+    auto depth = m_ScopeStack->get_type_level(type) + 1;
+    return GetScopedAt<T>(name, depth);
+  }
+
+  template <typename T>
+  T GetScopedAt(const std::string &name, int depth) const {
+    auto const scopedName = GetScopedNameAt(name, depth);
+    if (Has<T>(scopedName))
+      return Get<T>(scopedName);
+    else
+      THROWG(ErrorCode::MISSING_PARAMETER,
+             Formatter() << "Missing parameter " << scopedName);
   }
 
   template <typename T> std::vector<T> GetList(const std::string &name) const {
     boost::optional<bpt::ptree &> property =
         m_PropertyTree.get_child_optional(name);
     if (!property.is_initialized())
-      THROWG(MISSING_PARAMETER, Formatter() << "Missing parameter " << name);
+      THROWG(ErrorCode::MISSING_PARAMETER, Formatter()
+                                               << "Missing parameter " << name);
     std::vector<T> ret = std::vector<T>((*property).size());
 
     bpt::ptree::const_iterator it;

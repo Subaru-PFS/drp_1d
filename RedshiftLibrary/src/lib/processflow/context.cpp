@@ -36,16 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
-#include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/processflow/resultstore.h"
+#include <boost/filesystem.hpp>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
-
-#include <boost/filesystem.hpp>
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
 namespace bfs = boost::filesystem;
 
@@ -53,18 +52,19 @@ using namespace NSEpic;
 
 static void NewHandler(const char *reason, const char *file, int line,
                        int gsl_errno) {
-  THROWG(EXTERNAL_LIB_ERROR,
+  THROWG(ErrorCode::EXTERNAL_LIB_ERROR,
          Formatter() << "GSL Error : "
                      << " gsl: " << file << ":" << line << ": ERROR:" << reason
                      << " (Errtype: " << gsl_strerror(gsl_errno) << ")");
   return;
 }
 
-CProcessFlowContext::CProcessFlowContext() {
+CProcessFlowContext::CProcessFlowContext()
+    : m_ScopeStack(std::make_shared<CScopeStack>()),
+      m_ResultStore(std::make_shared<COperatorResultStore>(m_ScopeStack)),
+      m_parameterStore(::make_shared<CParameterStore>(m_ScopeStack)),
+      m_inputContext(std::make_shared<CInputContext>(m_parameterStore)) {
   gsl_set_error_handler(NewHandler);
-  m_parameterStore = std::make_shared<CParameterStore>(m_ScopeStack);
-  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
-  m_inputContext = std::make_shared<CInputContext>(m_parameterStore);
 }
 
 std::shared_ptr<const CParameterStore>
@@ -83,17 +83,18 @@ void CProcessFlowContext::reset() {
   m_inputContext->resetSpectrumSpecific();
 }
 
-const CLineMap CProcessFlowContext::getCLineMap() {
-  CAutoScope autoscope(m_ScopeStack, "linemodel");
+CLineMap CProcessFlowContext::getCLineMap() {
+  CAutoScope autoscope(m_ScopeStack, "lineModel");
   return m_inputContext->GetFilteredLineMap(
       GetCurrentCategory(), GetCurrentMethod(),
-      m_parameterStore->GetScoped<std::string>("linetypefilter"),
-      m_parameterStore->GetScoped<std::string>("lineforcefilter"));
+      m_parameterStore->GetScoped<std::string>("lineTypeFilter"),
+      m_parameterStore->GetScoped<std::string>("lineForceFilter"));
 }
 
 std::shared_ptr<CLineCatalogsTplRatio>
 CProcessFlowContext::GetTplRatioCatalog() {
-  return m_inputContext->GetTemplateRatioCatalog(m_ScopeStack[0]);
+  return m_inputContext->GetTemplateRatioCatalog(
+      m_ScopeStack->get_type_value(ScopeType::SPECTRUMMODEL));
 }
 
 std::shared_ptr<const CPhotBandCatalog>

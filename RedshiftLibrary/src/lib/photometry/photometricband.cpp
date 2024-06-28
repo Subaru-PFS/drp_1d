@@ -36,15 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-
-#include "RedshiftLibrary/photometry/photometricband.h"
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/log/log.h"
+#include <algorithm>
+#include <stdexcept>
 
 #include <gsl/gsl_const_mksa.h>
 
-#include <algorithm>
-#include <stdexcept>
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/photometry/photometricband.h"
 
 using namespace NSEpic;
 
@@ -52,8 +51,8 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
     : m_transmission(std::move(trans)), m_lambda(std::move(lambda)) {
   // check all sizes are the same
   if (m_transmission.size() != m_lambda.size()) {
-    THROWG(INTERNAL_ERROR, "Transmission and "
-                           "wavelength have not the same size");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Transmission and "
+                                      "wavelength have not the same size");
   }
 
   // initialize min lambda
@@ -80,8 +79,8 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
 Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
 
   if (inFlux.size() != m_transmission.size())
-    THROWG(INTERNAL_ERROR, "Flux and "
-                           "transmission sizes are different");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Flux and "
+                                      "transmission sizes are different");
 
   // convert flux from Flambda in Erg/s/cm2/Angstrom to Fnu in Erg/s/cm2/Hz
   const Float64 c = GSL_CONST_MKSA_SPEED_OF_LIGHT * 1e10; // angstrom s-1

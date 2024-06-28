@@ -39,15 +39,16 @@
 #ifndef _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 #define _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 
+#include <iostream>
+#include <map>
+#include <stdexcept>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include <iostream>
-#include <map>
-#include <stdexcept>
-#include <string>
 
 namespace Template { // boost_test_suite
 // all boost_auto_test_case that use private method
@@ -99,7 +100,7 @@ public:
   const TFloat64List &GetcomputedDustCoeffs() const;
   const TFloat64List &GetcomputedMeiksinCoeffs() const;
 
-  void GetIsmIgmRangeIndex(Int32 &begin, Int32 &end) const;
+  std::pair<Int32, Int32> GetIsmIgmRangeIndex() const;
   Int32 GetIgmEndIndex() const;
   Int32 GetIgmEndIndex(Int32 kstart, Int32 kend) const;
 
@@ -206,8 +207,9 @@ inline void CTemplate::SetType(const CSpectrum::EType type) const {
     if (!CheckIsmIgmEnabled())
       CSpectrum::SetType(type);
     else {
-      THROWG(INTERNAL_ERROR, "Cannot change component type "
-                             "when ism/igm enabled on a const CTemplate");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "Cannot change component type "
+             "when ism/igm enabled on a const CTemplate");
     }
   }
 }
@@ -222,29 +224,28 @@ inline void CTemplate::DisableIsmIgm() {
 
 inline Int32 CTemplate::GetIsmCoeff() const {
   if (!CheckIsmIgmEnabled()) {
-    THROWG(INTERNAL_ERROR, "ism/igm not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "ism/igm not initialized");
   }
   return m_kDust;
 }
 
 inline Int32 CTemplate::GetIgmCoeff() const {
   if (!CheckIsmIgmEnabled()) {
-    THROWG(INTERNAL_ERROR, "ism/igm not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "ism/igm not initialized");
   }
   return m_meiksinIdx;
 }
 
-inline void CTemplate::GetIsmIgmRangeIndex(Int32 &begin, Int32 &ismend) const {
+inline std::pair<Int32, Int32> CTemplate::GetIsmIgmRangeIndex() const {
   if (!CheckIsmIgmEnabled()) {
-    THROWG(INTERNAL_ERROR, "ism not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "ism not initialized");
   }
-  begin = m_IsmIgm_kstart;
-  ismend = m_Ism_kend;
+  return std::make_pair(m_IsmIgm_kstart, m_Ism_kend);
 }
 
 inline Int32 CTemplate::GetIgmEndIndex() const {
   if (!CheckIsmIgmEnabled() || MeiksinInitFailed()) {
-    THROWG(INTERNAL_ERROR, "igm not initialized");
+    THROWG(ErrorCode::INTERNAL_ERROR, "igm not initialized");
   }
   return m_Igm_kend;
 }

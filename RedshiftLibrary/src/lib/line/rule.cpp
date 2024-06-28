@@ -36,10 +36,10 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/rule.h"
-#include "RedshiftLibrary/common/datatypes.h"
-
 #include <cstdarg>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/line/rule.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -47,7 +47,7 @@ using namespace std;
 /**
  * Checks the elements and corrects if necessary.
  **/
-void CRule::Apply(CLineModelElementList &LineModelElementList) {
+void CRule::Apply(CLMEltListVector &LineModelElementList) {
   if (!Enabled) {
     return;
   }

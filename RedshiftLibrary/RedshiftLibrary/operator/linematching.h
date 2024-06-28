@@ -39,12 +39,14 @@
 #ifndef _REDSHIFT_OPERATOR_RAYMATCHING_
 #define _REDSHIFT_OPERATOR_RAYMATCHING_
 
+#include <functional>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/linedetected.h"
 #include "RedshiftLibrary/operator/linematchingresult.h"
-#include <functional>
+
 namespace NSEpic {
 
 /**

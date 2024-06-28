@@ -36,6 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <cmath>
+#include <iostream>
+#include <limits>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/gaussianfit/gaussianfit.h"
@@ -44,12 +50,6 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include <boost/test/unit_test.hpp>
-
-#include <cmath>
-#include <iostream>
-#include <limits>
 
 using namespace NSEpic;
 
@@ -186,12 +186,12 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   range = TInt32Range(0, 10);
   BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask,
                                                 &maxFluxnoContinuum, &noise),
-                    GlobalException);
+                    AmzException);
 
   range = TInt32Range(-2, 9);
   BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask,
                                                 &maxFluxnoContinuum, &noise),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {

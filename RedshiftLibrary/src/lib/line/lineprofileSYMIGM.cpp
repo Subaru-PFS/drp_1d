@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 using namespace NSEpic;
 using namespace std;
 
@@ -54,7 +55,7 @@ CLineProfileSYMIGM::CLineProfileSYMIGM(
 
 void CLineProfileSYMIGM::CheckMeiksinInit() const {
   if (!m_igmCorrectionMeiksin) {
-    THROWG(INTERNAL_ERROR, "m_igmCorrectionMeiksin is nullptr");
+    THROWG(ErrorCode::INTERNAL_ERROR, "m_igmCorrectionMeiksin is nullptr");
   }
 }
 
@@ -90,19 +91,32 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
                            x0_rest + winsize_rest / 2);
 
   // check igm, if not applicable return Gaussian flux
-  if (m_igmidx < 0 || range_rest.GetBegin() > RESTLAMBDA_LYA)
-    return A * sigma * sqrt(2 * M_PI);
+  if (range_rest.GetBegin() > RESTLAMBDA_LYA)
+    return CLineProfileSYM::GetLineFlux(x0, sigma, A);
 
   // Line support aligned to lambda rest grid of convolved igm
-  TFloat64List xlist_rest = m_igmCorrectionMeiksin->getWaveVector(range_rest);
+  auto const &[xlist_rest, correction] =
+      m_igmCorrectionMeiksin->getWaveAndCorrectionVector(range_rest, m_redshift,
+                                                         GetIgmIdx());
   if (xlist_rest.empty())
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "not enough IGM extinction samples inside line profile to compute "
            "flux, increase IGM extinction curves resolution.");
-  Float64 flux = 0.;
-  for (Float64 x_rest : xlist_rest)
-    flux += GetLineProfileVal(x_rest * (1 + m_redshift), x0, sigma);
-  flux *= (xlist_rest.back() - xlist_rest.front()) * (1 + m_redshift);
+
+  // trapeze integration
+  TFloat64List xlist(xlist_rest.size());
+  std::transform(xlist_rest.begin(), xlist_rest.end(), xlist.begin(),
+                 [this](Float64 x_rest) { return x_rest * (1 + m_redshift); });
+  TFloat64List gaussian(xlist_rest.size());
+  std::transform(
+      xlist.begin(), xlist.end(), gaussian.begin(),
+      [this, x0, sigma](Float64 x) { return GetLineProfileVal(x, x0, sigma); });
+  TFloat64List profile(xlist_rest.size());
+  std::transform(gaussian.begin(), gaussian.end(), correction.begin(),
+                 profile.begin(), std::multiplies());
+
+  auto const &[flux, _] = CSpectrum::integrateFluxes_usingTrapez(
+      xlist_rest, profile, {TInt32Range(0, xlist_rest.size() - 1)});
 
   return A * flux;
 }
@@ -154,23 +168,19 @@ Int32 CLineProfileSYMIGM::getIGMIdxCount() const {
 }
 
 Float64 CLineProfileSYMIGM::getIGMCorrection(Float64 x) const {
-  if (m_igmidx < 0)
-    return 1.0;
-  return m_igmCorrectionMeiksin->getCorrection(m_redshift, m_igmidx,
+  return m_igmCorrectionMeiksin->getCorrection(m_redshift, GetIgmIdx(),
                                                x / (1 + m_redshift));
 }
 
 std::tuple<Float64, Float64>
 CLineProfileSYMIGM::getIGMCorrectionAndDerivX0(Float64 x, Float64 x0) const {
-  if (m_igmidx < 0)
-    return std::make_tuple(1.0, 0.0);
 
   Float64 xRest = x / (1 + m_redshift);
   Float64 derivLbdaRest = NAN;
   Float64 corr = NAN;
   std::tie(corr, derivLbdaRest) =
       m_igmCorrectionMeiksin->getCorrectionAndDerivLbdaRest(m_redshift,
-                                                            m_igmidx, xRest);
+                                                            GetIgmIdx(), xRest);
   Float64 derivX0 = -xRest / x0 * derivLbdaRest;
   return std::make_tuple(corr, derivX0);
 }

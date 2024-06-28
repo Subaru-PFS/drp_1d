@@ -38,8 +38,11 @@
 // ============================================================================
 #ifndef _REDSHIFT_COMMON_VECTOROPERATIONS_
 #define _REDSHIFT_COMMON_VECTOROPERATIONS_
-#include "RedshiftLibrary/common/defaults.h"
+
 #include <vector>
+
+#include "RedshiftLibrary/common/defaults.h"
+
 namespace NSEpic {
 
 template <typename T>

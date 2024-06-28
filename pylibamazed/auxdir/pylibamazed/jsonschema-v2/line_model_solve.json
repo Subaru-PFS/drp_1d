@@ -1,0 +1,321 @@
+{
+  "$id": "line-model-solve",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Line model solver",
+  "description": "Parameters for line model solve schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "lineModel": {
+      "required": [
+        "improveBalmerFit",
+        "lineCatalog",
+        "lineTypeFilter",
+        "lineForceFilter",
+        "fittingMethod",
+        "lineWidthType",
+        "velocityEmission",
+        "velocityAbsorption",
+        "velocityFit",
+        "lbdaOffsetFit",
+        "ampOffsetFit",
+        "skipSecondPass",
+        "extremaCount",
+        "extremaCutProbaThreshold",
+        "lineRatioType",
+        "continuumComponent",
+        "strongLinesPrior",
+        "euclidNHaemittersStrength",
+        "pdfCombination",
+        "nSigmaSupport",
+        "haPrior",
+        "extremaCountB",
+        "enablePhotometry",
+        "lya",
+        "firstPass",
+        "secondPassLcFittingMethod",
+        "secondPass",
+        "pdf",
+        "tplRatio"
+      ],
+      "type": "object",
+      "title": "Line model parameters",
+      "properties": {
+        "useLogLambdaSampling": {
+          "type": "boolean",
+          "title": "Wether to use log lambda sampling",
+          "description": "Only valid if jointly set with `continuumFit.fftProcessing=true`. Setting `fftProcessing` to True will loglambda rebin the input spectrum, which is then used to fit the template continuum using fft. We then have the choice to use the initial sampling (`useLogLambdaSampling=false`) or the rebinned one (`useLogLambdaSampling=true`)."
+        },
+        "improveBalmerFit": {
+          "type": "boolean",
+          "title": "Wether to improve Balmer fit",
+          "description": "Used only if `lineRatioType=rules`"
+        },
+        "lineCatalog": {
+          "type": "string",
+          "title": "Line catalog path",
+          "description": "Path to line catalog file"
+        },
+        "lineTypeFilter": {
+          "type": "string",
+          "enum": [
+            "E",
+            "A",
+            "no"
+          ],
+          "title": "Filter on lines type",
+          "description": "Restrictions on the type of line to fit: \n * **E**: Emission \n * **A**: Absorption \n * **no**: fit all"
+        },
+        "lineForceFilter": {
+          "type": "string",
+          "enum": [
+            "W",
+            "S",
+            "no"
+          ],
+          "title": "Filter on lines force",
+          "description": "Restrict the strength category of lines to fit: \n * **W**: Weak \n * **S**: strong \n * **no**: fit all"
+        },
+        "fittingMethod": {
+          "type": "string",
+          "enum": [
+            "individual",
+            "svd",
+            "hybrid",
+            "lbfgsb"
+          ],
+          "title": "Line fitting method",
+          "description": "Line fitting method: \n * **individual**: independant fit of all lines amplitude \n * **svd**: joint fit of all lines amplitude (sparsity not exploited) \n * **hybrid**: svd only for groups of lines sharings pixels (eg. Ha and N2), independant fit for the other lines \n * **lbfgsb**: like hybrid but using non-linear least-square fit instead of svd to fit jointly the 3 Gaussian parameters (amplitude, position and width). Based on l-bfgs-b algorithm (bounded gradient descent). \n Note: if `lineRatioType=tplRatio`, choose \"individual\" (one set of ratio <-> a unique amplitude fitted for all lines)."
+        },
+        "lineWidthType": {
+          "type": "string",
+          "enum": [
+            "combined",
+            "instrumentDriven",
+            "velocityDriven"
+          ],
+          "title": "Line width type",
+          "description": "Selects which component are included in the line width \n * **instrumentDriven**: only instrument resolution (no intrinsic line width due to velocity dispersion) \n * **velocityDriven**: only line velocity dispersion (assuming negligible instrument PSF) \n * **combined**: both instrument resolution and velocity dispersion"
+        },
+        "velocityEmission": {
+          "type": "number",
+          "title": "Emission lines velocity",
+          "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
+        },
+        "velocityAbsorption": {
+          "type": "number",
+          "title": "Absorption lines velocity",
+          "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
+        },
+        "velocityFit": {
+          "type": "boolean",
+          "title": "Wether to fit line width",
+          "discription": "Wether 2nd pass includes line width fitting."
+        },
+        "emVelocityFitMin": {
+          "type": "number",
+          "title": "Emission lines velocity min",
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines"
+        },
+        "emVelocityFitMax": {
+          "type": "number",
+          "title": "Emission lines velocity max",
+          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for emission lines"
+        },
+        "emVelocityFitStep": {
+          "type": "number",
+          "title": "Emission lines velocity step",
+          "description": "Tabulation of velocity for line width fitting in km s-1: step for emission lines"
+        },
+        "absVelocityFitMin": {
+          "type": "number",
+          "title": "Aborption lines velocity min",
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for absorption lines"
+        },
+        "absVelocityFitMax": {
+          "type": "number",
+          "title": "Aborption lines velocity max",
+          "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for absorption lines"
+        },
+        "absVelocityFitStep": {
+          "type": "number",
+          "title": "Aborption lines velocity step",
+          "description": "Tabulation of velocity for line width fitting in km s-1: step for absorption lines"
+        },
+        "lbdaOffsetFit": {
+          "type": "boolean",
+          "title": "Wether to fit wavelength offset",
+          "description": "Wether the 2nd pass includes lines wavelength offset fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+        },
+        "ampOffsetFit": {
+          "type": "boolean",
+          "title": "Wether to fit amplitude offset",
+          "description": "Wether the 2nd pass includes line's polynomial offset in the profile fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+        },
+        "skipSecondPass": {
+          "type": "boolean",
+          "title": "Skip second pass",
+          "description": "Toggle the processing of a second pass refined around the candidates",
+          "default": false
+        },
+        "extremaCount": {
+          "type": "integer",
+          "title": "Extrema count",
+          "description": "Number of candidates to retain"
+        },
+        "extremaCutProbaThreshold": {
+          "type": "number",
+          "title": "Extrema cut probability threshold",
+          "description": "Selects the candidates to refine at the 2nd pass with a log probability (relative to max) upper than this threshold. \n * **-1** means retain a fixed number (set from extremaCount parameter) \n * **any positive value**: retain all candidates with log(max(pdf))-log(pdf) values (not integrated) below this threshold. Moreover, the number of candidates in the output is forced to be less (or equal) than `linemodel.extremaCount`."
+        },
+        "lineRatioType": {
+          "type": "string",
+          "enum": [
+            "tplRatio",
+            "rules",
+            "tplCorr"
+          ],
+          "title": "Line ratio type",
+          "description": "\n * **rules**: fit all lines amplitude independently with eventually some constraints (see rules parameter below) \n * **tplRatio**: fit one amplitude with fixed line ratios coming from template-ratio catalogs \n * **tplcorr**: after a linemodel \"free\", adjusts the best template ratio using the amplitudes vector as data, the global amplitude is the free parameter."
+        },
+        "rules": {
+          "type": "string",
+          "enum": [
+            "all",
+            "no",
+            "strongWeak",
+            "balmerSingle",
+            "ratioRange"
+          ],
+          "title": "Rules",
+          "description": "Selects used rules (only for `lineRatioType=rules`)"
+        },
+        "tplRatioCatalog": {
+          "type": "string",
+          "title": "Path to template ratio",
+          "description": "Path relative to calibration path"
+        },
+        "tplRatioIsmFit": {
+          "type": "boolean",
+          "title": "Wether to activate ISM extinction fit for lines ratio calculation.",
+          "description": "Wether to activate fit of ISM extinction (ie ebv parameter from Calzetti profiles) on calibration lines to estimate lines ratio. Parameter scan from 0 to 0.9, step = 0.1. (best value stored in `FittedTplshapeIsmCoeff` in `lineModelSolve.linemodel_extrema.csv`)."
+        },
+        "continuumComponent": {
+          "type": "string",
+          "enum": [
+            "fromSpectrum",
+            "tplFit",
+            "tplFitAuto",
+            "noContinuum"
+          ],
+          "title": "Continuum processing method",
+          "description": "Selects the method for processing the continuum: \n * **fromSpectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplFit\", but switch to \"fromSpectrum\" if the fitted continuum amplitude is found significantly negative (at all z)"
+        },
+        "continuumReestimation": {
+          "type": "string",
+          "enum": [
+            "no",
+            "onlyextrema",
+            "always"
+          ],
+          "title": "Wether to re estimatate continuum",
+          "description": "\n * **no**: never \n * **onlyextrema**: second pass \n * **always**: both passes. Needs `continuumComponent=fromSpectrum`"
+        },
+        "strongLinesPrior": {
+          "type": "number",
+          "title": "Strong lines prior",
+          "description": "\n * **-1**: no prior \n * **else**: use this value (positive below 1) as a low probability when no strong line is measured (the measured amplitude is s>0) & probability is set to 1 when a strong line is observed"
+        },
+        "euclidNHaemittersStrength": {
+          "type": "number",
+          "title": "Pozetti N(z) prior",
+          "description": "Strength (beta) of the penalty. The chi2 penalty is -2 beta log(P(z)). No penalty for a negative or zero values"
+        },
+        "pdfCombination": {
+          "type": "string",
+          "enum": [
+            "bestChi2",
+            "marg"
+          ],
+          "title": "Pdf combination method",
+          "description": "At each z: \n * **bestchi2**: select the max of the pdfs \n * **marg**: marginalize the pdfs (over templates and all parameters)"
+        },
+        "nSigmaSupport": {
+          "type": "number",
+          "title": "Support size",
+          "description": "Full (not half) size of each line support in sigma of the gaussian profile "
+        },
+        "haPrior": {
+          "type": "number",
+          "title": "Ha prior",
+          "description": "\n * **-1**: no prior \n * **positive below 1**: low multiplicative prior probability (posterior penalization) when Ha line is not measured (the measured amplitude is <=0 or is not the strongest measured line) \n * **else**: prior probability is set to 1 when Ha line is strongest measured line, typical value between 1e-1 to 1e-5"
+        },
+        "extremaCountB": {
+          "type": "integer",
+          "title": "Extrema count B",
+          "description": "Number of extrema retained after the firstPass B: \n * **0**: toggle OFF the firstPass B\n * **>0**: toggle ON the pass B"
+        },
+        "enablePhotometry": {
+          "type": "boolean",
+          "title": "Enable photometry",
+          "description": "Enable the use of photometry data"
+        },
+        "photometry": {
+          "type": "object",
+          "required": [
+            "weight"
+          ],
+          "properties": {
+            "weight": {
+              "type": "number",
+              "title": "Photometry weight",
+              "description": "The weight of photometry in the leastsquare sum relative to spectroscopy (factor to the photometry inverse variance, ie bigger than 1. gives more)"
+            }
+          }
+        },
+        "lya": {
+          "$ref": "lya_fit.json"
+        },
+        "continuumFit": {
+          "$ref": "line_model_continuum_fit.json"
+        },
+        "firstPass": {
+          "$ref": "line_model_first_pass.json"
+        },
+        "secondPassLcFittingMethod": {
+          "type": "string",
+          "enum": [
+            "-1",
+            "svdlc",
+            "svdlcp2",
+            "random",
+            "ones"
+          ],
+          "title": "Second pass continuum fitting method",
+          "description": "During the 2nd pass, after fitting of all the parameters, redo a joint fit of continuum and linemodel amplitudes and eventually a 2nd order polynomial using an SVD on the full observed range (heavy computation). \n * **-1**: skip this step \n * **svdlcp2**: refit continuum, linemodel and 2nd order polynomial \n * **svdlc**: refit only continuum and linemodel (usefull if we don't trust the continuum/linemodel orthogonalization, because it is done on a free linemodel or a mask)"
+        },
+        "secondPass": {
+          "$ref": "line_model_second_pass.json"
+        },
+        "pdf": {
+          "type": "object",
+          "properties": {
+            "margAmpCorr": {
+              "type": "boolean",
+              "title": "Wether to apply analytic marginalization on amplitudes",
+              "description": "Apply the analytic marginalization of the proba on the amplitudes "
+            }
+          }
+        },
+        "tplRatio": {
+          "type": "object",
+          "properties": {
+            "priors": {
+              "$ref": "line_model_priors.json"
+            }
+          }
+        }
+      }
+    }
+  }
+}

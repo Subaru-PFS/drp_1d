@@ -39,8 +39,9 @@
 #ifndef _REDSHIFT_COMMON_MEAN_
 #define _REDSHIFT_COMMON_MEAN_
 
-#include "RedshiftLibrary/common/datatypes.h"
 #include <numeric>
+
+#include "RedshiftLibrary/common/datatypes.h"
 
 using namespace std;
 
@@ -60,7 +61,7 @@ public:
 private:
 };
 
-#include <RedshiftLibrary/common/mean.hpp>
+#include "RedshiftLibrary/common/mean.hpp"
 
 } // namespace NSEpic
 

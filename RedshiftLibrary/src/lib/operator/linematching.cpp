@@ -36,9 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/linematching.h"
-#include "RedshiftLibrary/log/log.h"
 #include <numeric>
+
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/linematching.h"
+
 using namespace NSEpic;
 
 /**
@@ -68,7 +70,7 @@ std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
 
   CLineMatchingResult::TSolutionSetList solutions;
   Int32 const N = restLineList.size();
-  Log.LogDebug("CLineMatching: Lines detected. n=%d", N);
+  Log.LogDebug(Formatter() << "CLineMatching: Lines detected. n=" << N);
 
   for (auto const &[iDetectedLine, DetectedLine] : detectedLineList) {
     for (auto const &[iRestLine, RestLine] : restLineList) {
@@ -94,8 +96,8 @@ std::shared_ptr<CLineMatchingResult> CLineMatching::Compute(
     }
   }
 
-  Log.LogDebug("CLineMatching: non unique solutions found n=%d",
-               solutions.size());
+  Log.LogDebug(Formatter() << "CLineMatching: non unique solutions found n="
+                           << solutions.size());
   const CLineMatchingResult::TSolutionSetList newSolutions =
       refineSolutions(solutions, redshiftRange, nThreshold);
 
@@ -194,8 +196,8 @@ const CLineMatchingResult::TSolutionSetList CLineMatching::refineSolutions(
         redshiftMean < redshiftRange.GetEnd())
       newSolutions.push_back(currentSet);
   }
-  Log.LogDebug("CLineMatching: unique solutions found n=%d",
-               newSolutions.size());
+  Log.LogDebug(Formatter() << "CLineMatching: unique solutions found n="
+                           << newSolutions.size());
   return newSolutions;
 }
 /**

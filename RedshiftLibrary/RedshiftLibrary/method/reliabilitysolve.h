@@ -48,12 +48,9 @@ namespace NSEpic {
 class CReliabilitySolve : public CSolve {
 
 public:
-  CReliabilitySolve(TScopeStack &scope, std::string objectType);
+  CReliabilitySolve();
 
-  std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope);
+  std::shared_ptr<CSolveResult> compute();
 };
 } // namespace NSEpic
 

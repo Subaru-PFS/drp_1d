@@ -56,18 +56,17 @@
 using namespace NSEpic;
 using namespace std;
 
-CTemplateFittingSolve::CTemplateFittingSolve(TScopeStack &scope,
-                                             string objectType)
-    : CObjectSolve("TemplateFittingSolve", scope, objectType) {}
+CTemplateFittingSolve::CTemplateFittingSolve()
+    : CObjectSolve("templateFittingSolve") {}
 
-std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
-    std::shared_ptr<const CInputContext> inputContext,
-    std::shared_ptr<COperatorResultStore> resultStore, TScopeStack &scope) {
+std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
 
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
-      "extremaredshiftseparation"); // todo: deci
+      "extremaRedshiftSeparation"); // todo: deci
 
   bool storeResult = false;
   Float64 overlapThreshold =
@@ -79,25 +78,26 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
   const bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("igmfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("igmFit");
   bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("ismfit");
+      inputContext->GetParameterStore()->GetScoped<bool>("ismFit");
 
   bool fft_processing =
-      inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
+      inputContext->GetParameterStore()->GetScoped<bool>("fftProcessing");
 
   bool use_photometry = false;
   Float64 photometry_weight = NAN;
-  if (inputContext->GetParameterStore()->HasScoped<bool>("enablephotometry")) {
+  if (inputContext->GetParameterStore()->HasScoped<bool>("enablePhotometry")) {
     use_photometry =
-        inputContext->GetParameterStore()->GetScoped<bool>("enablephotometry");
+        inputContext->GetParameterStore()->GetScoped<bool>("enablePhotometry");
     if (use_photometry)
       photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>(
           "photometry.weight");
   }
   if (fft_processing && use_photometry)
-    THROWG(INTERNAL_ERROR, "fftprocessing not "
-                           "implemented with photometry enabled");
+    THROWG(ErrorCode::FFT_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+           "fftProcessing not "
+           "implemented with photometry enabled");
 
   if (fft_processing) {
     m_templateFittingOperator =
@@ -137,49 +137,49 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   } else if (opt_spcComponent == "all") {
     _type = nType_all;
   } else {
-    THROWG(INTERNAL_ERROR, "Unknown spectrum component");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
   }
 
   m_opt_maxCandidate =
-      inputContext->GetParameterStore()->GetScoped<int>("extremacount");
+      inputContext->GetParameterStore()->GetScoped<int>("extremaCount");
   m_opt_pdfcombination =
       inputContext->GetParameterStore()->GetScoped<std::string>(
-          "pdfcombination");
+          "pdfCombination");
 
   Log.LogInfo("Method parameters:");
-  Log.LogInfo("    -overlapThreshold: %.3f", overlapThreshold);
-  Log.LogInfo("    -component: %s", opt_spcComponent.c_str());
-  Log.LogInfo("    -interp: %s", opt_interp.c_str());
-  Log.LogInfo("    -IGM extinction: %s", opt_extinction ? "true" : "false");
-  Log.LogInfo("    -ISM dust-fit: %s", opt_dustFit ? "true" : "false");
-  Log.LogInfo("    -pdfcombination: %s", m_opt_pdfcombination.c_str());
+  Log.LogInfo(Formatter() << "    -overlapThreshold: " << overlapThreshold);
+  Log.LogInfo(Formatter() << "    -component: " << opt_spcComponent);
+  Log.LogInfo(Formatter() << "    -interp: " << opt_interp);
+  Log.LogInfo(Formatter() << "    -IGM extinction: "
+                          << (opt_extinction ? "true" : "false"));
+  Log.LogInfo(Formatter() << "    -ISM dust-fit: "
+                          << (opt_dustFit ? "true" : "false"));
+  Log.LogInfo(Formatter() << "    -pdfcombination: " << m_opt_pdfcombination);
   Log.LogInfo("");
 
-  if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0) {
-    THROWG(BAD_TEMPLATECATALOG, Formatter()
-                                    << "Empty template catalog for category "
-                                    << m_categoryList[0]);
+  if (tplCatalog.GetTemplateCount(m_category) == 0) {
+    THROWG(ErrorCode::BAD_TEMPLATECATALOG,
+           Formatter() << "Empty template catalog for category "
+                       << m_category[0]);
   }
-  Log.LogInfo("Iterating over %d tplCategories", m_categoryList.size());
+  Log.LogInfo(Formatter() << "Iterating over " << m_category.size()
+                          << " tplCategories");
 
-  for (Int32 i = 0; i < m_categoryList.size(); i++) {
-    std::string category = m_categoryList[i];
+  Log.LogInfo(Formatter() << "Trying " << m_category.c_str() << " ("
+                          << tplCatalog.GetTemplateCount(m_category)
+                          << " templates)");
+  for (Int32 j = 0; j < tplCatalog.GetTemplateCount(m_category); j++) {
+    std::shared_ptr<const CTemplate> tpl =
+        tplCatalog.GetTemplate(m_category, j);
 
-    Log.LogInfo("   trying %s (%d templates)", category.c_str(),
-                tplCatalog.GetTemplateCount(category));
-    for (Int32 j = 0; j < tplCatalog.GetTemplateCount(category); j++) {
-      std::shared_ptr<const CTemplate> tpl =
-          tplCatalog.GetTemplate(category, j);
+    Solve(resultStore, tpl, overlapThreshold, maskList, _type, opt_interp,
+          opt_extinction, opt_dustFit);
 
-      Solve(resultStore, tpl, overlapThreshold, maskList, _type, opt_interp,
-            opt_extinction, opt_dustFit);
-
-      storeResult = true;
-    }
+    storeResult = true;
   }
 
   if (!storeResult)
-    THROWG(INTERNAL_ERROR, "no result for any template");
+    THROWG(ErrorCode::INTERNAL_ERROR, "no result for any template");
 
   COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
                      m_opt_maxCandidate, m_redshiftSampling == "log");
@@ -263,7 +263,7 @@ void CTemplateFittingSolve::Solve(
       opt_dustFitting = false;
     } else {
       // unknown type
-      THROWG(INTERNAL_ERROR, "Unknown spectrum component");
+      THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
     }
 
     // Compute merit function
@@ -274,7 +274,8 @@ void CTemplateFittingSolve::Solve(
                                                opt_dustFitting));
 
     if (!templateFittingResult)
-      THROWG(INTERNAL_ERROR, "no results returned by templateFittingOperator");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "no results returned by templateFittingOperator");
 
     // Store results
     resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
@@ -292,9 +293,9 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
     const std::string &scopeStr) const {
   ChisquareArray chisquarearray;
 
-  Log.LogDetail("templatefittingsolve: building chisquare array");
+  Log.LogDetail("templatefittingsolver: building chisquare array");
   Log.LogDetail(Formatter()
-                << "    templatefittingsolve: using results in scope: "
+                << "    templatefittingsolver: using results in scope: "
                 << store->GetScopedName(scopeStr));
 
   TOperatorResultMap meritResults =
@@ -316,31 +317,16 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
     }
     if (chisquarearray.cstLog == -1) {
       chisquarearray.cstLog = meritResult->CstLog;
-      Log.LogInfo("templatefittingsolve: using cstLog = %f",
-                  chisquarearray.cstLog);
+      Log.LogInfo(Formatter() << "templatefittingsolver: using cstLog = "
+                              << chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != meritResult->CstLog) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "cstLog values do not correspond: val1="
-                                 << chisquarearray.cstLog
-                                 << " != val2=" << meritResult->CstLog);
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "cstLog values do not correspond: val1="
+                         << chisquarearray.cstLog
+                         << " != val2=" << meritResult->CstLog);
     }
     if (chisquarearray.redshifts.size() == 0) {
       chisquarearray.redshifts = meritResult->Redshifts;
-    }
-
-    // check chi2 results status for this template
-    {
-      bool foundBadStatus = 0;
-      for (Int32 kz = 0; kz < meritResult->Redshifts.size(); kz++) {
-        if (meritResult->Status[kz] != COperator::nStatus_OK) {
-          foundBadStatus = 1;
-          break;
-        }
-      }
-      if (foundBadStatus) {
-        THROWG(INTERNAL_ERROR, Formatter() << " Bad status result for tpl="
-                                           << (*it).first.c_str());
-      }
     }
 
     CZPrior zpriorhelper;
@@ -360,10 +346,11 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
                   [kz][kism]
                   [kigm]; // + resultXXX->ScaleMargCorrectionTplratios[][]?;
         }
-        Log.LogDetail("    templatefittingsolve: Pdfz combine - prepared merit "
-                      " #%d for model : %s",
-                      chisquarearray.chisquares.size() - 1,
-                      ((*it).first).c_str());
+        Log.LogDetail(
+            Formatter()
+            << "    templatefittingsolver: Pdfz combine - prepared merit #"
+            << chisquarearray.chisquares.size() - 1
+            << " for model : " << ((*it).first));
       }
     }
   }
@@ -379,13 +366,10 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
   Log.LogDetail(
       "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
   Log.LogDetail(Formatter()
-                << "    templatefittingsolve: using results in scope: "
+                << "    templatefittingsolve:r using results in scope: "
                 << store->GetScopedName(scopeStr));
 
-  TOperatorResultMap results =
-      store->GetScopedPerTemplateResult(scopeStr.c_str());
-
-  // bool foundRedshiftAtLeastOnce = false;
+  TOperatorResultMap results = store->GetScopedPerTemplateResult(scopeStr);
 
   Int32 extremumCount = ranked_zCandidates.size();
 
@@ -398,32 +382,17 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     auto TplFitResult =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
     if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::INTERNAL_ERROR,
              Formatter()
                  << "Size do not match among templatefitting results, for tpl="
-                 << r.first.c_str());
+                 << r.first);
     }
-
-    bool foundBadStatus = false;
-    bool foundBadRedshift = false;
     for (Int32 kz = 0; kz < TplFitResult->Redshifts.size(); kz++) {
-      if (TplFitResult->Status[kz] != COperator::nStatus_OK) {
-        foundBadStatus = true;
-        break;
-      }
       if (TplFitResult->Redshifts[kz] != redshifts[kz]) {
-        foundBadRedshift = true;
-        break;
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "redshift vector is not the same for tpl="
+                           << r.first);
       }
-    }
-    if (foundBadStatus) {
-      THROWG(INTERNAL_ERROR, Formatter() << "Found bad status result for tpl="
-                                         << r.first.c_str());
-    }
-    if (foundBadRedshift) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "redshift vector is not the same for tpl="
-                                 << r.first.c_str());
     }
   }
 
@@ -482,7 +451,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;
     std::shared_ptr<const CTemplate> tpl =
-        tplCatalog.GetTemplateByName(m_categoryList, tplName);
+        tplCatalog.GetTemplateByName({m_category}, tplName);
 
     std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
         std::make_shared<CModelSpectrumResult>();
@@ -496,8 +465,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
           spcmodelPtr);
 
       if (spcmodelPtr == nullptr)
-        THROWG(INTERNAL_ERROR, "Could not "
-                               "compute spectrum model");
+        THROWG(ErrorCode::INTERNAL_ERROR, "Could not "
+                                          "compute spectrum model");
       tplCatalog.m_logsampling = currentSampling;
 
       extremaResult->m_modelPhotValues[iExtremum] =

@@ -56,7 +56,7 @@ public:
   void SetLevelMask(Int32 mask);
   Int32 GetLevelMask() const;
 
-  virtual void LogEntry(Int32 lvl, const char *header, const char *msg) = 0;
+  virtual void LogEntry(Int32 logLevel, const std::string &message) = 0;
 
 private:
   Int32 m_LevelMask;

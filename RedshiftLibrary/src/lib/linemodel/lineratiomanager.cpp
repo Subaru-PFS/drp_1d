@@ -52,21 +52,25 @@
 using namespace NSEpic;
 
 CLineRatioManager::CLineRatioManager(
-    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
-    const CCSpectrumVectorPtr &inputSpcs,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
+    const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : m_elementsVector(elementsVector), m_models(models),
       m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
-      m_continuumManager(continuumManager), m_RestLineList(restLineList) {
+      m_continuumManager(continuumManager), m_RestLineList(restLineList),
+      m_spectraIndex(spcIndex) {
 
-  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  if (Context.GetCurrentMethod() == "LineModelSolve") {
-    m_opt_lya_forcefit = ps->GetScoped<bool>("lyaforcefit");
-    m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaforcedisablefit");
+  bool useAsymProfile = ps->GetScoped<std::string>("lya.profile") == "asym";
+  if (Context.GetCurrentMethod() == "lineModelSolve" && useAsymProfile) {
+    m_opt_lya_forcefit =
+        ps->GetScoped<bool>("lya.asymProfile.switchFixedToFit");
+    m_opt_lya_forcedisablefit =
+        ps->GetScoped<bool>("lya.asymProfile.switchFitToFixed");
   }
 }
 
@@ -86,38 +90,47 @@ CLineRatioManager::CLineRatioManager(
 
 void CLineRatioManager::setLyaProfile(Float64 redshift,
                                       const CLineMap &catalog) {
-  auto const indices_Igm = getElementList().getIgmLinesIndices();
-
+  auto const indices_Igm = m_elementsVector->getIgmLinesIndices();
   if (indices_Igm.empty())
     return;
 
-  // assuming only one asymfit/fixed profile
-  auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
-  Int32 line_idx_LyaE = line_indices_LyaE.front();
+  // ASymProfile
+  {
+    // assuming only one asymfit/fixed profile
+    auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
+    Int32 line_idx_LyaE = line_indices_LyaE.front();
 
-  const auto &profile =
-      getElementList()[elt_idx_LyaE]->GetLines()[line_idx_LyaE].GetProfile();
-  if (profile->isAsym())
-    setAsymProfile(elt_idx_LyaE, line_idx_LyaE, redshift, catalog);
+    auto const &param_LyaE = m_elementsVector->getElementParam()[elt_idx_LyaE];
+    auto const &profile = param_LyaE->getLineProfile(line_idx_LyaE);
 
-  for (auto const &[elt_idx_LyaE, line_indices_LyaE] : indices_Igm) {
-    const auto &elt = getElementList()[elt_idx_LyaE];
-    auto line_indices_filtered = line_indices_LyaE;
-    auto end =
-        std::remove_if(line_indices_filtered.begin(),
-                       line_indices_filtered.end(), [&elt](Int32 idx) {
-                         return !elt->GetLines()[idx].GetProfile()->isSymIgm();
-                       });
-    line_indices_filtered.erase(end, line_indices_filtered.end());
-    if (!line_indices_filtered.empty())
-      setSymIgmProfile(elt_idx_LyaE, line_indices_filtered, redshift);
+    if (profile->isAsym())
+      setAsymProfile(elt_idx_LyaE, line_idx_LyaE, redshift, catalog);
+  }
+  // SymIgm Profile
+  {
+    for (auto const &[elt_idx_igm, line_indices_igm] : indices_Igm) {
+      auto const &param_EltIgm =
+          m_elementsVector->getElementParam()[elt_idx_igm];
+
+      // const auto &elt = getElementList()[elt_idx_igm];
+      auto line_indices_filtered = line_indices_igm;
+      auto end = std::remove_if(
+          line_indices_filtered.begin(), line_indices_filtered.end(),
+          [&param_EltIgm](Int32 idx) {
+            return !param_EltIgm->getLineProfile(idx)->isSymIgm();
+          });
+      line_indices_filtered.erase(end, line_indices_filtered.end());
+      if (!line_indices_filtered.empty())
+        setSymIgmProfile(elt_idx_igm, line_indices_filtered, redshift);
+    }
   }
 }
 
 void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
                                        Float64 redshift,
                                        const CLineMap &catalog) {
-  Int32 lineId = getElementList()[idxLyaE]->GetLines()[idxLineLyaE].GetID();
+  auto const &param_LyaE = m_elementsVector->getElementParam()[idxLyaE];
+  Int32 lineId = param_LyaE->m_Lines[idxLineLyaE].GetID();
   auto const &ref_line = catalog.at(lineId);
 
   // finding or setting the correct profile
@@ -134,12 +147,14 @@ void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
   else
     profile = ref_profile->Clone();
 
-  getElementList()[idxLyaE]->SetLineProfile(idxLineLyaE, std::move(profile));
+  param_LyaE->SetLineProfile(idxLineLyaE, std::move(profile));
 }
 
 void CLineRatioManager::setSymIgmProfile(Int32 iElts,
                                          const TInt32List &idxLineIGM,
                                          Float64 redshift) {
+
+  auto const &param_EltIgm = m_elementsVector->getElementParam()[iElts];
 
   bool fixedIGM =
       m_continuumManager->isContinuumComponentTplfitxx() &&
@@ -148,10 +163,10 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
 
   if (fixedIGM) {
     Int32 igmidx = m_continuumManager->getFittedMeiksinIndex();
-    getElementList()[iElts]->SetSymIgmFit(false);
-    getElementList()[iElts]->SetSymIgmParams(TSymIgmParams(igmidx, redshift));
+    param_EltIgm->SetSymIgmFit(false);
+    param_EltIgm->SetSymIgmParams(TSymIgmParams(igmidx, redshift));
   } else {
-    getElementList()[iElts]->SetSymIgmFit(true);
+    param_EltIgm->SetSymIgmFit(true);
   }
 }
 
@@ -179,8 +194,9 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
     m_forceDisableLyaFitting = m_opt_lya_forcedisablefit;
     m_forceLyaFitting = m_opt_lya_forcefit;
     Log.LogDetail(
-        "    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d",
-        m_forceLyaFitting);
+        Formatter()
+        << "    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : "
+        << m_forceLyaFitting);
   }
   if (iPass == 3) {
     m_forceDisableLyaFitting = false;
@@ -192,70 +208,80 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
  *the argument lambdaRange and returns the sum.
  **/
 Float64 CLineRatioManager::getLeastSquareMerit() const {
-  const CSpectrumSpectralAxis &spcSpectralAxis =
-      getSpectrum().GetSpectralAxis();
-  const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
-
-  const CSpectrumFluxAxis &Yspc = getModel().getSpcFluxAxis();
-  const CSpectrumFluxAxis &Ymodel = getModel().GetModelSpectrum().GetFluxAxis();
-
   Float64 fit = 0.0;
-  Float64 diff = 0.0;
 
-  Int32 imin =
-      spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-  Int32 imax = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
-  for (Int32 j = imin; j < imax; j++) {
-    diff = (Yspc[j] - Ymodel[j]);
-    fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
-    //        if ( 1E6 * diff < ErrorNoContinuum[j] )
-    //        {
-    //            Log.LogDebug( "Warning: noise is at least 6 orders greater
-    //            than the residue!" ); Log.LogDebug(
-    //            "CLineModelFitting::getLeastSquareMerit diff = %f", diff );
-    //            Log.LogDebug( "CLineModelFitting::getLeastSquareMerit
-    //            ErrorNoContinuum[%d] = %f", j, ErrorNoContinuum[j] );
-    //        }
+  for (auto &spcIndex : m_spectraIndex) {
+
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        getSpectrum().GetSpectralAxis();
+    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+
+    const CSpectrumFluxAxis &Yspc = getModel().getSpcFluxAxis();
+    const CSpectrumFluxAxis &Ymodel =
+        getModel().GetModelSpectrum().GetFluxAxis();
+
+    Float64 diff = 0.0;
+
+    Int32 imin =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
+    Int32 imax =
+        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
+    for (Int32 j = imin; j < imax; j++) {
+      diff = (Yspc[j] - Ymodel[j]);
+      fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+    }
+    if (std::isnan(fit)) {
+      Log.LogDetail(
+          Formatter()
+          << "CLineModelFitting::getLeastSquareMerit: NaN value found on "
+             "the lambdarange = ("
+          << getLambdaRange().GetBegin() << ", " << getLambdaRange().GetEnd()
+          << ")");
+      Log.LogDetail(
+          Formatter()
+          << "CLineModelFitting::getLeastSquareMerit: NaN value found on "
+             "the true observed spectral axis lambdarange = ("
+          << spcSpectralAxis[imin] << ", " << spcSpectralAxis[imax] << ")");
+      for (Int32 j = imin; j < imax; j++) {
+        if (std::isnan(Yspc[j])) {
+          Log.LogDetail(
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: NaN value found "
+                 "for the observed spectrum at lambda="
+              << spcSpectralAxis[j]);
+          break;
+        }
+        if (std::isnan(Ymodel[j])) {
+          Log.LogDetail(
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: NaN value found "
+                 "for the model at lambda="
+              << spcSpectralAxis[j]);
+          break;
+        }
+
+        if (std::isnan(ErrorNoContinuum[j])) {
+          Log.LogDetail(
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: NaN value found "
+                 "for the sqrt(variance) at lambda="
+              << spcSpectralAxis[j]);
+          break;
+        }
+        if (ErrorNoContinuum[j] == 0.0) {
+          Log.LogDetail(
+              Formatter()
+              << "CLineModelFitting::getLeastSquareMerit: 0 value found "
+                 "for the sqrt(variance) at lambda="
+              << spcSpectralAxis[j]);
+          break;
+        }
+      }
+      THROWG(ErrorCode::INTERNAL_ERROR, "computed fit is NaN");
+    }
   }
-
   fit += m_continuumManager->getFitSum();
 
-  if (std::isnan(fit)) {
-    Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found on "
-                  "the lambdarange = (%f, %f)",
-                  getLambdaRange().GetBegin(), getLambdaRange().GetEnd());
-    Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found on "
-                  "the true observed spectral axis lambdarange = (%f, %f)",
-                  spcSpectralAxis[imin], spcSpectralAxis[imax]);
-    for (Int32 j = imin; j < imax; j++) {
-      if (std::isnan(Yspc[j])) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found "
-                      "for the observed spectrum at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-      if (std::isnan(Ymodel[j])) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found "
-                      "for the model at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-
-      if (std::isnan(ErrorNoContinuum[j])) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: NaN value found "
-                      "for the sqrt(variance) at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-      if (ErrorNoContinuum[j] == 0.0) {
-        Log.LogDetail("CLineModelFitting::getLeastSquareMerit: 0 value found "
-                      "for the sqrt(variance) at lambda=%f",
-                      spcSpectralAxis[j]);
-        break;
-      }
-    }
-    THROWG(INTERNAL_ERROR, "computed fit is NaN");
-  }
   return fit;
 }
 
@@ -267,27 +293,37 @@ void CLineRatioManager::logParameters() {
 }
 
 std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
-    const std::string &lineRatioType, const CLMEltListVectorPtr &elementsVector,
+    const std::string &lineRatioType,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter) {
+    const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
+    const CSpectraGlobalIndex &spcIndex) {
   std::shared_ptr<CLineRatioManager> ret;
-  if (lineRatioType == "tplratio")
+  if (lineRatioType == "tplRatio")
     ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                         continuumManager, restLineList));
-  else if (lineRatioType == "tplcorr")
+                         continuumManager, restLineList, spcIndex));
+  else if (lineRatioType == "tplCorr")
     ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elementsVector, models, inputSpcs, lambdaRanges,
-                        continuumManager, restLineList));
+                        continuumManager, restLineList, spcIndex));
   else if (lineRatioType == "rules")
     ret = std::make_shared<CRulesManager>(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
-                      continuumManager, restLineList));
+                      continuumManager, restLineList, spcIndex));
   else
-    THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
-                              "supported for linemodel.lineRatioType");
+    THROWG(ErrorCode::INVALID_PARAMETER,
+           "Only {tplratio, rules, tpcorr} values are "
+           "supported for linemodel.lineRatioType");
   ret->setFitter(fitter);
+
   return ret;
+}
+
+void CLineRatioManager::refreshAllModels() {
+  for (auto &spcIndex : m_spectraIndex) {
+    getModel().refreshModel();
+  }
 }

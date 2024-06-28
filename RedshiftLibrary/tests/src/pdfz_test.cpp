@@ -36,10 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <regex>
+
+#include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/operator/pdfz.h"
-#include <boost/test/unit_test.hpp>
-#include <regex>
+
 using namespace NSEpic;
 using namespace std;
 
@@ -63,14 +65,16 @@ BOOST_AUTO_TEST_CASE(checkWindowSize_test) {
   window_range = TFloat64Range{0.05, 0.15};
   op_pdfz.checkWindowSize(integration_range, window_range);
   BOOST_CHECK(Flag.getListMessages().size() == 1);
-  BOOST_CHECK(Flag.getListMessages()[0].first == WarningCode::WINDOW_TOO_SMALL);
+  BOOST_CHECK(Flag.getListMessages()[0].first ==
+              WarningCode::PDF_INTEGRATION_WINDOW_TOO_SMALL);
 
   Flag.resetFlag();
   integration_range = TFloat64Range{0.05, 0.15};
   window_range = TFloat64Range{0.1, 0.2};
   op_pdfz.checkWindowSize(integration_range, window_range);
   BOOST_CHECK(Flag.getListMessages().size() == 1);
-  BOOST_CHECK(Flag.getListMessages()[0].first == WarningCode::WINDOW_TOO_SMALL);
+  BOOST_CHECK(Flag.getListMessages()[0].first ==
+              WarningCode::PDF_INTEGRATION_WINDOW_TOO_SMALL);
 
   Flag.resetFlag();
   integration_range = TFloat64Range{0.1, 0.2};

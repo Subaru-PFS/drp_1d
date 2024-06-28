@@ -36,11 +36,20 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import os
 
-module_root_dir = os.path.split(__file__)[0]
+class DictUtils:
 
-rspecifications = os.path.join(module_root_dir, "resources", "results_specifications.csv")
+    @staticmethod
+    def rename_key(dict: dict, old_key: str, new_key: str):
+        # Warning no security for already existing new_key
+        if dict.get(old_key) is not None:
+            dict[new_key] = dict.pop(old_key)
 
-jsonSchemaFilename = os.path.join(module_root_dir, "resources", "general.json")
-jsonSchemaPath = f"file:///{os.path.join(module_root_dir, 'resources')}/"
+    @staticmethod
+    def contains_key(dict: dict, key: str) -> bool:
+        return dict.get(key) is not None
+    
+    @staticmethod
+    def delete(dict: dict, key: str):
+        if DictUtils.contains_key(dict, key):
+            del dict[key]

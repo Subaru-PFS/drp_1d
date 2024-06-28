@@ -37,28 +37,28 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <cmath>
+
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "tests/src/tool/inputContextLight.h"
 
-#include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
-
-#include <cmath>
-
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"galaxy\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"ismfit\" : true, \"igmfit\" : true}}, "
-    "\"star\" : {\"method\" : \"TemplateFittingSolve\", "
-    "\"TemplateFittingSolve\" : {\"ismfit\" : true, \"igmfit\" : true}}, "
+    "{\"galaxy\": {\"redshiftSolver\": {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"ismFit\" : true, \"igmFit\" : true}}}, "
+    "\"star\": {\"redshiftSolver\": {\"method\" : \"templateFittingSolve\", "
+    "\"templateFittingSolve\" : {\"ismFit\" : true, \"igmFit\" : true}}}, "
     "\"templateCatalog\" : {\"continuumRemoval\" : "
     "{ \"medianKernelWidth\" : 40.0, "
     "\"medianEvenReflection\" : false, "
-    "\"method\" : \"IrregularSamplingMedian\"}} }";
+    "\"method\" : \"irregularSamplingMedian\"}}}";
 
 class fixture_TemplateCatalogTest {
 public:
@@ -66,7 +66,7 @@ public:
     igmCorrectionMeiksin->convolveByLSF(LSF,
                                         fixture_MeiskinCorrection().lbdaRange);
   }
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   CTemplateCatalog catalog = fixture_TemplateCatalog().catalog;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
       fixture_CalzettiCorrection().ismCorrectionCalzetti;
@@ -165,8 +165,7 @@ BOOST_AUTO_TEST_CASE(Add) {
 
   // check throw
   category = "";
-  BOOST_CHECK_THROW(catalog.Add(CreateTemplate("T4", category)),
-                    GlobalException);
+  BOOST_CHECK_THROW(catalog.Add(CreateTemplate("T4", category)), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(SetTemplate) {
@@ -388,8 +387,7 @@ BOOST_AUTO_TEST_CASE(Getter_test) {
   std::shared_ptr<const CTemplate> tpl =
       catalog.GetTemplateByName(categories, "T1");
   BOOST_CHECK(tpl->GetCategory() == "galaxy");
-  BOOST_CHECK_THROW(catalog.GetTemplateByName(categories, "T4"),
-                    GlobalException);
+  BOOST_CHECK_THROW(catalog.GetTemplateByName(categories, "T4"), AmzException);
 
   // get all template for actual m_logsampling & m_orthogonal
   TTemplateRefList refList = catalog.GetTemplateList(categories);
@@ -541,7 +539,7 @@ BOOST_AUTO_TEST_CASE(InitContinuumRemoval_test) {
   TTemplateRefList tplList = catalog.GetTemplateList(categories);
   for (auto tpl : tplList) {
     BOOST_CHECK(tpl->GetContinuumEstimationMethod() ==
-                "IrregularSamplingMedian");
+                "irregularSamplingMedian");
     BOOST_CHECK(tpl->GetMedianWinsize() == 40.);
     BOOST_CHECK(tpl->GetMedianEvenReflection() == false);
   }

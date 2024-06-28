@@ -44,15 +44,16 @@
 using namespace NSEpic;
 
 CTplCorrManager::CTplCorrManager(
-    const CLMEltListVectorPtr &elementsVector, const CSpcModelVectorPtr &models,
-    const CCSpectrumVectorPtr &inputSpcs,
+    const std::shared_ptr<CLMEltListVector> &elementsVector,
+    const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
-    const CLineMap &restLineList)
+    const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                       continuumManager, restLineList) {}
+                       continuumManager, restLineList, spcIndex) {}
 
 Float64 CTplCorrManager::computeMerit(Int32 itratio) {
+  m_spectraIndex.reset(); // dummy implementation
 
   getModel().refreshModel();
   TFloat64List Amplitudes;
@@ -68,31 +69,33 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
     if (elt_idx == undefIdx)
       continue;
     auto const &elt_ptr = getElementList()[elt_idx];
-    if (elt_ptr->IsOutsideLambdaRange(elt_line_idx))
+    auto const &elt_param_ptr = elt_ptr->getElementParam();
+    if (elt_ptr->IsOutsideLambdaRangeLine(elt_line_idx))
       continue;
     eIdxList.push_back(std::pair(
         elt_idx, elt_line_idx)); // save elt_idx, line_idx for next loop
     validLinesIndex.push_back(i_lineCatalog);
-    Amplitudes.push_back(elt_ptr->GetFittedAmplitude(elt_line_idx));
+    Amplitudes.push_back(elt_param_ptr->GetFittedAmplitude(elt_line_idx));
     AmplitudesUncertainties.push_back(
-        elt_ptr->GetFittedAmplitudeErrorSigma(elt_line_idx));
+        elt_param_ptr->GetFittedAmplitudeStd(elt_line_idx));
   }
   TFloat64List correctedAmplitudes;
   m_CatalogTplRatio->GetBestFit(validLinesIndex, Amplitudes,
                                 AmplitudesUncertainties, correctedAmplitudes,
-                                m_tplratioBestTplName);
+                                m_savedIdxFitted);
 
   for (Int32 iValidLine = 0; iValidLine != validLinesIndex.size();
        ++iValidLine) {
     auto const [elt_idx, line_idx] = eIdxList[iValidLine];
     auto const &elt_ptr = getElementList()[elt_idx];
+    auto const &elt_param_ptr = elt_ptr->getElementParam();
 
     Float64 const er =
         AmplitudesUncertainties[iValidLine]; // not modifying the fitting error
                                              // for now
-    Float64 const nominalAmp = elt_ptr->GetNominalAmplitude(line_idx);
-    elt_ptr->SetElementAmplitude(correctedAmplitudes[iValidLine] / nominalAmp,
-                                 er);
+    Float64 const nominalAmp = elt_param_ptr->GetNominalAmplitude(line_idx);
+    m_elementsVector->SetElementAmplitude(
+        elt_idx, correctedAmplitudes[iValidLine] / nominalAmp, er);
   }
   getModel().refreshModel();
   return getLeastSquareMerit();

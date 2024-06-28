@@ -49,20 +49,19 @@ namespace NSEpic
 // class CRegulament;
 class CSvdlcFitter : public CAbstractFitter {
 public:
-  CSvdlcFitter(const CLMEltListVectorPtr &elementsVector,
+  CSvdlcFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
                const CCSpectrumVectorPtr &inputSpcs,
                const CTLambdaRangePtrVector &lambdaRanges,
                const CSpcModelVectorPtr &spectrumModels,
                const CLineMap &restLineList,
-               const std::vector<TLineModelElementParam_ptr> &elementParam,
-               const std::shared_ptr<Int32> &curObsPtr,
+               const CSpectraGlobalIndex &spcIndex,
                std::shared_ptr<CContinuumManager> continuumManager,
                Int32 polyOrder = -1, bool enableAmplitudeOffsets = false,
                bool enableLambdaOffsetsFit = false);
 
 private:
   void doFit(Float64 redshift) override;
-  Int32 fitAmplitudesLinesAndContinuumLinSolve(
+  void fitAmplitudesLinesAndContinuumLinSolve(
       const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
       TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
       Float64 redshift);

@@ -39,12 +39,12 @@
 #ifndef _REDSHIFT_PROCESSFLOW_RELIABILITYRESULT_
 #define _REDSHIFT_PROCESSFLOW_RELIABILITYRESULT_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/solveresult.h"
-
 #include <map>
 #include <ostream>
 #include <vector>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/solveresult.h"
 
 namespace NSEpic {
 

@@ -52,15 +52,12 @@ namespace NSEpic {
 class CClassificationSolve : public CSolve {
 
 public:
-  CClassificationSolve(TScopeStack &scope, std::string objectType);
+  CClassificationSolve();
 
 private:
   friend class classificationSolve_test::compute_test;
 
-  std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope) override;
+  std::shared_ptr<CSolveResult> compute() override;
 
   std::string typeLabel = "U";
 };

@@ -36,6 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <string>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/tokenizer.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/line/catalog.h"
@@ -43,15 +52,6 @@
 #include "RedshiftLibrary/operator/linematching.h"
 #include "RedshiftLibrary/operator/linematchingresult.h"
 #include "test-config.h"
-
-#include <boost/lexical_cast.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/tokenizer.hpp>
-
-#include <cmath>
-#include <fstream>
-#include <iostream>
-#include <string>
 
 using namespace NSEpic;
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(LoadLineRatioCatalog) {
   //    BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR
   //    "LineTestCase/linecatalog_OK1.txt" )); BOOST_CHECK_THROW(catalog.Load(
   //    DATA_ROOT_DIR "LineTestCase/linecatalog_NOK1.txt" ),
-  //		      GlobalException);
+  //		      AmzException);
 }
 
 // load a simple EL catalog and test the match with a redshifted version of

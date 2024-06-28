@@ -36,11 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/line/airvacuum.h"
-
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(Edlen1953) {
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
 
   // test Get
-  auto converter_2 = CAirVacuumConverter::Get("Edlen1953");
+  auto converter_2 = CAirVacuumConverter::Get("edlen1953");
   TFloat64List n_2 = converter_2->AirRefractiveIndex(lambda);
   BOOST_CHECK(n == n_2);
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(Edlen1953) {
   BOOST_CHECK(lambdaVac == lambdaVac_2);
 
   // test Throw
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(Edlen1966) {
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(Edlen1966) {
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
 
   // test Get
-  auto converter_2 = CAirVacuumConverter::Get("Edlen1966");
+  auto converter_2 = CAirVacuumConverter::Get("edlen1966");
   TFloat64List n_2 = converter_2->AirRefractiveIndex(lambda);
   BOOST_CHECK(n == n_2);
 
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(Edlen1966) {
   BOOST_CHECK(lambdaVac == lambdaVac_2);
 
   // test Throw
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(PeckReeder1972) {
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(PeckReeder1972) {
   BOOST_CHECK(lambdaVac == lambdaVac_2);
 
   // test Throw
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), AmzException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(Ciddor1996) {
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(Ciddor1996) {
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
 
   // test Get
-  auto converter_2 = CAirVacuumConverter::Get("Ciddor1996");
+  auto converter_2 = CAirVacuumConverter::Get("ciddor1996");
   TFloat64List n_2 = converter_2->AirRefractiveIndex(lambda);
   BOOST_CHECK(n == n_2);
 
@@ -177,8 +177,8 @@ BOOST_AUTO_TEST_CASE(Ciddor1996) {
   BOOST_CHECK(lambdaVac == lambdaVac_2);
 
   // test Throw
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), AmzException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(Morton2000) {
@@ -199,17 +199,17 @@ BOOST_AUTO_TEST_CASE(Morton2000) {
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
 
   // test Throw
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
-  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), AmzException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), AmzException);
 }
 //}
 // BOOST_AUTO_TEST_SUITE(CAirVacuumConverter)
 
 BOOST_AUTO_TEST_CASE(Converter) {
-  BOOST_CHECK_THROW(CAirVacuumConverter::Get(""), GlobalException);
-  BOOST_CHECK_NO_THROW(CAirVacuumConverter::Get("Morton2000"));
+  BOOST_CHECK_THROW(CAirVacuumConverter::Get(""), AmzException);
+  BOOST_CHECK_NO_THROW(CAirVacuumConverter::Get("morton2000"));
 
-  auto converter1 = CAirVacuumConverter::Get("Morton2000");
+  auto converter1 = CAirVacuumConverter::Get("morton2000");
   CAirVacMorton2000 converter2;
 
   TFloat64List n1 = converter1->AirRefractiveIndex(lambda);

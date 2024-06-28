@@ -39,10 +39,10 @@
 #ifndef _REDSHIFT_STATISTICS_DELTAZ_
 #define _REDSHIFT_STATISTICS_DELTAZ_
 
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-
-#include <string>
 
 namespace NSEpic {
 

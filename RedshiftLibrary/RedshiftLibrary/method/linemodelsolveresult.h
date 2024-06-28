@@ -39,13 +39,13 @@
 #ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 #define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 
+#include <memory>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/method/solveresult.h"
-
-#include <memory>
-#include <vector>
 
 namespace NSEpic {
 

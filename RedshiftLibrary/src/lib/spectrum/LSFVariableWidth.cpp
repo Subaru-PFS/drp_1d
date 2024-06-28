@@ -51,7 +51,8 @@ CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(
     : CLSF(GaussianVariableWidth,
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
       m_width(args->width), m_spcAxis(args->lambdas) {
-  IsValid();
+  if (!IsValid())
+    THROWG(ErrorCode::INVALID_LSF, "invalid LSF");
 }
 
 Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
@@ -61,7 +62,8 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
     lambda = getSpectralRange().Clamp(lambda);
 
   if (!checkAvailability(lambda))
-    THROWG(INTERNAL_ERROR, " lambda outside spectralAxis range");
+    THROWG(ErrorCode::INSUFFICIENT_LSF_COVERAGE,
+           " lambda outside spectralAxis range");
 
   Int32 idx = undefIdx;
   TFloat64Index::getClosestLowerIndex(m_spcAxis.GetSamplesVector(), lambda,
@@ -77,11 +79,12 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
 
 bool CLSFGaussianVariableWidth::IsValid() const {
   if (!m_width.size()) {
-    THROWG(BAD_COUNTMATCH, "Width array cannot be null ");
+    THROWG(ErrorCode::BAD_COUNTMATCH, "Width array cannot be null ");
   }
   if (m_spcAxis.GetSamplesCount() != m_width.size()) {
-    THROWG(BAD_COUNTMATCH, "Sizes do not match between Spectral axis "
-                           "and width axis");
+    THROWG(ErrorCode::BAD_COUNTMATCH,
+           "Sizes do not match between Spectral axis "
+           "and width axis");
   }
   for (Float64 w : m_width)
     if (w <= 0.)

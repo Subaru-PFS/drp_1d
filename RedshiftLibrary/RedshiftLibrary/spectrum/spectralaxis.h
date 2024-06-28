@@ -39,11 +39,14 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 #define _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 
+#include <vector>
+
+#include <boost/logic/tribool.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/axis.h"
-#include <boost/logic/tribool.hpp>
-#include <vector>
+
 using namespace boost::logic;
 
 namespace spectralaxis_test { // boost_test_suite
@@ -83,7 +86,10 @@ public:
   CSpectrumSpectralAxis extract(Int32 startIdx, Int32 endIdx) const;
 
   Float64 GetResolution(Float64 atWavelength = -1.0) const;
-  Float64 GetMeanResolution() const;
+  Float64 GetMeanResolution(TInt32Range const &index_range) const;
+  Float64 GetMeanResolution() const {
+    return GetMeanResolution(TInt32Range(0, GetSamplesCount() - 1));
+  };
 
   void ShiftByWaveLength(const CSpectrumSpectralAxis &origin,
                          Float64 wavelengthOffset, EShiftDirection direction);
@@ -96,7 +102,7 @@ public:
   GetIndexesAtWaveLengthRange(const TFloat64Range &waveLengthRange) const;
 
   TLambdaRange GetLambdaRange() const;
-  bool ClampLambdaRange(const TFloat64Range &range,
+  void ClampLambdaRange(const TFloat64Range &range,
                         TFloat64Range &clampedRange) const;
   void GetMask(const TFloat64Range &range, CMask &mask) const;
   Float64

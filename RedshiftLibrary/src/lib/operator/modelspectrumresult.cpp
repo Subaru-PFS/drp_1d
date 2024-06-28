@@ -36,14 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/modelspectrumresult.h"
-
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
 #include <fstream>
 #include <iomanip> // std::setprecision
 #include <string>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
+
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;

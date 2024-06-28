@@ -50,24 +50,24 @@ class TestSpectrumReaderUtils:
 
     def make_parameters_dict(self, **kwargs):
         params_dict = dict()
-        params_dict["LSF"] = dict()
-        params_dict["LSF"]["LSFType"] = kwargs.get("lsf_type", "FROMSPECTRUMDATA")
-        params_dict["airvacuum_method"] = kwargs.get("airvacuum_method", "")
-        params_dict["objects"] = []
-        params_dict["multiobsmethod"] = kwargs.get("multiobsmethod", "")
-        if params_dict["multiobsmethod"] == "full":
-            params_dict["lambdarange"] = kwargs.get("parameters_lambdarange", {"": [0, 10]})
+        params_dict["lsf"] = dict()
+        params_dict["lsf"]["lsfType"] = kwargs.get("lsfType", "fromSpectrumData")
+        params_dict["airVacuumMethod"] = kwargs.get("airVacuumMethod", "")
+        params_dict["spectrumModels"] = []
+        params_dict["multiObsMethod"] = kwargs.get("multiObsMethod", "")
+        if params_dict["multiObsMethod"] == "full":
+            params_dict["lambdaRange"] = kwargs.get("parameters_lambdaRange", {"": [0, 10]})
         else:
-            params_dict["lambdarange"] = kwargs.get("parameters_lambdarange", [0, 10])
+            params_dict["lambdaRange"] = kwargs.get("parameters_lambdaRange", [0, 10])
         if kwargs.get("filters"):
             params_dict["filters"] = kwargs.get("filters")
         if kwargs.get("width"):
-            params_dict["LSF"]["width"] = kwargs.get("width")
+            params_dict["lsf"]["width"] = kwargs.get("width")
         return params_dict
 
     def full_load(self, fsr, **kwargs):
         obs_id = kwargs.get('obs_id', '')
-        if kwargs.get("multiobsmethod") == "full":
+        if kwargs.get("multiObsMethod") == "full":
             wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
             wave_range = wave_ranges[obs_id]
         else:
@@ -79,7 +79,7 @@ class TestSpectrumReaderUtils:
 
     def initialize_fsr_with_data(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)
-        params = Parameters(params_dict, FakeParametersChecker)
+        params = Parameters(params_dict, Checker=FakeParametersChecker)
         cl = CalibrationLibrary(params, tempfile.mkdtemp())
         fsr = FakeSpectrumReader("000", params, cl, "000", "range")
         self.full_load(fsr, **kwargs)
@@ -140,7 +140,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
         )
 
     def load_lsf(self, location, obs_id=""):
-        self.lsf_type = "GaussianConstantWidth"
+        self.lsf_type = "gaussianConstantWidth"
         lsf = np.ndarray((1,), dtype=np.dtype([("width", '<f8')]))
         lsf["width"][0] = 3.0
         self.lsf_data.append(lsf, obs_id)

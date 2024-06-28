@@ -36,6 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <fstream>
+#include <iostream>
+#include <istream>
+
+#include <boost/filesystem.hpp>
+#include <boost/math/special_functions.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
@@ -45,13 +53,6 @@
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 
-#include <boost/filesystem.hpp>
-#include <boost/math/special_functions.hpp>
-#include <fstream>
-#include <iostream>
-#include <istream>
-
-#include <boost/test/unit_test.hpp>
 using namespace NSEpic;
 using namespace std;
 
@@ -71,13 +72,13 @@ BOOST_AUTO_TEST_CASE(GetIndices_test) {
   Float64 redshift_target = 8.0;
   BOOST_CHECK_THROW(deltaz.GetIndices(Redshifts_easy, redshift_target,
                                       half_samples_nb, iz, izmin, izmax),
-                    GlobalException);
+                    AmzException);
 
   // Target included in redshifts range but not defined in
   redshift_target = 4.5;
   BOOST_CHECK_THROW(deltaz.GetIndices(Redshifts_easy, redshift_target,
                                       half_samples_nb, iz, izmin, izmax),
-                    GlobalException);
+                    AmzException);
 
   // Target in redshifts range
   redshift_target = 4.0;
@@ -118,12 +119,12 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   // Compute : c0 <= 0
   merits = {0., 0., 0., 0., 0., 0., 0.};
   BOOST_CHECK_THROW(deltaz.Compute(merits, Redshifts_easy, iz, izmin, izmax),
-                    InternalException);
+                    AmzException);
 
   // Compute3ddl : c2 <= 0;
   BOOST_CHECK_THROW(
       deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax),
-      InternalException);
+      AmzException);
 
   // Compute3ddl : (izmax - izmin +1) < 3
   merits = {1., 1., 1., 5., 1., 1., 1.};
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   izmax = 3;
   BOOST_CHECK_THROW(
       deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax),
-      GlobalException);
+      AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(GetDeltaz_test) {
@@ -145,7 +146,7 @@ BOOST_AUTO_TEST_CASE(GetDeltaz_test) {
 
   // redshifts size = 0
   BOOST_CHECK_THROW(deltaz.GetDeltaz({}, merits, redshift_target),
-                    GlobalException);
+                    AmzException);
 
   // COMPUTE
   dz_ref = 1.;

@@ -38,87 +38,155 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
+from pylibamazed.redshift import WarningCode
 from tests.python.utils import (WarningUtils, check_from_parameter_dict,
+                                make_parameter_dict_at_linemeas_solve_level,
                                 make_parameter_dict_at_object_level)
 
 
 class TestLineMeasSolve:
 
+    class TestLineMeasSolverSection:
+        def test_error_if_stage_but_not_section(self):
+            param_dict = make_parameter_dict_at_object_level(**{"stages": ["lineMeasSolver"]})
+            param_dict["lsf"] = {}
+            with pytest.raises(APIException, match=r"Missing parameter galaxy lineMeasSolver"):
+                check_from_parameter_dict(param_dict)
+
+        def test_warning_if_not_stage_but_section(self, zflag):
+            param_dict = make_parameter_dict_at_object_level(**{"lineMeasSolver": {}})
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
+
+        def test_ok_if_both(self, zflag):
+            param_dict = make_parameter_dict_at_object_level(**{
+                "stages": ["lineMeasSolver"],
+                "lineMeasSolver": {}
+            })
+            param_dict["lsf"] = {}
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
+
     class TestLineRatioType:
 
         def _make_parameter_dict(self, **kwargs):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "LineMeasSolve": {"linemodel": kwargs}
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**{
+                "lineModel": kwargs
             })
             return param_dict
 
         def test_error_if_lineRatioType_is_rules_but_rules_is_absent(self):
             param_dict = self._make_parameter_dict(**{"lineRatioType": "rules"})
-            with pytest.raises(APIException, match=r"Missing parameter LineMeasSolve rules"):
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolve rules"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_lineRatioType_is_rules_and_rules_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"lineRatioType": "rules", "rules": "sth"})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_lineRatioType_is_not_rules_but_rules_is_present(self, zflag):
             param_dict = self._make_parameter_dict(**{"rules": "sth"})
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestFittingMethod:
         def _make_parameter_dict(self, **kwargs):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "LineMeasSolve": {"linemodel": kwargs}
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**{
+                "lineModel": kwargs
             })
             return param_dict
 
         def test_error_if_fittingmethod_is_lbfgsb_but_velocityfit_is_absent(self):
-            param_dict = self._make_parameter_dict(**{"fittingmethod": "lbfgsb"})
-            with pytest.raises(APIException, match=r"Missing parameter LineMeasSolve velocityfit"):
+            param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb"})
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolve velocityFit"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_fittingmethod_is_lbfgsb_and_velocityfit_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{"fittingmethod": "lbfgsb", "velocityfit": False})
+            param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb", "velocityFit": False})
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_fitting_method_is_not_lbfgsb_but_velocityfit_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{"velocityfit": False})
+            param_dict = self._make_parameter_dict(**{"velocityFit": False})
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
 
     class TestVelocityFit:
         def _make_parameter_dict(self, **kwargs):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "LineMeasSolve": {"linemodel": {"fittingmethod": "lbfgsb", **kwargs}}
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**{
+                "lineModel": {"fittingMethod": "lbfgsb", **kwargs}
             })
             return param_dict
 
         def test_error_if_velocityfit_is_true_but_a_velocity_param_is_absent(self):
             param_dict = self._make_parameter_dict(**{
-                "velocityfit": True,
-                "emvelocityfitmin": 1,
+                "velocityFit": True,
+                "emVelocityFitMin": 1,
             })
-            with pytest.raises(APIException, match=r"Missing parameter LineMeasSolve"):
+            with pytest.raises(APIException, match=r"Missing parameter lineMeasSolve"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_velocityfit_is_true_and_all_velocity_params_are_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "velocityfit": True,
-                "emvelocityfitmin": 1,
-                "emvelocityfitmax": 1,
-                "absvelocityfitmin": 1,
-                "absvelocityfitmax": 1,
+                "velocityFit": True,
+                "emVelocityFitMin": 1,
+                "emVelocityFitMax": 1,
+                "absVelocityFitMin": 1,
+                "absVelocityFitMax": 1,
             })
             check_from_parameter_dict(param_dict)
-            assert not WarningUtils.has_any_warning(zflag)
+            assert not WarningUtils.has_any_warning()
 
         def test_warning_if_velocityfit_is_false_but_some_velocity_params_are_present(self, zflag):
             param_dict = self._make_parameter_dict(**{
-                "velocityfit": False,
-                "emvelocityfitmin": 1,
+                "velocityFit": False,
+                "emVelocityFitMin": 1,
             })
             check_from_parameter_dict(param_dict)
-            assert WarningUtils.has_any_warning(zflag)
+            assert WarningUtils.has_any_warning()
+
+    class TestLyaFit:
+        def _make_parameter_dict(self, **kwargs) -> dict:
+            kwargs["method"] = "lineModelSolve"
+            param_dict = make_parameter_dict_at_linemeas_solve_level(**kwargs)
+            return param_dict
+
+        def test_error_if_lya_profile_is_asym_but_asym_section_absent(self):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {"profile": "asym"}}
+            })
+            with pytest.raises(
+                APIException,
+                match=r"Missing parameter lineMeasSolve linemodel lya asymProfile section"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        def test_warning_if_lya_profile_is_not_asym_but_asym_section_present(self, zflag):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {
+                    "profile": "igm",
+                    "asymProfile": {}
+                }}
+            })
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_any_warning()
+
+        def test_ok_if_lya_profile_is_asym_and_asym_section_present(self, zflag):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {
+                    "profile": "asym",
+                    "asymProfile": {}
+                }}
+            })
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        def test_ok_if_lya_profile_is_not_asym_and_asym_section_absent(self, zflag):
+            param_dict = self._make_parameter_dict(**{
+                "lineModel": {"lya": {
+                    "profile": "igm"
+                }}
+            })
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()

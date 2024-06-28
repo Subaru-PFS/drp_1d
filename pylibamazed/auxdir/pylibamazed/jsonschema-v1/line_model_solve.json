@@ -14,8 +14,6 @@
       "title": "Line model parameters",
       "additionalProperties": false,
       "required": [
-        "useloglambdasampling",
-        "igmfit",
         "improveBalmerFit",
         "linecatalog",
         "linetypefilter",
@@ -27,8 +25,6 @@
         "velocityfit",
         "lbdaoffsetfit",
         "ampoffsetfit",
-        "lyaforcefit",
-        "lyaforcedisablefit",
         "skipsecondpass",
         "extremacount",
         "extremacutprobathreshold",
@@ -41,7 +37,7 @@
         "haprior",
         "extremacountB",
         "enablephotometry",
-        "lyafit",
+        "lya",
         "firstpass",
         "secondpasslcfittingmethod",
         "secondpass",
@@ -53,11 +49,6 @@
           "type": "boolean",
           "title": "Wether to use log lambda sampling",
           "description": "Only valid if jointly set with `continuumfit.fftprocessing=true`. Setting `fftprocessing` to True will loglambda rebin the input spectrum, which is then used to fit the template continuum using fft. We then have the choice to use the initial sampling (`useloglambdasampling=false`) or the rebinned one (`useloglambdasampling=true`)."
-        },
-        "igmfit": {
-          "type": "boolean",
-          "title": "Wether to apply IGM",
-          "description": "Wether to apply IGM on lines with wavelength lower or equal to Lyalpha"
         },
         "improveBalmerFit": {
           "type": "boolean",
@@ -166,16 +157,6 @@
           "type": "boolean",
           "title": "Wether to fit amplitude offset",
           "description": "Wether the 2nd pass includes line's polynomial offset in the profile fitting. Relevant only for `fittingmethod=svd`, `hybrid` or `lbfgsb`"
-        },
-        "lyaforcefit": {
-          "type": "boolean",
-          "title": "Force Lya fit",
-          "description": "For `ASYMFIXED` profiles only: \n * **true**: fit Lya shape (alpha, width & offset) and forget values from template-ratio catalog \n * **false**: use Lya shape values from template-ratio catalog."
-        },
-        "lyaforcedisablefit": {
-          "type": "boolean",
-          "title": "Force lya fit disabling",
-          "description": "For ASYMFIT profiles only: \n * **true**: set hard coded values for Lya shape (alpha=2.0, width=2.0, offset=?) \n * **false**: fit or use template-ratio values depending on lyaforcefit parameter."
         },
         "skipsecondpass": {
           "type": "boolean",
@@ -298,8 +279,8 @@
             }
           }
         },
-        "lyafit": {
-          "$ref": "line_model_lya_fit.json"
+        "lya": {
+          "$ref": "lya_fit.json"
         },
         "continuumfit": {
           "$ref": "line_model_continuum_fit.json"

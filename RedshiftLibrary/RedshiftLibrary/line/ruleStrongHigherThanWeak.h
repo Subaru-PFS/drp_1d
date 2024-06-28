@@ -39,10 +39,11 @@
 #ifndef _REDSHIFT_LINE_RULESTRONGHIGHERTHANWEAK_
 #define _REDSHIFT_LINE_RULESTRONGHIGHERTHANWEAK_
 
+#include <boost/format.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/rule.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
-#include <boost/format.hpp>
 
 class RuleStrongHigherThanWeak_fixture;
 
@@ -56,23 +57,25 @@ class CRuleStrongHigherThanWeak : public CRule {
 public:
   CRuleStrongHigherThanWeak();
 
-  bool Check(CLineModelElementList &LineModelElementList);
+  bool Check(CLMEltListVector &LineModelElementList);
   void SetUp(bool EnabledArgument, ...);
 
 private:
   friend class ::RuleStrongHigherThanWeak_fixture;
   CLine::EType m_LineType;
-  void Correct(CLineModelElementList &LineModelElementList);
+  void Correct(CLMEltListVector &LineModelElementList);
   Float64 FindHighestStrongLineAmp(Int32 linetype, Float64 &er,
                                    std::string &name,
-                                   CLineModelElementList &LineModelElementList);
+                                   CLMEltListVector &LineModelElementList);
   std::pair<Int32, Int32>
-  FindLowestStrongLineIndex(const CLineModelElementList &LineModelElementList);
+  FindLowestStrongLineIndex(const CLMEltListVector &LineModelElementList);
   void constructLogMsg(const std::string &nameWeak,
                        const std::string &strongName, Float64 ampB,
                        Float64 maxB);
   Float64 maxAmplitude(Float64 ampStrong, Float64 erStrong);
-  void correctLineModelElement(CLineModelElement &element, Float64 maxAmplitude,
+  void correctLineModelElement(CLineModelElement &element,
+                               const TLineModelElementParam_ptr &elt_param_ptr,
+                               Float64 maxAmplitude,
                                const std::string &nameStrong);
 };
 } // namespace NSEpic

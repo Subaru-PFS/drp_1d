@@ -39,9 +39,10 @@
 #ifndef _REDSHIFT_STATISTICS_PRIORHELPER_
 #define _REDSHIFT_STATISTICS_PRIORHELPER_
 
+#include <boost/filesystem.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-#include <boost/filesystem.hpp>
 
 namespace bfs = boost::filesystem;
 namespace NSEpic {

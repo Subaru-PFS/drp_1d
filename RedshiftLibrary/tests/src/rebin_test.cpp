@@ -36,6 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
@@ -50,7 +52,6 @@
 #include "RedshiftLibrary/spectrum/rebin/rebinSpline.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
@@ -65,20 +66,20 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("lin"));
   BOOST_CHECK(rebin->getType() == "lin");
   BOOST_CHECK_NO_THROW(rebin =
-                           std::move(*rebin).convert("precomputedfinegrid"));
-  BOOST_CHECK(rebin->getType() == "precomputedfinegrid");
+                           std::move(*rebin).convert("preComputedFineGrid"));
+  BOOST_CHECK(rebin->getType() == "preComputedFineGrid");
   BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("spline"));
   BOOST_CHECK(rebin->getType() == "spline");
   BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("ngp"));
   BOOST_CHECK(rebin->getType() == "ngp");
-  BOOST_CHECK_THROW(std::move(*rebin).convert("linn"), GlobalException);
+  BOOST_CHECK_THROW(std::move(*rebin).convert("linn"), AmzException);
 
   // test create
   BOOST_CHECK_NO_THROW(CRebin::create("lin", spc));
-  BOOST_CHECK_NO_THROW(CRebin::create("precomputedfinegrid", spc));
+  BOOST_CHECK_NO_THROW(CRebin::create("preComputedFineGrid", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("spline", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("ngp", spc));
-  BOOST_CHECK_THROW(CRebin::create("linn", spc), GlobalException);
+  BOOST_CHECK_THROW(CRebin::create("linn", spc), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(rebinLinear_test) {
@@ -98,7 +99,7 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   TFloat64Range range2(9., 11.);
   BOOST_CHECK_THROW(rebin->compute(range2, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 
   // interp = "lin" et errorRebinMethod = "rebin
   rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
@@ -178,13 +179,13 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
                                            1215, 1215.5, 1216, 1216.5, 1217,
                                            1217.5, 1218, 1219});
   CMask rebinedMask;
-  std::string interp = "precomputedfinegrid";
+  std::string interp = "preComputedFineGrid";
   std::string errorRebinMethod = "no";
 
-  // interp = "precomputedfinegrid" et errorRebinMethod = "no"
+  // interp = "preComputedFineGrid" et errorRebinMethod = "no"
   std::unique_ptr<CRebinFineGrid> rebin =
       std::unique_ptr<CRebinFineGrid>(new CRebinFineGrid(spcLight));
-  spcLight.setRebinInterpMethod("precomputedfinegrid");
+  spcLight.setRebinInterpMethod("preComputedFineGrid");
   rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum, rebinedMask,
                  errorRebinMethod);
   TFloat64List rebinedFlux =
@@ -200,17 +201,17 @@ BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
     BOOST_CHECK(rebinedMask[i] == 1);
   }
 
-  // interp = "precomputedfinegrid" et errorRebinMethod != "no"
+  // interp = "preComputedFineGrid" et errorRebinMethod != "no"
   errorRebinMethod = "rebin";
   BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 
   // check throw : bad RebinFineGrid
   rebin->m_pfgFlux = {};
   BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 
   // RebinFinegrid
   rebin->rebinFineGrid();
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(rebinSpline_test) {
   errorRebinMethod = "rebin";
   BOOST_CHECK_THROW(rebin->compute(range1, tgtSpectralAxis_1, rebinedSpectrum,
                                    rebinedMask, errorRebinMethod),
-                    GlobalException);
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(rebinNgp_test) {

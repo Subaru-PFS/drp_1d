@@ -38,13 +38,14 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.ParametersAccessor import ParametersAccessor
-
 
 class FakeParametersChecker:
 
-    def __init__(self, accessor: ParametersAccessor):
-        self.accessor = accessor
+    def __init__(self, parameters):
+        pass
 
-    def check(self):
+    def json_schema_check(self, version):
+        pass
+
+    def custom_check(self):
         pass

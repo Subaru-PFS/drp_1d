@@ -36,16 +36,17 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4680, 4712 ],"
+    "{\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -53,44 +54,46 @@ const std::string jsonString =
     "\"medianKernelWidth\" : 75,"
     "\"medianEvenReflection\" : true}},"
     "\"continuumRemoval\" : {"
-    "\"method\" : \"IrregularSamplingMedian\","
+    "\"method\" : \"irregularSamplingMedian\","
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", "
     "\"resolution\" : "
     "4300},"
-    "\"objects\" : [\"galaxy\"],"
-    "\"autocorrectinput\" : false,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
     "\"galaxy\" : {"
-    "\"redshiftsampling\" : \"log\","
+    "\"redshiftSampling\" : \"log\","
     "\"method\" : null ,"
-    "\"linemeas_method\" : \"LineMeasSolve\","
-    "\"linemeas_dzhalf\" : 0.0,"
-    "\"linemeas_redshiftstep\" : 0.0001,"
+    "\"linemeas_method\" : \"lineMeasSolve\","
+    "\"lineMeasDzHalf\" : 0.0,"
+    "\"lineMeasRedshiftStep\" : 0.0001,"
     "\"redshiftref\" : 0.25969245809934272,"
-    "\"LineMeasSolve\" : {"
-    "\"linemodel\" : {"
-    "\"velocityemission\" : 30.0,"
-    "\"velocityabsorption\" : 150.0,"
-    "\"continuumcomponent\" : \"nocontinuum\","
-    "\"linetypefilter\" : \"E\","
-    "\"lineforcefilter\" : \"no\","
-    "\"nsigmasupport\" : 8,"
-    "\"linewidthtype\" : \"combined\","
-    "\"fittingmethod\" : \"hybrid\","
-    "\"polynomialdegree\" : 2,"
-    "\"velocityfit\" : false,"
-    "\"ampoffsetfit\": \"true\","
-    "\"lbdaoffsetfit\": \"true\","
+    "\"lineMeasSolver\" : {"
+    "\"lineMeasSolve\" : {"
+    "\"lineModel\" : {"
+    "\"lya\": {\"profile\": \"igm\"},"
+    "\"velocityEmission\" : 30.0,"
+    "\"velocityAbsorption\" : 150.0,"
+    "\"continuumComponent\" : \"noContinuum\","
+    "\"lineTypeFilter\" : \"E\","
+    "\"lineForceFilter\" : \"no\","
+    "\"nSigmaSupport\" : 8,"
+    "\"lineWidthType\" : \"combined\","
+    "\"fittingMethod\" : \"hybrid\","
+    "\"polynomialDegree\" : 2,"
+    "\"velocityFit\" : false,"
+    "\"ampOffsetFit\": \"true\","
+    "\"lbdaOffsetFit\": \"true\","
     "\"lineRatioType\" : \"rules\","
     "\"rules\" : \"no\","
     "\"improveBalmerFit\" : true,"
-    "\"lyaforcedisablefit\" : false "
-    "}}}}";
+    "\"lyaForceDisableFit\" : false "
+    "}}}}}";
 
 const std::string jsonString_lbfgsb =
-    "{\"lambdarange\" : [ 4680, 4712 ],"
+    "{\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -98,45 +101,47 @@ const std::string jsonString_lbfgsb =
     "\"medianKernelWidth\" : 75,"
     "\"medianEvenReflection\" : true}},"
     "\"continuumRemoval\" : {"
-    "\"method\" : \"IrregularSamplingMedian\","
+    "\"method\" : \"irregularSamplingMedian\","
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", "
     "\"resolution\" : "
     "4300},"
-    "\"objects\" : [\"galaxy\"],"
-    "\"autocorrectinput\" : false,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
     "\"galaxy\" : {"
-    "\"redshiftsampling\" : \"log\","
+    "\"redshiftSampling\" : \"log\","
     "\"method\" : null ,"
-    "\"linemeas_method\" : \"LineMeasSolve\","
-    "\"linemeas_dzhalf\" : 0.0,"
-    "\"linemeas_redshiftstep\" : 0.0001,"
+    "\"linemeas_method\" : \"lineMeasSolve\","
+    "\"lineMeasDzHalf\" : 0.0,"
+    "\"lineMeasRedshiftStep\" : 0.0001,"
     "\"redshiftref\" : 0.25969245809934272,"
-    "\"LineMeasSolve\" : {"
-    "\"linemodel\" : {"
-    "\"velocityemission\" : 30.0,"
-    "\"velocityabsorption\" : 150.0,"
-    "\"continuumcomponent\" : \"nocontinuum\","
-    "\"linetypefilter\" : \"E\","
-    "\"lineforcefilter\" : \"no\","
-    "\"nsigmasupport\" : 14,"
-    "\"linewidthtype\" : \"combined\","
-    "\"fittingmethod\" : \"lbfgsb\","
-    "\"polynomialdegree\" : 2,"
-    "\"velocityfit\" : true,"
-    "\"ampoffsetfit\": \"true\","
-    "\"lbdaoffsetfit\": \"true\","
-    "\"emvelocityfitmin\" : 10,"
-    "\"emvelocityfitmax\" : 400,"
-    "\"absvelocityfitmin\" : 150,"
-    "\"absvelocityfitmax\" : 500,"
+    "\"lineMeasSolver\" : {"
+    "\"lineMeasSolve\" : {"
+    "\"lineModel\" : {"
+    "\"lya\": {\"profile\": \"igm\"},"
+    "\"velocityEmission\" : 30.0,"
+    "\"velocityAbsorption\" : 150.0,"
+    "\"continuumComponent\" : \"noContinuum\","
+    "\"lineTypeFilter\" : \"E\","
+    "\"lineForceFilter\" : \"no\","
+    "\"nSigmaSupport\" : 14,"
+    "\"lineWidthType\" : \"combined\","
+    "\"fittingMethod\" : \"lbfgsb\","
+    "\"polynomialDegree\" : 2,"
+    "\"velocityFit\" : true,"
+    "\"ampOffsetFit\": \"true\","
+    "\"lbdaOffsetFit\": \"true\","
+    "\"emVelocityFitMin\" : 10,"
+    "\"emVelocityFitMax\" : 400,"
+    "\"absVelocityFitMin\" : 150,"
+    "\"absVelocityFitMax\" : 500,"
     "\"lineRatioType\" : \"rules\","
     "\"rules\" : \"no\","
     "\"improveBalmerFit\" : true,"
-    "\"lyaforcedisablefit\" : false "
-    "}}}}";
+    "\"lyaForceDisableFit\" : false "
+    "}}}}}";
 
 class fixture_LinemeasSolveTest {
 public:
@@ -144,6 +149,7 @@ public:
 
   fixture_LinemeasSolveTest() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -151,12 +157,12 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "LineMeasSolve", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineMeasSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -188,6 +194,7 @@ public:
 
   fixture_LinemeasSolveLbfgsbTest() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString_lbfgsb);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -195,12 +202,12 @@ public:
     spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-    ctx.setLineCatalog("galaxy", "LineMeasSolve", lineCatalog);
+    ctx.setLineCatalog("galaxy", "lineMeasSolve", lineCatalog);
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
 
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -229,16 +236,21 @@ public:
 BOOST_AUTO_TEST_SUITE(linemeasSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
-  CLineMeasSolve lineMeasSolve(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "lineMeasSolver",
+                             ScopeType::STAGE);
+  CLineMeasSolve lineMeasSolve;
+  BOOST_REQUIRE_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "LineMeasSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver",
+                                               "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "LineMeasSolve",
-                                                     "linemeas");
+      Context.GetResultStore()->GetLineModelSolution(
+          "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII;
   BOOST_CHECK_CLOSE(snrOII, 16.196486940733053, 1e-6);
@@ -251,17 +263,21 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
 
 #ifdef LBFGSBFITTER
 BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
-
-  CLineMeasSolve lineMeasSolve(Context.m_ScopeStack, "galaxy");
-  BOOST_CHECK_NO_THROW(lineMeasSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "lineMeasSolver",
+                             ScopeType::STAGE);
+  CLineMeasSolve lineMeasSolve;
+  BOOST_REQUIRE_NO_THROW(lineMeasSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("galaxy", "LineMeasSolve");
+      Context.GetResultStore()->GetSolveResult("galaxy", "lineMeasSolver",
+                                               "lineMeasSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CLineMeasSolveResult");
 
   std::shared_ptr<const CLineModelSolution> res =
-      Context.GetResultStore()->GetLineModelSolution("galaxy", "LineMeasSolve",
-                                                     "linemeas");
+      Context.GetResultStore()->GetLineModelSolution(
+          "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII_DI;
   BOOST_CHECK_CLOSE(snrOII, 21.480993641608535, 1e-2);

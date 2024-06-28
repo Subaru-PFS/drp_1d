@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include <cmath>
+
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/line/airvacuum.h"
-
-#include <cmath>
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -149,9 +149,9 @@ void CSpectrumSpectralAxis::ShiftByWaveLength(
     const CSpectrumSpectralAxis &origin, Float64 wavelengthOffset,
     EShiftDirection direction) {
   if (wavelengthOffset < 0.)
-    THROWG(INTERNAL_ERROR, "wavelengthOffset can not be negative");
+    THROWG(ErrorCode::INTERNAL_ERROR, "wavelengthOffset can not be negative");
   if (!(direction == nShiftForward || direction == nShiftBackward))
-    THROWG(INTERNAL_ERROR, "Unknown shift direction");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown shift direction");
 
   *this = origin;
   if (wavelengthOffset == 0.0)
@@ -198,17 +198,14 @@ Float64 CSpectrumSpectralAxis::GetResolution(Float64 atWavelength) const {
   return 0.0;
 }
 
-/**
- *
- */
-Float64 CSpectrumSpectralAxis::GetMeanResolution() const {
-  if (GetSamplesCount() < 2)
+Float64
+CSpectrumSpectralAxis::GetMeanResolution(TInt32Range const &index_range) const {
+  if (index_range.GetLength() < 1)
     return 0.0;
 
   Float64 resolution = 0.0;
   Int32 nsum = 0;
-  Int32 nSamples = m_Samples.size() - 1;
-  for (Int32 i = 0; i < nSamples; i++) {
+  for (Int32 i = index_range.GetBegin(); i < index_range.GetEnd(); ++i) {
     resolution += (m_Samples[i + 1] - m_Samples[i]);
     nsum++;
   }
@@ -280,14 +277,18 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapFraction(
 /**
  *
  */
-bool CSpectrumSpectralAxis::ClampLambdaRange(
+void CSpectrumSpectralAxis::ClampLambdaRange(
     const TFloat64Range &range, TFloat64Range &clampedRange) const {
   TFloat64Range effectiveRange = GetLambdaRange();
 
   clampedRange = TFloat64Range();
 
-  if (range.GetIsEmpty() || effectiveRange.GetIsEmpty())
-    return false;
+  if (range.GetIsEmpty())
+    THROWG(ErrorCode::INVALID_WAVELENGTH_RANGE, "lambda range is empty");
+
+  if (effectiveRange.GetIsEmpty())
+    THROWG(ErrorCode::INVALID_SPECTRUM_WAVELENGTH,
+           "spectral axis has less than 2 samples");
 
   // Clamp lambda start
   Float64 start = range.GetBegin();
@@ -300,7 +301,10 @@ bool CSpectrumSpectralAxis::ClampLambdaRange(
     end = effectiveRange.GetEnd();
 
   clampedRange = TFloat64Range(start, end);
-  return true;
+
+  if (clampedRange.GetLength() <= 0.0)
+    THROWG(ErrorCode::INVALID_WAVELENGTH_RANGE,
+           "lambda range clamped to spectral axis is empty");
 }
 
 /**
@@ -368,9 +372,10 @@ bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const {
   m_regularLogSamplingStep =
       log(m_Samples.back() / m_Samples.front()) / (GetSamplesCount() - 1);
   m_isLogSampled = true;
-  Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs "
-                "Relative Error (log lbda step)= %f",
-                maxAbsRelativeError);
+  Log.LogDetail(Formatter()
+                << "   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs "
+                   "Relative Error (log lbda step)= "
+                << maxAbsRelativeError);
 
   return true;
 }
@@ -403,7 +408,7 @@ bool CSpectrumSpectralAxis::IsLogSampled() const {
 
 Float64 CSpectrumSpectralAxis::GetlogGridStep() const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, " axis is not logsampled");
+    THROWG(ErrorCode::INTERNAL_ERROR, " axis is not logsampled");
   }
 
   return m_regularLogSamplingStep;
@@ -417,7 +422,7 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const {
 TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(
     Int32 ssratio, TFloat64Range const &lambdarange) const {
   Int32 imin = -1, imax = m_Samples.size();
-  lambdarange.getClosedIntervalIndices(m_Samples, imin, imax, false);
+  lambdarange.getClosedIntervalIndices(m_Samples, imin, imax);
   return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));
 }
 
@@ -426,12 +431,12 @@ TFloat64List
 CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
                                           const TInt32Range &ilbda) const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, "Cannot subsample spectrum");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot subsample spectrum");
   }
   if (ilbda.GetBegin() < 0)
-    THROWG(INTERNAL_ERROR, "range's lower bound < 0");
+    THROWG(ErrorCode::INTERNAL_ERROR, "range's lower bound < 0");
   if (ilbda.GetEnd() > m_Samples.size() - 1)
-    THROWG(INTERNAL_ERROR, "range's upper bound > samples size");
+    THROWG(ErrorCode::INTERNAL_ERROR, "range's upper bound > samples size");
 
   Int32 s = GetSamplesCount();
   if (ssratio == 1)
@@ -457,7 +462,7 @@ CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
 Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep,
                                                         Float64 &modulo) const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR,
+    THROWG(ErrorCode::INTERNAL_ERROR,
            "axis is not logsampled, thus cannot get integer ratio");
   }
 
@@ -468,7 +473,7 @@ Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep,
 
 void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, "axis is not logsampled");
+    THROWG(ErrorCode::INTERNAL_ERROR, "axis is not logsampled");
   }
   TFloat64Range lrange = GetLambdaRange();
   TFloat64List new_Samples =
@@ -479,7 +484,8 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
   const Int32 nm1 = m_Samples.size() - 1;
   bs = min(100, nm1 / 10);
   if (bs < 30) {
-    THROWG(INTERNAL_ERROR, "not enough points to recompute logLambda");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "not enough points to recompute logLambda");
   }
 
   Float64 bias_start = 0., bias_end = 0.;

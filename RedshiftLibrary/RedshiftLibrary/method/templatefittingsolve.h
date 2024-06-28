@@ -64,13 +64,10 @@ public:
     nType_all = 4,
   };
 
-  CTemplateFittingSolve(TScopeStack &scope, std::string objectType);
+  CTemplateFittingSolve();
 
 private:
-  std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope) override;
+  std::shared_ptr<CSolveResult> compute() override;
 
   void Solve(std::shared_ptr<COperatorResultStore> resultStore,
              const std::shared_ptr<const CTemplate> &tpl,

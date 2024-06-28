@@ -56,8 +56,8 @@ void CRebin::compute(const TFloat64Range &range,
   // find start/end indexs for both axes
   if (spectralAxis[0] > range.GetBegin() ||
       spectralAxis[spectralAxis.GetSamplesCount() - 1] < range.GetEnd()) {
-    THROWG(INTERNAL_ERROR, "input spectral range is not "
-                           "included in spectral axis");
+    THROWG(ErrorCode::INTERNAL_ERROR, "input spectral range is not "
+                                      "included in spectral axis");
   }
 
   CSpectrumFluxAxis rebinedFluxAxis =
@@ -115,30 +115,30 @@ Float64 CRebin::computeXStepCompensation(
 std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
   if (opt_interp == "lin")
     return std::unique_ptr<CRebin>(new CRebinLinear(std::move(*this)));
-  if (opt_interp == "precomputedfinegrid")
+  if (opt_interp == "preComputedFineGrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(std::move(*this)));
   if (opt_interp == "spline")
     return std::unique_ptr<CRebin>(new CRebinSpline(std::move(*this)));
   if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(std::move(*this)));
 
-  THROWG(INVALID_PARAMETER,
+  THROWG(ErrorCode::INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolve.interpolation");
+         "supported for TemplateFittingSolver.interpolation");
 }
 
 std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
                                        const CSpectrum &spectrum) {
   if (opt_interp == "lin")
     return std::unique_ptr<CRebin>(new CRebinLinear(spectrum));
-  if (opt_interp == "precomputedfinegrid")
+  if (opt_interp == "preComputedFineGrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(spectrum));
   if (opt_interp == "spline")
     return std::unique_ptr<CRebin>(new CRebinSpline(spectrum));
   if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(spectrum));
 
-  THROWG(INVALID_PARAMETER,
+  THROWG(ErrorCode::INVALID_PARAMETER,
          "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolve.interpolation");
+         "supported for TemplateFittingSolver.interpolation");
 }

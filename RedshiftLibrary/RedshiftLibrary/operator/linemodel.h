@@ -92,9 +92,7 @@ public:
 
   std::shared_ptr<const LineModelExtremaResult> buildFirstPassExtremaResults();
   std::shared_ptr<LineModelExtremaResult>
-  buildExtremaResults(const CSpectrum &spectrum,
-                      const TFloat64Range &lambdaRange,
-                      const TCandidateZbyRank &zCandidates,
+  buildExtremaResults(const TCandidateZbyRank &zCandidates,
                       const std::string &opt_continuumreest = "no");
 
   const bool m_enableWidthFitByGroups = false;
@@ -103,7 +101,7 @@ public:
 
   Int32 m_maxModelSaveCount = 20;
   Float64 m_secondPass_halfwindowsize; // = 0.005;
-  TStringList m_tplCategoryList;
+  std::string m_tplCategory;
 
   bool m_opt_tplfit_fftprocessing =
       false; // we cant set it as the default since not taken into account when
@@ -122,7 +120,7 @@ public:
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
 
-  Int32 m_continnuum_fit_option = 0; // default to "retryall" templates
+  Int32 m_continnuum_fit_option = 0; // default to "retryAll" templates
   // candidates
   CLineModelPassExtremaResult m_firstpass_extremaResult;
 
@@ -171,9 +169,11 @@ private:
                         std::vector<std::shared_ptr<CTemplateFittingResult>>
                             &chisquareResultsAllTpl,
                         TStringList &chisquareResultsTplName);
-  void getContinuumInfoFromFirstpassFitStore(
-      Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
-      TTemplateConstRefList &tplList) const;
+  void getContinuumInfoFromFirstpassFitStore(Int32 candidateIdx,
+                                             TInt32List &meiksinIndices,
+                                             TInt32List &ebmvIndices,
+                                             TTemplateConstRefList &tplList,
+                                             bool fft) const;
   void updateRedshiftGridAndResults();
   void makeTFOperator(const TFloat64List &redshifts);
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;

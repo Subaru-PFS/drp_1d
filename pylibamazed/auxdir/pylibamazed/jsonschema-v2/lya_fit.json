@@ -1,0 +1,96 @@
+{
+  "$id": "lya-fit",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lya fit",
+  "type": "object",
+  "required": [
+    "profile"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "profile": {
+      "type": "string",
+      "title": "Lya line fitting profile",
+      "enum": [
+        "asym",
+        "igm"
+      ],
+      "description": "Profile to apply to fit lya line: \n * **asym**: asymetric fitting \n * **igm**: use igm to reproduce lya asymetry"
+    },
+    "asymProfile": {
+      "type": "object",
+      "title": "Lya asymetric profile",
+      "required": [
+        "switchFixedToFit",
+        "switchFitToFixed",
+        "asymFitMin",
+        "asymFitMax",
+        "asymFitStep",
+        "widthFitMin",
+        "widthFitMax",
+        "widthFitStep",
+        "deltaFitMin",
+        "deltaFitMax",
+        "deltaStepMax"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "asymFitMin": {
+          "type": "number",
+          "title": "Asym fit min",
+          "description": "Tabulation of Lya asym alpha: min value"
+        },
+        "asymFitMax": {
+          "type": "number",
+          "title": "Asym fit max",
+          "description": "Tabulation of Lya asym alpha: max value"
+        },
+        "asymFitStep": {
+          "type": "number",
+          "title": "Asym fit step",
+          "description": "Tabulation of Lya asym alpha: step value"
+        },
+        "widthFitMin": {
+          "type": "number",
+          "title": "Width fit min",
+          "description": "Tabulation of Lya width (sigma), min value (in Angtr\u00f6ms)"
+        },
+        "widthFitMax": {
+          "type": "number",
+          "title": "Width fit max",
+          "description": "Tabulation of Lya width (sigma), max value (in Angtr\u00f6ms)"
+        },
+        "widthFitStep": {
+          "type": "number",
+          "title": "Width fit step",
+          "description": "Tabulation of Lya width (sigma), step value (in Angtr\u00f6ms)"
+        },
+        "deltaFitMin": {
+          "type": "number",
+          "title": "Delta fit min",
+          "description": "Tabulation of Lya offset, min value (in Angtr\u00f6ms), (offset is defined relative to mean of skewed gaussian profile)"
+        },
+        "deltaFitMax": {
+          "type": "number",
+          "title": "Delta fit max",
+          "description": "Tabulation of Lya offset, max value (in Angtr\u00f6ms)"
+        },
+        "deltaStepMax": {
+          "type": "number",
+          "title": "Delta fit step",
+          "description": "Tabulation of Lya offset, step value (in Angtr\u00f6ms)"
+        },
+        "swicthFixedToFit": {
+          "type": "boolean",
+          "title": "Force Lya fit",
+          "description": "For `ASYMFIXED` profiles only: \n * **true**: fit Lya shape (alpha, width & offset) and forget values from template-ratio catalog \n * **false**: use Lya shape values from template-ratio catalog."
+        },
+        "swicthFitToFixed": {
+          "type": "boolean",
+          "title": "Force lya fit disabling",
+          "description": "For ASYMFIT profiles only: \n * **true**: set hard coded values for Lya shape (alpha=2.0, width=2.0, offset=0.0) \n * **false**: fit or use template-ratio values depending on lyaforcefit parameter."
+        }
+      }
+    }
+  }
+}

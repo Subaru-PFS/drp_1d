@@ -65,16 +65,16 @@ public:
   static constexpr const char *oII3726_em = "[OII]3726";
   static constexpr const char *oII3729_em = "[OII]3729";
 
-  static constexpr const char *oIIIa_em = "[OIII](doublet-1)";
-  static constexpr const char *oIIIb_em = "[OIII](doublet-1/3)";
+  static constexpr const char *oIIIa_em = "[OIII]a";
+  static constexpr const char *oIIIb_em = "[OIII]b";
 
   static constexpr const char *cIII1907_em = "[CIII]1907";
   static constexpr const char *cIII1909_em = "[CIII]1909";
 
   static constexpr const char *lya_em = "LyAE";
 
-  static constexpr const char *niia_em = "[NII](doublet-1)";
-  static constexpr const char *niib_em = "[NII](doublet-1/2.95)";
+  static constexpr const char *niia_em = "[NII]a";
+  static constexpr const char *niib_em = "[NII]b";
 };
 
 } // namespace NSEpic

@@ -38,8 +38,8 @@
 # ============================================================================
 
 import pandas as pd
-from pylibamazed.AbstractOutput import ObjectStages, RootStages
-from pylibamazed.Exception import AmazedError
+from pylibamazed.AbstractOutput import root_stages, spectrum_model_stages
+from pylibamazed.Exception import APIException
 from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
@@ -50,11 +50,11 @@ def _create_dataset_from_dict(h5_node, name, source, compress=False):
     if df.empty:
         return
     dtypes = dict()
-    for (k,v) in dict(df.dtypes).items():
+    for (k, v) in dict(df.dtypes).items():
         if v == "O":
-            dtypes[k]=f'S{df[k].str.len().max()}'
+            dtypes[k] = f'S{df[k].str.len().max()}'
         else:
-            dtypes[k]=str(v)
+            dtypes[k] = str(v)
 
     records = df.to_records(index=False, column_dtypes=dtypes)
     h5_node.create_dataset(name,
@@ -95,7 +95,7 @@ class H5Writer():
                     object_results_node.get(ds).attrs[attr_name] = attr
 
     def write_hdf5_candidate_level(self, object_type, object_results_node):
-        if self.output.parameters.get_solve_method(object_type):
+        if self.output.parameters.get_redshift_solver_method(object_type):
             candidates = object_results_node.create_group("candidates")
             level = "candidate"
             nb_candidates = self.output.get_nb_candidates(object_type)
@@ -127,7 +127,7 @@ class H5Writer():
             obs = hdf5_root.create_group(spectrum_id)
             self.write_hdf5_root(obs)
 
-            for stage in RootStages:
+            for stage in root_stages:
                 if self.output.has_error(None, stage):
                     self.write_error(obs, None, stage)
             if self.output.has_error(None, "init"):
@@ -138,12 +138,12 @@ class H5Writer():
 #                self.write_hdf5_method_level(object_type, object_results)
                 if self.output.get_nb_candidates(object_type) > 0:
                     self.write_hdf5_candidate_level(object_type, object_results)
-                for stage in ObjectStages:
+                for stage in spectrum_model_stages:
                     if self.output.has_error(object_type, stage):
                         self.write_error(object_results, object_type, stage)
 
         except Exception as e:
-            raise AmazedError(ErrorCode.EXTERNAL_LIB_ERROR, f"Failed writing h5: {e}")
+            raise APIException(ErrorCode.EXTERNAL_LIB_ERROR, f"Failed writing h5: {e}") from e
 
     def write_error(self, hdf5_object_node, object_type, stage):
         error = hdf5_object_node.create_group(stage + "_error")

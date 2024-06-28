@@ -16,8 +16,8 @@ from platform import platform
 
 def ExtractTarGZ(tarPath, destPath):
     if os.path.exists(destPath):
-        print("File or folder: " + os.path.normpath(destPath) +
-              " already exist, extraction skipped...")
+        print("File or folder: " + os.path.normpath(destPath)
+              + " already exist, extraction skipped...")
         return False
     else:
         tfile = tarfile.open(tarPath, 'r:gz')
@@ -36,8 +36,8 @@ def ExtractTarGZ(tarPath, destPath):
 
 def ExtractZip(zipPath, destPath):
     if os.path.exists(destPath):
-        print("File or folder: " + os.path.normpath(destPath) +
-              " already exist, extraction skipped...")
+        print("File or folder: " + os.path.normpath(destPath)
+              + " already exist, extraction skipped...")
         return False
     else:
         with zipfile.ZipFile(zipPath, 'r') as zfile:
@@ -159,9 +159,9 @@ def _lbfgspp_build(path, prefix, options, extra_flags=''):
 
 libDict = {
     "boost": {
-        "path": "boost-1.57.0",
-        "src": "http://downloads.sourceforge.net/project/boost/boost/1.57.0/"
-        "boost_1_57_0.tar.gz",
+        "path": "boost-1.74.0",
+        "src": "http://downloads.sourceforge.net/project/boost/boost/1.74.0/"
+        "boost_1_74_0.tar.gz",
         "check_file": "libboost_chrono",
         "build": _boost_build,
         "extra_flags": ''

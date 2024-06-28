@@ -37,61 +37,63 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
-const std::string jsonString = "{\"lambdarange\" : [ 7200, 7800 ],"
+const std::string jsonString = "{\"lambdaRange\" : [ 7200, 7800 ],"
                                "\"smoothWidth\" : 0.0,"
                                "\"templateCatalog\" : {"
                                "\"continuumRemoval\" : {"
-                               "\"method\" : \"IrregularSamplingMedian\","
+                               "\"method\" : \"irregularSamplingMedian\","
                                "\"medianKernelWidth\" : 75,"
                                "\"medianEvenReflection\" : true}},"
                                "\"continuumRemoval\" : {"
-                               "\"method\" : \"IrregularSamplingMedian\","
+                               "\"method\" : \"irregularSamplingMedian\","
                                "\"medianKernelWidth\" : 400,"
                                "\"medianEvenReflection\" : true,"
                                "\"decompScales\" : 9},"
-                               "\"extremaredshiftseparation\" : 0.01,"
-                               "\"objects\" : [\"qso\"],"
-                               "\"autocorrectinput\" : false,"
+                               "\"extremaRedshiftSeparation\" : 0.01,"
+                               "\"spectrumModels\" : [\"qso\"],"
+                               "\"autoCorrectInput\" : false,"
                                "\"qso\" : {"
-                               "\"redshiftrange\" : [ 5.13, 5.16 ],"
-                               "\"redshiftstep\" : 0.001,"
-                               "\"redshiftsampling\" : \"log\","
-                               "\"method\" : \"TplcombinationSolve\","
+                               "\"redshiftRange\" : [ 5.13, 5.16 ],"
+                               "\"redshiftStep\" : 0.001,"
+                               "\"redshiftSampling\" : \"log\","
+                               "\"redshiftSolver\": {"
+                               "\"method\" : \"tplCombinationSolve\","
                                "\"linemeas_method\" : null,"
-                               "\"TplcombinationSolve\" : {"
+                               "\"tplCombinationSolve\" : {"
                                "\"overlapThreshold\" : 1,"
                                "\"interpolation\" : \"lin\","
-                               "\"pdfcombination\" : \"marg\","
-                               "\"extremacount\" : 5,"
-                               "\"ismfit\" : true,"
-                               "\"igmfit\" : true,";
+                               "\"pdfCombination\" : \"marg\","
+                               "\"extremaCount\" : 5,"
+                               "\"ismFit\" : true,"
+                               "\"igmFit\" : true,";
 
 const std::string jsonStringSpcComponentRaw =
-    "\"spectrum\" : {\"component\" : \"raw\"}}}}";
+    "\"spectrum\" : {\"component\" : \"raw\"}}}}}";
 
 const std::string jsonStringSpcComponentNoContinuum =
-    "\"spectrum\" : {\"component\" : \"nocontinuum\"}}}}";
+    "\"spectrum\" : {\"component\" : \"noContinuum\"}}}}}";
 
 const std::string jsonStringSpcComponentContinuum =
-    "\"spectrum\" : {\"component\" : \"continuum\"}}}}";
+    "\"spectrum\" : {\"component\" : \"continuum\"}}}}}";
 
 const std::string jsonStringSpcComponentAll =
-    "\"spectrum\" : {\"component\" : \"all\"}}}}";
+    "\"spectrum\" : {\"component\" : \"all\"}}}}}";
 
 class fixture_TplCombinationTest {
 public:
   fixture_Context ctx;
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -115,6 +117,7 @@ class fixture_TplCombinationTestRaw : public fixture_TplCombinationTest {
 public:
   fixture_TplCombinationTestRaw() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentRaw);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -128,6 +131,7 @@ class fixture_TplCombinationTestNoContinuum
 public:
   fixture_TplCombinationTestNoContinuum() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentNoContinuum);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -140,6 +144,7 @@ class fixture_TplCombinationTestContinuum : public fixture_TplCombinationTest {
 public:
   fixture_TplCombinationTestContinuum() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentContinuum);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -152,6 +157,7 @@ class fixture_TplCombinationTestAll : public fixture_TplCombinationTest {
 public:
   fixture_TplCombinationTestAll() {
     fillCatalog();
+    ctx.reset();
     ctx.loadParameterStore(jsonString + jsonStringSpcComponentAll);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
@@ -163,29 +169,36 @@ public:
 BOOST_AUTO_TEST_SUITE(tplCombinationSolve_test)
 
 BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);
@@ -195,29 +208,36 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
 
 BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
                         fixture_TplCombinationTestNoContinuum) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1545691054521061, 1e-6);
@@ -227,29 +247,36 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
 
 BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
                         fixture_TplCombinationTestContinuum) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);
@@ -258,29 +285,37 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
 }
 
 BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
-  CTplcombinationSolve tplcombinationSolve(Context.m_ScopeStack, "qso");
-  BOOST_CHECK_NO_THROW(tplcombinationSolve.Compute());
+
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "qso",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTplCombinationSolve tplcombinationSolve;
+  BOOST_REQUIRE_NO_THROW(tplcombinationSolve.Compute());
 
   std::weak_ptr<const COperatorResult> result_out =
-      Context.GetResultStore()->GetSolveResult("qso", "TplcombinationSolve");
+      Context.GetResultStore()->GetSolveResult("qso", "redshiftSolver",
+                                               "tplCombinationSolve");
   BOOST_CHECK(result_out.lock()->getType() == "CTplCombinationSolveResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   result_out = Context.GetResultStore()->GetLogZPdfResult(
-      "qso", "TplcombinationSolve", "pdf_params");
+      "qso", "redshiftSolver", "tplCombinationSolve", "pdf_params");
   BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
 
   std::string resType = Context.GetResultStore()->GetCandidateResultType(
-      "qso", "TplcombinationSolve", "extrema_results", "model_parameters");
+      "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+      "model_parameters");
   BOOST_CHECK(resType == "TTplCombinationResult");
 
   std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult("qso", "TplcombinationSolve",
-                                                 "extrema_results",
-                                                 "model_parameters", 0);
+      Context.GetResultStore()->GetExtremaResult(
+          "qso", "redshiftSolver", "tplCombinationSolve", "extrema_results",
+          "model_parameters", 0);
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);

@@ -39,14 +39,14 @@
 #ifndef _REDSHIFT_OPERATOR_EXTREMARESULT_
 #define _REDSHIFT_OPERATOR_EXTREMARESULT_
 
+#include <memory>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
-
-#include <memory>
-#include <vector>
 
 namespace NSEpic {
 class CModelSpectrumResult;

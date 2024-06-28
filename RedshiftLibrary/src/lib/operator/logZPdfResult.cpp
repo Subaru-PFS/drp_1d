@@ -36,13 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/logZPdfResult.h"
+#include <algorithm>
+
+#include <gsl/gsl_interp.h>
+
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
-
-#include <algorithm>
-#include <gsl/gsl_interp.h>
 
 using namespace NSEpic;
 
@@ -58,9 +59,10 @@ CLogZPdfResult::CLogZPdfResult(const CZGridListParams &zparamList,
 
 void CLogZPdfResult::check_sizes() const {
   if (valProbaLog.size() != redshifts.size())
-    THROWG(INTERNAL_ERROR, Formatter() << "redshifts size (" << redshifts.size()
-                                       << ") is different from pdf size ("
-                                       << valProbaLog.size() << ")");
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "redshifts size (" << redshifts.size()
+                       << ") is different from pdf size (" << valProbaLog.size()
+                       << ")");
 }
 
 void CLogZPdfResult::setZGrid() {
@@ -95,10 +97,13 @@ CZGridListParams CLogZPdfResult::getZGridParams() const {
 }
 
 void CLogZPdfResult::interpolateOnGrid(TFloat64List targetGrid) {
-  Log.LogDetail("interp FROM initial grid z0=%f to zEnd=%f (n=%d)",
-                redshifts.front(), redshifts.back(), redshifts.size());
-  Log.LogDetail("interp TO final grid z0=%f to zEnd=%f (n=%d)",
-                targetGrid.front(), targetGrid.back(), targetGrid.size());
+  Log.LogDetail(Formatter()
+                << "interp FROM initial grid z0=" << redshifts.front()
+                << " to zEnd=" << redshifts.back() << " (n=" << redshifts.size()
+                << ")");
+  Log.LogDetail(Formatter() << "interp TO final grid z0=" << targetGrid.front()
+                            << " to zEnd=" << targetGrid.back()
+                            << " (n=" << targetGrid.size() << ")");
 
   TFloat64List outputValues(targetGrid.size(), NAN);
 
@@ -139,8 +144,9 @@ void CLogZPdfResult::convertToRegular(bool fine) {
   if (fine) {
     for (Int32 i = 2; i < zstep.size(); ++i)
       if (zstep[1] != zstep[i])
-        THROWG(INTERNAL_ERROR, "cannot convert to regular with different steps "
-                               "in 2nd pass subgrids");
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               "cannot convert to regular with different steps "
+               "in 2nd pass subgrids");
     zstep[0] = zstep[1];
   }
   zcenter.resize(1);
@@ -187,20 +193,20 @@ void CLogZPdfResult::checkPdfSum() const {
   // check pdf sum=1
   Float64 sumTrapez = getSumTrapez();
   Log.LogDetail(
-      "CLogZPdfResult::checkPdfSum: Pdfz normalization - sum trapz. = %e",
-      sumTrapez);
+      Formatter()
+      << "CLogZPdfResult::checkPdfSum: Pdfz normalization - sum trapz. = "
+      << sumTrapez);
   if (abs(sumTrapez - 1.0) > 1e-1)
-    THROWG(INTERNAL_ERROR,
-           Formatter()
-               << "CLogZPdfResult::checkPdfSum: Pdfz normalization failed, "
-                  "trapzesum = "
-               << sumTrapez);
+    THROWG(ErrorCode::PDF_NORMALIZATION_FAILED,
+           Formatter() << "Pdfz normalization failed, "
+                          "trapzesum = "
+                       << sumTrapez);
 }
 
 void CLogZPdfResult::isPdfValid() const {
 
   if (redshifts.size() < 2)
-    THROWG(INTERNAL_ERROR, "PDF has size less than 2");
+    THROWG(ErrorCode::INTERNAL_ERROR, "PDF has size less than 2");
 
   // is it completely flat ?
   const auto minmax_it =
@@ -209,12 +215,12 @@ void CLogZPdfResult::isPdfValid() const {
   const Float64 maxVal = *minmax_it.second;
 
   if (minVal == maxVal)
-    THROWG(INTERNAL_ERROR, "PDF is flat");
+    THROWG(ErrorCode::FLAT_ZPDF, "PDF is flat");
 
   // is pdf any value nan ?
   for (Int32 k = 0; k < valProbaLog.size(); k++)
     if (valProbaLog[k] != valProbaLog[k])
-      THROWG(INTERNAL_ERROR, "PDF has nan or invalid values");
+      THROWG(ErrorCode::INTERNAL_ERROR, "PDF has nan or invalid values");
 
   // is sum equal to 1
   checkPdfSum();

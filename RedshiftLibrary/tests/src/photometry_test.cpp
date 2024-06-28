@@ -36,11 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/photometry/photometricband.h"
-#include "RedshiftLibrary/photometry/photometricdata.h"
+#include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/exception.h"
-#include <boost/test/unit_test.hpp>
+#include "RedshiftLibrary/photometry/photometricband.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
 
 using namespace NSEpic;
 
@@ -55,8 +55,7 @@ BOOST_AUTO_TEST_CASE(photometricdata) {
   BOOST_CHECK_NO_THROW(CPhotometricData phdat(name, flux, fluxErr));
 
   const TStringList name1 = {"band1"};
-  BOOST_CHECK_THROW(CPhotometricData phdat(name1, flux, fluxErr),
-                    GlobalException);
+  BOOST_CHECK_THROW(CPhotometricData phdat(name1, flux, fluxErr), AmzException);
 
   CPhotometricData phdat(name, flux, fluxErr);
   BOOST_CHECK(phdat.GetFlux("band1") == 1e-15);
@@ -81,7 +80,7 @@ BOOST_AUTO_TEST_CASE(photometricbands) {
   BOOST_CHECK_NO_THROW(CPhotometricBand(TFloat64List(trans, trans + n),
                                         TFloat64List(lambda, lambda + n)));
   BOOST_CHECK_THROW(CPhotometricBand(trans, n, lambda_tmp, n + 1),
-                    GlobalException);
+                    AmzException);
 
   CPhotometricBand band(trans, n, lambda, n);
   BOOST_CHECK(band.GetMinLambda() == 2000.);
@@ -92,7 +91,7 @@ BOOST_AUTO_TEST_CASE(photometricbands) {
   BOOST_CHECK_CLOSE(band.IntegrateFlux(flux), 4.4202843563e-12, 1e-6);
 
   const TFloat64List flux_tmp = {2., 2., 2., 3., 3.};
-  BOOST_CHECK_THROW(band.IntegrateFlux(flux_tmp), GlobalException);
+  BOOST_CHECK_THROW(band.IntegrateFlux(flux_tmp), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(photometricbandcatalog) {

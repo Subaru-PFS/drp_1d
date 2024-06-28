@@ -44,13 +44,9 @@
 
 using namespace NSEpic;
 
-CReliabilitySolve::CReliabilitySolve(TScopeStack &scope, std::string objectType)
-    : CSolve("Reliability", scope, objectType) {}
+CReliabilitySolve::CReliabilitySolve() : CSolve("reliabilityFromProbaSolver") {}
 
-std::shared_ptr<CSolveResult>
-CReliabilitySolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                           std::shared_ptr<COperatorResultStore> resultStore,
-                           TScopeStack &scope) {
+std::shared_ptr<CSolveResult> CReliabilitySolve::compute() {
 
   std::shared_ptr<CReliabilityResult> reliabResult =
       std::make_shared<CReliabilityResult>();

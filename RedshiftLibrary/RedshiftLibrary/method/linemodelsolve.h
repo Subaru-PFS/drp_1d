@@ -56,20 +56,16 @@ class CTemplateCatalog;
  */
 class CLineModelSolve : public CObjectSolve {
 public:
-  CLineModelSolve(TScopeStack &scope, std::string objectType);
+  CLineModelSolve();
 
   bool
   PopulateParameters(std::shared_ptr<const CParameterStore> parameterStore);
 
-  std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope) override;
+  std::shared_ptr<CSolveResult> compute() override;
 
   void Solve();
-  void
-  createRedshiftGrid(const std::shared_ptr<const CInputContext> &inputContext,
-                     const TFloat64Range &redshiftRange) override;
+  void createRedshiftGrid(const CInputContext &inputContext,
+                          const TFloat64Range &redshiftRange) override;
 
 private:
   ChisquareArray
@@ -102,6 +98,7 @@ private:
   std::string m_opt_pdfcombination;
   Int64 m_opt_extremacount;
   Int64 m_opt_extremacountB;
+  Int64 m_opt_maxCandidate;
 
   Float64 m_opt_stronglinesprior;
   Float64 m_opt_haPrior;

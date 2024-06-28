@@ -80,7 +80,7 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64 &sigma,
 
     if (m_asym_delta) // temporary check
       THROWG(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "Problem in configuring ASYM lineprofile: asym_delta should be null");
   } else if (m_centeringMethod == "mean") // ASYMFIT, ASYMFIXED
   { // correction in order to have the line shifted on the mean: from
@@ -106,7 +106,7 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64 &sigma,
 Float64 CLineProfileASYM::GetLineProfileVal(Float64 x, Float64 x0,
                                             Float64 sigma) const {
   if (!isValid()) {
-    THROWG(INTERNAL_ERROR, "LineProfile is not valid");
+    THROWG(ErrorCode::INTERNAL_ERROR, "LineProfile is not valid");
   }
   Float64 xsurc;
   GetXSurc(x - x0, sigma, xsurc);
@@ -128,7 +128,7 @@ Float64 CLineProfileASYM::GetLineFlux(Float64 x0, Float64 sigma,
 Float64 CLineProfileASYM::GetLineProfileDerivX0(Float64 x, Float64 x0,
                                                 Float64 sigma) const {
   if (!isValid()) {
-    THROWG(INTERNAL_ERROR, "LineProfile is not valid");
+    THROWG(ErrorCode::INTERNAL_ERROR, "LineProfile is not valid");
   }
   Float64 xsurc;
   Float64 alpha2 = m_asym_alpha * m_asym_alpha;
@@ -147,7 +147,7 @@ Float64 CLineProfileASYM::GetLineProfileDerivX0(Float64 x, Float64 x0,
 Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                                    Float64 sigma) const {
   if (!isValid()) {
-    THROWG(INTERNAL_ERROR, "LineProfile is not valid");
+    THROWG(ErrorCode::INTERNAL_ERROR, "LineProfile is not valid");
   }
   Float64 alpha2 = m_asym_alpha * m_asym_alpha;
 
@@ -162,7 +162,8 @@ Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
   if (m_centeringMethod == "none") {
     // temporary: double check muz == 0
     if (muz)
-      THROWG(INTERNAL_ERROR, "Problem: mu is not null for ASYM profile!");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "Problem: mu is not null for ASYM profile!");
   }
   valSymD = m_asym_sigma_coeff * (xsurc2 / sigma - muz * xsurc / sigma) *
             exp(-0.5 * xsurc2);

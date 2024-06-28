@@ -39,6 +39,10 @@
 #ifndef _REDSHIFT_OPERATOR_TEMPLATE_FITTING_WITHPHOT
 #define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_WITHPHOT
 
+#include <map>
+#include <memory>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/range.h"
@@ -48,10 +52,8 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
-#include <map>
-#include <memory>
-#include <string>
 namespace NSEpic {
+#include <string>
 
 class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
 
@@ -73,15 +75,16 @@ private:
                                Float64 redshift);
 
   void
-  InitIsmIgmConfig(Float64 redshift,
+  InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
                    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
                        &ismCorrectionCalzetti,
                    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
                        &igmCorrectionMeiksin,
-                   Int32 EbmvListSize) override;
+                   Int32 spcIndex) override;
 
-  bool
-  CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const override;
+  void init_fast_igm_processing(Int32 EbmvListSize) override;
+
+  bool igmIsInRange(const TFloat64RangeList &ranges) const override;
 
   bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
   bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
@@ -108,6 +111,7 @@ private:
   TFloat64List m_sumCross_outsideIGM_phot;
   TFloat64List m_sumT_outsideIGM_phot;
   TFloat64List m_sumS_outsideIGM_phot;
+  TStringList::const_iterator m_BandIgmEnd;
 };
 
 } // namespace NSEpic

@@ -36,15 +36,14 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-
-#include "RedshiftLibrary/log/log.h"
+#include <string>
 
 #include <boost/filesystem.hpp>
 
-#include <string>
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -70,10 +69,21 @@ CTemplateCatalog::const_TTemplateRefList_cast(const TTemplateRefList &list) {
  */
 TTemplateRefList
 CTemplateCatalog::GetTemplateList_(const TStringList &categoryList) const {
+
+  return GetTemplateList_(categoryList, m_orthogonal, m_logsampling);
+}
+
+/**
+ * Returns a list containing all templates as enumerated in the categoryList
+ * input.
+ */
+TTemplateRefList
+CTemplateCatalog::GetTemplateList_(const TStringList &categoryList,
+                                   bool opt_ortho, bool opt_logsampling) const {
   TTemplateRefList list;
 
   for (const auto &cat : categoryList) {
-    const auto &map = GetList();
+    const auto &map = GetList(opt_ortho, opt_logsampling);
     if (!map.count(cat))
       continue;
     for (const auto &tpl : map.at(cat))
@@ -84,17 +94,25 @@ CTemplateCatalog::GetTemplateList_(const TStringList &categoryList) const {
 
 std::shared_ptr<const CTemplate>
 CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
-                                    const std::string tplName) const {
+                                    const std::string tplName, bool opt_ortho,
+                                    bool opt_logsampling) const {
   for (const auto &cat : tplCategoryList) {
-    const auto &map = GetList();
+    const auto &map = GetList(opt_ortho, opt_logsampling);
     if (!map.count(cat))
       continue;
     for (const auto &tpl : map.at(cat))
       if (tpl->GetName() == tplName)
         return tpl;
   }
-  THROWG(INTERNAL_ERROR,
+  THROWG(ErrorCode::INTERNAL_ERROR,
          Formatter() << "Could not find template with name " << tplName);
+}
+
+std::shared_ptr<const CTemplate>
+CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
+                                    const std::string tplName) const {
+  return GetTemplateByName(tplCategoryList, tplName, m_orthogonal,
+                           m_logsampling);
 }
 
 /**
@@ -150,7 +168,7 @@ Int32 CTemplateCatalog::GetNonNullTemplateCount(const std::string &category,
  */
 void CTemplateCatalog::Add(const std::shared_ptr<CTemplate> &r) {
   if (r->GetCategory().empty())
-    THROWG(INTERNAL_ERROR, "Template has no category");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Template has no category");
 
   GetList()[r->GetCategory()].push_back(r);
 }

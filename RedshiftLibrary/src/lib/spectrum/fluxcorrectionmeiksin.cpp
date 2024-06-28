@@ -36,12 +36,12 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include <algorithm>
+
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-
-#include <algorithm>
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 
 using namespace NSEpic;
 
@@ -59,10 +59,10 @@ Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
   if (lambdaRest > RESTLAMBDA_LYA) // && meiksinIdx == -1)
     return 1.;
 
-  if (meiksinIdx == -1)
-    THROWG(INTERNAL_ERROR, "igmIdx cannot be negative");
+  if (meiksinIdx == undefIdx)
+    THROWG(ErrorCode::INTERNAL_ERROR, "igmIdx undefined");
   Int32 zIdx = getRedshiftIndex(redshift);
-  if (zIdx == -1)
+  if (zIdx == undefIdx)
     return 1.;
   Int32 lbdaIdx = getWaveIndex(lambdaRest);
 
@@ -77,9 +77,9 @@ CSpectrumFluxCorrectionMeiksin::getCorrectionAndDerivLbdaRest(
     return std::make_tuple(1., 0.);
 
   if (meiksinIdx == -1)
-    THROWG(INTERNAL_ERROR, "igmIdx cannot be negative");
+    THROWG(ErrorCode::INTERNAL_ERROR, "igmIdx cannot be negative");
   Int32 zIdx = getRedshiftIndex(redshift);
-  if (zIdx == -1)
+  if (zIdx == undefIdx)
     return std::make_tuple(1., 0.);
   Int32 lbdaIdx = getWaveIndex(lambdaRest);
 
@@ -108,7 +108,7 @@ Float64 CSpectrumFluxCorrectionMeiksin::getCorrectionDerivLbdaRest(
  * @return
  */
 Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const {
-  Int32 index = -1;
+  Int32 index = undefIdx;
   TFloat64Index::getClosestLowerIndex(m_zbins, z, index);
 
   // keep last curves above last bin
@@ -125,20 +125,44 @@ Int32 CSpectrumFluxCorrectionMeiksin::getWaveIndex(Float64 w) const {
 }
 
 // get wave vector inside range and aligned to fine lambda grid
-TFloat64List CSpectrumFluxCorrectionMeiksin::getWaveVector(
-    const TFloat64Range &wrange) const {
-  return getWaveVector(wrange, false);
+std::pair<TFloat64List, TFloat64List>
+CSpectrumFluxCorrectionMeiksin::getWaveAndCorrectionVector(
+    const TFloat64Range &wrange, Float64 redshift, Int32 meiksinIdx) const {
+
+  auto const indices = getWaveRangeIndices(wrange, false);
+  auto const wave = getWaveVector(indices, false);
+  if (wave.empty())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "not enough IGM extinction samples inside range");
+
+  Int32 zIdx = getRedshiftIndex(redshift);
+  if (zIdx == undefIdx)
+    return std::make_pair(wave, TFloat64List(wave.size(), 1.0));
+
+  TFloat64List correction(wave.size());
+  auto const idx_vector = indices.SpreadOver(1);
+  std::transform(idx_vector.begin(), idx_vector.end(), correction.begin(),
+                 [zIdx, meiksinIdx, this](Int32 lbdaIdx) {
+                   return getCorrection(zIdx, meiksinIdx, lbdaIdx);
+                 });
+  return std::make_pair(wave, correction);
 }
 
 TFloat64List
 CSpectrumFluxCorrectionMeiksin::getWaveVector(const TFloat64Range &wrange,
                                               bool raw) const {
-  TFloat64List waves;
-  Float64 step = raw ? IGM_RAW_STEP : m_finegridstep;
   TInt32Range indices = getWaveRangeIndices(wrange, raw);
+  return getWaveVector(indices, raw);
+}
+
+TFloat64List
+CSpectrumFluxCorrectionMeiksin::getWaveVector(const TInt32Range &indices,
+                                              bool raw) const {
+  TFloat64List waves;
   if (indices.GetLength() < 0)
     return waves;
   waves.resize(indices.GetLength() + 1);
+  Float64 step = raw ? IGM_RAW_STEP : m_finegridstep;
   for (std::size_t i = 0; i < waves.size(); ++i)
     waves[i] = getLambdaMin() + step * (indices.GetBegin() + i);
 
@@ -169,7 +193,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     const TFloat64List &fineLambdas, const TFloat64Range &zbin,
     const std::shared_ptr<const CLSF> &lsf) const {
   if (!arr.size()) {
-    THROWG(INTERNAL_ERROR, "Cannot convolve: array is empty. ");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot convolve: array is empty. ");
   }
 
   Int32 n = arr.size();
@@ -198,11 +222,11 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
                             lambda0 + half_lsf_range); // restframe
     TInt32Range lsf_indices = getWaveRangeIndices(lsf_range, true);
     if (lsf_indices.GetBegin() < 0 || lsf_indices.GetEnd() >= m_LambdaSize)
-      THROWG(INTERNAL_ERROR,
-             "LSF kernel does not overlap meiksin curve samples");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "lsf kernel does not overlap meiksin curve samples");
     if (lsf_indices.GetLength() < 0)
-      THROWG(INTERNAL_ERROR,
-             "LSF kernel smaller than Meiksin wavelength steps");
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "lsf kernel smaller than Meiksin wavelength steps");
     TFloat64List lambdas_obs(lsf_indices.GetLength() + 1);
     std::transform(lambdas.cbegin() + lsf_indices.GetBegin(),
                    lambdas.cbegin() + lsf_indices.GetEnd() + 1,

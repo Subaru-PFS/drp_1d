@@ -36,8 +36,9 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/zgridparam.h"
 #include <boost/test/unit_test.hpp>
+
+#include "RedshiftLibrary/common/zgridparam.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -157,14 +158,11 @@ BOOST_AUTO_TEST_CASE(mixedGrid_zcenterNotincluded2_test) {
 }
 
 BOOST_AUTO_TEST_CASE(mixedGrid_check_error_on_single_element_test) {
+  // If no intersection in the given grids, error
   TZGridListParams zparams = {
       CZGridParam(TFloat64Range(1, 10), 3, NAN), // 1, 4, 7, 10
-      CZGridParam(TFloat64Range(2., 3.), 0.5, 2.5),
       CZGridParam(TFloat64Range(4., 5.), 0.5, 4.5)};
-
-  BOOST_CHECK_THROW(
-      CZGridListParams(zparams).getZGrid(true),
-      GlobalException); // log grid with single element in main grid
+  BOOST_CHECK_THROW(CZGridListParams(zparams).getZGrid(true), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(mixedGrid_truncated_subgrids_test) {

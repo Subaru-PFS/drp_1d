@@ -39,14 +39,14 @@
 #ifndef _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 #define _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 
+#include <unordered_set>
+
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
-
-#include <unordered_set>
 
 namespace NSEpic {
 class CModelSpectrumResult;

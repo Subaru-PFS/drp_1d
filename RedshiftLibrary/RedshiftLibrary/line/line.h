@@ -39,15 +39,15 @@
 #ifndef _REDSHIFT_LINE_LINE_
 #define _REDSHIFT_LINE_LINE_
 
-#include "RedshiftLibrary/common/datatypes.h"
+#include <string>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 #include "RedshiftLibrary/line/lineprofileASYMFIT.h"
 #include "RedshiftLibrary/line/lineprofileLOR.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/line/lineprofileSYMIGM.h"
-#include <string>
 
 namespace NSEpic {
 

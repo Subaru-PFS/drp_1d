@@ -39,10 +39,11 @@
 #ifndef _REDSHIFT_COMMON_MEDIAN_
 #define _REDSHIFT_COMMON_MEDIAN_
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/defaults.h"
 #include <algorithm>
 #include <vector>
+
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 
 using namespace std;
 
@@ -70,7 +71,7 @@ private:
   T Opt9Find(const typename std::vector<T>::const_iterator &begin);
 };
 
-#include <RedshiftLibrary/common/median.hpp>
+#include "RedshiftLibrary/common/median.hpp"
 
 } // namespace NSEpic
 

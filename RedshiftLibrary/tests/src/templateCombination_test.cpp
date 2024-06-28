@@ -36,15 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/tplcombination.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "test-config.h"
+#include <cmath>
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/tplcombination.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "test-config.h"
 
 using namespace NSEpic;
 

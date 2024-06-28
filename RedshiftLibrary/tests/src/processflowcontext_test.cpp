@@ -36,20 +36,22 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_matrix_double.h>
+#include <gsl/gsl_multifit_nlin.h>
+
+#include <boost/test/unit_test.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
-#include <boost/test/unit_test.hpp>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_matrix_double.h>
-#include <gsl/gsl_multifit_nlin.h>
 
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdarange\" : [ 4630, 4815 ],"
+    "{\"lambdaRange\" : [ 4630, 4815 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -58,41 +60,43 @@ const std::string jsonString =
     "\"medianEvenReflection\" : true}},"
     "\"ebmv\" : {\"start\" : 0, \"step\" : 0.1, \"count\" : 10},"
     "\"continuumRemoval\" : {"
-    "\"method\" : \"IrregularSamplingMedian\","
+    "\"method\" : \"irregularSamplingMedian\","
     "\"medianKernelWidth\" : 400,"
     "\"medianEvenReflection\" : true,"
     "\"decompScales\" : 9},"
-    "\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\", \"resolution\" : "
+    "\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\", \"resolution\" : "
     "4300},"
-    "\"extremaredshiftseparation\" : 0.01,"
-    "\"objects\" : [\"galaxy\"],"
-    "\"autocorrectinput\" : false,"
+    "\"extremaRedshiftSeparation\" : 0.01,"
+    "\"spectrumModels\" : [\"galaxy\"],"
+    "\"autoCorrectInput\" : false,"
     "\"galaxy\" : {"
-    "\"redshiftrange\" : [ 2.84, 2.88 ],"
-    "\"redshiftstep\" : 0.0001,"
-    "\"redshiftsampling\" : \"log\","
-    "\"method\" : \"TemplateFittingSolve\","
-    "\"template_dir\" : \"templates/BC03_sdss_tremonti21\","
+    "\"stages\": [\"redshiftSolver\"],"
+    "\"redshiftRange\" : [ 2.84, 2.88 ],"
+    "\"redshiftStep\" : 0.0001,"
+    "\"redshiftSampling\" : \"log\","
+    "\"templateDir\" : \"templates/BC03_sdss_tremonti21\","
+    "\"redshiftSolver\": {"
+    "\"method\" : \"templateFittingSolve\","
     "\"linemeas_method\" : null,"
-    "\"LineModelSolve\" : {"
-    "\"linemodel\" : {"
-    "\"linetypefilter\" : \"no\","
-    "\"lineforcefilter\" : \"no\"}},"
-    "\"TemplateFittingSolve\" : {"
-    "\"extremacount\" : 5,"
+    "\"lineModelSolve\" : {"
+    "\"lineModel\" : {"
+    "\"lineTypeFilter\" : \"no\","
+    "\"lineForceFilter\" : \"no\"}},"
+    "\"templateFittingSolve\" : {"
+    "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
-    "\"fftprocessing\" : true,"
-    "\"interpolation\" : \"precomputedfinegrid\","
-    "\"igmfit\" : true,"
-    "\"ismfit\" : true,"
-    "\"pdfcombination\" : \"marg\","
-    "\"enablephotometry\" : false}},"
-    "\"airvacuum_method\" : \"default\"}";
+    "\"fftProcessing\" : true,"
+    "\"interpolation\" : \"preComputedFineGrid\","
+    "\"igmFit\" : true,"
+    "\"ismFit\" : true,"
+    "\"pdfCombination\" : \"marg\","
+    "\"enablePhotometry\" : false}},"
+    "\"airVacuumMethod\" : \"default\"}}";
 
 class fixture_processflowcontextTest {
 public:
-  TScopeStack scopeStack;
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
       fixture_MeiskinCorrection().igmCorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
@@ -117,14 +121,15 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Context.LoadParameterStore(jsonString);
   std::shared_ptr<const CParameterStore> paramStore =
       Context.GetParameterStore();
-  BOOST_CHECK(paramStore->Get<TFloat64Range>("lambdarange") ==
+  BOOST_CHECK(paramStore->Get<TFloat64Range>("lambdaRange") ==
               TFloat64Range(4630, 4815));
 
   std::shared_ptr<const CInputContext> inputCtx = Context.GetInputContext();
   BOOST_CHECK(inputCtx->getSpectra().size() == 0);
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver",
+                                      "templateFittingSolve",
                                       "solveResult") == false);
 
   spc->SetLSF(LSF);
@@ -143,13 +148,14 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.GetPhotBandCatalog() == photoBandCatalog);
 
   Context.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
-  Context.m_ScopeStack.push_back("galaxy");
+  Context.m_ScopeStack->push_back("galaxy", ScopeType::SPECTRUMMODEL);
   BOOST_CHECK(Context.GetTplRatioCatalog() == lineRatioTplCatalog);
 
-  Context.setLineCatalog("galaxy", "LineModelSolve", lineCatalog);
-  BOOST_CHECK(Context.GetLineCatalog("galaxy", "LineModelSolve") ==
+  Context.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+  BOOST_CHECK(Context.GetLineCatalog("galaxy", "lineModelSolve") ==
               lineCatalog);
-  Context.m_ScopeStack.push_back("LineModelSolve");
+  Context.m_ScopeStack->push_back("redshiftSolver", ScopeType::STAGE);
+  Context.m_ScopeStack->push_back("lineModelSolve", ScopeType::METHOD);
   BOOST_CHECK(Context.getCLineMap().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
@@ -181,26 +187,33 @@ BOOST_AUTO_TEST_CASE(context_test) {
                   .GetSamplesVector()
                   .back());
 
-  Context.m_ScopeStack.pop_back();
-  BOOST_CHECK_THROW(Context.GetCurrentMethod(), GlobalException);
+  Context.m_ScopeStack->pop_back();
+  BOOST_CHECK_THROW(Context.GetCurrentMethod(), AmzException);
 
-  Context.m_ScopeStack.pop_back();
-  BOOST_CHECK_THROW(Context.GetCurrentCategory(), GlobalException);
+  Context.m_ScopeStack->pop_back();
+  Context.m_ScopeStack->pop_back();
+  BOOST_CHECK_THROW(Context.GetCurrentCategory(), AmzException);
 
-  CTemplateFittingSolve templateFittingSolve(Context.m_ScopeStack, "galaxy");
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CTemplateFittingSolve templateFittingSolve;
   templateFittingSolve.Compute();
 
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver",
+                                      "templateFittingSolve",
                                       "solveResult") == true);
   Context.reset();
   BOOST_CHECK(Context.getSpectra().size() == 0);
-  BOOST_CHECK(resultStore->HasDataset("galaxy", "TemplateFittingSolve",
+  BOOST_CHECK(resultStore->HasDataset("galaxy", "redshiftSolver",
+                                      "templateFittingSolve",
                                       "solveResult") == false);
 
   // GSL error
   Int32 dim = 1;
   gsl_matrix *covarMatrix = gsl_matrix_alloc(dim, dim);
-  BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), GlobalException);
+  BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), AmzException);
   gsl_matrix_free(covarMatrix);
 }
 

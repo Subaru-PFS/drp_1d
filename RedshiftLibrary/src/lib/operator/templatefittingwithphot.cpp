@@ -50,7 +50,8 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
       m_weight(weight) {
 
   if (m_spectra.size() > 1)
-    THROWG(INTERNAL_ERROR, "Photometry not supported with multiobs");
+    THROWG(ErrorCode::MULTIOBS_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+           "Photometry not supported with multiobs");
   // check availability and coherence of photometric bands & data
   checkInputPhotometry();
 
@@ -68,19 +69,22 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
-    THROWG(INTERNAL_ERROR, "Photometric band "
-                           "transmision not available");
+    THROWG(ErrorCode::MISSING_PHOTOMETRIC_TRANSMISSION,
+           "Photometric band "
+           "transmision not available");
   if (m_photBandCat->empty())
-    THROWG(INTERNAL_ERROR, "Empty photometric band transmission");
+    THROWG(ErrorCode::MISSING_PHOTOMETRIC_TRANSMISSION,
+           "Empty photometric band transmission");
 
   if (m_spectra[0]->GetPhotData() == nullptr)
-    THROWG(INTERNAL_ERROR, "photometric data not available in spectrum");
+    THROWG(ErrorCode::MISSING_PHOTOMETRIC_DATA,
+           "photometric data not available in spectrum");
 
   const auto &dataNames = m_spectra[0]->GetPhotData()->GetNameList();
   for (const auto &bandName : m_photBandCat->GetNameList())
     if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
         dataNames.cend())
-      THROWG(INTERNAL_ERROR,
+      THROWG(ErrorCode::MISSING_PHOTOMETRIC_DATA,
              Formatter() << " "
                             "photometry point for band name: "
                          << bandName << " is not available in the spectrum");
@@ -128,58 +132,87 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
             lambdaRange_restframe, mskRebined);
 
     if (overlapFraction < 1.0) {
-      // status = nStatus_NoOverlap;
-      THROWG(OVERLAPFRACTION_NOTACCEPTABLE,
+      THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
              Formatter() << "tpl overlap too small: " << overlapFraction);
     }
   }
 }
 
 void COperatorTemplateFittingPhot::InitIsmIgmConfig(
-    Float64 redshift,
+    Float64 redshift, Int32 kstart, Int32 kend,
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti,
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
-    Int32 EbmvListSize) {
+    Int32 spcIndex) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(
-      redshift, ismCorrectionCalzetti, igmCorrectionMeiksin, EbmvListSize);
+  COperatorTemplateFitting::InitIsmIgmConfig(redshift, kstart, kend,
+                                             ismCorrectionCalzetti,
+                                             igmCorrectionMeiksin, spcIndex);
 
-  // init ism on all rebined photometric templates
+  if (spcIndex > 0)
+    return;
+
+  // init ism & igm on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
     band.second.InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
                                  igmCorrectionMeiksin);
-
-  m_sumCross_outsideIGM_phot.resize(EbmvListSize);
-  m_sumS_outsideIGM_phot.resize(EbmvListSize);
-  m_sumT_outsideIGM_phot.resize(EbmvListSize);
 }
 
-bool COperatorTemplateFittingPhot::CheckLyaIsInCurrentRange(
-    const TFloat64Range &currentRange) const {
+void COperatorTemplateFittingPhot::init_fast_igm_processing(
+    Int32 EbmvListSize) {
 
-  bool ret = COperatorTemplateFitting::CheckLyaIsInCurrentRange(currentRange);
+  COperatorTemplateFitting::init_fast_igm_processing(EbmvListSize);
+
+  // determine last band not impacted by IGM
+  m_BandIgmEnd = std::find_if(
+      m_sortedBandNames.cbegin(), m_sortedBandNames.cend(),
+      [this](std::string const &s) {
+        return m_templateRebined_phot.at(s).GetIgmEndIndex() == undefIdx;
+      });
+
+  m_sumCross_outsideIGM_phot.assign(EbmvListSize, 0.0);
+  m_sumS_outsideIGM_phot.assign(EbmvListSize, 0.0);
+  m_sumT_outsideIGM_phot.assign(EbmvListSize, 0.0);
+}
+
+bool COperatorTemplateFittingPhot::igmIsInRange(
+    const TFloat64RangeList &ranges) const {
+
+  if (COperatorTemplateFitting::igmIsInRange(ranges))
+    return true;
+
   for (const auto &band : m_templateRebined_phot)
-    ret = ret || COperatorTemplateFitting::CheckLyaIsInCurrentRange(
-                     band.second.GetLambdaRange());
-  return ret;
+    if (COperatorTemplateFitting::igmIsInRange({band.second.GetLambdaRange()}))
+      return true;
+
+  return false;
 }
 
 bool COperatorTemplateFittingPhot::ApplyMeiksinCoeff(Int32 meiksinIdx,
                                                      Int32 spcIndex) {
   bool ret = COperatorTemplateFitting::ApplyMeiksinCoeff(meiksinIdx, spcIndex);
+
+  if (spcIndex > 0)
+    return ret;
+
   for (auto &band : m_templateRebined_phot)
-    ret = ret || band.second.ApplyMeiksinCoeff(
-                     meiksinIdx); // will return true if at list igm is applied
-                                  // on one template
+    if (band.second.ApplyMeiksinCoeff(meiksinIdx))
+      ret = true;
+
   return ret;
 }
 
 bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
   bool ret = COperatorTemplateFitting::ApplyDustCoeff(kEbmv, spcIndex);
+
+  if (spcIndex > 0)
+    return ret;
+
   for (auto &band : m_templateRebined_phot)
-    ret = ret || band.second.ApplyDustCoeff(kEbmv);
+    if (band.second.ApplyDustCoeff(kEbmv))
+      ret = true;
+
   return ret;
 }
 
@@ -208,9 +241,9 @@ void COperatorTemplateFittingPhot::ComputeAmplitudeAndChi2(
 void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
     Int32 kM, Int32 kEbmv_, TCrossProductResult &fitResult) {
 
-  Float64 sumCross_phot = 0.0;
-  Float64 sumT_phot = 0.0;
-  Float64 sumS_phot = 0.0;
+  Float64 &sumCross_phot = fitResult.sumCross_phot;
+  Float64 &sumT_phot = fitResult.sumT_phot;
+  Float64 &sumS_phot = fitResult.sumS_phot;
 
   Float64 sumCross_IGM = 0.0;
   Float64 sumT_IGM = 0.0;
@@ -222,22 +255,17 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
   // determine bands impacted by IGM
   const auto &Start = m_sortedBandNames.cbegin();
   const auto &End = m_sortedBandNames.cend();
-  const auto IgmEnd =
-      std::lower_bound(m_sortedBandNames.cbegin(), m_sortedBandNames.cend(),
-                       RESTLAMBDA_LYA, [this](const std::string &s, Float64 v) {
-                         return m_photBandCat->at(s).GetMinLambda() < v;
-                       });
 
-  auto EndLoop = m_option_igmFastProcessing && kM > 0 ? IgmEnd : End;
+  auto EndLoop = m_option_igmFastProcessing && kM > 0 ? m_BandIgmEnd : End;
 
   // compute photometric Leastquare
-  for (auto it = Start; it < EndLoop; it++) {
+  for (auto it = Start; it != EndLoop; it++) {
 
-    if (m_option_igmFastProcessing && !sumsIgmSaved && it > IgmEnd) {
+    if (m_option_igmFastProcessing && !sumsIgmSaved && it == m_BandIgmEnd) {
       // store intermediate sums for IGM range
-      sumCross_IGM = fitResult.sumCross_phot;
-      sumT_IGM = fitResult.sumT_phot;
-      sumS_IGM = fitResult.sumS_phot;
+      sumCross_IGM = sumCross_phot;
+      sumT_IGM = sumT_phot;
+      sumS_IGM = sumS_phot;
       sumsIgmSaved = true;
     }
 
@@ -257,13 +285,13 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
         photData->GetFluxOverErr2(bandName) * m_weight * m_weight;
 
     if (std::isinf(oneOverErr2) || std::isnan(oneOverErr2))
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "found invalid inverse variance : err2="
-                                 << oneOverErr2 << ", for band=" << bandName);
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "found invalid inverse variance : err2="
+                         << oneOverErr2 << ", for band=" << bandName);
 
-    fitResult.sumCross_phot += d * integ_flux * oneOverErr2;
-    fitResult.sumT_phot += integ_flux * integ_flux * oneOverErr2;
-    fitResult.sumS_phot += fluxOverErr2;
+    sumCross_phot += d * integ_flux * oneOverErr2;
+    sumT_phot += integ_flux * integ_flux * oneOverErr2;
+    sumS_phot += fluxOverErr2;
   }
 
   if (m_option_igmFastProcessing) {
@@ -272,14 +300,16 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
       m_sumT_outsideIGM_phot[kEbmv_] = sumT_phot - sumT_IGM;
       m_sumS_outsideIGM_phot[kEbmv_] = sumS_phot - sumS_IGM;
     } else {
-      fitResult.sumCross_phot += m_sumCross_outsideIGM_phot[kEbmv_];
-      fitResult.sumT_phot += m_sumT_outsideIGM_phot[kEbmv_];
-      fitResult.sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
+      sumCross_phot += m_sumCross_outsideIGM_phot[kEbmv_];
+      sumT_phot += m_sumT_outsideIGM_phot[kEbmv_];
+      sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
     }
   }
-  fitResult.sumCross += fitResult.sumCross_phot;
-  fitResult.sumT += fitResult.sumT_phot;
-  fitResult.sumS += fitResult.sumS_phot;
+
+  // add photometric terms to spectroscopic ones
+  fitResult.sumCross += sumCross_phot;
+  fitResult.sumT += sumT_phot;
+  fitResult.sumS += sumS_phot;
 }
 
 Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog() const {

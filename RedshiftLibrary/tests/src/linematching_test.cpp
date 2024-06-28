@@ -36,13 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/line/line.h"
-#include "RedshiftLibrary/operator/linematching.h"
+#include <iostream>
 
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/line.h"
+#include "RedshiftLibrary/operator/linematching.h"
 
 using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(test_linematching)

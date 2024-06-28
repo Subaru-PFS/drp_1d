@@ -39,13 +39,14 @@
 #ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 #define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 
+#include <cmath>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/line/catalog.h"
-#include <cmath>
 
 namespace NSEpic {
 

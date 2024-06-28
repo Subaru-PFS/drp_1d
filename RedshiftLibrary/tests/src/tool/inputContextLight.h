@@ -73,7 +73,8 @@ static TFloat64List myNoiseListLight = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4};
 
 class fixture_ParamStore {
 public:
-  fixture_ParamStore(std::string jsonString, TScopeStack &scopeStack) {
+  fixture_ParamStore(std::string jsonString,
+                     const std::shared_ptr<const CScopeStack> &scopeStack) {
     paramStore = std::make_shared<CParameterStore>(scopeStack);
     paramStore->FromString(jsonString);
   }
@@ -89,20 +90,21 @@ public:
   TFloat64List width = {1, 2, 3, 4, 5};
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianVarWidthArgs>(wave, width);
-  std::shared_ptr<CLSF> LSF = LSFFactory.Create("GaussianVariableWidth", args);
+  std::shared_ptr<CLSF> LSF = LSFFactory.Create("gaussianVariableWidth", args);
 };
 
 std::string jsonString_LSFConstantRes =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantResolution\" , \"resolution\" "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianConstantResolution\" , \"resolution\" "
     ": 4300}}";
 class fixture_LSFGaussianConstantResolution {
 public:
-  fixture_LSFGaussianConstantResolution(TScopeStack scopeStack) {
+  fixture_LSFGaussianConstantResolution(
+      const std::shared_ptr<const CScopeStack> &scopeStack) {
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianConstantResolutionArgs>(
             fixture_ParamStore(jsonString_LSFConstantRes, scopeStack)
                 .paramStore);
-    LSF = LSFFactory.Create("GaussianConstantResolution", args);
+    LSF = LSFFactory.Create("gaussianConstantResolution", args);
   }
   std::shared_ptr<CLSF> LSF;
 };
@@ -110,35 +112,36 @@ public:
 class fixture_LSFGaussianNISPSIM2016 {
 public:
   std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFArguments>();
-  std::shared_ptr<CLSF> LSF = LSFFactory.Create("GaussianNISPSIM2016", args);
+  std::shared_ptr<CLSF> LSF = LSFFactory.Create("gaussianNISPSIM2016", args);
 };
 
 std::string jsonString_LSFGaussian =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianNISPVSSPSF201707\" , \"sourcesize\" : "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianNISPVSSPSF201707\" , \"sourceSize\" : "
     "0.1}}";
 class fixture_LSFGaussianNISPVSSPSF201707 {
 public:
-  fixture_LSFGaussianNISPVSSPSF201707(TScopeStack scopeStack) {
+  fixture_LSFGaussianNISPVSSPSF201707(
+      const std::shared_ptr<const CScopeStack> &scopeStack) {
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianNISPVSSPSF201707Args>(
             fixture_ParamStore(jsonString_LSFGaussian, scopeStack).paramStore);
-    LSF = LSFFactory.Create("GaussianNISPVSSPSF201707", args);
+    LSF = LSFFactory.Create("gaussianNISPVSSPSF201707", args);
   }
   std::shared_ptr<CLSF> LSF;
 };
 
 std::string jsonString_LSFConstantWidth =
-    "{\"LSF\" : {\"LSFType\" : \"GaussianConstantWidth\" , \"width\" : "
+    "{\"lsf\" : {\"lsfType\" : \"gaussianConstantWidth\" , \"width\" : "
     "1.09}}";
 class fixture_LSFGaussianConstantWidth {
 public:
   fixture_LSFGaussianConstantWidth(
-      TScopeStack scopeStack,
+      const std::shared_ptr<const CScopeStack> &scopeStack,
       std::string jsonStr = jsonString_LSFConstantWidth) {
     std::shared_ptr<TLSFArguments> args =
         std::make_shared<TLSFGaussianConstantWidthArgs>(
             fixture_ParamStore(jsonStr, scopeStack).paramStore);
-    LSF = LSFFactory.Create("GaussianConstantWidth", args);
+    LSF = LSFFactory.Create("gaussianConstantWidth", args);
   }
   std::shared_ptr<CLSF> LSF;
 };
@@ -155,6 +158,17 @@ public:
   Int32 spcAxisSize = spectrumData.mySpectralList.size();
   TFloat64List spcAxisList = spectrumData.mySpectralList;
   TFloat64List linLambdaList = spectrumData.myLinLambdaList;
+};
+
+class fixture_MultiSpectralAxis {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumSpectralAxis spcAxisA = spectrumData.lambdaAList;
+  CSpectrumSpectralAxis spcAxisB = spectrumData.lambdaBList;
+  Int32 spcAxisASize = spectrumData.lambdaAList.size();
+  Int32 spcAxisBSize = spectrumData.lambdaBList.size();
+  TFloat64List spcAxisAList = spectrumData.lambdaAList;
+  TFloat64List spcAxisBList = spectrumData.lambdaBList;
 };
 
 class fixture_SpectralAxisLog {
@@ -199,6 +213,15 @@ public:
   TFloat64List noiseList = spectrumData.myNoiseList;
 };
 
+class fixture_MultiNoiseAxis {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumNoiseAxis noiseAAxis = spectrumData.noiseAList;
+  CSpectrumNoiseAxis noiseBAxis = spectrumData.noiseBList;
+  TFloat64List noiseAList = spectrumData.noiseAList;
+  TFloat64List noiseBList = spectrumData.noiseBList;
+};
+
 class fixture_NoiseAxisLight {
 public:
   CSpectrumNoiseAxis noiseAxisLight = myNoiseListLight;
@@ -228,6 +251,17 @@ public:
   CSpectrumFluxAxis fluxAxis =
       CSpectrumFluxAxis(spectrumData.myFluxList, fixture_NoiseAxis().noiseAxis);
   TFloat64List fluxAxisList = spectrumData.myFluxList;
+};
+
+class fixture_MultiFluxAxis {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumFluxAxis fluxAAxis = CSpectrumFluxAxis(
+      spectrumData.fluxAList, fixture_MultiNoiseAxis().noiseAAxis);
+  CSpectrumFluxAxis fluxBAxis = CSpectrumFluxAxis(
+      spectrumData.fluxBList, fixture_MultiNoiseAxis().noiseBAxis);
+  TFloat64List fluxAxisAList = spectrumData.fluxAList;
+  TFloat64List fluxAxisBList = spectrumData.fluxBList;
 };
 
 class fixture_FluxAxisLight {
@@ -265,6 +299,14 @@ public:
       CSpectrum(fixture_SpectralAxis().spcAxis, fixture_FluxAxis().fluxAxis);
 };
 
+class fixture_MultiSpectrum {
+public:
+  CSpectrum spcA = CSpectrum(fixture_MultiSpectralAxis().spcAxisA,
+                             fixture_MultiFluxAxis().fluxAAxis);
+  CSpectrum spcB = CSpectrum(fixture_MultiSpectralAxis().spcAxisB,
+                             fixture_MultiFluxAxis().fluxBAxis);
+};
+
 class fixture_SpectrumWithLSF {
 public:
   CSpectrum spcWithVariableWidthLSF =
@@ -289,6 +331,14 @@ class fixture_SharedSpectrum {
 public:
   std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(
       fixture_SpectralAxis().spcAxis, fixture_FluxAxis().fluxAxis);
+};
+
+class fixture_SharedMultiSpectrum {
+public:
+  std::shared_ptr<CSpectrum> spcA = std::make_shared<CSpectrum>(
+      fixture_MultiSpectralAxis().spcAxisA, fixture_MultiFluxAxis().fluxAAxis);
+  std::shared_ptr<CSpectrum> spcB = std::make_shared<CSpectrum>(
+      fixture_MultiSpectralAxis().spcAxisB, fixture_MultiFluxAxis().fluxBAxis);
 };
 
 class fixture_SharedSpectrumFull {
@@ -1258,7 +1308,7 @@ public:
     spc = fixture_SharedSpectrumLog().spc;
 
     ctx->m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-        paramStore->Get<TFloat64Range>("lambdarange")));
+        paramStore->Get<TFloat64Range>("lambdaRange")));
     ctx->addSpectrum(spc);
     ctx->m_logGridStep = spc->GetSpectralAxis().GetlogGridStep();
     ctx->addRebinSpectrum(spc);
@@ -1272,7 +1322,7 @@ public:
     std::shared_ptr<CSpectrum> spc;
     ctx = std::make_shared<CInputContext>(paramStore);
     ctx->m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(
-        paramStore->Get<TFloat64Range>("lambdarange")));
+        paramStore->Get<TFloat64Range>("lambdaRange")));
 
     spc = fixture_SharedSpectrum().spc;
     TFloat64List spcAxis =
@@ -1287,6 +1337,7 @@ public:
   }
   std::shared_ptr<CInputContext> ctx;
 };
+
 class fixture_Context {
 public:
   void loadParameterStore(std::string jsonString) {
@@ -1309,14 +1360,14 @@ public:
   }
 
   void
-  setLineRatioCatalogCatalog(std::string objectType,
+  setLineRatioCatalogCatalog(std::string spectrumModel,
                              std::shared_ptr<CLineCatalogsTplRatio> catalog) {
-    Context.setLineRatioCatalogCatalog(objectType, catalog);
+    Context.setLineRatioCatalogCatalog(spectrumModel, catalog);
   }
 
-  void setLineCatalog(std::string objectType, std::string method,
+  void setLineCatalog(std::string spectrumModel, std::string method,
                       std::shared_ptr<CLineCatalog> catalog) {
-    Context.setLineCatalog(objectType, method, catalog);
+    Context.setLineCatalog(spectrumModel, method, catalog);
   }
 
   void addSpectrum(std::shared_ptr<CSpectrum> spc, std::shared_ptr<CLSF> LSF) {

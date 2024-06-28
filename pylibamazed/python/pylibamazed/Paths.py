@@ -36,13 +36,10 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+import os
 
-import re
+module_root_dir = os.path.split(__file__)[0]
 
-from pylibamazed.redshift import WarningCode
+results_specifications_filename = os.path.join(module_root_dir, "resources", "results_specifications.csv")
 
-
-def extract_warning_flags(flags):
-    i_flags = [index.start() for index in re.finditer(pattern='1', string=bin(flags)[2:][::-1])]
-    s_flags = [WarningCode(i).name for i in i_flags]
-    return s_flags
+v1_to_treed_filename = os.path.join(module_root_dir, "resources", "rename_params_v1_to_treed.csv")

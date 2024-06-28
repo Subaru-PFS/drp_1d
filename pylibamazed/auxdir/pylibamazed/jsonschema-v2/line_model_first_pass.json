@@ -1,0 +1,46 @@
+{
+  "$id": "line-model-first-pass-schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Line model first pass",
+  "type": "object",
+  "required": [
+    "fittingMethod",
+    "largeGridStepRatio",
+    "multipleContinuumFitDisable",
+    "extremaCount"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fittingMethod": {
+      "type": "string",
+      "enum": [
+        "hybrid",
+        "individual",
+        "svd"
+      ],
+      "title": "Fitting method",
+      "description": "Overwrite `fittingMethod` parameter to select a different method"
+    },
+    "largeGridStepRatio": {
+      "type": "integer",
+      "title": "Large grid step ratio",
+      "description": "Multiplicative factor of the redshift step size for the first pass: firstpassz step = step * largeGridStepRatio. To use finegrid step, set largegridstep to 0 or 1"
+    },
+    "tplRatioIsmFit": {
+      "type": "boolean",
+      "title": "Wether to activate ISM extinction fit",
+      "description": "Wether to overwrite the `tplRatioIsmFit` parameter",
+      "default": "false"
+    },
+    "multipleContinuumFitDisable": {
+      "type": "boolean",
+      "title": "Wether to use only the best continuum template",
+      "description": "Wether to overwrite the `continuumFit.count` parameter to keep only the best continuum template (true=> sets `continuumFit.count` to 1)"
+    },
+    "extremaCount": {
+      "type": "integer",
+      "title": "Maximum number of first pass candidate to retain",
+      "description": "Maximum number of first pass candidate to retain (has to be >= linemodel.extremacount)"
+    }
+  }
+}

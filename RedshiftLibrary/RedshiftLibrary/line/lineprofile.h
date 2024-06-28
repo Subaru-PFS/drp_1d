@@ -39,12 +39,14 @@
 #ifndef _REDSHIFT_LINE_PROFILE_
 #define _REDSHIFT_LINE_PROFILE_
 
+#include <cmath>
+#include <string>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
-#include <cmath>
-#include <string>
+
 namespace NSEpic {
 class CSpectrumFluxCorrectionMeiksin;
 /**
@@ -142,8 +144,8 @@ typedef std::unique_ptr<CLineProfile> CLineProfile_ptr;
 typedef std::vector<CLineProfile_ptr> TProfileList;
 
 inline Int32 CLineProfile::getIGMIdxCount() const {
-  THROWG(INTERNAL_ERROR, "getIGMIdxCount is not defined "
-                         "for non-SYMIGM lineprofile");
+  THROWG(ErrorCode::INTERNAL_ERROR, "getIGMIdxCount is not defined "
+                                    "for non-SYMIGM lineprofile");
 }
 } // namespace NSEpic
 #endif
