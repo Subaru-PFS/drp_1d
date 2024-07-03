@@ -44,15 +44,22 @@ import pandas as pd
 from pylibamazed.Container import Container
 from pylibamazed.Exception import APIException
 from pylibamazed.Filter import FilterList
-from pylibamazed.FilterLoader import (AbstractFilterLoader,
-                                      ParamJsonFilterLoader)
+from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 from pylibamazed.Parameters import Parameters
-from pylibamazed.redshift import (CFlagWarning, CLog, CLSFFactory,
-                                  CPhotometricData, CProcessFlowContext,
-                                  CSpectrum, CSpectrumFluxAxis_withError,
-                                  CSpectrumSpectralAxis, ErrorCode,
-                                  TLSFGaussianVarWidthArgs, WarningCode)
+from pylibamazed.redshift import (
+    CFlagWarning,
+    CLog,
+    CLSFFactory,
+    CPhotometricData,
+    CProcessFlowContext,
+    CSpectrum,
+    CSpectrumFluxAxis_withError,
+    CSpectrumSpectralAxis,
+    ErrorCode,
+    TLSFGaussianVarWidthArgs,
+    WarningCode,
+)
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -84,10 +91,9 @@ class AbstractSpectrumReader:
         parameters: Parameters,
         calibration_library,
         source_id: str,
-        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader
+        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader,
     ):
-        """Constructor method
-        """
+        """Constructor method"""
         self.observation_id = observation_id
 
         # Initial loaded data
@@ -100,7 +106,7 @@ class AbstractSpectrumReader:
         self.lsf_data = Container[np.ndarray]()
         self.photometric_data = []
         self._spectra = dict()
-        self.w_frame = 'vacuum'
+        self.w_frame = "vacuum"
         self.parameters = parameters
         self.calibration_library = calibration_library
         self.source_id = str(source_id)
@@ -137,8 +143,8 @@ class AbstractSpectrumReader:
     def load_lsf(self, resource, obs_id=""):
         """Append the spectral axis in self.flux , units are in erg.cm-2 by default
 
-         :param resource: resource where the error can be found, no restriction for type (can be a path, a
-            file handler, an hdf5 node,...)
+        :param resource: resource where the error can be found, no restriction for type (can be a path, a
+           file handler, an hdf5 node,...)
 
         """
         raise NotImplementedError("Implement in derived class")
@@ -229,16 +235,16 @@ class AbstractSpectrumReader:
 
     def init(self):
         if not self._sizes_are_consistent():
-            sizes: str = ', '.join([str(container.size()) for container in self._all_containers()])
+            sizes: str = ", ".join([str(container.size()) for container in self._all_containers()])
             raise APIException(
                 ErrorCode.INVALID_SPECTRUM,
-                f"Number of error, wavelength, flux and other arrays should be the same: {sizes}"
+                f"Number of error, wavelength, flux and other arrays should be the same: {sizes}",
             )
 
         if not self._obs_ids_are_consistent():
             raise APIException(
                 ErrorCode.INVALID_SPECTRUM,
-                "Names of error, wavelength, flux and other arrays should be the same"
+                "Names of error, wavelength, flux and other arrays should be the same",
             )
 
         self._merge_spectrum_in_dataframe()
@@ -270,20 +276,18 @@ class AbstractSpectrumReader:
             [params_lambda_min, params_lambda_max] = self.parameters.get_lambda_range(obs_id)
             obs_waves = np.array(self.waves.get(obs_id))
             if obs_waves.size == 0:
-                raise APIException(
-                    ErrorCode.INVALID_SPECTRUM,
-                    "Filtered spectrum is empty"
-                )
+                raise APIException(ErrorCode.INVALID_SPECTRUM, "Filtered spectrum is empty")
             spectrum_lambda_min = obs_waves[0]
             spectrum_lambda_max = obs_waves[-1]
 
-            params_lambda_range_in_spectrum_lambdas = spectrum_lambda_min <= params_lambda_min \
-                and spectrum_lambda_max >= params_lambda_max
+            params_lambda_range_in_spectrum_lambdas = (
+                spectrum_lambda_min <= params_lambda_min and spectrum_lambda_max >= params_lambda_max
+            )
             if not params_lambda_range_in_spectrum_lambdas:
                 zflag.warning(
                     WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,
                     f"Parameters lambda range ([{params_lambda_min}, {params_lambda_max}])is not "
-                    f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])"
+                    f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])",
                 )
 
     def _add_photometric_data(self):
@@ -295,8 +299,7 @@ class AbstractSpectrumReader:
                 self._spectra[obs_id].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
     def _all_containers(self):
-        return [container for container in self.others.values()] \
-            + [self.waves, self.fluxes, self.errors]
+        return [container for container in self.others.values()] + [self.waves, self.fluxes, self.errors]
 
     def _sizes_are_consistent(self) -> bool:
         expected_size = self.waves.size()
@@ -338,13 +341,9 @@ class AbstractSpectrumReader:
         airvacuum_method = self._corrected_airvacuum_method()
         multiobs_type = self.parameters.get_multiobs_method()
         if not multiobs_type:
-
             # Add check names if multiobs type is null
-            if list(self.waves.keys()) != ['']:
-                raise APIException(
-                    ErrorCode.INVALID_NAME,
-                    "Non multi obs observations cannot be named"
-                )
+            if list(self.waves.keys()) != [""]:
+                raise APIException(ErrorCode.INVALID_NAME, "Non multi obs observations cannot be named")
 
             spectralaxis = CSpectrumSpectralAxis(self._editable_waves(), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(self._editable_fluxes(), self._editable_errors())
@@ -371,16 +370,15 @@ class AbstractSpectrumReader:
                 raise APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
 
             spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
-            signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
-                                                 np.array(wse["error"]))
+            signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]), np.array(wse["error"]))
             self._add_cspectrum(spectralaxis, signal)
 
         elif multiobs_type == "full":
             for obs_id in self.waves.keys():
-                spectralaxis = CSpectrumSpectralAxis(self._editable_waves(obs_id),
-                                                     airvacuum_method)
-                signal = CSpectrumFluxAxis_withError(self._editable_fluxes(obs_id),
-                                                     self._editable_errors(obs_id))
+                spectralaxis = CSpectrumSpectralAxis(self._editable_waves(obs_id), airvacuum_method)
+                signal = CSpectrumFluxAxis_withError(
+                    self._editable_fluxes(obs_id), self._editable_errors(obs_id)
+                )
                 self._add_cspectrum(spectralaxis, signal, obs_id)
 
     def _add_cspectrum(self, spectralaxis, signal, obs_id=""):
@@ -403,7 +401,7 @@ class AbstractSpectrumReader:
         elif airvacuum_method != "" and self.w_frame == "vacuum":
             zflag.warning(
                 WarningCode.AIR_VACUUM_CONVERSION_IGNORED,
-                f"Air vacuum method {airvacuum_method} ignored, spectrum already in vacuum"
+                f"Air vacuum method {airvacuum_method} ignored, spectrum already in vacuum",
             )
             airvacuum_method = ""
 
@@ -416,46 +414,50 @@ class AbstractSpectrumReader:
         if parameter_lsf_type == "fromSpectrumData":
             lsf_obs_ids = self.get_loaded_lsf_observation_ids()
             if not lsf_obs_ids:
-                raise APIException(ErrorCode.LSF_NOT_LOADED,
-                                   "No LSF loaded in reader, "
-                                   "lsftype=fromSpectrumData "
-                                   "parameter cannot be applied")
+                raise APIException(
+                    ErrorCode.LSF_NOT_LOADED,
+                    "No LSF loaded in reader, " "lsftype=fromSpectrumData " "parameter cannot be applied",
+                )
             obs_id = lsf_obs_ids[0]
             if len(lsf_obs_ids) > 1:
-                zflag.warning(WarningCode.MULTI_OBS_ARBITRARY_LSF,
-                              f"lsf of observation {obs_id} chosen, other lsf ignored")
+                zflag.warning(
+                    WarningCode.MULTI_OBS_ARBITRARY_LSF,
+                    f"lsf of observation {obs_id} chosen, other lsf ignored",
+                )
             if self.lsf_type != "gaussianVariableWidth":
-                self.parameters.set_lsf_param(LSFParameters[self.lsf_type],
-                                              self.lsf_data.get(obs_id)["width"][0])
+                self.parameters.set_lsf_param(
+                    LSFParameters[self.lsf_type], self.lsf_data.get(obs_id)["width"][0]
+                )
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
                 lsf_args = TLSFArgumentsCtor[self.lsf_type](parameter_store)
             else:
-                lsf_args = TLSFGaussianVarWidthArgs(self.lsf_data.get(obs_id)["wave"],
-                                                    self.lsf_data.get(obs_id)["width"])
+                lsf_args = TLSFGaussianVarWidthArgs(
+                    self.lsf_data.get(obs_id)["wave"], self.lsf_data.get(obs_id)["width"]
+                )
         else:
             if parameter_lsf_type != "gaussianVariableWidth":
                 parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
                 lsf_args = TLSFArgumentsCtor[parameter_lsf_type](parameter_store)
             else:
-                lsf_args = TLSFGaussianVarWidthArgs(self.calibration_library.lsf["wave"],
-                                                    self.calibration_library.lsf["width"])
+                lsf_args = TLSFGaussianVarWidthArgs(
+                    self.calibration_library.lsf["wave"], self.calibration_library.lsf["width"]
+                )
         return lsf_args
 
     def _check_spectrum_is_loaded(self):
         if not self._spectra:
-            raise APIException(
-                ErrorCode.SPECTRUM_NOT_LOADED,
-                "Spectrum not loaded, launch init first"
-            )
+            raise APIException(ErrorCode.SPECTRUM_NOT_LOADED, "Spectrum not loaded, launch init first")
 
     def _merge_spectrum_in_dataframe(self):
         for obs_id in self.waves.keys():
             # Creates dataframe with mandatory columns
-            full_spectrum = pd.DataFrame({
-                "waves": self.waves.get(obs_id),
-                "fluxes": self.fluxes.get(obs_id),
-                "errors": self.errors.get(obs_id),
-            })
+            full_spectrum = pd.DataFrame(
+                {
+                    "waves": self.waves.get(obs_id),
+                    "fluxes": self.fluxes.get(obs_id),
+                    "errors": self.errors.get(obs_id),
+                }
+            )
             for col_key in self.others:
                 obs_others = self.others[col_key].get(obs_id)
                 if obs_others is not None:

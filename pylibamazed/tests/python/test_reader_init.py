@@ -124,7 +124,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
 
     def test_add_photometric_data(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.photometric_data = [pd.DataFrame([["a", 2, 3]], columns=['Name', 'Flux', 'Error'])]
+        fsr.photometric_data = [pd.DataFrame([["a", 2, 3]], columns=["Name", "Flux", "Error"])]
         fsr.init()
 
     def test_airvacuum_method_settings(self):
@@ -152,11 +152,11 @@ class TestReaderInit(TestSpectrumReaderUtils):
         with pytest.raises(KeyError):
             fsr.init()
 
-# TODO to make a real test we should add an lsf compatible with spectrum
-# fsr = self.initialize_fsr_with_data()
-# fsr.lsf_type = "gaussianVariableWidth"
-# with pytest.raises(TypeError):
-#     fsr.init()
+    # TODO to make a real test we should add an lsf compatible with spectrum
+    # fsr = self.initialize_fsr_with_data()
+    # fsr.lsf_type = "gaussianVariableWidth"
+    # with pytest.raises(TypeError):
+    #     fsr.init()
 
     def test_sizes_are_consistent(self):
         # Without "others"
@@ -210,12 +210,14 @@ class TestReaderInit(TestSpectrumReaderUtils):
         assert fsr._obs_ids_are_consistent() is False
 
     def test_input_output_size_coherence_with_filtering(self):
-        fsr = self.initialize_fsr_with_data(**{
-            "obs_id": "1",
-            "parameters_lambdaRange": {"1": [0, 1], "2": [3, 4]},
-            "multiObsMethod": "full",
-            "filters": [{"key": "waves", "instruction": "<=", "value": 3}]
-        })
+        fsr = self.initialize_fsr_with_data(
+            **{
+                "obs_id": "1",
+                "parameters_lambdaRange": {"1": [0, 1], "2": [3, 4]},
+                "multiObsMethod": "full",
+                "filters": [{"key": "waves", "instruction": "<=", "value": 3}],
+            }
+        )
         TestSpectrumReaderUtils().full_load(fsr, **{"obs_id": "2"})
 
         # Default data: 0 -> 9 => 4 items correspond to the filter
@@ -235,81 +237,81 @@ class TestReaderInit(TestSpectrumReaderUtils):
         assert spectrum.GetErrorAxis().GetSamplesCount() == 4
 
     class TestSpectrumLambdaRange(TestSpectrumReaderUtils):
-
         def _init_fsr(self, spectrum_wave_range, parameters_lambda_range):
-            fsr = self.initialize_fsr_with_data(**{
-                "spectrum_wave_range": spectrum_wave_range,
-                "parameters_lambdaRange": parameters_lambda_range
-            })
+            fsr = self.initialize_fsr_with_data(
+                **{
+                    "spectrum_wave_range": spectrum_wave_range,
+                    "parameters_lambdaRange": parameters_lambda_range,
+                }
+            )
             fsr.init()
 
         def test_warning_if_parameters_lambdarange_is_outside_spectrum(self, zflag):
-            fsr = self.initialize_fsr_with_data(**{
-                "spectrum_wave_range": [1, 3],
-                "parameters_lambdaRange": [5, 40]
-            })
+            fsr = self.initialize_fsr_with_data(
+                **{"spectrum_wave_range": [1, 3], "parameters_lambdaRange": [5, 40]}
+            )
             fsr.init()
 
             assert WarningUtils.has_any_warning()
 
         def test_warning_if_parameters_lambdarange_is_outside_spectrum_multiobs(self, zflag):
-            fsr = self.initialize_fsr_with_data(**{
-                "obs_id": "1",
-                "multiObsMethod": "full",
-                "spectrum_wave_range": {"1": [10, 40]},
-                "parameters_lambdaRange": {"1": [20, 30], "2": [0, 3]}
-            })
-            self.full_load(fsr, **{
-                "obs_id": "2",
-                "multiObsMethod": "full",
-                "spectrum_wave_range": {"2": [1, 4]},
-            })
+            fsr = self.initialize_fsr_with_data(
+                **{
+                    "obs_id": "1",
+                    "multiObsMethod": "full",
+                    "spectrum_wave_range": {"1": [10, 40]},
+                    "parameters_lambdaRange": {"1": [20, 30], "2": [0, 3]},
+                }
+            )
+            self.full_load(
+                fsr,
+                **{
+                    "obs_id": "2",
+                    "multiObsMethod": "full",
+                    "spectrum_wave_range": {"2": [1, 4]},
+                }
+            )
             fsr.init()
 
             assert WarningUtils.has_warning(WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM)
 
         def test_warning_if_parameters_lambdarange_begins_lower_than_spectrum(self, zflag):
-            self._init_fsr(
-                spectrum_wave_range=[10, 30],
-                parameters_lambda_range=[5, 25]
-            )
+            self._init_fsr(spectrum_wave_range=[10, 30], parameters_lambda_range=[5, 25])
             assert WarningUtils.has_any_warning()
 
         def test_warning_if_parameters_lambdarange_ends_higher_than_spectrum(self, zflag):
-            self._init_fsr(
-                spectrum_wave_range=[10, 30],
-                parameters_lambda_range=[11, 31]
-            )
+            self._init_fsr(spectrum_wave_range=[10, 30], parameters_lambda_range=[11, 31])
             assert WarningUtils.has_any_warning()
 
         def test_OK_if_parameters_lambdarange_boundaries_are_contained_in_spectrum(self, zflag):
-            self._init_fsr(
-                spectrum_wave_range=[10, 30],
-                parameters_lambda_range=[15, 20]
-            )
+            self._init_fsr(spectrum_wave_range=[10, 30], parameters_lambda_range=[15, 20])
             assert not WarningUtils.has_any_warning()
 
         def test_OK_if_parameters_lambdarange_boundaries_are_contained_in_spectrum_multiobs(self, zflag):
-            fsr = self.initialize_fsr_with_data(**{
-                "obs_id": "1",
-                "multiObsMethod": "full",
-                "lsf_type": "gaussianConstantWidth",
-                "width": 0.01,
-                "spectrum_wave_range": {"1": [10, 40]},
-                "parameters_lambdaRange": {"1": [20, 30], "2": [2, 3]}
-            })
-            self.full_load(fsr, **{
-                "obs_id": "2",
-                "multiObsMethod": "full",
-                "spectrum_wave_range": {"2": [1, 4]},
-            })
+            fsr = self.initialize_fsr_with_data(
+                **{
+                    "obs_id": "1",
+                    "multiObsMethod": "full",
+                    "lsf_type": "gaussianConstantWidth",
+                    "width": 0.01,
+                    "spectrum_wave_range": {"1": [10, 40]},
+                    "parameters_lambdaRange": {"1": [20, 30], "2": [2, 3]},
+                }
+            )
+            self.full_load(
+                fsr,
+                **{
+                    "obs_id": "2",
+                    "multiObsMethod": "full",
+                    "spectrum_wave_range": {"2": [1, 4]},
+                }
+            )
             fsr.init()
 
             assert not WarningUtils.has_warning(WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM)
 
         def test_OK_if_parameters_lambdarange_boundaries_are_equal_to_spectrum(self, zflag):
             self._init_fsr(
-                spectrum_wave_range=[10, 30],  # range => last item is 29
-                parameters_lambda_range=[10, 29]
+                spectrum_wave_range=[10, 30], parameters_lambda_range=[10, 29]  # range => last item is 29
             )
             assert not WarningUtils.has_any_warning()

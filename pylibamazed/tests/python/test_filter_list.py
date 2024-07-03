@@ -43,22 +43,21 @@ from tests.python.utils import ComparisonUtils
 
 
 class TestFilterList:
-
     def test_apply(self):
-        df = pd.DataFrame({'col1': [1, 22, 111], 'col2': [30, 1, 1]})
+        df = pd.DataFrame({"col1": [1, 22, 111], "col2": [30, 1, 1]})
 
         # Result is as expected
         filter = FilterList()
-        filter.add_filter(SpectrumFilterItem('col1', '>', 12))
-        filter.add_filter(SpectrumFilterItem('col2', '<', 10))
+        filter.add_filter(SpectrumFilterItem("col1", ">", 12))
+        filter.add_filter(SpectrumFilterItem("col2", "<", 10))
 
         filtered = filter.apply(df)
-        expected = pd.DataFrame({'col1': [22, 111], 'col2': [1, 1]})
+        expected = pd.DataFrame({"col1": [22, 111], "col2": [1, 1]})
         ComparisonUtils.compare_dataframe_without_index(filtered, expected)
 
     def test_apply_without_items(self):
         # If filter list is empty, returns the initial data
-        df = pd.DataFrame({'col1': [1, 22, 111], 'col2': [30, 1, 1]})
+        df = pd.DataFrame({"col1": [1, 22, 111], "col2": [30, 1, 1]})
         filter = FilterList()
         filtered = filter.apply(df)
         ComparisonUtils.compare_dataframe_without_index(filtered, df)
@@ -68,8 +67,8 @@ class TestFilterList:
         assert filter.__repr__() == "FilterList []"
 
     class TestEquality:
-        default_filter_item_1 = SpectrumFilterItem('col1', '>', 12)
-        default_filter_item_2 = SpectrumFilterItem('col2', '<', 10)
+        default_filter_item_1 = SpectrumFilterItem("col1", ">", 12)
+        default_filter_item_2 = SpectrumFilterItem("col2", "<", 10)
 
         def test_eq_true_for_empty_filters(self):
             filter1 = FilterList()
@@ -91,7 +90,7 @@ class TestFilterList:
 
             assert filter1 != filter2
             assert filter2 != filter1
-        
+
         def test_eq_false_for_filters_with_different_length(self):
             filter1 = FilterList([self.default_filter_item_1])
             filter2 = FilterList([self.default_filter_item_1, self.default_filter_item_2])

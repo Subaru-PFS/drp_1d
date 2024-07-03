@@ -40,8 +40,11 @@ import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.redshift import WarningCode
-from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_linemodelsolve_level)
+from tests.python.utils import (
+    WarningUtils,
+    check_from_parameter_dict,
+    make_parameter_dict_at_linemodelsolve_level,
+)
 
 
 class TestLSFUtils:
@@ -52,7 +55,6 @@ class TestLSFUtils:
 
 
 class TestLSF:
-
     class TestLSFSectionPresence(TestLSFUtils):
         def test_raises_an_error_if_linemodelsolve_without_lsf(self):
             param_dict = make_parameter_dict_at_linemodelsolve_level()
@@ -79,128 +81,98 @@ class TestLSF:
 
     class TestLSFTypeGaussianConstantWidth(TestLSFUtils):
         def test_raises_an_error_if_GaussianConstantWidth_without_width_defined(self):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "gaussianConstantWidth"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "gaussianConstantWidth"})
             with pytest.raises(APIException, match=r"Missing parameter lsf width"):
                 ParametersChecker(param_dict).custom_check()
 
         def test_OK_if_GaussianConstantWidth_with_width_defined(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "gaussianConstantWidth",
-                "width": "1"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "gaussianConstantWidth", "width": "1"})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestLSFTypeGaussianConstantResolution(TestLSFUtils):
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "gaussianConstantResolution"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "gaussianConstantResolution"})
             with pytest.raises(APIException, match=r"Missing parameter lsf resolution"):
                 check_from_parameter_dict(param_dict)
 
         def test_OK_if_GaussianConstantResolution_with_width_defined(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "gaussianConstantResolution",
-                "resolution": "1"
-            })
+            param_dict = self._make_parameter_dict(
+                **{"lsfType": "gaussianConstantResolution", "resolution": "1"}
+            )
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestLSFTypeGaussianNISPSIM201707(TestLSFUtils):
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "GaussianNISPSIM201707"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "GaussianNISPSIM201707"})
             with pytest.raises(APIException, match=r"Missing parameter lsf sourceSize"):
                 check_from_parameter_dict(param_dict)
 
         def test_OK_if_GaussianConstantResolution_with_width_defined(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "GaussianNISPSIM201707",
-                "sourceSize": "1"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "GaussianNISPSIM201707", "sourceSize": "1"})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestLSFTypeGaussianVariablewidth(TestLSFUtils):
         def test_raises_an_error_if_GaussianConstantResolution_without_width_defined(self):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "gaussianVariableWidth"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "gaussianVariableWidth"})
             with pytest.raises(APIException, match=r"Missing parameter lsf gaussianVariableWidthFileName"):
                 check_from_parameter_dict(param_dict)
 
         def test_OK_if_GaussianConstantResolution_with_width_defined(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "gaussianVariableWidth",
-                "gaussianVariableWidthFileName": "someFileName"
-            })
+            param_dict = self._make_parameter_dict(
+                **{"lsfType": "gaussianVariableWidth", "gaussianVariableWidthFileName": "someFileName"}
+            )
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestWidth(TestLSFUtils):
-
         def test_warning_if_width_defined_with_other_LSF_type_than_GaussianConstantWidth(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "sth",
-                "width": "1"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "sth", "width": "1"})
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
         def test_OK_if_width_not_defined_with_other_LSF_type_than_GaussianConstantWidth(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "sth"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "sth"})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestResolution(TestLSFUtils):
-
         def test_warning_if_resolution_defined_with_other_LSF_type_than_GaussianConstantResolution(
-                self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "sth",
-                "resolution": "1"
-            })
+            self, zflag
+        ):
+            param_dict = self._make_parameter_dict(**{"lsfType": "sth", "resolution": "1"})
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
         def test_OK_if_resolution_not_defined_with_other_LSF_type_than_GaussianConstantResolution(
-                self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "sth",
-            })
+            self, zflag
+        ):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lsfType": "sth",
+                }
+            )
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestSourceSize(TestLSFUtils):
-
         def test_warning_if_sourcesize_defined_with_other_LSF_type_than_NISP(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "sth",
-                "sourceSize": "1"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "sth", "sourceSize": "1"})
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
         def test_OK_if_sourcesize_not_defined_with_other_LSF_type_than_NISP(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "sth"
-            })
+            param_dict = self._make_parameter_dict(**{"lsfType": "sth"})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestFileName(TestLSFUtils):
-
         def test_warning_if_filename_defined_with_other_LSF_type_than_NISP(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lsfType": "sth",
-                "gaussianVariableWidthFileName": "someFileName"
-            })
+            param_dict = self._make_parameter_dict(
+                **{"lsfType": "sth", "gaussianVariableWidthFileName": "someFileName"}
+            )
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 

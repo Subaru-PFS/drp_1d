@@ -44,12 +44,12 @@ T = TypeVar("T")
 class Container(Generic[T]):
     def __init__(self, **kwargs):
         self.data: dict[str, T] = dict()
-        if (kwargs):
+        if kwargs:
             for key in kwargs:
                 self.append(kwargs[key], key)
 
     def __repr__(self):
-        repr = ''
+        repr = ""
         for key in self.data:
             repr += f"\n{key}: {self.data[key]}"
         return repr

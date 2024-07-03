@@ -50,19 +50,23 @@ class SubType:
         self.calibration_library = calibration
 
     def Compute(self, context):
-        output = ResultStoreOutput(context.GetResultStore(),
-                                   self.parameters,
-                                   auto_load=False,
-                                   extended_results=False)
+        output = ResultStoreOutput(
+            context.GetResultStore(), self.parameters, auto_load=False, extended_results=False
+        )
         ret = []
 
-        for rank in range(context.GetResultStore().getNbRedshiftCandidates(
-                self.object_type, "redshiftSolver", "lineModelSolve")):
-            tpl_ratio = output.get_attribute_from_source(self.object_type,
-                                                         "redshiftSolver",
-                                                         "lineModelSolve",
-                                                         "model_parameters",
-                                                         "LinesRatioName",
-                                                         rank)
+        for rank in range(
+            context.GetResultStore().getNbRedshiftCandidates(
+                self.object_type, "redshiftSolver", "lineModelSolve"
+            )
+        ):
+            tpl_ratio = output.get_attribute_from_source(
+                self.object_type,
+                "redshiftSolver",
+                "lineModelSolve",
+                "model_parameters",
+                "LinesRatioName",
+                rank,
+            )
             ret.append(self.calibration_library.get_sub_type(self.object_type, tpl_ratio))
         return ret

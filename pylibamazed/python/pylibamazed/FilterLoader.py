@@ -73,10 +73,7 @@ class ParamJsonFilterLoader(AbstractFilterLoader):
     ]
     """
 
-    def __init__(
-        self,
-        FitlerItemClass=SpectrumFilterItem
-    ):
+    def __init__(self, FitlerItemClass=SpectrumFilterItem):
         super().__init__(FitlerItemClass)
 
     def get_filters(self, params: Parameters) -> FilterList:

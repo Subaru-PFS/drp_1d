@@ -1,4 +1,3 @@
-
 # ============================================================================
 #
 # This file is part of: AMAZED
@@ -40,7 +39,6 @@
 
 
 class FakeParametersChecker:
-
     def __init__(self, parameters):
         pass
 

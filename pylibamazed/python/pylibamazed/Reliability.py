@@ -64,15 +64,12 @@ class ReliabilitySolve:
         return self.get_probas(output, model, model_parameters)["success"]
 
     def get_probas(self, output, model, model_parameters):
-
         c_zgrid_zend = model_parameters["zgrid_end"]
 
         logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
         output.load_object_level(self.object_type)
 
-        pdf = BuilderPdfHandler().add_params(
-            output, self.object_type, logsampling
-        ).build()
+        pdf = BuilderPdfHandler().add_params(output, self.object_type, logsampling).build()
         pdf.convertToRegular(True, c_zgrid_zend)
 
         zgrid = pdf.redshifts
@@ -80,15 +77,16 @@ class ReliabilitySolve:
 
         zgrid_end = zgrid[-1]
         if pdfval.shape[0] != model.input_shape[1]:
-            raise APIException(ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
-                               "PDF and model shapes are not compatible")
+            raise APIException(
+                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES, "PDF and model shapes are not compatible"
+            )
         # The model needs a PDF, not LogPDF
         zend_diff = (zgrid_end - c_zgrid_zend) / zgrid_end
         if zend_diff > 1e-6:
             raise APIException(
                 ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
                 "PDF and model shapes are not compatible, zgrid differ in the end : "
-                f"{zgrid_end} != {c_zgrid_zend}"
+                f"{zgrid_end} != {c_zgrid_zend}",
             )
         z_step = (zgrid[-1] + 1) / (zgrid[-2] + 1)
         c_zrange_step = model_parameters["zrange_step"]
@@ -97,7 +95,8 @@ class ReliabilitySolve:
             raise APIException(
                 ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
                 "PDF and model shapes are not compatible, zgrid differ in the end : "
-                f"{z_step} != {np.exp(c_zrange_step)}")
+                f"{z_step} != {np.exp(c_zrange_step)}",
+            )
         ret = dict()
         classes = model_parameters["classes"]
         probas = model.predict(np.exp(pdfval[None, :, None]))

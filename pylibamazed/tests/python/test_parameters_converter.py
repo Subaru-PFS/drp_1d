@@ -38,10 +38,15 @@
 # ============================================================================
 import json
 import os
-from pylibamazed.Exception import APIException
+
 import pytest
-from pylibamazed.ParametersConverter import ParametersConverter, ParametersConverterSelector, \
-    ParametersConverterV1, ParametersConverterV2
+from pylibamazed.Exception import APIException
+from pylibamazed.ParametersConverter import (
+    ParametersConverter,
+    ParametersConverterSelector,
+    ParametersConverterV1,
+    ParametersConverterV2,
+)
 from tests.python.config import test_dir
 
 # For investigating errors only
@@ -65,7 +70,6 @@ class TestParametersConverterSelector:
 
 
 class TestParametersConverterV2:
-
     converter = ParametersConverterV2()
 
     def test_returns_same_than_input(self):
@@ -80,37 +84,24 @@ class TestParametersConverterV2:
 
 
 class TestParametersConverterV1:
-
     converter = ParametersConverterV1()
 
     def test_adds_redshift_solver_stage_if_method_is_not_empty(self):
         raw_params = {
             "objects": ["galaxy", "star"],
-            "galaxy": {
-                "method": "lineModelSolve",
-                "lineModelSolve": {}
-            },
-            "star": {
-                "method": "TemplateFittingSolve",
-                "TemplateFittingSolve": {}
-            }
+            "galaxy": {"method": "lineModelSolve", "lineModelSolve": {}},
+            "star": {"method": "TemplateFittingSolve", "TemplateFittingSolve": {}},
         }
         expected = {
             "spectrumModels": ["galaxy", "star"],
             "galaxy": {
                 "stages": ["redshiftSolver"],
-                "redshiftSolver": {
-                    "method": "lineModelSolve",
-                    "lineModelSolve": {}
-                }
+                "redshiftSolver": {"method": "lineModelSolve", "lineModelSolve": {}},
             },
             "star": {
                 "stages": ["redshiftSolver"],
-                "redshiftSolver": {
-                    "method": "templateFittingSolve",
-                    "templateFittingSolve": {}
-                }
-            }
+                "redshiftSolver": {"method": "templateFittingSolve", "templateFittingSolve": {}},
+            },
         }
 
         # print("\n\ndeepdiff\n", DeepDiff(self.converter.convert(raw_params), expected))
@@ -119,25 +110,14 @@ class TestParametersConverterV1:
     def test_adds_linemeas_solver_stage(self):
         raw_params = {
             "objects": ["galaxy"],
-            "galaxy": {
-                "method": "",
-                "linemeas_method": "LineMeasSolve",
-                "LineMeasSolve": {
-                    "linemodel": {}
-                }
-            }
+            "galaxy": {"method": "", "linemeas_method": "LineMeasSolve", "LineMeasSolve": {"linemodel": {}}},
         }
         expected = {
             "spectrumModels": ["galaxy"],
             "galaxy": {
                 "stages": ["lineMeasSolver"],
-                "lineMeasSolver": {
-                    "method": "lineMeasSolve",
-                    "lineMeasSolve": {
-                        "lineModel": {}
-                    }
-                }
-            }
+                "lineMeasSolver": {"method": "lineMeasSolve", "lineMeasSolve": {"lineModel": {}}},
+            },
         }
 
         # print("deepdiff\n", DeepDiff(self.converter.convert(raw_params), expected))
@@ -150,8 +130,8 @@ class TestParametersConverterV1:
                 "method": "",
                 "linemeas_method": "",
                 "enable_reliability": True,
-                "reliabilityModel": "sth"
-            }
+                "reliabilityModel": "sth",
+            },
         }
         expected = {
             "spectrumModels": ["galaxy"],
@@ -159,11 +139,9 @@ class TestParametersConverterV1:
                 "stages": ["reliabilitySolver"],
                 "reliabilitySolver": {
                     "method": "deepLearningSolver",
-                    "deepLearningSolver": {
-                        "reliabilityModel": "sth"
-                    }
-                }
-            }
+                    "deepLearningSolver": {"reliabilityModel": "sth"},
+                },
+            },
         }
 
         # print("deepdiff\n", DeepDiff(self.converter.convert(raw_params), expected))
@@ -176,47 +154,32 @@ class TestParametersConverterV1:
                 "method": "lineModelSolve",
                 "lineModelSolve": {},
                 "linemeas_method": "LineMeasSolve",
-                "LineMeasSolve": {
-                    "linemodel": {}
-                },
+                "LineMeasSolve": {"linemodel": {}},
                 "enable_reliability": True,
-                "reliabilityModel": "sth"
+                "reliabilityModel": "sth",
             },
             "star": {
                 "method": "TemplateFittingSolve",
                 "TemplateFittingSolve": {},
-                "enable_reliability": False
-            }
+                "enable_reliability": False,
+            },
         }
 
         expected = {
             "spectrumModels": ["galaxy", "star"],
             "galaxy": {
                 "stages": ["redshiftSolver", "lineMeasSolver", "reliabilitySolver"],
-                "redshiftSolver": {
-                    "method": "lineModelSolve",
-                    "lineModelSolve": {}
-                },
-                "lineMeasSolver": {
-                    "method": "lineMeasSolve",
-                    "lineMeasSolve": {
-                        "lineModel": {}
-                    }
-                },
+                "redshiftSolver": {"method": "lineModelSolve", "lineModelSolve": {}},
+                "lineMeasSolver": {"method": "lineMeasSolve", "lineMeasSolve": {"lineModel": {}}},
                 "reliabilitySolver": {
                     "method": "deepLearningSolver",
-                    "deepLearningSolver": {
-                        "reliabilityModel": "sth"
-                    }
-                }
+                    "deepLearningSolver": {"reliabilityModel": "sth"},
+                },
             },
             "star": {
                 "stages": ["redshiftSolver"],
-                "redshiftSolver": {
-                    "method": "templateFittingSolve",
-                    "templateFittingSolve": {}
-                }
-            }
+                "redshiftSolver": {"method": "templateFittingSolve", "templateFittingSolve": {}},
+            },
         }
         # print("deepdiff\n", DeepDiff(self.converter.convert(raw_params), expected), "\n\n\n")
         assert self.converter.convert(raw_params) == expected

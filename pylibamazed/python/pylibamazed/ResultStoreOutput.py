@@ -54,8 +54,9 @@ class ResultStoreOutput(AbstractOutput):
         if auto_load:
             self.load_all()
 
-    def _get_attribute_from_result_store(self, object_type, stage, method, data_spec,
-                                         rank, band_name=None, obs_id=None):
+    def _get_attribute_from_result_store(
+        self, object_type, stage, method, data_spec, rank, band_name=None, obs_id=None
+    ):
         operator_result = self._get_operator_result(object_type, stage, method, data_spec, rank)
         band_name_hook = "[band_name]"
         object_type_hook = "[object_type]"
@@ -82,9 +83,7 @@ class ResultStoreOutput(AbstractOutput):
         if attr_type == "TMapTFloat64List":
             if obs_id is not None:
                 return attr.to_numpy(obs_id)
-        elif (attr_type == "TFloat64List"
-                or attr_type == "TInt32List"
-                or attr_type == "TBoolList"):
+        elif attr_type == "TFloat64List" or attr_type == "TInt32List" or attr_type == "TBoolList":
             return attr.to_numpy()
         elif attr_type == "TStringList":
             return np.array(attr)
@@ -94,31 +93,18 @@ class ResultStoreOutput(AbstractOutput):
             return attr
 
     def get_attribute_from_source(
-        self,
-        object_type,
-        stage,
-        method,
-        dataset,
-        attribute,
-        rank=None,
-        band_name=None,
-        obs_id=None
+        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
     ):
         rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
         return self._get_attribute_from_result_store(
-            object_type,
-            stage,
-            method,
-            attribute_info,
-            rank=rank,
-            band_name=band_name,
-            obs_id=obs_id
+            object_type, stage, method, attribute_info, rank=rank, band_name=band_name, obs_id=obs_id
         )
 
-    def has_attribute_in_source(self, object_type, stage, method, dataset, attribute,
-                                rank=None, band_name=None, obs_id=None):
+    def has_attribute_in_source(
+        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
+    ):
         rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
 
@@ -132,11 +118,12 @@ class ResultStoreOutput(AbstractOutput):
                 stage,
                 method,
                 attribute_info.ResultStore_key,
-                attribute_info.dataset.replace("<ObsID>", "")
+                attribute_info.dataset.replace("<ObsID>", ""),
             ):
                 try:
-                    operator_result = self._get_operator_result(object_type, stage, method, attribute_info,
-                                                                rank)
+                    operator_result = self._get_operator_result(
+                        object_type, stage, method, attribute_info, rank
+                    )
                 except AmzException:
                     return False
             else:
@@ -144,7 +131,8 @@ class ResultStoreOutput(AbstractOutput):
         else:
             try:
                 operator_result = self._get_operator_result(
-                    object_type, stage, method, attribute_info, rank=None)
+                    object_type, stage, method, attribute_info, rank=None
+                )
             except AmzException:
                 return False
         if "[object_type]" in attribute_info.OperatorResult_name:
@@ -185,25 +173,15 @@ class ResultStoreOutput(AbstractOutput):
 
     def has_dataset_in_source(self, object_type, stage, method, dataset):
         if dataset == "classification":
-            return self.results_store.HasDataset(dataset,
-                                                 dataset,
-                                                 dataset,
-                                                 "solveResult")
-        return self.results_store.HasDataset(object_type or '',
-                                             stage or '',
-                                             method or '',
-                                             dataset)
+            return self.results_store.HasDataset(dataset, dataset, dataset, "solveResult")
+        return self.results_store.HasDataset(object_type or "", stage or "", method or "", dataset)
 
     def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
         rs = self.results_specifications.get_df_by_dataset(dataset)
         rs_key = rs["ResultStore_key"].unique()[0]
 
         return self.results_store.HasCandidateDataset(
-            object_type,
-            stage,
-            method,
-            rs_key,
-            dataset.replace("<ObsID>", "")
+            object_type, stage, method, rs_key, dataset.replace("<ObsID>", "")
         )
 
     def get_nb_candidates_in_source(self, object_type, stage, method):
@@ -213,57 +191,63 @@ class ResultStoreOutput(AbstractOutput):
         if attribute_info.level == "root":
             if attribute_info.ResultStore_key in ["init_warningFlag", "context_warningFlag", "warningFlag"]:
                 dataset = "" if attribute_info.dataset != "classification" else "classification"
-                return self.results_store.GetFlagLogResult(dataset,
-                                                           dataset,
-                                                           dataset,
-                                                           attribute_info.ResultStore_key)
-            or_type = self.results_store.GetGlobalResultType(attribute_info.dataset,
-                                                             attribute_info.dataset,
-                                                             attribute_info.dataset,
-                                                             attribute_info.ResultStore_key)
+                return self.results_store.GetFlagLogResult(
+                    dataset, dataset, dataset, attribute_info.ResultStore_key
+                )
+            or_type = self.results_store.GetGlobalResultType(
+                attribute_info.dataset,
+                attribute_info.dataset,
+                attribute_info.dataset,
+                attribute_info.ResultStore_key,
+            )
             if or_type == "CClassificationResult":
-                return self.results_store.GetClassificationResult(attribute_info.dataset,
-                                                                  attribute_info.dataset,
-                                                                  attribute_info.dataset,
-                                                                  attribute_info.ResultStore_key)
+                return self.results_store.GetClassificationResult(
+                    attribute_info.dataset,
+                    attribute_info.dataset,
+                    attribute_info.dataset,
+                    attribute_info.ResultStore_key,
+                )
             else:
-                raise APIException(ErrorCode.OUTPUT_READER_ERROR,
-                                   "Unknown OperatorResult type {}".format(str(or_type)))
+                raise APIException(
+                    ErrorCode.OUTPUT_READER_ERROR, "Unknown OperatorResult type {}".format(str(or_type))
+                )
         elif attribute_info.level == "object" or attribute_info.level == "method":
-            or_type = self.results_store.GetGlobalResultType(object_type,
-                                                             stage,
-                                                             method,
-                                                             attribute_info.ResultStore_key)
+            or_type = self.results_store.GetGlobalResultType(
+                object_type, stage, method, attribute_info.ResultStore_key
+            )
             getter = getattr(self.results_store, "Get" + or_type[1:])
-            return getter(object_type,
-                          stage,
-                          method,
-                          attribute_info.ResultStore_key)
+            return getter(object_type, stage, method, attribute_info.ResultStore_key)
         elif attribute_info.level == "candidate":
-            or_type = self.results_store.GetCandidateResultType(object_type,
-                                                                stage,
-                                                                method,
-                                                                attribute_info.ResultStore_key,
-                                                                attribute_info.dataset.replace("<ObsID>", ""))
+            or_type = self.results_store.GetCandidateResultType(
+                object_type,
+                stage,
+                method,
+                attribute_info.ResultStore_key,
+                attribute_info.dataset.replace("<ObsID>", ""),
+            )
             if or_type == "TLineModelResult":
                 firstpass_result = "Firstpass" in attribute_info["name"]
-                return self.results_store.GetLineModelResult(object_type,
-                                                             stage,
-                                                             method,
-                                                             attribute_info.ResultStore_key,
-                                                             attribute_info.dataset,
-                                                             rank, firstpass_result)
+                return self.results_store.GetLineModelResult(
+                    object_type,
+                    stage,
+                    method,
+                    attribute_info.ResultStore_key,
+                    attribute_info.dataset,
+                    rank,
+                    firstpass_result,
+                )
             else:
                 getter = getattr(self.results_store, "Get" + or_type[1:])
-                return getter(object_type,
-                              stage,
-                              method,
-                              attribute_info.ResultStore_key,
-                              attribute_info.dataset.replace("<ObsID>", ""),
-                              rank)
+                return getter(
+                    object_type,
+                    stage,
+                    method,
+                    attribute_info.ResultStore_key,
+                    attribute_info.dataset.replace("<ObsID>", ""),
+                    rank,
+                )
         else:
-            raise APIException(ErrorCode.OUTPUT_READER_ERROR,
-                               "Unknown level {}".format(attribute_info.level))
+            raise APIException(ErrorCode.OUTPUT_READER_ERROR, "Unknown level {}".format(attribute_info.level))
 
     def store_error(self, amz_exception, object_type, stage):
         full_name = self.get_error_full_name(object_type, stage)

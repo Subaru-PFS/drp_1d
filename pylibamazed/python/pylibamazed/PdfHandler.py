@@ -37,8 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import numpy as np
-from pylibamazed.redshift import (CLogZPdfResult, CZGridListParams,
-                                  CZGridParam, TFloat64Range)
+from pylibamazed.redshift import CLogZPdfResult, CZGridListParams, CZGridParam, TFloat64Range
 
 from pylibamazed import AbstractOutput
 
@@ -55,13 +54,7 @@ def buildPdfParams(pdf_params, first_pass=False):
 
 
 class BuilderPdfHandler:
-    def add_params(
-        self,
-        abstract_output: AbstractOutput,
-        object_type,
-        logsampling,
-        first_pass=False
-    ):
+    def add_params(self, abstract_output: AbstractOutput, object_type, logsampling, first_pass=False):
         self.abstract_output = abstract_output
         self.object_type = object_type
         self.logsampling = logsampling
@@ -76,13 +69,11 @@ class BuilderPdfHandler:
             dataset_prefix = "firstpass_"
             name_prefix = "Firstpass"
 
-        pdf_params = self.abstract_output.get_dataset(
-            self.object_type, dataset_prefix + "pdf_params"
-        )
+        pdf_params = self.abstract_output.get_dataset(self.object_type, dataset_prefix + "pdf_params")
         c_pdf_params = buildPdfParams(pdf_params, self.first_pass)
-        pdf_proba = self.abstract_output.get_dataset(
-            self.object_type, dataset_prefix + "pdf"
-        )[name_prefix + "LogZPdfNative"]
+        pdf_proba = self.abstract_output.get_dataset(self.object_type, dataset_prefix + "pdf")[
+            name_prefix + "LogZPdfNative"
+        ]
 
         return PdfHandler(c_pdf_params, self.logsampling, pdf_proba)
 

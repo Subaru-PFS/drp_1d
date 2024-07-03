@@ -38,23 +38,27 @@
 # ============================================================================
 
 
-from pylibamazed.redshift import (TLSFArguments,
-                                  TLSFGaussianConstantResolutionArgs,
-                                  TLSFGaussianConstantWidthArgs,
-                                  TLSFGaussianNISPVSSPSF201707Args,
-                                  TLSFGaussianVarWidthArgs)
+from pylibamazed.redshift import (
+    TLSFArguments,
+    TLSFGaussianConstantResolutionArgs,
+    TLSFGaussianConstantWidthArgs,
+    TLSFGaussianNISPVSSPSF201707Args,
+    TLSFGaussianVarWidthArgs,
+)
 
 LSFParameters = {
-    'gaussianConstantWidth': "width",
-    'gaussianConstantResolution': "resolution",
-    'gaussianNISPVSSPSF201707': "sourceSize",
+    "gaussianConstantWidth": "width",
+    "gaussianConstantResolution": "resolution",
+    "gaussianNISPVSSPSF201707": "sourceSize",
     "gaussianVariableWidth": "gaussianVariableWidthFileName",
-    "gaussianNISPSIM2016": ""
+    "gaussianNISPSIM2016": "",
 }
 
 
-TLSFArgumentsCtor = {'gaussianNISPSIM2016': TLSFArguments,
-                     'gaussianConstantWidth': TLSFGaussianConstantWidthArgs,
-                     'gaussianConstantResolution': TLSFGaussianConstantResolutionArgs,
-                     'gaussianNISPVSSPSF201707': TLSFGaussianNISPVSSPSF201707Args,
-                     "gaussianVariableWidth": TLSFGaussianVarWidthArgs}
+TLSFArgumentsCtor = {
+    "gaussianNISPSIM2016": TLSFArguments,
+    "gaussianConstantWidth": TLSFGaussianConstantWidthArgs,
+    "gaussianConstantResolution": TLSFGaussianConstantResolutionArgs,
+    "gaussianNISPVSSPSF201707": TLSFGaussianNISPVSSPSF201707Args,
+    "gaussianVariableWidth": TLSFGaussianVarWidthArgs,
+}

@@ -46,9 +46,10 @@ from pylibamazed.redshift import ErrorCode
 
 
 class ParametersConverter(ABC):
-    """ Converts raw input parameters into treed parameters, used for custom checks and pylibamazed
+    """Converts raw input parameters into treed parameters, used for custom checks and pylibamazed
     calculations
     """
+
     @abstractmethod
     def convert(self, raw_params: dict) -> dict:
         pass
@@ -61,13 +62,11 @@ class ParametersConverterSelector:
         elif version == 2:
             Converter = ParametersConverterV2
         else:
-            raise APIException(ErrorCode.INVALID_PARAMETER_FILE,
-                               f"Unexpected parameters version {version}")
+            raise APIException(ErrorCode.INVALID_PARAMETER_FILE, f"Unexpected parameters version {version}")
         return Converter
 
 
 class ParametersConverterV2(ParametersConverter):
-
     def convert(self, raw_params: dict) -> dict:
         params = raw_params.copy()
 
@@ -85,8 +84,7 @@ class ParametersConverterV1(ParametersConverter):
         params_str = json.dumps(params)
         renaming_df = pd.read_csv(v1_to_treed_filename)
         for _, row in renaming_df.iterrows():
-            params_str = params_str.replace(
-                f"\"{row.loc['old_name']}\"", f"\"{row.loc['new_name']}\"")
+            params_str = params_str.replace(f"\"{row.loc['old_name']}\"", f"\"{row.loc['new_name']}\"")
         renamed_params = json.loads(params_str)
 
         self.update_redshift_part(renamed_params)
@@ -104,8 +102,9 @@ class ParametersConverterV1(ParametersConverter):
             for redshift_method in redshift_methods:
                 if redshift_method in renamed_params[spectrum_model]:
                     renamed_params[spectrum_model].setdefault("redshiftSolver", {})
-                    renamed_params[spectrum_model]["redshiftSolver"][redshift_method] = \
-                        renamed_params[spectrum_model].pop(redshift_method)
+                    renamed_params[spectrum_model]["redshiftSolver"][redshift_method] = renamed_params[
+                        spectrum_model
+                    ].pop(redshift_method)
 
     def update_linemeas_part(self, renamed_params):
         for spectrum_model in renamed_params.get("spectrumModels", []):
@@ -113,7 +112,7 @@ class ParametersConverterV1(ParametersConverter):
                 renamed_params[spectrum_model].setdefault("stages", []).append("lineMeasSolver")
                 renamed_params[spectrum_model]["lineMeasSolver"] = {
                     "method": "lineMeasSolve",
-                    "lineMeasSolve": renamed_params[spectrum_model].pop("lineMeasSolve")
+                    "lineMeasSolve": renamed_params[spectrum_model].pop("lineMeasSolve"),
                 }
 
     def update_reliability_part(self, renamed_params):
@@ -124,7 +123,7 @@ class ParametersConverterV1(ParametersConverter):
                     "method": "deepLearningSolver",
                     "deepLearningSolver": {
                         "reliabilityModel": renamed_params[spectrum_model].pop("reliabilityModel")
-                    }
+                    },
                 }
             else:
                 renamed_params[spectrum_model].pop("reliabilityModel", None)

@@ -44,6 +44,7 @@ from contextlib import contextmanager
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.Parameters import Parameters
+
 # NB: DO NOT REMOVE - these libs are used in globals
 from pylibamazed.redshift import CClassificationSolve  # noqa F401
 from pylibamazed.redshift import CLineMatchingSolve  # noqa F401
@@ -51,12 +52,10 @@ from pylibamazed.redshift import CLineMeasSolve  # noqa F401
 from pylibamazed.redshift import CLineModelSolve  # noqa F401
 from pylibamazed.redshift import CTemplateFittingSolve  # noqa F401
 from pylibamazed.redshift import CTplCombinationSolve  # noqa F401
-from pylibamazed.redshift import (AmzException, CFlagWarning, CLog,
-                                  CProcessFlowContext, ErrorCode, ScopeType)
+from pylibamazed.redshift import AmzException, CFlagWarning, CLog, CProcessFlowContext, ErrorCode, ScopeType
 from pylibamazed.Reliability import ReliabilitySolve
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
-from pylibamazed.ScopeManager import (get_scope_spectrum_model,
-                                      get_scope_stage, push_scope)
+from pylibamazed.ScopeManager import get_scope_spectrum_model, get_scope_stage, push_scope
 from pylibamazed.SubType import SubType
 
 zflag = CFlagWarning.GetInstance()
@@ -69,8 +68,9 @@ class ProcessFlowException(Exception):
 
 def store_exception_handler(func=None, *, raise_process_flow_exception=False):
     if func is None:
-        return functools.partial(store_exception_handler,
-                                 raise_process_flow_exception=raise_process_flow_exception)
+        return functools.partial(
+            store_exception_handler, raise_process_flow_exception=raise_process_flow_exception
+        )
 
     @functools.wraps(func)
     def wrapper(self, rso, *args, **kwargs):
@@ -84,23 +84,20 @@ def store_exception_handler(func=None, *, raise_process_flow_exception=False):
         except Exception as e:
             api_exception = APIException.fromException(e)
             api_exception.LogError()
-            rso.store_error(api_exception,
-                            get_scope_spectrum_model(),
-                            get_scope_stage())
+            rso.store_error(api_exception, get_scope_spectrum_model(), get_scope_stage())
             if raise_process_flow_exception:
                 raise ProcessFlowException from e
+
     return wrapper
 
 
 class ProcessFlow:
-
     @exception_decorator(logging=True)
     def __init__(self, config, parameters: Parameters):
         _check_config(config)
         self.parameters = parameters
         zlog.LogInfo("Loading all needed calibration files :")
-        self.calibration_library = CalibrationLibrary(parameters,
-                                                      config["calibration_dir"])
+        self.calibration_library = CalibrationLibrary(parameters, config["calibration_dir"])
         self.calibration_library.load_all()
         zlog.LogInfo("Calibration files loaded.")
         self.process_flow_context = CProcessFlowContext.GetInstance()
@@ -122,10 +119,9 @@ class ProcessFlow:
     @exception_decorator(logging=True)
     def run(self, spectrum_reader):
         resultStore = self.process_flow_context.GetResultStore()
-        rso = ResultStoreOutput(resultStore,
-                                self.parameters,
-                                auto_load=False,
-                                extended_results=self.extended_results)
+        rso = ResultStoreOutput(
+            resultStore, self.parameters, auto_load=False, extended_results=self.extended_results
+        )
         try:
             with self.store_flags_handler(name="init_warningFlag"):
                 self.initialize(rso, spectrum_reader)
@@ -153,8 +149,7 @@ class ProcessFlow:
 
         redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.parameters.get_linemeas_method(spectrum_model)
-        linemeas_alone = self.config["linemeascatalog"] \
-            and spectrum_model in self.config["linemeascatalog"]
+        linemeas_alone = self.config["linemeascatalog"] and spectrum_model in self.config["linemeascatalog"]
         pipe_redshift_linemeas = linemeas_method and not linemeas_alone
 
         if redshift_solver_method:
@@ -163,8 +158,10 @@ class ProcessFlow:
             if self.parameters.is_tplratio_catalog_needed(spectrum_model):
                 self.run_sub_classification_solver(rso)
 
-            if self.parameters.get_reliability_enabled(spectrum_model) \
-                    and spectrum_model in self.calibration_library.reliability_models:
+            if (
+                self.parameters.get_reliability_enabled(spectrum_model)
+                and spectrum_model in self.calibration_library.reliability_models
+            ):
                 self.run_reliability_solver(rso)
 
             if pipe_redshift_linemeas:
@@ -206,14 +203,11 @@ class ProcessFlow:
             if object_type in self.calibration_library.line_catalogs:
                 for method in self.parameters.get_linemodel_methods(object_type):
                     self.process_flow_context.setLineCatalog(
-                        object_type,
-                        method,
-                        self.calibration_library.line_catalogs[object_type][method]
+                        object_type, method, self.calibration_library.line_catalogs[object_type][method]
                     )
             if object_type in self.calibration_library.line_ratio_catalog_lists:
                 self.process_flow_context.setLineRatioCatalogCatalog(
-                    object_type,
-                    self.calibration_library.line_ratio_catalog_lists[object_type]
+                    object_type, self.calibration_library.line_ratio_catalog_lists[object_type]
                 )
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
@@ -247,22 +241,22 @@ class ProcessFlow:
     @store_exception_handler
     def run_reliability_solver(self, rso):
         rel = ReliabilitySolve(self.scope_spectrum_model, self.parameters, self.calibration_library)
-        rso.object_results[self.scope_spectrum_model]['reliability'] = dict()
-        rso.object_results[self.scope_spectrum_model]['reliability']['Reliability'] = \
-            rel.Compute(self.process_flow_context)
+        rso.object_results[self.scope_spectrum_model]["reliability"] = dict()
+        rso.object_results[self.scope_spectrum_model]["reliability"]["Reliability"] = rel.Compute(
+            self.process_flow_context
+        )
 
     @push_scope("subClassifSolver", ScopeType.STAGE)
     @store_exception_handler
     def run_sub_classification_solver(self, rso):
-        sub_type = SubType(self.scope_spectrum_model,
-                           self.parameters,
-                           self.calibration_library)
+        sub_type = SubType(self.scope_spectrum_model, self.parameters, self.calibration_library)
         sub_types = sub_type.Compute(self.process_flow_context)
-        rso.object_results[self.scope_spectrum_model]['model_parameters'] = []
+        rso.object_results[self.scope_spectrum_model]["model_parameters"] = []
         for rank in range(len(sub_types)):
-            rso.object_results[self.scope_spectrum_model]['model_parameters'].append(dict())
-            rso.object_results[self.scope_spectrum_model]['model_parameters'][rank]['SubType'] \
-                = sub_types[rank]
+            rso.object_results[self.scope_spectrum_model]["model_parameters"].append(dict())
+            rso.object_results[self.scope_spectrum_model]["model_parameters"][rank]["SubType"] = sub_types[
+                rank
+            ]
 
     def all_redshift_solver_failed(self, rso):
         answer = True
@@ -277,8 +271,9 @@ class ProcessFlow:
     @store_exception_handler
     def run_classification_solver(self, rso):
         if self.all_redshift_solver_failed(rso):
-            raise APIException(ErrorCode.NO_CLASSIFICATION,
-                               "Classification not run because all redshiftSolver failed")
+            raise APIException(
+                ErrorCode.NO_CLASSIFICATION, "Classification not run because all redshiftSolver failed"
+            )
         self.run_method("classificationSolve")
 
     @push_scope("load_result_store", ScopeType.STAGE)
@@ -292,7 +287,7 @@ class ProcessFlow:
             "lineMeasSolve": "CLineMeasSolve",
             "lineModelSolve": "CLineModelSolve",
             "templateFittingSolve": "CTemplateFittingSolve",
-            "tplCombinationSolve": "CTplCombinationSolve"
+            "tplCombinationSolve": "CTplCombinationSolve",
         }
         if method_to_solver[method] not in globals():
             raise APIException(ErrorCode.INVALID_PARAMETER, "Unknown method {}".format(method))
@@ -305,22 +300,28 @@ def _check_config(config):
     if "calibration_dir" not in config:
         raise APIException(ErrorCode.MISSING_CONFIG_OPTION, "Config must contain 'calibration_dir' key")
     if not os.path.exists(config["calibration_dir"]):
-        raise APIException(ErrorCode.INVALID_DIRECTORY,
-                           "Calibration directory {} does not exist".format(config["calibration_dir"]))
+        raise APIException(
+            ErrorCode.INVALID_DIRECTORY,
+            "Calibration directory {} does not exist".format(config["calibration_dir"]),
+        )
     if "linemeascatalog" in config:
         if "linemeas_catalog_columns" not in config:
-            raise APIException(ErrorCode.MISSING_CONFIG_OPTION,
-                               "Missing linemeas_catalog_columns key in linemeascatalog config-option")
+            raise APIException(
+                ErrorCode.MISSING_CONFIG_OPTION,
+                "Missing linemeas_catalog_columns key in linemeascatalog config-option",
+            )
         for object_type in config["linemeascatalog"].keys():
             if object_type not in config["linemeas_catalog_columns"]:
-                raise APIException(ErrorCode.INCOHERENT_CONFIG_OPTIONS,
-                                   "Missing category {} in linemeas_catalog_columns ".format(object_type))
+                raise APIException(
+                    ErrorCode.INCOHERENT_CONFIG_OPTIONS,
+                    "Missing category {} in linemeas_catalog_columns ".format(object_type),
+                )
 
             for attr in ["Redshift", "VelocityAbsorption", "VelocityEmission"]:
                 if attr not in config["linemeas_catalog_columns"][object_type]:
                     raise APIException(
                         ErrorCode.ATTRIBUTE_NOT_SUPPORTED,
-                        f"Not supported Attribute {object_type} in Config['linemeas_catalog_columns'][{attr}]"
+                        f"Not supported Attribute {object_type} in Config['linemeas_catalog_columns'][{attr}]",
                     )
 
 

@@ -62,24 +62,25 @@ class FilterItem:
         self.value = value
 
     def __repr__(self):
-        return "Filter " + str({
-            "key": self.key,
-            "instruction": self.instruction,
-            "value": self.value,
-        })
+        return "Filter " + str(
+            {
+                "key": self.key,
+                "instruction": self.instruction,
+                "value": self.value,
+            }
+        )
 
     def __eq__(self, __value: object) -> bool:
-        return type(self) == type(__value) \
-            and self.key == __value.key \
-            and self.instruction == __value.instruction \
+        return (
+            type(self) == type(__value)
+            and self.key == __value.key
+            and self.instruction == __value.instruction
             and self.value == __value.value
+        )
 
     def compliant_lines(self, df: pd.DataFrame) -> pd.Series:
         if self.key not in df:
-            raise APIException(
-                ErrorCode.INVALID_FILTER_KEY,
-                f"Column {self.key} does not exist"
-            )
+            raise APIException(ErrorCode.INVALID_FILTER_KEY, f"Column {self.key} does not exist")
         comparator = self._comparator_from_instruction()
         return comparator(df[self.key])
 
@@ -146,7 +147,7 @@ class FilterItem:
             raise APIException(
                 ErrorCode.INVALID_FILTER_INSTRUCTION,
                 f"Instruction {instruction} is not registered."
-                f"Allowed instructions are: {cls.allowed_instructions}"
+                f"Allowed instructions are: {cls.allowed_instructions}",
             )
 
 

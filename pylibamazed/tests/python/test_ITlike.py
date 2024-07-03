@@ -104,9 +104,7 @@ def get_parameters(parameters_file_path):
 
 def get_observation(input_file_path):
     input_spectra_path = os.path.join(test_dir, input_file_path)
-    observation = pd.read_table(
-        input_spectra_path, delimiter=" ", names=["ProcessingID"]
-    )
+    observation = pd.read_table(input_spectra_path, delimiter=" ", names=["ProcessingID"])
     return observation
 
 
@@ -125,10 +123,7 @@ def get_spectra(config, observation):
 
 def add_photometry_to_reader(config, observation, reader):
     phot_fname = (
-        os.path.join(test_dir, config["spectrum_dir"])
-        + "/"
-        + str(observation.ProcessingID[0])
-        + "_phot.txt"
+        os.path.join(test_dir, config["spectrum_dir"]) + "/" + str(observation.ProcessingID[0]) + "_phot.txt"
     )
     if os.path.exists(phot_fname):
         phot = read_photometry_fromfile(phot_fname)
@@ -167,14 +162,16 @@ def test_ITLikeTest():
     output = process_flow.run(reader)  # passing spectra reader to launch amazed
 
     # check results (no errors)
-    for spectrum_model, stage in (("", "init"),
-                                  ("galaxy", "redshiftSolver"),
-                                  ("galaxy", "linemeas_catalog_load"),
-                                  ("galaxy", "lineMeasSolver"),
-                                  ("galaxy", "subClassifSolver"),
-                                  ("galaxy", "reliabilitySolver"),
-                                  ("", "classification"),
-                                  ("", "load_result_store")):
+    for spectrum_model, stage in (
+        ("", "init"),
+        ("galaxy", "redshiftSolver"),
+        ("galaxy", "linemeas_catalog_load"),
+        ("galaxy", "lineMeasSolver"),
+        ("galaxy", "subClassifSolver"),
+        ("galaxy", "reliabilitySolver"),
+        ("", "classification"),
+        ("", "load_result_store"),
+    ):
         if output.has_error(spectrum_model, stage):
             print("object_type", spectrum_model, "stage", stage, output.get_error(spectrum_model, stage))
         assert output.has_error(spectrum_model, stage) is False
