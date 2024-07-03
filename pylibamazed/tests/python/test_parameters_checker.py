@@ -39,8 +39,7 @@
 
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.ParametersChecker import (JsonSchemaFileAccessor,
-                                           ParametersChecker)
+from pylibamazed.ParametersChecker import JsonSchemaFileAccessor, ParametersChecker
 from pylibamazed.Paths import module_root_dir
 
 
@@ -52,15 +51,18 @@ class TestParametersChecker:
 
 
 class TestJsonSchemaFileAccessor:
-
     json_file_accessor = JsonSchemaFileAccessor()
 
     def test_json_schema_filesystem_path(self):
         version = 2
-        assert self.json_file_accessor.json_schema_filesystem_path(version) == \
-            "file:///" + module_root_dir + "/resources/jsonschema-v2/"
+        assert (
+            self.json_file_accessor.json_schema_filesystem_path(version)
+            == "file:///" + module_root_dir + "/resources/jsonschema-v2/"
+        )
 
     def test_json_schema_filename(self):
         version = 2
-        assert self.json_file_accessor.json_schema_filename(version) == \
-            module_root_dir + "/resources/jsonschema-v2/general.json"
+        assert (
+            self.json_file_accessor.json_schema_filename(version)
+            == module_root_dir + "/resources/jsonschema-v2/general.json"
+        )

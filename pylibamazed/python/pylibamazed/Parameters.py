@@ -50,10 +50,14 @@ from pylibamazed.redshift import ErrorCode
 
 class Parameters(ParametersAccessor):
     @exception_decorator(logging=True)
-    def __init__(self, raw_params: dict, make_checks=True, Checker=ParametersChecker,
-                 ConverterSelector=ParametersConverterSelector,
-                 Extender=ParametersExtender):
-
+    def __init__(
+        self,
+        raw_params: dict,
+        make_checks=True,
+        Checker=ParametersChecker,
+        ConverterSelector=ParametersConverterSelector,
+        Extender=ParametersExtender,
+    ):
         version = self.get_json_schema_version(raw_params)
 
         if make_checks:
@@ -73,10 +77,7 @@ class Parameters(ParametersAccessor):
         if version is None:
             version = 1
         if type(version) is not int:
-            raise APIException(
-                ErrorCode.INVALID_PARAMETER_FILE,
-                "Parameter version must be an integer"
-            )
+            raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Parameter version must be an integer")
         return version
 
     def get_solve_methods(self, spectrum_model) -> dict:
@@ -121,13 +122,13 @@ class Parameters(ParametersAccessor):
 
     def load_linemeas_parameters_from_catalog(self, source_id, config):
         for spectrum_model in config["linemeascatalog"].keys():
-            lm = pd.read_csv(config["linemeascatalog"][spectrum_model],
-                             sep='\t', dtype={'ProcessingID': object})
+            lm = pd.read_csv(
+                config["linemeascatalog"][spectrum_model], sep="\t", dtype={"ProcessingID": object}
+            )
             lm = lm[lm.ProcessingID == source_id]
             if lm.empty:
                 raise APIException(
-                    ErrorCode.INVALID_PARAMETER,
-                    f"Uncomplete linemeas catalog, {source_id} missing"
+                    ErrorCode.INVALID_PARAMETER, f"Uncomplete linemeas catalog, {source_id} missing"
                 )
 
             columns = config["linemeas_catalog_columns"][spectrum_model]
@@ -140,25 +141,31 @@ class Parameters(ParametersAccessor):
             self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
 
     def load_linemeas_parameters_from_result_store(self, output, spectrum_model):
-        redshift = output.get_attribute_from_source(spectrum_model,
-                                                    "redshiftSolver",
-                                                    self.get_redshift_solver_method(spectrum_model),
-                                                    "model_parameters",
-                                                    "Redshift",
-                                                    0)
+        redshift = output.get_attribute_from_source(
+            spectrum_model,
+            "redshiftSolver",
+            self.get_redshift_solver_method(spectrum_model),
+            "model_parameters",
+            "Redshift",
+            0,
+        )
         self.parameters[spectrum_model]["redshiftref"] = redshift
-        velocity_abs = output.get_attribute_from_source(spectrum_model,
-                                                        "redshiftSolver",
-                                                        self.get_redshift_solver_method(spectrum_model),
-                                                        "model_parameters",
-                                                        "VelocityAbsorption",
-                                                        0)
-        velocity_em = output.get_attribute_from_source(spectrum_model,
-                                                       "redshiftSolver",
-                                                       self.get_redshift_solver_method(spectrum_model),
-                                                       "model_parameters",
-                                                       "VelocityEmission",
-                                                       0)
+        velocity_abs = output.get_attribute_from_source(
+            spectrum_model,
+            "redshiftSolver",
+            self.get_redshift_solver_method(spectrum_model),
+            "model_parameters",
+            "VelocityAbsorption",
+            0,
+        )
+        velocity_em = output.get_attribute_from_source(
+            spectrum_model,
+            "redshiftSolver",
+            self.get_redshift_solver_method(spectrum_model),
+            "model_parameters",
+            "VelocityEmission",
+            0,
+        )
         self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
         self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
 
@@ -175,8 +182,10 @@ class Parameters(ParametersAccessor):
         elif stage == "lineMeasSolver":
             return self.get_linemeas_method(spectrum_model) is not None
         elif stage == "linemeas_catalog_load":
-            return self.get_linemeas_method(spectrum_model) is not None \
+            return (
+                self.get_linemeas_method(spectrum_model) is not None
                 and self.get_redshift_solver_method(spectrum_model) is None
+            )
         elif stage == "reliabilitySolver":
             return self.get_reliability_enabled(spectrum_model)
         elif stage == "subClassifSolver":
@@ -215,7 +224,7 @@ class Parameters(ParametersAccessor):
                     raise APIException(
                         ErrorCode.INCOHERENT_CONFIG_OPTION,
                         "Cannot run LineMeasSolve from catalog when sequencial processing is selected"
-                        "simultaneously."
+                        "simultaneously.",
                     )
 
     def get_lambda_range_min(self):

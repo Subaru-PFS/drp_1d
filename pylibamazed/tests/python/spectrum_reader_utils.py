@@ -39,15 +39,13 @@
 import tempfile
 
 import numpy as np
-from pylibamazed.AbstractSpectrumReader import (AbstractSpectrumReader,
-                                                Container)
+from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader, Container
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
 from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestSpectrumReaderUtils:
-
     def make_parameters_dict(self, **kwargs):
         params_dict = dict()
         params_dict["lsf"] = dict()
@@ -66,16 +64,16 @@ class TestSpectrumReaderUtils:
         return params_dict
 
     def full_load(self, fsr, **kwargs):
-        obs_id = kwargs.get('obs_id', '')
+        obs_id = kwargs.get("obs_id", "")
         if kwargs.get("multiObsMethod") == "full":
             wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
             wave_range = wave_ranges[obs_id]
         else:
             wave_range = kwargs.get("spectrum_wave_range", [0, 10])
-        fsr.load_wave(wave_range, kwargs.get('obs_id', ''))
-        fsr.load_flux(wave_range, kwargs.get('obs_id', ''))
-        fsr.load_error(wave_range, kwargs.get('obs_id', ''))
-        fsr.load_lsf(None, kwargs.get('obs_id', ''))
+        fsr.load_wave(wave_range, kwargs.get("obs_id", ""))
+        fsr.load_flux(wave_range, kwargs.get("obs_id", ""))
+        fsr.load_error(wave_range, kwargs.get("obs_id", ""))
+        fsr.load_lsf(None, kwargs.get("obs_id", ""))
 
     def initialize_fsr_with_data(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)
@@ -87,7 +85,6 @@ class TestSpectrumReaderUtils:
 
 
 class FakeSpectrumReader(AbstractSpectrumReader):
-
     def __init__(self, observation_id, parameters: Parameters, calibration_library, source_id, lambda_type):
         AbstractSpectrumReader.__init__(self, observation_id, parameters, calibration_library, source_id)
         self.lambda_type = lambda_type
@@ -141,7 +138,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
 
     def load_lsf(self, location, obs_id=""):
         self.lsf_type = "gaussianConstantWidth"
-        lsf = np.ndarray((1,), dtype=np.dtype([("width", '<f8')]))
+        lsf = np.ndarray((1,), dtype=np.dtype([("width", "<f8")]))
         lsf["width"][0] = 3.0
         self.lsf_data.append(lsf, obs_id)
 

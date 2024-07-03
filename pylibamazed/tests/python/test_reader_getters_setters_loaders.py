@@ -49,7 +49,6 @@ from tests.python.spectrum_reader_utils import TestSpectrumReaderUtils
 
 
 class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
-
     def test_get_wave(self):
         fsr = self.initialize_fsr_with_data()
         fsr.init()
@@ -89,7 +88,7 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
         parameters = Parameters(self.make_parameters_dict(), Checker=FakeParametersChecker)
         cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
         fsr = AbstractSpectrumReader("000", parameters, cl, "000")
-        fsr.load_others('data name')
+        fsr.load_others("data name")
 
 
 class SpectrumReader(AbstractSpectrumReader):
@@ -98,7 +97,6 @@ class SpectrumReader(AbstractSpectrumReader):
 
 
 class TestSpectrumReaderGetErrors:
-
     spectrumReader = SpectrumReader()
 
     def test_get_spectrum_error(self):

@@ -48,17 +48,12 @@ calibration_dir = os.path.join(test_dir, "calibration")
 
 
 def make_parameters() -> Parameters:
-
     parameters_dict = {
         "spectrumModels": ["galaxy"],
-        "ebmv": {
-            "count": 3,
-            "start": 0.0,
-            "step": 0.5
-        },
+        "ebmv": {"count": 3, "start": 0.0, "step": 0.5},
         "lsf": {
             "lsfType": "gaussianVariableWidth",
-            "gaussianVariableWidthFileName": "LSF/EuclidNISPVSSPSF201707.fits"
+            "gaussianVariableWidthFileName": "LSF/EuclidNISPVSSPSF201707.fits",
         },
         "galaxy": {
             "stages": ["redshiftSolver"],
@@ -70,13 +65,13 @@ def make_parameters() -> Parameters:
                         "tplRatioCatalog": "lineratiocataloglists/lineratiocatalogs_v16/",
                         "tplRatioIsmFit": True,
                         "nSigmaSupport": 8,
-                        "lya": {"profile": "igm"}
+                        "lya": {"profile": "igm"},
                     }
                 }
-            }
+            },
         },
         "photometryTransmissionDir": "photometric_transmission/EL-COSMOSv2/",
-        "photometryBand": ["H", "J", "Y", "riz"]
+        "photometryBand": ["H", "J", "Y", "riz"],
     }
     return Parameters(parameters_dict, Checker=FakeParametersChecker)
 

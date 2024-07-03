@@ -77,17 +77,12 @@ def make_parameter_dict(**kwargs) -> dict:
 
 
 def make_parameter_dict_at_object_level(**kwargs) -> dict:
-    param_dict = {
-        "spectrumModels": [default_object_type],
-        default_object_type: kwargs
-    }
+    param_dict = {"spectrumModels": [default_object_type], default_object_type: kwargs}
     return param_dict
 
 
 def make_parameter_dict_at_redshift_solver_level(
-        object_level_params=None,
-        object_type=None,
-        **redshift_kwargs
+    object_level_params=None, object_type=None, **redshift_kwargs
 ) -> dict:
     if object_type is None:
         object_type = default_object_type
@@ -96,7 +91,7 @@ def make_parameter_dict_at_redshift_solver_level(
         object_type: {
             "stages": ["redshiftSolver"],
             "redshiftSolver": redshift_kwargs,
-        }
+        },
     }
     if object_level_params is not None:
         for key, val in object_level_params.items():
@@ -127,8 +122,8 @@ def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwar
             "lineMeasSolver": {
                 "method": "lineMeasSolve",
                 "lineMeasSolve": kwargs,
-            }
-        }
+            },
+        },
     }
     param_dict["lsf"] = {}
     if object_level_params is not None:
@@ -145,8 +140,8 @@ def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=N
             "reliabilitySolver": {
                 "method": "deepLearningSolver",
                 "deepLearningSolver": kwargs,
-            }
-        }
+            },
+        },
     }
     if object_level_params is not None:
         for key, val in object_level_params.items():

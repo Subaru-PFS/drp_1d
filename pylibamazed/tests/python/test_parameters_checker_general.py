@@ -39,31 +39,24 @@
 import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.ParametersChecker import ParametersChecker
-from tests.python.utils import (WarningUtils,
-                                make_parameter_dict_at_object_level)
+from tests.python.utils import WarningUtils, make_parameter_dict_at_object_level
 
 
 class TestParametersCheckGeneral:
     class TestFilters:
         class TestFiltersFormat:
             def test_ok_if_filter_format_is_correct(self, zflag):
-                parametersDict = {
-                    "filters": [{"key": "Err", "instruction": "^", "value": "8"}]
-                }
+                parametersDict = {"filters": [{"key": "Err", "instruction": "^", "value": "8"}]}
                 ParametersChecker(parametersDict).custom_check()
                 assert not WarningUtils.has_any_warning()
 
             def test_error_if_filters_is_not_a_list(self):
-                parametersDict = {
-                    "filters": {"key": "Err", "instruction": "^", "value": "8"}
-                }
+                parametersDict = {"filters": {"key": "Err", "instruction": "^", "value": "8"}}
                 with pytest.raises(APIException, match=r"Input filters json must be a list"):
                     ParametersChecker(parametersDict).custom_check()
 
             def test_error_if_filters_is_missing_a_key(self):
-                parametersDict = {
-                    "filters": [{"key": "Err", "instruction": "^"}]
-                }
+                parametersDict = {"filters": [{"key": "Err", "instruction": "^"}]}
                 with pytest.raises(APIException, match=r"Filters"):
                     ParametersChecker(parametersDict).custom_check()
 
@@ -81,9 +74,7 @@ class TestParametersCheckGeneral:
                 assert not WarningUtils.has_any_warning()
 
             def test_error_if_filter_uses_an_unknown_column(self):
-                parametersDict = {
-                    "filters": [{"key": "zzz", "instruction": "^", "value": "8"}]
-                }
+                parametersDict = {"filters": [{"key": "zzz", "instruction": "^", "value": "8"}]}
 
                 with pytest.raises(APIException, match=r"Unknown filter key zzz"):
                     ParametersChecker(parametersDict).custom_check()
@@ -92,16 +83,15 @@ class TestParametersCheckGeneral:
                 parametersDict = {
                     "filters": [
                         {"key": "Err", "instruction": "^", "value": "8"},
-                        {"key": "zzz", "instruction": "^", "value": "8"}
+                        {"key": "zzz", "instruction": "^", "value": "8"},
                     ],
-                    "additionalCols": ["zzz"]
+                    "additionalCols": ["zzz"],
                 }
 
                 ParametersChecker(parametersDict).custom_check()
                 assert not WarningUtils.has_any_warning()
 
     class TestPhotometryTransmissionDir:
-
         def _make_param_dict(self, **kwargs):
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
@@ -112,7 +102,7 @@ class TestParametersCheckGeneral:
                 "redshiftSolver": {
                     "method": "templateFittingSolve",
                     "templateFittingSolve": new_kwargs,
-                }
+                },
             }
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)
             if kwargs.get("enablePhotometry"):
@@ -138,7 +128,6 @@ class TestParametersCheckGeneral:
             assert WarningUtils.has_any_warning()
 
     class TestPhotometryBand:
-
         def _make_param_dict(self, **kwargs):
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
@@ -150,7 +139,7 @@ class TestParametersCheckGeneral:
                 "redshiftSolver": {
                     "method": "templateFittingSolve",
                     "templateFittingSolve": new_kwargs,
-                }
+                },
             }
 
             param_dict = make_parameter_dict_at_object_level(**new_kwargs)

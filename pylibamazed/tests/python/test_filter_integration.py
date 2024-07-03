@@ -41,8 +41,7 @@ from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Parameters import Parameters
 from pylibamazed.ProcessFlow import ProcessFlow
 from tests.python.fake_parameters_checker import FakeParametersChecker
-from tests.python.test_ITlike import (get_observation, get_parameters,
-                                      get_spectra, make_config)
+from tests.python.test_ITlike import get_observation, get_parameters, get_spectra, make_config
 
 
 class TestFilterIntegration:

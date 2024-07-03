@@ -38,12 +38,14 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
-from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_redshift_solver_level)
+from tests.python.utils import (
+    WarningUtils,
+    check_from_parameter_dict,
+    make_parameter_dict_at_redshift_solver_level,
+)
 
 
 class TestLineModelSolve:
-
     class TestMethod:
         def _make_parameter_dict(self, **kwargs):
             kwargs["linemeas_method"] = ""
@@ -56,104 +58,106 @@ class TestLineModelSolve:
                 check_from_parameter_dict(param_dict)
 
         def test_OK_if_method_is_lineModelSolve_and_section_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {}
-            })
+            param_dict = self._make_parameter_dict(**{"lineModelSolve": {}})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
         def test_OK_if_lineRatioType_is_rules_and_rules_section_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {
-                    "lineRatioType": "rules",
-                    "rules": {}
-                }
-            })
+            param_dict = self._make_parameter_dict(
+                **{"lineModelSolve": {"lineRatioType": "rules", "rules": {}}}
+            )
 
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
     class TestLineRatioType:
-
         def _make_parameter_dict(self, **kwargs):
             kwargs["linemeas_method"] = ""
             kwargs["method"] = "lineModelSolve"
-            if kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("lineRatioType") in \
-                    ["tplRatio", "tplCorr"]:
+            if kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("lineRatioType") in [
+                "tplRatio",
+                "tplCorr",
+            ]:
                 kwargs["lineModelSolve"]["lineModel"]["firstPass"] = {"tplRatioIsmFit": False}
             param_dict = make_parameter_dict_at_redshift_solver_level(**kwargs)
             return param_dict
 
         def test_error_if_lineRatioType_is_rules_but_rules_section_is_absent(self):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "lineRatioType": "rules",
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "lineRatioType": "rules",
+                        }
+                    }
+                }
+            )
             with pytest.raises(APIException, match=r"Missing parameter lineModelSolve rules"):
                 check_from_parameter_dict(param_dict)
 
         def test_warning_if_lineRatioType_is_not_rules_and_rules_section_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "lineRatioType": "sth",
-                    "rules": {}
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{"lineModelSolve": {"lineModel": {"lineRatioType": "sth", "rules": {}}}}
+            )
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
         def test_OK_if_lineRatioType_is_not_rules_and_rules_section_is_absent(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {
-                }
-            })
+            param_dict = self._make_parameter_dict(**{"lineModelSolve": {}})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
-        @pytest.mark.parametrize('tpl_ratio', ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
         def test_OK_if_lineRatioType_is_tplratio_and_tplratio_params_are_present(self, zflag, tpl_ratio):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "lineRatioType": tpl_ratio,
-                    "tplRatioCatalog": "",
-                    "tplRatioIsmFit": False,
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "lineRatioType": tpl_ratio,
+                            "tplRatioCatalog": "",
+                            "tplRatioIsmFit": False,
+                        }
+                    }
+                }
+            )
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
-        @pytest.mark.parametrize('tpl_ratio', ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
         def test_error_if_lineRatioType_is_tplratio_and_missing_tplratio_catalog(self, tpl_ratio):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "lineRatioType": tpl_ratio,
-                    "tplRatioIsmFit": False,
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "lineRatioType": tpl_ratio,
+                            "tplRatioIsmFit": False,
+                        }
+                    }
+                }
+            )
             with pytest.raises(APIException, match=r"Missing parameter lineModelSolve tplRatioCatalog"):
                 check_from_parameter_dict(param_dict)
 
-        @pytest.mark.parametrize('tpl_ratio', ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
         def test_error_if_lineRatioType_is_tplratio_and_missing_tplratio_ismfit(self, tpl_ratio):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "lineRatioType": tpl_ratio,
-                    "tplRatioCatalog": "",
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "lineRatioType": tpl_ratio,
+                            "tplRatioCatalog": "",
+                        }
+                    }
+                }
+            )
             with pytest.raises(APIException, match=r"Missing parameter lineModelSolve tplRatioIsmFit"):
                 check_from_parameter_dict(param_dict)
 
-        @pytest.mark.parametrize('tplparam', ["tplRatioCatalog", "tplRatioIsmFit"])
+        @pytest.mark.parametrize("tplparam", ["tplRatioCatalog", "tplRatioIsmFit"])
         def test_warning_if_lineRatioType_is_rules_and_tplratio_catalog_is_present(self, zflag, tplparam):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "lineRatioType": "rules",
-                    "rules": {},
-                    tplparam: "sth"
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{"lineModelSolve": {"lineModel": {"lineRatioType": "rules", "rules": {}, tplparam: "sth"}}}
+            )
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
@@ -167,88 +171,104 @@ class TestLineModelSolve:
             return param_dict
 
         def test_error_if_continuumcomponent_is_fromspectrum_but_continuumreestimation_absent(self):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "continuumComponent": "fromSpectrum",
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": "fromSpectrum",
+                        }
+                    }
+                }
+            )
             param_dict["continuumRemoval"] = {}
 
             with pytest.raises(
-                APIException,
-                match=r"Missing parameter object galaxy lineModelSolve continuumReestimation"
+                APIException, match=r"Missing parameter object galaxy lineModelSolve continuumReestimation"
             ):
                 check_from_parameter_dict(param_dict)
 
         def test_warning_if_continuumcomponent_is_not_fromspectrum_but_continuumreestimation_present(
-                self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "continuumComponent": "sth",
-                    "continuumReestimation": "sth"
-                }}
-            })
+            self, zflag
+        ):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {"continuumComponent": "sth", "continuumReestimation": "sth"}
+                    }
+                }
+            )
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
         def test_OK_if_continuumcomponent_is_fromspectrum_and_mandatory_fields_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "continuumComponent": "fromSpectrum",
-                    "continuumReestimation": "sth"
-                }}
-            })
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {"continuumComponent": "fromSpectrum", "continuumReestimation": "sth"}
+                    }
+                }
+            )
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
-        @pytest.mark.parametrize('continuum_component', ["tplFit", "tplFitAuto"])
-        def test_error_if_continuumcomponent_is_tplfit_but_continuumfit_is_absent(
-                self, continuum_component):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "continuumComponent": continuum_component,
-                    "secondPass": {"continuumFit": ""}
-                }}
-            })
+        @pytest.mark.parametrize("continuum_component", ["tplFit", "tplFitAuto"])
+        def test_error_if_continuumcomponent_is_tplfit_but_continuumfit_is_absent(self, continuum_component):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": continuum_component,
+                            "secondPass": {"continuumFit": ""},
+                        }
+                    }
+                }
+            )
             param_dict["continuumRemoval"] = {}
             with pytest.raises(
-                APIException,
-                match=r"Missing parameter object galaxy lineModelSolve continuumFit"
+                APIException, match=r"Missing parameter object galaxy lineModelSolve continuumFit"
             ):
                 check_from_parameter_dict(param_dict)
 
-        @pytest.mark.parametrize('continuum_component', ["tplFit", "tplFitAuto"])
+        @pytest.mark.parametrize("continuum_component", ["tplFit", "tplFitAuto"])
         def test_error_if_continuumcomponent_is_tplfit_but_secondpass_continuumfit_is_absent(
-            self,
-            continuum_component
+            self, continuum_component
         ):
-            param_dict = self._make_parameter_dict(**{
-                "lineModelSolve": {"lineModel": {
-                    "continuumComponent": continuum_component,
-                    "continuumFit": {},
-                    "secondPass": {}
-                }},
-            })
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": continuum_component,
+                            "continuumFit": {},
+                            "secondPass": {},
+                        }
+                    },
+                }
+            )
             param_dict["continuumRemoval"] = {}
             param_dict["galaxy"]["templateDir"] = "sth"
 
             with pytest.raises(
-                APIException,
-                match=r"Missing parameter object galaxy lineModelSolve secondpass continuumFit"
+                APIException, match=r"Missing parameter object galaxy lineModelSolve secondpass continuumFit"
             ):
                 check_from_parameter_dict(param_dict)
 
-        @pytest.mark.parametrize('continuum_component', ["tplFit", "tplFitAuto"])
-        def test_ok_if_continuumcomponent_is_tplfit_and_continuumfit_is_present(self, zflag,
-                                                                                continuum_component):
-            param_dict = self._make_parameter_dict({"templateDir": "sth"}, **{
-                "lineModelSolve": {"lineModel": {
-                    "continuumComponent": continuum_component,
-                    "continuumFit": {},
-                    "secondPass": {"continuumFit": ""}
-                }}}
+        @pytest.mark.parametrize("continuum_component", ["tplFit", "tplFitAuto"])
+        def test_ok_if_continuumcomponent_is_tplfit_and_continuumfit_is_present(
+            self, zflag, continuum_component
+        ):
+            param_dict = self._make_parameter_dict(
+                {"templateDir": "sth"},
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": continuum_component,
+                            "continuumFit": {},
+                            "secondPass": {"continuumFit": ""},
+                        }
+                    }
+                }
             )
             if continuum_component == "tplFitAuto":
                 param_dict["continuumRemoval"] = {}

@@ -57,11 +57,7 @@ class APIException(AmzException):
             filename = basename(frame.filename)
             name = frame.name
             line = frame.lineno
-        super().__init__(errCode.value,
-                         message,
-                         filename,
-                         name,
-                         line)
+        super().__init__(errCode.value, message, filename, name, line)
 
     @classmethod
     def fromException(cls, exception):
@@ -87,4 +83,5 @@ def exception_decorator(func=None, *, logging=False):
             if logging:
                 api_exception.LogError()
             raise api_exception from e
+
     return wrapper

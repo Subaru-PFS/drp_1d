@@ -44,14 +44,17 @@ from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestParamJsonFilterLoader:
-
     def test_load_returns_expected_filters(self, mocker):
         jsonFilterLoader = ParamJsonFilterLoader()
-        params = Parameters({"filters": [
-            {"key": "col1", "instruction": "<", "value": 2},
-            {"key": "col2", "instruction": ">=", "value": 2}
-        ]}, Checker=FakeParametersChecker)
-        assert jsonFilterLoader.get_filters(params) == FilterList([
-            SpectrumFilterItem("col1", "<", 2),
-            SpectrumFilterItem("col2", ">=", 2)
-        ])
+        params = Parameters(
+            {
+                "filters": [
+                    {"key": "col1", "instruction": "<", "value": 2},
+                    {"key": "col2", "instruction": ">=", "value": 2},
+                ]
+            },
+            Checker=FakeParametersChecker,
+        )
+        assert jsonFilterLoader.get_filters(params) == FilterList(
+            [SpectrumFilterItem("col1", "<", 2), SpectrumFilterItem("col2", ">=", 2)]
+        )

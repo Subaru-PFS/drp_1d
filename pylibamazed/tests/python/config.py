@@ -40,6 +40,4 @@
 import os
 
 module_root_dir = os.path.split(__file__)[0]
-test_dir = os.path.join(
-    module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test"
-)
+test_dir = os.path.join(module_root_dir, os.pardir, os.pardir, "auxdir", "pylibamazed", "test")
