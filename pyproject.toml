@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools", "numpy >= 1.16.0, < 2.0.0"] 
+build-backend = "setuptools.build_meta:__legacy__"
+
+[tool.setuptools.packages.find]
+where = ["pylibamazed/python"]
+#include = ["pkg*"]  # alternatively: `exclude = ["additional*"]`
+#namespaces = false
+
+[project]
+name = "pylibamazed"
+dynamic = ["version"]
+requires-python = ">= 3.9"
+dependencies = [
+    'setuptools-git-versioning>=1.2.0', 
+    'numpy >= 1.16.0, < 2.0.0', 
+    'astropy >= 3.1.1', 
+    'pandas >= 1.0.0', 
+    'h5py >= 2.9'
+]
+authors = [
+    {name = "LAM - Laboratoire d'Astrophysique de Marseille", email = "amazed-support@lam.fr"}]
+description = "AMAZED python library."
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+        "Development Status :: 4 - Production/Stable",
+        "Topic :: Scientific/Engineering",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: C++",
+        "License :: OSI Approved :: CeCILL-C",
+    ]
+
+[project.optional-dependencies]
+"reliability" = ["tensorflow>=2.4.0"]
+
+[project.urls]
+homepage = "https://www.lam.fr"

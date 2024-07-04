@@ -19,6 +19,7 @@ tools/CMakeFiles/
 *.includes
 *.files
 *.sh
+*.whl
 
 bin/*
 coverage/
