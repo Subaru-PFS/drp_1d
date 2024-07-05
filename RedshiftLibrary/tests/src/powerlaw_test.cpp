@@ -45,17 +45,27 @@ using namespace NSEpic;
 
 class PowerLaw_fixture {
 public:
-  COperatorPowerLaw Init(std::string jsonString,
-                         std::shared_ptr<CSpectrum> spc);
+  void Init(std::string jsonString,
+            TList<std::shared_ptr<CSpectrum>> const &spc);
+  void addNoiseAxis(CSpectrumFluxAxis &fluxAxis);
+  CSpectrumSpectralAxis createSpectralAxis(Float64 lambdaMin, Float64 lambdaMax,
+                                           Int16 step);
+  CSpectrumSpectralAxis
+  createSpectralAxisRest(CSpectrumSpectralAxis const &spectralAxis, Float64 z);
+  CSpectrumFluxAxis createFluxAxis(CSpectrumSpectralAxis const &spectralAxis,
+                                   Float64 a1, Float64 b1, Float64 b2 = NAN,
+                                   Float64 xc = INFINITY);
+  Float64 computea2(Float64 a1, Float64 b1, Float64 b2, Float64 xc);
+  void applyIsmIgmOnSpectrum(CSpectrumSpectralAxis const &spectralAxisRest,
+                             CSpectrumFluxAxis const &fluxAxis, Float64 z,
+                             std::shared_ptr<CSpectrum> &spc);
 };
 
-COperatorPowerLaw PowerLaw_fixture::Init(std::string jsonString,
-                                         std::shared_ptr<CSpectrum> spc) {
+void PowerLaw_fixture::Init(std::string jsonString,
+                            TList<std::shared_ptr<CSpectrum>> const &spcList) {
   std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
 
   Context.LoadParameterStore(jsonString);
-  // TODO here how to better set flux correction meiksin / calzetti : use real
-  // ones or create custom
   Context.setfluxCorrectionMeiksin(
       fixture_MeiskinCorrection().igmCorrectionMeiksin);
   Context.setfluxCorrectionCalzetti(
@@ -63,8 +73,10 @@ COperatorPowerLaw PowerLaw_fixture::Init(std::string jsonString,
 
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  spc->SetLSF(LSF);
-  Context.addSpectrum(spc);
+  for (Int16 spectrumIdx = 0; spectrumIdx < spcList.size(); spectrumIdx++) {
+    spcList[spectrumIdx]->SetLSF(LSF);
+    Context.addSpectrum(spcList[spectrumIdx]);
+  }
 
   // TODO see if could be removed
   std::shared_ptr<CTemplateCatalog> catalog =
@@ -72,14 +84,92 @@ COperatorPowerLaw PowerLaw_fixture::Init(std::string jsonString,
   Context.setTemplateCatalog(catalog);
 
   Context.Init();
-  COperatorPowerLaw operatorPowerlaw;
-  return operatorPowerlaw;
+}
+
+CSpectrumSpectralAxis PowerLaw_fixture::createSpectralAxis(Float64 lambdaMin,
+                                                           Float64 lambdaMax,
+                                                           Int16 step) {
+  // Build lambda
+  std::vector<Float64> spectralValues;
+  spectralValues.reserve(std::ceil(lambdaMax - lambdaMin / step));
+  for (Float64 lambda = lambdaMin; lambda <= lambdaMax; lambda += step) {
+    spectralValues.push_back(lambda);
+  }
+  return CSpectrumSpectralAxis(spectralValues);
+}
+
+CSpectrumFluxAxis
+PowerLaw_fixture::createFluxAxis(CSpectrumSpectralAxis const &spectralAxis,
+                                 Float64 a1, Float64 b1, Float64 b2,
+                                 Float64 xc) {
+  // Build flux
+  Int32 n = spectralAxis.GetSamplesVector().size();
+  Float64 a2 = 0;
+  if (!std::isnan(b2))
+    a2 = computea2(a1, b1, b2, xc);
+  TFloat64List fluxValues(n);
+  for (Int32 i = 0; i < n; i += 1) {
+    if (spectralAxis.GetSamplesVector()[i] < xc)
+      fluxValues[i] = a1 * pow(spectralAxis[i], b1);
+    else
+      fluxValues[i] = a2 * pow(spectralAxis[i], b2);
+  }
+  return CSpectrumFluxAxis(fluxValues);
+}
+
+CSpectrumSpectralAxis PowerLaw_fixture::createSpectralAxisRest(
+    CSpectrumSpectralAxis const &spectralAxis, Float64 z) {
+  TList<Float64> samplesRest(spectralAxis.GetSamplesCount());
+  for (Int32 sampleIdx = 0; sampleIdx < spectralAxis.GetSamplesCount();
+       sampleIdx++) {
+    samplesRest[sampleIdx] = spectralAxis.GetSamplesVector()[sampleIdx] /
+                             (1 + z); // <-> spectralAxis/(z+1)
+  }
+  CSpectrumSpectralAxis spectralAxisRest = CSpectrumSpectralAxis(samplesRest);
+  return spectralAxisRest;
+}
+
+void PowerLaw_fixture::applyIsmIgmOnSpectrum(
+    CSpectrumSpectralAxis const &spectralAxisRest,
+    CSpectrumFluxAxis const &fluxAxis, Float64 z,
+    std::shared_ptr<CSpectrum> &spc) {
+  CTemplate spectrumTemplate1("", "", spectralAxisRest, fluxAxis);
+  spectrumTemplate1.InitIsmIgmConfig(z, Context.getFluxCorrectionCalzetti(),
+                                     Context.getFluxCorrectionMeiksin());
+  spectrumTemplate1.ApplyMeiksinCoeff(0);
+  spectrumTemplate1.ApplyDustCoeff(0);
+  spc->SetFluxAxis(spectrumTemplate1.GetFluxAxis());
+}
+
+Float64 PowerLaw_fixture::computea2(Float64 a1, Float64 b1, Float64 b2,
+                                    Float64 xc) {
+  return a1 * std::pow(xc, b1 - b2);
+}
+
+void PowerLaw_fixture::addNoiseAxis(CSpectrumFluxAxis &fluxAxis) {
+  // Build error
+  // Calculate the mean of flux and divide by 10
+  Int32 n = fluxAxis.GetSamplesVector().size();
+  Float64 meanFlux = std::accumulate(fluxAxis.GetSamplesVector().begin(),
+                                     fluxAxis.GetSamplesVector().end(), 0.0) /
+                     n;
+
+  // Build noise from a random number generator
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(meanFlux / 5, meanFlux / 10);
+  std::vector<Float64> noiseValues(n);
+  for (Int32 i = 0; i < n; ++i) {
+    noiseValues[i] = dis(gen);
+  }
+
+  CSpectrumNoiseAxis noiseAxis(noiseValues);
+  fluxAxis.setError(noiseAxis);
 }
 
 BOOST_FIXTURE_TEST_SUITE(powerLawOperator_test, PowerLaw_fixture)
 
-const std::string jsonString2 =
-    "{\"lambdaRange\" : [ 4000, 6500 ],"
+const std::string jsonStringEnd =
     "\"smoothWidth\" : 0.0,"
     "\"spectrumModels\" : [\"galaxy\"],"
     "\"autoCorrectInput\" : false,"
@@ -97,130 +187,77 @@ const std::string jsonString2 =
     "\"medianEvenReflection\" : false"
     "}}}";
 
-BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
-  // Build lambda
-  Float64 lambdaMin = 4000;
-  Float64 lambdaMax = 6500;
-  std::vector<Float64> spectralValues;
-  for (Float64 lambda = lambdaMin; lambda <= lambdaMax; lambda += 10) {
-    spectralValues.push_back(lambda);
-  }
-  CSpectrumSpectralAxis spectralAxis(spectralValues);
+const std::string jsonStringBegin1 =
+    "{\"lambdaRange\" : [ 4000, 6500 ],"; // So that xc is in range
+const std::string jsonStringBegin2 =
+    "{\"lambdaRange\" : [ 2700, 4200 ],"; // To be in the range of ism / igm
+                                          // fixture
+const std::string jsonString1 = jsonStringBegin1 + jsonStringEnd;
+const std::string jsonString2 = jsonStringBegin2 + jsonStringEnd;
 
-  // Build flux
-  Int32 n = spectralValues.size();
+const Float64 nullThreshold = 2;
+const Int32 nMinSamples = 100;
+const Float64 xc = 5400;
+
+BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
+  // We consider z = 0 here
   Float64 a = 1.5e-16;
   Float64 b = -0.5;
-  std::vector<Float64> fluxValues(n);
-  for (Int32 i = 0; i < n; i += 1) {
-    fluxValues[i] = a * pow(spectralAxis[i], b);
-  }
-  CSpectrumFluxAxis fluxAxis(fluxValues);
 
-  // Build error
-  // Calculate the mean of flux and divide by 10
-  Float64 meanFlux =
-      std::accumulate(fluxValues.begin(), fluxValues.end(), 0.0) /
-      fluxValues.size();
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(
+      3999, 6498,
+      10); // Checks that OK is spectral axis larger than lambdaRange
+  CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxis, a, b);
+  addNoiseAxis(fluxAxis);
 
-  // Build noise from a random number generator
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(meanFlux / 5, meanFlux / 10);
-  std::vector<Float64> noiseValues(n);
-  for (Int32 i = 0; i < n; ++i) {
-    noiseValues[i] = dis(gen);
-  }
-
-  CSpectrumNoiseAxis noiseAxis(noiseValues);
-  fluxAxis.setError(noiseAxis);
-
-  // Spectrum
+  // Initialize power law operator
   std::shared_ptr<CSpectrum> spc =
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw;
 
-  COperatorPowerLaw operatorPowerLaw = Init(jsonString2, spc);
-
-  Float64 nullThreshold = 2;
-  Int32 nMinSamples = 100;
   TPowerLawResult result = operatorPowerLaw.BasicFit(
       0, false, false, nullThreshold, nMinSamples, "simple");
 
-  // accepts a 1% error for calculated coefs
+  // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
   BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
   Context.reset();
 
-  result = operatorPowerLaw.BasicFit(0, false, false, nullThreshold,
-                                     nMinSamples, "simpleWeighted");
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw2;
+  TPowerLawResult result2 = operatorPowerLaw.BasicFit(
+      0, false, false, nullThreshold, nMinSamples, "simpleWeighted");
 
-  // accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
-  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  // Accepts a 1% error for calculated coefs
+  BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result2.coefs.first.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_EQUAL(result2.coefs.second.a, 0);
+  BOOST_CHECK_EQUAL(result2.coefs.second.b, 0);
   Context.reset();
 }
 
 BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
-  // TODO see what to do whith this
-  Float64 xc = 5400;
-  // Build lambda
-  Float64 lambdaMin = 4000;
-  Float64 lambdaMax = 6500;
-  std::vector<Float64> spectralValues;
-  for (Float64 lambda = lambdaMin; lambda <= lambdaMax; lambda += 1) {
-    spectralValues.push_back(lambda);
-  }
-  CSpectrumSpectralAxis spectralAxis(spectralValues);
-
-  // Build flux
-  Int32 n = spectralValues.size();
   Float64 a1 = 1.5e-16;
   Float64 b1 = -0.5;
   Float64 b2 = -0.2;
-  Float64 a2 = a1 * std::pow(xc, b1 - b2);
-  TFloat64List fluxValues(n);
-  for (Int32 i = 0; i < n; i += 1) {
-    if (spectralValues[i] < xc)
-      fluxValues[i] = a1 * pow(spectralAxis[i], b1);
-    else
-      fluxValues[i] = a2 * pow(spectralAxis[i], b2);
-  }
-  CSpectrumFluxAxis fluxAxis(fluxValues);
+  Float64 a2 = computea2(a1, b1, b2, xc);
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(3999, 6498, 10);
+  CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxis, a1, b1, b2, xc);
+  addNoiseAxis(fluxAxis);
 
-  // Build error
-  // Calculate the mean of flux and divide by 10
-  Float64 meanFlux =
-      std::accumulate(fluxValues.begin(), fluxValues.end(), 0.0) /
-      fluxValues.size();
-
-  // Build noise from a random number generator
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(meanFlux / 5, meanFlux / 10);
-  TFloat64List noiseValues(n);
-  for (Int32 i = 0; i < n; ++i) {
-    noiseValues[i] = dis(gen);
-  }
-
-  CSpectrumNoiseAxis noiseAxis(noiseValues);
-  fluxAxis.setError(noiseAxis);
-
-  // Spectrum
+  // Initialize power law operator
   std::shared_ptr<CSpectrum> spc =
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw;
 
-  COperatorPowerLaw operatorPowerLaw = Init(jsonString2, spc);
-
-  Float64 nullThreshold = 2;
-  Int32 nMinSamples = 100;
   TPowerLawResult result = operatorPowerLaw.BasicFit(
       0, false, false, nullThreshold, nMinSamples, "full");
 
-  // accepts a 1% error for calculated coefs
+  // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b1, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.a == a2,
@@ -229,4 +266,180 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   Context.reset();
 }
 
+BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
+  Float64 z = 2;
+
+  // Build lambda obs & lambda rest
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(2700, 4200, 5);
+  // CSpectrumSpectralAxis spectralAxisRest =
+  //     createSpectralAxis(900, 1400, 1); // <-> spectralAxis/(z+1)
+
+  TList<Float64> samplesRest(spectralAxis.GetSamplesCount());
+  for (Int32 sampleIdx = 0; sampleIdx < spectralAxis.GetSamplesCount();
+       sampleIdx++) {
+    samplesRest[sampleIdx] = spectralAxis.GetSamplesVector()[sampleIdx] /
+                             3; // <-> spectralAxis/(z+1)
+  }
+  CSpectrumSpectralAxis spectralAxisRest = CSpectrumSpectralAxis(samplesRest);
+
+  Float64 a = 1.5e-16;
+  Float64 b = -0.5;
+  CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxisRest, a, b);
+  addNoiseAxis(fluxAxis);
+
+  // Initialize power law operator
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString2, {spc});
+  COperatorPowerLaw operatorPowerLaw;
+
+  // Without extinction, with redshift
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      z, false, false, nullThreshold, nMinSamples, "simple");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  Context.reset();
+
+  // With extinction
+
+  // Initialize another power law operator
+  std::shared_ptr<CSpectrum> spc2 =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString2, {spc2});
+  COperatorPowerLaw operatorPowerLaw2;
+
+  // Creates a template to be able to apply ism / igm
+  CTemplate spectrumTemplate("", "", spectralAxisRest, fluxAxis);
+  spectrumTemplate.InitIsmIgmConfig(z, Context.getFluxCorrectionCalzetti(),
+                                    Context.getFluxCorrectionMeiksin());
+  spectrumTemplate.ApplyMeiksinCoeff(0);
+  spectrumTemplate.ApplyDustCoeff(0);
+
+  // Adapts spectrum flux
+  spc2->SetFluxAxis(spectrumTemplate.GetFluxAxis());
+
+  result = operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, nMinSamples,
+                                      "simple");
+
+  // accepts a 1% error for calculated coefs
+  BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  Context.reset();
+}
+
+BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
+  // Updates the xc value so it is in the ism / igm correction range
+  Float64 xc2 = 1200;
+  Float64 z = 2;
+  Float64 a1 = 1.5e-16;
+  Float64 b1 = -0.5;
+  Float64 b2 = -0.2;
+  Float64 a2 = computea2(a1, b1, b2, xc);
+
+  // Build lambda obs & lambda rest
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(2700, 4200, 5);
+  CSpectrumSpectralAxis spectralAxisRest =
+      createSpectralAxisRest(spectralAxis, z);
+  CSpectrumFluxAxis fluxAxis =
+      createFluxAxis(spectralAxisRest, a1, b1, b2, xc2);
+  addNoiseAxis(fluxAxis);
+
+  // Same values in both spectrum
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  std::shared_ptr<CSpectrum> spc2 =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+
+  // Ism Igm
+  applyIsmIgmOnSpectrum(spectralAxisRest, fluxAxis, z, spc);
+  applyIsmIgmOnSpectrum(spectralAxisRest, fluxAxis, z, spc2);
+
+  Init(jsonString2, {spc, spc2});
+  COperatorPowerLaw operatorPowerLaw({}, xc2);
+
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      z, true, true, nullThreshold, nMinSamples, "full");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.first.b == b1, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.a == a2,
+             boost::test_tools::tolerance(10.)); // a2 has big errors
+  BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  Context.reset();
+
+  // Disjoint samples
+  CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 5);
+  CSpectrumSpectralAxis spectralAxisRest1 =
+      createSpectralAxisRest(spectralAxis1, z);
+  CSpectrumFluxAxis fluxAxis1 =
+      createFluxAxis(spectralAxisRest1, a1, b1, b2, xc2);
+  addNoiseAxis(fluxAxis1);
+
+  CSpectrumSpectralAxis spectralAxis2 = createSpectralAxis(3150, 4200, 5);
+  CSpectrumSpectralAxis spectralAxisRest2 =
+      createSpectralAxisRest(spectralAxis2, z);
+  CSpectrumFluxAxis fluxAxis2 =
+      createFluxAxis(spectralAxisRest2, a1, b1, b2, xc2);
+  addNoiseAxis(fluxAxis2);
+
+  spc = std::make_shared<CSpectrum>(spectralAxis1, fluxAxis1);
+  spc2 = std::make_shared<CSpectrum>(spectralAxis2, fluxAxis2);
+
+  Init(jsonString2, {spc, spc2});
+
+  applyIsmIgmOnSpectrum(spectralAxisRest1, fluxAxis1, z, spc);
+  applyIsmIgmOnSpectrum(spectralAxisRest2, fluxAxis2, z, spc2);
+
+  COperatorPowerLaw operatorPowerLaw2{{}, xc2};
+  result = operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, nMinSamples,
+                                      "full");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.first.b == b1, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.a == a2,
+             boost::test_tools::tolerance(10.)); // a2 has big errors
+  BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  Context.reset();
+
+  // Too small samples (left)
+  spectralAxis1 = createSpectralAxis(2700, 3100, 50);
+  spectralAxisRest1 = createSpectralAxisRest(spectralAxis1, z);
+  fluxAxis1 = createFluxAxis(spectralAxisRest1, a1, b1, b2, xc2);
+  addNoiseAxis(fluxAxis1);
+
+  spectralAxis2 = createSpectralAxis(3650, 4200, 5);
+  spectralAxisRest2 = createSpectralAxisRest(spectralAxis2, z);
+  fluxAxis2 = createFluxAxis(spectralAxisRest2, a1, b1, b2, xc2);
+  addNoiseAxis(fluxAxis2);
+
+  spc = std::make_shared<CSpectrum>(spectralAxis1, fluxAxis1);
+  spc2 = std::make_shared<CSpectrum>(spectralAxis2, fluxAxis2);
+
+  Init(jsonString2, {spc, spc2});
+
+  applyIsmIgmOnSpectrum(spectralAxisRest1, fluxAxis1, z, spc);
+  applyIsmIgmOnSpectrum(spectralAxisRest2, fluxAxis2, z, spc2);
+
+  COperatorPowerLaw operatorPowerLaw3{{}, xc2};
+  result = operatorPowerLaw3.BasicFit(z, true, true, nullThreshold, nMinSamples,
+                                      "full");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_TEST(result.coefs.first.a == 0);
+  BOOST_TEST(result.coefs.first.b == 0);
+  BOOST_TEST(result.coefs.second.a == a2,
+             boost::test_tools::tolerance(10.)); // a2 has big errors
+  BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK(Flag.getListMessages()[0].first ==
+              WarningCode::FORCED_POWERLAW_TO_ZERO);
+  Context.reset();
+}
 BOOST_AUTO_TEST_SUITE_END()

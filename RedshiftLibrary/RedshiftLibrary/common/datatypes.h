@@ -96,13 +96,16 @@ typedef std::vector<SPoint> TPointList;
 typedef UInt8 Mask;
 typedef Float64 Redshift;
 typedef Float64 Sample;
-typedef std::vector<Mask> TMaskList;
-typedef std::vector<Redshift> TRedshiftList;
-typedef std::vector<Sample> TAxisSampleList;
-typedef std::vector<std::vector<TFloat64List>> T3DFloatList;
-typedef std::vector<std::vector<Float64>> T2DFloatList;
-typedef std::vector<std::vector<std::vector<bool>>> T3DBoolList;
-typedef std::vector<std::vector<bool>> T2DBoolList;
+
+template <typename T> using T3DList = std::vector<std::vector<std::vector<T>>>;
+
+template <typename T> using T2DList = std::vector<std::vector<T>>;
+
+template <typename T> using TList = std::vector<T>;
+
+typedef TList<Mask> TMaskList;
+typedef TList<Redshift> TRedshiftList;
+typedef TList<Sample> TAxisSampleList;
 
 #include "RedshiftLibrary/common/errorcodes.i"
 #include "RedshiftLibrary/common/warningcodes.i"

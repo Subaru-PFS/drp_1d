@@ -42,18 +42,13 @@
 #include <vector>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/tplmodelsolution.h"
+#include "RedshiftLibrary/linemodel/continuumfitstore.h"
+#include "RedshiftLibrary/operator/continuummodelsolution.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-
 namespace NSEpic {
 
-struct fitMaxValues {
-  Float64 tplFitSNRMax = 0.0;
-  Float64 fitAmplitudeSigmaMAX = 0.0;
-};
-
-class CTemplatesFitStore {
+class CTemplatesFitStore : public CContinuumFitStore {
 public:
   CTemplatesFitStore(const TFloat64List &redshifts);
 
@@ -61,34 +56,13 @@ public:
            Float64 redshift, Float64 merit, Float64 chiSquare_phot,
            Float64 fitAmplitude, Float64 fitAmplitudeError,
            Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,
-           Float64 logprior, Float64 snr);
+           Float64 logprior, Float64 snr) override;
 
-  void initFitValues();
-  Int32 GetRedshiftIndex(Float64 z) const;
-  Int32 getClosestLowerRedshiftIndex(Float64 z) const;
-  const TFloat64List &GetRedshiftList() const;
-  // TODO maybe we could return const ref ?
-  const CTplModelSolution &GetFitValues(Int32 idxz,
-                                        Int32 continuumCandidateRank) const;
-  const CTplModelSolution &GetFitValues(Float64 redshiftVal,
-                                        Int32 continuumCandidateRank) const;
-  Int32 GetContinuumCount() const;
-  Float64 FindMaxAmplitudeSigma(Float64 &z, CTplModelSolution &fitValues);
-  // put as public on purpose to avoid the 'old-school' use of getters
+  Int32 GetContinuumCount() const override;
+  Float64 FindMaxAmplitudeSigma(Float64 &z, CContinuumModelSolution &fitValues);
   void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
-  void setAmplitudeSigmaMax(Float64 ampl) {
-    m_fitMaxValues->fitAmplitudeSigmaMAX = ampl;
-  }
-  std::shared_ptr<fitMaxValues> getFitMaxValues() const {
-    return m_fitMaxValues;
-  }
 
 private:
-  std::vector<std::vector<CTplModelSolution>>
-      m_fitValues; //[nz][n_continuum_candidates]
-  std::shared_ptr<fitMaxValues> m_fitMaxValues;
-  Int32 n_continuum_candidates = 0;
-  TFloat64List redshiftgrid;
 };
 
 } // namespace NSEpic

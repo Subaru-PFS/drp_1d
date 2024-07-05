@@ -78,7 +78,7 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
   Redshifts = std::move(redshifts);
   restLineList = std::move(restLines);
   LineModelSolutions.assign(nResults, CLineModelSolution());
-  ContinuumModelSolutions.assign(nResults, CTplModelSolution());
+  ContinuumModelSolutions.assign(nResults, CContinuumModelSolution());
 
   ChiSquareContinuum.assign(nResults, NAN);
   ScaleMargCorrectionContinuum.assign(nResults, NAN);
@@ -115,8 +115,8 @@ void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
   insertWithDuplicates<Float64>(ScaleMargCorrection, idx, count, NAN, ndup);
   insertWithDuplicates(LineModelSolutions, idx, count, CLineModelSolution(),
                        ndup);
-  insertWithDuplicates(ContinuumModelSolutions, idx, count, CTplModelSolution(),
-                       ndup);
+  insertWithDuplicates(ContinuumModelSolutions, idx, count,
+                       CContinuumModelSolution(), ndup);
   insertWithDuplicates<Float64>(ChiSquareContinuum, idx, count, NAN, ndup);
   insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, idx, count, NAN,
                                 ndup);
@@ -139,22 +139,22 @@ void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
   }
 }
 
-void CLineModelResult::SetChisquareTplContinuumResult(
-    Int32 index_z, const shared_ptr<const CTemplatesFitStore> &tplFitStore) {
+void CLineModelResult::SetChisquareContinuumResult(
+    Int32 index_z,
+    const shared_ptr<const CContinuumFitStore> &continuumFitStore) {
   const auto index_z_in_store =
-      tplFitStore->GetRedshiftIndex(Redshifts[index_z]);
+      continuumFitStore->GetRedshiftIndex(Redshifts[index_z]);
   if (index_z_in_store == -1)
     THROWG(ErrorCode::INTERNAL_ERROR, "Redshift not in fitstore");
 
-  for (Int32 k = 0; k < tplFitStore->GetContinuumCount();
+  for (Int32 k = 0; k < continuumFitStore->GetContinuumCount();
        k++) { // TODO: handle the use of more than one continuum in linemodel
     ChiSquareTplContinuum[k][index_z] =
-        tplFitStore->GetFitValues(index_z_in_store, k).tplMerit;
+        continuumFitStore->GetFitValues(index_z_in_store, k).tplMerit;
   }
 }
 
-void CLineModelResult::SetChisquareTplContinuumResultFromPrevious(
-    Int32 index_z) {
+void CLineModelResult::SetChisquareContinuumResultFromPrevious(Int32 index_z) {
   auto previous = index_z - 1;
   for (auto it = ChiSquareTplContinuum.begin(), e = ChiSquareTplContinuum.end();
        it != e; ++it)

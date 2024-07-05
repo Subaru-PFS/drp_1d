@@ -36,20 +36,36 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
-#define _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
+#ifndef _REDSHIFT_OPERATOR_POWERLAWRESULT_
+#define _REDSHIFT_OPERATOR_POWERLAWRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
+
 class CPowerLawResult : public COperatorResult {
 public:
   CPowerLawResult(Int32 n);
   virtual ~CPowerLawResult() = default;
+  void set_at_redshift(Int32 zIdx, TPowerLawResult result);
 
   TFloat64List Redshifts;
+  TFloat64List ChiSquare;
+  TFloat64List lambdaRest;
+  TFloat64List emittedFlux;
+  TFloat64List pixelsToUse;
+  TFloat64List fluxError;
+  TList<TPowerLawCoefsPair> coefs;
+
+  TFloat64List FitEbmvCoeff;
+  TFloat64List FitMeiksinIdx;
+  // TODO add SNR
+  T3DList<Float64> ChiSquareIntermediate;
+  T3DList<Float64> IsmEbmvCoeffIntermediate;
+  T3DList<Int16> IgmMeiksinIdxIntermediate;
 };
 } // namespace NSEpic
 

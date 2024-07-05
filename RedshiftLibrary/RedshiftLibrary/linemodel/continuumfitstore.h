@@ -36,21 +36,54 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
-#define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
-
-#include <cmath>
+#ifndef _REDSHIFT_LINEMODEL_CONTINUUMFITSTORE_
+#define _REDSHIFT_LINEMODEL_CONTINUUMFITSTORE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/processflow/result.h"
-
-#include "RedshiftLibrary/continuum/indexes.h"
-#include "RedshiftLibrary/line/catalog.h"
-
+#include "RedshiftLibrary/linemodel/continuumfitstore.h"
+#include "RedshiftLibrary/operator/continuummodelsolution.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 namespace NSEpic {
 
-#include "RedshiftLibrary/operator/tplmodelsolution.i"
+struct fitMaxValues {
+  Float64 tplFitSNRMax = 0.0;
+  Float64 fitAmplitudeSigmaMAX = 0.0;
+};
+
+class CContinuumFitStore {
+public:
+  CContinuumFitStore(const TFloat64List &redshifts);
+  virtual void Add(std::string tplName, Float64 ismEbmvCoeff,
+                   Int32 igmMeiksinIdx, Float64 redshift, Float64 merit,
+                   Float64 chiSquare_phot, Float64 fitAmplitude,
+                   Float64 fitAmplitudeError, Float64 fitAmplitudeSigma,
+                   Float64 fitDtM, Float64 fitMtM, Float64 logprior,
+                   Float64 snr);
+  virtual void Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx, Float64 redshift,
+                   Float64 chi2, // TODO see if chi2 and merit is the same
+                   Float64 a1, Float64 a2, Float64 b1, Float64 b2, Float64 snr);
+
+  Int32 GetRedshiftIndex(Float64 z) const;
+  Int32 getClosestLowerRedshiftIndex(Float64 z) const;
+  const TFloat64List &GetRedshiftList() const;
+
+  virtual const CContinuumModelSolution &
+  GetFitValues(Int32 idxz, Int32 continuumCandidateRank) const;
+  virtual const CContinuumModelSolution &
+  GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
+  virtual Int32 GetContinuumCount() const = 0;
+  void initFitValues();
+
+protected:
+  TFloat64List m_redshiftgrid;
+  std::vector<std::vector<CContinuumModelSolution>>
+      m_fitValues; //[nz][n_continuum_candidates]
+  std::shared_ptr<fitMaxValues> m_fitMaxValues;
+  Int32 n_continuum_candidates = 0;
+
+private:
+};
 
 } // namespace NSEpic
 

@@ -36,13 +36,47 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#ifndef _REDSHIFT_OPERATOR_CONTINUUM_FITTING_BASE_
+#define _REDSHIFT_OPERATOR_CONTINUUM_FITTING_BASE_
 
-#include "RedshiftLibrary/operator/powerlawbase.h"
-#include "RedshiftLibrary/processflow/context.h"
+#include <vector>
 
-using namespace NSEpic;
-using namespace std;
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/spectrum/maskBuilder.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/statistics/priorhelper.h"
 
-COperatorPowerLawBase::COperatorPowerLawBase(const TFloat64List &redshifts)
-    : COperatorContinuumFitting(redshifts), m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+namespace NSEpic {
+
+class CSpectrum;
+class COperatorResult;
+class CModelSpectrumResult;
+
+/**
+ * \ingroup Redshift
+ */
+class COperatorContinuumFitting : public COperator {
+
+public:
+  COperatorContinuumFitting(const TFloat64List &redshifts);
+  virtual bool IsFFTProcessing() { return false; };
+  virtual void SetRedshifts(TFloat64List redshifts) {
+    m_redshifts = std::move(redshifts);
+  };
+  void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
+    m_maskBuilder = maskBuilder;
+  }
+
+protected:
+  TFloat64List m_redshifts;
+  std::shared_ptr<CMaskBuilder> m_maskBuilder;
+};
+} // namespace NSEpic
+
+#endif

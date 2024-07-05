@@ -207,14 +207,14 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   // Compute linemodel on the template
   TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
-  std::shared_ptr<COperatorTemplateFitting> TFOperator;
-  CLineModelFitting model(tplOrtho, lambdaRange, TFOperator);
+  std::shared_ptr<COperatorTemplateFitting> continuumFittingOperator;
+  CLineModelFitting model(tplOrtho, lambdaRange, continuumFittingOperator);
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;
   bool enableLogging = true;
   CLineModelSolution modelSolution(Context.getCLineMap());
-  CTplModelSolution continuumModelSolution;
+  CContinuumModelSolution continuumModelSolution;
 
   model.fit(redshift, modelSolution, continuumModelSolution,
             contreest_iterations, enableLogging);

@@ -48,6 +48,7 @@
 using namespace NSEpic;
 
 const std::string lambdaString = "{\"lambdaRange\" : [ 4680, 4712 ],";
+const std::string largeLambdaString = "{\"lambdaRange\" : [ 4600, 5000 ],";
 const std::string multiLambdaString =
     "{\"lambdaRange\" : { \"A\" : [ 4680, 4695 ], \"B\" : [4695, 4712]},";
 
@@ -272,6 +273,24 @@ const std::string jsonStringFromSpectrum =
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
     "\"catalogDirPath\" : \"\"}}}}}}}";
 
+const std::string jsonStringPowerLaw =
+    "\"skipSecondPass\" : false,"
+    "\"continuumComponent\" : \"powerLaw\","
+    "\"pdfCombination\" : \"bestChi2\","
+    "\"tplRatioIsmFit\" : true,"
+    "\"rules\" : \"balmerSingle\","
+    "\"improveBalmerFit\" : true,"
+    "\"lineRatioType\": \"tplRatio\","
+    "\"continuumFit\" : { \"ignoreLineSupport\": true,"
+    "\"negativeThreshold\": -5.0,"
+    "\"count\" : 1,"
+    "\"nullThreshold\": 3,"
+    "\"ismFit\" : true,"
+    "\"igmFit\" : true,"
+    "\"fftProcessing\": false, "
+    "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
+    "\"catalogDirPath\" : \"\"}}}}}}}";
+
 class fixture_LineModelSolveTest {
 public:
   fixture_Context ctx;
@@ -283,6 +302,8 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CSpectrum> spcPow =
+      fixture_SharedPowerLawSpectrumExtended().spc;
   std::shared_ptr<CSpectrum> spcA = fixture_SharedMultiSpectrum().spcA;
   std::shared_ptr<CSpectrum> spcB = fixture_SharedMultiSpectrum().spcB;
   std::shared_ptr<CTemplateCatalog> catalog =
@@ -403,7 +424,56 @@ public:
   }
 };
 
+class fixture_LineModelSolveTestPowerLaw : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestPowerLaw() {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(largeLambdaString + jsonString + jsonStringPowerLaw);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spcPow->SetPhotData(photoData);
+    ctx.addSpectrum(spcPow, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
 BOOST_AUTO_TEST_SUITE(lineModelSolve_test)
+
+BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
+                        fixture_LineModelSolveTestPowerLaw) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "lineModelSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters");
+  BOOST_CHECK(resType == "TLineModelResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0);
+  Float64 z = res->Redshift;
+  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1); // accepts 0.1% error
+  ctx.reset();
+}
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
                         fixture_LineModelSolveTestTplFitRules) {

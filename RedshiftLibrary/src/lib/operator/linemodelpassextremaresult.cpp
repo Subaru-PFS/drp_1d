@@ -53,7 +53,7 @@ void CLineModelPassExtremaResult::Resize(
   m_ranked_candidates.resize(
       size, std::pair<std::string, std::shared_ptr<TCandidateZ>>());
 
-  FittedTpl.resize(size);
+  m_fittedContinuum.resize(size);
 
   Elv.resize(size, NAN);
   Alv.resize(size, NAN);
@@ -94,6 +94,6 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
 }
 
 void CLineModelPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
-    Int32 i, const CTplModelSolution &contModelSol) {
-  FittedTpl[i] = contModelSol;
+    Int32 i, const CContinuumModelSolution &contModelSol) {
+  m_fittedContinuum[i] = contModelSol;
 }

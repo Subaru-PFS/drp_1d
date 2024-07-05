@@ -529,9 +529,11 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // FIRST PASS + CANDIDATES - B
   //**************************************************
+  // TODO see if add powerlaw here ??
   bool enableFirstpass_B = (m_opt_extremacountB > 0) &&
                            (m_opt_continuumcomponent == "tplFit" ||
-                            m_opt_continuumcomponent == "tplFitAuto") &&
+                            m_opt_continuumcomponent == "tplFitAuto" ||
+                            m_opt_continuumcomponent == "powerLaw") &&
                            (m_opt_extremacountB > 1);
   COperatorLineModel linemodel_fpb;
   std::string fpb_opt_continuumcomponent =

@@ -44,11 +44,11 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/linemodel/continuumfitstore.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/pdfz.h"
-#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
@@ -75,10 +75,10 @@ public:
 
   Float64 getMinChiSquare() const;
   Float64 getMaxChiSquare() const;
-  void SetChisquareTplContinuumResult(
+  void SetChisquareContinuumResult(
       Int32 index,
-      const std::shared_ptr<const CTemplatesFitStore> &tplFitStore);
-  void SetChisquareTplContinuumResultFromPrevious(Int32 index);
+      const std::shared_ptr<const CContinuumFitStore> &tplFitStore);
+  void SetChisquareContinuumResultFromPrevious(Int32 index);
   void
   SetChisquareTplratioResult(Int32 index,
                              std::shared_ptr<CTplratioManager> tplratioManager);
@@ -123,7 +123,7 @@ public:
       ChiSquareTplContinuum; // chi2 for all continuum templates fited
 
   std::vector<CLineModelSolution> LineModelSolutions;
-  std::vector<CTplModelSolution> ContinuumModelSolutions;
+  std::vector<CContinuumModelSolution> ContinuumModelSolutions;
 
   CLineMap restLineList;
   Int32 nSpcSamples = 0;

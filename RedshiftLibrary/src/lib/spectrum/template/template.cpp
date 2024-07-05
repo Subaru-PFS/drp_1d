@@ -367,7 +367,6 @@ Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const {
     THROWG(ErrorCode::INTERNAL_ERROR, "igm is not initialized");
   }
 
-  Int32 Igm_kend = -1;
   // get last index in spectral axis where igm can be applied
   TAxisSampleList::const_iterator istart =
       m_SpectralAxis.GetSamplesVector().begin() + kstart;
@@ -402,7 +401,8 @@ TInt32List CTemplate::GetIsmIdxList(bool opt_dustFitting,
 
   Int32 EbmvListSize = 1;
   if (opt_dustFitting && FitEbmvIdx == undefIdx)
-    EbmvListSize = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+    EbmvListSize = m_ismCorrectionCalzetti
+                       ->GetNPrecomputedEbmvCoeffs(); // TODO à passer en arg
 
   TInt32List EbmvList(EbmvListSize);
 
@@ -427,7 +427,8 @@ TInt32List CTemplate::GetIgmIdxList(bool opt_extinction,
 
   Int32 MeiksinListSize = 1;
   if (opt_extinction && FitMeiksinIdx == undefIdx)
-    MeiksinListSize = m_igmCorrectionMeiksin->getIdxCount();
+    MeiksinListSize =
+        m_igmCorrectionMeiksin->getIdxCount(); // TODO à passer en arg
 
   TInt32List MeiksinList(MeiksinListSize);
 

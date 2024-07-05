@@ -40,59 +40,32 @@
 
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
-#include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include "RedshiftLibrary/linemodel/powerlawstore.h"
 
 using namespace NSEpic;
 
-CTemplatesFitStore::CTemplatesFitStore(const TFloat64List &redshifts)
+CPowerLawStore::CPowerLawStore(const TFloat64List &redshifts)
     : CContinuumFitStore(redshifts) {
   initFitValues();
   m_fitMaxValues = std::make_shared<fitMaxValues>();
 }
 
-/**
- * @brief CTemplatesFitStore::Add
- * @param tplName
- * @param ismEbmvCoeff
- * @param igmMeiksinIdx
- * @param redshift
- * @param merit
- * @param fitAmplitude
- * @param fitAmplitudeError
- * @param fitDtM
- * @param fitMtM
- *
- * brief: try to insert the fit values into the mFitValues table at the correct
- * idxz:
- *   - no insertion if redshift can't be found in the m_redshiftgrid
- *   - no insertion if the merit is higher than the highest rank continuum
- * candidate
- *   - insertion is done at a given continuum_candidate_rank position wrt merit
- * value
- * @return False if there was a problem.
- */
-void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
-                             Int32 igmMeiksinIdx, Float64 redshift,
-                             Float64 merit, Float64 chiSquare_phot,
-                             Float64 fitAmplitude, Float64 fitAmplitudeError,
-                             Float64 fitAmplitudeSigma, Float64 fitDtM,
-                             Float64 fitMtM, Float64 logprior, Float64 snr) {
+void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
+                         Float64 redshift,
+                         Float64 chi2, // TODO see if chi2 and merit is the same
+                         Float64 a1, Float64 a2, Float64 b1, Float64 b2,
+                         Float64 snr) {
   CContinuumModelSolution tmpCContinuumModelSolution;
-  tmpCContinuumModelSolution.tplMerit = merit;
-  tmpCContinuumModelSolution.tplMeritPhot = chiSquare_phot;
-  tmpCContinuumModelSolution.tplAmplitude = fitAmplitude;
-  tmpCContinuumModelSolution.tplAmplitudeError = fitAmplitudeError;
-  tmpCContinuumModelSolution.tplAmplitudeSigma = fitAmplitudeSigma;
-  tmpCContinuumModelSolution.tplDtM = fitDtM;
-  tmpCContinuumModelSolution.tplMtM = fitMtM;
-  tmpCContinuumModelSolution.tplLogPrior = logprior;
-  tmpCContinuumModelSolution.tplEbmvCoeff = ismEbmvCoeff;
-  tmpCContinuumModelSolution.tplMeiksinIdx = igmMeiksinIdx;
-  tmpCContinuumModelSolution.tplName = tplName;
-  tmpCContinuumModelSolution.tplRedshift = redshift;
-  tmpCContinuumModelSolution.tplSNR = snr;
+  tmpCContinuumModelSolution.a1 = a1;
+  tmpCContinuumModelSolution.a2 = a2;
+  tmpCContinuumModelSolution.b1 = b1;
+  tmpCContinuumModelSolution.b2 = b2;
+  tmpCContinuumModelSolution.EbmvCoeff = ismEbmvCoeff;
+  tmpCContinuumModelSolution.MeiksinIdx = igmMeiksinIdx;
+  tmpCContinuumModelSolution.redshift = redshift;
+  tmpCContinuumModelSolution.tplMerit = chi2;
+  tmpCContinuumModelSolution.SNR = snr;
 
-  // TODO partly mutualize from here to bottom with powerlaw
   Int32 idxz = GetRedshiftIndex(redshift);
   if (idxz < 0)
     THROWG(ErrorCode::INTERNAL_ERROR,
@@ -100,16 +73,17 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
 
   // if chi2 val is the lowest, and condition on tplName, insert at position
   // ipos
-  auto ipos = std::upper_bound(
-      m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
-      std::make_pair(tmpCContinuumModelSolution.tplMerit,
-                     std::abs(tmpCContinuumModelSolution.tplAmplitudeSigma)),
-      [](std::pair<Float64, Float64> const &val,
-         CContinuumModelSolution const &lhs) {
-        if (val.first != lhs.tplMerit)
-          return (val.first < lhs.tplMerit);
-        return val.second > std::abs(lhs.tplAmplitudeSigma);
-      });
+  // TODO : snr is incorrect should find an equivalent of amplitude sigma
+  auto ipos =
+      std::upper_bound(m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
+                       std::make_pair(tmpCContinuumModelSolution.tplMerit,
+                                      std::abs(tmpCContinuumModelSolution.SNR)),
+                       [](std::pair<Float64, Float64> const &val,
+                          CContinuumModelSolution const &lhs) {
+                         if (val.first != lhs.tplMerit)
+                           return (val.first < lhs.tplMerit);
+                         return val.second > std::abs(lhs.SNR);
+                       });
 
   Log.LogDebug(
       Formatter() << "CTemplatesFitStore::Add iz=" << idxz << " (z=" << redshift
@@ -132,27 +106,4 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
                  << "CTemplatesFitStore::n_continuum_candidates set to "
                  << n_continuum_candidates << ")");
   }
-}
-
-Int32 CTemplatesFitStore::GetContinuumCount() const {
-  return n_continuum_candidates;
-}
-
-Float64
-CTemplatesFitStore::FindMaxAmplitudeSigma(Float64 &z,
-                                          CContinuumModelSolution &fitValues) {
-  Int32 icontinuum = 0;
-  m_fitMaxValues->fitAmplitudeSigmaMAX = -INFINITY;
-  // TemplateFitValues fitValues;
-  for (Int32 i = 0; i < m_redshiftgrid.size(); i++) {
-    const CContinuumModelSolution &thisfitValues = m_fitValues[i][icontinuum];
-    if (thisfitValues.tplAmplitudeSigma >
-        m_fitMaxValues->fitAmplitudeSigmaMAX) {
-      m_fitMaxValues->fitAmplitudeSigmaMAX = thisfitValues.tplAmplitudeSigma;
-      z = m_redshiftgrid[i];
-      fitValues = thisfitValues;
-    }
-  }
-
-  return m_fitMaxValues->fitAmplitudeSigmaMAX;
-}
+};

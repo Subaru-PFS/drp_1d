@@ -100,17 +100,17 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
            "implemented with photometry enabled");
 
   if (fft_processing) {
-    m_templateFittingOperator =
+    m_continuumFittingOperator =
         std::make_shared<COperatorTemplateFittingLog>(m_redshifts);
     tplCatalog.m_logsampling = true;
   } else {
     if (use_photometry) {
-      m_templateFittingOperator =
+      m_continuumFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
               inputContext->GetPhotBandCatalog(), photometry_weight,
               m_redshifts);
     } else {
-      m_templateFittingOperator =
+      m_continuumFittingOperator =
           std::make_shared<COperatorTemplateFitting>(m_redshifts);
     }
     tplCatalog.m_logsampling = false;
@@ -269,9 +269,9 @@ void CTemplateFittingSolve::Solve(
     // Compute merit function
     auto templateFittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
-            m_templateFittingOperator->Compute(tpl, overlapThreshold,
-                                               opt_interp, opt_extinction,
-                                               opt_dustFitting));
+            m_continuumFittingOperator->Compute(tpl, overlapThreshold,
+                                                opt_interp, opt_extinction,
+                                                opt_dustFitting));
 
     if (!templateFittingResult)
       THROWG(ErrorCode::INTERNAL_ERROR,
@@ -458,7 +458,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     for (int spcIndex = 0; spcIndex < Context.getSpectra().size(); spcIndex++) {
       const std::string &obsId = Context.getSpectra()[spcIndex]->getObsID();
 
-      TPhotVal values = m_templateFittingOperator->ComputeSpectrumModel(
+      TPhotVal values = m_continuumFittingOperator->ComputeSpectrumModel(
           tpl, z, TplFitResult->FitEbmvCoeff[zIndex],
           TplFitResult->FitMeiksinIdx[zIndex],
           TplFitResult->FitAmplitude[zIndex], overlapThreshold, spcIndex,

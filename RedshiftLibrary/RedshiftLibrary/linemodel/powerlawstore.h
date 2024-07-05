@@ -36,13 +36,26 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#ifndef _REDSHIFT_LINEMODEL_POWERLAWSTORE_
+#define _REDSHIFT_LINEMODEL_POWERLAWSTORE_
 
-#include "RedshiftLibrary/operator/powerlawbase.h"
-#include "RedshiftLibrary/processflow/context.h"
+#include <vector>
 
-using namespace NSEpic;
-using namespace std;
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/continuumfitstore.h"
+namespace NSEpic {
 
-COperatorPowerLawBase::COperatorPowerLawBase(const TFloat64List &redshifts)
-    : COperatorContinuumFitting(redshifts), m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+class CPowerLawStore : public CContinuumFitStore {
+public:
+  CPowerLawStore(const TFloat64List &redshifts);
+  Int32 GetContinuumCount() const override { return 1; };
+  void Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx, Float64 redshift,
+           Float64 chi2, Float64 a1, Float64 a2, Float64 b1, Float64 b2,
+           Float64 snr) override;
+
+private:
+};
+
+} // namespace NSEpic
+
+#endif

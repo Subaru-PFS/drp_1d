@@ -88,7 +88,7 @@ private:
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const ExtremaResult> &ExtremaResult) const;
 
-  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
+  std::shared_ptr<COperatorTemplateFittingBase> m_continuumFittingOperator;
 
   std::string m_opt_pdfcombination;
   Float64 m_redshiftSeparation;

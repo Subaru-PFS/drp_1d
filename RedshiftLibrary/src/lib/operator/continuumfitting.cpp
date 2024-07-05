@@ -36,13 +36,16 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/range/combine.hpp>
 
-#include "RedshiftLibrary/operator/powerlawbase.h"
+#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
 using namespace std;
 
-COperatorPowerLawBase::COperatorPowerLawBase(const TFloat64List &redshifts)
-    : COperatorContinuumFitting(redshifts), m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+COperatorContinuumFitting::COperatorContinuumFitting(
+    const TFloat64List &redshifts)
+    : m_redshifts(redshifts), m_maskBuilder(std::make_shared<CMaskBuilder>()){};

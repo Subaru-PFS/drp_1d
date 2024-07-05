@@ -43,13 +43,15 @@
 #include <vector>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
 class COperatorResult;
 
-class COperatorPowerLawBase : public COperator {
+// TOD see if this is useful for something
+class COperatorPowerLawBase : public COperatorContinuumFitting {
 public:
   COperatorPowerLawBase(const TFloat64List &redshifts = TFloat64List());
 
@@ -58,7 +60,6 @@ public:
 protected:
   std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
-  TFloat64List m_redshifts;
 };
 } // namespace NSEpic
 

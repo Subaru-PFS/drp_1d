@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/linemodelpassextremaresult.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
@@ -137,7 +138,7 @@ private:
   friend class Linemodel::spanRedshift_test;
   friend class Linemodel::checkSecondPassWindowSize_test;
 
-  std::shared_ptr<CTemplatesFitStore>
+  std::shared_ptr<CContinuumFitStore>
   PrecomputeContinuumFit(const TFloat64List &redshifts,
                          Int32 candidateIdx = -1);
   void EstimateSecondPassParameters();
@@ -161,26 +162,25 @@ private:
                         const CSpectrumFluxAxis &fluxAxis, Float64 z,
                         Int32 start, Int32 end);
 
-  bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
+  bool AllAmplitudesAreZero(const TBoolList &amplitudesZero);
 
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
-  void
-  fitContinuumTemplates(Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
-                        std::vector<std::shared_ptr<CTemplateFittingResult>>
-                            &chisquareResultsAllTpl,
-                        TStringList &chisquareResultsTplName);
+  void fitContinuumTemplates(
+      Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
+      std::vector<std::shared_ptr<COperatorResult>> &chisquareResultsAllTpl,
+      TStringList &chisquareResultsTplName);
   void getContinuumInfoFromFirstpassFitStore(Int32 candidateIdx,
                                              TInt32List &meiksinIndices,
                                              TInt32List &ebmvIndices,
                                              TTemplateConstRefList &tplList,
                                              bool fft) const;
   void updateRedshiftGridAndResults();
-  void makeTFOperator(const TFloat64List &redshifts);
-  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
+  void makeContinuumFittingOperator(const TFloat64List &redshifts);
+  std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
-  std::shared_ptr<CTemplatesFitStore> m_tplfitStore_firstpass;
-  std::vector<std::shared_ptr<CTemplatesFitStore>> m_tplfitStore_secondpass;
+  std::shared_ptr<CContinuumFitStore> m_tplfitStore_firstpass;
+  std::vector<std::shared_ptr<CContinuumFitStore>> m_tplfitStore_secondpass;
 };
 
 } // namespace NSEpic

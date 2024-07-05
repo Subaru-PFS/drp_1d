@@ -48,12 +48,11 @@ using namespace std;
 
 COperatorTemplateFittingBase::COperatorTemplateFittingBase(
     const TFloat64List &redshifts)
-    : m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()), m_redshifts(redshifts),
+    : COperatorContinuumFitting(redshifts), m_spectra(Context.getSpectra()),
+      m_lambdaRanges(Context.getClampedLambdaRanges()),
       m_templateRebined_bf(m_spectra.size()),
       m_spcSpectralAxis_restframe(m_spectra.size()),
-      m_mskRebined_bf(m_spectra.size()),
-      m_maskBuilder(std::make_shared<CMaskBuilder>()){};
+      m_mskRebined_bf(m_spectra.size()){};
 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the

@@ -46,7 +46,7 @@
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
-    std::shared_ptr<const CTplModelSolution> cms) {
+    std::shared_ptr<const CContinuumModelSolution> cms) {
   fittedTpl = *cms;
   fittedTpl.tplName =
       fittedTpl.tplAmplitude ? fittedTpl.tplName : "noContinuum";

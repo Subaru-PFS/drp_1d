@@ -56,6 +56,7 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
@@ -69,20 +70,22 @@ class CLineModelFitting {
 
 public:
   CLineModelFitting(
-      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+      const std::shared_ptr<COperatorContinuumFitting>
+          &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
   CLineModelFitting(
       const std::shared_ptr<const CSpectrum> &template_,
       const TLambdaRange &lambdaRange,
-      const std::shared_ptr<COperatorTemplateFittingBase>
-          &TFOperator); // only used for template orthogonalization, TODO use
-                        // only one of the future subclasses ? at least inherit
-                        // from clinemodelfitting
+      const std::shared_ptr<COperatorContinuumFitting>
+          &continuumFittingOperator); // only used for template
+                                      // orthogonalization, TODO use only one of
+                                      // the future subclasses ? at least
+                                      // inherit from clinemodelfitting
 
   void initParameters();
-  void
-  initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
-              ElementComposition element_composition);
+  void initMembers(const std::shared_ptr<COperatorContinuumFitting>
+                       &continuumFittingOperator,
+                   ElementComposition element_composition);
 
   void LogCatalogInfos();
 
@@ -108,7 +111,7 @@ public:
   Float64 GetVelocityAbsorption() const;
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
-              CTplModelSolution &continuumModelSolution,
+              CContinuumModelSolution &continuumModelSolution,
               Int32 contreest_iterations = 0, bool enableLogging = 0);
   TFloat64Range &getDTDLambdaRange() { return m_dTransposeDLambdaRange; };
 
@@ -156,6 +159,10 @@ public:
     return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
+  bool isContinuumComponentPowerLaw() const {
+    return m_continuumManager->isContinuumComponentPowerLaw();
+  }
+
   Int32 GetModelNonZeroElementsNDdl() const {
     return m_ElementsVector->GetModelNonZeroElementsNDdl();
   }
@@ -192,7 +199,7 @@ public:
   std::shared_ptr<CContinuumManager> getContinuumManager() {
     return m_continuumManager;
   }
-  std::shared_ptr<const CTplModelSolution> getContinuumFitValues() const {
+  std::shared_ptr<const CContinuumModelSolution> getContinuumFitValues() const {
     return m_continuumFitValues;
   }
 
@@ -236,7 +243,7 @@ private:
 
   void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
 
-  std::shared_ptr<CTplModelSolution> m_continuumFitValues;
+  std::shared_ptr<CContinuumModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
   CSpcModelVectorPtr m_models;
