@@ -138,7 +138,16 @@ class ProcessFlow:
                     pass
 
         if self.parameters.is_a_redshift_solver_used():
-            self.run_classification_solver(rso)
+            try:
+                self.run_classification_solver(rso)
+                # Running linemeas only on classified model (if any)
+                classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
+                linemeas_method = self.parameters.get_linemeas_method(classif_model)
+                with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
+                    self.run_load_linemeas_params(rso)
+                    self.run_linemeas_solver(rso, linemeas_method)
+            except ProcessFlowException:
+                pass
 
         self.load_result_store(rso)
 
@@ -150,7 +159,6 @@ class ProcessFlow:
         redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.parameters.get_linemeas_method(spectrum_model)
         linemeas_alone = self.config["linemeascatalog"] and spectrum_model in self.config["linemeascatalog"]
-        pipe_redshift_linemeas = linemeas_method and not linemeas_alone
 
         if redshift_solver_method:
             self.run_redshift_solver(rso, redshift_solver_method)  # able to raise
@@ -163,10 +171,6 @@ class ProcessFlow:
                 and spectrum_model in self.calibration_library.reliability_models
             ):
                 self.run_reliability_solver(rso)
-
-            if pipe_redshift_linemeas:
-                self.run_load_linemeas_params(rso)  # able to raise
-                self.run_linemeas_solver(rso, linemeas_method)
 
         elif linemeas_method and linemeas_alone:
             self.run_linemeas_solver(rso, linemeas_method)
@@ -268,7 +272,7 @@ class ProcessFlow:
 
     @push_scope("classification", ScopeType.SPECTRUMMODEL)
     @push_scope("classification", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception_handler(raise_process_flow_exception=True)
     def run_classification_solver(self, rso):
         if self.all_redshift_solver_failed(rso):
             raise APIException(
