@@ -188,10 +188,10 @@ class TestParametersCheckGeneral:
         def test_linemeas_runmode_classif_no_lm_params_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{})
             ParametersChecker(param_dict).custom_check()
-            assert WarningUtils.has_warning(WarningCode.LINEMEAS_PARAMS_MISSING)
+            assert WarningUtils.has_warning(WarningCode.MISSING_PARAMS)
 
         def test_linemeas_runmode_classif_w_lm_params_ok(self, zflag):
             models_dict = make_parameter_dict_at_linemeas_solve_level(**{})
             param_dict = self._make_param_dict(**models_dict)
             ParametersChecker(param_dict).custom_check()
-            assert not WarningUtils.has_warning(WarningCode.LINEMEAS_PARAMS_MISSING)
+            assert not WarningUtils.has_warning(WarningCode.MISSING_PARAMS)
