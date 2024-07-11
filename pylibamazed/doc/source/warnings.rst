@@ -83,3 +83,8 @@ Possible warning codes list
   Happens in the case of multi obs, for which only one lsf is support.
   Only the lsf of the first observation is taken into account and applied
   to all observations.
+
+**MISSING_PARAMS**
+   Triggered if optional parameters are missing in some cases, where their
+   absence may likely prevent some features to be able to run. This does not
+   obstruct the execution overall.
