@@ -39,7 +39,11 @@
 import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.ParametersChecker import ParametersChecker
-from tests.python.utils import WarningUtils, make_parameter_dict_at_object_level
+from tests.python.utils import (
+    WarningUtils,
+    make_parameter_dict_at_object_level,
+    make_parameter_dict_at_linemeas_solve_level,
+)
 from pylibamazed.redshift import WarningCode
 
 
@@ -168,14 +172,17 @@ class TestParametersCheckGeneral:
 
     class TestLinemeasRunmode:
         def _make_param_dict(self, **kwargs):
-            models_dict = {"galaxy": {}, "star": {}, "qso": {}}
-            if kwargs.get("galaxy"):
-                models_dict = kwargs
             param_dict = {
                 "spectrumModels": ["galaxy", "star", "qso"],
                 "lineMeasRunmode": "classif",
-                **models_dict,
+                "galaxy": {},
+                "star": {},
+                "qso": {},
             }
+            if kwargs.get("galaxy"):
+                param_dict["lsf"] = kwargs["lsf"]
+                for model in param_dict["spectrumModels"]:
+                    param_dict[model] = kwargs["galaxy"]
             return param_dict
 
         def test_linemeas_runmode_classif_no_lm_params_raises_warning(self, zflag):
@@ -184,11 +191,7 @@ class TestParametersCheckGeneral:
             assert WarningUtils.has_warning(WarningCode.LINEMEAS_PARAMS_MISSING)
 
         def test_linemeas_runmode_classif_w_lm_params_ok(self, zflag):
-            models_dict = {
-                "galaxy": {"stages": ["lineMeasSolver"]},
-                "star": {"stages": ["lineMeasSolver"]},
-                "qso": {"stages": ["lineMeasSolver"]},
-            }
+            models_dict = make_parameter_dict_at_linemeas_solve_level(**{})
             param_dict = self._make_param_dict(**models_dict)
             ParametersChecker(param_dict).custom_check()
             assert not WarningUtils.has_warning(WarningCode.LINEMEAS_PARAMS_MISSING)
