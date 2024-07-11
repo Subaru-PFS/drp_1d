@@ -76,7 +76,7 @@
         "classif"
       ],
       "title": "Run mode for line measurement",
-      "description": "Option to run line measurement per spectrum on all models or only on the classified one"
+      "description": "Option to run line measurement per spectrum on models : \n * **\"all\"**: all models \n * **\"classif\"**: only the classified one"
     },
     "extremaRedshiftSeparation": {
       "type": "number",
