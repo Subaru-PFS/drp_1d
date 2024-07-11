@@ -174,7 +174,7 @@ class TestParametersCheckGeneral:
         def _make_param_dict(self, **kwargs):
             param_dict = {
                 "spectrumModels": ["galaxy", "star", "qso"],
-                "lineMeasRunmode": "classif",
+                "lineMeasRunMode": "classif",
                 "galaxy": {},
                 "star": {},
                 "qso": {},
