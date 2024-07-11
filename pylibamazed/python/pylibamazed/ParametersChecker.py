@@ -158,7 +158,7 @@ class ParametersChecker:
             for spectrum_model in self.accessor.get_spectrum_models():
                 if not self.accessor.get_linemeas_method(spectrum_model):
                     zflag.warning(
-                        WarningCode.LINEMEAS_PARAMS_MISSING,
+                        WarningCode.MISSING_PARAMS,
                         f"Linemeas run mode is set on 'classified objects only' but linemeas parameters are "
                         f"missing for model {spectrum_model}, linemeas will not run on this model.",
                     )
