@@ -141,20 +141,21 @@ class ProcessFlow:
             try:
                 self.run_classification_solver(rso)
                 # Running linemeas only on classified model (if any)
-                if self.parameters.get_linemeas_runmode() == "classif":
-                    classif_model = rso.get_attribute_from_source(
-                        "root", None, None, "classification", "Type"
-                    )
-                    linemeas_method = self.parameters.get_linemeas_method(classif_model)
-                    with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
-                        self.run_load_linemeas_params(rso)
-                        self.run_linemeas_solver(rso, linemeas_method)
+                self._run_linemeas_after_classification(rso)
             except ProcessFlowException:
                 pass
 
         self.load_result_store(rso)
 
         return rso
+
+    def _run_linemeas_after_classification(self, rso: ResultStoreOutput) -> None:
+        if self.parameters.get_linemeas_runmode() == "classif":
+            classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
+            linemeas_method = self.parameters.get_linemeas_method(classif_model)
+            with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
+                self.run_load_linemeas_params(rso)
+                self.run_linemeas_solver(rso, linemeas_method)
 
     def process_spectrum_model(self, rso):
         spectrum_model = self.scope_spectrum_model
