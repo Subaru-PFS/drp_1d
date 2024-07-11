@@ -104,6 +104,7 @@ class ParametersChecker:
         self._check_photometry_transmission_dir()
         self._check_photometry_band()
         self._check_filters()
+        self._check_linemeas_parameters_on_models()
 
     def _check_photometry_transmission_dir(self):
         parameter_name = "photometryTransmissionDir"
@@ -150,6 +151,17 @@ class ParametersChecker:
                     ErrorCode.INVALID_PARAMETER_FILE,
                     f"Filters: each dictionary in json list must have exactly the following keys {json_keys}",
                 )
+
+    def _check_linemeas_parameters_on_models(self):
+        linemeas_runmode = self.accessor.get_linemeas_runmode()
+        if linemeas_runmode == "classif":
+            for spectrum_model in self.accessor.get_spectrum_models():
+                if not self.accessor.get_linemeas_method(spectrum_model):
+                    zflag.warning(
+                        WarningCode.LINEMEAS_PARAMS_MISSING,
+                        f"Linemeas run mode is set on 'classified objects only' but linemeas parameters are "
+                        f"missing for model {spectrum_model}, linemeas will not run on this model.",
+                    )
 
     def _check_lsf(self) -> None:
         self._check_lsf_section()

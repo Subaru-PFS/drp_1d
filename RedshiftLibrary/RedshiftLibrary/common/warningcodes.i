@@ -17,5 +17,6 @@ enum class WarningCode {
   // Python
   UNUSED_PARAMETER,                             // 15
   SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,       // 16 
-  MULTI_OBS_ARBITRARY_LSF                       // 17
+  MULTI_OBS_ARBITRARY_LSF,                      // 17
+  LINEMEAS_PARAMS_MISSING                       // 18
 };

@@ -141,11 +141,14 @@ class ProcessFlow:
             try:
                 self.run_classification_solver(rso)
                 # Running linemeas only on classified model (if any)
-                classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
-                linemeas_method = self.parameters.get_linemeas_method(classif_model)
-                with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
-                    self.run_load_linemeas_params(rso)
-                    self.run_linemeas_solver(rso, linemeas_method)
+                if self.parameters.get_linemeas_runmode() == "classif":
+                    classif_model = rso.get_attribute_from_source(
+                        "root", None, None, "classification", "Type"
+                    )
+                    linemeas_method = self.parameters.get_linemeas_method(classif_model)
+                    with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
+                        self.run_load_linemeas_params(rso)
+                        self.run_linemeas_solver(rso, linemeas_method)
             except ProcessFlowException:
                 pass
 
@@ -171,6 +174,10 @@ class ProcessFlow:
                 and spectrum_model in self.calibration_library.reliability_models
             ):
                 self.run_reliability_solver(rso)
+
+            if self.parameters.get_linemeas_runmode() == "all":
+                self.run_load_linemeas_params(rso)
+                self.run_linemeas_solver(rso, linemeas_method)
 
         elif linemeas_method and linemeas_alone:
             self.run_linemeas_solver(rso, linemeas_method)
