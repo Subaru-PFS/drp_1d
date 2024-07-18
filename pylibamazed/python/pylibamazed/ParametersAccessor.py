@@ -73,7 +73,7 @@ class ParametersAccessor:
         return self.parameters.get("spectrumModels", default)
 
     def get_linemeas_runmode(self) -> str:
-        return self.parameters.get("lineMeasRunMode")
+        return self.parameters.get("linemeas_runmode")
 
     def get_spectrum_model_section(self, spectrum_model, create=False) -> dict:
         spectrum_model_section = self.parameters.get(spectrum_model)
