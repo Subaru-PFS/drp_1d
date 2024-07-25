@@ -46,23 +46,23 @@ class TestParametersCheckGeneral:
     class TestFilters:
         class TestFiltersFormat:
             def test_ok_if_filter_format_is_correct(self, zflag):
-                parametersDict = {"filters": [{"key": "Err", "instruction": "^", "value": "8"}]}
+                parametersDict = {"filters": [{"key": "errors", "instruction": "^", "value": "8"}]}
                 ParametersChecker(parametersDict).custom_check()
                 assert not WarningUtils.has_any_warning()
 
             def test_error_if_filters_is_not_a_list(self):
-                parametersDict = {"filters": {"key": "Err", "instruction": "^", "value": "8"}}
+                parametersDict = {"filters": {"key": "errors", "instruction": "^", "value": "8"}}
                 with pytest.raises(APIException, match=r"Input filters json must be a list"):
                     ParametersChecker(parametersDict).custom_check()
 
             def test_error_if_filters_is_missing_a_key(self):
-                parametersDict = {"filters": [{"key": "Err", "instruction": "^"}]}
+                parametersDict = {"filters": [{"key": "errors", "instruction": "^"}]}
                 with pytest.raises(APIException, match=r"Filters"):
                     ParametersChecker(parametersDict).custom_check()
 
             def test_error_if_filters_has_an_additional_key(self):
                 parametersDict = {
-                    "filters": [{"key": "Err", "instruction": "^", "value": "8", "errorKey": "123"}]
+                    "filters": [{"key": "errors", "instruction": "^", "value": "8", "errorKey": "123"}]
                 }
                 with pytest.raises(APIException, match=r"Filters"):
                     ParametersChecker(parametersDict).custom_check()
@@ -82,7 +82,7 @@ class TestParametersCheckGeneral:
             def test_ok_if_filter_uses_a_default_or_additional_column(self, zflag):
                 parametersDict = {
                     "filters": [
-                        {"key": "Err", "instruction": "^", "value": "8"},
+                        {"key": "errors", "instruction": "^", "value": "8"},
                         {"key": "zzz", "instruction": "^", "value": "8"},
                     ],
                     "additionalCols": ["zzz"],

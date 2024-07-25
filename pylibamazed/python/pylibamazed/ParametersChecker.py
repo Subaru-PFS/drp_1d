@@ -127,7 +127,7 @@ class ParametersChecker:
         filters = self.accessor.get_filters(default=[])
         self._check_filters_format(filters)
 
-        DEFAULT_COLUMN_NAMES = ["Wave", "Flux", "Err"]
+        DEFAULT_COLUMN_NAMES = ["waves", "fluxes", "errors"]
         if not filters:
             return
         filter_keys = [filt["key"] for filt in filters]
