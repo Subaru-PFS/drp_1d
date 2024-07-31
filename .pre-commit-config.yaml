@@ -27,6 +27,5 @@ repos:
       - id: black
         files: "pylibamazed"
         exclude: "redshift.py"
-        language_version: python3.9
         args: ["--line-length=110"]
         types: [python]
