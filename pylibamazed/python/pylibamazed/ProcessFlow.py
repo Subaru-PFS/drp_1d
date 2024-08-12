@@ -140,10 +140,11 @@ class ProcessFlow:
         if self.parameters.is_a_redshift_solver_used():
             try:
                 self.run_classification_solver(rso)
-                # Running linemeas only on classified model (if any)
-                self._run_linemeas_after_classification(rso)
             except ProcessFlowException:
                 pass
+            else:
+                # Running linemeas only on classified model (if any)
+                self._run_linemeas_after_classification(rso)
 
         self.load_result_store(rso)
 
@@ -163,6 +164,7 @@ class ProcessFlow:
         redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.parameters.get_linemeas_method(spectrum_model)
         linemeas_alone = self.config["linemeascatalog"] and spectrum_model in self.config["linemeascatalog"]
+        pipe_redshift_linemeas = linemeas_method and not linemeas_alone
 
         if redshift_solver_method:
             self.run_redshift_solver(rso, redshift_solver_method)  # able to raise
@@ -176,7 +178,7 @@ class ProcessFlow:
             ):
                 self.run_reliability_solver(rso)
 
-            if self.parameters.get_linemeas_runmode() == "all":
+            if self.parameters.get_linemeas_runmode() == "all" and pipe_redshift_linemeas:
                 self.run_load_linemeas_params(rso)
                 self.run_linemeas_solver(rso, linemeas_method)
 
