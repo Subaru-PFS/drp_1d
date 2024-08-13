@@ -431,51 +431,36 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   // needed ?) NB: this is only needed for the index=savedIdxFitted
   // ultimately
   for (Int32 iElt = 0; iElt < s; iElt++) {
-    bool savedAmp = false;
-    bool allampzero = true;
+    auto const &param = m_elementsVector->getElementParam()[iElt];
+    if (param->isNotFittable())
+      continue;
 
-    for (Int32 line_idx = 0;
-         line_idx != m_elementsVector->getElementParam()[iElt]->size();
-         ++line_idx) {
-      Float64 amp = m_elementsVector->getElementParam()[iElt]
-                        ->m_FittedAmplitudes[line_idx];
-      if (isnan(amp) || amp <= 0. ||
-          m_elementsVector->isOutsideLambdaRangeLine(iElt, line_idx))
-        continue;
-      allampzero = false;
+    // search a valid line in the template
+    Int32 const line_idx = param->GetElementValidLine();
+    if (line_idx == undefIdx)
+      continue;
 
-      Float64 amp_error = m_elementsVector->getElementParam()[iElt]
-                              ->m_FittedAmplitudesStd[line_idx];
-      Float64 nominal_amp = m_elementsVector->getElementParam()[iElt]
-                                ->m_NominalAmplitudes[line_idx];
-      m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
-      Log.LogDebug(Formatter()
-                   << "    model : fit tplratio mode, tplratio_fittedamp: "
-                   << m_FittedAmpTplratio[idx][iElt]);
+    auto const &fittedAmplitudes = param->m_FittedAmplitudes;
+    Float64 const amp = fittedAmplitudes[line_idx];
+    Float64 const amp_error = param->m_FittedAmplitudesStd[line_idx];
+    Float64 const nominal_amp = param->m_NominalAmplitudes[line_idx];
 
-      m_FittedErrorTplratio[idx][iElt] = amp_error / nominal_amp;
-      m_DtmTplratio[idx][iElt] =
-          m_elementsVector->getElementParam()[iElt]->m_sumCross;
-      m_MtmTplratio[idx][iElt] =
-          m_elementsVector->getElementParam()[iElt]->m_sumGauss;
+    m_FittedAmpTplratio[idx][iElt] = amp / nominal_amp;
+    Log.LogDebug(Formatter()
+                 << "    model : fit tplratio mode, tplratio_fittedamp: "
+                 << m_FittedAmpTplratio[idx][iElt]);
 
-      TAsymParams params =
-          m_elementsVector->getElementParam()[iElt]->GetAsymfitParams(0);
-      m_LyaAsymCoeffTplratio[idx][iElt] = params.alpha;
-      m_LyaWidthCoeffTplratio[idx][iElt] = params.sigma;
-      m_LyaDeltaCoeffTplratio[idx][iElt] = params.delta;
+    m_FittedErrorTplratio[idx][iElt] = amp_error / nominal_amp;
+    m_DtmTplratio[idx][iElt] = param->m_sumCross;
+    m_MtmTplratio[idx][iElt] = param->m_sumGauss;
 
-      TSymIgmParams params_igm =
-          m_elementsVector->getElementParam()[iElt]->GetSymIgmParams(0);
-      m_LyaIgmIdxTplratio[idx][iElt] = params_igm.m_igmidx;
+    TAsymParams const &asym_params = param->GetAsymfitParams(0);
+    m_LyaAsymCoeffTplratio[idx][iElt] = asym_params.alpha;
+    m_LyaWidthCoeffTplratio[idx][iElt] = asym_params.sigma;
+    m_LyaDeltaCoeffTplratio[idx][iElt] = asym_params.delta;
 
-      savedAmp = true;
-      break;
-    }
-    // TODO: this case should be treated more
-    // carefully, save dtm, mtm, and more...
-    if (allampzero && !savedAmp)
-      m_FittedAmpTplratio[idx][iElt] = 0.0;
+    TSymIgmParams const &params_igm = param->GetSymIgmParams(0);
+    m_LyaIgmIdxTplratio[idx][iElt] = params_igm.m_igmidx;
   }
   return;
 }
@@ -497,28 +482,15 @@ Float64 CTplratioManager::computelogLinePriorMerit(
   if (logPriorDataTplRatio[itratio].A_sigma <= 0.0)
     return _meritprior;
 
-  Float64 ampl = 0.0;
-  Int32 elt_index = 0;
   for (const auto &elt_param : m_elementsVector->getElementParam()) {
-    bool foundAmp = false;
-    for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
-      Float64 amp = elt_param->GetFittedAmplitude(line_idx);
-      if (amp <= 0. ||
-          m_elementsVector->isOutsideLambdaRangeLine(elt_index, line_idx))
-        continue;
-      Float64 nominal_amp = elt_param->GetNominalAmplitude(line_idx);
-      ampl = amp / nominal_amp;
-      foundAmp = true;
-      break;
-    }
-    if (foundAmp) {
+    Float64 const ampl = elt_param->GetElementAmplitude();
+    if (!isnan(ampl)) {
       _meritprior += logPriorDataTplRatio[itratio].betaA *
                      (ampl - logPriorDataTplRatio[itratio].A_mean) *
                      (ampl - logPriorDataTplRatio[itratio].A_mean) /
                      (logPriorDataTplRatio[itratio].A_sigma *
                       logPriorDataTplRatio[itratio].A_sigma);
     }
-    elt_index++;
   }
 
   return _meritprior;
@@ -552,20 +524,16 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
 
   for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
        iElts++) {
+    auto &param = m_elementsVector->getElementParam()[iElts];
     Log.LogDetail(Formatter()
                   << "    model - Linemodel: tplratio = " << m_savedIdxFitted
                   << " (" << getTplratio_bestTplName() << ", with ebmv="
                   << getTplratio_bestTplIsmCoeff() << "), and A="
                   << m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
-    m_elementsVector->getElementParam()[iElts]->setAmplitudes(
-        m_FittedAmpTplratio[m_savedIdxFitted][iElts],
-        m_FittedErrorTplratio[m_savedIdxFitted][iElts],
-        m_elementsVector->getOutsideLambdaRangeList(iElts),
-        m_elementsVector->isOutsideLambdaRange(iElts));
-    m_elementsVector->getElementParam()[iElts]->m_sumCross =
-        m_DtmTplratio[m_savedIdxFitted][iElts];
-    m_elementsVector->getElementParam()[iElts]->m_sumGauss =
-        m_MtmTplratio[m_savedIdxFitted][iElts];
+    param->setAmplitudes(m_FittedAmpTplratio[m_savedIdxFitted][iElts],
+                         m_FittedErrorTplratio[m_savedIdxFitted][iElts]);
+    param->m_sumCross = m_DtmTplratio[m_savedIdxFitted][iElts];
+    param->m_sumGauss = m_MtmTplratio[m_savedIdxFitted][iElts];
   }
 
   // Lya

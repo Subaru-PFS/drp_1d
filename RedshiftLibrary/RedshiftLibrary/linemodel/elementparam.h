@@ -92,6 +92,11 @@ struct TLineModelElementParam {
            // used as a limit for the abs line coeff (typically: 1.0)
   CLine::EType m_type;
   bool m_isEmission;
+  bool m_globalOutsideLambdaRange = false;
+  std::vector<bool> m_globalOutsideLambdaRangeList;
+  bool m_absLinesNullContinuum =
+      false; // when continuum is null under line (eg igm extinction)
+  bool m_nullNominalAmplitudes = false;
 
   void init(const std::string &widthType);
   const Float64 &getSumGauss() const { return m_sumGauss; }
@@ -170,21 +175,19 @@ struct TLineModelElementParam {
     fastd[index] = fittedAmpStd * nominalAmplitude;
   }
 
-  void setAmplitudes(Float64 A, Float64 AStd,
-                     const std::vector<bool> &outsideLambdaRangeList,
-                     bool outsideLambdaRange) {
+  void setAmplitudes(Float64 A, Float64 AStd) {
     auto &fa = m_FittedAmplitudes;
     auto &fastd = m_FittedAmplitudesStd;
     auto &na = m_NominalAmplitudes;
 
-    if (std::isnan(A) || outsideLambdaRange) {
+    if (std::isnan(A) || isNotFittable()) {
       fa.assign(size(), NAN);
       fastd.assign(size(), NAN);
       return;
     }
 
     for (Int32 index = 0; index != size(); ++index) {
-      if (outsideLambdaRangeList[index]) {
+      if (m_globalOutsideLambdaRangeList[index]) {
         fa[index] = NAN;
         fastd[index] = NAN;
         continue;
@@ -212,15 +215,29 @@ struct TLineModelElementParam {
     m_Lines[line_index].SetProfile(std::move(profile));
   }
 
-  Float64 GetElementAmplitude() const {
+  Int32 GetElementValidLine() const {
+    if (isNotFittable())
+      return undefIdx;
     for (Int32 line_idx = 0; line_idx != size(); ++line_idx) {
       auto const &nominal_amplitude = m_NominalAmplitudes[line_idx];
-      if (!std::isnan(m_FittedAmplitudes[line_idx]) &&
-          nominal_amplitude != 0.0) {
-        return m_FittedAmplitudes[line_idx] / nominal_amplitude;
-      }
+      if (!std::isnan(m_FittedAmplitudes[line_idx]) && nominal_amplitude != 0.0)
+        return line_idx;
     }
-    return NAN;
+    return undefIdx;
+  }
+
+  Float64 GetElementAmplitude() const {
+    Int32 line_idx = GetElementValidLine();
+    if (line_idx == undefIdx)
+      return NAN;
+    return m_FittedAmplitudes[line_idx] / m_NominalAmplitudes[line_idx];
+  }
+
+  Float64 GetElementAmplitudeError() const {
+    Int32 line_idx = GetElementValidLine();
+    if (line_idx == undefIdx)
+      return NAN;
+    return m_FittedAmplitudesStd[line_idx] / m_NominalAmplitudes[line_idx];
   }
 
   void resetLambdaOffsets() {
@@ -254,6 +271,20 @@ struct TLineModelElementParam {
   CLine::EType GetElementType() const { return m_type; };
   bool IsEmission() const { return m_isEmission; };
 
+  bool isFittable() const {
+    return !m_globalOutsideLambdaRange && !m_nullNominalAmplitudes &&
+           !m_absLinesNullContinuum;
+  }
+
+  bool isNotFittable() const {
+    return m_globalOutsideLambdaRange || m_nullNominalAmplitudes ||
+           m_absLinesNullContinuum;
+  }
+
+  bool isOutsideLambdaRangeLine(Int32 line_index) const {
+    return m_globalOutsideLambdaRangeList[line_index];
+  }
+
   const CLineVector &GetLines() const { return m_Lines; };
   const TInt32Map &GetLinesIndices() const { return m_LinesIds; };
 
@@ -266,6 +297,7 @@ struct TLineModelElementParam {
   Float64 GetFittedAmplitudeStd(Int32 line_index) const;
 
   bool isAllAmplitudesNull() const;
+  void setNullNominalAmplitudesNotFittable();
 
   bool LimitFittedAmplitude(Int32 line_index, Float64 limit);
   void SetAllOffsetsEnabled(Float64 val);

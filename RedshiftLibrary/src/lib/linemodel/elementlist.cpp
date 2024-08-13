@@ -240,18 +240,6 @@ TInt32List CLineModelElementList::getOverlappingElements(
 }
 
 /**
- * \brief If j is a valid index of m_Elements, returns a call to that element's
- *GetElementAmplitude. If not, returns -1.
- **/
-Float64 CLineModelElementList::GetElementAmplitude(Int32 j) const {
-  Float64 a = -1.0;
-  if (j >= 0 && j < m_Elements.size()) {
-    a = m_Elements[j]->GetElementAmplitude();
-  }
-  return a;
-}
-
-/**
  * @brief: get all valid elements based on whether the amplitude is null
  *
  * @param lineTypeFilter
@@ -263,12 +251,12 @@ TInt32List CLineModelElementList::getValidElementIndices(
   const TInt32List validEltsIdx = GetModelValidElementsIndexes();
   TInt32List nonZeroValidEltsIdx;
   for (const Int32 eIdx : validEltsIdx) {
-    auto const lineType = m_Elements[eIdx]->getElementParam()->GetElementType();
+    auto const &param = m_Elements[eIdx]->getElementParam();
+    auto const lineType = param->GetElementType();
     if (lineTypeFilter != CLine::EType::nType_All && lineTypeFilter != lineType)
       continue;
-
-    if (!std::isnan(m_Elements[eIdx]->GetElementAmplitude()) &&
-        m_Elements[eIdx]->GetElementAmplitude() > 0.0)
+    Float64 const amp = param->GetElementAmplitude();
+    if (!std::isnan(amp) && amp > 0.0)
       nonZeroValidEltsIdx.push_back(eIdx);
   }
   return nonZeroValidEltsIdx;
@@ -499,13 +487,19 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
   for (Int32 i = 0; i < eIdx_list.size(); i++) {
     Int32 const eIdx = eIdx_list[i];
     Int32 const subeIdx = subeIdx_list[i];
-    auto const &[mu, LineWidth] =
-        m_Elements[eIdx]->getObservedPositionAndLineWidth(redshift, subeIdx);
-
-    Float64 const winsizeAngstrom = LineWidth * sigma_support;
-
-    indexRangeList[i] = CLineModelElement::EstimateIndexRange(
-        spectralAxis, mu, lambdaRange, winsizeAngstrom);
+    auto const &elt = m_Elements[eIdx];
+    if (sigma_support ==
+        elt->getElementParam()->getLineProfile(subeIdx)->GetNSigmaSupport()) {
+      // same Nsigma support, get already computed support indices
+      indexRangeList[i] = elt->getTheoreticalSupportSubElt(subeIdx);
+    } else {
+      // different Nsigma support, thus need to recompute support indices
+      auto const &[mu, LineWidth] =
+          elt->getObservedPositionAndLineWidth(redshift, subeIdx);
+      Float64 const winsizeAngstrom = LineWidth * sigma_support;
+      indexRangeList[i] = CLineModelElement::EstimateIndexRange(
+          spectralAxis, mu, lambdaRange, winsizeAngstrom);
+    }
   }
 
   if (eIdx_list.size() == 1)

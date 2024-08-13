@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -88,7 +89,7 @@ CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
 Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() const {
   Int32 nddl = 0;
   for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {
-    if (isOutsideLambdaRange(elt_index))
+    if (m_ElementsParams[elt_index]->isNotFittable())
       continue;
     if (!m_ElementsParams[elt_index]->isAllAmplitudesNull())
       nddl++;
@@ -124,9 +125,6 @@ void CLMEltListVector::AddElementParam(CLineVector lines) {
   std::string lineWidthType = ps->GetScoped<std::string>("lineWidthType");
   m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
       std::move(lines), velocityEmission, velocityAbsorption, lineWidthType));
-
-  m_globalOutsideLambdaRangeList.push_back(std::vector<bool>(nb_lines, false));
-  m_globalOutsideLambdaRange.push_back(false);
 }
 
 void CLMEltListVector::fillElements() {
@@ -256,9 +254,7 @@ CLMEltListVector::getIgmLinesIndices() const {
  **/
 void CLMEltListVector::SetElementAmplitude(Int32 eltIndex, Float64 A,
                                            Float64 AStd) {
-  m_ElementsParams[eltIndex]->setAmplitudes(
-      A, AStd, m_globalOutsideLambdaRangeList[eltIndex],
-      m_globalOutsideLambdaRange[eltIndex]);
+  m_ElementsParams[eltIndex]->setAmplitudes(A, AStd);
 }
 
 void CLMEltListVector::resetLambdaOffsets() {
@@ -288,16 +284,49 @@ void CLMEltListVector::resetAsymfitParams() {
 
 void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
   for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
-    m_globalOutsideLambdaRange[elt_idx] = computeOutsideLambdaRange(elt_idx);
+    m_ElementsParams[elt_idx]->m_globalOutsideLambdaRange =
+        computeOutsideLambdaRange(elt_idx);
     for (size_t line_idx = 0; line_idx < m_ElementsParams[elt_idx]->size();
          ++line_idx)
-      m_globalOutsideLambdaRangeList[elt_idx][line_idx] =
+      m_ElementsParams[elt_idx]->m_globalOutsideLambdaRangeList[line_idx] =
           computeOutsideLambdaRangeLine(elt_idx, line_idx);
   }
 }
 
-const std::vector<bool> &
-CLMEltListVector::getOutsideLambdaRangeList(Int32 elt_index) const {
+void CLMEltListVector::setAllAbsLinesFittable() {
+  m_absLinesNoContinuum = false;
+  for (auto const &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_absLinesNullContinuum = false; // reset all
+  }
+}
 
-  return m_globalOutsideLambdaRangeList[elt_index];
+void CLMEltListVector::setAllAbsLinesNotFittable() {
+  m_absLinesNoContinuum = true;
+  for (auto const &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_absLinesNullContinuum = false; // reset all
+    if (elt_param_ptr->GetElementType() == CLine::EType::nType_Absorption)
+      elt_param_ptr->m_absLinesNullContinuum = true;
+  }
+}
+
+void CLMEltListVector::setNullNominalAmplitudesNotFittable() {
+  for (auto &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_nullNominalAmplitudes = false; // reset all
+    if (!elt_param_ptr->m_globalOutsideLambdaRange)
+      elt_param_ptr->setNullNominalAmplitudesNotFittable();
+  }
+}
+
+void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
+    CSpcModelVectorPtr const &models) {
+  for (size_t eIdx = 0; eIdx < getNbElements(); ++eIdx) {
+    auto const &elt_param_ptr = m_ElementsParams[eIdx];
+    elt_param_ptr->m_absLinesNullContinuum = false; // reset all
+    if (elt_param_ptr->GetElementType() != CLine::EType::nType_Absorption ||
+        elt_param_ptr->m_globalOutsideLambdaRange)
+      continue;
+    if (m_absLinesNoContinuum ||
+        models->getMaxContinuumUnderElement(eIdx) <= 0.)
+      elt_param_ptr->m_absLinesNullContinuum = true;
+  }
 }

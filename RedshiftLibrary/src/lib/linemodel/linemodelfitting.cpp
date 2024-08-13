@@ -379,8 +379,11 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     Float64 _meritprior = 0.; // only relevant for "tplRatio"
 
     prepareAndLoadContinuum(k, redshift);
-    if (!isContinuumComponentNoContinuum())
+    if (!isContinuumComponentNoContinuum()) {
       computeSpectrumFluxWithoutContinuum();
+      m_ElementsVector->setAllAbsLinesFittable();
+    } else
+      m_ElementsVector->setAllAbsLinesNotFittable();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
@@ -809,7 +812,9 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     auto const &elt_param = getElementParam()[eIdx];
     Int32 line_index = elt_param->getLineIndex(line_id);
     if (eIdx == undefIdx || line_index == undefIdx ||
-        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index))
+        m_ElementsVector->getElementParam()[eIdx]->isNotFittable() ||
+        m_ElementsVector->getElementParam()[eIdx]->isOutsideLambdaRangeLine(
+            line_index))
       continue; // data already set to its default values
 
     modelSolution.ResidualRMS[iRestLine] =
@@ -976,7 +981,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     auto [eIdx, line_index] = m_ElementsVector->findElementIndex(line_id);
     modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || line_index == undefIdx ||
-        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index))
+        m_ElementsVector->getElementParam()[eIdx]->isNotFittable() ||
+        m_ElementsVector->getElementParam()[eIdx]->isOutsideLambdaRangeLine(
+            line_index))
       continue; // data already set to its default values
 
     Float64 amp = m_ElementsVector->getElementParam()[eIdx]

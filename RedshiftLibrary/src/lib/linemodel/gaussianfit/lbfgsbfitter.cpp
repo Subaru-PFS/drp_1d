@@ -193,7 +193,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
                             m_fitter->getLambdaRange());
   }
-  m_fitter->setGlobalOutsideLambdaRangeFromSpectra();
+  m_fitter->m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
 
   CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -518,7 +518,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       THROWG(ErrorCode::INTERNAL_ERROR,
              "NAN amplitude for LBFGSB fitter initial guess");
     // retrive max SNR amplitude:
-    auto sigma = (elt->GetElementError() * normFactor);
+    auto sigma = (elt->GetElementAmplitudeError() * normFactor);
     auto snr = v_xGuess[i] / sigma;
     max_snr = std::max(max_snr, snr);
   }
@@ -695,7 +695,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  setGlobalOutsideLambdaRangeFromSpectra();
+  m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
   m_spectraIndex.reset();
   getModel().refreshModel(); // recompute model with estimated params (needed
                              // for noise estimation from residual)

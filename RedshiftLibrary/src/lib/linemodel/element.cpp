@@ -256,7 +256,10 @@ TInt32Range CLineModelElement::EstimateIndexRange(
 void CLineModelElement::computeOutsideLambdaRange() {
   m_OutsideLambdaRange = true;
   for (auto const &outside_lambda_range_id : m_OutsideLambdaRangeList)
-    m_OutsideLambdaRange = m_OutsideLambdaRange && outside_lambda_range_id;
+    if (!outside_lambda_range_id) {
+      m_OutsideLambdaRange = false;
+      break;
+    }
 }
 
 /**
@@ -400,14 +403,15 @@ void CLineModelElement::prepareSupport(
  **/
 TInt32RangeList CLineModelElement::getSupport() const {
   TInt32RangeList support;
-  if (m_OutsideLambdaRange == false) {
-    for (Int32 index = 0; index != GetSize(); ++index) {
-      if (m_OutsideLambdaRangeList[index])
-        continue;
+  if (m_OutsideLambdaRange)
+    return support;
 
-      support.push_back(
-          TInt32Range(m_StartNoOverlap[index], m_EndNoOverlap[index]));
-    }
+  for (Int32 index = 0; index != GetSize(); ++index) {
+    if (m_OutsideLambdaRangeList[index])
+      continue;
+
+    support.push_back(
+        TInt32Range(m_StartNoOverlap[index], m_EndNoOverlap[index]));
   }
   return support;
 }
@@ -415,15 +419,17 @@ TInt32RangeList CLineModelElement::getSupport() const {
 TInt32RangeList CLineModelElement::getTheoreticalSupport() const {
   TInt32RangeList support;
 
-  if (m_OutsideLambdaRange == false) {
-    for (Int32 index = 0; index != GetSize(); ++index) {
-      if (m_OutsideLambdaRangeList[index])
-        continue;
+  if (m_OutsideLambdaRange)
+    return support;
 
-      support.push_back(
-          TInt32Range(m_StartTheoretical[index], m_EndTheoretical[index]));
-    }
+  for (Int32 index = 0; index != GetSize(); ++index) {
+    if (m_OutsideLambdaRangeList[index])
+      continue;
+
+    support.push_back(
+        TInt32Range(m_StartTheoretical[index], m_EndTheoretical[index]));
   }
+
   return support;
 }
 
@@ -516,41 +522,6 @@ Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 index,
   auto const &profile = getElementParam()->getLineProfile(index);
 
   return profile->GetLineProfileVal(x, mu, sigma);
-}
-
-/**
- * \brief Returns NA  N if m_OutsideLambdaRange, and the fitted amplitude /
- *nominal amplitude of the first element otherwise.
- **/
-Float64 CLineModelElement::GetElementAmplitude() const {
-  if (m_OutsideLambdaRange) {
-    return NAN;
-  }
-  for (Int32 index = 0; index != GetSize(); ++index) {
-    auto const &nominal_amplitude = m_ElementParam->m_NominalAmplitudes[index];
-    if (!m_OutsideLambdaRangeList[index] && nominal_amplitude != 0.0) {
-      return m_ElementParam->m_FittedAmplitudes[index] / nominal_amplitude;
-    }
-  }
-  return NAN;
-}
-
-/**
- * \brief Returns NAN if m_OutsideLambdaRange, and the fitted error / nominal
- *amplitude of the first element otherwise.
- **/
-Float64 CLineModelElement::GetElementError() const {
-  if (m_OutsideLambdaRange) {
-    return NAN;
-  }
-
-  for (Int32 index = 0; index != GetSize(); ++index) {
-    auto const &nominal_amplitude = m_ElementParam->m_NominalAmplitudes[index];
-    if (!m_OutsideLambdaRangeList[index] && nominal_amplitude != 0.0) {
-      return m_ElementParam->m_FittedAmplitudesStd[index] / nominal_amplitude;
-    }
-  }
-  return NAN;
 }
 
 /**

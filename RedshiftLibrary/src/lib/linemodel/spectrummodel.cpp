@@ -291,20 +291,19 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
   return maxWeight;
 }
 
+// compute averaged continuum under line, weighted by the line profile
 std::pair<TInt32Range, TFloat64List>
 CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
                                        Float64 redshift) const {
   auto const &elt = (*m_Elements)[eIdx];
   auto const &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
-  auto const &[mu, sigma] =
-      elt->getObservedPositionAndLineWidth(redshift, line_id);
-
   auto const &profile = elt->getElementParam()->getLineProfile(line_id);
 
-  Float64 const winsize = profile->GetNSigmaSupport() * sigma;
-  TInt32Range const indexRange = elt->EstimateIndexRange(
-      spectralAxis, mu, spectralAxis.GetLambdaRange(), winsize);
+  TInt32Range const indexRange = elt->getTheoreticalSupportSubElt(line_id);
+
+  auto const &[mu, sigma] =
+      elt->getObservedPositionAndLineWidth(redshift, line_id);
 
   TFloat64List weights;
   weights.reserve(indexRange.GetLength() + 1);
@@ -391,6 +390,21 @@ CSpectrumModel::getContinuumSquaredResidualInRange(
     nsum2 += weight * weight;
   }
   return std::make_tuple(sum, nsum, nsum2);
+}
+
+Float64 CSpectrumModel::getMaxContinuumUnderElement(Int32 eIdx) const {
+  const auto &continuumFluxAxis = m_ContinuumFluxAxis;
+
+  // TODO add ampoffset polynomial ?
+
+  TInt32List xInds = m_Elements->getSupportIndexes({eIdx});
+  if (xInds.empty())
+    return -INFINITY;
+  return *std::max_element(xInds.begin(), xInds.end(),
+                           [&continuumFluxAxis](Float64 lhs, Float64 rhs) {
+                             return continuumFluxAxis[lhs] <
+                                    continuumFluxAxis[rhs];
+                           });
 }
 
 /**

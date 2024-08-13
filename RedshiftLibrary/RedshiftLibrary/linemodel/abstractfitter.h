@@ -103,9 +103,6 @@ protected:
   void resetElementsFittingParam();
 
   void resetLambdaOffsets() { m_ElementsVector->resetLambdaOffsets(); };
-  void setGlobalOutsideLambdaRangeFromSpectra() {
-    m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
-  }
 
   void fitLyaProfile(Float64 redshift);
 
@@ -151,7 +148,6 @@ protected:
   const std::vector<TLineModelElementParam_ptr> &getElementParam() const {
     return m_ElementsVector->getElementParam();
   }
-  bool isOutsideLambdaRange(Int32 elt_index);
 
   Int32 m_nbElements;
 
