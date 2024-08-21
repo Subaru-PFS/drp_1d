@@ -49,6 +49,7 @@ static const Float64 LAMBDA_OFFSET_STEP = 25.0; // km/s;
 
 // For QSO power law calculation, lambda at which the power law coefs change
 static const Float64 POWER_LOW_WAVELENGTH_CUT = 5400;
+static const Float64 POWER_LAW_N_SAMPLES_MIN_FOR_CONTINUUM_FIT = 10;
 
 } // namespace NSEpic
 #endif

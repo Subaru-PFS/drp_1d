@@ -86,7 +86,7 @@ public:
 
   TPhotVal
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
-                       Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
+                       Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
                        Float64 amplitude, const Float64 overlapThreshold,
                        Int32 index,
                        const std::shared_ptr<CModelSpectrumResult> &models);
@@ -126,12 +126,8 @@ protected:
   };
 
   // Likelihood
-  virtual Float64 EstimateLikelihoodCstLog() const;
   void applyPositiveAndNonNullConstraint(Float64 amp_sigma,
                                          Float64 &ampl) const;
-
-  std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
-  std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
 
   std::vector<CTemplate> m_templateRebined_bf;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;

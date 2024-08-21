@@ -42,8 +42,8 @@
 #include <unordered_set>
 
 #include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
-#include "RedshiftLibrary/operator/continuummodelsolution.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/processflow/result.h"

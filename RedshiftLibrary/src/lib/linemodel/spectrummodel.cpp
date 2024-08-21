@@ -674,13 +674,13 @@ Int32 CSpectrumModel::ApplyContinuumTplOnGrid(
   Int32 n = tpl->GetSampleCount();
 
   Int32 idxDust = -1;
-  if (m_fitContinuum->tplEbmvCoeff > 0.) {
+  if (m_fitContinuum->ebmvCoef > 0.) {
     if (tpl->CalzettiInitFailed()) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              "  no calzetti calib. file in template");
     }
-    idxDust = tpl->m_ismCorrectionCalzetti->GetEbmvIndex(
-        m_fitContinuum->tplEbmvCoeff);
+    idxDust =
+        tpl->m_ismCorrectionCalzetti->GetEbmvIndex(m_fitContinuum->ebmvCoef);
   }
   const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
   TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n - 1]);
@@ -693,8 +693,8 @@ Int32 CSpectrumModel::ApplyContinuumTplOnGrid(
   m_photValues =
       (std::dynamic_pointer_cast<COperatorTemplateFittingBase>(
            m_continuumFittingOperator))
-          ->ComputeSpectrumModel(tpl, zcontinuum, m_fitContinuum->tplEbmvCoeff,
-                                 m_fitContinuum->tplMeiksinIdx, amplitude,
+          ->ComputeSpectrumModel(tpl, zcontinuum, m_fitContinuum->ebmvCoef,
+                                 m_fitContinuum->meiksinIdx, amplitude,
                                  overlapThreshold, m_spcIndex, spcmodel);
   if (spcmodel == nullptr)
     THROWG(ErrorCode::INTERNAL_ERROR, "Couldnt compute spectrum model");

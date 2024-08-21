@@ -48,4 +48,36 @@ using namespace std;
 
 COperatorContinuumFitting::COperatorContinuumFitting(
     const TFloat64List &redshifts)
-    : m_redshifts(redshifts), m_maskBuilder(std::make_shared<CMaskBuilder>()){};
+    : m_redshifts(redshifts), m_maskBuilder(std::make_shared<CMaskBuilder>()),
+      m_spectra(Context.getSpectra()),
+      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+
+/**
+ * \brief this function estimates the likelihood_cstLog term withing the
+ * wavelength range
+ **/
+Float64 COperatorContinuumFitting::EstimateLikelihoodCstLog() const {
+  Float64 cstLog = 0.0;
+  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+       boost::combine(m_spectra, m_lambdaRanges)) {
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        spectrum_ptr->GetSpectralAxis();
+    const TFloat64List &error =
+        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
+
+    Int32 numDevs = 0;
+
+    Float64 sumLogNoise = 0.0;
+
+    Int32 imin;
+    Int32 imax;
+    lambdaRange_ptr->getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    for (Int32 j = imin; j <= imax; j++) {
+      numDevs++;
+      sumLogNoise += log(error[j]);
+    }
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+  }
+  return cstLog;
+}

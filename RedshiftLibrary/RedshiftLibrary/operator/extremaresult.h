@@ -43,7 +43,7 @@
 #include <vector>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/continuummodelsolution.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"

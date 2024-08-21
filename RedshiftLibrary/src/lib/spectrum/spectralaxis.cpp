@@ -123,6 +123,7 @@ void CSpectrumSpectralAxis::SetSize(Int32 s) {
       resetAxisProperties();
   }
 }
+
 CSpectrumSpectralAxis
 CSpectrumSpectralAxis::ShiftByWaveLength(Float64 wavelengthOffset,
                                          EShiftDirection direction) const {
@@ -141,6 +142,23 @@ CSpectrumSpectralAxis::ShiftByWaveLength(Float64 wavelengthOffset,
     }
   }
   return shiftedAxis;
+}
+
+// TODO test
+void CSpectrumSpectralAxis::ShiftByWaveLengthInplace(
+    Float64 wavelengthOffset, EShiftDirection direction) {
+  if (wavelengthOffset < 0.)
+    THROWG(ErrorCode::INTERNAL_ERROR, "wavelengthOffset can not be negative");
+  if (!(direction == nShiftForward || direction == nShiftBackward))
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown shift direction");
+
+  if (wavelengthOffset != 0.0) {
+    if (direction == nShiftForward) {
+      *this *= (wavelengthOffset);
+    } else if (direction == nShiftBackward) {
+      *this /= (wavelengthOffset);
+    }
+  }
 }
 
 void CSpectrumSpectralAxis::ApplyOffset(Float64 wavelengthOffset) {
@@ -514,6 +532,15 @@ void CSpectrumSpectralAxis::resetAxisProperties() {
 CSpectrumSpectralAxis CSpectrumSpectralAxis::blueShift(Float64 z) const {
   return ShiftByWaveLength(1 + z, nShiftBackward);
 };
+
+void CSpectrumSpectralAxis::blueShiftInplace(Float64 z) {
+  ShiftByWaveLengthInplace(1 + z, nShiftBackward);
+};
+
 CSpectrumSpectralAxis CSpectrumSpectralAxis::redShift(Float64 z) const {
   return ShiftByWaveLength(1 + z, nShiftForward);
+}
+
+void CSpectrumSpectralAxis::redShiftInplace(Float64 z) {
+  ShiftByWaveLength(1 + z, nShiftForward);
 }

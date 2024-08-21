@@ -44,12 +44,6 @@
 
 using namespace NSEpic;
 
-CTemplatesFitStore::CTemplatesFitStore(const TFloat64List &redshifts)
-    : CContinuumFitStore(redshifts) {
-  initFitValues();
-  m_fitMaxValues = std::make_shared<fitMaxValues>();
-}
-
 /**
  * @brief CTemplatesFitStore::Add
  * @param tplName
@@ -78,7 +72,7 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
                              Float64 fitAmplitudeSigma, Float64 fitDtM,
                              Float64 fitMtM, Float64 logprior, Float64 snr) {
   CContinuumModelSolution tmpCContinuumModelSolution;
-  tmpCContinuumModelSolution.tplMerit = merit;
+  tmpCContinuumModelSolution.merit = merit;
   tmpCContinuumModelSolution.tplMeritPhot = chiSquare_phot;
   tmpCContinuumModelSolution.tplAmplitude = fitAmplitude;
   tmpCContinuumModelSolution.tplAmplitudeError = fitAmplitudeError;
@@ -86,13 +80,12 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
   tmpCContinuumModelSolution.tplDtM = fitDtM;
   tmpCContinuumModelSolution.tplMtM = fitMtM;
   tmpCContinuumModelSolution.tplLogPrior = logprior;
-  tmpCContinuumModelSolution.tplEbmvCoeff = ismEbmvCoeff;
-  tmpCContinuumModelSolution.tplMeiksinIdx = igmMeiksinIdx;
+  tmpCContinuumModelSolution.ebmvCoef = ismEbmvCoeff;
+  tmpCContinuumModelSolution.meiksinIdx = igmMeiksinIdx;
   tmpCContinuumModelSolution.tplName = tplName;
-  tmpCContinuumModelSolution.tplRedshift = redshift;
-  tmpCContinuumModelSolution.tplSNR = snr;
+  tmpCContinuumModelSolution.redshift = redshift;
+  tmpCContinuumModelSolution.SNR = snr;
 
-  // TODO partly mutualize from here to bottom with powerlaw
   Int32 idxz = GetRedshiftIndex(redshift);
   if (idxz < 0)
     THROWG(ErrorCode::INTERNAL_ERROR,
@@ -102,40 +95,37 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
   // ipos
   auto ipos = std::upper_bound(
       m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
-      std::make_pair(tmpCContinuumModelSolution.tplMerit,
+      std::make_pair(tmpCContinuumModelSolution.merit,
                      std::abs(tmpCContinuumModelSolution.tplAmplitudeSigma)),
       [](std::pair<Float64, Float64> const &val,
          CContinuumModelSolution const &lhs) {
-        if (val.first != lhs.tplMerit)
-          return (val.first < lhs.tplMerit);
+        if (val.first != lhs.merit)
+          return (val.first < lhs.merit);
         return val.second > std::abs(lhs.tplAmplitudeSigma);
       });
 
-  Log.LogDebug(
-      Formatter() << "CTemplatesFitStore::Add iz=" << idxz << " (z=" << redshift
-                  << ") - adding at pos="
-                  << std::distance(m_fitValues[idxz].begin(), ipos)
-                  << "(merit=" << tmpCContinuumModelSolution.tplMerit
-                  << ", ebmv=" << tmpCContinuumModelSolution.tplEbmvCoeff
-                  << ", imeiksin=" << tmpCContinuumModelSolution.tplMeiksinIdx
-                  << ")");
+  Log.LogDebug(Formatter() << "CTemplatesFitStore::Add iz=" << idxz
+                           << " (z=" << redshift << ") - adding at pos="
+                           << std::distance(m_fitValues[idxz].begin(), ipos)
+                           << "(merit=" << tmpCContinuumModelSolution.merit
+                           << ", ebmv=" << tmpCContinuumModelSolution.ebmvCoef
+                           << ", imeiksin="
+                           << tmpCContinuumModelSolution.meiksinIdx << ")");
 
   // insert the new SValue and move all the older candidates position according
   // to ipos found
   m_fitValues[idxz].insert(ipos, tmpCContinuumModelSolution);
 
-  // this is not very secure. it should be checked that all redshifts have the
-  // same fitValues count
-  if (n_continuum_candidates < m_fitValues[idxz].size()) {
-    n_continuum_candidates = m_fitValues[idxz].size();
+  if (getContinuumCount() < m_fitValues[idxz].size()) {
+    m_nContinuumCandidates = m_fitValues[idxz].size();
     Log.LogDebug(Formatter()
-                 << "CTemplatesFitStore::n_continuum_candidates set to "
-                 << n_continuum_candidates << ")");
+                 << "CTemplatesFitStore::m_nContinuumCandidates set to "
+                 << getContinuumCount() << ")");
   }
 }
 
-Int32 CTemplatesFitStore::GetContinuumCount() const {
-  return n_continuum_candidates;
+Int32 CTemplatesFitStore::getContinuumCount() const {
+  return m_nContinuumCandidates;
 }
 
 Float64

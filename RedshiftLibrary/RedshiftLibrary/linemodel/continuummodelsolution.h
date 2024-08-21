@@ -36,13 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
+#define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 
-#include "RedshiftLibrary/operator/powerlawbase.h"
-#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 
-using namespace NSEpic;
-using namespace std;
+namespace NSEpic {
+#include "RedshiftLibrary/linemodel/continuummodelsolution.i"
 
-COperatorPowerLawBase::COperatorPowerLawBase(const TFloat64List &redshifts)
-    : COperatorContinuumFitting(redshifts), m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+} // namespace NSEpic
+
+#endif

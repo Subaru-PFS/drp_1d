@@ -423,16 +423,16 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplMerit =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.merit =
         ChiSquare;
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedTpl.tplMeritPhot = TplFitResult->ChiSquarePhot[zIndex];
     extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplName =
         tplName;
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplMeiksinIdx = TplFitResult->FitMeiksinIdx[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplEbmvCoeff = TplFitResult->FitEbmvCoeff[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.meiksinIdx =
+        TplFitResult->FitMeiksinIdx[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.ebmvCoef =
+        TplFitResult->FitEbmvCoeff[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedTpl.tplAmplitude = TplFitResult->FitAmplitude[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
@@ -442,7 +442,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
         TplFitResult->FitDtM[zIndex];
     extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplMtM =
         TplFitResult->FitMtM[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplSNR =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.SNR =
         TplFitResult->SNR[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedTpl.tplLogPrior = TplFitResult->LogPrior[zIndex];

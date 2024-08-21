@@ -14,7 +14,7 @@ enum class WarningCode {
   LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT, // 12
   LBFGSPP_ERROR,                                // 13
   PDF_INTEGRATION_WINDOW_TOO_SMALL,             // 14  
-  FORCED_POWERLAW_TO_ZERO,                      // 15
+  //FORCED_POWERLAW_TO_ZERO,                      // 15
             
   // Python
   UNUSED_PARAMETER,                             // 16

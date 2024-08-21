@@ -48,46 +48,15 @@ using namespace std;
 
 COperatorTemplateFittingBase::COperatorTemplateFittingBase(
     const TFloat64List &redshifts)
-    : COperatorContinuumFitting(redshifts), m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()),
+    : COperatorContinuumFitting(redshifts),
       m_templateRebined_bf(m_spectra.size()),
       m_spcSpectralAxis_restframe(m_spectra.size()),
       m_mskRebined_bf(m_spectra.size()){};
 
-/**
- * \brief this function estimates the likelihood_cstLog term withing the
- * wavelength range
- **/
-Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
-  Float64 cstLog = 0.0;
-  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
-       boost::combine(m_spectra, m_lambdaRanges)) {
-    const CSpectrumSpectralAxis &spcSpectralAxis =
-        spectrum_ptr->GetSpectralAxis();
-    const TFloat64List &error =
-        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
-
-    Int32 numDevs = 0;
-
-    Float64 sumLogNoise = 0.0;
-
-    Int32 imin;
-    Int32 imax;
-    lambdaRange_ptr->getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
-    for (Int32 j = imin; j <= imax; j++) {
-      numDevs++;
-      sumLogNoise += log(error[j]);
-    }
-    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
-  }
-  return cstLog;
-}
-
 // return tuple with photmetric values
 TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
+    Float64 ebmvCoef, Int32 meiksinIdx, Float64 amplitude,
     const Float64 overlapThreshold, Int32 spcIndex,
     const std::shared_ptr<CModelSpectrumResult> &models) {
   Log.LogDetail(
@@ -104,7 +73,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   const TAxisSampleList &Xspc =
       m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
 
-  if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
+  if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
     Int32 kstart = undefIdx;
     Int32 kend = undefIdx;
     currentRange.getClosedIntervalIndices(
@@ -114,14 +83,14 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
                      tpl->m_igmCorrectionMeiksin, spcIndex);
   }
 
-  if (EbmvCoeff > 0.) {
+  if (ebmvCoef > 0.) {
     if (m_templateRebined_bf[spcIndex].CalzettiInitFailed()) {
       THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
         m_templateRebined_bf[spcIndex].m_ismCorrectionCalzetti->GetEbmvIndex(
-            EbmvCoeff);
+            ebmvCoef);
 
     if (idxEbmv != -1)
       ApplyDustCoeff(idxEbmv, spcIndex);

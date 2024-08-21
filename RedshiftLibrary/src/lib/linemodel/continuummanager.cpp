@@ -134,7 +134,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
     std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
         {m_tplCategory}, m_fitContinuum->tplName);
 
-    getModel().ApplyContinuumTplOnGrid(tpl, m_fitContinuum->tplRedshift);
+    getModel().ApplyContinuumTplOnGrid(tpl, m_fitContinuum->redshift);
 
     setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                  m_fitContinuum->tplAmplitudeError,
@@ -148,15 +148,15 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
                  << ", with A_error=" << m_fitContinuum->tplAmplitudeError);
     Log.LogDebug(Formatter()
                  << "    model : LoadFitContinuum, loaded with DustCoeff="
-                 << m_fitContinuum->tplEbmvCoeff
-                 << ", with MeiksinIdx=" << m_fitContinuum->tplMeiksinIdx);
+                 << m_fitContinuum->ebmvCoef
+                 << ", with meiksinIdx=" << m_fitContinuum->meiksinIdx);
     Log.LogDebug(Formatter()
                  << "    model : LoadFitContinuum, loaded with dtm="
                  << m_fitContinuum->tplDtM
                  << ", with mtm=" << m_fitContinuum->tplMtM
                  << "with logprior=" << m_fitContinuum->tplLogPrior);
     Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with snr="
-                             << m_fitContinuum->tplSNR);
+                             << m_fitContinuum->SNR);
   }
 }
 
@@ -238,18 +238,17 @@ void CContinuumManager::logParameters() {
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeSigmaMAX="
                           << m_fitContinuumMaxValues->fitAmplitudeSigmaMAX);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit="
-                          << m_fitContinuum->tplMerit);
+                          << m_fitContinuum->merit);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit_phot="
                           << m_fitContinuum->tplMeritPhot);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitEbmvCoeff="
-                          << m_fitContinuum->tplEbmvCoeff);
+                          << m_fitContinuum->ebmvCoef);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMeiksinIdx="
-                          << m_fitContinuum->tplMeiksinIdx);
-  Log.LogInfo(
-      Formatter()
-      << "fitContinuum_tplFitRedshift="
-      << m_fitContinuum->tplRedshift); // only used with
-                                       // m_fitContinuum_option==2 for now
+                          << m_fitContinuum->meiksinIdx);
+  Log.LogInfo(Formatter()
+              << "fitContinuum_tplFitRedshift="
+              << m_fitContinuum->redshift); // only used with
+                                            // m_fitContinuum_option==2 for now
   Log.LogInfo(Formatter() << "fitContinuum_tplFitDtM="
                           << m_fitContinuum->tplDtM);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMtM="
@@ -298,7 +297,7 @@ void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
 }
 
 void CContinuumManager::reinterpolateContinuumResetAmp() {
-  reinterpolateContinuum(m_fitContinuum->tplRedshift);
+  reinterpolateContinuum(m_fitContinuum->redshift);
   m_fitContinuum->tplAmplitude = 1.0;
   m_fitContinuum->tplAmplitudeError = 1.0;
   TFloat64List polyCoeffs_unused;

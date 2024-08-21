@@ -102,7 +102,7 @@ public:
                      const TInt32Range &range); // could be also made static
   std::shared_ptr<CModelSpectrumResult> ComputeSpectrumModel(
       const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
-      Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
+      Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
       const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
       const Float64 overlapThreshold);
 

@@ -98,8 +98,8 @@ struct TFittingIsmIgmResult : TFittingResult {
                             TInt32List(MeiksinListSize, undefIdx)) {}
 
   TFloat64List overlapFraction;
-  Float64 EbmvCoeff = NAN;
-  Int32 MeiksinIdx = undefIdx;
+  Float64 ebmvCoef = NAN;
+  Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
   std::vector<TFloat64List> IsmCalzettiCoeffInterm;
   std::vector<TInt32List> IgmMeiksinIdxInterm;

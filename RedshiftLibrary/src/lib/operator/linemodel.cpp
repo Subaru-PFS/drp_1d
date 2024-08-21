@@ -90,14 +90,13 @@ void COperatorLineModel::ComputeFirstPass() {
   tplCatalog = Context.GetTemplateCatalog();
 
   makeContinuumFittingOperator(m_Redshifts);
-  if (!m_continuumFittingOperator->IsFFTProcessing()) {
-    m_fittingManager =
-        std::make_shared<CLineModelFitting>(m_continuumFittingOperator);
-  } else { // create a default
+  if (m_continuumFittingOperator->IsFFTProcessing()) { // create a default
     const TFloat64List &redshifts = m_Redshifts;
-    // Question: replace COperatorTemplateFitting here ?
     m_fittingManager = std::make_shared<CLineModelFitting>(
         std::make_shared<COperatorTemplateFitting>(redshifts));
+  } else {
+    m_fittingManager =
+        std::make_shared<CLineModelFitting>(m_continuumFittingOperator);
   }
 
   Int32 nfitcontinuum = 0;
@@ -138,11 +137,9 @@ void COperatorLineModel::ComputeFirstPass() {
   }
 
   m_result->nSpcSamples = m_fittingManager->computeSpcNSamples();
-  // TODO regarder ici, DtD ne fait pas forcémet sens
-  if (m_opt_continuumcomponent != "powerLaw") {
-    m_result->dTransposeD = m_fittingManager->getDTransposeD();
-    m_result->cstLog = m_fittingManager->getLikelihood_cstLog();
-  }
+  m_result->dTransposeD = m_fittingManager->getDTransposeD();
+  m_result->cstLog = m_fittingManager->getLikelihood_cstLog();
+
   Int32 contreest_iterations =
       ps->GetScoped<std::string>("lineModel.continuumReestimation") == "always"
           ? 1
@@ -209,10 +206,9 @@ void COperatorLineModel::ComputeFirstPass() {
                              << " Chi2 = " << m_result->ChiSquare[i]);
 
     // Flags on continuum and model amplitudes
-    CContinuumModelSolution tmpModelSolution =
-        m_result->ContinuumModelSolutions[i];
     // TODO here clean to check if powerlaw amplitude is zero too
-    bool continuumAmplitudeZero = tmpModelSolution.tplAmplitude <= 0.0;
+    bool continuumAmplitudeZero =
+        m_result->ContinuumModelSolutions[i].tplAmplitude <= 0.0;
     bool modelAmplitudesZero = true;
     auto it = std::find_if(m_result->LineModelSolutions[i].Amplitudes.cbegin(),
                            m_result->LineModelSolutions[i].Amplitudes.cend(),
@@ -287,45 +283,33 @@ void COperatorLineModel::fitContinuumTemplates(
   TInt32List ebmvIndices;
   TTemplateConstRefList tplList;
   bool fftprocessing = isfftprocessingActive(redshiftsContinuumFit.size());
-  Int16 nTpl = 0;
   if (m_fittingManager->GetPassNumber() == 2 && m_continnuum_fit_option == 3) {
     // case where we only want to refit around the m_opt_fitcontinuum_maxN
     // best continuum from firstpass
     getContinuumInfoFromFirstpassFitStore(candidateIdx, meiksinIndices,
                                           ebmvIndices, tplList, fftprocessing);
-    nTpl = tplList.size();
-    // TODO clean
-    if (m_opt_continuumcomponent == "powerLaw") {
-      nTpl = 1;
-    }
   } else {
-    if (m_opt_continuumcomponent == "powerLaw") {
-      nTpl = 1;
-    } else {
+    if (m_opt_continuumcomponent == "powerLaw")
+      tplList.push_back({});
+    else
       tplList = tplCatalog->GetOrthoTemplateList(TStringList{m_tplCategory},
                                                  fftprocessing);
-      nTpl = tplList.size();
-    }
-
-    ebmvIndices.assign(nTpl, undefIdx);
-    meiksinIndices.assign(nTpl, undefIdx);
-    Log.LogDebug(Formatter() << "Processing " << nTpl << " templates");
+    ebmvIndices.assign(tplList.size(), undefIdx);
+    meiksinIndices.assign(tplList.size(), undefIdx);
+    Log.LogDebug(Formatter()
+                 << "Processing " << tplList.size() << " templates");
   }
-  for (Int32 i = 0; i < nTpl; i++) {
+  for (Int32 i = 0; i < tplList.size(); i++) {
     m_continuumFittingOperator->SetRedshifts(redshiftsContinuumFit);
     std::shared_ptr<COperatorResult> templatefittingResult;
     std::string tplname;
-    // TODO see if can remove this
     if (m_opt_continuumcomponent == "powerLaw") {
-      // TODO see where to take this from
-      Int32 nLogSamplesMin = 30;
-      Float64 nullFluxThreshold = 2;
       tplname = "powerLaw";
       templatefittingResult = std::dynamic_pointer_cast<CPowerLawResult>(
           (std::dynamic_pointer_cast<COperatorPowerLaw>(
                m_continuumFittingOperator))
               ->Compute(m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
-                        nullFluxThreshold, nLogSamplesMin, "full"));
+                        m_opt_continuum_null_amp_threshold, "full"));
     } else {
 
       CPriorHelper::TPriorZEList zePriorData;
@@ -385,20 +369,18 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     CContinuumModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
 
-    // HERE
-    if (m_opt_continuumcomponent != "powerLaw")
+    if (m_opt_continuumcomponent == "powerLaw")
+      tplList.push_back({});
+    else
       tplList.push_back(tplCatalog->GetTemplateByName(
           TStringList{m_tplCategory}, fitValue.tplName, true, fft));
 
     if (m_opt_tplfit_extinction)
-      meiksinIndices[icontinuum] = fitValue.tplMeiksinIdx;
-
-    // access any template and retrieve the ismcorrection object
+      meiksinIndices[icontinuum] = fitValue.meiksinIdx;
     if (m_opt_tplfit_dustFit && m_opt_continuumcomponent != "powerLaw")
-      // TODO find a solution for ebmv coef
       ebmvIndices[icontinuum] =
           tplCatalog->GetTemplate(m_tplCategory, 0, true, fft)
-              ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.tplEbmvCoeff);
+              ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.ebmvCoef);
   }
   return;
 }
@@ -474,10 +456,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  // TODO see if usefull for power law too
-  std::shared_ptr<const CTemplateCatalog> tplCatalog =
-      Context.GetTemplateCatalog();
-
   bool ignoreLinesSupport =
       ps->GetScoped<bool>("lineModel.continuumFit.ignoreLineSupport");
   boost::chrono::thread_clock::time_point start_tplfitprecompute =
@@ -486,16 +464,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
               << "COperatorLineModel::PrecomputeContinuumFit: continuum tpl "
                  "fitting: min="
               << redshifts.front() << ", max=" << redshifts.back());
-
-  // Info : for debug purpose only
-  // Question: can remove this part ?
-  Int32 n_tplfit = std::min(Int32(redshiftsContinuumFit.size()), 10);
-  for (Int32 i = 0; i < n_tplfit; i++)
-    Log.LogDebug(Formatter()
-                 << "COperatorLineModel::PrecomputeContinuumFit: continuum tpl "
-                    "redshift list["
-                 << i << "] = " << redshiftsContinuumFit[i]);
-  //
 
   Log.LogInfo(Formatter()
               << "COperatorLineModel::PrecomputeContinuumFit: fftprocessing = "
@@ -541,21 +509,21 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++) {
       Float64 redshift = redshiftsContinuumFit[i];
-      continuumFitStore->Add(
-          chisquareResult->FitEbmvCoeff[i], chisquareResult->FitMeiksinIdx[i],
-          redshift, chisquareResult->coefs[i].first.a,
-          chisquareResult->coefs[i].first.a, chisquareResult->coefs[i].second.a,
-          chisquareResult->coefs[i].first.b, chisquareResult->coefs[i].second.b,
-          chisquareResult->fluxError[i] // TODO here put SNR
-      );
+      std::dynamic_pointer_cast<CPowerLawStore>(continuumFitStore)
+          ->Add(chisquareResult->FitEbmvCoeff[i],
+                chisquareResult->FitMeiksinIdx[i], redshift,
+                chisquareResult->coefs[i].first.a,
+                chisquareResult->coefs[i].first.a,
+                chisquareResult->coefs[i].second.a,
+                chisquareResult->coefs[i].first.b,
+                chisquareResult->coefs[i].second.b,
+                chisquareResult->fluxError[i] // TODO here put SNR
+          );
 
       // TODO here replace fluxError by SNR
       if (chisquareResult->fluxError[i] > bestTplFitSNR)
         bestTplFitSNR = chisquareResult->fluxError[i];
     }
-    // TODO see if should add for power law
-    // std::dynamic_pointer_cast<CPowerLawStore>(continuumFitStore)
-    // ->setSNRMax(bestTplFitSNR);
   } else {
     Float64 bestTplFitSNR = 0.0;
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
@@ -570,15 +538,16 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
         if (chisquareResult->SNR[i] > bestTplFitSNR)
           bestTplFitSNR = chisquareResult->SNR[i];
 
-        continuumFitStore->Add(
-            chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
-            chisquareResult->FitMeiksinIdx[i], redshift,
-            chisquareResult->ChiSquare[i], chisquareResult->ChiSquarePhot[i],
-            chisquareResult->FitAmplitude[i],
-            chisquareResult->FitAmplitudeError[i],
-            chisquareResult->FitAmplitudeSigma[i], chisquareResult->FitDtM[i],
-            chisquareResult->FitMtM[i], chisquareResult->LogPrior[i],
-            chisquareResult->SNR[i]);
+        std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
+            ->Add(chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
+                  chisquareResult->FitMeiksinIdx[i], redshift,
+                  chisquareResult->ChiSquare[i],
+                  chisquareResult->ChiSquarePhot[i],
+                  chisquareResult->FitAmplitude[i],
+                  chisquareResult->FitAmplitudeError[i],
+                  chisquareResult->FitAmplitudeSigma[i],
+                  chisquareResult->FitDtM[i], chisquareResult->FitMtM[i],
+                  chisquareResult->LogPrior[i], chisquareResult->SNR[i]);
       }
     }
     std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
@@ -590,9 +559,9 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     Log.LogDetail(
         Formatter()
         << "COperatorLineModel::PrecomputeContinuumFit: continuumcount set to "
-        << continuumFitStore->GetContinuumCount());
+        << continuumFitStore->getContinuumCount());
 
-    if (continuumFitStore->GetContinuumCount() < m_opt_fitcontinuum_maxN) {
+    if (continuumFitStore->getContinuumCount() < m_opt_fitcontinuum_maxN) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              "Couldn't compute the required continuum count");
     }
@@ -920,7 +889,7 @@ void COperatorLineModel::ComputeSecondPass(
     bool useSecondPassRedshiftValue = true;
     if (useSecondPassRedshiftValue) {
       for (Int32 i = 0; i < m_firstpass_extremaResult.size(); i++) {
-        m_firstpass_extremaResult.m_fittedContinuum[i].tplRedshift =
+        m_firstpass_extremaResult.m_fittedContinuum[i].redshift =
             m_firstpass_extremaResult.Redshift(i);
       }
     }

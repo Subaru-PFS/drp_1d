@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/operator/continuummodelsolution.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 
 class TExtremaResult : public TCandidateZ {
 

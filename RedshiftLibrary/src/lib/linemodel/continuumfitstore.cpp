@@ -45,7 +45,10 @@
 using namespace NSEpic;
 
 CContinuumFitStore::CContinuumFitStore(const TFloat64List &redshifts)
-    : m_redshiftgrid(redshifts) {}
+    : m_redshiftgrid(redshifts) {
+  initFitValues();
+  m_fitMaxValues = std::make_shared<fitMaxValues>();
+}
 
 Int32 CContinuumFitStore::GetRedshiftIndex(Float64 z) const {
   auto it = std::find(m_redshiftgrid.begin(), m_redshiftgrid.end(), z);
@@ -65,32 +68,16 @@ const TFloat64List &CContinuumFitStore::GetRedshiftList() const {
   return m_redshiftgrid;
 }
 
-void CContinuumFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
-                             Int32 igmMeiksinIdx, Float64 redshift,
-                             Float64 merit, Float64 chiSquare_phot,
-                             Float64 fitAmplitude, Float64 fitAmplitudeError,
-                             Float64 fitAmplitudeSigma, Float64 fitDtM,
-                             Float64 fitMtM, Float64 logprior, Float64 snr) {
-  THROWG(ErrorCode::INTERNAL_ERROR, Formatter() << "Wrong method");
-}
-
-void CContinuumFitStore::Add(
-    Float64 ismEbmvCoeff, Int32 igmMeiksinIdx, Float64 redshift,
-    Float64 chi2, // TODO see if chi2 and merit is the same
-    Float64 a1, Float64 a2, Float64 b1, Float64 b2, Float64 snr) {
-  THROWG(ErrorCode::INTERNAL_ERROR, Formatter() << "Wrong method");
-}
-
 const CContinuumModelSolution &
 CContinuumFitStore::GetFitValues(Int32 idxz,
                                  Int32 continuumCandidateRank) const {
-  if (continuumCandidateRank > n_continuum_candidates - 1)
+  Int32 continuumCount = getContinuumCount();
+  if (continuumCandidateRank > continuumCount - 1)
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Cannot find the "
                           "correct pre-computed continuum: candidateRank ("
-                       << continuumCandidateRank
-                       << ") >= n_continuum_candidates ("
-                       << n_continuum_candidates << ")");
+                       << continuumCandidateRank << ") >= continuumCount ("
+                       << continuumCount << ")");
   if (continuumCandidateRank < 0)
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Cannot find the "
@@ -108,13 +95,13 @@ CContinuumFitStore::GetFitValues(Int32 idxz,
 const CContinuumModelSolution &
 CContinuumFitStore::GetFitValues(Float64 redshiftVal,
                                  Int32 continuumCandidateRank) const {
-  if (continuumCandidateRank > n_continuum_candidates - 1)
+  Int32 continuumCount = getContinuumCount();
+  if (continuumCandidateRank > continuumCount - 1)
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Cannot find the "
                           "correct pre-computed continuum: candidateRank ("
-                       << continuumCandidateRank
-                       << ") >= n_continuum_candidates ("
-                       << n_continuum_candidates << ")");
+                       << continuumCandidateRank << ") >= continuumCount ("
+                       << continuumCount << ")");
 
   if (continuumCandidateRank < 0)
     THROWG(ErrorCode::INTERNAL_ERROR,
@@ -160,8 +147,7 @@ CContinuumFitStore::GetFitValues(Float64 redshiftVal,
 
     THROWG(ErrorCode::INTERNAL_ERROR, "Cannot find redshiftVal");
   }
-  // CContinuumModelSolution cms = m_fitValues[idxz][continuumCandidateRank];
-  //   cms.tplRedshift = redshiftVal;
+
   return m_fitValues[idxz][continuumCandidateRank];
 }
 

@@ -42,15 +42,15 @@ using namespace NSEpic;
 
 CPowerLawResult::CPowerLawResult(Int32 n)
     : COperatorResult("CPowerLawResult"), Redshifts(n), ChiSquare(n),
-      lambdaRest(n), emittedFlux(n), pixelsToUse(n), fluxError(n), coefs(n),
-      FitEbmvCoeff(n), FitMeiksinIdx(n), ChiSquareIntermediate(n),
-      IsmEbmvCoeffIntermediate(n), IgmMeiksinIdxIntermediate(n) {}
+      fluxError(n), coefs(n), FitEbmvCoeff(n), FitMeiksinIdx(n),
+      ChiSquareIntermediate(n), IsmEbmvCoeffIntermediate(n),
+      IgmMeiksinIdxIntermediate(n) {}
 
 void CPowerLawResult::set_at_redshift(Int32 zIdx, TPowerLawResult result) {
   ChiSquare[zIdx] = result.chiSquare;
   coefs[zIdx] = result.coefs;
-  FitEbmvCoeff[zIdx] = result.EbmvCoeff;
-  FitMeiksinIdx[zIdx] = result.MeiksinIdx;
+  FitEbmvCoeff[zIdx] = result.ebmvCoef;
+  FitMeiksinIdx[zIdx] = result.meiksinIdx;
   // Question: add SNR ?
 
   // [z][Calzetti][Meiksin])

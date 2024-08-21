@@ -71,8 +71,8 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
   FitAmplitude[i] = val.ampl;
   FitAmplitudeError[i] = val.ampl_err;
   FitAmplitudeSigma[i] = val.ampl_sigma;
-  FitEbmvCoeff[i] = val.EbmvCoeff;
-  FitMeiksinIdx[i] = val.MeiksinIdx;
+  FitEbmvCoeff[i] = val.ebmvCoef;
+  FitMeiksinIdx[i] = val.meiksinIdx;
   FitDtM[i] = val.cross_result.sumCross;
   FitMtM[i] = val.cross_result.sumT;
 

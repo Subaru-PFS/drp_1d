@@ -77,7 +77,7 @@ public:
   void reinterpolateContinuumResetAmp();
 
   bool isContFittedToNull();
-  Int32 getFittedMeiksinIndex() { return m_fitContinuum->tplMeiksinIdx; }
+  Int32 getFittedMeiksinIndex() { return m_fitContinuum->meiksinIdx; }
   Float64 getFitSum() {
     if (!isContinuumComponentTplfitxx())
       return 0.0;

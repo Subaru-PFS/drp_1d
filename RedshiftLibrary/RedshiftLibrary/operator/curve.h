@@ -36,15 +36,52 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
-#define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
+#ifndef _REDSHIFT_CURVE_
+#define _REDSHIFT_CURVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 namespace NSEpic {
-#include "RedshiftLibrary/operator/continuummodelsolution.i"
+
+struct TCurveElement {
+  Float64 lambda;
+  Float64 flux;
+  Float64 fluxError;
+};
+
+struct TCurve {
+  TCurve();
+  TCurve(TList<Float64> lambda, TList<Float64> flux, TList<Float64> fluxError);
+
+  TCurveElement get_at_index(Int32 idx) const;
+
+  void push_back(TCurveElement const &elem);
+  Int32 size() const;
+
+  void setLambda(TFloat64List inputLambda);
+
+  void setFlux(TList<Float64> inputFlux);
+  void setFluxError(TList<Float64> inputFluxError);
+  void sort();
+  void reserve(Int32 size);
+
+  void checkIdx(Int32 pixelIdx) const;
+
+  const TAxisSampleList &getLambda() const { return lambda; };
+  const TFloat64List &getFlux() const { return flux; };
+  const TFloat64List &getFluxError() const { return fluxError; };
+
+  Float64 getLambdaAt(Int32 pixelIdx) const;
+  Float64 getFluxAt(Int32 pixelIdx) const;
+  Float64 getFluxErrorAt(Int32 pixelIdx) const;
+
+private:
+  TAxisSampleList lambda;
+  TFloat64List flux;
+  TFloat64List fluxError;
+};
 
 } // namespace NSEpic
-
 #endif

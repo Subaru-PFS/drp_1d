@@ -76,6 +76,10 @@ public:
 protected:
   TFloat64List m_redshifts;
   std::shared_ptr<CMaskBuilder> m_maskBuilder;
+  std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
+
+  virtual Float64 EstimateLikelihoodCstLog() const;
 };
 } // namespace NSEpic
 

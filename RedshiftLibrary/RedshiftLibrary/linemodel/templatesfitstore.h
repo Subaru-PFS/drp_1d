@@ -43,26 +43,27 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/linemodel/continuumfitstore.h"
-#include "RedshiftLibrary/operator/continuummodelsolution.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 namespace NSEpic {
 
 class CTemplatesFitStore : public CContinuumFitStore {
 public:
-  CTemplatesFitStore(const TFloat64List &redshifts);
+  using CContinuumFitStore::CContinuumFitStore;
 
   void Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
            Float64 redshift, Float64 merit, Float64 chiSquare_phot,
            Float64 fitAmplitude, Float64 fitAmplitudeError,
            Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,
-           Float64 logprior, Float64 snr) override;
+           Float64 logprior, Float64 snr);
 
-  Int32 GetContinuumCount() const override;
+  Int32 getContinuumCount() const override;
   Float64 FindMaxAmplitudeSigma(Float64 &z, CContinuumModelSolution &fitValues);
   void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
 
 private:
+  Int32 m_nContinuumCandidates = 0;
 };
 
 } // namespace NSEpic

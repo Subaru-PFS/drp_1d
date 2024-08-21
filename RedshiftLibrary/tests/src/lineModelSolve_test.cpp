@@ -284,7 +284,7 @@ const std::string jsonStringPowerLaw =
     "\"continuumFit\" : { \"ignoreLineSupport\": true,"
     "\"negativeThreshold\": -5.0,"
     "\"count\" : 1,"
-    "\"nullThreshold\": 3,"
+    "\"nullThreshold\": 2,"
     "\"ismFit\" : true,"
     "\"igmFit\" : true,"
     "\"fftProcessing\": false, "

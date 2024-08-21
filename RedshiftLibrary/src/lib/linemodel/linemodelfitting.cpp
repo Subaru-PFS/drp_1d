@@ -302,10 +302,8 @@ bool CLineModelFitting::initDtd() {
                           // already initialized
                           // TODO check statement above
   m_dTransposeDLambdaRange = getLambdaRange();
-  if (isContinuumComponentTplfitxx())
+  if (isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw())
     m_dTransposeD = EstimateDTransposeD("raw");
-  else if (isContinuumComponentPowerLaw())
-    THROWG(ErrorCode::INTERNAL_ERROR, Formatter() << "Should not be there");
   else
     m_dTransposeD = EstimateDTransposeD("noContinuum");
 

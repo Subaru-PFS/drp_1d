@@ -41,7 +41,7 @@
 
 #include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/method/powerlawsolveresult.h"
-#include "RedshiftLibrary/operator/powerlawbase.h"
+#include "RedshiftLibrary/operator/powerlaw.h"
 
 namespace NSEpic {
 
@@ -56,7 +56,7 @@ private:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope);
 
-  std::shared_ptr<COperatorPowerLawBase> m_powerLawOperator;
+  std::shared_ptr<COperatorPowerLaw> m_powerLawOperator;
 };
 
 } // namespace NSEpic

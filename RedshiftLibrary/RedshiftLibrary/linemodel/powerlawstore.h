@@ -47,11 +47,11 @@ namespace NSEpic {
 
 class CPowerLawStore : public CContinuumFitStore {
 public:
-  CPowerLawStore(const TFloat64List &redshifts);
-  Int32 GetContinuumCount() const override { return 1; };
+  using CContinuumFitStore::CContinuumFitStore;
+  Int32 getContinuumCount() const override { return 1; };
   void Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx, Float64 redshift,
            Float64 chi2, Float64 a1, Float64 a2, Float64 b1, Float64 b2,
-           Float64 snr) override;
+           Float64 snr);
 
 private:
 };

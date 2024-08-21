@@ -40,11 +40,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
-#include "RedshiftLibrary/operator/continuummodelsolution.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"

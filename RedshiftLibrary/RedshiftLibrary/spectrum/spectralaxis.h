@@ -91,6 +91,8 @@ public:
 
   CSpectrumSpectralAxis ShiftByWaveLength(Float64 wavelengthOffset,
                                           EShiftDirection direction) const;
+  void ShiftByWaveLengthInplace(Float64 wavelengthOffset,
+                                EShiftDirection direction);
 
   void ApplyOffset(Float64 wavelengthOffset);
 
@@ -122,6 +124,8 @@ public:
   void SetSize(Int32 s) override;
   CSpectrumSpectralAxis blueShift(Float64 z) const;
   CSpectrumSpectralAxis redShift(Float64 z) const;
+  void blueShiftInplace(Float64 z);
+  void redShiftInplace(Float64 z);
 
 private:
   friend class spectralaxis_test::basic_functions_test;

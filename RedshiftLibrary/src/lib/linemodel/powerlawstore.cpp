@@ -44,12 +44,6 @@
 
 using namespace NSEpic;
 
-CPowerLawStore::CPowerLawStore(const TFloat64List &redshifts)
-    : CContinuumFitStore(redshifts) {
-  initFitValues();
-  m_fitMaxValues = std::make_shared<fitMaxValues>();
-}
-
 void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
                          Float64 redshift,
                          Float64 chi2, // TODO see if chi2 and merit is the same
@@ -60,10 +54,10 @@ void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
   tmpCContinuumModelSolution.a2 = a2;
   tmpCContinuumModelSolution.b1 = b1;
   tmpCContinuumModelSolution.b2 = b2;
-  tmpCContinuumModelSolution.EbmvCoeff = ismEbmvCoeff;
-  tmpCContinuumModelSolution.MeiksinIdx = igmMeiksinIdx;
+  tmpCContinuumModelSolution.ebmvCoef = ismEbmvCoeff;
+  tmpCContinuumModelSolution.meiksinIdx = igmMeiksinIdx;
   tmpCContinuumModelSolution.redshift = redshift;
-  tmpCContinuumModelSolution.tplMerit = chi2;
+  tmpCContinuumModelSolution.merit = chi2;
   tmpCContinuumModelSolution.SNR = snr;
 
   Int32 idxz = GetRedshiftIndex(redshift);
@@ -71,39 +65,5 @@ void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Unable to find z index for redshift=" << redshift);
 
-  // if chi2 val is the lowest, and condition on tplName, insert at position
-  // ipos
-  // TODO : snr is incorrect should find an equivalent of amplitude sigma
-  auto ipos =
-      std::upper_bound(m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
-                       std::make_pair(tmpCContinuumModelSolution.tplMerit,
-                                      std::abs(tmpCContinuumModelSolution.SNR)),
-                       [](std::pair<Float64, Float64> const &val,
-                          CContinuumModelSolution const &lhs) {
-                         if (val.first != lhs.tplMerit)
-                           return (val.first < lhs.tplMerit);
-                         return val.second > std::abs(lhs.SNR);
-                       });
-
-  Log.LogDebug(
-      Formatter() << "CTemplatesFitStore::Add iz=" << idxz << " (z=" << redshift
-                  << ") - adding at pos="
-                  << std::distance(m_fitValues[idxz].begin(), ipos)
-                  << "(merit=" << tmpCContinuumModelSolution.tplMerit
-                  << ", ebmv=" << tmpCContinuumModelSolution.tplEbmvCoeff
-                  << ", imeiksin=" << tmpCContinuumModelSolution.tplMeiksinIdx
-                  << ")");
-
-  // insert the new SValue and move all the older candidates position according
-  // to ipos found
-  m_fitValues[idxz].insert(ipos, tmpCContinuumModelSolution);
-
-  // this is not very secure. it should be checked that all redshifts have the
-  // same fitValues count
-  if (n_continuum_candidates < m_fitValues[idxz].size()) {
-    n_continuum_candidates = m_fitValues[idxz].size();
-    Log.LogDebug(Formatter()
-                 << "CTemplatesFitStore::n_continuum_candidates set to "
-                 << n_continuum_candidates << ")");
-  }
+  m_fitValues[idxz].push_back(std::move(tmpCContinuumModelSolution));
 };

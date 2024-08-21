@@ -54,9 +54,6 @@ public:
 
   TFloat64List Redshifts;
   TFloat64List ChiSquare;
-  TFloat64List lambdaRest;
-  TFloat64List emittedFlux;
-  TFloat64List pixelsToUse;
   TFloat64List fluxError;
   TList<TPowerLawCoefsPair> coefs;
 
@@ -66,6 +63,7 @@ public:
   T3DList<Float64> ChiSquareIntermediate;
   T3DList<Float64> IsmEbmvCoeffIntermediate;
   T3DList<Int16> IgmMeiksinIdxIntermediate;
+  Float64 CstLog = NAN;
 };
 } // namespace NSEpic
 

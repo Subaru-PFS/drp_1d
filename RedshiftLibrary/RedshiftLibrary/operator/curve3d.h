@@ -36,127 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_CURVE_3D_
-#define _REDSHIFT_CURVE_3D_
+#ifndef _REDSHIFT_CURVE3D_
+#define _REDSHIFT_CURVE3D_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/operator/powerlawbase.h"
+#include "RedshiftLibrary/operator/curve.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
-
-// TODO clean here
 
 namespace NSEpic {
 
-struct TCurveElement {
-  Float64 lambda;
-  Float64 flux;
-  bool pixelToUse;
-  Float64 fluxError;
-};
-
-struct TCurve {
-  TCurve(Int32 nMaxPixels) : nMaxPixels(nMaxPixels) {
-    lambda.reserve(nMaxPixels);
-    flux.reserve(nMaxPixels);
-    pixelsToUse.reserve(nMaxPixels);
-    fluxError.reserve(nMaxPixels);
-  };
-
-  Int32 nMaxPixels;
-  TAxisSampleList lambda;
-  TFloat64List flux;
-  TBoolList pixelsToUse;
-  TFloat64List fluxError;
-
-  // Proxy class to handle assignment at a specific index
-  // struct Proxy {
-  //   TCurve &curve;
-  //   Int32 idx;
-
-  //   // Overload the assignment operator
-  //   Proxy &operator=(const Proxy &other) {
-  //     curve.lambda[idx] = other.curve.lambda[other.idx];
-  //     curve.flux[idx] = other.curve.flux[other.idx];
-  //     curve.pixelsToUse[idx] = other.curve.pixelsToUse[other.idx];
-  //     curve.fluxError[idx] = other.curve.fluxError[other.idx];
-  //     return *this;
-  //   }
-
-  //   Proxy &operator=(const Proxy &other) const {
-  //     curve.lambda[idx] = other.curve.lambda[other.idx];
-  //     curve.flux[idx] = other.curve.flux[other.idx];
-  //     curve.pixelsToUse[idx] = other.curve.pixelsToUse[other.idx];
-  //     curve.fluxError[idx] = other.curve.fluxError[other.idx];
-  //     return *const_cast<Proxy *>(this);
-  //   }
-  // };
-
-  // Overload the operator[] to return a proxy object
-  // Proxy operator[](Int32 idx) { return Proxy{*this, idx}; }
-
-  TCurveElement operator[](Int32 idx) {
-    return {lambda[idx], flux[idx], pixelsToUse[idx], fluxError[idx]};
-  }
-
-  const TCurveElement operator[](Int32 idx) const {
-    return {lambda[idx], flux[idx], pixelsToUse[idx], fluxError[idx]};
-  }
-  // const Proxy operator[](Int32 idx) const {
-  //   return Proxy{*const_cast<TCurve *>(this), idx};
-  // }
-
-  void push_back(TCurveElement const &elem) {
-    // TODO add an error if size too big
-
-    lambda.push_back(elem.lambda);
-    flux.push_back(elem.flux);
-    pixelsToUse.push_back(elem.pixelToUse);
-    fluxError.push_back(elem.fluxError);
-  }
-
-  Int32 size() const { return lambda.size(); }
-
-  void setLambda(TFloat64List const &inputLambda) {
-    if (inputLambda.size() > nMaxPixels) {
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "T3DCurve::setLambda Lambda size toolarge, should "
-                            "be lower than"
-                         << nMaxPixels << " but is " << inputLambda.size());
-    }
-    lambda = inputLambda;
-  }
-
-  template <typename T>
-  void checkCurveElement(TList<T> const &inputElement,
-                         std::string elementName) {
-    if (inputElement.size() > nMaxPixels) {
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "Wrong curve " << elementName
-                         << " size, should be lower than " << nMaxPixels
-                         << " but is " << inputElement.size());
-    }
-  }
-
-  void setFlux(TList<Float64> const &inputFlux) {
-    checkCurveElement(inputFlux, "flux");
-    flux = inputFlux;
-  }
-
-  void setPixelsToUse(TList<bool> const &inputPixelsToUse) {
-    checkCurveElement(inputPixelsToUse, "pixelsToUse");
-    pixelsToUse = inputPixelsToUse;
-  }
-
-  void setFluxError(TList<Float64> const &inputFluxError) {
-    checkCurveElement(inputFluxError, "fluxError");
-    fluxError = inputFluxError;
-  }
-};
-
+// TODO voir pour tout le monde qui on met en public ou private
 struct T3DCurve {
-  T3DCurve(Int32 npixels, Int32 nigm, Int32 nism)
-      : nPixels(npixels), nIgm(nigm), nIsm(nism){};
+  T3DCurve(Int32 nigm, Int32 nism);
 
   // rule of 5 defaults
   ~T3DCurve() = default;
@@ -165,128 +57,61 @@ struct T3DCurve {
   T3DCurve &operator=(const T3DCurve &) = default;
   T3DCurve &operator=(T3DCurve &&) = default;
 
-  Int32 nPixels;
-  Int32 nIgm;
-  Int32 nIsm;
-  TList<Float64> lambda = TList<Float64>(nPixels);
-  T3DList<Float64> flux =
-      T3DList<Float64>(nIgm, T2DList<Float64>(nIsm, TList<Float64>(nPixels)));
-  T3DList<bool> pixelsToUse =
-      T3DList<bool>(nIgm, T2DList<bool>(nIsm, TList<bool>(nPixels)));
-  T3DList<Float64> fluxError =
-      T3DList<Float64>(nIgm, T2DList<Float64>(nIsm, TList<Float64>(nPixels)));
+  Int32 size() const { return lambda.size(); }
 
-  friend T3DCurve operator+(const T3DCurve &c1, const T3DCurve &c2) {
-    // NB after addition lambda is unsorted
-    if (c1.nIgm != c2.nIgm)
-      THROWG(
-          ErrorCode::INTERNAL_ERROR,
-          Formatter() << "T3DCurve::+ : Impossible to add curves with nIgm = "
-                      << c1.nIgm << "and " << c2.nIgm);
-    if (c1.nIsm != c2.nIsm)
-      THROWG(
-          ErrorCode::INTERNAL_ERROR,
-          Formatter() << "T3DCurve::+ : Impossible to add curves with nIsm = "
-                      << c1.nIsm << "and " << c2.nIsm);
-    Int32 newNPixels = c1.nPixels + c2.nPixels;
+  void copyCurveAtAllIgmIsm(TCurve &curve);
 
-    T3DCurve newCurve(newNPixels, c1.nIgm, c1.nIsm);
-
-    for (Int32 pixelIdx = 0; pixelIdx < c1.nPixels; pixelIdx++) {
-      newCurve.lambda[pixelIdx] = c1.lambda[pixelIdx];
-      for (Int16 igmIdx = 0; igmIdx < c1.nIgm; igmIdx++) {
-        for (Int16 ismIdx = 0; ismIdx < c1.nIsm; ismIdx++) {
-          newCurve.flux[igmIdx][ismIdx][pixelIdx] =
-              c1.flux[igmIdx][ismIdx][pixelIdx];
-          newCurve.pixelsToUse[igmIdx][ismIdx][pixelIdx] =
-              c1.pixelsToUse[igmIdx][ismIdx][pixelIdx];
-          newCurve.fluxError[igmIdx][ismIdx][pixelIdx] =
-              c1.fluxError[igmIdx][ismIdx][pixelIdx];
-        }
-      }
-    }
-    for (Int32 pixelIdx = 0; pixelIdx < c2.nPixels; pixelIdx++) {
-      newCurve.lambda[c1.nPixels + pixelIdx] = c2.lambda[pixelIdx];
-      for (Int16 igmIdx = 0; igmIdx < c1.nIgm; igmIdx++) {
-        for (Int16 ismIdx = 0; ismIdx < c1.nIsm; ismIdx++) {
-          newCurve.flux[igmIdx][ismIdx][c1.nPixels + pixelIdx] =
-              c2.flux[igmIdx][ismIdx][pixelIdx];
-          newCurve.pixelsToUse[igmIdx][ismIdx][c1.nPixels + pixelIdx] =
-              c2.pixelsToUse[igmIdx][ismIdx][pixelIdx];
-          newCurve.fluxError[igmIdx][ismIdx][c1.nPixels + pixelIdx] =
-              c2.fluxError[igmIdx][ismIdx][pixelIdx];
-        }
-      }
-    }
-
-    return newCurve;
-  }
-
-  Int32 size() const { return nPixels; }
-
-  void setLambda(TFloat64List const &inputLambda) {
-    if (inputLambda.size() != nPixels) {
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "T3DCurve::setLambda Wrong lambda size, should be "
-                         << nPixels << " but is " << inputLambda.size());
-    }
-    lambda = inputLambda;
-  }
-
+  void setLambda(TFloat64List inputLambda);
   template <typename T>
   void checkCurveElement(T3DList<T> const &inputElement,
-                         std::string elementName) {
+                         std::string elementName);
 
-    Int32 dim1 = inputElement.size();
-    Int32 dim2;
-    Int32 dim3;
+  void setFlux(T3DList<Float64> inputFlux);
+  void setFluxError(T3DList<Float64> inputFluxError);
+  void setIsExtincted(T3DList<bool> inputIsExtincted);
+  void setIsSnrCompliant(TList<bool> inputIsSnrCompliant);
+  void setMask(TList<uint8_t> inputMask);
 
-    for (Int32 i = 0; i < dim1; i++) {
-      dim2 = inputElement[i].size();
-      for (Int32 j = 0; j < dim1; j++) {
-        dim3 = inputElement[i][j].size();
-        if (dim1 != nIgm || dim2 != nIsm || dim3 != nPixels) {
-          THROWG(ErrorCode::INTERNAL_ERROR,
-                 Formatter()
-                     << "Wrong curve " << elementName << " size, should be "
-                     << nIgm << ", " << nIsm << ", " << nPixels << " but is "
-                     << dim1 << ", " << dim2 << ", " << dim3);
-        }
-      }
-    }
-  }
+  void setFluxAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx, Float64 value);
+  void setFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx,
+                      Float64 value);
 
-  void setFlux(T3DList<Float64> const &inputFlux) {
-    checkCurveElement(inputFlux, "flux");
-    flux = inputFlux;
-  }
+  TCurve toCurve(Int16 igmIdx, Int16 ismIdx) const;
+  TCurve toCoefCurve(Int16 igmIdx, Int16 ismIdx) const;
 
-  void setPixelsToUse(T3DList<bool> const &inputPixelsToUse) {
-    checkCurveElement(inputPixelsToUse, "pixelsToUse");
-    pixelsToUse = inputPixelsToUse;
-  }
+  bool pixelIsCoefValid(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
+  bool pixelIsChi2Valid(Int32 pixelIdx) const;
 
-  void setFluxError(T3DList<Float64> const &inputFluxError) {
-    checkCurveElement(inputFluxError, "fluxError");
-    fluxError = inputFluxError;
-  }
+  void checkIgmIdx(Int16 igmIdx) const;
+  void checkIsmIdx(Int16 ismIdx) const;
+  void checkPixelIdx(Int16 pixelIdx) const;
+  void checkIdxs(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
 
-  TCurve toCurve(Int16 igmIdx, Int16 ismIdx) const {
-    if (ismIdx > nIsm)
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "T3DCurve::toCurve ismIdx = " << ismIdx << " < "
-                         << nIsm);
-    if (igmIdx > nIgm)
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "T3DCurve::toCurve ismIdx = " << igmIdx << " < "
-                         << nIgm);
-    TCurve curve(lambda.size());
-    curve.setLambda(lambda);
-    curve.setFlux(flux[igmIdx][ismIdx]);
-    curve.setPixelsToUse(pixelsToUse[igmIdx][ismIdx]);
-    curve.setFluxError(fluxError[igmIdx][ismIdx]);
-    return curve;
-  }
+  const TList<Float64> &getLambda() const { return lambda; };
+  const T3DList<Float64> &getFlux() const { return flux; };
+  const T3DList<Float64> &getFluxError() const { return fluxError; };
+  const T3DList<bool> &getIsExtincted() const { return isExtincted; };
+  const TList<bool> &getIsSnrCompliant() const { return isSnrCompliant; };
+  const TList<uint8_t> &getMask() const { return mask; };
+
+  Float64 getLambdaAt(Int32 pixelIdx) const;
+  Float64 getFluxAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
+  Float64 getFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
+  bool getIsExtinctedAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
+
+  Int16 getNIgm() const { return nIgm; };
+  Int16 getNIsm() const { return nIsm; };
+
+private:
+  Int32 nIgm;
+  Int32 nIsm;
+  TList<Float64> lambda;
+  T3DList<Float64> flux;
+  T3DList<Float64> fluxError;
+  T3DList<bool> isExtincted;
+  TList<bool> isSnrCompliant;
+  TList<uint8_t> mask;
 };
+
 } // namespace NSEpic
 #endif

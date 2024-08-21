@@ -41,10 +41,12 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/operator/continuummodelsolution.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/curve3d.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
-#include "RedshiftLibrary/operator/powerlawbase.h"
+#include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 class PowerLaw_fixture;
@@ -55,6 +57,7 @@ class basicfit_powerlaw;
 class basicfit_without_extinction;
 class basicfit_without_extinction_only_one_coef;
 class basicfit_simple_without_extinction;
+class basicfit_simple_var;
 class basicfit_simple_weighted_without_extinction;
 class basicfit_double_without_extinction;
 class basicfit_simple_with_extinction;
@@ -67,6 +70,8 @@ struct TPowerLawCoefs {
   // a * x^b
   Float64 a = NAN;
   Float64 b = NAN;
+  Float64 sigmaa = NAN;
+  Float64 sigmab = NAN;
 };
 
 typedef std::vector<std::vector<TPowerLawCoefs>> T2DPowerLawCoefs;
@@ -78,8 +83,8 @@ typedef std::pair<T2DPowerLawCoefs, T2DPowerLawCoefs> TPair2DPowerLawCoefs;
 struct TPowerLawResult {
   Float64 chiSquare = INFINITY;
   TPowerLawCoefsPair coefs = {{0, 0}, {0, 0}};
-  Float64 EbmvCoeff = NAN;
-  Int32 MeiksinIdx = undefIdx;
+  Float64 ebmvCoef = NAN;
+  Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
   std::vector<TFloat64List> IsmCalzettiCoeffInterm;
   std::vector<TInt32List> IgmMeiksinIdxInterm;
@@ -91,7 +96,7 @@ struct TChi2Result {
   Float64 chi2;
 };
 
-class COperatorPowerLaw : public COperatorPowerLawBase {
+class COperatorPowerLaw : public COperatorContinuumFitting {
 
 public:
   COperatorPowerLaw(const TFloat64List &redshifts = TFloat64List(),
@@ -104,9 +109,10 @@ public:
   COperatorPowerLaw &operator=(COperatorPowerLaw &&other) = default;
   ~COperatorPowerLaw() = default;
 
-  std::shared_ptr<COperatorResult>
-  Compute(bool opt_extinction, bool opt_dustFitting, Float64 nullFluxThreshold,
-          Int32 nLogSamplesMin, std::string method);
+  std::shared_ptr<COperatorResult> Compute(bool opt_extinction,
+                                           bool opt_dustFitting,
+                                           Float64 nullFluxThreshold,
+                                           std::string method);
   void ComputeSpectrumModel(
       const std::shared_ptr<CContinuumModelSolution> &continuum, Int32 spcIndex,
       const std::shared_ptr<CModelSpectrumResult> &models);
@@ -118,6 +124,7 @@ protected:
   friend powerLawOperator_test::basicfit_without_extinction_only_one_coef;
   friend powerLawOperator_test::init;
   friend powerLawOperator_test::basicfit_simple_without_extinction;
+  friend powerLawOperator_test::basicfit_simple_var;
   friend powerLawOperator_test::basicfit_simple_weighted_without_extinction;
   friend powerLawOperator_test::basicfit_double_without_extinction;
   friend powerLawOperator_test::basicfit_simple_with_extinction;
@@ -125,7 +132,7 @@ protected:
 
   TPowerLawResult BasicFit(Float64 redshift, bool opt_extinction,
                            bool opt_dustFitting, Float64 nullFluxThreshold,
-                           Int32 nLogSamplesMin, std::string method);
+                           std::string method);
 
 private:
   // igm ism curves
@@ -140,42 +147,35 @@ private:
   Int16 m_nSpectra;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
   T3DList<Float64> m_ismIgmCorrections;
+  Int32 m_nLogSamplesMin = POWER_LAW_N_SAMPLES_MIN_FOR_CONTINUUM_FIT;
 
   void initIgmIsm(bool opt_extinction, bool opt_dustFitting);
-  template <typename T, typename U> T loopOnSpectra(U lambda);
-  void addTooFewSamplesWarning(Int32 N, Int32 nLogSamplesMin, Int16 igmIdx,
-                               Int16 ismIdx, const char *funcName) const;
+  void addTooFewSamplesWarning(Int32 N, Int16 igmIdx, Int16 ismIdx,
+                               const char *funcName) const;
   TPowerLawCoefsPair computeFullPowerLawCoefs(Int32 N1, Int32 N2,
-                                              Int32 nLogSamplesMin,
-                                              TCurve const &lnCurve,
-                                              Int16 igmIdx, Int16 ismIdx) const;
+                                              TCurve const &lnCurve) const;
   TAxisSampleList lnLambda(TAxisSampleList const &lambda) const;
   T2DPowerLawCoefsPair powerLawCoefs3D(T3DCurve const &lnCurves,
-                                       Int32 nLogSamplesMin, std::string method,
-                                       CMask const &spcMaskAdditional) const;
+                                       std::string method) const;
   TBoolList computeSNRCompliantPixels(TFloat64List const &spectrumFlux,
                                       TFloat64List const &spectrumFluxError,
                                       Float64 nullFluxThreshold) const;
   T3DCurve computeLnCurve(T3DCurve const &emittedCurve) const;
   T2DList<Float64> computeChi2(T3DCurve const &curve3D,
-                               T2DPowerLawCoefsPair const &coefs,
-                               CMask const &spcMaskAdditional);
+                               T2DPowerLawCoefsPair const &coefs);
   TChi2Result findMinChi2OnIgmIsm(T3DCurve const &curve,
                                   T2DPowerLawCoefsPair const &coefs,
-                                  std::vector<TFloat64List> &ChiSquareInterm,
-                                  CMask const &spcMaskAdditional);
+                                  std::vector<TFloat64List> &ChiSquareInterm);
   Float64 theoreticalFluxAtLambda(TPowerLawCoefsPair coefs, Float64 lambda);
   Float64 computePowerLaw(TPowerLawCoefs coefs, Float64 lambda);
   TPowerLawCoefs compute2PassSimplePowerLawCoefs(TCurve const &lnCurves) const;
   TPowerLawCoefsPair
-  compute2PassDoublePowerLawCoefs(TCurve const &lnCurves,
-                                  Int32 nLogSamplesMin) const;
+  compute2PassDoublePowerLawCoefs(TCurve const &lnCurves) const;
   TPowerLawCoefsPair computeDoublePowerLawCoefs(
-      TCurve const &lnCurve, Int32 nLogSamplesMin,
+      TCurve const &lnCurve,
       std::optional<TPowerLawCoefsPair> const &coefsFirstEstim =
           std::nullopt) const;
-  T3DCurve initializeFluxCurve(Int32 spectrumIdx, Float64 redshift,
-                               Float64 nullFluxThreshold);
+  T3DCurve initializeFluxCurve(Float64 redshift, Float64 nullFluxThreshold);
   T3DList<Float64>
   computeIsmIgmCorrections(Float64 redshift,
                            CSpectrumSpectralAxis const &spectrumLambdaRest,
@@ -184,9 +184,8 @@ private:
   computeIsmIgmCorrection(Float64 redshift,
                           CSpectrumSpectralAxis const &spectrumLambdaRest,
                           Int16 igmIdx, Float64 ismCoef) const;
-  T3DCurve computeEmittedCurve(Int16 spectrumIdx, Float64 redshift,
-                               Float64 nullFluxThreshold, bool opt_extinction,
-                               bool opt_dustFitting);
+  T3DCurve computeEmittedCurve(Float64 redshift, Float64 nullFluxThreshold,
+                               bool opt_extinction, bool opt_dustFitting);
   TPowerLawCoefs computeSimplePowerLawCoefs(
       TCurve const &lnCurve,
       std::optional<TPowerLawCoefs> const &coefsFirstEstim =

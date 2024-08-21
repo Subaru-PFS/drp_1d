@@ -49,7 +49,7 @@
     "nullThreshold": {
       "type": "number",
       "title": "Null threshold",
-      "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below `threshold * sigma`, continuum component is forced to noContinuum"
+      "description": "Depending on \n * Case tplFit / tplFitAuto: Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below `threshold * sigma`, continuum component is forced to noContinuum \n * Case powerLaw: Only pixels for which flux / noise > threshold, are taken into account for continuum calculation"
     },
     "priors": {
       "$ref": "line_model_priors.json"

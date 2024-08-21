@@ -190,8 +190,8 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         result_base = fitRes;                 // slicing, preserving specific
         // TFittingIsmIGmResult members
 
-        result.EbmvCoeff = coeffEBMV;
-        result.MeiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
+        result.ebmvCoef = coeffEBMV;
+        result.meiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
         chisquareSetAtLeastOnce = true;
       }
     }
