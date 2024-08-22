@@ -47,6 +47,7 @@ photometryBand,photometryBand,root,root
 photometryTransmissionDir,photometryTransmissionDir,root,root
 smoothWidth,smoothWidth,root,root
 templateCatalog,templateCatalog,root,root
+linemeas_runmode,lineMeasRunMode,root,root
 
 method,method,continuumRemoval,continuumRemoval
 medianKernelWidth,medianKernelWidth,continuumRemoval,continuumRemoval
