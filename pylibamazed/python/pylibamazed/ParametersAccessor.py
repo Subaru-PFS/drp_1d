@@ -72,6 +72,9 @@ class ParametersAccessor:
     def get_spectrum_models(self, default=None) -> List[str]:
         return self.parameters.get("spectrumModels", default)
 
+    def get_linemeas_runmode(self) -> str:
+        return self.parameters.get("lineMeasRunMode")
+
     def get_spectrum_model_section(self, spectrum_model, create=False) -> dict:
         spectrum_model_section = self.parameters.get(spectrum_model)
         if create and spectrum_model_section is None:

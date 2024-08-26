@@ -69,6 +69,15 @@
       "title": "Air vaccum method",
       "description": "Method to apply for the air to vacuum wavelength conversion when reading input spectrum. Currently \"default\" method corresponds to morton2000"
     },
+    "lineMeasRunMode": {
+      "type": "string",
+      "enum": [
+        "all",
+        "classif"
+      ],
+      "title": "Run mode for line measurement",
+      "description": "Option to run line measurement per spectrum on models : \n * **\"all\"**: all models \n * **\"classif\"**: only the classified one"
+    },
     "extremaRedshiftSeparation": {
       "type": "number",
       "title": "Extrema redshift separation",
