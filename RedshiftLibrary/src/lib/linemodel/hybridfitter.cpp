@@ -119,9 +119,6 @@ void CHybridFitter::doFit(Float64 redshift) {
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
-  if (m_enableAmplitudeOffsets)
-    m_ElementsVector->resetAmplitudeOffsets();
-
   m_spectraIndex.reset(); // dummy implementation
 
   TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();

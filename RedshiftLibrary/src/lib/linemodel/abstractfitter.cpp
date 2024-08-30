@@ -195,11 +195,6 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
   m_ElementsVector->setAbsLinesNullContinuumNotFittable(m_models);
 }
 
-void CAbstractFitter::resetElementsFittingParam() {
-  for (auto param_ptr : m_ElementsVector->getElementParam())
-    param_ptr->resetFittingParams();
-}
-
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   TInt32List idxEltIGM;
   std::vector<TInt32List> idxLineIGM;

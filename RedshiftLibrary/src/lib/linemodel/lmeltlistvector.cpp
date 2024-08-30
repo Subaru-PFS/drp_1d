@@ -262,11 +262,6 @@ void CLMEltListVector::resetLambdaOffsets() {
     ep->resetLambdaOffsets();
 }
 
-void CLMEltListVector::resetAmplitudeOffsets() {
-  for (auto &ep : m_ElementsParams)
-    ep->resetAmplitudeOffset();
-}
-
 void CLMEltListVector::resetElementsFittingParam(bool enableAmplitudeOffsets) {
 
   for (auto const &ep : m_ElementsParams) {

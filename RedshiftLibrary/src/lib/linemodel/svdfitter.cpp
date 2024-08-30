@@ -60,9 +60,6 @@ void CSvdFitter::doFit(Float64 redshift) {
   for (Int32 idx : validEltsIdx)
     m_ElementsVector->getElementParam()[idx]->SetFittingGroupInfo(fitGroupTag);
 
-  if (m_enableAmplitudeOffsets)
-    m_ElementsVector->resetAmplitudeOffsets();
-
   fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, m_enableLambdaOffsetsFit,
                                        redshift);
 }

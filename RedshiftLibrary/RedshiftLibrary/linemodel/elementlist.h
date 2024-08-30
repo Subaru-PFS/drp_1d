@@ -167,7 +167,6 @@ public:
   void SetElementAmplitude(Int32 eltIndex, Float64 A, Float64 AStd);
 
   void resetLambdaOffsets();
-  void resetAmplitudeOffsets();
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
   void resetAsymfitParams();
 
