@@ -497,7 +497,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   ///////////////////////////////
   VectorXd v_xGuess(nddl);
 
-  // amplitudes initial guess
+  // compute amplitudes initial guess using CSvdFitter
+  m_spectraIndex.reset();
   for (auto eltIndex : EltsIdx) {
     auto &elt_param = getElementParam()[eltIndex];
     // set velocity guess
@@ -506,19 +507,30 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     } else {
       elt_param->SetVelocityEmission(m_velIniGuessE);
     }
+
+    // reset support with initial velocities
+    auto &elt_ptr = getElementList()[eltIndex];
+    elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
+                            getLambdaRange());
   }
-  CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
+  m_ElementsVector->computeGlobalOutsideLambdaRange();
   m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
+  CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
   Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
-    // fitAmplitude(EltsIdx[i], redshift);
-    auto &elt = getElementList()[EltsIdx[i]];
-    v_xGuess[i] = elt->GetElementAmplitude() * normFactor;
+    auto &elt_param = getElementParam()[EltsIdx[i]];
+    if (elt_param->isNotFittable()) {
+      // the initial velocity renders the line outside range, set amplitude at
+      // zero and do not update the max snr
+      v_xGuess[i] = 0.0;
+      continue;
+    }
+    v_xGuess[i] = elt_param->GetElementAmplitude() * normFactor;
     if (std::isnan(v_xGuess[i]))
       THROWG(ErrorCode::INTERNAL_ERROR,
              "NAN amplitude for LBFGSB fitter initial guess");
     // retrive max SNR amplitude:
-    auto sigma = (elt->GetElementAmplitudeError() * normFactor);
+    auto sigma = (elt_param->GetElementAmplitudeError() * normFactor);
     auto snr = v_xGuess[i] / sigma;
     max_snr = std::max(max_snr, snr);
   }
