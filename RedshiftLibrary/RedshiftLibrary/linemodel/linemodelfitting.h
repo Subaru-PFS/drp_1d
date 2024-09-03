@@ -155,8 +155,8 @@ public:
     return m_continuumManager->isContinuumComponentNoContinuum();
   }
 
-  Int32 GetModelNonZeroElementsNDdl() const {
-    return m_ElementsVector->GetModelNonZeroElementsNDdl();
+  Int32 getNonZeroElementsNDdl() const {
+    return m_ElementsVector->getNonZeroElementsNDdl();
   }
 
   const CSpectrum &getSpectrum() const {

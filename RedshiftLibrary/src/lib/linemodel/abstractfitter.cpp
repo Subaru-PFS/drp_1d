@@ -214,7 +214,9 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     auto const &param_LyaE = m_ElementsVector->getElementParam()[elt_idx_LyaE];
     auto const &profile = param_LyaE->getLineProfile(line_idx_LyaE);
 
-    if (profile->isAsymFit() && param_LyaE->isFittable()) {
+    if (profile->isAsymFit() && param_LyaE->isFittable() &&
+        !param_LyaE->isOutsideLambdaRangeLine(line_idx_LyaE) &&
+        param_LyaE->GetNominalAmplitude(line_idx_LyaE) != 0.0) {
       // find the best width and asym coeff. parameters
       TAsymParams const bestfitParams =
           fitAsymParameters(redshift, elt_idx_LyaE, line_idx_LyaE);
@@ -237,7 +239,8 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
           line_indices_filtered.begin(), line_indices_filtered.end(),
           [&](Int32 idx) {
             return !param_EltIgm->getLineProfile(idx)->isSymIgmFit() ||
-                   param_EltIgm->isOutsideLambdaRangeLine(idx);
+                   param_EltIgm->isOutsideLambdaRangeLine(idx) ||
+                   param_EltIgm->GetNominalAmplitude(idx) == 0.0;
           });
       line_indices_filtered.erase(end, line_indices_filtered.end());
       if (!line_indices_filtered.empty())

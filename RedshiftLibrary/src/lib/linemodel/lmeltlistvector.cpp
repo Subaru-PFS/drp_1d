@@ -95,7 +95,7 @@ TInt32List CLMEltListVector::getValidElementIndices() const {
   return valid_indices;
 }
 
-Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() const {
+Int32 CLMEltListVector::getNonZeroElementsNDdl() const {
   Int32 nddl = 0;
   for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {
     if (m_ElementsParams[elt_index]->isNotFittable())

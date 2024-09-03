@@ -95,8 +95,8 @@ void CRuleRatioRange::Correct(CLMEltListVector &LineModelElementList) {
   if (iEltA == iEltB)
     return;
 
-  if (LineModelElementList.getElementList()[iEltA]->IsOutsideLambdaRange() ||
-      LineModelElementList.getElementList()[iEltB]->IsOutsideLambdaRange())
+  if (LineModelElementList.getElementParam()[iEltA]->isNotFittable() ||
+      LineModelElementList.getElementParam()[iEltB]->isNotFittable())
     return;
 
   Float64 ampA =

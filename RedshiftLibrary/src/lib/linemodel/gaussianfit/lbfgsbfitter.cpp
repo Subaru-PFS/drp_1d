@@ -717,7 +717,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     auto const &elt = getElementList()[EltsIdx[i]];
     Float64 const amp = v_xResult[i] / normFactor;
 
-    if (elt->IsOutsideLambdaRange()) {
+    if (elt->getElementParam()->isNotFittable()) {
       m_ElementsVector->SetElementAmplitude(EltsIdx[i], NAN, NAN);
       break;
     }

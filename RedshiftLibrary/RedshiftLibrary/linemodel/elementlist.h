@@ -56,8 +56,6 @@ public:
                                     Float64 redshift,
                                     Float64 overlapThres) const;
 
-  Int32 GetModelValidElementsNDdl() const;
-
   std::vector<TInt32List> GetModelVelfitGroups(CLine::EType lineType) const;
 
   TInt32RangeList getlambdaIndexesUnderLines(
@@ -171,7 +169,7 @@ public:
   void setAllAbsLinesFittable();
   void setAllAbsLinesNotFittable();
   TInt32List getValidElementIndices() const;
-  Int32 GetModelNonZeroElementsNDdl() const;
+  Int32 getNonZeroElementsNDdl() const;
 
 private:
   std::vector<CLineModelElementList>

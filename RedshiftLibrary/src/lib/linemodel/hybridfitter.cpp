@@ -226,7 +226,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // check if line is visible:
-    if (getElementList()[iElt_lineE]->IsOutsideLambdaRange())
+    if (getElementParam()[iElt_lineE]->isNotFittable())
       continue;
 
     // find the linesMore unique elements indexes

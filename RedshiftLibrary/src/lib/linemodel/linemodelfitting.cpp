@@ -981,7 +981,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   modelSolution.Redshift = getSpectrumModel().m_Redshift;
   const CLineModelElementList &firstEltList = getElementList();
 
-  modelSolution.nDDL = m_ElementsVector->GetModelNonZeroElementsNDdl();
+  modelSolution.nDDL = m_ElementsVector->getNonZeroElementsNDdl();
 
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 line_id = modelSolution.lineId[iRestLine];

@@ -46,20 +46,6 @@
 
 using namespace NSEpic;
 using namespace std;
-/**
- * \brief Returns the number of m_Elements that fail IsOutsideLambdaRange().
- **/
-Int32 CLineModelElementList::GetModelValidElementsNDdl() const {
-  Int32 nddl = 0;
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->IsOutsideLambdaRange() == true) {
-      continue;
-    }
-
-    nddl++;
-  }
-  return nddl;
-}
 
 /**
  * \brief Returns the list of indexes of elements that fail
@@ -329,7 +315,7 @@ Float64 CLineModelElementList::getScaleMargCorrection(Int32 Eltidx) const {
     iElts_end = Eltidx + 1;
   }
   for (Int32 iElts = iElts_start; iElts != iElts_end; iElts++) {
-    if (m_Elements[iElts]->IsOutsideLambdaRange() == true)
+    if (m_Elements[iElts]->getElementParam()->isNotFittable())
       continue;
 
     Float64 mtm = m_Elements[iElts]->getElementParam()->getSumGauss();
