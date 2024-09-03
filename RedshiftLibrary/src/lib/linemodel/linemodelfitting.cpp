@@ -470,7 +470,8 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
   CMask _mask(spectralAxis.GetSamplesCount(), 1);
 
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
+  TInt32List validEltsIdx =
+      getElementList().GetElementsIndicesInsideLambdaRange();
   TInt32List supportIdxes = getElementList().getSupportIndexes(validEltsIdx);
 
   // setting masks
@@ -599,7 +600,8 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
   // Retrieve all the strone emission lines supports in a list of range
   TInt32RangeList supportList;
   TBoolList isStrongList;
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
+  TInt32List validEltsIdx =
+      getElementList().GetElementsIndicesInsideLambdaRange();
   for (Int32 iElts : validEltsIdx) {
     auto const &elt = getElementList()[iElts];
     auto const &elt_param = elt->getElementParam();

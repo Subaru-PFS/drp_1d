@@ -100,7 +100,7 @@ void CHybridFitter::doFit(Float64 redshift) {
 
 /**
  * \brief Tries to fit subelements considering their overlap.
- * For each entry in GetModelValidElementsIndexes:
+ * For each entry in GetElementsIndicesInsideLambdaRange:
  *   If subelement in the entry already fitted, go for the next entry.
  *   getOverlappingElements for the fitted subelements.
  *   If the overlap is smaller than 2, call fitAmplitude on the entry.
@@ -121,7 +121,7 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
   m_spectraIndex.reset(); // dummy implementation
 
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
+  TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   TInt32Set indexesFitted;
   for (Int32 iElts : validEltsIdx) {
 

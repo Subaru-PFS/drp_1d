@@ -50,10 +50,8 @@ private:
   std::vector<std::shared_ptr<CLineModelElement>> m_Elements;
 
 public:
-  TInt32List m_elementsDisabledIndexes;
-
-  TInt32List GetModelValidElementsIndexes() const;
-  TInt32List getValidElementIndices(CLine::EType lineTypeFilter) const;
+  TInt32List GetElementsIndicesInsideLambdaRange() const;
+  TInt32List getNonZeroElementIndices(CLine::EType lineTypeFilter) const;
   TInt32List getOverlappingElements(Int32 ind, const TInt32Set &excludedInd,
                                     Float64 redshift,
                                     Float64 overlapThres) const;
@@ -73,10 +71,6 @@ public:
       const CSpectrumSpectralAxis &spectralAxis,
       CSpectrumFluxAxis &modelfluxAxis, const TInt32List &eIdx_list = {},
       CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
-
-  bool IsElementIndexInDisabledList(Int32 index) const;
-  void SetElementIndexesDisabledAuto();
-  void ResetElementIndexesDisabled();
 
   Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const;
   bool GetModelStrongEmissionLinePresent() const;
@@ -176,6 +170,7 @@ public:
       std::shared_ptr<CSpcModelVector> const &models);
   void setAllAbsLinesFittable();
   void setAllAbsLinesNotFittable();
+  TInt32List getValidElementIndices() const;
   Int32 GetModelNonZeroElementsNDdl() const;
 
 private:

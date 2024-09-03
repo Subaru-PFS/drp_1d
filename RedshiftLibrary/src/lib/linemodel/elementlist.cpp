@@ -65,44 +65,13 @@ Int32 CLineModelElementList::GetModelValidElementsNDdl() const {
  * \brief Returns the list of indexes of elements that fail
  *IsOutsideLambdaRange.
  **/
-TInt32List CLineModelElementList::GetModelValidElementsIndexes() const {
-  TInt32List nonZeroIndexes;
+TInt32List CLineModelElementList::GetElementsIndicesInsideLambdaRange() const {
+  TInt32List validIndices;
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    if (m_Elements[iElts]->IsOutsideLambdaRange() == true)
-      continue;
-
-    if (IsElementIndexInDisabledList(iElts))
-      continue;
-
-    nonZeroIndexes.push_back(iElts);
+    if (!m_Elements[iElts]->IsOutsideLambdaRange())
+      validIndices.push_back(iElts);
   }
-  return nonZeroIndexes;
-}
-
-bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index) const {
-  return std::find(m_elementsDisabledIndexes.cbegin(),
-                   m_elementsDisabledIndexes.cend(),
-                   index) != m_elementsDisabledIndexes.cend();
-}
-
-/**
- * @brief CLineModelElementList::SetElementIndexesDisabledAuto
- * Disables all the elements that have all sub-elements (lines) amplitudes equal
- * to zero
- */
-void CLineModelElementList::SetElementIndexesDisabledAuto() {
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    auto const &elt = m_Elements[iElts];
-    if (elt->IsOutsideLambdaRange())
-      continue;
-
-    if (elt->getElementParam()->isAllAmplitudesNull())
-      m_elementsDisabledIndexes.push_back(iElts);
-  }
-}
-
-void CLineModelElementList::ResetElementIndexesDisabled() {
-  m_elementsDisabledIndexes.clear();
+  return validIndices;
 }
 
 /**
@@ -115,10 +84,10 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
   TStringList tags;
   TInt32List nonGroupedLines;
 
-  TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
+  TInt32List validIndices = GetElementsIndicesInsideLambdaRange();
 
   std::map<std::string, TInt32List> tag_groups;
-  for (auto iElts : nonZeroIndexes) {
+  for (auto iElts : validIndices) {
     const auto &elt_param_ptr = m_Elements[iElts]->getElementParam();
     for (const auto &line : elt_param_ptr->GetLines())
       if (lineType == line.GetType()) {
@@ -245,10 +214,10 @@ TInt32List CLineModelElementList::getOverlappingElements(
  * @param lineTypeFilter
  * @return TFloat64List
  */
-TInt32List CLineModelElementList::getValidElementIndices(
+TInt32List CLineModelElementList::getNonZeroElementIndices(
     CLine::EType lineTypeFilter) const {
 
-  const TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  const TInt32List validEltsIdx = GetElementsIndicesInsideLambdaRange();
   TInt32List nonZeroValidEltsIdx;
   for (const Int32 eIdx : validEltsIdx) {
     auto const &param = m_Elements[eIdx]->getElementParam();
@@ -377,7 +346,7 @@ Float64 CLineModelElementList::getScaleMargCorrection(Int32 Eltidx) const {
  */
 bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
 
-  TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  TInt32List validEltsIdx = GetElementsIndicesInsideLambdaRange();
   for (Int32 iElts : validEltsIdx) {
     auto const &elt = m_Elements[iElts];
     auto const &elt_param = elt->getElementParam();
@@ -409,7 +378,7 @@ bool CLineModelElementList::GetModelHaStrongest() const {
   Float64 ampMax = -DBL_MAX;
   std::string ampMaxLineTag = "";
 
-  TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  TInt32List validEltsIdx = GetElementsIndicesInsideLambdaRange();
   for (Int32 iElts : validEltsIdx) {
     auto const &elt = m_Elements[iElts];
     auto const &elt_param = elt->getElementParam();

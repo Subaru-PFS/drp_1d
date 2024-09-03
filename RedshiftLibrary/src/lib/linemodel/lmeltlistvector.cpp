@@ -86,6 +86,15 @@ CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
     m_ElementsParams.push_back(elt->getElementParam());
 }
 
+TInt32List CLMEltListVector::getValidElementIndices() const {
+  TInt32List valid_indices;
+  for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {
+    if (m_ElementsParams[elt_index]->isFittable())
+      valid_indices.push_back(elt_index);
+  }
+  return valid_indices;
+}
+
 Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() const {
   Int32 nddl = 0;
   for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {

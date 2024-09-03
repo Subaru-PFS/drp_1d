@@ -150,36 +150,10 @@ void CSpectrumModel::refreshModelUnderElements(const TInt32List &filterEltsIdx,
  *cont. estimation close to the borders)
  **/
 void CSpectrumModel::EstimateSpectrumContinuum(Float64 opt_enhance_lines) {
-  TInt32List validEltsIdx = m_Elements->GetModelValidElementsIndexes();
-  // TInt32List xInds = getSupportIndexes( validEltsIdx );
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
 
-  // create new spectrum, which is corrected under the lines
-
-  /*
-  //1. interp from previous values
-  for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
-  {
-      Y[t] = m_SpcFluxAxis[t];
-  }
-  Int32 idx = 0;
-  Float64 valf = m_SpcFluxAxis[0];
-  Float64 corrRatio=0.8;
-  for (int i = 0; i < xInds.size(); i++)
-  {
-      idx = xInds[i];
-      if(idx>0){
-          if ( std::find(xInds.begin(), xInds.end(), idx-1) == xInds.end() )
-          {
-              valf=m_SpcFluxAxis[idx-1];
-          }
-      }
-      Y[idx]= corrRatio*valf + (1.0-corrRatio)*m_SpcFluxAxis[idx];
-  }
-  //*/
-
-  // 2. subtract lines from model
+  // subtract lines from model
   // model for subtraction
   CSpectrumFluxAxis spcmodel4linefittingFluxAxis =
       m_SpectrumModel.GetFluxAxis();
@@ -244,7 +218,7 @@ CSpectrum CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
   Float64 alphaMax = 0.9; // alpha blend = 0: only lineSubtractedFlux,
                           // alpha=1: only continuum
   TInt32List nonZeroValidEltsIdx =
-      m_Elements->getValidElementIndices(lineTypeFilter);
+      m_Elements->getNonZeroElementIndices(lineTypeFilter);
   TInt32List supportIdxes = m_Elements->getSupportIndexes(nonZeroValidEltsIdx);
   if (supportIdxes.size() > 0) {
     for (Int32 idx : supportIdxes) {
@@ -379,7 +353,7 @@ CSpectrumModel::getContinuumSquaredResidualInRange(
   Float64 nsum = 0;
   Float64 nsum2 = 0.0;
   TInt32List nonZeroValidEltsIdx =
-      m_Elements->getValidElementIndices(CLine::EType::nType_All);
+      m_Elements->getNonZeroElementIndices(CLine::EType::nType_All);
   for (Int32 t = indexRange.GetBegin(); t <= indexRange.GetEnd(); t++) {
     Float64 weight =
         1.0 - GetWeightingAnyLineCenterProximity(t, nonZeroValidEltsIdx);

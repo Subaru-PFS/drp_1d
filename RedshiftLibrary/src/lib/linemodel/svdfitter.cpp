@@ -51,14 +51,13 @@ using namespace std;
 // set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
   m_spectraIndex.reset(); // dummy implementation
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
-
+  TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   if (validEltsIdx.empty())
     return;
 
   std::string fitGroupTag = "svd";
-  for (Int32 idx : validEltsIdx)
-    m_ElementsVector->getElementParam()[idx]->SetFittingGroupInfo(fitGroupTag);
+  for (auto const &param : m_ElementsVector->getElementParam())
+    param->SetFittingGroupInfo(fitGroupTag);
 
   fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, m_enableLambdaOffsetsFit,
                                        redshift);

@@ -74,7 +74,13 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   m_continuumManager->reinterpolateContinuumResetAmp();
 
   m_spectraIndex.reset(); // TODO dummy impl
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
+
+  TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
+
+  std::string fitGroupTag = "svdlc";
+  for (auto const &param : m_ElementsVector->getElementParam())
+    param->SetFittingGroupInfo(fitGroupTag);
+
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
   Float64 chi2_cl = INFINITY;
