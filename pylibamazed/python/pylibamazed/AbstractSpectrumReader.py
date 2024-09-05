@@ -316,13 +316,13 @@ class AbstractSpectrumReader:
                     return False
         return True
 
-    def _editable_waves(self, obs_id=""):
+    def get_editable_waves(self, obs_id=""):
         return self.editable_spectra.get(obs_id)["waves"]
 
-    def _editable_fluxes(self, obs_id=""):
+    def get_editable_fluxes(self, obs_id=""):
         return self.editable_spectra.get(obs_id)["fluxes"]
 
-    def _editable_errors(self, obs_id=""):
+    def get_editable_errors(self, obs_id=""):
         return self.editable_spectra.get(obs_id)["errors"]
 
     def get_filtered_others(self, obs_id: str = "") -> pd.DataFrame:
@@ -345,17 +345,17 @@ class AbstractSpectrumReader:
             if list(self.waves.keys()) != [""]:
                 raise APIException(ErrorCode.INVALID_NAME, "Non multi obs observations cannot be named")
 
-            spectralaxis = CSpectrumSpectralAxis(self._editable_waves(), airvacuum_method)
-            signal = CSpectrumFluxAxis_withError(self._editable_fluxes(), self._editable_errors())
+            spectralaxis = CSpectrumSpectralAxis(self.get_editable_waves(), airvacuum_method)
+            signal = CSpectrumFluxAxis_withError(self.get_editable_fluxes(), self.get_editable_errors())
             self._add_cspectrum(spectralaxis, signal)
 
         elif multiobs_type == "merge":
             wses = []
             for i in self.waves.keys():
                 wse_ = pd.DataFrame()
-                wse_["wave"] = self._editable_waves(i)
-                wse_["flux"] = self._editable_fluxes(i)
-                wse_["error"] = self._editable_errors(i)
+                wse_["wave"] = self.get_editable_waves(i)
+                wse_["flux"] = self.get_editable_fluxes(i)
+                wse_["error"] = self.get_editable_errors(i)
                 wses.append(wse_)
             wse = pd.concat(wses)
             wse.sort_values(["wave"], inplace=True)
@@ -375,9 +375,9 @@ class AbstractSpectrumReader:
 
         elif multiobs_type == "full":
             for obs_id in self.waves.keys():
-                spectralaxis = CSpectrumSpectralAxis(self._editable_waves(obs_id), airvacuum_method)
+                spectralaxis = CSpectrumSpectralAxis(self.get_editable_waves(obs_id), airvacuum_method)
                 signal = CSpectrumFluxAxis_withError(
-                    self._editable_fluxes(obs_id), self._editable_errors(obs_id)
+                    self.get_editable_fluxes(obs_id), self.get_editable_errors(obs_id)
                 )
                 self._add_cspectrum(spectralaxis, signal, obs_id)
 
