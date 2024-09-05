@@ -257,8 +257,12 @@ class AbstractSpectrumReader:
         if self.parameters.get_lsf_type() == "fromSpectrumData":
             lsf_type = self.lsf_type
         lsf = lsf_factory.Create(lsf_type, lsf_args)
-        for obs_id in self.parameters.get_observation_ids():
-            self._spectra[obs_id].SetLSF(lsf)
+
+        if self.parameters.get_multiobs_method() == "merge":
+            self._spectra[""].SetLSF(lsf)
+        else:
+            for obs_id in self.get_observation_ids():
+                self._spectra[obs_id].SetLSF(lsf)
         self._add_photometric_data()
 
     def _get_filters(self):
@@ -295,8 +299,11 @@ class AbstractSpectrumReader:
             names = tuple(self.photometric_data[0].Name)
             flux = tuple([float(f) for f in self.photometric_data[0].Flux])
             fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
-            for obs_id in self.parameters.get_observation_ids():
-                self._spectra[obs_id].SetPhotData(CPhotometricData(names, flux, fluxerr))
+            if self.parameters.get_multiobs_method() == "merge":
+                self._spectra[""].SetPhotData(CPhotometricData(names, flux, fluxerr))
+            else:
+                for obs_id in self.parameters.get_observation_ids():
+                    self._spectra[obs_id].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
     def _all_containers(self):
         return [container for container in self.others.values()] + [self.waves, self.fluxes, self.errors]
