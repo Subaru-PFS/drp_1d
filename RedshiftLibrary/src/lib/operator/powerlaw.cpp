@@ -355,7 +355,7 @@ TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
     if (coefsFirstEstim.has_value()) {
       Float64 estimatedFlux = computeEstimatedFlux(
           coefsFirstEstim.value(), lnCurve.getLambdaAt(pixelIdx));
-      w = estimatedFlux / lnCurve.getFluxErrorAt(pixelIdx);
+      w = lnCurve.getFluxErrorAt(pixelIdx) / estimatedFlux;
     }
     Float64 X = lnCurve.getLambdaAt(pixelIdx) / w;
     Float64 Y = lnCurve.getFluxAt(pixelIdx) / w;
