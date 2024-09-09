@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include "tests/src/powerlaw/doublevardata.h"
 #include "tests/src/powerlaw/simplevardata.h"
 #include "tests/src/tool/inputContextLight.h"
 #include <boost/test/unit_test.hpp>
@@ -190,7 +191,7 @@ const std::string jsonStringEnd =
     "}}}";
 
 const std::string jsonStringBegin1 =
-    "{\"lambdaRange\" : [ 4000, 6500 ],"; // So that xc is in range
+    "{\"lambdaRange\" : [ 4000, 7000 ],"; // So that xc is in range
 const std::string jsonStringBegin2 =
     "{\"lambdaRange\" : [ 2700, 4200 ],"; // To be in the range of ism / igm
                                           // fixture
@@ -251,7 +252,6 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   TList<Float64> lambda = fixture_powerLawSimpleVar().lambda;
   TList<Float64> flux = fixture_powerLawSimpleVar().flux;
   TList<Float64> noise = fixture_powerLawSimpleVar().noise;
-  ;
 
   CSpectrumSpectralAxis spectralAxis(lambda);
   CSpectrumFluxAxis fluxAxis(flux);
@@ -288,9 +288,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
 
   // Accepts a 1% error compared to the results found with python notebook
   BOOST_TEST(result2.coefs.first.a == 1.4963406789134072e-16,
-             boost::test_tools::tolerance(0.01)); // Noisy : accepts a 30% error
+             boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.b == -0.49983673257891786,
-             boost::test_tools::tolerance(0.01)); // Noisy : accepts a 30% error
+             boost::test_tools::tolerance(0.01));
   BOOST_CHECK_EQUAL(result2.coefs.second.a, 0);
   BOOST_CHECK_EQUAL(result2.coefs.second.b, 0);
   BOOST_TEST(result2.coefs.first.sigmaa == 1.0296994218492315e-17,
@@ -301,6 +301,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
 }
 
 BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
+  nMinSamples = 10;
   Float64 a1 = 1.5e-16;
   Float64 b1 = -0.5;
   Float64 b2 = -0.2;
@@ -325,6 +326,53 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   BOOST_TEST(result.coefs.second.a == a2,
              boost::test_tools::tolerance(10.)); // a2 has big errors
   BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  Context.reset();
+}
+
+BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
+  nMinSamples = 10;
+  Float64 a1 = 1.5e-16;
+  Float64 b1 = -0.5;
+  Float64 b2 = -0.2;
+  Float64 a2 = computea2(a1, b1, b2, xc);
+
+  TList<Float64> lambda = fixture_powerLawDoubleVar().lambda;
+  TList<Float64> flux = fixture_powerLawDoubleVar().flux;
+  TList<Float64> noise = fixture_powerLawDoubleVar().noise;
+
+  CSpectrumSpectralAxis spectralAxis(lambda);
+  CSpectrumFluxAxis fluxAxis(flux);
+  CSpectrumNoiseAxis noiseAxis(noise);
+  fluxAxis.setError(noiseAxis);
+
+  // Initialize power law operator
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw;
+  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+
+  TPowerLawResult result =
+      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "full");
+
+  // Accepts a 1% error compared to the results found with python notebook
+  BOOST_TEST(result.coefs.first.a == 1.3593026417419627e-16,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.first.b == -0.4883729145733192,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.a == 1.1911841337173753e-17,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.b == -0.20508628168193455,
+             boost::test_tools::tolerance(0.01));
+
+  BOOST_TEST(result.coefs.first.sigmaa == 6.6531274177064696e-18,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.first.sigmab == 0.005769929304253846,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.sigmaa == 6.868548415411009e-19,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.sigmab == 0.0066342065076361876,
+             boost::test_tools::tolerance(0.01));
   Context.reset();
 }
 

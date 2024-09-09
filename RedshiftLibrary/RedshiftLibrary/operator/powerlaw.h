@@ -60,6 +60,7 @@ class basicfit_simple_without_extinction;
 class basicfit_simple_var;
 class basicfit_simple_weighted_without_extinction;
 class basicfit_double_without_extinction;
+class basicfit_double_with_var;
 class basicfit_simple_with_extinction;
 class basicfit_multiobs;
 } // namespace powerLawOperator_test
@@ -127,6 +128,7 @@ protected:
   friend powerLawOperator_test::basicfit_simple_var;
   friend powerLawOperator_test::basicfit_simple_weighted_without_extinction;
   friend powerLawOperator_test::basicfit_double_without_extinction;
+  friend powerLawOperator_test::basicfit_double_with_var;
   friend powerLawOperator_test::basicfit_simple_with_extinction;
   friend powerLawOperator_test::basicfit_multiobs;
 

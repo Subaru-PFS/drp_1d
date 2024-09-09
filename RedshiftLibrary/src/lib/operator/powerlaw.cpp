@@ -476,20 +476,30 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
   Eigen::Matrix3d m;
   m << m11, m12, m13, m21, m22, m23, m31, m32, m33;
 
-  Eigen::Vector3d v(v1, v2, v3);
-
   if (std::abs(m.determinant()) < DBL_MIN)
     THROWG(ErrorCode::INTERNAL_ERROR,
            "Cannot calculate power law coefs: division by zero");
 
-  Eigen::Vector3d theta = m.inverse() * v;
+  Eigen::Matrix3d mInv = m.inverse();
+  Eigen::Vector3d v(v1, v2, v3);
+
+  Eigen::Vector3d theta = mInv * v;
 
   Float64 a1 = std::exp(theta(0));
   Float64 b1 = theta(1);
   Float64 b2 = theta(2);
   Float64 a2 = a1 * std::pow(std::exp(xc), b1 - b2);
 
-  return {{a1, b1}, {a2, b2}};
+  // Calculates var / covar
+  Float64 varlna2 = mInv(0, 0) +
+                    xc * xc * (mInv(1, 1) + mInv(2, 2) - 2 * mInv(1, 2)) +
+                    2 * xc * (mInv(0, 1) - mInv(0, 2));
+  Float64 sigmaa1 = a1 * std::sqrt(mInv(0, 0));
+  Float64 sigmab1 = std::sqrt(mInv(1, 1));
+  Float64 sigmaa2 = a2 * std::sqrt(varlna2);
+  Float64 sigmab2 = std::sqrt(mInv(2, 2));
+
+  return {{a1, b1, sigmaa1, sigmab1}, {a2, b2, sigmaa2, sigmab2}};
 }
 
 T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
