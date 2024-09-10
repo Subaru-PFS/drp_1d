@@ -127,24 +127,12 @@ void CSpectrumSpectralAxis::SetSize(Int32 s) {
 CSpectrumSpectralAxis
 CSpectrumSpectralAxis::ShiftByWaveLength(Float64 wavelengthOffset,
                                          EShiftDirection direction) const {
-  if (wavelengthOffset < 0.)
-    THROWG(ErrorCode::INTERNAL_ERROR, "wavelengthOffset can not be negative");
-  if (!(direction == nShiftForward || direction == nShiftBackward))
-    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown shift direction");
-
   auto shiftedAxis = *this;
-
-  if (wavelengthOffset != 0.0) {
-    if (direction == nShiftForward) {
-      shiftedAxis *= (wavelengthOffset);
-    } else if (direction == nShiftBackward) {
-      shiftedAxis /= (wavelengthOffset);
-    }
-  }
+  shiftedAxis.ShiftByWaveLengthInplace(wavelengthOffset, direction);
   return shiftedAxis;
+
 }
 
-// TODO test
 void CSpectrumSpectralAxis::ShiftByWaveLengthInplace(
     Float64 wavelengthOffset, EShiftDirection direction) {
   if (wavelengthOffset < 0.)

@@ -361,8 +361,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   m_spectraIndex.reset(); // we choose arbitrarily first obs to check if dtd is
                           // already initialized
 
-  if (!isContinuumComponentPowerLaw() &&
-      m_dTransposeDLambdaRange != getLambdaRange())
+  if (m_dTransposeDLambdaRange != getLambdaRange())
     initDtd();
 
   // TODO here ask Didier how it works more explicitly

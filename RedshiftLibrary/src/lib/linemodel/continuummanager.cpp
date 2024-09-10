@@ -126,8 +126,6 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
                        << m_fitContinuum_option);
   // Retrieve the best template, otherwise Getter throws an error
   if (m_ContinuumComponent == "powerLaw") {
-    std::dynamic_pointer_cast<COperatorPowerLaw>(
-        getModel().m_continuumFittingOperator);
     getModel().ApplyContinuumPowerLawOnGrid(m_fitContinuum);
   } else {
     // TODO see if should set some continuum amplitudes for power law
