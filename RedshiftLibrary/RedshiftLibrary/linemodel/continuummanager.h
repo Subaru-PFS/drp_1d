@@ -54,9 +54,11 @@ public:
     return m_ContinuumComponent == "tplFit" ||
            m_ContinuumComponent == "tplFitAuto";
   }
-  // TODO use wherever possible
   bool isContinuumComponentPowerLaw() const {
     return m_ContinuumComponent == "powerLaw";
+  }
+  bool isContinuumComponentFitter() const {
+    return isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw();
   }
 
   Float64 getFitContinuum_snr() const;

@@ -128,7 +128,6 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   if (isContinuumComponentPowerLaw()) {
     getModel().ApplyContinuumPowerLawOnGrid(m_fitContinuum);
   } else {
-    // TODO see if should set some continuum amplitudes for power law
     std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
         {m_tplCategory}, m_fitContinuum->tplName);
 

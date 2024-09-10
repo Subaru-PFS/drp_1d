@@ -302,7 +302,7 @@ bool CLineModelFitting::initDtd() {
                           // already initialized
                           // TODO check statement above
   m_dTransposeDLambdaRange = getLambdaRange();
-  if (isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw())
+  if (isContinuumComponentFitter())
     m_dTransposeD = EstimateDTransposeD("raw");
   else
     m_dTransposeD = EstimateDTransposeD("noContinuum");
@@ -315,8 +315,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
   if (getContinuumComponent() == "noContinuum")
     return;
 
-  // TODO make a fusion of conditions
-  if (!isContinuumComponentTplfitxx() && !isContinuumComponentPowerLaw()) {
+  if (!isContinuumComponentFitter()) {
     for (auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().setContinuumToInputSpc();
     }
@@ -364,7 +363,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (m_dTransposeDLambdaRange != getLambdaRange())
     initDtd();
 
-  // TODO here ask Didier how it works more explicitly
   Int32 ntplratio = m_lineRatioManager->prepareFit(
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
   Int32 nContinuum = 1;
@@ -416,7 +414,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (!enableLogging)
     return bestMerit;
 
-  if (isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw()) {
+  if (isContinuumComponentFitter()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       for (auto &spcIndex : m_spectraIndex) {
@@ -541,7 +539,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     }
   }
-  if (isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw()) {
+  if (isContinuumComponentFitter()) {
     fit += m_continuumManager->getFittedLogPrior();
   }
   return fit;
@@ -552,8 +550,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMeritFast() const {
 
   fit = m_dTransposeD;
 
-  // TODO see what to do with powerlaw here if necessaary
-  if (!isContinuumComponentTplfitxx() && !isContinuumComponentPowerLaw())
+  if (!isContinuumComponentFitter())
     return fit;
 
   Float64 term1 = m_continuumManager->getTerm1();

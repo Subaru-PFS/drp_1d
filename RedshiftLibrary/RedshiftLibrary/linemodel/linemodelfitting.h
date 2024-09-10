@@ -163,6 +163,10 @@ public:
     return m_continuumManager->isContinuumComponentPowerLaw();
   }
 
+  bool isContinuumComponentFitter() const {
+    return isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw();
+  }
+
   Int32 GetModelNonZeroElementsNDdl() const {
     return m_ElementsVector->GetModelNonZeroElementsNDdl();
   }
