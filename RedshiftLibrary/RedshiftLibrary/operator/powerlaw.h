@@ -71,7 +71,7 @@ struct TPowerLawCoefs {
   // a * x^b
   Float64 a = NAN;
   Float64 b = NAN;
-  Float64 sigmaa = NAN;
+  Float64 stda = NAN;
   Float64 sigmab = NAN;
 };
 

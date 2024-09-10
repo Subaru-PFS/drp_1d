@@ -20,6 +20,11 @@ struct CContinuumModelSolution {
   Float64 b1 = NAN;
   Float64 b2 = NAN;
 
+  Float64 a1std = NAN;
+  Float64 a2std = NAN;
+  Float64 b1std = NAN;
+  Float64 b2std = NAN;
+
   // Common
   Float64 merit = NAN;
   Float64 SNR = NAN;

@@ -371,10 +371,10 @@ TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
   Float64 a = std::exp((SY - b * SX) / n);
 
   Float64 sigmalna = sqrt(SX2 * denomInv);
-  Float64 sigmaa = a * sigmalna;
+  Float64 stda = a * sigmalna;
   Float64 sigmab = sqrt(n * denomInv);
 
-  return {a, b, sigmaa, sigmab};
+  return {a, b, stda, sigmab};
 }
 
 TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(

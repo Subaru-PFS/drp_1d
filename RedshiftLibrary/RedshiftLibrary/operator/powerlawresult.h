@@ -59,11 +59,14 @@ public:
 
   TFloat64List FitEbmvCoeff;
   TFloat64List FitMeiksinIdx;
-  // TODO add SNR
+  TFloat64List SNR;
   T3DList<Float64> ChiSquareIntermediate;
   T3DList<Float64> IsmEbmvCoeffIntermediate;
   T3DList<Int16> IgmMeiksinIdxIntermediate;
   Float64 CstLog = NAN;
+
+private:
+  Float64 SNRCalculation(TPowerLawCoefsPair const &coefs) const;
 };
 } // namespace NSEpic
 

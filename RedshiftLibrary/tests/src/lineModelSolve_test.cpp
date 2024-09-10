@@ -304,6 +304,8 @@ public:
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
   std::shared_ptr<CSpectrum> spcPow =
       fixture_SharedPowerLawSpectrumExtended().spc;
+  std::shared_ptr<CSpectrum> spcNegPow =
+      fixture_SharedPowerLawNegSpectrumExtended().spc;
   std::shared_ptr<CSpectrum> spcA = fixture_SharedMultiSpectrum().spcA;
   std::shared_ptr<CSpectrum> spcB = fixture_SharedMultiSpectrum().spcB;
   std::shared_ptr<CTemplateCatalog> catalog =
@@ -440,7 +442,27 @@ public:
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
+
 };
+
+class fixture_LineModelSolveTestNegPowerLaw : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestNegPowerLaw() {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(largeLambdaString + jsonString + jsonStringPowerLaw);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spcNegPow->SetPhotData(photoData);
+    ctx.addSpectrum(spcNegPow, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
 
 BOOST_AUTO_TEST_SUITE(lineModelSolve_test)
 
@@ -474,6 +496,18 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
   BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1); // accepts 0.1% error
   ctx.reset();
 }
+
+BOOST_FIXTURE_TEST_CASE(computeNegPowerLaw_test,
+                        fixture_LineModelSolveTestNegPowerLaw) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_CHECK_THROW(lineModelSolve.Compute(), AmzException);
+  ctx.reset();
+}
+
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
                         fixture_LineModelSolveTestTplFitRules) {

@@ -357,6 +357,19 @@ public:
                                   fixture_FluxAxisExtendedPowerLaw().fluxAxis);
 };
 
+class fixture_SharedPowerLawNegSpectrumExtended {
+public:
+  fixture_SharedPowerLawNegSpectrumExtended(){
+    TList<Float64> negFlux = fixture_FluxAxisExtendedPowerLaw().fluxAxis.GetSamplesVector();
+    for (Int16 i=0; i < negFlux.size(); i ++) {
+        negFlux[i] = -10 * negFlux[i];
+    }
+    spc = std::make_shared<CSpectrum>(fixture_SpectralAxisSuperExtended().spcAxis,
+                                  CSpectrumFluxAxis(negFlux));
+  }
+  std::shared_ptr<CSpectrum> spc;
+};
+
 class fixture_SharedSpectrum {
 public:
   std::shared_ptr<CSpectrum> spc = std::make_shared<CSpectrum>(

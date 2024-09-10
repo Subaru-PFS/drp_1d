@@ -147,7 +147,7 @@ private:
       const std::string &opt_continuumreest, const Int32 tplfit_option,
       const bool overrideRecomputeOnlyOnTheCandidate = false);
   void evaluateContinuumAmplitude(
-      const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
+      const std::shared_ptr<CContinuumFitStore> &tplfitStore);
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_Redshifts; // coarse grid

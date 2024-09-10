@@ -59,10 +59,10 @@ public:
            Float64 logprior, Float64 snr);
 
   Int32 getContinuumCount() const override;
-  Float64 FindMaxAmplitudeSigma(Float64 &z, CContinuumModelSolution &fitValues);
   void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
 
 private:
+  Float64 getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const override;
   Int32 m_nContinuumCandidates = 0;
 };
 

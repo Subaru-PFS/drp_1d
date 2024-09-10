@@ -65,12 +65,15 @@ public:
   GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
   virtual Int32 getContinuumCount() const = 0;
   void initFitValues();
+  Float64 FindMaxAmplitudeSigma(Float64 &z,
+                                          CContinuumModelSolution &fitValues);
 
 protected:
   TFloat64List m_redshiftgrid;
   std::vector<std::vector<CContinuumModelSolution>>
       m_fitValues; //[nz][m_nContinuumCandidates]
   std::shared_ptr<fitMaxValues> m_fitMaxValues;
+  virtual Float64 getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const = 0;
 
 private:
 };

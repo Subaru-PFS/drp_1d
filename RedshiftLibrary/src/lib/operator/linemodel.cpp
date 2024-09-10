@@ -505,27 +505,23 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     const auto &chisquareResult =
         std::dynamic_pointer_cast<CPowerLawResult>(chisquareResultsAllTpl[0]);
     // size 1
-    Float64 bestTplFitSNR = 0.0;
+    Float64 bestFitSNR = 0.0;
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++) {
       Float64 redshift = redshiftsContinuumFit[i];
       std::dynamic_pointer_cast<CPowerLawStore>(continuumFitStore)
           ->Add(chisquareResult->FitEbmvCoeff[i],
                 chisquareResult->FitMeiksinIdx[i], redshift,
-                chisquareResult->coefs[i].first.a,
-                chisquareResult->coefs[i].first.a,
-                chisquareResult->coefs[i].second.a,
-                chisquareResult->coefs[i].first.b,
-                chisquareResult->coefs[i].second.b,
-                chisquareResult->fluxError[i] // TODO here put SNR
+                chisquareResult->ChiSquare[i],
+                chisquareResult->coefs[i],
+                chisquareResult->SNR[i]
           );
 
-      // TODO here replace fluxError by SNR
-      if (chisquareResult->fluxError[i] > bestTplFitSNR)
-        bestTplFitSNR = chisquareResult->fluxError[i];
+      if (chisquareResult->SNR[i] > bestFitSNR)
+        bestFitSNR = chisquareResult->SNR[i];
     }
   } else {
-    Float64 bestTplFitSNR = 0.0;
+    Float64 bestFitSNR = 0.0;
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++) {
       Float64 redshift = redshiftsContinuumFit[i];
@@ -535,8 +531,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
             std::dynamic_pointer_cast<CTemplateFittingResult>(
                 chisquareResultsAllTpl[j]);
 
-        if (chisquareResult->SNR[i] > bestTplFitSNR)
-          bestTplFitSNR = chisquareResult->SNR[i];
+        if (chisquareResult->SNR[i] > bestFitSNR)
+          bestFitSNR = chisquareResult->SNR[i];
 
         std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
             ->Add(chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
@@ -552,10 +548,10 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     }
     std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
         ->setSNRMax(
-            bestTplFitSNR); // TODO rename bestTplFitSNR bestContinuumFitSNR
+            bestFitSNR); // TODO rename bestFitSNR bestContinuumFitSNR
     Log.LogDetail(Formatter() << "COperatorLineModel::PrecomputeContinuumFit: "
                                  "fitcontinuum_snrMAX set to "
-                              << bestTplFitSNR);
+                              << bestFitSNR);
     Log.LogDetail(
         Formatter()
         << "COperatorLineModel::PrecomputeContinuumFit: continuumcount set to "
@@ -583,16 +579,14 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       << duration_tplfit_seconds << " sec");
   Log.LogDetail(Formatter() << "<proc-lm-tplfit><"
                             << (Int32)duration_tplfit_seconds << ">");
-
-  if (m_opt_continuumcomponent != "powerLaw")
-    evaluateContinuumAmplitude(
-        std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore));
+  
+  evaluateContinuumAmplitude(continuumFitStore);
 
   return continuumFitStore;
 }
 
 void COperatorLineModel::evaluateContinuumAmplitude(
-    const std::shared_ptr<CTemplatesFitStore> &continuumFitStore) {
+    std::shared_ptr<CContinuumFitStore> const &continuumFitStore) {
   // Check if best continuum amplitudes are negative fitted amplitudes at
   // all z
   CContinuumModelSolution fitValues;

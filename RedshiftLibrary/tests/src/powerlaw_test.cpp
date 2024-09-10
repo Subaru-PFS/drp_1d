@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
-  BOOST_TEST(result.coefs.first.sigmaa == 5.634124732229189e-16,
+  BOOST_TEST(result.coefs.first.stda == 5.634124732229189e-16,
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.sigmab == 0.4533861348305359,
              boost::test_tools::tolerance(0.01));
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_CHECK_EQUAL(result2.coefs.second.a, 0);
   BOOST_CHECK_EQUAL(result2.coefs.second.b, 0);
-  BOOST_TEST(result2.coefs.first.sigmaa == 1.0296994218492315e-17,
+  BOOST_TEST(result2.coefs.first.stda == 1.0296994218492315e-17,
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.sigmab == 0.008048716415326033,
              boost::test_tools::tolerance(0.01));
@@ -365,11 +365,11 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
   BOOST_TEST(result.coefs.second.b == -0.20508628168193455,
              boost::test_tools::tolerance(0.01));
 
-  BOOST_TEST(result.coefs.first.sigmaa == 6.6531274177064696e-18,
+  BOOST_TEST(result.coefs.first.stda == 6.6531274177064696e-18,
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.sigmab == 0.005769929304253846,
              boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.sigmaa == 6.868548415411009e-19,
+  BOOST_TEST(result.coefs.second.stda == 6.868548415411009e-19,
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.sigmab == 0.0066342065076361876,
              boost::test_tools::tolerance(0.01));
