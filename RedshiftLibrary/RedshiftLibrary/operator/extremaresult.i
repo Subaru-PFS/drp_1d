@@ -51,6 +51,5 @@ public:
     m_type = "TExtremaResult";
   }
 
-  // keep fittedTpl name for the moment in order to avoid changing too much results_specifications.csv
-  CContinuumModelSolution fittedTpl;
+  CContinuumModelSolution fittedContinuum;
 };

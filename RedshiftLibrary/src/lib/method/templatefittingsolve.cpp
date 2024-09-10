@@ -423,29 +423,29 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.merit =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.merit =
         ChiSquare;
     extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplMeritPhot = TplFitResult->ChiSquarePhot[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplName =
+        .second->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.tplName =
         tplName;
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.meiksinIdx =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.meiksinIdx =
         TplFitResult->FitMeiksinIdx[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.ebmvCoef =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.ebmvCoef =
         TplFitResult->FitEbmvCoeff[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplAmplitude = TplFitResult->FitAmplitude[zIndex];
+        .second->fittedContinuum.tplAmplitude = TplFitResult->FitAmplitude[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplAmplitudeError =
+        .second->fittedContinuum.tplAmplitudeError =
         TplFitResult->FitAmplitudeError[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplDtM =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.tplDtM =
         TplFitResult->FitDtM[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplMtM =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.tplMtM =
         TplFitResult->FitMtM[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.SNR =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.SNR =
         TplFitResult->SNR[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplLogPrior = TplFitResult->LogPrior[zIndex];
+        .second->fittedContinuum.tplLogPrior = TplFitResult->LogPrior[zIndex];
 
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;

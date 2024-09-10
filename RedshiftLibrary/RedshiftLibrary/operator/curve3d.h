@@ -46,7 +46,6 @@
 
 namespace NSEpic {
 
-// TODO voir pour tout le monde qui on met en public ou private
 struct T3DCurve {
   T3DCurve(Int32 nigm, Int32 nism);
 

@@ -66,7 +66,6 @@ inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
             value); // replace existing values with the defaultV
 }
 
-// TODO test
 template <typename T>
 inline TInt32Pair find2DVectorMinIndexes(std::vector<std::vector<T>> vect) {
   Int32 iMin = 0;
