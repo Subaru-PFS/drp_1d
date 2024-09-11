@@ -95,16 +95,14 @@ void TLineModelResult::updateFromModel(
   if (lmel->getLineRatioType() == "rules")
     snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa_DI = lmresult->LineModelSolutions[idx].lfHa_DI;
-  if (lmel->getLineRatioType() == "rules")
-    snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
+  snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
 
   // store model OII SNR & Flux
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
   if (lmel->getLineRatioType() == "rules")
     snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII_DI = lmresult->LineModelSolutions[idx].lfOII_DI;
-  if (lmel->getLineRatioType() == "rules")
-    snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
+  snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
 
   // store Lya fitting parameters
   LyaWidthCoeff = lmresult->LineModelSolutions[idx].LyaWidthCoeff;

@@ -916,7 +916,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       auto [fluxDI, snrDI] = getFluxDirectIntegration(
           eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
       modelSolution.Flux[iRestLine] = flux;
-      modelSolution.FluxUncertainty[iRestLine] = fluxError;
+      if (getLineRatioType() == "rules")
+        modelSolution.FluxUncertainty[iRestLine] = fluxError;
       modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
       modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
           std::abs(fluxDI) / snrDI;
@@ -940,7 +941,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
           modelSolution.snrHa_DI = snrDI;
           modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
           modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
-          modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
+          if (getLineRatioType() == "rules")
+            modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
         }
       }
 
@@ -962,7 +964,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
           modelSolution.snrOII_DI = snrDI;
           modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
           modelSolution.lfOII = flux_oii > 0.0 ? log10(flux_oii) : -INFINITY;
-          modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
+          if (getLineRatioType() == "rules")
+            modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
         }
       }
     }
