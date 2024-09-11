@@ -14,6 +14,7 @@ pylibamazed
    ResultStoreOutput
    lsf
    r_specifications
+   powerLaw
 
 parameters
 ===========

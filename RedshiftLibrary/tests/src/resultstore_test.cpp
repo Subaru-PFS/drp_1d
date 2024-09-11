@@ -40,6 +40,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/method/classificationresult.h"
@@ -50,7 +51,6 @@
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
-#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"

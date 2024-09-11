@@ -308,10 +308,12 @@ class CalibrationLibrary:
 
     def load_line_ratio_catalog_list(self, object_type):
         tplratio_catalog = self.parameters.get_linemodel_tplratio_catalog(object_type)
-        line_ratio_catalog_list = os.path.join(self.calibration_dir, tplratio_catalog, "*.tsv")
-        line_ratio_catalog_list = glob.glob(line_ratio_catalog_list)
+        line_ratio_catalog_list_path = os.path.join(self.calibration_dir, tplratio_catalog, "*.tsv")
+        line_ratio_catalog_list = glob.glob(line_ratio_catalog_list_path)
         if not line_ratio_catalog_list:
-            raise APIException(ErrorCode.INVALID_FILEPATH, "Template ratio catalog empty")
+            raise APIException(
+                ErrorCode.INVALID_FILEPATH, f"Empty template ratio catalog:  {line_ratio_catalog_list_path}"
+            )
         line_ratio_catalog_list.sort()
 
         zlog.LogInfo(f"Loading {object_type} line ratio catalogs: {tplratio_catalog}")

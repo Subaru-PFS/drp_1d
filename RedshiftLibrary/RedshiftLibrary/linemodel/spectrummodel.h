@@ -5,12 +5,13 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
 
 class CLineModelSolution;
-class CTplModelSolution;
+class CContinuumModelSolution;
 class CTemplate;
 class COperatorTemplateFittingBase;
 class CSpectrumModel {
@@ -19,8 +20,9 @@ public:
       const std::shared_ptr<CLineModelElementList> &elements,
       const std::shared_ptr<const CSpectrum> &spc,
       const CLineMap &m_RestLineList,
-      const std::shared_ptr<CTplModelSolution> &tfv,
-      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+      const std::shared_ptr<CContinuumModelSolution> &continuumModelSolution,
+      const std::shared_ptr<COperatorContinuumFitting>
+          &continuumFittingOperator,
       Int32 spcIndex);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
@@ -70,7 +72,7 @@ public:
   Float64 m_Redshift = 0.;
   // new methods
   Int32 m__count = 0;
-  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
+  std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
@@ -83,8 +85,11 @@ public:
     return m_spcFluxAxisNoContinuum;
   }
 
-  Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate> &tpl,
-                             Float64 zcontinuum);
+  Int32 ApplyContinuumPowerLawOnGrid(
+      std::shared_ptr<CContinuumModelSolution> const &continuum);
+
+  Int32 ApplyContinuumTplOnGrid(const std::shared_ptr<const CTemplate> &tpl,
+                                Float64 zcontinuum);
   void initObserveGridContinuumFlux(Int32 size);
   const TPhotVal &getPhotValues() const { return m_photValues; };
 
@@ -95,7 +100,7 @@ private:
                          bool substract_abslinesmodel) const;
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
   const CLineMap &m_RestLineList;
-  std::shared_ptr<CTplModelSolution> m_fitContinuum;
+  std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
   std::shared_ptr<CLineModelElementList> m_Elements;

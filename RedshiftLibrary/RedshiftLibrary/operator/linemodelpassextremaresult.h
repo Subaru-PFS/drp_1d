@@ -59,14 +59,12 @@ public:
   TInt32List
   getUniqueCandidates(const CLineModelPassExtremaResult &results_b) const;
   TFloat64List GetRedshifts() const;
-  void
-  fillWithContinuumModelSolutionAtIndex(Int32 i,
-                                        const CTplModelSolution &contModelSol);
+  void fillWithContinuumModelSolutionAtIndex(
+      Int32 i, const CContinuumModelSolution &contModelSol);
 
   TCandidateZbyRank m_ranked_candidates;
 
-  // template continuum
-  std::vector<CTplModelSolution> FittedTpl;
+  std::vector<CContinuumModelSolution> m_fittedContinuum;
 
   std::vector<TFloat64List> ExtendedRedshifts; // z range around extrema
 

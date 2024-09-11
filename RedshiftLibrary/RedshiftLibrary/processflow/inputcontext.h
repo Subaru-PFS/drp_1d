@@ -166,10 +166,18 @@ public:
                                &igmcorrectionMeiksin) {
     m_igmcorrectionMeiksin = igmcorrectionMeiksin;
   }
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+  getFluxCorrectionMeiksin() const {
+    return m_igmcorrectionMeiksin;
+  }
   void setfluxCorrectionCalzetti(
       const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
           &ismcorrectionCalzetti) {
     m_ismcorrectionCalzetti = ismcorrectionCalzetti;
+  }
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
+  getFluxCorrectionCalzetti() const {
+    return m_ismcorrectionCalzetti;
   }
   void Init();
 

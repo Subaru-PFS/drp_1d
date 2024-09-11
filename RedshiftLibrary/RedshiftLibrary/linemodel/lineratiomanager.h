@@ -51,7 +51,7 @@ class CSpectrumModel;
 class CSpectrum;
 class CContinuumManager;
 class CLineModelSolution;
-class CTplModelSolution;
+class CContinuumModelSolution;
 class CAbstractFitter;
 
 class CLineRatioManager {

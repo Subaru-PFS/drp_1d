@@ -21,12 +21,12 @@ class CSpectrum;
 class CTemplateCatalog;
 class CSpectrumFluxCorrectionCalzetti;
 
-class CTplModelSolution;
+class CContinuumModelSolution;
 
 class CContinuumManager {
 public:
   CContinuumManager(const CSpcModelVectorPtr &models,
-                    std::shared_ptr<CTplModelSolution>,
+                    std::shared_ptr<CContinuumModelSolution>,
                     const CSpectraGlobalIndex &spcGlobIndex);
 
   const CSpectrumModel &getModel() const {
@@ -35,17 +35,17 @@ public:
   CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
 
   Int32 SetFitContinuum_FitStore(
-      const std::shared_ptr<const CTemplatesFitStore> &fitStore);
+      const std::shared_ptr<const CContinuumFitStore> &fitStore);
   void SetFitContinuum_SNRMax(Float64 snr_max);
   void SetFitContinuum_Option(Int32 opt);
   Int32 GetFitContinuum_Option() const;
 
-  const std::shared_ptr<const CTemplatesFitStore> &
+  const std::shared_ptr<const CContinuumFitStore> &
   GetFitContinuum_FitStore() const;
   std::shared_ptr<CPriorHelper> SetFitContinuum_PriorHelper();
   void LoadFitContinuum(Int32 icontinuum, Float64 redshift);
 
-  void SetFitContinuum_FitValues(const CTplModelSolution &cms) {
+  void SetFitContinuum_FitValues(const CContinuumModelSolution &cms) {
     *m_fitContinuum = cms;
   }
 
@@ -54,9 +54,15 @@ public:
     return m_ContinuumComponent == "tplFit" ||
            m_ContinuumComponent == "tplFitAuto";
   }
+  // TODO use wherever possible
+  bool isContinuumComponentPowerLaw() const {
+    return m_ContinuumComponent == "powerLaw";
+  }
+
   Float64 getFitContinuum_snr() const;
-  CTplModelSolution GetContinuumModelSolutionCopy() const;
-  std::shared_ptr<const CTplModelSolution> GetContinuumModelSolution() const {
+  CContinuumModelSolution GetContinuumModelSolutionCopy() const;
+  std::shared_ptr<const CContinuumModelSolution>
+  GetContinuumModelSolution() const {
     return m_fitContinuum;
   }
   void setContinuumComponent(std::string component);
@@ -71,7 +77,7 @@ public:
   void reinterpolateContinuumResetAmp();
 
   bool isContFittedToNull();
-  Int32 getFittedMeiksinIndex() { return m_fitContinuum->tplMeiksinIdx; }
+  Int32 getFittedMeiksinIndex() { return m_fitContinuum->meiksinIdx; }
   Float64 getFitSum() {
     if (!isContinuumComponentTplfitxx())
       return 0.0;
@@ -96,7 +102,7 @@ private:
 
   std::shared_ptr<CPriorHelper> m_fitContinuum_priorhelper;
 
-  std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
+  std::shared_ptr<const CContinuumFitStore> m_fitContinuum_tplfitStore;
 
   CSpcModelVectorPtr m_models;
 
@@ -107,7 +113,7 @@ private:
   Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
 
-  std::shared_ptr<CTplModelSolution> m_fitContinuum;
+  std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
   std::shared_ptr<fitMaxValues> m_fitContinuumMaxValues;
 
   // m_fitContinuum_option==2 for now

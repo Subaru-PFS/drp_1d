@@ -331,9 +331,9 @@ void COperatorTplcombination::BasicFit(
       if (chisq < fittingResults.chiSquare) {
         fittingResults.chiSquare = chisq;
         fittingResults.SNR = SNR;
-        fittingResults.MeiksinIdx =
+        fittingResults.meiksinIdx =
             igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
-        fittingResults.EbmvCoeff = coeffEBMV;
+        fittingResults.ebmvCoef = coeffEBMV;
         chisquareSetAtLeastOnce = true;
       }
 
@@ -385,9 +385,8 @@ void COperatorTplcombination::RebinTemplate(
                                       lambdaRange.GetEnd() / onePlusRedshift);
 
   // redshift in restframe the tgtSpectralAxis,
-  m_spcSpectralAxis_restframe.ShiftByWaveLength(
-      spectrum.GetSpectralAxis(), onePlusRedshift,
-      CSpectrumSpectralAxis::nShiftBackward);
+  m_spcSpectralAxis_restframe = spectrum.GetSpectralAxis().ShiftByWaveLength(
+      onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
   m_spcSpectralAxis_restframe.ClampLambdaRange(lambdaRange_restframe,
                                                spcLambdaRange_restframe);
 
@@ -552,8 +551,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     result->SNR[i] = fittingResults.SNR;
     result->FitCOV[i] = fittingResults.COV;
     // result->LogPrior[i]=NAN: //not yet calculated
-    result->FitEbmvCoeff[i] = fittingResults.EbmvCoeff;
-    result->FitMeiksinIdx[i] = fittingResults.MeiksinIdx;
+    result->FitEbmvCoeff[i] = fittingResults.ebmvCoef;
+    result->FitMeiksinIdx[i] = fittingResults.meiksinIdx;
     result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
     result->IsmEbmvCoeffIntermediate[i] = fittingResults.IsmCalzettiCoeffInterm;
     result->IgmMeiksinIdxIntermediate[i] = fittingResults.IgmMeiksinIdxInterm;
@@ -593,7 +592,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 std::shared_ptr<CModelSpectrumResult>
 COperatorTplcombination::ComputeSpectrumModel(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
-    Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
+    Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
     const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
     const Float64 overlapThreshold) {
   Log.LogDetail(
@@ -622,15 +621,15 @@ COperatorTplcombination::ComputeSpectrumModel(
       "identity", "idle", m_templatesRebined_bf.front().GetSpectralAxis(),
       CSpectrumFluxAxis(m_templatesRebined_bf.front().GetSampleCount(), 1));
 
-  if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
+  if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
     identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift,
                                       tplList[0]->m_ismCorrectionCalzetti,
                                       tplList[0]->m_igmCorrectionMeiksin);
   }
 
-  if (EbmvCoeff > 0.) {
+  if (ebmvCoef > 0.) {
     Int32 idxEbmv = -1;
-    idxEbmv = identityTemplate.m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
+    idxEbmv = identityTemplate.m_ismCorrectionCalzetti->GetEbmvIndex(ebmvCoef);
 
     if (idxEbmv != -1)
       identityTemplate.ApplyDustCoeff(idxEbmv);
@@ -643,7 +642,6 @@ COperatorTplcombination::ComputeSpectrumModel(
   const CSpectrumFluxAxis &extinction = identityTemplate.GetFluxAxis();
 
   Int32 modelSize = spectrum.GetSampleCount();
-  CSpectrumSpectralAxis modelSpcAxis = spectrum.GetSpectralAxis();
 
   CSpectrumFluxAxis modelFlux(modelSize, 0.0);
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
@@ -652,8 +650,9 @@ COperatorTplcombination::ComputeSpectrumModel(
       modelFlux[k] += amplitudes[iddl] * tmp[k] * extinction[k];
     }
   }
-  modelSpcAxis.ShiftByWaveLength((1.0 + redshift),
-                                 CSpectrumSpectralAxis::nShiftForward);
+  CSpectrumSpectralAxis modelSpcAxis =
+      spectrum.GetSpectralAxis().ShiftByWaveLength(
+          (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
 
   // Deallocate the rebined template and mask buffers
   m_templatesRebined_bf.clear();

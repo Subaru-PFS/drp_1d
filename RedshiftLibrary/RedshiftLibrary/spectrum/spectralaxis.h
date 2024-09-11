@@ -79,8 +79,6 @@ public:
                         std::string const &AirVacuum = "");
   CSpectrumSpectralAxis(const Float64 *samples, Int32 n,
                         std::string const &AirVacuum = "");
-  CSpectrumSpectralAxis(const CSpectrumSpectralAxis &origin, Float64 redshift,
-                        EShiftDirection direction);
   CSpectrumSpectralAxis &operator*=(const Float64 op) override;
   CSpectrumSpectralAxis &operator/=(const Float64 op) override;
   CSpectrumSpectralAxis extract(Int32 startIdx, Int32 endIdx) const;
@@ -91,9 +89,10 @@ public:
     return GetMeanResolution(TInt32Range(0, GetSamplesCount() - 1));
   };
 
-  void ShiftByWaveLength(const CSpectrumSpectralAxis &origin,
-                         Float64 wavelengthOffset, EShiftDirection direction);
-  void ShiftByWaveLength(Float64 wavelengthOffset, EShiftDirection direction);
+  CSpectrumSpectralAxis ShiftByWaveLength(Float64 wavelengthOffset,
+                                          EShiftDirection direction) const;
+  void ShiftByWaveLengthInplace(Float64 wavelengthOffset,
+                                EShiftDirection direction);
 
   void ApplyOffset(Float64 wavelengthOffset);
 
@@ -123,6 +122,10 @@ public:
 
   CSpectrumSpectralAxis MaskAxis(const TFloat64List &masks) const;
   void SetSize(Int32 s) override;
+  CSpectrumSpectralAxis blueShift(Float64 z) const;
+  CSpectrumSpectralAxis redShift(Float64 z) const;
+  void blueShiftInplace(Float64 z);
+  void redShiftInplace(Float64 z);
 
 private:
   friend class spectralaxis_test::basic_functions_test;

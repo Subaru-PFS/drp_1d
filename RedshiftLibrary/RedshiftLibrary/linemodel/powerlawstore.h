@@ -36,21 +36,25 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
-#define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
+#ifndef _REDSHIFT_LINEMODEL_POWERLAWSTORE_
+#define _REDSHIFT_LINEMODEL_POWERLAWSTORE_
 
-#include <cmath>
+#include <vector>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/processflow/result.h"
-
-#include "RedshiftLibrary/continuum/indexes.h"
-#include "RedshiftLibrary/line/catalog.h"
-
+#include "RedshiftLibrary/linemodel/continuumfitstore.h"
 namespace NSEpic {
 
-#include "RedshiftLibrary/operator/tplmodelsolution.i"
+class CPowerLawStore : public CContinuumFitStore {
+public:
+  using CContinuumFitStore::CContinuumFitStore;
+  Int32 getContinuumCount() const override { return 1; };
+  void Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx, Float64 redshift,
+           Float64 chi2, Float64 a1, Float64 a2, Float64 b1, Float64 b2,
+           Float64 snr);
+
+private:
+};
 
 } // namespace NSEpic
 

@@ -192,6 +192,14 @@ public:
   TFloat64List spcAxisList = spectrumData.myExtendedLambdaList;
 };
 
+class fixture_SpectralAxisSuperExtended {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumSpectralAxis spcAxis = spectrumData.superExtendedLambdaList;
+  Int32 spcAxisSize = spectrumData.superExtendedLambdaList.size();
+  TFloat64List spcAxisList = spectrumData.superExtendedLambdaList;
+};
+
 class fixture_SpectralAxisQso {
 public:
   fixture_spectralQsoData spcQsoData;
@@ -231,6 +239,12 @@ class fixture_NoiseAxisExtended {
 public:
   fixture_SpectrumData spectrumData;
   CSpectrumNoiseAxis noiseAxis = spectrumData.myExtendedNoiseList;
+};
+
+class fixture_NoiseAxisSuperExtended {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumNoiseAxis noiseAxis = spectrumData.mySuperExtendedNoiseList;
 };
 
 class fixture_NoiseAxisQso {
@@ -276,6 +290,15 @@ public:
   CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
       spectrumData.myExtendedFluxList, fixture_NoiseAxisExtended().noiseAxis);
   TFloat64List fluxAxisList = spectrumData.myExtendedFluxList;
+};
+
+class fixture_FluxAxisExtendedPowerLaw {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumFluxAxis fluxAxis =
+      CSpectrumFluxAxis(spectrumData.myExtendedPowerLawList,
+                        fixture_NoiseAxisSuperExtended().noiseAxis);
+  TFloat64List fluxAxisList = spectrumData.myExtendedPowerLawList;
 };
 
 class fixture_FluxAxisQso {
@@ -325,6 +348,13 @@ public:
   std::shared_ptr<CSpectrum> spc =
       std::make_shared<CSpectrum>(fixture_SpectralAxisExtended().spcAxis,
                                   fixture_FluxAxisExtended().fluxAxis);
+};
+
+class fixture_SharedPowerLawSpectrumExtended {
+public:
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(fixture_SpectralAxisSuperExtended().spcAxis,
+                                  fixture_FluxAxisExtendedPowerLaw().fluxAxis);
 };
 
 class fixture_SharedSpectrum {

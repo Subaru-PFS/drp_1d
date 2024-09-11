@@ -100,17 +100,17 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
            "implemented with photometry enabled");
 
   if (fft_processing) {
-    m_templateFittingOperator =
+    m_continuumFittingOperator =
         std::make_shared<COperatorTemplateFittingLog>(m_redshifts);
     tplCatalog.m_logsampling = true;
   } else {
     if (use_photometry) {
-      m_templateFittingOperator =
+      m_continuumFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
               inputContext->GetPhotBandCatalog(), photometry_weight,
               m_redshifts);
     } else {
-      m_templateFittingOperator =
+      m_continuumFittingOperator =
           std::make_shared<COperatorTemplateFitting>(m_redshifts);
     }
     tplCatalog.m_logsampling = false;
@@ -269,9 +269,9 @@ void CTemplateFittingSolve::Solve(
     // Compute merit function
     auto templateFittingResult =
         std::dynamic_pointer_cast<CTemplateFittingResult>(
-            m_templateFittingOperator->Compute(tpl, overlapThreshold,
-                                               opt_interp, opt_extinction,
-                                               opt_dustFitting));
+            m_continuumFittingOperator->Compute(tpl, overlapThreshold,
+                                                opt_interp, opt_extinction,
+                                                opt_dustFitting));
 
     if (!templateFittingResult)
       THROWG(ErrorCode::INTERNAL_ERROR,
@@ -423,16 +423,16 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplMerit =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.merit =
         ChiSquare;
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedTpl.tplMeritPhot = TplFitResult->ChiSquarePhot[zIndex];
     extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplName =
         tplName;
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplMeiksinIdx = TplFitResult->FitMeiksinIdx[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedTpl.tplEbmvCoeff = TplFitResult->FitEbmvCoeff[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.meiksinIdx =
+        TplFitResult->FitMeiksinIdx[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.ebmvCoef =
+        TplFitResult->FitEbmvCoeff[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedTpl.tplAmplitude = TplFitResult->FitAmplitude[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
@@ -442,7 +442,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
         TplFitResult->FitDtM[zIndex];
     extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplMtM =
         TplFitResult->FitMtM[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.tplSNR =
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedTpl.SNR =
         TplFitResult->SNR[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedTpl.tplLogPrior = TplFitResult->LogPrior[zIndex];
@@ -458,7 +458,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     for (int spcIndex = 0; spcIndex < Context.getSpectra().size(); spcIndex++) {
       const std::string &obsId = Context.getSpectra()[spcIndex]->getObsID();
 
-      TPhotVal values = m_templateFittingOperator->ComputeSpectrumModel(
+      TPhotVal values = m_continuumFittingOperator->ComputeSpectrumModel(
           tpl, z, TplFitResult->FitEbmvCoeff[zIndex],
           TplFitResult->FitMeiksinIdx[zIndex],
           TplFitResult->FitAmplitude[zIndex], overlapThreshold, spcIndex,

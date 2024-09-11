@@ -99,10 +99,18 @@ public:
                                &igmcorrectionMeiksin) {
     m_inputContext->setfluxCorrectionMeiksin(igmcorrectionMeiksin);
   };
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+  getFluxCorrectionMeiksin() const {
+    return m_inputContext->getFluxCorrectionMeiksin();
+  };
   void setfluxCorrectionCalzetti(
       const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
           &ismcorrectionCalzetti) {
     m_inputContext->setfluxCorrectionCalzetti(ismcorrectionCalzetti);
+  };
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
+  getFluxCorrectionCalzetti() const {
+    return m_inputContext->getFluxCorrectionCalzetti();
   };
 
   void Init();
