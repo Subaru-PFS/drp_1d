@@ -117,7 +117,7 @@ public:
   bool m_opt_firstpass_multiplecontinuumfit_disable = true;
   std::string m_opt_firstpass_fittingmethod;
   std::string m_opt_secondpasslcfittingmethod = undefStr;
-  std::string m_opt_continuumcomponent;
+  TContinuumComponent m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
 

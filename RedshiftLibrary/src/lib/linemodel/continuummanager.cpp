@@ -69,9 +69,10 @@ CContinuumManager::CContinuumManager(
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-  setContinuumComponent(ps->GetScoped<std::string>("continuumComponent"));
+  setContinuumComponent(
+      TContinuumComponent(ps->GetScoped<std::string>("continuumComponent")));
 
-  if (m_ContinuumComponent != "noContinuum") {
+  if (!m_ContinuumComponent.isNoContinuum()) {
     m_opt_fitcontinuum_neg_threshold =
         ps->GetScoped<Float64>("continuumFit.negativeThreshold");
     m_opt_fitcontinuum_null_amp_threshold =
@@ -209,9 +210,9 @@ Float64 CContinuumManager::getContinuumScaleMargCorrection() const {
   Float64 corr = 0.0;
 
   // scale marg for continuum
-  if (isContinuumComponentTplfitxx()) // the support has to be already
-                                      // computed when LoadFitContinuum() is
-                                      // called
+  if (isContinuumComponentTplFitxxx()) // the support has to be already
+                                       // computed when LoadFitContinuum() is
+                                       // called
     corr += log(m_fitContinuum->tplMtM);
 
   return corr;
@@ -223,7 +224,8 @@ CContinuumManager::getIsmCorrectionFromTpl() {
 }
 
 void CContinuumManager::logParameters() {
-  Log.LogInfo(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
+  Log.LogInfo(Formatter() << "ContinuumComponent="
+                          << std::string(m_ContinuumComponent));
 
   Log.LogInfo(Formatter() << "fitContinuum_option=" << m_fitContinuum_option);
   Log.LogInfo(Formatter() << "fitContinuum_tplName="
@@ -263,24 +265,24 @@ bool CContinuumManager::isContFittedToNull() {
                                             m_fitContinuum->tplAmplitudeError;
 }
 
-void CContinuumManager::setContinuumComponent(std::string component) {
+void CContinuumManager::setContinuumComponent(TContinuumComponent component) {
   m_ContinuumComponent = std::move(component);
   for (auto &spcIndex : m_spectraIndex) {
     getModel().setContinuumComponent(m_ContinuumComponent);
   }
   *m_fitContinuum = {};
 
-  if (m_ContinuumComponent == "noContinuum") {
+  if (m_ContinuumComponent.isNoContinuum()) {
     m_fitContinuum->tplName = "noContinuum"; // to keep track in resultstore
     // the continuum is set to zero and the observed spectrum is the spectrum
     // without continuum
   }
-  if (m_ContinuumComponent == "fromSpectrum") {
+  if (m_ContinuumComponent.isFromSpectrum()) {
     m_fitContinuum->tplName = "fromSpectrum"; // to keep track in resultstore
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
   }
-  if (isContinuumComponentPowerLaw()) {
+  if (m_ContinuumComponent.isPowerLaw()) {
     m_fitContinuum->tplName = "powerLaw";
   }
 }

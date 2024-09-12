@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/continuum/continuumcomponent.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
@@ -35,7 +36,7 @@ public:
   getModel(const TInt32List &eIdx_list,
            CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
   void setContinuumToInputSpc();
-  void setContinuumComponent(const std::string &component);
+  void setContinuumComponent(TContinuumComponent const &component);
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   const CSpectrum &GetModelSpectrum() const;

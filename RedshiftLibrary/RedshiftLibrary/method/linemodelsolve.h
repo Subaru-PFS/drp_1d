@@ -93,7 +93,7 @@ private:
 
   std::string m_opt_lineratiotype;
   std::string m_opt_continuumreest;
-  std::string m_opt_continuumcomponent;
+  TContinuumComponent m_opt_continuumcomponent;
 
   std::string m_opt_pdfcombination;
   Int64 m_opt_extremacount;

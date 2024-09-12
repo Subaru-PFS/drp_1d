@@ -73,8 +73,6 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
   Float64 opt_nsigmasupport =
       inputContext->GetParameterStore()->GetScoped<Float64>(
           "lineModel.nSigmaSupport"); // try with 16 (-> parameters.json)
-  const std::string &opt_continuumcomponent =
-      "noContinuum"; // params->GetScoped<std::string>("continuumComponent");
 
   m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
 

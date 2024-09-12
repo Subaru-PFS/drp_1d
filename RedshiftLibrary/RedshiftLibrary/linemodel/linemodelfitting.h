@@ -90,8 +90,8 @@ public:
   void LogCatalogInfos();
 
   void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
-  void setContinuumComponent(std::string component);
-  const std::string &getContinuumComponent() const {
+  void setContinuumComponent(TContinuumComponent component);
+  const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
   };
 
@@ -155,8 +155,8 @@ public:
 
   void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
   void computeSpectrumFluxWithoutContinuum();
-  bool isContinuumComponentTplfitxx() const {
-    return m_continuumManager->isContinuumComponentTplfitxx();
+  bool isContinuumComponentTplFitxxx() const {
+    return m_continuumManager->isContinuumComponentTplFitxxx();
   }
 
   bool isContinuumComponentPowerLaw() const {
@@ -164,7 +164,11 @@ public:
   }
 
   bool isContinuumComponentFitter() const {
-    return isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw();
+    return m_continuumManager->isContinuumComponentFitter();
+  }
+
+  bool isContinuumComponentNoContinuum() const {
+    return m_continuumManager->isContinuumComponentNoContinuum();
   }
 
   Int32 GetModelNonZeroElementsNDdl() const {

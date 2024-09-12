@@ -50,15 +50,18 @@ public:
   }
 
   Float64 getContinuumScaleMargCorrection() const;
-  bool isContinuumComponentTplfitxx() const {
-    return m_ContinuumComponent == "tplFit" ||
-           m_ContinuumComponent == "tplFitAuto";
+  bool isContinuumComponentTplFitxxx() const {
+    return m_ContinuumComponent.isTplFitxxx();
   }
   bool isContinuumComponentPowerLaw() const {
-    return m_ContinuumComponent == "powerLaw";
+    return m_ContinuumComponent.isPowerLaw();
   }
   bool isContinuumComponentFitter() const {
-    return isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw();
+    return m_ContinuumComponent.isContinuumFit();
+  }
+
+  bool isContinuumComponentNoContinuum() const {
+    return m_ContinuumComponent.isNoContinuum();
   }
 
   Float64 getFitContinuum_snr() const;
@@ -67,8 +70,8 @@ public:
   GetContinuumModelSolution() const {
     return m_fitContinuum;
   }
-  void setContinuumComponent(std::string component);
-  const std::string &getContinuumComponent() const {
+  void setContinuumComponent(TContinuumComponent component);
+  const TContinuumComponent &getContinuumComponent() const {
     return m_ContinuumComponent;
   };
 
@@ -81,7 +84,7 @@ public:
   bool isContFittedToNull();
   Int32 getFittedMeiksinIndex() { return m_fitContinuum->meiksinIdx; }
   Float64 getFitSum() {
-    if (!isContinuumComponentTplfitxx())
+    if (!isContinuumComponentTplFitxxx())
       return 0.0;
     return m_fitContinuum->tplMeritPhot +
            m_fitContinuum->tplLogPrior; // unconditionnal sum (if photometry
@@ -110,7 +113,7 @@ private:
 
   CSpectraGlobalIndex m_spectraIndex;
 
-  std::string m_ContinuumComponent;
+  TContinuumComponent m_ContinuumComponent;
   Int32 m_fitContinuum_option;
   Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
