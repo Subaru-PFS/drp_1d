@@ -86,9 +86,6 @@ struct TPowerLawResult {
   TPowerLawCoefsPair coefs = {{0, 0}, {0, 0}};
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
-  std::vector<TFloat64List> ChiSquareInterm;
-  std::vector<TFloat64List> IsmCalzettiCoeffInterm;
-  std::vector<TInt32List> IgmMeiksinIdxInterm;
 };
 
 struct TChi2Result {

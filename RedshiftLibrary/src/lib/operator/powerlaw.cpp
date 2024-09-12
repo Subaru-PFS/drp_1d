@@ -106,30 +106,22 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
 
   // Step 3. Compute power law coefs and chi2
   T2DPowerLawCoefsPair coefs = powerLawCoefs3D(lnCurve, method);
-  // TODO  check these results;
   std::vector<TFloat64List> ChiSquareInterm;
   TChi2Result chi2Result =
       findMinChi2OnIgmIsm(emittedCurve, coefs, ChiSquareInterm);
-  // TODO stocket out le monde et pas que le meilleur chi2
   // Step 4. Creates result
-
-  // TODO add error here
-  // TODO see what to do with the result later
   TPowerLawResult result;
   result.chiSquare = chi2Result.chi2;
-  result.coefs = coefs[0][0]; // TODO put indexes there later
+  result.coefs = coefs[chi2Result.igmIdx]
+                      [chi2Result.ismIdx]; // TODO put indexes there later
   if (opt_dustFitting)
     result.ebmvCoef = m_ismCorrectionCalzetti->GetEbmvValue(chi2Result.ismIdx);
   if (opt_extinction)
     result.meiksinIdx = chi2Result.igmIdx;
-  // TODO see if all is usefull
-  result.ChiSquareInterm = ChiSquareInterm;
-
-  // TODO make a loop to calc ?
-  // result.IsmCalzettiCoeffInterm =
+  // Question: j'ai l'impression que ChiSquareInterm et IsmCalzettiCoeffInterm
+  // ne sont utilisés null part. OK pour les supprimer du TPowerLawResult ?
   return result;
 };
-// TODO see the different border cases (ex coefs set to 0)
 
 T3DCurve COperatorPowerLaw::computeLnCurve(T3DCurve const &emittedCurve) const {
   T3DCurve lnCurve = emittedCurve;
@@ -233,13 +225,13 @@ COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
 void COperatorPowerLaw::addTooFewSamplesWarning(Int32 N, Int16 igmIdx,
                                                 Int16 ismIdx,
                                                 const char *funcName) const {
-  // Flag.warning(WarningCode::FORCED_POWERLAW_TO_ZERO,
-  //              Formatter() << "COperatorPowerLaw::" << funcName << ": only "
-  //                          << N << " < " << m_nLogSamplesMin
-  //                          << " samples with significant flux values. Power "
-  //                             "law coefs are forced to zero. igmIdx = "
-  //                          << igmIdx << ", "
-  //                          << "ismIdx = " << ismIdx);
+  Flag.warning(WarningCode::FORCED_POWERLAW_TO_ZERO,
+               Formatter() << "COperatorPowerLaw::" << funcName << ": only "
+                           << N << " < " << m_nLogSamplesMin
+                           << " samples with significant flux values. Power "
+                              "law coefs are forced to zero. igmIdx = "
+                           << igmIdx << ", "
+                           << "ismIdx = " << ismIdx);
 }
 
 T2DPowerLawCoefsPair
@@ -279,11 +271,12 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
           powerLawsCoefs[igmIdx][ismIdx] =
               computeFullPowerLawCoefs(N1, N2, curve);
         } else if (method == "simple") {
-          powerLawsCoefs[igmIdx][ismIdx] = {computeSimplePowerLawCoefs(curve),
-                                            {0, 0}};
+          TPowerLawCoefs coefs = computeSimplePowerLawCoefs(curve);
+          powerLawsCoefs[igmIdx][ismIdx] = {coefs, coefs};
         } else if (method == "simpleWeighted") {
-          powerLawsCoefs[igmIdx][ismIdx] = {
-              compute2PassSimplePowerLawCoefs(curve), {0, 0}};
+          TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(curve);
+
+          powerLawsCoefs[igmIdx][ismIdx] = {coefs, coefs};
         } else {
           THROWG(ErrorCode::INTERNAL_ERROR,
                  Formatter() << "Unexpected method " << method);
@@ -297,10 +290,11 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
 TPowerLawCoefsPair
 COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
                                             TCurve const &lnCurve) const {
+  // If one part of the curve has too little samples, calculate the coefs
+  // with the other part, and set the same coefs on the small part
   Float64 lnxc = std::log(m_lambdaCut);
 
   TPowerLawCoefsPair powerLawsCoefs;
-  // TODO this is ugly, improve
   TCurve lnPartCurve;
   lnPartCurve.reserve(N1 + N2);
   if (N1 < m_nLogSamplesMin) {
@@ -309,22 +303,18 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
         lnPartCurve.push_back(lnCurve.get_at_index(pixelIdx));
       }
     }
-    // TODO replace {0,0}
-    powerLawsCoefs = {{0, 0}, compute2PassSimplePowerLawCoefs(lnPartCurve)};
+    TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
+    powerLawsCoefs = {coefs, coefs};
   } else if (N2 < m_nLogSamplesMin) {
     for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
       if (lnCurve.getLambdaAt(pixelIdx) < lnxc) {
         lnPartCurve.push_back(lnCurve.get_at_index(pixelIdx));
       }
     }
-    powerLawsCoefs = {compute2PassSimplePowerLawCoefs(lnPartCurve), {0, 0}};
+    TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
+    powerLawsCoefs = {coefs, coefs};
   } else {
     powerLawsCoefs = compute2PassDoublePowerLawCoefs(lnCurve);
-  }
-  if (std::isnan(powerLawsCoefs.first.a) ||
-      std::isnan(powerLawsCoefs.second.a)) {
-    powerLawsCoefs = {{0, 0}, {0, 0}};
-    // TODO add warning on ewtreme data
   }
 
   return powerLawsCoefs;

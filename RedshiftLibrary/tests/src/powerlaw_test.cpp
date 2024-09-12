@@ -225,8 +225,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
-  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -238,8 +238,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_EQUAL(result2.coefs.second.a, 0);
-  BOOST_CHECK_EQUAL(result2.coefs.second.b, 0);
+  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
   Context.reset();
 }
 
@@ -272,8 +272,10 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == -0.4962537047556169,
              boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
-  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  BOOST_TEST(result.coefs.first.a == 1.452346083570847e-16,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.first.b == -0.4962537047556169,
+             boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.stda == 5.634124732229189e-16,
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.sigmab == 0.4533861348305359,
@@ -291,8 +293,10 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.b == -0.49983673257891786,
              boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_EQUAL(result2.coefs.second.a, 0);
-  BOOST_CHECK_EQUAL(result2.coefs.second.b, 0);
+  BOOST_TEST(result2.coefs.first.a == 1.4963406789134072e-16,
+             boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result2.coefs.first.b == -0.49983673257891786,
+             boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.stda == 1.0296994218492315e-17,
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.sigmab == 0.008048716415326033,
@@ -381,8 +385,6 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
 
   // Build lambda obs & lambda rest
   CSpectrumSpectralAxis spectralAxis = createSpectralAxis(2700, 4200, 5);
-  // CSpectrumSpectralAxis spectralAxisRest =
-  //     createSpectralAxis(900, 1400, 1); // <-> spectralAxis/(z+1)
 
   TList<Float64> samplesRest(spectralAxis.GetSamplesCount());
   for (Int32 sampleIdx = 0; sampleIdx < spectralAxis.GetSamplesCount();
@@ -411,8 +413,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
-  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
   Context.reset();
 
   // With extinction
@@ -439,8 +441,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   // accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
-  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
   Context.reset();
 }
 
@@ -553,8 +555,9 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   result = operatorPowerLaw3.BasicFit(z, true, true, nullThreshold, "full");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == 0);
-  BOOST_TEST(result.coefs.first.b == 0);
+  BOOST_TEST(result.coefs.first.a == a2,
+             boost::test_tools::tolerance(10.)); // a2 has big errors
+  BOOST_TEST(result.coefs.first.b == b2, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.a == a2,
              boost::test_tools::tolerance(10.)); // a2 has big errors
   BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
