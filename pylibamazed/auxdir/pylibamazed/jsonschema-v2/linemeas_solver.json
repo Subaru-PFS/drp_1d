@@ -34,7 +34,8 @@
             "fromSpectrum",
             "tplFit",
             "tplFitAuto",
-            "noContinuum"
+            "noContinuum",
+            "powerLaw"
           ],
           "title": "Continuum processing method",
           "description": "Selects the method for processing the continuum: \n * **fromSpectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplFit\", but switch to \"fromSpectrum\" if the fitted continuum amplitude is found significantly negative (at all z)"
