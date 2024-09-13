@@ -83,6 +83,7 @@ typedef std::pair<T2DPowerLawCoefs, T2DPowerLawCoefs> TPair2DPowerLawCoefs;
 // FOr one z
 struct TPowerLawResult {
   Float64 chiSquare = INFINITY;
+  Float64 reducedChiSquare = INFINITY;
   TPowerLawCoefsPair coefs = {{0, 0}, {0, 0}};
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;

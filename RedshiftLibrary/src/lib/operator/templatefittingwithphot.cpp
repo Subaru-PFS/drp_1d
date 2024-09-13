@@ -206,10 +206,19 @@ bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
   return ret;
 }
 
+std::pair<TList<CMask>, Int32>
+COperatorTemplateFittingPhot::getMaskListAndNSamples(Float64 redshift) const {
+  auto &&[mask_list, n_samples] =
+      COperatorTemplateFitting::getMaskListAndNSamples(redshift);
+  n_samples += m_sortedBandNames.size();
+  return std::make_pair(std::move(mask_list), n_samples);
+}
+
 TCrossProductResult COperatorTemplateFittingPhot::ComputeCrossProducts(
-    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
+    Int32 kM, Int32 kEbmv_, Float64 redshift, CMask const &mask,
+    Int32 spcIndex) {
   TCrossProductResult crossResult =
-      COperatorTemplateFitting::ComputeCrossProducts(kM, kEbmv_, redshift,
+      COperatorTemplateFitting::ComputeCrossProducts(kM, kEbmv_, redshift, mask,
                                                      spcIndex);
   if (spcIndex == 0)
     ComputePhotCrossProducts(kM, kEbmv_, crossResult);

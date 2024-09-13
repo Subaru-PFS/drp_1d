@@ -83,11 +83,15 @@ private:
 
   bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
   bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
+
+  std::pair<TList<CMask>, Int32>
+  getMaskListAndNSamples(Float64 redshift) const override;
+
   void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
                                 TCrossProductResult &fitResult);
 
   TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
-                                           Float64 redshift,
+                                           Float64 redshift, CMask const &mask,
                                            Int32 spcIndex = 0) override;
 
   void ComputeAmplitudeAndChi2(

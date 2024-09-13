@@ -53,10 +53,10 @@ public:
   using CContinuumFitStore::CContinuumFitStore;
 
   void Add(std::string name, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
-           Float64 redshift, Float64 merit, Float64 chiSquare_phot,
-           Float64 fitAmplitude, Float64 fitAmplitudeError,
-           Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,
-           Float64 logprior, Float64 snr);
+           Float64 redshift, Float64 merit, Float64 reducedChi2,
+           Float64 chiSquare_phot, Float64 fitAmplitude,
+           Float64 fitAmplitudeError, Float64 fitAmplitudeSigma, Float64 fitDtM,
+           Float64 fitMtM, Float64 logprior, Float64 snr);
 
   Int32 getContinuumCount() const override;
   void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }

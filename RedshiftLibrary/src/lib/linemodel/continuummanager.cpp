@@ -237,6 +237,8 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuumMaxValues->fitAmplitudeSigmaMAX);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit="
                           << m_fitContinuum->merit);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitReducedChi2="
+                          << m_fitContinuum->reducedChi2);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit_phot="
                           << m_fitContinuum->tplMeritPhot);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitEbmvCoeff="

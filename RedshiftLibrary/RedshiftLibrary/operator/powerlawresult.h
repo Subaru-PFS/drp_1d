@@ -54,6 +54,7 @@ public:
 
   TFloat64List Redshifts;
   TFloat64List ChiSquare;
+  TFloat64List ReducedChiSquare;
   TFloat64List fluxError;
   TList<TPowerLawCoefsPair> coefs;
 

@@ -108,6 +108,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         m_kStart[spcIndex], m_kEnd[spcIndex]);
   }
 
+  // get masks & determine number of samples actually used
+  auto const &[mask_list, n_samples] = getMaskListAndNSamples(redshift);
+
   if (opt_extinction)
     opt_extinction = igmIsInRange(currentRanges);
 
@@ -170,8 +173,8 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
       // Chi2 calculation
       for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-        fitRes.cross_result +=
-            ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
+        fitRes.cross_result += ComputeCrossProducts(
+            kM, kEbmv_, redshift, mask_list[spcIndex], spcIndex);
       }
       ComputeAmplitudeAndChi2(fitRes, logpriorTZE);
 
@@ -189,6 +192,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         result_base = fitRes;                 // slicing, preserving specific
         // TFittingIsmIGmResult members
 
+        result.reducedChisquare = result.chiSquare / n_samples;
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
         chisquareSetAtLeastOnce = true;
@@ -203,6 +207,26 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   }
 
   return result;
+}
+
+std::pair<TList<CMask>, Int32>
+COperatorTemplateFitting::getMaskListAndNSamples(Float64 redshift) const {
+  // get masks & determine number of samples actually used
+  TList<CMask> mask_list;
+  Int32 n_samples = 0; // total number of samples
+  mask_list.reserve(m_spectra.size());
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+    const CMask &mask =
+        m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
+                               *m_lambdaRanges[spcIndex], redshift);
+    for (Int32 pixel_idx = m_kStart[spcIndex]; pixel_idx <= m_kEnd[spcIndex];
+         ++pixel_idx)
+      if (mask[pixel_idx])
+        ++n_samples;
+    mask_list.push_back(std::move(mask));
+  }
+
+  return std::make_pair(std::move(mask_list), n_samples);
 }
 
 void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {
@@ -223,7 +247,8 @@ bool COperatorTemplateFitting::igmIsInRange(
 }
 
 TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
-    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
+    Int32 kM, Int32 kEbmv_, Float64 redshift, CMask const &mask,
+    Int32 spcIndex) {
   const CSpectrumFluxAxis &spcFluxAxis = m_spectra[spcIndex]->GetFluxAxis();
   const TAxisSampleList &Yspc = spcFluxAxis.GetSamplesVector();
   const TAxisSampleList &Ytpl =
@@ -231,9 +256,6 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   const TAxisSampleList &Xtpl =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector();
 
-  const CMask &spcMaskAdditional =
-      m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
-                             *m_lambdaRanges[spcIndex], redshift);
   TCrossProductResult fitResult;
 
   Float64 &sumCross = fitResult.sumCross;
@@ -262,7 +284,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
       sumsIgmSaved = 1;
     }
 
-    if (spcMaskAdditional[j]) {
+    if (mask[j]) {
 
       err2 = 1.0 / (error[j] * error[j]);
 

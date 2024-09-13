@@ -330,6 +330,7 @@ void COperatorTplcombination::BasicFit(
 
       if (chisq < fittingResults.chiSquare) {
         fittingResults.chiSquare = chisq;
+        fittingResults.reducedChisquare = chisq / n;
         fittingResults.SNR = SNR;
         fittingResults.meiksinIdx =
             igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
@@ -541,6 +542,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              additional_spcMask, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
     result->ChiSquare[i] = fittingResults.chiSquare;
+    result->ReducedChiSquare[i] = fittingResults.reducedChisquare;
     result->Overlap[i] = fittingResults.overlapFraction;
     result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
     result->FitAmplitudeSigma[i] = fittingResults.fittingAmplitudeSigmas;

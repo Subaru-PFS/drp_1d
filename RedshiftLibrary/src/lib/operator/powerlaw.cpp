@@ -109,6 +109,13 @@ COperatorPowerLaw::BasicFit(Float64 redshift, bool opt_extinction,
   // Step 4. Creates result
   TPowerLawResult result;
   result.chiSquare = chi2Result.chi2;
+  TInt32List indices(emittedCurve.size());
+  std::iota(indices.begin(), indices.end(), 0);
+  auto const N = std::count_if(indices.begin(), indices.end(),
+                               [&emittedCurve](Int32 pixelIdx) {
+                                 return emittedCurve.pixelIsChi2Valid(pixelIdx);
+                               });
+  result.reducedChiSquare = chi2Result.chi2 / N;
   result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
   if (opt_extinction)
     result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];

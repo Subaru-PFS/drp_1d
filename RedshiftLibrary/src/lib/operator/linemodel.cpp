@@ -510,7 +510,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       std::dynamic_pointer_cast<CPowerLawStore>(continuumFitStore)
           ->Add(chisquareResult->FitEbmvCoeff[i],
                 chisquareResult->FitMeiksinIdx[i], redshift,
-                chisquareResult->ChiSquare[i], chisquareResult->coefs[i],
+                chisquareResult->ChiSquare[i],
+                chisquareResult->ReducedChiSquare[i], chisquareResult->coefs[i],
                 chisquareResult->SNR[i]);
 
       if (chisquareResult->SNR[i] > bestFitSNR)
@@ -534,6 +535,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
             ->Add(chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
                   chisquareResult->FitMeiksinIdx[i], redshift,
                   chisquareResult->ChiSquare[i],
+                  chisquareResult->ReducedChiSquare[i],
                   chisquareResult->ChiSquarePhot[i],
                   chisquareResult->FitAmplitude[i],
                   chisquareResult->FitAmplitudeError[i],

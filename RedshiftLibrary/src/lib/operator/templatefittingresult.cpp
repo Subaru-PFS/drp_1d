@@ -44,11 +44,11 @@ using namespace NSEpic;
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n)
     : COperatorResult("CTemplateFittingResult"), Redshifts(n), ChiSquare(n),
-      ChiSquarePhot(n), FitAmplitude(n), FitAmplitudeError(n),
-      FitAmplitudeSigma(n), FitEbmvCoeff(n), FitMeiksinIdx(n), FitDtM(n),
-      FitMtM(n), LogPrior(n), ChiSquareIntermediate(n),
-      IsmEbmvCoeffIntermediate(n), IgmMeiksinIdxIntermediate(n), SNR(n),
-      Overlap(n) {}
+      ReducedChiSquare(n), ChiSquarePhot(n), FitAmplitude(n),
+      FitAmplitudeError(n), FitAmplitudeSigma(n), FitEbmvCoeff(n),
+      FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n),
+      ChiSquareIntermediate(n), IsmEbmvCoeffIntermediate(n),
+      IgmMeiksinIdxIntermediate(n), SNR(n), Overlap(n) {}
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
                                                Int32 MeiksinListSize)
@@ -67,6 +67,7 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
 void CTemplateFittingResult::set_at_redshift(Int32 i,
                                              TFittingIsmIgmResult val) {
   ChiSquare[i] = val.chiSquare;
+  ReducedChiSquare[i] = val.reducedChisquare;
   ChiSquarePhot[i] = val.chiSquare_phot;
   FitAmplitude[i] = val.ampl;
   FitAmplitudeError[i] = val.ampl_err;

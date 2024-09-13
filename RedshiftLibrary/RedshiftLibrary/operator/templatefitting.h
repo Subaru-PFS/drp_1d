@@ -98,6 +98,7 @@ struct TFittingIsmIgmResult : TFittingResult {
                             TInt32List(MeiksinListSize, undefIdx)) {}
 
   TFloat64List overlapFraction;
+  Float64 reducedChisquare = INFINITY;
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
@@ -132,12 +133,16 @@ protected:
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
 
+  virtual std::pair<TList<CMask>, Int32>
+  getMaskListAndNSamples(Float64 redshift) const;
+
   virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
   virtual bool igmIsInRange(const TFloat64RangeList &ranges) const;
 
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                                                    Float64 redshift,
+                                                   CMask const &mask,
                                                    Int32 spcIndex = 0);
 
   virtual void
