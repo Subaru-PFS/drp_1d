@@ -49,9 +49,9 @@ TCurve::TCurve() {}
 
 TCurve::TCurve(TList<Float64> lambda, TList<Float64> flux,
                TList<Float64> fluxError) {
-  setLambda(lambda);
-  setFlux(flux);
-  setFluxError(fluxError);
+  setLambda(std::move(lambda));
+  setFlux(std::move(flux));
+  setFluxError(std::move(fluxError));
 }
 
 void TCurve::checkIdx(Int32 idx) const {
