@@ -261,7 +261,7 @@ class AbstractSpectrumReader:
         if self.parameters.get_multiobs_method() == "merge":
             self._spectra[""].SetLSF(lsf)
         else:
-            for obs_id in self.get_observation_ids():
+            for obs_id in self.parameters.get_observation_ids():
                 self._spectra[obs_id].SetLSF(lsf)
         self._add_photometric_data()
 
