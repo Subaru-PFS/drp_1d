@@ -42,7 +42,7 @@
         "array",
         "object"
       ],
-      "title": "Lambda range in Angstroms. Is a array (range) for mono obs, and a dictionary of ranges for multiobs",
+      "title": "Lambda range in Angstroms. Is an array (range) for mono obs, and a dictionary of ranges for multiobs. ",
       "minItems": 2,
       "maxItems": 2,
       "prefixItems": [

@@ -81,7 +81,7 @@ Possible warning codes list
    NB: Some parameters are usefull only under some conditions.
 
 **SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM**
-   Parameters lambda range goes beyond spectrum range.
+   Parameters lambda range goes beyond spectrum range. This means that a part of the lambda range specified in the parameters will not be studied.
 
 **MULTI_OBS_ARBITRARY_LSF**
   Happens in the case of multi obs, for which only one lsf is support.
