@@ -15,6 +15,7 @@ pylibamazed
    lsf
    r_specifications
    powerLaw
+   igmism
 
 parameters
 ===========

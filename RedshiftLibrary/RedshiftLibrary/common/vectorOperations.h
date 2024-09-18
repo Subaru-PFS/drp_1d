@@ -71,8 +71,8 @@ inline TInt32Pair find2DVectorMinIndexes(std::vector<std::vector<T>> vect) {
   Int32 iMin = 0;
   Int32 jMin = 0;
   T valMin = vect[0][0];
-  for (Int32 i = 1; i < vect.size(); i++) {
-    for (Int32 j = 1; j < vect[i].size(); j++) {
+  for (Int32 i = 0; i < vect.size(); i++) {
+    for (Int32 j = 0; j < vect[i].size(); j++) {
       if (vect[i][j] < valMin) {
         iMin = i;
         jMin = j;

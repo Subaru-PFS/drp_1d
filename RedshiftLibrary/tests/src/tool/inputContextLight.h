@@ -359,13 +359,15 @@ public:
 
 class fixture_SharedPowerLawNegSpectrumExtended {
 public:
-  fixture_SharedPowerLawNegSpectrumExtended(){
-    TList<Float64> negFlux = fixture_FluxAxisExtendedPowerLaw().fluxAxis.GetSamplesVector();
-    for (Int16 i=0; i < negFlux.size(); i ++) {
-        negFlux[i] = -10 * negFlux[i];
+  fixture_SharedPowerLawNegSpectrumExtended() {
+    TList<Float64> negFlux =
+        fixture_FluxAxisExtendedPowerLaw().fluxAxis.GetSamplesVector();
+    for (Int16 i = 0; i < negFlux.size(); i++) {
+      negFlux[i] = -10 * negFlux[i];
     }
-    spc = std::make_shared<CSpectrum>(fixture_SpectralAxisSuperExtended().spcAxis,
-                                  CSpectrumFluxAxis(negFlux));
+    spc =
+        std::make_shared<CSpectrum>(fixture_SpectralAxisSuperExtended().spcAxis,
+                                    CSpectrumFluxAxis(negFlux));
   }
   std::shared_ptr<CSpectrum> spc;
 };
@@ -425,6 +427,21 @@ public:
                         {meiksinData25.fluxCorr1, meiksinData25.fluxCorr2}),
       MeiksinCorrection(meiksinData25.lbdaCorr,
                         {meiksinData30.fluxCorr1b, meiksinData30.fluxCorr2b})};
+  TFloat64List z_bins = {2.0, 2.5, 3.0};
+  Int32 idxCount = meiskinCorr[0].fluxcorr.size();
+  TFloat64Range lbdaRange = TFloat64Range(4680., 4713.);
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      std::make_shared<CSpectrumFluxCorrectionMeiksin>(meiskinCorr, z_bins);
+};
+
+class fixture_MeiskinCorrection2 {
+public:
+  fixture_MeiksinData25 meiksinData25;
+  fixture_MeiksinData30 meiksinData30;
+  std::vector<MeiksinCorrection> meiskinCorr = {MeiksinCorrection(
+      meiksinData25.lbdaCorr, {meiksinData25.fluxCorr1, meiksinData25.fluxCorr2,
+                               meiksinData25.fluxCorr3})};
+
   TFloat64List z_bins = {2.0, 2.5, 3.0};
   Int32 idxCount = meiskinCorr[0].fluxcorr.size();
   TFloat64Range lbdaRange = TFloat64Range(4680., 4713.);
@@ -1390,8 +1407,8 @@ public:
   void setCorrections(
       std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin,
       std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti) {
-    Context.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-    Context.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
+    Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
+    Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
   }
 
   void setCatalog(std::shared_ptr<CTemplateCatalog> catalog) {

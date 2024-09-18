@@ -114,8 +114,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   if (opt_dustFitting || opt_extinction) {
     for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
       InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
-                       tpl->m_ismCorrectionCalzetti,
-                       tpl->m_igmCorrectionMeiksin, spcIndex);
+                       spcIndex);
     }
   }
 

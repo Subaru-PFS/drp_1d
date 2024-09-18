@@ -135,25 +135,18 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
   }
 }
 
-void COperatorTemplateFittingPhot::InitIsmIgmConfig(
-    Float64 redshift, Int32 kstart, Int32 kend,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin,
-    Int32 spcIndex) {
+void COperatorTemplateFittingPhot::InitIsmIgmConfig(Float64 redshift,
+                                                    Int32 kstart, Int32 kend,
+                                                    Int32 spcIndex) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(redshift, kstart, kend,
-                                             ismCorrectionCalzetti,
-                                             igmCorrectionMeiksin, spcIndex);
+  COperatorTemplateFitting::InitIsmIgmConfig(redshift, kstart, kend, spcIndex);
 
   if (spcIndex > 0)
     return;
 
   // init ism & igm on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
-    band.second.InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
-                                 igmCorrectionMeiksin);
+    band.second.InitIsmIgmConfig(redshift);
 }
 
 void COperatorTemplateFittingPhot::init_fast_igm_processing(

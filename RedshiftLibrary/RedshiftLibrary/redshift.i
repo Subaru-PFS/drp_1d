@@ -464,8 +464,8 @@ public:
   void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog);
   void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog);
   void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum);
-  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin);
-  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti);
+  void setFluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin);
+  void setFluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti);
   void reset();
 
   const std::shared_ptr<COperatorResultStore> &GetResultStore();

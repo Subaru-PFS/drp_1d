@@ -47,8 +47,7 @@ using namespace NSEpic;
 void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
                          Float64 redshift,
                          Float64 chi2, // TODO see if chi2 and merit is the same
-                         TPowerLawCoefsPair powerLawCoefs,
-                         Float64 snr) {
+                         TPowerLawCoefsPair powerLawCoefs, Float64 snr) {
   CContinuumModelSolution tmpCContinuumModelSolution;
   tmpCContinuumModelSolution.a1 = powerLawCoefs.first.a;
   tmpCContinuumModelSolution.a2 = powerLawCoefs.second.a;
@@ -56,8 +55,8 @@ void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
   tmpCContinuumModelSolution.b2 = powerLawCoefs.second.b;
   tmpCContinuumModelSolution.a1std = powerLawCoefs.first.stda;
   tmpCContinuumModelSolution.a2std = powerLawCoefs.second.stda;
-  tmpCContinuumModelSolution.b1std = powerLawCoefs.first.sigmab;
-  tmpCContinuumModelSolution.b2std = powerLawCoefs.second.sigmab;
+  tmpCContinuumModelSolution.b1std = powerLawCoefs.first.stdb;
+  tmpCContinuumModelSolution.b2std = powerLawCoefs.second.stdb;
   tmpCContinuumModelSolution.ebmvCoef = ismEbmvCoeff;
   tmpCContinuumModelSolution.meiksinIdx = igmMeiksinIdx;
   tmpCContinuumModelSolution.redshift = redshift;
@@ -72,6 +71,8 @@ void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
   m_fitValues[idxz].push_back(std::move(tmpCContinuumModelSolution));
 };
 
-Float64 CPowerLawStore::getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const {
-  return std::max(continuum.a1 / continuum.a1std, continuum.a2 / continuum.a2std);
+Float64 CPowerLawStore::getFracAmplitudeSigma(
+    CContinuumModelSolution const &continuum) const {
+  return std::max(continuum.a1 / continuum.a1std,
+                  continuum.a2 / continuum.a2std);
 };

@@ -67,7 +67,7 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
   m_firstPixelIdxInRange.resize(m_nSpectra);
   m_lastPixelIdxInRange.resize(m_nSpectra);
 
-  for (Int16 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
+  for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     const CSpectrumSpectralAxis &spectrumLambda =
         Context.getSpectra()[spectrumIdx]->GetSpectralAxis();
     m_lambdaRanges[spectrumIdx]->getClosedIntervalIndices(
@@ -76,32 +76,38 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
     m_nPixels[spectrumIdx] = m_lastPixelIdxInRange[spectrumIdx] -
                              m_firstPixelIdxInRange[spectrumIdx] + 1;
   }
-  m_igmCorrectionMeiksin = Context.getFluxCorrectionMeiksin();
-  m_ismCorrectionCalzetti = Context.getFluxCorrectionCalzetti();
-
-  initIgmIsm(true, true);
 }
 
-void COperatorPowerLaw::initIgmIsm(bool opt_extinction, bool opt_dustFitting) {
+void COperatorPowerLaw::initIgmIsm(bool opt_extinction, bool opt_dustFitting,
+                                   const TList<Int32> &MeiksinList,
+                                   const TList<Int32> &EbmvList) {
+
   if (opt_extinction) {
-    m_nIgmCurves = m_igmCorrectionMeiksin->getIdxCount();
+    m_igmCorrectionMeiksin = Context.getFluxCorrectionMeiksin();
+    m_igmIdxList = MeiksinList;
+    m_nIgmCurves = m_igmIdxList.size();
   } else {
     m_nIgmCurves = 1;
   }
   if (opt_dustFitting) {
-    m_nIsmCurves = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+    m_ismCorrectionCalzetti = Context.getFluxCorrectionCalzetti();
+    m_ismIdxList = EbmvList;
+    m_nIsmCurves = m_ismIdxList.size();
   } else {
     m_nIsmCurves = 1;
   }
 }
 
-TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
-                                            bool opt_extinction,
-                                            bool opt_dustFitting,
-                                            Float64 nullFluxThreshold,
-                                            std::string method) {
+TPowerLawResult
+COperatorPowerLaw::BasicFit(Float64 redshift, bool opt_extinction,
+                            bool opt_dustFitting, Float64 nullFluxThreshold,
+                            std::string method, const TList<Int32> &MeiksinList,
+                            const TList<Int32> &EbmvList) {
+  initIgmIsm(opt_extinction, opt_dustFitting, MeiksinList, EbmvList);
 
-  initIgmIsm(opt_extinction, opt_dustFitting);
+  // Question: what to do with this ?
+  // m_option_igmFastProcessing = (m_nIgmCurves > 1 ? true : false);
+
   T3DCurve emittedCurve = computeEmittedCurve(redshift, nullFluxThreshold,
                                               opt_extinction, opt_dustFitting);
   T3DCurve lnCurve = computeLnCurve(emittedCurve);
@@ -112,12 +118,12 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   // Step 4. Creates result
   TPowerLawResult result;
   result.chiSquare = chi2Result.chi2;
-  result.coefs = coefs[chi2Result.igmIdx]
-                      [chi2Result.ismIdx]; // TODO put indexes there later
-  if (opt_dustFitting)
-    result.ebmvCoef = m_ismCorrectionCalzetti->GetEbmvValue(chi2Result.ismIdx);
+  result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
   if (opt_extinction)
-    result.meiksinIdx = chi2Result.igmIdx;
+    result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
+  if (opt_dustFitting)
+    result.ebmvCoef =
+        m_ismCorrectionCalzetti->GetEbmvValue(m_ismIdxList[chi2Result.ismIdx]);
   return result;
 };
 
@@ -170,8 +176,8 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
   T2DList<Float64> chi2(m_nIgmCurves, TList<Float64>(m_nIsmCurves, 0));
   Float64 diff;
 
-  for (Int16 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
-    for (Int16 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
+  for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
+    for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
       for (Int32 pixelIdx = 0; pixelIdx < m_nPixels[0]; pixelIdx++) {
         if (curve3D.pixelIsChi2Valid(pixelIdx)) {
           Float64 theoreticalFlux =
@@ -201,19 +207,24 @@ COperatorPowerLaw::lnLambda(TAxisSampleList const &lambda) const {
 
 std::shared_ptr<COperatorResult>
 COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
-                           Float64 nullFluxThreshold, std::string method) {
-
+                           Float64 nullFluxThreshold, std::string method,
+                           Int32 FitEbmvIdx, Int32 FitMeiksinIdx) {
   // Creates power law result
-  // TODO check that m_redshifts is set somewhere before
   std::shared_ptr<CPowerLawResult> result =
       std::make_shared<CPowerLawResult>(m_redshifts.size());
 
   result->Redshifts = m_redshifts;
+  TList<Int32> MeiksinList;
+  TList<Int32> EbmvList;
+
+  Context.GetIsmIgmIdxList(opt_extinction, opt_dustFitting, MeiksinList,
+                           EbmvList, FitEbmvIdx, FitMeiksinIdx);
 
   for (Int32 zIdx = 0; zIdx < m_redshifts.size(); zIdx++) {
     Float64 redshift = result->Redshifts[zIdx];
-    TPowerLawResult result_z = BasicFit(
-        redshift, opt_extinction, opt_dustFitting, nullFluxThreshold, method);
+    TPowerLawResult result_z =
+        BasicFit(redshift, opt_extinction, opt_dustFitting, nullFluxThreshold,
+                 method, MeiksinList, EbmvList);
 
     result->set_at_redshift(zIdx, std::move(result_z));
   }
@@ -223,8 +234,8 @@ COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
   return result;
 }
 
-void COperatorPowerLaw::addTooFewSamplesWarning(Int32 N, Int16 igmIdx,
-                                                Int16 ismIdx,
+void COperatorPowerLaw::addTooFewSamplesWarning(Int32 N, Int32 igmIdx,
+                                                Int32 ismIdx,
                                                 const char *funcName) const {
   Flag.warning(WarningCode::FORCED_POWERLAW_TO_ZERO,
                Formatter() << "COperatorPowerLaw::" << funcName << ": only "
@@ -240,7 +251,7 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
                                    std::string method) const {
 
   T2DPowerLawCoefsPair powerLawsCoefs(
-      m_nIgmCurves, std::vector<TPowerLawCoefsPair>(m_nIsmCurves));
+      lnCurve.getNIgm(), std::vector<TPowerLawCoefsPair>(lnCurve.getNIsm()));
 
   Float64 lnxc = std::log(m_lambdaCut);
 
@@ -324,8 +335,6 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
 TPowerLawCoefs COperatorPowerLaw::compute2PassSimplePowerLawCoefs(
     TCurve const &lnCurves) const {
   TPowerLawCoefs coefsFirstEstim = computeSimplePowerLawCoefs(lnCurves);
-  // TODO add an error here if is inf
-  // TODO add here a condition on result ?
   TPowerLawCoefs coefsSecondEstim =
       computeSimplePowerLawCoefs(lnCurves, coefsFirstEstim);
   return coefsSecondEstim;
@@ -363,9 +372,9 @@ TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
 
   Float64 sigmalna = sqrt(SX2 * denomInv);
   Float64 stda = a * sigmalna;
-  Float64 sigmab = sqrt(n * denomInv);
+  Float64 stdb = sqrt(n * denomInv);
 
-  return {a, b, stda, sigmab};
+  return {a, b, stda, stdb};
 }
 
 TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(
@@ -567,27 +576,23 @@ T3DList<Float64> COperatorPowerLaw::computeIsmIgmCorrections(
   // In order to access ism igm coefs, we initialize a template with a flux
   // at 1, and apply ism/igm on it
   Int32 n = spectrumLambdaRest.GetSamplesCount();
-  CTemplate templateForCoefs(
-      "", "", spectrumLambdaRest,
-      std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));
-  templateForCoefs.InitIsmIgmConfig(redshift, m_ismCorrectionCalzetti,
-                                    m_igmCorrectionMeiksin);
 
   T3DList<Float64> correctionCoefs(
       m_nIgmCurves,
       std::vector<std::vector<Float64>>(
           m_nIsmCurves,
           std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), NAN)));
-
-  Float64 igmCorrection = 1;
-  Float64 ismCorrection = 1;
+  CTemplate templateForCoefs(
+      "", "", spectrumLambdaRest,
+      std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));
+  templateForCoefs.InitIsmIgmConfig(redshift);
   for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
     if (opt_extinction) { // igm
-      templateForCoefs.ApplyMeiksinCoeff(igmIdx);
+      templateForCoefs.ApplyMeiksinCoeff(m_igmIdxList[igmIdx]);
     }
     for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
       if (opt_dustFitting) { // ism
-        templateForCoefs.ApplyDustCoeff(ismIdx);
+        templateForCoefs.ApplyDustCoeff(m_ismIdxList[ismIdx]);
       }
       correctionCoefs[igmIdx][ismIdx] =
           templateForCoefs.GetFluxAxis().GetSamplesVector();
@@ -598,26 +603,22 @@ T3DList<Float64> COperatorPowerLaw::computeIsmIgmCorrections(
 
 TList<Float64> COperatorPowerLaw::computeIsmIgmCorrection(
     Float64 redshift, CSpectrumSpectralAxis const &spectrumLambdaRest,
-    Int16 igmIdx, Float64 ismCoef) const {
+    Int32 igmIdx, Float64 ismCoef) const {
   // In order to access ism igm coefs, we initialize a template with a flux
   // at 1, and apply ism/igm on it
   Int32 n = spectrumLambdaRest.GetSamplesCount();
   CTemplate templateForCoefs(
       "", "", spectrumLambdaRest,
       std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));
-  templateForCoefs.InitIsmIgmConfig(redshift, m_ismCorrectionCalzetti,
-                                    m_igmCorrectionMeiksin);
+  templateForCoefs.InitIsmIgmConfig(redshift);
 
   TList<Float64> correctionCoefs(spectrumLambdaRest.GetSamplesCount(), NAN);
 
-  Float64 igmCorrection = 1;
-  Float64 ismCorrection = 1;
   if (igmIdx > -1) {
     templateForCoefs.ApplyMeiksinCoeff(igmIdx);
   }
   if (ismCoef > 0) {
     Int32 ismIdx = -1;
-    // TODO find what to take here
     ismIdx = m_ismCorrectionCalzetti->GetEbmvIndex(ismCoef);
     templateForCoefs.ApplyDustCoeff(ismIdx);
   }
@@ -635,10 +636,9 @@ T3DCurve COperatorPowerLaw::computeEmittedCurve(Float64 redshift,
   // Set m_ismIgmCorrections
 
   T3DCurve fluxCurve = initializeFluxCurve(redshift, nullFluxThreshold);
-
   T3DList<bool> isExtincted(
-      fluxCurve.getNIgm(),
-      T2DList<bool>(fluxCurve.getNIsm(), TList<bool>(fluxCurve.size(), false)));
+      m_nIgmCurves,
+      T2DList<bool>(m_nIsmCurves, TList<bool>(fluxCurve.size(), false)));
   if (opt_extinction || opt_dustFitting) {
     m_ismIgmCorrections = computeIsmIgmCorrections(
         redshift, fluxCurve.getLambda(), opt_extinction, opt_dustFitting);
@@ -691,17 +691,15 @@ void COperatorPowerLaw::ComputeSpectrumModel(
     const std::shared_ptr<CContinuumModelSolution> &continuum, Int32 spcIndex,
     const std::shared_ptr<CModelSpectrumResult> &models) {
 
-  // TODO here create a model with
-  // lambda, flux created from input coefs
   auto lambdaObsAxis = m_spectra[spcIndex]->GetSpectralAxis();
   auto lambdaObs = lambdaObsAxis.GetSamplesVector();
   auto lambdaRestAxis = lambdaObsAxis.blueShift(continuum->redshift);
 
   // Calculates ism igm corrections for given lambdaRest / redshift
+  // TODO check here
   TList<Float64> correctionCoefs =
       computeIsmIgmCorrection(continuum->redshift, lambdaRestAxis,
                               continuum->meiksinIdx, continuum->ebmvCoef);
-  // TODO above check which one is igm / ism
   // Use lambda rest to calculate flux rest and apply ism igm on flux rest to
   // get flux obs
   TList<Float64> fluxObs(lambdaObs.size(), NAN);

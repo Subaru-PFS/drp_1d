@@ -180,8 +180,8 @@ public:
     inputCtx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
     scopeStack->push_back("galaxy");
     inputCtx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
-    inputCtx.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-    inputCtx.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
+    inputCtx.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
+    inputCtx.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
   }
 
   void setInputDataMO(CInputContext &inputCtx) {
@@ -224,13 +224,13 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
       inputCtx.GetFilteredLineMap("galaxy", "lineModelSolve", "no", "no")
           .size() == fixture_LineCatalog().lineCatalogSize);
 
-  BOOST_CHECK(inputCtx.m_ismcorrectionCalzetti == nullptr);
-  inputCtx.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-  BOOST_CHECK(inputCtx.m_ismcorrectionCalzetti == ismCorrectionCalzetti);
+  BOOST_CHECK(inputCtx.m_ismCorrectionCalzetti == nullptr);
+  inputCtx.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
+  BOOST_CHECK(inputCtx.m_ismCorrectionCalzetti == ismCorrectionCalzetti);
 
-  BOOST_CHECK(inputCtx.m_igmcorrectionMeiksin == nullptr);
-  inputCtx.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
-  BOOST_CHECK(inputCtx.m_igmcorrectionMeiksin == igmCorrectionMeiksin);
+  BOOST_CHECK(inputCtx.m_igmCorrectionMeiksin == nullptr);
+  inputCtx.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
+  BOOST_CHECK(inputCtx.m_igmCorrectionMeiksin == igmCorrectionMeiksin);
 
   // lambda range
   BOOST_CHECK(inputCtx.m_lambdaRanges.size() == 0);

@@ -74,13 +74,8 @@ private:
   void RebinTemplateOnPhotBand(const std::shared_ptr<const CTemplate> &tpl,
                                Float64 redshift);
 
-  void
-  InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin,
-                   Int32 spcIndex) override;
+  void InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
+                        Int32 spcIndex) override;
 
   void init_fast_igm_processing(Int32 EbmvListSize) override;
 

@@ -622,9 +622,7 @@ COperatorTplcombination::ComputeSpectrumModel(
       CSpectrumFluxAxis(m_templatesRebined_bf.front().GetSampleCount(), 1));
 
   if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
-    identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift,
-                                      tplList[0]->m_ismCorrectionCalzetti,
-                                      tplList[0]->m_igmCorrectionMeiksin);
+    identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift);
   }
 
   if (ebmvCoef > 0.) {

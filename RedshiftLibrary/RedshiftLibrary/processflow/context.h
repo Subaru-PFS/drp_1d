@@ -95,18 +95,18 @@ public:
     m_inputContext->setLineRatioCatalogCatalog(spectrumModel, catalog);
   }
   void
-  setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+  setFluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
                                &igmcorrectionMeiksin) {
-    m_inputContext->setfluxCorrectionMeiksin(igmcorrectionMeiksin);
+    m_inputContext->setFluxCorrectionMeiksin(igmcorrectionMeiksin);
   };
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
   getFluxCorrectionMeiksin() const {
     return m_inputContext->getFluxCorrectionMeiksin();
   };
-  void setfluxCorrectionCalzetti(
+  void setFluxCorrectionCalzetti(
       const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
           &ismcorrectionCalzetti) {
-    m_inputContext->setfluxCorrectionCalzetti(ismcorrectionCalzetti);
+    m_inputContext->setFluxCorrectionCalzetti(ismcorrectionCalzetti);
   };
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
   getFluxCorrectionCalzetti() const {
@@ -206,6 +206,14 @@ public:
   getRebinnedSpectra() const {
     return m_inputContext->getRebinnedSpectra();
   }
+  void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
+                        TInt32List &MeiksinList, TInt32List &EbmvList,
+                        Int32 FitEbmvIdx = undefIdx,
+                        Int32 FitMeiksinIdx = undefIdx) const;
+  TInt32List GetIsmIdxList(bool opt_dustFitting,
+                           Int32 FitEbmvIdx = undefIdx) const;
+  TInt32List GetIgmIdxList(bool opt_extinction,
+                           Int32 FitMeiksinIdx = undefIdx) const;
 
   std::shared_ptr<CScopeStack> m_ScopeStack;
 
