@@ -5,7 +5,7 @@ RedshiftProba	model_parameters	False	candidate	ValSumProba	extrema_results	f8
 RedshiftLogProbaDensity	model_parameters	False	candidate	ValProba	extrema_results	f8
 RedshiftProbaZmin	model_parameters	False	candidate	ValSumProbaZmin	extrema_results	f8
 RedshiftProbaZmax	model_parameters	False	candidate	ValSumProbaZmax	extrema_results	f8
-ContinuumName	model_parameters	False	candidate	fittedContinuum.tplName	extrema_results	S40
+ContinuumName	model_parameters	False	candidate	fittedContinuum.name	extrema_results	S40
 ContinuumIsmCoeff	model_parameters	False	candidate	fittedContinuum.ebmvCoef	extrema_results	f8
 ContinuumIgmIndex	model_parameters	False	candidate	fittedContinuum.meiksinIdx	extrema_results	i
 ContinuumAmplitude	model_parameters	False	candidate	fittedContinuum.tplAmplitude	extrema_results	f8
@@ -79,7 +79,7 @@ LyaDelta	model_parameters	False	candidate	LyaDelta	extrema_results	f8
 LyaIgm	model_parameters	False	candidate	LyaIgm	extrema_results	i
 FirstpassRedshift	model_parameters	True	candidate	Redshift	extrema_results	f8
 FirstpassRedshiftLogProbaDensity	model_parameters	True	candidate	ValProba	extrema_results	f8
-FirstpassContinuumName	model_parameters	True	candidate	fittedContinuum.tplName	extrema_results	S40
+FirstpassContinuumName	model_parameters	True	candidate	fittedContinuum.name	extrema_results	S40
 FirstpassContinuumIsmCoeff	model_parameters	True	candidate	fittedContinuum.ebmvCoef	extrema_results	f8
 FirstpassContinuumIgmIndex	model_parameters	True	candidate	fittedContinuum.meiksinIdx	extrema_results	i
 FirstpassContinuumAmplitude	model_parameters	True	candidate	fittedContinuum.tplAmplitude	extrema_results	f8

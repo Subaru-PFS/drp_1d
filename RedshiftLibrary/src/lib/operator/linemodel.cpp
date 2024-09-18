@@ -337,7 +337,7 @@ void COperatorLineModel::fitContinuumTemplates(
   return;
 }
 
-// get tplName, Meiksin and ISM coeff for all continuum
+// get name, Meiksin and ISM coeff for all continuum
 // returns vectors of these entities
 void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     Int32 candidateIdx, TInt32List &meiksinIndices, TInt32List &ebmvIndices,
@@ -370,7 +370,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
       tplList.push_back({});
     else
       tplList.push_back(tplCatalog->GetTemplateByName(
-          TStringList{m_tplCategory}, fitValue.tplName, true, fft));
+          TStringList{m_tplCategory}, fitValue.name, true, fft));
 
     if (m_opt_tplfit_extinction)
       meiksinIndices[icontinuum] = fitValue.meiksinIdx;
@@ -421,7 +421,7 @@ void COperatorLineModel::makeContinuumFittingOperator(
 }
 /**
  * Estimate once for all the continuum amplitude which is only dependent
- * from the tplName, ism and igm indexes. This is useful when the model
+ * from the name, ism and igm indexes. This is useful when the model
  * fitting option corresponds to fitting separately the continuum and the
  * lines. In such case, playing with (fit) Lines parameters (velocity, line
  * offsets, lines amps, etc.) do not affect continuum amplitudes.. thus we
@@ -593,7 +593,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
              Formatter() << "Negative "
                             "continuum amplitude found at z="
                          << max_fitamplitudeSigma_z << ": best continuum tpl "
-                         << fitValues.tplName
+                         << fitValues.name
                          << ", amplitude/error = " << max_fitamplitudeSigma
                          << " & error = " << fitValues.tplAmplitudeError);
 
@@ -603,7 +603,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                        << ": Switching to spectrum continuum since Negative "
                           "continuum amplitude found at z="
                        << max_fitamplitudeSigma_z << ": best continuum tpl "
-                       << fitValues.tplName
+                       << fitValues.name
                        << ", amplitude/error = " << max_fitamplitudeSigma
                        << " & error = " << fitValues.tplAmplitudeError);
       m_opt_continuumcomponent.set("fromSpectrum");
@@ -619,7 +619,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                         "to null or not enough negative continuum amplitude "
                         "found at z="
                      << max_fitamplitudeSigma_z << ": best continuum tpl "
-                     << fitValues.tplName
+                     << fitValues.name
                      << ", amplitude/error = " << max_fitamplitudeSigma
                      << " & error = " << fitValues.tplAmplitudeError);
     m_opt_continuumcomponent.set("noContinuum");
@@ -766,7 +766,7 @@ void COperatorLineModel::Combine_firstpass_candidates(
         startIdx + keb, contModel);
 
     if (!m_opt_continuumcomponent.isPowerLaw() &&
-        static_cast<CContinuumModelSolution>(contModel).tplName == "") {
+        static_cast<CContinuumModelSolution>(contModel).name == "") {
       THROWG(ErrorCode::TPL_NAME_EMPTY,
              Formatter() << "ContinuumModelSolutions tplname is empty"
                          << "result idx=" << idx);
@@ -1081,7 +1081,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       auto &cont = m_result->ContinuumModelSolutions[idx];
       TPhotVal phot_values;
       if (m_opt_continuumcomponent.isPowerLaw() ||
-          static_cast<CContinuumModelSolution>(cont).tplName == "noContinuum" ||
+          static_cast<CContinuumModelSolution>(cont).name == "noContinuum" ||
           m_opt_continuumcomponent.isFromSpectrum()) { // no photometry
         Log.LogDetail(
             "photometry cannot be applied for fromspectrum or noContinuum");

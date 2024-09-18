@@ -46,7 +46,7 @@ using namespace NSEpic;
 
 /**
  * @brief CTemplatesFitStore::Add
- * @param tplName
+ * @param name
  * @param ismEbmvCoeff
  * @param igmMeiksinIdx
  * @param redshift
@@ -65,7 +65,7 @@ using namespace NSEpic;
  * value
  * @return False if there was a problem.
  */
-void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
+void CTemplatesFitStore::Add(std::string name, Float64 ismEbmvCoeff,
                              Int32 igmMeiksinIdx, Float64 redshift,
                              Float64 merit, Float64 chiSquare_phot,
                              Float64 fitAmplitude, Float64 fitAmplitudeError,
@@ -82,7 +82,7 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
   tmpCContinuumModelSolution.tplLogPrior = logprior;
   tmpCContinuumModelSolution.ebmvCoef = ismEbmvCoeff;
   tmpCContinuumModelSolution.meiksinIdx = igmMeiksinIdx;
-  tmpCContinuumModelSolution.tplName = tplName;
+  tmpCContinuumModelSolution.name = name;
   tmpCContinuumModelSolution.redshift = redshift;
   tmpCContinuumModelSolution.SNR = snr;
 
@@ -91,7 +91,7 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Unable to find z index for redshift=" << redshift);
 
-  // if chi2 val is the lowest, and condition on tplName, insert at position
+  // if chi2 val is the lowest, and condition on name, insert at position
   // ipos
   auto ipos = std::upper_bound(
       m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
@@ -128,6 +128,7 @@ Int32 CTemplatesFitStore::getContinuumCount() const {
   return m_nContinuumCandidates;
 }
 
-Float64 CTemplatesFitStore::getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const {
+Float64 CTemplatesFitStore::getFracAmplitudeSigma(
+    CContinuumModelSolution const &continuum) const {
   return continuum.tplAmplitudeSigma;
 }

@@ -52,7 +52,7 @@ class CTemplatesFitStore : public CContinuumFitStore {
 public:
   using CContinuumFitStore::CContinuumFitStore;
 
-  void Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
+  void Add(std::string name, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
            Float64 redshift, Float64 merit, Float64 chiSquare_phot,
            Float64 fitAmplitude, Float64 fitAmplitudeError,
            Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,
@@ -62,7 +62,8 @@ public:
   void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
 
 private:
-  Float64 getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const override;
+  Float64 getFracAmplitudeSigma(
+      CContinuumModelSolution const &continuum) const override;
   Int32 m_nContinuumCandidates = 0;
 };
 

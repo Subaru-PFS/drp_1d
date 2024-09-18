@@ -670,7 +670,7 @@ CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
  */
 Int32 CSpectrumModel::ApplyContinuumTplOnGrid(
     const std::shared_ptr<const CTemplate> &tpl, Float64 zcontinuum) {
-  m_fitContinuum->tplName = tpl->GetName();
+  m_fitContinuum->name = tpl->GetName();
   Int32 n = tpl->GetSampleCount();
 
   Int32 idxDust = -1;

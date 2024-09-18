@@ -111,7 +111,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
       1) { // using precomputed fit store, i.e., fitValues
     CContinuumModelSolution fitValues =
         m_fitContinuum_tplfitStore->GetFitValues(redshift, icontinuum);
-    if (fitValues.tplName.empty()) {
+    if (fitValues.name.empty()) {
       THROWG(ErrorCode::INTERNAL_ERROR, "Empty template name");
     }
 
@@ -121,7 +121,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   } else {
     THROWG(ErrorCode::INTERNAL_ERROR, "Cannot parse fitContinuum_option");
   }
-  if (m_fitContinuum->tplName.empty())
+  if (m_fitContinuum->name.empty())
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Failed to load-fit continuum for cfitopt="
                        << m_fitContinuum_option);
@@ -129,8 +129,8 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   if (isContinuumComponentPowerLaw()) {
     getModel().ApplyContinuumPowerLawOnGrid(m_fitContinuum);
   } else {
-    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-        {m_tplCategory}, m_fitContinuum->tplName);
+    std::shared_ptr<const CTemplate> tpl =
+        m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->name);
 
     getModel().ApplyContinuumTplOnGrid(tpl, m_fitContinuum->redshift);
 
@@ -139,7 +139,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
                                  m_fitContinuum->pCoeffs);
 
     Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded: "
-                             << m_fitContinuum->tplName);
+                             << m_fitContinuum->name);
     Log.LogDebug(Formatter()
                  << "    model : LoadFitContinuum, loaded with A="
                  << m_fitContinuum->tplAmplitude
@@ -228,8 +228,7 @@ void CContinuumManager::logParameters() {
                           << std::string(m_ContinuumComponent));
 
   Log.LogInfo(Formatter() << "fitContinuum_option=" << m_fitContinuum_option);
-  Log.LogInfo(Formatter() << "fitContinuum_tplName="
-                          << m_fitContinuum->tplName);
+  Log.LogInfo(Formatter() << "fitContinuum_tplName=" << m_fitContinuum->name);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitude="
                           << m_fitContinuum->tplAmplitude);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeError="
@@ -273,24 +272,24 @@ void CContinuumManager::setContinuumComponent(TContinuumComponent component) {
   *m_fitContinuum = {};
 
   if (m_ContinuumComponent.isNoContinuum()) {
-    m_fitContinuum->tplName = "noContinuum"; // to keep track in resultstore
+    m_fitContinuum->name = "noContinuum"; // to keep track in resultstore
     // the continuum is set to zero and the observed spectrum is the spectrum
     // without continuum
   }
   if (m_ContinuumComponent.isFromSpectrum()) {
-    m_fitContinuum->tplName = "fromSpectrum"; // to keep track in resultstore
+    m_fitContinuum->name = "fromSpectrum"; // to keep track in resultstore
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
   }
   if (m_ContinuumComponent.isPowerLaw()) {
-    m_fitContinuum->tplName = "powerLaw";
+    m_fitContinuum->name = "powerLaw";
   }
 }
 
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
   for (auto &spcIndex : m_spectraIndex) {
-    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-        {m_tplCategory}, m_fitContinuum->tplName);
+    std::shared_ptr<const CTemplate> tpl =
+        m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->name);
     getModel().ApplyContinuumTplOnGrid(tpl, redshift);
   }
 }
