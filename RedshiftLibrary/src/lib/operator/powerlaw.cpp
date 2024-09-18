@@ -38,15 +38,16 @@
 // ============================================================================
 
 #include "RedshiftLibrary/operator/powerlaw.h"
+#include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
-#include "RedshiftLibrary/operator/curve3d.h"
 #include "RedshiftLibrary/operator/powerlawresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 #include <Eigen/Dense>
+#include <algorithm>
 #include <cmath>
 #include <execution>
 #include <utility>
@@ -247,8 +248,6 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
   // above
   for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
     for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
-      // Question : how to deal with warning on N ? Manymany warnings can be
-      // written with this version
       Int32 N1 = 0;
       Int32 N2 = 0;
       for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
@@ -533,7 +532,7 @@ T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
                              std::make_move_iterator(tmpError.end()));
   }
 
-  CSpectrumSpectralAxis spectrumLambdaAxis(spectrumLambda);
+  CSpectrumSpectralAxis spectrumLambdaAxis(std::move(spectrumLambda));
 
   TList<uint8_t> maskedPixels =
       m_maskBuilder
@@ -546,18 +545,16 @@ T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
 
   // Initializes usable pixels
   spectrumLambdaAxis.blueShiftInplace(redshift);
-  TCurve fluxCurve1D(
-      {spectrumLambdaAxis.GetSamplesVector(), spectrumFlux, spectrumFluxError});
+  TBoolList snrCompliantPixels = computeSNRCompliantPixels(
+      spectrumFlux, spectrumFluxError, nullFluxThreshold);
+  TCurve fluxCurve1D({spectrumLambdaAxis.GetSamplesVector(),
+                      std::move(spectrumFlux), std::move(spectrumFluxError)});
   fluxCurve1D.sort();
 
   T3DCurve fluxCurve3D(m_nIgmCurves, m_nIsmCurves);
   fluxCurve3D.copyCurveAtAllIgmIsm(fluxCurve1D);
-
-  TBoolList snrCompliantPixels = computeSNRCompliantPixels(
-      spectrumFlux, spectrumFluxError, nullFluxThreshold);
-  fluxCurve3D.setIsSnrCompliant(snrCompliantPixels);
-
-  fluxCurve3D.setMask(maskedPixels);
+  fluxCurve3D.setIsSnrCompliant(std::move(snrCompliantPixels));
+  fluxCurve3D.setMask(std::move(maskedPixels));
 
   return fluxCurve3D;
 }
@@ -641,13 +638,13 @@ T3DCurve COperatorPowerLaw::computeEmittedCurve(Float64 redshift,
       fluxCurve.getNIgm(),
       T2DList<bool>(fluxCurve.getNIsm(), TList<bool>(fluxCurve.size(), false)));
   if (opt_extinction || opt_dustFitting) {
-    T3DList<Float64> correctionCoefs = computeIsmIgmCorrections(
+    T3DList<Float64> m_ismIgmCorrections = computeIsmIgmCorrections(
         redshift, fluxCurve.getLambda(), opt_extinction, opt_dustFitting);
-    m_ismIgmCorrections = correctionCoefs;
     for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
       for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
         for (Int32 pixelIdx = 0; pixelIdx < fluxCurve.size(); pixelIdx++) {
-          Float64 correctionCoef = correctionCoefs[igmIdx][ismIdx][pixelIdx];
+          Float64 correctionCoef =
+              m_ismIgmCorrections[igmIdx][ismIdx][pixelIdx];
           if (correctionCoef < DBL_MIN) {
             isExtincted[igmIdx][ismIdx][pixelIdx] = true;
             continue;
@@ -663,7 +660,7 @@ T3DCurve COperatorPowerLaw::computeEmittedCurve(Float64 redshift,
       }
     }
   }
-  fluxCurve.setIsExtincted(isExtincted);
+  fluxCurve.setIsExtincted(std::move(isExtincted));
   return fluxCurve;
 }
 

@@ -300,11 +300,13 @@ void COperatorLineModel::fitContinuumTemplates(
     std::string tplname;
     if (m_opt_continuumcomponent.isPowerLaw()) {
       tplname = "powerLaw";
-      templatefittingResult = std::dynamic_pointer_cast<CPowerLawResult>(
-          (std::dynamic_pointer_cast<COperatorPowerLaw>(
-               m_continuumFittingOperator))
+
+      templatefittingResult =
+          std::dynamic_pointer_cast<COperatorPowerLaw>(
+              m_continuumFittingOperator)
               ->Compute(m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
-                        m_opt_continuum_null_amp_threshold, "full"));
+                        m_opt_continuum_null_amp_threshold, "full");
+
     } else {
 
       CPriorHelper::TPriorZEList zePriorData;
@@ -313,13 +315,13 @@ void COperatorLineModel::fitContinuumTemplates(
                                           zePriorData);
       Log.LogDebug(Formatter() << "Processing tpl " << tplname);
       tplList[i]->setRebinInterpMethod(opt_interp);
-      templatefittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>(
-          (std::dynamic_pointer_cast<COperatorTemplateFittingBase>(
-               m_continuumFittingOperator))
+      templatefittingResult =
+          std::dynamic_pointer_cast<COperatorTemplateFittingBase>(
+              m_continuumFittingOperator)
               ->Compute(tplList[i], overlapThreshold, opt_interp,
                         m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
                         m_opt_continuum_null_amp_threshold, zePriorData,
-                        ebmvIndices[i], meiksinIndices[i]));
+                        ebmvIndices[i], meiksinIndices[i]);
     }
 
     if (!templatefittingResult) {

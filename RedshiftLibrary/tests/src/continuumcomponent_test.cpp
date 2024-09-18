@@ -36,30 +36,32 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/powerlawresult.h"
+
+#include <boost/test/unit_test.hpp>
+
+#include "RedshiftLibrary/linemodel/continuumcomponent.h"
 
 using namespace NSEpic;
 
-CPowerLawResult::CPowerLawResult(Int32 n)
-    : COperatorResult("CPowerLawResult"), Redshifts(n), ChiSquare(n),
-      fluxError(n), coefs(n), FitEbmvCoeff(n), FitMeiksinIdx(n),
-      ChiSquareIntermediate(n), IsmEbmvCoeffIntermediate(n),
-      IgmMeiksinIdxIntermediate(n), SNR(n) {}
+BOOST_AUTO_TEST_SUITE(continuumcomponent_test)
+BOOST_AUTO_TEST_CASE(tautology_test) {
 
-void CPowerLawResult::set_at_redshift(Int32 zIdx, TPowerLawResult result) {
-  ChiSquare[zIdx] = result.chiSquare;
-  coefs[zIdx] = result.coefs;
-  FitEbmvCoeff[zIdx] = result.ebmvCoef;
-  FitMeiksinIdx[zIdx] = result.meiksinIdx;
-  SNR[zIdx] = SNRCalculation(result.coefs);
-
-  // [z][Calzetti][Meiksin])
-  T2DList<Float64> ChiSquareIntermediate;
-  T2DList<Float64> IgmMeiksinIdxIntermediate;
-  T2DList<Float64> IsmEbmvCoeffIntermediate;
+  std::vector<std::string> componentsString = {
+      "tplFit", "tplFitAuto", "noContinuum", "fromSpectrum", "powerLaw"};
+  std::vector<TContinuumComponent::EContinuumComponent> componentsEnum = {
+      TContinuumComponent::EContinuumComponent::tplFit,
+      TContinuumComponent::EContinuumComponent::tplFitAuto,
+      TContinuumComponent::EContinuumComponent::noContinuum,
+      TContinuumComponent::EContinuumComponent::fromSpectrum,
+      TContinuumComponent::EContinuumComponent::powerLaw};
+  for (size_t componentIdx = 0; componentIdx < componentsString.size();
+       componentIdx++) {
+    BOOST_CHECK(TContinuumComponent().stringToEnum(
+        TContinuumComponent().enumToString(componentsEnum[componentIdx]) ==
+        componentsEnum[componentIdx]));
+    BOOST_CHECK(TContinuumComponent().enumToString(
+        TContinuumComponent().stringToEnum(componentsString[componentIdx]) ==
+        componentsString[componentIdx]));
+  }
 }
-
-Float64 CPowerLawResult::SNRCalculation(TPowerLawCoefsPair const &coefs) const {
-  return std::max(std::abs(coefs.first.a) / coefs.first.stda,
-                  std::abs(coefs.second.a) / coefs.second.stda);
-}
+BOOST_AUTO_TEST_SUITE_END()

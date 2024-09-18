@@ -37,11 +37,12 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/operator/curve.h"
+#include "RedshiftLibrary/common/curve.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include <numeric>
 
 using namespace NSEpic;
 
@@ -110,9 +111,7 @@ void TCurve::sort() {
     return;
 
   TList<Int32> sortingIndices(lambda.size());
-  for (size_t pixelIdx = 0; pixelIdx < sortingIndices.size(); pixelIdx++) {
-    sortingIndices[pixelIdx] = pixelIdx;
-  }
+  std::iota(sortingIndices.begin(), sortingIndices.end(), 0);
 
   std::sort(sortingIndices.begin(), sortingIndices.end(),
             [this](size_t i1, size_t i2) { return lambda[i1] < lambda[i2]; });

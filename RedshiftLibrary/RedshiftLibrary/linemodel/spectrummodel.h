@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/continuum/continuumcomponent.h"
+#include "RedshiftLibrary/linemodel/continuumcomponent.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"

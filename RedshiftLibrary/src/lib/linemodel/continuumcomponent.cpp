@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/continuum/continuumcomponent.h"
+#include "RedshiftLibrary/linemodel/continuumcomponent.h"
 
 using namespace NSEpic;
 

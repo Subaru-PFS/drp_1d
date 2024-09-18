@@ -39,11 +39,11 @@
 #ifndef _REDSHIFT_OPERATOR_POWER_LAW_
 #define _REDSHIFT_OPERATOR_POWER_LAW_
 
+#include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
-#include "RedshiftLibrary/operator/curve3d.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/result.h"

@@ -128,13 +128,13 @@ CSpectrumSpectralAxis
 CSpectrumSpectralAxis::ShiftByWaveLength(Float64 wavelengthOffset,
                                          EShiftDirection direction) const {
   auto shiftedAxis = *this;
-  shiftedAxis.ShiftByWaveLengthInplace(wavelengthOffset, direction);
+  shiftedAxis.ShiftByWaveLengthInPlace(wavelengthOffset, direction);
   return shiftedAxis;
-
 }
 
-void CSpectrumSpectralAxis::ShiftByWaveLengthInplace(
-    Float64 wavelengthOffset, EShiftDirection direction) {
+CSpectrumSpectralAxis
+CSpectrumSpectralAxis::ShiftByWaveLengthInPlace(Float64 wavelengthOffset,
+                                                EShiftDirection direction) {
   if (wavelengthOffset < 0.)
     THROWG(ErrorCode::INTERNAL_ERROR, "wavelengthOffset can not be negative");
   if (!(direction == nShiftForward || direction == nShiftBackward))
@@ -147,6 +147,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLengthInplace(
       *this /= (wavelengthOffset);
     }
   }
+  return *this;
 }
 
 void CSpectrumSpectralAxis::ApplyOffset(Float64 wavelengthOffset) {
@@ -522,7 +523,7 @@ CSpectrumSpectralAxis CSpectrumSpectralAxis::blueShift(Float64 z) const {
 };
 
 void CSpectrumSpectralAxis::blueShiftInplace(Float64 z) {
-  ShiftByWaveLengthInplace(1 + z, nShiftBackward);
+  ShiftByWaveLengthInPlace(1 + z, nShiftBackward);
 };
 
 CSpectrumSpectralAxis CSpectrumSpectralAxis::redShift(Float64 z) const {

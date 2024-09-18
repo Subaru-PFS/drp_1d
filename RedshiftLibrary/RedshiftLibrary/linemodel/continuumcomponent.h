@@ -45,6 +45,11 @@
 
 #include <unordered_map>
 
+namespace continuumcomponent_test { // boost_test_suite
+// all boost_auto_test_case that use private method
+class tautology_test;
+} // namespace continuumcomponent_test
+
 namespace NSEpic {
 
 class TContinuumComponent {
@@ -117,6 +122,7 @@ public:
   }
 
 private:
+  friend class continuumcomponent_test::tautology_test;
   enum class EContinuumComponent {
     null,
     tplFit,
