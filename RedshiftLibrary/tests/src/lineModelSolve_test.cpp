@@ -442,10 +442,10 @@ public:
     ctx.initContext();
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
-
 };
 
-class fixture_LineModelSolveTestNegPowerLaw : public fixture_LineModelSolveTest {
+class fixture_LineModelSolveTestNegPowerLaw
+    : public fixture_LineModelSolveTest {
 public:
   fixture_LineModelSolveTestNegPowerLaw() {
     fillCatalog();
@@ -462,7 +462,6 @@ public:
     lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
   }
 };
-
 
 BOOST_AUTO_TEST_SUITE(lineModelSolve_test)
 
@@ -493,7 +492,7 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
           "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
           "model_parameters", 0);
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1); // accepts 0.1% error
+  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1);
   ctx.reset();
 }
 
@@ -507,7 +506,6 @@ BOOST_FIXTURE_TEST_CASE(computeNegPowerLaw_test,
   BOOST_CHECK_THROW(lineModelSolve.Compute(), AmzException);
   ctx.reset();
 }
-
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
                         fixture_LineModelSolveTestTplFitRules) {

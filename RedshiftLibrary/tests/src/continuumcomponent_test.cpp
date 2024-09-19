@@ -56,12 +56,15 @@ BOOST_AUTO_TEST_CASE(tautology_test) {
       TContinuumComponent::EContinuumComponent::powerLaw};
   for (size_t componentIdx = 0; componentIdx < componentsString.size();
        componentIdx++) {
-    BOOST_CHECK(TContinuumComponent().stringToEnum(
-        TContinuumComponent().enumToString(componentsEnum[componentIdx]) ==
-        componentsEnum[componentIdx]));
-    BOOST_CHECK(TContinuumComponent().enumToString(
-        TContinuumComponent().stringToEnum(componentsString[componentIdx]) ==
-        componentsString[componentIdx]));
+
+    BOOST_CHECK(TContinuumComponent::stringToEnum.at(
+                    TContinuumComponent::enumToString.at(
+                        componentsEnum[componentIdx])) ==
+                componentsEnum[componentIdx]);
+    BOOST_CHECK(TContinuumComponent::enumToString.at(
+                    TContinuumComponent::stringToEnum.at(
+                        componentsString[componentIdx])) ==
+                componentsString[componentIdx]);
   }
 }
 BOOST_AUTO_TEST_SUITE_END()

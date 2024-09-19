@@ -48,6 +48,7 @@
 
 #include <Eigen/Dense>
 #include <algorithm>
+#include <boost/iterator/counting_iterator.hpp>
 #include <cmath>
 #include <execution>
 #include <utility>
@@ -177,11 +178,14 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
     for (Int16 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
       for (Int32 pixelIdx = 0; pixelIdx < m_nPixels[0]; pixelIdx++) {
         if (curve3D.pixelIsChi2Valid(pixelIdx)) {
-          diff = curve3D.getFluxAt(igmIdx, ismIdx, pixelIdx) -
-                 theoreticalFluxAtLambda(
-                     TPowerLawCoefsPair(coefs[igmIdx][ismIdx].first,
-                                        coefs[igmIdx][ismIdx].second),
-                     curve3D.getLambdaAt(pixelIdx));
+          Float64 theoreticalFlux =
+              curve3D.getIsExtinctedAt(igmIdx, ismIdx, pixelIdx)
+                  ? 0
+                  : theoreticalFluxAtLambda(
+                        TPowerLawCoefsPair(coefs[igmIdx][ismIdx].first,
+                                           coefs[igmIdx][ismIdx].second),
+                        curve3D.getLambdaAt(pixelIdx));
+          diff = curve3D.getFluxAt(igmIdx, ismIdx, pixelIdx) - theoreticalFlux;
           diff = diff / curve3D.getFluxErrorAt(igmIdx, ismIdx, pixelIdx);
           chi2[igmIdx][ismIdx] += diff * diff;
         }
@@ -248,18 +252,20 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
   // above
   for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
     for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
-      Int32 N1 = 0;
-      Int32 N2 = 0;
-      for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
-        if (lnCurve.pixelIsCoefValid(igmIdx, ismIdx, pixelIdx)) {
-          if (lnCurve.getLambdaAt(pixelIdx) < lnxc) {
-            N1 += 1;
-          } else {
-            N2 += 1;
-          }
-        }
-      }
-      Int32 N = N1 + N2;
+      auto const N = std::count_if(
+          boost::counting_iterator<Int32>(0),
+          boost::counting_iterator<Int32>(lnCurve.size()),
+          [&lnCurve, igmIdx, ismIdx](Int32 pixelIdx) {
+            return lnCurve.pixelIsCoefValid(igmIdx, ismIdx, pixelIdx);
+          });
+      auto const N1 = std::count_if(
+          boost::counting_iterator<Int32>(0),
+          boost::counting_iterator<Int32>(lnCurve.size()),
+          [&lnCurve, igmIdx, ismIdx, lnxc](Int32 pixelIdx) {
+            return lnCurve.pixelIsCoefValid(igmIdx, ismIdx, pixelIdx) &&
+                   lnCurve.getLambdaAt(pixelIdx) < lnxc;
+          });
+      auto const N2 = N - N1;
 
       if (N < m_nLogSamplesMin) {
         addTooFewSamplesWarning(N, igmIdx, ismIdx, __func__);
