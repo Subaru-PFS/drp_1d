@@ -132,7 +132,7 @@ CSpectrumSpectralAxis::ShiftByWaveLength(Float64 wavelengthOffset,
   return shiftedAxis;
 }
 
-CSpectrumSpectralAxis
+const CSpectrumSpectralAxis &
 CSpectrumSpectralAxis::ShiftByWaveLengthInPlace(Float64 wavelengthOffset,
                                                 EShiftDirection direction) {
   if (wavelengthOffset < 0.)

@@ -163,8 +163,7 @@ private:
   T2DList<Float64> computeChi2(T3DCurve const &curve3D,
                                T2DPowerLawCoefsPair const &coefs);
   TChi2Result findMinChi2OnIgmIsm(T3DCurve const &curve,
-                                  T2DPowerLawCoefsPair const &coefs,
-                                  std::vector<TFloat64List> &ChiSquareInterm);
+                                  T2DPowerLawCoefsPair const &coefs);
   Float64 theoreticalFluxAtLambda(TPowerLawCoefsPair coefs, Float64 lambda);
   Float64 computePowerLaw(TPowerLawCoefs coefs, Float64 lambda);
   TPowerLawCoefs compute2PassSimplePowerLawCoefs(TCurve const &lnCurves) const;

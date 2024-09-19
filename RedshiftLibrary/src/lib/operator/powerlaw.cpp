@@ -108,9 +108,7 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
 
   // Step 3. Compute power law coefs and chi2
   T2DPowerLawCoefsPair coefs = powerLawCoefs3D(lnCurve, method);
-  std::vector<TFloat64List> ChiSquareInterm;
-  TChi2Result chi2Result =
-      findMinChi2OnIgmIsm(emittedCurve, coefs, ChiSquareInterm);
+  TChi2Result chi2Result = findMinChi2OnIgmIsm(emittedCurve, coefs);
   // Step 4. Creates result
   TPowerLawResult result;
   result.chiSquare = chi2Result.chi2;
@@ -120,8 +118,6 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     result.ebmvCoef = m_ismCorrectionCalzetti->GetEbmvValue(chi2Result.ismIdx);
   if (opt_extinction)
     result.meiksinIdx = chi2Result.igmIdx;
-  // Question: j'ai l'impression que ChiSquareInterm et IsmCalzettiCoeffInterm
-  // ne sont utilisés null part. OK pour les supprimer du TPowerLawResult ?
   return result;
 };
 
@@ -143,13 +139,11 @@ T3DCurve COperatorPowerLaw::computeLnCurve(T3DCurve const &emittedCurve) const {
   return lnCurve;
 }
 
-TChi2Result COperatorPowerLaw::findMinChi2OnIgmIsm(
-    T3DCurve const &curve3D, T2DPowerLawCoefsPair const &coefs,
-    std::vector<TFloat64List> &ChiSquareInterm) {
-  ChiSquareInterm = computeChi2(curve3D, coefs);
-  TInt32Pair minChi2Idxs = find2DVectorMinIndexes(ChiSquareInterm);
-  return {minChi2Idxs.first, minChi2Idxs.second,
-          ChiSquareInterm[minChi2Idxs.first][minChi2Idxs.second]};
+TChi2Result
+COperatorPowerLaw::findMinChi2OnIgmIsm(T3DCurve const &curve3D,
+                                       T2DPowerLawCoefsPair const &coefs) {
+  TInt32Pair minChi2Idxs = find2DVectorMinIndexes(computeChi2(curve3D, coefs));
+  return {minChi2Idxs.first, minChi2Idxs.second};
 }
 
 Float64 COperatorPowerLaw::theoreticalFluxAtLambda(TPowerLawCoefsPair fullCoefs,
@@ -644,7 +638,7 @@ T3DCurve COperatorPowerLaw::computeEmittedCurve(Float64 redshift,
       fluxCurve.getNIgm(),
       T2DList<bool>(fluxCurve.getNIsm(), TList<bool>(fluxCurve.size(), false)));
   if (opt_extinction || opt_dustFitting) {
-    T3DList<Float64> m_ismIgmCorrections = computeIsmIgmCorrections(
+    m_ismIgmCorrections = computeIsmIgmCorrections(
         redshift, fluxCurve.getLambda(), opt_extinction, opt_dustFitting);
     for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
       for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
