@@ -46,11 +46,6 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 namespace NSEpic {
 
-struct fitMaxValues {
-  Float64 tplFitSNRMax = 0.0;
-  Float64 fitAmplitudeSigmaMAX = 0.0;
-};
-
 class CContinuumFitStore {
 public:
   CContinuumFitStore(const TFloat64List &redshifts);
@@ -65,13 +60,14 @@ public:
   GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
   virtual Int32 getContinuumCount() const = 0;
   void initFitValues();
-  Float64 FindMaxAmplitudeSigma(Float64 &z, CContinuumModelSolution &fitValues);
+  std::pair<Float64, CContinuumModelSolution const>
+  FindMaxAmplitudeSigma() const;
+  CContinuumModelSolution const &FindMinReducedChi2() const;
 
 protected:
   TFloat64List m_redshiftgrid;
   std::vector<std::vector<CContinuumModelSolution>>
       m_fitValues; //[nz][m_nContinuumCandidates]
-  std::shared_ptr<fitMaxValues> m_fitMaxValues;
   virtual Float64
   getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const = 0;
 

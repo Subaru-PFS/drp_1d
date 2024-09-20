@@ -191,10 +191,6 @@ void CContinuumManager::SetFitContinuum_Option(Int32 opt) {
   m_fitContinuum_option = opt;
 }
 
-void CContinuumManager::SetFitContinuum_SNRMax(Float64 snr_max) {
-  m_fitContinuumMaxValues->tplFitSNRMax = snr_max;
-}
-
 Int32 CContinuumManager::GetFitContinuum_Option() const {
   return m_fitContinuum_option;
 }
@@ -233,8 +229,6 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum->tplAmplitude);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeError="
                           << m_fitContinuum->tplAmplitudeError);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeSigmaMAX="
-                          << m_fitContinuumMaxValues->fitAmplitudeSigmaMAX);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit="
                           << m_fitContinuum->merit);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitReducedChi2="
@@ -255,8 +249,6 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum->tplMtM);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitLogprior="
                           << m_fitContinuum->tplLogPrior);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitSNRMax="
-                          << m_fitContinuumMaxValues->tplFitSNRMax);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAlpha="
                           << m_fitContinuum_tplFitAlpha);
 }

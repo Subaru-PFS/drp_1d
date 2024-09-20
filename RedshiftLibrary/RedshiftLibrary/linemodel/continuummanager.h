@@ -36,7 +36,6 @@ public:
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CContinuumFitStore> &fitStore);
-  void SetFitContinuum_SNRMax(Float64 snr_max);
   void SetFitContinuum_Option(Int32 opt);
   Int32 GetFitContinuum_Option() const;
 
@@ -119,7 +118,6 @@ private:
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
 
   std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
-  std::shared_ptr<fitMaxValues> m_fitContinuumMaxValues;
 
   // m_fitContinuum_option==2 for now
   Float64 m_fitContinuum_tplFitAlpha = 0.;

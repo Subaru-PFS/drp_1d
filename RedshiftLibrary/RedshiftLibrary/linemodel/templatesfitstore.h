@@ -59,7 +59,6 @@ public:
            Float64 fitMtM, Float64 logprior, Float64 snr);
 
   Int32 getContinuumCount() const override;
-  void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
 
 private:
   Float64 getFracAmplitudeSigma(

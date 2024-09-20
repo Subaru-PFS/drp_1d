@@ -518,7 +518,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
         bestFitSNR = chisquareResult->SNR[i];
     }
   } else {
-    Float64 bestFitSNR = 0.0;
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++) {
       Float64 redshift = redshiftsContinuumFit[i];
@@ -527,9 +526,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
         const auto &chisquareResult =
             std::dynamic_pointer_cast<CTemplateFittingResult>(
                 chisquareResultsAllTpl[j]);
-
-        if (chisquareResult->SNR[i] > bestFitSNR)
-          bestFitSNR = chisquareResult->SNR[i];
 
         std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
             ->Add(chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
@@ -544,11 +540,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                   chisquareResult->LogPrior[i], chisquareResult->SNR[i]);
       }
     }
-    std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
-        ->setSNRMax(bestFitSNR); // TODO rename bestFitSNR bestContinuumFitSNR
-    Log.LogDetail(Formatter() << "COperatorLineModel::PrecomputeContinuumFit: "
-                                 "fitcontinuum_snrMAX set to "
-                              << bestFitSNR);
     Log.LogDetail(
         Formatter()
         << "COperatorLineModel::PrecomputeContinuumFit: continuumcount set to "
@@ -577,54 +568,115 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   Log.LogDetail(Formatter() << "<proc-lm-tplfit><"
                             << (Int32)duration_tplfit_seconds << ">");
 
-  evaluateContinuumAmplitude(continuumFitStore);
+  // raise exception or switch to fromspectrum if bad or negative continuum
+  // switch to NoContinuum if null-compatible continuum
+  if (m_fittingManager->GetPassNumber() == 1)
+    evaluateAndUpdateContinuumComponent(continuumFitStore);
 
   return continuumFitStore;
 }
 
-void COperatorLineModel::evaluateContinuumAmplitude(
-    std::shared_ptr<CContinuumFitStore> const &continuumFitStore) {
-  // Check if best continuum amplitudes are negative fitted amplitudes at
-  // all z
-  CContinuumModelSolution fitValues;
-  Float64 max_fitamplitudeSigma_z = NAN;
-  Float64 max_fitamplitudeSigma = continuumFitStore->FindMaxAmplitudeSigma(
-      max_fitamplitudeSigma_z, fitValues);
-  if (max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
-    if (!m_opt_continuumcomponent.isAuto())
-      THROWG(ErrorCode::NEGATIVE_CONTINUUM,
-             Formatter() << "Negative "
-                            "continuum amplitude found at z="
-                         << max_fitamplitudeSigma_z << ": best continuum tpl "
-                         << fitValues.name
-                         << ", amplitude/error = " << max_fitamplitudeSigma);
-    if (m_fittingManager->GetPassNumber() == 1) {
-      Flag.warning(WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
-                   Formatter()
-                       << ": Switching to spectrum continuum since Negative "
+bool COperatorLineModel::updateContinuumComponentIfBadChi2(
+    CContinuumModelSolution const &fitValues) {
+
+  // check if min_z reducedChisquare is not to big
+  auto const min_chi2_r = fitValues.reducedChi2;
+  bool const good_cont = min_chi2_r <= m_opt_continuum_bad_chi2_threshold;
+
+  if (good_cont)
+    return false;
+
+  if (!m_opt_continuumcomponent.isAuto())
+    THROWG(ErrorCode::BAD_CONTINUUMFIT,
+           Formatter() << "Bad continuum fit found at z=" << fitValues.redshift
+                       << ": best continuum tpl " << fitValues.name
+                       << ", reduced chi2 = " << min_chi2_r);
+
+  Flag.warning(
+      WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
+      Formatter() << "Switching to continuum filtered from spectrum since"
+                     "bad continuum fit found at z="
+                  << fitValues.redshift << ": best continuum tpl "
+                  << fitValues.name << ", reduced chi2 = " << min_chi2_r);
+  m_opt_continuumcomponent.set("fromSpectrum");
+  m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
+  return true;
+}
+
+bool COperatorLineModel::updateContinuumComponentIfNegative(
+    Float64 max_fitamplitudeSigma, CContinuumModelSolution const &fitValues) {
+
+  bool const negative_cont =
+      max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold;
+
+  if (!negative_cont)
+    return false;
+
+  if (!m_opt_continuumcomponent.isAuto())
+    THROWG(ErrorCode::NEGATIVE_CONTINUUMFIT,
+           Formatter() << "Negative "
                           "continuum amplitude found at z="
-                       << max_fitamplitudeSigma_z << ": best continuum tpl "
+                       << fitValues.redshift << ": best continuum tpl "
                        << fitValues.name
-                       << ", amplitude/error = " << max_fitamplitudeSigma
-                       << " & error = " << fitValues.tplAmplitudeError);
-      m_opt_continuumcomponent.set("fromSpectrum");
-      m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
-    }
-  } else if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold &&
-             m_fittingManager->GetPassNumber() == 1) {
-    // check if continuum is too weak comparing to the preset threshold, or
-    // falls within [thres_neg; thresh_null], at all z
-    Flag.warning(WarningCode::FORCED_CONTINUUM_TO_NOCONTINUUM,
-                 Formatter()
-                     << ": Switching to nocontinuum since close"
-                        "to null or not enough negative continuum amplitude "
-                        "found at z="
-                     << max_fitamplitudeSigma_z << ": best continuum tpl "
-                     << fitValues.name
-                     << ", amplitude/error = " << max_fitamplitudeSigma);
-    m_opt_continuumcomponent.set("noContinuum");
-    m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
-  }
+                       << ", amplitude/error = " << max_fitamplitudeSigma);
+
+  Flag.warning(
+      WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
+      Formatter() << ": Switching to spectrum continuum since Negative "
+                     "continuum amplitude found at z="
+                  << fitValues.redshift << ": best continuum tpl "
+                  << fitValues.name
+                  << ", amplitude/error = " << max_fitamplitudeSigma
+                  << " & error = " << fitValues.tplAmplitudeError);
+  m_opt_continuumcomponent.set("fromSpectrum");
+  m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
+
+  return true;
+}
+
+bool COperatorLineModel::updateContinuumComponentIfNotSignificant(
+    Float64 max_fitamplitudeSigma, CContinuumModelSolution const &fitValues) {
+
+  // check if continuum is too weak comparing to the preset threshold, or
+  // falls within [thres_neg; thresh_null], at all z
+
+  bool significant =
+      max_fitamplitudeSigma >= m_opt_continuum_null_amp_threshold;
+  if (significant)
+    return false;
+
+  Flag.warning(
+      WarningCode::FORCED_CONTINUUM_TO_NOCONTINUUM,
+      Formatter() << ": Switching to nocontinuum since close"
+                     "to null or not enough negative continuum amplitude "
+                     "found at z="
+                  << fitValues.redshift << ": best continuum tpl "
+                  << fitValues.name
+                  << ", amplitude/error = " << max_fitamplitudeSigma);
+  m_opt_continuumcomponent.set("noContinuum");
+  m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
+
+  return true;
+}
+
+void COperatorLineModel::evaluateAndUpdateContinuumComponent(
+    std::shared_ptr<CContinuumFitStore> const &continuumFitStore) {
+
+  // get smallest reduced chi2 at all z
+  auto const &fitValues_of_min_chi2_r = continuumFitStore->FindMinReducedChi2();
+  if (updateContinuumComponentIfBadChi2(fitValues_of_min_chi2_r))
+    return;
+
+  // get greatest continuum amplitude at all z
+  auto const &[max_fitamplitudeSigma, fitValues_of_max_amplitude] =
+      continuumFitStore->FindMaxAmplitudeSigma();
+
+  if (updateContinuumComponentIfNegative(max_fitamplitudeSigma,
+                                         fitValues_of_max_amplitude))
+    return;
+
+  updateContinuumComponentIfNotSignificant(max_fitamplitudeSigma,
+                                           fitValues_of_max_amplitude);
 }
 
 void COperatorLineModel::buildExtendedRedshifts() {

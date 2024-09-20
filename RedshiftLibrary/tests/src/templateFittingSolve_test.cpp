@@ -229,7 +229,7 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
           "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
           "model_parameters", 0);
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 2.8604060282076706, 1e-6);
+  BOOST_CHECK_CLOSE(z, 2.8770415147926256, 1e-6);
 
   ctx.reset();
 }
