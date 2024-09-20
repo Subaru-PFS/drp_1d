@@ -49,6 +49,7 @@ void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
                          Float64 chi2, // TODO see if chi2 and merit is the same
                          TPowerLawCoefsPair powerLawCoefs, Float64 snr) {
   CContinuumModelSolution tmpCContinuumModelSolution;
+  tmpCContinuumModelSolution.name = "powerLaw";
   tmpCContinuumModelSolution.a1 = powerLawCoefs.first.a;
   tmpCContinuumModelSolution.a2 = powerLawCoefs.second.a;
   tmpCContinuumModelSolution.b1 = powerLawCoefs.first.b;

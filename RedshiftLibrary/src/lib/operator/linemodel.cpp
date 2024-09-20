@@ -588,27 +588,28 @@ void COperatorLineModel::evaluateContinuumAmplitude(
   Float64 max_fitamplitudeSigma = continuumFitStore->FindMaxAmplitudeSigma(
       max_fitamplitudeSigma_z, fitValues);
   if (max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
-    if (!m_opt_continuumcomponent.isTplFitAuto())
-      THROWG(ErrorCode::NEGATIVE_CONTINUUM,
-             Formatter() << "Negative "
+    if (m_opt_continuumcomponent.isTplFitAuto()) {
+      if (m_fittingManager->GetPassNumber() == 1) {
+        Flag.warning(WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
+                     Formatter()
+                         << ": Switching to spectrum continuum since Negative "
                             "continuum amplitude found at z="
                          << max_fitamplitudeSigma_z << ": best continuum tpl "
                          << fitValues.name
                          << ", amplitude/error = " << max_fitamplitudeSigma
                          << " & error = " << fitValues.tplAmplitudeError);
-
-    if (m_fittingManager->GetPassNumber() == 1) {
-      Flag.warning(WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
-                   Formatter()
-                       << ": Switching to spectrum continuum since Negative "
-                          "continuum amplitude found at z="
-                       << max_fitamplitudeSigma_z << ": best continuum tpl "
-                       << fitValues.name
-                       << ", amplitude/error = " << max_fitamplitudeSigma
-                       << " & error = " << fitValues.tplAmplitudeError);
-      m_opt_continuumcomponent.set("fromSpectrum");
-      m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
+        m_opt_continuumcomponent.set("fromSpectrum");
+        m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
+      } else
+        THROWG(ErrorCode::NEGATIVE_CONTINUUM,
+               Formatter() << "Negative "
+                              "continuum amplitude found at z="
+                           << max_fitamplitudeSigma_z << ": best continuum tpl "
+                           << fitValues.name
+                           << ", amplitude/error = " << max_fitamplitudeSigma);
     }
+    // TODO tplDtm à remplir
+
   } else if (max_fitamplitudeSigma < m_opt_continuum_null_amp_threshold &&
              m_fittingManager->GetPassNumber() == 1) {
     // check if continuum is too weak comparing to the preset threshold, or
@@ -620,8 +621,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                         "found at z="
                      << max_fitamplitudeSigma_z << ": best continuum tpl "
                      << fitValues.name
-                     << ", amplitude/error = " << max_fitamplitudeSigma
-                     << " & error = " << fitValues.tplAmplitudeError);
+                     << ", amplitude/error = " << max_fitamplitudeSigma);
     m_opt_continuumcomponent.set("noContinuum");
     m_fittingManager->setContinuumComponent(m_opt_continuumcomponent);
   }

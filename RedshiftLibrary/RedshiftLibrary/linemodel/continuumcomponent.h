@@ -109,8 +109,13 @@ public:
     checkInitialized();
     return m_type == EContinuumComponent::powerLaw;
   }
+  bool isPowerLawAuto() const {
+    checkInitialized();
+    return m_type == EContinuumComponent::powerLawAuto;
+  }
   bool isTplFitxxx() const { return isTplFit() || isTplFitAuto(); }
   bool isContinuumFit() const { return isTplFitxxx() || isPowerLaw(); }
+  bool isAuto() const { return isTplFitAuto() || isPowerLawAuto(); }
 
   bool isInitialized() const { return m_type != EContinuumComponent::null; }
 
@@ -129,7 +134,8 @@ private:
     tplFitAuto,
     noContinuum,
     fromSpectrum,
-    powerLaw
+    powerLaw,
+    powerLawAuto
   };
 
   EContinuumComponent m_type;
