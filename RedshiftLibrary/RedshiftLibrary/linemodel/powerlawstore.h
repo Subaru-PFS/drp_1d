@@ -51,15 +51,12 @@ class CPowerLawStore : public CContinuumFitStore {
 public:
   using CContinuumFitStore::CContinuumFitStore;
   Int32 getContinuumCount() const override { return 1; };
-  void Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
-                         Float64 redshift,
-                         Float64 chi2,
-                         TPowerLawCoefsPair powerlawCoefs,
-                         Float64 snr);
+  void Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx, Float64 redshift,
+           Float64 chi2, TPowerLawCoefsPair powerlawCoefs, Float64 snr);
 
 private:
-  Float64 getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const override;
-
+  Float64 getFracAmplitudeSigma(
+      CContinuumModelSolution const &continuum) const override;
 };
 
 } // namespace NSEpic
