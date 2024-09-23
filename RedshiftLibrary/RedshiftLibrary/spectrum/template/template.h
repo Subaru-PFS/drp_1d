@@ -117,8 +117,7 @@ public:
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                        TInt32List &MeiksinList, TInt32List &EbmvList,
-                        Int32 FitEbmvIdx = undefIdx,
+                        TIgmIsmIdxs &igmIsmIdxs, Int32 FitEbmvIdx = undefIdx,
                         Int32 FitMeiksinIdx = undefIdx) const;
   TInt32List GetIsmIdxList(bool opt_dustFitting,
                            Int32 FitEbmvIdx = undefIdx) const;

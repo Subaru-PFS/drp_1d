@@ -62,6 +62,10 @@ typedef char Char;
 typedef unsigned char Byte;
 typedef const char *String;
 
+template <typename T> using T3DList = std::vector<std::vector<std::vector<T>>>;
+template <typename T> using T2DList = std::vector<std::vector<T>>;
+template <typename T> using TList = std::vector<T>;
+
 typedef std::vector<Float64> TFloat64List;
 typedef std::map<Int32, Float64> TFloat64Map;
 typedef std::pair<Float64, Float64> TFloat64Pair;
@@ -97,15 +101,16 @@ typedef UInt8 Mask;
 typedef Float64 Redshift;
 typedef Float64 Sample;
 
-template <typename T> using T3DList = std::vector<std::vector<std::vector<T>>>;
-
-template <typename T> using T2DList = std::vector<std::vector<T>>;
-
-template <typename T> using TList = std::vector<T>;
-
 typedef TList<Mask> TMaskList;
 typedef TList<Redshift> TRedshiftList;
 typedef TList<Sample> TAxisSampleList;
+
+struct TIgmIsmIdxs {
+  // Contains the igm / ism indexes to take into account from the igm / ism
+  // elements from context
+  TInt32List igmIdxs;
+  TInt32List ismIdxs;
+};
 
 #include "RedshiftLibrary/common/errorcodes.i"
 #include "RedshiftLibrary/common/warningcodes.i"

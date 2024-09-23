@@ -169,7 +169,7 @@ public:
                                &igmcorrectionMeiksin) {
     m_igmCorrectionMeiksin = igmcorrectionMeiksin;
   }
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
   getFluxCorrectionMeiksin() const {
     return m_igmCorrectionMeiksin;
   }
@@ -178,7 +178,7 @@ public:
           &ismcorrectionCalzetti) {
     m_ismCorrectionCalzetti = ismcorrectionCalzetti;
   }
-  std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
+  std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
   getFluxCorrectionCalzetti() const {
     return m_ismCorrectionCalzetti;
   }

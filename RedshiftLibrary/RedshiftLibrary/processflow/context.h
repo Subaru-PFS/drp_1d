@@ -99,7 +99,8 @@ public:
                                &igmcorrectionMeiksin) {
     m_inputContext->setFluxCorrectionMeiksin(igmcorrectionMeiksin);
   };
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+
+  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
   getFluxCorrectionMeiksin() const {
     return m_inputContext->getFluxCorrectionMeiksin();
   };
@@ -108,7 +109,7 @@ public:
           &ismcorrectionCalzetti) {
     m_inputContext->setFluxCorrectionCalzetti(ismcorrectionCalzetti);
   };
-  std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
+  std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
   getFluxCorrectionCalzetti() const {
     return m_inputContext->getFluxCorrectionCalzetti();
   };
@@ -207,8 +208,7 @@ public:
     return m_inputContext->getRebinnedSpectra();
   }
   void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                        TInt32List &MeiksinList, TInt32List &EbmvList,
-                        Int32 FitEbmvIdx = undefIdx,
+                        TIgmIsmIdxs &igmIsmIdxs, Int32 FitEbmvIdx = undefIdx,
                         Int32 FitMeiksinIdx = undefIdx) const;
   TInt32List GetIsmIdxList(bool opt_dustFitting,
                            Int32 FitEbmvIdx = undefIdx) const;

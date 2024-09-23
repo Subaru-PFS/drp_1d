@@ -365,10 +365,10 @@ void CTemplate::ApplyAmplitude(Float64 amplitude) {
 }
 
 void CTemplate::GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                                 TInt32List &meiksinList, TInt32List &ebmvList,
-                                 Int32 fitEbmvIdx, Int32 fitMeiksinIdx) const {
-  Context.GetIsmIgmIdxList(opt_extinction, opt_dustFitting, meiksinList,
-                           ebmvList, fitEbmvIdx, fitMeiksinIdx);
+                                 TIgmIsmIdxs &igmIsmIdxs, Int32 fitEbmvIdx,
+                                 Int32 fitMeiksinIdx) const {
+  Context.GetIsmIgmIdxList(opt_extinction, opt_dustFitting, igmIsmIdxs,
+                           fitEbmvIdx, fitMeiksinIdx);
 }
 
 TInt32List CTemplate::GetIsmIdxList(bool opt_dustFitting,

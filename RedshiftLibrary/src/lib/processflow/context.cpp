@@ -102,11 +102,13 @@ CProcessFlowContext::GetPhotBandCatalog() {
   return m_inputContext->GetPhotBandCatalog();
 }
 
-void CProcessFlowContext::GetIsmIgmIdxList(
-    bool opt_extinction, bool opt_dustFitting, TInt32List &MeiksinList,
-    TInt32List &EbmvList, Int32 FitEbmvIdx, Int32 FitMeiksinIdx) const {
-  EbmvList = GetIsmIdxList(opt_dustFitting, FitEbmvIdx);
-  MeiksinList = GetIgmIdxList(opt_extinction, FitMeiksinIdx);
+void CProcessFlowContext::GetIsmIgmIdxList(bool opt_extinction,
+                                           bool opt_dustFitting,
+                                           TIgmIsmIdxs &igmIsmIdxs,
+                                           Int32 FitEbmvIdx,
+                                           Int32 FitMeiksinIdx) const {
+  igmIsmIdxs.igmIdxs = GetIgmIdxList(opt_extinction, FitMeiksinIdx);
+  igmIsmIdxs.ismIdxs = GetIsmIdxList(opt_dustFitting, FitEbmvIdx);
 }
 
 TInt32List CProcessFlowContext::GetIsmIdxList(bool opt_dustFitting,

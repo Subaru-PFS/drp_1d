@@ -368,11 +368,10 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   BOOST_CHECK(meiksinList[0] == 3);
 
   // GetIsmIgmIdxList
-  TInt32List ebmvList2;
-  TInt32List meiksinList2;
-  tpl5.GetIsmIgmIdxList(1, 1, meiksinList2, ebmvList2, 3, 3);
-  BOOST_CHECK(meiksinList2 == meiksinList);
-  BOOST_CHECK(ebmvList2 == ebmvList);
+  TIgmIsmIdxs igmIsmIdxs;
+  tpl5.GetIsmIgmIdxList(1, 1, igmIsmIdxs, 3, 3);
+  BOOST_CHECK(igmIsmIdxs.igmIdxs == meiksinList);
+  BOOST_CHECK(igmIsmIdxs.ismIdxs == ebmvList);
 
   Context.reset();
 }

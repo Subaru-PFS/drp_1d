@@ -226,8 +226,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -240,8 +240,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
   Context.reset();
 }
 
@@ -420,8 +420,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
   Context.reset();
 
   // With extinction
@@ -447,8 +447,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   // accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
 
   BOOST_CHECK_EQUAL(result.meiksinIdx, 2);
   BOOST_CHECK_EQUAL(result.ebmvCoef, 0.1);
@@ -568,9 +568,8 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
                                       TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a2,
-             boost::test_tools::tolerance(10.)); // a2 has big errors
-  BOOST_TEST(result.coefs.first.b == b2, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.first.a));
+  BOOST_TEST(std::isnan(result.coefs.first.b));
   BOOST_TEST(result.coefs.second.a == a2,
              boost::test_tools::tolerance(10.)); // a2 has big errors
   BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));

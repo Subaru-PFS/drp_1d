@@ -404,10 +404,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   std::shared_ptr<CTemplateFittingResult> result =
       std::make_shared<CTemplateFittingResult>(m_redshifts.size());
-  TInt32List MeiksinList;
-  TInt32List EbmvList;
-  tpl->GetIsmIgmIdxList(opt_extinction, opt_dustFitting, MeiksinList, EbmvList,
-                        FitEbmvIdx, FitMeiksinIdx);
+  TIgmIsmIdxs igmIsmIdxs;
+  tpl->GetIsmIgmIdxList(opt_extinction, opt_dustFitting, igmIsmIdxs, FitEbmvIdx,
+                        FitMeiksinIdx);
 
   result->Redshifts = m_redshifts;
 
@@ -427,7 +426,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
     TFittingIsmIgmResult result_z =
         BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
-                 opt_dustFitting, logp, MeiksinList, EbmvList);
+                 opt_dustFitting, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
     result->set_at_redshift(i, std::move(result_z));
   }
