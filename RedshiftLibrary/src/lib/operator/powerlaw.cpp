@@ -142,8 +142,10 @@ T3DCurve COperatorPowerLaw::computeLnCurve(T3DCurve const &emittedCurve) const {
 TChi2Result
 COperatorPowerLaw::findMinChi2OnIgmIsm(T3DCurve const &curve3D,
                                        T2DPowerLawCoefsPair const &coefs) {
-  TInt32Pair minChi2Idxs = find2DVectorMinIndexes(computeChi2(curve3D, coefs));
-  return {minChi2Idxs.first, minChi2Idxs.second};
+  T2DList<Float64> chiSquareInterm = computeChi2(curve3D, coefs);
+  TInt32Pair minChi2Idxs = find2DVectorMinIndexes(chiSquareInterm);
+  return {minChi2Idxs.first, minChi2Idxs.second,
+          chiSquareInterm[minChi2Idxs.first][minChi2Idxs.second]};
 }
 
 Float64 COperatorPowerLaw::theoreticalFluxAtLambda(TPowerLawCoefsPair fullCoefs,
