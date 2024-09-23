@@ -131,7 +131,6 @@ public:
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  // TODO voir pour la sortir de là et la rendre statique
   void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
                         TInt32List &MeiksinList, TInt32List &EbmvList,
                         Int32 FitEbmvIdx = undefIdx,

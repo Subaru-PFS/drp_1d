@@ -382,13 +382,13 @@ CTplCombinationSolve::buildExtremaResults(
     const Int32 idx = std::distance(redshifts.begin(), itZ);
 
     // Fill extrema Result
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.merit =
+    extremaResult->m_ranked_candidates[i].second->fittedContinuum.merit =
         TplFitResult->ChiSquare[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->fittedContinuum.tplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.meiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->fittedContinuum.meiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.ebmvCoef =
+    extremaResult->m_ranked_candidates[i].second->fittedContinuum.ebmvCoef =
         TplFitResult->FitEbmvCoeff[idx];
     extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeList =
         TplFitResult->FitAmplitude[idx];
@@ -398,8 +398,8 @@ CTplCombinationSolve::buildExtremaResults(
         TplFitResult->FitAmplitudeSigma[idx];
     extremaResult->m_ranked_candidates[i].second->FittedTplCovMatrix =
         TplFitResult->FitCOV[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplLogPrior = NAN;
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.SNR =
+    extremaResult->m_ranked_candidates[i].second->fittedContinuum.tplLogPrior = NAN;
+    extremaResult->m_ranked_candidates[i].second->fittedContinuum.SNR =
         TplFitResult->SNR[idx];
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;

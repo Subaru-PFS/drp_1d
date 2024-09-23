@@ -36,7 +36,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/operator/curve3d.h"
+#include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
@@ -45,7 +45,7 @@ using namespace NSEpic;
 
 T3DCurve::T3DCurve(Int32 nIgm, Int32 nIsm) : nIgm(nIgm), nIsm(nIsm){};
 
-void T3DCurve::copyCurveAtAllIgmIsm(TCurve &curve) {
+void T3DCurve::copyCurveAtAllIgmIsm(TCurve const &curve) {
   setLambda(curve.getLambda());
 
   T3DList<Float64> flux3D(nIgm, T2DList<Float64>(nIsm, curve.getFlux()));

@@ -114,10 +114,8 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CSpectrumSpectralAxis &photSpectralAxis_restframe =
         m_photSpectralAxis_restframe[bandName];
     CTemplate &templateRebined_phot = m_templateRebined_phot[bandName];
-
-    CSpectrumSpectralAxis photSpectralaxis = bandLambda;
-
-    photSpectralAxis_restframe = photSpectralaxis.ShiftByWaveLength(
+    photSpectralAxis_restframe = bandLambda;
+    photSpectralAxis_restframe.ShiftByWaveLengthInPlace(
         onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
 
     CMask mskRebined;

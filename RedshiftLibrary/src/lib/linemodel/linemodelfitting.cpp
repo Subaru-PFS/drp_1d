@@ -117,7 +117,7 @@ CLineModelFitting::CLineModelFitting(
   setLineRatioType(m_lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
-  setContinuumComponent("fromSpectrum");
+  setContinuumComponent(TContinuumComponent("fromSpectrum"));
 }
 
 void CLineModelFitting::initParameters() {
@@ -138,9 +138,9 @@ void CLineModelFitting::initParameters() {
         ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
   }
 
-  std::string continuumComponent =
-      ps->GetScoped<std::string>("continuumComponent");
-  if (continuumComponent == "tplFit" || continuumComponent == "tplFitAuto") {
+  TContinuumComponent continuumComponent(
+      ps->GetScoped<std::string>("continuumComponent"));
+  if (continuumComponent.isTplFitxxx()) {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
     m_useloglambdasampling = ps->GetScoped<bool>("useLogLambdaSampling");
@@ -302,7 +302,7 @@ bool CLineModelFitting::initDtd() {
                           // already initialized
                           // TODO check statement above
   m_dTransposeDLambdaRange = getLambdaRange();
-  if (isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw())
+  if (isContinuumComponentFitter())
     m_dTransposeD = EstimateDTransposeD("raw");
   else
     m_dTransposeD = EstimateDTransposeD("noContinuum");
@@ -312,11 +312,10 @@ bool CLineModelFitting::initDtd() {
 }
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
-  if (getContinuumComponent() == "noContinuum")
+  if (isContinuumComponentNoContinuum())
     return;
 
-  // TODO make a fusion of conditions
-  if (!isContinuumComponentTplfitxx() && !isContinuumComponentPowerLaw()) {
+  if (!isContinuumComponentFitter()) {
     for (auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().setContinuumToInputSpc();
     }
@@ -361,16 +360,14 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   m_spectraIndex.reset(); // we choose arbitrarily first obs to check if dtd is
                           // already initialized
 
-  if (!isContinuumComponentPowerLaw() &&
-      m_dTransposeDLambdaRange != getLambdaRange())
+  if (m_dTransposeDLambdaRange != getLambdaRange())
     initDtd();
 
-  // TODO here ask Didier how it works more explicitly
   Int32 ntplratio = m_lineRatioManager->prepareFit(
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
-  if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
+  if (isContinuumComponentTplFitxxx() && !m_forcedisableMultipleContinuumfit)
     nContinuum = m_opt_fitcontinuum_maxN;
   // 'on the fly' initialization
   Float64 bestMerit = INFINITY;
@@ -382,7 +379,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     Float64 _meritprior = 0.; // only relevant for "tplRatio"
 
     prepareAndLoadContinuum(k, redshift);
-    if (getContinuumComponent() != "noContinuum")
+    if (!isContinuumComponentNoContinuum())
       computeSpectrumFluxWithoutContinuum();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
@@ -408,7 +405,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         m_lineRatioManager->saveResults(itratio);
       }
-      if (getContinuumComponent() == "noContinuum") {
+      if (isContinuumComponentNoContinuum()) {
         m_models->reinitAllModels();
       }
     }
@@ -417,7 +414,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (!enableLogging)
     return bestMerit;
 
-  if (isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw()) {
+  if (isContinuumComponentFitter()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       for (auto &spcIndex : m_spectraIndex) {
@@ -542,7 +539,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     }
   }
-  if (isContinuumComponentTplfitxx() || isContinuumComponentPowerLaw()) {
+  if (isContinuumComponentFitter()) {
     fit += m_continuumManager->getFittedLogPrior();
   }
   return fit;
@@ -553,8 +550,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMeritFast() const {
 
   fit = m_dTransposeD;
 
-  // TODO see what to do with powerlaw here if necessaary
-  if (!isContinuumComponentTplfitxx() && !isContinuumComponentPowerLaw())
+  if (!isContinuumComponentFitter())
     return fit;
 
   Float64 term1 = m_continuumManager->getTerm1();
@@ -1149,7 +1145,7 @@ Float64 CLineModelFitting::EstimateMTransposeM()
   return mtm;
 }
 
-void CLineModelFitting::setContinuumComponent(std::string component) {
+void CLineModelFitting::setContinuumComponent(TContinuumComponent component) {
   m_continuumManager->setContinuumComponent(std::move(component));
 }
 /**

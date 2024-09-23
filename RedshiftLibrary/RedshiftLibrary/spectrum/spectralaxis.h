@@ -91,8 +91,8 @@ public:
 
   CSpectrumSpectralAxis ShiftByWaveLength(Float64 wavelengthOffset,
                                           EShiftDirection direction) const;
-  void ShiftByWaveLengthInplace(Float64 wavelengthOffset,
-                                EShiftDirection direction);
+  const CSpectrumSpectralAxis &
+  ShiftByWaveLengthInPlace(Float64 wavelengthOffset, EShiftDirection direction);
 
   void ApplyOffset(Float64 wavelengthOffset);
 

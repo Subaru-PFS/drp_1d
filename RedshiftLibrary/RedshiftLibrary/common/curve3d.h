@@ -39,27 +39,19 @@
 #ifndef _REDSHIFT_CURVE3D_
 #define _REDSHIFT_CURVE3D_
 
+#include "RedshiftLibrary/common/curve.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/operator/curve.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 namespace NSEpic {
 
-// TODO voir pour tout le monde qui on met en public ou private
 struct T3DCurve {
   T3DCurve(Int32 nigm, Int32 nism);
 
-  // rule of 5 defaults
-  ~T3DCurve() = default;
-  T3DCurve(const T3DCurve &) = default;
-  T3DCurve(T3DCurve &&) = default;
-  T3DCurve &operator=(const T3DCurve &) = default;
-  T3DCurve &operator=(T3DCurve &&) = default;
-
   Int32 size() const { return lambda.size(); }
 
-  void copyCurveAtAllIgmIsm(TCurve &curve);
+  void copyCurveAtAllIgmIsm(TCurve const &curve);
 
   void setLambda(TFloat64List inputLambda);
   template <typename T>

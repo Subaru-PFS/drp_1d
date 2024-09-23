@@ -128,21 +128,6 @@ Int32 CTemplatesFitStore::getContinuumCount() const {
   return m_nContinuumCandidates;
 }
 
-Float64
-CTemplatesFitStore::FindMaxAmplitudeSigma(Float64 &z,
-                                          CContinuumModelSolution &fitValues) {
-  Int32 icontinuum = 0;
-  m_fitMaxValues->fitAmplitudeSigmaMAX = -INFINITY;
-  // TemplateFitValues fitValues;
-  for (Int32 i = 0; i < m_redshiftgrid.size(); i++) {
-    const CContinuumModelSolution &thisfitValues = m_fitValues[i][icontinuum];
-    if (thisfitValues.tplAmplitudeSigma >
-        m_fitMaxValues->fitAmplitudeSigmaMAX) {
-      m_fitMaxValues->fitAmplitudeSigmaMAX = thisfitValues.tplAmplitudeSigma;
-      z = m_redshiftgrid[i];
-      fitValues = thisfitValues;
-    }
-  }
-
-  return m_fitMaxValues->fitAmplitudeSigmaMAX;
+Float64 CTemplatesFitStore::getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const {
+  return continuum.tplAmplitudeSigma;
 }

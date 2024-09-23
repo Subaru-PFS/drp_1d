@@ -117,7 +117,7 @@ public:
   bool m_opt_firstpass_multiplecontinuumfit_disable = true;
   std::string m_opt_firstpass_fittingmethod;
   std::string m_opt_secondpasslcfittingmethod = undefStr;
-  std::string m_opt_continuumcomponent;
+  TContinuumComponent m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
 
@@ -147,7 +147,7 @@ private:
       const std::string &opt_continuumreest, const Int32 tplfit_option,
       const bool overrideRecomputeOnlyOnTheCandidate = false);
   void evaluateContinuumAmplitude(
-      const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
+      const std::shared_ptr<CContinuumFitStore> &tplfitStore);
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_Redshifts; // coarse grid

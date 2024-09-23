@@ -160,3 +160,21 @@ void CContinuumFitStore::initFitValues() {
   m_fitValues = std::vector<std::vector<CContinuumModelSolution>>(
       m_redshiftgrid.size(), zfitvals);
 }
+
+Float64 CContinuumFitStore::FindMaxAmplitudeSigma(Float64 &z,
+                                          CContinuumModelSolution &fitValues) {
+  Int32 icontinuum = 0;
+  m_fitMaxValues->fitAmplitudeSigmaMAX = -INFINITY;
+  for (Int32 i = 0; i < m_redshiftgrid.size(); i++) {
+    const CContinuumModelSolution &continuum = m_fitValues[i][icontinuum];
+    Float64 fracAmplitudeSigma = getFracAmplitudeSigma(continuum);
+    if (fracAmplitudeSigma >
+        m_fitMaxValues->fitAmplitudeSigmaMAX) {
+      m_fitMaxValues->fitAmplitudeSigmaMAX = fracAmplitudeSigma;
+      z = m_redshiftgrid[i];
+      fitValues = continuum;
+    }
+  }
+
+  return m_fitMaxValues->fitAmplitudeSigmaMAX;
+}

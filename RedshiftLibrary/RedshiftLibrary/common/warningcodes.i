@@ -14,10 +14,13 @@ enum class WarningCode {
   LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT, // 12
   LBFGSPP_ERROR,                                // 13
   PDF_INTEGRATION_WINDOW_TOO_SMALL,             // 14  
-  //FORCED_POWERLAW_TO_ZERO,                      // 15
             
   // Python
-  UNUSED_PARAMETER,                             // 16
-  SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,       // 17 
-  MULTI_OBS_ARBITRARY_LSF                       // 18
+  UNUSED_PARAMETER,                             // 15
+  SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,       // 16
+  MULTI_OBS_ARBITRARY_LSF,                      // 17
+  
+  
+  // All new ones here not to change binary codes
+  FORCED_POWERLAW_TO_ZERO                      // 18
 };

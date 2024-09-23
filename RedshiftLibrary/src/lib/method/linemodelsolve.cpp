@@ -70,8 +70,8 @@ bool CLineModelSolve::PopulateParameters(
 
   m_opt_continuumreest =
       parameterStore->GetScoped<std::string>("lineModel.continuumReestimation");
-  m_opt_continuumcomponent =
-      parameterStore->GetScoped<std::string>("lineModel.continuumComponent");
+  m_opt_continuumcomponent = TContinuumComponent(
+      parameterStore->GetScoped<std::string>("lineModel.continuumComponent"));
 
   m_opt_pdfcombination =
       parameterStore->GetScoped<std::string>("lineModel.pdfCombination");
@@ -531,9 +531,7 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // TODO see if add powerlaw here ??
   bool enableFirstpass_B = (m_opt_extremacountB > 0) &&
-                           (m_opt_continuumcomponent == "tplFit" ||
-                            m_opt_continuumcomponent == "tplFitAuto" ||
-                            m_opt_continuumcomponent == "powerLaw") &&
+                           m_opt_continuumcomponent.isContinuumFit() &&
                            (m_opt_extremacountB > 1);
   COperatorLineModel linemodel_fpb;
   std::string fpb_opt_continuumcomponent =

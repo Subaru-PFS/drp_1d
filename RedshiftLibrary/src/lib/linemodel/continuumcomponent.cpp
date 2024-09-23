@@ -36,36 +36,25 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
-#define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
-#include <vector>
+#include "RedshiftLibrary/linemodel/continuumcomponent.h"
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/continuumfitstore.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-namespace NSEpic {
+using namespace NSEpic;
 
-class CTemplatesFitStore : public CContinuumFitStore {
-public:
-  using CContinuumFitStore::CContinuumFitStore;
+const std::unordered_map<std::string, TContinuumComponent::EContinuumComponent>
+    TContinuumComponent::stringToEnum = {
+        {"tplFit", TContinuumComponent::EContinuumComponent::tplFit},
+        {"tplFitAuto", TContinuumComponent::EContinuumComponent::tplFitAuto},
+        {"noContinuum", TContinuumComponent::EContinuumComponent::noContinuum},
+        {"fromSpectrum",
+         TContinuumComponent::EContinuumComponent::fromSpectrum},
+        {"powerLaw", TContinuumComponent::EContinuumComponent::powerLaw}};
 
-  void Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
-           Float64 redshift, Float64 merit, Float64 chiSquare_phot,
-           Float64 fitAmplitude, Float64 fitAmplitudeError,
-           Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,
-           Float64 logprior, Float64 snr);
-
-  Int32 getContinuumCount() const override;
-  void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
-
-private:
-  Float64 getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const override;
-  Int32 m_nContinuumCandidates = 0;
-};
-
-} // namespace NSEpic
-
-#endif
+const std::unordered_map<TContinuumComponent::EContinuumComponent, std::string>
+    TContinuumComponent::enumToString = {
+        {TContinuumComponent::EContinuumComponent::tplFit, "tplFit"},
+        {TContinuumComponent::EContinuumComponent::tplFitAuto, "tplFitAuto"},
+        {TContinuumComponent::EContinuumComponent::noContinuum, "noContinuum"},
+        {TContinuumComponent::EContinuumComponent::fromSpectrum,
+         "fromSpectrum"},
+        {TContinuumComponent::EContinuumComponent::powerLaw, "powerLaw"}};

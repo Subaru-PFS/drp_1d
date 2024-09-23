@@ -39,11 +39,11 @@
 #ifndef _REDSHIFT_OPERATOR_POWER_LAW_
 #define _REDSHIFT_OPERATOR_POWER_LAW_
 
+#include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
-#include "RedshiftLibrary/operator/curve3d.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/result.h"
@@ -60,6 +60,7 @@ class basicfit_simple_without_extinction;
 class basicfit_simple_var;
 class basicfit_simple_weighted_without_extinction;
 class basicfit_double_without_extinction;
+class basicfit_double_with_var;
 class basicfit_simple_with_extinction;
 class basicfit_multiobs;
 } // namespace powerLawOperator_test
@@ -70,7 +71,7 @@ struct TPowerLawCoefs {
   // a * x^b
   Float64 a = NAN;
   Float64 b = NAN;
-  Float64 sigmaa = NAN;
+  Float64 stda = NAN;
   Float64 sigmab = NAN;
 };
 
@@ -85,9 +86,6 @@ struct TPowerLawResult {
   TPowerLawCoefsPair coefs = {{0, 0}, {0, 0}};
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
-  std::vector<TFloat64List> ChiSquareInterm;
-  std::vector<TFloat64List> IsmCalzettiCoeffInterm;
-  std::vector<TInt32List> IgmMeiksinIdxInterm;
 };
 
 struct TChi2Result {
@@ -127,6 +125,7 @@ protected:
   friend powerLawOperator_test::basicfit_simple_var;
   friend powerLawOperator_test::basicfit_simple_weighted_without_extinction;
   friend powerLawOperator_test::basicfit_double_without_extinction;
+  friend powerLawOperator_test::basicfit_double_with_var;
   friend powerLawOperator_test::basicfit_simple_with_extinction;
   friend powerLawOperator_test::basicfit_multiobs;
 
@@ -164,8 +163,7 @@ private:
   T2DList<Float64> computeChi2(T3DCurve const &curve3D,
                                T2DPowerLawCoefsPair const &coefs);
   TChi2Result findMinChi2OnIgmIsm(T3DCurve const &curve,
-                                  T2DPowerLawCoefsPair const &coefs,
-                                  std::vector<TFloat64List> &ChiSquareInterm);
+                                  T2DPowerLawCoefsPair const &coefs);
   Float64 theoreticalFluxAtLambda(TPowerLawCoefsPair coefs, Float64 lambda);
   Float64 computePowerLaw(TPowerLawCoefs coefs, Float64 lambda);
   TPowerLawCoefs compute2PassSimplePowerLawCoefs(TCurve const &lnCurves) const;

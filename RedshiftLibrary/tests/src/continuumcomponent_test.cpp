@@ -36,36 +36,35 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
-#define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
-#include <vector>
+#include <boost/test/unit_test.hpp>
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/continuumfitstore.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-namespace NSEpic {
+#include "RedshiftLibrary/linemodel/continuumcomponent.h"
 
-class CTemplatesFitStore : public CContinuumFitStore {
-public:
-  using CContinuumFitStore::CContinuumFitStore;
+using namespace NSEpic;
 
-  void Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
-           Float64 redshift, Float64 merit, Float64 chiSquare_phot,
-           Float64 fitAmplitude, Float64 fitAmplitudeError,
-           Float64 fitAmplitudeSigma, Float64 fitDtM, Float64 fitMtM,
-           Float64 logprior, Float64 snr);
+BOOST_AUTO_TEST_SUITE(continuumcomponent_test)
+BOOST_AUTO_TEST_CASE(tautology_test) {
 
-  Int32 getContinuumCount() const override;
-  void setSNRMax(Float64 snr) { m_fitMaxValues->tplFitSNRMax = snr; }
+  std::vector<std::string> componentsString = {
+      "tplFit", "tplFitAuto", "noContinuum", "fromSpectrum", "powerLaw"};
+  std::vector<TContinuumComponent::EContinuumComponent> componentsEnum = {
+      TContinuumComponent::EContinuumComponent::tplFit,
+      TContinuumComponent::EContinuumComponent::tplFitAuto,
+      TContinuumComponent::EContinuumComponent::noContinuum,
+      TContinuumComponent::EContinuumComponent::fromSpectrum,
+      TContinuumComponent::EContinuumComponent::powerLaw};
+  for (size_t componentIdx = 0; componentIdx < componentsString.size();
+       componentIdx++) {
 
-private:
-  Float64 getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const override;
-  Int32 m_nContinuumCandidates = 0;
-};
-
-} // namespace NSEpic
-
-#endif
+    BOOST_CHECK(TContinuumComponent::stringToEnum.at(
+                    TContinuumComponent::enumToString.at(
+                        componentsEnum[componentIdx])) ==
+                componentsEnum[componentIdx]);
+    BOOST_CHECK(TContinuumComponent::enumToString.at(
+                    TContinuumComponent::stringToEnum.at(
+                        componentsString[componentIdx])) ==
+                componentsString[componentIdx]);
+  }
+}
+BOOST_AUTO_TEST_SUITE_END()
