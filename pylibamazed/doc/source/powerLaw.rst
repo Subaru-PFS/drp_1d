@@ -85,12 +85,43 @@ With :
 Which can be reduced with the continuity constraint of the 2 power laws in (1) :
 
 .. math::
-     \theta = \left( \begin{array}{c} A_1 \\ b_1 \\ A_2 \end{array} \right)
+     \theta = \left( \begin{array}{c} A_1 \\ b_1 \\ b_2 \end{array} \right)
      \text{, and }
      M = \left( \begin{array}{ccc} 1 & X_i & 0 \\ \vdots & \vdots & \vdots \\ 1 & X_c & -X_c + X_i \\ \vdots & \vdots & \vdots \end{array} \right)
 
 
-Calculations then allow to find an analytic solution to this equation.
+Matrix calculations then allow to find an analytic solution to this equation.
+
+
+Calculating coefs standard deviations
+-------------------------------------
+
+Variances and covariances of A1, b1, b2 are the terms of :math:`(M^T N^{-1} M)^{-1}`.
+We use the approximation :math:`\text{Var}(a_1) = \text{Var}(\exp(A_1)) \approx a_1^2 var(A1)` 
+
+For A2, based on :math:`A2 = A1 + (b1-b2) X_c` we find:
+
+.. math::
+     \text{Var}(A_2) = \text{Var}(A_1) + X_c^2 \left( \text{Var}(b_1) + \text{Var}(b_2) - 2 \text{Cov}(b_1,b_2) \right) + 2 X_c \left(\text{Cov}(A_1, b_1) - \text{Cov}(A_1, b_2)\right)
+
+And using the same approximation than for :math:`a_1`, we deduce the formula :math:`\text{Var}(a_2)` from :math:`\text{Var}(A_2)`
+
+Estimating continuum amplitude
+------------------------------
+
+To calculate continuum SNR, we use :math:`\text{max}(\frac{a_1}{\sigma_{a_1}}, \frac{a_2}{\sigma_{a_2}})`
+If SNR is lwoer than threshold defined in parameters, we apply same behavior than in template fitting.
+
+
+Behaviour for too little sample
+-------------------------------
+
+Two main cases of too little cases are possible:
+
+* The total number of samples is too low : coefficient are forced to zero, and a warning is issued.
+* One of either sides of lambda cut does not have enough samples:
+    - The coefficients are calculated using the side with enough samples
+    - They are extended to the side with too little samples before chi2 calculation
 
 
 Calculating the noise
@@ -106,16 +137,9 @@ We will use:
           \sigma_{log} = \frac{\sigma}{y}
      }
 
-:math:`ln` is also applied to the x-axis. We empirically compensate with :math:`\sigma_{loglog} = x \sigma_{log} = \frac{x}{y} \sigma`
+:math:`ln` is also applied to the x-axis. We could empirically compensate with :math:`\sigma_{loglog} = x \sigma_{log} = \frac{x}{y} \sigma`
 
-
-Finally, we will use the standard deviation:
-
-.. math::
-     \boxed{
-          \sigma_{loglog} = \frac{x}{y} \sigma
-     }
-
+For the moment, it did not show a big difference in the tests so we will not apply this ponderation yet.
 
 
 

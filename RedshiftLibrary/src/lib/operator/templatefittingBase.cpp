@@ -79,8 +79,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
     currentRange.getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         kstart, kend);
-    InitIsmIgmConfig(redshift, kstart, kend, tpl->m_ismCorrectionCalzetti,
-                     tpl->m_igmCorrectionMeiksin, spcIndex);
+    InitIsmIgmConfig(redshift, kstart, kend, spcIndex);
   }
 
   if (ebmvCoef > 0.) {

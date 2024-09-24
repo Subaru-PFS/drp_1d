@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
@@ -277,45 +278,22 @@ bool CTemplate::MeiksinInitFailed() const {
 }
 
 // init ism/igm configuration when we change redshift value
-void CTemplate::InitIsmIgmConfig(
-    Float64 redshift,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin) {
-  InitIsmIgmConfig(0, GetSampleCount() - 1, redshift, ismCorrectionCalzetti,
-                   igmCorrectionMeiksin);
+void CTemplate::InitIsmIgmConfig(Float64 redshift) {
+  InitIsmIgmConfig(0, GetSampleCount() - 1, redshift);
 }
 
-void CTemplate::InitIsmIgmConfig(
-    const TFloat64Range &lbdaRange, Float64 redshift,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin) {
+void CTemplate::InitIsmIgmConfig(const TFloat64Range &lbdaRange,
+                                 Float64 redshift) {
   Int32 kstart, kend;
   lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart,
                                      kend);
 
-  InitIsmIgmConfig(kstart, kend, redshift, ismCorrectionCalzetti,
-                   igmCorrectionMeiksin);
+  InitIsmIgmConfig(kstart, kend, redshift);
 }
 
-void CTemplate::InitIsmIgmConfig(
-    Int32 kstart, Int32 kend, Float64 redshift,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin) {
-  if (ismCorrectionCalzetti)
-    m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-
-  if (igmCorrectionMeiksin)
-    m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-
-  if (MeiksinInitFailed() && CalzettiInitFailed()) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot initialize ism/igm");
-  }
+void CTemplate::InitIsmIgmConfig(Int32 kstart, Int32 kend, Float64 redshift) {
+  m_ismCorrectionCalzetti = Context.getFluxCorrectionCalzetti();
+  m_igmCorrectionMeiksin = Context.getFluxCorrectionMeiksin();
 
   if (kstart < 0 || kstart >= m_SpectralAxis.GetSamplesCount()) {
     THROWG(ErrorCode::INTERNAL_ERROR, "kstart outside range");
@@ -387,60 +365,20 @@ void CTemplate::ApplyAmplitude(Float64 amplitude) {
 }
 
 void CTemplate::GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                                 TInt32List &MeiksinList, TInt32List &EbmvList,
-                                 Int32 FitEbmvIdx, Int32 FitMeiksinIdx) const {
-  EbmvList = GetIsmIdxList(opt_dustFitting, FitEbmvIdx);
-  MeiksinList = GetIgmIdxList(opt_extinction, FitMeiksinIdx);
+                                 TInt32List &meiksinList, TInt32List &ebmvList,
+                                 Int32 fitEbmvIdx, Int32 fitMeiksinIdx) const {
+  Context.GetIsmIgmIdxList(opt_extinction, opt_dustFitting, meiksinList,
+                           ebmvList, fitEbmvIdx, fitMeiksinIdx);
 }
 
 TInt32List CTemplate::GetIsmIdxList(bool opt_dustFitting,
-                                    Int32 FitEbmvIdx) const {
+                                    Int32 fitEbmvIdx) const {
 
-  if (CalzettiInitFailed() && opt_dustFitting)
-    THROWG(ErrorCode::INTERNAL_ERROR, "missing Calzetti initialization");
-
-  Int32 EbmvListSize = 1;
-  if (opt_dustFitting && FitEbmvIdx == undefIdx)
-    EbmvListSize = m_ismCorrectionCalzetti
-                       ->GetNPrecomputedEbmvCoeffs(); // TODO à passer en arg
-
-  TInt32List EbmvList(EbmvListSize);
-
-  if (!opt_dustFitting) { // Ism deactivated
-    EbmvList[0] = -1;
-    return EbmvList;
-  }
-
-  if (FitEbmvIdx != undefIdx)
-    EbmvList[0] = FitEbmvIdx;
-  else
-    std::iota(EbmvList.begin(), EbmvList.end(), 0);
-
-  return EbmvList;
+  return Context.GetIsmIdxList(opt_dustFitting, fitEbmvIdx);
 }
 
 TInt32List CTemplate::GetIgmIdxList(bool opt_extinction,
-                                    Int32 FitMeiksinIdx) const {
+                                    Int32 fitMeiksinIdx) const {
 
-  if (MeiksinInitFailed() && opt_extinction)
-    THROWG(ErrorCode::INTERNAL_ERROR, "missing Meiksin initialization");
-
-  Int32 MeiksinListSize = 1;
-  if (opt_extinction && FitMeiksinIdx == undefIdx)
-    MeiksinListSize =
-        m_igmCorrectionMeiksin->getIdxCount(); // TODO à passer en arg
-
-  TInt32List MeiksinList(MeiksinListSize);
-
-  if (!opt_extinction) {
-    MeiksinList[0] = -1;
-    return MeiksinList;
-  }
-
-  if (FitMeiksinIdx != undefIdx)
-    MeiksinList[0] = FitMeiksinIdx;
-  else
-    std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
-
-  return MeiksinList;
+  return Context.GetIgmIdxList(opt_extinction, fitMeiksinIdx);
 }

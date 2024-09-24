@@ -214,9 +214,9 @@ void CInputContext::Init() {
     spectrum_ptr->InitSpectrumContinuum(*m_ParameterStore);
     // convolve IGM by LSF
 
-    if (!m_igmcorrectionMeiksin->isConvolved() ||
+    if (!m_igmCorrectionMeiksin->isConvolved() ||
         m_ParameterStore->Get<std::string>("lsf.lsfType") == "fromSpectrumData")
-      m_igmcorrectionMeiksin->convolveByLSF(spectrum_ptr->GetLSF(),
+      m_igmCorrectionMeiksin->convolveByLSF(spectrum_ptr->GetLSF(),
                                             *lambdaRange_ptr);
   }
 
@@ -224,7 +224,7 @@ void CInputContext::Init() {
   m_TemplateCatalog->m_logsampling = 0;
   m_TemplateCatalog->m_orthogonal = 0;
   m_TemplateCatalog->SetIsmIgmCorrection(
-      m_ParameterStore, m_igmcorrectionMeiksin, m_ismcorrectionCalzetti);
+      m_ParameterStore, m_igmCorrectionMeiksin, m_ismCorrectionCalzetti);
 
   // log-lambda resampling if needed
   RebinInputs();

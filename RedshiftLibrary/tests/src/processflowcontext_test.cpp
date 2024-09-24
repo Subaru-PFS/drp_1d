@@ -159,8 +159,8 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.getCLineMap().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
-  Context.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-  Context.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
+  Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
+  Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
 
   Context.Init();
   BOOST_CHECK(Context.GetRebinnedSpectrum() = spc);

@@ -72,7 +72,7 @@ struct TPowerLawCoefs {
   Float64 a = NAN;
   Float64 b = NAN;
   Float64 stda = NAN;
-  Float64 sigmab = NAN;
+  Float64 stdb = NAN;
 };
 
 typedef std::vector<std::vector<TPowerLawCoefs>> T2DPowerLawCoefs;
@@ -107,10 +107,9 @@ public:
   COperatorPowerLaw &operator=(COperatorPowerLaw &&other) = default;
   ~COperatorPowerLaw() = default;
 
-  std::shared_ptr<COperatorResult> Compute(bool opt_extinction,
-                                           bool opt_dustFitting,
-                                           Float64 nullFluxThreshold,
-                                           std::string method);
+  std::shared_ptr<COperatorResult>
+  Compute(bool opt_extinction, bool opt_dustFitting, Float64 nullFluxThreshold,
+          std::string method, Int32 FitEbmvIdx, Int32 FitMeiksinIdx);
   void ComputeSpectrumModel(
       const std::shared_ptr<CContinuumModelSolution> &continuum, Int32 spcIndex,
       const std::shared_ptr<CModelSpectrumResult> &models);
@@ -131,25 +130,34 @@ protected:
 
   TPowerLawResult BasicFit(Float64 redshift, bool opt_extinction,
                            bool opt_dustFitting, Float64 nullFluxThreshold,
-                           std::string method);
+                           std::string method, const TList<Int32> &MeiksinList,
+                           const TList<Int32> &EbmvList);
 
 private:
   // igm ism curves
-  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  Int32 m_nIsmCurves;
+  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
+  std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+      m_ismCorrectionCalzetti;
+
+  // Indexes of igm / ism elements to take into account
+  TList<Int32> m_igmIdxList;
+  TList<Int32> m_ismIdxList;
   Int32 m_nIgmCurves;
+  Int32 m_nIsmCurves;
+
   TList<Int32> m_nPixels;
   TList<Int32> m_firstPixelIdxInRange;
   TList<Int32> m_lastPixelIdxInRange;
   Float64 m_lambdaCut;
-  Int16 m_nSpectra;
+  Int32 m_nSpectra;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
   T3DList<Float64> m_ismIgmCorrections;
   Int32 m_nLogSamplesMin = POWER_LAW_N_SAMPLES_MIN_FOR_CONTINUUM_FIT;
 
-  void initIgmIsm(bool opt_extinction, bool opt_dustFitting);
-  void addTooFewSamplesWarning(Int32 N, Int16 igmIdx, Int16 ismIdx,
+  void initIgmIsm(bool opt_extinction, bool opt_dustFitting,
+                  const TList<Int32> &MeiksinList,
+                  const TList<Int32> &EbmvList);
+  void addTooFewSamplesWarning(Int32 N, Int32 igmIdx, Int32 ismIdx,
                                const char *funcName) const;
   TPowerLawCoefsPair computeFullPowerLawCoefs(Int32 N1, Int32 N2,
                                               TCurve const &lnCurve) const;
@@ -181,7 +189,7 @@ private:
   TList<Float64>
   computeIsmIgmCorrection(Float64 redshift,
                           CSpectrumSpectralAxis const &spectrumLambdaRest,
-                          Int16 igmIdx, Float64 ismCoef) const;
+                          Int32 igmIdx, Float64 ismCoef) const;
   T3DCurve computeEmittedCurve(Float64 redshift, Float64 nullFluxThreshold,
                                bool opt_extinction, bool opt_dustFitting);
   TPowerLawCoefs computeSimplePowerLawCoefs(

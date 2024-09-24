@@ -61,7 +61,8 @@ public:
   Float64 computea2(Float64 a1, Float64 b1, Float64 b2, Float64 xc);
   void applyIsmIgmOnSpectrum(CSpectrumSpectralAxis const &spectralAxisRest,
                              CSpectrumFluxAxis const &fluxAxis, Float64 z,
-                             std::shared_ptr<CSpectrum> &spc);
+                             std::shared_ptr<CSpectrum> &spc,
+                             Int32 meiksinIdx = 0, Int32 dustCoefIdx = 0);
 };
 
 void PowerLaw_fixture::Init(std::string jsonString,
@@ -69,9 +70,9 @@ void PowerLaw_fixture::Init(std::string jsonString,
   std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
 
   Context.LoadParameterStore(jsonString);
-  Context.setfluxCorrectionMeiksin(
-      fixture_MeiskinCorrection().igmCorrectionMeiksin);
-  Context.setfluxCorrectionCalzetti(
+  Context.setFluxCorrectionMeiksin(
+      fixture_MeiskinCorrection2().igmCorrectionMeiksin);
+  Context.setFluxCorrectionCalzetti(
       fixture_CalzettiCorrection().ismCorrectionCalzetti);
 
   std::shared_ptr<CLSF> LSF =
@@ -135,12 +136,11 @@ CSpectrumSpectralAxis PowerLaw_fixture::createSpectralAxisRest(
 void PowerLaw_fixture::applyIsmIgmOnSpectrum(
     CSpectrumSpectralAxis const &spectralAxisRest,
     CSpectrumFluxAxis const &fluxAxis, Float64 z,
-    std::shared_ptr<CSpectrum> &spc) {
+    std::shared_ptr<CSpectrum> &spc, Int32 meiksinIdx, Int32 dustCoefIdx) {
   CTemplate spectrumTemplate1("", "", spectralAxisRest, fluxAxis);
-  spectrumTemplate1.InitIsmIgmConfig(z, Context.getFluxCorrectionCalzetti(),
-                                     Context.getFluxCorrectionMeiksin());
-  spectrumTemplate1.ApplyMeiksinCoeff(0);
-  spectrumTemplate1.ApplyDustCoeff(0);
+  spectrumTemplate1.InitIsmIgmConfig(z);
+  spectrumTemplate1.ApplyMeiksinCoeff(meiksinIdx);
+  spectrumTemplate1.ApplyDustCoeff(dustCoefIdx);
   spc->SetFluxAxis(spectrumTemplate1.GetFluxAxis());
 }
 
@@ -160,7 +160,7 @@ void PowerLaw_fixture::addNoiseAxis(CSpectrumFluxAxis &fluxAxis) {
   // Build noise from a random number generator
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(meanFlux / 5, meanFlux / 10);
+  std::uniform_real_distribution<> dis(meanFlux / 50, meanFlux / 100);
   std::vector<Float64> noiseValues(n);
   for (Int32 i = 0; i < n; ++i) {
     noiseValues[i] = dis(gen);
@@ -220,7 +220,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   COperatorPowerLaw operatorPowerLaw;
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
   TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "simple");
+      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "simple",
+                                TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
@@ -233,7 +234,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   COperatorPowerLaw operatorPowerLaw2;
   operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
   TPowerLawResult result2 = operatorPowerLaw2.BasicFit(
-      0, false, false, nullThreshold, "simpleWeighted");
+      0, false, false, nullThreshold, "simpleWeighted", TList<Int32>{undefIdx},
+      TList<Int32>{undefIdx});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
@@ -265,7 +267,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   COperatorPowerLaw operatorPowerLaw;
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
   TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "simple");
+      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "simple",
+                                TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error compared to the results found with python notebook
   BOOST_TEST(result.coefs.first.a == 1.452346083570847e-16,
@@ -278,7 +281,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.stda == 5.634124732229189e-16,
              boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.sigmab == 0.4533861348305359,
+  BOOST_TEST(result.coefs.first.stdb == 0.4533861348305359,
              boost::test_tools::tolerance(0.01));
   Context.reset();
 
@@ -286,7 +289,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   COperatorPowerLaw operatorPowerLaw2;
   operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
   TPowerLawResult result2 = operatorPowerLaw2.BasicFit(
-      0, false, false, nullThreshold, "simpleWeighted");
+      0, false, false, nullThreshold, "simpleWeighted", TList<Int32>{undefIdx},
+      TList<Int32>{undefIdx});
 
   // Accepts a 1% error compared to the results found with python notebook
   BOOST_TEST(result2.coefs.first.a == 1.4963406789134072e-16,
@@ -299,7 +303,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.stda == 1.0296994218492315e-17,
              boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.first.sigmab == 0.008048716415326033,
+  BOOST_TEST(result2.coefs.first.stdb == 0.008048716415326033,
              boost::test_tools::tolerance(0.01));
   Context.reset();
 }
@@ -322,7 +326,8 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
 
   TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "full");
+      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "full",
+                                TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
@@ -357,7 +362,8 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
 
   TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "full");
+      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "full",
+                                TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error compared to the results found with python notebook
   BOOST_TEST(result.coefs.first.a == 1.3593026417419627e-16,
@@ -371,11 +377,11 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
 
   BOOST_TEST(result.coefs.first.stda == 6.6531274177064696e-18,
              boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.sigmab == 0.005769929304253846,
+  BOOST_TEST(result.coefs.first.stdb == 0.005769929304253846,
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.stda == 6.868548415411009e-19,
              boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.sigmab == 0.0066342065076361876,
+  BOOST_TEST(result.coefs.second.stdb == 0.0066342065076361876,
              boost::test_tools::tolerance(0.01));
   Context.reset();
 }
@@ -408,7 +414,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
 
   // Without extinction, with redshift
   TPowerLawResult result =
-      operatorPowerLaw.BasicFit(z, false, false, nullThreshold, "simple");
+      operatorPowerLaw.BasicFit(z, false, false, nullThreshold, "simple",
+                                TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
@@ -428,21 +435,24 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
 
   // Creates a template to be able to apply ism / igm
   CTemplate spectrumTemplate("", "", spectralAxisRest, fluxAxis);
-  spectrumTemplate.InitIsmIgmConfig(z, Context.getFluxCorrectionCalzetti(),
-                                    Context.getFluxCorrectionMeiksin());
-  spectrumTemplate.ApplyMeiksinCoeff(0);
-  spectrumTemplate.ApplyDustCoeff(0);
+  spectrumTemplate.InitIsmIgmConfig(z);
+  spectrumTemplate.ApplyMeiksinCoeff(2);
+  spectrumTemplate.ApplyDustCoeff(1);
 
-  // Adapts spectrum flux
   spc2->SetFluxAxis(spectrumTemplate.GetFluxAxis());
-
-  result = operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, "simple");
+  result =
+      operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, "simple",
+                                 TList<Int32>{0, 2}, TList<Int32>{0, 1, 2});
 
   // accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+
+  BOOST_CHECK_EQUAL(result.meiksinIdx, 2);
+  BOOST_CHECK_EQUAL(result.ebmvCoef, 0.1);
+
   Context.reset();
 }
 
@@ -487,7 +497,8 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
 
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
   TPowerLawResult result =
-      operatorPowerLaw.BasicFit(z, true, true, nullThreshold, "full");
+      operatorPowerLaw.BasicFit(z, true, true, nullThreshold, "full",
+                                TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
@@ -520,7 +531,8 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
 
   COperatorPowerLaw operatorPowerLaw2{{}, xc2};
   operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
-  result = operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, "full");
+  result = operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, "full",
+                                      TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
@@ -552,7 +564,8 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   COperatorPowerLaw operatorPowerLaw3{{}, xc2};
   operatorPowerLaw3.m_nLogSamplesMin = nMinSamples;
 
-  result = operatorPowerLaw3.BasicFit(z, true, true, nullThreshold, "full");
+  result = operatorPowerLaw3.BasicFit(z, true, true, nullThreshold, "full",
+                                      TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a2,
