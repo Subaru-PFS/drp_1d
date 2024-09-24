@@ -492,11 +492,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   Log.LogDebug(" prepare the results");
 
-  TInt32List MeiksinList;
-  TInt32List EbmvList;
-  TIgmIsmIdxs igmIsmIdxs;
-  m_templatesRebined_bf.front().GetIsmIgmIdxList(
-      opt_extinction, opt_dustFitting, igmIsmIdxs, FitEbmvIdx, FitMeiksinIdx);
+  TIgmIsmIdxs igmIsmIdxs = m_templatesRebined_bf.front().GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
   Int32 MeiksinListSize = igmIsmIdxs.igmIdxs.size();
   Int32 EbmvListSize = igmIsmIdxs.ismIdxs.size();
   Log.LogDebug(Formatter() << " prepare N ism coeffs = " << EbmvListSize);

@@ -404,9 +404,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   std::shared_ptr<CTemplateFittingResult> result =
       std::make_shared<CTemplateFittingResult>(m_redshifts.size());
-  TIgmIsmIdxs igmIsmIdxs;
-  tpl->GetIsmIgmIdxList(opt_extinction, opt_dustFitting, igmIsmIdxs, FitEbmvIdx,
-                        FitMeiksinIdx);
+  TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
   result->Redshifts = m_redshifts;
 

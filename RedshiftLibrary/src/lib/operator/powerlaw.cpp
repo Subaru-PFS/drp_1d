@@ -81,20 +81,14 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
 }
 
 void COperatorPowerLaw::initIgmIsm(bool opt_extinction, bool opt_dustFitting,
-                                   const TList<Int32> &MeiksinList,
-                                   const TList<Int32> &EbmvList) {
-  if (opt_extinction) {
-    m_igmIdxList = MeiksinList;
-    m_nIgmCurves = m_igmIdxList.size();
-  } else {
-    m_nIgmCurves = 1;
-  }
-  if (opt_dustFitting) {
-    m_ismIdxList = EbmvList;
-    m_nIsmCurves = m_ismIdxList.size();
-  } else {
-    m_nIsmCurves = 1;
-  }
+                                   Int32 FitEbmvIdx, Int32 FitMeiksinIdx) {
+  TIgmIsmIdxs igmIsmIdxs = Context.GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
+
+  m_igmIdxList = igmIsmIdxs.igmIdxs;
+  m_nIgmCurves = m_igmIdxList.size();
+  m_ismIdxList = igmIsmIdxs.ismIdxs;
+  m_nIsmCurves = m_ismIdxList.size();
 }
 
 TPowerLawResult
@@ -102,8 +96,6 @@ COperatorPowerLaw::BasicFit(Float64 redshift, bool opt_extinction,
                             bool opt_dustFitting, Float64 nullFluxThreshold,
                             std::string method, const TList<Int32> &MeiksinList,
                             const TList<Int32> &EbmvList) {
-  initIgmIsm(opt_extinction, opt_dustFitting, MeiksinList, EbmvList);
-
   // Question: what to do with this ?
   // m_option_igmFastProcessing = (m_nIgmCurves > 1 ? true : false);
 
@@ -218,20 +210,18 @@ std::shared_ptr<COperatorResult>
 COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
                            Float64 nullFluxThreshold, std::string method,
                            Int32 FitEbmvIdx, Int32 FitMeiksinIdx) {
+  initIgmIsm(opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
+
   // Creates power law result
   std::shared_ptr<CPowerLawResult> result =
       std::make_shared<CPowerLawResult>(m_redshifts.size());
 
   result->Redshifts = m_redshifts;
-  TIgmIsmIdxs igmIsmIdxs;
-  Context.GetIsmIgmIdxList(opt_extinction, opt_dustFitting, igmIsmIdxs,
-                           FitEbmvIdx, FitMeiksinIdx);
-
   for (Int32 zIdx = 0; zIdx < m_redshifts.size(); zIdx++) {
     Float64 redshift = result->Redshifts[zIdx];
     TPowerLawResult result_z =
         BasicFit(redshift, opt_extinction, opt_dustFitting, nullFluxThreshold,
-                 method, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
+                 method, m_igmIdxList, m_ismIdxList);
 
     result->set_at_redshift(zIdx, std::move(result_z));
   }

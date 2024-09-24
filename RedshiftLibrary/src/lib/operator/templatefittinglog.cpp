@@ -1057,9 +1057,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   // Note: below corresponds to ::BasicFit code except that redshift loop
   // belongs to ::compute
   // Optionally apply some IGM absorption
-  TIgmIsmIdxs igmIsmIdxs;
-  m_templateRebined_bf[0].GetIsmIgmIdxList(opt_extinction, opt_dustFitting,
-                                           igmIsmIdxs, FitMeiksinIdx);
+  TIgmIsmIdxs igmIsmIdxs = m_templateRebined_bf[0].GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
   Int32 nIGMCoeffs = igmIsmIdxs.igmIdxs.size();
   Int32 nISMCoeffs = igmIsmIdxs.ismIdxs.size();
 

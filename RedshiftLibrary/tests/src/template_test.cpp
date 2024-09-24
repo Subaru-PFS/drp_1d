@@ -368,8 +368,7 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   BOOST_CHECK(meiksinList[0] == 3);
 
   // GetIsmIgmIdxList
-  TIgmIsmIdxs igmIsmIdxs;
-  tpl5.GetIsmIgmIdxList(1, 1, igmIsmIdxs, 3, 3);
+  TIgmIsmIdxs igmIsmIdxs = tpl5.GetIsmIgmIdxList(1, 1, 3, 3);
   BOOST_CHECK(igmIsmIdxs.igmIdxs == meiksinList);
   BOOST_CHECK(igmIsmIdxs.ismIdxs == ebmvList);
 

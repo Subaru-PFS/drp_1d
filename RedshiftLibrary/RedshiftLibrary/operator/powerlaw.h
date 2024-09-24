@@ -154,9 +154,8 @@ private:
   T3DList<Float64> m_ismIgmCorrections;
   Int32 m_nLogSamplesMin = POWER_LAW_N_SAMPLES_MIN_FOR_CONTINUUM_FIT;
 
-  void initIgmIsm(bool opt_extinction, bool opt_dustFitting,
-                  const TList<Int32> &MeiksinList,
-                  const TList<Int32> &EbmvList);
+  void initIgmIsm(bool opt_extinction, bool opt_dustFitting, Int32 FitEbmvIdx,
+                  Int32 FitMeiksinIdx);
   void addTooFewSamplesWarning(Int32 N, Int32 igmIdx, Int32 ismIdx,
                                const char *funcName) const;
   TPowerLawCoefsPair computeFullPowerLawCoefs(Int32 N1, Int32 N2,
