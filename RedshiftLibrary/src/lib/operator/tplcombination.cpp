@@ -492,13 +492,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   Log.LogDebug(" prepare the results");
 
-  TInt32List MeiksinList;
-  TInt32List EbmvList;
-  m_templatesRebined_bf.front().GetIsmIgmIdxList(
-      opt_extinction, opt_dustFitting, MeiksinList, EbmvList, FitEbmvIdx,
-      FitMeiksinIdx);
-  Int32 MeiksinListSize = MeiksinList.size();
-  Int32 EbmvListSize = EbmvList.size();
+  TIgmIsmIdxs igmIsmIdxs = m_templatesRebined_bf.front().GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
+  Int32 MeiksinListSize = igmIsmIdxs.igmIdxs.size();
+  Int32 EbmvListSize = igmIsmIdxs.ismIdxs.size();
   Log.LogDebug(Formatter() << " prepare N ism coeffs = " << EbmvListSize);
   Log.LogDebug(Formatter() << " prepare N igm coeffs = " << MeiksinListSize);
   std::shared_ptr<CTplCombinationResult> result =
@@ -541,7 +538,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
     BasicFit(spectrum, tplList, clampedlambdaRange, redshift, overlapThreshold,
              fittingResults, -1, opt_extinction, opt_dustFitting,
-             additional_spcMask, logp, MeiksinList, EbmvList);
+             additional_spcMask, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
     result->ChiSquare[i] = fittingResults.chiSquare;
     result->Overlap[i] = fittingResults.overlapFraction;

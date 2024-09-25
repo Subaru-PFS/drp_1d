@@ -48,7 +48,9 @@ const std::unordered_map<std::string, TContinuumComponent::EContinuumComponent>
         {"noContinuum", TContinuumComponent::EContinuumComponent::noContinuum},
         {"fromSpectrum",
          TContinuumComponent::EContinuumComponent::fromSpectrum},
-        {"powerLaw", TContinuumComponent::EContinuumComponent::powerLaw}};
+        {"powerLaw", TContinuumComponent::EContinuumComponent::powerLaw},
+        {"powerLawAuto",
+         TContinuumComponent::EContinuumComponent::powerLawAuto}};
 
 const std::unordered_map<TContinuumComponent::EContinuumComponent, std::string>
     TContinuumComponent::enumToString = {
@@ -57,4 +59,6 @@ const std::unordered_map<TContinuumComponent::EContinuumComponent, std::string>
         {TContinuumComponent::EContinuumComponent::noContinuum, "noContinuum"},
         {TContinuumComponent::EContinuumComponent::fromSpectrum,
          "fromSpectrum"},
-        {TContinuumComponent::EContinuumComponent::powerLaw, "powerLaw"}};
+        {TContinuumComponent::EContinuumComponent::powerLaw, "powerLaw"},
+        {TContinuumComponent::EContinuumComponent::powerLawAuto,
+         "powerLawAuto"}};

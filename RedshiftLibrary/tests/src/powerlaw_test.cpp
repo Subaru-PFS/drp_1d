@@ -219,29 +219,38 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
-  TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "simple",
-                                TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
+
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "simple",
+      TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
   Context.reset();
 
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw2;
   operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw2.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                               undefIdx);
+
   TPowerLawResult result2 = operatorPowerLaw2.BasicFit(
-      0, false, false, nullThreshold, "simpleWeighted", TList<Int32>{undefIdx},
-      TList<Int32>{undefIdx});
+      0, opt_extinction, opt_dustFitting, nullThreshold, "simpleWeighted",
+      TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
   Context.reset();
 }
 
@@ -266,9 +275,15 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
-  TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "simple",
-                                TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
+
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "simple",
+      TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error compared to the results found with python notebook
   BOOST_TEST(result.coefs.first.a == 1.452346083570847e-16,
@@ -288,9 +303,11 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw2;
   operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw2.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                               undefIdx);
   TPowerLawResult result2 = operatorPowerLaw2.BasicFit(
-      0, false, false, nullThreshold, "simpleWeighted", TList<Int32>{undefIdx},
-      TList<Int32>{undefIdx});
+      0, opt_extinction, opt_dustFitting, nullThreshold, "simpleWeighted",
+      TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error compared to the results found with python notebook
   BOOST_TEST(result2.coefs.first.a == 1.4963406789134072e-16,
@@ -309,6 +326,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
 }
 
 BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
   nMinSamples = 10;
   Float64 a1 = 1.5e-16;
   Float64 b1 = -0.5;
@@ -324,10 +344,12 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
 
-  TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "full",
-                                TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "full",
+      TList<Int32>{undefIdx}, TList<Int32>{undefIdx});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
@@ -339,6 +361,9 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
 }
 
 BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
   nMinSamples = 10;
   Float64 a1 = 1.5e-16;
   Float64 b1 = -0.5;
@@ -360,10 +385,12 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
 
-  TPowerLawResult result =
-      operatorPowerLaw.BasicFit(0, false, false, nullThreshold, "full",
-                                TList<Int32>{0, 1}, TList<Int32>{0, 1});
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "full",
+      TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error compared to the results found with python notebook
   BOOST_TEST(result.coefs.first.a == 1.3593026417419627e-16,
@@ -413,15 +440,19 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
 
   // Without extinction, with redshift
-  TPowerLawResult result =
-      operatorPowerLaw.BasicFit(z, false, false, nullThreshold, "simple",
-                                TList<Int32>{0, 1}, TList<Int32>{0, 1});
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      z, opt_extinction, opt_dustFitting, nullThreshold, "simple",
+      TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
   Context.reset();
 
   // With extinction
@@ -440,6 +471,11 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   spectrumTemplate.ApplyDustCoeff(1);
 
   spc2->SetFluxAxis(spectrumTemplate.GetFluxAxis());
+
+  opt_extinction = true;
+  opt_dustFitting = true;
+  operatorPowerLaw2.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                               undefIdx);
   result =
       operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, "simple",
                                  TList<Int32>{0, 2}, TList<Int32>{0, 1, 2});
@@ -447,8 +483,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   // accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == b, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.second.a));
+  BOOST_TEST(std::isnan(result.coefs.second.b));
 
   BOOST_CHECK_EQUAL(result.meiksinIdx, 2);
   BOOST_CHECK_EQUAL(result.ebmvCoef, 0.1);
@@ -496,6 +532,10 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   COperatorPowerLaw operatorPowerLaw({}, xc2);
 
   operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  bool opt_extinction = true;
+  bool opt_dustFitting = true;
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
   TPowerLawResult result =
       operatorPowerLaw.BasicFit(z, true, true, nullThreshold, "full",
                                 TList<Int32>{0, 1}, TList<Int32>{0, 1});
@@ -531,8 +571,11 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
 
   COperatorPowerLaw operatorPowerLaw2{{}, xc2};
   operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
-  result = operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, "full",
-                                      TList<Int32>{0, 1}, TList<Int32>{0, 1});
+  operatorPowerLaw2.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                               undefIdx);
+  result = operatorPowerLaw2.BasicFit(z, opt_extinction, opt_dustFitting,
+                                      nullThreshold, "full", TList<Int32>{0, 1},
+                                      TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
@@ -564,13 +607,14 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   COperatorPowerLaw operatorPowerLaw3{{}, xc2};
   operatorPowerLaw3.m_nLogSamplesMin = nMinSamples;
 
+  operatorPowerLaw3.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                               undefIdx);
   result = operatorPowerLaw3.BasicFit(z, true, true, nullThreshold, "full",
                                       TList<Int32>{0, 1}, TList<Int32>{0, 1});
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a2,
-             boost::test_tools::tolerance(10.)); // a2 has big errors
-  BOOST_TEST(result.coefs.first.b == b2, boost::test_tools::tolerance(0.01));
+  BOOST_TEST(std::isnan(result.coefs.first.a));
+  BOOST_TEST(std::isnan(result.coefs.first.b));
   BOOST_TEST(result.coefs.second.a == a2,
              boost::test_tools::tolerance(10.)); // a2 has big errors
   BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));

@@ -94,25 +94,24 @@ CTemplateCatalog::GetTemplateList_(const TStringList &categoryList,
 
 std::shared_ptr<const CTemplate>
 CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
-                                    const std::string tplName, bool opt_ortho,
+                                    const std::string name, bool opt_ortho,
                                     bool opt_logsampling) const {
   for (const auto &cat : tplCategoryList) {
     const auto &map = GetList(opt_ortho, opt_logsampling);
     if (!map.count(cat))
       continue;
     for (const auto &tpl : map.at(cat))
-      if (tpl->GetName() == tplName)
+      if (tpl->GetName() == name)
         return tpl;
   }
   THROWG(ErrorCode::INTERNAL_ERROR,
-         Formatter() << "Could not find template with name " << tplName);
+         Formatter() << "Could not find template with name " << name);
 }
 
 std::shared_ptr<const CTemplate>
 CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
-                                    const std::string tplName) const {
-  return GetTemplateByName(tplCategoryList, tplName, m_orthogonal,
-                           m_logsampling);
+                                    const std::string name) const {
+  return GetTemplateByName(tplCategoryList, name, m_orthogonal, m_logsampling);
 }
 
 /**

@@ -294,10 +294,17 @@ public:
 
 class fixture_FluxAxisExtendedPowerLaw {
 public:
+  fixture_FluxAxisExtendedPowerLaw() {
+    TList<Float64> noise =
+        fixture_NoiseAxisSuperExtended().noiseAxis.GetSamplesVector();
+    std::transform(noise.begin(), noise.end(), noise.begin(),
+                   [](Float64 pixelNoise) { return pixelNoise / 10; });
+    fluxAxis = CSpectrumFluxAxis(spectrumData.myExtendedPowerLawList,
+                                 CSpectrumNoiseAxis(noise));
+  }
   fixture_SpectrumData spectrumData;
-  CSpectrumFluxAxis fluxAxis =
-      CSpectrumFluxAxis(spectrumData.myExtendedPowerLawList,
-                        fixture_NoiseAxisSuperExtended().noiseAxis);
+
+  CSpectrumFluxAxis fluxAxis;
   TFloat64List fluxAxisList = spectrumData.myExtendedPowerLawList;
 };
 
@@ -357,17 +364,18 @@ public:
                                   fixture_FluxAxisExtendedPowerLaw().fluxAxis);
 };
 
-class fixture_SharedPowerLawNegSpectrumExtended {
+class fixture_SharedPowerLawLowSpectrumExtended {
 public:
-  fixture_SharedPowerLawNegSpectrumExtended() {
-    TList<Float64> negFlux =
+  fixture_SharedPowerLawLowSpectrumExtended() {
+    TList<Float64> lowFlux =
         fixture_FluxAxisExtendedPowerLaw().fluxAxis.GetSamplesVector();
-    for (Int16 i = 0; i < negFlux.size(); i++) {
-      negFlux[i] = -10 * negFlux[i];
+    for (Int16 i = 0; i < lowFlux.size(); i++) {
+      // Creates a very noisy signal
+      i % 2 == 0 ? lowFlux[i] = lowFlux[i] : lowFlux[i] = lowFlux[i];
     }
-    spc =
-        std::make_shared<CSpectrum>(fixture_SpectralAxisSuperExtended().spcAxis,
-                                    CSpectrumFluxAxis(negFlux));
+    spc = std::make_shared<CSpectrum>(
+        fixture_SpectralAxisSuperExtended().spcAxis,
+        CSpectrumFluxAxis(lowFlux, fixture_NoiseAxisSuperExtended().noiseAxis));
   }
   std::shared_ptr<CSpectrum> spc;
 };

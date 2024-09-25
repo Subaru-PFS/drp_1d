@@ -46,14 +46,16 @@ using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(continuumcomponent_test)
 BOOST_AUTO_TEST_CASE(tautology_test) {
 
-  std::vector<std::string> componentsString = {
-      "tplFit", "tplFitAuto", "noContinuum", "fromSpectrum", "powerLaw"};
+  std::vector<std::string> componentsString = {"tplFit",      "tplFitAuto",
+                                               "noContinuum", "fromSpectrum",
+                                               "powerLaw",    "powerLawAuto"};
   std::vector<TContinuumComponent::EContinuumComponent> componentsEnum = {
       TContinuumComponent::EContinuumComponent::tplFit,
       TContinuumComponent::EContinuumComponent::tplFitAuto,
       TContinuumComponent::EContinuumComponent::noContinuum,
       TContinuumComponent::EContinuumComponent::fromSpectrum,
-      TContinuumComponent::EContinuumComponent::powerLaw};
+      TContinuumComponent::EContinuumComponent::powerLaw,
+      TContinuumComponent::EContinuumComponent::powerLawAuto};
   for (size_t componentIdx = 0; componentIdx < componentsString.size();
        componentIdx++) {
 

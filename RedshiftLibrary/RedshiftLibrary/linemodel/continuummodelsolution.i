@@ -1,7 +1,7 @@
 struct CContinuumModelSolution {
 
   // template continuum
-  std::string tplName = undefStr;
+  std::string name = undefStr;
   Float64 tplAmplitude = NAN;
   Float64 tplAmplitudeError = NAN;
   Float64 tplAmplitudeSigma = NAN;

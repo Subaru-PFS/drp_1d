@@ -1057,13 +1057,10 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   // Note: below corresponds to ::BasicFit code except that redshift loop
   // belongs to ::compute
   // Optionally apply some IGM absorption
-  TInt32List MeiksinList;
-  TInt32List EbmvList;
-  m_templateRebined_bf[0].GetIsmIgmIdxList(opt_extinction, opt_dustFitting,
-                                           MeiksinList, EbmvList, FitEbmvIdx,
-                                           FitMeiksinIdx);
-  Int32 nIGMCoeffs = MeiksinList.size();
-  Int32 nISMCoeffs = EbmvList.size();
+  TIgmIsmIdxs igmIsmIdxs = m_templateRebined_bf[0].GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
+  Int32 nIGMCoeffs = igmIsmIdxs.igmIdxs.size();
+  Int32 nISMCoeffs = igmIsmIdxs.ismIdxs.size();
 
   m_enableIGM = opt_extinction;
   m_enableISM = opt_dustFitting;
@@ -1079,7 +1076,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
                << logpriorze.size() << " != " << m_redshifts.size());
   }
 
-  Int32 retFit = FitAllz(result, MeiksinList, EbmvList, logpriorze);
+  Int32 retFit =
+      FitAllz(result, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs, logpriorze);
 
   if (retFit != 0) {
     THROWG(ErrorCode::INTERNAL_ERROR,

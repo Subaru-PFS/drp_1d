@@ -409,39 +409,42 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
 
     // find the min chisquare at corresponding redshift
     Float64 ChiSquare = DBL_MAX;
-    std::string tplName = "";
+    std::string name = "";
     for (auto &r : results) {
       auto TplFitResult =
           std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
 
       if (TplFitResult->ChiSquare[zIndex] < ChiSquare) {
         ChiSquare = TplFitResult->ChiSquare[zIndex];
-        tplName = r.first;
+        name = r.first;
       };
     }
 
     // Fill extrema Result
-    auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
-        results[tplName]);
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.merit =
-        ChiSquare;
+    auto TplFitResult =
+        std::dynamic_pointer_cast<const CTemplateFittingResult>(results[name]);
     extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.tplName =
-        tplName;
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.meiksinIdx =
+        .second->fittedContinuum.merit = ChiSquare;
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.tplMeritPhot =
+        TplFitResult->ChiSquarePhot[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.name =
+        name;
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.meiksinIdx =
         TplFitResult->FitMeiksinIdx[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.ebmvCoef =
-        TplFitResult->FitEbmvCoeff[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplAmplitude = TplFitResult->FitAmplitude[zIndex];
+        .second->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.tplAmplitude =
+        TplFitResult->FitAmplitude[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedContinuum.tplAmplitudeError =
         TplFitResult->FitAmplitudeError[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.tplDtM =
-        TplFitResult->FitDtM[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.tplMtM =
-        TplFitResult->FitMtM[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.tplDtM = TplFitResult->FitDtM[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.tplMtM = TplFitResult->FitMtM[zIndex];
     extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.SNR =
         TplFitResult->SNR[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]
@@ -451,7 +454,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;
     std::shared_ptr<const CTemplate> tpl =
-        tplCatalog.GetTemplateByName({m_category}, tplName);
+        tplCatalog.GetTemplateByName({m_category}, name);
 
     std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
         std::make_shared<CModelSpectrumResult>();

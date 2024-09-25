@@ -48,8 +48,8 @@ using namespace NSEpic;
 void TLineModelResult::updateFromContinuumModelSolution(
     std::shared_ptr<const CContinuumModelSolution> cms) {
   fittedContinuum = *cms;
-  fittedContinuum.tplName =
-      fittedContinuum.tplAmplitude ? fittedContinuum.tplName : "noContinuum";
+  fittedContinuum.name =
+      fittedContinuum.tplAmplitude ? fittedContinuum.name : "noContinuum";
 }
 
 void TLineModelResult::updateFromLineModelSolution(

@@ -116,10 +116,9 @@ public:
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                        TInt32List &MeiksinList, TInt32List &EbmvList,
-                        Int32 FitEbmvIdx = undefIdx,
-                        Int32 FitMeiksinIdx = undefIdx) const;
+  TIgmIsmIdxs GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
+                               Int32 FitEbmvIdx = undefIdx,
+                               Int32 FitMeiksinIdx = undefIdx) const;
   TInt32List GetIsmIdxList(bool opt_dustFitting,
                            Int32 FitEbmvIdx = undefIdx) const;
   TInt32List GetIgmIdxList(bool opt_extinction,

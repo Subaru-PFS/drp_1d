@@ -282,8 +282,8 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
       store.GetScopedPerTemplateResult("warningFlag");
   TOperatorResultMap::const_iterator it;
   for (it = result_out_2.begin(); it != result_out_2.end(); ++it) {
-    std::string tplName = (*it).first;
-    BOOST_CHECK(result_out_2[tplName]->getType() == "CFlagLogResult");
+    std::string name = (*it).first;
+    BOOST_CHECK(result_out_2[name]->getType() == "CFlagLogResult");
   }
 
   // empty map
@@ -310,8 +310,8 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
 
   result_out_2 = store.GetScopedPerTemplateResult("warningFlag_2");
   for (it = result_out_2.begin(); it != result_out_2.end(); ++it) {
-    std::string tplName = (*it).first;
-    BOOST_CHECK(result_out_2[tplName]->getType() == "CFlagLogResult");
+    std::string name = (*it).first;
+    BOOST_CHECK(result_out_2[name]->getType() == "CFlagLogResult");
   }
 }
 
