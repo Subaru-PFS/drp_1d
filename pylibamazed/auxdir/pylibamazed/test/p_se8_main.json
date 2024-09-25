@@ -2,6 +2,9 @@
   "version": 2,
   "multiObsMethod": "",
   "lambdaRange": [
+  "version": 2,
+  "multiObsMethod": "",
+  "lambdaRange": [
     12510,
     18500
   ],
@@ -20,6 +23,7 @@
   },
   "continuumRemoval": {
     "method": "irregularSamplingMedian",
+    "method": "irregularSamplingMedian",
     "medianKernelWidth": 150,
     "medianEvenReflection": true
   },
@@ -27,13 +31,21 @@
   "lsf": {
     "lsfType": "gaussianNISPVSSPSF201707",
     "sourceSize": 0.1
+  "airVacuumMethod": "default",
+  "lsf": {
+    "lsfType": "gaussianNISPVSSPSF201707",
+    "sourceSize": 0.1
   },
+  "extremaRedshiftSeparation": 0.01,
+  "spectrumModels": [
   "extremaRedshiftSeparation": 0.01,
   "spectrumModels": [
     "galaxy"
   ],
   "autoCorrectInput": false,
+  "autoCorrectInput": false,
   "galaxy": {
+    "redshiftRange": [
     "redshiftRange": [
       0.9001832537307723,
       1.70026612
@@ -147,6 +159,43 @@
         }
       }
     },
+    "lineMeasSolver": {
+      "method": "lineMeasSolve",
+      "lineMeasSolve": {
+        "lineModel": {
+          "ampOffsetFit": false,
+          "lbdaOffsetFit": false,
+          "continuumComponent": "noContinuum",
+          "lineCatalog": "linecatalogs/linecatalogamazedvacuum_H0.tsv",
+          "lineTypeFilter": "E",
+          "lineForceFilter": "no",
+          "nSigmaSupport": 8,
+          "lineWidthType": "combined",
+          "fittingMethod": "hybrid",
+          "polynomialDegree": 2,
+          "velocityFit": false,
+          "lineRatioType": "rules",
+          "rules": "no",
+          "improveBalmerFit": true,
+          "lya": {
+            "profile": "asym",
+            "asymProfile": {
+              "switchFixedToFit": false,
+              "switchFitToFixed": false,
+              "asymFitMin": 0,
+              "asymFitMax": 4,
+              "asymFitStep": 1,
+              "widthFitMin": 1,
+              "widthFitMax": 4,
+              "widthFitStep": 1,
+              "deltaFitMin": 0,
+              "deltaFitMax": 0,
+              "deltaStepMax": 1
+            }
+          }
+        }
+      }
+    }
     "lineMeasSolver": {
       "method": "lineMeasSolve",
       "lineMeasSolve": {
