@@ -49,6 +49,7 @@ calibration_dir = os.path.join(test_dir, "calibration")
 
 def make_parameters() -> Parameters:
     parameters_dict = {
+        "version": 2,
         "spectrumModels": ["galaxy"],
         "ebmv": {"count": 3, "start": 0.0, "step": 0.5},
         "lsf": {

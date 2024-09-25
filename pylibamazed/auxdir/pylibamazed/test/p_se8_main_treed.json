@@ -125,7 +125,7 @@
             "halfWindowSize": 0.002,
             "continuumFit": "reFitFirstPass"
           },
-          "secondPassLcFittingMethod": -1,
+          "secondPassLcFittingMethod": "-1",
           "strongLinesPrior": 0.001,
           "nOfZPriorStrength": -1,
           "tplRatio": {

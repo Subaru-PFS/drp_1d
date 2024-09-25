@@ -56,8 +56,13 @@ class ParametersConverter(ABC):
 
 
 class ParametersConverterSelector:
+    def __init__(self, accept_v1: bool = False):
+        self.accept_v1 = accept_v1
+
     def get_converter(self, version: int) -> ParametersConverter:
         if version == 1:
+            # if not self.accept_v1:
+            #     raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Deprecated parameters file version")
             Converter = ParametersConverterV1
         elif version == 2:
             Converter = ParametersConverterV2
@@ -90,6 +95,7 @@ class ParametersConverterV1(ParametersConverter):
         self.update_redshift_part(renamed_params)
         self.update_linemeas_part(renamed_params)
         self.update_reliability_part(renamed_params)
+        renamed_params["version"] = 2
         return renamed_params
 
     def update_redshift_part(self, renamed_params):

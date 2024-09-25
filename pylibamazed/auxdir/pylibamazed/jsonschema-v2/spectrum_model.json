@@ -46,12 +46,12 @@
       "type": "string",
       "title": "Template directory"
     },
-    "linemeasDzHalf": {
+    "lineMeasDzHalf": {
       "type": "number",
       "title": "Redshift range radius",
       "description": "Radius for redshift range around Zref "
     },
-    "linemeasRedshiftStep": {
+    "lineMeasRedshiftStep": {
       "type": "number",
       "title": "Redshift step"
     },

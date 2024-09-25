@@ -43,8 +43,8 @@ class TestParametersUtils:
 
     def make_input_parameters(self, **kwargs) -> dict:
         input_parameters = {
+            "version": 2,
             self.default_object_type: {
-                "version": 2,
                 "redshiftSampling": "some redshift sampling",
                 "stages": ["redshiftSolver", "lineMeasSolver"],
                 "redshiftSolver": {

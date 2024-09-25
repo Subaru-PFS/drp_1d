@@ -91,6 +91,8 @@ class ParametersAccessor:
         )
 
     def get_redshift_solver_method(self, spectrum_model: str) -> str:
+        if "redshiftSolver" not in self.get_stages(spectrum_model):
+            return None
         method = self._get_on_None(self.get_redshift_solver_section(spectrum_model), "method")
         # Not in the get because if method is defined as an empty string in the parameters json
         # we still want method to be "None"
@@ -134,6 +136,8 @@ class ParametersAccessor:
         )
 
     def get_reliability_method(self, spectrum_model: str) -> str:
+        if "reliabilitySolver" not in self.get_stages(spectrum_model):
+            return None
         return self._get_on_None(self.get_reliability_section(spectrum_model), "method")
 
     def get_deep_learning_solver_section(self, spectrum_model: str, create: bool = False) -> str:

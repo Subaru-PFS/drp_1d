@@ -47,12 +47,12 @@ class TestParamJsonFilterLoader:
     def test_load_returns_expected_filters(self, mocker):
         jsonFilterLoader = ParamJsonFilterLoader()
         params = Parameters(
-            {
+            {"version": 2,
                 "filters": [
                     {"key": "col1", "instruction": "<", "value": 2},
                     {"key": "col2", "instruction": ">=", "value": 2},
                 ]
-            },
+             },
             Checker=FakeParametersChecker,
         )
         assert jsonFilterLoader.get_filters(params) == FilterList(

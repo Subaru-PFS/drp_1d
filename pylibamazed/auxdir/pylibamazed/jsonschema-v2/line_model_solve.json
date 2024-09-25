@@ -25,10 +25,10 @@
         "lineRatioType",
         "continuumComponent",
         "strongLinesPrior",
-        "euclidNHaemittersStrength",
+        "nOfZPriorStrength",
         "pdfCombination",
         "nSigmaSupport",
-        "haPrior",
+        "hAlphaPrior",
         "extremaCountB",
         "enablePhotometry",
         "lya",
@@ -79,6 +79,7 @@
         "fittingMethod": {
           "type": "string",
           "enum": [
+            "ones",
             "individual",
             "svd",
             "hybrid",
@@ -228,7 +229,7 @@
           "title": "Strong lines prior",
           "description": "\n * **-1**: no prior \n * **else**: use this value (positive below 1) as a low probability when no strong line is measured (the measured amplitude is s>0) & probability is set to 1 when a strong line is observed"
         },
-        "euclidNHaemittersStrength": {
+        "nOfZPriorStrength": {
           "type": "number",
           "title": "Pozetti N(z) prior",
           "description": "Strength (beta) of the penalty. The chi2 penalty is -2 beta log(P(z)). No penalty for a negative or zero values"
@@ -247,7 +248,7 @@
           "title": "Support size",
           "description": "Full (not half) size of each line support in sigma of the gaussian profile "
         },
-        "haPrior": {
+        "hAlphaPrior": {
           "type": "number",
           "title": "Ha prior",
           "description": "\n * **-1**: no prior \n * **positive below 1**: low multiplicative prior probability (posterior penalization) when Ha line is not measured (the measured amplitude is <=0 or is not the strongest measured line) \n * **else**: prior probability is set to 1 when Ha line is strongest measured line, typical value between 1e-1 to 1e-5"
