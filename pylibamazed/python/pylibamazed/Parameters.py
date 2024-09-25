@@ -61,15 +61,15 @@ class Parameters(ParametersAccessor):
         version = self.get_json_schema_version(raw_params)
 
         if make_checks:
-            Checker(raw_params).json_schema_check(version)
+            Checker(raw_params, version).json_schema_check()
 
         converter = ConverterSelector().get_converter(version)
         converted_parameters = converter().convert(raw_params)
 
         if make_checks:
-            Checker(converted_parameters).custom_check()
+            Checker(converted_parameters, version).custom_check()
 
-        extended_parameters = Extender().extend(converted_parameters)
+        extended_parameters = Extender(version).extend(converted_parameters)
         self.parameters = extended_parameters
 
     def get_json_schema_version(self, raw_parameters: dict):

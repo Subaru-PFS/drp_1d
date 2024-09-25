@@ -54,7 +54,7 @@ class TestParametersExtender:
             initial_dict = self._make_parameter_dict(
                 **{"fittingMethod": "hybrid", "continuumReestimation": "always"}
             )
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert (
                 extended_dict["galaxy"]["redshiftSolver"]["lineModelSolve"]["lineModel"][
@@ -74,7 +74,7 @@ class TestParametersExtender:
             initial_dict = self._make_parameter_dict(
                 **{"fittingMethod": "sth", "continuumReestimation": "always"}
             )
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert (
                 extended_dict["galaxy"]["redshiftSolver"]["lineModelSolve"]["lineModel"][
@@ -92,7 +92,7 @@ class TestParametersExtender:
 
         def test_adds_if_absent(self):
             initial_dict = self._make_parameter_dict(**{"fittingMethod": "sth"})
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert (
                 extended_dict["galaxy"]["redshiftSolver"]["lineModelSolve"]["lineModel"][
@@ -121,7 +121,7 @@ class TestParametersExtender:
                     "useLogLambdaSampling": True,
                 }
             )
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert extended_dict["galaxy"]["redshiftSolver"]["lineModelSolve"]["lineModel"][
                 "useLogLambdaSampling"
@@ -138,7 +138,7 @@ class TestParametersExtender:
                     "useLogLambdaSampling": True,
                 }
             )
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert not extended_dict["galaxy"]["redshiftSolver"]["lineModelSolve"]["lineModel"][
                 "useLogLambdaSampling"
@@ -156,7 +156,7 @@ class TestParametersExtender:
                     "continuumFit": {"fftProcessing": False},
                 }
             )
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert not extended_dict["galaxy"]["redshiftSolver"]["lineModelSolve"]["lineModel"][
                 "useLogLambdaSampling"
@@ -185,7 +185,7 @@ class TestParametersExtender:
                     }
                 }
             )
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert extended_dict["continuumRemoval"]["medianKernelWidth"] == 1
             assert extended_dict["continuumRemoval"]["medianEvenReflection"] == 2
@@ -203,7 +203,7 @@ class TestParametersExtender:
                     }
                 }
             )
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert extended_dict["continuumRemoval"].get("method") == "sth"
             assert extended_dict["continuumRemoval"]["medianKernelWidth"] == -1
@@ -215,7 +215,7 @@ class TestParametersExtender:
 
         def test_adds_if_absent(self):
             initial_dict = self._make_parameter_dict(**{"continuumRemoval": {"method": "sth"}})
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
 
             assert extended_dict["continuumRemoval"].get("method") == "sth"
             assert extended_dict["continuumRemoval"]["medianKernelWidth"] == -1
@@ -238,15 +238,15 @@ class TestParametersExtender:
             )
 
             print("initial dict", initial_dict)
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
             assert extended_dict["templateCatalog"]["continuumRemoval"].get("some key") == "some value"
 
         def test_overwrites_if_present_but_should_not(self):
             initial_dict = {"templateCatalog": {"continuumRemoval": {"some key": "some value"}}}
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
             assert extended_dict["templateCatalog"]["continuumRemoval"].get("some key") is None
 
         def test_adds_if_absent(self):
             initial_dict = {"templateCatalog": {}}
-            extended_dict = ParametersExtender().extend(initial_dict)
+            extended_dict = ParametersExtender(2).extend(initial_dict)
             assert extended_dict["templateCatalog"].get("continuumRemoval") is not None
