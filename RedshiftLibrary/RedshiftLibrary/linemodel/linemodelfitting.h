@@ -112,7 +112,7 @@ public:
   void SetAbsLinesLimit(Float64 limit);
 
   CMask getOutsideLinesMask() const;
-  Float64 getOutsideLinesSTD(Int32 which) const;
+  std::pair<Float64, Float64> getOutsideLinesRMS(CMask const &line_mask) const;
 
   Int32 computeSpcNSamples() const;
 
