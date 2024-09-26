@@ -638,7 +638,7 @@ COperatorTplcombination::ComputeSpectrumModel(
 
   Int32 modelSize = spectrum.GetSampleCount();
 
-  CSpectrumFluxAxis modelFlux(modelSize, 0.0);
+  TFloat64List modelFlux(modelSize, 0.0);
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     const CSpectrumFluxAxis &tmp = m_templatesRebined_bf[iddl].GetFluxAxis();
     for (Int32 k = 0; k < modelSize; k++) {
@@ -654,7 +654,8 @@ COperatorTplcombination::ComputeSpectrumModel(
   m_masksRebined_bf.clear();
   std::shared_ptr<CModelSpectrumResult> ret =
       std::make_shared<CModelSpectrumResult>();
-  ret->addModel(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)), "");
+  ret->addModel(std::move(modelSpcAxis.GetSamplesVector()),
+                std::move(modelFlux), "");
   return ret;
 }
 

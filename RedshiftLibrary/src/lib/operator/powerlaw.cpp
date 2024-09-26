@@ -687,13 +687,13 @@ void COperatorPowerLaw::ComputeSpectrumModel(
     const std::shared_ptr<CContinuumModelSolution> &continuum, Int32 spcIndex,
     const std::shared_ptr<CModelSpectrumResult> &models) {
 
-  auto lambdaObsAxis = m_spectra[spcIndex]->GetSpectralAxis();
-  auto lambdaObs = lambdaObsAxis.GetSamplesVector();
-  auto lambdaRestAxis = lambdaObsAxis.blueShift(continuum->redshift);
+  auto const &lambdaObsAxis = m_spectra[spcIndex]->GetSpectralAxis();
+  auto const &lambdaObs = lambdaObsAxis.GetSamplesVector();
+  auto const lambdaRestAxis = lambdaObsAxis.blueShift(continuum->redshift);
 
   // Calculates ism igm corrections for given lambdaRest / redshift
   // TODO check here
-  TList<Float64> correctionCoefs =
+  TList<Float64> const correctionCoefs =
       computeIsmIgmCorrection(continuum->redshift, lambdaRestAxis,
                               continuum->meiksinIdx, continuum->ebmvCoef);
   // Use lambda rest to calculate flux rest and apply ism igm on flux rest to
@@ -710,7 +710,7 @@ void COperatorPowerLaw::ComputeSpectrumModel(
   Float64 overlapFraction = 0.0;
   TFloat64Range currentRange;
 
-  models->addModel(CSpectrum(lambdaObsAxis, CSpectrumFluxAxis(fluxObs)),
+  models->addModel(lambdaObs, std::move(fluxObs),
                    m_spectra[spcIndex]->getObsID());
   return;
 }

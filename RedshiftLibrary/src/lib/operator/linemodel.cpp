@@ -1109,13 +1109,13 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
 
         // Save the reestimated continuum, only the first
         // n=maxSaveNLinemodelContinua extrema
-        const CSpectrumFluxAxis &modelContinuumFluxAxis =
-            m_fittingManager->getSpectrumModel().GetModelContinuum();
-
-        baselineResult->addModel(
-            CSpectrum(m_fittingManager->getSpectrum().GetSpectralAxis(),
-                      modelContinuumFluxAxis),
-            m_fittingManager->getSpectrum().getObsID());
+        baselineResult->addModel(m_fittingManager->getSpectrum()
+                                     .GetSpectralAxis()
+                                     .GetSamplesVector(),
+                                 m_fittingManager->getSpectrumModel()
+                                     .GetModelContinuum()
+                                     .GetSamplesVector(),
+                                 m_fittingManager->getSpectrum().getObsID());
       }
       ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
       savedModels++;

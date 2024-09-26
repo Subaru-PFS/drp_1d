@@ -109,7 +109,8 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   CSpectrumSpectralAxis modelwav =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().ShiftByWaveLength(
           (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
-  models->addModel(CSpectrum(std::move(modelwav), modelflux),
+  models->addModel(std::move(modelwav.GetSamplesVector()),
+                   modelflux.GetSamplesVector(),
                    m_spectra[spcIndex]->getObsID());
   return spcIndex > 0 ? TPhotVal() : getIntegratedFluxes();
 }
