@@ -1703,6 +1703,9 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
         ps->GetScoped<Float64>("continuumFit.nullThreshold");
 
     m_opt_skipsecondpass = ps->GetScoped<bool>("skipSecondPass");
+
+    m_opt_continuum_bad_chi2_threshold =
+        ps->GetScoped<Float64>("continuumFit.badChi2Threshold");
   }
 }
 
