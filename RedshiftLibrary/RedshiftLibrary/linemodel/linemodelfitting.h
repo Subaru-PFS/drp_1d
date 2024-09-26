@@ -139,12 +139,12 @@ public:
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
 
-  bool isContinuumComponentTplFitxxx() const {
-    return m_continuumManager->isContinuumComponentTplFitxxx();
+  bool isContinuumComponentTplFitXXX() const {
+    return m_continuumManager->isContinuumComponentTplFitXXX();
   }
 
-  bool isContinuumComponentPowerLaw() const {
-    return m_continuumManager->isContinuumComponentPowerLaw();
+  bool isContinuumComponentPowerLawXXX() const {
+    return m_continuumManager->isContinuumComponentPowerLawXXX();
   }
 
   bool isContinuumComponentFitter() const {

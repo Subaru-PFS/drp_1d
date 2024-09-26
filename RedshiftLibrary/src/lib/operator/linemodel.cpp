@@ -100,9 +100,9 @@ void COperatorLineModel::ComputeFirstPass() {
   }
 
   Int32 nfitcontinuum = 0;
-  if (m_opt_continuumcomponent.isTplFitxxx())
+  if (m_opt_continuumcomponent.isTplFitXXX())
     nfitcontinuum = tplCatalog->GetTemplateCount(m_tplCategory);
-  else if (m_opt_continuumcomponent.isPowerLaw())
+  else if (m_opt_continuumcomponent.isPowerLawXXX())
     nfitcontinuum = 1;
   m_result->Init(m_Redshifts, Context.getCLineMap(), nfitcontinuum,
                  m_fittingManager->getTplratio_count(),
@@ -129,7 +129,7 @@ void COperatorLineModel::ComputeFirstPass() {
   ////////////////////
   if (m_opt_continuumcomponent.isContinuumFit()) {
 
-    Log.LogInfo(Formatter() << "Precompuute continuum fit ortho");
+    Log.LogInfo(Formatter() << "Precompuute continuum fit");
     m_tplfitStore_firstpass = PrecomputeContinuumFit(m_Redshifts);
   }
 
@@ -202,9 +202,14 @@ void COperatorLineModel::ComputeFirstPass() {
                              << " Chi2 = " << m_result->ChiSquare[i]);
 
     // Flags on continuum and model amplitudes
-    // TODO here clean to check if powerlaw amplitude is zero too
-    bool continuumAmplitudeZero =
-        m_result->ContinuumModelSolutions[i].tplAmplitude <= 0.0;
+    bool continuumAmplitudeZero = true;
+    if (m_opt_continuumcomponent.isTplFitXXX() &&
+        m_result->ContinuumModelSolutions[i].tplAmplitude > 0.0) // false if NAN
+      continuumAmplitudeZero = false;
+    if (m_opt_continuumcomponent.isPowerLawXXX())
+      if (m_result->ContinuumModelSolutions[i].a1 > 0.0 ||
+          m_result->ContinuumModelSolutions[i].a2 > 0.0)
+        continuumAmplitudeZero = false;
     bool modelAmplitudesZero = true;
     auto it = std::find_if(m_result->LineModelSolutions[i].Amplitudes.cbegin(),
                            m_result->LineModelSolutions[i].Amplitudes.cend(),
@@ -215,7 +220,7 @@ void COperatorLineModel::ComputeFirstPass() {
   }
   // Check if all amplitudes are zero for all z
   bool checkAllAmplitudes = AllAmplitudesAreZero(allAmplitudesZero);
-  if (!m_opt_continuumcomponent.isPowerLaw() && checkAllAmplitudes == true)
+  if (checkAllAmplitudes == true)
     THROWG(ErrorCode::NULL_MODEL,
            "Null amplitudes (continuum & model) at all z");
 
@@ -241,7 +246,7 @@ bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero) {
 }
 
 bool COperatorLineModel::isfftprocessingActive(Int32 redshiftsTplFitCount) {
-  if (m_opt_continuumcomponent.isPowerLaw()) {
+  if (m_opt_continuumcomponent.isPowerLawXXX()) {
     return false;
   }
 
@@ -285,7 +290,7 @@ void COperatorLineModel::fitContinuumTemplates(
     getContinuumInfoFromFirstpassFitStore(candidateIdx, meiksinIndices,
                                           ebmvIndices, tplList, fftprocessing);
   } else {
-    if (m_opt_continuumcomponent.isPowerLaw())
+    if (m_opt_continuumcomponent.isPowerLawXXX())
       tplList.push_back({});
     else
       tplList = tplCatalog->GetOrthoTemplateList(TStringList{m_tplCategory},
@@ -299,7 +304,7 @@ void COperatorLineModel::fitContinuumTemplates(
     m_continuumFittingOperator->SetRedshifts(redshiftsContinuumFit);
     std::shared_ptr<COperatorResult> templatefittingResult;
     std::string tplname;
-    if (m_opt_continuumcomponent.isPowerLaw()) {
+    if (m_opt_continuumcomponent.isPowerLawXXX()) {
       tplname = "powerLaw";
 
       templatefittingResult =
@@ -367,7 +372,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
     CContinuumModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
 
-    if (m_opt_continuumcomponent.isPowerLaw())
+    if (m_opt_continuumcomponent.isPowerLawXXX())
       tplList.push_back({});
     else
       tplList.push_back(tplCatalog->GetTemplateByName(
@@ -375,10 +380,9 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
 
     if (m_opt_tplfit_extinction)
       meiksinIndices[icontinuum] = fitValue.meiksinIdx;
-    if (m_opt_tplfit_dustFit && !m_opt_continuumcomponent.isPowerLaw())
+    if (m_opt_tplfit_dustFit)
       ebmvIndices[icontinuum] =
-          tplCatalog->GetTemplate(m_tplCategory, 0, true, fft)
-              ->m_ismCorrectionCalzetti->GetEbmvIndex(fitValue.ebmvCoef);
+          Context.getFluxCorrectionCalzetti()->GetEbmvIndex(fitValue.ebmvCoef);
   }
   return;
 }
@@ -389,7 +393,7 @@ void COperatorLineModel::makeContinuumFittingOperator(
 
   bool fftprocessing = isfftprocessingActive(redshifts.size());
 
-  if (m_opt_continuumcomponent.isPowerLaw()) {
+  if (m_opt_continuumcomponent.isPowerLawXXX()) {
     m_continuumFittingOperator = std::make_shared<COperatorPowerLaw>(redshifts);
     return;
   }
@@ -433,12 +437,8 @@ void COperatorLineModel::makeContinuumFittingOperator(
 std::shared_ptr<CContinuumFitStore>
 COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                                            Int32 candidateIdx) {
-  // TODO separate case is power law or not
-  // std::shared_ptr<CContinuumFitStore> continuumFitStore =
-  //     make_shared<CPowerLawStore>(redshifts);
-  // ;
   std::shared_ptr<CContinuumFitStore> continuumFitStore;
-  if (m_opt_continuumcomponent.isPowerLaw()) {
+  if (m_opt_continuumcomponent.isPowerLawXXX()) {
     continuumFitStore = make_shared<CPowerLawStore>(redshifts);
   } else {
     continuumFitStore = make_shared<CTemplatesFitStore>(redshifts);
@@ -498,7 +498,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
   // fill the fit store with fitted values: only the best fitted values FOR
   // EACH TEMPLATE are used
-  if (m_opt_continuumcomponent.isPowerLaw()) {
+  if (m_opt_continuumcomponent.isPowerLawXXX()) {
     // TODO check that chisquareResultsAllTpl size is 1
     const auto &chisquareResult =
         std::dynamic_pointer_cast<CPowerLawResult>(chisquareResultsAllTpl[0]);
@@ -817,8 +817,7 @@ void COperatorLineModel::Combine_firstpass_candidates(
     m_firstpass_extremaResult.fillWithContinuumModelSolutionAtIndex(
         startIdx + keb, contModel);
 
-    if (!m_opt_continuumcomponent.isPowerLaw() &&
-        static_cast<CContinuumModelSolution>(contModel).name == "") {
+    if (contModel.name == "") {
       THROWG(ErrorCode::TPL_NAME_EMPTY,
              Formatter() << "ContinuumModelSolutions tplname is empty"
                          << "result idx=" << idx);
@@ -1132,12 +1131,9 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       // below spectrumModel doesnt include identified lines
       auto &cont = m_result->ContinuumModelSolutions[idx];
       TPhotVal phot_values;
-      if (m_opt_continuumcomponent.isPowerLaw() ||
-          static_cast<CContinuumModelSolution>(cont).name == "noContinuum" ||
-          m_opt_continuumcomponent.isFromSpectrum()) { // no photometry
-        Log.LogDetail(
-            "photometry cannot be applied for fromspectrum or noContinuum");
-
+      if (!m_opt_continuumcomponent.isTplFitXXX() ||
+          cont.name == "noContinuum") { // no photometry
+        Log.LogDetail("photometry cannot be applied outside tplFit");
       } else {
         m_fittingManager->getSpectraIndex().reset();
         phot_values = m_fittingManager->getSpectrumModel().getPhotValues();
@@ -1676,7 +1672,7 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
   if (m_opt_continuumcomponent.isContinuumFit()) {
 
     m_opt_fitcontinuum_maxN = ps->GetScoped<Int32>("continuumFit.count");
-    if (m_opt_continuumcomponent.isPowerLaw()) {
+    if (m_opt_continuumcomponent.isPowerLawXXX()) {
       m_opt_fitcontinuum_maxN = 1;
     }
     Log.LogDetail(Formatter()

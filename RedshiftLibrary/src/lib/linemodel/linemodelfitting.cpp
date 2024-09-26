@@ -140,7 +140,7 @@ void CLineModelFitting::initParameters() {
 
   TContinuumComponent continuumComponent(
       ps->GetScoped<std::string>("continuumComponent"));
-  if (continuumComponent.isTplFitxxx()) {
+  if (continuumComponent.isTplFitXXX()) {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
     m_useloglambdasampling = ps->GetScoped<bool>("useLogLambdaSampling");
@@ -367,7 +367,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
-  if (isContinuumComponentTplFitxxx() && !m_forcedisableMultipleContinuumfit)
+  if (isContinuumComponentTplFitXXX() && !m_forcedisableMultipleContinuumfit)
     nContinuum = m_opt_fitcontinuum_maxN;
   // 'on the fly' initialization
   Float64 bestMerit = INFINITY;

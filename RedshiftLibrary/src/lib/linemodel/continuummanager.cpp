@@ -126,7 +126,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
            Formatter() << "Failed to load-fit continuum for cfitopt="
                        << m_fitContinuum_option);
   // Retrieve the best template, otherwise Getter throws an error
-  if (isContinuumComponentPowerLaw()) {
+  if (isContinuumComponentPowerLawXXX()) {
     getModel().ApplyContinuumPowerLawOnGrid(m_fitContinuum);
   } else {
     std::shared_ptr<const CTemplate> tpl =
@@ -206,7 +206,7 @@ Float64 CContinuumManager::getContinuumScaleMargCorrection() const {
   Float64 corr = 0.0;
 
   // scale marg for continuum
-  if (isContinuumComponentTplFitxxx()) // the support has to be already
+  if (isContinuumComponentTplFitXXX()) // the support has to be already
                                        // computed when LoadFitContinuum() is
                                        // called
     corr += log(m_fitContinuum->tplMtM);
@@ -275,7 +275,7 @@ void CContinuumManager::setContinuumComponent(TContinuumComponent component) {
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
   }
-  if (m_ContinuumComponent.isPowerLaw()) {
+  if (m_ContinuumComponent.isPowerLawXXX()) {
     m_fitContinuum->name = "powerLaw";
   }
 }

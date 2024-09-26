@@ -264,7 +264,7 @@ class ParametersChecker:
             if (
                 template_fitting_spectrum_component not in [None, "raw"]
                 or template_combination_spectrum_component not in [None, "raw"]
-                or linemodel_continuum_component in ["fromSpectrum", "tplFitAuto"]
+                or linemodel_continuum_component in ["fromSpectrum", "tplFitAuto", "powerLawAuto"]
                 or linemodel_continuum_reestimation not in [None, "never"]
             ):
                 continuum_removal_necessity = True
@@ -508,7 +508,8 @@ class ParametersChecker:
 
     def _check_linemodelsolve_continuumfit_section(self, spectrum_model):
         self._check_dependant_parameter_presence(
-            self.accessor.get_linemodel_continuum_component(spectrum_model) in ["tplFit", "tplFitAuto"],
+            self.accessor.get_linemodel_continuum_component(spectrum_model)
+            in ["tplFit", "tplFitAuto", "powerLaw", "powerLawAuto"],
             self.accessor.get_linemodel_continuumfit_section(spectrum_model) is not None,
             error_message=f"object {spectrum_model} lineModelSolve continuumFit",
         )
@@ -527,6 +528,8 @@ class ParametersChecker:
         ) is not None and self.accessor.get_linemodel_continuum_component(spectrum_model) in [
             "tplFit",
             "tplFitAuto",
+            "powerLaw",
+            "powerLawAuto",
         ]
         self._check_dependant_parameter_presence(
             condition,
