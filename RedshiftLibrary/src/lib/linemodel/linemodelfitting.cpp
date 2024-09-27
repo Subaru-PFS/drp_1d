@@ -1195,6 +1195,7 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
+// assumes model is refreshed and continuum uptodate
 std::pair<Float64, Float64>
 CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
                                              Float64 redshift) {
@@ -1205,7 +1206,9 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
   Float64 sumWeightAll = 0.0;
   Float64 sumSquaredWeightAll = 0.0;
   Float64 sumResidualAll = 0.0;
-  Int32 nsumAll = 0;
+  Int32 npixResidualAll = 0;
+  Float64 sumWeightResidualAll = 0;
+  Float64 sumSquaredWeightResidualAll = 0;
   auto const &polynomCoeffs =
       m_ElementsVector->getElementParam()[eltIdx]->m_ampOffsetsCoeffs;
   for (auto &spcIndex : m_spectraIndex) {
@@ -1225,20 +1228,23 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
     sumWeightAll += sum_weight;
     sumSquaredWeightAll += sum_squared_weight;
 
-    auto const &[residual_sum, nsum] =
-        model.getContinuumSquaredResidualInRange(indexRange);
+    auto const &[residual_sum, nsum, nsum2] =
+        model.getContinuumSquaredResidualInRange(indexRange, eltIdx);
     sumResidualAll += residual_sum;
-    nsumAll += nsum;
+    sumWeightResidualAll += nsum;
+    sumSquaredWeightResidualAll += nsum2;
+    npixResidualAll += indexRange.GetLength() + 1;
   }
   if (sumWeightAll == 0.0)
     return std::make_pair(NAN, NAN);
 
   Float64 const continuum = sumContinuumAll / sumWeightAll;
 
-  Float64 const std = nsumAll >= MIN_SAMPLE_NUMBER_CONTINUUMM_UNCERTAINTY
-                          ? sqrt(sumResidualAll / nsumAll) *
-                                sqrt(sumSquaredWeightAll) / sumWeightAll
-                          : NAN;
+  Float64 const std =
+      npixResidualAll >= MIN_SAMPLE_NUMBER_CONTINUUMM_UNCERTAINTY
+          ? sqrt(sumResidualAll / sumSquaredWeightResidualAll) *
+                sqrt(sumSquaredWeightAll) / sumWeightAll
+          : NAN;
 
   return std::make_pair(continuum, std);
 }

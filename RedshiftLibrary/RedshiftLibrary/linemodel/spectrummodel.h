@@ -54,8 +54,9 @@ public:
                                  TFloat64List const &weights,
                                  TPolynomCoeffs const &polynomCoeffs) const;
 
-  std::pair<Float64, Int32>
-  getContinuumSquaredResidualInRange(TInt32Range const &indexRange);
+  std::tuple<Float64, Float64, Float64>
+  getContinuumSquaredResidualInRange(TInt32Range const &indexRange,
+                                     Int32 eltIdx);
 
   std::pair<Float64, Float64>
   getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
