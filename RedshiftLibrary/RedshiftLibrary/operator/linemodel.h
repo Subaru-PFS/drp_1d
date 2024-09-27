@@ -115,6 +115,7 @@ public:
   bool m_opt_tplfit_ignoreLinesSupport =
       false; // default: false, as ortho templates store makes this un-necessary
   bool m_opt_firstpass_multiplecontinuumfit_disable = true;
+  bool m_opt_skipsecondpass = false;
   std::string m_opt_firstpass_fittingmethod;
   std::string m_opt_secondpasslcfittingmethod = undefStr;
   TContinuumComponent m_opt_continuumcomponent;

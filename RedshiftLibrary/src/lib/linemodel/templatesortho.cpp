@@ -212,7 +212,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;
-  bool enableLogging = true;
+  bool enableLogging = false;
   CLineModelSolution modelSolution(Context.getCLineMap());
   CContinuumModelSolution continuumModelSolution;
 

@@ -174,7 +174,8 @@ void COperatorLineModel::ComputeFirstPass() {
 
     m_result->ChiSquare[i] = m_fittingManager->fit(
         m_result->Redshifts[i], m_result->LineModelSolutions[i],
-        m_result->ContinuumModelSolutions[i], contreest_iterations, false);
+        m_result->ContinuumModelSolutions[i], contreest_iterations,
+        m_opt_skipsecondpass);
 
     m_result->ScaleMargCorrection[i] =
         m_fittingManager->getScaleMargCorrection();
@@ -1650,6 +1651,8 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
     m_opt_continuum_null_amp_threshold =
         ps->GetScoped<Float64>("continuumFit.nullThreshold");
+
+    m_opt_skipsecondpass = ps->GetScoped<bool>("skipSecondPass");
   }
 }
 

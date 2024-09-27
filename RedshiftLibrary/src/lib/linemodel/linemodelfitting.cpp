@@ -789,6 +789,164 @@ void CLineModelFitting::LoadModelSolution(
   return;
 }
 
+void CLineModelFitting::ComputeAndAddOptionalLineProperties(
+    CLineModelSolution &modelSolution) {
+
+  TInt32List eIdx_oii;
+  TInt32List subeIdx_oii;
+  TInt32List eIdx_ha;
+  TInt32List subeIdx_ha;
+  Float64 flux_oii = 0.0;
+  Float64 fluxVar_oii = 0.0;
+  Float64 flux_ha = 0.0;
+  Float64 fluxVar_ha = 0.0;
+
+  Int32 s = m_RestLineList.size();
+  for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
+    Int32 line_id = modelSolution.lineId[iRestLine];
+    // auto [eIdx, line_index] = m_ElementsVector->findElementIndex(line_id);
+    Int32 eIdx = modelSolution.ElementId[iRestLine];
+    auto const &elt_param = getElementParam()[eIdx];
+    Int32 line_index = elt_param->getLineIndex(line_id);
+    if (eIdx == undefIdx || line_index == undefIdx ||
+        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index))
+      continue; // data already set to its default values
+
+    modelSolution.ResidualRMS[iRestLine] =
+        m_fitter->getModelResidualRmsUnderElements({eIdx}, true);
+    if (m_enableAmplitudeOffsets) {
+      const auto &polynom_coeffs =
+          m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
+      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
+      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
+      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
+    }
+
+    auto const [cont, cont_std] =
+        GetMeanContinuumUnderLine(eIdx, line_index, modelSolution.Redshift);
+    modelSolution.CenterContinuumFlux[iRestLine] = cont;
+    modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_std;
+
+    Float64 amp = modelSolution.Amplitudes[iRestLine];
+    Float64 ampError = modelSolution.AmplitudesUncertainties[iRestLine];
+    Float64 flux = NAN;
+    Float64 fluxError = NAN;
+    TInt32List eIdx_line(1, eIdx);
+    TInt32List subeIdx_line(1, line_index);
+    auto const &line = m_RestLineList.at(line_id);
+    bool isEmission = false;
+    Int32 opt_cont_substract_abslinesmodel = 0;
+    if (line.GetType() == CLine::EType::nType_Emission) {
+      opt_cont_substract_abslinesmodel = 1;
+      isEmission = true;
+    }
+    if (!std::isnan(amp) && amp >= 0.0) {
+      if (!isEmission) {
+        Float64 const positive_cont = std::max(0.0, cont);
+        ampError *= positive_cont;
+        ampError += amp * cont_std; // add continuum error (will lead to a
+                                    // non-null error for a null continuum)
+        amp *= -positive_cont;      // minus sign to get a negative flux for abs
+      }
+
+      for (auto &spcIndex : m_spectraIndex) {
+        const auto &eltList = getElementList();
+        if (!eltList[eIdx]->IsOutsideLambdaRangeLine(line_index)) {
+          auto const &[mu, sigma] =
+              eltList[eIdx]->getObservedPositionAndLineWidth(
+                  modelSolution.Redshift, line_index,
+                  false); // do not apply Lya asym offset
+          modelSolution.Sigmas[iRestLine] = sigma;
+          const auto &profile =
+              eltList[eIdx]->getElementParam()->getLineProfile(line_index);
+
+          Float64 const lineFlux = profile->GetLineFlux(mu, sigma);
+
+          flux = amp * lineFlux;
+          fluxError = ampError * lineFlux;
+          break;
+        }
+      }
+      if (!m_spectraIndex.isValid())
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "Failed finding a spectrum containing"
+                           << line_index << " at " << modelSolution.Redshift);
+    }
+    auto [fluxDI, snrDI] = getFluxDirectIntegration(
+        eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
+    modelSolution.Flux[iRestLine] = flux;
+    if (getLineRatioType() == "rules")
+      modelSolution.FluxUncertainty[iRestLine] = fluxError;
+    modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
+    modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
+        std::abs(fluxDI) / snrDI;
+
+    // sum Ha complex fluxes
+    if (isEmission && (line.GetName() == linetags::halpha_em ||
+                       line.GetName() == linetags::niia_em ||
+                       line.GetName() == linetags::niib_em)) {
+      eIdx_ha.push_back(eIdx);
+      subeIdx_ha.push_back(line_index);
+      if (flux > 0.0)
+        flux_ha += flux;
+      if (fluxError > 0.0)
+        fluxVar_ha += fluxError * fluxError;
+
+      if (eIdx_ha.size() == 3) {
+
+        Int32 opt_cont_substract_abslinesmodel = 0;
+        auto [fluxDI, snrDI] = getFluxDirectIntegration(
+            eIdx_ha, subeIdx_ha, opt_cont_substract_abslinesmodel);
+        modelSolution.snrHa_DI = snrDI;
+        modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
+        modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
+        if (getLineRatioType() == "rules")
+          modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
+      }
+    }
+
+    // sum OII doublet fluxes
+    if (isEmission && (line.GetName() == linetags::oII3726_em ||
+                       line.GetName() == linetags::oII3729_em)) {
+      eIdx_oii.push_back(eIdx);
+      subeIdx_oii.push_back(line_index);
+      if (flux > 0.0)
+        flux_oii += flux;
+      if (fluxError > 0.0)
+        fluxVar_oii += fluxError * fluxError;
+
+      if (eIdx_oii.size() == 2) {
+        Int32 opt_cont_substract_abslinesmodel = 0;
+        auto [fluxDI, snrDI] = getFluxDirectIntegration(
+            eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel);
+
+        modelSolution.snrOII_DI = snrDI;
+        modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
+        modelSolution.lfOII = flux_oii > 0.0 ? log10(flux_oii) : -INFINITY;
+        if (getLineRatioType() == "rules")
+          modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
+      }
+    }
+
+    modelSolution.fittingGroupInfo[iRestLine] =
+        m_ElementsVector->getElementParam()[eIdx]->m_fittingGroupInfo;
+  }
+
+  // retrieve Lya params if fitted
+  std::string lyaTag = linetags::lya_em;
+  auto const [idxLyaE, _] = m_ElementsVector->findElementIndex(lyaTag);
+  if (idxLyaE != undefIdx) {
+    TAsymParams params =
+        m_ElementsVector->getElementParam()[idxLyaE]->GetAsymfitParams(0);
+    modelSolution.LyaWidthCoeff = params.sigma;
+    modelSolution.LyaAlpha = params.alpha;
+    modelSolution.LyaDelta = params.delta;
+    TSymIgmParams params_igm =
+        m_ElementsVector->getElementParam()[idxLyaE]->GetSymIgmParams(0);
+    modelSolution.LyaIgm = params_igm.m_igmidx;
+  }
+}
+
 /**
  * \brief Returns a CLineModelSolution object populated with the current
  *solutions.
@@ -811,26 +969,15 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   modelSolution.Redshift = getSpectrumModel().m_Redshift;
   const CLineModelElementList &firstEltList = getElementList();
 
-  TInt32List eIdx_oii;
-  TInt32List subeIdx_oii;
-  TInt32List eIdx_ha;
-  TInt32List subeIdx_ha;
-  Float64 flux_oii = 0.0;
-  Float64 fluxVar_oii = 0.0;
-  Float64 flux_ha = 0.0;
-  Float64 fluxVar_ha = 0.0;
-
   modelSolution.nDDL = m_ElementsVector->GetModelNonZeroElementsNDdl();
 
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 line_id = modelSolution.lineId[iRestLine];
-    auto const &line = m_RestLineList.at(line_id);
     auto [eIdx, line_index] = m_ElementsVector->findElementIndex(line_id);
     modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || line_index == undefIdx ||
-        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index)) {
+        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index))
       continue; // data already set to its default values
-    }
 
     Float64 amp = m_ElementsVector->getElementParam()[eIdx]
                       ->m_FittedAmplitudes[line_index];
@@ -849,145 +996,17 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.Offset[iRestLine] =
         m_ElementsVector->getElementParam()[eIdx]->m_Offsets[line_index];
 
-    if (opt_level) // brief, to save processing time, do not estimate fluxes
-                   // and high level line properties
-    {
-      modelSolution.ResidualRMS[iRestLine] =
-          m_fitter->getModelResidualRmsUnderElements({eIdx}, true);
-      if (m_enableAmplitudeOffsets) {
-        const auto &polynom_coeffs =
-            m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
-        modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
-        modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
-        modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
-      }
-
-      auto const [cont, cont_std] =
-          GetMeanContinuumUnderLine(eIdx, line_index, modelSolution.Redshift);
-      modelSolution.CenterContinuumFlux[iRestLine] = cont;
-      modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_std;
-
-      Float64 flux = NAN;
-      Float64 fluxError = NAN;
-      TInt32List eIdx_line(1, eIdx);
-      TInt32List subeIdx_line(1, line_index);
-      Int32 opt_cont_substract_abslinesmodel = 0;
-      bool isEmission = false;
-      if (line.GetType() == CLine::EType::nType_Emission) {
-        opt_cont_substract_abslinesmodel = 1;
-        isEmission = true;
-      }
-      if (!std::isnan(amp) && amp >= 0.0) {
-        if (!isEmission) {
-          Float64 const positive_cont = std::max(0.0, cont);
-          ampError *= positive_cont;
-          ampError += amp * cont_std; // add continuum error (will lead to a
-                                      // non-null error for a null continuum)
-          amp *= -positive_cont; // minus sign to get a negative flux for abs
-        }
-
-        for (auto &spcIndex : m_spectraIndex) {
-          const auto &eltList = getElementList();
-          if (!eltList[eIdx]->IsOutsideLambdaRangeLine(line_index)) {
-            auto const &[mu, sigma] =
-                eltList[eIdx]->getObservedPositionAndLineWidth(
-                    modelSolution.Redshift, line_index,
-                    false); // do not apply Lya asym offset
-            modelSolution.Sigmas[iRestLine] = sigma;
-            const auto &profile =
-                eltList[eIdx]->getElementParam()->getLineProfile(line_index);
-
-            Float64 const lineFlux = profile->GetLineFlux(mu, sigma);
-
-            flux = amp * lineFlux;
-            fluxError = ampError * lineFlux;
-            break;
-          }
-        }
-        if (!m_spectraIndex.isValid())
-          THROWG(ErrorCode::INTERNAL_ERROR,
-                 Formatter() << "Failed finding a spectrum containing"
-                             << line_index << " at " << modelSolution.Redshift);
-      }
-      auto [fluxDI, snrDI] = getFluxDirectIntegration(
-          eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
-      modelSolution.Flux[iRestLine] = flux;
-      if (getLineRatioType() == "rules")
-        modelSolution.FluxUncertainty[iRestLine] = fluxError;
-      modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
-      modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
-          std::abs(fluxDI) / snrDI;
-
-      // sum Ha complex fluxes
-      if (isEmission && (line.GetName() == linetags::halpha_em ||
-                         line.GetName() == linetags::niia_em ||
-                         line.GetName() == linetags::niib_em)) {
-        eIdx_ha.push_back(eIdx);
-        subeIdx_ha.push_back(line_index);
-        if (flux > 0.0)
-          flux_ha += flux;
-        if (fluxError > 0.0)
-          fluxVar_ha += fluxError * fluxError;
-
-        if (eIdx_ha.size() == 3) {
-
-          Int32 opt_cont_substract_abslinesmodel = 0;
-          auto [fluxDI, snrDI] = getFluxDirectIntegration(
-              eIdx_ha, subeIdx_ha, opt_cont_substract_abslinesmodel);
-          modelSolution.snrHa_DI = snrDI;
-          modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
-          modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
-          if (getLineRatioType() == "rules")
-            modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
-        }
-      }
-
-      // sum OII doublet fluxes
-      if (isEmission && (line.GetName() == linetags::oII3726_em ||
-                         line.GetName() == linetags::oII3729_em)) {
-        eIdx_oii.push_back(eIdx);
-        subeIdx_oii.push_back(line_index);
-        if (flux > 0.0)
-          flux_oii += flux;
-        if (fluxError > 0.0)
-          fluxVar_oii += fluxError * fluxError;
-
-        if (eIdx_oii.size() == 2) {
-          Int32 opt_cont_substract_abslinesmodel = 0;
-          auto [fluxDI, snrDI] = getFluxDirectIntegration(
-              eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel);
-
-          modelSolution.snrOII_DI = snrDI;
-          modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
-          modelSolution.lfOII = flux_oii > 0.0 ? log10(flux_oii) : -INFINITY;
-          if (getLineRatioType() == "rules")
-            modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
-        }
-      }
-    }
-
-    modelSolution.fittingGroupInfo[iRestLine] =
-        m_ElementsVector->getElementParam()[eIdx]->m_fittingGroupInfo;
     modelSolution.OutsideLambdaRange[iRestLine] = false;
-  }
-
-  // retrieve Lya params if fitted
-  std::string lyaTag = linetags::lya_em;
-  auto const [idxLyaE, _] = m_ElementsVector->findElementIndex(lyaTag);
-  if (idxLyaE != undefIdx) {
-    TAsymParams params =
-        m_ElementsVector->getElementParam()[idxLyaE]->GetAsymfitParams(0);
-    modelSolution.LyaWidthCoeff = params.sigma;
-    modelSolution.LyaAlpha = params.alpha;
-    modelSolution.LyaDelta = params.delta;
-    TSymIgmParams params_igm =
-        m_ElementsVector->getElementParam()[idxLyaE]->GetSymIgmParams(0);
-    modelSolution.LyaIgm = params_igm.m_igmidx;
   }
 
   std::unordered_set<std::string>
       strongELSNRAboveCut; // = getLinesAboveSNR(3.5);
   modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
+
+  // brief, to save processing time, do not estimate fluxes
+  // and high level line properties
+  if (opt_level)
+    ComputeAndAddOptionalLineProperties(modelSolution);
 
   return modelSolution;
 }
