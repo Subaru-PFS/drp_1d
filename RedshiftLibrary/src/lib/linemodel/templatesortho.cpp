@@ -73,6 +73,8 @@ void CTemplatesOrthogonalization::Orthogonalize(
     return;
   }
 
+  Log.LogInfo(Formatter() << "Orthogonalize linemodel with " << spectrumModel
+                          << " templates");
   for (bool sampling : samplingList) {
     tplCatalog->m_logsampling = sampling;
     // orthogonalize all templates
