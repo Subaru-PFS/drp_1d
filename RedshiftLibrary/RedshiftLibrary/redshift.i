@@ -881,7 +881,7 @@ class AmzException : public std::exception
 
 %pythoncode %{
   def _AmzException__str__(self):
-    msg = f"{self.getErrorCode().name}:{self.getMessage()}"
+    msg = f"{self.getErrorCode().name}: {self.getMessage()}"
     filename = self.getFileName()
     if filename:
       msg += f" [{filename}:{self.getLine()}:{self.getMethod()}]"

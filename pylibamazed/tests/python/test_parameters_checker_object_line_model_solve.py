@@ -171,7 +171,7 @@ class TestLineModelSolve:
             )
             with pytest.raises(
                 APIException,
-                match=r"INVALID_PARAMETER_FILE:linemodel.firstpass.extremaCount is lower than "
+                match=r"INVALID_PARAMETER_FILE: linemodel.firstpass.extremaCount is lower than "
                 "linemodel.extremaCount for object galaxy",
             ):
                 check_from_parameter_dict(param_dict)

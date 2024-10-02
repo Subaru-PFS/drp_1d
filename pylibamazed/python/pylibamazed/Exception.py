@@ -61,7 +61,7 @@ class APIException(AmzException):
 
     @classmethod
     def fromException(cls, exception):
-        return cls(ErrorCode.PYTHON_API_ERROR, str(exception))
+        return cls(ErrorCode.PYTHON_API_ERROR, f"{type(exception).__name__}: {exception}")
 
 
 # decorator to convert any non-amazed exception to AmzException
@@ -74,7 +74,7 @@ def exception_decorator(func=None, *, logging=False):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except AmzException as e:  # will catch both AmzException and derived
+        except AmzException as e:  # will catch both AmzException and derived APIException
             if logging:
                 e.LogError()
             raise e from None
