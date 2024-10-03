@@ -6,14 +6,6 @@ pylibamazed
 
    warnings
    errors
-   AbstractOutput
-   AbstractSpectrumReader
-   CalibrationLibrary
-   Hdf5Output
-   OutputSpecifications
-   ResultStoreOutput
-   lsf
-   r_specifications
    powerLaw
    igmism
 
