@@ -91,6 +91,8 @@ void CInputContext::RebinInputs() {
       m_ParameterStore->hasToLogRebin(m_categories, fft_processing);
   if (!m_use_LogLambaSpectrum)
     return;
+
+  Log.LogInfo("Rebining input spectra in logarithmic wavelength steps");
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
        boost::combine(m_spectra, m_lambdaRanges)) {
     if (spectrum_ptr->GetSpectralAxis().IsLogSampled()) {
@@ -175,8 +177,10 @@ void CInputContext::setLineRatioCatalogCatalog(
 
 void CInputContext::Init() {
   m_categories = m_ParameterStore->GetList<std::string>("spectrumModels");
+  std::string categories_msg = "Spectrum Model categories:";
   for (std::string cat : m_categories)
-    Log.LogInfo(cat);
+    categories_msg += "  " + cat;
+  Log.LogInfo(categories_msg);
 
   // set template continuum removal parameters
   // TODO correct this to make it non mandatory if powerlaw for instance ?

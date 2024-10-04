@@ -73,6 +73,8 @@ void CTemplatesOrthogonalization::Orthogonalize(
     return;
   }
 
+  Log.LogInfo(Formatter() << "Orthogonalize linemodel with " << spectrumModel
+                          << " templates");
   for (bool sampling : samplingList) {
     tplCatalog->m_logsampling = sampling;
     // orthogonalize all templates
@@ -212,7 +214,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;
-  bool enableLogging = true;
+  bool enableLogging = false;
   CLineModelSolution modelSolution(Context.getCLineMap());
   CContinuumModelSolution continuumModelSolution;
 

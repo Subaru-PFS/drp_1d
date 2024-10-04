@@ -218,16 +218,21 @@ CSpectrum CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   const CSpectrumFluxAxis &fluxAxis = m_SpectrumModel.GetFluxAxis();
 
-  if (lineTypeFilter == CLine::EType::nType_Emission)
-    refreshModel(CLine::EType::nType_Absorption);
-  else if (lineTypeFilter == CLine::EType::nType_Absorption)
-    refreshModel(CLine::EType::nType_Emission);
-  TFloat64List fluxAndContinuum = fluxAxis.GetSamplesVector();
+  TFloat64List continuum;
+  if (lineTypeFilter == CLine::EType::nType_All)
+    continuum = m_ContinuumFluxAxis.GetSamplesVector();
+  else {
+    // when removing only abs or em line,
+    // include the other type in the continuum
+    if (lineTypeFilter == CLine::EType::nType_Emission)
+      refreshModel(CLine::EType::nType_Absorption);
+    else if (lineTypeFilter == CLine::EType::nType_Absorption)
+      refreshModel(CLine::EType::nType_Emission);
+    continuum = fluxAxis.GetSamplesVector();
+    refreshModel(lineTypeFilter); // reset flux axis to full model
+  }
 
-  refreshModel(lineTypeFilter);
-
-  CSpectrum spcCorrectedUnderLines(*m_inputSpc);
-
+  // compute spc with lines removed
   TAxisSampleList Y(m_inputSpc->GetSampleCount());
   const auto &SpcFluxAxis = m_SpcFluxAxis;
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
@@ -238,21 +243,19 @@ CSpectrum CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
   // apply smooth blending of continuun below lines
   Float64 alphaMax = 0.9; // alpha blend = 0: only lineSubtractedFlux,
                           // alpha=1: only continuum
-
   TInt32List nonZeroValidEltsIdx =
       m_Elements->getValidElementIndices(lineTypeFilter);
-
   TInt32List supportIdxes = m_Elements->getSupportIndexes(nonZeroValidEltsIdx);
-
   if (supportIdxes.size() > 0) {
     for (Int32 idx : supportIdxes) {
       Float64 weighting =
           GetWeightingAnyLineCenterProximity(idx, nonZeroValidEltsIdx);
       Float64 alpha = alphaMax * weighting;
-      Y[idx] = (1. - alpha) * Y[idx] + alpha * fluxAndContinuum[idx];
+      Y[idx] = (1. - alpha) * Y[idx] + alpha * continuum[idx];
     }
   }
 
+  CSpectrum spcCorrectedUnderLines(*m_inputSpc);
   spcCorrectedUnderLines.SetFluxAxis(CSpectrumFluxAxis(std::move(Y)));
 
   return spcCorrectedUnderLines;
@@ -266,19 +269,18 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
 
   for (const Int32 iElts : EltsIdx) {
     for (const auto &range : (*m_Elements)[iElts]->getTheoreticalSupport()) {
+      if (sampleIndex <= range.GetBegin() || sampleIndex >= range.GetEnd())
+        continue;
+
+      Float64 minRangeLbda = spectralAxis[range.GetBegin()];
+      Float64 maxRangeLbda = spectralAxis[range.GetEnd()];
+      Float64 fullInterval = maxRangeLbda - minRangeLbda;
       Float64 weight = 0.;
-      if (sampleIndex > range.GetBegin() && sampleIndex < range.GetEnd()) {
-        Float64 minRangeLbda = spectralAxis[range.GetBegin()];
-        Float64 maxRangeLbda = spectralAxis[range.GetEnd()];
-
-        Float64 fullInterval = maxRangeLbda - minRangeLbda;
-        if (fullInterval > 0.0) {
-          Float64 leftInterval = currentLbda - minRangeLbda;
-          Float64 rightInterval = maxRangeLbda - currentLbda;
-          Float64 coeff = std::abs(leftInterval - rightInterval);
-
-          weight = 1. - (Float64)coeff / (Float64)fullInterval;
-        }
+      if (fullInterval > 0.0) {
+        Float64 leftInterval = currentLbda - minRangeLbda;
+        Float64 rightInterval = maxRangeLbda - currentLbda;
+        Float64 coeff = std::abs(leftInterval - rightInterval);
+        weight = 1. - (Float64)coeff / (Float64)fullInterval;
       }
 
       if (maxWeight < weight)
@@ -298,9 +300,7 @@ CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
   auto const &[mu, sigma] =
       elt->getObservedPositionAndLineWidth(redshift, line_id);
 
-  // compute averaged continuum under line, weighted by the line profile
   auto const &profile = elt->getElementParam()->getLineProfile(line_id);
-  // auto const &polynomCoeffs = elt->GetPolynomCoeffs();
 
   Float64 const winsize = profile->GetNSigmaSupport() * sigma;
   TInt32Range const indexRange = elt->EstimateIndexRange(
@@ -321,6 +321,7 @@ CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
  * @brief GetContinuumWeightedSumInRange
  * @param indexRange
  * Add up polynome contribution below lines
+ *  assumes model is refreshed and continuum uptodate
  * @return the continuum flux val at the sub element center wavelength.
  */
 std::tuple<Float64, Float64, Float64>
@@ -357,25 +358,39 @@ CSpectrumModel::GetContinuumWeightedSumInRange(
  * 1. calculate the observed spectrum flux with lines subtracted (fitted line
  * model)
  * 2. estimate the squared summ in the given range
+ * assumes model is refreshed
  * @param indexRange
  * @return NAN: not enough samples found for error estimation
  */
-std::pair<Float64, Int32> CSpectrumModel::getContinuumSquaredResidualInRange(
-    TInt32Range const &indexRange) {
+std::tuple<Float64, Float64, Float64>
+CSpectrumModel::getContinuumSquaredResidualInRange(
+    TInt32Range const &indexRange, Int32 eltIdx) {
 
-  const CSpectrum noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
-  const CSpectrumFluxAxis &noLinesFluxAxis = noLinesSpectrum.GetFluxAxis();
-  const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
+  TAxisSampleList spectrumNoLinesFlux(m_inputSpc->GetSampleCount());
+
+  const CSpectrumFluxAxis &modelFlux = m_SpectrumModel.GetFluxAxis();
+  for (Int32 t = indexRange.GetBegin(); t <= indexRange.GetEnd(); t++) {
+    spectrumNoLinesFlux[t] =
+        m_SpcFluxAxis[t] - modelFlux[t] + m_ContinuumFluxAxis[t];
+  }
 
   // estimate sum square error between continuum and nolines-spectrum
+  // weighted by distance to lines
   Float64 sum = 0.0;
-  Int32 nsum = 0;
+  Float64 nsum = 0;
+  Float64 nsum2 = 0.0;
+  TInt32List nonZeroValidEltsIdx =
+      m_Elements->getValidElementIndices(CLine::EType::nType_All);
   for (Int32 t = indexRange.GetBegin(); t <= indexRange.GetEnd(); t++) {
-    Float64 diff = noLinesFluxAxis[t] - ContinuumFluxAxis[t];
+    Float64 weight =
+        1.0 - GetWeightingAnyLineCenterProximity(t, nonZeroValidEltsIdx);
+
+    Float64 diff = weight * (spectrumNoLinesFlux[t] - m_ContinuumFluxAxis[t]);
     sum += diff * diff;
-    nsum++;
+    nsum += weight;
+    nsum2 += weight * weight;
   }
-  return std::make_pair(sum, nsum);
+  return std::make_tuple(sum, nsum, nsum2);
 }
 
 /**

@@ -82,23 +82,13 @@ public:
                                       // the future subclasses ? at least
                                       // inherit from clinemodelfitting
 
-  void initParameters();
-  void initMembers(const std::shared_ptr<COperatorContinuumFitting>
-                       &continuumFittingOperator,
-                   ElementComposition element_composition);
-
-  void LogCatalogInfos();
-
-  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
   void setContinuumComponent(TContinuumComponent component);
   const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
   };
 
   bool initDtd();
-  Float64 EstimateDTransposeD(const std::string &spcComponent) const;
   Float64 EstimateMTransposeM() const;
-  Float64 EstimateLikelihoodCstLog() const;
   Float64 getDTransposeD();
   Float64 getLikelihood_cstLog();
 
@@ -120,8 +110,6 @@ public:
                         bool enableLambdaOffsetsFit = false);
   void setLineRatioType(const std::string &lineratio);
   void SetAbsLinesLimit(Float64 limit);
-
-  Float64 GetRedshift() const;
 
   CMask getOutsideLinesMask() const;
   Float64 getOutsideLinesSTD(Int32 which) const;
@@ -145,16 +133,12 @@ public:
   std::pair<Float64, Float64> getSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
 
-  Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
 
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
 
-  void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
-  void computeSpectrumFluxWithoutContinuum();
   bool isContinuumComponentTplFitxxx() const {
     return m_continuumManager->isContinuumComponentTplFitxxx();
   }
@@ -218,20 +202,30 @@ public:
 
   std::string const &getLineRatioType() const { return m_lineRatioType; }
 
-  void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
-
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
 
-  const CLineMap m_RestLineList;
+  // Multi obs combination/aggregation methods on elements Lists
 
-  Int32 m_pass = 1;
-  bool m_enableAmplitudeOffsets;
-  bool m_enableLbdaOffsets;
+  CSpectraGlobalIndex &getSpectraIndex() { return m_spectraIndex; }
+  void refreshAllModels();
 
-  Float64 m_LambdaOffsetMin = -400.0;
-  Float64 m_LambdaOffsetMax = 400.0;
-  Float64 m_LambdaOffsetStep = 25.0;
+private:
+  void initParameters();
+  void initMembers(const std::shared_ptr<COperatorContinuumFitting>
+                       &continuumFittingOperator,
+                   ElementComposition element_composition);
+
+  void LogCatalogInfos();
+  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
+  Float64 EstimateDTransposeD(const std::string &spcComponent) const;
+  Float64 EstimateLikelihoodCstLog() const;
+  void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
+  void computeSpectrumFluxWithoutContinuum();
+
+  void SetLSF();
+  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
+  void ComputeAndAddOptionalLineProperties(CLineModelSolution &modelSolution);
 
   // Multi obs combination/aggregation methods on elements Lists
 
@@ -243,13 +237,9 @@ public:
                            const TInt32List &subeIdx_list,
                            bool substract_abslinesmodel) const;
 
-  CSpectraGlobalIndex &getSpectraIndex() { return m_spectraIndex; }
-  void refreshAllModels();
+  const CLineMap m_RestLineList;
 
-private:
-  void SetLSF();
-
-  void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
+  Int32 m_pass = 1;
 
   std::shared_ptr<CContinuumModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
@@ -283,6 +273,12 @@ private:
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
+  bool m_enableAmplitudeOffsets;
+  bool m_enableLbdaOffsets;
+
+  Float64 m_LambdaOffsetMin = -400.0;
+  Float64 m_LambdaOffsetMax = 400.0;
+  Float64 m_LambdaOffsetStep = 25.0;
 
   mutable CSpectraGlobalIndex m_spectraIndex;
 };

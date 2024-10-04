@@ -247,6 +247,8 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
 void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
     const std::shared_ptr<const CLSF> &lsf, const TFloat64Range &convolRange) {
 
+  Log.LogInfo("Convolving igm extinction by the LSF");
+
   m_convolRange = convolRange;
 
   TFloat64Range range(m_LambdaMin, m_rawCorrections[0].lbda.back());
