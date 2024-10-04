@@ -59,7 +59,7 @@ void CLineMeasSolve::GetRedshiftSampling(const CInputContext &inputContext,
 
   Float64 half_r = halfRange;
   Float64 half_l = halfRange;
-  if (m_redshiftSampling == "log") {
+  if (m_zLogSampling) {
     half_r = (exp(halfRange) - 1.0) * (1. + rangeCenter);
     half_l = (1.0 - exp(-halfRange)) * (1. + rangeCenter);
   }
@@ -74,7 +74,7 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
       inputContext->GetParameterStore()->GetScoped<Float64>(
           "lineModel.nSigmaSupport"); // try with 16 (-> parameters.json)
 
-  m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
+  m_linemodel.Init(m_redshifts, m_redshiftStep, m_zLogSampling);
 
   CLineModelSolution bestModelSolution;
   Float64 bestz = NAN;

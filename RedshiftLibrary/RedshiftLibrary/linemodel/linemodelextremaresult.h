@@ -81,13 +81,17 @@ public:
         m_savedModelSpectrumResults(zCandidates.size()),
         m_modelPhotValues(zCandidates.size()) {
     m_type = "LineModelExtremaResult";
+    SetRankedCandidates(zCandidates);
+  };
+
+  void SetRankedCandidates(const TCandidateZbyRank &zCandidates) {
+    m_ranked_candidates.clear();
     for (const auto &cand : zCandidates) {
       m_ranked_candidates.push_back(
-          std::make_pair<std::string, std::shared_ptr<TLineModelResult>>(
-              std::string(cand.first),
-              std::make_shared<TLineModelResult>(*cand.second)));
+          std::make_pair(std::string(cand.first),
+                         std::make_shared<TLineModelResult>(*cand.second)));
     }
-  };
+  }
 
   std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,

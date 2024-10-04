@@ -40,23 +40,34 @@
 #define _REDSHIFT_METHOD_TWOPASSSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 
 namespace NSEpic {
+
+enum class EContinuumFit {
+  retryAll = 0,
+  fromFirstPass = 2,
+  reFitFirstPass = 3,
+  undefined
+};
 
 class CTwoPassSolve : public CObjectSolve {
 public:
   using CObjectSolve::CObjectSolve;
   void createRedshiftGrid(const CInputContext &inputContext,
-                                         const TFloat64Range &redshiftRange);
-  
-  protected:
-    virtual void initTwoPassZStepFactor() = 0;
-    Float64 m_coarseRedshiftStep = NAN;
-    Float64 m_twoPassZStepFactor = NAN;
+                          const TFloat64Range &redshiftRange);
+  static const std::unordered_map<std::string, EContinuumFit> str2ContinuumFit;
+
+protected:
+  virtual void initTwoPassZStepFactor() = 0;
+  bool useTwoPass() const { return !m_opt_skipsecondpass; }
+
+  Float64 m_coarseRedshiftStep = NAN;
+  Float64 m_twoPassZStepFactor = NAN;
+  bool m_opt_skipsecondpass = true;
 };
 
-}
+} // namespace NSEpic
 
 #endif

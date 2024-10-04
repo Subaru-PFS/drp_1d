@@ -296,14 +296,14 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   tplStar.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
 
   BOOST_CHECK(tplStar.CheckIsmIgmEnabled() == true);
-  tplStar.SetType(CSpectrum::EType::nType_noContinuum);
+  tplStar.SetType(CSpectrum::EType::noContinuum);
   BOOST_CHECK(tplStar.CheckIsmIgmEnabled() == false);
 
   CSpectrumSpectralAxis spectralAxis2(spcAxisList);
   tplStar.SetSpectralAxis(spectralAxis2);
   tplStar.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
   const CTemplate tpl2 = tplStar;
-  BOOST_CHECK_THROW(tpl2.SetType(CSpectrum::EType::nType_continuumOnly),
+  BOOST_CHECK_THROW(tpl2.SetType(CSpectrum::EType::continuumOnly),
                     AmzException);
   CSpectrumFluxAxis fluxAxis2(fluxAxisList);
   tplStar.SetFluxAxis(fluxAxis2);

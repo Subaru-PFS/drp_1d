@@ -42,36 +42,10 @@
 
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/operator/linemodel.h"
-
+#include "RedshiftLibrary/operator/twopass.h"
 using namespace NSEpic;
 using namespace std;
 BOOST_AUTO_TEST_SUITE(Linemodel)
-
-BOOST_AUTO_TEST_CASE(spanRedshift_test) {
-  Float64 z = 5.;
-  Float64 step = log(1 + 0.5);
-  TFloat64List redshifts{0, 5, 9};
-  std::string redshiftSampling = "log";
-  Float64 secondPass_halfwindowsize = log(1 + 1);
-  Int32 ref_idx = 1;
-  TFloat64List extendedRedshifts_ref{3, 5, 8};
-
-  // prepare object
-  COperatorLineModel op;
-  op.m_Redshifts = redshifts;
-  op.m_fineStep = step;
-  op.m_redshiftSampling = redshiftSampling;
-  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
-
-  TFloat64List extendedList = op.SpanRedshiftWindow(z);
-  // check is sorted
-  BOOST_CHECK(
-      std::is_sorted(std::begin(extendedList), std::end(extendedList)) == true);
-  BOOST_CHECK(extendedList == extendedRedshifts_ref);
-  // check presence of z in extendedList
-  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
-  BOOST_CHECK(idx == ref_idx);
-}
 
 BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
   /*//TODO
@@ -87,7 +61,7 @@ BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
   COperatorLineModel op;
   op.m_Redshifts = redshifts;
   op.m_fineStep = step;
-  op.m_redshiftSampling = redshiftSampling;
+  op.m_zLogSampling = (redshiftSampling == "log");
   op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
   op.updateRedshiftGridAndResults();
       // verifications:

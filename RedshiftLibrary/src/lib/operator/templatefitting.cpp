@@ -53,6 +53,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
@@ -487,4 +488,62 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   result->CstLog = EstimateLikelihoodCstLog();
 
   return result;
+}
+
+void COperatorTemplateFitting::SetFirstPassCandidates(
+    const TCandidateZbyRank &zCandidates) {
+  m_firstpass_extremaResult.Resize(zCandidates.size());
+  m_firstpass_extremaResult.m_ranked_candidates = zCandidates;
+}
+
+std::shared_ptr<const ExtremaResult>
+COperatorTemplateFitting::BuildFirstPassExtremaResults(
+    const TOperatorResultMap &resultsMapFromStore) {
+  // Access the raw extremas results
+  // Converts TCandidateZbyRank m_firstpass_extremaResult.m_ranked_candidates to
+  // ExtremaResult using constructor
+  std::shared_ptr<ExtremaResult> extremaResult =
+      make_shared<ExtremaResult>(m_firstpass_extremaResult.m_ranked_candidates);
+  Int32 extremumCount = extremaResult->size();
+
+  // Find the common redshifts grid using first result
+  auto firstStoreResult =
+      std::dynamic_pointer_cast<const CTemplateFittingResult>(
+          (*resultsMapFromStore.begin()).second);
+  const TFloat64List &redshifts = firstStoreResult->Redshifts;
+
+  // For each extremum, find its corresponding template
+  for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
+    Float64 z = extremaResult->m_ranked_candidates[iExtremum].second->Redshift;
+
+    // Find z index in stored results redshifts grid
+    auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
+    const Int32 zIndex = std::distance(redshifts.begin(), itZ);
+
+    // Find template minimizing chi2 : this is the extremum template
+    Float64 chiSquare = DBL_MAX;
+    std::string name = "";
+    for (auto &resultPair : resultsMapFromStore) {
+      auto tplFitResult =
+          std::dynamic_pointer_cast<const CTemplateFittingResult>(
+              resultPair.second);
+
+      if (tplFitResult->ChiSquare[zIndex] < chiSquare) {
+        chiSquare = tplFitResult->ChiSquare[zIndex];
+        name = resultPair.first;
+      };
+    }
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.name =
+        name;
+    auto resultFromStore =
+        std::dynamic_pointer_cast<const CTemplateFittingResult>(
+            resultsMapFromStore.at(name));
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.meiksinIdx =
+        resultFromStore->FitMeiksinIdx[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.ebmvCoef =
+        resultFromStore->FitEbmvCoeff[zIndex];
+  }
+  return extremaResult;
 }

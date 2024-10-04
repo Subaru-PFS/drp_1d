@@ -50,7 +50,7 @@ class TestContinuumRemoval:
             param_dict = make_parameter_dict_at_redshift_solver_level(
                 **{
                     "method": "templateFittingSolve",
-                    "templateFittingSolve": {"spectrum": {"component": "sth"}},
+                    "templateFittingSolve": {"spectrum": {"component": "sth"}, "skipSecondPass": True},
                 }
             )
             param_dict["galaxy"]["templateDir"] = "sth"

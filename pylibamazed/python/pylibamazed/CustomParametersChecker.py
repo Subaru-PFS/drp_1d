@@ -332,6 +332,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_templateFittingSolve_ism(spectrum_model)
         self._check_templateFittingSolve_photometry_weight(spectrum_model)
         self._check_templateFittingSolve_exclusive_fft_photometry(spectrum_model)
+        self._check_templateFittingSolve_pass_presence(spectrum_model)
         self._check_templateFittingSolve_secondpass_continuumfit(spectrum_model)
 
     def _check_templateFittingSolve_ism(self, spectrum_model: str) -> None:
@@ -360,9 +361,28 @@ class CustomParametersChecker(ParametersChecker):
                 f"on spectrum model {spectrum_model}",
             )
 
+    def _check_templateFittingSolve_pass_presence(self, spectrum_model: str) -> None:
+        self._check_dependant_parameter_presence(
+            self.accessor.get_skipsecondpass(ESolveMethod.TEMPLATE_FITTING, spectrum_model) is False,
+            self.accessor.get_firstpass_section(ESolveMethod.TEMPLATE_FITTING, spectrum_model) is not None,
+            f"object {spectrum_model} TemplateFittingSolve first pass section",
+            f"object {spectrum_model} TemplateFittingSolve first pass section",
+        )
+        self._check_dependant_parameter_presence(
+            self.accessor.get_skipsecondpass(ESolveMethod.TEMPLATE_FITTING, spectrum_model) is False,
+            self.accessor.get_secondpass_section(ESolveMethod.TEMPLATE_FITTING, spectrum_model) is not None,
+            f"object {spectrum_model} TemplateFittingSolve second pass section",
+            f"object {spectrum_model} TemplateFittingSolve second pass section",
+        )
+
     def _check_templateFittingSolve_secondpass_continuumfit(self, spectrum_model: str) -> None:
-        continuum_fit = self.accessor.get_secondpass_continuumfit(ESolveMethod.TEMPLATE_FITTING, spectrum_model)
-        if continuum_fit not in [None, self.accessor.second_pass_continuum_fit_dict[EContinuumFit.REFIT_FIRST_PASS]]:
+        continuum_fit = self.accessor.get_secondpass_continuumfit(
+            ESolveMethod.TEMPLATE_FITTING, spectrum_model
+        )
+        if continuum_fit not in [
+            None,
+            self.accessor.second_pass_continuum_fit_dict[EContinuumFit.REFIT_FIRST_PASS],
+        ]:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 f"Second pass continuum fit for templatFittingSolve must be set to {self.accessor.second_pass_continuum_fit_dict[EContinuumFit.REFIT_FIRST_PASS]} (spectrum model {spectrum_model})",
@@ -488,8 +508,7 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_linemodelsolve_secondpass_continuumfit(self, spectrum_model):
         condition = self.accessor.get_secondpass_section(
-            ESolveMethod.LINE_MODEL,
-            spectrum_model
+            ESolveMethod.LINE_MODEL, spectrum_model
         ) is not None and self.accessor.get_linemodel_continuum_component(spectrum_model) in [
             "tplFit",
             "tplFitAuto",

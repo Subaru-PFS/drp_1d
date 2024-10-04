@@ -36,40 +36,36 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-
-#include "RedshiftLibrary/method/twopasssolve.h"
-
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/operator/twopass.h"
+#include <boost/test/unit_test.hpp>
 using namespace NSEpic;
+BOOST_AUTO_TEST_SUITE(TwoPass)
 
-void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
-                                       const TFloat64Range &redshiftRange) {
-  if (useTwoPass()) {
-    initTwoPassZStepFactor();
-    m_coarseRedshiftStep = m_redshiftStep * m_twoPassZStepFactor;
-  } else
-    m_coarseRedshiftStep = m_redshiftStep;
-  CZGridParam zp(redshiftRange, m_coarseRedshiftStep);
-  m_redshifts = zp.getZGrid(m_zLogSampling);
+BOOST_AUTO_TEST_CASE(spanRedshift_test) {
+  Float64 z = 5.;
+  Float64 step = log(1 + 0.5);
+  TFloat64List redshifts{0, 5, 9};
+  bool zLogSampling = true;
+  Float64 secondPass_halfwindowsize = log(1 + 1);
+  Int32 ref_idx = 1;
+  TFloat64List extendedRedshifts_ref{3, 5, 8};
 
-  if (m_redshifts.size() < MIN_GRID_COUNT) {
-    m_coarseRedshiftStep = m_redshiftStep;
-    CObjectSolve::createRedshiftGrid(
-        inputContext, redshiftRange); // fall back to creating fine grid
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
-                   "raw "
-                << m_redshifts.size() << " redshifts will be calculated");
-  } else {
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid enabled: "
-                << m_redshifts.size()
-                << " redshifts "
-                   "will be calculated on the coarse grid");
-  }
+  // prepare object
+  COperatorTwoPass op;
+  op.m_Redshifts = redshifts;
+  op.m_fineStep = step;
+  op.m_zLogSampling = zLogSampling;
+  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
+
+  TFloat64List extendedList = op.SpanRedshiftWindow(z);
+  // check is sorted
+  BOOST_CHECK(
+      std::is_sorted(std::begin(extendedList), std::end(extendedList)) == true);
+  BOOST_CHECK(extendedList == extendedRedshifts_ref);
+  // check presence of z in extendedList
+  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
+  BOOST_CHECK(idx == ref_idx);
 }
 
-const std::unordered_map<std::string, EContinuumFit>
-    CTwoPassSolve::str2ContinuumFit = {
-        {"retryAll", EContinuumFit::retryAll},
-        {"fromFirstPass", EContinuumFit::fromFirstPass},
-        {"reFitFirstPass", EContinuumFit::reFitFirstPass}};
+BOOST_AUTO_TEST_SUITE_END()

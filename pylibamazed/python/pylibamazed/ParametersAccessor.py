@@ -49,6 +49,7 @@ class ESolveMethod(Enum):
     TEMPLATE_COMBINATION = 3
     LINE_MEAS = 4
 
+
 class EContinuumFit(Enum):
     FROM_FIRST_PASS = 1
     RETRY_ALL = 2
@@ -56,18 +57,17 @@ class EContinuumFit(Enum):
 
 
 class ParametersAccessor:
-
     solve_method_dict = {
         ESolveMethod.LINE_MODEL: "lineModelSolve",
         ESolveMethod.TEMPLATE_FITTING: "templateFittingSolve",
         ESolveMethod.TEMPLATE_COMBINATION: "tplCombinationSolve",
-        ESolveMethod.LINE_MEAS: "lineMeasSolve"
+        ESolveMethod.LINE_MEAS: "lineMeasSolve",
     }
 
     second_pass_continuum_fit_dict = {
         EContinuumFit.FROM_FIRST_PASS: "fromFirstPass",
         EContinuumFit.RETRY_ALL: "retryAll",
-        EContinuumFit.REFIT_FIRST_PASS: "reFitFirstPass"
+        EContinuumFit.REFIT_FIRST_PASS: "reFitFirstPass",
     }
 
     def __init__(self, parameters: dict):
@@ -146,7 +146,10 @@ class ParametersAccessor:
 
     def get_linemeas_solve_section(self, spectrum_model: str, create: bool = False) -> dict:
         return self._get_or_create_section(
-            self.get_linemeas_solver_section, self.solve_method_dict[ESolveMethod.LINE_MEAS], create, spectrum_model
+            self.get_linemeas_solver_section,
+            self.solve_method_dict[ESolveMethod.LINE_MEAS],
+            create,
+            spectrum_model,
         )
 
     def get_linemeas_dzhalf(self, spectrum_model: str) -> float:
@@ -264,7 +267,10 @@ class ParametersAccessor:
 
     def get_template_fitting_section(self, spectrum_model: str, create: bool = False) -> dict:
         return self._get_or_create_section(
-            self.get_redshift_solver_section, self.solve_method_dict[ESolveMethod.TEMPLATE_FITTING], create, spectrum_model
+            self.get_redshift_solver_section,
+            self.solve_method_dict[ESolveMethod.TEMPLATE_FITTING],
+            create,
+            spectrum_model,
         )
 
     def get_template_fitting_fft(self, spectrum_model: str) -> dict:
@@ -291,7 +297,10 @@ class ParametersAccessor:
 
     def get_template_combination_section(self, spectrum_model: str, create: bool = False) -> dict:
         return self._get_or_create_section(
-            self.get_redshift_solver_section, self.solve_method_dict[ESolveMethod.TEMPLATE_COMBINATION], create, spectrum_model
+            self.get_redshift_solver_section,
+            self.solve_method_dict[ESolveMethod.TEMPLATE_COMBINATION],
+            create,
+            spectrum_model,
         )
 
     def get_template_combination_ism(self, spectrum_model: str) -> bool:
@@ -316,7 +325,10 @@ class ParametersAccessor:
 
     def get_linemodel_solve_section(self, spectrum_model: str, create: bool = False) -> dict:
         return self._get_or_create_section(
-            self.get_redshift_solver_section, self.solve_method_dict[ESolveMethod.LINE_MODEL], create, spectrum_model
+            self.get_redshift_solver_section,
+            self.solve_method_dict[ESolveMethod.LINE_MODEL],
+            create,
+            spectrum_model,
         )
 
     def get_linemodel_solve_linemodel_section(self, spectrum_model: str, create: bool = False) -> str:
@@ -390,6 +402,15 @@ class ParametersAccessor:
     def get_linemodel_continuumfit_fft(self, spectrum_model: str) -> dict:
         return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "fftProcessing")
 
+    def get_firstpass_section(self, solve_method: ESolveMethod, spectrum_model: str) -> dict:
+        if solve_method == ESolveMethod.LINE_MODEL:
+            solve_section = self.get_linemodel_solve_linemodel_section(spectrum_model)
+        elif solve_method == ESolveMethod.TEMPLATE_FITTING:
+            solve_section = self.get_template_fitting_section(spectrum_model)
+        else:
+            return None
+        return self._get_on_None(solve_section, "firstPass")
+
     def get_secondpass_section(self, solve_method: ESolveMethod, spectrum_model: str) -> dict:
         if solve_method == ESolveMethod.LINE_MODEL:
             solve_section = self.get_linemodel_solve_linemodel_section(spectrum_model)
@@ -398,7 +419,7 @@ class ParametersAccessor:
         else:
             return None
         return self._get_on_None(solve_section, "secondPass")
-    
+
     def get_secondpass_continuumfit(self, solve_method: ESolveMethod, spectrum_model: str) -> dict:
         secondpass_section = self.get_secondpass_section(solve_method, spectrum_model)
         return self._get_on_None(secondpass_section, "continuumFit")
@@ -419,19 +440,20 @@ class ParametersAccessor:
     def get_linemodel_continuumfit_fftprocessing(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "fftProcessing")
 
-    def get_linemodel_firstpass_section(self, spectrum_model: str) -> bool:
-        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "firstPass")
-
     def get_linemodel_firstpass_tplratio_ismfit(self, spectrum_model: str) -> bool:
-        return self._get_on_None(self.get_linemodel_firstpass_section(spectrum_model), "tplRatioIsmFit")
+        return self._get_on_None(
+            self.get_firstpass_section(ESolveMethod.LINE_MODEL, spectrum_model), "tplRatioIsmFit"
+        )
 
     def get_linemodel_firstpass_extremacount(self, spectrum_model: str) -> bool:
-        return self._get_on_None(self.get_linemodel_firstpass_section(spectrum_model), "extremaCount")
+        return self._get_on_None(
+            self.get_firstpass_section(ESolveMethod.LINE_MODEL, spectrum_model), "extremaCount"
+        )
 
     def get_linemodel_fitting_method(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "fittingMethod")
 
-    def get_skipsecondpass(self, solve_method:ESolveMethod, spectrum_model: str) -> bool:
+    def get_skipsecondpass(self, solve_method: ESolveMethod, spectrum_model: str) -> bool:
         section = None
         if solve_method == ESolveMethod.LINE_MODEL:
             section = self.get_linemodel_solve_linemodel_section(spectrum_model)

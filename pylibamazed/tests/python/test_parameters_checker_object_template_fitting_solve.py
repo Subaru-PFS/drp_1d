@@ -144,5 +144,26 @@ class TestTemplateFittingSolve:
                 }
             }
         )
-        with pytest.raises(APIException, match=r"Second pass continuum fit for templatFittingSolve must be set to reFitFirstPass"):
+        with pytest.raises(
+            APIException,
+            match=r"Second pass continuum fit for templatFittingSolve must be set to reFitFirstPass",
+        ):
+            check_from_parameter_dict(param_dict)
+
+    def test_error_if_secondpass_active_without_firstpass_section(self):
+        param_dict = self._make_parameter_dict(
+            **{"templateFittingSolve": {"skipSecondPass": False, "secondPass": {}}}
+        )
+        with pytest.raises(
+            APIException, match=r"Missing parameter object galaxy TemplateFittingSolve first pass section"
+        ):
+            check_from_parameter_dict(param_dict)
+
+    def test_error_if_secondpass_active_without_secondpass_section(self):
+        param_dict = self._make_parameter_dict(
+            **{"templateFittingSolve": {"skipSecondPass": False, "firstPass": {}}}
+        )
+        with pytest.raises(
+            APIException, match=r"Missing parameter object galaxy TemplateFittingSolve second pass section"
+        ):
             check_from_parameter_dict(param_dict)

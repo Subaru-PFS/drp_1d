@@ -65,7 +65,6 @@ public:
 
   void Solve();
 
-
 private:
   ChisquareArray
   BuildChisquareArray(const std::shared_ptr<const CLineModelResult> &result,
@@ -90,9 +89,7 @@ private:
       ChisquareArray &chisquarearray) const;
 
   void initTwoPassZStepFactor() override;
-  
 
-    
   COperatorLineModel m_linemodel;
 
   std::string m_opt_lineratiotype;
@@ -112,7 +109,6 @@ private:
   Float64 m_opt_candidatesLogprobaCutThreshold;
 
   Int32 m_opt_firstpass_largegridstepRatio;
-  bool m_opt_skipsecondpass = false;
 
   bool m_useloglambdasampling;
 };

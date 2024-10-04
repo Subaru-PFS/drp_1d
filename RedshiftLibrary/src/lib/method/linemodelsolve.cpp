@@ -55,7 +55,9 @@ using namespace boost;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve() : CTwoPassSolve("lineModelSolve") {}
+CLineModelSolve::CLineModelSolve() : CTwoPassSolve("lineModelSolve") {
+  m_opt_skipsecondpass = false;
+}
 
 /**
  * \brief
@@ -147,7 +149,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       0.0,                // no peak Separation in 2nd pass
       0.0,                // cut threshold
       m_opt_extremacount, // max nb of final (2nd pass) candidates
-      m_redshiftSampling == "log",
+      m_zLogSampling,
       "SPE", // Id_prefix
       false, // do not allow extrema at border
       1      // one peak/window only
@@ -492,7 +494,7 @@ void CLineModelSolve::Solve() {
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
 
   // Compute with linemodel operator
-  m_linemodel.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
+  m_linemodel.Init(m_redshifts, m_redshiftStep, m_zLogSampling);
 
   // logstep from redshift
 
@@ -515,7 +517,7 @@ void CLineModelSolve::Solve() {
   COperatorPdfz pdfz(m_opt_pdfcombination,
                      2 * m_opt_secondpass_halfwindowsize, // peak separation
                      m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
-                     m_redshiftSampling == "log", "FPE", true, 0);
+                     m_zLogSampling, "FPE", true, 0);
 
   std::shared_ptr<PdfCandidatesZResult> candResult_fp =
       pdfz.Compute(chisquares);
@@ -536,7 +538,7 @@ void CLineModelSolve::Solve() {
   std::string fpb_opt_continuumcomponent =
       "fromSpectrum"; // Note: this is hardocoded! given that condition for
                       // FPB relies on having "tplFit"
-  linemodel_fpb.Init(m_redshifts, m_redshiftStep, m_redshiftSampling);
+  linemodel_fpb.Init(m_redshifts, m_redshiftStep, m_zLogSampling);
 
   if (enableFirstpass_B) {
     Log.LogInfo("Linemodel FIRST PASS B enabled. Computing now.");
@@ -560,7 +562,7 @@ void CLineModelSolve::Solve() {
     COperatorPdfz pdfz(m_opt_pdfcombination,
                        2 * m_opt_secondpass_halfwindowsize, // peak separation
                        m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
-                       m_redshiftSampling == "log", "FPB", true, 0);
+                       m_zLogSampling, "FPB", true, 0);
 
     std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares);
 
@@ -576,7 +578,7 @@ void CLineModelSolve::Solve() {
   }
 
   std::shared_ptr<const LineModelExtremaResult> fpExtremaResult =
-      m_linemodel.buildFirstPassExtremaResults();
+      m_linemodel.BuildFirstPassExtremaResults();
 
   // save linemodel firstpass extrema results
   std::string firstpassExtremaResultsStr = scopeStr;
@@ -587,7 +589,7 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // SECOND PASS
   //**************************************************
-  if (!m_opt_skipsecondpass)
+  if (useTwoPass())
     m_linemodel.ComputeSecondPass(fpExtremaResult);
 
   // read it as constant to save it
@@ -605,10 +607,9 @@ void CLineModelSolve::Solve() {
   // computation
 }
 
-
 void CLineModelSolve::initTwoPassZStepFactor() {
-    m_twoPassZStepFactor =
+  m_twoPassZStepFactor =
       Context.GetInputContext()->GetParameterStore()->GetScoped<Int32>(
           "lineModelSolve.lineModel.firstPass."
           "largeGridStepRatio");
-  };
+};

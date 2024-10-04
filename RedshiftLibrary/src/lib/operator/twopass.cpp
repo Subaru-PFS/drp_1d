@@ -37,39 +37,50 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/method/twopasssolve.h"
+#include "RedshiftLibrary/operator/twopass.h"
 
 using namespace NSEpic;
 
-void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
-                                       const TFloat64Range &redshiftRange) {
-  if (useTwoPass()) {
-    initTwoPassZStepFactor();
-    m_coarseRedshiftStep = m_redshiftStep * m_twoPassZStepFactor;
-  } else
-    m_coarseRedshiftStep = m_redshiftStep;
-  CZGridParam zp(redshiftRange, m_coarseRedshiftStep);
-  m_redshifts = zp.getZGrid(m_zLogSampling);
-
-  if (m_redshifts.size() < MIN_GRID_COUNT) {
-    m_coarseRedshiftStep = m_redshiftStep;
-    CObjectSolve::createRedshiftGrid(
-        inputContext, redshiftRange); // fall back to creating fine grid
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
-                   "raw "
-                << m_redshifts.size() << " redshifts will be calculated");
-  } else {
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid enabled: "
-                << m_redshifts.size()
-                << " redshifts "
-                   "will be calculated on the coarse grid");
-  }
+void COperatorTwoPass::Init(const Float64 halfWindowSize,
+                            const bool zLogSampling,
+                            const TFloat64List &redshifts,
+                            const Float64 fineStep) {
+  m_secondPass_halfwindowsize = halfWindowSize;
+  m_zLogSampling = zLogSampling;
+  m_Redshifts = redshifts;
+  m_fineStep = fineStep;
 }
 
-const std::unordered_map<std::string, EContinuumFit>
-    CTwoPassSolve::str2ContinuumFit = {
-        {"retryAll", EContinuumFit::retryAll},
-        {"fromFirstPass", EContinuumFit::fromFirstPass},
-        {"reFitFirstPass", EContinuumFit::reFitFirstPass}};
+TFloat64List COperatorTwoPass::SpanRedshiftWindow(const Float64 z) const {
+  Float64 half_r = m_secondPass_halfwindowsize;
+  Float64 half_l = m_secondPass_halfwindowsize;
+
+  if (m_zLogSampling) {
+    half_r = (exp(half_r) - 1.0) * (1. + z);
+    half_l = (1.0 - exp(-half_l)) * (1. + z);
+  }
+
+  //
+  TFloat64Range windowRange(z - half_l, z + half_r);
+  windowRange.IntersectWith(m_Redshifts);
+  CZGridParam zparam(windowRange, m_fineStep, z);
+
+  return zparam.getZGrid(m_zLogSampling);
+};
+
+void COperatorTwoPass::BuildExtendedRedshifts(
+    CPassExtremaResult &passExtremaResult) {
+  Int32 nExtremaResults = passExtremaResult.size();
+  passExtremaResult.ExtendedRedshifts.reserve(nExtremaResults);
+
+  for (Int32 candidateIdx = 0; candidateIdx < nExtremaResults; candidateIdx++) {
+    const std::shared_ptr<const TCandidateZ> &cand =
+        passExtremaResult.m_ranked_candidates[candidateIdx].second;
+
+    Log.LogInfo(Formatter() << "  Operator-TwoPass: Raw extr #" << candidateIdx
+                            << ", z_e.X=" << cand->Redshift
+                            << ", m_e.Y=" << cand->ValProba);
+    passExtremaResult.ExtendedRedshifts.push_back(
+        SpanRedshiftWindow(cand->Redshift));
+  }
+}

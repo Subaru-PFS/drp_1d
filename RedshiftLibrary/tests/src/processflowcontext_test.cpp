@@ -83,6 +83,7 @@ const std::string jsonString =
     "\"lineTypeFilter\" : \"no\","
     "\"lineForceFilter\" : \"no\"}},"
     "\"templateFittingSolve\" : {"
+    "\"skipSecondPass\" : true,"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"

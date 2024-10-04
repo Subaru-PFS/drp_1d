@@ -14,9 +14,7 @@
     "ismFit",
     "pdfCombination",
     "enablePhotometry",
-    "skipSecondPass",
-    "firstPass",
-    "secondPass"
+    "skipSecondPass"
   ],
   "additionalProperties": false,
   "properties": {

@@ -79,6 +79,7 @@ const std::string jsonStringFFT = {
     "\"redshiftSolver\": {"
     "\"method\" : \"templateFittingSolve\","
     "\"templateFittingSolve\" : {"
+    "\"skipSecondPass\" : true,"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -98,6 +99,7 @@ const std::string jsonStringNoFFT = {
     "\"redshiftSolver\": {"
     "\"method\" : \"templateFittingSolve\","
     "\"templateFittingSolve\" : {"
+    "\"skipSecondPass\" : true,"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -107,21 +109,23 @@ const std::string jsonStringNoFFT = {
     "\"ismFit\" : true,"
     "\"pdfCombination\" : \"marg\","
     "\"enablePhotometry\" : true,"
-    "\"photometry\": {\"weight\" : 1.0}}}}}"};
+    "\"photometry\": {\"weight\" : 1.0},"
+    "\"secondPass\": {\"continuumFit\": \"fromFirstPass\"}"
+    "}}}}"};
 
-class fixture_TemplateFittingSolveTestNoFFT {
+class fixture_TemplateFittingCommon {
 public:
   fixture_Context ctx;
-  fixture_TemplateFittingSolveTestNoFFT() {
+  void Init(std::string fullJsonString) {
     fillCatalog();
     ctx.reset();
-    ctx.loadParameterStore(jsonString + jsonStringNoFFT);
+    ctx.loadParameterStore(fullJsonString);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
-    ctx.setPhotoBandCatalog(photoBandCatalog);
-    spc->SetPhotData(photoData);
     ctx.addSpectrum(spc, LSF);
     ctx.initContext();
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
   }
 
   std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
@@ -145,34 +149,33 @@ public:
   }
 };
 
-class fixture_TemplateFittingSolveTestFFT {
+class fixture_TemplateFittingSolveTestNoFFT
+    : public fixture_TemplateFittingCommon {
+public:
+  fixture_TemplateFittingSolveTestNoFFT() {
+    Init(jsonString + jsonStringNoFFT);
+  };
+};
+
+class fixture_TemplateFittingSolve2PassTest
+    : public fixture_TemplateFittingCommon {
+public:
+  fixture_TemplateFittingSolve2PassTest() {
+    std::string json2Pass = jsonStringNoFFT;
+    std::string target = "\"skipSecondPass\" : true,";
+    size_t pos = json2Pass.find(target);
+    json2Pass.replace(pos, target.length(), "\"skipSecondPass\" : false,");
+    Init(jsonString + json2Pass);
+  }
+};
+
+class fixture_TemplateFittingSolveTestFFT
+    : public fixture_TemplateFittingCommon {
 public:
   fixture_Context ctx;
   fixture_TemplateFittingSolveTestFFT() {
-    fillCatalog();
-    ctx.reset();
-    ctx.loadParameterStore(jsonString + jsonStringFFT);
-    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
-    ctx.setCatalog(catalog);
-    ctx.addSpectrum(spc, LSF);
-    ctx.initContext();
-  }
-
-  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
-      fixture_MeiskinCorrection().igmCorrectionMeiksin;
-  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti =
-      fixture_CalzettiCorrection().ismCorrectionCalzetti;
-  std::shared_ptr<CLSF> LSF =
-      fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
-  std::shared_ptr<CTemplateCatalog> catalog =
-      fixture_sharedTemplateCatalog().catalog;
-
-  void fillCatalog() {
-    catalog->Add(fixture_SharedGalaxyTemplate().tpl);
-    catalog->m_logsampling = 1;
-    catalog->Add(fixture_SharedGalaxyTemplate().tpl);
+    spc = fixture_SharedSpectrumExtended().spc;
+    Init(jsonString + jsonStringFFT);
   }
 };
 
@@ -232,6 +235,58 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
   BOOST_CHECK_CLOSE(z, 2.8770415147926256, 1e-6);
 
   ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(compute2Pass_test,
+                        fixture_TemplateFittingSolve2PassTest) {
+
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+
+  CTemplateFittingSolve templateFittingSolve;
+  BOOST_REQUIRE_NO_THROW(templateFittingSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "templateFittingSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CTemplateFittingSolveResult");
+
+  // First pass pdf results
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "templateFittingSolve", "firstpass_pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "templateFittingSolve",
+      "firstpass_pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "templateFittingSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
+      "model_parameters");
+  BOOST_CHECK(resType == "TExtremaResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
+          "model_parameters", 0);
+  Float64 z = res->Redshift;
+  BOOST_CHECK_CLOSE(z, 2.8604060282076706, 1e-6);
+
+  ctx.reset();
+
+  // TODO tests to add:
+  // - presence of first_pass restults
+  // - presence of second_pass results
 }
 
 BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {

@@ -88,9 +88,6 @@ public:
   std::vector<std::vector<TInt32List>>
       IgmMeiksinIdxIntermediate; // meiksin idx for each intermediate result
                                  // (for each config [z][Calzetti][Meiksin])
-  // TODO: std::vector<std::vector<TFloat64List>> LogPriorIntermediate
-  // TODO: std::vector<std::vector<TFloat64List>> AmpIntermediate //is needed
-  // for correct prior use in marg. mode tplmodel method
 
   Float64 CstLog = NAN;
   std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra

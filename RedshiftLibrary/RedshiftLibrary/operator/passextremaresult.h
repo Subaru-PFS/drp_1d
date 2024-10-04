@@ -48,16 +48,18 @@
 
 namespace NSEpic {
 
-class CLineModelPassExtremaResult {
+class CPassExtremaResult {
 
 public:
-  CLineModelPassExtremaResult(Int32 n);
+  CPassExtremaResult(Int32 n);
 
-  CLineModelPassExtremaResult() = default;
-
+  CPassExtremaResult() = default;
+  template <typename T>
+  void SetRankedCandidates(const TRankedCandidates<T> &zCandidates) {
+    m_ranked_candidates.assign(zCandidates.cbegin(), zCandidates.cend());
+  }
   void Resize(Int32 size);
-  TInt32List
-  getUniqueCandidates(const CLineModelPassExtremaResult &results_b) const;
+  TInt32List getUniqueCandidates(const CPassExtremaResult &results_b) const;
   TFloat64List GetRedshifts() const;
   void fillWithContinuumModelSolutionAtIndex(
       Int32 i, const CContinuumModelSolution &contModelSol);

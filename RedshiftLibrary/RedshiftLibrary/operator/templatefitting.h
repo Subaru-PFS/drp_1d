@@ -47,7 +47,10 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/passextremaresult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
@@ -124,6 +127,9 @@ public:
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
+  void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
+  std::shared_ptr<const ExtremaResult>
+  BuildFirstPassExtremaResults(const TOperatorResultMap &resultsFromStore);
 
 protected:
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
@@ -155,6 +161,9 @@ protected:
   std::vector<TFloat64List> m_sumCross_outsideIGM;
   std::vector<TFloat64List> m_sumT_outsideIGM;
   std::vector<TFloat64List> m_sumS_outsideIGM;
+  CPassExtremaResult m_firstpass_extremaResult;
+  std::shared_ptr<std::vector<CTemplateFittingResult>> m_results;
+  std::vector<CContinuumModelSolution> ContinuumModelSolutions;
 };
 
 } // namespace NSEpic

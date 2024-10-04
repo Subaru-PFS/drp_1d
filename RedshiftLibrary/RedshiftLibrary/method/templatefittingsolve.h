@@ -40,7 +40,8 @@
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/objectSolve.h"
+#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/method/twopasssolve.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
@@ -54,26 +55,41 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-class CTemplateFittingSolve : public CObjectSolve {
+class CTemplateFittingSolve : public CTwoPassSolve {
 
 public:
-  enum EType {
-    nType_raw = 1,
-    nType_continuumOnly = 2,
-    nType_noContinuum = 3,
-    nType_all = 4,
+  enum class EType {
+    raw,
+    continuumOnly,
+    noContinuum,
+    all,
   };
+
+  static const std::unordered_map<EType, CSpectrum::EType>
+      fittingTypeToSpectrumType;
 
   CTemplateFittingSolve();
 
 private:
+  void PopulateParameters(
+      const std::shared_ptr<const CParameterStore> &parameterStore);
+  void UpdateParamsAndCatalogForFft(
+      const std::shared_ptr<const CInputContext> &inputContext,
+      const CTemplateCatalog &tplCatalog);
+  void LogParameters();
+  void CheckTemplateCatalog(const CTemplateCatalog &tplCatalog);
+  std::string MakeScopeStrFromTypeAndPass(EType type,
+                                          bool isFirstPass = true) const;
+  EType MakeTypeFromSpectrumComponentParam(std::string component);
+
   std::shared_ptr<CSolveResult> compute() override;
 
   void Solve(std::shared_ptr<COperatorResultStore> resultStore,
              const std::shared_ptr<const CTemplate> &tpl,
              Float64 overlapThreshold, std::vector<CMask> maskList,
-             EType spctype = nType_raw, std::string opt_interp = "lin",
-             bool opt_extinction = false, bool opt_dustFitting = false);
+             EType spctype = EType::raw, std::string opt_interp = "lin",
+             bool opt_extinction = false, bool opt_dustFitting = false,
+             Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx);
 
   ChisquareArray
   BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store,
@@ -83,16 +99,25 @@ private:
       shared_ptr<const COperatorResultStore> store, const std::string &scopeStr,
       const TCandidateZbyRank &ranked_zCandidates,
       const CTemplateCatalog &tplCatalog, Float64 overlapThreshold);
-
   void StoreExtremaResults(
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const ExtremaResult> &ExtremaResult) const;
+  void initTwoPassZStepFactor() override;
 
   std::shared_ptr<COperatorTemplateFittingBase> m_continuumFittingOperator;
 
   std::string m_opt_pdfcombination;
   Float64 m_redshiftSeparation;
   Int64 m_opt_maxCandidate;
+  Float64 m_overlapThreshold;
+  std::string m_spcComponent;
+  std::string m_interpolation;
+  bool m_extinction;
+  bool m_dustFit;
+  bool m_fftProcessing;
+  bool m_usePhotometry = false;
+  Float64 m_photometryWeight = NAN;
+  EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
 };
 
 } // namespace NSEpic
