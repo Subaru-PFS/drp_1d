@@ -36,22 +36,27 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/method/powerlawsolve.h"
-#include "RedshiftLibrary/operator/powerlaw.h"
+#ifndef _REDSHIFT_METHOD_TWOPASSSOLVE_
+#define _REDSHIFT_METHOD_TWOPASSSOLVE_
 
-using namespace NSEpic;
-using namespace std;
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/objectSolve.h"
+#include "RedshiftLibrary/common/defaults.h"
 
-CPowerLawSolve::CPowerLawSolve() : CObjectSolve("powerLawSolve") {}
+namespace NSEpic {
 
-std::shared_ptr<CSolveResult>
-CPowerLawSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                        std::shared_ptr<COperatorResultStore> resultStore,
-                        TScopeStack &scope) {
+class CTwoPassSolve : public CObjectSolve {
+public:
+  using CObjectSolve::CObjectSolve;
+  void createRedshiftGrid(const CInputContext &inputContext,
+                                         const TFloat64Range &redshiftRange);
+  
+  protected:
+    virtual void initTwoPassZStepFactor() = 0;
+    Float64 m_coarseRedshiftStep = NAN;
+    Float64 m_twoPassZStepFactor = NAN;
+};
 
-  m_powerLawOperator = std::make_shared<COperatorPowerLaw>(m_redshifts);
-
-  std::shared_ptr<CPowerLawSolveResult> PowerLawSolveResult =
-      std::make_shared<CPowerLawSolveResult>();
-  return PowerLawSolveResult;
 }
+
+#endif

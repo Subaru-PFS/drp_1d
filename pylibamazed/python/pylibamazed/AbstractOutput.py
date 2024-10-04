@@ -41,6 +41,7 @@ import pandas as pd
 from pylibamazed.Exception import APIException
 from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import ESolveMethod
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
 
@@ -350,7 +351,7 @@ class AbstractOutput:
         # filter ds_attributes by extended_results column
         skipsecondpass = False
         if object_type is not None:
-            skipsecondpass = self.parameters.get_linemodel_skipsecondpass(object_type)
+            skipsecondpass = self.parameters.get_skipsecondpass(ESolveMethod.LINE_MODEL ,object_type)
 
         # retrieve results which are not firstpass results
         # exclude firstpass results for methods other than LineModelSolve

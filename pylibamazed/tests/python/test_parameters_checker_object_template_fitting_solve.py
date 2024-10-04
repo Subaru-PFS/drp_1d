@@ -133,3 +133,16 @@ class TestTemplateFittingSolve:
         )
         with pytest.raises(APIException, match=r"cannot activate both fft and photometry"):
             check_from_parameter_dict(param_dict)
+
+    def test_error_if_unsupported_second_pass_continuum_fit(self):
+        param_dict = self._make_parameter_dict(
+            **{
+                "templateFittingSolve": {
+                    "secondPass": {
+                        "continuumFit": "retryAll",
+                    }
+                }
+            }
+        )
+        with pytest.raises(APIException, match=r"Second pass continuum fit for templatFittingSolve must be set to reFitFirstPass"):
+            check_from_parameter_dict(param_dict)

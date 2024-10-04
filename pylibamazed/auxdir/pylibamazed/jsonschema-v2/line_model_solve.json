@@ -298,7 +298,7 @@
           "description": "During the 2nd pass, after fitting of all the parameters, redo a joint fit of continuum and linemodel amplitudes and eventually a 2nd order polynomial using an SVD on the full observed range (heavy computation). \n * **-1**: skip this step \n * **svdlcp2**: refit continuum, linemodel and 2nd order polynomial \n * **svdlc**: refit only continuum and linemodel (usefull if we don't trust the continuum/linemodel orthogonalization, because it is done on a free linemodel or a mask)"
         },
         "secondPass": {
-          "$ref": "line_model_second_pass.json"
+          "$ref": "second_pass.json"
         },
         "pdf": {
           "type": "object",

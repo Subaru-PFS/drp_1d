@@ -55,7 +55,7 @@ using namespace boost;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve() : CObjectSolve("lineModelSolve") {}
+CLineModelSolve::CLineModelSolve() : CTwoPassSolve("lineModelSolve") {}
 
 /**
  * \brief
@@ -605,32 +605,10 @@ void CLineModelSolve::Solve() {
   // computation
 }
 
-void CLineModelSolve::createRedshiftGrid(const CInputContext &inputContext,
-                                         const TFloat64Range &redshiftRange) {
 
-  Int32 opt_twosteplargegridstep_ratio =
-      inputContext.GetParameterStore()->GetScoped<Int32>(
+void CLineModelSolve::initTwoPassZStepFactor() {
+    m_twoPassZStepFactor =
+      Context.GetInputContext()->GetParameterStore()->GetScoped<Int32>(
           "lineModelSolve.lineModel.firstPass."
           "largeGridStepRatio");
-
-  m_coarseRedshiftStep = m_redshiftStep * opt_twosteplargegridstep_ratio;
-
-  CZGridParam zp(redshiftRange, m_coarseRedshiftStep);
-  m_redshifts = zp.getZGrid(m_redshiftSampling == "log");
-
-  if (m_redshifts.size() < MIN_GRID_COUNT) {
-    m_coarseRedshiftStep = m_redshiftStep;
-    CObjectSolve::createRedshiftGrid(
-        inputContext, redshiftRange); // fall back to creating fine grid
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
-                   "raw "
-                << m_redshifts.size() << " redshifts will be calculated");
-  } else {
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid enabled: "
-                << m_redshifts.size()
-                << " redshifts "
-                   "will be calculated on the coarse grid");
-  }
-}
+  };
