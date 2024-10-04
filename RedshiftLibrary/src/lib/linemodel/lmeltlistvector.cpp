@@ -313,6 +313,12 @@ void CLMEltListVector::setAllAbsLinesNotFittable() {
   }
 }
 
+void CLMEltListVector::resetNullLineProfiles() {
+  for (auto &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_null_line_profiles = false;
+  }
+}
+
 void CLMEltListVector::setNullNominalAmplitudesNotFittable() {
   for (auto &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_nullNominalAmplitudes = false; // reset all

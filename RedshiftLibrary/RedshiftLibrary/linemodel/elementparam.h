@@ -97,6 +97,7 @@ struct TLineModelElementParam {
   bool m_absLinesNullContinuum =
       false; // when continuum is null under line (eg igm extinction)
   bool m_nullNominalAmplitudes = false;
+  bool m_null_line_profiles = false;
 
   void init(const std::string &widthType);
   const Float64 &getSumGauss() const { return m_sumGauss; }
@@ -271,14 +272,11 @@ struct TLineModelElementParam {
   CLine::EType GetElementType() const { return m_type; };
   bool IsEmission() const { return m_isEmission; };
 
-  bool isFittable() const {
-    return !m_globalOutsideLambdaRange && !m_nullNominalAmplitudes &&
-           !m_absLinesNullContinuum;
-  }
+  bool isFittable() const { return !isNotFittable(); }
 
   bool isNotFittable() const {
     return m_globalOutsideLambdaRange || m_nullNominalAmplitudes ||
-           m_absLinesNullContinuum;
+           m_absLinesNullContinuum || m_null_line_profiles;
   }
 
   bool isOutsideLambdaRangeLine(Int32 line_index) const {

@@ -193,6 +193,7 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
   m_ElementsVector->computeGlobalOutsideLambdaRange();
   m_ElementsVector->setNullNominalAmplitudesNotFittable();
   m_ElementsVector->setAbsLinesNullContinuumNotFittable(m_models);
+  m_ElementsVector->resetNullLineProfiles();
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
@@ -289,30 +290,22 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
         lineIdx);
   }
 
-  if (num == 0 || param->getSumGauss() == 0) {
-    Log.LogDebug(
-        Formatter()
-        << "CLineModelElement::fitAmplitude: Could not fit amplitude:    "
-           " num="
-        << num << ", mtm=" << param->m_sumGauss << " at line index " << lineIdx
-        << " of elt " << eltIndex);
-    THROWG(
-        ErrorCode::INTERNAL_ERROR,
-        Formatter() << "linemodel amplitude cannot be fitted, profile is null");
+  if (num == 0) {
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter()
+               << "linemodel amplitude cannot be fitted, null number of samples"
+               << " at line index " << lineIdx << " of elt " << eltIndex);
   }
 
-  bool allNaN = true;
-  for (auto &spcIndex : m_spectraIndex) {
-    if (!std::isnan(param->getSumGauss())) {
-      allNaN = false;
-      break;
-    }
-  }
-
-  if (allNaN) {
-    param->m_sumCross = NAN;
+  if (param->getSumGauss() == 0) {
+    param->m_null_line_profiles = true;
+    Flag.warning(WarningCode::NULL_LINES_PROFILE,
+                 Formatter()
+                     << "linemodel amplitude cannot be fitted, profile is null"
+                     << " at line index " << lineIdx << " of elt " << eltIndex);
     return;
   }
+
   param->m_sumCross = std::max(0.0, param->m_dtmFree);
   Float64 const A = param->m_sumCross / param->m_sumGauss;
   Float64 const Astd = 1.0 / sqrt(param->m_sumGauss);

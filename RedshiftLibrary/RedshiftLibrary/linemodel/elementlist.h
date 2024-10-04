@@ -168,6 +168,7 @@ public:
       std::shared_ptr<CSpcModelVector> const &models);
   void setAllAbsLinesFittable();
   void setAllAbsLinesNotFittable();
+  void resetNullLineProfiles();
   TInt32List getValidElementIndices() const;
   Int32 getNonZeroElementsNDdl() const;
 
