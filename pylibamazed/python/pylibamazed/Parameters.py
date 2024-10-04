@@ -222,7 +222,7 @@ class Parameters(ParametersAccessor):
             if method == "lineModelSolve":
                 if self.get_linemeas_method(spectrum_model):
                     raise APIException(
-                        ErrorCode.INCOHERENT_CONFIG_OPTION,
+                        ErrorCode.INCOHERENT_CONFIG_OPTIONS,
                         "Cannot run LineMeasSolve from catalog when sequencial processing is selected"
                         "simultaneously.",
                     )
