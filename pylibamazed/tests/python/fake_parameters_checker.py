@@ -39,10 +39,10 @@
 
 
 class FakeParametersChecker:
-    def __init__(self, parameters):
+    def __init__(self, parameters, version=2):
         pass
 
-    def json_schema_check(self, version):
+    def json_schema_check(self):
         pass
 
     def custom_check(self):

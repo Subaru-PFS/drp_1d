@@ -47,22 +47,15 @@ class TestParametersChecker:
     def test_json_schema_error(self):
         param_dict = {}
         with pytest.raises(APIException, match=r"INVALID_PARAMETER_FILE"):
-            ParametersChecker(param_dict).json_schema_check(1)
+            ParametersChecker(param_dict, 1).json_schema_check()
 
 
 class TestJsonSchemaFileAccessor:
-    json_file_accessor = JsonSchemaFileAccessor()
-
-    def test_json_schema_filesystem_path(self):
-        version = 2
-        assert (
-            self.json_file_accessor.json_schema_filesystem_path(version)
-            == "file:///" + module_root_dir + "/resources/jsonschema-v2/"
-        )
+    version = 2
+    json_file_accessor = JsonSchemaFileAccessor(version)
 
     def test_json_schema_filename(self):
-        version = 2
         assert (
-            self.json_file_accessor.json_schema_filename(version)
+            self.json_file_accessor.json_schema_filename()
             == module_root_dir + "/resources/jsonschema-v2/general.json"
         )
