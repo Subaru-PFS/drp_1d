@@ -189,11 +189,7 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
                               m_enlarge_line_supports);
     }
   }
-
-  m_ElementsVector->computeGlobalOutsideLambdaRange();
-  m_ElementsVector->setNullNominalAmplitudesNotFittable();
-  m_ElementsVector->setAbsLinesNullContinuumNotFittable(m_models);
-  m_ElementsVector->resetNullLineProfiles();
+  m_ElementsVector->computeGlobalLineValidity(m_models);
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {

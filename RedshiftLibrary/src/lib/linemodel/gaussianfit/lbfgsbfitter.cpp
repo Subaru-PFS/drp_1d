@@ -193,7 +193,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
                             m_fitter->getLambdaRange());
   }
-  m_fitter->m_ElementsVector->computeGlobalOutsideLambdaRange();
+  m_fitter->m_ElementsVector->computeGlobalLineValidity(m_fitter->m_models);
 
   CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -513,7 +513,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  m_ElementsVector->computeGlobalOutsideLambdaRange();
+  m_ElementsVector->computeGlobalLineValidity(m_models);
   m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
   Float64 max_snr = -INFINITY;
@@ -707,10 +707,11 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  m_ElementsVector->computeGlobalOutsideLambdaRange();
+  m_ElementsVector->computeGlobalLineValidity(m_models);
   m_spectraIndex.reset();
-  getModel().refreshModel(); // recompute model with estimated params (needed
-                             // for noise estimation from residual)
+  // recompute model with estimated params (needed
+  // for noise estimation from residual)
+  getModel().refreshModelUnderElements(EltsIdx);
 
   for (Int32 i = 0; i < EltsIdx.size(); ++i) {
     m_spectraIndex.reset();

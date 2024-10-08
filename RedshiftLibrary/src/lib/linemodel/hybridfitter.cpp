@@ -226,7 +226,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // check if line is visible:
-    if (getElementParam()[iElt_lineE]->isNotFittable())
+    if (getElementParam()[iElt_lineE]->isNotFittable() ||
+        getElementParam()[iElt_lineA]->isNotFittable())
       continue;
 
     // find the linesMore unique elements indexes
@@ -237,7 +238,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
       auto const &[iElt_lineMore, lineMore_id] =
           m_ElementsVector->findElementIndex(tagMore,
                                              CLine::EType::nType_Emission);
-      if (iElt_lineMore == undefIdx)
+      if (iElt_lineMore == undefIdx ||
+          getElementParam()[iElt_lineMore]->isNotFittable())
         continue;
 
       ilinesMore.push_back(iElt_lineMore);

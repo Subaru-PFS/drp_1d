@@ -87,11 +87,19 @@ CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
 }
 
 TInt32List CLMEltListVector::getValidElementIndices() const {
+  TInt32List EltIndices(m_ElementsParams.size());
+  std::iota(EltIndices.begin(), EltIndices.end(), 0);
+  return getValidElementIndices(EltIndices);
+}
+
+TInt32List
+CLMEltListVector::getValidElementIndices(TInt32List const &EltIndices) const {
   TInt32List valid_indices;
-  for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {
-    if (m_ElementsParams[elt_index]->isFittable())
-      valid_indices.push_back(elt_index);
-  }
+  std::copy_if(EltIndices.cbegin(), EltIndices.cend(),
+               std::back_inserter(valid_indices), [this](Int32 elt_idx) {
+                 return m_ElementsParams[elt_idx]->isFittable();
+               });
+
   return valid_indices;
 }
 
@@ -340,3 +348,11 @@ void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
       elt_param_ptr->m_absLinesNullContinuum = true;
   }
 }
+
+void CLMEltListVector::computeGlobalLineValidity(
+    CSpcModelVectorPtr const &models) {
+  computeGlobalOutsideLambdaRange();
+  setNullNominalAmplitudesNotFittable();
+  setAbsLinesNullContinuumNotFittable(models);
+  resetNullLineProfiles();
+};

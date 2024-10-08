@@ -169,6 +169,9 @@ public:
   void setAllAbsLinesFittable();
   void setAllAbsLinesNotFittable();
   void resetNullLineProfiles();
+  void
+  computeGlobalLineValidity(std::shared_ptr<CSpcModelVector> const &models);
+  TInt32List getValidElementIndices(TInt32List const &EltIndices) const;
   TInt32List getValidElementIndices() const;
   Int32 getNonZeroElementsNDdl() const;
 

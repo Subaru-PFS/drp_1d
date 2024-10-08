@@ -36,6 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <gsl/gsl_blas.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_vector.h>
@@ -90,37 +91,41 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
            "no observed samples for the line Element to fit");
 
   // list of elements to fit
-  TInt32List EltsIdxToFit;
+  TInt32List EltsIdxToFit_ini;
   if (IdxToFit.empty())
-    EltsIdxToFit = EltsIdx;
+    EltsIdxToFit_ini = EltsIdx;
   else {
-    EltsIdxToFit.reserve(IdxToFit.size());
+    EltsIdxToFit_ini.reserve(IdxToFit.size());
     for (auto idx : IdxToFit)
-      EltsIdxToFit.push_back(EltsIdx[idx]);
+      EltsIdxToFit_ini.push_back(EltsIdx[idx]);
   }
-  Int32 nddl = EltsIdxToFit.size();
+  Int32 nddl_ini = EltsIdxToFit_ini.size();
 
-  if (useAmpOffset)
-    nddl += TPolynomCoeffs::degree + 1;
+  Int32 ncol_polynome = 0;
+  if (useAmpOffset) {
+    ncol_polynome = TPolynomCoeffs::degree + 1;
+    nddl_ini += ncol_polynome;
+  }
 
-  if (n < nddl) {
+  if (n < nddl_ini) {
     Flag.warning(WarningCode::LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,
-                 Formatter() << __func__ << " SVD ill ranked:"
+                 Formatter() << "SVD aborted since ill ranked:"
                              << " number of samples = " << n
-                             << ", number of parameters to fit = " << nddl);
-    ampsfitted.assign(EltsIdx.size(), 0.0);
-    errorsfitted.assign(EltsIdx.size(), INFINITY);
-    for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
-      m_ElementsVector->SetElementAmplitude(EltsIdx[iddl], 0., INFINITY);
+                             << ", number of parameters to fit = " << nddl_ini);
+    for (Int32 iddl = 0; iddl < EltsIdxToFit_ini.size(); iddl++) {
+      m_ElementsVector->SetElementAmplitude(EltsIdxToFit_ini[iddl], NAN, NAN);
+      m_ElementsVector->getElementParam()[EltsIdxToFit_ini[iddl]]
+          ->m_null_line_profiles = true;
+    }
     if (useAmpOffset) {
       for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
-        m_ElementsVector->getElementParam()[EltsIdx[iddl]]->SetPolynomCoeffs(
-            {0., 0., 0.});
+        m_ElementsVector->getElementParam()[EltsIdxToFit_ini[iddl]]
+            ->SetPolynomCoeffs({NAN, NAN, NAN});
     }
     return true;
   }
 
-  for (auto const iElt : EltsIdxToFit)
+  for (auto const iElt : EltsIdxToFit_ini)
     m_ElementsVector->SetElementAmplitude(iElt, 1.0, 0.0);
 
   const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
@@ -128,14 +133,12 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   // Linear fit
   Float64 fval;
   double chisq;
-  gsl_matrix *X, *cov;
+  gsl_matrix *Xini, *X, *cov;
   gsl_vector *y, *w, *c;
 
-  X = gsl_matrix_alloc(n, nddl);
+  Xini = gsl_matrix_alloc(n, nddl_ini);
   y = gsl_vector_alloc(n);
   w = gsl_vector_alloc(n);
-  c = gsl_vector_alloc(nddl);
-  cov = gsl_matrix_alloc(nddl, nddl);
 
   // Normalize
   Float64 maxabsval = DBL_MIN;
@@ -158,23 +161,83 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, 1.0 / (ei * ei));
 
-    for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++) {
-      fval = getElementList()[EltsIdxToFit[iddl]]->getModelAtLambda(
+    for (Int32 iddl = 0; iddl < EltsIdxToFit_ini.size(); iddl++) {
+      fval = getElementList()[EltsIdxToFit_ini[iddl]]->getModelAtLambda(
           xi, redshift, continuumfluxAxis[idx]);
-      gsl_matrix_set(X, i, iddl, fval);
+      gsl_matrix_set(Xini, i, iddl, fval);
       Log.LogDebug(Formatter() << "fval = '" << fval << "'");
     }
 
     if (useAmpOffset) {
-      gsl_matrix_set(X, i, EltsIdxToFit.size(), 1.0);
+      gsl_matrix_set(Xini, i, EltsIdxToFit_ini.size(), 1.0);
       if (TPolynomCoeffs::degree == 0)
         continue;
-      gsl_matrix_set(X, i, EltsIdxToFit.size() + 1, xi);
+      gsl_matrix_set(Xini, i, EltsIdxToFit_ini.size() + 1, xi);
       if (TPolynomCoeffs::degree == 1)
         continue;
-      gsl_matrix_set(X, i, EltsIdxToFit.size() + 2, xi * xi);
+      gsl_matrix_set(Xini, i, EltsIdxToFit_ini.size() + 2, xi * xi);
     }
   }
+
+  // detect null colunms (null profiles)
+  // reduce the matrix accordingly, and set the null elements m_null_profiles
+  // true
+  TInt32List valid_col_indices;
+  TInt32List EltsIdxToFit;
+  Int32 nddl = nddl_ini;
+  X = Xini;
+  for (Int32 iddl = 0; iddl < EltsIdxToFit_ini.size(); iddl++) {
+    auto const col_view = gsl_matrix_const_column(Xini, iddl);
+    if (gsl_blas_dnrm2(&col_view.vector) > DBL_MIN) {
+      valid_col_indices.push_back(iddl);
+      EltsIdxToFit.push_back(EltsIdxToFit_ini[iddl]);
+    } else {
+      // set the amplitude to NAN
+      Int32 const elt_idx = EltsIdxToFit_ini[iddl];
+      m_ElementsVector->SetElementAmplitude(elt_idx, NAN, NAN);
+      m_ElementsVector->getElementParam()[elt_idx]->m_null_line_profiles = true;
+      Flag.warning(WarningCode::NULL_LINES_PROFILE,
+                   Formatter() << "Null lines profile"
+                               << " of elt " << elt_idx);
+    }
+  }
+
+  if (valid_col_indices.empty()) {
+    Flag.warning(WarningCode::NULL_LINES_PROFILE,
+                 Formatter() << "SVD aborted since all lines null");
+    if (useAmpOffset) {
+      for (Int32 elt_idx : EltsIdxToFit_ini)
+        m_ElementsVector->getElementParam()[elt_idx]->SetPolynomCoeffs(
+            {NAN, NAN, NAN});
+    }
+    gsl_matrix_free(Xini);
+    gsl_vector_free(y);
+    gsl_vector_free(w);
+    return true;
+  }
+
+  if (valid_col_indices.size() != EltsIdxToFit_ini.size()) {
+    nddl -= EltsIdxToFit_ini.size() - valid_col_indices.size();
+    X = gsl_matrix_alloc(n, nddl);
+    // copy the valid columns
+    for (Int32 icol = 0; icol != valid_col_indices.size(); ++icol) {
+      Int32 const valid_col_idx = valid_col_indices[icol];
+      auto col_view = gsl_matrix_column(Xini, valid_col_idx);
+      gsl_matrix_set_col(X, icol, &col_view.vector);
+    }
+    // copy the polynomial columns
+    if (useAmpOffset) {
+      auto Xini_view = gsl_matrix_const_submatrix(
+          Xini, 0, nddl_ini - ncol_polynome, n, ncol_polynome);
+      auto X_view =
+          gsl_matrix_submatrix(X, 0, nddl - ncol_polynome, n, ncol_polynome);
+      gsl_matrix_memcpy(&X_view.matrix, &Xini_view.matrix);
+    }
+    gsl_matrix_free(Xini);
+  }
+
+  c = gsl_vector_alloc(nddl);
+  cov = gsl_matrix_alloc(nddl, nddl);
 
   {
     gsl_multifit_linear_workspace *work = gsl_multifit_linear_alloc(n, nddl);
@@ -189,8 +252,8 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
   bool allPositive = true;
 
-  ampsfitted.resize(EltsIdxToFit.size());
-  errorsfitted.resize(EltsIdxToFit.size());
+  ampsfitted.assign(EltsIdxToFit_ini.size(), NAN);
+  errorsfitted.assign(EltsIdxToFit_ini.size(), NAN);
   for (Int32 iddl = 0; iddl < EltsIdxToFit.size(); iddl++) {
     Float64 const a = gsl_vector_get(c, iddl) / normFactor;
     if (a < 0)
@@ -198,8 +261,8 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     Float64 const var = gsl_matrix_get(cov, iddl, iddl);
     Float64 const std = sqrt(var) / normFactor;
     m_ElementsVector->SetElementAmplitude(EltsIdxToFit[iddl], a, std);
-    ampsfitted[iddl] = a;
-    errorsfitted[iddl] = std;
+    ampsfitted[valid_col_indices[iddl]] = a;
+    errorsfitted[valid_col_indices[iddl]] = std;
   }
 
   if (useAmpOffset) {
@@ -235,40 +298,47 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
 
-  bool allPositive =
-      fitAmplitudesLinSolve(EltsIdx, ampsfitted, errorsfitted, redshift);
+  // filter out not fittable lines
+  auto const ValidEltsIdx = m_ElementsVector->getValidElementIndices(EltsIdx);
+  bool const allPositive =
+      fitAmplitudesLinSolve(ValidEltsIdx, ampsfitted, errorsfitted, redshift);
+  if (allPositive)
+    return;
 
-  if (!allPositive) {
-    TInt32List idx_positive;
-    for (Int32 ifit = 0; ifit < EltsIdx.size(); ifit++) {
-      if (ampsfitted[ifit] < 0) {
-        m_ElementsVector->SetElementAmplitude(EltsIdx[ifit], 0.0,
-                                              errorsfitted[ifit]);
-      } else {
-        idx_positive.push_back(ifit);
-      }
-    }
-    // refit the positive elements together
-    if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
-      fitAmplitude(EltsIdx[idx_positive.front()], redshift, undefIdx);
-      m_spectraIndex.reset(); // dummy implementation
-    } else if (idx_positive.size() > 0) {
-      bool const allPositive2 = fitAmplitudesLinSolve(
-          EltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
-
-      if (!allPositive2) {
-        for (Int32 irefit = 0; irefit < idx_positive.size(); ++irefit) {
-          if (ampsfitted[irefit] > 0) {
-            fitAmplitude(EltsIdx[idx_positive[irefit]], redshift, undefIdx);
-            m_spectraIndex.reset(); // dummy implementation
-          } else {
-            m_ElementsVector->SetElementAmplitude(EltsIdx[idx_positive[irefit]],
-                                                  0.0, errorsfitted[irefit]);
-          }
-        }
-      }
+  TInt32List idx_positive;
+  for (Int32 ifit = 0; ifit < ValidEltsIdx.size(); ifit++) {
+    if (ampsfitted[ifit] > 0)
+      idx_positive.push_back(ifit);
+    else if (isfinite(ampsfitted[ifit]) && ampsfitted[ifit] < 0) {
+      m_ElementsVector->SetElementAmplitude(ValidEltsIdx[ifit], 0.0,
+                                            errorsfitted[ifit]);
     }
   }
+  if (idx_positive.empty())
+    return;
+
+  // refit the positive elements together
+  if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
+    fitAmplitude(ValidEltsIdx[idx_positive.front()], redshift, undefIdx);
+    m_spectraIndex.reset(); // dummy implementation
+    return;
+  }
+  bool const allPositive2 = fitAmplitudesLinSolve(
+      ValidEltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
+  if (allPositive2) {
+    m_spectraIndex.reset(); // dummy implementation
+    return;
+  }
+  for (Int32 irefit = 0; irefit < idx_positive.size(); ++irefit) {
+    if (ampsfitted[irefit] > 0) {
+      fitAmplitude(ValidEltsIdx[idx_positive[irefit]], redshift, undefIdx);
+    }
+    if (isfinite(ampsfitted[irefit]) && ampsfitted[irefit] < 0) {
+      m_ElementsVector->SetElementAmplitude(ValidEltsIdx[idx_positive[irefit]],
+                                            0.0, errorsfitted[irefit]);
+    }
+  }
+  m_spectraIndex.reset(); // dummy implementation
 }
 
 void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
