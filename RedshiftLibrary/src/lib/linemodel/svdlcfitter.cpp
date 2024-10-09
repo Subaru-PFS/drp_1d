@@ -36,6 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_multifit_nlin.h>
 
@@ -123,33 +124,32 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   if (EltsIdx.size() < 1)
     THROWG(ErrorCode::EMPTY_LIST, Formatter()
                                       << "Input elements list is empty");
-  Int32 nddl = EltsIdx.size() + 1 +
-               std ::max(m_fitc_polyOrder + 1,
-                         0); // number of param to be fitted=nlines+continuum
+  Int32 nddl_ini =
+      EltsIdx.size() + 1 +
+      std ::max(m_fitc_polyOrder + 1,
+                0); // number of param to be fitted=nlines+continuum
 
   Int32 imin = -1, imax = -1;
   getLambdaRange().getClosedIntervalIndices(spectralAxis.GetSamplesVector(),
                                             imin, imax);
-  ampsfitted.resize(nddl, 0.0);
-  errorsfitted.resize(nddl, 1e12);
+  ampsfitted.assign(nddl_ini, NAN);
+  errorsfitted.assign(nddl_ini, NAN);
 
   Int32 n = imax - imin + 1;
-  if (n < nddl)
+  if (n < nddl_ini)
     THROWG(ErrorCode::LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT,
            Formatter() << " SVD ill ranked:"
                        << " number of samples = " << n
-                       << ", number of parameters to fit = " << nddl);
+                       << ", number of parameters to fit = " << nddl_ini);
 
   for (Int32 eltIdx : EltsIdx)
     m_ElementsVector->SetElementAmplitude(eltIdx, 1.0, 0.0);
 
   // Linear fit
   double chisq;
-  gsl_matrix *X = gsl_matrix_alloc(n, nddl);
-  gsl_matrix *cov = gsl_matrix_alloc(nddl, nddl);
+  gsl_matrix *X = gsl_matrix_alloc(n, nddl_ini);
   gsl_vector *y = gsl_vector_alloc(n);
   gsl_vector *w = gsl_vector_alloc(n);
-  gsl_vector *c = gsl_vector_alloc(nddl);
 
   // Normalize
   Float64 normFactor = 1.0 / fluxAxis.computeMaxAbsValue(imin, imax);
@@ -164,6 +164,19 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, 1.0 / (ei * ei));
   }
+
+  // remove eventually null columns
+  TInt32List EltsIdxToFit;
+  TInt32List valid_col_indices;
+  X = cleanMatrix(EltsIdx, X, EltsIdxToFit, valid_col_indices);
+  if (EltsIdxToFit.empty()) {
+    gsl_vector_free(y);
+    gsl_vector_free(w);
+    return;
+  }
+  Int32 nddl = X->size2; // nb of columns
+  gsl_vector *c = gsl_vector_alloc(nddl);
+  gsl_matrix *cov = gsl_matrix_alloc(nddl, nddl);
 
   gsl_multifit_linear_workspace *work = gsl_multifit_linear_alloc(n, nddl);
   gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
@@ -186,7 +199,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
   Int32 sameSign = 1;
   Float64 a0 = gsl_vector_get(c, 0) / normFactor;
-  for (Int32 iddl = 1; iddl < EltsIdx.size(); iddl++) {
+  for (Int32 iddl = 1; iddl < EltsIdxToFit.size(); iddl++) {
     Float64 const a = gsl_vector_get(c, iddl) / normFactor;
     sameSign &= std::signbit(a0 * a);
   }
@@ -195,12 +208,13 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
                             << " amplitudes with sameSign=" << sameSign);
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
+    Int32 const valid_col = valid_col_indices[iddl];
     Float64 const var = gsl_matrix_get(cov, iddl, iddl);
-    errorsfitted[iddl] = sqrt(var) / normFactor;
-    ampsfitted[iddl] = gsl_vector_get(c, iddl) / normFactor;
-    if (iddl < EltsIdx.size())
-      m_ElementsVector->SetElementAmplitude(EltsIdx[iddl], ampsfitted[iddl],
-                                            errorsfitted[iddl]);
+    errorsfitted[valid_col] = sqrt(var) / normFactor;
+    ampsfitted[valid_col] = gsl_vector_get(c, iddl) / normFactor;
+    if (iddl < EltsIdxToFit.size())
+      m_ElementsVector->SetElementAmplitude(
+          EltsIdxToFit[iddl], ampsfitted[valid_col], errorsfitted[valid_col]);
   }
 
   if (m_fitc_polyOrder >= 0) {
@@ -248,4 +262,63 @@ void CSvdlcFitter::fillMatrix(Int32 imin, Int32 imax, Float64 redshift,
     }
   }
   return;
+}
+
+gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
+                                      gsl_matrix *Xini,
+                                      TInt32List &EltsIdxToFit,
+                                      TInt32List &valid_col_indices) const {
+  Int32 nline = Xini->size1;
+  Int32 ncol_ini = Xini->size2;
+  gsl_matrix *X = Xini;
+  for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl) {
+    auto const col_view = gsl_matrix_const_column(Xini, iddl);
+    if (gsl_blas_dnrm2(&col_view.vector) > DBL_MIN) {
+      valid_col_indices.push_back(iddl);
+      EltsIdxToFit.push_back(EltsIdx[iddl]);
+    } else {
+      // set the amplitude to NAN
+      Int32 elt_idx = EltsIdx[iddl];
+      m_ElementsVector->SetElementAmplitude(elt_idx, NAN, NAN);
+      m_ElementsVector->getElementParam()[elt_idx]->m_null_line_profiles = true;
+      Flag.warning(WarningCode::NULL_LINES_PROFILE,
+                   Formatter() << "Null lines profile"
+                               << " of elt " << elt_idx);
+    }
+  }
+
+  if (valid_col_indices.empty()) {
+    Flag.warning(WarningCode::NULL_LINES_PROFILE,
+                 Formatter() << "SVD reduced to continuum only since all lines "
+                                "profiles are null");
+  }
+
+  // TODO handle the null continuum case
+
+  for (Int32 icol = EltsIdx.size(); icol < nline; ++icol)
+    valid_col_indices.push_back(icol);
+
+  if (EltsIdxToFit.size() == EltsIdx.size())
+    return X;
+
+  // replace matrix with a new one containig a copy of valid columns
+  Int32 ncol = ncol_ini - (EltsIdx.size() - EltsIdxToFit.size());
+  X = gsl_matrix_alloc(nline, ncol);
+  // copy the valid columns
+  for (Int32 icol = 0; icol != EltsIdxToFit.size(); ++icol) {
+    Int32 const valid_col_idx = valid_col_indices[icol];
+    auto col_view = gsl_matrix_column(Xini, valid_col_idx);
+    gsl_matrix_set_col(X, icol, &col_view.vector);
+  }
+
+  // copy the other columns (continuum + polynomial)
+  Int32 ncol_to_copy = ncol_ini - EltsIdx.size();
+  auto Xini_view =
+      gsl_matrix_const_submatrix(Xini, 0, EltsIdx.size(), nline, ncol_to_copy);
+  auto X_view =
+      gsl_matrix_submatrix(X, 0, EltsIdxToFit.size(), nline, ncol_to_copy);
+  gsl_matrix_memcpy(&X_view.matrix, &Xini_view.matrix);
+  gsl_matrix_free(Xini);
+
+  return X;
 }
