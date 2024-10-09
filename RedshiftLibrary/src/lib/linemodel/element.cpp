@@ -533,7 +533,7 @@ void CLineModelElement::addToSpectrumModel(
     CSpectrumFluxAxis &modelfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
     Int32 line_index) const {
-  if (m_OutsideLambdaRange)
+  if (m_OutsideLambdaRange || getElementParam()->isNotFittable())
     return;
 
   for (Int32 index = 0; index != GetSize(); ++index) { // loop on the interval
@@ -577,9 +577,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(
 
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
-      continue;
-    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
-    // be NAN");//to be uncommented
+      THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
 
     for (Int32 i = m_StartNoOverlap[index]; i <= m_EndNoOverlap[index]; i++) {
 
@@ -622,9 +620,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
 
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
-      continue;
-    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
-    // be NAN");
+      THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
     if (A < 0.)
       continue;
 
@@ -678,9 +674,7 @@ CLineModelElement::GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
 
     Float64 const A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
-      continue;
-    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
-    // be NAN");
+      THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
     if (A < 0.)
       continue;
 
@@ -718,9 +712,7 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
 
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
-      continue;
-    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
-    // be NAN");
+      THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
 
     Yi += m_ElementParam->m_SignFactors[index] * continuumFluxUnscale * A *
           GetLineProfileAtRedshift(index, redshift, x);
@@ -746,9 +738,7 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
 
     Float64 const A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
-      continue;
-    // THROWG(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
-    // be NAN");
+      THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
 
     auto const &[mu, sigma] =
         getObservedPositionAndLineWidth(redshift, index,

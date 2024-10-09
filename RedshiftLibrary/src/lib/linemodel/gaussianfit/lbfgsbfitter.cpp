@@ -133,14 +133,7 @@ coeffs= "
 CPolynomCoeffsNormalized
 CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
-  // unpack param vector
-  TFloat64List amps(x.begin(), x.begin() + m_EltsIdx->size());
-  for (Int32 i = 0; i < m_EltsIdx->size(); ++i) {
-    Log.LogDebug(Formatter() << "amplitude[" << i << "]= " << amps[i]);
-    m_fitter->m_ElementsVector->SetElementAmplitude((*m_EltsIdx)[i], amps[i],
-                                                    0.0);
-  }
-
+  // unpack velocties and set inside elements
   if (m_fitter->m_enableVelocityFitting) {
 
     if (m_velA_idx != undefIdx)
@@ -160,6 +153,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     }
   }
 
+  // unpack lambda wavelength offsets and set inside elements
   if (m_fitter->m_enableLambdaOffsetsFit) {
     const Float64 delta_offset = x[m_lbdaOffset_idx] * m_normLbdaOffset;
     Log.LogDebug(Formatter() << "lambda offset = " << delta_offset);
@@ -186,6 +180,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     }
   }
 
+  // after velocities and wavelength offsets:
   // reset the support (lines outside range)
   m_fitter->m_spectraIndex.reset();
   for (Int32 eltIndex : *m_EltsIdx) {
@@ -194,6 +189,15 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
                             m_fitter->getLambdaRange());
   }
   m_fitter->m_ElementsVector->computeGlobalLineValidity(m_fitter->m_models);
+
+  // unpack amplitudes and set them
+  // be carefull, since it depends on line validity
+  TFloat64List amps(x.begin(), x.begin() + m_EltsIdx->size());
+  for (Int32 i = 0; i < m_EltsIdx->size(); ++i) {
+    Log.LogDebug(Formatter() << "amplitude[" << i << "]= " << amps[i]);
+    m_fitter->m_ElementsVector->SetElementAmplitude((*m_EltsIdx)[i], amps[i],
+                                                    0.0);
+  }
 
   CPolynomCoeffsNormalized pCoeffs = m_pCoeffs;
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -223,6 +227,8 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
     Float64 fval = 0.;
     for (auto &eltIndex : *m_EltsIdx) {
       auto &elt = m_fitter->getElementList()[eltIndex];
+      if (elt->getElementParam()->isNotFittable())
+        continue;
       // linemodel value
       Float64 mval =
           elt->getModelAtLambda(xi, m_redshift, (*m_continuumFluxAxis)[idx]);
@@ -543,8 +549,12 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   // polynomial coeffs initial guess
   if (m_enableAmplitudeOffsets) {
-    const auto &pCoeffs =
-        getElementParam()[EltsIdx.front()]->GetPolynomCoeffs();
+    // look for first element fittable
+    Int32 elt_idx =
+        *(std::find_if(EltsIdx.cbegin(), EltsIdx.cend(), [this](Int32 idx) {
+          return getElementParam()[idx]->isFittable();
+        }));
+    const auto &pCoeffs = getElementParam()[elt_idx]->GetPolynomCoeffs();
     auto pCoeffsNormalized = func.getPcoeffs();
     pCoeffsNormalized.setCoeffs(pCoeffs.a0 * normFactor,
                                 pCoeffs.a1 * normFactor,
@@ -569,6 +579,12 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // lambda offset inital guess
   if (m_enableLambdaOffsetsFit)
     v_xGuess[lbdaOffset_param_idx] = 0.;
+
+  // check initial guess is finite
+  for (auto const &val : v_xGuess) {
+    if (std::isnan(val))
+      THROWG(ErrorCode::INTERNAL_ERROR, "initial values contains nan");
+  }
 
   // Set up solver parameters
   LBFGSBParam<Float64> param; // New parameter class
