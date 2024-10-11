@@ -145,6 +145,9 @@ void CTplratioManager::duplicateTplratioResult(Int32 idx) {
        iElt++) {
     m_FittedAmpTplratio[idx][iElt] = m_FittedAmpTplratio[idx - 1][iElt];
     m_FittedErrorTplratio[idx][iElt] = m_FittedErrorTplratio[idx - 1][iElt];
+    m_absLinesNullContinuum[idx][iElt] = m_absLinesNullContinuum[idx - 1][iElt];
+    m_nullNominalAmplitudes[idx][iElt] = m_nullNominalAmplitudes[idx - 1][iElt];
+    m_null_line_profiles[idx][iElt] = m_null_line_profiles[idx - 1][iElt];
     m_DtmTplratio[idx][iElt] = m_DtmTplratio[idx - 1][iElt];
     m_MtmTplratio[idx][iElt] = m_MtmTplratio[idx - 1][iElt];
     m_LyaAsymCoeffTplratio[idx][iElt] = m_LyaAsymCoeffTplratio[idx - 1][iElt];
@@ -173,6 +176,9 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_StrongHalphaELPresentTplratio.assign(s, false);
   m_NLinesAboveSNRTplratio.assign(s, undefIdx);
   m_FittedAmpTplratio.assign(s, TFloat64List(elCount, NAN));
+  m_absLinesNullContinuum.assign(s, TBoolList(elCount, false));
+  m_nullNominalAmplitudes.assign(s, TBoolList(elCount, false));
+  m_null_line_profiles.assign(s, TBoolList(elCount, false));
   m_LyaAsymCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaWidthCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaDeltaCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
@@ -422,6 +428,9 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   m_FittedErrorTplratio[idx].assign(s, NAN);
   m_DtmTplratio[idx].assign(s, NAN);
   m_MtmTplratio[idx].assign(s, NAN);
+  m_absLinesNullContinuum[idx].assign(s, false);
+  m_nullNominalAmplitudes[idx].assign(s, false);
+  m_null_line_profiles[idx].assign(s, false);
   m_LyaAsymCoeffTplratio[idx].assign(s, NAN);
   m_LyaWidthCoeffTplratio[idx].assign(s, NAN);
   m_LyaDeltaCoeffTplratio[idx].assign(s, NAN);
@@ -432,6 +441,9 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   // ultimately
   for (Int32 iElt = 0; iElt < s; iElt++) {
     auto const &param = m_elementsVector->getElementParam()[iElt];
+    m_absLinesNullContinuum[idx][iElt] = param->m_absLinesNullContinuum;
+    m_nullNominalAmplitudes[idx][iElt] = param->m_nullNominalAmplitudes;
+    m_null_line_profiles[idx][iElt] = param->m_null_line_profiles;
     if (param->isNotFittable())
       continue;
 
@@ -522,18 +534,23 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
   // first reinit all the elements:
   setTplratioModel(m_savedIdxFitted, redshift);
 
-  for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
-       iElts++) {
-    auto &param = m_elementsVector->getElementParam()[iElts];
+  for (Int32 iElt = 0; iElt < m_elementsVector->getElementParam().size();
+       iElt++) {
+    auto &param = m_elementsVector->getElementParam()[iElt];
+    param->m_absLinesNullContinuum =
+        m_absLinesNullContinuum[m_savedIdxFitted][iElt];
+    param->m_nullNominalAmplitudes =
+        m_nullNominalAmplitudes[m_savedIdxFitted][iElt];
+    param->m_null_line_profiles = m_null_line_profiles[m_savedIdxFitted][iElt];
     Log.LogDetail(Formatter()
                   << "    model - Linemodel: tplratio = " << m_savedIdxFitted
                   << " (" << getTplratio_bestTplName() << ", with ebmv="
                   << getTplratio_bestTplIsmCoeff() << "), and A="
-                  << m_FittedAmpTplratio[m_savedIdxFitted][iElts]);
-    param->setAmplitudes(m_FittedAmpTplratio[m_savedIdxFitted][iElts],
-                         m_FittedErrorTplratio[m_savedIdxFitted][iElts]);
-    param->m_sumCross = m_DtmTplratio[m_savedIdxFitted][iElts];
-    param->m_sumGauss = m_MtmTplratio[m_savedIdxFitted][iElts];
+                  << m_FittedAmpTplratio[m_savedIdxFitted][iElt]);
+    param->setAmplitudes(m_FittedAmpTplratio[m_savedIdxFitted][iElt],
+                         m_FittedErrorTplratio[m_savedIdxFitted][iElt]);
+    param->m_sumCross = m_DtmTplratio[m_savedIdxFitted][iElt];
+    param->m_sumGauss = m_MtmTplratio[m_savedIdxFitted][iElt];
   }
 
   // Lya

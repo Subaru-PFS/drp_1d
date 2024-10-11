@@ -125,6 +125,9 @@ protected:
   std::vector<TFloat64List> m_FittedErrorTplratio;
   std::vector<TFloat64List> m_MtmTplratio;
   std::vector<TFloat64List> m_DtmTplratio;
+  T2DList<bool> m_absLinesNullContinuum;
+  T2DList<bool> m_nullNominalAmplitudes;
+  T2DList<bool> m_null_line_profiles;
   std::vector<TFloat64List> m_LyaAsymCoeffTplratio;
   std::vector<TFloat64List> m_LyaWidthCoeffTplratio;
   std::vector<TFloat64List> m_LyaDeltaCoeffTplratio;
