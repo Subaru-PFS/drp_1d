@@ -496,7 +496,7 @@ Float64 CTplratioManager::computelogLinePriorMerit(
   return _meritprior;
 }
 
-Float64 CTplratioManager::computeMerit(Int32 itratio) {
+std::pair<Float64, Float64> CTplratioManager::computeMerit(Int32 itratio) {
   Float64 _merit = 0;
 
   /*if (!enableLogging && m_tplratioLeastSquareFast)
@@ -514,7 +514,7 @@ Float64 CTplratioManager::computeMerit(Int32 itratio) {
     // update result variables
     updateTplratioResults(itratio, _merit, _meritprior);
   }
-  return _merit;
+  return std::make_pair(_merit, _meritprior);
 }
 
 void CTplratioManager::resetToBestRatio(Float64 redshift) {

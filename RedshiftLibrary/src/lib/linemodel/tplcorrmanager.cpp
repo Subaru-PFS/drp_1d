@@ -52,7 +52,7 @@ CTplCorrManager::CTplCorrManager(
     : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
                        continuumManager, restLineList, spcIndex) {}
 
-Float64 CTplCorrManager::computeMerit(Int32 itratio) {
+std::pair<Float64, Float64> CTplCorrManager::computeMerit(Int32 itratio) {
   m_spectraIndex.reset(); // dummy implementation
 
   getModel().refreshModel();
@@ -98,7 +98,7 @@ Float64 CTplCorrManager::computeMerit(Int32 itratio) {
         elt_idx, correctedAmplitudes[iValidLine] / nominalAmp, er);
   }
   getModel().refreshModel();
-  return getLeastSquareMerit();
+  return std::make_pair(getLeastSquareMerit(), 0.0);
 }
 
 void CTplCorrManager::saveResults(Int32 itratio) {

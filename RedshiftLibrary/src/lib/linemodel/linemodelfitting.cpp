@@ -394,7 +394,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
       std::string bestTplratioName = undefStr;
 
-      _merit = m_lineRatioManager->computeMerit(itratio);
+      std::tie(_merit, _meritprior) = m_lineRatioManager->computeMerit(itratio);
 
       if (bestMerit + bestMeritPrior > _merit + _meritprior) {
         bestMerit = _merit;
