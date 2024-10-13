@@ -286,8 +286,16 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
   TInt32List mask(modelfluxAxis.GetSamplesCount(), 1);
   for (const auto &g : ampOffsetGroups) {
     const auto &group_eIdx_list = g.second;
-    auto samples = getSupportIndexes(group_eIdx_list);
-    const auto &pCoeffs = m_Elements[group_eIdx_list.front()]
+    // filter out not fittable elements
+    TInt32List valid_eIdx_list;
+    std::copy_if(group_eIdx_list.begin(), group_eIdx_list.end(),
+                 std::back_inserter(valid_eIdx_list), [this](Int32 idx) {
+                   return m_Elements[idx]->getElementParam()->isFittable();
+                 });
+    if (valid_eIdx_list.empty())
+      continue;
+    auto samples = getSupportIndexes(valid_eIdx_list);
+    const auto &pCoeffs = m_Elements[valid_eIdx_list.front()]
                               ->getElementParam()
                               ->GetPolynomCoeffs();
     for (Int32 s : samples) {

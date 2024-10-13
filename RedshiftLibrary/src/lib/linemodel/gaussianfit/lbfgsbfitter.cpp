@@ -645,12 +645,6 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     v_xResult = v_xGuess;
   }
 
-  // store fitted amplitude, with temporary unknown SNR
-  Float64 amp_std = NAN;
-  for (Int32 i = 0; i < EltsIdx.size(); ++i)
-    m_ElementsVector->SetElementAmplitude(EltsIdx[i], v_xResult[i] / normFactor,
-                                          amp_std);
-
   // store fitted velocity dispersion (line width)
   if (m_enableVelocityFitting) {
     if (lineType == CLine::EType::nType_All) {
