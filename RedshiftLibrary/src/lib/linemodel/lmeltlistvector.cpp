@@ -323,7 +323,7 @@ void CLMEltListVector::setAllAbsLinesNotFittable() {
 
 void CLMEltListVector::resetNullLineProfiles() {
   for (auto &elt_param_ptr : m_ElementsParams) {
-    elt_param_ptr->m_null_line_profiles = false;
+    elt_param_ptr->m_nullLineProfiles = false;
   }
 }
 

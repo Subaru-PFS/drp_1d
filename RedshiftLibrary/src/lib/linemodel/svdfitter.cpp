@@ -115,7 +115,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     for (Int32 iddl = 0; iddl < EltsIdxToFit_ini.size(); iddl++) {
       m_ElementsVector->SetElementAmplitude(EltsIdxToFit_ini[iddl], NAN, NAN);
       m_ElementsVector->getElementParam()[EltsIdxToFit_ini[iddl]]
-          ->m_null_line_profiles = true;
+          ->m_nullLineProfiles = true;
     }
     if (useAmpOffset) {
       for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl)
@@ -195,7 +195,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       // set the amplitude to NAN
       Int32 const elt_idx = EltsIdxToFit_ini[iddl];
       m_ElementsVector->SetElementAmplitude(elt_idx, NAN, NAN);
-      m_ElementsVector->getElementParam()[elt_idx]->m_null_line_profiles = true;
+      m_ElementsVector->getElementParam()[elt_idx]->m_nullLineProfiles = true;
       Flag.warning(WarningCode::NULL_LINES_PROFILE,
                    Formatter() << "Null lines profile"
                                << " of elt " << elt_idx);

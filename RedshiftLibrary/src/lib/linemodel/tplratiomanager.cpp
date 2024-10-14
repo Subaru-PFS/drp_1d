@@ -147,7 +147,7 @@ void CTplratioManager::duplicateTplratioResult(Int32 idx) {
     m_FittedErrorTplratio[idx][iElt] = m_FittedErrorTplratio[idx - 1][iElt];
     m_absLinesNullContinuum[idx][iElt] = m_absLinesNullContinuum[idx - 1][iElt];
     m_nullNominalAmplitudes[idx][iElt] = m_nullNominalAmplitudes[idx - 1][iElt];
-    m_null_line_profiles[idx][iElt] = m_null_line_profiles[idx - 1][iElt];
+    m_nullLineProfiles[idx][iElt] = m_nullLineProfiles[idx - 1][iElt];
     m_DtmTplratio[idx][iElt] = m_DtmTplratio[idx - 1][iElt];
     m_MtmTplratio[idx][iElt] = m_MtmTplratio[idx - 1][iElt];
     m_LyaAsymCoeffTplratio[idx][iElt] = m_LyaAsymCoeffTplratio[idx - 1][iElt];
@@ -178,7 +178,7 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_FittedAmpTplratio.assign(s, TFloat64List(elCount, NAN));
   m_absLinesNullContinuum.assign(s, TBoolList(elCount, false));
   m_nullNominalAmplitudes.assign(s, TBoolList(elCount, false));
-  m_null_line_profiles.assign(s, TBoolList(elCount, false));
+  m_nullLineProfiles.assign(s, TBoolList(elCount, false));
   m_LyaAsymCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaWidthCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaDeltaCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
@@ -430,7 +430,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   m_MtmTplratio[idx].assign(s, NAN);
   m_absLinesNullContinuum[idx].assign(s, false);
   m_nullNominalAmplitudes[idx].assign(s, false);
-  m_null_line_profiles[idx].assign(s, false);
+  m_nullLineProfiles[idx].assign(s, false);
   m_LyaAsymCoeffTplratio[idx].assign(s, NAN);
   m_LyaWidthCoeffTplratio[idx].assign(s, NAN);
   m_LyaDeltaCoeffTplratio[idx].assign(s, NAN);
@@ -443,7 +443,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
     auto const &param = m_elementsVector->getElementParam()[iElt];
     m_absLinesNullContinuum[idx][iElt] = param->m_absLinesNullContinuum;
     m_nullNominalAmplitudes[idx][iElt] = param->m_nullNominalAmplitudes;
-    m_null_line_profiles[idx][iElt] = param->m_null_line_profiles;
+    m_nullLineProfiles[idx][iElt] = param->m_nullLineProfiles;
     if (param->isNotFittable())
       continue;
 
@@ -541,7 +541,7 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
         m_absLinesNullContinuum[m_savedIdxFitted][iElt];
     param->m_nullNominalAmplitudes =
         m_nullNominalAmplitudes[m_savedIdxFitted][iElt];
-    param->m_null_line_profiles = m_null_line_profiles[m_savedIdxFitted][iElt];
+    param->m_nullLineProfiles = m_nullLineProfiles[m_savedIdxFitted][iElt];
     Log.LogDetail(Formatter()
                   << "    model - Linemodel: tplratio = " << m_savedIdxFitted
                   << " (" << getTplratio_bestTplName() << ", with ebmv="

@@ -294,7 +294,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   }
 
   if (param->getSumGauss() == 0) {
-    param->m_null_line_profiles = true;
+    param->m_nullLineProfiles = true;
     Flag.warning(WarningCode::NULL_LINES_PROFILE,
                  Formatter()
                      << "linemodel amplitude cannot be fitted, profile is null"
