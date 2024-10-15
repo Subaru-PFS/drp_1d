@@ -52,7 +52,7 @@ FittedLineAmplitudeUncertainty	fitted_lines	True	candidate	AmplitudesUncertainti
 FittedLineSNR	fitted_lines	True	candidate	SNR	extrema_results	f8
 FittedLineVelocity	fitted_lines	True	candidate	Velocity	extrema_results	f8
 FittedLineOffset	fitted_lines	True	candidate	Offset	extrema_results	f8
-FittedLineOutsideRange	fitted_lines	True	candidate	OutsideLambdaRange	extrema_results	i
+FittedLineNotFitted	fitted_lines	True	candidate	NotFitted	extrema_results	i
 FittedLineFittingGroupInfo	fitted_lines	True	candidate	fittingGroupInfo	extrema_results	S10
 ContinuumPCoeff0	fitted_lines	True	candidate	continuum_pCoeff0	extrema_results	f8
 ContinuumPCoeff1	fitted_lines	True	candidate	continuum_pCoeff1	extrema_results	f8
@@ -122,7 +122,7 @@ LinemeasLineAmplitudeUncertainty	linemeas	True	object	AmplitudesUncertainties	li
 LinemeasLineSNR	linemeas	True	object	SNR	linemeas	f8
 LinemeasLineVelocity	linemeas	False	object	Velocity	linemeas	f8
 LinemeasLineOffset	linemeas	False	object	Offset	linemeas	f8
-LinemeasLineOutsideRange	linemeas	True	object	OutsideLambdaRange	linemeas	i
+LinemeasLineNotFitted	linemeas	True	object	NotFitted	linemeas	i
 LinemeasLineFittingGroupInfo	linemeas	True	object	fittingGroupInfo	linemeas	S10
 LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	i
 LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	i

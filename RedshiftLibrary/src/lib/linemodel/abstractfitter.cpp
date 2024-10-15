@@ -167,7 +167,6 @@ void CAbstractFitter::initFit(Float64 redshift) {
 
   resetSupport(redshift);
 
-  m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
 
@@ -190,11 +189,7 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
                               m_enlarge_line_supports);
     }
   }
-}
-
-void CAbstractFitter::resetElementsFittingParam() {
-  for (auto param_ptr : m_ElementsVector->getElementParam())
-    param_ptr->resetFittingParams();
+  m_ElementsVector->computeGlobalLineValidity(m_models);
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
@@ -216,8 +211,9 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     auto const &param_LyaE = m_ElementsVector->getElementParam()[elt_idx_LyaE];
     auto const &profile = param_LyaE->getLineProfile(line_idx_LyaE);
 
-    if (profile->isAsymFit() && !m_ElementsVector->isOutsideLambdaRangeLine(
-                                    elt_idx_LyaE, line_idx_LyaE)) {
+    if (profile->isAsymFit() && param_LyaE->isFittable() &&
+        !param_LyaE->isOutsideLambdaRangeLine(line_idx_LyaE) &&
+        param_LyaE->GetNominalAmplitude(line_idx_LyaE) != 0.0) {
       // find the best width and asym coeff. parameters
       TAsymParams const bestfitParams =
           fitAsymParameters(redshift, elt_idx_LyaE, line_idx_LyaE);
@@ -233,15 +229,15 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
       auto const &param_EltIgm =
           m_ElementsVector->getElementParam()[elt_idx_igmLine];
 
-      if (isOutsideLambdaRange(elt_idx_igmLine))
+      if (param_EltIgm->isNotFittable())
         continue;
       auto line_indices_filtered = line_indices_LyaE;
       auto end = std::remove_if(
           line_indices_filtered.begin(), line_indices_filtered.end(),
           [&](Int32 idx) {
             return !param_EltIgm->getLineProfile(idx)->isSymIgmFit() ||
-                   m_ElementsVector->isOutsideLambdaRangeLine(elt_idx_igmLine,
-                                                              idx);
+                   param_EltIgm->isOutsideLambdaRangeLine(idx) ||
+                   param_EltIgm->GetNominalAmplitude(idx) == 0.0;
           });
       line_indices_filtered.erase(end, line_indices_filtered.end());
       if (!line_indices_filtered.empty())
@@ -261,21 +257,21 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
 void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
                                    Int32 lineIdx) {
 
-  if (isOutsideLambdaRange(eltIndex)) {
-
-    getElementParam()[eltIndex]->m_sumCross = NAN;
-    getElementParam()[eltIndex]->m_sumGauss = NAN;
-    getElementParam()[eltIndex]->m_dtmFree = NAN;
+  auto &param = getElementParam()[eltIndex];
+  if (param->isNotFittable()) {
+    param->m_sumCross = NAN;
+    param->m_sumGauss = NAN;
+    param->m_dtmFree = NAN;
     return;
   }
 
-  Int32 nLines = getElementList()[eltIndex]->GetSize();
-  getElementParam()[eltIndex]->m_sumCross = 0.;
-  getElementParam()[eltIndex]->m_sumGauss = 0.;
-  getElementParam()[eltIndex]->m_dtmFree = 0.;
+  Int32 nLines = param->size();
+  param->m_sumCross = 0.;
+  param->m_sumGauss = 0.;
+  param->m_dtmFree = 0.;
 
-  getElementParam()[eltIndex]->m_FittedAmplitudes.assign(nLines, NAN);
-  getElementParam()[eltIndex]->m_FittedAmplitudesStd.assign(nLines, NAN);
+  param->m_FittedAmplitudes.assign(nLines, NAN);
+  param->m_FittedAmplitudesStd.assign(nLines, NAN);
 
   Int32 num = 0;
   for (auto &spcIndex : m_spectraIndex) {
@@ -290,36 +286,25 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
         lineIdx);
   }
 
-  if (num == 0 || getElementParam()[eltIndex]->m_sumGauss == 0) {
-    Log.LogDebug(
-        Formatter()
-        << "CLineModelElement::fitAmplitude: Could not fit amplitude:    "
-           " num="
-        << num << ", mtm=" << getElementParam()[eltIndex]->m_sumGauss
-        << " at line index " << lineIdx << " of elt " << eltIndex);
-    getElementParam()[eltIndex]->m_sumGauss = NAN;
-    getElementParam()[eltIndex]->m_dtmFree = NAN;
-    getElementParam()[eltIndex]->m_sumCross = NAN;
+  if (num == 0) {
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter()
+               << "linemodel amplitude cannot be fitted, null number of samples"
+               << " at line index " << lineIdx << " of elt " << eltIndex);
+  }
+
+  if (param->getSumGauss() == 0) {
+    param->m_nullLineProfiles = true;
+    Flag.warning(WarningCode::NULL_LINES_PROFILE,
+                 Formatter()
+                     << "linemodel amplitude cannot be fitted, profile is null"
+                     << " at line index " << lineIdx << " of elt " << eltIndex);
     return;
   }
 
-  bool allNaN = true;
-  for (auto &spcIndex : m_spectraIndex) {
-    if (!std::isnan(getElementParam()[eltIndex]->getSumGauss())) {
-      allNaN = false;
-      break;
-    }
-  }
-
-  if (allNaN) {
-    getElementParam()[eltIndex]->m_sumCross = NAN;
-    return;
-  }
-  getElementParam()[eltIndex]->m_sumCross =
-      std::max(0.0, getElementParam()[eltIndex]->m_dtmFree);
-  Float64 const A = getElementParam()[eltIndex]->m_sumCross /
-                    getElementParam()[eltIndex]->m_sumGauss;
-  Float64 const Astd = 1.0 / sqrt(getElementParam()[eltIndex]->m_sumGauss);
+  param->m_sumCross = std::max(0.0, param->m_dtmFree);
+  Float64 const A = param->m_sumCross / param->m_sumGauss;
+  Float64 const Astd = 1.0 / sqrt(param->m_sumGauss);
   m_ElementsVector->SetElementAmplitude(eltIndex, A, Astd);
 
   return;
@@ -544,16 +529,4 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
   }
 
   return bestIgmIdx;
-}
-
-bool CAbstractFitter::isOutsideLambdaRange(Int32 elt_index) {
-
-  bool allOutsideLambdaRange = true;
-  for (auto &spcIndex : m_spectraIndex) {
-    if (!getElementList()[elt_index]->IsOutsideLambdaRange()) {
-      allOutsideLambdaRange = false;
-      break;
-    }
-  }
-  return allOutsideLambdaRange;
 }

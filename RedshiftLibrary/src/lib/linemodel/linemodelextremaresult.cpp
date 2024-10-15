@@ -123,7 +123,7 @@ void TLineModelResult::updateFromModel(
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  NDof = lmel->GetModelNonZeroElementsNDdl();
+  NDof = lmel->getNonZeroElementsNDdl();
 
   Int32 const nddl = lmresult->LineModelSolutions[idx].nDDL;
   bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC

@@ -22,5 +22,6 @@ enum class WarningCode {
   
   
   // All new ones here not to change binary codes
-  FORCED_POWERLAW_TO_ZERO                      // 18
+  FORCED_POWERLAW_TO_ZERO,                      // 18
+  NULL_LINES_PROFILE                            // 19
 };

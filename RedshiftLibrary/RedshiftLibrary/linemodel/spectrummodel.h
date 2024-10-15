@@ -58,6 +58,8 @@ public:
   getContinuumSquaredResidualInRange(TInt32Range const &indexRange,
                                      Int32 eltIdx);
 
+  Float64 getMaxContinuumUnderElement(Int32 eIdx) const;
+
   std::pair<Float64, Float64>
   getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
                                        bool with_continuum,
@@ -124,7 +126,9 @@ class CSpcModelVector {
 public:
   CSpcModelVector(const CSpectraGlobalIndex &spcIndex)
       : m_spectraIndex(spcIndex) {}
+
   void push_back(const CSpectrumModel &model) { m_models.push_back(model); }
+
   CSpectrumModel &getSpectrumModel() {
     m_spectraIndex.AssertIsValid();
     return m_models.at(m_spectraIndex.get());
@@ -176,6 +180,16 @@ public:
     if (nb_nan == m_models.size())
       return NAN;
     return sumErr_allObs != 0.0 ? sqrt(fit_allObs / sumErr_allObs) : NAN;
+  }
+
+  Float64 getMaxContinuumUnderElement(Int32 eIdx) const {
+    Float64 max_all = -INFINITY;
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
+      auto const &model = getSpectrumModel();
+      Float64 const max = model.getMaxContinuumUnderElement(eIdx);
+      max_all = std::max(max, max_all);
+    }
+    return max_all;
   }
 
   void setEnableAmplitudeOffsets(bool enableAmplitudeOffsets) {

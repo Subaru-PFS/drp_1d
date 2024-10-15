@@ -408,7 +408,7 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
       Int32 line_id = linemodelsols[solutionIdx].lineId[j];
       if (!restLineList.at(line_id).IsEmission() ||
-          linemodelsols[solutionIdx].OutsideLambdaRange[j])
+          linemodelsols[solutionIdx].NotFitted[j])
         continue;
 
       Log.LogDebug(Formatter()

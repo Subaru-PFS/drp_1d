@@ -379,8 +379,11 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     Float64 _meritprior = 0.; // only relevant for "tplRatio"
 
     prepareAndLoadContinuum(k, redshift);
-    if (!isContinuumComponentNoContinuum())
+    if (!isContinuumComponentNoContinuum()) {
       computeSpectrumFluxWithoutContinuum();
+      m_ElementsVector->setAllAbsLinesFittable();
+    } else
+      m_ElementsVector->setAllAbsLinesNotFittable();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
@@ -391,7 +394,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
       std::string bestTplratioName = undefStr;
 
-      _merit = m_lineRatioManager->computeMerit(itratio);
+      std::tie(_merit, _meritprior) = m_lineRatioManager->computeMerit(itratio);
 
       if (bestMerit + bestMeritPrior > _merit + _meritprior) {
         bestMerit = _merit;
@@ -467,7 +470,8 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
   CMask _mask(spectralAxis.GetSamplesCount(), 1);
 
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
+  TInt32List validEltsIdx =
+      getElementList().GetElementsIndicesInsideLambdaRange();
   TInt32List supportIdxes = getElementList().getSupportIndexes(validEltsIdx);
 
   // setting masks
@@ -596,7 +600,8 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
   // Retrieve all the strone emission lines supports in a list of range
   TInt32RangeList supportList;
   TBoolList isStrongList;
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
+  TInt32List validEltsIdx =
+      getElementList().GetElementsIndicesInsideLambdaRange();
   for (Int32 iElts : validEltsIdx) {
     auto const &elt = getElementList()[iElts];
     auto const &elt_param = elt->getElementParam();
@@ -724,11 +729,18 @@ void CLineModelFitting::LoadModelSolution(
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue; // TODO should throw exception here
-    if (modelSolution.OutsideLambdaRange[iRestLine])
+    auto const &elt_param = getElementParam()[eIdx];
+    if (modelSolution.NotFitted[iRestLine]) {
+      // set outsidelambdrarangeList
+      for ([[maybe_unused]] auto const spcIndex : m_spectraIndex) {
+        auto const &elt_ptr = getElementList()[eIdx];
+        for (Int32 line_idx = 0; line_idx < elt_ptr->GetSize(); ++line_idx)
+          elt_ptr->SetOutsideLambdaRangeList(line_idx);
+      }
       continue;
+    }
     Int32 line_id = modelSolution.lineId[iRestLine];
 
-    auto const &elt_param = getElementParam()[eIdx];
     Int32 elt_line_index = elt_param->getLineIndex(line_id);
     if (elt_line_index == undefIdx)
       continue; // or throw an exception ?
@@ -736,8 +748,7 @@ void CLineModelFitting::LoadModelSolution(
     elt_param->setFittedAmplitude(
         elt_line_index, modelSolution.Amplitudes[iRestLine],
         modelSolution.AmplitudesUncertainties[iRestLine]);
-    m_ElementsVector->getElementParam()[eIdx]->setLambdaOffset(
-        elt_line_index, modelSolution.Offset[iRestLine]);
+    elt_param->setLambdaOffset(elt_line_index, modelSolution.Offset[iRestLine]);
 
     if (element_done[eIdx])
       continue;
@@ -776,15 +787,14 @@ void CLineModelFitting::LoadModelSolution(
 
   for (auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-    for (Int32 iElts = 0; iElts < getElementList().size(); iElts++) {
-      getElementList()[iElts]->computeOutsideLambdaRange();
-
-      if (!getElementList()[iElts]->IsOutsideLambdaRange())
-
-        getElementList()[iElts]->prepareSupport(
-            spectralAxis, modelSolution.Redshift, getLambdaRange());
+    for (auto const &elt_ptr : getElementList()) {
+      elt_ptr->computeOutsideLambdaRange();
+      if (!elt_ptr->IsOutsideLambdaRange())
+        elt_ptr->prepareSupport(spectralAxis, modelSolution.Redshift,
+                                getLambdaRange());
     }
   }
+  m_ElementsVector->computeGlobalOutsideLambdaRange();
 
   return;
 }
@@ -809,7 +819,9 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     auto const &elt_param = getElementParam()[eIdx];
     Int32 line_index = elt_param->getLineIndex(line_id);
     if (eIdx == undefIdx || line_index == undefIdx ||
-        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index))
+        m_ElementsVector->getElementParam()[eIdx]->isNotFittable() ||
+        m_ElementsVector->getElementParam()[eIdx]->isOutsideLambdaRangeLine(
+            line_index))
       continue; // data already set to its default values
 
     modelSolution.ResidualRMS[iRestLine] =
@@ -969,14 +981,16 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   modelSolution.Redshift = getSpectrumModel().m_Redshift;
   const CLineModelElementList &firstEltList = getElementList();
 
-  modelSolution.nDDL = m_ElementsVector->GetModelNonZeroElementsNDdl();
+  modelSolution.nDDL = m_ElementsVector->getNonZeroElementsNDdl();
 
   for (Int32 iRestLine = 0; iRestLine < s; iRestLine++) {
     Int32 line_id = modelSolution.lineId[iRestLine];
     auto [eIdx, line_index] = m_ElementsVector->findElementIndex(line_id);
     modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || line_index == undefIdx ||
-        m_ElementsVector->isOutsideLambdaRangeLine(eIdx, line_index))
+        m_ElementsVector->getElementParam()[eIdx]->isNotFittable() ||
+        m_ElementsVector->getElementParam()[eIdx]->isOutsideLambdaRangeLine(
+            line_index))
       continue; // data already set to its default values
 
     Float64 amp = m_ElementsVector->getElementParam()[eIdx]
@@ -996,7 +1010,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.Offset[iRestLine] =
         m_ElementsVector->getElementParam()[eIdx]->m_Offsets[line_index];
 
-    modelSolution.OutsideLambdaRange[iRestLine] = false;
+    modelSolution.NotFitted[iRestLine] = false;
   }
 
   std::unordered_set<std::string>

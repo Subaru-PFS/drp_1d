@@ -54,7 +54,8 @@ TLineModelElementParam::TLineModelElementParam(CLineVector lines,
     : m_Lines(std::move(lines)), m_VelocityEmission(velocityEmission),
       m_VelocityAbsorption(velocityAbsorption),
       m_FittedAmplitudes(m_Lines.size(), NAN),
-      m_FittedAmplitudesStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr) {
+      m_FittedAmplitudesStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr),
+      m_globalOutsideLambdaRangeList(m_Lines.size(), false) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
   for (Int32 index = 0; index != m_Lines.size(); ++index) {
@@ -124,6 +125,16 @@ bool TLineModelElementParam::isAllAmplitudesNull() const {
   auto const &amps = m_FittedAmplitudes;
   return std::find_if(amps.cbegin(), amps.cend(),
                       [](Float64 a) { return a > 0.0; }) == amps.cend();
+}
+
+void TLineModelElementParam::setNullNominalAmplitudesNotFittable() {
+  m_nullNominalAmplitudes = true;
+  for (size_t idx = 0; idx < size(); ++idx) {
+    if (!isOutsideLambdaRangeLine(idx) && GetNominalAmplitude(idx) > 0.0) {
+      m_nullNominalAmplitudes = false;
+      break;
+    }
+  }
 }
 
 /**
