@@ -92,11 +92,17 @@ struct TLineModelElementParam {
            // used as a limit for the abs line coeff (typically: 1.0)
   CLine::EType m_type;
   bool m_isEmission;
+
+  // global (considering all spectra) validity of the element:
+  // element is outside range (all element lines, ie no line is visible)
   bool m_globalOutsideLambdaRange = false;
+  // visibility of each line of the element
   std::vector<bool> m_globalOutsideLambdaRangeList;
-  bool m_absLinesNullContinuum =
-      false; // when continuum is null under line (eg igm extinction)
+  // null continuum under all element absorption lines
+  bool m_absLinesNullContinuum = false;
+  // all visible element lines have null nominal amplitudes
   bool m_nullNominalAmplitudes = false;
+  // the profile is null on the element (all lines) support
   bool m_nullLineProfiles = false;
 
   void init(const std::string &widthType);

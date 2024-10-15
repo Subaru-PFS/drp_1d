@@ -306,14 +306,14 @@ void CLMEltListVector::computeGlobalOutsideLambdaRange() {
 }
 
 void CLMEltListVector::setAllAbsLinesFittable() {
-  m_absLinesNoContinuum = false;
+  m_allAbsLinesNoContinuum = false;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
   }
 }
 
 void CLMEltListVector::setAllAbsLinesNotFittable() {
-  m_absLinesNoContinuum = true;
+  m_allAbsLinesNoContinuum = true;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
     if (elt_param_ptr->GetElementType() == CLine::EType::nType_Absorption)
@@ -343,7 +343,7 @@ void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
     if (elt_param_ptr->GetElementType() != CLine::EType::nType_Absorption ||
         elt_param_ptr->m_globalOutsideLambdaRange)
       continue;
-    if (m_absLinesNoContinuum ||
+    if (m_allAbsLinesNoContinuum ||
         models->getMaxContinuumUnderElement(eIdx) <= 0.)
       elt_param_ptr->m_absLinesNullContinuum = true;
   }

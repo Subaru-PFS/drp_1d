@@ -185,7 +185,9 @@ private:
 
   const CLineMap &m_RestLineList;
 
-  bool m_absLinesNoContinuum = false; // when no continuum
+  // when spectrum component is "noContinuum" set to true
+  // to invalid all absorption lines of all element
+  bool m_allAbsLinesNoContinuum = false;
 
   void AddElementParam(CLineVector lines);
   void fillElements();
