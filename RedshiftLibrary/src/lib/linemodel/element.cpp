@@ -518,9 +518,14 @@ Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 index,
   auto const &[mu, sigma] =
       getObservedPositionAndLineWidth(redshift, index,
                                       false); // do not apply Lya asym offset
+  if (sigma == 0.0) {
+    Flag.warning(WarningCode::NULL_LINES_PROFILE,
+                 Formatter() << "null line width sigma, for line "
+                             << getElementParam()->GetLineName(index));
+    return 0.0;
+  }
 
   auto const &profile = getElementParam()->getLineProfile(index);
-
   return profile->GetLineProfileVal(x, mu, sigma);
 }
 
@@ -550,8 +555,9 @@ void CLineModelElement::addToSpectrumModel(
       modelfluxAxis[i] += Yi;
       if (std::isnan(modelfluxAxis[i]))
         THROWG(ErrorCode::INTERNAL_ERROR,
-               Formatter() << "addToSpectrumModel has a NaN flux Line" << index
-                           << ": ContinuumFlux " << continuumfluxAxis[i]
+               Formatter() << "NaN flux Line: "
+                           << getElementParam()->GetLineName(index)
+                           << ", ContinuumFlux " << continuumfluxAxis[i]
                            << ", ModelAtLambda Yi = " << Yi << " for range ["
                            << m_StartNoOverlap[index] << ", "
                            << m_EndNoOverlap[index] << "]");
@@ -621,7 +627,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
-    if (A < 0.)
+    if (A <= 0.)
       continue;
 
     Float64 fluxval = m_ElementParam->m_SignFactors[index] * A *
@@ -631,9 +637,11 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
 
     if (std::isnan(Yi))
       THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "NaN fluxval for Line nb: " << index
-                         << " and GetLineProfileAtRedshift: "
-                         << GetLineProfileAtRedshift(index, redshift, x));
+             Formatter() << "NaN fluxval for Line: "
+                         << getElementParam()->GetLineName(index)
+                         << ", amplitude: " << A << ", line profile:"
+                         << GetLineProfileAtRedshift(index, redshift, x)
+                         << ", continnum: " << continuumFlux);
   }
   return Yi;
 }
@@ -650,7 +658,8 @@ Float64 CLineModelElement::GetModelDerivAmplitudeAtLambda(
   for (Int32 index = 0; index != GetSize(); ++index) { // loop on lines
     if (m_OutsideLambdaRangeList[index])
       continue;
-
+    if (m_ElementParam->m_NominalAmplitudes[index] == 0.0)
+      continue;
     Float64 fluxval = m_ElementParam->m_SignFactors[index] *
                       m_ElementParam->m_NominalAmplitudes[index] *
                       GetLineProfileAtRedshift(index, redshift, x);
@@ -713,7 +722,8 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
     if (std::isnan(A))
       THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
-
+    if (A <= 0.0)
+      continue;
     Yi += m_ElementParam->m_SignFactors[index] * continuumFluxUnscale * A *
           GetLineProfileAtRedshift(index, redshift, x);
   }
@@ -890,15 +900,13 @@ Int32 CLineModelElement::computeCrossProducts(
         if (m_OutsideLambdaRangeList[index2] ||
             !m_LineIsActiveOnSupport[index][index2])
           continue;
-        //	Log.LogDebug(Formatter()<<"Add on "<< i<<","<<index2);
         Int32 sf = m_ElementParam->getSignFactor(index2);
-        if (sf == -1) {
-          yg += sf * c * nominalAmplitudes[index2] *
-                GetLineProfileAtRedshift(index2, redshift, x);
-        } else {
-          yg += sf * nominalAmplitudes[index2] *
-                GetLineProfileAtRedshift(index2, redshift, x);
-        }
+        Float64 amp = nominalAmplitudes[index2];
+        if (sf == -1)
+          amp *= -c;
+        if (amp == 0.0)
+          continue;
+        yg += amp * GetLineProfileAtRedshift(index2, redshift, x);
       }
       num++;
       err2 = 1.0 / (error[i] * error[i]);
