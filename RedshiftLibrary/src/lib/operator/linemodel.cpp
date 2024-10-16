@@ -594,7 +594,7 @@ bool COperatorLineModel::updateContinuumComponentIfBadChi2(
 
   Flag.warning(
       WarningCode::FORCED_CONTINUUM_COMPONENT_TO_FROMSPECTRUM,
-      Formatter() << "Switching to continuum filtered from spectrum since"
+      Formatter() << "Switching to continuum filtered from spectrum since "
                      "bad continuum fit found at z="
                   << fitValues.redshift << ": best continuum tpl "
                   << fitValues.name << ", reduced chi2 = " << min_chi2_r);

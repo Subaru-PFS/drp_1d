@@ -308,7 +308,8 @@ void CSpectrum::EstimateContinuum() const {
     continuum.SetMedianKernelWidth(m_medianWindowSize);
     continuum.SetMeanKernelWidth(m_medianWindowSize);
     continuum.SetMedianEvenReflection(m_medianEvenReflection);
-    RemoveContinuum(continuum);
+    if (!RemoveContinuum(continuum))
+      THROWG(ErrorCode::INTERNAL_ERROR, "Continuum removal failed");
     Log.LogDetail(Formatter() << "Continuum estimation - medianKernelWidth ="
                               << m_medianWindowSize);
   } else if (m_estimationMethod == "raw") {
@@ -323,7 +324,7 @@ void CSpectrum::EstimateContinuum() const {
     m_WithoutContinuumFluxAxis = m_RawFluxAxis;
     m_WithoutContinuumFluxAxis.Subtract(m_ContinuumFluxAxis);
   } else {
-    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown Estimation method");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown continuum estimation method");
   }
 
   Log.LogDetail("===============================================");

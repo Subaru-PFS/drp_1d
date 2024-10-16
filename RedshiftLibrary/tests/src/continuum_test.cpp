@@ -65,7 +65,13 @@ BOOST_AUTO_TEST_CASE(median_test) {
 
   // odd n_points     : rest part is on right side
   // even n_points    : no rest part
-  // In this context n_points is always odd
+
+  // n_points = 0
+  n_points = 0;
+  y_out = sample.MedianSmooth(y_in, n_points);
+  BOOST_TEST_MESSAGE("n_points = 0");
+  BOOST_CHECK(y_out == y_in);
+  print_flux(y_out);
 
   // n_points = 1 > y_out == y_in
   n_points = 1;
@@ -153,7 +159,13 @@ BOOST_AUTO_TEST_CASE(mean_test) {
 
   // odd n_range  : rest part is on right side
   // even n_range : no rest part
-  // In this context range is always even
+
+  // n_range null
+  n_range = 0;
+  y_out = sample.MeanSmooth(y_in, n_range);
+  BOOST_TEST_MESSAGE("n_range = 0");
+  BOOST_CHECK(y_out == y_in);
+  print_flux(y_out);
 
   // n_range = 1 > y_out == y_in
   n_range = 1;

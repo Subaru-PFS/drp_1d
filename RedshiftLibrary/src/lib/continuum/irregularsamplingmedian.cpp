@@ -87,6 +87,9 @@ void CContinuumIrregularSamplingMedian::SetMedianEvenReflection(
 TFloat64List
 CContinuumIrregularSamplingMedian::MedianSmooth(const TFloat64List &y,
                                                 Int32 n_range) const {
+  if (n_range <= 0)
+    return y;
+
   Int32 i;
   Int32 half, rest;
   Int32 start, stop;
@@ -114,6 +117,9 @@ CContinuumIrregularSamplingMedian::MedianSmooth(const TFloat64List &y,
 TFloat64List
 CContinuumIrregularSamplingMedian::MeanSmooth(const TFloat64List &y,
                                               Int32 n) const {
+  if (n <= 0)
+    return y;
+
   Int32 i;
   Int32 start, end, half, rest;
   Int32 N = y.size();
@@ -352,7 +358,7 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum(
   {
     // mean smoothing
     // mean smooth size=meanSmoothAmplitude/4
-    ysmoobig = MeanSmooth(ysmoobig, (Int32)meanSmoothAmplitude / 4);
+    ysmoobig = MeanSmooth(ysmoobig, meanSmoothAmplitude / 4);
   }
 
   // Copy spectrum before k0
