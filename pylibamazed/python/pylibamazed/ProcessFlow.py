@@ -142,6 +142,8 @@ class ProcessFlow:
         if self.parameters.get_linemeas_runmode() == "classif":
             classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
             linemeas_method = self.parameters.get_linemeas_method(classif_model)
+            if linemeas_method is None:
+                return
             with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
                 self.run_load_linemeas_params(rso)
                 self.run_linemeas_solver(rso, linemeas_method)
