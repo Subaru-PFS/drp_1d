@@ -39,7 +39,7 @@
 import functools
 import os
 import os.path
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Exception import APIException, exception_decorator
@@ -64,31 +64,6 @@ zlog = CLog.GetInstance()
 
 class ProcessFlowException(Exception):
     pass
-
-
-def store_exception_handler(func=None, *, raise_process_flow_exception=False):
-    if func is None:
-        return functools.partial(
-            store_exception_handler, raise_process_flow_exception=raise_process_flow_exception
-        )
-
-    @functools.wraps(func)
-    def wrapper(self, rso, *args, **kwargs):
-        try:
-            return func(self, rso, *args, **kwargs)
-        except AmzException as e:
-            e.LogError()
-            rso.store_error(e, get_scope_spectrum_model(), get_scope_stage())
-            if raise_process_flow_exception:
-                raise ProcessFlowException from e
-        except Exception as e:
-            api_exception = APIException.fromException(e)
-            api_exception.LogError()
-            rso.store_error(api_exception, get_scope_spectrum_model(), get_scope_stage())
-            if raise_process_flow_exception:
-                raise ProcessFlowException from e
-
-    return wrapper
 
 
 class ProcessFlow:
@@ -116,6 +91,23 @@ class ProcessFlow:
         resultStore = self.process_flow_context.GetResultStore()
         self.context_warning_Flag = resultStore.GetFlagLogResult("", "", "", "context_warningFlag")
 
+    def store_exception_handler(func):
+        @functools.wraps(func)
+        def wrapper(self, rso, *args, **kwargs):
+            try:
+                return func(self, rso, *args, **kwargs)
+            except AmzException as e:
+                e.LogError()
+                rso.store_error(e, get_scope_spectrum_model(), get_scope_stage())
+                raise ProcessFlowException from e
+            except Exception as e:
+                api_exception = APIException.fromException(e)
+                api_exception.LogError()
+                rso.store_error(api_exception, get_scope_spectrum_model(), get_scope_stage())
+                raise ProcessFlowException from e
+
+        return wrapper
+
     @exception_decorator(logging=True)
     def run(self, spectrum_reader):
         resultStore = self.process_flow_context.GetResultStore()
@@ -132,21 +124,17 @@ class ProcessFlow:
         # loop on spectrum models (galaxy, star, qso, ...)
         for spectrum_model in self.parameters.get_spectrum_models():
             with push_scope(spectrum_model, ScopeType.SPECTRUMMODEL):
-                try:
+                with suppress(ProcessFlowException):
                     self.process_spectrum_model(rso)
-                except ProcessFlowException:
-                    pass
 
         if self.parameters.is_a_redshift_solver_used():
-            try:
+            with suppress(ProcessFlowException):
                 self.run_classification_solver(rso)
-            except ProcessFlowException:
-                pass
-            else:
                 # Running linemeas only on classified model (if any)
                 self._run_linemeas_after_classification(rso)
 
-        self.load_result_store(rso)
+        with suppress(ProcessFlowException):
+            self.load_result_store(rso)
 
         return rso
 
@@ -167,16 +155,18 @@ class ProcessFlow:
         pipe_redshift_linemeas = linemeas_method and not linemeas_alone
 
         if redshift_solver_method:
-            self.run_redshift_solver(rso, redshift_solver_method)  # able to raise
+            self.run_redshift_solver(rso, redshift_solver_method)
 
             if self.parameters.is_tplratio_catalog_needed(spectrum_model):
-                self.run_sub_classification_solver(rso)
+                with suppress(ProcessFlowException):
+                    self.run_sub_classification_solver(rso)
 
             if (
                 self.parameters.get_reliability_enabled(spectrum_model)
                 and spectrum_model in self.calibration_library.reliability_models
             ):
-                self.run_reliability_solver(rso)
+                with suppress(ProcessFlowException):
+                    self.run_reliability_solver(rso)
 
             if self.parameters.get_linemeas_runmode() == "all" and pipe_redshift_linemeas:
                 self.run_load_linemeas_params(rso)
@@ -185,27 +175,7 @@ class ProcessFlow:
         elif linemeas_method and linemeas_alone:
             self.run_linemeas_solver(rso, linemeas_method)
 
-    @property
-    def scope_spectrum_model(self):
-        return get_scope_spectrum_model()
-
-    @property
-    def scope_stage(self):
-        return get_scope_stage()
-
-    def store_flags(self, name="warningFlag"):
-        resultStore = self.process_flow_context.GetResultStore()
-        resultStore.StoreScopedFlagResult(name)
-        zflag.resetFlag()
-
-    @contextmanager
-    def store_flags_handler(self, name="warningFlag"):
-        try:
-            yield
-        finally:
-            self.store_flags(name)
-
-    @store_exception_handler(raise_process_flow_exception=True)
+    @store_exception_handler
     def initialize(self, rso, spectrum_reader):
         zlog.LogInfo("Context initialization")
         self.process_flow_context.reset()
@@ -236,7 +206,7 @@ class ProcessFlow:
         self.process_flow_context.Init()
 
     @push_scope("redshiftSolver", ScopeType.STAGE)
-    @store_exception_handler(raise_process_flow_exception=True)
+    @store_exception_handler
     def run_redshift_solver(self, rso, method):
         self.run_method(method)
 
@@ -246,7 +216,7 @@ class ProcessFlow:
         self.run_method(method)
 
     @push_scope("linemeas_catalog_load", ScopeType.STAGE)
-    @store_exception_handler(raise_process_flow_exception=True)
+    @store_exception_handler
     def run_load_linemeas_params(self, rso):
         self.parameters.load_linemeas_parameters_from_result_store(rso, self.scope_spectrum_model)
         self.process_flow_context.LoadParameterStore(self.parameters.to_json())
@@ -282,7 +252,7 @@ class ProcessFlow:
 
     @push_scope("classification", ScopeType.SPECTRUMMODEL)
     @push_scope("classification", ScopeType.STAGE)
-    @store_exception_handler(raise_process_flow_exception=True)
+    @store_exception_handler
     def run_classification_solver(self, rso):
         if self.all_redshift_solver_failed(rso):
             raise APIException(
@@ -308,6 +278,26 @@ class ProcessFlow:
         solver_method = globals()[method_to_solver[method]]
         solver = solver_method()
         solver.Compute()
+
+    @property
+    def scope_spectrum_model(self):
+        return get_scope_spectrum_model()
+
+    @property
+    def scope_stage(self):
+        return get_scope_stage()
+
+    @contextmanager
+    def store_flags_handler(self, name="warningFlag"):
+        try:
+            yield
+        finally:
+            self.store_flags(name)
+
+    def store_flags(self, name="warningFlag"):
+        resultStore = self.process_flow_context.GetResultStore()
+        resultStore.StoreScopedFlagResult(name)
+        zflag.resetFlag()
 
 
 def _check_config(config):
