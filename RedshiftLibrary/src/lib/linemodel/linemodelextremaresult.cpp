@@ -145,31 +145,30 @@ void TLineModelResult::updateFromModel(
   // save the outsideLinesMask
   OutsideLinesMask = lmel->getOutsideLinesMask();
 
-  OutsideLinesResidualRMS = lmel->getOutsideLinesSTD(1);
-  OutsideLinesInputStDevRMS = lmel->getOutsideLinesSTD(2);
+  std::tie(OutsideLinesResidualRMS, OutsideLinesInputStDevRMS) =
+      lmel->getOutsideLinesRMS(OutsideLinesMask);
 
-  if (OutsideLinesInputStDevRMS > 0.0) {
-    Float64 ratioSTD = OutsideLinesResidualRMS / OutsideLinesInputStDevRMS;
-    Float64 ratio_thres = 1.5;
-    if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
-      Flag.warning(
-          WarningCode::ESTIMATED_STD_FAR_FROM_INPUT,
-          Formatter()
-              << "  TLineModelResult::" << __func__
-              << ": StDev estimation outside lines do not match: ratio = "
-              << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
-              << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
-    } else {
-      Log.LogInfo(Formatter()
-                  << "  Operator-Linemodel: StDev estimations outside lines "
-                     "match: ratio = "
-                  << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
-                  << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
-    }
+  if (std::isnan(OutsideLinesResidualRMS) ||
+      std::isnan(OutsideLinesInputStDevRMS)) {
+    Flag.warning(WarningCode::STD_ESTIMATION_FAILED,
+                 "StDev estimation outside lines failed");
+    return;
+  }
+
+  Float64 ratioSTD = OutsideLinesResidualRMS / OutsideLinesInputStDevRMS;
+  Float64 ratio_thres = 1.5;
+  if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
+    Flag.warning(WarningCode::ESTIMATED_STD_FAR_FROM_INPUT,
+                 Formatter()
+                     << "StDev estimation outside lines do not match: ratio = "
+                     << ratioSTD
+                     << ", residual RMS = " << OutsideLinesResidualRMS
+                     << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
   } else {
-    THROWG(ErrorCode::STDESTIMATION_FAILED,
-           Formatter() << "Unable to get spectrum mean Standard "
-                          "Deviation estimations");
+    Log.LogInfo(Formatter()
+                << "StDev estimations outside lines match: ratio = " << ratioSTD
+                << ", residual RMS = " << OutsideLinesResidualRMS
+                << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
   }
 }
 

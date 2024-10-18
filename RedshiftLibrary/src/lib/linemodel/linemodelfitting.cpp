@@ -140,7 +140,7 @@ void CLineModelFitting::initParameters() {
 
   TContinuumComponent continuumComponent(
       ps->GetScoped<std::string>("continuumComponent"));
-  if (continuumComponent.isTplFitxxx()) {
+  if (continuumComponent.isTplFitXXX()) {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
     m_useloglambdasampling = ps->GetScoped<bool>("useLogLambdaSampling");
@@ -367,7 +367,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
-  if (isContinuumComponentTplFitxxx() && !m_forcedisableMultipleContinuumfit)
+  if (isContinuumComponentTplFitXXX() && !m_forcedisableMultipleContinuumfit)
     nContinuum = m_opt_fitcontinuum_maxN;
   // 'on the fly' initialization
   Float64 bestMerit = INFINITY;
@@ -487,18 +487,14 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
  * input: which = 1: uses the spectrum flux continuum subtracted to compute
  *STD input: which = 2: uses the spectrum error to compute STD
  **/
-Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
+std::pair<Float64, Float64>
+CLineModelFitting::getOutsideLinesRMS(CMask const &_mask) const {
   // TODO temp basic impl
   m_spectraIndex.reset();
 
-  if (which != 1 && which != 2)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "wrong argument, which (1 or 2): " << which);
-
-  CMask _mask = getOutsideLinesMask();
-
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
-  Float64 sum2 = 0.0;
+  Float64 sum2_flux = 0.0;
+  Float64 sum2_error = 0.0;
   Int32 nsum = 0;
   Int32 imin = spectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
   Int32 imax = spectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
@@ -509,16 +505,14 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
     if (!_mask[i])
       continue;
 
-    if (which == 1)
-      sum2 += spcFluxAxisNoContinuum[i] * spcFluxAxisNoContinuum[i];
-    else if (which == 2)
-      sum2 += ErrorNoContinuum[i] * ErrorNoContinuum[i];
+    sum2_flux += spcFluxAxisNoContinuum[i] * spcFluxAxisNoContinuum[i];
+    sum2_error += ErrorNoContinuum[i] * ErrorNoContinuum[i];
     nsum++;
   }
 
-  if (!nsum)
-    return NAN;
-  return sqrt(sum2 / nsum);
+  if (nsum < RMS_MIN_SAMPLE_NUMBER)
+    return std::make_pair(NAN, NAN);
+  return std::make_pair(sqrt(sum2_flux / nsum), sqrt(sum2_error / nsum));
 }
 
 Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
@@ -1255,7 +1249,7 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
   Float64 const continuum = sumContinuumAll / sumWeightAll;
 
   Float64 const std =
-      npixResidualAll >= MIN_SAMPLE_NUMBER_CONTINUUMM_UNCERTAINTY
+      npixResidualAll >= RMS_MIN_SAMPLE_NUMBER
           ? sqrt(sumResidualAll / sumSquaredWeightResidualAll) *
                 sqrt(sumSquaredWeightAll) / sumWeightAll
           : NAN;

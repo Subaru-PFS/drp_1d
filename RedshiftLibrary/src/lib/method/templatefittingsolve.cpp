@@ -431,6 +431,9 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.name =
         name;
     extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.reducedChi2 =
+        TplFitResult->ReducedChiSquare[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedContinuum.meiksinIdx =
         TplFitResult->FitMeiksinIdx[zIndex];
     extremaResult->m_ranked_candidates[iExtremum]

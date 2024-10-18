@@ -506,6 +506,8 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       if (fullResultIdx >= result->ChiSquare.size())
         THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
       result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
+      result->ReducedChiSquare[fullResultIdx] =
+          subresult->ReducedChiSquare[isubz];
       result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
       result->FitAmplitudeError[fullResultIdx] =
           subresult->FitAmplitudeError[isubz];
@@ -567,7 +569,8 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           result->ChiSquare[fullResultIdx] =
               dtd + result->FitMtM[fullResultIdx] * ampl * ampl -
               2. * ampl * result->FitDtM[fullResultIdx];
-
+          result->ReducedChiSquare[fullResultIdx] =
+              result->ChiSquare[fullResultIdx] / spectrumRebinedFluxRaw.size();
           Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
                           (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
           if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
@@ -732,6 +735,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
   // prepare best fit data buffer
   TFloat64List bestChi2(nshifts, DBL_MAX);
+  TFloat64List bestReducedChi2(nshifts, DBL_MAX);
   TFloat64List bestFitAmp(nshifts, NAN);
   TFloat64List bestFitAmpErr(nshifts, NAN);
   TFloat64List bestFitAmpSigma(nshifts, NAN);
@@ -851,6 +855,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
         if (bestChi2[k] > chi2[k]) {
           bestChi2[k] = chi2[k];
+          bestReducedChi2[k] = chi2[k] / nSpc;
           bestFitAmp[k] = amp[k];
           bestFitAmpErr[k] = amp_err[k];
           bestFitAmpSigma[k] = amp_sigma[k];
@@ -883,6 +888,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // reversing all vectors
   std::reverse(z_vect.begin(), z_vect.end());
   std::reverse(bestChi2.begin(), bestChi2.end());
+  std::reverse(bestReducedChi2.begin(), bestReducedChi2.end());
   std::reverse(bestFitAmp.begin(), bestFitAmp.end());
   std::reverse(bestFitAmpErr.begin(), bestFitAmpErr.end());
   std::reverse(bestFitAmpSigma.begin(), bestFitAmpSigma.end());
@@ -906,6 +912,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     result->Overlap[k] = TFloat64List(1, 1.0);
   }
   result->ChiSquare = bestChi2;
+  result->ReducedChiSquare = bestReducedChi2;
   result->FitAmplitude = bestFitAmp;
   result->FitAmplitudeError = bestFitAmpErr;
   result->FitAmplitudeSigma = bestFitAmpSigma;

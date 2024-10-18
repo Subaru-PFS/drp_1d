@@ -121,6 +121,7 @@ public:
   TContinuumComponent m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
+  Float64 m_opt_continuum_bad_chi2_threshold = 100;
 
   Int32 m_continnuum_fit_option = 0; // default to "retryAll" templates
   // candidates
@@ -147,8 +148,20 @@ private:
   void RecomputeAroundCandidates(
       const std::string &opt_continuumreest, const Int32 tplfit_option,
       const bool overrideRecomputeOnlyOnTheCandidate = false);
-  void evaluateContinuumAmplitude(
-      const std::shared_ptr<CContinuumFitStore> &tplfitStore);
+
+  void evaluateAndUpdateContinuumComponent(
+      const std::shared_ptr<CContinuumFitStore> &continuumFitStore);
+
+  bool
+  updateContinuumComponentIfBadChi2(CContinuumModelSolution const &fitValues);
+
+  bool
+  updateContinuumComponentIfNegative(Float64 max_fitamplitudeSigma,
+                                     CContinuumModelSolution const &fitValues);
+
+  bool updateContinuumComponentIfNotSignificant(
+      Float64 max_fitamplitudeSigma, CContinuumModelSolution const &fitValues);
+
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_Redshifts; // coarse grid

@@ -49,7 +49,7 @@ public:
   std::map<std::string,  TFloat64List> ModelFlux;
 
   void addModel(const CSpectrum &spc,const std::string &obs_id="");
-  void addModel(CSpectrum &&spc,const std::string &obs_id="");
+  void addModel(TFloat64List lambda, TFloat64List flux, const std::string &obs_id="");
   
 };
 

@@ -126,7 +126,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
            Formatter() << "Failed to load-fit continuum for cfitopt="
                        << m_fitContinuum_option);
   // Retrieve the best template, otherwise Getter throws an error
-  if (isContinuumComponentPowerLaw()) {
+  if (isContinuumComponentPowerLawXXX()) {
     getModel().ApplyContinuumPowerLawOnGrid(m_fitContinuum);
   } else {
     std::shared_ptr<const CTemplate> tpl =
@@ -191,10 +191,6 @@ void CContinuumManager::SetFitContinuum_Option(Int32 opt) {
   m_fitContinuum_option = opt;
 }
 
-void CContinuumManager::SetFitContinuum_SNRMax(Float64 snr_max) {
-  m_fitContinuumMaxValues->tplFitSNRMax = snr_max;
-}
-
 Int32 CContinuumManager::GetFitContinuum_Option() const {
   return m_fitContinuum_option;
 }
@@ -210,7 +206,7 @@ Float64 CContinuumManager::getContinuumScaleMargCorrection() const {
   Float64 corr = 0.0;
 
   // scale marg for continuum
-  if (isContinuumComponentTplFitxxx()) // the support has to be already
+  if (isContinuumComponentTplFitXXX()) // the support has to be already
                                        // computed when LoadFitContinuum() is
                                        // called
     corr += log(m_fitContinuum->tplMtM);
@@ -233,10 +229,10 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum->tplAmplitude);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeError="
                           << m_fitContinuum->tplAmplitudeError);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeSigmaMAX="
-                          << m_fitContinuumMaxValues->fitAmplitudeSigmaMAX);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit="
                           << m_fitContinuum->merit);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitReducedChi2="
+                          << m_fitContinuum->reducedChi2);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit_phot="
                           << m_fitContinuum->tplMeritPhot);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitEbmvCoeff="
@@ -253,8 +249,6 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum->tplMtM);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitLogprior="
                           << m_fitContinuum->tplLogPrior);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitSNRMax="
-                          << m_fitContinuumMaxValues->tplFitSNRMax);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAlpha="
                           << m_fitContinuum_tplFitAlpha);
 }
@@ -281,7 +275,7 @@ void CContinuumManager::setContinuumComponent(TContinuumComponent component) {
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
   }
-  if (m_ContinuumComponent.isPowerLaw()) {
+  if (m_ContinuumComponent.isPowerLawXXX()) {
     m_fitContinuum->name = "powerLaw";
   }
 }

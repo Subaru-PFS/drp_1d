@@ -572,8 +572,8 @@ class fixture_PhotoData {
 public:
   fixture_PhotoData() {
     TStringList names = {"band1", "band2"};
-    TFloat64List flux = {1e-14, 2e-15};
-    TFloat64List fluxerr = {1e-18, 3e-18};
+    TFloat64List flux = {8.7e-30, 8.69e-30};
+    TFloat64List fluxerr = {5.8e-30, 5.8e-30};
     photoData = std::make_shared<CPhotometricData>(names, flux, fluxerr);
   }
   std::shared_ptr<CPhotometricData> photoData;

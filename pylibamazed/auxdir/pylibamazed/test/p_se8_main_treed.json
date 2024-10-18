@@ -93,6 +93,7 @@
           "continuumFit": {
             "negativeThreshold": -5.0,
             "nullThreshold": 3,
+            "badChi2Threshold": 100,
             "fftProcessing": false,
             "ismFit": true,
             "igmFit": false,

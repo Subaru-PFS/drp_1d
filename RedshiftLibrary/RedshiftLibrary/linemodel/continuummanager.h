@@ -36,7 +36,6 @@ public:
 
   Int32 SetFitContinuum_FitStore(
       const std::shared_ptr<const CContinuumFitStore> &fitStore);
-  void SetFitContinuum_SNRMax(Float64 snr_max);
   void SetFitContinuum_Option(Int32 opt);
   Int32 GetFitContinuum_Option() const;
 
@@ -50,11 +49,11 @@ public:
   }
 
   Float64 getContinuumScaleMargCorrection() const;
-  bool isContinuumComponentTplFitxxx() const {
-    return m_ContinuumComponent.isTplFitxxx();
+  bool isContinuumComponentTplFitXXX() const {
+    return m_ContinuumComponent.isTplFitXXX();
   }
-  bool isContinuumComponentPowerLaw() const {
-    return m_ContinuumComponent.isPowerLaw();
+  bool isContinuumComponentPowerLawXXX() const {
+    return m_ContinuumComponent.isPowerLawXXX();
   }
   bool isContinuumComponentFitter() const {
     return m_ContinuumComponent.isContinuumFit();
@@ -84,7 +83,7 @@ public:
   bool isContFittedToNull();
   Int32 getFittedMeiksinIndex() { return m_fitContinuum->meiksinIdx; }
   Float64 getFitSum() {
-    if (!isContinuumComponentTplFitxxx())
+    if (!isContinuumComponentTplFitXXX())
       return 0.0;
     return m_fitContinuum->tplMeritPhot +
            m_fitContinuum->tplLogPrior; // unconditionnal sum (if photometry
@@ -119,7 +118,6 @@ private:
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
 
   std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
-  std::shared_ptr<fitMaxValues> m_fitContinuumMaxValues;
 
   // m_fitContinuum_option==2 for now
   Float64 m_fitContinuum_tplFitAlpha = 0.;

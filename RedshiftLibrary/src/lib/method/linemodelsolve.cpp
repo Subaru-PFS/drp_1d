@@ -529,7 +529,6 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // FIRST PASS + CANDIDATES - B
   //**************************************************
-  // TODO see if add powerlaw here ??
   bool enableFirstpass_B = (m_opt_extremacountB > 0) &&
                            m_opt_continuumcomponent.isContinuumFit() &&
                            (m_opt_extremacountB > 1);

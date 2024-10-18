@@ -39,15 +39,14 @@
 #include <climits>
 
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/linemodel/continuumfitstore.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
-#include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
 using namespace NSEpic;
 
 CContinuumFitStore::CContinuumFitStore(const TFloat64List &redshifts)
     : m_redshiftgrid(redshifts) {
   initFitValues();
-  m_fitMaxValues = std::make_shared<fitMaxValues>();
 }
 
 Int32 CContinuumFitStore::GetRedshiftIndex(Float64 z) const {
@@ -161,20 +160,33 @@ void CContinuumFitStore::initFitValues() {
       m_redshiftgrid.size(), zfitvals);
 }
 
-Float64
-CContinuumFitStore::FindMaxAmplitudeSigma(Float64 &z,
-                                          CContinuumModelSolution &fitValues) {
-  Int32 icontinuum = 0;
-  m_fitMaxValues->fitAmplitudeSigmaMAX = -INFINITY;
+std::pair<Float64, CContinuumModelSolution const>
+CContinuumFitStore::FindMaxAmplitudeSigma() const {
+  Int32 const icontinuum = 0;
+  Float64 fitAmplitudeSigmaMAX = -INFINITY;
+  Int32 i_max = undefIdx;
   for (Int32 i = 0; i < m_redshiftgrid.size(); i++) {
     const CContinuumModelSolution &continuum = m_fitValues[i][icontinuum];
     Float64 fracAmplitudeSigma = getFracAmplitudeSigma(continuum);
-    if (fracAmplitudeSigma > m_fitMaxValues->fitAmplitudeSigmaMAX) {
-      m_fitMaxValues->fitAmplitudeSigmaMAX = fracAmplitudeSigma;
-      z = m_redshiftgrid[i];
-      fitValues = continuum;
+    if (fracAmplitudeSigma > fitAmplitudeSigmaMAX) {
+      fitAmplitudeSigmaMAX = fracAmplitudeSigma;
+      i_max = i;
     }
   }
 
-  return m_fitMaxValues->fitAmplitudeSigmaMAX;
+  return std::make_pair(fitAmplitudeSigmaMAX,
+                        std::cref(m_fitValues[i_max][icontinuum]));
+}
+
+CContinuumModelSolution const &CContinuumFitStore::FindMinReducedChi2() const {
+  Int32 const icontinum = 0;
+  Float64 max_reduced_chi2 = -INFINITY;
+  auto const max_elt = std::min_element(
+      m_fitValues.cbegin(), m_fitValues.cend(),
+      [this](std::vector<CContinuumModelSolution> const &left_fitValues,
+             std::vector<CContinuumModelSolution> const &right_fitValues) {
+        return left_fitValues[icontinum].reducedChi2 <
+               right_fitValues[icontinum].reducedChi2;
+      });
+  return (*max_elt)[icontinum];
 }

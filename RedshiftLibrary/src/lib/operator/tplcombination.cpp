@@ -330,6 +330,7 @@ void COperatorTplcombination::BasicFit(
 
       if (chisq < fittingResults.chiSquare) {
         fittingResults.chiSquare = chisq;
+        fittingResults.reducedChisquare = chisq / n;
         fittingResults.SNR = SNR;
         fittingResults.meiksinIdx =
             igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
@@ -541,6 +542,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              additional_spcMask, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
     result->ChiSquare[i] = fittingResults.chiSquare;
+    result->ReducedChiSquare[i] = fittingResults.reducedChisquare;
     result->Overlap[i] = fittingResults.overlapFraction;
     result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
     result->FitAmplitudeSigma[i] = fittingResults.fittingAmplitudeSigmas;
@@ -638,7 +640,7 @@ COperatorTplcombination::ComputeSpectrumModel(
 
   Int32 modelSize = spectrum.GetSampleCount();
 
-  CSpectrumFluxAxis modelFlux(modelSize, 0.0);
+  TFloat64List modelFlux(modelSize, 0.0);
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     const CSpectrumFluxAxis &tmp = m_templatesRebined_bf[iddl].GetFluxAxis();
     for (Int32 k = 0; k < modelSize; k++) {
@@ -654,7 +656,8 @@ COperatorTplcombination::ComputeSpectrumModel(
   m_masksRebined_bf.clear();
   std::shared_ptr<CModelSpectrumResult> ret =
       std::make_shared<CModelSpectrumResult>();
-  ret->addModel(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)), "");
+  ret->addModel(std::move(modelSpcAxis.GetSamplesVector()),
+                std::move(modelFlux), "");
   return ret;
 }
 
