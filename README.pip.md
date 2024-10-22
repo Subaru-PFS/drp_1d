@@ -34,10 +34,9 @@ pip install -v . -C build-dir=build-pip  -C cmake.define.CMAKE_PREFIX_PATH=$SHAR
 ```
 
 
-# Test import module
-You must be outside of your git directory. You can run :
+# Test import module and check version
+Run :
 ```
-cd
 python -c "import pylibamazed.redshift as pr; print(pr.get_version()); import pylibamazed; print(pylibamazed.version)"
 ```
 

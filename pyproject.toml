@@ -38,16 +38,25 @@ classifiers = [
 [project.urls]
 homepage = "https://www.lam.fr"
 
-# [tool.scikit-build.metadata.version]
-# provider = "scikit_build_core.metadata.regex"
-# input = "RedshiftLibrary/RedshiftLibrary/version.h"
-# regex = '''(?i)^(#define CPF_REDSHIFT_REVISION)(?: ?\: ?str)?  *([\'"])v?(?P<value>.+?)\2'''
-# result="{value}"
-
 [tool.scikit-build]
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
-sdist.include = ["pylibamazed/python/pylibamazed/resources","src/package/_version.py"]
+sdist.include = ["pylibamazed/python/pylibamazed/resources",
+                 "pylibamazed/python/pylibamazed/_version.py",
+                 "RedshiftLibrary/RedshiftLibrary/version.h"
+]
 wheel.packages = ["pylibamazed/python/pylibamazed"]
 
-[tool.setuptools_scm]  # Section required
+[tool.setuptools_scm]
 write_to = "pylibamazed/python/pylibamazed/_version.py"
+
+[[tool.scikit-build.generate]]
+path = "RedshiftLibrary/RedshiftLibrary/version.h"
+location = "source"
+template = '''
+#define CPF_REDSHIFT_REVISION "${version}"
+
+namespace NSEpic
+{
+  const char* get_version();
+}
+'''

@@ -341,6 +341,8 @@ CONFIGURE_PACKAGE_CONFIG_FILE(
   PATH_VARS cpf-redshift_INCLUDE_DIR cpf-redshift_LINK_DIR
 )
 
+
+IF (NOT SKBUILD_PROJECT_NAME)
 # Configure version file (this is used by find_package to determine a matching version)
 WRITE_BASIC_PACKAGE_VERSION_FILE(
   ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
@@ -352,3 +354,4 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
 )
+ENDIF (NOT SKBUILD_PROJECT_NAME)
