@@ -57,14 +57,14 @@ class TestFilterIntegration:
         # Read and load spectra using spectra reader
         spectra = get_spectra(config, observation)
         reader = ASCIISpectrumReader(
-            observation_id=observation.ProcessingID[0],
+            observation_id="",
             parameters=param,
             calibration_library=process_flow.calibration_library,
             source_id=observation.ProcessingID[0],
         )
 
         reader.load_all(spectra)
-        process_flow.run(reader)  # passing spectra reader to launch amazed
+        spectrum = reader.get_spectrum()
 
-        # # Checks that the number of waves kept has decreased (6 to 3) with filtering
-        assert len(reader.get_wave()) == 3
+        # Checks that the number of waves kept has decreased (6 to 3) with filtering
+        assert len(spectrum.get_wave()) == 3

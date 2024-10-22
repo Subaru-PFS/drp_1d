@@ -75,11 +75,15 @@ class TestSpectrumReaderUtils:
         fsr.load_error(wave_range, kwargs.get("obs_id", ""))
         fsr.load_lsf(None, kwargs.get("obs_id", ""))
 
-    def initialize_fsr_with_data(self, **kwargs):
+    def initialize_empty_fsr(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)
         params = Parameters(params_dict, Checker=FakeParametersChecker)
         cl = CalibrationLibrary(params, tempfile.mkdtemp())
         fsr = FakeSpectrumReader("000", params, cl, "000", "range")
+        return fsr
+
+    def initialize_fsr_with_data(self, **kwargs):
+        fsr = self.initialize_empty_fsr(**kwargs)
         self.full_load(fsr, **kwargs)
         return fsr
 
@@ -143,4 +147,7 @@ class FakeSpectrumReader(AbstractSpectrumReader):
         self.lsf_data.append(lsf, obs_id)
 
     def load_photometry(self, location):
+        pass
+
+    def set_air_or_vaccum(self, location):
         pass

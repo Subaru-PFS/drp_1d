@@ -44,6 +44,7 @@ from contextlib import contextmanager, suppress
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.Parameters import Parameters
+from pylibamazed.Spectrum import Spectrum
 
 # NB: DO NOT REMOVE - these libs are used in globals
 from pylibamazed.redshift import CClassificationSolve  # noqa F401
@@ -109,14 +110,14 @@ class ProcessFlow:
         return wrapper
 
     @exception_decorator(logging=True)
-    def run(self, spectrum_reader):
+    def run(self, spectrum: Spectrum):
         resultStore = self.process_flow_context.GetResultStore()
         rso = ResultStoreOutput(
             resultStore, self.parameters, auto_load=False, extended_results=self.extended_results
         )
         try:
             with self.store_flags_handler(name="init_warningFlag"):
-                self.initialize(rso, spectrum_reader)
+                self.initialize(rso, spectrum)
         except ProcessFlowException:
             rso.load_root()
             return rso
@@ -178,7 +179,7 @@ class ProcessFlow:
             self.run_linemeas_solver(rso, linemeas_method)
 
     @store_exception_handler
-    def initialize(self, rso, spectrum_reader):
+    def initialize(self, rso, spectrum: Spectrum):
         zlog.LogInfo("Context initialization")
         self.process_flow_context.reset()
 
@@ -200,10 +201,10 @@ class ProcessFlow:
         self.process_flow_context.setFluxCorrectionMeiksin(self.calibration_library.meiksin)
         self.process_flow_context.setFluxCorrectionCalzetti(self.calibration_library.calzetti)
 
-        spectrum_reader.init()
+        spectrum.push_in_context()
 
         if self.config.get("linemeascatalog"):
-            self.parameters.load_linemeas_parameters_from_catalog(spectrum_reader.source_id, self.config)
+            self.parameters.load_linemeas_parameters_from_catalog(spectrum.source_id, self.config)
         self.process_flow_context.LoadParameterStore(self.parameters.to_json())
         self.process_flow_context.Init()
 

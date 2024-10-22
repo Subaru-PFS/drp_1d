@@ -41,23 +41,17 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
+from pylibamazed.Spectrum import Spectrum
 from pylibamazed.Container import Container
 from pylibamazed.Exception import APIException
 from pylibamazed.Filter import FilterList
 from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
-from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 from pylibamazed.Parameters import Parameters
+from pylibamazed.lsf import LSFParameters
 from pylibamazed.redshift import (
     CFlagWarning,
     CLog,
-    CLSFFactory,
-    CPhotometricData,
-    CProcessFlowContext,
-    CSpectrum,
-    CSpectrumFluxAxis_withError,
-    CSpectrumSpectralAxis,
     ErrorCode,
-    TLSFGaussianVarWidthArgs,
     WarningCode,
 )
 
@@ -95,23 +89,38 @@ class AbstractSpectrumReader:
     ):
         """Constructor method"""
         self.observation_id = observation_id
+        self.parameters = parameters
+        self.calibration_library = calibration_library
+        self.filter_loader_class = filter_loader_class
+        self.source_id = str(source_id)
 
         # Initial loaded data
         self.waves = Container[np.ndarray]()
         self.fluxes = Container[np.ndarray]()
         self.errors = Container[np.ndarray]()
         self.others: Dict[str, Container[np.ndarray]] = dict()
-
         self.lsf_type = None
         self.lsf_data = Container[np.ndarray]()
         self.photometric_data = []
-        self._spectra = dict()
         self.w_frame = "vacuum"
-        self.parameters = parameters
-        self.calibration_library = calibration_library
-        self.source_id = str(source_id)
-        self.editable_spectra = Container[pd.DataFrame]()
-        self.filter_loader_class = filter_loader_class
+
+        # pandas dataframe to instanciate Spectrum
+        self.spectra_dataframe = pd.DataFrame()
+
+    # setup context manger
+    def __enter__(self):
+        self.load_all(self.resource, self.obs_id)
+        return self
+
+    def __call__(self, resource, obs_id=""):
+        self.resource = resource
+        self.obs_id = obs_id
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.clean()
+        self.resource = None
+        return False
 
     def load_wave(self, resource, obs_id=""):
         """Append the spectral axis in self.wave , units are in Angstrom by default
@@ -149,7 +158,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_photometry(self, resource, obs_id=""):
+    def load_photometry(self, resource):
         """Append the photometric data in self.photometric_data , units are in erg.cm-2 by default
 
         :param resource: resource where the error can be found, no restriction for type (can be a path, a
@@ -161,79 +170,43 @@ class AbstractSpectrumReader:
     def load_others(self, resource, obs_id=""):
         """Appends other data in self.others
 
-        :param resource: resource where the error can be found, no restriction for type (can be a path, a
-            file handler, an hdf5 node,...)
+        :param resource: resource where other data vector indexed by the wavelengths
+        can be found, no restriction for type (can be a path, a file handler, an hdf5 node,...)
         """
+        raise NotImplementedError("Implement in derived class")
 
-    def load_all(self, resource):
+    def set_air_or_vaccum(self, resource):
+        """
+        Set w_frame to "air" or "vaccum" (default is vacuum).
+        frame should be deduced from resource.
+        """
+        raise NotImplementedError("Implement in derived class")
+
+    def load_all(self, resource, obs_id="") -> Spectrum:
         """
         Load all components of the spectrum. Reimplement this if resources are different
 
         :param resource: resource where wave, flux, error, lsf and photometry can be found
         """
-        self.load_wave(resource)
-        self.load_flux(resource)
-        self.load_error(resource)
-        self.load_lsf(resource)
+        self.load_wave(resource, obs_id)
+        self.load_flux(resource, obs_id)
+        self.load_error(resource, obs_id)
+        self.load_others(resource, obs_id)
+        self.set_air_or_vaccum(resource)
+        self.load_lsf(resource, obs_id)
         self.load_photometry(resource)
-        self.load_others(resource)
 
-    def get_spectrum(self, obs_id=""):
+    def load_and_get_spectrum(self, resource, obs_id="") -> Spectrum:
         """
-        Get spectrum c++ object
+        Load all components of the spectrum, build and return Spectrum, then clean memory (re load necessary)
+        """
+        self.load_all(resource, obs_id)
+        spectrum = self.get_spectrum()
+        self.clean()
+        return spectrum
 
-        :return: CSpectrum object, fully loaded
-        """
+    def get_spectrum(self) -> Spectrum:
         self._check_spectrum_is_loaded()
-        return self._spectra[obs_id]
-
-    def get_wave(self, obs_id=""):
-        """
-        :raises: Spectrum not loaded
-        :return: wavelength
-        :rtype: np.array
-        """
-        self._check_spectrum_is_loaded()
-        return self._spectra[obs_id].GetSpectralAxis().GetSamplesVector().to_numpy()
-
-    def get_flux(self, obs_id=""):
-        """
-        :raises: Spectrum not loaded
-        :return: wavelength
-        :rtype: np.array
-        """
-        self._check_spectrum_is_loaded()
-        return self._spectra[obs_id].GetFluxAxis().GetSamplesVector().to_numpy()
-
-    def get_error(self, obs_id=""):
-        """
-        :raises: Spectrum not loaded
-        :return: error
-        :rtype: np.array
-        """
-        self._check_spectrum_is_loaded()
-        return self._spectra[obs_id].GetErrorAxis().GetSamplesVector().to_numpy()
-
-    def get_lsf(self, obs_id=""):
-        """
-        :raises: Spectrum not loaded
-        :return: lsf
-        :rtype: np.array
-        """
-        self._check_spectrum_is_loaded()
-        return self.lsf_data.get(obs_id)
-
-    def set_air(self):
-        """
-        Set w_frame to "air" (default is vacuum). Client should use this method if input spectra are in air
-        frame
-        """
-        self.w_frame = "air"
-
-    def get_loaded_lsf_observation_ids(self):
-        return list(self.lsf_data.keys())
-
-    def init(self):
         if not self._sizes_are_consistent():
             sizes: str = ", ".join([str(container.size()) for container in self._all_containers()])
             raise APIException(
@@ -247,23 +220,38 @@ class AbstractSpectrumReader:
                 "Names of error, wavelength, flux and other arrays should be the same",
             )
 
+        if not self.parameters.get_multiobs_method():
+            # Add check names if multiobs type is null
+            if list(self._get_observation_ids()) != [""]:
+                raise APIException(ErrorCode.INVALID_NAME, "Non multi obs observations cannot be named")
+
         self._merge_spectrum_in_dataframe()
+
         self._apply_filters(self._get_filters())
         self._check_wavelengths()
-        self._add_cspectra()
-        lsf_factory = CLSFFactory.GetInstance()
-        lsf_args = self._lsf_args()
-        lsf_type = self.parameters.get_lsf_type()
-        if self.parameters.get_lsf_type() == "fromSpectrumData":
-            lsf_type = self.lsf_type
-        lsf = lsf_factory.Create(lsf_type, lsf_args)
 
-        if self.parameters.get_multiobs_method() == "merge":
-            self._spectra[""].SetLSF(lsf)
-        else:
-            for obs_id in self.parameters.get_observation_ids():
-                self._spectra[obs_id].SetLSF(lsf)
-        self._add_photometric_data()
+        spectrum = Spectrum(
+            self.observation_id,
+            self.source_id,
+            self.parameters,
+            self.spectra_dataframe,
+            self._select_lsf(),
+            self.photometric_data,
+            self.w_frame,
+        )
+        return spectrum
+
+    def clean(self):
+        """
+        clean the Containers
+        """
+        self.__init__(
+            self.observation_id,
+            self.parameters,
+            self.calibration_library,
+            self.source_id,
+            self.filter_loader_class,
+        )
 
     def _get_filters(self):
         return self.filter_loader_class().get_filters(self.parameters)
@@ -271,8 +259,7 @@ class AbstractSpectrumReader:
     def _apply_filters(self, filters: FilterList) -> None:
         if filters is None:
             return
-        for spectrum_key in self.editable_spectra.keys():
-            self.editable_spectra.data[spectrum_key] = filters.apply(self.editable_spectra.data[spectrum_key])
+        filters.apply(self.spectra_dataframe)
 
     def _check_wavelengths(self):
         """Looks if lambda range specified in parameters is contained in spectrum range."""
@@ -294,17 +281,6 @@ class AbstractSpectrumReader:
                     f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])",
                 )
 
-    def _add_photometric_data(self):
-        if len(self.photometric_data) > 0 and len(self.photometric_data[0]) > 0:
-            names = tuple(self.photometric_data[0].Name)
-            flux = tuple([float(f) for f in self.photometric_data[0].Flux])
-            fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
-            if self.parameters.get_multiobs_method() == "merge":
-                self._spectra[""].SetPhotData(CPhotometricData(names, flux, fluxerr))
-            else:
-                for obs_id in self.parameters.get_observation_ids():
-                    self._spectra[obs_id].SetPhotData(CPhotometricData(names, flux, fluxerr))
-
     def _all_containers(self):
         return [container for container in self.others.values()] + [self.waves, self.fluxes, self.errors]
 
@@ -313,164 +289,81 @@ class AbstractSpectrumReader:
         return all(container.size() == expected_size for container in self._all_containers())
 
     def _obs_ids_are_consistent(self) -> bool:
-        """Checks that all keys from waves conatiner are present in all other containers.
+        """Checks that all keys from waves container are present in all other containers.
         Must be combined with size test to be sure that all keys are equal
         """
-        expected_keys = self.waves.keys()
+        expected_keys = self._get_observation_ids()
         for obs_id in expected_keys:
             for container in self._all_containers():
                 if obs_id not in container.keys():
                     return False
+            # check lsf keys
+            if (self.lsf_data.size()) and (obs_id not in self.lsf_data.keys()):
+                return False
         return True
 
-    def get_editable_waves(self, obs_id=""):
-        return self.editable_spectra.get(obs_id)["waves"]
-
-    def get_editable_fluxes(self, obs_id=""):
-        return self.editable_spectra.get(obs_id)["fluxes"]
-
-    def get_editable_errors(self, obs_id=""):
-        return self.editable_spectra.get(obs_id)["errors"]
-
-    def get_filtered_others(self, obs_id: str = "") -> pd.DataFrame:
-        """
-        Return a dataframe with the filtered non-mandatory columns of the spectrum.
-
-        :param obs_id: name of the observation
-        :return: dataframe with the data of the other columns of the spectrum
-        """
-        others_data = pd.DataFrame()
-        for col in self.others:
-            others_data[col] = self.editable_spectra.get(obs_id)[col]
-        return others_data
-
-    def _add_cspectra(self):
-        airvacuum_method = self._corrected_airvacuum_method()
-        multiobs_type = self.parameters.get_multiobs_method()
-        if not multiobs_type:
-            # Add check names if multiobs type is null
-            if list(self.waves.keys()) != [""]:
-                raise APIException(ErrorCode.INVALID_NAME, "Non multi obs observations cannot be named")
-
-            spectralaxis = CSpectrumSpectralAxis(self.get_editable_waves(), airvacuum_method)
-            signal = CSpectrumFluxAxis_withError(self.get_editable_fluxes(), self.get_editable_errors())
-            self._add_cspectrum(spectralaxis, signal)
-
-        elif multiobs_type == "merge":
-            wses = []
-            for i in self.waves.keys():
-                wse_ = pd.DataFrame()
-                wse_["wave"] = self.get_editable_waves(i)
-                wse_["flux"] = self.get_editable_fluxes(i)
-                wse_["error"] = self.get_editable_errors(i)
-                wses.append(wse_)
-            wse = pd.concat(wses)
-            wse.sort_values(["wave"], inplace=True)
-            codes, uniques = pd.factorize(wse["wave"])
-            epsilon = np.concatenate([i for i in map(np.arange, np.bincount(codes))]) * 1e-10
-            wse["wave"] = wse["wave"] + epsilon
-
-            if len(wse["wave"].unique()) != wse.index.size:
-                raise APIException(ErrorCode.UNALLOWED_DUPLICATES, "Duplicates in wavelengths")
-
-            if not (np.diff(wse["wave"]) > 0).all():
-                raise APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
-
-            spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
-            signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]), np.array(wse["error"]))
-            self._add_cspectrum(spectralaxis, signal)
-
-        elif multiobs_type == "full":
-            for obs_id in self.waves.keys():
-                spectralaxis = CSpectrumSpectralAxis(self.get_editable_waves(obs_id), airvacuum_method)
-                signal = CSpectrumFluxAxis_withError(
-                    self.get_editable_fluxes(obs_id), self.get_editable_errors(obs_id)
-                )
-                self._add_cspectrum(spectralaxis, signal, obs_id)
-
-    def _add_cspectrum(self, spectralaxis, signal, obs_id=""):
-        self._spectra[obs_id] = CSpectrum(spectralaxis, signal)
-        self._spectra[obs_id].SetName(self.source_id)
-        self._spectra[obs_id].setObsID(obs_id)
-
-        ctx = CProcessFlowContext.GetInstance()
-        ctx.addSpectrum(self._spectra[obs_id])
-
-    def _corrected_airvacuum_method(self):
-        airvacuum_method = self.parameters.get_airvacuum_method()
-
-        if airvacuum_method == "default":
-            airvacuum_method = "morton2000"
-
-        if airvacuum_method == "" and self.w_frame == "air":
-            airvacuum_method = "morton2000"
-
-        elif airvacuum_method != "" and self.w_frame == "vacuum":
-            zflag.warning(
-                WarningCode.AIR_VACUUM_CONVERSION_IGNORED,
-                f"Air vacuum method {airvacuum_method} ignored, spectrum already in vacuum",
-            )
-            airvacuum_method = ""
-
-        return airvacuum_method
-
-    def _lsf_args(self):
-        ctx = CProcessFlowContext.GetInstance()
+    def _select_lsf(self):
         parameter_lsf_type = self.parameters.get_lsf_type()
 
         if parameter_lsf_type == "fromSpectrumData":
-            lsf_obs_ids = self.get_loaded_lsf_observation_ids()
+            selected_lsf = {"type": self.lsf_type}
+            lsf_obs_ids = self._get_observation_ids()
             if not lsf_obs_ids:
                 raise APIException(
                     ErrorCode.LSF_NOT_LOADED,
                     "No LSF loaded in reader, " "lsftype=fromSpectrumData " "parameter cannot be applied",
                 )
-            obs_id = lsf_obs_ids[0]
+            obs_id = next(iter(lsf_obs_ids))
             if len(lsf_obs_ids) > 1:
                 zflag.warning(
                     WarningCode.MULTI_OBS_ARBITRARY_LSF,
                     f"lsf of observation {obs_id} chosen, other lsf ignored",
                 )
-            if self.lsf_type != "gaussianVariableWidth":
-                self.parameters.set_lsf_param(
-                    LSFParameters[self.lsf_type], self.lsf_data.get(obs_id)["width"][0]
-                )
-                parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
-                lsf_args = TLSFArgumentsCtor[self.lsf_type](parameter_store)
-            else:
-                lsf_args = TLSFGaussianVarWidthArgs(
-                    self.lsf_data.get(obs_id)["wave"], self.lsf_data.get(obs_id)["width"]
-                )
+            param_name = LSFParameters[selected_lsf["type"]]
+            selected_lsf["data"] = {param_name: self.lsf_data.get(obs_id)["width"][0]}
+
         else:
-            if parameter_lsf_type != "gaussianVariableWidth":
-                parameter_store = ctx.LoadParameterStore(self.parameters.to_json())
-                lsf_args = TLSFArgumentsCtor[parameter_lsf_type](parameter_store)
+            selected_lsf = {"type": parameter_lsf_type}
+            if parameter_lsf_type == "gaussianVariableWidth":
+                selected_lsf["data"] = {
+                    "wave": self.calibration_library.lsf["wave"],
+                    "width": self.calibration_library.lsf["width"],
+                }
             else:
-                lsf_args = TLSFGaussianVarWidthArgs(
-                    self.calibration_library.lsf["wave"], self.calibration_library.lsf["width"]
-                )
-        return lsf_args
+                selected_lsf["data"] = self.parameters.get_lsf()
+        return selected_lsf
 
     def _check_spectrum_is_loaded(self):
-        if not self._spectra:
-            raise APIException(ErrorCode.SPECTRUM_NOT_LOADED, "Spectrum not loaded, launch init first")
+        if not self.waves.size():
+            raise APIException(ErrorCode.SPECTRUM_NOT_LOADED, "Spectrum not loaded, load_all first")
 
     def _merge_spectrum_in_dataframe(self):
-        for obs_id in self.waves.keys():
+        frames = dict()
+        for obs_id in self._get_observation_ids():
             # Creates dataframe with mandatory columns
-            full_spectrum = pd.DataFrame(
+            spectrum = pd.DataFrame(
                 {
-                    "waves": self.waves.get(obs_id),
-                    "fluxes": self.fluxes.get(obs_id),
-                    "errors": self.errors.get(obs_id),
+                    "wave": self.waves.get(obs_id),
+                    "flux": self.fluxes.get(obs_id),
+                    "error": self.errors.get(obs_id),
                 }
             )
             for col_key in self.others:
                 obs_others = self.others[col_key].get(obs_id)
                 if obs_others is not None:
-                    full_spectrum[col_key] = obs_others
+                    spectrum[col_key] = obs_others
 
-            self.editable_spectra.append(full_spectrum, obs_id)
+            # sort by wavelength
+            spectrum.sort_values(["wave"], inplace=True)
 
-    def get_observation_ids(self):
+            # check unicity of wavelength
+            if len(spectrum["wave"].unique()) != spectrum.index.size:
+                raise APIException(
+                    ErrorCode.UNALLOWED_DUPLICATES, f"Duplicated wavelength values in obs_id {obs_id}"
+                )
+            frames[obs_id] = spectrum
+
+        self.spectra_dataframe = pd.concat(frames, names=["obs_id", "index"])
+
+    def _get_observation_ids(self):
         return self.waves.keys()

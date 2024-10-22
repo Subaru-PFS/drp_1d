@@ -51,20 +51,28 @@ class TestSpectrumReaderImplementationErrors:
 
     def test_load_wave_not_implemented_error(self):
         with pytest.raises(NotImplementedError):
-            self.spectrumReader.load_wave("", "")
+            self.spectrumReader.load_wave(None)
 
     def test_load_flux_not_implemented_error(self):
         with pytest.raises(NotImplementedError):
-            self.spectrumReader.load_flux("", "")
+            self.spectrumReader.load_flux(None)
 
     def test_load_error_not_implemented_error(self):
         with pytest.raises(NotImplementedError):
-            self.spectrumReader.load_error("", "")
+            self.spectrumReader.load_error(None)
+
+    def test_load_others_not_implemented_error(self):
+        with pytest.raises(NotImplementedError):
+            self.spectrumReader.load_others(None)
 
     def test_load_lsf_not_implemented_error(self):
         with pytest.raises(NotImplementedError):
-            self.spectrumReader.load_lsf("", "")
+            self.spectrumReader.load_lsf(None)
 
     def test_load_photometry_not_implemented_error(self):
         with pytest.raises(NotImplementedError):
-            self.spectrumReader.load_photometry("", "")
+            self.spectrumReader.load_photometry(None)
+
+    def test_set_air_or_vaccum_not_implemented_error(self):
+        with pytest.raises(NotImplementedError):
+            self.spectrumReader.set_air_or_vaccum(None)

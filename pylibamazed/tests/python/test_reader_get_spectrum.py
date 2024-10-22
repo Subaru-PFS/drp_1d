@@ -41,18 +41,18 @@ import numpy as np
 import pandas as pd
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import AmzException, WarningCode
+from pylibamazed.redshift import WarningCode
 from tests.python.spectrum_reader_utils import TestSpectrumReaderUtils
 from tests.python.utils import WarningUtils
 
 
-class TestReaderInit(TestSpectrumReaderUtils):
+class TestReaderGetSpectrum(TestSpectrumReaderUtils):
     def test_input_fluxes_size_error(self):
         fsr = self.initialize_fsr_with_data()
         # Adds a wave -> incoherent size
         fsr.load_wave([20, 30], "2")
         with pytest.raises(APIException, match=r"INVALID_SPECTRUM"):
-            fsr.init()
+            fsr.get_spectrum()
 
     def test_input_fluxes_key_error(self):
         fsr = self.initialize_fsr_with_data()
@@ -61,96 +61,53 @@ class TestReaderInit(TestSpectrumReaderUtils):
         fsr.load_flux([20, 30], "2")
         fsr.load_error([20, 30], "3")
         with pytest.raises(APIException, match=r"INVALID_SPECTRUM"):
-            fsr.init()
+            fsr.get_spectrum()
 
     def test_non_multi_obs_naming_restrictions(self):
         fsr = self.initialize_fsr_with_data(**{"obs_id": "name that shouldn't be here"})
         with pytest.raises(APIException, match=r"INVALID_NAME"):
-            fsr.init()
+            fsr.get_spectrum()
 
     def test_wavelength_duplicates_error(self):
-        fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "merge"})
-        self.full_load(fsr, **{"obs_id": "2"})
-        fsr.waves.append(
-            np.arange(10, dtype=float) + 1e-10,
-            obs_id="3",
-        )
-        fsr.fluxes.append(
-            np.arange(10, dtype=float) + 1e-10,
-            obs_id="3",
-        )
-        fsr.errors.append(
-            np.arange(10, dtype=float) + 1e-10,
-            obs_id="3",
-        )
+        fsr = self.initialize_fsr_with_data()
+        self.full_load(fsr)
+        fsr.waves.append(np.array([0, 1, 1, 3, 4, 5, 6, 7, 8, 9], dtype=float))
         with pytest.raises(APIException, match=r"UNALLOWED_DUPLICATES"):
-            fsr.init()
-
-    def test_wavelength_not_sorted_error(self):
-        fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "merge"})
-        self.full_load(fsr, **{"obs_id": "2"})
-        fsr.waves.append(
-            np.arange(10, dtype=float) + 1e-11,
-            obs_id="3",
-        )
-        fsr.fluxes.append(
-            np.arange(10, dtype=float) + 1e-11,
-            obs_id="3",
-        )
-        fsr.errors.append(
-            np.arange(10, dtype=float) + 1e-11,
-            obs_id="3",
-        )
-        with pytest.raises(APIException, match=r"UNSORTED_ARRAY"):
-            fsr.init()
+            fsr.get_spectrum()
 
     def test_no_multi_obs(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.init()
+        fsr.get_spectrum()
 
     def test_multi_obs_merge(self):
-        fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "merge"})
+        fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "merge", "obs_id": "1"})
         fsr.load_wave([8, 20], "2")
         fsr.load_flux([8, 20], "2")
         fsr.load_error([8, 20], "2")
+        fsr.load_lsf(None, "2")
         fsr.load_wave([7, 12], "3")
         fsr.load_flux([7, 12], "3")
         fsr.load_error([7, 12], "3")
-        fsr.init()
+        fsr.load_lsf(None, "3")
+        fsr.get_spectrum()
 
     def test_multi_obs_full(self):
         fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "full"})
-        fsr.init()
+        fsr.get_spectrum()
 
     def test_add_photometric_data(self):
         fsr = self.initialize_fsr_with_data()
         fsr.photometric_data = [pd.DataFrame([["a", 2, 3]], columns=["Name", "Flux", "Error"])]
-        fsr.init()
-
-    def test_airvacuum_method_settings(self):
-        # No meaning - for test coverage only
-        fsr = self.initialize_fsr_with_data(**{"airVacuumMethod": "default"})
-        fsr.init()
-
-        fsr = self.initialize_fsr_with_data()
-        fsr.set_air()
-        with pytest.raises(AmzException):
-            fsr.init()
-
-        fsr = self.initialize_fsr_with_data(**{"airVacuumMethod": "default"})
-        fsr.set_air()
-        with pytest.raises(AmzException):
-            fsr.init()
+        fsr.get_spectrum()
 
     def test_lsf_args(self):
         # No meaning - for test coverage only
         fsr = self.initialize_fsr_with_data(**{"lsfType": "gaussianNISPSIM2016"})
-        with pytest.raises(BaseException):
-            fsr.init()
+        fsr.get_spectrum()
 
         fsr = self.initialize_fsr_with_data(**{"lsfType": "gaussianVariableWidth"})
         with pytest.raises(KeyError):
-            fsr.init()
+            fsr.get_spectrum()
 
     # TODO to make a real test we should add an lsf compatible with spectrum
     # fsr = self.initialize_fsr_with_data()
@@ -215,26 +172,22 @@ class TestReaderInit(TestSpectrumReaderUtils):
                 "obs_id": "1",
                 "parameters_lambdaRange": {"1": [0, 1], "2": [3, 4]},
                 "multiObsMethod": "full",
-                "filters": [{"key": "waves", "instruction": "<=", "value": 3}],
+                "filters": [{"key": "wave", "instruction": "<=", "value": 3}],
             }
         )
         TestSpectrumReaderUtils().full_load(fsr, **{"obs_id": "2"})
 
         # Default data: 0 -> 9 => 4 items correspond to the filter
-        fsr.init()
+        spectra = fsr.get_spectrum()
 
         # Check size is correct for spectrum first obs
-        spectrum = fsr.get_spectrum("1")
+        spectrum_id1 = spectra.get_dataframe("1")
 
-        assert spectrum.GetSpectralAxis().GetSamplesCount() == 4
-        assert spectrum.GetFluxAxis().GetSamplesCount() == 4
-        assert spectrum.GetErrorAxis().GetSamplesCount() == 4
+        assert len(spectrum_id1.index) == 4
 
         # Check size is correct for second obs
-        spectrum = fsr.get_spectrum("2")
-        assert spectrum.GetSpectralAxis().GetSamplesCount() == 4
-        assert spectrum.GetFluxAxis().GetSamplesCount() == 4
-        assert spectrum.GetErrorAxis().GetSamplesCount() == 4
+        spectrum_id2 = spectra.get_dataframe("2")
+        assert len(spectrum_id2.index) == 4
 
     class TestSpectrumLambdaRange(TestSpectrumReaderUtils):
         def _init_fsr(self, spectrum_wave_range, parameters_lambda_range):
@@ -244,13 +197,13 @@ class TestReaderInit(TestSpectrumReaderUtils):
                     "parameters_lambdaRange": parameters_lambda_range,
                 }
             )
-            fsr.init()
+            fsr.get_spectrum()
 
         def test_warning_if_parameters_lambdarange_is_outside_spectrum(self, zflag):
             fsr = self.initialize_fsr_with_data(
                 **{"spectrum_wave_range": [1, 3], "parameters_lambdaRange": [5, 40]}
             )
-            fsr.init()
+            fsr.get_spectrum()
 
             assert WarningUtils.has_any_warning()
 
@@ -271,7 +224,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
                     "spectrum_wave_range": {"2": [1, 4]},
                 }
             )
-            fsr.init()
+            fsr.get_spectrum()
 
             assert WarningUtils.has_warning(WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM)
 
@@ -306,7 +259,7 @@ class TestReaderInit(TestSpectrumReaderUtils):
                     "spectrum_wave_range": {"2": [1, 4]},
                 }
             )
-            fsr.init()
+            fsr.get_spectrum()
 
             assert not WarningUtils.has_warning(WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM)
 

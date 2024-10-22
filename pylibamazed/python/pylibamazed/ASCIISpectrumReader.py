@@ -95,9 +95,9 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
                 self.others[col_name].append(col_data, obs_id)
 
     # spectrum here is a CSpectrum
-    def load_all(self, spectrum):
-        self.load_wave(spectrum)
-        self.load_flux(spectrum)
-        self.load_error(spectrum)
-        self.load_lsf(spectrum)
-        self.load_others(spectrum)
+    def load_all(self, spectrum, obs_id=""):
+        self.load_wave(spectrum, obs_id)
+        self.load_flux(spectrum, obs_id)
+        self.load_error(spectrum, obs_id)
+        self.load_lsf(spectrum, obs_id)
+        self.load_others(spectrum, obs_id)

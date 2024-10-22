@@ -156,10 +156,11 @@ def test_ITLikeTest():
         source_id=observation.ProcessingID[0],
     )
 
-    reader.load_all(spectra)
-    add_photometry_to_reader(config, observation, reader)
+    with reader(spectra):
+        add_photometry_to_reader(config, observation, reader)
+        spectrum = reader.get_spectrum()
 
-    output = process_flow.run(reader)  # passing spectra reader to launch amazed
+    output = process_flow.run(spectrum)
 
     # check results (no errors)
     for spectrum_model, stage in (

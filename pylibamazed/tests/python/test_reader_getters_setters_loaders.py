@@ -51,32 +51,23 @@ from tests.python.spectrum_reader_utils import TestSpectrumReaderUtils
 class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
     def test_get_wave(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.init()
-        fsr.get_wave()
+        fsr.get_spectrum().get_wave()
 
     def test_get_flux(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.init()
-        fsr.get_flux()
+        fsr.get_spectrum().get_flux()
 
     def test_get_error(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.init()
-        fsr.get_error()
+        fsr.get_spectrum().get_error()
 
     def test_get_lsf(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.init()
-        fsr.get_lsf()
-
-    def test_get_spectrum(self):
-        fsr = self.initialize_fsr_with_data()
-        fsr.init()
-        fsr.get_spectrum()
+        fsr.get_spectrum().get_lsf()
 
     def test_set_air(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.set_air()
+        fsr.set_air_or_vaccum(None)
 
     def test_load_all(self):
         fsr = self.initialize_fsr_with_data()
@@ -88,33 +79,12 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
         parameters = Parameters(self.make_parameters_dict(), Checker=FakeParametersChecker)
         cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
         fsr = AbstractSpectrumReader("000", parameters, cl, "000")
-        fsr.load_others("data name")
+        with pytest.raises(NotImplementedError):
+            fsr.load_others("data name")
 
 
-class SpectrumReader(AbstractSpectrumReader):
-    def __init__(self):
-        self._spectra = []
-
-
-class TestSpectrumReaderGetErrors:
-    spectrumReader = SpectrumReader()
-
+class TestSpectrumReaderGetErrors(TestSpectrumReaderUtils):
     def test_get_spectrum_error(self):
+        spectrumReader = self.initialize_empty_fsr()
         with pytest.raises(APIException, match=r"SPECTRUM_NOT_LOADED"):
-            self.spectrumReader.get_spectrum()
-
-    def test_get_wave_error(self):
-        with pytest.raises(APIException, match=r"SPECTRUM_NOT_LOADED"):
-            self.spectrumReader.get_wave()
-
-    def test_get_flux_error(self):
-        with pytest.raises(APIException, match=r"SPECTRUM_NOT_LOADED"):
-            self.spectrumReader.get_flux()
-
-    def test_get_error_error(self):
-        with pytest.raises(APIException, match=r"SPECTRUM_NOT_LOADED"):
-            self.spectrumReader.get_error()
-
-    def test_get_lsf_error(self):
-        with pytest.raises(APIException, match=r"SPECTRUM_NOT_LOADED"):
-            self.spectrumReader.get_lsf()
+            spectrumReader.get_spectrum()

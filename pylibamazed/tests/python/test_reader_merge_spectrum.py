@@ -56,11 +56,11 @@ class TestMergeSpectrumInDataframe(TestSpectrumReaderUtils):
     lambdas = [4, 5, 6]
 
     # Base of the expected spectrum
-    expected_full_scpectrum = pd.DataFrame(
+    expected_spectrum_dataframe = pd.DataFrame(
         {
-            "waves": waves,
-            "fluxes": fluxes,
-            "errors": errors,
+            "wave": waves,
+            "flux": fluxes,
+            "error": errors,
         }
     )
 
@@ -81,21 +81,21 @@ class TestMergeSpectrumInDataframe(TestSpectrumReaderUtils):
         fsr = self._initialize_fsr()
         fsr._merge_spectrum_in_dataframe()
 
-        assert fsr.editable_spectra.size() == 1
-        assert self.expected_full_scpectrum.equals(fsr.editable_spectra.get())
+        assert len(fsr.spectra_dataframe.index.levels[0]) == 1
+        assert self.expected_spectrum_dataframe.equals(fsr.spectra_dataframe.loc[""])
 
     def test_with_others(self):
         fsr = self._initialize_fsr()
 
         # Adds a "other" colum
-        fsr.others["lambdas"] = Container(**{"": np.array(self.lambdas)})
+        fsr.others["lambda"] = Container(**{"": np.array(self.lambdas)})
 
         # Updates expected spectrum
-        self.expected_full_scpectrum["lambdas"] = self.lambdas
+        self.expected_spectrum_dataframe["lambda"] = self.lambdas
 
         fsr._merge_spectrum_in_dataframe()
-        assert fsr.editable_spectra.size() == 1
-        assert self.expected_full_scpectrum.equals(fsr.editable_spectra.get())
+        assert len(fsr.spectra_dataframe.index.levels[0]) == 1
+        assert self.expected_spectrum_dataframe.equals(fsr.spectra_dataframe.loc[""])
 
     def test_with_multi_obs(self):
         waves2 = [21, 22, 23]
@@ -110,20 +110,20 @@ class TestMergeSpectrumInDataframe(TestSpectrumReaderUtils):
         fsr.fluxes.append(np.array(fluxes2), "2")
         fsr.errors.append(np.array(errors2), "2")
 
-        fsr.others["lambdas"] = Container(**{"": np.array(self.lambdas), "2": np.array(lambdas2)})
+        fsr.others["lambda"] = Container(**{"": np.array(self.lambdas), "2": np.array(lambdas2)})
 
         # Expected spectrum
         fsr._merge_spectrum_in_dataframe()
-        self.expected_full_scpectrum["lambdas"] = self.lambdas
-        expected_full_scpectrum2 = pd.DataFrame(
+        self.expected_spectrum_dataframe["lambda"] = self.lambdas
+        expected_spectrum_dataframe2 = pd.DataFrame(
             {
-                "waves": waves2,
-                "fluxes": fluxes2,
-                "errors": errors2,
-                "lambdas": lambdas2,
+                "wave": waves2,
+                "flux": fluxes2,
+                "error": errors2,
+                "lambda": lambdas2,
             }
         )
 
-        assert fsr.editable_spectra.size() == 2
-        assert self.expected_full_scpectrum.equals(fsr.editable_spectra.get())
-        assert expected_full_scpectrum2.equals(fsr.editable_spectra.get("2"))
+        assert len(fsr.spectra_dataframe.index.levels[0]) == 2
+        assert self.expected_spectrum_dataframe.equals(fsr.spectra_dataframe.loc[""])
+        assert expected_spectrum_dataframe2.equals(fsr.spectra_dataframe.loc["2"])
