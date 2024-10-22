@@ -88,9 +88,13 @@ void CTemplateFittingSolve::PopulateParameters(
   m_opt_pdfcombination =
       parameterStore->GetScoped<std::string>("pdfCombination");
   m_opt_skipsecondpass = parameterStore->GetScoped<bool>("skipSecondPass");
-  if (useTwoPass())
+  if (useTwoPass()) {
     m_secondPassContinuumFit = str2ContinuumFit.at(
         parameterStore->GetScoped<std::string>("secondPass.continuumFit"));
+
+    m_secondPass_halfwindowsize =
+        parameterStore->GetScoped<Float64>("secondPass.halfWindowSize");
+  }
 }
 
 void CTemplateFittingSolve::UpdateParamsAndCatalogForFft(
@@ -224,14 +228,14 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
   // Second pass
   std::shared_ptr<const ExtremaResult> extremaResult;
   if (useTwoPass()) {
-    // Create and store first pass results
-    std::shared_ptr<COperatorTemplateFitting> opt_templateFitting =
+    // TODO extract in a computeSecondPass
+    std::shared_ptr<COperatorTemplateFitting> templateFittingOperator =
         std::dynamic_pointer_cast<COperatorTemplateFitting>(
             m_continuumFittingOperator);
-    opt_templateFitting->SetFirstPassCandidates(
+    templateFittingOperator->SetFirstPassCandidates(
         candidateResult->m_ranked_candidates);
     std::shared_ptr<const ExtremaResult> fpExtremaResult =
-        opt_templateFitting->BuildFirstPassExtremaResults(
+        templateFittingOperator->BuildFirstPassExtremaResults(
             resultStore->GetScopedPerTemplateResult(scopeStr));
 
     std::string firstpassExtremaResultsStr = scopeStr;
@@ -244,6 +248,26 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
     resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
                                          pdfz.m_postmargZResult);
 
+    // need to initialize an operator two pass
+    // const Float64 halfWindowSize,
+    //                           const bool zLogSampling,
+    //                           const TFloat64List &redshifts,
+    //                           const Float64 fineStep
+
+    templateFittingOperator->m_operatorTwoPass.Init(m_secondPass_halfwindowsize,
+                                                    m_zLogSampling, m_redshifts,
+                                                    m_redshiftStep);
+    templateFittingOperator->m_operatorTwoPass.BuildExtendedRedshifts(
+        templateFittingOperator->m_firstpass_extremaResult);
+    // TODO move this
+    size_t nResults = m_results.size();
+    for (size_t resultIdx = 0; resultIdx < nResults; ++resultIdx) {
+      templateFittingOperator->m_operatorTwoPass.UpdateRedshiftGridAndResults(
+          templateFittingOperator->m_firstpass_extremaResult,
+          m_results[resultIdx]);
+    }
+    // EstimateSecondPassParameters
+    // RecomputeAroundCandidates
     // Computes second pass
     for (auto candidate : fpExtremaResult->m_ranked_candidates) {
       std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(
@@ -252,22 +276,24 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
       Int32 ismIdx = Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
           candidate.second->fittedContinuum.ebmvCoef);
       std::vector<CMask> maskList;
+      // TODO check that the second pass redshift grid is used
       Solve(resultStore, tpl, m_overlapThreshold, maskList, type,
             m_interpolation, m_extinction, m_dustFit, igmIdx, ismIdx);
-      std::shared_ptr<PdfCandidatesZResult> candidateResult =
-          pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
     }
   }
-  // get second pass continuum fit
+
+  scopeStr = MakeScopeStrFromTypeAndPass(type, false);
+  COperatorPdfz pdfz2(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
+                      m_opt_maxCandidate, m_zLogSampling);
+  candidateResult = pdfz2.Compute(BuildChisquareArray(resultStore, scopeStr));
   extremaResult = buildExtremaResults(resultStore, scopeStr,
                                       candidateResult->m_ranked_candidates,
                                       tplCatalog, m_overlapThreshold);
-  ;
 
   // TODO here store final result
 
-  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
-  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf", pdfz2.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz2.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
   // for each extrema, get best model by reading from datastore and selecting
@@ -307,9 +333,16 @@ void CTemplateFittingSolve::Solve(
                      CSpectrum::EType::continuumOnly};
   } else
     spectrumTypes = {fittingTypeToSpectrumType.at(fittingType)};
+  const bool isFirstPass = FitEbmvIdx == undefIdx;
 
-  for (auto spectrumType : spectrumTypes) {
+  if (isFirstPass)
+    m_results = std::vector<std::shared_ptr<CTemplateFittingResult>>(
+        spectrumTypes.size(), std::make_shared<CTemplateFittingResult>(
+                                  CTemplateFittingResult(m_redshifts.size())));
+  for (size_t spectrumTypeIdx = 0; spectrumTypeIdx < spectrumTypes.size();
+       ++spectrumTypeIdx) {
     // Adapts spectra and template fitting type if necessary
+    CSpectrum::EType spectrumType = spectrumTypes[spectrumTypeIdx];
     if (fittingType == EType::all) {
       for (auto spc : Context.getSpectra())
         spc->SetType(spectrumType);
@@ -320,20 +353,31 @@ void CTemplateFittingSolve::Solve(
       m_dustFitting = false;
     tpl->setRebinInterpMethod(m_interpolation);
 
-    // Compute merit function
-    auto templateFittingResult =
-        std::dynamic_pointer_cast<CTemplateFittingResult>(
-            m_continuumFittingOperator->Compute(
-                tpl, m_overlapThreshold, m_interpolation, m_extinction,
-                m_dustFitting, 0, CPriorHelper::TPriorZEList(), FitEbmvIdx,
-                FitMeiksinIdx));
-
+    // TODO
+    // ici on pourrait plutôt initialiser m_results à la bonne taille et update
+    // le result situé à l'index visé
+    // TODO find a more elegant way to test if is COPeratorTemplateFitting
+    std::shared_ptr<CTemplateFittingResult> templateFittingResult;
+    if (!m_fftProcessing && !m_usePhotometry) {
+      templateFittingResult =
+          std::dynamic_pointer_cast<COperatorTemplateFitting>(
+              m_continuumFittingOperator)
+              ->Compute(tpl, m_overlapThreshold, m_interpolation, m_extinction,
+                        m_dustFitting, 0, CPriorHelper::TPriorZEList(),
+                        FitEbmvIdx, FitMeiksinIdx, m_results[spectrumTypeIdx]);
+    } else {
+      templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>(
+          m_continuumFittingOperator->Compute(
+              tpl, m_overlapThreshold, m_interpolation, m_extinction,
+              m_dustFitting, 0, CPriorHelper::TPriorZEList(), FitEbmvIdx,
+              FitMeiksinIdx));
+    }
+    // TODO see how to deal with this error
     if (!templateFittingResult)
       THROWG(ErrorCode::INTERNAL_ERROR,
              "no results returned by templateFittingOperator");
 
     // Store results
-    const bool isFirstPass = FitEbmvIdx == undefIdx;
     std::string scopeStr =
         MakeScopeStrFromTypeAndPass(fittingType, isFirstPass);
     resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
@@ -362,6 +406,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
       store->GetScopedPerTemplateResult(scopeStr.c_str());
 
   chisquarearray.cstLog = -1;
+  // TODO see where this quantidy is set
   chisquarearray.zstep = m_redshiftStep;
   for (TOperatorResultMap::const_iterator it = meritResults.begin();
        it != meritResults.end(); ++it) {
@@ -426,33 +471,35 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
 
   Log.LogDetail(
       "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
-  Log.LogDetail(Formatter()
-                << "    templatefittingsolve:r using results in scope: "
-                << store->GetScopedName(scopeStr));
+  Log.LogDetail(
+      Formatter()
+      << "    templatefittingsolve:r using tplFitResultsMap in scope: "
+      << store->GetScopedName(scopeStr));
 
-  TOperatorResultMap results = store->GetScopedPerTemplateResult(scopeStr);
+  TOperatorResultMap tplFitResultsMap =
+      store->GetScopedPerTemplateResult(scopeStr);
 
   Int32 extremumCount = ranked_zCandidates.size();
 
   auto firstResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
-      (*results.begin()).second);
+      (*tplFitResultsMap.begin()).second);
   const TFloat64List &redshifts = firstResult->Redshifts;
 
-  // check all results  status
-  for (auto &r : results) {
-    auto TplFitResult =
-        std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
-    if (TplFitResult->ChiSquare.size() != redshifts.size()) {
+  // check all tplFitResultsMap  status
+  for (auto &result : tplFitResultsMap) {
+    auto tplFitResult =
+        std::dynamic_pointer_cast<const CTemplateFittingResult>(result.second);
+    if (tplFitResult->ChiSquare.size() != redshifts.size()) {
       THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter()
-                 << "Size do not match among templatefitting results, for tpl="
-                 << r.first);
+             Formatter() << "Size do not match among templatefitting "
+                            "tplFitResultsMap, for tpl="
+                         << result.first);
     }
-    for (Int32 kz = 0; kz < TplFitResult->Redshifts.size(); kz++) {
-      if (TplFitResult->Redshifts[kz] != redshifts[kz]) {
+    for (Int32 kz = 0; kz < tplFitResult->Redshifts.size(); kz++) {
+      if (tplFitResult->Redshifts[kz] != redshifts[kz]) {
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "redshift vector is not the same for tpl="
-                           << r.first);
+                           << result.first);
       }
     }
   }
@@ -470,7 +517,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // find the min chisquare at corresponding redshift
     Float64 ChiSquare = DBL_MAX;
     std::string name = "";
-    for (auto &r : results) {
+    for (auto &r : tplFitResultsMap) {
       auto TplFitResult =
           std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
 
@@ -481,8 +528,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     }
 
     // Fill extrema Result
-    auto TplFitResult =
-        std::dynamic_pointer_cast<const CTemplateFittingResult>(results[name]);
+    auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
+        tplFitResultsMap[name]);
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedContinuum.merit = ChiSquare;
     extremaResult->m_ranked_candidates[iExtremum]

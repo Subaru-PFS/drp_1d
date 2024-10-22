@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
   op.m_fineStep = step;
   op.m_zLogSampling = (redshiftSampling == "log");
   op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
-  op.updateRedshiftGridAndResults();
+  op.UpdateRedshiftGridAndResults();
       // verifications:
       auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
       auto _j = std::distance(m_Redshifts.begin(), it);

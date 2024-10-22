@@ -38,13 +38,15 @@
 // ============================================================================
 
 #include "RedshiftLibrary/operator/twopass.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
 
 using namespace NSEpic;
 
-void COperatorTwoPass::Init(const Float64 halfWindowSize,
-                            const bool zLogSampling,
-                            const TFloat64List &redshifts,
-                            const Float64 fineStep) {
+void COperatorTwoPass::Init(
+    const Float64 halfWindowSize, const bool zLogSampling,
+    const TFloat64List &redshifts, // TODO check if should be a shared_ptr /
+                                   // check that is always synchro with operator
+    const Float64 fineStep) {
   m_secondPass_halfwindowsize = halfWindowSize;
   m_zLogSampling = zLogSampling;
   m_Redshifts = redshifts;
@@ -70,6 +72,7 @@ TFloat64List COperatorTwoPass::SpanRedshiftWindow(const Float64 z) const {
 
 void COperatorTwoPass::BuildExtendedRedshifts(
     CPassExtremaResult &passExtremaResult) {
+  // Refine redshift grid around extrema results redshifts
   Int32 nExtremaResults = passExtremaResult.size();
   passExtremaResult.ExtendedRedshifts.reserve(nExtremaResults);
 
@@ -83,4 +86,18 @@ void COperatorTwoPass::BuildExtendedRedshifts(
     passExtremaResult.ExtendedRedshifts.push_back(
         SpanRedshiftWindow(cand->Redshift));
   }
+}
+
+void COperatorTwoPass::UpdateRedshiftGridAndResults(
+    CPassExtremaResult &m_firstpass_extremaResult,
+    std::shared_ptr<CTwoPassResult> result) {
+
+  for (Int32 i = 0; i < m_firstpass_extremaResult.size(); i++) {
+    Int32 imin, ndup;
+    std::tie(imin, ndup) = CZGridListParams::insertSubgrid(
+        m_firstpass_extremaResult.ExtendedRedshifts[i], m_Redshifts);
+    result->updateVectors(
+        imin, ndup, m_firstpass_extremaResult.ExtendedRedshifts[i].size());
+  }
+  result->Redshifts = m_Redshifts;
 }

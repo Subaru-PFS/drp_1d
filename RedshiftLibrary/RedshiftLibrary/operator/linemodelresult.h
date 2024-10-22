@@ -49,6 +49,7 @@
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/operator/twopassresult.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
@@ -56,9 +57,9 @@ namespace NSEpic {
 
 class CTemplatesFitStore;
 
-class CLineModelResult : public COperatorResult {
+class CLineModelResult : public CTwoPassResult {
 public:
-  CLineModelResult() : COperatorResult("CLineModelResult"){};
+  CLineModelResult() : CTwoPassResult("CLineModelResult"){};
 
   void Init(TFloat64List redshifts, CLineMap restLines, Int32 nTplContinuum,
             Int32 nTplratios, TFloat64List tplratiosPriors);
@@ -91,10 +92,9 @@ public:
   TBoolList getHaELPresentTplratioResult(Int32 index_z);
   TInt32List getNLinesAboveSNRTplratioResult(Int32 index_z);
   TFloat64List getPriorLinesTplratioResult(Int32 index_z);
-  void updateVectors(Int32 idx, Int32 ndup, Int32 count);
+  void updateVectors(Int32 idx, Int32 ndup, Int32 count) override;
 
   // Merit results
-  TFloat64List Redshifts;           // z axis
   TFloat64List ChiSquare;           // min chi2
   TFloat64List ScaleMargCorrection; // margCorrection for min chi2
 

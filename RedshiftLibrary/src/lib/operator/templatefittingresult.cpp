@@ -43,12 +43,15 @@
 using namespace NSEpic;
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n)
-    : COperatorResult("CTemplateFittingResult"), Redshifts(n), ChiSquare(n),
+    : CTwoPassResult("CTemplateFittingResult"), ChiSquare(n),
       ReducedChiSquare(n), ChiSquarePhot(n), FitAmplitude(n),
       FitAmplitudeError(n), FitAmplitudeSigma(n), FitEbmvCoeff(n),
       FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n),
       ChiSquareIntermediate(n), IsmEbmvCoeffIntermediate(n),
-      IgmMeiksinIdxIntermediate(n), SNR(n), Overlap(n) {}
+      IgmMeiksinIdxIntermediate(n), SNR(n), Overlap(n) {
+  Redshifts.resize(n);
+  m_isFirstPassResult = std::vector<bool>(n, true);
+}
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
                                                Int32 MeiksinListSize)
@@ -97,3 +100,36 @@ Float64 CTemplateFittingResult::SNRCalculation(Float64 dtm, Float64 mtm) {
   }
   return snr;
 }
+
+void CTemplateFittingResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
+  insertWithDuplicates<Float64>(ChiSquare, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(ReducedChiSquare, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(ChiSquarePhot, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitAmplitude, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitAmplitudeError, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitAmplitudeSigma, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitEbmvCoeff, idx, count, NAN, ndup);
+  insertWithDuplicates<Int32>(FitMeiksinIdx, idx, count, -1, ndup);
+  insertWithDuplicates<Float64>(FitDtM, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitMtM, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(LogPrior, idx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(SNR, idx, count, NAN, ndup);
+  insertWithDuplicates<bool>(m_isFirstPassResult, idx, count, false, ndup);
+
+  insertWithDuplicates<std::vector<Float64>>(
+      Overlap, idx, count, std::vector<Float64>(Overlap[0].size(), NAN), ndup);
+
+  // TODO voir quoi faire de ça: a un rôle ?
+  // size_t nIsm = ChiSquareIntermediate[0].size();
+  // size_t nIgm = ChiSquareIntermediate[0][0].size();
+  // std::vector<std::vector<Float64>> vecToInsert(
+  //     nIgm, std::vector<Float64>(nIsm, NAN));
+  // insertWithDuplicates<std::vector<std::vector<Float64>>>(
+  //     ChiSquareIntermediate, idx, count, vecToInsert, ndup);
+  // insertWithDuplicates<std::vector<std::vector<Float64>>>(
+  //     IsmEbmvCoeffIntermediate, idx, count, vecToInsert, ndup);
+  // insertWithDuplicates<std::vector<std::vector<Int32>>>(
+  //     IgmMeiksinIdxIntermediate, idx, count,
+  //     std::vector<std::vector<Int32>>(nIgm, std::vector<Int32>(nIsm, -1)),
+  //     ndup);
+};

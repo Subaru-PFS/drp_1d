@@ -829,7 +829,8 @@ void COperatorLineModel::ComputeSecondPass(
   m_operatorTwoPass.BuildExtendedRedshifts(m_firstpass_extremaResult);
 
   // insert extendedRedshifts into m_Redshifts
-  updateRedshiftGridAndResults();
+  m_operatorTwoPass.UpdateRedshiftGridAndResults(m_firstpass_extremaResult,
+                                                 m_result);
 
   // Deal with continuum, either recompute it or keep from first pass
   if (m_opt_continuumcomponent.isContinuumFit()) {
@@ -1145,18 +1146,6 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       savedFitContinuumOption);
 
   return ExtremaResult;
-}
-
-void COperatorLineModel::updateRedshiftGridAndResults() {
-
-  for (Int32 i = 0; i < m_firstpass_extremaResult.size(); i++) {
-    Int32 imin, ndup;
-    std::tie(imin, ndup) = CZGridListParams::insertSubgrid(
-        m_firstpass_extremaResult.ExtendedRedshifts[i], m_Redshifts);
-    m_result->updateVectors(
-        imin, ndup, m_firstpass_extremaResult.ExtendedRedshifts[i].size());
-  }
-  m_result->Redshifts = m_Redshifts;
 }
 
 /**

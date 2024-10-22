@@ -190,7 +190,6 @@ private:
                                              TInt32List &ebmvIndices,
                                              TTemplateConstRefList &tplList,
                                              bool fft) const;
-  void updateRedshiftGridAndResults();
   void makeContinuumFittingOperator(const TFloat64List &redshifts);
   bool mustReFit(EContinuumFit continuumFit) {
     return continuumFit == EContinuumFit::retryAll ||

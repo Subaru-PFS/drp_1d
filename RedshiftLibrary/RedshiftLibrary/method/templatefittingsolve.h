@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/method/twopasssolve.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
@@ -118,6 +119,9 @@ private:
   bool m_usePhotometry = false;
   Float64 m_photometryWeight = NAN;
   EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
+  Float64 m_secondPass_halfwindowsize = NAN;
+  std::vector<std::shared_ptr<CTemplateFittingResult>>
+      m_results; // one result per spectrum type
 };
 
 } // namespace NSEpic

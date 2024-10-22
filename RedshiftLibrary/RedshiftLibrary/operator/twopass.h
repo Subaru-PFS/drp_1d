@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/operator/passextremaresult.h"
+#include "RedshiftLibrary/operator/twopassresult.h"
 
 namespace TwoPass {
 class spanRedshift_test;
@@ -54,6 +55,9 @@ public:
             const TFloat64List &redshifts, const Float64 fineStep);
   TFloat64List SpanRedshiftWindow(const Float64 z) const;
   void BuildExtendedRedshifts(CPassExtremaResult &passExtremaResult);
+  void
+  UpdateRedshiftGridAndResults(CPassExtremaResult &m_firstpass_extremaResult,
+                               std::shared_ptr<CTwoPassResult> m_result);
 
 private:
   friend class TwoPass::spanRedshift_test;
