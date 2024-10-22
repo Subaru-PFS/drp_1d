@@ -13,11 +13,16 @@ set( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
 message(STATUS "ROOT_DIR = " ${ROOT_DIR})
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR = " ${CMAKE_CURRENT_SOURCE_DIR})
 message(STATUS "CMAKE_BINARY_DIR = " ${CMAKE_BINARY_DIR})
+MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 
 # Regular cmake tools
 FIND_PACKAGE(Python3 COMPONENTS Interpreter REQUIRED)
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 FIND_PACKAGE(PkgConfig REQUIRED)
+
+# package required to build python wrapper
+FIND_PACKAGE(SWIG REQUIRED)
+FIND_PACKAGE(Python REQUIRED Interpreter Development.Module)
 
 # Install directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -148,13 +153,19 @@ MESSAGE("Using third party header only libraries: " "${cpf-redshift_THIRDPARTY_H
 # Setting ccache
 #--------------------------------------------------------
 
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-  set(ENV{CC} "ccache ${CMAKE_C_COMPILER}")
-  set(ENV{CXX} "ccache ${CMAKE_CXX_COMPILER}")
-endif(CCACHE_FOUND)
+find_program(CCACHE_PROGRAM ccache)
+if (CCACHE_PROGRAM)
+    message(NOTICE "Selected CCache: ${CCACHE_PROGRAM}")
+    #get_filename_component(PARENT_DIR ${PROJECT_SOURCE_DIR} DIRECTORY)
+    MESSAGE (STATUS "CCACHE_BASEDIR=${PROJECT_SOURCE_DIR}")
+    set(ccacheEnv
+            CCACHE_BASEDIR=${PROJECT_SOURCE_DIR}
+            CCACHE_SLOPPINESS="pch_defines,file_macro,include_file_ctime"
+            CCACHE_NOHASHDIR=true
+    )
+    set(CMAKE_C_COMPILER_LAUNCHER ${CMAKE_COMMAND} -E env ${ccacheEnv} ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CMAKE_COMMAND} -E env ${ccacheEnv} ${CCACHE_PROGRAM})
+endif ()
 
 #--------------------------------------------------------
 # Preprocessor and linker path
@@ -268,40 +279,54 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/ DESTINATIO
 #--------------------------------------------------------
 # Build python wrapper
 #--------------------------------------------------------
+IF (SKBUILD_PROJECT_NAME)
+  MESSAGE(STATUS "==== python wrapper ====")
+  MESSAGE(STATUS "SWIG_EXECUTABLE =" ${SWIG_EXECUTABLE})
+  MESSAGE(STATUS "Python_EXECUTABLE =" ${Python_EXECUTABLE})
+  MESSAGE(STATUS "SKBUILD_PROJECT_NAME =" ${SKBUILD_PROJECT_NAME})
 
-CONFIGURE_FILE(
-  ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
-)
+  MESSAGE(STATUS "CMAKE_INSTALL_RPATH=" ${CMAKE_INSTALL_RPATH})
+  # Grab the variables from a local Python installation F2PY headers
+  execute_process(
+    COMMAND "${Python_EXECUTABLE}" -c
+            "import numpy; print(numpy.get_include())"
+    OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  MESSAGE(STATUS "NUMPY_INCLUDE_DIR =" ${NUMPY_INCLUDE_DIR})
 
-set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
-  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
-  "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
-)
+  # Generate the wrapper files
+  add_custom_command(
+    OUTPUT redshift.py redshift_wrap.cpp
+    COMMAND ${SWIG_EXECUTABLE} -c++ -python -I${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary
+            -outdir ${CMAKE_CURRENT_BINARY_DIR}
+            -o ${CMAKE_CURRENT_BINARY_DIR}/redshift_wrap.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i
+    VERBATIM
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i
+  )
 
-set(PYTHON_BUILD_FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
-  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
-  "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
-)
+  python_add_library(
+    _redshift
+    MODULE
+    WITH_SOABI
+    ${CMAKE_CURRENT_BINARY_DIR}/redshift_wrap.cpp
+  )
 
-add_custom_target(clean_python_build
-  COMMAND rm -rf ${PYTHON_BUILD_FILES}
-  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Removing existing python build files"
-  VERBATIM
-)
+  target_include_directories(_redshift PUBLIC  ${NUMPY_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+  
+  MESSAGE (STATUS "cpf-redshift_LINK_DIR :" ${cpf-redshift_LINK_DIR})
+  if (APPLE)
+      set_target_properties(_redshift PROPERTIES INSTALL_RPATH "@loader_path")
+  else()
+      set_target_properties(_redshift PROPERTIES INSTALL_RPATH "$ORIGIN;${cpf-redshift_LINK_DIR}")
+  endif()
+  target_link_libraries(_redshift PUBLIC cpf-redshift ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_HEADERONLY} )
 
+  install(TARGETS _redshift DESTINATION pylibamazed)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/redshift.py DESTINATION pylibamazed)
+  install(FILES ${cpf-redshift_BINARY_DIR}/libcpf-redshift.so DESTINATION pylibamazed)
+  #install(FILES ${cpf-redshift_BINARY_DIR}/libcpf-redshift.${LIBEXT} DESTINATION pylibamazed)
+ENDIF (SKBUILD_PROJECT_NAME)
 #--------------------------------------------------------
 # Package deployement and config
 #--------------------------------------------------------

@@ -1,22 +1,23 @@
 [build-system]
-requires = ["setuptools", "numpy >= 1.16.0, < 2.0.0"] 
-build-backend = "setuptools.build_meta:__legacy__"
-
-[tool.setuptools.packages.find]
-where = ["pylibamazed/python"]
-#include = ["pkg*"]  # alternatively: `exclude = ["additional*"]`
-#namespaces = false
+requires = [
+    "numpy>=1.25,<3; python_version>'3.8'",
+    "scikit-build-core"
+]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "pylibamazed"
 dynamic = ["version"]
 requires-python = ">= 3.9"
 dependencies = [
-    'setuptools-git-versioning>=1.2.0', 
-    'numpy >= 1.16.0, < 2.0.0', 
-    'astropy >= 3.1.1', 
-    'pandas >= 1.0.0', 
-    'h5py >= 2.9'
+    "numpy>=1.25,<3; python_version>'3.8'",
+    "astropy>=3.1.1",
+    "cython>=0.17.0",
+    "pandas>=1.0.0",
+    "h5py>=2.9",
+    "GitPython>=3.1.32",
+    "pytest-mock>=3.11.1",
+    "jsonschema>=4.17.3",
 ]
 authors = [
     {name = "LAM - Laboratoire d'Astrophysique de Marseille", email = "amazed-support@lam.fr"}]
@@ -36,3 +37,17 @@ classifiers = [
 
 [project.urls]
 homepage = "https://www.lam.fr"
+
+# [tool.scikit-build.metadata.version]
+# provider = "scikit_build_core.metadata.regex"
+# input = "RedshiftLibrary/RedshiftLibrary/version.h"
+# regex = '''(?i)^(#define CPF_REDSHIFT_REVISION)(?: ?\: ?str)?  *([\'"])v?(?P<value>.+?)\2'''
+# result="{value}"
+
+[tool.scikit-build]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["pylibamazed/python/pylibamazed/resources","src/package/_version.py"]
+wheel.packages = ["pylibamazed/python/pylibamazed"]
+
+[tool.setuptools_scm]  # Section required
+write_to = "pylibamazed/python/pylibamazed/_version.py"

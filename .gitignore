@@ -68,7 +68,7 @@ pylibamazed/python/pylibamazed/redshift.py
 pylibamazed/python/pylibamazed/resources/
 *.egg*
 wheel
-
+_version.py
 swig_ext.py
 
 lib/*.so
