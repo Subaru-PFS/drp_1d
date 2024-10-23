@@ -79,10 +79,6 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
         pass
         # self.lsf_type = "no_lsf"
 
-    # this to keep base load_all
-    def load_photometry(self, spectrum):
-        pass
-
     def add_photometry(self, phot):
         self.photometric_data.append(phot)
 
@@ -97,6 +93,3 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
                 self.others[col_name] = Container(**{obs_id: col_data})
             else:
                 self.others[col_name].append(col_data, obs_id)
-
-    def set_air_or_vaccum(self, resource):
-        pass

@@ -144,9 +144,3 @@ class FakeSpectrumReader(AbstractSpectrumReader):
         lsf = np.ndarray((1,), dtype=np.dtype([("width", "<f8")]))
         lsf["width"][0] = 3.0
         self.lsf_data.append(lsf, obs_id)
-
-    def load_photometry(self, location):
-        pass
-
-    def set_air_or_vaccum(self, location):
-        pass

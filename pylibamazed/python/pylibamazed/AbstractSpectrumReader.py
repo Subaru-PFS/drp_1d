@@ -164,7 +164,7 @@ class AbstractSpectrumReader:
             file handler, an hdf5 node,...)
 
         """
-        raise NotImplementedError("Implement in derived class")
+        pass  # implementation not mandatory
 
     def load_others(self, resource, obs_id=""):
         """Appends other data in self.others
@@ -172,14 +172,14 @@ class AbstractSpectrumReader:
         :param resource: resource where other data vector indexed by the wavelengths
         can be found, no restriction for type (can be a path, a file handler, an hdf5 node,...)
         """
-        raise NotImplementedError("Implement in derived class")
+        pass  # implementation not mandatory
 
     def set_air_or_vaccum(self, resource):
         """
         Set w_frame to "air" or "vaccum" (default is vacuum).
         frame should be deduced from resource.
         """
-        raise NotImplementedError("Implement in derived class")
+        pass  # implemenation not mandatory
 
     def load_all(self, resource, obs_id_list=[""]) -> Spectrum:
         """

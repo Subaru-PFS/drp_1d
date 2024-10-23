@@ -192,7 +192,10 @@ class Spectrum:
         :return: lsf
         :rtype: np.array
         """
-        return self._lsf["data"]
+        return self._lsf
+
+    def get_photometric_data(self):
+        return self._photometric_data
 
     def push_in_context(self):
         ctx = CProcessFlowContext.GetInstance()

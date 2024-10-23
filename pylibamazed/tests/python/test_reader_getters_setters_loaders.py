@@ -79,8 +79,7 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
         parameters = Parameters(self.make_parameters_dict(), Checker=FakeParametersChecker)
         cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
         fsr = AbstractSpectrumReader(parameters, cl, "000")
-        with pytest.raises(NotImplementedError):
-            fsr.load_others("data name")
+        fsr.load_others("data name")
 
 
 class TestSpectrumReaderGetErrors(TestSpectrumReaderUtils):
