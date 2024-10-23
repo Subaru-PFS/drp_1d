@@ -62,8 +62,7 @@ class TestFilterIntegration:
             source_id=observation.ProcessingID[0],
         )
 
-        reader.load_all(spectra)
-        spectrum = reader.get_spectrum()
+        spectrum = reader.load_and_get_spectrum(spectra)
 
         # Checks that the number of waves kept has decreased (6 to 3) with filtering
         assert len(spectrum.get_wave()) == 3

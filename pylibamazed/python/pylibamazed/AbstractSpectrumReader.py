@@ -107,17 +107,18 @@ class AbstractSpectrumReader:
 
     # setup context manger
     def __enter__(self):
-        self.load_all(self.resource, self.obs_id)
+        self.load_all(self.resource, self.obs_id_list)
         return self
 
-    def __call__(self, resource, obs_id=""):
+    def __call__(self, resource, obs_id_list=[""]):
         self.resource = resource
-        self.obs_id = obs_id
+        self.obs_id_list = obs_id_list
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.clean()
         self.resource = None
+        self.obs_id_list = None
         return False
 
     def load_wave(self, resource, obs_id=""):
@@ -180,25 +181,26 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_all(self, resource, obs_id="") -> Spectrum:
+    def load_all(self, resource, obs_id_list=[""]) -> Spectrum:
         """
         Load all components of the spectrum. Reimplement this if resources are different
 
         :param resource: resource where wave, flux, error, lsf and photometry can be found
         """
-        self.load_wave(resource, obs_id)
-        self.load_flux(resource, obs_id)
-        self.load_error(resource, obs_id)
-        self.load_others(resource, obs_id)
+        for obs_id in obs_id_list:
+            self.load_wave(resource, obs_id)
+            self.load_flux(resource, obs_id)
+            self.load_error(resource, obs_id)
+            self.load_others(resource, obs_id)
+            self.load_lsf(resource, obs_id)
         self.set_air_or_vaccum(resource)
-        self.load_lsf(resource, obs_id)
         self.load_photometry(resource)
 
-    def load_and_get_spectrum(self, resource, obs_id="") -> Spectrum:
+    def load_and_get_spectrum(self, resource, obs_id_list=[""]) -> Spectrum:
         """
         Load all components of the spectrum, build and return Spectrum, then clean memory (re load necessary)
         """
-        self.load_all(resource, obs_id)
+        self.load_all(resource, obs_id_list)
         spectrum = self.get_spectrum()
         self.clean()
         return spectrum

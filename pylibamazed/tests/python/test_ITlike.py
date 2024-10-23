@@ -127,7 +127,7 @@ def add_photometry_to_reader(config, observation, reader):
     )
     if os.path.exists(phot_fname):
         phot = read_photometry_fromfile(phot_fname)
-        reader.load_photometry(phot)
+        reader.add_photometry(phot)
 
 
 def save_output(output, config, observation):
