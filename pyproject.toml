@@ -47,7 +47,9 @@ sdist.include = ["pylibamazed/python/pylibamazed/resources",
 wheel.packages = ["pylibamazed/python/pylibamazed"]
 
 [tool.setuptools_scm]
-write_to = "pylibamazed/python/pylibamazed/_version.py"
+version_file = "pylibamazed/python/pylibamazed/_version.py"
+fallback_version = "1.3.0"
+
 
 [[tool.scikit-build.generate]]
 path = "RedshiftLibrary/RedshiftLibrary/version.h"
