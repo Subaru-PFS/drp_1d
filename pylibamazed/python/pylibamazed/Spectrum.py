@@ -66,7 +66,6 @@ class Spectrum:
 
     def __init__(
         self,
-        observation_id: str,
         source_id: str,
         parameters: Parameters,
         spectra_dataframe,
@@ -74,7 +73,6 @@ class Spectrum:
         photometric_data,
         wave_frame="vacuum",
     ):
-        self.observation_id = observation_id
         self.source_id = str(source_id)
         self.parameters = parameters
 

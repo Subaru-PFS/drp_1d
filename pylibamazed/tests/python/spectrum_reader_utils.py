@@ -79,7 +79,7 @@ class TestSpectrumReaderUtils:
         params_dict = self.make_parameters_dict(**kwargs)
         params = Parameters(params_dict, Checker=FakeParametersChecker)
         cl = CalibrationLibrary(params, tempfile.mkdtemp())
-        fsr = FakeSpectrumReader("000", params, cl, "000", "range")
+        fsr = FakeSpectrumReader(params, cl, "000", "range")
         return fsr
 
     def initialize_fsr_with_data(self, **kwargs):
@@ -89,10 +89,9 @@ class TestSpectrumReaderUtils:
 
 
 class FakeSpectrumReader(AbstractSpectrumReader):
-    def __init__(self, observation_id, parameters: Parameters, calibration_library, source_id, lambda_type):
-        AbstractSpectrumReader.__init__(self, observation_id, parameters, calibration_library, source_id)
+    def __init__(self, parameters: Parameters, calibration_library, source_id, lambda_type):
         self.lambda_type = lambda_type
-        super().__init__(observation_id, parameters, calibration_library, source_id)
+        super().__init__(parameters, calibration_library, source_id)
 
     def load_wave(self, l_range, obs_id=""):
         if self.lambda_type == "random":

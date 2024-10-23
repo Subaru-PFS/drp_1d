@@ -57,7 +57,6 @@ class TestFilterIntegration:
         # Read and load spectra using spectra reader
         spectra = get_spectra(config, observation)
         reader = ASCIISpectrumReader(
-            observation_id="",
             parameters=param,
             calibration_library=process_flow.calibration_library,
             source_id=observation.ProcessingID[0],

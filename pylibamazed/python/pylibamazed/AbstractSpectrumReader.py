@@ -81,14 +81,12 @@ class AbstractSpectrumReader:
 
     def __init__(
         self,
-        observation_id: str,
         parameters: Parameters,
         calibration_library,
         source_id: str,
         filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader,
     ):
         """Constructor method"""
-        self.observation_id = observation_id
         self.parameters = parameters
         self.calibration_library = calibration_library
         self.filter_loader_class = filter_loader_class
@@ -231,7 +229,6 @@ class AbstractSpectrumReader:
         self._check_wavelengths()
 
         spectrum = Spectrum(
-            self.observation_id,
             self.source_id,
             self.parameters,
             self.spectra_dataframe,
@@ -246,7 +243,6 @@ class AbstractSpectrumReader:
         clean the Containers
         """
         self.__init__(
-            self.observation_id,
             self.parameters,
             self.calibration_library,
             self.source_id,

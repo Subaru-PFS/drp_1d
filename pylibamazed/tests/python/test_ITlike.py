@@ -150,7 +150,6 @@ def test_ITLikeTest():
     spectra = get_spectra(config, observation)
 
     reader = ASCIISpectrumReader(
-        observation_id=observation.ProcessingID[0],
         parameters=param,
         calibration_library=process_flow.calibration_library,
         source_id=observation.ProcessingID[0],
