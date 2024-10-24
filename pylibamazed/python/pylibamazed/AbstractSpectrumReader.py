@@ -105,20 +105,12 @@ class AbstractSpectrumReader:
         # pandas dataframe to instanciate Spectrum
         self.spectra_dataframe = pd.DataFrame()
 
-    # setup context manger
+    # setup context manger to automatize cleaning after getting sepectrum
     def __enter__(self):
-        self.load_all(self.resource, self.obs_id_list)
-        return self
-
-    def __call__(self, resource, obs_id_list=[""]):
-        self.resource = resource
-        self.obs_id_list = obs_id_list
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.clean()
-        self.resource = None
-        self.obs_id_list = None
         return False
 
     def load_wave(self, resource, obs_id=""):
@@ -186,15 +178,19 @@ class AbstractSpectrumReader:
         Load all components of the spectrum. Reimplement this if resources are different
 
         :param resource: resource where wave, flux, error, lsf and photometry can be found
+               obs_id_list: list of obs id, will loop on them to load all observations,
+                            note: only usefull when resource does not need to be updated between observations
         """
+        #  on first observation only:
+        if self.waves.size() == 0:
+            self.set_air_or_vaccum(resource)
+            self.load_photometry(resource)
         for obs_id in obs_id_list:
             self.load_wave(resource, obs_id)
             self.load_flux(resource, obs_id)
             self.load_error(resource, obs_id)
             self.load_others(resource, obs_id)
             self.load_lsf(resource, obs_id)
-        self.set_air_or_vaccum(resource)
-        self.load_photometry(resource)
 
     def load_and_get_spectrum(self, resource, obs_id_list=[""]) -> Spectrum:
         """
