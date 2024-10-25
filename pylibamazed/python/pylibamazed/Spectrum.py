@@ -87,7 +87,7 @@ class Spectrum:
         return self.observation_number > 1 and self.parameters.get_multiobs_method() == "merge"
 
     def _merge_if_not_available(self):
-        if "wave_merged" in self._dataframe.columns():
+        if "wave_merged" in self._dataframe.columns:
             return
         self._merge_spectra()
 
