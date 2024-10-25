@@ -23,7 +23,7 @@ message(STATUS "COVERAGE = " ${COVERAGE})
 # Compiler options
 #--------------------------------------------------------
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto -D_FORTIFY_SOURCE=2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -D_FORTIFY_SOURCE=2")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG_BUILD -Wl,--no-as-needed")
 

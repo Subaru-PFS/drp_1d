@@ -179,7 +179,7 @@ push-rc-38-osx:
     - python -m build -C build-dir=build -C cmake.define.CMAKE_PREFIX_PATH=/root/local
     - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - python -c "import pylibamazed; import importlib.metadata; print(importlib.metadata.version('pylibamazed'))"
     - cd /
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
   after_script:
