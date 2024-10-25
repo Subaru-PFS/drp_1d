@@ -285,6 +285,7 @@ class Spectrum:
     def _lsf_args(self):
         wave = None
         width = None
+        self.parameters.set_lsf_param("lsfType", self._lsf["type"])
         if self._lsf["type"] != "gaussianVariableWidth":
             param_name = LSFParameters[self._lsf["type"]]
             if param_name is not None:

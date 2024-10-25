@@ -311,7 +311,7 @@ class AbstractSpectrumReader:
 
         if parameter_lsf_type == "fromSpectrumData":
             selected_lsf = {"type": self.lsf_type}
-            lsf_obs_ids = self._get_observation_ids()
+            lsf_obs_ids = self.lsf_data.keys()
             if not lsf_obs_ids:
                 raise APIException(
                     ErrorCode.LSF_NOT_LOADED,
@@ -324,7 +324,13 @@ class AbstractSpectrumReader:
                     f"lsf of observation {obs_id} chosen, other lsf ignored",
                 )
             param_name = LSFParameters[selected_lsf["type"]]
-            selected_lsf["data"] = {param_name: self.lsf_data.get(obs_id)["width"][0]}
+            if selected_lsf["type"] == "gaussianVariableWidth":
+                selected_lsf["data"] = {
+                    "wave": self.lsf_data.get(obs_id)["wave"],
+                    "width": self.lsf_data.get(obs_id)["width"],
+                }
+            else:
+                selected_lsf["data"] = {param_name: self.lsf_data.get(obs_id)["width"][0]}
 
         else:
             selected_lsf = {"type": parameter_lsf_type}
