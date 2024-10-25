@@ -176,7 +176,7 @@ push-rc-38-osx:
   stage: build-wheel
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
-    - python -m build -C build-dir=build -C cmake.define.CMAKE_PREFIX_PATH=/root/local
+    - python -m build -C build-dir=build -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.BUILD_TESTING=OFF
     - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
     - python -c "import pylibamazed; import importlib.metadata; print(importlib.metadata.version('pylibamazed'))"
