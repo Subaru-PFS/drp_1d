@@ -19,7 +19,7 @@
   "properties": {
     "fftProcessing": {
       "description": "Using FFT for Least-square template fitting (in log lambda)",
-      "type": "bool"
+      "type": "boolean"
     },
     "overlapThreshold": {
       "description": "Minimal fraction of the spectrum to be covered by the redshifted template to proceed (at each redshift)",

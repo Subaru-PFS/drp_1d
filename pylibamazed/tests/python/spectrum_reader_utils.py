@@ -47,7 +47,7 @@ from tests.python.fake_parameters_checker import FakeParametersChecker
 
 class TestSpectrumReaderUtils:
     def make_parameters_dict(self, **kwargs):
-        params_dict = dict()
+        params_dict = dict({"version": 2})
         params_dict["lsf"] = dict()
         params_dict["lsf"]["lsfType"] = kwargs.get("lsfType", "fromSpectrumData")
         params_dict["airVacuumMethod"] = kwargs.get("airVacuumMethod", "")

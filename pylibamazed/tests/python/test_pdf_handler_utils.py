@@ -58,7 +58,7 @@ class PdfHandlerTestUtils:
 
     @staticmethod
     def parameters():
-        return Parameters({"spectrumModels": []}, Checker=FakeParametersChecker)
+        return Parameters({"version": 2, "spectrumModels": []}, Checker=FakeParametersChecker)
 
     @staticmethod
     def abstract_output():

@@ -264,7 +264,6 @@ push-rc-38-osx:
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - pip install -r pip-doc-requirements.txt
-    - generate-schema-doc --config template_name=md pylibamazed/auxdir/pylibamazed/jsonschema-v1 pylibamazed/doc/source/json-schema-deprecated/
     - generate-schema-doc --config template_name=md pylibamazed/auxdir/pylibamazed/jsonschema-v2 pylibamazed/doc/source/json-schema/
     - sphinx-build -b html pylibamazed/doc/source public/$DOC_VERSION
   artifacts:

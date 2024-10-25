@@ -108,7 +108,7 @@ class TestParameters:
     class TestIsARedshiftSolverUsed:
         def test_false_if_no_object_has_a_redshift_solver_defined(self):
             parameters: Parameters = Parameters(
-                {"galaxy": {"method": None}, "spectrumModels": ["galaxy"]}, make_checks=False
+                {"version": 2, "galaxy": {"method": None}, "spectrumModels": ["galaxy"]}, make_checks=False
             )
             assert parameters.is_a_redshift_solver_used() is False
 

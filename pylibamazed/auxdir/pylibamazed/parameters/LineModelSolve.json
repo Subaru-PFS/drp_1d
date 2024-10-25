@@ -75,7 +75,7 @@
       },
       "secondpasslcfittingmethod": -1,
       "stronglinesprior": -1,
-      "euclidnhaemittersStrength": -1,
+      "nOfZPriorStrength": -1,
       "tplratio": {
         "priors": {
           "betaA": 1,

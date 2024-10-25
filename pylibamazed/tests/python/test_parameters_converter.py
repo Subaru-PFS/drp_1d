@@ -44,7 +44,6 @@ from pylibamazed.Exception import APIException
 from pylibamazed.ParametersConverter import (
     ParametersConverter,
     ParametersConverterSelector,
-    ParametersConverterV1,
     ParametersConverterV2,
 )
 from tests.python.config import test_dir
@@ -55,10 +54,6 @@ from tests.python.config import test_dir
 
 class TestParametersConverterSelector:
     selector = ParametersConverterSelector()
-
-    def test_indicated_version_is_used_ex_1(self):
-        Converter: ParametersConverter = self.selector.get_converter(1)
-        assert isinstance(Converter(), ParametersConverterV1)
 
     def test_indicated_version_is_used_ex_2(self):
         Converter: ParametersConverter = self.selector.get_converter(2)
@@ -81,115 +76,3 @@ class TestParametersConverterV2:
         expected = {"galaxy": {}, "other": {"lala": "yopyop"}}
 
         assert self.converter.convert(raw_params) == expected
-
-
-class TestParametersConverterV1:
-    converter = ParametersConverterV1()
-
-    def test_adds_redshift_solver_stage_if_method_is_not_empty(self):
-        raw_params = {
-            "objects": ["galaxy", "star"],
-            "galaxy": {"method": "lineModelSolve", "lineModelSolve": {}},
-            "star": {"method": "TemplateFittingSolve", "TemplateFittingSolve": {}},
-        }
-        expected = {
-            "spectrumModels": ["galaxy", "star"],
-            "galaxy": {
-                "stages": ["redshiftSolver"],
-                "redshiftSolver": {"method": "lineModelSolve", "lineModelSolve": {}},
-            },
-            "star": {
-                "stages": ["redshiftSolver"],
-                "redshiftSolver": {"method": "templateFittingSolve", "templateFittingSolve": {}},
-            },
-        }
-
-        # print("\n\ndeepdiff\n", DeepDiff(self.converter.convert(raw_params), expected))
-        assert self.converter.convert(raw_params) == expected
-
-    def test_adds_linemeas_solver_stage(self):
-        raw_params = {
-            "objects": ["galaxy"],
-            "galaxy": {"method": "", "linemeas_method": "LineMeasSolve", "LineMeasSolve": {"linemodel": {}}},
-        }
-        expected = {
-            "spectrumModels": ["galaxy"],
-            "galaxy": {
-                "stages": ["lineMeasSolver"],
-                "lineMeasSolver": {"method": "lineMeasSolve", "lineMeasSolve": {"lineModel": {}}},
-            },
-        }
-
-        # print("deepdiff\n", DeepDiff(self.converter.convert(raw_params), expected))
-        assert self.converter.convert(raw_params) == expected
-
-    def test_adds_reliability_solver_stage(self):
-        raw_params = {
-            "objects": ["galaxy"],
-            "galaxy": {
-                "method": "",
-                "linemeas_method": "",
-                "enable_reliability": True,
-                "reliabilityModel": "sth",
-            },
-        }
-        expected = {
-            "spectrumModels": ["galaxy"],
-            "galaxy": {
-                "stages": ["reliabilitySolver"],
-                "reliabilitySolver": {
-                    "method": "deepLearningSolver",
-                    "deepLearningSolver": {"reliabilityModel": "sth"},
-                },
-            },
-        }
-
-        # print("deepdiff\n", DeepDiff(self.converter.convert(raw_params), expected))
-        assert self.converter.convert(raw_params) == expected
-
-    def test_adds_several_solvers(self):
-        raw_params = {
-            "objects": ["galaxy", "star"],
-            "galaxy": {
-                "method": "lineModelSolve",
-                "lineModelSolve": {},
-                "linemeas_method": "LineMeasSolve",
-                "LineMeasSolve": {"linemodel": {}},
-                "enable_reliability": True,
-                "reliabilityModel": "sth",
-            },
-            "star": {
-                "method": "TemplateFittingSolve",
-                "TemplateFittingSolve": {},
-                "enable_reliability": False,
-            },
-        }
-
-        expected = {
-            "spectrumModels": ["galaxy", "star"],
-            "galaxy": {
-                "stages": ["redshiftSolver", "lineMeasSolver", "reliabilitySolver"],
-                "redshiftSolver": {"method": "lineModelSolve", "lineModelSolve": {}},
-                "lineMeasSolver": {"method": "lineMeasSolve", "lineMeasSolve": {"lineModel": {}}},
-                "reliabilitySolver": {
-                    "method": "deepLearningSolver",
-                    "deepLearningSolver": {"reliabilityModel": "sth"},
-                },
-            },
-            "star": {
-                "stages": ["redshiftSolver"],
-                "redshiftSolver": {"method": "templateFittingSolve", "templateFittingSolve": {}},
-            },
-        }
-        # print("deepdiff\n", DeepDiff(self.converter.convert(raw_params), expected), "\n\n\n")
-        assert self.converter.convert(raw_params) == expected
-
-    def test_correctly_translates_an_input_parameters_file(self):
-        with open(os.path.join(test_dir, "p_se8_main.json")) as raw_param_file:
-            raw_params: dict = json.load(raw_param_file)
-        with open(os.path.join(test_dir, "p_se8_main_treed.json")) as treed_param_file:
-            treed_params: dict = json.load(treed_param_file)
-
-        # For investigating errors only
-        # print("\n\n\ndeepDiff\n", DeepDiff(self.converter.convert(raw_params), treed_params), "\n\n\n")
-        assert self.converter.convert(raw_params) == treed_params

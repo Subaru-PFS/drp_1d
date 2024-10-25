@@ -39,6 +39,7 @@
 
 import json
 
+from enum import Enum
 import pandas as pd
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.ParametersAccessor import ParametersAccessor
@@ -49,11 +50,15 @@ from pylibamazed.redshift import ErrorCode
 
 
 class Parameters(ParametersAccessor):
+
+    defined_stages = ["redshiftSolver", "lineMeasSolver", "reliabilitySolver"]
+
     @exception_decorator(logging=True)
     def __init__(
         self,
         raw_params: dict,
         make_checks=True,
+        accepts_v1=False,
         Checker=ParametersChecker,
         ConverterSelector=ParametersConverterSelector,
         Extender=ParametersExtender,
@@ -63,7 +68,7 @@ class Parameters(ParametersAccessor):
         if make_checks:
             Checker(raw_params, version).json_schema_check()
 
-        converter = ConverterSelector().get_converter(version)
+        converter = ConverterSelector(accepts_v1).get_converter(version)
         converted_parameters = converter().convert(raw_params)
 
         if make_checks:
@@ -71,6 +76,7 @@ class Parameters(ParametersAccessor):
 
         extended_parameters = Extender(version).extend(converted_parameters)
         self.parameters = extended_parameters
+        self.remove_unused_solvers()
 
     def get_json_schema_version(self, raw_parameters: dict):
         version = raw_parameters.get("version")
@@ -95,6 +101,13 @@ class Parameters(ParametersAccessor):
             return "lineMeasSolver"
         else:
             return "redshiftSolver"
+
+    def remove_unused_solvers(self) -> None:
+        for spectrum_model in self.get_spectrum_models([]):
+            for stage in self.defined_stages:
+                if not stage in self.get_stages(spectrum_model):
+                    if stage in self.parameters.get(spectrum_model, []):
+                        del self.parameters[spectrum_model][stage]
 
     def get_linemodel_methods(self, spectrum_model):
         methods = []
@@ -137,8 +150,9 @@ class Parameters(ParametersAccessor):
             velocity_em = float(lm[columns["VelocityEmission"]].iloc[0])
 
             self.set_redshiftref(spectrum_model, redshift_ref)
-            self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
-            self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
+            if self.get_linemodel_section(spectrum_model, "lineMeasSolve") is not None:
+                self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
+                self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
 
     def load_linemeas_parameters_from_result_store(self, output, spectrum_model):
         redshift = output.get_attribute_from_source(
@@ -166,8 +180,9 @@ class Parameters(ParametersAccessor):
             "VelocityEmission",
             0,
         )
-        self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
-        self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
+        if self.get_linemodel_section(spectrum_model, "lineMeasSolve") is not None:
+            self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
+            self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
 
     def is_tplratio_catalog_needed(self, spectrum_model) -> bool:
         solve_method = self.get_redshift_solver_method(spectrum_model)
@@ -210,7 +225,7 @@ class Parameters(ParametersAccessor):
 
     def is_a_redshift_solver_used(self) -> bool:
         z_solver_found: bool = False
-        for spectrum_model in self.get_spectrum_models():
+        for spectrum_model in self.get_spectrum_models([]):
             if self.get_redshift_solver_method(spectrum_model) is not None:
                 z_solver_found = True
                 break
@@ -219,7 +234,7 @@ class Parameters(ParametersAccessor):
     def check_linemeas_validity(self):
         for spectrum_model in self.get_spectrum_models():
             method = self.get_redshift_solver_method(spectrum_model)
-            if method == "lineModelSolve":
+            if "redshiftSolver" in self.get_stages(spectrum_model) and method == "lineModelSolve":
                 if self.get_linemeas_method(spectrum_model):
                     raise APIException(
                         ErrorCode.INCOHERENT_CONFIG_OPTIONS,
