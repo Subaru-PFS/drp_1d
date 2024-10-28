@@ -140,8 +140,11 @@ push-rc-38-osx:
   after_script:
     - ccache --show-stats
   cache:
+    key : build-key
+    paths :
+      - ccache/
     policy: push
-    untracked: true
+    #untracked: true
 
 
 .build-coverage-linux:
@@ -195,8 +198,11 @@ push-rc-38-osx:
       - wheel/
     expire_in: 1 week
   cache:
+    key : build-key
+    paths :
+      - ccache/    
     policy: pull
-    untracked: true
+    #untracked: true
 
 .pytest-linux:
   stage: python-test
