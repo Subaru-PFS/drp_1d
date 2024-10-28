@@ -156,11 +156,11 @@ MESSAGE("Using third party header only libraries: " "${cpf-redshift_THIRDPARTY_H
 find_program(CCACHE_PROGRAM ccache)
 if (CCACHE_PROGRAM)
     message(NOTICE "Selected CCache: ${CCACHE_PROGRAM}")
-    #get_filename_component(PARENT_DIR ${PROJECT_SOURCE_DIR} DIRECTORY)
     MESSAGE (STATUS "CCACHE_BASEDIR=${PROJECT_SOURCE_DIR}")
     MESSAGE (STATUS "CCACHE_DIR=$ENV{CCACHE_DIR}")
     set(ccacheEnv
             CCACHE_BASEDIR=${PROJECT_SOURCE_DIR}
+            CCACHE_DIR=$ENV{CCACHE_DIR}
             CCACHE_SLOPPINESS="pch_defines,file_macro,include_file_ctime"
             CCACHE_NOHASHDIR=true
     )
