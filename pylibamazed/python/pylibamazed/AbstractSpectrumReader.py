@@ -346,10 +346,20 @@ class AbstractSpectrumReader:
     def _check_spectrum_is_loaded(self):
         if not self.waves.size():
             raise APIException(ErrorCode.SPECTRUM_NOT_LOADED, "Spectrum not loaded, load_all first")
-
+        if self.parameters.get_multiobs_method() == "full" and self.waves.size() != len(self.parameters.get_observation_ids()):
+            raise APIException(ErrorCode.SPECTRUM_NOT_LOADED, f"Spectrum not loaded for every lambda range in {self.parameters.get_lambda_ranges()}")
+        
     def _merge_spectrum_in_dataframe(self):
         frames = dict()
         for obs_id in self._get_observation_ids():
+            # check unicity of wavelength
+            u, c = np.unique(self.waves.get(obs_id), return_counts=True)
+            dup = u[c > 1]
+            if dup:
+                raise APIException(
+                    ErrorCode.UNALLOWED_DUPLICATES, f"Duplicated wavelength values in obs_id {obs_id}"
+                )
+            
             # Creates dataframe with mandatory columns
             spectrum = pd.DataFrame(
                 {
@@ -366,11 +376,7 @@ class AbstractSpectrumReader:
             # sort by wavelength
             spectrum.sort_values(["wave"], inplace=True)
 
-            # check unicity of wavelength
-            if len(spectrum["wave"].unique()) != spectrum.index.size:
-                raise APIException(
-                    ErrorCode.UNALLOWED_DUPLICATES, f"Duplicated wavelength values in obs_id {obs_id}"
-                )
+            
             frames[obs_id] = spectrum
 
         self.spectra_dataframe = pd.concat(frames, names=["obs_id", "index"])
