@@ -149,9 +149,9 @@ push-rc-38-osx:
     - source /venv/p39/bin/activate
     - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
     - pip install . -v -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
-    - cd build-pip
-    - pip install ninja
-    - ninja install
+    # - cd build-pip
+    # - pip install ninja
+    # - ninja install
   after_script:
     - ccache --show-stats
   cache:
