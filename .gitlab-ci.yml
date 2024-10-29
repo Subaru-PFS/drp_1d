@@ -186,7 +186,8 @@ push-rc-38-osx:
   stage: test
   script:
     - cd build-pip
-    - make test
+    - pip install ninja
+    - ninja test
   cache:
     policy: pull
     untracked: true
