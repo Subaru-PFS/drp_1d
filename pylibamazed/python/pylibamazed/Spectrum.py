@@ -206,9 +206,7 @@ class Spectrum:
     def _make_clsf(self):
         lsf_factory = CLSFFactory.GetInstance()
         lsf_args = self._lsf_args()
-        lsf_type = self.parameters.get_lsf_type()
-        if self.parameters.get_lsf_type() == "fromSpectrumData":
-            lsf_type = self.lsf_type
+        lsf_type = self._lsf["lsfType"]
         return lsf_factory.Create(lsf_type, lsf_args)
 
     def _make_photometric_data(self):
@@ -283,18 +281,7 @@ class Spectrum:
         self._dataframe["wave"] = wave_vacuum
 
     def _lsf_args(self):
-        wave = None
-        width = None
-        self.parameters.set_lsf_param("lsfType", self._lsf["type"])
-        if self._lsf["type"] != "gaussianVariableWidth":
-            param_name = LSFParameters[self._lsf["type"]]
-            if param_name is not None:
-                self.parameters.set_lsf_param(param_name, self._lsf["data"][param_name])
-        else:
-            wave = self._lsf["data"]["wave"]
-            width = self._lsf["data"]["width"]
-
-        return get_lsf_args_from_parameters(self.parameters, wave=wave, width=width)
+        return get_lsf_args_from_parameters(self._lsf)
 
     def _merge_spectra(self):
         self._dataframe.sort_values(["wave"], inplace=True)

@@ -240,7 +240,7 @@ class AbstractSpectrumReader:
             self.source_id,
             self.parameters,
             self.spectra_dataframe,
-            self._select_lsf(),
+            self._get_lsf(),
             self.photometric_data,
             self.w_frame,
         )
@@ -306,11 +306,11 @@ class AbstractSpectrumReader:
                 return False
         return True
 
-    def _select_lsf(self):
+    def _get_lsf(self):
         parameter_lsf_type = self.parameters.get_lsf_type()
 
         if parameter_lsf_type == "fromSpectrumData":
-            selected_lsf = {"type": self.lsf_type}
+            selected_lsf = {"lsfType": self.lsf_type}
             lsf_obs_ids = self.lsf_data.keys()
             if not lsf_obs_ids:
                 raise APIException(
@@ -323,43 +323,42 @@ class AbstractSpectrumReader:
                     WarningCode.MULTI_OBS_ARBITRARY_LSF,
                     f"lsf of observation {obs_id} chosen, other lsf ignored",
                 )
-            param_name = LSFParameters[selected_lsf["type"]]
-            if selected_lsf["type"] == "gaussianVariableWidth":
-                selected_lsf["data"] = {
-                    "wave": self.lsf_data.get(obs_id)["wave"],
-                    "width": self.lsf_data.get(obs_id)["width"],
-                }
+            if self.lsf_type == "gaussianVariableWidth":
+                selected_lsf["wave"] = self.lsf_data.get(obs_id)["wave"]
+                selected_lsf["width"] = self.lsf_data.get(obs_id)["width"]
             else:
-                selected_lsf["data"] = {param_name: self.lsf_data.get(obs_id)["width"][0]}
+                param_name = LSFParameters[selected_lsf["lsfType"]]
+                selected_lsf[param_name] = self.lsf_data.get(obs_id)["width"][0]
 
         else:
-            selected_lsf = {"type": parameter_lsf_type}
             if parameter_lsf_type == "gaussianVariableWidth":
-                selected_lsf["data"] = {
-                    "wave": self.calibration_library.lsf["wave"],
-                    "width": self.calibration_library.lsf["width"],
-                }
+                selected_lsf = {"lsfType": parameter_lsf_type}
+                selected_lsf["wave"] = self.calibration_library.lsf["wave"]
+                selected_lsf["width"] = self.calibration_library.lsf["width"]
             else:
-                selected_lsf["data"] = self.parameters.get_lsf()
+                selected_lsf = self.parameters.get_lsf()
         return selected_lsf
 
     def _check_spectrum_is_loaded(self):
         if not self.waves.size():
             raise APIException(ErrorCode.SPECTRUM_NOT_LOADED, "Spectrum not loaded, load_all first")
-        if self.parameters.get_multiobs_method() == "full" and self.waves.size() != len(self.parameters.get_observation_ids()):
-            raise APIException(ErrorCode.SPECTRUM_NOT_LOADED, f"Spectrum not loaded for every lambda range in {self.parameters.get_lambda_ranges()}")
-        
+        if self.parameters.get_multiobs_method() == "full" and self.waves.size() != len(
+            self.parameters.get_observation_ids()
+        ):
+            raise APIException(
+                ErrorCode.SPECTRUM_NOT_LOADED,
+                f"Spectrum not loaded for every lambda range in {self.parameters.get_lambda_ranges()}",
+            )
+
     def _merge_spectrum_in_dataframe(self):
         frames = dict()
         for obs_id in self._get_observation_ids():
             # check unicity of wavelength
-            u, c = np.unique(self.waves.get(obs_id), return_counts=True)
-            dup = u[c > 1]
-            if dup:
+            if len(set(self.waves.get(obs_id))) != len(self.waves.get(obs_id)):
                 raise APIException(
                     ErrorCode.UNALLOWED_DUPLICATES, f"Duplicated wavelength values in obs_id {obs_id}"
                 )
-            
+
             # Creates dataframe with mandatory columns
             spectrum = pd.DataFrame(
                 {
@@ -376,7 +375,6 @@ class AbstractSpectrumReader:
             # sort by wavelength
             spectrum.sort_values(["wave"], inplace=True)
 
-            
             frames[obs_id] = spectrum
 
         self.spectra_dataframe = pd.concat(frames, names=["obs_id", "index"])
