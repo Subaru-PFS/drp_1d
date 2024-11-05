@@ -194,7 +194,7 @@ libDict = {
         "v0.3.19.tar.gz",
         "check_file": "libopenblas",
         "build": _openblas_build,
-        "extra_flags": "NO_LAPACK=1"
+        "extra_flags": "NO_LAPACK=1 TARGET=SANDYBRIDGE"
     },
     "eigen": {
         "path": "eigen-3.4.0",
