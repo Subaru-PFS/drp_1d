@@ -178,22 +178,10 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
     for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
       for (Int32 pixelIdx = 0; pixelIdx < m_nPixels[0]; pixelIdx++) {
         if (curve3D.pixelIsChi2Valid(pixelIdx)) {
-          TPowerLawCoefs coefs1 =
-              std::isnan(coefs[igmIdx][ismIdx].first.a)
-                  ? TPowerLawCoefs{coefs[igmIdx][ismIdx].second.a,
-                                   coefs[igmIdx][ismIdx].second.b}
-                  : TPowerLawCoefs{coefs[igmIdx][ismIdx].first.a,
-                                   coefs[igmIdx][ismIdx].first.b};
-          TPowerLawCoefs coefs2 =
-              std::isnan(coefs[igmIdx][ismIdx].second.a)
-                  ? TPowerLawCoefs{coefs[igmIdx][ismIdx].first.a,
-                                   coefs[igmIdx][ismIdx].first.b}
-                  : TPowerLawCoefs{coefs[igmIdx][ismIdx].second.a,
-                                   coefs[igmIdx][ismIdx].second.b};
           Float64 theoreticalFlux =
               curve3D.getIsExtinctedAt(igmIdx, ismIdx, pixelIdx)
                   ? 0
-                  : theoreticalFluxAtLambda(TPowerLawCoefsPair(coefs1, coefs2),
+                  : theoreticalFluxAtLambda(coefs[igmIdx][ismIdx],
                                             curve3D.getLambdaAt(pixelIdx));
           diff = curve3D.getFluxAt(igmIdx, ismIdx, pixelIdx) - theoreticalFlux;
           diff = diff / curve3D.getFluxErrorAt(igmIdx, ismIdx, pixelIdx);
@@ -288,10 +276,10 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
               computeFullPowerLawCoefs(N1, N2, curve);
         } else if (method == "simple") {
           TPowerLawCoefs coefs = computeSimplePowerLawCoefs(curve);
-          powerLawsCoefs[igmIdx][ismIdx] = {coefs, {NAN, NAN}};
+          powerLawsCoefs[igmIdx][ismIdx] = {coefs, coefs};
         } else if (method == "simpleWeighted") {
           TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(curve);
-          powerLawsCoefs[igmIdx][ismIdx] = {coefs, {NAN, NAN}};
+          powerLawsCoefs[igmIdx][ismIdx] = {coefs, coefs};
         } else {
           THROWG(ErrorCode::INTERNAL_ERROR,
                  Formatter() << "Unexpected method " << method);
@@ -319,7 +307,7 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
       }
     }
     TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
-    powerLawsCoefs = {{NAN, NAN}, coefs};
+    powerLawsCoefs = {coefs, coefs};
   } else if (N2 < m_nLogSamplesMin) {
     for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
       if (lnCurve.getLambdaAt(pixelIdx) < lnxc) {
@@ -327,7 +315,7 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
       }
     }
     TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
-    powerLawsCoefs = {coefs, {NAN, NAN}};
+    powerLawsCoefs = {coefs, coefs};
   } else {
     powerLawsCoefs = compute2PassDoublePowerLawCoefs(lnCurve);
   }
