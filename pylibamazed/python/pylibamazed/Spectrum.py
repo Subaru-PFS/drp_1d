@@ -54,6 +54,8 @@ from pylibamazed.redshift import (
     ErrorCode,
     WarningCode,
 )
+from pylibamazed.Filter import FilterList
+from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -72,10 +74,13 @@ class Spectrum:
         lsf,
         photometric_data,
         wave_frame="vacuum",
+        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader
     ):
         self.source_id = str(source_id)
         self.parameters = parameters
 
+        self.filter_loader_class = filter_loader_class
+        
         # Data members
         self._dataframe = spectra_dataframe
         self._lsf = lsf
@@ -122,7 +127,6 @@ class Spectrum:
             df = self._dataframe
         else:
             df = self._dataframe.loc[obs_id]
-
         if filtered_only and "amazed_mask" in df:
             return df.loc[df["amazed_mask"]]
         else:
@@ -143,6 +147,7 @@ class Spectrum:
         :type: pandas.series
         """
         wave_column = "wave"
+
         if self.w_frame == "air":
             if vacuum:
                 self._convert_air_to_vacuum()
@@ -295,3 +300,44 @@ class Spectrum:
 
         if not (np.diff(self._dataframe["wave_merged"]) > 0).all():
             raise APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
+
+
+    def _check_wavelengths(self):
+        """Looks if lambda range specified in parameters is contained in spectrum range."""
+        for obs_id in self.parameters.get_observation_ids():
+            [params_lambda_min, params_lambda_max] = self.parameters.get_lambda_range(obs_id)
+            obs_waves = np.array(self.get_wave(obs_id))
+            if obs_waves.size == 0:
+                raise APIException(ErrorCode.INVALID_SPECTRUM, "Filtered spectrum is empty")
+            spectrum_lambda_min = obs_waves[0]
+            spectrum_lambda_max = obs_waves[-1]
+
+            params_lambda_range_in_spectrum_lambdas = (
+                spectrum_lambda_min <= params_lambda_min and spectrum_lambda_max >= params_lambda_max
+            )
+            if not params_lambda_range_in_spectrum_lambdas:
+                zflag.warning(
+                    WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,
+                    f"Parameters lambda range ([{params_lambda_min}, {params_lambda_max}])is not "
+                    f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])",
+                )
+                
+    def _get_filters(self):
+        return self.filter_loader_class().get_filters(self.parameters)
+
+    def _apply_filters(self, filters: FilterList) -> None:
+        if filters is None:
+            return
+        filters.apply(self._dataframe)
+
+    def init(self):
+        """
+        Does three things :
+         - Check if airvaccum conversion specified in parameters is legitimate
+         - Apply filtering specified in parameters
+         - Check if spectrum(s) wavelength(s) is/are correct: note empty, contains lambda range(s) specified in parameters
+        """
+
+        self._corrected_airvacuum_method()
+        self._apply_filters(self._get_filters())
+        self._check_wavelengths()

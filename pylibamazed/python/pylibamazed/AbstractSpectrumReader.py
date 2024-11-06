@@ -44,8 +44,6 @@ import pandas as pd
 from pylibamazed.Spectrum import Spectrum
 from pylibamazed.Container import Container
 from pylibamazed.Exception import APIException
-from pylibamazed.Filter import FilterList
-from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
 from pylibamazed.Parameters import Parameters
 from pylibamazed.lsf import LSFParameters
 from pylibamazed.redshift import (
@@ -93,13 +91,12 @@ class AbstractSpectrumReader:
         self,
         parameters: Parameters,
         calibration_library,
-        source_id: str,
-        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader,
+        source_id: str
     ):
         """Constructor method"""
         self.parameters = parameters
         self.calibration_library = calibration_library
-        self.filter_loader_class = filter_loader_class
+
         self.source_id = str(source_id)
 
         # Initial loaded data
@@ -233,9 +230,6 @@ class AbstractSpectrumReader:
 
         self._merge_spectrum_in_dataframe()
 
-        self._apply_filters(self._get_filters())
-        self._check_wavelengths()
-
         spectrum = Spectrum(
             self.source_id,
             self.parameters,
@@ -244,6 +238,8 @@ class AbstractSpectrumReader:
             self.photometric_data,
             self.w_frame,
         )
+#        self._check_wavelengths(spectrum)
+
         return spectrum
 
     def clean(self):
@@ -253,37 +249,8 @@ class AbstractSpectrumReader:
         self.__init__(
             self.parameters,
             self.calibration_library,
-            self.source_id,
-            self.filter_loader_class,
+            self.source_id
         )
-
-    def _get_filters(self):
-        return self.filter_loader_class().get_filters(self.parameters)
-
-    def _apply_filters(self, filters: FilterList) -> None:
-        if filters is None:
-            return
-        filters.apply(self.spectra_dataframe)
-
-    def _check_wavelengths(self):
-        """Looks if lambda range specified in parameters is contained in spectrum range."""
-        for obs_id in self.waves.keys():
-            [params_lambda_min, params_lambda_max] = self.parameters.get_lambda_range(obs_id)
-            obs_waves = np.array(self.waves.get(obs_id))
-            if obs_waves.size == 0:
-                raise APIException(ErrorCode.INVALID_SPECTRUM, "Filtered spectrum is empty")
-            spectrum_lambda_min = obs_waves[0]
-            spectrum_lambda_max = obs_waves[-1]
-
-            params_lambda_range_in_spectrum_lambdas = (
-                spectrum_lambda_min <= params_lambda_min and spectrum_lambda_max >= params_lambda_max
-            )
-            if not params_lambda_range_in_spectrum_lambdas:
-                zflag.warning(
-                    WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,
-                    f"Parameters lambda range ([{params_lambda_min}, {params_lambda_max}])is not "
-                    f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])",
-                )
 
     def _all_containers(self):
         return [container for container in self.others.values()] + [self.waves, self.fluxes, self.errors]

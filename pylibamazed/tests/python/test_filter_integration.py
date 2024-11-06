@@ -63,6 +63,7 @@ class TestFilterIntegration:
         )
 
         spectrum = reader.load_and_get_spectrum(spectra)
+        spectrum.init()
 
         # Checks that the number of waves kept has decreased (6 to 3) with filtering
         assert len(spectrum.get_wave()) == 3

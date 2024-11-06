@@ -182,7 +182,7 @@ class ProcessFlow:
     def initialize(self, rso, spectrum: Spectrum):
         zlog.LogInfo("Context initialization")
         self.process_flow_context.reset()
-
+        
         # inject in the clean resultStore the contextFlag
         rso.results_store.StoreScopedGlobalResult("context_warningFlag", self.context_warning_Flag)
 
@@ -201,6 +201,7 @@ class ProcessFlow:
         self.process_flow_context.setFluxCorrectionMeiksin(self.calibration_library.meiksin)
         self.process_flow_context.setFluxCorrectionCalzetti(self.calibration_library.calzetti)
 
+        spectrum.init()
         spectrum.push_in_context()
 
         if self.config.get("linemeascatalog"):

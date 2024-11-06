@@ -179,6 +179,7 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
 
         # Default data: 0 -> 9 => 4 items correspond to the filter
         spectra = fsr.get_spectrum()
+        spectra.init()
 
         # Check size is correct for spectrum first obs
         spectrum_id1 = spectra.get_dataframe("1")
@@ -197,13 +198,13 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
                     "parameters_lambdaRange": parameters_lambda_range,
                 }
             )
-            fsr.get_spectrum()
+            fsr.get_spectrum().init()
 
         def test_warning_if_parameters_lambdarange_is_outside_spectrum(self, zflag):
             fsr = self.initialize_fsr_with_data(
                 **{"spectrum_wave_range": [1, 3], "parameters_lambdaRange": [5, 40]}
             )
-            fsr.get_spectrum()
+            fsr.get_spectrum().init()
 
             assert WarningUtils.has_any_warning()
 
@@ -224,7 +225,7 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
                     "spectrum_wave_range": {"2": [1, 4]},
                 }
             )
-            fsr.get_spectrum()
+            fsr.get_spectrum().init()
 
             assert WarningUtils.has_warning(WarningCode.SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM)
 
