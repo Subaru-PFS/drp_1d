@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 (2024-11-07)
+## Added
+* [9058] : Linemeas only for classified object
+* [8313] : Power law fit for QSO continuum 
+* [5803] : Evaluate the goodness of fit for the continuum, then raise an error if below a given threshold or switch to a median removal
+## Fixed
+* [9093] : Parameters checker : change default columns name to check in filters
+* [9184] : In template ratio modes, all the line flux uncertainties and SNR with Gaussian fit are disabled (set to NAN), and (re-)enabled with direct integration 
+* [9223] : Mispelled error code
+* [9221] : Fix the estimation of the continuum under each lines
+* [7047] : Better track all the conditions when the lines cannot be fitted (abs lines with null continuum, only visible lines with null ratio, ...)  
+* [9243] : Should check if the classified type has a lineMeasSolver listed in its stages
+
 ## 1.2.0 (2024-06-26)
 ## Added
 * [8312] : Change all the structure of the code to fit jointly several spectra of the same source to a unique model
