@@ -151,13 +151,13 @@ private:
   Float64 m_lambdaCut;
   Int32 m_nSpectra;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
-  T3DList<Float64> m_ismIgmCorrections;
   Int32 m_nLogSamplesMin = POWER_LAW_N_SAMPLES_MIN_FOR_CONTINUUM_FIT;
 
   void initIgmIsm(bool opt_extinction, bool opt_dustFitting, Int32 FitEbmvIdx,
                   Int32 FitMeiksinIdx);
   void addTooFewSamplesWarning(Int32 N, Int32 igmIdx, Int32 ismIdx,
                                const char *funcName) const;
+  TPowerLawCoefsPair computeConstantLawCoefs(TCurve const &emittedCurve) const;
   TPowerLawCoefsPair computeFullPowerLawCoefs(Int32 N1, Int32 N2,
                                               TCurve const &lnCurve) const;
   TAxisSampleList lnLambda(TAxisSampleList const &lambda) const;
@@ -189,8 +189,8 @@ private:
   computeIsmIgmCorrection(Float64 redshift,
                           CSpectrumSpectralAxis const &spectrumLambdaRest,
                           Int32 igmIdx, Float64 ismCoef) const;
-  T3DCurve computeEmittedCurve(Float64 redshift, Float64 nullFluxThreshold,
-                               bool opt_extinction, bool opt_dustFitting);
+  T3DCurve computeEmittedCurve(Float64 redshift, bool opt_extinction,
+                               bool opt_dustFitting, T3DCurve &fluxCurve);
   TPowerLawCoefs computeSimplePowerLawCoefs(
       TCurve const &lnCurve,
       std::optional<TPowerLawCoefs> const &coefsFirstEstim =

@@ -45,15 +45,28 @@ using namespace NSEpic;
 
 T3DCurve::T3DCurve(Int32 nIgm, Int32 nIsm) : nIgm(nIgm), nIsm(nIsm){};
 
-void T3DCurve::copyCurveAtAllIgmIsm(TCurve const &curve) {
-  setLambda(curve.getLambda());
+T3DCurve::T3DCurve(TCurve &&curve)
+    : nIgm(1), nIsm(1),
+      flux(
+          T3DList<Float64>(1, T2DList<Float64>(1, std::move(curve).getFlux()))),
+      fluxError(T3DList<Float64>(
+          1, T2DList<Float64>(1, std::move(curve).getFluxError()))),
+      lambda(std::move(curve).getLambda()){};
 
-  T3DList<Float64> flux3D(nIgm, T2DList<Float64>(nIsm, curve.getFlux()));
-  setFlux(std::move(flux3D));
+void T3DCurve::extendIgmIsm(Int32 nIgm_, Int32 nIsm_) {
+  if (nIgm != 1 && nIsm != 1)
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "initial size should be (1,1), instead of (nIgm="
+                       << nIgm << ", nIsm=" << nIsm << ")");
 
-  T3DList<Float64> fluxError3D(nIgm,
-                               T2DList<Float64>(nIsm, curve.getFluxError()));
-  setFluxError(std::move(fluxError3D));
+  nIgm = nIgm_;
+  nIsm = nIsm_;
+
+  flux[0].resize(nIsm, flux[0][0]);
+  flux.resize(nIgm, flux[0]);
+
+  fluxError[0].resize(nIsm, fluxError[0][0]);
+  fluxError.resize(nIgm, fluxError[0]);
 }
 
 template <typename T>

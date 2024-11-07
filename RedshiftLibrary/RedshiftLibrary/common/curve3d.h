@@ -48,10 +48,11 @@ namespace NSEpic {
 
 struct T3DCurve {
   T3DCurve(Int32 nigm, Int32 nism);
+  T3DCurve(TCurve &&curve);
 
   Int32 size() const { return lambda.size(); }
 
-  void copyCurveAtAllIgmIsm(TCurve const &curve);
+  void extendIgmIsm(Int32 nIgm, Int32 nIsm);
 
   void setLambda(TFloat64List inputLambda);
   template <typename T>

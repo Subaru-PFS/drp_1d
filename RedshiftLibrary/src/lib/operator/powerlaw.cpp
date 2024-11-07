@@ -97,19 +97,43 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                                             std::string method) {
   // Question: what to do with this ?
   // m_option_igmFastProcessing = (m_nIgmCurves > 1 ? true : false);
+  T3DCurve fluxCurve = initializeFluxCurve(redshift, nullFluxThreshold);
 
-  T3DCurve emittedCurve = computeEmittedCurve(redshift, nullFluxThreshold,
-                                              opt_extinction, opt_dustFitting);
-  T3DCurve lnCurve = computeLnCurve(emittedCurve);
+  // handle null or negative spectrum
+  auto N = std::count_if(boost::counting_iterator<Int32>(0),
+                         boost::counting_iterator<Int32>(fluxCurve.size()),
+                         [&fluxCurve](Int32 pixelIdx) {
+                           return fluxCurve.pixelIsChi2Valid(pixelIdx);
+                         });
+  if (N < m_nLogSamplesMin) {
+    auto const constantLawsCoef =
+        computeConstantLawCoefs(fluxCurve.toCurve(0, 0));
+    T2DPowerLawCoefsPair coefs(1,
+                               TList<TPowerLawCoefsPair>(1, constantLawsCoef));
+    // reset snrCompliant to true everywhere for computing chi2
+    fluxCurve.setIsSnrCompliant(TBoolList(fluxCurve.size(), true));
+    auto const chi2 = computeChi2(fluxCurve, coefs);
+    TPowerLawResult result;
+    result.chiSquare = chi2[0][0];
+    result.reducedChiSquare = result.chiSquare / fluxCurve.size();
+    result.coefs = constantLawsCoef;
+    if (opt_extinction)
+      result.meiksinIdx = undefIdx;
+    if (opt_dustFitting)
+      result.ebmvCoef = 0.0;
+    return result;
+  }
+
+  T3DCurve emittedCurve =
+      computeEmittedCurve(redshift, opt_extinction, opt_dustFitting, fluxCurve);
 
   // Step 3. Compute power law coefs and chi2
-  T2DPowerLawCoefsPair coefs = powerLawCoefs3D(lnCurve, method);
+  T2DPowerLawCoefsPair coefs = powerLawCoefs3D(emittedCurve, method);
   TChi2Result chi2Result = findMinChi2OnIgmIsm(emittedCurve, coefs);
   // Step 4. Creates result
   TPowerLawResult result;
   result.chiSquare = chi2Result.chi2;
-  auto const N =
-      std::count_if(boost::counting_iterator<Int32>(0),
+  N = std::count_if(boost::counting_iterator<Int32>(0),
                     boost::counting_iterator<Int32>(emittedCurve.size()),
                     [&emittedCurve](Int32 pixelIdx) {
                       return emittedCurve.pixelIsChi2Valid(pixelIdx);
@@ -170,11 +194,13 @@ Float64 COperatorPowerLaw::computePowerLaw(TPowerLawCoefs coefs,
 T2DList<Float64>
 COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
                                T2DPowerLawCoefsPair const &coefs) {
-  T2DList<Float64> chi2(m_nIgmCurves, TList<Float64>(m_nIsmCurves, 0));
-  Float64 diff;
+  Int32 nIgmCurves = curve3D.getNIgm();
+  Int32 nIsmCurves = curve3D.getNIsm();
+  T2DList<Float64> chi2_all(nIgmCurves, TList<Float64>(nIsmCurves, INFINITY));
 
-  for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
-    for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
+  for (Int32 igmIdx = 0; igmIdx < nIgmCurves; igmIdx++) {
+    for (Int32 ismIdx = 0; ismIdx < nIsmCurves; ismIdx++) {
+      Float64 chi2 = 0.0;
       for (Int32 pixelIdx = 0; pixelIdx < m_nPixels[0]; pixelIdx++) {
         if (curve3D.pixelIsChi2Valid(pixelIdx)) {
           Float64 theoreticalFlux =
@@ -182,14 +208,17 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
                   ? 0
                   : theoreticalFluxAtLambda(coefs[igmIdx][ismIdx],
                                             curve3D.getLambdaAt(pixelIdx));
-          diff = curve3D.getFluxAt(igmIdx, ismIdx, pixelIdx) - theoreticalFlux;
+          Float64 diff =
+              curve3D.getFluxAt(igmIdx, ismIdx, pixelIdx) - theoreticalFlux;
           diff = diff / curve3D.getFluxErrorAt(igmIdx, ismIdx, pixelIdx);
-          chi2[igmIdx][ismIdx] += diff * diff;
+          chi2 += diff * diff;
         }
       }
+      if (chi2 > 0)
+        chi2_all[igmIdx][ismIdx] = chi2;
     }
   }
-  return chi2;
+  return chi2_all;
 }
 
 TAxisSampleList
@@ -237,13 +266,15 @@ void COperatorPowerLaw::addTooFewSamplesWarning(Int32 N, Int32 igmIdx,
 }
 
 T2DPowerLawCoefsPair
-COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
+COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
                                    std::string method) const {
 
   T2DPowerLawCoefsPair powerLawsCoefs(
-      lnCurve.getNIgm(), std::vector<TPowerLawCoefsPair>(lnCurve.getNIsm()));
+      emittedCurve.getNIgm(),
+      std::vector<TPowerLawCoefsPair>(emittedCurve.getNIsm()));
 
   Float64 lnxc = std::log(m_lambdaCut);
+  T3DCurve lnCurve = computeLnCurve(emittedCurve);
 
   // Computes power law for each igm / ism depending on the method selected
   // above
@@ -266,7 +297,8 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
 
       if (N < m_nLogSamplesMin) {
         addTooFewSamplesWarning(N, igmIdx, ismIdx, __func__);
-        powerLawsCoefs[igmIdx][ismIdx] = {{0, 0}, {0, 0}};
+        powerLawsCoefs[igmIdx][ismIdx] = {{0, 0, INFINITY, INFINITY},
+                                          {0, 0, INFINITY, INFINITY}};
       } else {
         TCurve curve = lnCurve.toCoefCurve(igmIdx, ismIdx);
         if (method == "full") {
@@ -286,6 +318,23 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &lnCurve,
     }
   }
   return powerLawsCoefs;
+}
+
+TPowerLawCoefsPair
+COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
+  auto const &flux = emittedCurve.getFlux();
+  auto const &error = emittedCurve.getFluxError();
+  TFloat64List inverse_var(error.size());
+  std::transform(error.cbegin(), error.cend(), inverse_var.begin(),
+                 [](Float64 v) { return 1.0 / (v * v); });
+  Float64 mean_amplitude = std::transform_reduce(flux.cbegin(), flux.cend(),
+                                                 inverse_var.cbegin(), 0.0);
+  Float64 const sum_inv_var =
+      std::reduce(inverse_var.cbegin(), inverse_var.cend());
+  mean_amplitude /= sum_inv_var;
+  Float64 mean_amplitude_std = 1.0 / sqrt(sum_inv_var);
+  TPowerLawCoefs coefs{mean_amplitude, 0.0, mean_amplitude_std, INFINITY};
+  return TPowerLawCoefsPair{coefs, coefs};
 }
 
 TPowerLawCoefsPair
@@ -559,10 +608,11 @@ T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
                       std::move(spectrumFlux), std::move(spectrumFluxError)});
   fluxCurve1D.sort();
 
-  T3DCurve fluxCurve3D(m_nIgmCurves, m_nIsmCurves);
-  fluxCurve3D.copyCurveAtAllIgmIsm(fluxCurve1D);
+  T3DCurve fluxCurve3D(std::move(fluxCurve1D));
   fluxCurve3D.setIsSnrCompliant(std::move(snrCompliantPixels));
   fluxCurve3D.setMask(std::move(maskedPixels));
+  fluxCurve3D.setIsExtincted(
+      T3DList<bool>(1, T2DList<bool>(1, TBoolList(fluxCurve3D.size(), false))));
 
   return fluxCurve3D;
 }
@@ -624,26 +674,26 @@ TList<Float64> COperatorPowerLaw::computeIsmIgmCorrection(
 }
 
 T3DCurve COperatorPowerLaw::computeEmittedCurve(Float64 redshift,
-                                                Float64 nullFluxThreshold,
                                                 bool opt_extinction,
-                                                bool opt_dustFitting) {
+                                                bool opt_dustFitting,
+                                                T3DCurve &fluxCurve) {
   // In order to take into account ism, igm we initialize a template with a flux
   // at 1 we then divide the initial flux by the template flux value once ism
   // igm has been applied
   // Set m_ismIgmCorrections
 
-  T3DCurve fluxCurve = initializeFluxCurve(redshift, nullFluxThreshold);
+  fluxCurve.extendIgmIsm(m_nIgmCurves, m_nIsmCurves);
+
   T3DList<bool> isExtincted(
       m_nIgmCurves,
       T2DList<bool>(m_nIsmCurves, TList<bool>(fluxCurve.size(), false)));
   if (opt_extinction || opt_dustFitting) {
-    m_ismIgmCorrections = computeIsmIgmCorrections(
+    auto const ismIgmCorrections = computeIsmIgmCorrections(
         redshift, fluxCurve.getLambda(), opt_extinction, opt_dustFitting);
     for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
       for (Int32 ismIdx = 0; ismIdx < m_nIsmCurves; ismIdx++) {
         for (Int32 pixelIdx = 0; pixelIdx < fluxCurve.size(); pixelIdx++) {
-          Float64 correctionCoef =
-              m_ismIgmCorrections[igmIdx][ismIdx][pixelIdx];
+          Float64 correctionCoef = ismIgmCorrections[igmIdx][ismIdx][pixelIdx];
           if (correctionCoef < DBL_MIN) {
             isExtincted[igmIdx][ismIdx][pixelIdx] = true;
             continue;
