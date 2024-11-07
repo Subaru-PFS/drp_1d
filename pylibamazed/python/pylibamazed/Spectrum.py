@@ -40,7 +40,7 @@
 import numpy as np
 import pandas as pd
 from pylibamazed.Exception import APIException
-from pylibamazed.lsf import LSFParameters, get_lsf_args_from_parameters
+from pylibamazed.lsf import get_lsf_args_from_parameters
 from pylibamazed.Parameters import Parameters
 from pylibamazed.redshift import (
     CFlagWarning,
@@ -74,13 +74,13 @@ class Spectrum:
         lsf,
         photometric_data,
         wave_frame="vacuum",
-        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader
+        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader,
     ):
         self.source_id = str(source_id)
         self.parameters = parameters
 
         self.filter_loader_class = filter_loader_class
-        
+
         # Data members
         self._dataframe = spectra_dataframe
         self._lsf = lsf
@@ -253,34 +253,40 @@ class Spectrum:
         cpp_spectrum.SetPhotData(cpp_phot)
         return cpp_spectrum
 
+    @property
+    def airvacuum_method(self):
+        try:
+            return self._airvacuum_method
+        except AttributeError:
+            return self._corrected_airvacuum_method()
+
     def _corrected_airvacuum_method(self):
-        airvacuum_method = self.parameters.get_airvacuum_method()
+        self._airvacuum_method = self.parameters.get_airvacuum_method()
 
-        if airvacuum_method == "default":
-            airvacuum_method = "morton2000"
+        if self._airvacuum_method == "default":
+            self._airvacuum_method = "morton2000"
 
-        if airvacuum_method == "" and self.w_frame == "air":
-            airvacuum_method = "morton2000"
+        if self._airvacuum_method == "" and self.w_frame == "air":
+            self._airvacuum_method = "morton2000"
 
-        elif airvacuum_method != "" and self.w_frame == "vacuum":
+        elif self._airvacuum_method != "" and self.w_frame == "vacuum":
             zflag.warning(
                 WarningCode.AIR_VACUUM_CONVERSION_IGNORED,
-                f"Air vacuum method {airvacuum_method} ignored, spectrum already in vacuum",
+                f"Air vacuum method {self._airvacuum_method} ignored, spectrum already in vacuum",
             )
-            airvacuum_method = ""
+            self._airvacuum_method = ""
 
-        return airvacuum_method
+        return self._airvacuum_method
 
     def _convert_air_to_vacuum(self):
         if (self.w_frame == "vacuum") or ("wave_air" in self._dataframe.columns):
             return
-        airvacuum_method = self._corrected_airvacuum_method()
         try:
             self.w_frame = "vacuum"  # temporary set to vacuum to get wave column
             wave_air = self.get_wave(obs_id=None)
         finally:
             self.w_frame = "air"
-        spectralAxis = CSpectrumSpectralAxis(wave_air, airvacuum_method)
+        spectralAxis = CSpectrumSpectralAxis(wave_air, self.airvacuum_method)
         wave_vacuum = spectralAxis.GetSamplesVector().to_numpy()
         self._dataframe.rename(columns={"wave": "wave_air"}, inplace=True)
         self._dataframe["wave"] = wave_vacuum
@@ -301,7 +307,6 @@ class Spectrum:
         if not (np.diff(self._dataframe["wave_merged"]) > 0).all():
             raise APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
 
-
     def _check_wavelengths(self):
         """Looks if lambda range specified in parameters is contained in spectrum range."""
         for obs_id in self.parameters.get_observation_ids():
@@ -321,7 +326,7 @@ class Spectrum:
                     f"Parameters lambda range ([{params_lambda_min}, {params_lambda_max}])is not "
                     f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])",
                 )
-                
+
     def _get_filters(self):
         return self.filter_loader_class().get_filters(self.parameters)
 
@@ -335,7 +340,8 @@ class Spectrum:
         Does three things :
          - Check if airvaccum conversion specified in parameters is legitimate
          - Apply filtering specified in parameters
-         - Check if spectrum(s) wavelength(s) is/are correct: note empty, contains lambda range(s) specified in parameters
+         - Check if spectrum(s) wavelength(s) is/are correct:
+            not empty, contains lambda range(s) specified in parameters
         """
 
         self._corrected_airvacuum_method()
