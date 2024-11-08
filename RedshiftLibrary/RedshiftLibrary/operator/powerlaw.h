@@ -131,8 +131,7 @@ protected:
 
   TPowerLawResult BasicFit(Float64 redshift, bool opt_extinction,
                            bool opt_dustFitting, Float64 nullFluxThreshold,
-                           std::string method, const TList<Int32> &MeiksinList,
-                           const TList<Int32> &EbmvList);
+                           std::string method);
 
 private:
   // igm ism curves

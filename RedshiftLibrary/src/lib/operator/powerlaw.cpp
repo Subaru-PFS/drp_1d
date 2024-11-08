@@ -90,11 +90,11 @@ void COperatorPowerLaw::initIgmIsm(bool opt_extinction, bool opt_dustFitting,
   m_nIsmCurves = m_ismIdxList.size();
 }
 
-TPowerLawResult
-COperatorPowerLaw::BasicFit(Float64 redshift, bool opt_extinction,
-                            bool opt_dustFitting, Float64 nullFluxThreshold,
-                            std::string method, const TList<Int32> &MeiksinList,
-                            const TList<Int32> &EbmvList) {
+TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
+                                            bool opt_extinction,
+                                            bool opt_dustFitting,
+                                            Float64 nullFluxThreshold,
+                                            std::string method) {
   // Question: what to do with this ?
   // m_option_igmFastProcessing = (m_nIgmCurves > 1 ? true : false);
 
@@ -213,9 +213,8 @@ COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
   result->Redshifts = m_redshifts;
   for (Int32 zIdx = 0; zIdx < m_redshifts.size(); zIdx++) {
     Float64 redshift = result->Redshifts[zIdx];
-    TPowerLawResult result_z =
-        BasicFit(redshift, opt_extinction, opt_dustFitting, nullFluxThreshold,
-                 method, m_igmIdxList, m_ismIdxList);
+    TPowerLawResult result_z = BasicFit(
+        redshift, opt_extinction, opt_dustFitting, nullFluxThreshold, method);
 
     result->set_at_redshift(zIdx, std::move(result_z));
   }
