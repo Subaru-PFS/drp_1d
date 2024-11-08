@@ -87,12 +87,7 @@ class AbstractSpectrumReader:
 
     """
 
-    def __init__(
-        self,
-        parameters: Parameters,
-        calibration_library,
-        source_id: str
-    ):
+    def __init__(self, parameters: Parameters, calibration_library, source_id: str):
         """Constructor method"""
         self.parameters = parameters
         self.calibration_library = calibration_library
@@ -238,7 +233,7 @@ class AbstractSpectrumReader:
             self.photometric_data,
             self.w_frame,
         )
-#        self._check_wavelengths(spectrum)
+        #        self._check_wavelengths(spectrum)
 
         return spectrum
 
@@ -246,11 +241,7 @@ class AbstractSpectrumReader:
         """
         clean the Containers
         """
-        self.__init__(
-            self.parameters,
-            self.calibration_library,
-            self.source_id
-        )
+        self.__init__(self.parameters, self.calibration_library, self.source_id)
 
     def _all_containers(self):
         return [container for container in self.others.values()] + [self.waves, self.fluxes, self.errors]

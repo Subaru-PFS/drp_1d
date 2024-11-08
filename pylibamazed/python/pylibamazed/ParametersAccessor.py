@@ -60,10 +60,10 @@ class ParametersAccessor:
     def get_lambda_ranges(self):
         multiobs = self.get_multiobs_method()
         if multiobs in ["", "merge"]:
-            return {"":self.parameters["lambdaRange"]}
+            return {"": self.parameters["lambdaRange"]}
         else:
             return self.parameters["lambdaRange"]
-        
+
     def get_airvacuum_method(self):
         return self.parameters.get("airVacuumMethod", "")
 
