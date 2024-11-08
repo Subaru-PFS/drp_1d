@@ -78,7 +78,21 @@ public:
     return m_ranked_candidates[rank].second;
   }
 
+  std::shared_ptr<T> getRankedCandidate(int rank) {
+    return m_ranked_candidates[rank].second;
+  }
+
+  std::vector<std::shared_ptr<TCandidateZ>> getCandidatesZ() {
+    std::vector<std::shared_ptr<TCandidateZ>> ret;
+    for (auto &c : m_ranked_candidates) {
+      ret.push_back(std::dynamic_pointer_cast<TCandidateZ>(c.second));
+    }
+    return ret;
+  }
+
   TRankedCandidates<T> m_ranked_candidates;
+
+  TFloat64List GetRedshifts() const;
 };
 
 typedef CPdfCandidateszResult<TCandidateZ> PdfCandidatesZResult;

@@ -55,12 +55,11 @@ public:
   void init(const Float64 halfWindowSize, const bool zLogSampling,
             const TFloat64List &redshifts, const Float64 fineStep);
   TFloat64List spanRedshiftWindow(const Float64 z) const;
-  void buildExtendedRedshifts(CPassExtremaResult &passExtremaResult);
+  void buildExtendedRedshifts();
   void updateRedshiftGridAndResults(std::shared_ptr<CTwoPassResult> result);
   TZGridListParams getSPZGridParams();
-
-  CPassExtremaResult &getFirstPassExtremaResult() {
-    return m_firstpass_extremaResult;
+  TCandidateZbyRank getFirstPassCandidatesZByRank() {
+    return m_firstpass_extremaResult->getCandidatesZByRank();
   }
 
 protected:
@@ -70,8 +69,7 @@ protected:
   TFloat64List m_Redshifts;
   Float64 m_fineStep;
   std::vector<TFloat64List> m_extendedRedshifts; // z range around extrema
-  CPassExtremaResult m_firstpass_extremaResult;
-  std::shared_ptr<CExtremaResult<T>> m_rebaseArg;
+  std::shared_ptr<CExtremaResult<T>> m_firstpass_extremaResult;
 };
 
 template <class T>
@@ -104,18 +102,12 @@ TFloat64List COperatorTwoPass<T>::spanRedshiftWindow(const Float64 z) const {
   return zparam.getZGrid(m_zLogSampling);
 };
 
-template <class T>
-void COperatorTwoPass<T>::buildExtendedRedshifts(
-    CPassExtremaResult &passExtremaResult) {
+template <class T> void COperatorTwoPass<T>::buildExtendedRedshifts() {
   // Refine redshift grid around extrema results redshifts
-  Int32 nExtremaResults = passExtremaResult.size();
-  m_extendedRedshifts.reserve(nExtremaResults);
 
-  for (Int32 candidateIdx = 0; candidateIdx < nExtremaResults; candidateIdx++) {
-    const std::shared_ptr<const TCandidateZ> &cand =
-        passExtremaResult.m_ranked_candidates[candidateIdx].second;
-
-    Log.LogInfo(Formatter() << "  Operator-TwoPass: Raw extr #" << candidateIdx
+  m_extendedRedshifts.reserve(m_firstpass_extremaResult->size());
+  for (auto &cand : m_firstpass_extremaResult->getCandidatesZ()) {
+    Log.LogInfo(Formatter() << "  Operator-TwoPass: Raw extr #" << cand->Rank
                             << ", z_e.X=" << cand->Redshift
                             << ", m_e.Y=" << cand->ValProba);
     m_extendedRedshifts.push_back(spanRedshiftWindow(cand->Redshift));
@@ -141,13 +133,12 @@ template <class T> TZGridListParams COperatorTwoPass<T>::getSPZGridParams() {
   TZGridListParams centeredZgrid_params(s);
   for (Int32 i = 0; i < s; i++) {
     const auto &extendedGrid = m_extendedRedshifts[i];
-    centeredZgrid_params[i] = CZGridParam(
-        TFloat64Range(extendedGrid), m_fineStep,
-        m_firstpass_extremaResult.m_ranked_candidates[i].second->Redshift);
+    centeredZgrid_params[i] =
+        CZGridParam(TFloat64Range(extendedGrid), m_fineStep,
+                    m_firstpass_extremaResult->getRankedCandidate(i)->Redshift);
   }
   return centeredZgrid_params;
 }
 
 } // namespace NSEpic
-
 #endif

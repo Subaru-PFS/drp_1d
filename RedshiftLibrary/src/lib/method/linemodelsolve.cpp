@@ -128,9 +128,9 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
 
   //  suggestion : CSolve::GetCurrentScopeName(CScopeStack)
   //  prepare the linemodel chisquares and prior results for pdf computation
-  ChisquareArray chisquares = BuildChisquareArray(
-      lmresult, m_linemodel.getSPZGridParams(),
-      m_linemodel.getFirstPassExtremaResult().m_ranked_candidates);
+  ChisquareArray chisquares =
+      BuildChisquareArray(lmresult, m_linemodel.getSPZGridParams(),
+                          m_linemodel.getFirstPassCandidatesZByRank());
 
   /*
   zpriorResult->Redshifts.size());
@@ -526,20 +526,20 @@ void CLineModelSolve::Solve() {
   resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
                                        pdfz.m_postmargZResult);
 
-  std::shared_ptr<const LineModelExtremaResult> fpExtremaResult =
-      m_linemodel.BuildFirstPassExtremaResults();
-
   // save linemodel firstpass extrema results
   std::string firstpassExtremaResultsStr = scopeStr;
   firstpassExtremaResultsStr.append("_firstpass_extrema");
+  std::shared_ptr<const LineModelExtremaResult> firstpass_results =
+      std::dynamic_pointer_cast<const LineModelExtremaResult>(
+          m_linemodel.getFirstPassExtremaResults());
   resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr.c_str(),
-                                       fpExtremaResult);
+                                       firstpass_results);
 
   //**************************************************
   // SECOND PASS
   //**************************************************
   if (useTwoPass())
-    m_linemodel.ComputeSecondPass(fpExtremaResult);
+    m_linemodel.ComputeSecondPass();
 
   // read it as constant to save it
   std::shared_ptr<const CLineModelResult> result =

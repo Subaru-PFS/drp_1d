@@ -84,14 +84,16 @@ public:
 
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
-  void ComputeSecondPass(
-      const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
+  void ComputeSecondPass();
 
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
 
-  std::shared_ptr<const LineModelExtremaResult> BuildFirstPassExtremaResults();
+  std::shared_ptr<LineModelExtremaResult> getFirstPassExtremaResults() {
+    return m_firstpass_extremaResult;
+  }
+
   std::shared_ptr<LineModelExtremaResult>
   buildExtremaResults(const TCandidateZbyRank &zCandidates,
                       const std::string &opt_continuumreest = "no");
