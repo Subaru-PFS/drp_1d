@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/passextremaresult.h"
 #include "RedshiftLibrary/operator/twopassresult.h"
 
@@ -49,22 +50,27 @@ class spanRedshift_test;
 } // namespace TwoPass
 
 namespace NSEpic {
-class COperatorTwoPass {
+class COperatorTwoPass : public COperator {
 public:
-  void Init(const Float64 halfWindowSize, const bool zLogSampling,
+  void init(const Float64 halfWindowSize, const bool zLogSampling,
             const TFloat64List &redshifts, const Float64 fineStep);
-  TFloat64List SpanRedshiftWindow(const Float64 z) const;
-  void BuildExtendedRedshifts(CPassExtremaResult &passExtremaResult);
-  void
-  UpdateRedshiftGridAndResults(CPassExtremaResult &m_firstpass_extremaResult,
-                               std::shared_ptr<CTwoPassResult> m_result);
+  TFloat64List spanRedshiftWindow(const Float64 z) const;
+  void buildExtendedRedshifts(CPassExtremaResult &passExtremaResult);
+  void updateRedshiftGridAndResults(std::shared_ptr<CTwoPassResult> result);
+  TZGridListParams getSPZGridParams();
 
-private:
+  CPassExtremaResult &getFirstPassExtremaResult() {
+    return m_firstpass_extremaResult;
+  }
+
+protected:
   friend class TwoPass::spanRedshift_test;
   Float64 m_secondPass_halfwindowsize;
   bool m_zLogSampling;
   TFloat64List m_Redshifts;
   Float64 m_fineStep;
+  std::vector<TFloat64List> m_extendedRedshifts; // z range around extrema
+  CPassExtremaResult m_firstpass_extremaResult;
 };
 } // namespace NSEpic
 

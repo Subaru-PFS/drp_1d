@@ -68,8 +68,6 @@ public:
 
   std::vector<CContinuumModelSolution> m_fittedContinuum;
 
-  std::vector<TFloat64List> ExtendedRedshifts; // z range around extrema
-
   // line width
   TFloat64List Elv;                    // emission line width
   TFloat64List Alv;                    // absorption line width

@@ -53,7 +53,6 @@
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
-#include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
@@ -170,9 +169,8 @@ protected:
   std::vector<TFloat64List> m_sumCross_outsideIGM;
   std::vector<TFloat64List> m_sumT_outsideIGM;
   std::vector<TFloat64List> m_sumS_outsideIGM;
-  CPassExtremaResult m_firstpass_extremaResult;
+
   std::vector<CContinuumModelSolution> ContinuumModelSolutions;
-  COperatorTwoPass m_operatorTwoPass;
 };
 
 } // namespace NSEpic

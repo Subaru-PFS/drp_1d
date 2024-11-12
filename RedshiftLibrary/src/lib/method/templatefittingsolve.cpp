@@ -254,16 +254,14 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
     //                           const TFloat64List &redshifts,
     //                           const Float64 fineStep
 
-    templateFittingOperator->m_operatorTwoPass.Init(m_secondPass_halfwindowsize,
-                                                    m_zLogSampling, m_redshifts,
-                                                    m_redshiftStep);
-    templateFittingOperator->m_operatorTwoPass.BuildExtendedRedshifts(
+    templateFittingOperator->init(m_secondPass_halfwindowsize, m_zLogSampling,
+                                  m_redshifts, m_redshiftStep);
+    templateFittingOperator->buildExtendedRedshifts(
         templateFittingOperator->m_firstpass_extremaResult);
     // TODO move this
     size_t nResults = m_results.size();
     for (size_t resultIdx = 0; resultIdx < nResults; ++resultIdx) {
-      templateFittingOperator->m_operatorTwoPass.UpdateRedshiftGridAndResults(
-          templateFittingOperator->m_firstpass_extremaResult,
+      templateFittingOperator->updateRedshiftGridAndResults(
           m_results[resultIdx]);
     }
     // EstimateSecondPassParameters

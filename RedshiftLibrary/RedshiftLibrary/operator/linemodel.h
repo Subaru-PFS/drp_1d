@@ -72,7 +72,7 @@ class COperatorTemplateFittingBase;
 /**
  * \ingroup Redshift
  */
-class COperatorLineModel {
+class COperatorLineModel : public COperatorTwoPass {
 
 public:
   void Init(const TFloat64List &redshifts, Float64 finestep,
@@ -126,8 +126,6 @@ public:
   Float64 m_opt_continuum_bad_chi2_threshold = 100;
 
   EContinuumFit m_continnuum_fit_option = EContinuumFit::retryAll;
-  // candidates
-  CPassExtremaResult m_firstpass_extremaResult;
 
   CLineModelSolution
   fitWidthByGroups(std::shared_ptr<const CInputContext> context,
@@ -136,7 +134,6 @@ public:
   void setHapriorOption(Int32 opt);
   const CSpectrum &
   getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
-  TZGridListParams getSPZGridParams();
 
 private:
   friend class Linemodel::spanRedshift_test;
@@ -171,7 +168,7 @@ private:
   bool m_zLogSampling = false;
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
-  void buildExtendedRedshifts();
+
   TFloat64List SpanRedshiftWindow(Float64 z) const;
 
   Float64 FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,
@@ -200,8 +197,6 @@ private:
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
   std::shared_ptr<CContinuumFitStore> m_tplfitStore_firstpass;
   std::vector<std::shared_ptr<CContinuumFitStore>> m_tplfitStore_secondpass;
-
-  COperatorTwoPass m_operatorTwoPass;
 };
 
 } // namespace NSEpic

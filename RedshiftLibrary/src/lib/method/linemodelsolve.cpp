@@ -132,7 +132,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   //  prepare the linemodel chisquares and prior results for pdf computation
   ChisquareArray chisquares = BuildChisquareArray(
       lmresult, m_linemodel.getSPZGridParams(),
-      m_linemodel.m_firstpass_extremaResult.m_ranked_candidates);
+      m_linemodel.getFirstPassExtremaResult().m_ranked_candidates);
 
   /*
   zpriorResult->Redshifts.size());
@@ -574,7 +574,7 @@ void CLineModelSolve::Solve() {
     // COMBINE CANDIDATES
     //**************************************************
     m_linemodel.Combine_firstpass_candidates(
-        linemodel_fpb.m_firstpass_extremaResult);
+        linemodel_fpb.getFirstPassExtremaResult());
   }
 
   std::shared_ptr<const LineModelExtremaResult> fpExtremaResult =

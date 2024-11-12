@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(spanRedshift_test) {
   op.m_zLogSampling = zLogSampling;
   op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
 
-  TFloat64List extendedList = op.SpanRedshiftWindow(z);
+  TFloat64List extendedList = op.spanRedshiftWindow(z);
   // check is sorted
   BOOST_CHECK(
       std::is_sorted(std::begin(extendedList), std::end(extendedList)) == true);

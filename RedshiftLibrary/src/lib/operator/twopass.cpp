@@ -42,7 +42,7 @@
 
 using namespace NSEpic;
 
-void COperatorTwoPass::Init(
+void COperatorTwoPass::init(
     const Float64 halfWindowSize, const bool zLogSampling,
     const TFloat64List &redshifts, // TODO check if should be a shared_ptr /
                                    // check that is always synchro with operator
@@ -53,7 +53,7 @@ void COperatorTwoPass::Init(
   m_fineStep = fineStep;
 }
 
-TFloat64List COperatorTwoPass::SpanRedshiftWindow(const Float64 z) const {
+TFloat64List COperatorTwoPass::spanRedshiftWindow(const Float64 z) const {
   Float64 half_r = m_secondPass_halfwindowsize;
   Float64 half_l = m_secondPass_halfwindowsize;
 
@@ -70,11 +70,11 @@ TFloat64List COperatorTwoPass::SpanRedshiftWindow(const Float64 z) const {
   return zparam.getZGrid(m_zLogSampling);
 };
 
-void COperatorTwoPass::BuildExtendedRedshifts(
+void COperatorTwoPass::buildExtendedRedshifts(
     CPassExtremaResult &passExtremaResult) {
   // Refine redshift grid around extrema results redshifts
   Int32 nExtremaResults = passExtremaResult.size();
-  passExtremaResult.ExtendedRedshifts.reserve(nExtremaResults);
+  m_extendedRedshifts.reserve(nExtremaResults);
 
   for (Int32 candidateIdx = 0; candidateIdx < nExtremaResults; candidateIdx++) {
     const std::shared_ptr<const TCandidateZ> &cand =
@@ -83,21 +83,31 @@ void COperatorTwoPass::BuildExtendedRedshifts(
     Log.LogInfo(Formatter() << "  Operator-TwoPass: Raw extr #" << candidateIdx
                             << ", z_e.X=" << cand->Redshift
                             << ", m_e.Y=" << cand->ValProba);
-    passExtremaResult.ExtendedRedshifts.push_back(
-        SpanRedshiftWindow(cand->Redshift));
+    m_extendedRedshifts.push_back(spanRedshiftWindow(cand->Redshift));
   }
 }
 
-void COperatorTwoPass::UpdateRedshiftGridAndResults(
-    CPassExtremaResult &m_firstpass_extremaResult,
+void COperatorTwoPass::updateRedshiftGridAndResults(
     std::shared_ptr<CTwoPassResult> result) {
 
-  for (Int32 i = 0; i < m_firstpass_extremaResult.size(); i++) {
+  for (auto &subgrid : m_extendedRedshifts) {
     Int32 imin, ndup;
-    std::tie(imin, ndup) = CZGridListParams::insertSubgrid(
-        m_firstpass_extremaResult.ExtendedRedshifts[i], m_Redshifts);
-    result->updateVectors(
-        imin, ndup, m_firstpass_extremaResult.ExtendedRedshifts[i].size());
+    std::tie(imin, ndup) =
+        CZGridListParams::insertSubgrid(subgrid, m_Redshifts);
+    result->updateVectors(imin, ndup, subgrid.size());
   }
   result->Redshifts = m_Redshifts;
+}
+
+// only for secondpass grid
+TZGridListParams COperatorTwoPass::getSPZGridParams() {
+  Int32 s = m_extendedRedshifts.size();
+  TZGridListParams centeredZgrid_params(s);
+  for (Int32 i = 0; i < s; i++) {
+    const auto &extendedGrid = m_extendedRedshifts[i];
+    centeredZgrid_params[i] = CZGridParam(
+        TFloat64Range(extendedGrid), m_fineStep,
+        m_firstpass_extremaResult.m_ranked_candidates[i].second->Redshift);
+  }
+  return centeredZgrid_params;
 }
