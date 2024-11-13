@@ -92,19 +92,14 @@ class ProcessFlow:
         resultStore = self.process_flow_context.GetResultStore()
         self.context_warning_Flag = resultStore.GetFlagLogResult("", "", "", "context_warningFlag")
 
-    def store_exception_handler(func):
+    def store_exception(func):
         @functools.wraps(func)
         def wrapper(self, rso, *args, **kwargs):
             try:
-                return func(self, rso, *args, **kwargs)
+                new_func = exception_decorator(logging=True)(func)
+                return new_func(self, rso, *args, **kwargs)
             except AmzException as e:
-                e.LogError()
                 rso.store_error(e, get_scope_spectrum_model(), get_scope_stage())
-                raise ProcessFlowException from e
-            except Exception as e:
-                api_exception = APIException.fromException(e)
-                api_exception.LogError()
-                rso.store_error(api_exception, get_scope_spectrum_model(), get_scope_stage())
                 raise ProcessFlowException from e
 
         return wrapper
@@ -176,7 +171,7 @@ class ProcessFlow:
         elif linemeas_method:  # linemeas alone
             self.run_linemeas_solver(rso, linemeas_method)
 
-    @store_exception_handler
+    @store_exception
     def initialize(self, rso, spectrum: Spectrum):
         zlog.LogInfo("Context initialization")
         self.process_flow_context.reset()
@@ -215,17 +210,17 @@ class ProcessFlow:
         self.process_flow_context.Init()
 
     @push_scope("redshiftSolver", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception
     def run_redshift_solver(self, rso, method):
         self.run_method(method)
 
     @push_scope("lineMeasSolver", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception
     def run_linemeas_solver(self, rso, method):
         self.run_method(method)
 
     @push_scope("linemeas_catalog_load", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception
     def run_load_linemeas_params(self, rso):
         lp = LinemeasParameters()
         lp.load_from_result_store(self.parameters, rso, self.scope_spectrum_model)
@@ -233,7 +228,7 @@ class ProcessFlow:
         self.process_flow_context.LoadParameterStore(self.parameters.to_json())
 
     @push_scope("reliabilitySolver", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception
     def run_reliability_solver(self, rso):
         rel = ReliabilitySolve(self.scope_spectrum_model, self.parameters, self.calibration_library)
         rso.object_results[self.scope_spectrum_model]["reliability"] = dict()
@@ -242,7 +237,7 @@ class ProcessFlow:
         )
 
     @push_scope("subClassifSolver", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception
     def run_sub_classification_solver(self, rso):
         sub_type = SubType(self.scope_spectrum_model, self.parameters, self.calibration_library)
         sub_types = sub_type.Compute(self.process_flow_context)
@@ -263,7 +258,7 @@ class ProcessFlow:
 
     @push_scope("classification", ScopeType.SPECTRUMMODEL)
     @push_scope("classification", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception
     def run_classification_solver(self, rso):
         if self.all_redshift_solver_failed(rso):
             raise APIException(
@@ -272,7 +267,7 @@ class ProcessFlow:
         self.run_method("classificationSolve")
 
     @push_scope("load_result_store", ScopeType.STAGE)
-    @store_exception_handler
+    @store_exception
     def load_result_store(self, rso):
         rso.load_all()
 
