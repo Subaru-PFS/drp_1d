@@ -88,6 +88,14 @@ public:
     return m_ranked_candidates[i].second->Deltaz;
   }
   Int32 size() const { return m_ranked_candidates.size(); }
+  std::vector<Int32> GetExtremaIdxsSortedByRedshift();
+  TStringList GetIDs() const {
+    TStringList ids;
+    ids.reserve(m_ranked_candidates.size());
+    for (auto c : m_ranked_candidates)
+      ids.push_back(c.first);
+    return ids;
+  }
 };
 
 } // namespace NSEpic

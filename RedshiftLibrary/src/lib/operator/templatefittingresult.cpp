@@ -67,8 +67,8 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
                                  TInt32List(MeiksinListSize, undefIdx)));
 }
 
-void CTemplateFittingResult::set_at_redshift(Int32 i,
-                                             TFittingIsmIgmResult val) {
+void CTemplateFittingResult::set_at_redshift(Int32 i, TFittingIsmIgmResult val,
+                                             Int32 igmIdx, Int32 ismIdx) {
   ChiSquare[i] = val.chiSquare;
   ReducedChiSquare[i] = val.reducedChisquare;
   ChiSquarePhot[i] = val.chiSquare_phot;
@@ -84,9 +84,25 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
   LogPrior[i] = val.logprior;
   Overlap[i] = val.overlapFraction;
 
-  ChiSquareIntermediate[i] = std::move(val.ChiSquareInterm);
-  IsmEbmvCoeffIntermediate[i] = std::move(val.IsmCalzettiCoeffInterm);
-  IgmMeiksinIdxIntermediate[i] = std::move(val.IgmMeiksinIdxInterm);
+  bool isNotFromLineModelSolve =
+      ChiSquareIntermediate[i].size() > ismIdx &&
+      ChiSquareIntermediate[i][ismIdx].size() > igmIdx;
+  bool isSecondPass = igmIdx != undefIdx && ismIdx != undefIdx;
+
+  if (isSecondPass && isNotFromLineModelSolve) {
+    ChiSquareIntermediate[i][ismIdx][igmIdx] =
+        std::move(val.ChiSquareInterm[0][0]);
+    IsmEbmvCoeffIntermediate[i][ismIdx][igmIdx] =
+        std::move(val.IsmCalzettiCoeffInterm[0][0]);
+    IgmMeiksinIdxIntermediate[i][ismIdx][igmIdx] =
+        std::move(val.IgmMeiksinIdxInterm[0][0]);
+  } else {
+    ChiSquareIntermediate[i] = std::move(val.ChiSquareInterm);
+    IsmEbmvCoeffIntermediate[i] =
+        std::move(val.IsmCalzettiCoeffInterm); // TODO see if useful ?
+    IgmMeiksinIdxIntermediate[i] =
+        std::move(val.IgmMeiksinIdxInterm); // TODO see if useful ?
+  }
 }
 
 Float64 CTemplateFittingResult::SNRCalculation(Float64 dtm, Float64 mtm) {
@@ -119,17 +135,28 @@ void CTemplateFittingResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
   insertWithDuplicates<std::vector<Float64>>(
       Overlap, idx, count, std::vector<Float64>(Overlap[0].size(), NAN), ndup);
 
-  // TODO voir quoi faire de ça: a un rôle ?
-  // size_t nIsm = ChiSquareIntermediate[0].size();
-  // size_t nIgm = ChiSquareIntermediate[0][0].size();
-  // std::vector<std::vector<Float64>> vecToInsert(
-  //     nIgm, std::vector<Float64>(nIsm, NAN));
-  // insertWithDuplicates<std::vector<std::vector<Float64>>>(
-  //     ChiSquareIntermediate, idx, count, vecToInsert, ndup);
-  // insertWithDuplicates<std::vector<std::vector<Float64>>>(
-  //     IsmEbmvCoeffIntermediate, idx, count, vecToInsert, ndup);
-  // insertWithDuplicates<std::vector<std::vector<Int32>>>(
-  //     IgmMeiksinIdxIntermediate, idx, count,
-  //     std::vector<std::vector<Int32>>(nIgm, std::vector<Int32>(nIsm, -1)),
-  //     ndup);
+  size_t nIsm = 0;
+  size_t nIgm = 0;
+  if (ChiSquareIntermediate.size() > 0) {
+    nIsm = ChiSquareIntermediate[0].size();
+    if (ChiSquareIntermediate[0].size() > 0)
+      nIgm = ChiSquareIntermediate[0][0].size();
+  }
+
+  T3DList<Float64> chi2ToInsert(
+      count, T2DList<Float64>(nIsm, std::vector<Float64>(nIgm, NAN)));
+  for (Int32 ismIdx = 0; ismIdx < nIsm; ++ismIdx) {
+    for (Int32 igmIdx = 0; igmIdx < nIgm; ++igmIdx) {
+      Float64 v1 = ChiSquareIntermediate[idx][ismIdx][igmIdx];
+      Float64 v2 = ChiSquareIntermediate[idx + 1][ismIdx][igmIdx];
+      TFloat64List linearVect =
+          removeFirstAndLast(createLinearInterpVector(v1, v2, count + 2));
+      for (Int32 zIdx = 0; zIdx < count; ++zIdx) {
+        chi2ToInsert[zIdx][ismIdx][igmIdx] = linearVect[zIdx];
+      }
+    }
+  }
+
+  insertWithDuplicates<std::vector<std::vector<Float64>>>(
+      ChiSquareIntermediate, idx, chi2ToInsert, ndup);
 };

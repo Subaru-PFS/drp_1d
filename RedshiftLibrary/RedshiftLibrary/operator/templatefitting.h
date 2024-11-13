@@ -133,10 +133,13 @@ public:
           Float64 opt_continuum_null_amp_threshold,
           const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
           Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
-          bool isFirstPass = true);
+          bool isFirstPass = true,
+          const std::vector<Int32> &zIdxsToCompute = {});
   void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
   std::shared_ptr<const ExtremaResult>
   BuildFirstPassExtremaResults(const TOperatorResultMap &resultsFromStore);
+  std::vector<Int32> getzIdxsToCompute(TFloat64List allRedshifts,
+                                       TFloat64List extendedRedshifts);
 
 protected:
   friend class CTemplateFittingSolve;
@@ -169,7 +172,6 @@ protected:
   std::vector<TFloat64List> m_sumCross_outsideIGM;
   std::vector<TFloat64List> m_sumT_outsideIGM;
   std::vector<TFloat64List> m_sumS_outsideIGM;
-
   std::vector<CContinuumModelSolution> ContinuumModelSolutions;
 };
 

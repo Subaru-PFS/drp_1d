@@ -90,16 +90,20 @@ private:
              Float64 overlapThreshold, std::vector<CMask> maskList,
              EType spctype = EType::raw, std::string opt_interp = "lin",
              bool opt_extinction = false, bool opt_dustFitting = false,
-             Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx);
+             Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+             std::string parentId = "", std::vector<Int32> zIdxsToCompute = {});
 
   ChisquareArray
   BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store,
-                      const std::string &scopeStr) const;
+                      const std::string &scopeStr,
+                      std::shared_ptr<CPassExtremaResult> fpResults = {},
+                      TZGridListParams zgridParams = {}) const;
 
   std::shared_ptr<const ExtremaResult> buildExtremaResults(
       shared_ptr<const COperatorResultStore> store, const std::string &scopeStr,
       const TCandidateZbyRank &ranked_zCandidates,
-      const CTemplateCatalog &tplCatalog, Float64 overlapThreshold);
+      const CTemplateCatalog &tplCatalog, Float64 overlapThreshold,
+      std::shared_ptr<CPassExtremaResult> fpResults = {});
   void StoreExtremaResults(
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const ExtremaResult> &ExtremaResult) const;

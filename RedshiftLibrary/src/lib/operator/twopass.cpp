@@ -39,5 +39,6 @@
 
 #include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
+#include <numeric>
 
 using namespace NSEpic;

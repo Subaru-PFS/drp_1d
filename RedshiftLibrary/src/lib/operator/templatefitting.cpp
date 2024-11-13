@@ -192,7 +192,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         TFittingResult &result_base = result; // upcasting (slicing)
         result_base = fitRes;                 // slicing, preserving specific
         // TFittingIsmIGmResult members
-
         result.reducedChisquare = result.chiSquare / n_samples;
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
@@ -396,7 +395,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
-    bool isFirstPass) {
+    bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
   Log.LogDetail(
       Formatter()
       << "  Operator-TemplateFitting: starting computation for template: "
@@ -421,6 +420,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
       opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
+  // NB in second pass, is already equal, see if useful in fp
   result->Redshifts = m_redshifts;
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size())
@@ -428,24 +428,32 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
            Formatter() << "prior list size(" << logpriorze.size()
                        << ") does not match the input redshift-list size :"
                        << m_redshifts.size());
+  // TODO possibly remove m_isFirstPassResult
 
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    if (isFirstPass || !result->m_isFirstPassResult[i]) {
-      Float64 redshift = result->Redshifts[i];
-      // TODO move a condition up loop
-      const CPriorHelper::TPriorEList &logp =
-          logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
-              ? logpriorze[i]
-              : CPriorHelper::TPriorEList();
+  std::vector<Int32> zIdxs;
+  if (isFirstPass) {
+    zIdxs.resize(m_redshifts.size());
+    std::iota(zIdxs.begin(), zIdxs.end(), 0);
+  } else
+    zIdxs = zIdxsToCompute;
+  for (Int32 zIdx : zIdxs) {
+    // TODO question est ici comment
+    Float64 redshift = result->Redshifts[zIdx];
+    // TODO move a condition up loop
+    const CPriorHelper::TPriorEList &logp =
+        logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
+            ? logpriorze[zIdx]
+            : CPriorHelper::TPriorEList();
 
-      TFittingIsmIgmResult result_z = BasicFit(
-          tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
-          logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
+    TFittingIsmIgmResult result_z =
+        BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
+                 opt_dustFitting, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
-      result->set_at_redshift(i, std::move(result_z));
-    }
+    result->set_at_redshift(zIdx, std::move(result_z), FitMeiksinIdx,
+                            FitEbmvIdx);
   }
 
+  // Question what to do with overlap in second pass ?
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
@@ -559,4 +567,19 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
         resultFromStore->FitEbmvCoeff[zIndex];
   }
   return m_firstpass_extremaResult;
+}
+
+std::vector<Int32>
+COperatorTemplateFitting::getzIdxsToCompute(TFloat64List allRedshifts,
+                                            TFloat64List extendedRedshifts) {
+  Int32 nz = allRedshifts.size();
+  std::vector<Int32> zIdxsToCompute{};
+  for (Int32 zIdx = 0; zIdx < nz; ++zIdx) {
+    bool isFound =
+        (std::find(extendedRedshifts.begin(), extendedRedshifts.end(),
+                   allRedshifts[zIdx]) != extendedRedshifts.end());
+    if (isFound)
+      zIdxsToCompute.push_back(zIdx);
+  }
+  return zIdxsToCompute;
 }

@@ -97,3 +97,17 @@ void CPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
     Int32 i, const CContinuumModelSolution &contModelSol) {
   m_fittedContinuum[i] = contModelSol;
 }
+
+std::vector<Int32> CPassExtremaResult::GetExtremaIdxsSortedByRedshift() {
+  // Initialize indexes with original positions
+  std::vector<Int32> sortedIndexes(size());
+  for (Int32 candidateIdx = 0; candidateIdx < size(); ++candidateIdx) {
+    sortedIndexes[candidateIdx] = candidateIdx;
+  }
+
+  // Sort indexes based on Redshift values
+  std::sort(sortedIndexes.begin(), sortedIndexes.end(),
+            [&](Int32 i1, Int32 i2) { return Redshift(i1) < Redshift(i2); });
+
+  return sortedIndexes;
+}
