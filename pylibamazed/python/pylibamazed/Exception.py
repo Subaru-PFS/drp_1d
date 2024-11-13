@@ -37,7 +37,6 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import functools
-import sys
 import traceback
 from os.path import basename
 
@@ -46,22 +45,30 @@ from pylibamazed.redshift import AmzException, ErrorCode
 AmazedError = AmzException  # for amazed clients compatibility reason, should be removed later
 
 
+def get_info_from_traceback(exception):
+    if exception.__traceback__ is None:
+        return ("", "", 0)
+    frame = traceback.extract_tb(exception.__traceback__)[-1]
+    return basename(frame.filename), frame.name, frame.lineno
+
+
 class APIException(AmzException):
-    def __init__(self, errCode, message):
-        filename = ""
-        name = ""
-        line = 0
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        if exc_traceback is not None:
-            frame = traceback.extract_tb(exc_traceback)[-1]
-            filename = basename(frame.filename)
-            name = frame.name
-            line = frame.lineno
+    def __init__(self, errCode, message, filename="", name="", line=0):
         super().__init__(errCode.value, message, filename, name, line)
 
     @classmethod
     def fromException(cls, exception):
-        return cls(ErrorCode.PYTHON_API_ERROR, f"{type(exception).__name__}: {exception}")
+        filename, method, line = get_info_from_traceback(exception)
+        return cls(
+            ErrorCode.PYTHON_API_ERROR, f"{type(exception).__name__}: {exception}", filename, method, line
+        )
+
+    def add_traceback_info(self):
+        filename, method, line = get_info_from_traceback(self)
+        if filename != "":
+            self.setFilename(filename)
+            self.setMethod(method)
+            self.setLine(line)
 
 
 # decorator to convert any non-amazed exception to AmzException
@@ -74,7 +81,12 @@ def exception_decorator(func=None, *, logging=False):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except AmzException as e:  # will catch both AmzException and derived APIException
+        except APIException as e:
+            e.add_traceback_info()
+            if logging:
+                e.LogError()
+            raise e from None
+        except AmzException as e:
             if logging:
                 e.LogError()
             raise e from None
@@ -82,6 +94,6 @@ def exception_decorator(func=None, *, logging=False):
             api_exception = APIException.fromException(e)
             if logging:
                 api_exception.LogError()
-            raise api_exception from e
+            raise api_exception from None
 
     return wrapper
