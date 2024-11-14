@@ -855,8 +855,11 @@ public:
 %}
 
 %pythonprepend AmzException::LogError() const %{
+    if self.logged return
     if not args:
       args = (self.__str__(), )
+
+    self.logged = True
 %}
 
 class AmzException : public std::exception
@@ -893,6 +896,7 @@ class AmzException : public std::exception
     return msg
 
   AmzException.__str__ = _AmzException__str__
+  AmzException.logged = False
 %}
 
 class CSolve{

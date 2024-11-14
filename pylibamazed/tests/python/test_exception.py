@@ -17,7 +17,7 @@ def raise_Exception():
     raise Exception("Exception raised")
 
 
-@exception_decorator
+@exception_decorator(logging=False)
 def decorated_raise_APIException():
     raise_APIException()
 
@@ -27,7 +27,7 @@ def decorated_raise_APIException_with_logging():
     raise_APIException()
 
 
-@exception_decorator
+@exception_decorator(logging=False)
 def decorated_raise_AmzException():
     raise_AmzException()
 
@@ -37,7 +37,7 @@ def decorated_raise_AmzException_with_logging():
     raise_AmzException()
 
 
-@exception_decorator
+@exception_decorator(logging=False)
 def decorated_raise_Exception():
     raise_Exception()
 

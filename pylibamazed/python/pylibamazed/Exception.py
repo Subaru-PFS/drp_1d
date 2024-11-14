@@ -73,7 +73,7 @@ class APIException(AmzException):
 
 # decorator to convert any non-amazed exception to AmzException
 #  with the optional ErrorLogging
-def exception_decorator(func=None, *, logging=False):
+def exception_decorator(func=None, *, logging=True):
     if func is None:
         return functools.partial(exception_decorator, logging=logging)
 

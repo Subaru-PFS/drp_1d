@@ -69,7 +69,7 @@ class ProcessFlowException(Exception):
 
 
 class ProcessFlow:
-    @exception_decorator(logging=True)
+    @exception_decorator
     def __init__(self, config, parameters: Parameters):
         _check_config(config)
         _check_lineMeasValidity(config, parameters)
@@ -104,7 +104,7 @@ class ProcessFlow:
 
         return wrapper
 
-    @exception_decorator(logging=True)
+    @exception_decorator
     def run(self, spectrum: Spectrum):
         resultStore = self.process_flow_context.GetResultStore()
         rso = ResultStoreOutput(
