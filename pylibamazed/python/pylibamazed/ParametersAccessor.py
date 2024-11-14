@@ -39,7 +39,7 @@
 from typing import List
 
 from enum import Enum
-from pylibamazed.Exception import APIException
+from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.redshift import CLog, ErrorCode
 
 
@@ -103,6 +103,7 @@ class ParametersAccessor:
     def get_photometry_bands(self) -> List[str]:
         return self.parameters.get("photometryBand", [])
 
+    @exception_decorator
     def get_multiobs_method(self) -> str:
         return self.parameters.get("multiObsMethod")
 

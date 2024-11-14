@@ -541,6 +541,7 @@ class CalibrationLibrary:
                 ErrorCode.PYTHON_API_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
             ) from None
 
+    @exception_decorator
     def get_lines_ids(self, attributes):
         lines_ids = dict()
         lines = None

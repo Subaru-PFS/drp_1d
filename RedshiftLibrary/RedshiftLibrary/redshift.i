@@ -855,7 +855,8 @@ public:
 %}
 
 %pythonprepend AmzException::LogError() const %{
-    if self.logged return
+    if self.logged:
+      return
     if not args:
       args = (self.__str__(), )
 

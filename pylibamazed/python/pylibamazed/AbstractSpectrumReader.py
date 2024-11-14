@@ -44,7 +44,7 @@ import numpy as np
 import pandas as pd
 from pylibamazed.Spectrum import Spectrum
 from pylibamazed.Container import Container
-from pylibamazed.Exception import APIException
+from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.Parameters import Parameters
 from pylibamazed.lsf import LSFParameters
 from pylibamazed.redshift import (
@@ -88,6 +88,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
 
     """
 
+    @exception_decorator
     def __init__(self, parameters: Parameters, calibration_library, source_id: str):
         """Constructor method"""
         self.parameters = parameters
@@ -208,6 +209,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         self.clean()
         return spectrum
 
+    @exception_decorator
     def get_spectrum(self) -> Spectrum:
         self._check_spectrum_is_loaded()
         if not self._sizes_are_consistent():

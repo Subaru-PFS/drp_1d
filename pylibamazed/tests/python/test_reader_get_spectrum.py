@@ -106,7 +106,7 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
         fsr.get_spectrum()
 
         fsr = self.initialize_fsr_with_data(**{"lsfType": "gaussianVariableWidth"})
-        with pytest.raises(KeyError):
+        with pytest.raises(APIException):
             fsr.get_spectrum()
 
     def test_sizes_are_consistent(self):
