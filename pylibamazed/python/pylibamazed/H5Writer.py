@@ -107,7 +107,9 @@ class H5Writer:
                         try:
                             _create_dataset_from_dict(candidate, ds, dataset)
                         except Exception as e:
-                            raise Exception(f"failed to create dataset {ds} : {e}")
+                            raise APIException(
+                                ErrorCode.PYTHON_API_ERROR, f"failed to create dataset {ds} : {e}"
+                            ) from None
 
     def write_hdf5(self, hdf5_root, spectrum_id):
         try:
