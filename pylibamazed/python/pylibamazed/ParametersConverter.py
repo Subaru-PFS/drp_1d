@@ -95,6 +95,8 @@ class ParametersConverterV1(ParametersConverter):
         self.update_redshift_part(renamed_params)
         self.update_linemeas_part(renamed_params)
         self.update_reliability_part(renamed_params)
+        self.update_sections_names(renamed_params)
+
         renamed_params["version"] = 2
         return renamed_params
 
@@ -111,6 +113,16 @@ class ParametersConverterV1(ParametersConverter):
                     renamed_params[spectrum_model]["redshiftSolver"][redshift_method] = renamed_params[
                         spectrum_model
                     ].pop(redshift_method)
+
+                    # Converts int -1 to string -1 for secondPassLcFittingMethod
+                    if redshift_method == "lineModelSolve":
+                        self.update_secondPassLcFittingMethod(renamed_params, spectrum_model)
+
+    def update_secondPassLcFittingMethod(self, renamed_params, spectrum_model):
+        # Expects lineModel key to be present
+        linemodel = renamed_params[spectrum_model]["redshiftSolver"]["lineModelSolve"]["lineModel"]
+        if linemodel.get("secondPassLcFittingMethod") == -1:
+            linemodel["secondPassLcFittingMethod"] = "-1"
 
     def update_linemeas_part(self, renamed_params):
         for spectrum_model in renamed_params.get("spectrumModels", []):
@@ -133,3 +145,15 @@ class ParametersConverterV1(ParametersConverter):
                 }
             else:
                 renamed_params[spectrum_model].pop("reliabilityModel", None)
+
+    def update_sections_names(self, renamed_params):
+        # Loops on all the v1 authorized spectrum models names
+        for spectrum_model in ["galaxy", "star", "qso", "sn"]:
+            # Updates <key> by spectrumModel_<key>
+            if spectrum_model in renamed_params.get("spectrumModels", []):
+                renamed_params["spectrumModel_" + spectrum_model] = renamed_params[spectrum_model]
+                del renamed_params[spectrum_model]
+            # Deletes the section if it is not used
+            elif spectrum_model in renamed_params.keys():
+                renamed_params.pop(spectrum_model)
+            # If section is expected but absent, an error will be raised in the checker, not here
