@@ -79,8 +79,6 @@ bool CLineModelSolve::PopulateParameters(
       parameterStore->GetScoped<std::string>("lineModel.pdfCombination");
   m_opt_extremacount =
       parameterStore->GetScoped<Int32>("lineModel.extremaCount");
-  m_opt_extremacountB =
-      parameterStore->GetScoped<Int32>("lineModel.extremaCountB");
   m_opt_maxCandidate =
       parameterStore->GetScoped<Int32>("lineModel.firstPass.extremaCount");
 
@@ -527,55 +525,6 @@ void CLineModelSolve::Solve() {
   // had to duplicate it to allow access from hdf5
   resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
                                        pdfz.m_postmargZResult);
-
-  //**************************************************
-  // FIRST PASS + CANDIDATES - B
-  //**************************************************
-  bool enableFirstpass_B = (m_opt_extremacountB > 0) &&
-                           m_opt_continuumcomponent.isContinuumFit() &&
-                           (m_opt_extremacountB > 1);
-  COperatorLineModel linemodel_fpb;
-  std::string fpb_opt_continuumcomponent =
-      "fromSpectrum"; // Note: this is hardocoded! given that condition for
-                      // FPB relies on having "tplFit"
-  linemodel_fpb.Init(m_redshifts, m_redshiftStep, m_zLogSampling);
-
-  if (enableFirstpass_B) {
-    Log.LogInfo("Linemodel FIRST PASS B enabled. Computing now.");
-
-    //**************************************************
-    // FIRST PASS B
-    //**************************************************
-    linemodel_fpb.ComputeFirstPass();
-
-    //**************************************************
-    // Compute z-candidates B
-    //**************************************************
-    std::shared_ptr<const CLineModelResult> lmresult =
-        std::dynamic_pointer_cast<const CLineModelResult>(
-            linemodel_fpb.getResult());
-
-    ChisquareArray chisquares = BuildChisquareArray(lmresult);
-
-    // TODO deal with the case lmresult->Redshifts=1
-    // Int32 extremacount = 5;
-    COperatorPdfz pdfz(m_opt_pdfcombination,
-                       2 * m_opt_secondpass_halfwindowsize, // peak separation
-                       m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
-                       m_zLogSampling, "FPB", true, 0);
-
-    std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares);
-
-    linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
-    // resultStore->StoreScopedGlobalResult( "firstPassb_pdf",
-    // pdfz.m_postmargZResult);
-
-    //**************************************************
-    // COMBINE CANDIDATES
-    //**************************************************
-    m_linemodel.Combine_firstpass_candidates(
-        linemodel_fpb.getFirstPassExtremaResult());
-  }
 
   std::shared_ptr<const LineModelExtremaResult> fpExtremaResult =
       m_linemodel.BuildFirstPassExtremaResults();
