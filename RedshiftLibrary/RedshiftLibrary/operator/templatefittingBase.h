@@ -63,7 +63,7 @@ class CModelSpectrumResult;
  * \ingroup Redshift
  */
 class COperatorTemplateFittingBase : public COperatorContinuumFitting,
-                                     public COperatorTwoPass {
+                                     public COperatorTwoPass<TExtremaResult> {
 
 public:
   COperatorTemplateFittingBase(const TFloat64List &redshifts = TFloat64List());

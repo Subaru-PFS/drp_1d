@@ -72,7 +72,7 @@ class COperatorTemplateFittingBase;
 /**
  * \ingroup Redshift
  */
-class COperatorLineModel : public COperatorTwoPass {
+class COperatorLineModel : public COperatorTwoPass<TLineModelResult> {
 
 public:
   void Init(const TFloat64List &redshifts, Float64 finestep,

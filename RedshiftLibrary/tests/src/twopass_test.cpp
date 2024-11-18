@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(spanRedshift_test) {
   TFloat64List extendedRedshifts_ref{3, 5, 8};
 
   // prepare object
-  COperatorTwoPass op;
+  COperatorTwoPass<TExtremaResult> op;
   op.m_Redshifts = redshifts;
   op.m_fineStep = step;
   op.m_zLogSampling = zLogSampling;
