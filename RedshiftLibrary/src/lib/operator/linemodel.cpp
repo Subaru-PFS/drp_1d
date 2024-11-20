@@ -1069,6 +1069,7 @@ void COperatorLineModel::EstimateSecondPassParameters() {
       ps->GetScoped<std::string>("lineModel.continuumReestimation");
 
   m_fittingManager->logParameters();
+  m_velocitySolutions.reserve(m_firstpass_extremaResult->size());
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     Log.LogInfo("");
     Log.LogInfo(
@@ -1112,13 +1113,14 @@ void COperatorLineModel::EstimateSecondPassParameters() {
       //  Emission
       //       Int32 s = m_firstpass_extremaResult->GroupsELv[i].size();
       Float64 emVel = m_fittingManager->GetVelocityEmission();
-      m_firstpass_extremaResult->getRankedCandidate(i)->Elv = emVel;
+
       // m_firstpass_extremaResult->GroupsELv[i].assign(s, emVel);
 
       // Absorption
       //      s = m_firstpass_extremaResult->GroupsALv[i].size();
       Float64 absVel = m_fittingManager->GetVelocityAbsorption();
-      m_firstpass_extremaResult->getRankedCandidate(i)->Alv = absVel;
+
+      m_velocitySolutions[i] = VelocityFitSolution(emVel, absVel);
       // m_firstpass_extremaResult->GroupsALv[i].assign(s, absVel);
 
       continue; // move to the following candidate
@@ -1304,9 +1306,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
           //     vOptim; // not sure yet how to deal with this
         } else
           m_fittingManager->SetVelocityAbsorption(vOptim);
-
-        m_firstpass_extremaResult->getRankedCandidate(candidateIdx)->Alv =
-            vOptim;
+        m_velocitySolutions[candidateIdx].Alv = vOptim;
         Log.LogDebug(
             Formatter()
             << "    Operator-Linemodel: secondpass_parameters extrema #"
@@ -1320,8 +1320,8 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
           // vOptim;
         } else
           m_fittingManager->SetVelocityEmission(vOptim);
-        m_firstpass_extremaResult->getRankedCandidate(candidateIdx)->Elv =
-            vOptim;
+        m_velocitySolutions[candidateIdx].Elv = vOptim;
+
         Log.LogDebug(Formatter()
                      << "    Operator-Linemodel: secondpass_parameters "
                         "extrema #"
@@ -1399,10 +1399,8 @@ void COperatorLineModel::RecomputeAroundCandidates(
                   << elv_list_str);
 
     } else {
-      m_fittingManager->SetVelocityEmission(
-          m_firstpass_extremaResult->getRankedCandidate(i)->Elv);
-      m_fittingManager->SetVelocityAbsorption(
-          m_firstpass_extremaResult->getRankedCandidate(i)->Alv);
+      m_fittingManager->SetVelocityEmission(m_velocitySolutions[i].Elv);
+      m_fittingManager->SetVelocityAbsorption(m_velocitySolutions[i].Alv);
       Log.LogInfo(Formatter()
                   << "    Operator-Linemodel: recompute with elv="
                   << m_fittingManager->GetVelocityEmission()
