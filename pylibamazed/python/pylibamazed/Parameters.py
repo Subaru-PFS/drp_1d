@@ -39,11 +39,9 @@
 
 import json
 
-from enum import Enum
 import pandas as pd
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.ParametersAccessor import ParametersAccessor
-from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.ParametersConverter import ParametersConverterSelector
 from pylibamazed.ParametersExtender import ParametersExtender
 from pylibamazed.redshift import ErrorCode
@@ -58,20 +56,19 @@ class Parameters(ParametersAccessor):
         raw_params: dict,
         make_checks=True,
         accepts_v1=False,
-        Checker=ParametersChecker,
         ConverterSelector=ParametersConverterSelector,
         Extender=ParametersExtender,
     ):
         version = self.get_json_schema_version(raw_params)
-
-        if make_checks:
-            Checker(raw_params, version).json_schema_check()
-
         converter = ConverterSelector(accepts_v1).get_converter(version)
         converted_parameters = converter().convert(raw_params)
 
         if make_checks:
-            Checker(converted_parameters, version).custom_check()
+            from pylibamazed.JsonParametersChecker import JsonParametersChecker
+            from pylibamazed.CustomParametersChecker import CustomParametersChecker
+
+            JsonParametersChecker(raw_params, version).check()
+            CustomParametersChecker(converted_parameters).check()
 
         extended_parameters = Extender(version).extend(converted_parameters)
         self.parameters = extended_parameters

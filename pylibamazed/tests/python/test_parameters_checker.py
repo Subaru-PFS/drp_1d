@@ -39,7 +39,7 @@
 
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.ParametersChecker import JsonSchemaFileAccessor, ParametersChecker
+from pylibamazed.JsonParametersChecker import JsonSchemaFileAccessor, JsonParametersChecker
 from pylibamazed.Paths import module_root_dir
 
 
@@ -47,7 +47,7 @@ class TestParametersChecker:
     def test_json_schema_error(self):
         param_dict = {}
         with pytest.raises(APIException, match=r"INVALID_PARAMETER_FILE"):
-            ParametersChecker(param_dict, 1).json_schema_check()
+            JsonParametersChecker(param_dict, 1).check()
 
 
 class TestJsonSchemaFileAccessor:

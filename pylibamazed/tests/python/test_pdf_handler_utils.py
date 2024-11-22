@@ -40,7 +40,6 @@
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Parameters import Parameters
 from pylibamazed.PdfHandler import BuilderPdfHandler
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class PdfHandlerTestUtils:
@@ -58,7 +57,7 @@ class PdfHandlerTestUtils:
 
     @staticmethod
     def parameters():
-        return Parameters({"version": 2, "spectrumModels": []}, Checker=FakeParametersChecker)
+        return Parameters({"version": 2, "spectrumModels": []}, make_checks=False)
 
     @staticmethod
     def abstract_output():

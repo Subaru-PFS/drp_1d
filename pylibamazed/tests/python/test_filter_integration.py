@@ -40,7 +40,6 @@
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Parameters import Parameters
 from pylibamazed.ProcessFlow import ProcessFlow
-from tests.python.fake_parameters_checker import FakeParametersChecker
 from tests.python.test_ITlike import get_observation, get_parameters, get_spectra, make_config
 
 
@@ -50,7 +49,7 @@ class TestFilterIntegration:
 
         # Creates a "real" configuration
         config = make_config(**{"config_filename": "config_filters.json"})
-        param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
+        param = Parameters(get_parameters(config["parameters_file"]), make_checks=False)
         process_flow = ProcessFlow(config, param)  # vars returns the dict version of config
         observation = get_observation(config["input_file"])
 

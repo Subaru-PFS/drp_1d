@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.CustomParametersChecker import CustomParametersChecker
 from pylibamazed.redshift import CFlagWarning, WarningCode
 
 default_object_type = "galaxy"
@@ -150,4 +150,4 @@ def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=N
 
 
 def check_from_parameter_dict(param_dict: dict):
-    ParametersChecker(param_dict).custom_check()
+    CustomParametersChecker(param_dict).check()
