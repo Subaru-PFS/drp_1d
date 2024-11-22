@@ -110,7 +110,8 @@ template <class T> void COperatorTwoPass<T>::buildExtendedRedshifts() {
   // Refine redshift grid around extrema results redshifts
 
   m_extendedRedshifts.reserve(m_firstpass_extremaResult->size());
-  for (auto &cand : m_firstpass_extremaResult->getCandidatesZ()) {
+  for (auto &rank_cand : m_firstpass_extremaResult->m_ranked_candidates) {
+    auto &cand = rank_cand.second;
     Log.LogInfo(Formatter() << "  Operator-TwoPass: Raw extr #" << cand->Rank
                             << ", z_e.X=" << cand->Redshift
                             << ", m_e.Y=" << cand->ValProba);
@@ -139,7 +140,7 @@ template <class T> TZGridListParams COperatorTwoPass<T>::getSPZGridParams() {
     const auto &extendedGrid = m_extendedRedshifts[i];
     centeredZgrid_params[i] =
         CZGridParam(TFloat64Range(extendedGrid), m_fineStep,
-                    m_firstpass_extremaResult->getRankedCandidate(i)->Redshift);
+                    m_firstpass_extremaResult->Redshift(i));
   }
   return centeredZgrid_params;
 }

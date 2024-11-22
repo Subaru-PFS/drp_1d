@@ -44,8 +44,6 @@ public:
   }
 
   void updateFromContinuumModelSolution(
-      std::shared_ptr<const CContinuumModelSolution> cms);
-  void updateFromContinuumModelSolution(
       const CContinuumModelSolution &cms);
 
   void updateFromLineModelSolution(const CLineModelSolution &cms);

@@ -366,8 +366,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
        icontinuum++) {
     // get the closest lower or equal redshift in coarse grid
     Int32 coarseIdx = m_tplfitStore_firstpass->getClosestLowerRedshiftIndex(
-        m_firstpass_extremaResult->m_ranked_candidates[candidateIdx]
-            .second->Redshift);
+        m_firstpass_extremaResult->Redshift(candidateIdx));
 
     CContinuumModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
@@ -695,14 +694,14 @@ void COperatorLineModel::SetFirstPassCandidates(
     m_firstpass_extremaResult->m_savedModelFittingResults[i] =
         std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
     // save the continuum fitting parameters from first pass
-    std::shared_ptr<const CContinuumModelSolution> csolution =
-        std::make_shared<CContinuumModelSolution>(
-            m_result->ContinuumModelSolutions[idx]);
+    // std::shared_ptr<const CContinuumModelSolution> csolution =
+    //     std::make_shared<CContinuumModelSolution>(
+    //         m_result->ContinuumModelSolutions[idx]);
+    auto &candidate = m_firstpass_extremaResult->getRankedCandidatePtr(i);
 
-    m_firstpass_extremaResult->m_ranked_candidates[i]
-        .second->updateFromContinuumModelSolution(csolution);
-    m_firstpass_extremaResult->m_ranked_candidates[i]
-        .second->updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
+    candidate->updateFromContinuumModelSolution(
+        m_result->ContinuumModelSolutions[idx]);
+    candidate->updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
     //... TODO: more first pass results can be saved here if needed
   }
 }
@@ -1026,18 +1025,18 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
       savedModels++;
     }
-
+    auto candidate = ExtremaResult->getRankedCandidatePtr(i);
     // code here has been moved to TLineModelResult::updateFromModel
-    ExtremaResult->m_ranked_candidates[i].second->updateFromModel(
-        m_fittingManager, m_result, m_estimateLeastSquareFast, idx);
+    candidate->updateFromModel(m_fittingManager, m_result,
+                               m_estimateLeastSquareFast, idx);
 
     // save the continuum tpl fitting results
-    ExtremaResult->m_ranked_candidates[i]
-        .second->updateFromContinuumModelSolution(
-            m_fittingManager->getContinuumFitValues());
+
+    candidate->updateFromContinuumModelSolution(
+        *m_fittingManager->getContinuumFitValues());
 
     if (m_fittingManager->getLineRatioType() == "tplRatio")
-      ExtremaResult->m_ranked_candidates[i].second->updateTplRatioFromModel(
+      candidate->updateTplRatioFromModel(
           std::dynamic_pointer_cast<CTplratioManager>(
               m_fittingManager->m_lineRatioManager));
     // save the tplcorr/tplratio results
@@ -1091,7 +1090,8 @@ void COperatorLineModel::EstimateSecondPassParameters() {
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             nullptr);
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
-            m_firstpass_extremaResult->getRankedCandidate(i)->fittedContinuum);
+            m_firstpass_extremaResult->getRankedCandidateCPtr(i)
+                ->fittedContinuum);
         m_fittingManager->getContinuumManager()->SetFitContinuum_Option(2);
       }
     }
@@ -1410,7 +1410,8 @@ void COperatorLineModel::RecomputeAroundCandidates(
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             nullptr);
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
-            m_firstpass_extremaResult->getRankedCandidate(i)->fittedContinuum);
+            m_firstpass_extremaResult->getRankedCandidateCPtr(i)
+                ->fittedContinuum);
         m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
             static_cast<Int32>(tplfit_option));
       } else if (tplfit_option == EContinuumFit::retryAll ||

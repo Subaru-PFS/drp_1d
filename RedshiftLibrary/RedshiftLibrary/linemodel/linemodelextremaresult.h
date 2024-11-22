@@ -106,21 +106,6 @@ public:
 
   std::shared_ptr<const COperatorResult>
   getCandidateParent(const int &rank, const std::string &dataset) const;
-
-  std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
-
-  Float64 Redshift(Int32 i) const {
-    return m_ranked_candidates[i].second->Redshift;
-  }
-  Float64 ValProba(Int32 i) const {
-    return m_ranked_candidates[i].second->ValProba;
-  }
-  Float64 ValSumProba(Int32 i) const {
-    return m_ranked_candidates[i].second->ValSumProba;
-  }
-  Float64 DeltaZ(Int32 i) const {
-    return m_ranked_candidates[i].second->Deltaz;
-  }
 };
 
 typedef CExtremaResult<TLineModelResult> LineModelExtremaResult;

@@ -66,25 +66,16 @@ public:
   Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
 
   Int32 size() const { return m_ranked_candidates.size(); }
-  T getCandidateDataset(int rank, std::string dataset) {
-    return m_ranked_candidates[rank].second;
+
+  std::shared_ptr<const T> getRankedCandidateCPtr(int rank) const {
+    return std::dynamic_pointer_cast<const T>(m_ranked_candidates[rank].second);
   }
 
-  std::shared_ptr<T> getRankedCandidate(int rank) {
+  const std::shared_ptr<T> &getRankedCandidatePtr(int rank) const {
     return m_ranked_candidates[rank].second;
-  }
-
-  std::vector<std::shared_ptr<TCandidateZ>> getCandidatesZ() {
-    std::vector<std::shared_ptr<TCandidateZ>> ret;
-    for (auto &c : m_ranked_candidates) {
-      ret.push_back(std::dynamic_pointer_cast<TCandidateZ>(c.second));
-    }
-    return ret;
   }
 
   TRankedCandidates<T> m_ranked_candidates;
-
-  TFloat64List GetRedshifts() const;
 
   TCandidateZbyRank getCandidatesZByRank() {
     TCandidateZbyRank ret;
@@ -94,12 +85,28 @@ public:
     }
     return ret;
   }
+
   TStringList GetIDs() const {
     TStringList ids;
     ids.reserve(m_ranked_candidates.size());
     for (auto c : m_ranked_candidates)
       ids.push_back(c.first);
     return ids;
+  }
+
+  std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
+
+  Float64 Redshift(Int32 i) const {
+    return m_ranked_candidates[i].second->Redshift;
+  }
+  Float64 ValProba(Int32 i) const {
+    return m_ranked_candidates[i].second->ValProba;
+  }
+  Float64 ValSumProba(Int32 i) const {
+    return m_ranked_candidates[i].second->ValSumProba;
+  }
+  Float64 DeltaZ(Int32 i) const {
+    return m_ranked_candidates[i].second->Deltaz;
   }
 };
 

@@ -261,25 +261,25 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
       // fpExtremaResult->m_ranked_candidates and
       // templateFittingOperator->m_firstpass_extremaResult
       // TODO is ugly - homogenize
-      for (Int32 candidateIdx = 0;
-           candidateIdx < extremaResult->m_ranked_candidates.size();
+      for (Int32 candidateIdx = 0; candidateIdx < extremaResult->size();
            ++candidateIdx) {
         // TODO here get zIdxsToCompute
         std::vector<Int32> zIdxsToCompute =
             templateFittingOperator->getzIdxsToCompute(
                 m_redshifts,
                 templateFittingOperator->m_extendedRedshifts[candidateIdx]);
-        auto candidate = extremaResult->m_ranked_candidates[candidateIdx];
+        auto candidate = extremaResult->getRankedCandidateCPtr(candidateIdx);
+        const std::string &candidateName = extremaResult->ID(candidateIdx);
         std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(
-            {m_category}, candidate.second->fittedContinuum.name);
-        Int32 igmIdx = candidate.second->fittedContinuum.meiksinIdx;
+            {m_category}, candidate->fittedContinuum.name);
+        Int32 igmIdx = candidate->fittedContinuum.meiksinIdx;
         Int32 ismIdx = Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
-            candidate.second->fittedContinuum.ebmvCoef);
+            candidate->fittedContinuum.ebmvCoef);
         std::vector<CMask> maskList;
         // TODO check that the second pass redshift grid is used
         Solve(resultStore, tpl, m_overlapThreshold, maskList, type,
               m_interpolation, m_extinction, m_dustFit, ismIdx, igmIdx,
-              candidate.first, zIdxsToCompute);
+              candidateName, zIdxsToCompute);
       }
     }
     zgridParams = templateFittingOperator->getSPZGridParams();
@@ -308,7 +308,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
     }
     StoreExtremaResults(resultStore, extremaResult);
     TemplateFittingSolveResult = std::make_shared<CTemplateFittingSolveResult>(
-        extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
+        extremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
         pdfz.m_postmargZResult->valMargEvidenceLog);
 
   } else {
@@ -333,7 +333,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
     }
     StoreExtremaResults(resultStore, extremaResult);
     TemplateFittingSolveResult = std::make_shared<CTemplateFittingSolveResult>(
-        extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
+        extremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
         pdfz.m_postmargZResult->valMargEvidenceLog);
   }
   // TODO add   m_opt_candidatesLogprobaCutThreshold =
@@ -612,35 +612,23 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         tplFitResultsMap[name]);
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.merit = ChiSquare;
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplMeritPhot =
+    auto candidate = extremaResult->getRankedCandidatePtr(iExtremum);
+    candidate->fittedContinuum.merit = ChiSquare;
+    candidate->fittedContinuum.tplMeritPhot =
         TplFitResult->ChiSquarePhot[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.name =
-        name;
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.reducedChi2 =
+    candidate->fittedContinuum.name = name;
+    candidate->fittedContinuum.reducedChi2 =
         TplFitResult->ReducedChiSquare[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.meiksinIdx =
-        TplFitResult->FitMeiksinIdx[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplAmplitude =
+    candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[zIndex];
+    candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[zIndex];
+    candidate->fittedContinuum.tplAmplitude =
         TplFitResult->FitAmplitude[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplAmplitudeError =
+    candidate->fittedContinuum.tplAmplitudeError =
         TplFitResult->FitAmplitudeError[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplDtM = TplFitResult->FitDtM[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplMtM = TplFitResult->FitMtM[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.SNR =
-        TplFitResult->SNR[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.tplLogPrior = TplFitResult->LogPrior[zIndex];
+    candidate->fittedContinuum.tplDtM = TplFitResult->FitDtM[zIndex];
+    candidate->fittedContinuum.tplMtM = TplFitResult->FitMtM[zIndex];
+    candidate->fittedContinuum.SNR = TplFitResult->SNR[zIndex];
+    candidate->fittedContinuum.tplLogPrior = TplFitResult->LogPrior[zIndex];
 
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;

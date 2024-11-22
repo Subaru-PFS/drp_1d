@@ -534,8 +534,9 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
 
   // For each extremum, find its corresponding template
   for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
-    Float64 z = m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-                    .second->Redshift;
+    auto candidate =
+        m_firstpass_extremaResult->getRankedCandidatePtr(iExtremum);
+    Float64 z = candidate->Redshift;
 
     // Find z index in stored results redshifts grid
     auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
@@ -554,17 +555,14 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
         name = resultPair.first;
       };
     }
-    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.name = name;
+
+    candidate->fittedContinuum.name = name;
     auto resultFromStore =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(
             resultsMapFromStore.at(name));
-    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.meiksinIdx =
+    candidate->fittedContinuum.meiksinIdx =
         resultFromStore->FitMeiksinIdx[zIndex];
-    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.ebmvCoef =
-        resultFromStore->FitEbmvCoeff[zIndex];
+    candidate->fittedContinuum.ebmvCoef = resultFromStore->FitEbmvCoeff[zIndex];
   }
   return m_firstpass_extremaResult;
 }
