@@ -45,6 +45,18 @@ class SpectrumReader(AbstractSpectrumReader):
     def __init__(self):
         pass
 
+    def load_wave(self, resource, obs_id=""):
+        return super().load_wave(resource, obs_id)
+
+    def load_flux(self, resource, obs_id=""):
+        return super().load_flux(resource, obs_id)
+
+    def load_error(self, resource, obs_id=""):
+        return super().load_error(resource, obs_id)
+
+    def load_lsf(self, resource, obs_id=""):
+        return super().load_lsf(resource, obs_id)
+
 
 class TestSpectrumReaderImplementationErrors:
     spectrumReader = SpectrumReader()

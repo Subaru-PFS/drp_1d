@@ -74,13 +74,6 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
         fsr.load_others = lambda *args: None
         fsr.load_all([1, 10])
 
-    def test_load_others(self):
-        # Make test from the abstract spectrum reader
-        parameters = Parameters(self.make_parameters_dict(), Checker=FakeParametersChecker)
-        cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
-        fsr = AbstractSpectrumReader(parameters, cl, "000")
-        fsr.load_others("data name")
-
 
 class TestSpectrumReaderGetErrors(TestSpectrumReaderUtils):
     def test_get_spectrum_error(self):

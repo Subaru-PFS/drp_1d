@@ -38,6 +38,7 @@
 # ============================================================================
 
 from typing import Dict
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 import pandas as pd
@@ -67,7 +68,7 @@ def get_reader_from_name(reader_name):
     return reader_classes[reader_name]
 
 
-class AbstractSpectrumReader:
+class AbstractSpectrumReader(metaclass=ABCMeta):
     """
     Base class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also
     handles Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle
@@ -115,6 +116,7 @@ class AbstractSpectrumReader:
         self.clean()
         return False
 
+    @abstractmethod
     def load_wave(self, resource, obs_id=""):
         """Append the spectral axis in self.wave , units are in Angstrom by default
 
@@ -124,6 +126,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
+    @abstractmethod
     def load_flux(self, resource, obs_id=""):
         """Append the flux in self.flux , units are in erg.cm-2 by default
 
@@ -133,6 +136,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
+    @abstractmethod
     def load_error(self, resource, obs_id=""):
         """Append the variance in self.error , units are in erg.cm-2 by default
 
@@ -142,6 +146,7 @@ class AbstractSpectrumReader:
         """
         raise NotImplementedError("Implement in derived class")
 
+    @abstractmethod
     def load_lsf(self, resource, obs_id=""):
         """Append the spectral axis in self.flux , units are in erg.cm-2 by default
 
