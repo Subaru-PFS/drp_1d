@@ -107,20 +107,6 @@ public:
   std::shared_ptr<const COperatorResult>
   getCandidateParent(const int &rank, const std::string &dataset) const;
 
-  TCandidateZbyRank getCandidatesZByRank();
-  // {
-  //   TCandidateZbyRank ret(size());
-  //   for (auto &c: m_ranked_candidates)
-  //     {
-
-  // 	ret.push_back(std::pair<std::string,
-  // std::shared_ptr<TCandidateZ>>(std::string(c.first),
-  // std::dynamic_pointer_cast<std::shared_ptr<TCandidateZ>>(c.second)));
-  //     }
-  //   return ret;
-
-  // }
-
   std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
 
   Float64 Redshift(Int32 i) const {

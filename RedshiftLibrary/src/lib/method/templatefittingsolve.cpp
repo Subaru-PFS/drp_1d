@@ -209,9 +209,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
     THROWG(ErrorCode::INTERNAL_ERROR, "no result for any template");
 
   std::shared_ptr<const ExtremaResult> extremaResult;
-  TStringList fpResultsIds;
   TZGridListParams zgridParams = {};
-  std::shared_ptr<CPassExtremaResult> fpExtremaResult;
   std::shared_ptr<CTemplateFittingSolveResult> TemplateFittingSolveResult;
 
   // TODO split in two methods depending if use two pass or not
@@ -284,12 +282,13 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
               candidate.first, zIdxsToCompute);
       }
     }
-    fpExtremaResult = std::make_shared<CPassExtremaResult>(
-        templateFittingOperator->m_firstpass_extremaResult);
     zgridParams = templateFittingOperator->getSPZGridParams();
     scopeStr = MakeScopeStrFromTypeAndPass(type, false);
     COperatorPdfz pdfz2(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
                         m_opt_maxCandidate, m_zLogSampling);
+    std::shared_ptr<const ExtremaResult> fpExtremaResult =
+        std::dynamic_pointer_cast<const ExtremaResult>(
+            m_continuumFittingOperator->getFirstPassExtremaResults());
     auto chi2array = BuildChisquareArray(resultStore, scopeStr, fpExtremaResult,
                                          zgridParams);
     candidateResult = pdfz2.Compute(chi2array);
@@ -435,7 +434,7 @@ void CTemplateFittingSolve::Solve(
 
 ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
     std::shared_ptr<const COperatorResultStore> store,
-    const std::string &scopeStr, std::shared_ptr<CPassExtremaResult> fpResults,
+    const std::string &scopeStr, std::shared_ptr<const ExtremaResult> fpResults,
     TZGridListParams zgridParams) const {
   ChisquareArray chisquarearray;
 
@@ -448,8 +447,9 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   bool isSecondPass = bool(fpResults);
   TOperatorResultMap templatesResultsMap;
   if (isSecondPass) {
-    // TODO create a method to get all ids
-    chisquarearray.parentCandidates = fpResults->m_ranked_candidates;
+    chisquarearray.parentCandidates =
+        m_continuumFittingOperator->getFirstPassCandidatesZByRank();
+    ;
     TStringList fpResultsIds = fpResults->GetIDs();
     for (std::string id : fpResultsIds) {
       const TOperatorResultMap &tmpMap =
@@ -535,7 +535,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     const CTemplateCatalog &tplCatalog, Float64 m_overlapThreshold,
-    std::shared_ptr<CPassExtremaResult> fpResults) {
+    std::shared_ptr<const ExtremaResult> fpResults) {
 
   Log.LogDetail(
       "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
@@ -550,7 +550,6 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
 
   // TODO this is a duplicate with buildchi2 array. To put in common
   if (isSecondPass) {
-    // TODO create a method to get all ids
     TStringList fpResultsIds = fpResults->GetIDs();
     for (std::string id : fpResultsIds) {
       const TOperatorResultMap &tmpMap =

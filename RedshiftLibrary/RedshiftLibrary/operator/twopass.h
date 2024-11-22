@@ -41,9 +41,10 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/passextremaresult.h"
 #include "RedshiftLibrary/operator/twopassresult.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
 namespace TwoPass {
 class spanRedshift_test;
@@ -60,6 +61,9 @@ public:
   TZGridListParams getSPZGridParams();
   TCandidateZbyRank getFirstPassCandidatesZByRank() {
     return m_firstpass_extremaResult->getCandidatesZByRank();
+  }
+  std::shared_ptr<CExtremaResult<T>> getFirstPassExtremaResults() {
+    return m_firstpass_extremaResult;
   }
 
 protected:

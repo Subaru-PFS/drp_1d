@@ -63,14 +63,6 @@ public:
   CPdfCandidateszResult &operator=(const CPdfCandidateszResult &) = default;
   CPdfCandidateszResult &operator=(CPdfCandidateszResult &&) = default;
   virtual ~CPdfCandidateszResult() = default;
-
-  TStringList GetIDs() const {
-    TStringList ids;
-    ids.reserve(m_ranked_candidates.size());
-    for (auto c : m_ranked_candidates)
-      ids.push_back(c.first);
-    return ids;
-  }
   Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
 
   Int32 size() const { return m_ranked_candidates.size(); }
@@ -93,6 +85,22 @@ public:
   TRankedCandidates<T> m_ranked_candidates;
 
   TFloat64List GetRedshifts() const;
+
+  TCandidateZbyRank getCandidatesZByRank() {
+    TCandidateZbyRank ret;
+    for (auto &cand : m_ranked_candidates) {
+      ret.push_back(std::make_pair(
+          cand.first, std::dynamic_pointer_cast<TCandidateZ>(cand.second)));
+    }
+    return ret;
+  }
+  TStringList GetIDs() const {
+    TStringList ids;
+    ids.reserve(m_ranked_candidates.size());
+    for (auto c : m_ranked_candidates)
+      ids.push_back(c.first);
+    return ids;
+  }
 };
 
 typedef CPdfCandidateszResult<TCandidateZ> PdfCandidatesZResult;

@@ -96,14 +96,14 @@ private:
   ChisquareArray
   BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store,
                       const std::string &scopeStr,
-                      std::shared_ptr<CPassExtremaResult> fpResults = {},
+                      std::shared_ptr<const ExtremaResult> fpResults = {},
                       TZGridListParams zgridParams = {}) const;
 
   std::shared_ptr<const ExtremaResult> buildExtremaResults(
       shared_ptr<const COperatorResultStore> store, const std::string &scopeStr,
       const TCandidateZbyRank &ranked_zCandidates,
       const CTemplateCatalog &tplCatalog, Float64 overlapThreshold,
-      std::shared_ptr<CPassExtremaResult> fpResults = {});
+      std::shared_ptr<const ExtremaResult> fpResults = {});
   void StoreExtremaResults(
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const ExtremaResult> &ExtremaResult) const;

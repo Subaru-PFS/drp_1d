@@ -49,7 +49,6 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/passextremaresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"

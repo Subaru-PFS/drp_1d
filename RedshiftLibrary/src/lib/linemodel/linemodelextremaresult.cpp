@@ -235,12 +235,3 @@ LineModelExtremaResult::getCandidateParent(const int &rank,
   else
     THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
 }
-
-TCandidateZbyRank LineModelExtremaResult::getCandidatesZByRank() {
-  TCandidateZbyRank ret;
-  for (auto &cand : m_ranked_candidates) {
-    ret.push_back(std::make_pair(
-        cand.first, std::dynamic_pointer_cast<TCandidateZ>(cand.second)));
-  }
-  return ret;
-}
