@@ -63,6 +63,7 @@ class basicfit_double_without_extinction;
 class basicfit_double_with_var;
 class basicfit_simple_with_extinction;
 class basicfit_multiobs;
+class basicfit_negative;
 } // namespace powerLawOperator_test
 
 namespace NSEpic {
@@ -128,6 +129,7 @@ protected:
   friend powerLawOperator_test::basicfit_double_with_var;
   friend powerLawOperator_test::basicfit_simple_with_extinction;
   friend powerLawOperator_test::basicfit_multiobs;
+  friend powerLawOperator_test::basicfit_negative;
 
   TPowerLawResult BasicFit(Float64 redshift, bool opt_extinction,
                            bool opt_dustFitting, Float64 nullFluxThreshold,

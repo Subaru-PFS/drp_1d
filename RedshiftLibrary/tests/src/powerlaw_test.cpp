@@ -163,7 +163,7 @@ void PowerLaw_fixture::addNoiseAxis(CSpectrumFluxAxis &fluxAxis) {
   // compute the stdev of the flux axis, with a constant SNR
   TFloat64List stdev(n);
   std::transform(fluxVector.begin(), fluxVector.end(), stdev.begin(),
-                 [SNR](Float64 v) { return v / SNR; });
+                 [SNR](Float64 v) { return std::abs(v) / SNR; });
 
   // Build random normal noise realization
   TFloat64List noisyFluxValues(n);
@@ -641,6 +641,48 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
   BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  Context.reset();
+}
+
+BOOST_AUTO_TEST_CASE(basicfit_negative) {
+  Float64 xc2 = 1200;
+  Float64 z = 2;
+  Float64 a1 = -1.5e-16;
+  Float64 b1 = 0.0;
+  Float64 b2 = 0.0;
+  Float64 a2 = computea2(a1, b1, b2, xc2);
+
+  CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 50);
+  CSpectrumSpectralAxis spectralAxisRest1 =
+      createSpectralAxisRest(spectralAxis1, z);
+  CSpectrumFluxAxis fluxAxis1 =
+      createFluxAxis(spectralAxisRest1, a1, b1, b2, xc2);
+  addNoiseAxis(fluxAxis1);
+
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis1, fluxAxis1);
+  Init(jsonString2, {spc});
+  applyIsmIgmOnSpectrum(spectralAxisRest1, fluxAxis1, z, spc);
+
+  COperatorPowerLaw operatorPowerLaw{{}, xc2};
+  bool opt_extinction = true;
+  bool opt_dustFitting = true;
+  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  operatorPowerLaw.m_ismIdxList = TList<Int32>{0, 1};
+  operatorPowerLaw.m_nIsmCurves = 2;
+  operatorPowerLaw.m_igmIdxList = TList<Int32>{0, 1};
+  operatorPowerLaw.m_nIgmCurves = 2;
+
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      z, opt_extinction, opt_dustFitting, nullThreshold, "full");
+
+  BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.5));
+  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
+  BOOST_TEST(result.coefs.first.b == 0);
+  BOOST_TEST(result.coefs.second.b == 0);
+
   Context.reset();
 }
 BOOST_AUTO_TEST_SUITE_END()
