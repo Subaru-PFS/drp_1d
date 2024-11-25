@@ -36,14 +36,14 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-
-
+import json
 from pylibamazed.redshift import (
     TLSFArguments,
     TLSFGaussianConstantResolutionArgs,
     TLSFGaussianConstantWidthArgs,
     TLSFGaussianNISPVSSPSF201707Args,
     TLSFGaussianVarWidthArgs,
+    CProcessFlowContext,
 )
 
 LSFParameters = {
@@ -51,7 +51,7 @@ LSFParameters = {
     "gaussianConstantResolution": "resolution",
     "gaussianNISPVSSPSF201707": "sourceSize",
     "gaussianVariableWidth": "gaussianVariableWidthFileName",
-    "gaussianNISPSIM2016": "",
+    "gaussianNISPSIM2016": None,
 }
 
 
@@ -62,3 +62,17 @@ TLSFArgumentsCtor = {
     "gaussianNISPVSSPSF201707": TLSFGaussianNISPVSSPSF201707Args,
     "gaussianVariableWidth": TLSFGaussianVarWidthArgs,
 }
+
+
+def get_lsf_args_from_parameters(parameters: dict):
+    ctx = CProcessFlowContext.GetInstance()
+    parameter_lsf_type = parameters["lsfType"]
+
+    if parameter_lsf_type != "gaussianVariableWidth":
+        parameter_store = ctx.LoadParameterStore(json.dumps({"lsf": parameters}))
+        lsf_args = TLSFArgumentsCtor[parameter_lsf_type](parameter_store)
+    else:
+        wave = parameters["wave"]
+        width = parameters["width"]
+        lsf_args = TLSFGaussianVarWidthArgs(wave, width)
+    return lsf_args

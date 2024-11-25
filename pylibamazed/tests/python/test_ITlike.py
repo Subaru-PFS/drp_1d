@@ -127,7 +127,7 @@ def add_photometry_to_reader(config, observation, reader):
     )
     if os.path.exists(phot_fname):
         phot = read_photometry_fromfile(phot_fname)
-        reader.load_photometry(phot)
+        reader.add_photometry(phot)
 
 
 def save_output(output, config, observation):
@@ -150,16 +150,17 @@ def test_ITLikeTest():
     spectra = get_spectra(config, observation)
 
     reader = ASCIISpectrumReader(
-        observation_id=observation.ProcessingID[0],
         parameters=param,
         calibration_library=process_flow.calibration_library,
         source_id=observation.ProcessingID[0],
     )
 
-    reader.load_all(spectra)
-    add_photometry_to_reader(config, observation, reader)
+    with reader:
+        reader.load_all(spectra)
+        add_photometry_to_reader(config, observation, reader)
+        spectrum = reader.get_spectrum()
 
-    output = process_flow.run(reader)  # passing spectra reader to launch amazed
+    output = process_flow.run(spectrum)
 
     # check results (no errors)
     for spectrum_model, stage in (

@@ -45,22 +45,25 @@ from tests.python.utils import ComparisonUtils
 class TestFilterList:
     def test_apply(self):
         df = pd.DataFrame({"col1": [1, 22, 111], "col2": [30, 1, 1]})
+        expected = df.copy()
 
         # Result is as expected
         filter = FilterList()
         filter.add_filter(SpectrumFilterItem("col1", ">", 12))
         filter.add_filter(SpectrumFilterItem("col2", "<", 10))
 
-        filtered = filter.apply(df)
-        expected = pd.DataFrame({"col1": [22, 111], "col2": [1, 1]})
-        ComparisonUtils.compare_dataframe_without_index(filtered, expected)
+        filter.apply(df)
+        expected["amazed_mask"] = [False, True, True]
+        ComparisonUtils.compare_dataframe_without_index(df, expected)
 
     def test_apply_without_items(self):
         # If filter list is empty, returns the initial data
         df = pd.DataFrame({"col1": [1, 22, 111], "col2": [30, 1, 1]})
+        expected = df.copy()
+
         filter = FilterList()
-        filtered = filter.apply(df)
-        ComparisonUtils.compare_dataframe_without_index(filtered, df)
+        filter.apply(df)
+        ComparisonUtils.compare_dataframe_without_index(df, expected)
 
     def test_repr(self):
         filter = FilterList()

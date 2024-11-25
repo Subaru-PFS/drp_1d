@@ -55,8 +55,7 @@ zflag = CFlagWarning.GetInstance()
 
 
 class JsonSchemaFileAccessor:
-
-    def __init__(self, version: int=2):
+    def __init__(self, version: int = 2):
         self.version = version
 
     def get_json_schema(self) -> dict:
@@ -70,7 +69,6 @@ class JsonSchemaFileAccessor:
     def _json_schema_path(self) -> str:
         return os.path.join(module_root_dir, "resources", f"jsonschema-v{self.version}")
 
-
     def retrieve_from_filesystem(self, uri: str):
         schema_path = Path(self._json_schema_path())
         path = schema_path / Path(uri)
@@ -79,11 +77,10 @@ class JsonSchemaFileAccessor:
 
 
 class ParametersChecker:
-
     def __init__(
         self,
         parameters: dict,
-        version: int=2,
+        version: int = 2,
         FilterLoader=ParamJsonFilterLoader,
         FileAccessor=JsonSchemaFileAccessor,
         Accessor=ParametersAccessor,
@@ -99,8 +96,7 @@ class ParametersChecker:
 
         # Add the base schema to the registry
         registry = Registry(retrieve=self.file_accessor.retrieve_from_filesystem)
-        validator = Draft202012Validator(
-            json_schema, registry=registry)
+        validator = Draft202012Validator(json_schema, registry=registry)
         try:
             validator.validate(self.accessor.parameters)
         except ValidationError as e:

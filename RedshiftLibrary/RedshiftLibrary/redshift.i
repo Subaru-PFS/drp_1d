@@ -782,6 +782,7 @@ class CLSFFactory : public CSingleton<CLSFFactory>
 typedef struct{
     virtual ~TLSFArguments(){};
     TLSFArguments()=default;
+    TLSFArguments(const std::shared_ptr<const CParameterStore>& parameterStore);
     TLSFArguments(const TLSFArguments & other) = default; 
     TLSFArguments(TLSFArguments && other) = default; 
     TLSFArguments& operator=(const TLSFArguments& other) = default;  

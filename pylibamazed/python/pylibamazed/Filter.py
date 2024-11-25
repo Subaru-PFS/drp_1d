@@ -173,8 +173,9 @@ class FilterList:
     def add_filter(self, filter) -> None:
         self.items.append(filter)
 
-    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+    def apply(self, df: pd.DataFrame):
         if not self.items:
             return df
         condition_list = [filt.compliant_lines(df) for filt in self.items]
-        return df[LogicUtils.cumulate_conditions(condition_list)]
+        mask = LogicUtils.cumulate_conditions(condition_list)
+        df["amazed_mask"] = mask

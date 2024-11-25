@@ -50,7 +50,6 @@ from pylibamazed.redshift import ErrorCode
 
 
 class Parameters(ParametersAccessor):
-
     defined_stages = ["redshiftSolver", "lineMeasSolver", "reliabilitySolver"]
 
     @exception_decorator(logging=True)
