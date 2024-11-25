@@ -65,12 +65,7 @@ public:
   std::vector<std::shared_ptr<const CModelPhotValueResult>> m_modelPhotValues;
   CExtremaResult<TExtremaResult>(const TCandidateZbyRank &zCandidates) {
     m_type = "ExtremaResult";
-    for (const auto &cand : zCandidates) {
-      m_ranked_candidates.push_back(
-          std::make_pair<std::string, std::shared_ptr<TExtremaResult>>(
-              std::string(cand.first),
-              std::make_shared<TExtremaResult>(*cand.second)));
-    }
+    SetRankedCandidates(zCandidates);
     m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
     m_modelPhotValues.resize(this->m_ranked_candidates.size());
   }

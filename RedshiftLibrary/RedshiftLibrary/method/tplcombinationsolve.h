@@ -94,7 +94,7 @@ private:
 
   std::string m_opt_pdfcombination;
   Float64 m_redshiftSeparation;
-  Int64 m_opt_maxCandidate;
+  Int32 m_opt_maxCandidate;
   std::string m_opt_saveintermediateresults;
 };
 

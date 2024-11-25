@@ -128,8 +128,6 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
   // save in resultstore pdf results
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
-  // save in resultstore candidates results
-  resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
   // for each candidate, get best model by reading from datastore and selecting
   // best fit

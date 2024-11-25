@@ -49,13 +49,16 @@
 namespace NSEpic {
 
 template <typename T>
-using TRankedCandidates =
+using TCandidateZResultbyRank =
     std::vector<std::pair<std::string, std::shared_ptr<T>>>;
 template <class T> class CPdfCandidateszResult : public COperatorResult {
 
 public:
   CPdfCandidateszResult(Int32 optMethod = 0)
-      : COperatorResult("PdfCandidatesZResult"), m_optMethod(optMethod){};
+      : COperatorResult("PdfCandidatesZResult"), m_optMethod(optMethod) {
+    // For T deriving from TCandidateZ classes only.
+    static_assert(std::is_base_of<TCandidateZ, T>::value);
+  };
 
   // rule of 5 defaults
   CPdfCandidateszResult(const CPdfCandidateszResult &) = default;
@@ -75,7 +78,7 @@ public:
     return m_ranked_candidates[rank].second;
   }
 
-  TRankedCandidates<T> m_ranked_candidates;
+  TCandidateZResultbyRank<T> m_ranked_candidates;
 
   TCandidateZbyRank getCandidatesZByRank() {
     TCandidateZbyRank ret;
@@ -107,6 +110,15 @@ public:
   }
   Float64 DeltaZ(Int32 i) const {
     return m_ranked_candidates[i].second->Deltaz;
+  }
+
+  void SetRankedCandidates(const TCandidateZbyRank &zCandidates) {
+    // Upcasts zCandidates
+    m_ranked_candidates.clear();
+    for (const auto &cand : zCandidates) {
+      m_ranked_candidates.push_back(std::make_pair(
+          std::string(cand.first), std::make_shared<T>(*cand.second)));
+    }
   }
 };
 

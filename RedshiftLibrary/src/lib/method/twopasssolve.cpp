@@ -43,11 +43,18 @@ using namespace NSEpic;
 
 void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
                                        const TFloat64Range &redshiftRange) {
-  if (useTwoPass()) {
-    initTwoPassZStepFactor();
-    m_coarseRedshiftStep = m_redshiftStep * m_twoPassZStepFactor;
-  } else
-    m_coarseRedshiftStep = m_redshiftStep;
+
+  {
+    auto &scope = Context.m_ScopeStack;
+    CAutoScope method_autoscope(scope, m_name, ScopeType::METHOD);
+    initSkipSecondPass();
+    if (useTwoPass()) {
+      initTwoPassZStepFactor();
+      m_coarseRedshiftStep = m_redshiftStep * m_twoPassZStepFactor;
+    } else
+      m_coarseRedshiftStep = m_redshiftStep;
+  }
+
   CZGridParam zp(redshiftRange, m_coarseRedshiftStep);
   m_redshifts = zp.getZGrid(m_zLogSampling);
 

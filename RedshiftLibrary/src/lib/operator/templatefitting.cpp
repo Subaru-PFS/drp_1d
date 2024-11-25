@@ -393,7 +393,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
-    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+    const CPriorHelper::TPriorZEList &logprior, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
     bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
   Log.LogDetail(
@@ -420,15 +420,16 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
       opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
-  // NB in second pass, is already equal, see if useful in fp
+  if (!result) {
+    result = std::make_shared<CTemplateFittingResult>(m_redshifts.size());
+  }
   result->Redshifts = m_redshifts;
 
-  if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size())
+  if (logprior.size() > 0 && logprior.size() != m_redshifts.size())
     THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "prior list size(" << logpriorze.size()
+           Formatter() << "prior list size(" << logprior.size()
                        << ") does not match the input redshift-list size :"
                        << m_redshifts.size());
-  // TODO possibly remove m_isFirstPassResult
 
   std::vector<Int32> zIdxs;
   if (isFirstPass) {
@@ -441,8 +442,8 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     Float64 redshift = result->Redshifts[zIdx];
     // TODO move a condition up loop
     const CPriorHelper::TPriorEList &logp =
-        logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
-            ? logpriorze[zIdx]
+        logprior.size() > 0 && logprior.size() == m_redshifts.size()
+            ? logprior[zIdx]
             : CPriorHelper::TPriorEList();
 
     TFittingIsmIgmResult result_z =
@@ -498,26 +499,13 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
  *otherwise its size should match the redshifts list size
  *
  **/
-std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
-    Float64 opt_continuum_null_amp_threshold,
-    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx) {
-  std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>(m_redshifts.size());
-  result->Redshifts = m_redshifts;
-
-  return Compute(tpl, overlapThreshold, opt_interp, opt_extinction,
-                 opt_dustFitting, opt_continuum_null_amp_threshold, logpriorze,
-                 FitEbmvIdx, FitMeiksinIdx, result);
-}
 
 void COperatorTemplateFitting::SetFirstPassCandidates(
     const TCandidateZbyRank &zCandidates) {
   m_firstpass_extremaResult = std::make_shared<ExtremaResult>(zCandidates);
 }
 
+// TODO move in solve and mutualize with buildextremaresult
 std::shared_ptr<const ExtremaResult>
 COperatorTemplateFitting::BuildFirstPassExtremaResults(
     const TOperatorResultMap &resultsMapFromStore) {
@@ -563,6 +551,7 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
     candidate->fittedContinuum.meiksinIdx =
         resultFromStore->FitMeiksinIdx[zIndex];
     candidate->fittedContinuum.ebmvCoef = resultFromStore->FitEbmvCoeff[zIndex];
+    candidate->fittedContinuum.redshift = resultFromStore->Redshifts[zIndex];
   }
   return m_firstpass_extremaResult;
 }

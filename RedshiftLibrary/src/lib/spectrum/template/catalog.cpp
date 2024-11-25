@@ -234,8 +234,7 @@ void CTemplateCatalog::InitContinuumRemoval(
       "templateCatalog.continuumRemoval.medianKernelWidth");
   bool medianEvenReflection = parameterStore->Get<bool>(
       "templateCatalog.continuumRemoval.medianEvenReflection");
-  for (auto it : GetList(0, 0)) {
-    const TTemplateRefList &TplList = it.second;
+  for (const auto &[_, TplList] : GetList(0, 0)) {
     for (auto tpl : TplList) {
       tpl->SetContinuumEstimationMethod(ContinuumRemovalMethod);
       tpl->SetMedianWinsize(medianKernelWidth);

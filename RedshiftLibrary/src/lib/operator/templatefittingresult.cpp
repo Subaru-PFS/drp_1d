@@ -50,7 +50,6 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n)
       ChiSquareIntermediate(n), IsmEbmvCoeffIntermediate(n),
       IgmMeiksinIdxIntermediate(n), SNR(n), Overlap(n) {
   Redshifts.resize(n);
-  m_isFirstPassResult = std::vector<bool>(n, true);
 }
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
@@ -130,7 +129,6 @@ void CTemplateFittingResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
   insertWithDuplicates<Float64>(FitMtM, idx, count, NAN, ndup);
   insertWithDuplicates<Float64>(LogPrior, idx, count, NAN, ndup);
   insertWithDuplicates<Float64>(SNR, idx, count, NAN, ndup);
-  insertWithDuplicates<bool>(m_isFirstPassResult, idx, count, false, ndup);
 
   insertWithDuplicates<std::vector<Float64>>(
       Overlap, idx, count, std::vector<Float64>(Overlap[0].size(), NAN), ndup);
@@ -159,4 +157,15 @@ void CTemplateFittingResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
 
   insertWithDuplicates<std::vector<std::vector<Float64>>>(
       ChiSquareIntermediate, idx, chi2ToInsert, ndup);
+
+  // TODO see how to fill this
+  T3DList<Float64> toInsertFloat(
+      count, T2DList<Float64>(nIsm, std::vector<Float64>(nIgm, NAN)));
+  insertWithDuplicates<std::vector<std::vector<Float64>>>(
+      IsmEbmvCoeffIntermediate, idx, toInsertFloat, ndup);
+
+  T3DList<Int32> toInsertInt(
+      count, T2DList<Int32>(nIsm, std::vector<Int32>(nIgm, -1)));
+  insertWithDuplicates<std::vector<std::vector<Int32>>>(
+      IgmMeiksinIdxIntermediate, idx, toInsertInt, ndup);
 };

@@ -110,9 +110,10 @@ const std::string jsonStringNoFFT = {
     "\"pdfCombination\" : \"marg\","
     "\"enablePhotometry\" : true,"
     "\"photometry\": {\"weight\" : 1.0},"
-    "\"firstPass\": {\"largeGridStepRatio\": \"10\"},"
+    "\"extremaCutProbaThreshold\" : -1,"
+    "\"firstPass\": {\"largeGridStepRatio\": 10, \"extremaCount\" : 5},"
     "\"secondPass\": {\"continuumFit\": \"fromFirstPass\", \"halfWindowSize\": "
-    "0.002}"
+    "0.001}"
     "}}}}"};
 // Question: here on halfwindowsize : should it be < redshiftStep ?
 

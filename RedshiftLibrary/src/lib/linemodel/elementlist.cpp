@@ -284,8 +284,7 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
   // between elements considered not overlapped. In this case we should not add
   // the overlapped polynomes, but choose one of them.
   TInt32List mask(modelfluxAxis.GetSamplesCount(), 1);
-  for (const auto &g : ampOffsetGroups) {
-    const auto &group_eIdx_list = g.second;
+  for (const auto &[_, group_eIdx_list] : ampOffsetGroups) {
     // filter out not fittable elements
     TInt32List valid_eIdx_list;
     std::copy_if(group_eIdx_list.begin(), group_eIdx_list.end(),

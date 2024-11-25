@@ -60,6 +60,7 @@ public:
   static const std::unordered_map<std::string, EContinuumFit> str2ContinuumFit;
 
 protected:
+  virtual void initSkipSecondPass() = 0;
   virtual void initTwoPassZStepFactor() = 0;
   bool useTwoPass() const { return !m_opt_skipsecondpass; }
 

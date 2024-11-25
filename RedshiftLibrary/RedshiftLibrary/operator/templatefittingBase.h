@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/result.h"
@@ -78,12 +79,15 @@ public:
   COperatorTemplateFittingBase &
   operator=(COperatorTemplateFittingBase &&other) = default;
 
-  virtual std::shared_ptr<COperatorResult> Compute(
+  virtual std::shared_ptr<CTemplateFittingResult> Compute(
       const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
       std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
-      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
+      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+      std::shared_ptr<CTemplateFittingResult> result = NULL,
+      bool isFirstPass = true,
+      const std::vector<Int32> &zIdxsToCompute = {}) = 0;
 
   TPhotVal
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,

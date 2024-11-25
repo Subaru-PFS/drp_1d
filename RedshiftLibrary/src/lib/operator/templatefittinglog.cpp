@@ -1001,12 +1001,13 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
  *
  * lambdaRange is not clamped
  **/
-std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
+std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
     const std::shared_ptr<const CTemplate> &logSampledTpl,
     Float64 overlapThreshold, std::string opt_interp, bool opt_extinction,
     bool opt_dustFitting, Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx) {
+    Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
+    bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
   Log.LogDetail(Formatter() << "starting computation for template: "
                             << logSampledTpl->GetName());
 
@@ -1071,9 +1072,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
 
   m_enableIGM = opt_extinction;
   m_enableISM = opt_dustFitting;
-  std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>(m_redshifts.size(), nISMCoeffs,
-                                               nIGMCoeffs);
+  result = std::make_shared<CTemplateFittingResult>(m_redshifts.size(),
+                                                    nISMCoeffs, nIGMCoeffs);
   result->Redshifts = m_redshifts;
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {

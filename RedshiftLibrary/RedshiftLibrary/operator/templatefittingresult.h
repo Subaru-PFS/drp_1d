@@ -78,7 +78,6 @@ public:
   TFloat64List FitMtM;
   TFloat64List LogPrior;
   TFloat64List SNR;
-  std::vector<bool> m_isFirstPassResult;
 
   // intermediate chisquare results
   std::vector<std::vector<TFloat64List>>
