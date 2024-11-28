@@ -93,3 +93,14 @@ def exception_decorator(func, logging=True, *args, **kwargs):
         if logging:
             api_exception.LogError()
         raise api_exception from None
+
+
+def exception_class_decorator(cls=None, *, logging=True):
+    if cls is None:
+        return functools.partial(exception_class_decorator, logging=logging)
+
+    for attr_name in cls.__dict__:
+        attr = getattr(cls, attr_name)
+        if attr_name[0] != "_" and callable(attr):
+            setattr(cls, attr_name, exception_decorator(attr, logging=logging))
+    return cls
