@@ -42,6 +42,11 @@ def decorated_raise_Exception():
     raise_Exception()
 
 
+@exception_decorator(logging=False)
+def double_decorated_raise_Exception():
+    decorated_raise_Exception()
+
+
 @exception_decorator(logging=True)
 def decorated_raise_Exception_with_logging():
     raise_Exception()
@@ -154,9 +159,20 @@ def test_exception():
     assert e.__str__() == long_str
 
     with pytest.raises(exception, match=msg) as exc_info:
+        double_decorated_raise_Exception()
+    e = exc_info.value
+    assert e.getFileName() == filename
+    assert e.getMethod() == method
+    assert e.getLine() == line
+    assert e.__str__() == long_str
+
+    with pytest.raises(exception, match=msg) as exc_info:
         decorated_raise_Exception_with_logging()
     e = exc_info.value
     assert e.getFileName() == filename
     assert e.getMethod() == method
     assert e.getLine() == line
     assert e.__str__() == long_str
+
+    with pytest.raises(TypeError) as exc_info:
+        decorated_raise_Exception(0)  # bad call (number of arguments)

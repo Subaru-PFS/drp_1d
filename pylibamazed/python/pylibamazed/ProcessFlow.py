@@ -36,10 +36,10 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import functools
 import os
 import os.path
 from contextlib import contextmanager, suppress
+from decorator import decorator
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Exception import APIException, exception_decorator
@@ -92,17 +92,14 @@ class ProcessFlow:
         resultStore = self.process_flow_context.GetResultStore()
         self.context_warning_Flag = resultStore.GetFlagLogResult("", "", "", "context_warningFlag")
 
-    def store_exception(func):
-        @functools.wraps(func)
-        def wrapper(self, rso, *args, **kwargs):
-            try:
-                new_func = exception_decorator(logging=True)(func)
-                return new_func(self, rso, *args, **kwargs)
-            except AmzException as e:
-                rso.store_error(e, get_scope_spectrum_model(), get_scope_stage())
-                raise ProcessFlowException from e
-
-        return wrapper
+    @decorator
+    def store_exception(func, self, rso, *args, **kwargs):
+        try:
+            new_func = exception_decorator(logging=True)(func)
+            return new_func(self, rso, *args, **kwargs)
+        except AmzException as e:
+            rso.store_error(e, get_scope_spectrum_model(), get_scope_stage())
+            raise ProcessFlowException from e
 
     @exception_decorator
     def run(self, spectrum: Spectrum):

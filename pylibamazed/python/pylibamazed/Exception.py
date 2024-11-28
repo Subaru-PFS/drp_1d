@@ -39,6 +39,7 @@
 import functools
 import traceback
 from os.path import basename
+from decorator import decorator
 
 from pylibamazed.redshift import AmzException, ErrorCode
 
@@ -73,27 +74,22 @@ class APIException(AmzException):
 
 # decorator to convert any non-amazed exception to AmzException
 #  with the optional ErrorLogging
-def exception_decorator(func=None, *, logging=True):
-    if func is None:
-        return functools.partial(exception_decorator, logging=logging)
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except APIException as e:
+@decorator
+def exception_decorator(func, logging=True, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except APIException as e:
+        if e.getFileName() == "":
             e.add_traceback_info()
-            if logging:
-                e.LogError()
-            raise e from None
-        except AmzException as e:
-            if logging:
-                e.LogError()
-            raise e from None
-        except Exception as e:
-            api_exception = APIException.fromException(e)
-            if logging:
-                api_exception.LogError()
-            raise api_exception from None
-
-    return wrapper
+        if logging:
+            e.LogError()
+        raise e from None
+    except AmzException as e:
+        if logging:
+            e.LogError()
+        raise e from None
+    except Exception as e:
+        api_exception = APIException.fromException(e)
+        if logging:
+            api_exception.LogError()
+        raise api_exception from None
