@@ -172,10 +172,10 @@ class ParametersAccessor:
             self.get_spectrum_model_section, "reliabilitySolver", create, spectrum_model
         )
 
-    def get_reliability_method(self, spectrum_model: str) -> str:
+    def get_reliability_methods(self, spectrum_model: str, default=[]) -> str:
         if "reliabilitySolver" not in self.get_stages(spectrum_model):
-            return None
-        return self._get_on_None(self.get_reliability_section(spectrum_model), "method")
+            return default
+        return self._get_on_None(self.get_reliability_section(spectrum_model), "method", default=default)
 
     def get_deep_learning_solver_section(self, spectrum_model: str, create: bool = False) -> str:
         return self._get_or_create_section(
@@ -184,6 +184,21 @@ class ParametersAccessor:
 
     def get_reliability_model(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_deep_learning_solver_section(spectrum_model), "reliabilityModel")
+
+    def get_sk_learn_classifier_solver_section(self, spectrum_model: str, create: bool = False) -> str:
+        return self._get_or_create_section(
+            self.get_reliability_section, "skLearnClassifier", create, spectrum_model
+        )
+
+    def get_sk_learn_classifier(self, spectrum_model: str) -> str:
+        return self._get_on_None(
+            self.get_sk_learn_classifier_solver_section(spectrum_model), "skLearnClassifier"
+        )
+
+    def get_sk_learn_classifier_file(self, spectrum_model: str) -> str:
+        return self._get_on_None(
+            self.get_sk_learn_classifier_solver_section(spectrum_model), "classifierFile"
+        )
 
     def get_template_dir(self, spectrum_model: str) -> str:
         return self.get_spectrum_model_section(spectrum_model).get("templateDir")
