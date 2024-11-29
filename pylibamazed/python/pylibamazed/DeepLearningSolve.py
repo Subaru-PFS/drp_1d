@@ -42,14 +42,10 @@ from pylibamazed.Exception import APIException
 from pylibamazed.PdfHandler import BuilderPdfHandler
 from pylibamazed.redshift import ErrorCode
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
+from pylibamazed.AbstractReliabilitySolver import AbstractReliabilitySolver, register_reliability_solver
 
 
-class ReliabilitySolve:
-    def __init__(self, object_type, parameters, calibration):
-        self.object_type = object_type
-        self.parameters = parameters
-        self.calibration_library = calibration
-
+class DeepLearningSolve(AbstractReliabilitySolver):
     def Compute(self, source):
         # context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
         output = ResultStoreOutput(
@@ -103,3 +99,6 @@ class ReliabilitySolve:
         for i in range(1, len(classes)):
             ret[classes[i]] = probas[0, i]
         return ret
+
+
+register_reliability_solver("deepLearningSolver", DeepLearningSolve, "deep")

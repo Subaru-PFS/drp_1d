@@ -145,7 +145,7 @@ Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	
 LinemeasLyaIgm	linemeas_parameters	False	object	LyaIgm	linemeas	f8
 ModelLambda	linemeas_model<ObsID>	False	object	ModelLambda[obs_id]	linemeas_model	f8
 ModelFlux	linemeas_model<ObsID>	False	object	ModelFlux[obs_id]	linemeas_model	f8
-Reliability	reliability	False	object	m_ReliabilityLabel	solveResult	f8
+Reliability	reliability<relName>	False	object	m_ReliabilityLabel	solveResult	f8
 FirstpassLogZPdfNative	firstpass_pdf	True	object	valProbaLog	firstpass_pdf	f8
 ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i
 InitWarningFlags	init_warningFlag	False	root	flagValue	init_warningFlag	i
