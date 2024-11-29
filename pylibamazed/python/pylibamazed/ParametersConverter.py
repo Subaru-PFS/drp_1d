@@ -138,7 +138,7 @@ class ParametersConverterV1(ParametersConverter):
             if renamed_params[spectrum_model].pop("enable_reliability", False):
                 renamed_params[spectrum_model].setdefault("stages", []).append("reliabilitySolver")
                 renamed_params[spectrum_model]["reliabilitySolver"] = {
-                    "method": "deepLearningSolver",
+                    "method": ["deepLearningSolver"],
                     "deepLearningSolver": {
                         "reliabilityModel": renamed_params[spectrum_model].pop("reliabilityModel")
                     },
