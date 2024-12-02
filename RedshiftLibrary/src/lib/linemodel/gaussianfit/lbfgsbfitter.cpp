@@ -721,6 +721,10 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   m_spectraIndex.reset();
   // recompute model with estimated params (needed
   // for noise estimation from residual)
+  for (Int32 i = 0; i < EltsIdx.size(); ++i) {
+    Float64 const amp = v_xResult[i] / normFactor;
+    m_ElementsVector->SetElementAmplitude(EltsIdx[i], amp, NAN);
+  }
   getModel().refreshModelUnderElements(EltsIdx);
 
   for (Int32 i = 0; i < EltsIdx.size(); ++i) {
