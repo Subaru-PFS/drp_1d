@@ -65,10 +65,14 @@ zlog = CLog.GetInstance()
 
 class AbstractOutput:
     def __init__(
-        self, parameters: Parameters, specs_path=results_specifications_filename, extended_results=True
+        self,
+        parameters: Parameters,
+        specs_path=results_specifications_filename,
+        extended_results=True,
+        spectrum_id="",
     ):
         self.parameters = parameters
-        self.spectrum_id = ""
+        self.spectrum_id = spectrum_id
         self.root_results = dict()
         self.object_results = dict()
         self.extended_results = extended_results
