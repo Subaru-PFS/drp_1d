@@ -27,65 +27,77 @@ Required third parties:
 * [fftw](http://www.fftw.org/) >=3.3.8
 * [openblas](https://www.openblas.net/) >= 0.3.19
 * [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.0
-* [lbfgspp](https://lbfgspp.statr.me) == 0.2.0-13-g563106b
-
-lbfgspp needs to be installed from source
+* [lbfgspp](https://lbfgspp.statr.me) == 0.3.0
 
 Required python packages:
-* [numpy](https://www.numpy.org/) >=1.16.0
+* [numpy](https://www.numpy.org/) >=1.25.0
 * [astropy](https://www.astropy.org/) >=3.1.1
 * [cython](https://cython.org/) >=0.17.0
 * [pandas](https://pandas.pydata.org/) >=1.0.0
 * [h5py](https://www.h5py.org/) >=2.9
+* [pytest-mock](https://pypi.org/project/pytest-mock/) >=3.11.1
+* [jsonschema](https://pypi.org/project/jsonschema/) >=4.17.3
+* [ninja](https://pypi.org/project/ninja/) >=1.11
 
 ### Build and install
 
 Prerequisites to install pylibamazed from source code:
 
 * [gcc](https://gcc.gnu.org/)
-* [python](https://www.python.org/) >=3.6
-* [cmake](https://cmake.org/) >=3.12
-* [swig](http://www.swig.org/) >=4.0
+* [python](https://www.python.org/) >=3.8
+* [cmake](https://cmake.org/) >=3.15
+* [swig](http://www.swig.org/) >=4.1
 
-To build the C++ part, in `pylibamazed` root directory, run:
+To install the `pylibamazed` python module, run :
 
-    mkdir build
-    cd build
-    cmake ..
-    make
-    make install
+    pip install . 
 
-To run tests in `build` directory, run:
+All the building stages are managed by the python package manager. Several options is used to drive the python package deployement or the C++ part building.
 
-    make test
-
-To build and install `pylibamazed` python module, in `pylibamazed` root directory run:
-
-    pip install .
 
 ### Build options
 
-The Build process uses the cmake tool
+The build process uses the `pip` package manager.
 
-#### -DCMAKE_BUILD_TYPE
+#### cmake.define.CMAKE_PREFIX_PATH
 
-You can build the library either in `Release`, `Debug` or `Coverage` mode (default to `Release`).
+If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify the corresponding directory as follows
 
-For instance to build pylibamazed in Debug mode, run: 
+    pip install -v . -C cmake.define.CMAKE_PREFIX_PATH=/your/thirdparties/directory
 
-    cmake .. -DCMAKE_BUILD_TYPE=Debug
+#### cmake.build-type
 
-#### -DCMAKE_INSTALL_PREFIX
+You can build the library either in `Release`, `Debug` or `Coverage` mode (default to `Release`). For instance to build pylibamazed in Debug mode, run: 
 
-You can specify the absolute path to your installation directory (default to `$HOME/.local`). If you are working with several versions of pylibamazed, it is hightly recommended to specify a proper installation directory for each version. 
+    pip install -v . -C cmake.build-type=Debug
 
-    cmake .. -DCMAKE_INSTALL_PREFIX=/my/own/directory
 
-#### -DCMAKE_PREFIX_PATH
+#### cmake.define.BUILD_TESTING
 
-If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify the  corresponding directory as follows
+To speed up the building time, you can disable test :
 
-    cmake .. -DCMAKE_PREFIX_PATH=/my/thirdparty/directory
+    pip install -v . -C cmake.define.BUILD_TESTING=OFF
+
+#### build-dir
+
+You can specify a directory for C++ building files. Tests are also available in this directory.
+
+    pip install -v . -C build-dir=build-pip
+
+### Test C++ part
+
+To test the C++ part, in `pylibamazed` root directory, run:
+
+    pip install -v . -C build-dir=build-pip
+    cd build-pip
+    ninja test
+
+### Test python part
+
+To test the python part, in `pylibamazed` root directory, run:
+
+    pip install -v . -C build-dir=build-pip
+    pytest
 
 
 ## Additional documentation
@@ -153,9 +165,9 @@ Other command line options:
 
     python tools/buildandinstallthirdparty.py fftw cfitsio --force
 
-## Tests
+## Python code coverage
 
-In order to launch tests and see coverage, **in pylibamazed folder**
+In order to launch tests and see python code coverage, **in pylibamazed folder**
 ```
 coverage run --source=pylibamazed -m pytest
 coverage report
@@ -163,6 +175,17 @@ coverage html
 ```
 Drag and drop the created index.js in your web navigator
 
+## Create a wheel
+
+To create a wheel, you need to previously install `build` package.
+
+    pip install build
+
+Then to create a wheel, run the command :
+
+    python -m build -C build-dir=build-pip -C cmake.define.BUILD_TESTING=OFF -C cmake.define.CMAKE_PREFIX_PATH=/your/thirdparties/directory
+
+The wheel is available in the `dist` directory.
 
 ## Contacts
 
