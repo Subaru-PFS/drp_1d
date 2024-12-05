@@ -705,7 +705,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // compute snr (analytical formula from doi:10.1364/AO.46.005374)
   // --------------------------------------------------------------
   //  Var(amp) = 3/2 * var(spectra) /
-  //       (sqrt(pi) * sigma_in_wavelength_unit * pixsize_in_wavelength_unit)
+  //       (sqrt(pi) * sigma_in_wavelength_unit / pixsize_in_wavelength_unit)
   //
   // note: this is only for one line (one Gaussian profile)
   // Thus it does not take into account the correlation between overlapping
@@ -752,7 +752,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
     pixsize /= nlines;
     Float64 const amp_std =
-        noise_stdev * sqrt(3.0 / (2.0 * sigma * pixsize * sqrt(M_PI)));
+        noise_stdev * sqrt(3.0 / (2.0 * sigma / pixsize * sqrt(M_PI)));
 
     m_ElementsVector->SetElementAmplitude(EltsIdx[i], amp, amp_std);
 
