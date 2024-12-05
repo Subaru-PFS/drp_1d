@@ -50,7 +50,6 @@
 #include <algorithm>
 #include <boost/iterator/counting_iterator.hpp>
 #include <cmath>
-#include <execution>
 #include <utility>
 
 using namespace NSEpic;
