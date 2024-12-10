@@ -65,6 +65,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_lsf()
         self._check_continuum_removal()
         self._check_templateCatalog_continuum_removal()
+        self._check_linemeas_runmode()
         for object in self.accessor.get_spectrum_models([]):
             self._check_object(object)
 
@@ -612,6 +613,16 @@ class CustomParametersChecker(ParametersChecker):
                 error_message=f"{ESolveMethod.LINE_MODEL.value} linemodel lya asymProfile section for object {spectrum_model}",
                 warning_message=f"object {spectrum_model} {ESolveMethod.LINE_MODEL.value} lineModel lya asymProfile section",
             )
+
+    def _check_linemeas_runmode(self):
+        for spectrum_model in self.accessor.get_spectrum_models():
+            if "lineMeasSolver" in self.accessor.get_stages(spectrum_model):
+                self._check_dependant_parameter_presence(
+                    True,
+                    self.accessor.get_linemeas_runmode() is not None,
+                    error_message=f"LineMeasSolve stage present, lineMeasRunMode parameter is mandatory",
+                )
+                break
 
     def useloglambdasampling_presence_condition(self, spectrum_model):
         return self.accessor.get_linemodel_continuum_component(spectrum_model) in [
