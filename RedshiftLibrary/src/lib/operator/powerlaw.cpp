@@ -465,7 +465,15 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
   Float64 v3 = sxy2 - xc * sy2;
 
   Eigen::Matrix3d m;
-  m << m11, m12, m13, m21, m22, m23, m31, m32, m33;
+  m(0, 0) = m11;
+  m(0, 1) = m12;
+  m(0, 2) = m13;
+  m(1, 0) = m21;
+  m(1, 1) = m22;
+  m(1, 2) = m23;
+  m(2, 0) = m31;
+  m(2, 1) = m32;
+  m(2, 2) = m33;
 
   if (std::abs(m.determinant()) < DBL_MIN)
     THROWG(ErrorCode::INTERNAL_ERROR,
