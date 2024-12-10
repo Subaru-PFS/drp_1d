@@ -18,6 +18,7 @@ dependencies = [
     "GitPython>=3.1.32",
     "pytest-mock>=3.11.1",
     "jsonschema>=4.17.3",
+    "ninja>=1.11",
 ]
 authors = [
     {name = "LAM - Laboratoire d'Astrophysique de Marseille", email = "amazed-support@lam.fr"}]
