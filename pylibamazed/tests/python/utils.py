@@ -99,6 +99,12 @@ def make_parameter_dict_at_redshift_solver_level(
     if redshift_kwargs.get("method") == "lineModelSolve":
         if param_dict.get("lsf") is None:
             param_dict["lsf"] = {}
+    if (
+        redshift_kwargs.get("method") == "templateFittingSolve"
+        and redshift_kwargs.get("templateFittingSolve") is not None
+        and redshift_kwargs.get("templateFittingSolve").get("skipSecondPass") is not False
+    ):
+        param_dict[object_type]["redshiftSolver"]["templateFittingSolve"]["skipSecondPass"] = True
     return param_dict
 
 

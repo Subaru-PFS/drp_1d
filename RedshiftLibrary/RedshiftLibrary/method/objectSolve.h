@@ -60,7 +60,7 @@ protected:
                                    TFloat64Range &redshiftRange,
                                    Float64 &redshiftStep);
   Float64 m_redshiftStep = NAN;
-  std::string m_redshiftSampling;
+  bool m_zLogSampling;
   TFloat64List m_redshifts;
 };
 } // namespace NSEpic

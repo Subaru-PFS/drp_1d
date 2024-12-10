@@ -57,57 +57,63 @@ using namespace NSEpic;
 using namespace std;
 
 CTemplateFittingSolve::CTemplateFittingSolve()
-    : CObjectSolve("templateFittingSolve") {}
+    : CTwoPassSolve("templateFittingSolve") {}
 
-std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
+const std::unordered_map<CTemplateFittingSolve::EType, CSpectrum::EType>
+    CTemplateFittingSolve::fittingTypeToSpectrumType = {
+        {EType::raw, CSpectrum::EType::raw},
+        {EType::noContinuum, CSpectrum::EType::noContinuum},
+        {EType::continuumOnly, CSpectrum::EType::continuumOnly},
+};
 
-  auto const &inputContext = Context.GetInputContext();
-  auto const &resultStore = Context.GetResultStore();
-  const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
+void CTemplateFittingSolve::PopulateParameters(
+    const std::shared_ptr<const CParameterStore> &parameterStore) {
+  m_redshiftSeparation =
+      parameterStore->Get<Float64>("extremaRedshiftSeparation");
+  m_overlapThreshold = parameterStore->GetScoped<Float64>("overlapThreshold");
+  m_spcComponent = parameterStore->GetScoped<std::string>("spectrum.component");
+  m_interpolation = parameterStore->GetScoped<std::string>("interpolation");
+  m_extinction = parameterStore->GetScoped<bool>("igmFit");
+  m_dustFit = parameterStore->GetScoped<bool>("ismFit");
 
-  m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
-      "extremaRedshiftSeparation"); // todo: deci
+  m_fftProcessing = parameterStore->GetScoped<bool>("fftProcessing");
 
-  bool storeResult = false;
-  Float64 overlapThreshold =
-      inputContext->GetParameterStore()->GetScoped<Float64>("overlapThreshold");
-  std::string opt_spcComponent =
-      inputContext->GetParameterStore()->GetScoped<std::string>(
-          "spectrum.component");
-  std::string opt_interp =
-      inputContext->GetParameterStore()->GetScoped<std::string>(
-          "interpolation");
-  const bool opt_extinction =
-      inputContext->GetParameterStore()->GetScoped<bool>("igmFit");
-  bool opt_dustFit =
-      inputContext->GetParameterStore()->GetScoped<bool>("ismFit");
-
-  bool fft_processing =
-      inputContext->GetParameterStore()->GetScoped<bool>("fftProcessing");
-
-  bool use_photometry = false;
-  Float64 photometry_weight = NAN;
-  if (inputContext->GetParameterStore()->HasScoped<bool>("enablePhotometry")) {
-    use_photometry =
-        inputContext->GetParameterStore()->GetScoped<bool>("enablePhotometry");
-    if (use_photometry)
-      photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>(
-          "photometry.weight");
+  if (parameterStore->HasScoped<bool>("enablePhotometry")) {
+    m_usePhotometry = parameterStore->GetScoped<bool>("enablePhotometry");
+    if (m_usePhotometry)
+      m_photometryWeight =
+          parameterStore->GetScoped<Float64>("photometry.weight");
   }
-  if (fft_processing && use_photometry)
+  m_opt_maxCandidate = parameterStore->GetScoped<int>("extremaCount");
+  m_opt_pdfcombination =
+      parameterStore->GetScoped<std::string>("pdfCombination");
+  m_opt_skipsecondpass = parameterStore->GetScoped<bool>("skipSecondPass");
+  if (useTwoPass()) {
+    m_secondPassContinuumFit = str2ContinuumFit.at(
+        parameterStore->GetScoped<std::string>("secondPass.continuumFit"));
+
+    m_secondPass_halfwindowsize =
+        parameterStore->GetScoped<Float64>("secondPass.halfWindowSize");
+  }
+}
+
+void CTemplateFittingSolve::UpdateParamsAndCatalogForFft(
+    const std::shared_ptr<const CInputContext> &inputContext,
+    const CTemplateCatalog &tplCatalog) {
+  if (m_fftProcessing && m_usePhotometry)
     THROWG(ErrorCode::FFT_WITH_PHOTOMETRY_NOTIMPLEMENTED,
            "fftProcessing not "
            "implemented with photometry enabled");
 
-  if (fft_processing) {
+  if (m_fftProcessing) {
     m_continuumFittingOperator =
         std::make_shared<COperatorTemplateFittingLog>(m_redshifts);
     tplCatalog.m_logsampling = true;
   } else {
-    if (use_photometry) {
+    if (m_usePhotometry) {
       m_continuumFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
-              inputContext->GetPhotBandCatalog(), photometry_weight,
+              inputContext->GetPhotBandCatalog(), m_photometryWeight,
               m_redshifts);
     } else {
       m_continuumFittingOperator =
@@ -115,97 +121,186 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
     }
     tplCatalog.m_logsampling = false;
   }
+}
 
-  // prepare the unused masks
-  std::vector<CMask> maskList;
-  // define the redshift search grid
-  //         Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f],
-  //         step=%.6f", starRedshiftRange.GetBegin(),
-  //         starRedshiftRange.GetEnd(), starRedshiftStep);
-
-  std::string scopeStr = "templatefitting";
-
-  EType _type = nType_raw;
-  if (opt_spcComponent == "raw") {
-    _type = nType_raw;
-  } else if (opt_spcComponent == "nocontinuum") {
-    _type = nType_noContinuum;
-    scopeStr = "templatefitting_nocontinuum";
-  } else if (opt_spcComponent == "continuum") {
-    _type = nType_continuumOnly;
-    scopeStr = "templatefitting_continuum";
-  } else if (opt_spcComponent == "all") {
-    _type = nType_all;
-  } else {
-    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
-  }
-
-  m_opt_maxCandidate =
-      inputContext->GetParameterStore()->GetScoped<int>("extremaCount");
-  m_opt_pdfcombination =
-      inputContext->GetParameterStore()->GetScoped<std::string>(
-          "pdfCombination");
-
+void CTemplateFittingSolve::LogParameters() {
   Log.LogInfo("Method parameters:");
-  Log.LogInfo(Formatter() << "    -overlapThreshold: " << overlapThreshold);
-  Log.LogInfo(Formatter() << "    -component: " << opt_spcComponent);
-  Log.LogInfo(Formatter() << "    -interp: " << opt_interp);
+  Log.LogInfo(Formatter() << "    -m_overlapThreshold: " << m_overlapThreshold);
+  Log.LogInfo(Formatter() << "    -component: " << m_spcComponent);
+  Log.LogInfo(Formatter() << "    -interp: " << m_interpolation);
   Log.LogInfo(Formatter() << "    -IGM extinction: "
-                          << (opt_extinction ? "true" : "false"));
+                          << (m_extinction ? "true" : "false"));
   Log.LogInfo(Formatter() << "    -ISM dust-fit: "
-                          << (opt_dustFit ? "true" : "false"));
+                          << (m_dustFit ? "true" : "false"));
   Log.LogInfo(Formatter() << "    -pdfcombination: " << m_opt_pdfcombination);
   Log.LogInfo("");
+}
 
+void CTemplateFittingSolve::CheckTemplateCatalog(
+    const CTemplateCatalog &tplCatalog) {
   if (tplCatalog.GetTemplateCount(m_category) == 0) {
     THROWG(ErrorCode::BAD_TEMPLATECATALOG,
            Formatter() << "Empty template catalog for category "
                        << m_category[0]);
   }
+}
+
+std::string
+CTemplateFittingSolve::MakeScopeStrFromTypeAndPass(EType type,
+                                                   bool isFirstPass) const {
+  std::unordered_map<EType, std::string> spectrumTypeToStr = {
+      {EType::raw, "templatefitting"},
+      {EType::continuumOnly, "templatefitting_continuum"},
+      {EType::noContinuum, "templatefitting_nocontinuum"},
+      {EType::all, "templatefitting"},
+  };
+
+  std::string scopeStr = spectrumTypeToStr.at(type);
+  if (useTwoPass() && isFirstPass)
+    scopeStr += "_firstpass";
+
+  return scopeStr;
+}
+
+CTemplateFittingSolve::EType
+CTemplateFittingSolve::MakeTypeFromSpectrumComponentParam(
+    std::string component) {
+  std::unordered_map<std::string, EType> stringToEnumType{
+      {"raw", EType::raw},
+      {"nocontinuum", EType::noContinuum},
+      {"continuum", EType::continuumOnly},
+      {"all", EType::all},
+  };
+  return stringToEnumType.at(component);
+};
+
+std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
+
+  auto const &inputContext = Context.GetInputContext();
+  auto const &resultStore = Context.GetResultStore();
+  const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
+  const std::shared_ptr<const CParameterStore> parameterStore =
+      inputContext->GetParameterStore();
+
+  PopulateParameters(parameterStore);
+  UpdateParamsAndCatalogForFft(inputContext, tplCatalog);
+
+  LogParameters();
+  CheckTemplateCatalog(tplCatalog);
+
   Log.LogInfo(Formatter() << "Iterating over " << m_category.size()
                           << " tplCategories");
-
   Log.LogInfo(Formatter() << "Trying " << m_category.c_str() << " ("
                           << tplCatalog.GetTemplateCount(m_category)
                           << " templates)");
-  for (Int32 j = 0; j < tplCatalog.GetTemplateCount(m_category); j++) {
-    std::shared_ptr<const CTemplate> tpl =
-        tplCatalog.GetTemplate(m_category, j);
 
-    Solve(resultStore, tpl, overlapThreshold, maskList, _type, opt_interp,
-          opt_extinction, opt_dustFit);
-
-    storeResult = true;
+  // Calculates first pass for each template
+  EType type = MakeTypeFromSpectrumComponentParam(m_spcComponent);
+  std::vector<CMask> maskList;
+  bool hasResult = false;
+  for (auto tpl : tplCatalog.GetTemplateList(m_category)) {
+    Solve(resultStore, tpl, m_overlapThreshold, maskList, type, m_interpolation,
+          m_extinction, m_dustFit);
+    hasResult = true;
   }
-
-  if (!storeResult)
+  // Question : a priori maskList ne sert à rien et pourrait être supprimé. À
+  // confirmer
+  if (!hasResult)
     THROWG(ErrorCode::INTERNAL_ERROR, "no result for any template");
 
+  // Calculates pdfz on first pass results
   COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
-                     m_opt_maxCandidate, m_redshiftSampling == "log");
+                     m_opt_maxCandidate, m_zLogSampling);
 
+  std::string scopeStr = MakeScopeStrFromTypeAndPass(type);
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
-  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
-  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
+  // Here compute a second pass
+  // We redefine a redshift grid
+  // La seule chose à refit c'est l'amplitude, on garde le template / igm /ism
 
-  // save in resultstore candidates results
+  // tpl: ceux retenus, m_extinction et m_dustfit correspondant
+  // Solve(resultStore, tpl, m_overlapThreshold, maskList, type,
+  // m_interpolation,
+  //         m_extinction, m_dustFit);
+
+  // Second pass
+  std::shared_ptr<const ExtremaResult> extremaResult;
+  if (useTwoPass()) {
+    // TODO extract in a computeSecondPass
+    std::shared_ptr<COperatorTemplateFitting> templateFittingOperator =
+        std::dynamic_pointer_cast<COperatorTemplateFitting>(
+            m_continuumFittingOperator);
+    templateFittingOperator->SetFirstPassCandidates(
+        candidateResult->m_ranked_candidates);
+    std::shared_ptr<const ExtremaResult> fpExtremaResult =
+        templateFittingOperator->BuildFirstPassExtremaResults(
+            resultStore->GetScopedPerTemplateResult(scopeStr));
+
+    std::string firstpassExtremaResultsStr = scopeStr;
+    firstpassExtremaResultsStr.append("_extrema");
+    resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr.c_str(),
+                                         fpExtremaResult);
+    // Store first pass pdf results
+    resultStore->StoreScopedGlobalResult("firstpass_pdf",
+                                         pdfz.m_postmargZResult);
+    resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
+                                         pdfz.m_postmargZResult);
+
+    // need to initialize an operator two pass
+    // const Float64 halfWindowSize,
+    //                           const bool zLogSampling,
+    //                           const TFloat64List &redshifts,
+    //                           const Float64 fineStep
+
+    templateFittingOperator->init(m_secondPass_halfwindowsize, m_zLogSampling,
+                                  m_redshifts, m_redshiftStep);
+    templateFittingOperator->buildExtendedRedshifts(
+        templateFittingOperator->m_firstpass_extremaResult);
+    // TODO move this
+    size_t nResults = m_results.size();
+    for (size_t resultIdx = 0; resultIdx < nResults; ++resultIdx) {
+      templateFittingOperator->updateRedshiftGridAndResults(
+          m_results[resultIdx]);
+    }
+    // EstimateSecondPassParameters
+    // RecomputeAroundCandidates
+    // Computes second pass
+    for (auto candidate : fpExtremaResult->m_ranked_candidates) {
+      std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(
+          {m_category}, candidate.second->fittedContinuum.name);
+      Int32 igmIdx = candidate.second->fittedContinuum.meiksinIdx;
+      Int32 ismIdx = Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
+          candidate.second->fittedContinuum.ebmvCoef);
+      std::vector<CMask> maskList;
+      // TODO check that the second pass redshift grid is used
+      Solve(resultStore, tpl, m_overlapThreshold, maskList, type,
+            m_interpolation, m_extinction, m_dustFit, igmIdx, ismIdx);
+    }
+  }
+
+  scopeStr = MakeScopeStrFromTypeAndPass(type, false);
+  COperatorPdfz pdfz2(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
+                      m_opt_maxCandidate, m_zLogSampling);
+  candidateResult = pdfz2.Compute(BuildChisquareArray(resultStore, scopeStr));
+  extremaResult = buildExtremaResults(resultStore, scopeStr,
+                                      candidateResult->m_ranked_candidates,
+                                      tplCatalog, m_overlapThreshold);
+
+  // TODO here store final result
+
+  resultStore->StoreScopedGlobalResult("pdf", pdfz2.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz2.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
   // for each extrema, get best model by reading from datastore and selecting
   // best fit
   /////////////////////////////////////////////////////////////////////////////////////
-  if (fft_processing) {
+  if (m_fftProcessing) {
     tplCatalog.m_logsampling = false;
   }
-  std::shared_ptr<const ExtremaResult> extremaResult = buildExtremaResults(
-      resultStore, scopeStr, candidateResult->m_ranked_candidates, tplCatalog,
-      overlapThreshold);
-
-  // store extrema results
   StoreExtremaResults(resultStore, extremaResult);
-
   std::shared_ptr<CTemplateFittingSolveResult> TemplateFittingSolveResult =
       std::make_shared<CTemplateFittingSolveResult>(
           extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
@@ -216,76 +311,83 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
 
 void CTemplateFittingSolve::Solve(
     std::shared_ptr<COperatorResultStore> resultStore,
-    const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-    std::vector<CMask> maskList, EType spctype, std::string opt_interp,
-    bool opt_extinction, bool opt_dustFitting) {
+    const std::shared_ptr<const CTemplate> &tpl, Float64 m_overlapThreshold,
+    std::vector<CMask> maskList, EType fittingType, std::string m_interpolation,
+    bool m_extinction, bool m_dustFitting, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx) {
 
-  std::string scopeStr = "templatefitting";
-  Int32 _ntype = 1;
-  CSpectrum::EType _spctype = CSpectrum::nType_raw;
-  CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw,
-                                     CSpectrum::nType_noContinuum,
-                                     CSpectrum::nType_continuumOnly};
-
-  // case: nType_all
-  if (spctype == nType_all) {
-    _ntype = 3;
-  }
-
+  // For saving initial spectra fitting types and template type
   std::vector<CSpectrum::EType> save_spcTypes;
+  CSpectrum::EType save_tplType;
   for (auto spc : Context.getSpectra())
     save_spcTypes.push_back(spc->GetType());
-  const CSpectrum::EType save_tplType = tpl->GetType();
+  save_tplType = tpl->GetType();
 
-  for (Int32 i = 0; i < _ntype; i++) {
-    if (spctype == nType_all) {
-      _spctype = _spctypetab[i];
-    } else {
-      _spctype = static_cast<CSpectrum::EType>(spctype);
-    }
-    for (auto spc : Context.getSpectra())
-      spc->SetType(_spctype);
-    tpl->SetType(_spctype);
-    tpl->setRebinInterpMethod(opt_interp);
+  // If fitting type is all, loop on all spectrum fitting types
+  // otherwise, just use the corresponding one
+  std::vector<CSpectrum::EType> spectrumTypes;
+  if (fittingType == EType::all) {
+    spectrumTypes = {CSpectrum::EType::raw, CSpectrum::EType::noContinuum,
+                     CSpectrum::EType::continuumOnly};
+  } else
+    spectrumTypes = {fittingTypeToSpectrumType.at(fittingType)};
+  const bool isFirstPass = FitEbmvIdx == undefIdx;
 
-    if (_spctype == CSpectrum::nType_continuumOnly) {
-      // use continuum only
-      scopeStr = "templatefitting_continuum";
-
-    } else if (_spctype == CSpectrum::nType_raw) {
-      // use full spectrum
-      scopeStr = "templatefitting";
-
-    } else if (_spctype == CSpectrum::nType_noContinuum) {
-      // use spectrum without continuum
-      scopeStr = "templatefitting_nocontinuum";
-      //
-      opt_dustFitting = false;
-    } else {
-      // unknown type
-      THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
+  if (isFirstPass)
+    m_results = std::vector<std::shared_ptr<CTemplateFittingResult>>(
+        spectrumTypes.size(), std::make_shared<CTemplateFittingResult>(
+                                  CTemplateFittingResult(m_redshifts.size())));
+  for (size_t spectrumTypeIdx = 0; spectrumTypeIdx < spectrumTypes.size();
+       ++spectrumTypeIdx) {
+    // Adapts spectra and template fitting type if necessary
+    CSpectrum::EType spectrumType = spectrumTypes[spectrumTypeIdx];
+    if (fittingType == EType::all) {
+      for (auto spc : Context.getSpectra())
+        spc->SetType(spectrumType);
+      tpl->SetType(spectrumType);
     }
 
-    // Compute merit function
-    auto templateFittingResult =
-        std::dynamic_pointer_cast<CTemplateFittingResult>(
-            m_continuumFittingOperator->Compute(tpl, overlapThreshold,
-                                                opt_interp, opt_extinction,
-                                                opt_dustFitting));
+    if (fittingType == EType::noContinuum)
+      m_dustFitting = false;
+    tpl->setRebinInterpMethod(m_interpolation);
 
+    // TODO
+    // ici on pourrait plutôt initialiser m_results à la bonne taille et update
+    // le result situé à l'index visé
+    // TODO find a more elegant way to test if is COPeratorTemplateFitting
+    std::shared_ptr<CTemplateFittingResult> templateFittingResult;
+    if (!m_fftProcessing && !m_usePhotometry) {
+      templateFittingResult =
+          std::dynamic_pointer_cast<COperatorTemplateFitting>(
+              m_continuumFittingOperator)
+              ->Compute(tpl, m_overlapThreshold, m_interpolation, m_extinction,
+                        m_dustFitting, 0, CPriorHelper::TPriorZEList(),
+                        FitEbmvIdx, FitMeiksinIdx, m_results[spectrumTypeIdx]);
+    } else {
+      templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>(
+          m_continuumFittingOperator->Compute(
+              tpl, m_overlapThreshold, m_interpolation, m_extinction,
+              m_dustFitting, 0, CPriorHelper::TPriorZEList(), FitEbmvIdx,
+              FitMeiksinIdx));
+    }
+    // TODO see how to deal with this error
     if (!templateFittingResult)
       THROWG(ErrorCode::INTERNAL_ERROR,
              "no results returned by templateFittingOperator");
 
     // Store results
+    std::string scopeStr =
+        MakeScopeStrFromTypeAndPass(fittingType, isFirstPass);
     resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
                                               templateFittingResult);
   }
 
+  // Reset spectra fitting types and template type
   int i = 0;
   for (auto spc : Context.getSpectra())
     spc->SetType(save_spcTypes[i++]);
   tpl->SetType(save_tplType);
+  // Question add timer ?
 }
 
 ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
@@ -302,6 +404,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
       store->GetScopedPerTemplateResult(scopeStr.c_str());
 
   chisquarearray.cstLog = -1;
+  // TODO see where this quantidy is set
   chisquarearray.zstep = m_redshiftStep;
   for (TOperatorResultMap::const_iterator it = meritResults.begin();
        it != meritResults.end(); ++it) {
@@ -358,40 +461,43 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   return chisquarearray;
 }
 
+// TODO move this in operator ?
 std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
-    const CTemplateCatalog &tplCatalog, Float64 overlapThreshold) {
+    const CTemplateCatalog &tplCatalog, Float64 m_overlapThreshold) {
 
   Log.LogDetail(
       "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
-  Log.LogDetail(Formatter()
-                << "    templatefittingsolve:r using results in scope: "
-                << store->GetScopedName(scopeStr));
+  Log.LogDetail(
+      Formatter()
+      << "    templatefittingsolve:r using tplFitResultsMap in scope: "
+      << store->GetScopedName(scopeStr));
 
-  TOperatorResultMap results = store->GetScopedPerTemplateResult(scopeStr);
+  TOperatorResultMap tplFitResultsMap =
+      store->GetScopedPerTemplateResult(scopeStr);
 
   Int32 extremumCount = ranked_zCandidates.size();
 
   auto firstResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
-      (*results.begin()).second);
+      (*tplFitResultsMap.begin()).second);
   const TFloat64List &redshifts = firstResult->Redshifts;
 
-  // check all results  status
-  for (auto &r : results) {
-    auto TplFitResult =
-        std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
-    if (TplFitResult->ChiSquare.size() != redshifts.size()) {
+  // check all tplFitResultsMap  status
+  for (auto &result : tplFitResultsMap) {
+    auto tplFitResult =
+        std::dynamic_pointer_cast<const CTemplateFittingResult>(result.second);
+    if (tplFitResult->ChiSquare.size() != redshifts.size()) {
       THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter()
-                 << "Size do not match among templatefitting results, for tpl="
-                 << r.first);
+             Formatter() << "Size do not match among templatefitting "
+                            "tplFitResultsMap, for tpl="
+                         << result.first);
     }
-    for (Int32 kz = 0; kz < TplFitResult->Redshifts.size(); kz++) {
-      if (TplFitResult->Redshifts[kz] != redshifts[kz]) {
+    for (Int32 kz = 0; kz < tplFitResult->Redshifts.size(); kz++) {
+      if (tplFitResult->Redshifts[kz] != redshifts[kz]) {
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "redshift vector is not the same for tpl="
-                           << r.first);
+                           << result.first);
       }
     }
   }
@@ -400,7 +506,6 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
       make_shared<ExtremaResult>(ranked_zCandidates);
 
   for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
-    // std::string Id = ranked_zCandidates[iExtremum].first;
     Float64 z = ranked_zCandidates[iExtremum].second->Redshift;
 
     // find the corresponding Z
@@ -410,7 +515,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // find the min chisquare at corresponding redshift
     Float64 ChiSquare = DBL_MAX;
     std::string name = "";
-    for (auto &r : results) {
+    for (auto &r : tplFitResultsMap) {
       auto TplFitResult =
           std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
 
@@ -421,8 +526,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     }
 
     // Fill extrema Result
-    auto TplFitResult =
-        std::dynamic_pointer_cast<const CTemplateFittingResult>(results[name]);
+    auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
+        tplFitResultsMap[name]);
     extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedContinuum.merit = ChiSquare;
     extremaResult->m_ranked_candidates[iExtremum]
@@ -467,7 +572,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
       TPhotVal values = m_continuumFittingOperator->ComputeSpectrumModel(
           tpl, z, TplFitResult->FitEbmvCoeff[zIndex],
           TplFitResult->FitMeiksinIdx[zIndex],
-          TplFitResult->FitAmplitude[zIndex], overlapThreshold, spcIndex,
+          TplFitResult->FitAmplitude[zIndex], m_overlapThreshold, spcIndex,
           spcmodelPtr);
 
       if (spcmodelPtr == nullptr)
@@ -493,3 +598,11 @@ void CTemplateFittingSolve::StoreExtremaResults(
 
   return;
 }
+
+void CTemplateFittingSolve::initTwoPassZStepFactor() {
+  // NB: To be used only if second pass is enabled
+  m_twoPassZStepFactor =
+      Context.GetInputContext()->GetParameterStore()->GetScoped<Int32>(
+          "templateFittingSolve.firstPass."
+          "largeGridStepRatio");
+};

@@ -79,6 +79,7 @@ public:
   };
 
   TTemplateConstRefList GetTemplateList(const TStringList &categoryList) const;
+  TTemplateConstRefList GetTemplateList(const std::string &category) const;
   TTemplateRefList GetTemplateList(const TStringList &categoryList);
 
   TTemplateConstRefList GetOrthoTemplateList(const TStringList &categoryList,
@@ -149,6 +150,12 @@ CTemplateCatalog::GetTemplateList(const TStringList &categoryList) {
 inline TTemplateConstRefList
 CTemplateCatalog::GetTemplateList(const TStringList &categoryList) const {
   return const_TTemplateRefList_cast(GetTemplateList_(categoryList));
+}
+
+//  const getter returning const templates
+inline TTemplateConstRefList
+CTemplateCatalog::GetTemplateList(const std::string &category) const {
+  return const_TTemplateRefList_cast(GetTemplateList_(TStringList{category}));
 }
 
 //  const getter returning const templates

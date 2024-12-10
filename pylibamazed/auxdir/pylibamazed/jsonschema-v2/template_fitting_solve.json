@@ -13,7 +13,8 @@
     "igmFit",
     "ismFit",
     "pdfCombination",
-    "enablePhotometry"
+    "enablePhotometry",
+    "skipSecondPass"
   ],
   "additionalProperties": false,
   "properties": {
@@ -86,6 +87,28 @@
           ]
         }
       }
+    },
+    "skipSecondPass": {
+      "type": "boolean",
+      "title": "Skip second pass",
+      "description": "Toggle the processing of a second pass refined around the candidates",
+      "default": false
+    },
+    "firstPass": {
+      "type": "object",
+      "required": [
+        "largeGridStepRatio"
+      ],
+      "properties": {
+        "largeGridStepRatio": {
+          "type": "integer",
+          "title": "Large grid step ratio",
+          "description": "Multiplicative factor of the redshift step size for the first pass: firstpassz step = step * largeGridStepRatio. To use finegrid step, set largegridstep to 0 or 1"
+        }
+      }
+    },
+    "secondPass": {
+      "$ref": "second_pass.json"
     }
   }
 }

@@ -36,59 +36,36 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATORRESULT_LINEMODEL_
-#define _REDSHIFT_OPERATORRESULT_LINEMODEL_
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/operator/twopass.h"
+#include <boost/test/unit_test.hpp>
+using namespace NSEpic;
+BOOST_AUTO_TEST_SUITE(TwoPass)
 
-#include <unordered_set>
+BOOST_AUTO_TEST_CASE(spanRedshift_test) {
+  Float64 z = 5.;
+  Float64 step = log(1 + 0.5);
+  TFloat64List redshifts{0, 5, 9};
+  bool zLogSampling = true;
+  Float64 secondPass_halfwindowsize = log(1 + 1);
+  Int32 ref_idx = 1;
+  TFloat64List extendedRedshifts_ref{3, 5, 8};
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/mask.h"
-#include "RedshiftLibrary/continuum/indexes.h"
-#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+  // prepare object
+  COperatorTwoPass<TExtremaResult> op;
+  op.m_Redshifts = redshifts;
+  op.m_fineStep = step;
+  op.m_zLogSampling = zLogSampling;
+  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
 
-namespace NSEpic {
+  TFloat64List extendedList = op.spanRedshiftWindow(z);
+  // check is sorted
+  BOOST_CHECK(
+      std::is_sorted(std::begin(extendedList), std::end(extendedList)) == true);
+  BOOST_CHECK(extendedList == extendedRedshifts_ref);
+  // check presence of z in extendedList
+  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
+  BOOST_CHECK(idx == ref_idx);
+}
 
-class CLineModelPassExtremaResult {
-
-public:
-  CLineModelPassExtremaResult(Int32 n);
-
-  CLineModelPassExtremaResult() = default;
-
-  void Resize(Int32 size);
-  TInt32List
-  getUniqueCandidates(const CLineModelPassExtremaResult &results_b) const;
-  TFloat64List GetRedshifts() const;
-  void fillWithContinuumModelSolutionAtIndex(
-      Int32 i, const CContinuumModelSolution &contModelSol);
-
-  TCandidateZbyRank m_ranked_candidates;
-
-  std::vector<CContinuumModelSolution> m_fittedContinuum;
-
-  std::vector<TFloat64List> ExtendedRedshifts; // z range around extrema
-
-  // line width
-  TFloat64List Elv;                    // emission line width
-  TFloat64List Alv;                    // absorption line width
-  std::vector<TFloat64List> GroupsELv; // per fitting group line width , EL
-  std::vector<TFloat64List> GroupsALv; // per fitting group line width , AL
-
-  std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
-  Float64 Redshift(Int32 i) const {
-    return m_ranked_candidates[i].second->Redshift;
-  }
-  Float64 ValProba(Int32 i) const {
-    return m_ranked_candidates[i].second->ValProba;
-  }
-  Float64 ValSumProba(Int32 i) const {
-    return m_ranked_candidates[i].second->ValSumProba;
-  }
-  Float64 DeltaZ(Int32 i) const {
-    return m_ranked_candidates[i].second->Deltaz;
-  }
-  Int32 size() const { return m_ranked_candidates.size(); }
-};
-
-} // namespace NSEpic
-#endif
+BOOST_AUTO_TEST_SUITE_END()

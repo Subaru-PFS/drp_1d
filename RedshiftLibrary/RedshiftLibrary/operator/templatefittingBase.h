@@ -46,7 +46,7 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
-#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
@@ -62,7 +62,8 @@ class CModelSpectrumResult;
 /**
  * \ingroup Redshift
  */
-class COperatorTemplateFittingBase : public COperatorContinuumFitting {
+class COperatorTemplateFittingBase : public COperatorContinuumFitting,
+                                     public COperatorTwoPass<TExtremaResult> {
 
 public:
   COperatorTemplateFittingBase(const TFloat64List &redshifts = TFloat64List());

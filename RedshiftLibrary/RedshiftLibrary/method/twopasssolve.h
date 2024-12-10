@@ -36,66 +36,36 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_METHOD_TPLCOMBINATIONSOLVE_
-#define _REDSHIFT_METHOD_TPLCOMBINATIONSOLVE_
+#ifndef _REDSHIFT_METHOD_TWOPASSSOLVE_
+#define _REDSHIFT_METHOD_TWOPASSSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/method/objectSolve.h"
-#include "RedshiftLibrary/operator/pdfz.h"
-#include "RedshiftLibrary/operator/tplcombination.h"
 
-#include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 namespace NSEpic {
 
-class CSpectrum;
-class CTemplateCatalog;
-class CResultStore;
+enum class EContinuumFit {
+  retryAll = 0,
+  fromFirstPass = 2,
+  reFitFirstPass = 3,
+  undefined
+};
 
-/**
- * \ingroup Redshift
- */
-class CTplCombinationSolve : public CObjectSolve {
-
+class CTwoPassSolve : public CObjectSolve {
 public:
-  enum class EType {
-    raw,
-    continuumOnly,
-    noContinuum,
-    all,
-  };
+  using CObjectSolve::CObjectSolve;
+  void createRedshiftGrid(const CInputContext &inputContext,
+                          const TFloat64Range &redshiftRange);
+  static const std::unordered_map<std::string, EContinuumFit> str2ContinuumFit;
 
-  CTplCombinationSolve();
+protected:
+  virtual void initTwoPassZStepFactor() = 0;
+  bool useTwoPass() const { return !m_opt_skipsecondpass; }
 
-  std::shared_ptr<CSolveResult> compute() override;
-
-private:
-  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
-             const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
-             const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
-             Float64 overlapThreshold, const std::vector<CMask> &maskList,
-             EType spctype = EType::raw, const std::string &opt_interp = "lin",
-             bool opt_extinction = false, bool opt_dustFitting = false);
-
-  ChisquareArray
-  BuildChisquareArray(std::shared_ptr<COperatorResultStore> store,
-                      const std::string &scopeStr) const;
-  void StoreExtremaResults(
-      std::shared_ptr<COperatorResultStore> resultStore,
-      std::shared_ptr<const TplCombinationExtremaResult> &extremaResult) const;
-  std::shared_ptr<const TplCombinationExtremaResult> buildExtremaResults(
-      std::shared_ptr<const COperatorResultStore> store,
-      const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
-      const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
-      const TFloat64Range &lambdaRange, Float64 overlapThreshold);
-  std::string getSpecBasedScope(CSpectrum::EType _spctype);
-  void checkTemplates(const TTemplateConstRefList &tplList) const;
-  COperatorTplcombination m_tplcombinationOperator;
-
-  std::string m_opt_pdfcombination;
-  Float64 m_redshiftSeparation;
-  Int64 m_opt_maxCandidate;
-  std::string m_opt_saveintermediateresults;
+  Float64 m_coarseRedshiftStep = NAN;
+  Float64 m_twoPassZStepFactor = NAN;
+  bool m_opt_skipsecondpass = true;
 };
 
 } // namespace NSEpic

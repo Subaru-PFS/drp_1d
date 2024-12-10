@@ -39,7 +39,7 @@
 import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.CustomParametersChecker import CustomParametersChecker
-from tests.python.utils import WarningUtils, make_parameter_dict_at_object_level
+from tests.python.utils import WarningUtils, make_parameter_dict_at_redshift_solver_level
 
 
 class TestParametersCheckGeneral:
@@ -96,15 +96,14 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-            new_kwargs = {
-                "stages": ["redshiftSolver"],
-                "templateDir": "sth",
-                "redshiftSolver": {
+            param_dict = make_parameter_dict_at_redshift_solver_level(
+                object_level_params={"stages": ["redshiftSolver"], "templateDir": "sth"},
+                object_type=None,
+                **{
                     "method": "templateFittingSolve",
                     "templateFittingSolve": new_kwargs,
-                },
-            }
-            param_dict = make_parameter_dict_at_object_level(**new_kwargs)
+                }
+            )
             if kwargs.get("enablePhotometry"):
                 param_dict["photometryBand"] = "sth"
 
@@ -132,17 +131,14 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
-
-            new_kwargs = {
-                "stages": ["redshiftSolver"],
-                "templateDir": "sth",
-                "redshiftSolver": {
+            param_dict = make_parameter_dict_at_redshift_solver_level(
+                object_level_params={"stages": ["redshiftSolver"], "templateDir": "sth"},
+                object_type=None,
+                **{
                     "method": "templateFittingSolve",
                     "templateFittingSolve": new_kwargs,
-                },
-            }
-
-            param_dict = make_parameter_dict_at_object_level(**new_kwargs)
+                }
+            )
             if kwargs.get("enablePhotometry"):
                 param_dict["photometryTransmissionDir"] = "sth"
 

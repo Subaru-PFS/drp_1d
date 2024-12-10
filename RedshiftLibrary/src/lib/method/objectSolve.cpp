@@ -45,13 +45,13 @@ using namespace NSEpic;
 void CObjectSolve::InitRanges(const CInputContext &inputContext) {
   m_lambdaRange = TFloat64Range(*inputContext.getLambdaRange()); // non-clamped
 
-  // m_redshiftSampling could be overwritten if fftprocessing is activated
+  // m_zLogSampling could be overwritten if fftprocessing is activated
   //  Warning for LineMeas :  we consider linemeas use the same redshiftsampling
   //  as the objectMethod if linemeas is called in standalone, redshiftsampling
   //  must be present in parameters
-  m_redshiftSampling =
-      inputContext.GetParameterStore()->GetScopedAt<std::string>(
-          "redshiftSampling", ScopeType::SPECTRUMMODEL);
+  // TODO change here
+  m_zLogSampling = inputContext.GetParameterStore()->GetScopedAt<std::string>(
+                       "redshiftSampling", ScopeType::SPECTRUMMODEL) == "log";
 
   TFloat64Range redshiftRange;
 
@@ -66,7 +66,7 @@ void CObjectSolve::InitRanges(const CInputContext &inputContext) {
 void CObjectSolve::createRedshiftGrid(const CInputContext &inputContext,
                                       const TFloat64Range &redshiftRange) {
   CZGridParam zp(redshiftRange, m_redshiftStep);
-  m_redshifts = zp.getZGrid(m_redshiftSampling == "log");
+  m_redshifts = zp.getZGrid(m_zLogSampling);
 }
 
 void CObjectSolve::GetRedshiftSampling(const CInputContext &inputContext,
@@ -76,7 +76,7 @@ void CObjectSolve::GetRedshiftSampling(const CInputContext &inputContext,
   if (searchLogRebin != inputContext.m_logRebin.end()) {
     redshiftRange = searchLogRebin->second.zrange;
     redshiftStep = inputContext.getLogGridStep();
-    if (m_redshiftSampling == "lin")
+    if (!m_zLogSampling)
       THROWG(ErrorCode::BAD_PARAMETER_VALUE,
              Formatter() << "CSolve::" << __func__
                          << ": redshiftsampling param should be set to log "

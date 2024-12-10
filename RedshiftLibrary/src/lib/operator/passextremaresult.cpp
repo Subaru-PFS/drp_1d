@@ -38,14 +38,14 @@
 // ============================================================================
 #include <cfloat>
 
-#include "RedshiftLibrary/operator/linemodelpassextremaresult.h"
+#include "RedshiftLibrary/operator/passextremaresult.h"
 
 using namespace NSEpic;
 using namespace std;
 
-CLineModelPassExtremaResult::CLineModelPassExtremaResult(Int32 n) { Resize(n); }
+CPassExtremaResult::CPassExtremaResult(Int32 n) { Resize(n); }
 
-void CLineModelPassExtremaResult::Resize(
+void CPassExtremaResult::Resize(
     Int32 size) { // Resize is called from Combine_firstpass_candidates in which
                   // we want to increase the size of the current object and
                   // reinit it, thus assign cannot be used here. We d better
@@ -62,7 +62,7 @@ void CLineModelPassExtremaResult::Resize(
   GroupsALv.resize(size, TFloat64List(250, NAN));
 }
 
-TFloat64List CLineModelPassExtremaResult::GetRedshifts() const {
+TFloat64List CPassExtremaResult::GetRedshifts() const {
   TFloat64List redshifts;
   redshifts.reserve(m_ranked_candidates.size());
   for (auto c : m_ranked_candidates)
@@ -70,8 +70,8 @@ TFloat64List CLineModelPassExtremaResult::GetRedshifts() const {
   return redshifts;
 }
 
-TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
-    const CLineModelPassExtremaResult &results_b) const {
+TInt32List CPassExtremaResult::getUniqueCandidates(
+    const CPassExtremaResult &results_b) const {
   TInt32List uniqueIndices;
   Float64 skip_thres_absdiffz =
       5e-4; // threshold to remove duplicate extrema/candidates
@@ -93,7 +93,7 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
   return uniqueIndices;
 }
 
-void CLineModelPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
+void CPassExtremaResult::fillWithContinuumModelSolutionAtIndex(
     Int32 i, const CContinuumModelSolution &contModelSol) {
   m_fittedContinuum[i] = contModelSol;
 }

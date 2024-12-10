@@ -36,29 +36,40 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_METHOD_POWERLAWSOLVE_
-#define _REDSHIFT_METHOD_POWERLAWSOLVE_
 
-#include "RedshiftLibrary/method/objectSolve.h"
-#include "RedshiftLibrary/method/powerlawsolveresult.h"
-#include "RedshiftLibrary/operator/powerlaw.h"
+#include "RedshiftLibrary/method/twopasssolve.h"
 
-namespace NSEpic {
+using namespace NSEpic;
 
-class CPowerLawSolve : public CObjectSolve {
+void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
+                                       const TFloat64Range &redshiftRange) {
+  if (useTwoPass()) {
+    initTwoPassZStepFactor();
+    m_coarseRedshiftStep = m_redshiftStep * m_twoPassZStepFactor;
+  } else
+    m_coarseRedshiftStep = m_redshiftStep;
+  CZGridParam zp(redshiftRange, m_coarseRedshiftStep);
+  m_redshifts = zp.getZGrid(m_zLogSampling);
 
-public:
-  CPowerLawSolve();
+  if (m_redshifts.size() < MIN_GRID_COUNT) {
+    m_coarseRedshiftStep = m_redshiftStep;
+    CObjectSolve::createRedshiftGrid(
+        inputContext, redshiftRange); // fall back to creating fine grid
+    Log.LogInfo(Formatter()
+                << "Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
+                   "raw "
+                << m_redshifts.size() << " redshifts will be calculated");
+  } else {
+    Log.LogInfo(Formatter()
+                << "Operator-Linemodel: 1st pass coarse zgrid enabled: "
+                << m_redshifts.size()
+                << " redshifts "
+                   "will be calculated on the coarse grid");
+  }
+}
 
-private:
-  std::shared_ptr<CSolveResult>
-  compute(std::shared_ptr<const CInputContext> inputContext,
-          std::shared_ptr<COperatorResultStore> resultStore,
-          TScopeStack &scope);
-
-  std::shared_ptr<COperatorPowerLaw> m_powerLawOperator;
-};
-
-} // namespace NSEpic
-
-#endif
+const std::unordered_map<std::string, EContinuumFit>
+    CTwoPassSolve::str2ContinuumFit = {
+        {"retryAll", EContinuumFit::retryAll},
+        {"fromFirstPass", EContinuumFit::fromFirstPass},
+        {"reFitFirstPass", EContinuumFit::reFitFirstPass}};

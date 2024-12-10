@@ -231,7 +231,7 @@ private:
 
   TFloat64Range m_redshiftRange;
   TFloat64List m_redshifts;
-  std::string m_redshiftSampling;
+  bool m_zLogSampling;
 };
 
 } // namespace NSEpic

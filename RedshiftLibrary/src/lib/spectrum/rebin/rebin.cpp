@@ -90,7 +90,7 @@ void CRebin::compute(const TFloat64Range &range,
 
   rebinedFluxAxis.setError(CSpectrumNoiseAxis(error_tmp));
   rebinedSpectrum.ResetContinuum();
-  rebinedSpectrum.SetType(CSpectrum::EType::nType_raw);
+  rebinedSpectrum.SetType(CSpectrum::EType::raw);
   rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,
                                          std::move(rebinedFluxAxis));
 }

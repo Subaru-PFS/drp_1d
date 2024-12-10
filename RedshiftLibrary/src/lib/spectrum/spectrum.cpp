@@ -224,7 +224,7 @@ void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis &fluxaxis) {
   }
 
   ResetContinuum();
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   m_rebin->reset();
   m_RawFluxAxis = fluxaxis;
 }
@@ -238,7 +238,7 @@ void CSpectrum::SetFluxAxis(CSpectrumFluxAxis &&fluxaxis) {
   }
 
   ResetContinuum();
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   m_rebin->reset();
   m_RawFluxAxis = std::move(fluxaxis);
 }
@@ -253,7 +253,7 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
   }
 
   ResetContinuum();
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   m_rebin->reset();
 
   m_SpectralAxis = std::move(spcaxis);
@@ -273,7 +273,7 @@ void CSpectrum::InitSpectrumContinuum(CParameterStore &parameterStore) {
       parameterStore.Get<Float64>("continuumRemoval.medianKernelWidth");
   bool medianEvenReflection =
       parameterStore.Get<bool>("continuumRemoval.medianEvenReflection");
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   if (smoothWidth > 0) {
     m_RawFluxAxis.ApplyMeanSmooth(smoothWidth);
   }

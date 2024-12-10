@@ -36,65 +36,20 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
-#define _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
+#ifndef _REDSHIFT_OPERATOR_TWOPASSRESULT_
+#define _REDSHIFT_OPERATOR_TWOPASSRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/twopassresult.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
-
-class TFittingIsmIgmResult;
-class CTemplateFittingResult : public CTwoPassResult {
-
+class CTwoPassResult : public COperatorResult {
 public:
-  CTemplateFittingResult(Int32 n);
-  CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
-  void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
-
-  virtual ~CTemplateFittingResult() = default;
-  CTemplateFittingResult(const CTemplateFittingResult &) = default;
-  CTemplateFittingResult(CTemplateFittingResult &&) = default;
-  CTemplateFittingResult &operator=(const CTemplateFittingResult &) = default;
-  CTemplateFittingResult &operator=(CTemplateFittingResult &&) = default;
-  void updateVectors(Int32 idx, Int32 ndup, Int32 count) override;
-
-  Float64 SNRCalculation(Float64 dtm, Float64 mtm);
-
-  // best fit results
-  TFloat64List ChiSquare;
-  TFloat64List ReducedChiSquare;
-  TFloat64List ChiSquarePhot;
-  TFloat64List FitAmplitude;
-  TFloat64List FitAmplitudeError;
-  TFloat64List FitAmplitudeSigma;
-  TFloat64List FitEbmvCoeff;
-  TInt32List FitMeiksinIdx;
-  TFloat64List FitDtM;
-  TFloat64List FitMtM;
-  TFloat64List LogPrior;
-  TFloat64List SNR;
-  std::vector<bool> m_isFirstPassResult;
-
-  // intermediate chisquare results
-  std::vector<std::vector<TFloat64List>>
-      ChiSquareIntermediate; // chi2 for each intermediate results (for each
-                             // config [z][Calzetti][Meiksin])
-  std::vector<std::vector<TFloat64List>>
-      IsmEbmvCoeffIntermediate; // calzetti dust coeff for each intermediate
-                                // result (for each config
-                                // [z][Calzetti][Meiksin])
-  std::vector<std::vector<TInt32List>>
-      IgmMeiksinIdxIntermediate; // meiksin idx for each intermediate result
-                                 // (for each config [z][Calzetti][Meiksin])
-
-  Float64 CstLog = NAN;
-  std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra
+  using COperatorResult::COperatorResult;
+  virtual void updateVectors(Int32 idx, Int32 ndup, Int32 count) = 0;
+  TFloat64List Redshifts; // z axis
 };
-
 } // namespace NSEpic
 
 #endif

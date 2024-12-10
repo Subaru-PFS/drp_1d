@@ -36,43 +36,59 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <regex>
+#ifndef _REDSHIFT_OPERATORRESULT_LINEMODEL_
+#define _REDSHIFT_OPERATORRESULT_LINEMODEL_
 
-#include <boost/test/unit_test.hpp>
+#include <unordered_set>
 
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/operator/linemodel.h"
-#include "RedshiftLibrary/operator/twopass.h"
-using namespace NSEpic;
-using namespace std;
-BOOST_AUTO_TEST_SUITE(Linemodel)
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/continuum/indexes.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 
-BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
-  /*//TODO
-    Float64 z = 5.;
-  Float64 step = 1;
-  TFloat64List redshifts{0, 5, 9};
-  std::string redshiftSampling = "lin";
-  Float64 secondPass_halfwindowsize = 0.5;
-  Int32 ref_idx = 3; // todo
-  TFloat64List extendedRedshifts_ref{2, 3, 4, 5, 6, 7, 8};
+namespace NSEpic {
 
-  // prepare object
-  COperatorLineModel op;
-  op.m_Redshifts = redshifts;
-  op.m_fineStep = step;
-  op.m_zLogSampling = (redshiftSampling == "log");
-  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
-  op.UpdateRedshiftGridAndResults();
-      // verifications:
-      auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
-      auto _j = std::distance(m_Redshifts.begin(), it);
+class CPassExtremaResult {
 
-      if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
-        THROWG(ErrorCode::INTERNAL_ERROR, "lineModel vector is not sorted");
+public:
+  CPassExtremaResult(Int32 n);
 
-    if (m_result->Redshifts.size() != m_Redshifts.size())
-      THROWG(ErrorCode::INTERNAL_ERROR, "lineModel sizes do not match");
-  */
-}
-BOOST_AUTO_TEST_SUITE_END()
+  CPassExtremaResult() = default;
+  template <typename T>
+  void SetRankedCandidates(const TRankedCandidates<T> &zCandidates) {
+    m_ranked_candidates.assign(zCandidates.cbegin(), zCandidates.cend());
+  }
+  void Resize(Int32 size);
+  TInt32List getUniqueCandidates(const CPassExtremaResult &results_b) const;
+  TFloat64List GetRedshifts() const;
+  void fillWithContinuumModelSolutionAtIndex(
+      Int32 i, const CContinuumModelSolution &contModelSol);
+
+  TCandidateZbyRank m_ranked_candidates;
+
+  std::vector<CContinuumModelSolution> m_fittedContinuum;
+
+  // line width
+  TFloat64List Elv;                    // emission line width
+  TFloat64List Alv;                    // absorption line width
+  std::vector<TFloat64List> GroupsELv; // per fitting group line width , EL
+  std::vector<TFloat64List> GroupsALv; // per fitting group line width , AL
+
+  std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
+  Float64 Redshift(Int32 i) const {
+    return m_ranked_candidates[i].second->Redshift;
+  }
+  Float64 ValProba(Int32 i) const {
+    return m_ranked_candidates[i].second->ValProba;
+  }
+  Float64 ValSumProba(Int32 i) const {
+    return m_ranked_candidates[i].second->ValSumProba;
+  }
+  Float64 DeltaZ(Int32 i) const {
+    return m_ranked_candidates[i].second->Deltaz;
+  }
+  Int32 size() const { return m_ranked_candidates.size(); }
+};
+
+} // namespace NSEpic
+#endif

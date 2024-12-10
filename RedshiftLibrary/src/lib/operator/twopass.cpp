@@ -36,22 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/method/powerlawsolve.h"
-#include "RedshiftLibrary/operator/powerlaw.h"
+
+#include "RedshiftLibrary/operator/twopass.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
 
 using namespace NSEpic;
-using namespace std;
-
-CPowerLawSolve::CPowerLawSolve() : CObjectSolve("powerLawSolve") {}
-
-std::shared_ptr<CSolveResult>
-CPowerLawSolve::compute(std::shared_ptr<const CInputContext> inputContext,
-                        std::shared_ptr<COperatorResultStore> resultStore,
-                        TScopeStack &scope) {
-
-  m_powerLawOperator = std::make_shared<COperatorPowerLaw>(m_redshifts);
-
-  std::shared_ptr<CPowerLawSolveResult> PowerLawSolveResult =
-      std::make_shared<CPowerLawSolveResult>();
-  return PowerLawSolveResult;
-}

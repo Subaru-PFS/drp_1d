@@ -266,8 +266,8 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   spc.SetContinuumEstimationMethod("raw");
   spc.EstimateContinuum();
   CSpectrumFluxAxis flux_out;
-  spc.SetType(CSpectrum::EType::nType_continuumOnly);
-  BOOST_CHECK(spc.GetType() == 2);
+  spc.SetType(CSpectrum::EType::continuumOnly);
+  BOOST_CHECK(spc.GetType() == CSpectrum::EType::continuumOnly);
   flux_out = spc.GetFluxAxis();
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetContinuumFluxAxis().GetSamplesVector());
@@ -276,8 +276,8 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetContinuumFluxAxis_().GetSamplesVector());
 
-  spc.SetType(CSpectrum::EType::nType_noContinuum);
-  BOOST_CHECK(spc.GetType() == 3);
+  spc.SetType(CSpectrum::EType::noContinuum);
+  BOOST_CHECK(spc.GetType() == CSpectrum::EType::noContinuum);
   spc.ResetContinuum();
   flux_out = spc.GetFluxAxis();
   BOOST_CHECK(flux_out.GetSamplesVector() ==
@@ -287,8 +287,8 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetWithoutContinuumFluxAxis_().GetSamplesVector());
 
-  spc.SetType(CSpectrum::EType::nType_raw);
-  BOOST_CHECK(spc.GetType() == 1);
+  spc.SetType(CSpectrum::EType::raw);
+  BOOST_CHECK(spc.GetType() == CSpectrum::EType::raw);
   flux_out = spc.GetFluxAxis();
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetRawFluxAxis().GetSamplesVector());

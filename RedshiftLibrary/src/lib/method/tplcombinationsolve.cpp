@@ -85,17 +85,17 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
 
   std::string scopeStr = "tplcombination";
 
-  EType _type = nType_raw;
+  EType _type = EType::raw;
   if (opt_spcComponent == "raw") {
-    _type = nType_raw;
+    _type = EType::raw;
   } else if (opt_spcComponent == "noContinuum") {
-    _type = nType_noContinuum;
+    _type = EType::noContinuum;
     scopeStr = "tplcombination_nocontinuum";
   } else if (opt_spcComponent == "continuum") {
-    _type = nType_continuumOnly;
+    _type = EType::continuumOnly;
     scopeStr = "tplcombination_continuum";
   } else if (opt_spcComponent == "all") {
-    _type = nType_all;
+    _type = EType::all;
   } else {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
   }
@@ -120,7 +120,7 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
         opt_dustFit);
 
   COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
-                     m_opt_maxCandidate, m_redshiftSampling == "log");
+                     m_opt_maxCandidate, m_zLogSampling);
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
@@ -158,11 +158,12 @@ bool CTplCombinationSolve::Solve(
     const std::vector<CMask> &maskList, EType spctype,
     const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting) {
   std::string scopeStr = "tplcombination";
-  Int32 _ntype = 1;
-  CSpectrum::EType _spctype = CSpectrum::nType_raw;
-  CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw,
-                                     CSpectrum::nType_noContinuum,
-                                     CSpectrum::nType_continuumOnly};
+  // TODO modify as in templatefittingsolve when stabilized
+  Int32 _ntype = 0;
+  CSpectrum::EType _spctype = CSpectrum::EType::raw;
+  CSpectrum::EType _spctypetab[3] = {CSpectrum::EType::raw,
+                                     CSpectrum::EType::noContinuum,
+                                     CSpectrum::EType::continuumOnly};
 
   Int32 enable_extinction =
       0; // TODO: extinction should be deactivated for nocontinuum anyway ? TBD
@@ -181,9 +182,9 @@ bool CTplCombinationSolve::Solve(
       tplCatalog.GetTemplateList(TStringList{m_category});
   checkTemplates(tplList);
 
-  // case: nType_all
-  if (spctype == nType_all)
-    _ntype = 3;
+  // case: all
+  if (spctype == EType::all)
+    _ntype = 2;
 
   const CSpectrum::EType save_spcType = spc.GetType();
   std::vector<CSpectrum::EType> save_tplTypes(tplList.size());
@@ -192,8 +193,8 @@ bool CTplCombinationSolve::Solve(
                    return tpl->GetType();
                  });
 
-  for (Int32 i = 0; i < _ntype; i++) {
-    if (spctype == nType_all)
+  for (Int32 i = 0; i <= _ntype; i++) {
+    if (spctype == EType::all)
       _spctype = _spctypetab[i];
     else
       _spctype = static_cast<CSpectrum::EType>(spctype);
@@ -207,7 +208,7 @@ bool CTplCombinationSolve::Solve(
         });
 
     scopeStr = getSpecBasedScope(_spctype);
-    if (_spctype == CSpectrum::nType_noContinuum)
+    if (_spctype == CSpectrum::EType::noContinuum)
       enable_dustFitting = 0;
 
     // Compute merit function
@@ -257,15 +258,15 @@ void CTplCombinationSolve::checkTemplates(
 }
 
 std::string CTplCombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
-  if (_spctype == CSpectrum::nType_continuumOnly)
+  if (_spctype == CSpectrum::EType::continuumOnly)
     // use continuum only
     return "tplcombination_continuum";
 
-  if (_spctype == CSpectrum::nType_raw)
+  if (_spctype == CSpectrum::EType::raw)
     // use full spectrum
     return "tplcombination";
 
-  if (_spctype == CSpectrum::nType_noContinuum)
+  if (_spctype == CSpectrum::EType::noContinuum)
     // use spectrum without continuum
     return "tplcombination_nocontinuum";
   else

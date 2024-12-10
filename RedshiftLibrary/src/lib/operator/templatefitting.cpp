@@ -53,6 +53,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
@@ -389,19 +390,13 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
   }
 }
 
-/**
- * \brief
- *
- * input: if additional_spcMasks size is 0, no additional mask will be used,
- *otherwise its size should match the redshifts list size
- *
- **/
-std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
+std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx) {
+    Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
+    bool isFirstPass) {
   Log.LogDetail(
       Formatter()
       << "  Operator-TemplateFitting: starting computation for template: "
@@ -423,9 +418,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
-
-  std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>(m_redshifts.size());
   TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
       opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
@@ -438,18 +430,20 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
                        << m_redshifts.size());
 
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    const CPriorHelper::TPriorEList &logp =
-        logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
-            ? logpriorze[i]
-            : CPriorHelper::TPriorEList();
+    if (isFirstPass || !result->m_isFirstPassResult[i]) {
+      Float64 redshift = result->Redshifts[i];
+      // TODO move a condition up loop
+      const CPriorHelper::TPriorEList &logp =
+          logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
+              ? logpriorze[i]
+              : CPriorHelper::TPriorEList();
 
-    Float64 redshift = result->Redshifts[i];
+      TFittingIsmIgmResult result_z = BasicFit(
+          tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
+          logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
-    TFittingIsmIgmResult result_z =
-        BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
-                 opt_dustFitting, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
-
-    result->set_at_redshift(i, std::move(result_z));
+      result->set_at_redshift(i, std::move(result_z));
+    }
   }
 
   // overlap warning
@@ -487,4 +481,84 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   result->CstLog = EstimateLikelihoodCstLog();
 
   return result;
+}
+
+/**
+ * \brief
+ *
+ * input: if additional_spcMasks size is 0, no additional mask will be used,
+ *otherwise its size should match the redshifts list size
+ *
+ **/
+std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
+    const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
+    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+    Float64 opt_continuum_null_amp_threshold,
+    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx) {
+  std::shared_ptr<CTemplateFittingResult> result =
+      std::make_shared<CTemplateFittingResult>(m_redshifts.size());
+  result->Redshifts = m_redshifts;
+
+  return Compute(tpl, overlapThreshold, opt_interp, opt_extinction,
+                 opt_dustFitting, opt_continuum_null_amp_threshold, logpriorze,
+                 FitEbmvIdx, FitMeiksinIdx, result);
+}
+
+void COperatorTemplateFitting::SetFirstPassCandidates(
+    const TCandidateZbyRank &zCandidates) {
+  m_firstpass_extremaResult.Resize(zCandidates.size());
+  m_firstpass_extremaResult.m_ranked_candidates = zCandidates;
+}
+
+std::shared_ptr<const ExtremaResult>
+COperatorTemplateFitting::BuildFirstPassExtremaResults(
+    const TOperatorResultMap &resultsMapFromStore) {
+  // Access the raw extremas results
+  // Converts TCandidateZbyRank m_firstpass_extremaResult.m_ranked_candidates to
+  // ExtremaResult using constructor
+  std::shared_ptr<ExtremaResult> extremaResult =
+      make_shared<ExtremaResult>(m_firstpass_extremaResult.m_ranked_candidates);
+  Int32 extremumCount = extremaResult->size();
+
+  // Find the common redshifts grid using first result
+  auto firstStoreResult =
+      std::dynamic_pointer_cast<const CTemplateFittingResult>(
+          (*resultsMapFromStore.begin()).second);
+  const TFloat64List &redshifts = firstStoreResult->Redshifts;
+
+  // For each extremum, find its corresponding template
+  for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
+    Float64 z = extremaResult->m_ranked_candidates[iExtremum].second->Redshift;
+
+    // Find z index in stored results redshifts grid
+    auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
+    const Int32 zIndex = std::distance(redshifts.begin(), itZ);
+
+    // Find template minimizing chi2 : this is the extremum template
+    Float64 chiSquare = DBL_MAX;
+    std::string name = "";
+    for (auto &resultPair : resultsMapFromStore) {
+      auto tplFitResult =
+          std::dynamic_pointer_cast<const CTemplateFittingResult>(
+              resultPair.second);
+
+      if (tplFitResult->ChiSquare[zIndex] < chiSquare) {
+        chiSquare = tplFitResult->ChiSquare[zIndex];
+        name = resultPair.first;
+      };
+    }
+    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.name =
+        name;
+    auto resultFromStore =
+        std::dynamic_pointer_cast<const CTemplateFittingResult>(
+            resultsMapFromStore.at(name));
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.meiksinIdx =
+        resultFromStore->FitMeiksinIdx[zIndex];
+    extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.ebmvCoef =
+        resultFromStore->FitEbmvCoeff[zIndex];
+  }
+  return extremaResult;
 }

@@ -47,6 +47,10 @@
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
 namespace NSEpic {
+
+template <typename T>
+using TRankedCandidates =
+    std::vector<std::pair<std::string, std::shared_ptr<T>>>;
 template <class T> class CPdfCandidateszResult : public COperatorResult {
 
 public:
@@ -74,7 +78,7 @@ public:
     return m_ranked_candidates[rank].second;
   }
 
-  std::vector<std::pair<std::string, std::shared_ptr<T>>> m_ranked_candidates;
+  TRankedCandidates<T> m_ranked_candidates;
 };
 
 typedef CPdfCandidateszResult<TCandidateZ> PdfCandidatesZResult;

@@ -47,7 +47,10 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/passextremaresult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
@@ -124,8 +127,19 @@ public:
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
+  std::shared_ptr<CTemplateFittingResult>
+  Compute(const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
+          std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+          Float64 opt_continuum_null_amp_threshold,
+          const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+          Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
+          bool isFirstPass = true);
+  void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
+  std::shared_ptr<const ExtremaResult>
+  BuildFirstPassExtremaResults(const TOperatorResultMap &resultsFromStore);
 
 protected:
+  friend class CTemplateFittingSolve;
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
                                 Float64 redshift, Float64 overlapThreshold,
                                 bool opt_extinction, bool opt_dustFitting,
@@ -155,6 +169,8 @@ protected:
   std::vector<TFloat64List> m_sumCross_outsideIGM;
   std::vector<TFloat64List> m_sumT_outsideIGM;
   std::vector<TFloat64List> m_sumS_outsideIGM;
+
+  std::vector<CContinuumModelSolution> ContinuumModelSolutions;
 };
 
 } // namespace NSEpic
