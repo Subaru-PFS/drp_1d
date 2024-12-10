@@ -48,7 +48,6 @@ from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
 from pylibamazed.ProcessFlow import ProcessFlow
 from tests.python.config import test_dir
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 def read_photometry_fromfile(fname):
@@ -142,7 +141,7 @@ def save_output(output, config, observation):
 
 def test_ITLikeTest():
     config = make_config()
-    param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
+    param = Parameters(get_parameters(config["parameters_file"]), make_checks=False)
     process_flow = ProcessFlow(config, param)
     observation = get_observation(config["input_file"])
 

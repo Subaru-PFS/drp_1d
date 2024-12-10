@@ -38,7 +38,7 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.CustomParametersChecker import CustomParametersChecker
 from pylibamazed.redshift import WarningCode
 from tests.python.utils import (
     WarningUtils,
@@ -83,7 +83,7 @@ class TestLSF:
         def test_raises_an_error_if_GaussianConstantWidth_without_width_defined(self):
             param_dict = self._make_parameter_dict(**{"lsfType": "gaussianConstantWidth"})
             with pytest.raises(APIException, match=r"Missing parameter lsf width"):
-                ParametersChecker(param_dict).custom_check()
+                CustomParametersChecker(param_dict).check()
 
         def test_OK_if_GaussianConstantWidth_with_width_defined(self, zflag):
             param_dict = self._make_parameter_dict(**{"lsfType": "gaussianConstantWidth", "width": "1"})

@@ -42,7 +42,6 @@ import os
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
 from tests.python.config import test_dir
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 calibration_dir = os.path.join(test_dir, "calibration")
 
@@ -74,7 +73,7 @@ def make_parameters() -> Parameters:
         "photometryTransmissionDir": "photometric_transmission/EL-COSMOSv2/",
         "photometryBand": ["H", "J", "Y", "riz"],
     }
-    return Parameters(parameters_dict, Checker=FakeParametersChecker)
+    return Parameters(parameters_dict, make_checks=False)
 
 
 def test_calibration_linecatalog():

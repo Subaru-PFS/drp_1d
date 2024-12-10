@@ -40,7 +40,7 @@
 import copy
 
 from pylibamazed.ParametersAccessor import ParametersAccessor
-from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.CustomParametersChecker import CustomParametersChecker
 
 
 class ParametersExtender:
@@ -54,7 +54,7 @@ class ParametersExtender:
         "medianEvenReflection": default_median_even_reflection,
     }
 
-    def __init__(self, version: int, Accessor=ParametersAccessor, Checker=ParametersChecker):
+    def __init__(self, version: int, Accessor=ParametersAccessor, Checker=CustomParametersChecker):
         self.Accessor = Accessor
         self.Checker = Checker
         self.version = version
@@ -62,7 +62,7 @@ class ParametersExtender:
     def extend(self, parameters: dict):
         self.initial_accessor = self.Accessor(parameters)
         self.extended_accessor = self.Accessor(copy.deepcopy(parameters))
-        self.checker = self.Checker(parameters, self.version)
+        self.checker = self.Checker(parameters)
 
         self._extend_continuum_removal()
         self._extend_template_catalog_continuum_removal()

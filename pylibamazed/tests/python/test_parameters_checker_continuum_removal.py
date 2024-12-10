@@ -38,7 +38,7 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.CustomParametersChecker import CustomParametersChecker
 from tests.python.utils import DictUtils, WarningUtils, make_parameter_dict_at_redshift_solver_level
 
 
@@ -73,7 +73,7 @@ class TestContinuumRemoval:
                     "medianEvenReflection": 1,
                 }
             }
-            ParametersChecker(param_dict).custom_check()
+            CustomParametersChecker(param_dict).check()
             assert not WarningUtils.has_any_warning()
 
         @pytest.mark.parametrize("nesting", [None, "templateCatalog"])
@@ -83,7 +83,7 @@ class TestContinuumRemoval:
                 nesting,
             )
             with pytest.raises(APIException, match="Missing parameter continuumRemoval medianKernelWidth"):
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
 
         @pytest.mark.parametrize("nesting", [None, "templateCatalog"])
         def test_error_if_method_is_IrregularSamplingMedian_without_medianEvenReflection(self, nesting):
@@ -91,7 +91,7 @@ class TestContinuumRemoval:
                 {"continuumRemoval": {"method": "irregularSamplingMedian", "medianKernelWidth": 1}}, nesting
             )
             with pytest.raises(APIException, match="Missing parameter continuumRemoval medianEvenReflection"):
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
 
     class TestMedianEvenWidth:
         @pytest.mark.parametrize("nesting", [None, "templateCatalog"])
@@ -106,7 +106,7 @@ class TestContinuumRemoval:
                 nesting,
             )
 
-            ParametersChecker(parametersDict).custom_check()
+            CustomParametersChecker(parametersDict).check()
             assert WarningUtils.has_any_warning()
 
     class TestMedianEvenReflection:
@@ -116,7 +116,7 @@ class TestContinuumRemoval:
                 {"continuumRemoval": {"method": "sth", "medianEvenReflection": 1}}, nesting
             )
 
-            ParametersChecker(parametersDict).custom_check()
+            CustomParametersChecker(parametersDict).check()
             assert WarningUtils.has_any_warning()
 
 
@@ -130,7 +130,7 @@ class TestBaseContinuumRemoval:
             parametersDict = make_parameter_dict_at_redshift_solver_level(**kwargs)
             parametersDict["galaxy"]["templateDir"] = "sth"
             with pytest.raises(APIException, match="Missing parameter continuumRemoval"):
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
 
         def test_error_if_absent_but_tplCombinationSolve_spectrum_component_is_not_raw(self):
             kwargs = {
@@ -140,7 +140,7 @@ class TestBaseContinuumRemoval:
             parametersDict = make_parameter_dict_at_redshift_solver_level(**kwargs)
             parametersDict["galaxy"]["templateDir"] = "sth"
             with pytest.raises(APIException, match="Missing parameter continuumRemoval"):
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
 
         def test_error_if_absent_but_lineModelSolve_continuumComponent_is_fromSpectrum(self):
             kwargs = {
@@ -149,7 +149,7 @@ class TestBaseContinuumRemoval:
             }
             parametersDict = make_parameter_dict_at_redshift_solver_level(**kwargs)
             with pytest.raises(APIException, match="Missing parameter continuumRemoval"):
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
 
         def test_necessity_for_any_object(self):
             # First object which does not need continuumRemoval
@@ -167,4 +167,4 @@ class TestBaseContinuumRemoval:
             parametersDict = parametersDict | parametersDict2
             parametersDict["qso"]["templateDir"] = "sth"
             with pytest.raises(APIException, match="Missing parameter continuumRemoval"):
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()

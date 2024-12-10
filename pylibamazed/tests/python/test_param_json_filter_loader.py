@@ -40,7 +40,6 @@
 from pylibamazed.Filter import FilterList, SpectrumFilterItem
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
 from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestParamJsonFilterLoader:
@@ -54,7 +53,7 @@ class TestParamJsonFilterLoader:
                     {"key": "col2", "instruction": ">=", "value": 2},
                 ],
             },
-            Checker=FakeParametersChecker,
+            make_checks=False,
         )
         assert jsonFilterLoader.get_filters(params) == FilterList(
             [SpectrumFilterItem("col1", "<", 2), SpectrumFilterItem("col2", ">=", 2)]

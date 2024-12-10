@@ -38,7 +38,7 @@
 # ============================================================================
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.CustomParametersChecker import CustomParametersChecker
 from tests.python.utils import WarningUtils, make_parameter_dict_at_object_level
 
 
@@ -47,37 +47,37 @@ class TestParametersCheckGeneral:
         class TestFiltersFormat:
             def test_ok_if_filter_format_is_correct(self, zflag):
                 parametersDict = {"filters": [{"key": "errors", "instruction": "^", "value": "8"}]}
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
                 assert not WarningUtils.has_any_warning()
 
             def test_error_if_filters_is_not_a_list(self):
                 parametersDict = {"filters": {"key": "errors", "instruction": "^", "value": "8"}}
                 with pytest.raises(APIException, match=r"Input filters json must be a list"):
-                    ParametersChecker(parametersDict).custom_check()
+                    CustomParametersChecker(parametersDict).check()
 
             def test_error_if_filters_is_missing_a_key(self):
                 parametersDict = {"filters": [{"key": "errors", "instruction": "^"}]}
                 with pytest.raises(APIException, match=r"Filters"):
-                    ParametersChecker(parametersDict).custom_check()
+                    CustomParametersChecker(parametersDict).check()
 
             def test_error_if_filters_has_an_additional_key(self):
                 parametersDict = {
                     "filters": [{"key": "errors", "instruction": "^", "value": "8", "errorKey": "123"}]
                 }
                 with pytest.raises(APIException, match=r"Filters"):
-                    ParametersChecker(parametersDict).custom_check()
+                    CustomParametersChecker(parametersDict).check()
 
         class TestFiltersKeys:
             def test_no_error_if_no_filter(self, zflag):
                 parametersDict = {}
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
                 assert not WarningUtils.has_any_warning()
 
             def test_error_if_filter_uses_an_unknown_column(self):
                 parametersDict = {"filters": [{"key": "zzz", "instruction": "^", "value": "8"}]}
 
                 with pytest.raises(APIException, match=r"Unknown filter key zzz"):
-                    ParametersChecker(parametersDict).custom_check()
+                    CustomParametersChecker(parametersDict).check()
 
             def test_ok_if_filter_uses_a_default_or_additional_column(self, zflag):
                 parametersDict = {
@@ -88,7 +88,7 @@ class TestParametersCheckGeneral:
                     "additionalCols": ["zzz"],
                 }
 
-                ParametersChecker(parametersDict).custom_check()
+                CustomParametersChecker(parametersDict).check()
                 assert not WarningUtils.has_any_warning()
 
     class TestPhotometryTransmissionDir:
@@ -113,18 +113,18 @@ class TestParametersCheckGeneral:
         def test_photometry_enabled_without_transmission_dir_raises_an_error(self):
             param_dict = self._make_param_dict(**{"enablePhotometry": True})
             with pytest.raises(APIException, match=r"Missing parameter"):
-                ParametersChecker(param_dict).custom_check()
+                CustomParametersChecker(param_dict).check()
 
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
             param_dict = self._make_param_dict(**{"enablePhotometry": True})
             param_dict["photometryTransmissionDir"] = "sth"
-            ParametersChecker(param_dict).custom_check()
+            CustomParametersChecker(param_dict).check()
             assert not WarningUtils.has_any_warning()
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{"enablePhotometry": False})
             param_dict["photometryTransmissionDir"] = "sth"
-            ParametersChecker(param_dict).custom_check()
+            CustomParametersChecker(param_dict).check()
             assert WarningUtils.has_any_warning()
 
     class TestPhotometryBand:
@@ -151,16 +151,16 @@ class TestParametersCheckGeneral:
         def test_photometry_enabled_without_transmission_dir_raises_an_error(self):
             param_dict = self._make_param_dict(**{"enablePhotometry": True})
             with pytest.raises(APIException, match=r"Missing parameter"):
-                ParametersChecker(param_dict).custom_check()
+                CustomParametersChecker(param_dict).check()
 
         def test_photometry_enabled_with_transmission_dir_ok(self, zflag):
             param_dict = self._make_param_dict(**{"enablePhotometry": True})
             param_dict["photometryBand"] = "sth"
-            ParametersChecker(param_dict).custom_check()
+            CustomParametersChecker(param_dict).check()
             assert not WarningUtils.has_any_warning()
 
         def test_photometry_disabled_with_transmission_dir_raises_warning(self, zflag):
             param_dict = self._make_param_dict(**{"enablePhotometry": False})
             param_dict["photometryBand"] = "sth"
-            ParametersChecker(param_dict).custom_check()
+            CustomParametersChecker(param_dict).check()
             assert WarningUtils.has_any_warning()
