@@ -50,36 +50,6 @@ class TestParameters:
         TestParametersUtils().make_parameters_dict(), make_checks=False
     )
 
-    def test_load_linemeas_parameters_from_catalog(self, mocker):
-        source_id = "some_source_id"
-        mocker.patch(
-            "pandas.read_csv",
-            return_value=pd.DataFrame(
-                {
-                    "ProcessingID": [source_id],
-                    "redshift_column_name": [0],
-                    "velocity_absorption_column_name": [0],
-                    "velocity_emission_column_name": [0],
-                }
-            ),
-        )
-        config = TestParametersUtils().make_config()
-        self.generic_parameters.load_linemeas_parameters_from_catalog(source_id, config)
-
-        # Source id absent from loaded dataframe
-        with pytest.raises(APIException):
-            self.generic_parameters.load_linemeas_parameters_from_catalog("some absent source id", config)
-
-    def test_load_linemeas_parameters_from_result_store(self, mocker):
-        mocker.patch(
-            "pylibamazed.AbstractOutput.AbstractOutput.get_attribute_from_source", return_value="anything"
-        )
-        mocker.patch("pylibamazed.AbstractOutput.AbstractOutput.__init__", return_value=None)
-        self.generic_parameters.load_linemeas_parameters_from_result_store(
-            AbstractOutput(),
-            TestParametersUtils.default_object_type,
-        )
-
     def test_to_json(self):
         self.generic_parameters.to_json()
 

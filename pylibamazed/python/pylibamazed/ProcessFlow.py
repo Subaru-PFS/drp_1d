@@ -58,6 +58,7 @@ from pylibamazed.Reliability import ReliabilitySolve
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.ScopeManager import get_scope_spectrum_model, get_scope_stage, push_scope
 from pylibamazed.SubType import SubType
+from pylibamazed.LinemeasParameters import LinemeasParameters
 
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
@@ -205,7 +206,14 @@ class ProcessFlow:
         spectrum.push_in_context()
 
         if self.config.get("linemeascatalog"):
-            self.parameters.load_linemeas_parameters_from_catalog(spectrum.source_id, self.config)
+            lp = LinemeasParameters()
+            lp.load_from_catalogs(
+                spectrum.source_id,
+                self.config.get("linemeascatalog"),
+                self.config.get("linemeas_catalog_columns"),
+            )
+            lp.update_parameters(self.parameters)
+
         self.process_flow_context.LoadParameterStore(self.parameters.to_json())
         self.process_flow_context.Init()
 
@@ -222,7 +230,9 @@ class ProcessFlow:
     @push_scope("linemeas_catalog_load", ScopeType.STAGE)
     @store_exception_handler
     def run_load_linemeas_params(self, rso):
-        self.parameters.load_linemeas_parameters_from_result_store(rso, self.scope_spectrum_model)
+        lp = LinemeasParameters()
+        lp.load_from_result_store(self.parameters, rso, self.scope_spectrum_model)
+        lp.update_parameters(self.parameters)
         self.process_flow_context.LoadParameterStore(self.parameters.to_json())
 
     @push_scope("reliabilitySolver", ScopeType.STAGE)

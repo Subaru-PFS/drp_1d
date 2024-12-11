@@ -94,8 +94,7 @@ public:
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
-  void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
-  void setVelocityEmissionByGroup(Float64 vel, const TInt32List &inds);
+  void setVelocityByGroup(Float64 vel, const TInt32List &inds);
 
   Float64 GetVelocityEmission() const;
   Float64 GetVelocityAbsorption() const;

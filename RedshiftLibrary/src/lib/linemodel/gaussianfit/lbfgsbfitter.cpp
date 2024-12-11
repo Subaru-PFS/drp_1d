@@ -147,9 +147,9 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
       auto &elt_param = m_fitter->getElementParam()[eltIndex];
 
       if (elt_param->IsEmission())
-        elt_param->SetVelocityEmission(x[m_velE_idx] * m_normVel);
+        elt_param->setVelocity(x[m_velE_idx] * m_normVel);
       else
-        elt_param->SetVelocityAbsorption(x[m_velA_idx] * m_normVel);
+        elt_param->setVelocity(x[m_velA_idx] * m_normVel);
     }
   }
 
@@ -308,8 +308,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
       // squared diff derivative wrt velocity
       if (m_fitter->m_enableVelocityFitting) {
-        if (m_fitter->getElementParam()[eltIndex]->GetElementType() ==
-            CLine::EType::nType_Absorption) {
+        if (m_fitter->getElementParam()[eltIndex]->IsAbsorption()) {
           grad[m_velA_idx] += residual * velocityAGrad;
         } else {
           grad[m_velE_idx] += residual * velocityEGrad;
@@ -334,11 +333,12 @@ void CLbfgsbFitter::resetSupport(Float64 redshift) {
 
   // set velocity at max value (to set largest line overlapping)
   if (Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit")) {
-    for (Int32 j = 0; j < getElementList().size(); j++) {
-      getElementParam()[j]->m_VelocityEmission = m_velfitMaxE;
-      getElementParam()[j]->m_VelocityAbsorption = m_velfitMaxA;
-      m_enlarge_line_supports = MAX_LAMBDA_OFFSET;
+    for (auto param : getElementParam()) {
+      Float64 const velocity =
+          param->IsEmission() ? m_velfitMaxE : m_velfitMaxA;
+      param->setVelocity(velocity);
     }
+    m_enlarge_line_supports = MAX_LAMBDA_OFFSET;
   }
 
   CAbstractFitter::resetSupport(redshift);
@@ -509,9 +509,9 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     auto &elt_param = getElementParam()[eltIndex];
     // set velocity guess
     if (elt_param->GetElementType() == CLine::EType::nType_Absorption) {
-      elt_param->SetVelocityAbsorption(m_velIniGuessA);
+      elt_param->setVelocity(m_velIniGuessA);
     } else {
-      elt_param->SetVelocityEmission(m_velIniGuessE);
+      elt_param->setVelocity(m_velIniGuessE);
     }
 
     // reset support with initial velocities
@@ -652,19 +652,19 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       Float64 velocityE = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx) {
         auto &elt_param = getElementParam()[eltIndex];
-        if (elt_param->GetElementType() == CLine::EType::nType_Absorption)
-          elt_param->SetVelocityAbsorption(velocityA);
+        if (elt_param->IsAbsorption())
+          elt_param->setVelocity(velocityA);
         else
-          elt_param->SetVelocityEmission(velocityE);
+          elt_param->setVelocity(velocityE);
       }
     } else if (lineType == CLine::EType::nType_Absorption) {
       Float64 velocity = v_xResult[velA_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
-        getElementParam()[eltIndex]->SetVelocityAbsorption(velocity);
+        getElementParam()[eltIndex]->setVelocity(velocity);
     } else {
       Float64 velocity = v_xResult[velE_idx] * normVel;
       for (Int32 eltIndex : EltsIdx)
-        getElementParam()[eltIndex]->SetVelocityEmission(velocity);
+        getElementParam()[eltIndex]->setVelocity(velocity);
     }
   }
 

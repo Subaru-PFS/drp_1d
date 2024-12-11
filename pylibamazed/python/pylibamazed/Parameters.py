@@ -101,7 +101,7 @@ class Parameters(ParametersAccessor):
     def remove_unused_solvers(self) -> None:
         for spectrum_model in self.get_spectrum_models([]):
             for stage in self.defined_stages:
-                if not stage in self.get_stages(spectrum_model):
+                if stage not in self.get_stages(spectrum_model):
                     if stage in self.parameters.get(spectrum_model, []):
                         del self.parameters[spectrum_model][stage]
 
@@ -128,57 +128,6 @@ class Parameters(ParametersAccessor):
             if self.get_linemeas_method(spectrum_model):
                 ret[spectrum_model] = self.get_linemeas_method(spectrum_model)
         return ret
-
-    def load_linemeas_parameters_from_catalog(self, source_id, config):
-        for spectrum_model in config["linemeascatalog"].keys():
-            lm = pd.read_csv(
-                config["linemeascatalog"][spectrum_model], sep="\t", dtype={"ProcessingID": object}
-            )
-            lm = lm[lm.ProcessingID == source_id]
-            if lm.empty:
-                raise APIException(
-                    ErrorCode.INVALID_PARAMETER, f"Uncomplete linemeas catalog, {source_id} missing"
-                )
-
-            columns = config["linemeas_catalog_columns"][spectrum_model]
-            redshift_ref = float(lm[columns["Redshift"]].iloc[0])
-            velocity_abs = float(lm[columns["VelocityAbsorption"]].iloc[0])
-            velocity_em = float(lm[columns["VelocityEmission"]].iloc[0])
-
-            self.set_redshiftref(spectrum_model, redshift_ref)
-            if self.get_linemodel_section(spectrum_model, "lineMeasSolve") is not None:
-                self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
-                self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
-
-    def load_linemeas_parameters_from_result_store(self, output, spectrum_model):
-        redshift = output.get_attribute_from_source(
-            spectrum_model,
-            "redshiftSolver",
-            self.get_redshift_solver_method(spectrum_model),
-            "model_parameters",
-            "Redshift",
-            0,
-        )
-        self.parameters[spectrum_model]["redshiftref"] = redshift
-        velocity_abs = output.get_attribute_from_source(
-            spectrum_model,
-            "redshiftSolver",
-            self.get_redshift_solver_method(spectrum_model),
-            "model_parameters",
-            "VelocityAbsorption",
-            0,
-        )
-        velocity_em = output.get_attribute_from_source(
-            spectrum_model,
-            "redshiftSolver",
-            self.get_redshift_solver_method(spectrum_model),
-            "model_parameters",
-            "VelocityEmission",
-            0,
-        )
-        if self.get_linemodel_section(spectrum_model, "lineMeasSolve") is not None:
-            self.set_velocity_absorption(spectrum_model, "lineMeasSolve", velocity_abs)
-            self.set_velocity_emission(spectrum_model, "lineMeasSolve", velocity_em)
 
     def is_tplratio_catalog_needed(self, spectrum_model) -> bool:
         solve_method = self.get_redshift_solver_method(spectrum_model)
@@ -215,6 +164,12 @@ class Parameters(ParametersAccessor):
 
     def set_velocity_emission(self, spectrum_model: str, solve_method, velocity_em) -> None:
         self.get_linemodel_section(spectrum_model, solve_method)["velocityEmission"] = velocity_em
+
+    def get_velocity_absorption(self, spectrum_model: str, solve_method) -> float:
+        return self.get_linemodel_section(spectrum_model, solve_method)["velocityAbsorption"]
+
+    def get_velocity_emission(self, spectrum_model: str, solve_method) -> float:
+        return self.get_linemodel_section(spectrum_model, solve_method)["velocityEmission"]
 
     def to_json(self):
         return json.dumps(self.parameters)

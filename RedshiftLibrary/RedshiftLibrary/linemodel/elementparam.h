@@ -62,15 +62,11 @@ enum class ElementComposition {
 
 struct TLineModelElementParam {
 
-  TLineModelElementParam(CLineVector lines, Float64 velocityEmission,
-                         Float64 velocityAbsorption,
+  TLineModelElementParam(CLineVector lines, Float64 velocity,
                          const std::string &lineWidthType);
 
   CLineVector m_Lines;
-  Float64 m_VelocityEmission =
-      NAN; // TODO there should be one unique velocity, and m_isEmissions
-           // determines whether it is emission or absorption velocity
-  Float64 m_VelocityAbsorption = NAN;
+  Float64 m_Velocity = NAN;
   TFloat64List m_FittedAmplitudes;
   TFloat64List m_FittedAmplitudesStd;
   TFloat64List m_NominalAmplitudes;
@@ -123,9 +119,7 @@ struct TLineModelElementParam {
   Float64 GetSignFactor(Int32 line_index) const;
 
   const CLineVector &GetLines() { return m_Lines; }
-  Float64 getVelocity() {
-    return m_isEmission ? m_VelocityEmission : m_VelocityAbsorption;
-  }
+  Float64 getVelocity() { return m_Velocity; }
   TAsymParams GetAsymfitParams(Int32 asym_line_index = 0) const {
     if (!m_asymLineIndices.size())
       return TAsymParams(); // case where no asymprofile in linecatalog
@@ -277,6 +271,7 @@ struct TLineModelElementParam {
 
   CLine::EType GetElementType() const { return m_type; };
   bool IsEmission() const { return m_isEmission; };
+  bool IsAbsorption() const { return !m_isEmission; };
 
   bool isFittable() const { return !isNotFittable(); }
 
@@ -308,10 +303,6 @@ struct TLineModelElementParam {
   bool SetAbsLinesLimit(Float64 limit);
   Float64 GetAbsLinesLimit() const;
 
-  void SetVelocityEmission(Float64 vel);
-  Float64 getVelocityEmission() const;
-  void SetVelocityAbsorption(Float64 vel);
-  Float64 getVelocityAbsorption() const;
   Float64 getVelocity() const;
   void setVelocity(Float64 vel);
 
