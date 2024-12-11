@@ -256,8 +256,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
 
     templateFittingOperator->init(m_secondPass_halfwindowsize, m_zLogSampling,
                                   m_redshifts, m_redshiftStep);
-    templateFittingOperator->buildExtendedRedshifts(
-        templateFittingOperator->m_firstpass_extremaResult);
+    templateFittingOperator->buildExtendedRedshifts();
     // TODO move this
     size_t nResults = m_results.size();
     for (size_t resultIdx = 0; resultIdx < nResults; ++resultIdx) {

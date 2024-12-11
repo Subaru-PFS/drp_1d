@@ -36,66 +36,25 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
-#define _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
+#ifndef _REDSHIFT_LINEMODEL_VELOCITYFIT_
+#define _REDSHIFT_LINEMODEL_VELOCITYFIT_
 
-#include <ostream>
-#include <string>
+#include <vector>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/processflow/result.h"
-#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
 namespace NSEpic {
 
-template <typename T>
-using TRankedCandidates =
-    std::vector<std::pair<std::string, std::shared_ptr<T>>>;
-template <class T> class CPdfCandidateszResult : public COperatorResult {
+struct VelocityFitSolution {
 
 public:
-  CPdfCandidateszResult(Int32 optMethod = 0)
-      : COperatorResult("PdfCandidatesZResult"), m_optMethod(optMethod){};
-
-  // rule of 5 defaults
-  CPdfCandidateszResult(const CPdfCandidateszResult &) = default;
-  CPdfCandidateszResult(CPdfCandidateszResult &&) = default;
-  CPdfCandidateszResult &operator=(const CPdfCandidateszResult &) = default;
-  CPdfCandidateszResult &operator=(CPdfCandidateszResult &&) = default;
-  virtual ~CPdfCandidateszResult() = default;
-
-  TStringList GetIDs() const {
-    TStringList ids;
-    ids.reserve(m_ranked_candidates.size());
-    for (auto c : m_ranked_candidates)
-      ids.push_back(c.first);
-    return ids;
+  VelocityFitSolution(Float64 elv, Float64 alv) {
+    Elv = elv;
+    Alv = alv;
   }
-  Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
-
-  Int32 size() const { return m_ranked_candidates.size(); }
-  T getCandidateDataset(int rank, std::string dataset) {
-    return m_ranked_candidates[rank].second;
-  }
-
-  std::shared_ptr<T> getRankedCandidate(int rank) {
-    return m_ranked_candidates[rank].second;
-  }
-
-  std::vector<std::shared_ptr<TCandidateZ>> getCandidatesZ() {
-    std::vector<std::shared_ptr<TCandidateZ>> ret;
-    for (auto &c : m_ranked_candidates) {
-      ret.push_back(std::dynamic_pointer_cast<TCandidateZ>(c.second));
-    }
-    return ret;
-  }
-
-  TRankedCandidates<T> m_ranked_candidates;
-
-  TFloat64List GetRedshifts() const;
+  Float64 Elv = NAN; // emission line width
+  Float64 Alv = NAN; // absorption line width
 };
 
-typedef CPdfCandidateszResult<TCandidateZ> PdfCandidatesZResult;
 } // namespace NSEpic
-
 #endif

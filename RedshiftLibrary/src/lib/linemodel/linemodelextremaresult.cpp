@@ -37,17 +37,24 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
-
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
     std::shared_ptr<const CContinuumModelSolution> cms) {
   fittedContinuum = *cms;
+  fittedContinuum.name =
+      fittedContinuum.tplAmplitude ? fittedContinuum.name : "noContinuum";
+}
+
+void TLineModelResult::updateFromContinuumModelSolution(
+    const CContinuumModelSolution &cms) {
+  fittedContinuum = cms;
   fittedContinuum.name =
       fittedContinuum.tplAmplitude ? fittedContinuum.name : "noContinuum";
 }
@@ -227,4 +234,13 @@ LineModelExtremaResult::getCandidateParent(const int &rank,
 
   else
     THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
+}
+
+TCandidateZbyRank LineModelExtremaResult::getCandidatesZByRank() {
+  TCandidateZbyRank ret;
+  for (auto &cand : m_ranked_candidates) {
+    ret.push_back(std::make_pair(
+        cand.first, std::dynamic_pointer_cast<TCandidateZ>(cand.second)));
+  }
+  return ret;
 }

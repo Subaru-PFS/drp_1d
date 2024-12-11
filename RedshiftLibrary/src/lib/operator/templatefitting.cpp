@@ -507,8 +507,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
 void COperatorTemplateFitting::SetFirstPassCandidates(
     const TCandidateZbyRank &zCandidates) {
-  m_firstpass_extremaResult.Resize(zCandidates.size());
-  m_firstpass_extremaResult.m_ranked_candidates = zCandidates;
+  m_firstpass_extremaResult = std::make_shared<ExtremaResult>(zCandidates);
 }
 
 std::shared_ptr<const ExtremaResult>
@@ -517,9 +516,7 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
   // Access the raw extremas results
   // Converts TCandidateZbyRank m_firstpass_extremaResult.m_ranked_candidates to
   // ExtremaResult using constructor
-  std::shared_ptr<ExtremaResult> extremaResult =
-      make_shared<ExtremaResult>(m_firstpass_extremaResult.m_ranked_candidates);
-  Int32 extremumCount = extremaResult->size();
+  Int32 extremumCount = m_firstpass_extremaResult->size();
 
   // Find the common redshifts grid using first result
   auto firstStoreResult =
@@ -529,7 +526,8 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
 
   // For each extremum, find its corresponding template
   for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
-    Float64 z = extremaResult->m_ranked_candidates[iExtremum].second->Redshift;
+    Float64 z = m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
+                    .second->Redshift;
 
     // Find z index in stored results redshifts grid
     auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
@@ -548,17 +546,17 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
         name = resultPair.first;
       };
     }
-    extremaResult->m_ranked_candidates[iExtremum].second->fittedContinuum.name =
-        name;
+    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
+        .second->fittedContinuum.name = name;
     auto resultFromStore =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(
             resultsMapFromStore.at(name));
-    extremaResult->m_ranked_candidates[iExtremum]
+    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedContinuum.meiksinIdx =
         resultFromStore->FitMeiksinIdx[zIndex];
-    extremaResult->m_ranked_candidates[iExtremum]
+    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
         .second->fittedContinuum.ebmvCoef =
         resultFromStore->FitEbmvCoeff[zIndex];
   }
-  return extremaResult;
+  return m_firstpass_extremaResult;
 }

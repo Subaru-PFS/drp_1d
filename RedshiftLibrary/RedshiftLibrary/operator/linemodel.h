@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
+#include "RedshiftLibrary/linemodel/velocityfit.h"
 #include "RedshiftLibrary/method/twopasssolve.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
@@ -84,14 +85,16 @@ public:
 
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
-  void ComputeSecondPass(
-      const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
+  void ComputeSecondPass();
 
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
 
-  std::shared_ptr<const LineModelExtremaResult> BuildFirstPassExtremaResults();
+  std::shared_ptr<LineModelExtremaResult> getFirstPassExtremaResults() {
+    return m_firstpass_extremaResult;
+  }
+
   std::shared_ptr<LineModelExtremaResult>
   buildExtremaResults(const TCandidateZbyRank &zCandidates,
                       const std::string &opt_continuumreest = "no");
@@ -195,6 +198,7 @@ private:
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
   std::shared_ptr<CContinuumFitStore> m_tplfitStore_firstpass;
   std::vector<std::shared_ptr<CContinuumFitStore>> m_tplfitStore_secondpass;
+  std::vector<VelocityFitSolution> m_velocitySolutions;
 };
 
 } // namespace NSEpic
