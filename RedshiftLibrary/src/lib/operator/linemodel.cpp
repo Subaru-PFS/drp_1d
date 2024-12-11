@@ -736,48 +736,6 @@ COperatorLineModel::BuildFirstPassExtremaResults() {
   return ExtremaResult;
 }
 
-/**
- * @brief Aggregate candidates from both firstpasses, while avoiding duplicate
- * candidates
- *
- * @param firstpass_results_b
- */
-void COperatorLineModel::Combine_firstpass_candidates(
-    const CPassExtremaResult &firstpass_results_b) {
-  Int32 startIdx = m_firstpass_extremaResult.size();
-  TInt32List uniqueIdx_fpb =
-      m_firstpass_extremaResult.getUniqueCandidates(firstpass_results_b);
-  m_firstpass_extremaResult.Resize(m_firstpass_extremaResult.size() +
-                                   uniqueIdx_fpb.size());
-
-  for (Int32 keb = 0; keb < uniqueIdx_fpb.size(); keb++) {
-    Int32 i = uniqueIdx_fpb[keb];
-    // append the candidate to m_firstpass_extremaResult
-    m_firstpass_extremaResult.m_ranked_candidates[startIdx + keb] =
-        firstpass_results_b.m_ranked_candidates[i];
-
-    // save basic fitting info from first pass
-    m_firstpass_extremaResult.Elv[startIdx + keb] = firstpass_results_b.Elv[i];
-    m_firstpass_extremaResult.Alv[startIdx + keb] = firstpass_results_b.Alv[i];
-
-    // save the continuum fitting parameters from first pass
-
-    // find the index in the zaxis results
-    const Float64 &z_fpb = firstpass_results_b.Redshift(i);
-    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z_fpb);
-    const auto &contModel = m_result->ContinuumModelSolutions[idx];
-    // save the continuum fitting parameters from first pass
-    m_firstpass_extremaResult.fillWithContinuumModelSolutionAtIndex(
-        startIdx + keb, contModel);
-
-    if (contModel.name == "") {
-      THROWG(ErrorCode::TPL_NAME_EMPTY,
-             Formatter() << "ContinuumModelSolutions tplname is empty"
-                         << "result idx=" << idx);
-    }
-  }
-}
-
 void COperatorLineModel::ComputeSecondPass(
     const std::shared_ptr<const LineModelExtremaResult> &firstpassResults) {
 

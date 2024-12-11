@@ -29,7 +29,6 @@
         "pdfCombination",
         "nSigmaSupport",
         "hAlphaPrior",
-        "extremaCountB",
         "enablePhotometry",
         "lya",
         "firstPass",
@@ -252,11 +251,6 @@
           "type": "number",
           "title": "Ha prior",
           "description": "\n * **-1**: no prior \n * **positive below 1**: low multiplicative prior probability (posterior penalization) when Ha line is not measured (the measured amplitude is <=0 or is not the strongest measured line) \n * **else**: prior probability is set to 1 when Ha line is strongest measured line, typical value between 1e-1 to 1e-5"
-        },
-        "extremaCountB": {
-          "type": "integer",
-          "title": "Extrema count B",
-          "description": "Number of extrema retained after the firstPass B: \n * **0**: toggle OFF the firstPass B\n * **>0**: toggle ON the pass B"
         },
         "enablePhotometry": {
           "type": "boolean",

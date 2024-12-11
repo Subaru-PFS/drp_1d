@@ -84,8 +84,6 @@ public:
 
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
-  void Combine_firstpass_candidates(const CPassExtremaResult &results_b);
-
   void ComputeSecondPass(
       const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
 

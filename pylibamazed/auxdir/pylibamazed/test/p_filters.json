@@ -98,7 +98,6 @@
               "deltaStepMax": 1
             }
           },
-          "extremaCountB": 0,
           "hAlphaPrior": -1,
           "lineRatioType": "tplRatio",
           "rules": "all",
