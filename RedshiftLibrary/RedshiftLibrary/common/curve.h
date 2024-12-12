@@ -69,9 +69,12 @@ struct TCurve {
 
   void checkIdx(Int32 pixelIdx) const;
 
-  const TAxisSampleList &getLambda() const { return lambda; };
-  const TFloat64List &getFlux() const { return flux; };
-  const TFloat64List &getFluxError() const { return fluxError; };
+  const TAxisSampleList &getLambda() const & { return lambda; };
+  TAxisSampleList &&getLambda() && { return std::move(lambda); };
+  const TFloat64List &getFlux() const & { return flux; };
+  TFloat64List &&getFlux() && { return std::move(flux); };
+  const TFloat64List &getFluxError() const & { return fluxError; };
+  TFloat64List &&getFluxError() && { return std::move(fluxError); };
 
   Float64 getLambdaAt(Int32 pixelIdx) const;
   Float64 getFluxAt(Int32 pixelIdx) const;
