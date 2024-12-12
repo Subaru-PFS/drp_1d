@@ -396,8 +396,7 @@ CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
   // CElementList::m_ErrorNoContinuum, a reference initialized twice in
   // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
   // and after to spectrumFluxAxis.GetError
-  const CSpectrumNoiseAxis &errorNoContinuum =
-      m_SpectrumModel.GetFluxAxis().GetError();
+  const CSpectrumNoiseAxis &error = getSpcFluxAxis().GetError();
   const CSpectrumFluxAxis &fluxRef =
       with_continuum ? getSpcFluxAxis() : getSpcFluxAxisNoContinuum();
 
@@ -414,8 +413,7 @@ CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
   TInt32List xInds = m_Elements->getSupportIndexes(EltsIdx);
   for (Int32 const j : xInds) {
     diff = (Yspc[j] - Ymodel[j]);
-    Float64 const w =
-        with_weight ? 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]) : 1.0;
+    Float64 const w = with_weight ? 1.0 / (error[j] * error[j]) : 1.0;
     fit += (diff * diff) * w;
     sumErr += w;
   }
