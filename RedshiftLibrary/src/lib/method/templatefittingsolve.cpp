@@ -166,7 +166,7 @@ CTemplateFittingSolve::EType
 CTemplateFittingSolve::getFitTypeFromParam(const std::string &component) {
   std::unordered_map<std::string, EType> stringToEnumType{
       {"raw", EType::raw},
-      {"nocontinuum", EType::noContinuum},
+      {"noContinuum", EType::noContinuum},
       {"continuum", EType::continuumOnly},
   };
   return stringToEnumType.at(component);
