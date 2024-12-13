@@ -181,9 +181,6 @@ class ParametersAccessor:
             return default
         return self._get_on_None(self.get_reliability_section(spectrum_model), "method", default=default)
 
-    def get_reliability_names(self, spectrum_model: str) -> []:
-        return [meth[:4] for meth in get_reliability_methods(self, spectrum_model)]
-
     def get_deep_learning_solver_section(self, spectrum_model: str, create: bool = False) -> str:
         return self._get_or_create_section(
             self.get_reliability_section, "deepLearningSolver", create, spectrum_model

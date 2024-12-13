@@ -41,11 +41,13 @@ from abc import ABCMeta, abstractmethod
 
 reliability_solver_classes = dict()
 reliability_solver_dataset_suffixes = dict()
+dataset_suffixes_to_reliability_solvers = dict()
 
 
 def register_reliability_solver(reliability_solver_name: str, reliability_solver, short_name: str):
     reliability_solver_classes[reliability_solver_name] = reliability_solver
     reliability_solver_dataset_suffixes[reliability_solver_name] = short_name
+    dataset_suffixes_to_reliability_solvers[short_name] = reliability_solver_name
 
 
 def get_reliability_solver_from_name(reliability_solver_name):
@@ -54,6 +56,10 @@ def get_reliability_solver_from_name(reliability_solver_name):
 
 def get_reliability_dataset_suffix(reliability_solver_name):
     return reliability_solver_dataset_suffixes[reliability_solver_name]
+
+
+def get_reliability_solver_name(dataset_suffix):
+    return dataset_suffixes_to_reliability_solvers[dataset_suffix]
 
 
 class AbstractReliabilitySolver(metaclass=ABCMeta):

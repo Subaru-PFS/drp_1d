@@ -42,6 +42,7 @@ from abc import ABCMeta, abstractmethod
 
 from pylibamazed.Exception import APIException, exception_decorator, exception_class_decorator
 from pylibamazed.OutputSpecifications import ResultsSpecifications
+from pylibamazed.AbstractReliabilitySolver import get_reliability_dataset_suffix
 from pylibamazed.Parameters import Parameters
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
@@ -190,6 +191,10 @@ class AbstractOutput(metaclass=ABCMeta):
 
             if dataset == "model_parameters" and rank is None:
                 rank = 0  # Exception for model_parameters where no rank is actually rank 0
+            elif dataset.startswith("reliability"):
+                dataset = dataset.replace("<relName>", attr_parts[1])
+                if self.has_attribute(object_type, dataset, attr_name, rank):
+                    return self.get_attribute(object_type, dataset, attr_name, rank)
             if dataset not in LINES_DATASETS:
                 if self._has_attribute(object_type, dataset, attr_name, rank):
                     return self._get_attribute(object_type, dataset, attr_name, rank)
@@ -267,6 +272,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return None
         if dataset == "linemeas":
             return self.parameters.get_linemeas_method(object_type)
+        elif dataset.startswith("reliability"):
+            return get_reliability_solver_name(dataset[len("reliability") :])
         else:
             return self.parameters.get_redshift_solver_method(object_type)
 
@@ -359,6 +366,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return 0
 
     def get_level(self, dataset):
+        if dataset.startswith("reliability"):
+            return "object"
         dataset_entries = self.results_specifications.get_df_by_dataset(dataset)
         return dataset_entries["level"].unique()[0]
 
