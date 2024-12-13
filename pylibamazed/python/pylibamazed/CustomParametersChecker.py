@@ -255,6 +255,7 @@ class CustomParametersChecker(ParametersChecker):
     def _check_object(self, spectrum_model: str) -> None:
         self._check_linemeassolve(spectrum_model)
         self._check_object_reliability(spectrum_model)
+        self._check_reliability_method(spectrum_model)
         self._check_templateFittingSolve_section(spectrum_model)
         self._check_templateCombinationSolve_section(spectrum_model)
         self._check_lineModelSolve(spectrum_model)
@@ -320,6 +321,20 @@ class CustomParametersChecker(ParametersChecker):
             self.accessor.get_reliability_section(spectrum_model) is not None,
             f"{spectrum_model} reliabilitySolver",
             f"{spectrum_model} reliabilitySolver",
+        )
+
+    def _check_reliability_method(self, spectrum_model: str) -> None:
+        self._check_dependant_parameter_presence(
+            "deepLearningSolver" in self.accessor.get_reliability_methods(spectrum_model),
+            self.accessor.get_deep_learning_solver_section(spectrum_model) is not None,
+            f"{spectrum_model} deepLearningSolver",
+            f"{spectrum_model} reliabilitySolver deepLearningSolver",
+        )
+        self._check_dependant_parameter_presence(
+            "skLearnClassifier" in self.accessor.get_reliability_methods(spectrum_model),
+            self.accessor.get_sk_learn_classifier_solver_section(spectrum_model) is not None,
+            f"{spectrum_model} skLearnClassifier",
+            f"{spectrum_model} reliabilitySolver skLearnClassifier",
         )
 
     def _check_templateFittingSolve_section(self, spectrum_model: str) -> None:

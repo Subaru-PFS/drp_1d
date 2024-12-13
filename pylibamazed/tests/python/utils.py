@@ -138,6 +138,20 @@ def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwar
     return param_dict
 
 
+def make_parameter_dict_at_reliability_solver_level(object_level_params=None, **kwargs) -> dict:
+    param_dict = {
+        "spectrumModels": [default_object_type],
+        default_object_type: {
+            "stages": ["reliabilitySolver"],
+            "reliabilitySolver": {**kwargs},
+        },
+    }
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[default_object_type][key] = val
+    return param_dict
+
+
 def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=None, **kwargs) -> dict:
     param_dict = {
         "spectrumModels": [default_object_type],
