@@ -76,9 +76,9 @@ class ParamJsonFilterLoader(AbstractFilterLoader):
     def __init__(self, FitlerItemClass=SpectrumFilterItem):
         super().__init__(FitlerItemClass)
 
-    def get_filters(self, params: Parameters) -> FilterList:
+    def get_filters(self, params: Parameters, obs_id: str) -> FilterList:
         filters: List[FilterItem] = []
-        json_filters = params.get_filters()
+        json_filters = params.get_filters(obs_id=obs_id)
         if json_filters is None:
             return None
         for filter in json_filters:

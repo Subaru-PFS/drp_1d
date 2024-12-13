@@ -71,7 +71,8 @@ class CustomParametersChecker(ParametersChecker):
     def _check_general(self):
         self._check_photometry_transmission_dir()
         self._check_photometry_band()
-        self._check_filters()
+        for obs_id in self.accessor.get_observation_ids():
+            self._check_filters(obs_id)
 
     def _check_photometry_transmission_dir(self):
         parameter_name = "photometryTransmissionDir"
@@ -91,8 +92,8 @@ class CustomParametersChecker(ParametersChecker):
             parameter_name,
         )
 
-    def _check_filters(self):
-        filters = self.accessor.get_filters(default=[])
+    def _check_filters(self, obs_id: str):
+        filters = self.accessor.get_filters(default=[], obs_id=obs_id)
         self._check_filters_format(filters)
 
         DEFAULT_COLUMN_NAMES = ["waves", "fluxes", "errors"]

@@ -115,7 +115,10 @@
       }
     },
     "filters": {
-      "type": "array",
+      "type": [
+        "array",
+        "object"
+      ],
       "title": "Filters",
       "description": "List of filters to apply for pixel selection on spectra.\n Example: we want to select the pixels for which \n 1. flag corresponding to 8 is absent \n 2. flag corresponding to 4 is present or flag is 0 : \n [{\"key\": \"Flag\", \"instruction\": \"^\", \"value\": \"8\"}, {\"key\": \"Flag\", \"instruction\": \"0&\", \"value\": \"4\"}]",
       "items": {

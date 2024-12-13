@@ -222,12 +222,8 @@ class Spectrum:
             cpp_phot = CPhotometricData(names, flux, fluxerr)
             return cpp_phot
 
-    def _make_cspectra(self) -> dict:
-        cpp_spectra = dict()
+    def _get_obs_ids(self) -> list:
         multiobs_type = self.parameters.get_multiobs_method()
-        cpp_lsf = self._make_clsf()
-        cpp_phot = self._make_photometric_data()
-
         if not multiobs_type:
             obs_ids = [""]
 
@@ -237,6 +233,16 @@ class Spectrum:
 
         elif multiobs_type == "full":
             obs_ids = self.observation_ids
+
+        return obs_ids
+
+    def _make_cspectra(self) -> dict:
+        cpp_spectra = dict()
+
+        cpp_lsf = self._make_clsf()
+        cpp_phot = self._make_photometric_data()
+
+        obs_ids = self._get_obs_ids()
 
         for obs_id in obs_ids:
             spectralaxis = CSpectrumSpectralAxis(self.get_wave(obs_id))
@@ -327,13 +333,13 @@ class Spectrum:
                     f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])",
                 )
 
-    def _get_filters(self):
-        return self.filter_loader_class().get_filters(self.parameters)
+    def _get_filters(self, obs_id: str):
+        return self.filter_loader_class().get_filters(self.parameters, obs_id)
 
-    def _apply_filters(self, filters: FilterList) -> None:
+    def _apply_filters(self, filters: FilterList, obs_id: str) -> None:
         if filters is None:
             return
-        filters.apply(self._dataframe)
+        filters.apply(self._dataframe.loc[obs_id])
 
     def init(self):
         """
@@ -345,5 +351,6 @@ class Spectrum:
         """
 
         self._corrected_airvacuum_method()
-        self._apply_filters(self._get_filters())
+        for obs_id in self._get_obs_ids():
+            self._apply_filters(self._get_filters(obs_id), obs_id)
         self._check_wavelengths()
