@@ -14,12 +14,12 @@
     "ismFit",
     "pdfCombination",
     "enablePhotometry",
-    "skipSecondPass"
+    "singlePass"
   ],
   "additionalProperties": false,
   "properties": {
     "fftProcessing": {
-      "description": "Using FFT for Least-square template fitting (in log lambda)",
+      "description": "Using FFT for Least-square template fitting (in log lambda). Cannot be used if singlePass is false.",
       "type": "boolean"
     },
     "overlapThreshold": {
@@ -56,7 +56,7 @@
     },
     "enablePhotometry": {
       "type": "boolean",
-      "description": "Enable the use of photometry data"
+      "description": "Enable the use of photometry data. Cannot be used if singlePass is false."
     },
     "photometry": {
       "type": "object",
@@ -88,10 +88,10 @@
         }
       }
     },
-    "skipSecondPass": {
+    "singlePass": {
       "type": "boolean",
-      "title": "Skip second pass",
-      "description": "Toggle the processing of a second pass refined around the candidates",
+      "title": "Use single pass",
+      "description": "Wether to use one pass or two pass for candidates calculation.",
       "default": false
     },
     "firstPass": {

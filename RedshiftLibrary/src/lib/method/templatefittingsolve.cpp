@@ -89,8 +89,8 @@ void CTemplateFittingSolve::PopulateParameters(
   m_opt_extremacount = parameterStore->GetScoped<int>("extremaCount");
   m_opt_pdfcombination =
       parameterStore->GetScoped<std::string>("pdfCombination");
-  m_opt_skipsecondpass = parameterStore->GetScoped<bool>("skipSecondPass");
-  if (useTwoPass()) {
+  m_opt_singlePass = parameterStore->GetScoped<bool>("singlePass");
+  if (!isSinglePass()) {
     m_opt_maxCandidate =
         parameterStore->GetScoped<int>("firstPass.extremaCount");
     m_secondPassContinuumFit = str2ContinuumFit.at(
@@ -157,7 +157,7 @@ std::string CTemplateFittingSolve::getScopeStr() const {
   };
 
   std::string scopeStr = spectrumTypeToStr.at(m_spectrumType);
-  if (useTwoPass() && m_isFirstPass)
+  if (twoPassIsActive() && m_isFirstPass)
     scopeStr += "_firstpass";
 
   return scopeStr;
@@ -196,7 +196,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute() {
     m_castedTemplateFittingOperator =
         std::dynamic_pointer_cast<COperatorTemplateFitting>(
             m_templateFittingOperator);
-  if (useTwoPass()) {
+  if (!isSinglePass()) {
     TemplateFittingSolveResult = computeTwoPass();
   } else {
     TemplateFittingSolveResult = computeSinglePass();
@@ -438,7 +438,6 @@ void CTemplateFittingSolve::Solve(
           tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFitting,
           0, CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx);
     }
-    // TODO see how to deal with this error
     if (!templateFittingResult)
       THROWG(ErrorCode::INTERNAL_ERROR,
              "no results returned by templateFittingOperator");
@@ -447,7 +446,6 @@ void CTemplateFittingSolve::Solve(
     std::string scopeStr = getScopeStr();
     if (parentId != "")
       scopeStr += "_" + parentId;
-    // TODO add spectrumtype
     resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
                                               templateFittingResult);
   }
@@ -489,7 +487,6 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
     Int32 nISM = -1;
     Int32 nIGM = -1;
     if (isSecondPass) {
-      // TODO verifier que ça se passe bien là pour la 2d pass
       nISM = 1;
       nIGM = 1;
     } else {
@@ -513,10 +510,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
                          << chisquarearray.cstLog
                          << " != val2=" << templateResult->CstLog);
     }
-    // TODO move this and replace by a check ?
-    // if (chisquarearray.redshifts.size() == 0) {
     chisquarearray.redshifts = templateResult->Redshifts;
-    // }
 
     CZPrior zpriorhelper;
     for (Int32 kism = 0; kism < nISM; kism++) {
@@ -539,7 +533,6 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   return chisquarearray;
 }
 
-// TODO move this in operator ?
 std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     Float64 m_overlapThreshold,
@@ -653,13 +646,10 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
 }
 
 void CTemplateFittingSolve::initSkipSecondPass() {
-  // NB: To be used only if second pass is enabled
-  m_opt_skipsecondpass = true;
-  if (Context.GetInputContext()->GetParameterStore()->HasScoped<bool>(
-          "skipSecondPass"))
-    m_opt_skipsecondpass =
-        Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
-            "skipSecondPass");
+  m_opt_skipsecondpass = false;
+  m_opt_singlePass =
+      Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
+          "singlePass");
 };
 
 void CTemplateFittingSolve::initTwoPassZStepFactor() {

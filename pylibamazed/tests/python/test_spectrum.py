@@ -115,12 +115,3 @@ class TestMergeSpectrum(TestSpectrumReaderUtils):
             KeyError
         ):  # error raised since missing parameter lsf.gaussianVariableWidthFileName
             fsr.get_spectrum().get_lsf()
-
-    # TODO to make a real test we should add an lsf compatible with spectrum
-    # fsr = self.initialize_fsr_with_data()
-    # fsr.lsf_type = "gaussianVariableWidth"
-    # with pytest.raises(TypeError):
-    #     fsr.init()
-
-
-##  TODO add make_cspectra testing

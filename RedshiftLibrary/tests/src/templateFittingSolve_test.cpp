@@ -79,7 +79,7 @@ const std::string jsonStringFFT = {
     "\"redshiftSolver\": {"
     "\"method\" : \"templateFittingSolve\","
     "\"templateFittingSolve\" : {"
-    "\"skipSecondPass\" : true,"
+    "\"singlePass\" : true,"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -99,7 +99,7 @@ const std::string jsonStringNoFFT = {
     "\"redshiftSolver\": {"
     "\"method\" : \"templateFittingSolve\","
     "\"templateFittingSolve\" : {"
-    "\"skipSecondPass\" : true,"
+    "\"singlePass\" : true,"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -166,9 +166,9 @@ class fixture_TemplateFittingSolve2PassTest
 public:
   fixture_TemplateFittingSolve2PassTest() {
     std::string json2Pass = jsonStringNoFFT;
-    std::string target = "\"skipSecondPass\" : true,";
+    std::string target = "\"singlePass\" : true,";
     size_t pos = json2Pass.find(target);
-    json2Pass.replace(pos, target.length(), "\"skipSecondPass\" : false,");
+    json2Pass.replace(pos, target.length(), "\"singlePass\" : false,");
 
     // TODO do with photometry in a second time
     target = "\"enablePhotometry\" : true,";

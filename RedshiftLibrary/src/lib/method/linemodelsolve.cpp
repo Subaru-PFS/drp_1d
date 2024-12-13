@@ -530,7 +530,7 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // SECOND PASS
   //**************************************************
-  if (useTwoPass())
+  if (twoPassIsActive())
     m_linemodel.ComputeSecondPass();
 
   // read it as constant to save it

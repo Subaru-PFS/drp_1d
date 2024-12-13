@@ -48,7 +48,9 @@ void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
     auto &scope = Context.m_ScopeStack;
     CAutoScope method_autoscope(scope, m_name, ScopeType::METHOD);
     initSkipSecondPass();
-    if (useTwoPass()) {
+    if (!isSinglePass()) {
+      // As long as we are in a two pass configuration, use coarse grid, wether
+      // or not second pass is active
       initTwoPassZStepFactor();
       m_coarseRedshiftStep = m_redshiftStep * m_twoPassZStepFactor;
     } else

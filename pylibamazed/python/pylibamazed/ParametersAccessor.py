@@ -479,6 +479,10 @@ class ParametersAccessor:
             section = self.get_template_fitting_section(spectrum_model)
         return self._get_on_None(section, "skipSecondPass", default)
 
+    def get_template_fitting_single_pass(self, spectrum_model: str) -> bool:
+        section = self.get_template_fitting_section(spectrum_model)
+        return self._get_on_None(section, "singlePass")
+
     def get_linemodel_nsigmasupport(self, spectrum_model: str) -> float:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "nSigmaSupport")
 
