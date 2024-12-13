@@ -95,9 +95,6 @@ public:
   getCandidateDatasetType(const std::string &dataset) const override;
 
   bool HasCandidateDataset(const std::string &dataset) const override;
-
-  std::shared_ptr<const COperatorResult>
-  getCandidateParent(const int &rank, const std::string &dataset) const;
 };
 
 typedef CExtremaResult<TLineModelResult> LineModelExtremaResult;

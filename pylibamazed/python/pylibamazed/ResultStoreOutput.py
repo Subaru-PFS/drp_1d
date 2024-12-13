@@ -236,6 +236,18 @@ class ResultStoreOutput(AbstractOutput):
                     rank,
                     firstpass_result,
                 )
+            # Template fitting case
+            elif or_type == "TExtremaResult":
+                firstpass_result = "Firstpass" in attribute_info["name"]
+                return self.results_store.GetExtremaResult(
+                    object_type,
+                    stage,
+                    method,
+                    attribute_info.ResultStore_key,
+                    attribute_info.dataset,
+                    rank,
+                    firstpass_result,
+                )
             else:
                 getter = getattr(self.results_store, "Get" + or_type[1:])
                 return getter(

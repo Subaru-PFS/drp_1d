@@ -89,6 +89,18 @@ public:
     return ret;
   }
 
+  std::shared_ptr<const COperatorResult>
+  getCandidateParent(const int &rank, const std::string &dataset) const {
+    if (dataset == "model_parameters") {
+      return std::dynamic_pointer_cast<TCandidateZ>(
+                 m_ranked_candidates[rank].second)
+          ->ParentObject;
+    }
+
+    else
+      THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
+  }
+
   TStringList GetIDs() const {
     TStringList ids;
     ids.reserve(m_ranked_candidates.size());

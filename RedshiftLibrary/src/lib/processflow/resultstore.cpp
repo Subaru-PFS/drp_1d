@@ -264,13 +264,14 @@ COperatorResultStore::GetTplCombinationResult(const std::string &spectrumModel,
 std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name,
-    const std::string &dataset, const int &rank) const
+    const std::string &dataset, const int &rank,
+    bool firstpassCorrespondingResult) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
-          ->getCandidate(rank, dataset);
+          ->getCandidate(rank, dataset, firstpassCorrespondingResult);
   std::shared_ptr<const TExtremaResult> tlm =
       std::dynamic_pointer_cast<const TExtremaResult>(cop);
   return tlm;

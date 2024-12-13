@@ -349,19 +349,14 @@ class AbstractOutput:
     def filter_dataset_attributes(self, ds_name, object_type=None, method=None):
         ds_attributes = self.results_specifications.get_df_by_dataset(ds_name)
         # filter ds_attributes by extended_results column
-        skipsecondpass = False
-        if object_type is not None:
-            skipsecondpass = self.parameters.get_skipsecondpass(ESolveMethod.LINE_MODEL ,object_type)
-
-        # retrieve results which are not firstpass results
-        # exclude firstpass results for methods other than LineModelSolve
-        notLinemodel = False
-        if method:
-            notLinemodel = "lineModelSolve" not in method
-        if skipsecondpass or notLinemodel:
-            filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
-        else:
+        two_pass_solve = True
+        if (method is not None) and (object_type is not None):
+            two_pass_solve = self.parameters.is_two_pass_active(method, object_type)
+        if two_pass_solve:
             filtered_df = ds_attributes
+        else:
+            # retrieves results which are not firstpass results
+            filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
 
         if self.extended_results:
             return filtered_df
