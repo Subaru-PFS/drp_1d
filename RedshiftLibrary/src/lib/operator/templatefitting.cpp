@@ -112,9 +112,10 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   // get masks & determine number of samples actually used
   auto const &[mask_list, n_samples] = getMaskListAndNSamples(redshift);
 
-  if (opt_extinction)
+  if (opt_extinction) {
     opt_extinction = igmIsInRange(currentRanges);
-
+    m_option_igmFastProcessing = opt_extinction && m_option_igmFastProcessing;
+  }
   if (opt_dustFitting || opt_extinction) {
     for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
       InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
