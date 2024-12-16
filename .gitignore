@@ -3,6 +3,7 @@
 ###############################################
 build*/
 RedshiftLibrary/RedshiftLibrary/version.h
+RedshiftLibrary/RedshiftLibrary/version.h.ref
 RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp
 RedshiftLibrary/RedshiftLibrary/redshift_wrap.h
 

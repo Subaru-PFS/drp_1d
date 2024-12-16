@@ -36,16 +36,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 # Define build flags
 include(SetupVar)
 
-# Get library revision
-include(gitrevision)
-message(STATUS "Using git revision : " ${GIT_REVISION})
-FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
-MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
+# check version.h file to speed up "re pip install --no-build-isolation" command
+include(checkVersion)
 
 # Building environment
 LIST(APPEND cpf-redshift_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/RedshiftLibrary)
-LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+
 if(CMAKE_PREFIX_PATH)
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_PREFIX_PATH}/include)
   LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_PREFIX_PATH}/lib)
@@ -351,8 +347,4 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
   COMPATIBILITY SameMajorVersion
 )
 
-CONFIGURE_FILE(
-  ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
-)
 ENDIF (NOT SKBUILD_PROJECT_NAME)
