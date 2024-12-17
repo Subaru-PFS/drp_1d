@@ -153,7 +153,6 @@ std::string CTemplateFittingSolve::getScopeStr() const {
       {EType::raw, "templatefitting"},
       {EType::continuumOnly, "templatefitting_continuum"},
       {EType::noContinuum, "templatefitting_nocontinuum"},
-      {EType::all, "templatefitting"},
   };
 
   std::string scopeStr = spectrumTypeToStr.at(m_spectrumType);
@@ -169,7 +168,6 @@ CTemplateFittingSolve::getFitTypeFromParam(const std::string &component) {
       {"raw", EType::raw},
       {"nocontinuum", EType::noContinuum},
       {"continuum", EType::continuumOnly},
-      {"all", EType::all},
   };
   return stringToEnumType.at(component);
 };
@@ -362,30 +360,25 @@ void CTemplateFittingSolve::computeSecondPass(
   m_castedTemplateFittingOperator->COperatorTwoPass::setClassVariables(
       m_secondPass_halfwindowsize, m_zLogSampling, m_redshifts, m_redshiftStep);
   m_castedTemplateFittingOperator->buildExtendedRedshifts();
-  size_t nResults = m_results.size();
-  for (size_t resultIdx = 0; resultIdx < nResults; ++resultIdx) {
-    m_castedTemplateFittingOperator->updateRedshiftGridAndResults(
-        m_results[resultIdx]);
+  m_castedTemplateFittingOperator->updateRedshiftGridAndResults(m_result);
 
-    m_redshifts = m_results[resultIdx]->Redshifts;
-    m_castedTemplateFittingOperator->setRedshifts(
-        m_results[resultIdx]->Redshifts);
-    for (Int32 candidateIdx = 0; candidateIdx < extremaResult->size();
-         ++candidateIdx) {
-      std::vector<Int32> zIdxsToCompute =
-          m_castedTemplateFittingOperator->getzIdxsToCompute(
-              m_redshifts, m_castedTemplateFittingOperator
-                               ->getExtendedRedshifts()[candidateIdx]);
-      auto candidate = extremaResult->getRankedCandidateCPtr(candidateIdx);
-      const std::string &candidateName = extremaResult->ID(candidateIdx);
-      std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(
-          {m_category}, candidate->fittedContinuum.name);
-      Int32 igmIdx = candidate->fittedContinuum.meiksinIdx;
-      Int32 ismIdx = Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
-          candidate->fittedContinuum.ebmvCoef);
-      Solve(resultStore, tpl, m_overlapThreshold, m_interpolation, m_extinction,
-            m_dustFit, ismIdx, igmIdx, candidateName, zIdxsToCompute);
-    }
+  m_redshifts = m_result->Redshifts;
+  m_castedTemplateFittingOperator->setRedshifts(m_result->Redshifts);
+  for (Int32 candidateIdx = 0; candidateIdx < extremaResult->size();
+       ++candidateIdx) {
+    std::vector<Int32> zIdxsToCompute =
+        m_castedTemplateFittingOperator->getzIdxsToCompute(
+            m_redshifts, m_castedTemplateFittingOperator
+                             ->getExtendedRedshifts()[candidateIdx]);
+    auto candidate = extremaResult->getRankedCandidateCPtr(candidateIdx);
+    const std::string &candidateName = extremaResult->ID(candidateIdx);
+    std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(
+        {m_category}, candidate->fittedContinuum.name);
+    Int32 igmIdx = candidate->fittedContinuum.meiksinIdx;
+    Int32 ismIdx = Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
+        candidate->fittedContinuum.ebmvCoef);
+    Solve(resultStore, tpl, m_overlapThreshold, m_interpolation, m_extinction,
+          m_dustFit, ismIdx, igmIdx, candidateName, zIdxsToCompute);
   }
 }
 
@@ -405,50 +398,40 @@ void CTemplateFittingSolve::Solve(
 
   // If fitting type is all, loop on all spectrum fitting types
   // otherwise, just use the corresponding one
-  std::vector<CSpectrum::EType> spectrumTypes;
-  if (m_spectrumType == EType::all) {
-    spectrumTypes = {CSpectrum::EType::raw, CSpectrum::EType::noContinuum,
-                     CSpectrum::EType::continuumOnly};
-  } else
-    spectrumTypes = {fittingTypeToSpectrumType.at(m_spectrumType)};
+  CSpectrum::EType spectrumType = fittingTypeToSpectrumType.at(m_spectrumType);
 
   if (m_isFirstPass)
-    m_results = std::vector<std::shared_ptr<CTemplateFittingResult>>(
-        spectrumTypes.size(), std::make_shared<CTemplateFittingResult>(
-                                  CTemplateFittingResult(m_redshifts.size())));
-  for (size_t spectrumTypeIdx = 0; spectrumTypeIdx < spectrumTypes.size();
-       ++spectrumTypeIdx) {
-    // Adapts spectra and template fitting type if necessary
-    CSpectrum::EType spectrumType = spectrumTypes[spectrumTypeIdx];
-    for (auto spc : Context.getSpectra())
-      spc->SetType(spectrumType);
-    tpl->SetType(spectrumType);
+    m_result = std::make_shared<CTemplateFittingResult>(
+        CTemplateFittingResult(m_redshifts.size()));
 
-    if (m_spectrumType == EType::noContinuum)
-      m_dustFitting = false;
-    tpl->setRebinInterpMethod(m_interpolation);
-    std::shared_ptr<CTemplateFittingResult> templateFittingResult;
-    if (!m_fftProcessing) {
-      templateFittingResult = m_castedTemplateFittingOperator->Compute(
-          tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFitting,
-          0, CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx,
-          m_results[spectrumTypeIdx], m_isFirstPass, zIdxsToCompute);
-    } else {
-      templateFittingResult = m_templateFittingOperator->Compute(
-          tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFitting,
-          0, CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx);
-    }
-    if (!templateFittingResult)
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             "no results returned by templateFittingOperator");
+  for (auto spc : Context.getSpectra())
+    spc->SetType(spectrumType);
+  tpl->SetType(spectrumType);
 
-    // Store results
-    std::string scopeStr = getScopeStr();
-    if (parentId != "")
-      scopeStr += "_" + parentId;
-    resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
-                                              templateFittingResult);
+  if (m_spectrumType == EType::noContinuum)
+    m_dustFitting = false;
+  tpl->setRebinInterpMethod(m_interpolation);
+  std::shared_ptr<CTemplateFittingResult> templateFittingResult;
+  if (!m_fftProcessing) {
+    templateFittingResult = m_castedTemplateFittingOperator->Compute(
+        tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFitting,
+        0, CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx, m_result,
+        m_isFirstPass, zIdxsToCompute);
+  } else {
+    templateFittingResult = m_templateFittingOperator->Compute(
+        tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFitting,
+        0, CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx);
   }
+  if (!templateFittingResult)
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "no results returned by templateFittingOperator");
+
+  // Store results
+  std::string scopeStr = getScopeStr();
+  if (parentId != "")
+    scopeStr += "_" + parentId;
+  resultStore->StoreScopedPerTemplateResult(tpl, scopeStr.c_str(),
+                                            templateFittingResult);
 
   // Reset spectra fitting types and template type
   int i = 0;

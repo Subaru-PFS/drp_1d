@@ -143,8 +143,7 @@ private:
   Float64 m_photometryWeight = NAN;
   EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
   Float64 m_secondPass_halfwindowsize = NAN;
-  std::vector<std::shared_ptr<CTemplateFittingResult>>
-      m_results; // one result per spectrum type
+  std::shared_ptr<CTemplateFittingResult> m_result;
   Int32 m_opt_extremacount;
   Float64 m_opt_candidatesLogprobaCutThreshold = 0.0;
   std::shared_ptr<COperatorTemplateFitting> m_castedTemplateFittingOperator;
