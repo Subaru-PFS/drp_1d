@@ -78,6 +78,14 @@ void CTemplateFittingSolve::PopulateParameters(
   m_extinction = parameterStore->GetScoped<bool>("igmFit");
   m_dustFit = parameterStore->GetScoped<bool>("ismFit");
 
+  if (m_spcComponent == "noContinuum")
+    {
+	if (m_dustFit)
+	  THROWG(ErrorCode::BAD_PARAMETER_VALUE, "noContinuum option incompatible with ismFit");
+	if (m_extinction)
+	  THROWG(ErrorCode::BAD_PARAMETER_VALUE, "noContinuum option incompatible with ismFit");
+    }
+		     
   m_fftProcessing = parameterStore->GetScoped<bool>("fftProcessing");
 
   if (parameterStore->HasScoped<bool>("enablePhotometry")) {

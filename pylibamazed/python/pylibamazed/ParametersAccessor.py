@@ -297,6 +297,9 @@ class ParametersAccessor:
     def get_template_fitting_ism(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_template_fitting_section(spectrum_model), "ismFit")
 
+    def get_template_fitting_igm(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_template_fitting_section(spectrum_model), "igmFit")
+
     def get_template_fitting_photometry_enabled(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_template_fitting_section(spectrum_model), "enablePhotometry")
 
@@ -454,6 +457,9 @@ class ParametersAccessor:
 
     def get_linemodel_continuumfit_ismfit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "ismFit")
+
+    def get_linemodel_continuumfit_igmfit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "igmFit")
 
     def get_linemodel_continuumfit_fftprocessing(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "fftProcessing")

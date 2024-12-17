@@ -260,7 +260,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_templateCombinationSolve_section(spectrum_model)
         self._check_lineModelSolve(spectrum_model)
         self._check_template_dir(spectrum_model)
-
+        
     def _check_linemeassolve(self, spectrum_model: str) -> None:
         self._check_linemeassolver_section(spectrum_model)
         self._check_linemeassolve_dzhalf(spectrum_model)
@@ -351,6 +351,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_templateFittingSolve_exclusive_twopass_fft(spectrum_model)
         self._check_templateFittingSolve_pass_presence(spectrum_model)
         self._check_templateFittingSolve_secondpass_continuumfit(spectrum_model)
+        self._check_templateFittingSolve_spectrum_consistency(spectrum_model)
 
     def _check_templateFittingSolve_ism(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
@@ -427,6 +428,20 @@ class CustomParametersChecker(ParametersChecker):
                 f"Second pass continuum fit for templatFittingSolve must be set to {self.accessor.second_pass_continuum_fit_dict[EContinuumFit.REFIT_FIRST_PASS]} (spectrum model {spectrum_model})",
             )
 
+    def _check_templateFittingSolve_spectrum_consistency(self, spectrum_model: str):
+        spectrum_component = self.accessor.get_template_fitting_spectrum_component(spectrum_model)
+        self._check_dependant_parameter_presence(
+            spectrum_component == "noContinuum",
+            self.accessor.get_template_fitting_ism(spectrum_model) == False,
+            error_message=f"noContinuum requires deactivating ism and igm, check {spectrum_model}",
+            custom_error_message=True
+        )
+        self._check_dependant_parameter_presence(
+            spectrum_component == "noContinuum",
+            self.accessor.get_template_fitting_igm(spectrum_model) == False,
+            error_message=f"noContinuum requires deactivating ism and igm, check {spectrum_model}",
+            custom_error_message=True)
+        
     def _check_templateCombinationSolve_section(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
             self.accessor.get_redshift_solver_method(spectrum_model) == "tplCombinationSolve",
@@ -463,6 +478,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
         self._check_linemodelsolve_lya_fit(spectrum_model)
         self._check_linemodelsolve_useloglambdasampling(spectrum_model)
+
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
@@ -650,8 +666,8 @@ class CustomParametersChecker(ParametersChecker):
         dependant_condition: bool,
         error_message: str = None,
         warning_message: str = None,
-        custom_error_message: str = False,
-        custom_warning_message: str = False,
+        custom_error_message: bool = False,
+        custom_warning_message: bool = False,
     ):
         # Checks that if triggering_condition is valid, then dependant_condition too. Otherwise error.
         # If a warning message is specified, raises an error if dependant_condition is present without its
