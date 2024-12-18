@@ -437,7 +437,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
 
   Float64 normFactor = 1.0 / std::abs(noContinuumFluxAxis[maxabsval_idx]);
   Float64 normVel = m_velfitMaxE;
-  Float64 normLbdaOffset = m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM;
+  Float64 normLbdaOffset = m_LambdaOffsetMax;
 
   CLeastSquare func(*this, EltsIdx, lineType, redshift, xInds, velA_idx,
                     velE_idx, lbdaOffset_param_idx, pCoeff_param_idx,
@@ -479,10 +479,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // TODO adapt bounds to lambdaRange (if line goes out of border #8669)
   if (m_enableLambdaOffsetsFit) {
     // offset bounds
-    lb[lbdaOffset_param_idx] =
-        m_LambdaOffsetMin / SPEED_OF_LIGHT_IN_VACCUM / normLbdaOffset;
-    ub[lbdaOffset_param_idx] =
-        m_LambdaOffsetMax / SPEED_OF_LIGHT_IN_VACCUM / normLbdaOffset;
+    lb[lbdaOffset_param_idx] = m_LambdaOffsetMin / normLbdaOffset;
+    ub[lbdaOffset_param_idx] = m_LambdaOffsetMax / normLbdaOffset;
   }
 
   // polynomial bounds

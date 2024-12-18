@@ -72,6 +72,7 @@ class ProcessFlow:
     @exception_decorator(logging=True)
     def __init__(self, config, parameters: Parameters):
         _check_config(config)
+        _check_lineMeasValidity(config, parameters)
         self.parameters = parameters
         zlog.LogInfo("Loading all needed calibration files :")
         self.calibration_library = CalibrationLibrary(parameters, config["calibration_dir"])
@@ -82,8 +83,6 @@ class ProcessFlow:
         self.config = config
         if "linemeascatalog" not in self.config:
             self.config["linemeascatalog"] = {}
-        else:
-            _check_LinemeasValidity(config, parameters)
 
         self.extended_results = config["extended_results"]
 
@@ -133,7 +132,8 @@ class ProcessFlow:
             with suppress(ProcessFlowException):
                 self.run_classification_solver(rso)
                 # Running linemeas only on classified model (if any)
-                self._run_linemeas_after_classification(rso)
+                if self.parameters.get_linemeas_runmode() == "classif":
+                    self._run_linemeas_after_classification(rso)
 
         with suppress(ProcessFlowException):
             self.load_result_store(rso)
@@ -141,22 +141,19 @@ class ProcessFlow:
         return rso
 
     def _run_linemeas_after_classification(self, rso: ResultStoreOutput) -> None:
-        if self.parameters.get_linemeas_runmode() == "classif":
-            classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
-            linemeas_method = self.parameters.get_linemeas_method(classif_model)
-            if linemeas_method is None:
-                return
-            with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
-                self.run_load_linemeas_params(rso)
-                self.run_linemeas_solver(rso, linemeas_method)
+        classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
+        linemeas_method = self.parameters.get_linemeas_method(classif_model)
+        if linemeas_method is None:
+            return
+        with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
+            self.run_load_linemeas_params(rso)
+            self.run_linemeas_solver(rso, linemeas_method)
 
     def process_spectrum_model(self, rso):
         spectrum_model = self.scope_spectrum_model
 
         redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.parameters.get_linemeas_method(spectrum_model)
-        linemeas_alone = self.config["linemeascatalog"] and spectrum_model in self.config["linemeascatalog"]
-        pipe_redshift_linemeas = linemeas_method and not linemeas_alone
 
         if redshift_solver_method:
             self.run_redshift_solver(rso, redshift_solver_method)
@@ -172,11 +169,11 @@ class ProcessFlow:
                 with suppress(ProcessFlowException):
                     self.run_reliability_solver(rso)
 
-            if self.parameters.get_linemeas_runmode() == "all" and pipe_redshift_linemeas:
+            if self.parameters.get_linemeas_runmode() == "all" and linemeas_method:
                 self.run_load_linemeas_params(rso)
                 self.run_linemeas_solver(rso, linemeas_method)
 
-        elif linemeas_method and linemeas_alone:
+        elif linemeas_method:  # linemeas alone
             self.run_linemeas_solver(rso, linemeas_method)
 
     @store_exception_handler
@@ -343,7 +340,17 @@ def _check_config(config):
                     )
 
 
-def _check_LinemeasValidity(config, parameters):
-    if not config["linemeascatalog"]:
-        return
-    parameters.check_linemeas_validity()
+def _check_lineMeasValidity(config, parameters: Parameters):
+    for spectrum_model in parameters.get_spectrum_models():
+        if parameters.is_linemeas_alone(spectrum_model):
+            if "linemeascatalog" not in config or spectrum_model not in config["linemeascatalog"].keys():
+                raise APIException(
+                    ErrorCode.INCOHERENT_CONFIG_OPTIONS,
+                    f"Cannot run lineMeasSolver alone without linemeascatalog in config for model {spectrum_model}.",
+                )
+        elif parameters.is_linemeas_piped(spectrum_model):
+            if "linemeascatalog" in config and spectrum_model in config["linemeascatalog"].keys():
+                raise APIException(
+                    ErrorCode.INCOHERENT_CONFIG_OPTIONS,
+                    f"Cannot run lineMeasSolver from catalog when redshiftSolver stage is enabled for model {spectrum_model}",
+                )

@@ -182,16 +182,13 @@ class Parameters(ParametersAccessor):
                 break
         return z_solver_found
 
-    def check_linemeas_validity(self):
-        for spectrum_model in self.get_spectrum_models():
-            method = self.get_redshift_solver_method(spectrum_model)
-            if "redshiftSolver" in self.get_stages(spectrum_model) and method == "lineModelSolve":
-                if self.get_linemeas_method(spectrum_model):
-                    raise APIException(
-                        ErrorCode.INCOHERENT_CONFIG_OPTIONS,
-                        "Cannot run LineMeasSolve from catalog when sequencial processing is selected"
-                        "simultaneously.",
-                    )
+    def is_linemeas_alone(self, spectrum_model: str) -> bool:
+        return self.get_linemeas_method(spectrum_model) and not self.get_redshift_solver_method(
+            spectrum_model
+        )
+
+    def is_linemeas_piped(self, spectrum_model: str) -> bool:
+        return self.get_linemeas_method(spectrum_model) and self.get_redshift_solver_method(spectrum_model)
 
     def get_lambda_range_min(self):
         if self.get_multiobs_method() != "full":
