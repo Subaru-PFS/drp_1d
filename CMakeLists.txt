@@ -66,6 +66,15 @@ IF(CMAKE_PREFIX_PATH)
   LIST(APPEND CMAKE_INSTALL_RPATH ${CMAKE_PREFIX_PATH}/lib)
 ENDIF()
 
+# Setup thirdparty directory : GSL
+pkg_check_modules(GSL gsl>=${GSL_MINIMUM_REQUIRED} REQUIRED)
+message(STATUS "Found gsl: ${GSL_LINK_LIBRARIES}")
+message(STATUS "GSL_LIBRARY_DIRS = ${GSL_LIBRARY_DIRS}")
+message(STATUS "GSL_INCLUDE_DIRS = ${GSL_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
+LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
+
 # Add specific PREFIX PATH for users on Appel osx managed by brew
 list(APPEND CMAKE_PREFIX_PATH /usr/local/opt/openblas/lib)
 LIST(APPEND CMAKE_INSTALL_RPATH /usr/local/opt/openblas/lib)
@@ -124,15 +133,6 @@ set(BLA_F95 OFF)
 find_package(BLAS REQUIRED)
 message(STATUS "BLAS_LIBRARIES = ${BLAS_LIBRARIES}")
 LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${BLAS_LIBRARIES})
-
-# Setup thirdparty directory : GSL
-pkg_check_modules(GSL gsl>=${GSL_MINIMUM_REQUIRED} REQUIRED)
-message(STATUS "Found gsl: ${GSL_LINK_LIBRARIES}")
-message(STATUS "GSL_LIBRARY_DIRS = ${GSL_LIBRARY_DIRS}")
-message(STATUS "GSL_INCLUDE_DIRS = ${GSL_INCLUDE_DIRS}")
-LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
-LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
-LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 
 # setup thirdparty directory : eigen3
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
