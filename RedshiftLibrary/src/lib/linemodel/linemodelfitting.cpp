@@ -996,9 +996,12 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
         firstEltList[eIdx]->GetObservedPosition(line_index,
                                                 modelSolution.Redshift);
     modelSolution.Velocity[iRestLine] = elt_param_vect[eIdx]->getVelocity();
+    modelSolution.VelocityUncertainty[iRestLine] =
+        elt_param_vect[eIdx]->getVelocityStd();
     modelSolution.Offset[iRestLine] =
-        elt_param_vect[eIdx]->m_Offsets[line_index];
-
+        elt_param_vect[eIdx]->getLambdaOffset(line_index);
+    modelSolution.OffsetUncertainty[iRestLine] =
+        elt_param_vect[eIdx]->getLambdaOffsetStd(line_index);
     modelSolution.NotFitted[iRestLine] = false;
   }
 

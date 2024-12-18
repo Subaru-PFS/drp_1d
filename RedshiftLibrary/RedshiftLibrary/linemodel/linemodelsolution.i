@@ -72,8 +72,10 @@ public:
 
   TFloat64List LambdaObs; // observed position in Angstrom
   TFloat64List Velocity;  // dispersion velocity in km/s
+  TFloat64List VelocityUncertainty;
   TFloat64List Offset;    // line offset in km/s
-  TBoolList NotFitted;
+  TFloat64List OffsetUncertainty;
+   TBoolList NotFitted;
   std::vector<TInt32Range> fittingIndexRange;
   TStringList fittingGroupInfo;
 

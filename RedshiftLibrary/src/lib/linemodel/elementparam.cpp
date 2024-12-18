@@ -50,9 +50,10 @@ using namespace NSEpic;
 TLineModelElementParam::TLineModelElementParam(CLineVector lines,
                                                Float64 velocity,
                                                const std::string &lineWidthType)
-    : m_Lines(std::move(lines)), m_Velocity(velocity),
+    : m_Lines(std::move(lines)), m_Velocity(velocity), m_VelocityStd(NAN),
       m_FittedAmplitudes(m_Lines.size(), NAN),
-      m_FittedAmplitudesStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr),
+      m_FittedAmplitudesStd(m_Lines.size(), NAN),
+      m_OffsetsStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr),
       m_globalOutsideLambdaRangeList(m_Lines.size(), false) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
@@ -142,8 +143,6 @@ Float64 TLineModelElementParam::GetFittedAmplitudeStd(Int32 line_index) const {
   return m_FittedAmplitudesStd[line_index];
 }
 
-Float64 TLineModelElementParam::getVelocity() const { return m_Velocity; }
-
 /*
 const CLineProfile_ptr &
 TLineModelElementParam::getLineProfile(Int32 line_index) const {
@@ -159,6 +158,15 @@ void TLineModelElementParam::setVelocity(Float64 vel) {
            "Empty line model element, could not set velocity");
 #endif
   m_Velocity = vel;
+}
+
+void TLineModelElementParam::setVelocityStd(Float64 velStd) {
+#ifdef DEBUG
+  if (!GetSize())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Empty line model element, could not set velocity");
+#endif
+  m_VelocityStd = velStd;
 }
 
 /*

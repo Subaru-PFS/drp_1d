@@ -67,10 +67,12 @@ struct TLineModelElementParam {
 
   CLineVector m_Lines;
   Float64 m_Velocity = NAN;
+  Float64 m_VelocityStd = NAN;
   TFloat64List m_FittedAmplitudes;
   TFloat64List m_FittedAmplitudesStd;
   TFloat64List m_NominalAmplitudes;
   TFloat64List m_Offsets;
+  TFloat64List m_OffsetsStd;
   TInt32Map m_LinesIds;
   std::string m_fittingGroupInfo;
   TPolynomCoeffs m_ampOffsetsCoeffs;
@@ -118,8 +120,9 @@ struct TLineModelElementParam {
   Int32 getSignFactor(Int32 line_index) const;
   Float64 GetSignFactor(Int32 line_index) const;
 
-  const CLineVector &GetLines() { return m_Lines; }
-  Float64 getVelocity() { return m_Velocity; }
+  Float64 getVelocity() const { return m_Velocity; }
+  Float64 getVelocityStd() const { return m_VelocityStd; };
+
   TAsymParams GetAsymfitParams(Int32 asym_line_index = 0) const {
     if (!m_asymLineIndices.size())
       return TAsymParams(); // case where no asymprofile in linecatalog
@@ -249,7 +252,13 @@ struct TLineModelElementParam {
   void setLambdaOffset(Int32 line_index, Float64 val) {
     m_Offsets[line_index] = val;
   }
+  void setLambdaOffsetStd(Int32 line_index, Float64 val) {
+    m_OffsetsStd[line_index] = val;
+  }
   Float64 getLambdaOffset(Int32 line_index) { return m_Offsets[line_index]; }
+  Float64 getLambdaOffsetStd(Int32 line_index) {
+    return m_OffsetsStd[line_index];
+  }
 
   void resetFittingParams();
   void resetAsymfitParams() {
@@ -303,8 +312,8 @@ struct TLineModelElementParam {
   bool SetAbsLinesLimit(Float64 limit);
   Float64 GetAbsLinesLimit() const;
 
-  Float64 getVelocity() const;
   void setVelocity(Float64 vel);
+  void setVelocityStd(Float64 velStd);
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,
                                  Float64 x0, Float64 sigma,

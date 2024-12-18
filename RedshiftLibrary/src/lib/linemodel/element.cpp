@@ -111,14 +111,12 @@ Int32 TLineModelElementParam::getLineIndex(
 Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
   const Float64 c = SPEED_OF_LIGHT_IN_VACCUM;
   Float64 v = m_ElementParam->getVelocity();
-  const Float64 pfsSimuCompensationFactor = 1.0;
 
   if (!m_LSF)
     THROWG(ErrorCode::INTERNAL_ERROR, "lsf object is not initailized.");
   Float64 instrumentSigma = m_LSF->GetWidth(redshiftedlambda);
 
-  Float64 velocitySigma = pfsSimuCompensationFactor * v / c *
-                          redshiftedlambda; //, useless /(1+z)*(1+z);
+  Float64 velocitySigma = v / c * redshiftedlambda;
   switch (m_ElementParam->m_LineWidthType) {
   case INSTRUMENTDRIVEN: // only instrumental sigma
     velocitySigma = 0.;
@@ -478,7 +476,7 @@ std::pair<Float64, Float64> CLineModelElement::getObservedPositionAndLineWidth(
 Float64 CLineModelElement::GetObservedPosition(Int32 index, Float64 redshift,
                                                bool doAsymfitdelta) const {
   Float64 dzOffset =
-      m_ElementParam->m_Offsets[index] / SPEED_OF_LIGHT_IN_VACCUM;
+      m_ElementParam->getLambdaOffset(index) / SPEED_OF_LIGHT_IN_VACCUM;
 
   auto const &line = m_ElementParam->GetLines()[index];
   Float64 mu = line.GetPosition() * (1 + redshift) * (1 + dzOffset);

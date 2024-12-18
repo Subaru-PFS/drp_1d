@@ -164,9 +164,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
       for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
         Float64 offset = elt_param->m_Lines[line_idx].GetOffset();
-        offset /= SPEED_OF_LIGHT_IN_VACCUM;
-        offset += (1 + offset) * delta_offset;
-        offset *= SPEED_OF_LIGHT_IN_VACCUM;
+        offset += delta_offset;
         elt_param->setLambdaOffset(line_idx, offset);
 
         /* // set redshift in SYMIGM profiles
@@ -674,10 +672,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       auto &elt_param = m_ElementsVector->getElementParam()[eltIndex];
       for (Int32 line_idx = 0; line_idx != elt_param->size(); ++line_idx) {
         Float64 offset = elt_param->m_Lines[line_idx].GetOffset();
-        offset /= SPEED_OF_LIGHT_IN_VACCUM;
-        offset +=
-            (1 + offset) * v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
-        offset *= SPEED_OF_LIGHT_IN_VACCUM;
+        offset += v_xResult[lbdaOffset_param_idx] * normLbdaOffset;
         elt_param->setLambdaOffset(line_idx, offset);
       }
     }
@@ -710,6 +705,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // note: this is only for one line (one Gaussian profile)
   // Thus it does not take into account the correlation between overlapping
   // lines, and possibly underestimate the uncertainty in such a case
+
   // reset the support (lines outside range)
   m_spectraIndex.reset();
   for (Int32 eltIndex : EltsIdx) {
@@ -737,7 +733,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       break;
     }
 
-    auto const &[_, sigma] = elt->getObservedPositionAndLineWidth(redshift);
+    auto const &[lambda, sigma] =
+        elt->getObservedPositionAndLineWidth(redshift);
     Float64 const noise_stdev =
         getModelResidualRmsUnderElements({EltsIdx[i]}, true, false);
     Float64 pixsize = 0.0;
@@ -762,5 +759,23 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     for (Int32 line_idx = 0; line_idx < elt->GetSize(); ++line_idx)
       param->m_FittedAmplitudesStd[line_idx] /=
           param->m_NominalAmplitudes[line_idx];
+
+    // compute velocity dispersion uncertainty and lambda offset uncertainty
+    // (from doi:10.1364/AO.46.005374)
+    // var(w) = var(lambda) = 2 var(spectra) * w / (amplitude**2 *
+    // pixsize_in_wavelength_unit * sqrt(pi)) where  w is
+    // sigma_in_wavelength_unit (Gaussian width)
+    if (m_enableVelocityFitting || m_enableLambdaOffsetsFit) {
+      Float64 const width_lambda_std =
+          sqrt((2 * pow(noise_stdev, 2) * sigma) /
+               (pow(amp, 2) * pixsize * sqrt(M_PI)));
+      Float64 const velocity_std =
+          width_lambda_std * SPEED_OF_LIGHT_IN_VACCUM / lambda;
+      if (m_enableVelocityFitting)
+        param->setVelocityStd(velocity_std);
+      if (m_enableLambdaOffsetsFit)
+        for (Int32 line_idx = 0; line_idx != param->size(); ++line_idx)
+          param->setLambdaOffsetStd(line_idx, velocity_std);
+    }
   }
 }
