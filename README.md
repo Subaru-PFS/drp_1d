@@ -84,6 +84,18 @@ You can specify a directory for C++ building files. Tests are also available in 
 
     pip install -v . -C build-dir=build-pip
 
+#### --no-build-isolation
+
+For developers. In order to speed up the compilation of the library and the installation of the python module, you must use the following options `build-dir=build-pip` and `--no-build-isolation`
+
+These options, requires to mandatory install the following packages in your virtural environement.
+
+    pip install scikit-build-core numpy setuptools_scm ninja
+
+Then, you can run the following command to build the library and install the python module
+
+    pip install -v -C build-dir=build-pip --no-build-isolation
+
 ### Test C++ part
 
 To test the C++ part, in `pylibamazed` root directory, run:
