@@ -78,14 +78,15 @@ void CTemplateFittingSolve::PopulateParameters(
   m_extinction = parameterStore->GetScoped<bool>("igmFit");
   m_dustFit = parameterStore->GetScoped<bool>("ismFit");
 
-  if (m_spcComponent == "noContinuum")
-    {
-	if (m_dustFit)
-	  THROWG(ErrorCode::BAD_PARAMETER_VALUE, "noContinuum option incompatible with ismFit");
-	if (m_extinction)
-	  THROWG(ErrorCode::BAD_PARAMETER_VALUE, "noContinuum option incompatible with ismFit");
-    }
-		     
+  if (m_spectrumType == EType::noContinuum) {
+    if (m_dustFit)
+      THROWG(ErrorCode::BAD_PARAMETER_VALUE,
+             "noContinuum option incompatible with ismFit");
+    if (m_extinction)
+      THROWG(ErrorCode::BAD_PARAMETER_VALUE,
+             "noContinuum option incompatible with ismFit");
+  }
+
   m_fftProcessing = parameterStore->GetScoped<bool>("fftProcessing");
 
   if (parameterStore->HasScoped<bool>("enablePhotometry")) {
@@ -285,8 +286,7 @@ void CTemplateFittingSolve::computeFirstPass() {
   const CTemplateCatalog &tplCatalog = *(Context.GetTemplateCatalog());
 
   for (auto tpl : tplCatalog.GetTemplateList(m_category)) {
-    Solve(resultStore, tpl, m_overlapThreshold, m_interpolation, m_extinction,
-          m_dustFit);
+    Solve(resultStore, tpl);
     hasResult = true;
   }
   if (!hasResult)
@@ -385,16 +385,14 @@ void CTemplateFittingSolve::computeSecondPass(
     Int32 igmIdx = candidate->fittedContinuum.meiksinIdx;
     Int32 ismIdx = Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
         candidate->fittedContinuum.ebmvCoef);
-    Solve(resultStore, tpl, m_overlapThreshold, m_interpolation, m_extinction,
-          m_dustFit, ismIdx, igmIdx, candidateName, zIdxsToCompute);
+    Solve(resultStore, tpl, ismIdx, igmIdx, candidateName, zIdxsToCompute);
   }
 }
 
 void CTemplateFittingSolve::Solve(
     std::shared_ptr<COperatorResultStore> resultStore,
-    const std::shared_ptr<const CTemplate> &tpl, Float64 m_overlapThreshold,
-    std::string m_interpolation, bool m_extinction, bool m_dustFitting,
-    Int32 FitEbmvIdx, Int32 FitMeiksinIdx, std::string parentId,
+    const std::shared_ptr<const CTemplate> &tpl, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx, std::string parentId,
     std::vector<Int32> zIdxsToCompute) {
 
   // For saving initial spectra fitting types and template type
@@ -417,18 +415,18 @@ void CTemplateFittingSolve::Solve(
   tpl->SetType(spectrumType);
 
   if (m_spectrumType == EType::noContinuum)
-    m_dustFitting = false;
+    m_dustFit = false;
   tpl->setRebinInterpMethod(m_interpolation);
   std::shared_ptr<CTemplateFittingResult> templateFittingResult;
   if (!m_fftProcessing) {
     templateFittingResult = m_castedTemplateFittingOperator->Compute(
-        tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFitting,
-        0, CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx, m_result,
+        tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFit, 0,
+        CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx, m_result,
         m_isFirstPass, zIdxsToCompute);
   } else {
     templateFittingResult = m_templateFittingOperator->Compute(
-        tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFitting,
-        0, CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx);
+        tpl, m_overlapThreshold, m_interpolation, m_extinction, m_dustFit, 0,
+        CPriorHelper::TPriorZEList(), FitEbmvIdx, FitMeiksinIdx);
   }
   if (!templateFittingResult)
     THROWG(ErrorCode::INTERNAL_ERROR,

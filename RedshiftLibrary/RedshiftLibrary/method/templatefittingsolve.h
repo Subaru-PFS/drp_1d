@@ -108,9 +108,8 @@ private:
 
   void Solve(std::shared_ptr<COperatorResultStore> resultStore,
              const std::shared_ptr<const CTemplate> &tpl,
-             Float64 overlapThreshold, std::string opt_interp = "lin",
-             bool opt_extinction = false, bool opt_dustFitting = false,
-             Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+             Int32 FitEbmvIdx = undefIdx,
+             Int32 FitMeiksinIdx = undefIdx,
              std::string parentId = "", std::vector<Int32> zIdxsToCompute = {});
 
   ChisquareArray
