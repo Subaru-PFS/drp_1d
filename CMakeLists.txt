@@ -13,16 +13,19 @@ set( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
 message(STATUS "ROOT_DIR = " ${ROOT_DIR})
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR = " ${CMAKE_CURRENT_SOURCE_DIR})
 message(STATUS "CMAKE_BINARY_DIR = " ${CMAKE_BINARY_DIR})
-MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
+MESSAGE(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 
 # Regular cmake tools
-FIND_PACKAGE(Python3 COMPONENTS Interpreter REQUIRED)
+FIND_PACKAGE(Python3 COMPONENTS Interpreter Development REQUIRED)
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+message(STATUS "Python3_INCLUDE_DIRS" = ${Python3_INCLUDE_DIRS})
 FIND_PACKAGE(PkgConfig REQUIRED)
 
 # package required to build python wrapper
+set(SWIG_USE_SWIG_DEPENDENCIES TRUE)
 FIND_PACKAGE(SWIG REQUIRED)
 FIND_PACKAGE(Python REQUIRED Interpreter Development.Module)
+include(UseSWIG)
 
 # Install directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -297,35 +300,23 @@ IF (SKBUILD_PROJECT_NAME)
     OUTPUT_STRIP_TRAILING_WHITESPACE)
   MESSAGE(STATUS "NUMPY_INCLUDE_DIR =" ${NUMPY_INCLUDE_DIR})
 
-  # Generate the wrapper files
-  add_custom_command(
-    OUTPUT redshift.py redshift_wrap.cpp
-    COMMAND ${SWIG_EXECUTABLE} -c++ -python -I${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary
-            -outdir ${CMAKE_CURRENT_BINARY_DIR}
-            -o ${CMAKE_CURRENT_BINARY_DIR}/redshift_wrap.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i
-    VERBATIM
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i
+  set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
+  swig_add_library(redshift
+    LANGUAGE python
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i
   )
 
-  python_add_library(
-    _redshift
-    MODULE
-    WITH_SOABI
-    ${CMAKE_CURRENT_BINARY_DIR}/redshift_wrap.cpp
-  )
-
-  target_include_directories(_redshift PUBLIC  ${NUMPY_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+  target_include_directories(redshift PUBLIC ${Python3_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../src)
   
   MESSAGE (STATUS "cpf-redshift_LINK_DIR :" ${cpf-redshift_LINK_DIR})
   if (APPLE)
-      set_target_properties(_redshift PROPERTIES INSTALL_RPATH "@loader_path")
+      set_target_properties(redshift PROPERTIES INSTALL_RPATH "@loader_path")
   else()
-      set_target_properties(_redshift PROPERTIES INSTALL_RPATH "$ORIGIN;${cpf-redshift_LINK_DIR}")
+      set_target_properties(redshift PROPERTIES INSTALL_RPATH "$ORIGIN;${cpf-redshift_LINK_DIR}")
   endif()
-  target_link_libraries(_redshift PUBLIC cpf-redshift ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_HEADERONLY} )
+  target_link_libraries(redshift PUBLIC cpf-redshift ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_HEADERONLY} )
 
-  install(TARGETS _redshift DESTINATION pylibamazed)
+  install(TARGETS redshift DESTINATION pylibamazed)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/redshift.py DESTINATION pylibamazed)
   install(FILES ${cpf-redshift_BINARY_DIR}/libcpf-redshift.so DESTINATION pylibamazed)
   #install(FILES ${cpf-redshift_BINARY_DIR}/libcpf-redshift.${LIBEXT} DESTINATION pylibamazed)
