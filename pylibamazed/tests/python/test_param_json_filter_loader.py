@@ -55,6 +55,6 @@ class TestParamJsonFilterLoader:
             },
             make_checks=False,
         )
-        assert jsonFilterLoader.get_filters(params) == FilterList(
+        assert jsonFilterLoader.get_filters(params, obs_id="") == FilterList(
             [SpectrumFilterItem("col1", "<", 2), SpectrumFilterItem("col2", ">=", 2)]
         )

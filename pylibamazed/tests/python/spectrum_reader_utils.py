@@ -63,16 +63,17 @@ class TestSpectrumReaderUtils:
         return params_dict
 
     def full_load(self, fsr, **kwargs):
-        obs_id = kwargs.get("obs_id", "")
-        if kwargs.get("multiObsMethod") == "full":
-            wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
-            wave_range = wave_ranges[obs_id]
-        else:
-            wave_range = kwargs.get("spectrum_wave_range", [0, 10])
-        fsr.load_wave(wave_range, kwargs.get("obs_id", ""))
-        fsr.load_flux(wave_range, kwargs.get("obs_id", ""))
-        fsr.load_error(wave_range, kwargs.get("obs_id", ""))
-        fsr.load_lsf(None, kwargs.get("obs_id", ""))
+        multiObsMethod = kwargs.get("multiObsMethod")
+        for obs_id in kwargs.get("obs_ids", [""]):
+            if multiObsMethod == "full" or multiObsMethod == "merge":
+                wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
+                wave_range = wave_ranges[obs_id]
+            else:
+                wave_range = kwargs.get("spectrum_wave_range", [0, 10])
+            fsr.load_wave(wave_range, obs_id)
+            fsr.load_flux(wave_range, obs_id)
+            fsr.load_error(wave_range, obs_id)
+            fsr.load_lsf(None, obs_id)
 
     def initialize_empty_fsr(self, **kwargs):
         params_dict = self.make_parameters_dict(**kwargs)

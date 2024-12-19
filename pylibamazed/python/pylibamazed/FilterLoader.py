@@ -79,7 +79,7 @@ class ParamJsonFilterLoader(AbstractFilterLoader):
     def get_filters(self, params: Parameters, obs_id: str) -> FilterList:
         filters: List[FilterItem] = []
         json_filters = params.get_filters(obs_id=obs_id)
-        if json_filters is None:
+        if not json_filters:
             return None
         for filter in json_filters:
             filters.append(self.FilterItemClass(filter["key"], filter["instruction"], filter["value"]))

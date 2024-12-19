@@ -48,8 +48,8 @@ from tests.python.utils import WarningUtils
 
 class TestMergeSpectrum(TestSpectrumReaderUtils):
     def test_wavelength_duplicates_error(self):
-        fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "merge", "obs_id": "1"})
-        self.full_load(fsr, **{"obs_id": "2"})
+        fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "merge", "obs_ids": ["1", "2"]})
+
         fsr.waves.append(
             np.arange(10, dtype=float) + 1e-10,
             obs_id="3",
@@ -73,15 +73,13 @@ class TestMergeSpectrum(TestSpectrumReaderUtils):
         spectrum.get_wave()
 
     def test_multi_obs_merge(self):
-        fsr = self.initialize_fsr_with_data(**{"multiObsMethod": "merge", "obs_id": "1"})
-        fsr.load_wave([8, 20], "2")
-        fsr.load_flux([8, 20], "2")
-        fsr.load_error([8, 20], "2")
-        fsr.load_lsf(None, "2")
-        fsr.load_wave([7, 12], "3")
-        fsr.load_flux([7, 12], "3")
-        fsr.load_error([7, 12], "3")
-        fsr.load_lsf(None, "3")
+        fsr = self.initialize_fsr_with_data(
+            **{
+                "multiObsMethod": "merge",
+                "obs_ids": ["1", "2", "3"],
+                "wave_range": {"1": [0, 10], "2": [8, 20], "3": [7, 12]},
+            }
+        )
         fsr.get_spectrum()._merge_spectra()
 
     def test_multi_obs_full(self):

@@ -86,6 +86,7 @@ class Spectrum:
         self._lsf = lsf
         self._photometric_data = photometric_data
         self.w_frame = wave_frame
+        self.masks = dict()
 
     @property
     def _is_multiobs_merge(self) -> bool:
@@ -127,8 +128,12 @@ class Spectrum:
             df = self._dataframe
         else:
             df = self._dataframe.loc[obs_id]
+            if filtered_only and "amazed_mask" in df:
+                return df[df["amazed_mask"]]
+            else:
+                return self._dataframe.loc[obs_id]
         if filtered_only and "amazed_mask" in df:
-            return df.loc[df["amazed_mask"]]
+            return df[df["amazed_mask"]]
         else:
             return df
 
@@ -334,12 +339,12 @@ class Spectrum:
                 )
 
     def _get_filters(self, obs_id: str):
-        return self.filter_loader_class().get_filters(self.parameters, obs_id)
+        return self.filter_loader_class().get_filters(self.parameters, obs_id=obs_id)
 
     def _apply_filters(self, filters: FilterList, obs_id: str) -> None:
         if filters is None:
             return
-        filters.apply(self._dataframe.loc[obs_id])
+        self.masks[obs_id] = filters.apply(self._dataframe.loc[obs_id])
 
     def init(self):
         """
@@ -351,6 +356,15 @@ class Spectrum:
         """
 
         self._corrected_airvacuum_method()
+
         for obs_id in self._get_obs_ids():
             self._apply_filters(self._get_filters(obs_id), obs_id)
+        if self.masks:
+            self._dataframe["amazed_mask"] = [
+                self.masks[obs_id][i]
+                for obs_id, i in zip(
+                    self._dataframe.index.get_level_values("obs_id"),
+                    self._dataframe.index.get_level_values("index"),
+                )
+            ]
         self._check_wavelengths()
