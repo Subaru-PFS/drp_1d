@@ -1252,7 +1252,7 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
     sumSquaredWeightAll += sum_squared_weight;
 
     auto const &[residual_sum, nsum, nsum2] =
-        model.getContinuumSquaredResidualInRange(indexRange, eltIdx);
+        model.getContinuumSquaredResidualInRange(indexRange);
     sumResidualAll += residual_sum;
     sumWeightResidualAll += nsum;
     sumSquaredWeightResidualAll += nsum2;
