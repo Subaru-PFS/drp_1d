@@ -260,7 +260,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_templateCombinationSolve_section(spectrum_model)
         self._check_lineModelSolve(spectrum_model)
         self._check_template_dir(spectrum_model)
-        
+
     def _check_linemeassolve(self, spectrum_model: str) -> None:
         self._check_linemeassolver_section(spectrum_model)
         self._check_linemeassolve_dzhalf(spectrum_model)
@@ -434,14 +434,15 @@ class CustomParametersChecker(ParametersChecker):
             spectrum_component == "noContinuum",
             self.accessor.get_template_fitting_ism(spectrum_model) == False,
             error_message=f"noContinuum requires deactivating ism and igm, check {spectrum_model}",
-            custom_error_message=True
+            custom_error_message=True,
         )
         self._check_dependant_parameter_presence(
             spectrum_component == "noContinuum",
             self.accessor.get_template_fitting_igm(spectrum_model) == False,
             error_message=f"noContinuum requires deactivating ism and igm, check {spectrum_model}",
-            custom_error_message=True)
-        
+            custom_error_message=True,
+        )
+
     def _check_templateCombinationSolve_section(self, spectrum_model: str) -> None:
         self._check_dependant_parameter_presence(
             self.accessor.get_redshift_solver_method(spectrum_model) == "tplCombinationSolve",
@@ -478,7 +479,6 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
         self._check_linemodelsolve_lya_fit(spectrum_model)
         self._check_linemodelsolve_useloglambdasampling(spectrum_model)
-
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
@@ -550,6 +550,7 @@ class CustomParametersChecker(ParametersChecker):
             in ["tplFit", "tplFitAuto", "powerLaw", "powerLawAuto"],
             self.accessor.get_linemodel_continuumfit_section(spectrum_model) is not None,
             error_message=f"object {spectrum_model} lineModelSolve continuumFit",
+            warning_message=f"object {spectrum_model} continuumFit section",
         )
 
     def _check_linemodelsolve_secondpass_section(self, spectrum_model):
