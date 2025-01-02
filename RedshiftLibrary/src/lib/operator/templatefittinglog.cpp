@@ -65,8 +65,8 @@ COperatorTemplateFittingLog::COperatorTemplateFittingLog(
   CheckRedshifts();
 }
 
-void COperatorTemplateFittingLog::SetRedshifts(TFloat64List redshifts) {
-  COperatorTemplateFittingBase::SetRedshifts(std::move(redshifts));
+void COperatorTemplateFittingLog::SetRedshifts(const TFloat64List &redshifts) {
+  COperatorTemplateFittingBase::SetRedshifts(redshifts);
   CheckRedshifts();
 }
 

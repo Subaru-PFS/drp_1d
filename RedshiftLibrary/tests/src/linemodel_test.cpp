@@ -59,19 +59,19 @@ BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
 
   // prepare object
   COperatorLineModel op;
-  op.m_Redshifts = redshifts;
+  op.m_redshifts = redshifts;
   op.m_fineStep = step;
   op.m_zLogSampling = (redshiftSampling == "log");
   op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
   op.UpdateRedshiftGridAndResults();
       // verifications:
-      auto it = std::is_sorted_until(m_Redshifts.begin(), m_Redshifts.end());
-      auto _j = std::distance(m_Redshifts.begin(), it);
+      auto it = std::is_sorted_until(m_redshifts.begin(), m_redshifts.end());
+      auto _j = std::distance(m_redshifts.begin(), it);
 
-      if (!std::is_sorted(std::begin(m_Redshifts), std::end(m_Redshifts)))
+      if (!std::is_sorted(std::begin(m_redshifts), std::end(m_redshifts)))
         THROWG(ErrorCode::INTERNAL_ERROR, "lineModel vector is not sorted");
 
-    if (m_result->Redshifts.size() != m_Redshifts.size())
+    if (m_result->Redshifts.size() != m_redshifts.size())
       THROWG(ErrorCode::INTERNAL_ERROR, "lineModel sizes do not match");
   */
 }

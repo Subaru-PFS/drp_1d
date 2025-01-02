@@ -60,8 +60,7 @@ class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
 public:
   explicit COperatorTemplateFittingPhot(
       const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
-      const Float64 weight = 1.0,
-      const TFloat64List &redshifts = TFloat64List());
+      const TFloat64List &redshifts, const Float64 weight);
 
 private:
   void checkInputPhotometry() const;

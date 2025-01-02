@@ -116,7 +116,7 @@ void CTemplateFittingSolve::InitFittingOperator() {
     if (m_usePhotometry) {
       m_templateFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
-              Context.GetPhotBandCatalog(), m_photometryWeight, m_redshifts);
+              Context.GetPhotBandCatalog(), m_redshifts, m_photometryWeight);
     } else {
       m_templateFittingOperator =
           std::make_shared<COperatorTemplateFitting>(m_redshifts);
@@ -363,7 +363,7 @@ void CTemplateFittingSolve::computeSecondPass(
   m_castedTemplateFittingOperator->updateRedshiftGridAndResults(m_result);
 
   m_redshifts = m_result->Redshifts;
-  m_castedTemplateFittingOperator->setRedshifts(m_result->Redshifts);
+  m_castedTemplateFittingOperator->SetRedshifts(m_result->Redshifts);
   for (Int32 candidateIdx = 0; candidateIdx < extremaResult->size();
        ++candidateIdx) {
     std::vector<Int32> zIdxsToCompute =

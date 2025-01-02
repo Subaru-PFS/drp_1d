@@ -64,19 +64,13 @@ class CModelSpectrumResult;
 class COperatorContinuumFitting : public COperator {
 
 public:
-  COperatorContinuumFitting(const TFloat64List &redshifts);
+  COperatorContinuumFitting();
   virtual bool IsFFTProcessing() { return false; };
-  virtual void SetRedshifts(TFloat64List redshifts) {
-    m_redshifts = std::move(redshifts);
-  };
   void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
     m_maskBuilder = maskBuilder;
   }
 
-  void setRedshifts(const TFloat64List &redshifts) { m_redshifts = redshifts; }
-
 protected:
-  TFloat64List m_redshifts;
   std::shared_ptr<CMaskBuilder> m_maskBuilder;
   std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;

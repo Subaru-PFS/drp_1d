@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/pass.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
@@ -96,7 +97,8 @@ struct TChi2Result {
   Float64 chi2;
 };
 
-class COperatorPowerLaw : public COperatorContinuumFitting {
+class COperatorPowerLaw : public COperatorContinuumFitting,
+                          public COperatorPass {
 
 public:
   COperatorPowerLaw(const TFloat64List &redshifts = TFloat64List(),

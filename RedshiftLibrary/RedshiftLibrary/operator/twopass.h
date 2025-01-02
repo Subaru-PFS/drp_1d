@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/pass.h"
 #include "RedshiftLibrary/operator/twopassresult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
@@ -51,8 +52,15 @@ class spanRedshift_test;
 } // namespace TwoPass
 
 namespace NSEpic {
-template <class T> class COperatorTwoPass : public COperator {
+template <class T> class COperatorTwoPass : public COperatorPass {
 public:
+  COperatorTwoPass() = default;
+  virtual ~COperatorTwoPass() = default;
+  COperatorTwoPass(const COperatorTwoPass &other) = default;
+  COperatorTwoPass &operator=(const COperatorTwoPass &other) = default;
+  COperatorTwoPass(COperatorTwoPass &&other) noexcept = default;
+  COperatorTwoPass &operator=(COperatorTwoPass &&other) noexcept = default;
+
   void setClassVariables(const Float64 halfWindowSize, const bool zLogSampling,
                          const TFloat64List &redshifts, const Float64 fineStep);
   TFloat64List spanRedshiftWindow(const Float64 z) const;
@@ -73,7 +81,6 @@ protected:
   friend class TwoPass::spanRedshift_test;
   Float64 m_secondPass_halfwindowsize;
   bool m_zLogSampling;
-  TFloat64List m_Redshifts;
   Float64 m_fineStep;
   std::vector<TFloat64List> m_extendedRedshifts; // z range around extrema
   std::shared_ptr<CExtremaResult<T>> m_firstpass_extremaResult;
@@ -86,7 +93,7 @@ void COperatorTwoPass<T>::setClassVariables(const Float64 halfWindowSize,
                                             const Float64 fineStep) {
   m_secondPass_halfwindowsize = halfWindowSize;
   m_zLogSampling = zLogSampling;
-  m_Redshifts = redshifts;
+  m_redshifts = redshifts;
   m_fineStep = fineStep;
 }
 
@@ -102,7 +109,7 @@ TFloat64List COperatorTwoPass<T>::spanRedshiftWindow(const Float64 z) const {
 
   //
   TFloat64Range windowRange(z - half_l, z + half_r);
-  windowRange.IntersectWith(m_Redshifts);
+  windowRange.IntersectWith(m_redshifts);
   CZGridParam zparam(windowRange, m_fineStep, z);
 
   return zparam.getZGrid(m_zLogSampling);
@@ -126,10 +133,10 @@ void COperatorTwoPass<T>::updateRedshiftGridAndResults(
 
   for (auto &subgrid : m_extendedRedshifts) {
     auto const &[imin, ndup] =
-        CZGridListParams::insertSubgrid(subgrid, m_Redshifts);
+        CZGridListParams::insertSubgrid(subgrid, m_redshifts);
     result->updateVectors(imin, ndup, subgrid.size());
   }
-  result->Redshifts = m_Redshifts;
+  result->Redshifts = m_redshifts;
 }
 
 // only for secondpass grid

@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(spanRedshift_test) {
 
   // prepare object
   COperatorTwoPass<TExtremaResult> op;
-  op.m_Redshifts = redshifts;
+  op.m_redshifts = redshifts;
   op.m_fineStep = step;
   op.m_zLogSampling = zLogSampling;
   op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;

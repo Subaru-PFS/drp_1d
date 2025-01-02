@@ -111,7 +111,7 @@ struct TFittingIsmIgmResult : TFittingResult {
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
-  COperatorTemplateFitting(const TFloat64List &redshifts = TFloat64List())
+  COperatorTemplateFitting(const TFloat64List &redshifts)
       : COperatorTemplateFittingBase(redshifts), m_kStart(m_spectra.size()),
         m_kEnd(m_spectra.size()){
 

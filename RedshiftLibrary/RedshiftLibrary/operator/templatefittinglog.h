@@ -65,7 +65,7 @@ public:
   COperatorTemplateFittingLog(const TFloat64List &redshifts);
   ~COperatorTemplateFittingLog();
 
-  void SetRedshifts(TFloat64List redshifts) override;
+  void SetRedshifts(const TFloat64List &redshifts) override;
   void CheckRedshifts();
 
   std::shared_ptr<CTemplateFittingResult> Compute(

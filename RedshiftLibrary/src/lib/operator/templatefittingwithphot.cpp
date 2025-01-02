@@ -45,7 +45,7 @@ using namespace std;
 
 COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
     const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
-    const Float64 weight, const TFloat64List &redshifts)
+    const TFloat64List &redshifts, const Float64 weight)
     : COperatorTemplateFitting(redshifts), m_photBandCat(photbandcat),
       m_weight(weight) {
 
