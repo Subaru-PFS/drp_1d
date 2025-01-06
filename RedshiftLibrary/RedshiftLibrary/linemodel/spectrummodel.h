@@ -55,8 +55,7 @@ public:
                                  TPolynomCoeffs const &polynomCoeffs) const;
 
   std::tuple<Float64, Float64, Float64>
-  getContinuumSquaredResidualInRange(TInt32Range const &indexRange,
-                                     Int32 eltIdx);
+  getContinuumSquaredResidualInRange(TInt32Range const &indexRange);
 
   Float64 getMaxContinuumUnderElement(Int32 eIdx) const;
 

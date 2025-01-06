@@ -710,8 +710,7 @@ void CLineModelFitting::LoadModelSolution(
   // reset before loading
   for (auto param_ptr : m_ElementsVector->getElementParam()) {
     param_ptr->resetFittingParams();
-    param_ptr->m_VelocityAbsorption = NAN;
-    param_ptr->m_VelocityEmission = NAN;
+    param_ptr->setVelocity(NAN);
   }
   m_ElementsVector->resetLambdaOffsets();
 
@@ -963,10 +962,10 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
 
-  modelSolution.EmissionVelocity =
-      m_ElementsVector->getElementParam()[0]->m_VelocityEmission;
-  modelSolution.AbsorptionVelocity =
-      m_ElementsVector->getElementParam()[0]->m_VelocityAbsorption;
+  auto &elt_param_vect = m_ElementsVector->getElementParam();
+
+  modelSolution.EmissionVelocity = GetVelocityEmission();
+  modelSolution.AbsorptionVelocity = GetVelocityAbsorption();
 
   // For some quantities it is more simple to get them from the first
   // observation objects There could be refactor but it can be complicated for
@@ -982,16 +981,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     auto [eIdx, line_index] = m_ElementsVector->findElementIndex(line_id);
     modelSolution.ElementId[iRestLine] = eIdx;
     if (eIdx == undefIdx || line_index == undefIdx ||
-        m_ElementsVector->getElementParam()[eIdx]->isNotFittable() ||
-        m_ElementsVector->getElementParam()[eIdx]->isOutsideLambdaRangeLine(
-            line_index))
+        elt_param_vect[eIdx]->isNotFittable() ||
+        elt_param_vect[eIdx]->isOutsideLambdaRangeLine(line_index))
       continue; // data already set to its default values
 
-    Float64 amp = m_ElementsVector->getElementParam()[eIdx]
-                      ->m_FittedAmplitudes[line_index];
+    Float64 amp = elt_param_vect[eIdx]->m_FittedAmplitudes[line_index];
     modelSolution.Amplitudes[iRestLine] = amp;
-    Float64 ampError = m_ElementsVector->getElementParam()[eIdx]
-                           ->m_FittedAmplitudesStd[line_index];
+    Float64 ampError = elt_param_vect[eIdx]->m_FittedAmplitudesStd[line_index];
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
     if (getLineRatioType() == "rules")
       modelSolution.SNR[iRestLine] = std::abs(amp) / ampError;
@@ -999,11 +995,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.LambdaObs[iRestLine] =
         firstEltList[eIdx]->GetObservedPosition(line_index,
                                                 modelSolution.Redshift);
-    modelSolution.Velocity[iRestLine] =
-        m_ElementsVector->getElementParam()[eIdx]->getVelocity();
+    modelSolution.Velocity[iRestLine] = elt_param_vect[eIdx]->getVelocity();
+    modelSolution.VelocityUncertainty[iRestLine] =
+        elt_param_vect[eIdx]->getVelocityStd();
     modelSolution.Offset[iRestLine] =
-        m_ElementsVector->getElementParam()[eIdx]->m_Offsets[line_index];
-
+        elt_param_vect[eIdx]->getLambdaOffset(line_index);
+    modelSolution.OffsetUncertainty[iRestLine] =
+        elt_param_vect[eIdx]->getLambdaOffsetStd(line_index);
     modelSolution.NotFitted[iRestLine] = false;
   }
 
@@ -1040,37 +1038,54 @@ void CLineModelFitting::SetLSF() {
 }
 
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
-  for (auto &lmep : m_ElementsVector->getElementParam()) {
-    lmep->m_VelocityEmission = vel;
-  }
-}
-
-void CLineModelFitting::setVelocityEmissionByGroup(Float64 vel,
-                                                   const TInt32List &inds) {
-  for (auto idxElt : inds)
-    m_ElementsVector->getElementParam()[idxElt]->m_VelocityEmission = vel;
+  for (auto &lmep : m_ElementsVector->getElementParam())
+    if (lmep->IsEmission())
+      lmep->setVelocity(vel);
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
-
-  for (auto &lmep : m_ElementsVector->getElementParam()) {
-    lmep->m_VelocityAbsorption = vel;
-  }
+  for (auto &lmep : m_ElementsVector->getElementParam())
+    if (lmep->IsAbsorption())
+      lmep->setVelocity(vel);
 }
 
-void CLineModelFitting::setVelocityAbsorptionByGroup(Float64 vel,
-                                                     const TInt32List &inds) {
-
+void CLineModelFitting::setVelocityByGroup(Float64 vel,
+                                           const TInt32List &inds) {
   for (auto idxElt : inds)
-    m_ElementsVector->getElementParam()[idxElt]->m_VelocityAbsorption = vel;
+    m_ElementsVector->getElementParam()[idxElt]->setVelocity(vel);
 }
 
 Float64 CLineModelFitting::GetVelocityEmission() const {
-  return m_ElementsVector->getElementParam()[0]->m_VelocityEmission;
+
+  // no global emission or absorption velocities
+  if (m_lineRatioType == "rules" && m_fittingmethod == "lbfgsb")
+    return NAN;
+
+  // find 1st emission element
+  auto elt_param_vect = m_ElementsVector->getElementParam();
+  auto const it = std::find_if(
+      elt_param_vect.begin(), elt_param_vect.end(),
+      [](TLineModelElementParam_ptr const &p) { return p->IsEmission(); });
+  if (it == elt_param_vect.end())
+    return NAN;
+
+  return (*it)->getVelocity();
 }
 
 Float64 CLineModelFitting::GetVelocityAbsorption() const {
-  return m_ElementsVector->getElementParam()[0]->m_VelocityAbsorption;
+  // no global emission or absorption velocities
+  if (m_lineRatioType == "rules" && m_fittingmethod == "lbfgsb")
+    return NAN;
+
+  // find 1st emission element
+  auto elt_param_vect = m_ElementsVector->getElementParam();
+  auto const it = std::find_if(
+      elt_param_vect.begin(), elt_param_vect.end(),
+      [](TLineModelElementParam_ptr const &p) { return p->IsAbsorption(); });
+  if (it == elt_param_vect.end())
+    return NAN;
+
+  return (*it)->getVelocity();
 }
 
 /**
@@ -1237,7 +1252,7 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
     sumSquaredWeightAll += sum_squared_weight;
 
     auto const &[residual_sum, nsum, nsum2] =
-        model.getContinuumSquaredResidualInRange(indexRange, eltIdx);
+        model.getContinuumSquaredResidualInRange(indexRange);
     sumResidualAll += residual_sum;
     sumWeightResidualAll += nsum;
     sumSquaredWeightResidualAll += nsum2;
@@ -1248,11 +1263,10 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
 
   Float64 const continuum = sumContinuumAll / sumWeightAll;
 
-  Float64 const std =
-      npixResidualAll >= RMS_MIN_SAMPLE_NUMBER
-          ? sqrt(sumResidualAll / sumSquaredWeightResidualAll) *
-                sqrt(sumSquaredWeightAll) / sumWeightAll
-          : NAN;
+  Float64 const std = npixResidualAll >= RMS_MIN_SAMPLE_NUMBER
+                          ? sqrt(sumResidualAll / sumSquaredWeightResidualAll) *
+                                sqrt(sumSquaredWeightAll) / sumWeightAll
+                          : NAN;
 
   return std::make_pair(continuum, std);
 }

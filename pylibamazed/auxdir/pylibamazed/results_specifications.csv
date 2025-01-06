@@ -123,7 +123,9 @@ LinemeasLineAmplitude	linemeas	True	object	Amplitudes	linemeas	f8
 LinemeasLineAmplitudeUncertainty	linemeas	True	object	AmplitudesUncertainties	linemeas	f8
 LinemeasLineSNR	linemeas	True	object	SNR	linemeas	f8
 LinemeasLineVelocity	linemeas	False	object	Velocity	linemeas	f8
+LinemeasLineVelocityUncertainty	linemeas	False	object	VelocityUncertainty	linemeas	f8
 LinemeasLineOffset	linemeas	False	object	Offset	linemeas	f8
+LinemeasLineOffsetUncertainty	linemeas	False	object	OffsetUncertainty	linemeas	f8
 LinemeasLineNotFitted	linemeas	True	object	NotFitted	linemeas	i
 LinemeasLineFittingGroupInfo	linemeas	True	object	fittingGroupInfo	linemeas	S10
 LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	i

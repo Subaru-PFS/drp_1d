@@ -1258,18 +1258,15 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
       for (Int32 idzTest = lowerzIdx; idzTest <= higherzIdx; ++idzTest) {
         Float64 zTest = m_result->Redshifts[idzTest];
         for (const auto vTest : velfitlist) {
-          if (iLineType == 0) {
-            if (m_enableWidthFitByGroups)
-              m_fittingManager->setVelocityAbsorptionByGroup(
-                  vTest, idxVelfitGroups[kgroup]);
-            else
-              m_fittingManager->SetVelocityAbsorption(vTest);
+          if (m_enableWidthFitByGroups) {
+            m_fittingManager->setVelocityByGroup(vTest,
+                                                 idxVelfitGroups[kgroup]);
           } else {
-            if (m_enableWidthFitByGroups)
-              m_fittingManager->setVelocityEmissionByGroup(
-                  vTest, idxVelfitGroups[kgroup]);
-            else
+            if (iLineType == 0) {
+              m_fittingManager->SetVelocityAbsorption(vTest);
+            } else {
               m_fittingManager->SetVelocityEmission(vTest);
+            }
           }
           Float64 meritv = m_fittingManager->fit(
               zTest, m_result->LineModelSolutions[Zidx],

@@ -337,15 +337,13 @@ CSpectrumModel::GetContinuumWeightedSumInRange(
  */
 std::tuple<Float64, Float64, Float64>
 CSpectrumModel::getContinuumSquaredResidualInRange(
-    TInt32Range const &indexRange, Int32 eltIdx) {
+    TInt32Range const &indexRange) {
 
-  TAxisSampleList spectrumNoLinesFlux(m_inputSpc->GetSampleCount());
+  TAxisSampleList residualFlux(m_inputSpc->GetSampleCount());
 
   const CSpectrumFluxAxis &modelFlux = m_SpectrumModel.GetFluxAxis();
-  for (Int32 t = indexRange.GetBegin(); t <= indexRange.GetEnd(); t++) {
-    spectrumNoLinesFlux[t] =
-        m_SpcFluxAxis[t] - modelFlux[t] + m_ContinuumFluxAxis[t];
-  }
+  for (Int32 t = indexRange.GetBegin(); t <= indexRange.GetEnd(); t++)
+    residualFlux[t] = m_SpcFluxAxis[t] - modelFlux[t];
 
   // estimate sum square error between continuum and nolines-spectrum
   // weighted by distance to lines
@@ -358,7 +356,7 @@ CSpectrumModel::getContinuumSquaredResidualInRange(
     Float64 weight =
         1.0 - GetWeightingAnyLineCenterProximity(t, nonZeroValidEltsIdx);
 
-    Float64 diff = weight * (spectrumNoLinesFlux[t] - m_ContinuumFluxAxis[t]);
+    Float64 diff = weight * residualFlux[t];
     sum += diff * diff;
     nsum += weight;
     nsum2 += weight * weight;

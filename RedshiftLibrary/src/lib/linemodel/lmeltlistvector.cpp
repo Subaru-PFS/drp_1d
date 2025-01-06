@@ -136,12 +136,13 @@ void CLMEltListVector::AddElementParam(CLineVector lines) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityAbsorption");
+  Float64 const velocity = lines.front().IsEmission()
+                               ? ps->GetScoped<Float64>("velocityEmission")
+                               : ps->GetScoped<Float64>("velocityAbsorption");
+
   std::string lineWidthType = ps->GetScoped<std::string>("lineWidthType");
   m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
-      std::move(lines), velocityEmission, velocityAbsorption, lineWidthType));
+      std::move(lines), velocity, lineWidthType));
 }
 
 void CLMEltListVector::fillElements() {
