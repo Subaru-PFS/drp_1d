@@ -326,8 +326,12 @@ class Spectrum:
         for obs_id in self.parameters.get_observation_ids():
             [params_lambda_min, params_lambda_max] = self.parameters.get_lambda_range(obs_id)
             obs_waves = np.array(self.get_wave(obs_id))
-            if obs_waves.size == 0:
-                raise APIException(ErrorCode.INVALID_SPECTRUM, "Filtered spectrum is empty")
+            nb_samples_min = self.parameters.get_nb_samples_min()
+            if obs_waves.size < nb_samples_min:
+                raise APIException(
+                    ErrorCode.INVALID_SPECTRUM,
+                    f"Filtered spectrum size is {obs_waves.size} should be > {nb_samples_min}",
+                )
             spectrum_lambda_min = obs_waves[0]
             spectrum_lambda_max = obs_waves[-1]
 
@@ -359,7 +363,7 @@ class Spectrum:
         """
 
         self._corrected_airvacuum_method()
-        
+
         for obs_id in self._get_obs_ids(all_obs=True):
             self._apply_filters(self._get_filters(obs_id), obs_id)
         if self.masks:

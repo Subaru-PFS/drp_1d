@@ -184,6 +184,33 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
         spectrum_id2 = spectra.get_dataframe("2")
         assert len(spectrum_id2.index) == 4
 
+    def test_nb_samples_min(self):
+        fsr = self.initialize_fsr_with_data(
+            **{"filters": [{"key": "wave", "instruction": "<=", "value": 3}], "nbSamplesMin": 5}
+        )
+
+        spectra = fsr.get_spectrum()
+        with pytest.raises(APIException, match=r"INVALID_SPECTRUM"):
+            spectra.init()
+
+    def test_nb_samples_min_full_multiobs(self):
+        fsr = self.initialize_fsr_with_data(
+            **{
+                "obs_ids": ["1", "2"],
+                "parameters_lambdaRange": {"1": [0, 1], "2": [3, 4]},
+                "multiObsMethod": "full",
+                "filters": {
+                    "1": [{"key": "wave", "instruction": "<=", "value": 3}],
+                    "2": [{"key": "wave", "instruction": "<=", "value": 3}],
+                },
+                "nbSamplesMin": 5,
+            }
+        )
+
+        spectra = fsr.get_spectrum()
+        with pytest.raises(APIException, match=r"INVALID_SPECTRUM"):
+            spectra.init()
+
     class TestSpectrumLambdaRange(TestSpectrumReaderUtils):
         def _init_fsr(self, spectrum_wave_range, parameters_lambda_range):
             fsr = self.initialize_fsr_with_data(

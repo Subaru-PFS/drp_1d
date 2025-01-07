@@ -10,7 +10,8 @@
     "extremaRedshiftSeparation",
     "smoothWidth",
     "autoCorrectInput",
-    "spectrumModels"
+    "spectrumModels",
+    "nbSamplesMin"
   ],
   "additionalProperties": false,
   "patternProperties": {
@@ -191,6 +192,11 @@
       "title": "Continuum removal",
       "description": "",
       "$ref": "continuum_removal.json"
+    },
+    "nbSamplesMin": {
+      "type": "integer",
+      "title": "Minimum number of samples in a spectrum",
+      "description": ""
     }
   }
 }

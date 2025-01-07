@@ -53,6 +53,7 @@ const std::string jsonString =
     "{\"multiObsMethod\" : \"\","
     "\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
+    "\"nbSamplesMin\" : 1,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
