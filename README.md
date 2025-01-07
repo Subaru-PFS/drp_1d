@@ -82,11 +82,11 @@ To speed up the building time, you can disable test :
 
 You can specify a directory for C++ building files. Tests are also available in this directory.
 
-    pip install -v . -C build-dir=build-pip
+    pip install -v . -C build-dir=build
 
 #### --no-build-isolation
 
-For developers. In order to speed up the compilation of the library and the installation of the python module, you must use the following options `build-dir=build-pip` and `--no-build-isolation`
+For developers. In order to speed up the compilation of the library and the installation of the python module, you must use the following options `build-dir=build` and `--no-build-isolation`
 
 These options, requires to mandatory install the following packages in your virtural environement.
 
@@ -94,21 +94,21 @@ These options, requires to mandatory install the following packages in your virt
 
 Then, you can run the following command to build the library and install the python module
 
-    pip install -v -C build-dir=build-pip --no-build-isolation
+    pip install -v -C build-dir=build --no-build-isolation
 
 ### Test C++ part
 
 To test the C++ part, in `pylibamazed` root directory, run:
 
-    pip install -v . -C build-dir=build-pip
-    cd build-pip
+    pip install -v . -C build-dir=build
+    cd build
     ninja test
 
 ### Test python part
 
 To test the python part, in `pylibamazed` root directory, run:
 
-    pip install -v . -C build-dir=build-pip
+    pip install -v . -C build-dir=build
     pytest
 
 
@@ -195,7 +195,7 @@ To create a wheel, you need to previously install `build` package.
 
 Then to create a wheel, run the command :
 
-    python -m build -C build-dir=build-pip -C cmake.define.BUILD_TESTING=OFF -C cmake.define.CMAKE_PREFIX_PATH=/your/thirdparties/directory
+    python -m build -C build-dir=build -C cmake.define.BUILD_TESTING=OFF -C cmake.define.CMAKE_PREFIX_PATH=/your/thirdparties/directory
 
 The wheel is available in the `dist` directory.
 
