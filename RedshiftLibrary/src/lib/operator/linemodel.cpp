@@ -1070,7 +1070,8 @@ void COperatorLineModel::EstimateSecondPassParameters() {
       ps->GetScoped<std::string>("lineModel.continuumReestimation");
 
   m_fittingManager->logParameters();
-  m_velocitySolutions.reserve(m_firstpass_extremaResult->size());
+  m_velocitySolutions =
+      std::vector<TVelocityFitSolution>(m_firstpass_extremaResult->size());
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     Log.LogInfo("");
     Log.LogInfo(
@@ -1115,15 +1116,15 @@ void COperatorLineModel::EstimateSecondPassParameters() {
       // TODO move these copies to another structure
       //  Emission
       //       Int32 s = m_firstpass_extremaResult->GroupsELv[i].size();
-      Float64 emVel = m_fittingManager->GetVelocityEmission();
+      Float64 emVel = m_result->LineModelSolutions[idx].EmissionVelocity;
 
       // m_firstpass_extremaResult->GroupsELv[i].assign(s, emVel);
 
       // Absorption
       //      s = m_firstpass_extremaResult->GroupsALv[i].size();
-      Float64 absVel = m_fittingManager->GetVelocityAbsorption();
+      Float64 absVel = m_result->LineModelSolutions[idx].AbsorptionVelocity;
 
-      m_velocitySolutions[i] = VelocityFitSolution(emVel, absVel);
+      m_velocitySolutions[i] = TVelocityFitSolution{emVel, absVel};
       // m_firstpass_extremaResult->GroupsALv[i].assign(s, absVel);
 
       continue; // move to the following candidate
@@ -1284,8 +1285,8 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
           if (meritMin > meritv) {
             meritMin = meritv;
             vOptim = (iLineType == 0)
-                         ? m_fittingManager->GetVelocityAbsorption()
-                         : m_fittingManager->GetVelocityEmission();
+                         ? m_result->LineModelSolutions[Zidx].AbsorptionVelocity
+                         : m_result->LineModelSolutions[Zidx].EmissionVelocity;
             z_vOptim = zTest;
           }
         }
@@ -1401,10 +1402,9 @@ void COperatorLineModel::RecomputeAroundCandidates(
     } else {
       m_fittingManager->SetVelocityEmission(m_velocitySolutions[i].Elv);
       m_fittingManager->SetVelocityAbsorption(m_velocitySolutions[i].Alv);
-      Log.LogInfo(Formatter()
-                  << "    Operator-Linemodel: recompute with elv="
-                  << m_fittingManager->GetVelocityEmission()
-                  << ", alv=" << m_fittingManager->GetVelocityAbsorption());
+      Log.LogInfo(Formatter() << "    Operator-Linemodel: recompute with elv="
+                              << m_velocitySolutions[i].Elv
+                              << ", alv=" << m_velocitySolutions[i].Alv);
     }
 
     if (m_opt_continuumcomponent.isContinuumFit()) {

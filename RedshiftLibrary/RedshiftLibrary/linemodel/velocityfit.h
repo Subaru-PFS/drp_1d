@@ -45,13 +45,9 @@
 
 namespace NSEpic {
 
-struct VelocityFitSolution {
+struct TVelocityFitSolution {
 
 public:
-  VelocityFitSolution(Float64 elv, Float64 alv) {
-    Elv = elv;
-    Alv = alv;
-  }
   Float64 Elv = NAN; // emission line width
   Float64 Alv = NAN; // absorption line width
 };

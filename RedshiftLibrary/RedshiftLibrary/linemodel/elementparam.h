@@ -88,6 +88,7 @@ struct TLineModelElementParam {
   Float64 m_absLinesLimit =
       1.0; //-1: disable the ABS lines amplitude cut, any other value is
            // used as a limit for the abs line coeff (typically: 1.0)
+  Float64 m_defaultVelocity;
   CLine::EType m_type;
   bool m_isEmission;
 

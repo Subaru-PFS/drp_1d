@@ -1063,9 +1063,10 @@ Float64 CLineModelFitting::GetVelocityEmission() const {
 
   // find 1st emission element
   auto elt_param_vect = m_ElementsVector->getElementParam();
-  auto const it = std::find_if(
-      elt_param_vect.begin(), elt_param_vect.end(),
-      [](TLineModelElementParam_ptr const &p) { return p->IsEmission(); });
+  auto const it = std::find_if(elt_param_vect.begin(), elt_param_vect.end(),
+                               [](TLineModelElementParam_ptr const &p) {
+                                 return p->IsEmission() && p->isFittable();
+                               });
   if (it == elt_param_vect.end())
     return NAN;
 
@@ -1079,9 +1080,10 @@ Float64 CLineModelFitting::GetVelocityAbsorption() const {
 
   // find 1st emission element
   auto elt_param_vect = m_ElementsVector->getElementParam();
-  auto const it = std::find_if(
-      elt_param_vect.begin(), elt_param_vect.end(),
-      [](TLineModelElementParam_ptr const &p) { return p->IsAbsorption(); });
+  auto const it = std::find_if(elt_param_vect.begin(), elt_param_vect.end(),
+                               [](TLineModelElementParam_ptr const &p) {
+                                 return p->IsAbsorption() && p->isFittable();
+                               });
   if (it == elt_param_vect.end())
     return NAN;
 
