@@ -60,12 +60,18 @@ public:
   static const std::unordered_map<std::string, EContinuumFit> str2ContinuumFit;
 
 protected:
+  virtual void initSkipSecondPass() = 0;
   virtual void initTwoPassZStepFactor() = 0;
-  bool useTwoPass() const { return !m_opt_skipsecondpass; }
+  bool twoPassIsActive() const {
+    return !m_opt_singlePass && !m_opt_skipsecondpass;
+  }
+  bool firstPassOnly() const { return m_opt_skipsecondpass; }
+  bool isSinglePass() const { return m_opt_singlePass; }
 
   Float64 m_coarseRedshiftStep = NAN;
   Float64 m_twoPassZStepFactor = NAN;
-  bool m_opt_skipsecondpass = true;
+  bool m_opt_skipsecondpass = false;
+  bool m_opt_singlePass = false;
 };
 
 } // namespace NSEpic

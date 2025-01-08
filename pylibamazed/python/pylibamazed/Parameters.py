@@ -153,6 +153,9 @@ class Parameters(ParametersAccessor):
         else:
             raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown stage {stage}")
 
+    def is_two_pass_active(self, solve_method: str, spectrum_model):
+        return not self.get_skipsecondpass(solve_method, spectrum_model, True)
+
     def set_lsf_param(self, param_name, data):
         self.parameters["lsf"][param_name] = data
 

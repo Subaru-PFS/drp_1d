@@ -73,6 +73,8 @@ public:
     m_maskBuilder = maskBuilder;
   }
 
+  void setRedshifts(const TFloat64List &redshifts) { m_redshifts = redshifts; }
+
 protected:
   TFloat64List m_redshifts;
   std::shared_ptr<CMaskBuilder> m_maskBuilder;

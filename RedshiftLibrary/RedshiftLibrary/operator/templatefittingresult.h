@@ -53,7 +53,8 @@ class CTemplateFittingResult : public CTwoPassResult {
 public:
   CTemplateFittingResult(Int32 n);
   CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
-  void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
+  void set_at_redshift(Int32 i, TFittingIsmIgmResult val,
+                       Int32 igmIdx = undefIdx, Int32 ismIdx = undefIdx);
 
   virtual ~CTemplateFittingResult() = default;
   CTemplateFittingResult(const CTemplateFittingResult &) = default;
@@ -77,7 +78,6 @@ public:
   TFloat64List FitMtM;
   TFloat64List LogPrior;
   TFloat64List SNR;
-  std::vector<bool> m_isFirstPassResult;
 
   // intermediate chisquare results
   std::vector<std::vector<TFloat64List>>

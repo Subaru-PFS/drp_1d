@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "numpy>=1.25,<3; python_version>'3.8'",
+    "numpy>=1.25,<2; python_version>'3.8'",
     "scikit-build-core"
 ]
 build-backend = "scikit_build_core.build"
@@ -10,7 +10,7 @@ name = "pylibamazed"
 dynamic = ["version"]
 requires-python = ">= 3.9"
 dependencies = [
-    "numpy>=1.25,<3; python_version>'3.8'",
+    "numpy>=1.25,<2; python_version>'3.8'",
     "astropy>=3.1.1",
     "cython>=0.17.0",
     "pandas>=1.0.0",

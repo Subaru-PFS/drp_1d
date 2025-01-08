@@ -88,7 +88,9 @@ class TestTemplateFittingSolve:
             check_from_parameter_dict(param_dict)
 
     def test_ok_if_ismfit_enabled_and_ebmv_is_present(self, zflag):
-        param_dict = self._make_parameter_dict(**{"templateFittingSolve": {"ismFit": True}})
+        param_dict = self._make_parameter_dict(
+            **{"templateFittingSolve": {"ismFit": True, "singlePass": True}}
+        )
         param_dict["ebmv"] = {}
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning()
@@ -102,7 +104,13 @@ class TestTemplateFittingSolve:
 
     def test_ok_if_photometry_is_enabled_and_photometry_weight_too(self, zflag):
         param_dict = self._make_parameter_dict(
-            **{"templateFittingSolve": {"enablePhotometry": True, "photometry": {"weight": 1}}}
+            **{
+                "templateFittingSolve": {
+                    "enablePhotometry": True,
+                    "photometry": {"weight": 1},
+                    "singlePass": True,
+                }
+            }
         )
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning()
@@ -134,6 +142,26 @@ class TestTemplateFittingSolve:
         with pytest.raises(APIException, match=r"cannot activate both fft and photometry"):
             check_from_parameter_dict(param_dict)
 
+    def test_error_if_fft_processing_and_not_singlepass(self):
+        param_dict = self._make_parameter_dict(
+            **{"templateFittingSolve": {"fftProcessing": True, "singlePass": False}}
+        )
+        with pytest.raises(APIException, match=r"cannot activate both two pass and fft"):
+            check_from_parameter_dict(param_dict)
+
+    def test_error_if_photometry_and_not_singlepass(self):
+        param_dict = self._make_parameter_dict(
+            **{
+                "templateFittingSolve": {
+                    "enablePhotometry": True,
+                    "photometry": {"weight": 1},
+                    "singlePass": False,
+                }
+            }
+        )
+        with pytest.raises(APIException, match=r"cannot activate both two pass and photometry"):
+            check_from_parameter_dict(param_dict)
+
     def test_error_if_unsupported_second_pass_continuum_fit(self):
         param_dict = self._make_parameter_dict(
             **{
@@ -152,7 +180,7 @@ class TestTemplateFittingSolve:
 
     def test_error_if_secondpass_active_without_firstpass_section(self):
         param_dict = self._make_parameter_dict(
-            **{"templateFittingSolve": {"skipSecondPass": False, "secondPass": {}}}
+            **{"templateFittingSolve": {"singlePass": False, "secondPass": {}}}
         )
         with pytest.raises(
             APIException, match=r"Missing parameter object galaxy TemplateFittingSolve first pass section"
@@ -161,7 +189,7 @@ class TestTemplateFittingSolve:
 
     def test_error_if_secondpass_active_without_secondpass_section(self):
         param_dict = self._make_parameter_dict(
-            **{"templateFittingSolve": {"skipSecondPass": False, "firstPass": {}}}
+            **{"templateFittingSolve": {"singlePass": False, "firstPass": {}}}
         )
         with pytest.raises(
             APIException, match=r"Missing parameter object galaxy TemplateFittingSolve second pass section"

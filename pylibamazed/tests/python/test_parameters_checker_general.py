@@ -96,13 +96,14 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
+                new_kwargs["singlePass"] = True
             param_dict = make_parameter_dict_at_redshift_solver_level(
                 object_level_params={"stages": ["redshiftSolver"], "templateDir": "sth"},
                 object_type=None,
                 **{
                     "method": "templateFittingSolve",
                     "templateFittingSolve": new_kwargs,
-                }
+                },
             )
             if kwargs.get("enablePhotometry"):
                 param_dict["photometryBand"] = "sth"
@@ -131,13 +132,14 @@ class TestParametersCheckGeneral:
             new_kwargs = kwargs.copy()
             if kwargs.get("enablePhotometry"):
                 new_kwargs["photometry"] = {"weight": 1}
+                new_kwargs["singlePass"] = True
             param_dict = make_parameter_dict_at_redshift_solver_level(
                 object_level_params={"stages": ["redshiftSolver"], "templateDir": "sth"},
                 object_type=None,
                 **{
                     "method": "templateFittingSolve",
                     "templateFittingSolve": new_kwargs,
-                }
+                },
             )
             if kwargs.get("enablePhotometry"):
                 param_dict["photometryTransmissionDir"] = "sth"

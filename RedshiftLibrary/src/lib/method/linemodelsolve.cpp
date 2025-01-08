@@ -55,9 +55,7 @@ using namespace boost;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve() : CTwoPassSolve("lineModelSolve") {
-  m_opt_skipsecondpass = false;
-}
+CLineModelSolve::CLineModelSolve() : CTwoPassSolve("lineModelSolve") {}
 
 /**
  * \brief
@@ -93,12 +91,6 @@ bool CLineModelSolve::PopulateParameters(
 
   m_opt_candidatesLogprobaCutThreshold =
       parameterStore->GetScoped<Float64>("lineModel.extremaCutProbaThreshold");
-
-  m_opt_firstpass_largegridstepRatio = parameterStore->GetScoped<Int32>(
-      "lineModel.firstPass.largeGridStepRatio");
-
-  m_opt_skipsecondpass =
-      parameterStore->GetScoped<bool>("lineModel.skipSecondPass");
 
   m_useloglambdasampling =
       parameterStore->GetScoped<bool>("lineModel.useLogLambdaSampling");
@@ -180,7 +172,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   // create the solveresult
   std::shared_ptr<CLineModelSolveResult> lmsolveresult =
       std::make_shared<CLineModelSolveResult>(
-          ExtremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
+          ExtremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
           pdfz.m_postmargZResult->valMargEvidenceLog);
 
   return lmsolveresult;
@@ -538,7 +530,7 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // SECOND PASS
   //**************************************************
-  if (useTwoPass())
+  if (twoPassIsActive())
     m_linemodel.ComputeSecondPass();
 
   // read it as constant to save it
@@ -556,9 +548,15 @@ void CLineModelSolve::Solve() {
   // computation
 }
 
+void CLineModelSolve::initSkipSecondPass() {
+
+  m_opt_skipsecondpass =
+      Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
+          "lineModel.skipSecondPass");
+};
+
 void CLineModelSolve::initTwoPassZStepFactor() {
   m_twoPassZStepFactor =
       Context.GetInputContext()->GetParameterStore()->GetScoped<Int32>(
-          "lineModelSolve.lineModel.firstPass."
-          "largeGridStepRatio");
+          "lineModel.firstPass.largeGridStepRatio");
 };

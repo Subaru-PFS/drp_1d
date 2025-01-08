@@ -86,14 +86,6 @@ public:
   };
 
   CExtremaResult<TLineModelResult>() { m_type = "LineModelExtremaResult"; }
-  void SetRankedCandidates(const TCandidateZbyRank &zCandidates) {
-    m_ranked_candidates.clear();
-    for (const auto &cand : zCandidates) {
-      m_ranked_candidates.push_back(
-          std::make_pair(std::string(cand.first),
-                         std::make_shared<TLineModelResult>(*cand.second)));
-    }
-  }
 
   std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,
@@ -103,38 +95,6 @@ public:
   getCandidateDatasetType(const std::string &dataset) const override;
 
   bool HasCandidateDataset(const std::string &dataset) const override;
-
-  std::shared_ptr<const COperatorResult>
-  getCandidateParent(const int &rank, const std::string &dataset) const;
-
-  TCandidateZbyRank getCandidatesZByRank();
-  // {
-  //   TCandidateZbyRank ret(size());
-  //   for (auto &c: m_ranked_candidates)
-  //     {
-
-  // 	ret.push_back(std::pair<std::string,
-  // std::shared_ptr<TCandidateZ>>(std::string(c.first),
-  // std::dynamic_pointer_cast<std::shared_ptr<TCandidateZ>>(c.second)));
-  //     }
-  //   return ret;
-
-  // }
-
-  std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
-
-  Float64 Redshift(Int32 i) const {
-    return m_ranked_candidates[i].second->Redshift;
-  }
-  Float64 ValProba(Int32 i) const {
-    return m_ranked_candidates[i].second->ValProba;
-  }
-  Float64 ValSumProba(Int32 i) const {
-    return m_ranked_candidates[i].second->ValSumProba;
-  }
-  Float64 DeltaZ(Int32 i) const {
-    return m_ranked_candidates[i].second->Deltaz;
-  }
 };
 
 typedef CExtremaResult<TLineModelResult> LineModelExtremaResult;

@@ -128,8 +128,6 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
   // save in resultstore pdf results
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
-  // save in resultstore candidates results
-  resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
   // for each candidate, get best model by reading from datastore and selecting
   // best fit
@@ -145,7 +143,7 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
 
   std::shared_ptr<CTplCombinationSolveResult> solveResult =
       std::make_shared<CTplCombinationSolveResult>(
-          extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
+          extremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
           pdfz.m_postmargZResult->valMargEvidenceLog);
 
   return solveResult;
@@ -383,28 +381,21 @@ CTplCombinationSolve::buildExtremaResults(
     const Int32 idx = std::distance(redshifts.begin(), itZ);
 
     // Fill extrema Result
-    extremaResult->m_ranked_candidates[i].second->fittedContinuum.merit =
-        TplFitResult->ChiSquare[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedContinuum.reducedChi2 =
+    auto candidate = extremaResult->getRankedCandidatePtr(i);
+    candidate->fittedContinuum.merit = TplFitResult->ChiSquare[idx];
+    candidate->fittedContinuum.reducedChi2 =
         TplFitResult->ReducedChiSquare[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedContinuum.tplMeritPhot =
-        TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedContinuum.meiksinIdx =
-        TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedContinuum.ebmvCoef =
-        TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeList =
-        TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeErrorList =
+    candidate->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[idx];
+    candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[idx];
+    candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[idx];
+    candidate->FittedTplAmplitudeList = TplFitResult->FitAmplitude[idx];
+    candidate->FittedTplAmplitudeErrorList =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeSigmaList =
+    candidate->FittedTplAmplitudeSigmaList =
         TplFitResult->FitAmplitudeSigma[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplCovMatrix =
-        TplFitResult->FitCOV[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedContinuum.tplLogPrior =
-        NAN;
-    extremaResult->m_ranked_candidates[i].second->fittedContinuum.SNR =
-        TplFitResult->SNR[idx];
+    candidate->FittedTplCovMatrix = TplFitResult->FitCOV[idx];
+    candidate->fittedContinuum.tplLogPrior = NAN;
+    candidate->fittedContinuum.SNR = TplFitResult->SNR[idx];
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;

@@ -152,7 +152,8 @@ public:
   std::shared_ptr<const TExtremaResult>
   GetExtremaResult(const std::string &spectrumModel, const std::string &stage,
                    const std::string &method, const std::string &name,
-                   const std::string &dataset, const int &rank) const;
+                   const std::string &dataset, const int &rank,
+                   bool firstpassCorrespondingResult = false) const;
 
   std::shared_ptr<const CLineModelSolution>
   GetLineModelSolution(const std::string &spectrumModel,

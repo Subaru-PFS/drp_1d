@@ -192,7 +192,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         TFittingResult &result_base = result; // upcasting (slicing)
         result_base = fitRes;                 // slicing, preserving specific
         // TFittingIsmIGmResult members
-
         result.reducedChisquare = result.chiSquare / n_samples;
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
@@ -394,9 +393,9 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
-    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
+    const CPriorHelper::TPriorZEList &logprior, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
-    bool isFirstPass) {
+    bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
   Log.LogDetail(
       Formatter()
       << "  Operator-TemplateFitting: starting computation for template: "
@@ -421,31 +420,41 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
       opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
+  if (!result) {
+    result = std::make_shared<CTemplateFittingResult>(m_redshifts.size());
+  }
   result->Redshifts = m_redshifts;
 
-  if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size())
+  if (logprior.size() > 0 && logprior.size() != m_redshifts.size())
     THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "prior list size(" << logpriorze.size()
+           Formatter() << "prior list size(" << logprior.size()
                        << ") does not match the input redshift-list size :"
                        << m_redshifts.size());
 
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
-    if (isFirstPass || !result->m_isFirstPassResult[i]) {
-      Float64 redshift = result->Redshifts[i];
-      // TODO move a condition up loop
-      const CPriorHelper::TPriorEList &logp =
-          logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
-              ? logpriorze[i]
-              : CPriorHelper::TPriorEList();
+  std::vector<Int32> zIdxs;
+  if (isFirstPass) {
+    zIdxs.resize(m_redshifts.size());
+    std::iota(zIdxs.begin(), zIdxs.end(), 0);
+  } else
+    zIdxs = zIdxsToCompute;
+  for (Int32 zIdx : zIdxs) {
+    // TODO question est ici comment
+    Float64 redshift = result->Redshifts[zIdx];
+    // TODO move a condition up loop
+    const CPriorHelper::TPriorEList &logp =
+        logprior.size() > 0 && logprior.size() == m_redshifts.size()
+            ? logprior[zIdx]
+            : CPriorHelper::TPriorEList();
 
-      TFittingIsmIgmResult result_z = BasicFit(
-          tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
-          logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
+    TFittingIsmIgmResult result_z =
+        BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
+                 opt_dustFitting, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
-      result->set_at_redshift(i, std::move(result_z));
-    }
+    result->set_at_redshift(zIdx, std::move(result_z), FitMeiksinIdx,
+                            FitEbmvIdx);
   }
 
+  // Question what to do with overlap in second pass ?
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
@@ -490,26 +499,13 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
  *otherwise its size should match the redshifts list size
  *
  **/
-std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
-    Float64 opt_continuum_null_amp_threshold,
-    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx) {
-  std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>(m_redshifts.size());
-  result->Redshifts = m_redshifts;
-
-  return Compute(tpl, overlapThreshold, opt_interp, opt_extinction,
-                 opt_dustFitting, opt_continuum_null_amp_threshold, logpriorze,
-                 FitEbmvIdx, FitMeiksinIdx, result);
-}
 
 void COperatorTemplateFitting::SetFirstPassCandidates(
     const TCandidateZbyRank &zCandidates) {
   m_firstpass_extremaResult = std::make_shared<ExtremaResult>(zCandidates);
 }
 
+// TODO move in solve and mutualize with buildextremaresult
 std::shared_ptr<const ExtremaResult>
 COperatorTemplateFitting::BuildFirstPassExtremaResults(
     const TOperatorResultMap &resultsMapFromStore) {
@@ -526,8 +522,9 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
 
   // For each extremum, find its corresponding template
   for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
-    Float64 z = m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-                    .second->Redshift;
+    auto candidate =
+        m_firstpass_extremaResult->getRankedCandidatePtr(iExtremum);
+    Float64 z = candidate->Redshift;
 
     // Find z index in stored results redshifts grid
     auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
@@ -546,17 +543,30 @@ COperatorTemplateFitting::BuildFirstPassExtremaResults(
         name = resultPair.first;
       };
     }
-    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.name = name;
+
+    candidate->fittedContinuum.name = name;
     auto resultFromStore =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(
             resultsMapFromStore.at(name));
-    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.meiksinIdx =
+    candidate->fittedContinuum.meiksinIdx =
         resultFromStore->FitMeiksinIdx[zIndex];
-    m_firstpass_extremaResult->m_ranked_candidates[iExtremum]
-        .second->fittedContinuum.ebmvCoef =
-        resultFromStore->FitEbmvCoeff[zIndex];
+    candidate->fittedContinuum.ebmvCoef = resultFromStore->FitEbmvCoeff[zIndex];
+    candidate->fittedContinuum.redshift = resultFromStore->Redshifts[zIndex];
   }
   return m_firstpass_extremaResult;
+}
+
+std::vector<Int32>
+COperatorTemplateFitting::getzIdxsToCompute(TFloat64List allRedshifts,
+                                            TFloat64List extendedRedshifts) {
+  Int32 nz = allRedshifts.size();
+  std::vector<Int32> zIdxsToCompute{};
+  for (Int32 zIdx = 0; zIdx < nz; ++zIdx) {
+    bool isFound =
+        (std::find(extendedRedshifts.begin(), extendedRedshifts.end(),
+                   allRedshifts[zIdx]) != extendedRedshifts.end());
+    if (isFound)
+      zIdxsToCompute.push_back(zIdx);
+  }
+  return zIdxsToCompute;
 }

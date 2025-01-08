@@ -62,9 +62,7 @@ CContinuumManager::CContinuumManager(
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
   // available
-  m_fitContinuum_option =
-      0; // 0=interactive fitting, 1=use precomputed fit store, 2=use fixed
-  // values (typical use for second pass recompute)
+  m_fitContinuum_option = EFitType::interactiveFitting;
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
@@ -106,9 +104,10 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
  */
 void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   Log.LogDebug(Formatter() << "Elementlist, m_fitContinuum_option="
-                           << m_fitContinuum_option);
+                           << static_cast<Int32>(m_fitContinuum_option));
   if (m_fitContinuum_option ==
-      1) { // using precomputed fit store, i.e., fitValues
+      EFitType::precomputedFitStore) { // using precomputed fit store, i.e.,
+                                       // fitValues
     CContinuumModelSolution fitValues =
         m_fitContinuum_tplfitStore->GetFitValues(redshift, icontinuum);
     if (fitValues.name.empty()) {
@@ -116,7 +115,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
     }
 
     *m_fitContinuum = fitValues;
-  } else if (m_fitContinuum_option == 2) {
+  } else if (m_fitContinuum_option == EFitType::fixedValues) {
     // values unmodified nothing to do
   } else {
     THROWG(ErrorCode::INTERNAL_ERROR, "Cannot parse fitContinuum_option");
@@ -124,7 +123,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   if (m_fitContinuum->name.empty())
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Failed to load-fit continuum for cfitopt="
-                       << m_fitContinuum_option);
+                       << static_cast<Int32>(m_fitContinuum_option));
   // Retrieve the best template, otherwise Getter throws an error
   if (isContinuumComponentPowerLawXXX()) {
     getModel().ApplyContinuumPowerLawOnGrid(m_fitContinuum);
@@ -172,14 +171,14 @@ void CContinuumManager::setFitContinuum_tplAmplitude(
   getModel().setContinuumFromTplFit(alpha, tplAmp, polyCoeffs);
 }
 
-Int32 CContinuumManager::SetFitContinuum_FitStore(
+void CContinuumManager::SetFitContinuum_FitStore(
     const std::shared_ptr<const CContinuumFitStore> &fitStore) {
   if (fitStore) {
-    m_fitContinuum_option = 1; // enable use of the fit store
+    m_fitContinuum_option =
+        EFitType::precomputedFitStore; // enable use of the fit store
     Log.LogDetail("Elementlist: enabling fitContinuum store.");
   }
   m_fitContinuum_tplfitStore = fitStore;
-  return 1;
 }
 
 const std::shared_ptr<const CContinuumFitStore> &
@@ -187,11 +186,11 @@ CContinuumManager::GetFitContinuum_FitStore() const {
   return m_fitContinuum_tplfitStore;
 }
 
-void CContinuumManager::SetFitContinuum_Option(Int32 opt) {
+void CContinuumManager::SetFitContinuum_Option(EFitType opt) {
   m_fitContinuum_option = opt;
 }
 
-Int32 CContinuumManager::GetFitContinuum_Option() const {
+CContinuumManager::EFitType CContinuumManager::GetFitContinuum_Option() const {
   return m_fitContinuum_option;
 }
 
@@ -223,7 +222,8 @@ void CContinuumManager::logParameters() {
   Log.LogInfo(Formatter() << "ContinuumComponent="
                           << std::string(m_ContinuumComponent));
 
-  Log.LogInfo(Formatter() << "fitContinuum_option=" << m_fitContinuum_option);
+  Log.LogInfo(Formatter() << "fitContinuum_option="
+                          << static_cast<Int32>(m_fitContinuum_option));
   Log.LogInfo(Formatter() << "fitContinuum_tplName=" << m_fitContinuum->name);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitude="
                           << m_fitContinuum->tplAmplitude);
@@ -239,10 +239,12 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum->ebmvCoef);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMeiksinIdx="
                           << m_fitContinuum->meiksinIdx);
-  Log.LogInfo(Formatter()
-              << "fitContinuum_tplFitRedshift="
-              << m_fitContinuum->redshift); // only used with
-                                            // m_fitContinuum_option==2 for now
+  Log.LogInfo(
+      Formatter()
+      << "fitContinuum_tplFitRedshift="
+      << m_fitContinuum->redshift); // only used with
+                                    // m_fitContinuum_option==fixedValues
+                                    // for now
   Log.LogInfo(Formatter() << "fitContinuum_tplFitDtM="
                           << m_fitContinuum->tplDtM);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitMtM="

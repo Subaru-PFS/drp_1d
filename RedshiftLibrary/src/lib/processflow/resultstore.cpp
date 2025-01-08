@@ -99,9 +99,9 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
   TPerTemplateResultsMap::const_iterator it1 =
       m_PerTemplateResults.find(t->GetName());
   if (it1 != m_PerTemplateResults.end()) {
-    const TResultsMap &m = (*it1).second;
-    TResultsMap::const_iterator it2 = m.find(name);
-    if (it2 != m.end()) {
+    const TResultsMap &resultsMap = (*it1).second;
+    TResultsMap::const_iterator it2 = resultsMap.find(name);
+    if (it2 != resultsMap.end()) {
       return (*it2).second;
     }
   }
@@ -120,15 +120,15 @@ COperatorResultStore::GetScopedPerTemplateResult(
 TOperatorResultMap
 COperatorResultStore::GetPerTemplateResult(const std::string &name) const {
   TOperatorResultMap map;
-  TPerTemplateResultsMap::const_iterator it;
-  for (it = m_PerTemplateResults.begin(); it != m_PerTemplateResults.end();
-       ++it) {
-    std::string tplName = (*it).first;
+  TPerTemplateResultsMap::const_iterator templateIterator;
+  for (templateIterator = m_PerTemplateResults.begin();
+       templateIterator != m_PerTemplateResults.end(); ++templateIterator) {
+    std::string tplName = (*templateIterator).first;
 
-    const TResultsMap &m = (*it).second;
-    TResultsMap::const_iterator it2 = m.find(name);
-    if (it2 != m.end()) {
-      map[tplName] = (*it2).second;
+    const TResultsMap &resultsMap = (*templateIterator).second;
+    TResultsMap::const_iterator storedResult = resultsMap.find(name);
+    if (storedResult != resultsMap.end()) {
+      map[tplName] = (*storedResult).second;
     }
   }
 
@@ -264,13 +264,14 @@ COperatorResultStore::GetTplCombinationResult(const std::string &spectrumModel,
 std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name,
-    const std::string &dataset, const int &rank) const
+    const std::string &dataset, const int &rank,
+    bool firstpassCorrespondingResult) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
-          ->getCandidate(rank, dataset);
+          ->getCandidate(rank, dataset, firstpassCorrespondingResult);
   std::shared_ptr<const TExtremaResult> tlm =
       std::dynamic_pointer_cast<const TExtremaResult>(cop);
   return tlm;

@@ -68,14 +68,15 @@ public:
   void SetRedshifts(TFloat64List redshifts) override;
   void CheckRedshifts();
 
-  std::shared_ptr<COperatorResult>
-  Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
-          Float64 overlapThreshold, std::string opt_interp,
-          bool opt_extinction = false, bool opt_dustFitting = false,
-          Float64 opt_continuum_null_amp_threshold = 0.,
-          const CPriorHelper::TPriorZEList &logpriorze =
-              CPriorHelper::TPriorZEList(),
-          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
+  std::shared_ptr<CTemplateFittingResult> Compute(
+      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
+      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      Float64 opt_continuum_null_amp_threshold = 0.,
+      const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
+      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+      std::shared_ptr<CTemplateFittingResult> result = NULL,
+      bool isFirstPass = true,
+      const std::vector<Int32> &zIdxsToCompute = {}) override;
 
   inline bool IsFFTProcessing() override { return true; };
 

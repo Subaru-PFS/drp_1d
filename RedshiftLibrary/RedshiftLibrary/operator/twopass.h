@@ -41,9 +41,10 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/passextremaresult.h"
 #include "RedshiftLibrary/operator/twopassresult.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
 namespace TwoPass {
 class spanRedshift_test;
@@ -52,14 +53,20 @@ class spanRedshift_test;
 namespace NSEpic {
 template <class T> class COperatorTwoPass : public COperator {
 public:
-  void init(const Float64 halfWindowSize, const bool zLogSampling,
-            const TFloat64List &redshifts, const Float64 fineStep);
+  void setClassVariables(const Float64 halfWindowSize, const bool zLogSampling,
+                         const TFloat64List &redshifts, const Float64 fineStep);
   TFloat64List spanRedshiftWindow(const Float64 z) const;
   void buildExtendedRedshifts();
   void updateRedshiftGridAndResults(std::shared_ptr<CTwoPassResult> result);
   TZGridListParams getSPZGridParams();
   TCandidateZbyRank getFirstPassCandidatesZByRank() {
     return m_firstpass_extremaResult->getCandidatesZByRank();
+  }
+  std::shared_ptr<CExtremaResult<T>> getFirstPassExtremaResults() const {
+    return m_firstpass_extremaResult;
+  }
+  std::vector<TFloat64List> getExtendedRedshifts() const {
+    return m_extendedRedshifts;
   }
 
 protected:
@@ -73,11 +80,10 @@ protected:
 };
 
 template <class T>
-void COperatorTwoPass<T>::init(
-    const Float64 halfWindowSize, const bool zLogSampling,
-    const TFloat64List &redshifts, // TODO check if should be a shared_ptr /
-                                   // check that is always synchro with operator
-    const Float64 fineStep) {
+void COperatorTwoPass<T>::setClassVariables(const Float64 halfWindowSize,
+                                            const bool zLogSampling,
+                                            const TFloat64List &redshifts,
+                                            const Float64 fineStep) {
   m_secondPass_halfwindowsize = halfWindowSize;
   m_zLogSampling = zLogSampling;
   m_Redshifts = redshifts;
@@ -106,7 +112,7 @@ template <class T> void COperatorTwoPass<T>::buildExtendedRedshifts() {
   // Refine redshift grid around extrema results redshifts
 
   m_extendedRedshifts.reserve(m_firstpass_extremaResult->size());
-  for (auto &cand : m_firstpass_extremaResult->getCandidatesZ()) {
+  for (const auto &[_, cand] : m_firstpass_extremaResult->m_ranked_candidates) {
     Log.LogInfo(Formatter() << "  Operator-TwoPass: Raw extr #" << cand->Rank
                             << ", z_e.X=" << cand->Redshift
                             << ", m_e.Y=" << cand->ValProba);
@@ -119,8 +125,7 @@ void COperatorTwoPass<T>::updateRedshiftGridAndResults(
     std::shared_ptr<CTwoPassResult> result) {
 
   for (auto &subgrid : m_extendedRedshifts) {
-    Int32 imin, ndup;
-    std::tie(imin, ndup) =
+    auto const &[imin, ndup] =
         CZGridListParams::insertSubgrid(subgrid, m_Redshifts);
     result->updateVectors(imin, ndup, subgrid.size());
   }
@@ -135,7 +140,7 @@ template <class T> TZGridListParams COperatorTwoPass<T>::getSPZGridParams() {
     const auto &extendedGrid = m_extendedRedshifts[i];
     centeredZgrid_params[i] =
         CZGridParam(TFloat64Range(extendedGrid), m_fineStep,
-                    m_firstpass_extremaResult->getRankedCandidate(i)->Redshift);
+                    m_firstpass_extremaResult->Redshift(i));
   }
   return centeredZgrid_params;
 }

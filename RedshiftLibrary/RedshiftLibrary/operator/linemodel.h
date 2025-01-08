@@ -50,7 +50,6 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/passextremaresult.h"
 #include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
@@ -90,10 +89,6 @@ public:
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
-
-  std::shared_ptr<LineModelExtremaResult> getFirstPassExtremaResults() {
-    return m_firstpass_extremaResult;
-  }
 
   std::shared_ptr<LineModelExtremaResult>
   buildExtremaResults(const TCandidateZbyRank &zCandidates,

@@ -46,13 +46,6 @@
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
-    std::shared_ptr<const CContinuumModelSolution> cms) {
-  fittedContinuum = *cms;
-  fittedContinuum.name =
-      fittedContinuum.tplAmplitude ? fittedContinuum.name : "noContinuum";
-}
-
-void TLineModelResult::updateFromContinuumModelSolution(
     const CContinuumModelSolution &cms) {
   fittedContinuum = cms;
   fittedContinuum.name =
@@ -223,24 +216,4 @@ bool LineModelExtremaResult::HasCandidateDataset(
           dataset == "continuum" || dataset == "fitted_lines" ||
           dataset == "fp_fitted_lines" || dataset == "line_mask" ||
           dataset == "continuum_polynom" || dataset == "PhotometricModel");
-}
-
-std::shared_ptr<const COperatorResult>
-LineModelExtremaResult::getCandidateParent(const int &rank,
-                                           const std::string &dataset) const {
-  if (dataset == "model_parameters") {
-    return m_ranked_candidates[rank].second->ParentObject;
-  }
-
-  else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
-}
-
-TCandidateZbyRank LineModelExtremaResult::getCandidatesZByRank() {
-  TCandidateZbyRank ret;
-  for (auto &cand : m_ranked_candidates) {
-    ret.push_back(std::make_pair(
-        cand.first, std::dynamic_pointer_cast<TCandidateZ>(cand.second)));
-  }
-  return ret;
 }

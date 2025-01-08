@@ -24,7 +24,14 @@ class CSpectrumFluxCorrectionCalzetti;
 class CContinuumModelSolution;
 
 class CContinuumManager {
+
 public:
+  enum class EFitType {
+    interactiveFitting = 0,
+    precomputedFitStore = 1,
+    fixedValues = 2
+  };
+
   CContinuumManager(const CSpcModelVectorPtr &models,
                     std::shared_ptr<CContinuumModelSolution>,
                     const CSpectraGlobalIndex &spcGlobIndex);
@@ -34,10 +41,10 @@ public:
   }
   CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
 
-  Int32 SetFitContinuum_FitStore(
+  void SetFitContinuum_FitStore(
       const std::shared_ptr<const CContinuumFitStore> &fitStore);
-  void SetFitContinuum_Option(Int32 opt);
-  Int32 GetFitContinuum_Option() const;
+  void SetFitContinuum_Option(EFitType opt);
+  EFitType GetFitContinuum_Option() const;
 
   const std::shared_ptr<const CContinuumFitStore> &
   GetFitContinuum_FitStore() const;
@@ -113,13 +120,12 @@ private:
   CSpectraGlobalIndex m_spectraIndex;
 
   TContinuumComponent m_ContinuumComponent;
-  Int32 m_fitContinuum_option;
+  EFitType m_fitContinuum_option;
   Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
 
   std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
 
-  // m_fitContinuum_option==2 for now
   Float64 m_fitContinuum_tplFitAlpha = 0.;
 
   void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr,

@@ -40,7 +40,10 @@ from typing import List
 
 from enum import Enum
 from pylibamazed.Exception import APIException
-from pylibamazed.redshift import ErrorCode
+from pylibamazed.redshift import CLog, ErrorCode
+
+
+zlog = CLog.GetInstance()
 
 
 class ESolveMethod(Enum):
@@ -468,13 +471,17 @@ class ParametersAccessor:
     def get_linemodel_fitting_method(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "fittingMethod")
 
-    def get_skipsecondpass(self, solve_method: ESolveMethod, spectrum_model: str) -> bool:
+    def get_skipsecondpass(self, solve_method: str, spectrum_model: str, default: bool = None) -> bool:
         section = None
-        if solve_method == ESolveMethod.LINE_MODEL:
+        if solve_method == self.solve_method_dict[ESolveMethod.LINE_MODEL]:
             section = self.get_linemodel_solve_linemodel_section(spectrum_model)
-        elif solve_method == ESolveMethod.TEMPLATE_FITTING:
+        elif solve_method == self.solve_method_dict[ESolveMethod.TEMPLATE_FITTING]:
             section = self.get_template_fitting_section(spectrum_model)
-        return self._get_on_None(section, "skipSecondPass")
+        return self._get_on_None(section, "skipSecondPass", default)
+
+    def get_template_fitting_single_pass(self, spectrum_model: str) -> bool:
+        section = self.get_template_fitting_section(spectrum_model)
+        return self._get_on_None(section, "singlePass")
 
     def get_linemodel_nsigmasupport(self, spectrum_model: str) -> float:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "nSigmaSupport")

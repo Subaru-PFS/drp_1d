@@ -366,8 +366,7 @@ void COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
        icontinuum++) {
     // get the closest lower or equal redshift in coarse grid
     Int32 coarseIdx = m_tplfitStore_firstpass->getClosestLowerRedshiftIndex(
-        m_firstpass_extremaResult->m_ranked_candidates[candidateIdx]
-            .second->Redshift);
+        m_firstpass_extremaResult->Redshift(candidateIdx));
 
     CContinuumModelSolution fitValue =
         m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
@@ -695,14 +694,14 @@ void COperatorLineModel::SetFirstPassCandidates(
     m_firstpass_extremaResult->m_savedModelFittingResults[i] =
         std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
     // save the continuum fitting parameters from first pass
-    std::shared_ptr<const CContinuumModelSolution> csolution =
-        std::make_shared<CContinuumModelSolution>(
-            m_result->ContinuumModelSolutions[idx]);
+    // std::shared_ptr<const CContinuumModelSolution> csolution =
+    //     std::make_shared<CContinuumModelSolution>(
+    //         m_result->ContinuumModelSolutions[idx]);
+    auto &candidate = m_firstpass_extremaResult->getRankedCandidatePtr(i);
 
-    m_firstpass_extremaResult->m_ranked_candidates[i]
-        .second->updateFromContinuumModelSolution(csolution);
-    m_firstpass_extremaResult->m_ranked_candidates[i]
-        .second->updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
+    candidate->updateFromContinuumModelSolution(
+        m_result->ContinuumModelSolutions[idx]);
+    candidate->updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
     //... TODO: more first pass results can be saved here if needed
   }
 }
@@ -717,7 +716,7 @@ void COperatorLineModel::ComputeSecondPass() {
       boost::chrono::thread_clock::now();
   // Set model parameters to SECOND-PASS
   m_fittingManager->setPassMode(2);
-  Int32 savedFitContinuumOption =
+  CContinuumManager::EFitType savedFitContinuumOption =
       m_fittingManager->getContinuumManager()
           ->GetFitContinuum_Option(); // the first time was set in
                                       // precomputeContinuumFit
@@ -815,7 +814,7 @@ void COperatorLineModel::ComputeSecondPass() {
 std::shared_ptr<LineModelExtremaResult>
 COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
                                         const std::string &opt_continuumreest) {
-  Int32 savedFitContinuumOption =
+  CContinuumManager::EFitType savedFitContinuumOption =
       m_fittingManager->getContinuumManager()->GetFitContinuum_Option();
   Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
 
@@ -864,7 +863,8 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
     m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
         m_result->ContinuumModelSolutions[idx]);
 
-    m_fittingManager->getContinuumManager()->SetFitContinuum_Option(2);
+    m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
+        CContinuumManager::EFitType::fixedValues);
 
     // reestimate the model (eventually with continuum reestimation) on the
     // extrema selected
@@ -1026,18 +1026,18 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
       savedModels++;
     }
-
+    auto candidate = ExtremaResult->getRankedCandidatePtr(i);
     // code here has been moved to TLineModelResult::updateFromModel
-    ExtremaResult->m_ranked_candidates[i].second->updateFromModel(
-        m_fittingManager, m_result, m_estimateLeastSquareFast, idx);
+    candidate->updateFromModel(m_fittingManager, m_result,
+                               m_estimateLeastSquareFast, idx);
 
     // save the continuum tpl fitting results
-    ExtremaResult->m_ranked_candidates[i]
-        .second->updateFromContinuumModelSolution(
-            m_fittingManager->getContinuumFitValues());
+
+    candidate->updateFromContinuumModelSolution(
+        *m_fittingManager->getContinuumFitValues());
 
     if (m_fittingManager->getLineRatioType() == "tplRatio")
-      ExtremaResult->m_ranked_candidates[i].second->updateTplRatioFromModel(
+      candidate->updateTplRatioFromModel(
           std::dynamic_pointer_cast<CTplratioManager>(
               m_fittingManager->m_lineRatioManager));
     // save the tplcorr/tplratio results
@@ -1091,8 +1091,10 @@ void COperatorLineModel::EstimateSecondPassParameters() {
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             nullptr);
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
-            m_firstpass_extremaResult->getRankedCandidate(i)->fittedContinuum);
-        m_fittingManager->getContinuumManager()->SetFitContinuum_Option(2);
+            m_firstpass_extremaResult->getRankedCandidateCPtr(i)
+                ->fittedContinuum);
+        m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
+            CContinuumManager::EFitType::fixedValues);
       }
     }
     // find the index in the zaxis results
@@ -1410,9 +1412,10 @@ void COperatorLineModel::RecomputeAroundCandidates(
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitStore(
             nullptr);
         m_fittingManager->getContinuumManager()->SetFitContinuum_FitValues(
-            m_firstpass_extremaResult->getRankedCandidate(i)->fittedContinuum);
+            m_firstpass_extremaResult->getRankedCandidateCPtr(i)
+                ->fittedContinuum);
         m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
-            static_cast<Int32>(tplfit_option));
+            CContinuumManager::EFitType::fixedValues);
       } else if (tplfit_option == EContinuumFit::retryAll ||
                  tplfit_option ==
                      EContinuumFit::reFitFirstPass) // for these cases we called
@@ -1422,9 +1425,6 @@ void COperatorLineModel::RecomputeAroundCandidates(
             m_tplfitStore_secondpass[i]);
     }
 
-    // moved here to override the previously set option value
-    // since all
-    // m_fittingManager->SetFitContinuum_Option(tplfit_option);
     Log.LogInfo(Formatter()
                 << "    Operator-Linemodel: recompute with tplfit_option="
                 << static_cast<Int32>(tplfit_option));
@@ -1509,7 +1509,8 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
     m_opt_firstpass_fittingmethod =
         ps->GetScoped<std::string>("firstPass.fittingMethod");
-    init(m_secondPass_halfwindowsize, zLogSampling, redshifts, finestep);
+    COperatorTwoPass::setClassVariables(m_secondPass_halfwindowsize,
+                                        zLogSampling, redshifts, finestep);
   }
   //
   if (m_opt_continuumcomponent.isContinuumFit()) {

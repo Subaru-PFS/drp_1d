@@ -109,12 +109,6 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
         with pytest.raises(KeyError):
             fsr.get_spectrum()
 
-    # TODO to make a real test we should add an lsf compatible with spectrum
-    # fsr = self.initialize_fsr_with_data()
-    # fsr.lsf_type = "gaussianVariableWidth"
-    # with pytest.raises(TypeError):
-    #     fsr.init()
-
     def test_sizes_are_consistent(self):
         # Without "others"
         # All sizes consistent
@@ -223,7 +217,7 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
                     "obs_id": "2",
                     "multiObsMethod": "full",
                     "spectrum_wave_range": {"2": [1, 4]},
-                }
+                },
             )
             fsr.get_spectrum().init()
 
@@ -258,7 +252,7 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
                     "obs_id": "2",
                     "multiObsMethod": "full",
                     "spectrum_wave_range": {"2": [1, 4]},
-                }
+                },
             )
             fsr.get_spectrum()
 
