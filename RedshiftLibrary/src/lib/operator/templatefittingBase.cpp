@@ -48,10 +48,11 @@ using namespace std;
 
 COperatorTemplateFittingBase::COperatorTemplateFittingBase(
     const TFloat64List &redshifts)
-    : COperatorContinuumFitting(redshifts),
-      m_templateRebined_bf(m_spectra.size()),
+    : COperatorContinuumFitting(), m_templateRebined_bf(m_spectra.size()),
       m_spcSpectralAxis_restframe(m_spectra.size()),
-      m_mskRebined_bf(m_spectra.size()){};
+      m_mskRebined_bf(m_spectra.size()) {
+  SetRedshifts(redshifts);
+};
 
 // return tuple with photmetric values
 TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(

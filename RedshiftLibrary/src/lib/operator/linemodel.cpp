@@ -89,9 +89,9 @@ void COperatorLineModel::ComputeFirstPass() {
   std::shared_ptr<const CTemplateCatalog> tplCatalog;
   tplCatalog = Context.GetTemplateCatalog();
 
-  makeContinuumFittingOperator(m_Redshifts);
+  makeContinuumFittingOperator(m_redshifts);
   if (m_continuumFittingOperator->IsFFTProcessing()) { // create a default
-    const TFloat64List &redshifts = m_Redshifts;
+    const TFloat64List &redshifts = m_redshifts;
     m_fittingManager = std::make_shared<CLineModelFitting>(
         std::make_shared<COperatorTemplateFitting>(redshifts));
   } else {
@@ -104,7 +104,7 @@ void COperatorLineModel::ComputeFirstPass() {
     nfitcontinuum = tplCatalog->GetTemplateCount(m_tplCategory);
   else if (m_opt_continuumcomponent.isPowerLawXXX())
     nfitcontinuum = 1;
-  m_result->Init(m_Redshifts, Context.getCLineMap(), nfitcontinuum,
+  m_result->Init(m_redshifts, Context.getCLineMap(), nfitcontinuum,
                  m_fittingManager->getTplratio_count(),
                  m_fittingManager->getTplratio_priors());
 
@@ -130,7 +130,7 @@ void COperatorLineModel::ComputeFirstPass() {
   if (m_opt_continuumcomponent.isContinuumFit()) {
 
     Log.LogInfo(Formatter() << "Precompuute continuum fit");
-    m_tplfitStore_firstpass = PrecomputeContinuumFit(m_Redshifts);
+    m_tplfitStore_firstpass = PrecomputeContinuumFit(m_redshifts);
   }
 
   m_result->nSpcSamples = m_fittingManager->computeSpcNSamples();
@@ -302,18 +302,17 @@ void COperatorLineModel::fitContinuumTemplates(
                  << "Processing " << tplList.size() << " templates");
   }
   for (Int32 i = 0; i < tplList.size(); i++) {
-    m_continuumFittingOperator->SetRedshifts(redshiftsContinuumFit);
     std::shared_ptr<COperatorResult> templatefittingResult;
     std::string tplname;
     if (m_opt_continuumcomponent.isPowerLawXXX()) {
+      auto castedOperator = std::dynamic_pointer_cast<COperatorPowerLaw>(
+          m_continuumFittingOperator);
       tplname = "powerLaw";
-
+      castedOperator->SetRedshifts(redshiftsContinuumFit);
       templatefittingResult =
-          std::dynamic_pointer_cast<COperatorPowerLaw>(
-              m_continuumFittingOperator)
-              ->Compute(m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
-                        m_opt_continuum_null_amp_threshold, "full",
-                        ebmvIndices[i], meiksinIndices[i]);
+          castedOperator->Compute(m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
+                                  m_opt_continuum_null_amp_threshold, "full",
+                                  ebmvIndices[i], meiksinIndices[i]);
     } else {
       CPriorHelper::TPriorZEList zePriorData;
       tplname = tplList[i]->GetName();
@@ -321,13 +320,15 @@ void COperatorLineModel::fitContinuumTemplates(
                                           zePriorData);
       Log.LogDebug(Formatter() << "Processing tpl " << tplname);
       tplList[i]->setRebinInterpMethod(opt_interp);
-      templatefittingResult =
+
+      auto castedOperator =
           std::dynamic_pointer_cast<COperatorTemplateFittingBase>(
-              m_continuumFittingOperator)
-              ->Compute(tplList[i], overlapThreshold, opt_interp,
-                        m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
-                        m_opt_continuum_null_amp_threshold, zePriorData,
-                        ebmvIndices[i], meiksinIndices[i]);
+              m_continuumFittingOperator);
+      castedOperator->SetRedshifts(redshiftsContinuumFit);
+      templatefittingResult = castedOperator->Compute(
+          tplList[i], overlapThreshold, opt_interp, m_opt_tplfit_extinction,
+          m_opt_tplfit_dustFit, m_opt_continuum_null_amp_threshold, zePriorData,
+          ebmvIndices[i], meiksinIndices[i]);
     }
 
     if (!templatefittingResult) {
@@ -416,8 +417,8 @@ void COperatorLineModel::makeContinuumFittingOperator(
       std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
       m_continuumFittingOperator =
           std::make_shared<COperatorTemplateFittingPhot>(
-              photBandCat,
-              ps->GetScoped<Float64>("lineModel.photometry.weight"), redshifts);
+              photBandCat, redshifts,
+              ps->GetScoped<Float64>("lineModel.photometry.weight"));
     } else
       m_continuumFittingOperator =
           std::make_shared<COperatorTemplateFitting>(redshifts);
@@ -738,7 +739,7 @@ void COperatorLineModel::ComputeSecondPass() {
   // extend z around the extrema
   buildExtendedRedshifts();
 
-  // insert extendedRedshifts into m_Redshifts
+  // insert extendedRedshifts into m_redshifts
   updateRedshiftGridAndResults(m_result);
 
   // Deal with continuum, either recompute it or keep from first pass
@@ -1498,7 +1499,7 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
   m_opt_continuumcomponent = ps->GetScoped<std::string>("continuumComponent");
 
   // below should be part of constructor
-  m_Redshifts = redshifts;
+  m_redshifts = redshifts;
   // init relevant elements to generate secondpass intervals
   m_fineStep = finestep;
   m_zLogSampling = zLogSampling;
@@ -1706,7 +1707,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
     THROWG(ErrorCode::INVALID_PARAMETER, "the polynomial degree "
                                          "parameter should be between 0 and 2");
 
-  makeContinuumFittingOperator(m_Redshifts);
+  makeContinuumFittingOperator(m_redshifts);
 
   m_fittingManager = std::make_shared<CLineModelFitting>(
       m_continuumFittingOperator, ElementComposition::OneLine);

@@ -159,7 +159,6 @@ private:
 
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
-  TFloat64List m_Redshifts; // coarse grid
   Float64 m_fineStep = NAN;
   bool m_zLogSampling = false;
   Int32 m_estimateLeastSquareFast = 0;

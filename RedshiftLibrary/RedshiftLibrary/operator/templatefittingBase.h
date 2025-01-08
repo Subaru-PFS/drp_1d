@@ -67,7 +67,7 @@ class COperatorTemplateFittingBase : public COperatorContinuumFitting,
                                      public COperatorTwoPass<TExtremaResult> {
 
 public:
-  COperatorTemplateFittingBase(const TFloat64List &redshifts = TFloat64List());
+  COperatorTemplateFittingBase(const TFloat64List &redshifts);
 
   virtual ~COperatorTemplateFittingBase() = default;
   COperatorTemplateFittingBase(COperatorTemplateFittingBase const &other) =

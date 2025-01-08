@@ -57,15 +57,15 @@ using namespace std;
 
 COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
                                      Float64 lambdaCut)
-    : COperatorContinuumFitting(redshifts), m_lambdaCut(lambdaCut) {
+    : COperatorContinuumFitting(), m_lambdaCut(lambdaCut) {
 
   // Gets pixels of interest and sets elements size
+  SetRedshifts(redshifts);
   m_spectra = Context.getSpectra();
   m_nSpectra = m_spectra.size();
   m_nPixels.resize(m_nSpectra);
   m_firstPixelIdxInRange.resize(m_nSpectra);
   m_lastPixelIdxInRange.resize(m_nSpectra);
-
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     const CSpectrumSpectralAxis &spectrumLambda =
         Context.getSpectra()[spectrumIdx]->GetSpectralAxis();
