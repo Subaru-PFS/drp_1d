@@ -39,7 +39,7 @@
 
 import pandas as pd
 from pylibamazed.AbstractOutput import root_stages, spectrum_model_stages
-from pylibamazed.Exception import APIException
+from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
@@ -107,8 +107,11 @@ class H5Writer:
                         try:
                             _create_dataset_from_dict(candidate, ds, dataset)
                         except Exception as e:
-                            raise Exception(f"failed to create dataset {ds} : {e}")
+                            raise APIException(
+                                ErrorCode.PYTHON_API_ERROR, f"failed to create dataset {ds} : {e}"
+                            ) from None
 
+    @exception_decorator
     def write_hdf5(self, hdf5_root, spectrum_id):
         try:
             obs = hdf5_root.create_group(spectrum_id)

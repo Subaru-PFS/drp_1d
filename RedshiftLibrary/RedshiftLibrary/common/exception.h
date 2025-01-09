@@ -71,8 +71,11 @@ public:
   void setErrorCode(ErrorCode ec) { code = ec; }
 
   const std::string &getFileName() const { return filename; }
+  void setFilename(std::string const &filename_) { filename = filename_; };
   const std::string &getMethod() const { return method; }
+  void setMethod(std::string const &method_) { method = method_; };
   int getLine() const { return line; }
+  void setLine(int line_) { line = line_; };
   void LogError(const std::string &msg = std::string()) const {
     Log.LogError(msg.empty() ? _msg : msg);
   };

@@ -855,8 +855,12 @@ public:
 %}
 
 %pythonprepend AmzException::LogError() const %{
+    if self.logged:
+      return
     if not args:
       args = (self.__str__(), )
+
+    self.logged = True
 %}
 
 class AmzException : public std::exception
@@ -874,8 +878,11 @@ class AmzException : public std::exception
   const std::string &getMessage() const;
 
   const std::string &getFileName() const;
+  void setFilename(std::string const &filename_);
   const std::string &getMethod() const;
+  void setMethod(std::string const &method_);
   int getLine() const;
+  void setLine(int line_);
 
   void LogError(const std::string &msg = std::string()) const;
 
@@ -890,6 +897,7 @@ class AmzException : public std::exception
     return msg
 
   AmzException.__str__ = _AmzException__str__
+  AmzException.logged = False
 %}
 
 class CSolve{

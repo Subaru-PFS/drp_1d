@@ -97,7 +97,7 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
     except ImportError:
         raise APIException(
             ErrorCode.RELIABILITY_NEEDS_TENSORFLOW, "Tensorflow is required to compute the reliability"
-        )
+        ) from None
     ret = dict()
     model_ha = h5py.File(model_path).attrs
     keras_model_version = model_ha["keras_version"].split(".")
@@ -211,7 +211,7 @@ class CalibrationLibrary:
                 except Exception:
                     raise APIException(
                         ErrorCode.INVALID_FILEPATH, "Unable to read template file {}".format(file_path)
-                    )
+                    ) from None
                 wavelength = data[0]
                 flux = data[1]
 
@@ -263,7 +263,7 @@ class CalibrationLibrary:
         except Exception as e:
             raise APIException(
                 ErrorCode.PYTHON_API_ERROR, f"bad line catalog {line_catalog_file} cause :{e}"
-            ) from e
+            ) from None
 
         # force "-1" to undefStr (for compatibility)
         line_catalog.loc[line_catalog.AmplitudeGroupName == "-1", "AmplitudeGroupName"] = undefStr
@@ -282,7 +282,7 @@ class CalibrationLibrary:
             elif row.Profile == "ASYMFIT":
                 asymParams = TAsymParams(2.0, 2.0, 0.0)
             elif row.Profile == "ASYMFIXED":
-                raise Exception("Profile in linecatalog cannot be asymFixed")
+                raise APIException(ErrorCode.PYTHON_API_ERROR, "Profile in linecatalog cannot be asymFixed")
             else:
                 asymParams = TAsymParams(0, 0, 0)
             self.line_catalogs[object_type][solve_method].AddLineFromParams(
@@ -401,7 +401,9 @@ class CalibrationLibrary:
                 try:
                     lsf_hdu = hdulist[1]
                 except IndexError:
-                    raise APIException(ErrorCode.BAD_FILEFORMAT, f"Cannot access hdu 1 for LSF in {file}")
+                    raise APIException(
+                        ErrorCode.BAD_FILEFORMAT, f"Cannot access hdu 1 for LSF in {file}"
+                    ) from None
                 self.lsf["wave"] = lsf_hdu.data.field(0)
                 self.lsf["width"] = lsf_hdu.data.field(1)
 
@@ -524,7 +526,7 @@ class CalibrationLibrary:
             if self.parameters.get_photometry_transmission_dir() is not None:
                 self.load_photometric_bands()
         except FileNotFoundError as e:
-            raise APIException(ErrorCode.INVALID_FILEPATH, str(e)) from e
+            raise APIException(ErrorCode.INVALID_FILEPATH, str(e)) from None
 
     def init(self):
         """Initialize templates (init continuum removal, init ism/igm and lsf if lsf is not spectrum dependent"""
@@ -535,8 +537,11 @@ class CalibrationLibrary:
             tpl_ratio_conf = self.lr_catalog_param[object_type][line_ratio_catalog]
             return tpl_ratio_conf["sub_type"]
         except KeyError:
-            raise Exception(f"Could not find {line_ratio_catalog} in tpl ratio catalog")
+            raise APIException(
+                ErrorCode.PYTHON_API_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
+            ) from None
 
+    @exception_decorator
     def get_lines_ids(self, attributes):
         lines_ids = dict()
         lines = None
@@ -576,5 +581,7 @@ class CalibrationLibrary:
                     line_id = lines[lines["Name"] == line_name].index[0]
                     lines_ids[line_name] = line_id
                 except Exception:
-                    raise Exception(f"Could not find {line_name} in catalog")
+                    raise APIException(
+                        ErrorCode.PYTHON_API_ERROR, f"Could not find {line_name} in catalog"
+                    ) from None
         return lines_ids

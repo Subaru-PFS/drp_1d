@@ -61,6 +61,7 @@ class PdfHandlerTestUtils:
 
     @staticmethod
     def abstract_output():
+        AbstractOutput.__abstractmethods__ = set()
         return AbstractOutput(PdfHandlerTestUtils.parameters())
 
     @staticmethod
