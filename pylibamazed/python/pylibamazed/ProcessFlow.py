@@ -38,6 +38,7 @@
 # ============================================================================
 import os
 import os.path
+import copy
 from contextlib import contextmanager, suppress
 from decorator import decorator
 
@@ -198,6 +199,7 @@ class ProcessFlow:
         spectrum.init()
         spectrum.push_in_context()
 
+        parameters = copy.deepcopy(self.parameters)
         if self.config.get("linemeascatalog"):
             lp = LinemeasParameters()
             lp.load_from_catalogs(
@@ -205,9 +207,9 @@ class ProcessFlow:
                 self.config.get("linemeascatalog"),
                 self.config.get("linemeas_catalog_columns"),
             )
-            lp.update_parameters(self.parameters)
+            lp.update_parameters(parameters)
 
-        self.process_flow_context.LoadParameterStore(self.parameters.to_json())
+        self.process_flow_context.LoadParameterStore(parameters.to_json())
         self.process_flow_context.Init()
 
     @push_scope("redshiftSolver", ScopeType.STAGE)
@@ -223,10 +225,11 @@ class ProcessFlow:
     @push_scope("linemeas_catalog_load", ScopeType.STAGE)
     @store_exception
     def run_load_linemeas_params(self, rso):
+        parameters = copy.deepcopy(self.parameters)
         lp = LinemeasParameters()
-        lp.load_from_result_store(self.parameters, rso, self.scope_spectrum_model)
-        lp.update_parameters(self.parameters)
-        self.process_flow_context.LoadParameterStore(self.parameters.to_json())
+        lp.load_from_result_store(parameters, rso, self.scope_spectrum_model)
+        lp.update_parameters(parameters)
+        self.process_flow_context.LoadParameterStore(parameters.to_json())
 
     @push_scope("reliabilitySolver", ScopeType.STAGE)
     @store_exception

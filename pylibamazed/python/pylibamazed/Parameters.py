@@ -38,8 +38,8 @@
 # ============================================================================
 
 import json
+import copy
 
-import pandas as pd
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersConverter import ParametersConverterSelector
@@ -73,6 +73,11 @@ class Parameters(ParametersAccessor):
         extended_parameters = Extender(version).extend(converted_parameters)
         self.parameters = extended_parameters
         self.remove_unused_solvers()
+
+    def __deep_copy__(self, memo):
+        ret = copy.copy(self)
+        ret.parameters = copy.deepcopy(self.parameters, memo)
+        return ret
 
     def get_json_schema_version(self, raw_parameters: dict):
         version = raw_parameters.get("version")

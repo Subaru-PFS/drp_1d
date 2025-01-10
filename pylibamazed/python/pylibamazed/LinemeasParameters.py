@@ -78,15 +78,25 @@ class LinemeasParameters:
             0,
         )
 
-        self.velocity_abs[spectrum_model] = self._get_velocity_from_result_store(
-            parameter, output, spectrum_model, "VelocityAbsorption"
-        )
-        self.velocity_em[spectrum_model] = self._get_velocity_from_result_store(
-            parameter, output, spectrum_model, "VelocityEmission"
-        )
+        if redshift_solver == "lineModelSolve":
+            self.velocity_abs[spectrum_model] = self._get_velocity_from_result_store(
+                parameter, output, spectrum_model, "VelocityAbsorption"
+            )
+            self.velocity_em[spectrum_model] = self._get_velocity_from_result_store(
+                parameter, output, spectrum_model, "VelocityEmission"
+            )
+        else:
+            zlog.LogInfo("velocities not measured, using lineMeasSolver parameter values")
+            self.velocity_abs[spectrum_model] = self._get_velocity_from_parameters(
+                parameter, spectrum_model, "VelocityAbsorption"
+            )
+            self.velocity_em[spectrum_model] = self._get_velocity_from_parameters(
+                parameter, spectrum_model, "VelocityEmission"
+            )
 
     def update_parameters(self, parameter: Parameters) -> None:
         for spectrum_model in self.redshift_ref.keys():
+            self._replace_nan_with_parameter(parameter, spectrum_model)
             parameter.set_redshiftref(spectrum_model, self.redshift_ref[spectrum_model])
             if parameter.get_linemodel_section(spectrum_model, "lineMeasSolve") is not None:
                 parameter.set_velocity_absorption(
@@ -117,11 +127,28 @@ class LinemeasParameters:
                 ErrorCode.OUTPUT_READER_ERROR,
                 f"missing output: {spectrum_model}.{redshift_solver}.{velocity_name}",
             ) from None
-        if pd.isna(velocity):
-            if velocity_name == "VelocityAbsorption":
-                velocity = parameter.get_velocity_absorption(spectrum_model, redshift_solver)
-            elif velocity_name == "VelocityEmission":
-                velocity = parameter.get_velocity_emission(spectrum_model, redshift_solver)
-            zlog.LogInfo(f"{velocity_name} not measured, using redshiftSolver parameter value: {velocity}")
-
         return velocity
+
+    def _get_velocity_from_parameters(self, parameter: Parameters, spectrum_model: str, velocity_name: str):
+        linemeas_solver = parameter.get_linemeas_method(spectrum_model)
+        if velocity_name == "VelocityAbsorption":
+            velocity = parameter.get_velocity_absorption(spectrum_model, linemeas_solver)
+        elif velocity_name == "VelocityEmission":
+            velocity = parameter.get_velocity_emission(spectrum_model, linemeas_solver)
+        return velocity
+
+    def _replace_nan_with_parameter(self, parameter: Parameters, spectrum_model: str):
+        if pd.isna(self.velocity_abs[spectrum_model]):
+            self.velocity_abs[spectrum_model] = self._get_velocity_from_parameters(
+                parameter, spectrum_model, "VelocityAbsorption"
+            )
+            zlog.LogInfo(
+                f"VelocityAbsorption not measured, using lineMeasSolver parameter value: {self.velocity_abs[spectrum_model]}"
+            )
+        if pd.isna(self.velocity_em[spectrum_model]):
+            self.velocity_em[spectrum_model] = self._get_velocity_from_parameters(
+                parameter, spectrum_model, "VelocityEmission"
+            )
+            zlog.LogInfo(
+                f"VelocityEmission not measured, using lineMeasSolver parameter value: {self.velocity_em[spectrum_model]}"
+            )

@@ -510,6 +510,12 @@ class ParametersAccessor:
     def get_linemodel_extremacount(self, spectrum_model: str):
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "extremaCount")
 
+    def get_linemodel_velocity_fit(self, spectrum_model: str) -> str:
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "velocityFit")
+
+    def get_linemodel_velocity_fit_param(self, spectrum_model: str, param: str) -> float:
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), param)
+
     def get_linemeas_linemodel_section(self, spectrum_model: str) -> dict:
         return self._get_on_None(self.get_linemeas_solve_section(spectrum_model), "lineModel")
 

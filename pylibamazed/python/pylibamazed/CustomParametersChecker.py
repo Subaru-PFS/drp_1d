@@ -480,6 +480,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
         self._check_linemodelsolve_lya_fit(spectrum_model)
         self._check_linemodelsolve_useloglambdasampling(spectrum_model)
+        self._check_linemodelsolve_velocityfit_params(spectrum_model)
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
@@ -625,6 +626,24 @@ class CustomParametersChecker(ParametersChecker):
             f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling",
             f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling",
         )
+
+    def _check_linemodelsolve_velocityfit_params(self, spectrum_model: str):
+        params = [
+            "emVelocityFitMin",
+            "emVelocityFitMax",
+            "emVelocityFitStep",
+            "absVelocityFitMin",
+            "absVelocityFitMax",
+            "absVelocityFitStep",
+        ]
+        velocityfit: bool = self.accessor.get_linemodel_velocity_fit(spectrum_model)
+        for param in params:
+            self._check_dependant_parameter_presence(
+                velocityfit,
+                self.accessor.get_linemodel_velocity_fit_param(spectrum_model, param) is not None,
+                error_message=f"lineModelSolve {param} for object {spectrum_model}",
+                warning_message=f"object {spectrum_model} LineModelSolve {param}",
+            )
 
     def _check_linemeassolve_lineratiotype_rules(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
