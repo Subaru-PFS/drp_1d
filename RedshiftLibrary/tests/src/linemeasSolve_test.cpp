@@ -46,7 +46,8 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdaRange\" : [ 4680, 4712 ],"
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
@@ -93,7 +94,8 @@ const std::string jsonString =
     "}}}}}";
 
 const std::string jsonString_lbfgsb =
-    "{\"lambdaRange\" : [ 4680, 4712 ],"
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
