@@ -176,7 +176,7 @@ class ParametersAccessor:
             self.get_spectrum_model_section, "reliabilitySolver", create, spectrum_model
         )
 
-    def get_reliability_methods(self, spectrum_model: str, default=[]) -> str:
+    def get_reliability_methods(self, spectrum_model: str, default=[]) -> []:
         if "reliabilitySolver" not in self.get_stages(spectrum_model):
             return default
         return self._get_on_None(self.get_reliability_section(spectrum_model), "method", default=default)

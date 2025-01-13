@@ -54,7 +54,11 @@ from pylibamazed.redshift import CLineModelSolve  # noqa F401
 from pylibamazed.redshift import CTemplateFittingSolve  # noqa F401
 from pylibamazed.redshift import CTplCombinationSolve  # noqa F401
 from pylibamazed.redshift import AmzException, CFlagWarning, CLog, CProcessFlowContext, ErrorCode, ScopeType
-from pylibamazed.Reliability import ReliabilitySolve
+from pylibamazed.AbstractReliabilitySolver import (
+    get_reliability_solver_from_name,
+    get_reliability_dataset_suffix,
+)
+import pylibamazed.DeepLearningSolve
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.ScopeManager import get_scope_spectrum_model, get_scope_stage, push_scope
 from pylibamazed.SubType import SubType
@@ -227,11 +231,15 @@ class ProcessFlow:
     @push_scope("reliabilitySolver", ScopeType.STAGE)
     @store_exception
     def run_reliability_solver(self, rso):
-        rel = ReliabilitySolve(self.scope_spectrum_model, self.parameters, self.calibration_library)
-        rso.object_results[self.scope_spectrum_model]["reliability"] = dict()
-        rso.object_results[self.scope_spectrum_model]["reliability"]["Reliability"] = rel.Compute(
-            self.process_flow_context
-        )
+        for solver_name in self.parameters.get_reliability_methods(self.scope_spectrum_model):
+            #            for name in self.parameters.get
+            solver = get_reliability_solver_from_name(solver_name)
+            dataset_suffix = get_reliability_dataset_suffix(solver_name)
+            rel = solver(self.scope_spectrum_model, self.parameters, self.calibration_library)
+            rso.object_results[self.scope_spectrum_model][f"reliability{dataset_suffix}"] = dict()
+            rso.object_results[self.scope_spectrum_model][f"reliability{dataset_suffix}"][
+                "Reliability"
+            ] = rel.Compute(self.process_flow_context)
 
     @push_scope("subClassifSolver", ScopeType.STAGE)
     @store_exception
