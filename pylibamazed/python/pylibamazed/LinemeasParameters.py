@@ -39,10 +39,11 @@
 import pandas as pd
 from pylibamazed.Parameters import Parameters
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
-from pylibamazed.redshift import ErrorCode, CLog
+from pylibamazed.redshift import ErrorCode, CLog, WarningCode, CFlagWarning
 from pylibamazed.Exception import APIException
 
 zlog = CLog.GetInstance()
+zflag = CFlagWarning.GetInstance()
 
 
 class LinemeasParameters:
@@ -105,6 +106,7 @@ class LinemeasParameters:
                 parameter.set_velocity_emission(
                     spectrum_model, "lineMeasSolve", self.velocity_em[spectrum_model]
                 )
+                self._check_velocity_range(parameter, spectrum_model)
 
     def _get_velocity_from_result_store(
         self, parameter: Parameters, output: ResultStoreOutput, spectrum_model: str, velocity_name: str
@@ -143,12 +145,55 @@ class LinemeasParameters:
                 parameter, spectrum_model, "VelocityAbsorption"
             )
             zlog.LogInfo(
-                f"VelocityAbsorption not measured, using lineMeasSolver parameter value: {self.velocity_abs[spectrum_model]}"
+                (
+                    "VelocityAbsorption not measured, using lineMeasSolver parameter value: "
+                    + f"{self.velocity_abs[spectrum_model]}"
+                )
             )
         if pd.isna(self.velocity_em[spectrum_model]):
             self.velocity_em[spectrum_model] = self._get_velocity_from_parameters(
                 parameter, spectrum_model, "VelocityEmission"
             )
             zlog.LogInfo(
-                f"VelocityEmission not measured, using lineMeasSolver parameter value: {self.velocity_em[spectrum_model]}"
+                (
+                    "VelocityEmission not measured, using lineMeasSolver parameter value: "
+                    + f"{self.velocity_em[spectrum_model]}"
+                )
             )
+
+    def _check_velocity_range(self, parameter: Parameters, spectrum_model: str):
+        velocityfit: bool = parameter.get_linemeas_velocity_fit(spectrum_model)
+        if not velocityfit:
+            return
+        params = [
+            {"param": "velocityEmission", "fitparam": ["emVelocityFitMin", "emVelocityFitMax"]},
+            {"param": "velocityAbsorption", "fitparam": ["absVelocityFitMin", "absVelocityFitMax"]},
+        ]
+        for param_dict in params:
+            velocity = parameter.get_linemeas_velocity_fit_param(spectrum_model, param_dict["param"])
+
+            velocity_bound = parameter.get_linemeas_velocity_fit_param(
+                spectrum_model, param_dict["fitparam"][0]
+            )
+            if velocity < velocity_bound:
+                warning_message = (
+                    f"lineMeasSolve input velocity {param_dict['param']}={velocity}"
+                    + f" for object {spectrum_model}"
+                    + f" is below {param_dict['fitparam'][0]}={velocity_bound}:"
+                    + " extending velocity fit range"
+                )
+                zflag.warning(WarningCode.VELOCITY_FIT_RANGE, warning_message)
+                parameter.set_linemeas_velocity_fit_param(spectrum_model, param_dict["fitparam"][0], velocity)
+
+            velocity_bound = parameter.get_linemeas_velocity_fit_param(
+                spectrum_model, param_dict["fitparam"][1]
+            )
+            if velocity > velocity_bound:
+                warning_message = (
+                    f"lineMeasSolve input velocity {param_dict['param']}={velocity}"
+                    + f" for object {spectrum_model}"
+                    + f" is above {param_dict['fitparam'][1]}={velocity_bound}:"
+                    + " extending velocity fit range"
+                )
+                zflag.warning(WarningCode.VELOCITY_FIT_RANGE, warning_message)
+                parameter.set_linemeas_velocity_fit_param(spectrum_model, param_dict["fitparam"][1], velocity)

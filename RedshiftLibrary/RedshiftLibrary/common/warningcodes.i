@@ -24,5 +24,6 @@ enum class WarningCode {
   // All new ones here not to change binary codes
   FORCED_POWERLAW_TO_ZERO,                     // 18
   NULL_LINES_PROFILE,                          // 19
-  STD_ESTIMATION_FAILED                        // 20
+  STD_ESTIMATION_FAILED,                       // 20
+  VELOCITY_FIT_RANGE                           // 21
 };

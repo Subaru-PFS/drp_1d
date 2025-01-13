@@ -129,10 +129,12 @@ class TestLineMeasSolve:
             param_dict = self._make_parameter_dict(
                 **{
                     "velocityFit": True,
-                    "emVelocityFitMin": 1,
-                    "emVelocityFitMax": 1,
-                    "absVelocityFitMin": 1,
-                    "absVelocityFitMax": 1,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 50,
+                    "emVelocityFitMax": 300,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
                 }
             )
             check_from_parameter_dict(param_dict)

@@ -534,6 +534,9 @@ class ParametersAccessor:
     def get_linemeas_velocity_fit_param(self, spectrum_model: str, param: str) -> float:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), param)
 
+    def set_linemeas_velocity_fit_param(self, spectrum_model: str, param: str, value):
+        self.get_linemeas_linemodel_section(spectrum_model)[param] = value
+
     def get_linemeas_nsigmasupport(self, spectrum_model: str) -> float:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "nSigmaSupport")
 
