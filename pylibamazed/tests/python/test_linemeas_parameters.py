@@ -41,9 +41,12 @@ import pandas as pd
 import pytest
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Exception import APIException
+from pylibamazed.redshift import WarningCode
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import EVelocityType, EVelocityFitParam
 from pylibamazed.LinemeasParameters import LinemeasParameters
 from tests.python.test_parameters_utils import TestParametersUtils
+from tests.python import utils
 
 
 class TestLinemeasParameters:
@@ -69,8 +72,8 @@ class TestLinemeasParameters:
         lp = LinemeasParameters()
         lp.load_from_catalogs(source_id, config["linemeascatalog"], config["linemeas_catalog_columns"])
         assert lp.redshift_ref[self.object_type] == 0.0
-        assert lp.velocity_abs[self.object_type] == 1.0
-        assert lp.velocity_em[self.object_type] == 2.0
+        assert lp.velocity[EVelocityType.Absorption][self.object_type] == 1.0
+        assert lp.velocity[EVelocityType.Emission][self.object_type] == 2.0
 
         # Source id absent from loaded dataframe
         with pytest.raises(APIException):
@@ -79,32 +82,98 @@ class TestLinemeasParameters:
             )
 
     def test_load_from_result_store(self, mocker):
-        # mocker.patch(
-        #     "pylibamazed.AbstractOutput.AbstractOutput.get_attribute_from_source", return_value="anything"
-        # )
-        def get_attribute_from_source(
+        def get_attribute_from_source_mocked(
             object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
         ):
             map = {"Redshift": 0.0, "VelocityAbsorption": 1.0, "VelocityEmission": 2.0}
             return map[attribute]
 
-        mocker.patch(
-            "pylibamazed.AbstractOutput.AbstractOutput.get_attribute_from_source",
-            side_effect=get_attribute_from_source,
-        )
-        mocker.patch("pylibamazed.AbstractOutput.AbstractOutput.__init__", return_value=None)
+        FakeOutput = mocker.Mock(spec=AbstractOutput)
+        FakeOutput.get_attribute_from_source = get_attribute_from_source_mocked
         lp = LinemeasParameters()
-        lp.load_from_result_store(self.generic_parameters, AbstractOutput(), self.object_type)
+        lp.load_from_result_store(self.generic_parameters, FakeOutput, self.object_type)
         assert lp.redshift_ref[self.object_type] == 0.0
-        assert lp.velocity_abs[self.object_type] == 1.0
-        assert lp.velocity_em[self.object_type] == 2.0
+        assert lp.velocity[EVelocityType.Absorption][self.object_type] == 1.0
+        assert lp.velocity[EVelocityType.Emission][self.object_type] == 2.0
+
+    def _make_parameter_dict_for_update_parameters(self) -> Parameters:
+        param_dict = utils.make_parameter_dict_at_linemeas_solve_level(
+            **{
+                "lineModel": {
+                    "velocityFit": True,
+                    "emVelocityFitMin": 500,
+                    "emVelocityFitMax": 2000,
+                    "absVelocityFitMin": 150,
+                    "absVelocityFitMax": 500,
+                }
+            }
+        )
+        param_dict["version"] = 2
+        parameters = Parameters(param_dict, make_checks=False)
+        return parameters
 
     def test_update_parameters(self):
+        parameters = self._make_parameter_dict_for_update_parameters()
         lp = LinemeasParameters()
-        lp.redshift_ref[self.object_type] = 0.0
-        lp.velocity_abs[self.object_type] = 1.0
-        lp.velocity_em[self.object_type] = 2.0
-        lp.update_parameters(self.generic_parameters)
-        assert self.generic_parameters.get_spectrum_model_section(self.object_type)["redshiftref"] == 0.0
-        assert self.generic_parameters.get_velocity_absorption(self.object_type, "lineMeasSolve") == 1.0
-        assert self.generic_parameters.get_velocity_emission(self.object_type, "lineMeasSolve") == 2.0
+        lp.redshift_ref[utils.default_object_type] = 1.0
+        lp.velocity[EVelocityType.Absorption][utils.default_object_type] = 200
+        lp.velocity[EVelocityType.Emission][utils.default_object_type] = 1000
+        lp.update_parameters(parameters)
+        assert parameters.get_spectrum_model_section(utils.default_object_type)["redshiftref"] == 1.0
+        assert (
+            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Absorption)
+            == 200
+        )
+        assert (
+            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Emission)
+            == 1000
+        )
+
+    def test_update_parameters_below_fit_min(self):
+        parameters = self._make_parameter_dict_for_update_parameters()
+        lp = LinemeasParameters()
+        lp.redshift_ref[utils.default_object_type] = 1.0
+        lp.velocity[EVelocityType.Absorption][utils.default_object_type] = 200
+        lp.velocity[EVelocityType.Emission][utils.default_object_type] = 400
+        lp.update_parameters(parameters)
+        assert utils.WarningUtils.has_warning(WarningCode.VELOCITY_FIT_RANGE)
+
+        assert parameters.get_spectrum_model_section(utils.default_object_type)["redshiftref"] == 1.0
+        assert (
+            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Absorption)
+            == 200
+        )
+        assert (
+            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Emission) == 400
+        )
+        assert (
+            parameters.get_velocity_fit_param(
+                utils.default_object_type, "lineMeasSolve", EVelocityType.Emission, EVelocityFitParam.Min
+            )
+            == 400
+        )
+
+    def test_update_parameters_above_fit_min(self):
+        parameters = self._make_parameter_dict_for_update_parameters()
+        lp = LinemeasParameters()
+        lp.redshift_ref[utils.default_object_type] = 1.0
+        lp.velocity[EVelocityType.Absorption][utils.default_object_type] = 200
+        lp.velocity[EVelocityType.Emission][utils.default_object_type] = 2500
+        lp.update_parameters(parameters)
+        assert utils.WarningUtils.has_warning(WarningCode.VELOCITY_FIT_RANGE)
+
+        assert parameters.get_spectrum_model_section(utils.default_object_type)["redshiftref"] == 1.0
+        assert (
+            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Absorption)
+            == 200
+        )
+        assert (
+            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Emission)
+            == 2500
+        )
+        assert (
+            parameters.get_velocity_fit_param(
+                utils.default_object_type, "lineMeasSolve", EVelocityType.Emission, EVelocityFitParam.Max
+            )
+            == 2500
+        )

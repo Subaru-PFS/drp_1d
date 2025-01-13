@@ -38,6 +38,7 @@
 # ============================================================================
 import pandas as pd
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import EVelocityType, EVelocityFitParam, ParametersAccessor
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.redshift import ErrorCode, CLog, WarningCode, CFlagWarning
 from pylibamazed.Exception import APIException
@@ -49,8 +50,10 @@ zflag = CFlagWarning.GetInstance()
 class LinemeasParameters:
     def __init__(self):
         self.redshift_ref = dict()
-        self.velocity_abs = dict()
-        self.velocity_em = dict()
+        self.velocity = {EVelocityType.Absorption: dict(), EVelocityType.Emission: dict()}
+
+    def _get_catalog_velocity_name(self, velocity_type: EVelocityType) -> str:
+        return f"Velocity{velocity_type.value}"
 
     def load_from_catalogs(self, source_id: str, catalogs: dict, catalog_columns: dict):
         for spectrum_model in catalogs.keys():
@@ -63,58 +66,58 @@ class LinemeasParameters:
 
             columns = catalog_columns[spectrum_model]
             self.redshift_ref[spectrum_model] = float(lm[columns["Redshift"]].iloc[0])
-            self.velocity_abs[spectrum_model] = float(lm[columns["VelocityAbsorption"]].iloc[0])
-            self.velocity_em[spectrum_model] = float(lm[columns["VelocityEmission"]].iloc[0])
+            for velocity_type in self.velocity:
+                self.velocity[velocity_type][spectrum_model] = float(
+                    lm[columns[self._get_catalog_velocity_name(velocity_type)]].iloc[0]
+                )
 
     def load_from_result_store(
         self, parameter: Parameters, output: ResultStoreOutput, spectrum_model: str
     ) -> None:
-        redshift_solver = parameter.get_redshift_solver_method(spectrum_model)
+        redshift_solver_method = parameter.get_redshift_solver_method(spectrum_model)
         self.redshift_ref[spectrum_model] = output.get_attribute_from_source(
             spectrum_model,
             "redshiftSolver",
-            redshift_solver,
+            redshift_solver_method,
             "model_parameters",
             "Redshift",
             0,
         )
 
-        if redshift_solver == "lineModelSolve":
-            self.velocity_abs[spectrum_model] = self._get_velocity_from_result_store(
-                parameter, output, spectrum_model, "VelocityAbsorption"
-            )
-            self.velocity_em[spectrum_model] = self._get_velocity_from_result_store(
-                parameter, output, spectrum_model, "VelocityEmission"
-            )
-        else:
-            zlog.LogInfo("velocities not measured, using lineMeasSolver parameter values")
-            self.velocity_abs[spectrum_model] = self._get_velocity_from_parameters(
-                parameter, spectrum_model, "VelocityAbsorption"
-            )
-            self.velocity_em[spectrum_model] = self._get_velocity_from_parameters(
-                parameter, spectrum_model, "VelocityEmission"
-            )
+        for velocity_type in self.velocity:
+            if redshift_solver_method == "lineModelSolve":
+                self.velocity[velocity_type][spectrum_model] = self._get_velocity_from_result_store(
+                    parameter, output, spectrum_model, velocity_type
+                )
+            else:
+                zlog.LogInfo("velocities not measured, using lineMeasSolver parameter values")
+                self.velocity[velocity_type][spectrum_model] = self._get_velocity_from_linemeas_parameters(
+                    parameter, spectrum_model, velocity_type
+                )
 
     def update_parameters(self, parameter: Parameters) -> None:
         for spectrum_model in self.redshift_ref.keys():
             self._replace_nan_with_parameter(parameter, spectrum_model)
             parameter.set_redshiftref(spectrum_model, self.redshift_ref[spectrum_model])
             if parameter.get_linemodel_section(spectrum_model, "lineMeasSolve") is not None:
-                parameter.set_velocity_absorption(
-                    spectrum_model, "lineMeasSolve", self.velocity_abs[spectrum_model]
-                )
-                parameter.set_velocity_emission(
-                    spectrum_model, "lineMeasSolve", self.velocity_em[spectrum_model]
-                )
+                for velocity_type in self.velocity:
+                    parameter.set_velocity(
+                        spectrum_model,
+                        "lineMeasSolve",
+                        velocity_type,
+                        self.velocity[velocity_type][spectrum_model],
+                    )
                 self._check_velocity_range(parameter, spectrum_model)
 
     def _get_velocity_from_result_store(
-        self, parameter: Parameters, output: ResultStoreOutput, spectrum_model: str, velocity_name: str
+        self,
+        parameter: Parameters,
+        output: ResultStoreOutput,
+        spectrum_model: str,
+        velocity_type: EVelocityType,
     ):
-        if velocity_name not in ["VelocityAbsorption", "VelocityEmission"]:
-            raise APIException(ErrorCode.APIException, "invalid velocity_name")
-
         redshift_solver = parameter.get_redshift_solver_method(spectrum_model)
+        velocity_name = self._get_catalog_velocity_name(velocity_type)
         try:
             velocity = output.get_attribute_from_source(
                 spectrum_model,
@@ -127,73 +130,71 @@ class LinemeasParameters:
         except Exception:
             raise APIException(
                 ErrorCode.OUTPUT_READER_ERROR,
-                f"missing output: {spectrum_model}.{redshift_solver}.{velocity_name}",
+                f"missing output: {spectrum_model}.redshiftSolver.{redshift_solver}.{velocity_name}",
             ) from None
         return velocity
 
-    def _get_velocity_from_parameters(self, parameter: Parameters, spectrum_model: str, velocity_name: str):
+    def _get_velocity_from_linemeas_parameters(
+        self, parameter: Parameters, spectrum_model: str, velocity_type: EVelocityType
+    ):
         linemeas_solver = parameter.get_linemeas_method(spectrum_model)
-        if velocity_name == "VelocityAbsorption":
-            velocity = parameter.get_velocity_absorption(spectrum_model, linemeas_solver)
-        elif velocity_name == "VelocityEmission":
-            velocity = parameter.get_velocity_emission(spectrum_model, linemeas_solver)
+        velocity = parameter.get_velocity(spectrum_model, linemeas_solver, velocity_type)
+        if velocity is None:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER_FILE,
+                f"missing parameter {spectrum_model}.lineMeasSolver.{linemeas_solver}."
+                f"{ParametersAccessor.get_velocity_name(velocity_type)}",
+            )
         return velocity
 
     def _replace_nan_with_parameter(self, parameter: Parameters, spectrum_model: str):
-        if pd.isna(self.velocity_abs[spectrum_model]):
-            self.velocity_abs[spectrum_model] = self._get_velocity_from_parameters(
-                parameter, spectrum_model, "VelocityAbsorption"
-            )
-            zlog.LogInfo(
-                (
-                    "VelocityAbsorption not measured, using lineMeasSolver parameter value: "
-                    + f"{self.velocity_abs[spectrum_model]}"
+        for velocity_type in self.velocity:
+            if pd.isna(self.velocity[velocity_type][spectrum_model]):
+                self.velocity[velocity_type][spectrum_model] = self._get_velocity_from_linemeas_parameters(
+                    parameter, spectrum_model, velocity_type
                 )
-            )
-        if pd.isna(self.velocity_em[spectrum_model]):
-            self.velocity_em[spectrum_model] = self._get_velocity_from_parameters(
-                parameter, spectrum_model, "VelocityEmission"
-            )
-            zlog.LogInfo(
-                (
-                    "VelocityEmission not measured, using lineMeasSolver parameter value: "
-                    + f"{self.velocity_em[spectrum_model]}"
+                zlog.LogInfo(
+                    (
+                        f"{ParametersAccessor.get_velocity_name(velocity_type)} "
+                        "not measured, using lineMeasSolver parameter value: "
+                        f"{self.velocity[velocity_type][spectrum_model]}"
+                    )
                 )
-            )
 
     def _check_velocity_range(self, parameter: Parameters, spectrum_model: str):
         velocityfit: bool = parameter.get_linemeas_velocity_fit(spectrum_model)
         if not velocityfit:
             return
-        params = [
-            {"param": "velocityEmission", "fitparam": ["emVelocityFitMin", "emVelocityFitMax"]},
-            {"param": "velocityAbsorption", "fitparam": ["absVelocityFitMin", "absVelocityFitMax"]},
-        ]
-        for param_dict in params:
-            velocity = parameter.get_linemeas_velocity_fit_param(spectrum_model, param_dict["param"])
-
-            velocity_bound = parameter.get_linemeas_velocity_fit_param(
-                spectrum_model, param_dict["fitparam"][0]
+        for velocity_type in EVelocityType:
+            velocity = parameter.get_velocity(spectrum_model, "lineMeasSolve", velocity_type)
+            velocity_bound = parameter.get_velocity_fit_param(
+                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min
             )
             if velocity < velocity_bound:
                 warning_message = (
-                    f"lineMeasSolve input velocity {param_dict['param']}={velocity}"
-                    + f" for object {spectrum_model}"
-                    + f" is below {param_dict['fitparam'][0]}={velocity_bound}:"
-                    + " extending velocity fit range"
+                    f"lineMeasSolve input velocity {parameter.get_velocity_name(velocity_type)}"
+                    f"={velocity} for object {spectrum_model} is below "
+                    f"{parameter.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)}"
+                    f"={velocity_bound}:"
+                    " extending velocity fit range"
                 )
                 zflag.warning(WarningCode.VELOCITY_FIT_RANGE, warning_message)
-                parameter.set_linemeas_velocity_fit_param(spectrum_model, param_dict["fitparam"][0], velocity)
+                parameter.set_velocity_fit_param(
+                    spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min, velocity
+                )
 
-            velocity_bound = parameter.get_linemeas_velocity_fit_param(
-                spectrum_model, param_dict["fitparam"][1]
+            velocity_bound = parameter.get_velocity_fit_param(
+                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max
             )
             if velocity > velocity_bound:
                 warning_message = (
-                    f"lineMeasSolve input velocity {param_dict['param']}={velocity}"
-                    + f" for object {spectrum_model}"
-                    + f" is above {param_dict['fitparam'][1]}={velocity_bound}:"
-                    + " extending velocity fit range"
+                    f"lineMeasSolve input velocity {parameter.get_velocity_name(velocity_type)}"
+                    f"={velocity} for object {spectrum_model} is above "
+                    f"{parameter.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}"
+                    f"={velocity_bound}:"
+                    " extending velocity fit range"
                 )
                 zflag.warning(WarningCode.VELOCITY_FIT_RANGE, warning_message)
-                parameter.set_linemeas_velocity_fit_param(spectrum_model, param_dict["fitparam"][1], velocity)
+                parameter.set_velocity_fit_param(
+                    spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max, velocity
+                )
