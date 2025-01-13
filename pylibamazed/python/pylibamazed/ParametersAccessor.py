@@ -236,7 +236,10 @@ class ParametersAccessor:
             return self.parameters.get("filters", default)
         else:
             if self.parameters.get("filters"):
-                return self.parameters.get("filters").get(obs_id, default)
+                try:
+                    return self.parameters.get("filters").get(obs_id, default)
+                except:
+                    return self.parameters.get("filters")
             else:
                 return default
 

@@ -131,7 +131,7 @@ class Spectrum:
             if filtered_only and "amazed_mask" in df:
                 return df[df["amazed_mask"]]
             else:
-                return self._dataframe.loc[obs_id]
+                return df
         if filtered_only and "amazed_mask" in df:
             return df[df["amazed_mask"]]
         else:
@@ -227,14 +227,17 @@ class Spectrum:
             cpp_phot = CPhotometricData(names, flux, fluxerr)
             return cpp_phot
 
-    def _get_obs_ids(self) -> list:
+    def _get_obs_ids(self, all_obs=False) -> list:
         multiobs_type = self.parameters.get_multiobs_method()
         if not multiobs_type:
             obs_ids = [""]
 
         elif self._is_multiobs_merge:
             self._merge_if_not_available()
-            obs_ids = [""]
+            if all_obs:
+                return self.observation_ids
+            else:
+                return [""]
 
         elif multiobs_type == "full":
             obs_ids = self.observation_ids
@@ -356,8 +359,8 @@ class Spectrum:
         """
 
         self._corrected_airvacuum_method()
-
-        for obs_id in self._get_obs_ids():
+        
+        for obs_id in self._get_obs_ids(all_obs=True):
             self._apply_filters(self._get_filters(obs_id), obs_id)
         if self.masks:
             self._dataframe["amazed_mask"] = [
