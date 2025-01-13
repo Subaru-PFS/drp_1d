@@ -101,7 +101,7 @@ class AbstractExternalStorage:
         :return resource: astropy Table containing fits table at hdu <hdu>
         :type resource: Table
         """
-        return Table.read(filepath, hdu=hdu)
+        return Table.read(filepath, hdu=hdu, unit_parse_strict="silent")
 
     def _read_ascii(self, filepath: str, **kwargs) -> pd.DataFrame:
         """
