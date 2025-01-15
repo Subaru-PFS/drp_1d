@@ -86,6 +86,7 @@ class Spectrum:
         self._lsf = lsf
         self._photometric_data = photometric_data
         self.w_frame = wave_frame
+        self.masks = dict()
 
     @property
     def _is_multiobs_merge(self) -> bool:
@@ -127,8 +128,12 @@ class Spectrum:
             df = self._dataframe
         else:
             df = self._dataframe.loc[obs_id]
+            if filtered_only and "amazed_mask" in df:
+                return df[df["amazed_mask"]]
+            else:
+                return df
         if filtered_only and "amazed_mask" in df:
-            return df.loc[df["amazed_mask"]]
+            return df[df["amazed_mask"]]
         else:
             return df
 
@@ -222,21 +227,30 @@ class Spectrum:
             cpp_phot = CPhotometricData(names, flux, fluxerr)
             return cpp_phot
 
-    def _make_cspectra(self) -> dict:
-        cpp_spectra = dict()
+    def _get_obs_ids(self, all_obs=False) -> list:
         multiobs_type = self.parameters.get_multiobs_method()
-        cpp_lsf = self._make_clsf()
-        cpp_phot = self._make_photometric_data()
-
         if not multiobs_type:
             obs_ids = [""]
 
         elif self._is_multiobs_merge:
             self._merge_if_not_available()
-            obs_ids = [""]
+            if all_obs:
+                return self.observation_ids
+            else:
+                return [""]
 
         elif multiobs_type == "full":
             obs_ids = self.observation_ids
+
+        return obs_ids
+
+    def _make_cspectra(self) -> dict:
+        cpp_spectra = dict()
+
+        cpp_lsf = self._make_clsf()
+        cpp_phot = self._make_photometric_data()
+
+        obs_ids = self._get_obs_ids()
 
         for obs_id in obs_ids:
             spectralaxis = CSpectrumSpectralAxis(self.get_wave(obs_id))
@@ -327,13 +341,13 @@ class Spectrum:
                     f"contained in spectrum wavelength ([{spectrum_lambda_min}, {spectrum_lambda_max}])",
                 )
 
-    def _get_filters(self):
-        return self.filter_loader_class().get_filters(self.parameters)
+    def _get_filters(self, obs_id: str):
+        return self.filter_loader_class().get_filters(self.parameters, obs_id=obs_id)
 
-    def _apply_filters(self, filters: FilterList) -> None:
+    def _apply_filters(self, filters: FilterList, obs_id: str) -> None:
         if filters is None:
             return
-        filters.apply(self._dataframe)
+        self.masks[obs_id] = filters.apply(self._dataframe.loc[obs_id])
 
     def init(self):
         """
@@ -345,5 +359,15 @@ class Spectrum:
         """
 
         self._corrected_airvacuum_method()
-        self._apply_filters(self._get_filters())
+        
+        for obs_id in self._get_obs_ids(all_obs=True):
+            self._apply_filters(self._get_filters(obs_id), obs_id)
+        if self.masks:
+            self._dataframe["amazed_mask"] = [
+                self.masks[obs_id][i]
+                for obs_id, i in zip(
+                    self._dataframe.index.get_level_values("obs_id"),
+                    self._dataframe.index.get_level_values("index"),
+                )
+            ]
         self._check_wavelengths()

@@ -193,8 +193,8 @@ class AbstractOutput(metaclass=ABCMeta):
                 rank = 0  # Exception for model_parameters where no rank is actually rank 0
             elif dataset.startswith("reliability"):
                 dataset = dataset.replace("<relName>", attr_parts[1])
-                if self.has_attribute(object_type, dataset, attr_name, rank):
-                    return self.get_attribute(object_type, dataset, attr_name, rank)
+                if self._has_attribute(object_type, dataset, attr_name, rank):
+                    return self._get_attribute(object_type, dataset, attr_name, rank)
             if dataset not in LINES_DATASETS:
                 if self._has_attribute(object_type, dataset, attr_name, rank):
                     return self._get_attribute(object_type, dataset, attr_name, rank)

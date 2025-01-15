@@ -52,7 +52,7 @@ class TestFilterList:
         filter.add_filter(SpectrumFilterItem("col1", ">", 12))
         filter.add_filter(SpectrumFilterItem("col2", "<", 10))
 
-        filter.apply(df)
+        df["amazed_mask"] = filter.apply(df)
         expected["amazed_mask"] = [False, True, True]
         ComparisonUtils.compare_dataframe_without_index(df, expected)
 
