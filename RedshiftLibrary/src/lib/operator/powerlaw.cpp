@@ -297,8 +297,7 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
 
       if (N < m_nLogSamplesMin) {
         addTooFewSamplesWarning(N, igmIdx, ismIdx, __func__);
-        powerLawsCoefs[igmIdx][ismIdx] = {{0, 0, INFINITY, INFINITY},
-                                          {0, 0, INFINITY, INFINITY}};
+        powerLawsCoefs[igmIdx][ismIdx] = DEFAULT_COEFS_PAIR;
       } else {
         TCurve curve = lnCurve.toCoefCurve(igmIdx, ismIdx);
         if (method == "full") {
@@ -334,6 +333,7 @@ COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
   mean_amplitude /= sum_inv_var;
   Float64 mean_amplitude_std = 1.0 / sqrt(sum_inv_var);
   TPowerLawCoefs coefs{mean_amplitude, 0.0, mean_amplitude_std, INFINITY};
+  checkCoefsOrDefault(coefs);
   return TPowerLawCoefsPair{coefs, coefs};
 }
 
@@ -367,15 +367,33 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
     powerLawsCoefs = compute2PassDoublePowerLawCoefs(lnCurve);
   }
 
+  checkCoefsOrDefault(powerLawsCoefs);
   return powerLawsCoefs;
 };
 
 TPowerLawCoefs COperatorPowerLaw::compute2PassSimplePowerLawCoefs(
     TCurve const &lnCurves) const {
-  TPowerLawCoefs coefsFirstEstim = computeSimplePowerLawCoefs(lnCurves);
-  TPowerLawCoefs coefsSecondEstim =
-      computeSimplePowerLawCoefs(lnCurves, coefsFirstEstim);
-  return coefsSecondEstim;
+  TPowerLawCoefs coefs = computeSimplePowerLawCoefs(lnCurves);
+  bool validCoefs = checkCoefsOrDefault(coefs);
+  if (validCoefs)
+    coefs = computeSimplePowerLawCoefs(lnCurves, coefs);
+  return coefs;
+}
+
+bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefs &coefs) const {
+  if (coefs.a < DBL_MIN) {
+    coefs = DEFAULT_COEFS;
+    return false;
+  }
+  return true;
+}
+
+bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const {
+  if (coefs.first.a < DBL_MIN || coefs.second.a < DBL_MIN) {
+    coefs = DEFAULT_COEFS_PAIR;
+    return false;
+  }
+  return true;
 }
 
 TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
@@ -419,10 +437,11 @@ TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(
     TCurve const &lnCurves) const {
   // Make a first calculation of power law coefficients without taking into
   // account the noise
-  TPowerLawCoefsPair coefsFirstEstim = computeDoublePowerLawCoefs(lnCurves);
-  TPowerLawCoefsPair coefsSecondEstim =
-      computeDoublePowerLawCoefs(lnCurves, coefsFirstEstim);
-  return coefsSecondEstim;
+  TPowerLawCoefsPair coefs = computeDoublePowerLawCoefs(lnCurves);
+  bool validCoefs = checkCoefsOrDefault(coefs);
+  if (validCoefs)
+    coefs = computeDoublePowerLawCoefs(lnCurves, coefs);
+  return coefs;
 }
 
 TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
