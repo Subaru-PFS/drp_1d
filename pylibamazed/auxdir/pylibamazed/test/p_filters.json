@@ -16,6 +16,7 @@
       "value": 20
     }
   ],
+  "nbSamplesMin": 1,
   "multiObsMethod": "",
   "lambdaRange": [
     12510,

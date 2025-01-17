@@ -210,11 +210,12 @@ void CInputContext::Init() {
     spectrum_ptr->GetSpectralAxis().ClampLambdaRange(*lambdaRange_ptr,
                                                      *clampedLambdaRange_ptr);
   }
-
+  Float64 nbSamplesMin = m_ParameterStore->Get<Int32>("nbSamplesMin");
   // validate spectra and initialize spectra continuum removal
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
        boost::combine(m_spectra, m_lambdaRanges)) {
-    spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect);
+    spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect,
+                                   nbSamplesMin);
     spectrum_ptr->InitSpectrumContinuum(*m_ParameterStore);
     // convolve IGM by LSF
 
@@ -237,8 +238,8 @@ void CInputContext::Init() {
   if (m_use_LogLambaSpectrum) {
     for (auto const &[spectrum_ptr, lambdaRange_ptr, rebinedSpectrum_ptr] :
          boost::combine(m_spectra, m_lambdaRanges, m_rebinnedSpectra)) {
-      rebinedSpectrum_ptr->ValidateSpectrum(*lambdaRange_ptr,
-                                            enableInputSpcCorrect);
+      rebinedSpectrum_ptr->ValidateSpectrum(
+          *lambdaRange_ptr, enableInputSpcCorrect, nbSamplesMin);
       rebinedSpectrum_ptr->SetLSF(spectrum_ptr->GetLSF());
     }
   }

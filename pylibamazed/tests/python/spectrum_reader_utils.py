@@ -60,6 +60,7 @@ class TestSpectrumReaderUtils:
             params_dict["filters"] = kwargs.get("filters")
         if kwargs.get("width"):
             params_dict["lsf"]["width"] = kwargs.get("width")
+        params_dict["nbSamplesMin"] = kwargs.get("nbSamplesMin", 0)
         return params_dict
 
     def full_load(self, fsr, **kwargs):

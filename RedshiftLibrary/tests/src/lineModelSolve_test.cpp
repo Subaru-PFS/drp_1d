@@ -57,6 +57,7 @@ const std::string multiLambdaString =
 
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
+    "\"nbSamplesMin\" : 1,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -133,6 +134,7 @@ const std::string jsonString =
 
 const std::string jsonStringS =
     "\"smoothWidth\" : 0.0,"
+    "\"nbSamplesMin\" : 1,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","

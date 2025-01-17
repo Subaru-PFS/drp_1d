@@ -190,6 +190,7 @@ BOOST_FIXTURE_TEST_SUITE(powerLawOperator_test, PowerLaw_fixture)
 
 const std::string jsonStringEnd =
     "\"smoothWidth\" : 0.0,"
+    "\"nbSamplesMin\" : 1,"
     "\"spectrumModels\" : [\"galaxy\"],"
     "\"autoCorrectInput\" : false,"
     "\"continuumRemoval\": {"

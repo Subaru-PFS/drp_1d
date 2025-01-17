@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
@@ -645,7 +646,8 @@ void CSpectrum::ApplyAmplitude(Float64 amplitude) {
 }
 
 void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
-                                 bool enableInputSpcCorrect) {
+                                 bool enableInputSpcCorrect,
+                                 const Int32 &nbSamplesMin) {
   if (!IsValid())
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes or non-matching "
@@ -661,6 +663,20 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
   Float64 lmin = clampedlambdaRange.GetBegin();
   Float64 lmax = clampedlambdaRange.GetEnd();
 
+  Int32 imin, imax;
+  try {
+    clampedlambdaRange.getClosedIntervalIndices(
+        m_SpectralAxis.GetSamplesVector(), imin, imax);
+  } catch (const AmzException &e) {
+    THROWG(ErrorCode::INVALID_SPECTRUM,
+           Formatter() << "Invalid spectrum after clamping to [" << lmin << ","
+                       << lmax << "] has no samples : " << e.what());
+  }
+  if (imax - imin + 1 < nbSamplesMin)
+    THROWG(ErrorCode::INVALID_SPECTRUM,
+           Formatter() << "Invalid spectrum after clamping to [" << lmin << ","
+                       << lmax << "] , has " << imax - imin + 1
+                       << " samples, less than " << nbSamplesMin);
   // Check if the Spectrum is valid on the clamped lambdarange
   if (enableInputSpcCorrect)
     if (correctSpectrum(lmin, lmax))

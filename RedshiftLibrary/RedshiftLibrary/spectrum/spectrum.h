@@ -126,7 +126,8 @@ public:
   bool IsFluxEmpty() const;
   bool IsEmpty() const;
   bool IsValid() const;
-  void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect);
+  void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect,
+                        const Int32 &nbSamplesMin);
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
   void SetPhotData(const std::shared_ptr<const CPhotometricData> &photData);
 

@@ -570,6 +570,9 @@ class ParametersAccessor:
         except Exception:
             return [""]
 
+    def get_nb_samples_min(self):
+        return self.parameters["nbSamplesMin"]
+
     def _get_or_create_section(self, parent_section_getter, child_section_name: str, create: bool, *args):
         parent_section = parent_section_getter(*args, create)
         child_section = self._get_on_None(parent_section, child_section_name)

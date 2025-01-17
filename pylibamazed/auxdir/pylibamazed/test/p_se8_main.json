@@ -5,6 +5,7 @@
     12510,
     18500
   ],
+  "nbSamplesMin": 1,
   "smoothWidth": 0.0,
   "templateCatalog": {
     "continuumRemoval": {
