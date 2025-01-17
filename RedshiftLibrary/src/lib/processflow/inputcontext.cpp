@@ -191,7 +191,7 @@ void CInputContext::Init() {
   // non clamped lambdaRange: to be clamped depending on used spectra
   for (auto spectrum : m_spectra) {
     TFloat64Range lambdaRange;
-    if (m_spectra.size() > 1)
+    if (m_ParameterStore->Get<std::string>("multiObsMethod") == "full")
       lambdaRange = m_ParameterStore->Get<TFloat64Range>(
           Formatter() << "lambdaRange." << spectrum->getObsID());
     else

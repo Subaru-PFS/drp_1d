@@ -207,10 +207,12 @@ const std::string jsonStringEnd =
     "}}}";
 
 const std::string jsonStringBegin1 =
-    "{\"lambdaRange\" : [ 4000, 7000 ],"; // So that xc is in range
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 4000, 7000 ],"; // So that xc is in range
 const std::string jsonStringBegin2 =
-    "{\"lambdaRange\" : [ 2700, 4200 ],"; // To be in the range of ism / igm
-                                          // fixture
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 2700, 4200 ],"; // To be in the range of ism / igm
+                                         // fixture
 const std::string jsonString1 = jsonStringBegin1 + jsonStringEnd;
 const std::string jsonString2 = jsonStringBegin2 + jsonStringEnd;
 

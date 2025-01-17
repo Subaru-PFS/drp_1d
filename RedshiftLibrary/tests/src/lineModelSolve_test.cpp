@@ -47,10 +47,13 @@
 
 using namespace NSEpic;
 
-const std::string lambdaString = "{\"lambdaRange\" : [ 4680, 4712 ],";
-const std::string largeLambdaString = "{\"lambdaRange\" : [ 4600, 5000 ],";
+const std::string lambdaString = "{\"multiObsMethod\" : \"\","
+                                 "\"lambdaRange\" : [ 4680, 4712 ],";
+const std::string largeLambdaString = "{\"multiObsMethod\" : \"\","
+                                      "\"lambdaRange\" : [ 4600, 5000 ],";
 const std::string multiLambdaString =
-    "{\"lambdaRange\" : { \"A\" : [ 4680, 4695 ], \"B\" : [4695, 4712]},";
+    "{\"multiObsMethod\" : \"full\","
+    "\"lambdaRange\" : { \"A\" : [ 4680, 4695 ], \"B\" : [4695, 4712]},";
 
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"

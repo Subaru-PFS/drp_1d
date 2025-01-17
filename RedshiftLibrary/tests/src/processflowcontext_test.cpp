@@ -51,7 +51,8 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdaRange\" : [ 4630, 4815 ],"
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 4630, 4815 ],"
     "\"smoothWidth\" : 0.0,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"

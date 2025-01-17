@@ -46,10 +46,12 @@
 
 using namespace NSEpic;
 
-const std::string jsonStringOneSpc = "{\"lambdaRange\" : [ 4631, 4815 ],";
+const std::string jsonStringOneSpc = "{\"multiObsMethod\" : \"\","
+                                     "\"lambdaRange\" : [ 4631, 4815 ],";
 
 const std::string jsonStringMO =
-    "{\"lambdaRange\" : {\"1\" : [ 4631, 4815], \"2\" : [ 4631, 4815 ]},";
+    "{\"multiObsMethod\" : \"full\","
+    "\"lambdaRange\" : {\"1\" : [ 4631, 4815], \"2\" : [ 4631, 4815 ]},";
 
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
