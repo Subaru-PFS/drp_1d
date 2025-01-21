@@ -87,3 +87,14 @@ Possible warning codes list
   Happens in the case of multi obs, for which only one lsf is support.
   Only the lsf of the first observation is taken into account and applied
   to all observations.
+
+**NULL_LINES_PROFILE**
+   One line profile is null (zero flux) on all its samples: the corresponding line is discarded
+
+**STD_ESTIMATION_FAILED**
+   The number of samples available to estimate the RMS of the residual is too low. 
+
+**VELOCITY_FIT_RANGE**
+   The lineMeas velocity fit range does not include the input velocity
+   (comming from either the previous redhiftSolver stage, input lineMeas catalog).
+   The range is thus extended to contain this velocity.

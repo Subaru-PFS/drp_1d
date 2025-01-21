@@ -59,6 +59,17 @@ class EContinuumFit(Enum):
     REFIT_FIRST_PASS = 3
 
 
+class EVelocityType(Enum):
+    Absorption = "Absorption"
+    Emission = "Emission"
+
+
+class EVelocityFitParam(Enum):
+    Min = "Min"
+    Max = "Max"
+    Step = "Step"
+
+
 class ParametersAccessor:
     solve_method_dict = {
         ESolveMethod.LINE_MODEL: "lineModelSolve",
@@ -71,6 +82,11 @@ class ParametersAccessor:
         EContinuumFit.FROM_FIRST_PASS: "fromFirstPass",
         EContinuumFit.RETRY_ALL: "retryAll",
         EContinuumFit.REFIT_FIRST_PASS: "reFitFirstPass",
+    }
+
+    velocity_fit_prefix_dict = {
+        EVelocityType.Absorption: "abs",
+        EVelocityType.Emission: "em",
     }
 
     def __init__(self, parameters: dict):
@@ -168,6 +184,9 @@ class ParametersAccessor:
     def get_linemeas_redshiftstep(self, spectrum_model: str) -> float:
         return self.get_spectrum_model_section(spectrum_model).get("lineMeasRedshiftStep")
 
+    def set_redshiftref(self, spectrum_model, redshift_ref) -> None:
+        self.get_spectrum_model_section(spectrum_model)["redshiftref"] = redshift_ref
+
     def get_reliability_enabled(self, spectrum_model: str) -> bool:
         return "reliabilitySolver" in self.get_stages(spectrum_model)
 
@@ -238,7 +257,7 @@ class ParametersAccessor:
             if self.parameters.get("filters"):
                 try:
                     return self.parameters.get("filters").get(obs_id, default)
-                except:
+                except AttributeError:
                     return self.parameters.get("filters")
             else:
                 return default
@@ -260,6 +279,9 @@ class ParametersAccessor:
 
     def get_lsf_width_file_name(self):
         return self._get_on_None(self.get_lsf(), "gaussianVariableWidthFileName")
+
+    def set_lsf_param(self, param_name, data):
+        self.parameters["lsf"][param_name] = data
 
     def get_continuum_removal_section(self, fromTemplateCatalog: bool = False, create: bool = False):
         if fromTemplateCatalog:
@@ -510,6 +532,50 @@ class ParametersAccessor:
     def get_linemodel_extremacount(self, spectrum_model: str):
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "extremaCount")
 
+    def get_linemodel_velocity_fit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "velocityFit")
+
+    @staticmethod
+    def get_velocity_name(velocity_type: EVelocityType) -> str:
+        return f"velocity{velocity_type.value}"
+
+    def get_velocity(self, spectrum_model: str, solve_method: str, velocity_type: EVelocityType) -> float:
+        return self._get_on_None(
+            self.get_linemodel_section(spectrum_model, solve_method),
+            self.get_velocity_name(velocity_type),
+        )
+
+    @classmethod
+    def get_velocity_fit_param_name(cls, velocity_type: EVelocityType, param: EVelocityFitParam) -> str:
+        return f"{cls.velocity_fit_prefix_dict[velocity_type]}VelocityFit{param.value}"
+
+    def get_velocity_fit_param(
+        self, spectrum_model: str, solve_method: str, velocity_type: EVelocityType, param: EVelocityFitParam
+    ) -> float:
+        return self._get_on_None(
+            self.get_linemodel_section(spectrum_model, solve_method),
+            self.get_velocity_fit_param_name(velocity_type, param),
+        )
+
+    def set_velocity(
+        self, spectrum_model: str, solve_method: str, velocity_type: EVelocityType, value: float
+    ):
+        self.get_linemodel_section(spectrum_model, solve_method)[
+            self.get_velocity_name(velocity_type)
+        ] = value
+
+    def set_velocity_fit_param(
+        self,
+        spectrum_model: str,
+        solve_method: str,
+        velocity_type: EVelocityType,
+        param: EVelocityFitParam,
+        value: float,
+    ):
+        self.get_linemodel_section(spectrum_model, solve_method)[
+            self.get_velocity_fit_param_name(velocity_type, param)
+        ] = value
+
     def get_linemeas_linemodel_section(self, spectrum_model: str) -> dict:
         return self._get_on_None(self.get_linemeas_solve_section(spectrum_model), "lineModel")
 
@@ -522,11 +588,8 @@ class ParametersAccessor:
     def get_linemeas_fitting_method(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "fittingMethod")
 
-    def get_linemeas_velocity_fit(self, spectrum_model: str) -> str:
+    def get_linemeas_velocity_fit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "velocityFit")
-
-    def get_linemeas_velocity_fit_param(self, spectrum_model: str, param: str) -> float:
-        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), param)
 
     def get_linemeas_nsigmasupport(self, spectrum_model: str) -> float:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "nSigmaSupport")

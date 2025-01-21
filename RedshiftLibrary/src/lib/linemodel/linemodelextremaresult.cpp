@@ -81,8 +81,8 @@ void TLineModelResult::updateFromModel(
   Merit = lmresult->ChiSquare[idx];
 
   // LineModelSolutions
-  Elv = lmel->GetVelocityEmission();
-  Alv = lmel->GetVelocityAbsorption();
+  Elv = lmresult->LineModelSolutions[idx].EmissionVelocity;
+  Alv = lmresult->LineModelSolutions[idx].AbsorptionVelocity;
 
   if (!estimateLeastSquareFast) {
     MeritContinuum = lmel->getLeastSquareContinuumMerit();

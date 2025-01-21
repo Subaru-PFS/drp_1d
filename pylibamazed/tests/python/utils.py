@@ -138,6 +138,17 @@ def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwar
     return param_dict
 
 
+def make_parameter_dict_linemeas_solve_piped_linemodel(
+    linemodel_level_params: dict = None, linemeas_level_params: dict = None
+) -> dict:
+    param_dict = make_parameter_dict_at_linemodelsolve_level(**linemodel_level_params)
+    param_dict[default_object_type]["stages"] += ["lineMeasSolver"]
+    linemeas_dict = make_parameter_dict_at_linemeas_solve_level(**linemeas_level_params)
+    del linemeas_dict[default_object_type]["stages"]
+    param_dict[default_object_type] = param_dict[default_object_type] | linemeas_dict[default_object_type]
+    return param_dict
+
+
 def make_parameter_dict_at_reliability_solver_level(object_level_params=None, **kwargs) -> dict:
     param_dict = {
         "spectrumModels": [default_object_type],

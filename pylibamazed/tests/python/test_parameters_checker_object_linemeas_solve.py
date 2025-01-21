@@ -43,6 +43,7 @@ from tests.python.utils import (
     WarningUtils,
     check_from_parameter_dict,
     make_parameter_dict_at_linemeas_solve_level,
+    make_parameter_dict_linemeas_solve_piped_linemodel,
     make_parameter_dict_at_object_level,
 )
 
@@ -115,6 +116,13 @@ class TestLineMeasSolve:
             )
             return param_dict
 
+        def _make_parameter_pipe_dict(self, linemodel_params, linemeas_params):
+            param_dict = make_parameter_dict_linemeas_solve_piped_linemodel(
+                linemodel_level_params=linemodel_params,
+                linemeas_level_params={"lineModel": {"fittingMethod": "lbfgsb", **linemeas_params}},
+            )
+            return param_dict
+
         def test_error_if_velocityfit_is_true_but_a_velocity_param_is_absent(self):
             param_dict = self._make_parameter_dict(
                 **{
@@ -129,10 +137,12 @@ class TestLineMeasSolve:
             param_dict = self._make_parameter_dict(
                 **{
                     "velocityFit": True,
-                    "emVelocityFitMin": 1,
-                    "emVelocityFitMax": 1,
-                    "absVelocityFitMin": 1,
-                    "absVelocityFitMax": 1,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 50,
+                    "emVelocityFitMax": 300,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
                 }
             )
             check_from_parameter_dict(param_dict)
@@ -147,6 +157,93 @@ class TestLineMeasSolve:
             )
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
+
+        def test_error_if_velocity_not_in_range(self, zflag):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "velocityFit": True,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 200,
+                    "emVelocityFitMax": 300,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
+                }
+            )
+            with pytest.raises(APIException):
+                check_from_parameter_dict(param_dict)
+
+        def test_ok_piped_velocity(self, zflag):
+            param_dict = self._make_parameter_pipe_dict(
+                linemodel_params={
+                    "velocityFit": True,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 50,
+                    "emVelocityFitMax": 300,
+                    "emVelocityFitStep": 50,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
+                    "absVelocityFitStep": 50,
+                },
+                linemeas_params={
+                    "velocityFit": True,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 50,
+                    "emVelocityFitMax": 300,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
+                },
+            )
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        def test_error1_piped_velocity(self, zflag):
+            param_dict = self._make_parameter_pipe_dict(
+                linemodel_params={
+                    "velocityFit": False,
+                    "velocityEmission": 50,
+                    "velocityAbsorption": 100,
+                },
+                linemeas_params={
+                    "velocityFit": True,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 100,
+                    "emVelocityFitMax": 300,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
+                },
+            )
+            with pytest.raises(APIException):
+                check_from_parameter_dict(param_dict)
+
+        def test_error2_piped_velocity(self, zflag):
+            param_dict = self._make_parameter_pipe_dict(
+                linemodel_params={
+                    "velocityFit": True,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 50,
+                    "emVelocityFitMax": 300,
+                    "emVelocityFitStep": 50,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
+                    "absVelocityFitStep": 50,
+                },
+                linemeas_params={
+                    "velocityFit": True,
+                    "velocityEmission": 100,
+                    "velocityAbsorption": 100,
+                    "emVelocityFitMin": 100,
+                    "emVelocityFitMax": 300,
+                    "absVelocityFitMin": 100,
+                    "absVelocityFitMax": 500,
+                },
+            )
+            with pytest.raises(APIException):
+                check_from_parameter_dict(param_dict)
 
     class TestLyaFit:
         def _make_parameter_dict(self, **kwargs) -> dict:

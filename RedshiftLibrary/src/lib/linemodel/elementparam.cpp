@@ -54,6 +54,7 @@ TLineModelElementParam::TLineModelElementParam(CLineVector lines,
       m_FittedAmplitudes(m_Lines.size(), NAN),
       m_FittedAmplitudesStd(m_Lines.size(), NAN),
       m_OffsetsStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr),
+      m_defaultVelocity(velocity),
       m_globalOutsideLambdaRangeList(m_Lines.size(), false) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
@@ -157,7 +158,7 @@ void TLineModelElementParam::setVelocity(Float64 vel) {
     THROWG(ErrorCode::INTERNAL_ERROR,
            "Empty line model element, could not set velocity");
 #endif
-  m_Velocity = vel;
+  m_Velocity = isfinite(vel) ? vel : m_defaultVelocity;
 }
 
 void TLineModelElementParam::setVelocityStd(Float64 velStd) {

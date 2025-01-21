@@ -41,7 +41,7 @@ import json
 
 from pylibamazed.Exception import APIException
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
-from pylibamazed.ParametersAccessor import ParametersAccessor
+from pylibamazed.ParametersAccessor import ParametersAccessor, EVelocityFitParam, EVelocityType
 from pylibamazed.ParametersChecker import ParametersChecker
 from pylibamazed.redshift import ErrorCode, WarningCode, CFlagWarning
 from pylibamazed.ParametersAccessor import ESolveMethod
@@ -268,7 +268,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemeassolve_redshiftstep(spectrum_model)
         self._check_linemeassolve_lineratiotype_rules(spectrum_model)
         self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(spectrum_model)
-        self._check_linemeassolve_velocityfit_params(spectrum_model)
+        self._check_linemeassolve_velocity_fit_params(spectrum_model)
         self._check_linemeassolve_lya_fit(spectrum_model)
 
     def _check_linemeassolver_section(self, spectrum_model: str) -> None:
@@ -426,20 +426,22 @@ class CustomParametersChecker(ParametersChecker):
         ]:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
-                f"Second pass continuum fit for templatFittingSolve must be set to {self.accessor.second_pass_continuum_fit_dict[EContinuumFit.REFIT_FIRST_PASS]} (spectrum model {spectrum_model})",
+                "Second pass continuum fit for templatFittingSolve must be set to "
+                f"{self.accessor.second_pass_continuum_fit_dict[EContinuumFit.REFIT_FIRST_PASS]}"
+                f"(spectrum model {spectrum_model})",
             )
 
     def _check_templateFittingSolve_spectrum_consistency(self, spectrum_model: str):
         spectrum_component = self.accessor.get_template_fitting_spectrum_component(spectrum_model)
         self._check_dependant_parameter_presence(
             spectrum_component == "noContinuum",
-            self.accessor.get_template_fitting_ism(spectrum_model) == False,
+            self.accessor.get_template_fitting_ism(spectrum_model) is False,
             error_message=f"noContinuum requires deactivating ism and igm, check {spectrum_model}",
             custom_error_message=True,
         )
         self._check_dependant_parameter_presence(
             spectrum_component == "noContinuum",
-            self.accessor.get_template_fitting_igm(spectrum_model) == False,
+            self.accessor.get_template_fitting_igm(spectrum_model) is False,
             error_message=f"noContinuum requires deactivating ism and igm, check {spectrum_model}",
             custom_error_message=True,
         )
@@ -480,6 +482,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
         self._check_linemodelsolve_lya_fit(spectrum_model)
         self._check_linemodelsolve_useloglambdasampling(spectrum_model)
+        self._check_linemodelsolve_velocity_fit_params(spectrum_model)
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
@@ -626,6 +629,52 @@ class CustomParametersChecker(ParametersChecker):
             f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling",
         )
 
+    def _check_linemodelsolve_velocity_fit_params(self, spectrum_model: str):
+        velocity_fit: bool = self.accessor.get_linemodel_velocity_fit(spectrum_model)
+        for velocity_type in EVelocityType:
+            for param in EVelocityFitParam:
+                message = (
+                    f"lineModelSolve {self.accessor.get_velocity_fit_param_name(velocity_type, param)}"
+                    f" for object {spectrum_model}"
+                )
+                self._check_dependant_parameter_presence(
+                    velocity_fit,
+                    self.accessor.get_velocity_fit_param(
+                        spectrum_model, "lineModelSolve", velocity_type, param
+                    )
+                    is not None,
+                    error_message=message,
+                    warning_message=message,
+                )
+        self._check_linemodelsolve_velocity_in_range(spectrum_model)
+
+    def _check_linemodelsolve_velocity_in_range(self, spectrum_model: str):
+        velocityfit: bool = self.accessor.get_linemodel_velocity_fit(spectrum_model)
+        if not velocityfit:
+            return
+        for velocity_type in EVelocityType:
+            velocity = self.accessor.get_velocity(spectrum_model, "lineModelSolve", velocity_type)
+            velocity_fit_min = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Min
+            )
+            velocity_fit_max = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Max
+            )
+            velocity_in_range = velocity >= velocity_fit_min and velocity <= velocity_fit_max
+            self._check_dependant_parameter_presence(
+                velocityfit,
+                velocity_in_range,
+                error_message=(
+                    f"lineModelSolve {self.accessor.get_velocity_name(velocity_type)}"
+                    f"={velocity} for object {spectrum_model} is outside "
+                    f"[{self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)}"
+                    f" {self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}]"
+                    f"=[{velocity_fit_min}, {velocity_fit_max}]"
+                ),
+                warning_message=None,
+                custom_error_message=True,
+            )
+
     def _check_linemeassolve_lineratiotype_rules(self, spectrum_model: str):
         self._check_dependant_parameter_presence(
             self.accessor.get_linemeas_line_ratio_type(spectrum_model) == "rules",
@@ -642,15 +691,116 @@ class CustomParametersChecker(ParametersChecker):
             warning_message=f"object {spectrum_model} LineMeasSolve velocityFit",
         )
 
-    def _check_linemeassolve_velocityfit_params(self, spectrum_model: str):
-        params = ["emVelocityFitMin", "emVelocityFitMax", "absVelocityFitMin", "absVelocityFitMax"]
-        velocityfit: bool = self.accessor.get_linemeas_velocity_fit(spectrum_model)
-        for param in params:
+    def _check_linemeassolve_velocity_fit_params(self, spectrum_model: str):
+        velocity_fit: bool = self.accessor.get_linemeas_velocity_fit(spectrum_model)
+        for velocity_type in EVelocityType:
+            for param in [EVelocityFitParam.Min, EVelocityFitParam.Max]:
+                message = (
+                    f"lineMeasSolve {self.accessor.get_velocity_fit_param_name(velocity_type, param)}"
+                    f" for object {spectrum_model}"
+                )
+                self._check_dependant_parameter_presence(
+                    velocity_fit,
+                    self.accessor.get_velocity_fit_param(
+                        spectrum_model, "lineMeasSolve", velocity_type, param
+                    )
+                    is not None,
+                    error_message=message,
+                    warning_message=message,
+                )
+        self._check_linemeassolve_velocity_in_range(spectrum_model)
+        self._check_linemeassolve_piped_linemodel_velocity(spectrum_model)
+
+    def _check_linemeassolve_velocity_in_range(self, spectrum_model: str):
+        velocity_fit: bool = self.accessor.get_linemeas_velocity_fit(spectrum_model)
+        if not velocity_fit:
+            return
+        for velocity_type in EVelocityType:
+            velocity = self.accessor.get_velocity(spectrum_model, "lineMeasSolve", velocity_type)
+            velocity_fit_min = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min
+            )
+            velocity_fit_max = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max
+            )
+            velocity_in_range = velocity >= velocity_fit_min and velocity <= velocity_fit_max
             self._check_dependant_parameter_presence(
-                velocityfit,
-                self.accessor.get_linemeas_velocity_fit_param(spectrum_model, param) is not None,
-                error_message=f"lineMeasSolve {param} for object {spectrum_model}",
-                warning_message=f"object {spectrum_model} LineMeasSolve {param}",
+                velocity_fit,
+                velocity_in_range,
+                error_message=(
+                    f"lineMeasSolve {self.accessor.get_velocity_name(velocity_type)}"
+                    f"={velocity} for object {spectrum_model} is outside "
+                    f"[{self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)},"
+                    f" {self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}]="
+                    f"[{velocity_fit_min}, {velocity_fit_max}]"
+                ),
+                warning_message=None,
+                custom_error_message=True,
+            )
+
+    def _check_linemeassolve_piped_linemodel_velocity(self, spectrum_model: str):
+        stages = self.accessor.get_stages(spectrum_model)
+        redshift_solver_method = self.accessor.get_redshift_solver_method(spectrum_model)
+        linemeas_piped_linemodel = (
+            "redshiftSolver" in stages
+            and "lineMeasSolver" in stages
+            and redshift_solver_method == "lineModelSolve"
+        )
+        linemeas_velocity_fit = self.accessor.get_linemeas_velocity_fit(spectrum_model)
+        if not linemeas_piped_linemodel or not linemeas_velocity_fit:
+            return
+        linemodel_velocity_fit = self.accessor.get_linemodel_velocity_fit(spectrum_model)
+        for velocity_type in EVelocityType:
+            linemodel_velocity = self.accessor.get_velocity(spectrum_model, "lineModelSolve", velocity_type)
+            velocity_fit_min = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min
+            )
+            velocity_fit_max = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max
+            )
+            velocity_in_range = (
+                linemodel_velocity >= velocity_fit_min and linemodel_velocity <= velocity_fit_max
+            )
+            self._check_dependant_parameter_presence(
+                linemeas_piped_linemodel and linemeas_velocity_fit and not linemodel_velocity_fit,
+                velocity_in_range,
+                error_message=(
+                    f"lineModelSolve {self.accessor.get_velocity_name(velocity_type)}"
+                    f"={linemodel_velocity} for object {spectrum_model} is outside lineMeasSolve "
+                    f"[{self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)},"
+                    f" {self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}]"
+                    f"=[{velocity_fit_min}, {velocity_fit_max}]"
+                ),
+                warning_message=None,
+                custom_error_message=True,
+            )
+
+            if not linemodel_velocity_fit:
+                continue
+
+            linemodel_velocity_fit_min = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Min
+            )
+            linemodel_velocity_fit_max = self.accessor.get_velocity_fit_param(
+                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Max
+            )
+            velocity_in_range = (
+                linemodel_velocity_fit_min >= velocity_fit_min
+                and linemodel_velocity_fit_max <= velocity_fit_max
+            )
+            self._check_dependant_parameter_presence(
+                linemeas_piped_linemodel and linemeas_velocity_fit and linemodel_velocity_fit,
+                velocity_in_range,
+                error_message=(
+                    "lineModelSolve velocity fit range "
+                    f"[{self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)},"
+                    f" {self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}]"
+                    f"=[{linemodel_velocity_fit_min}, {linemodel_velocity_fit_max}]"
+                    " is not included in lineMeasSolve velocity fit range"
+                    f"=[{velocity_fit_min}, {velocity_fit_max}] for object {spectrum_model}"
+                ),
+                warning_message=None,
+                custom_error_message=True,
             )
 
     def _check_linemeassolve_lya_fit(self, spectrum_model: str):

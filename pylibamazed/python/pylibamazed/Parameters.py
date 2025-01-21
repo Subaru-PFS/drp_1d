@@ -38,8 +38,8 @@
 # ============================================================================
 
 import json
+import copy
 
-import pandas as pd
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.ParametersAccessor import ParametersAccessor
 from pylibamazed.ParametersConverter import ParametersConverterSelector
@@ -73,6 +73,11 @@ class Parameters(ParametersAccessor):
         extended_parameters = Extender(version).extend(converted_parameters)
         self.parameters = extended_parameters
         self.remove_unused_solvers()
+
+    def __deep_copy__(self, memo):
+        ret = copy.copy(self)
+        ret.parameters = copy.deepcopy(self.parameters, memo)
+        return ret
 
     def get_json_schema_version(self, raw_parameters: dict):
         version = raw_parameters.get("version")
@@ -155,24 +160,6 @@ class Parameters(ParametersAccessor):
 
     def is_two_pass_active(self, solve_method: str, spectrum_model):
         return not self.get_skipsecondpass(solve_method, spectrum_model, True)
-
-    def set_lsf_param(self, param_name, data):
-        self.parameters["lsf"][param_name] = data
-
-    def set_redshiftref(self, spectrum_model, redshift_ref) -> None:
-        self.get_spectrum_model_section(spectrum_model)["redshiftref"] = redshift_ref
-
-    def set_velocity_absorption(self, spectrum_model: str, solve_method, velocity_abs) -> None:
-        self.get_linemodel_section(spectrum_model, solve_method)["velocityAbsorption"] = velocity_abs
-
-    def set_velocity_emission(self, spectrum_model: str, solve_method, velocity_em) -> None:
-        self.get_linemodel_section(spectrum_model, solve_method)["velocityEmission"] = velocity_em
-
-    def get_velocity_absorption(self, spectrum_model: str, solve_method) -> float:
-        return self.get_linemodel_section(spectrum_model, solve_method)["velocityAbsorption"]
-
-    def get_velocity_emission(self, spectrum_model: str, solve_method) -> float:
-        return self.get_linemodel_section(spectrum_model, solve_method)["velocityEmission"]
 
     def to_json(self):
         return json.dumps(self.parameters)

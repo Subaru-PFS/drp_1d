@@ -192,7 +192,7 @@ private:
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
   std::shared_ptr<CContinuumFitStore> m_tplfitStore_firstpass;
   std::vector<std::shared_ptr<CContinuumFitStore>> m_tplfitStore_secondpass;
-  std::vector<VelocityFitSolution> m_velocitySolutions;
+  std::vector<TVelocityFitSolution> m_velocitySolutions;
 };
 
 } // namespace NSEpic
