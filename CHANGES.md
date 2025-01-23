@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.6.0 (2025-01-23)
+## Added
+* [#6715] : Add velocity uncertainty and lambda offset uncertainty
+* [#9300] : Template fitting solve : implements the two pass coarse/ fine zgrid fitting
+* [#9299] : Add python filename,method,line number in APIexceptions, fix some exception handling
+* [#9365] : [api] Add optional class AbstractExternalStorage
+* [#9360] : Filters should be defined by observation
+* [#8308] : Enable linemeas after template fitting
+## Changed
+* [#9245] : Switched to pyproject.toml installation and build procedure (compatible with python 3.12)
+* [#9255] : Refactor AbstractSpectrumReader
+* [#9311] : Makes referencing lib easily optional (if not using json scheme checker)
+* [#9033] : Add a minimal number of samples required to process spectra
+* [#9366] : Upgrading numpy : small code adaptations for upgrading numpy to 2.0.2
+## Removed
+* [#9218] : Removes parameters v1 support. Only v2 parameters format are now supported.
+* [#9310] : Remove linemodel firstpass b
+## Fixed
+* [#9295] : Parameters converter : Fixes v1 to v2 parameters conversion
+* [#9271] : Fix when few samples in one of the power law
+* [#9294] : Handle negative or null spectrum in power Law fitting
+* [#9185] : Fix linemeas SNR
+* [#9374] : Fix templateFittingSolve with continuum filtered out
+
+
 ## 1.4.0 (2024-11-07)
 ## Added
 * [9058] : Linemeas only for classified object
