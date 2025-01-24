@@ -225,13 +225,6 @@ private:
   std::shared_ptr<COperatorResultStore> m_ResultStore;
   std::shared_ptr<CParameterStore> m_parameterStore;
   std::shared_ptr<CInputContext> m_inputContext;
-
-  // added below variables - to discuss if we only define them here (and no more
-  // in processflow)
-
-  TFloat64Range m_redshiftRange;
-  TFloat64List m_redshifts;
-  bool m_zLogSampling;
 };
 
 } // namespace NSEpic
