@@ -159,7 +159,7 @@ void CLineModelFitting::initMembers(
       (m_lineRatioType == "tplRatio" || m_lineRatioType == "tplCorr"))
     element_composition = ElementComposition::EmissionAbsorption;
   m_ElementsVector = std::make_shared<CLMEltListVector>(
-      m_lambdaRanges, m_spectraIndex, m_RestLineList, element_composition);
+      m_spectraIndex, m_RestLineList, element_composition);
   for (auto &spcIndex : m_spectraIndex) {
     Log.LogDetail(Formatter() << "    model: Continuum winsize found is "
                               << std::fixed << std::setprecision(2)

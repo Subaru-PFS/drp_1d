@@ -72,6 +72,7 @@ public:
   CLineCatalogBase &operator=(CLineCatalogBase &&other) = default;
 
   void Add(const TLine &r) { m_List[r.GetID()] = r; };
+  void Add(TLine &&r) { m_List[r.GetID()] = std::move(r); };
 
   const TLineMap &GetList() const { return m_List; };
   TLineMap

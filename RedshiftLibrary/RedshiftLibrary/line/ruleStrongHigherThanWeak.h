@@ -45,7 +45,10 @@
 #include "RedshiftLibrary/line/rule.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 
-class RuleStrongHigherThanWeak_fixture;
+namespace RuleStrongHigherThanWeak_test { // boost_test_suite
+class Correct_test_no_change;
+class Correct_test_one_high_weak;
+} // namespace RuleStrongHigherThanWeak_test
 
 namespace NSEpic {
 
@@ -61,7 +64,9 @@ public:
   void SetUp(bool EnabledArgument, ...);
 
 private:
-  friend class ::RuleStrongHigherThanWeak_fixture;
+  friend class RuleStrongHigherThanWeak_test::Correct_test_no_change;
+  friend class RuleStrongHigherThanWeak_test::Correct_test_one_high_weak;
+
   CLine::EType m_LineType;
   void Correct(CLMEltListVector &LineModelElementList);
   Float64 FindHighestStrongLineAmp(Int32 linetype, Float64 &er,

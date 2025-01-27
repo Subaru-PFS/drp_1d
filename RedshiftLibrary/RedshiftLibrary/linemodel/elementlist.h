@@ -119,13 +119,9 @@ public:
 
 class CLMEltListVector {
 public:
-  CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
-                   const CSpectraGlobalIndex &spcIndex,
+  CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                    const CLineMap &restLineList,
                    ElementComposition element_composition);
-  CLMEltListVector(CLineModelElementList eltlist,
-                   const CLineMap &restLineList); // for unit test
-
   CLMEltListVector() = delete;
 
   std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
@@ -180,7 +176,6 @@ private:
       m_ElementsVector; // number of multiobs spectrum
   std::vector<TLineModelElementParam_ptr>
       m_ElementsParams; // number of LineModelElements
-  CTLambdaRangePtrVector m_lambdaRanges;
   mutable CSpectraGlobalIndex m_spectraIndex;
 
   const CLineMap &m_RestLineList;

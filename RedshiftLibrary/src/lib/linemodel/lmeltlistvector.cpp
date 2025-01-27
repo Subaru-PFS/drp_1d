@@ -45,12 +45,10 @@
 using namespace NSEpic;
 using namespace std;
 
-CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
-                                   const CSpectraGlobalIndex &spcIndex,
+CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                                    const CLineMap &restLineList,
                                    ElementComposition element_composition)
-    : m_lambdaRanges(lambdaranges), m_spectraIndex(spcIndex),
-      m_RestLineList(restLineList) {
+    : m_spectraIndex(spcIndex), m_RestLineList(restLineList) {
 
   switch (element_composition) {
   case ElementComposition::Default:
@@ -74,16 +72,6 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
     m_ElementsVector.push_back(CLineModelElementList());
     fillElements();
   }
-}
-
-CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
-                                   const CLineMap &restLineList)
-    : m_RestLineList(restLineList), m_spectraIndex(1) { // for unit test
-
-  m_ElementsVector.push_back(eltlist);
-
-  for (auto elt : m_ElementsVector[0])
-    m_ElementsParams.push_back(elt->getElementParam());
 }
 
 TInt32List CLMEltListVector::getValidElementIndices() const {
