@@ -74,7 +74,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // re-interpolate the continuum on the grid
   m_continuumManager->reinterpolateContinuumResetAmp();
 
-  m_spectraIndex.reset(); // TODO dummy impl
+  m_spectraIndex.setAtBegining(); // TODO dummy impl
 
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
 
@@ -115,7 +115,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
     TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
     Float64 redshift) {
-  m_spectraIndex.reset(); // TODO dummy impl
+  m_spectraIndex.setAtBegining(); // TODO dummy impl
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();

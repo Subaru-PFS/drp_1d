@@ -103,7 +103,7 @@ CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
   Context.LoadParameterStore(jsonString);
   CLMEltListVector element_list_vector =
       CLMEltListVector(spc_index, lm, ElementComposition::Default);
-  spc_index.reset();
+  spc_index.setAtBegining();
   for (auto &elt : element_list_vector.getElementList()) {
     elt->m_OutsideLambdaRangeList.assign(2, false);
     elt->computeOutsideLambdaRange();

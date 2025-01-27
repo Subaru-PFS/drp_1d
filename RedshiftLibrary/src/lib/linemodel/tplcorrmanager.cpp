@@ -53,7 +53,7 @@ CTplCorrManager::CTplCorrManager(
                        continuumManager, restLineList, spcIndex) {}
 
 std::pair<Float64, Float64> CTplCorrManager::computeMerit(Int32 itratio) {
-  m_spectraIndex.reset(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // dummy implementation
 
   getModel().refreshModel();
   TFloat64List Amplitudes;

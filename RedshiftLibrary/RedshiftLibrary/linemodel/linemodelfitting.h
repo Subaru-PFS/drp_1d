@@ -73,15 +73,14 @@ public:
       const std::shared_ptr<COperatorContinuumFitting>
           &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
-  CLineModelFitting(
-      const std::shared_ptr<const CSpectrum> &template_,
-      const TLambdaRange &lambdaRange,
-      const std::shared_ptr<COperatorContinuumFitting>
-          &continuumFittingOperator); // only used for template
-                                      // orthogonalization, TODO use only one of
-                                      // the future subclasses ? at least
-                                      // inherit from clinemodelfitting
 
+  // only used for template orthogonalization,
+  // TODO use only one of the future subclasses ?
+  //      at least inherit from clinemodelfitting
+  CLineModelFitting(const std::shared_ptr<const CSpectrum> &template_,
+                    const TLambdaRange &lambdaRange,
+                    const std::shared_ptr<COperatorContinuumFitting>
+                        &continuumFittingOperator);
   void setContinuumComponent(TContinuumComponent component);
   const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
