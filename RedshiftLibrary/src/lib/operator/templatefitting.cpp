@@ -219,11 +219,10 @@ COperatorTemplateFitting::getMaskListAndNSamples(Float64 redshift) const {
   for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
     const CMask &mask =
         m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
-                               *m_lambdaRanges[spcIndex], redshift);
-    for (Int32 pixel_idx = m_kStart[spcIndex]; pixel_idx <= m_kEnd[spcIndex];
-         ++pixel_idx)
-      if (mask[pixel_idx])
-        ++n_samples;
+                               *m_lambdaRanges[spcIndex], redshift, spcIndex);
+    n_samples +=
+        std::count(mask.getMaskList().begin() + m_kStart[spcIndex],
+                   mask.getMaskList().begin() + m_kEnd[spcIndex] + 1, Mask(1));
     mask_list.push_back(std::move(mask));
   }
 

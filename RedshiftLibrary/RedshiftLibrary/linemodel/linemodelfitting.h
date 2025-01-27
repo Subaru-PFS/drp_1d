@@ -123,7 +123,7 @@ public:
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
     // TODO temp basic impl
-    m_spectraIndex.reset();
+    m_spectraIndex.setAtBegining();
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
@@ -168,6 +168,10 @@ public:
 
   const CSpectrumModel &getSpectrumModel() const {
     return m_models->getSpectrumModel();
+  }
+
+  std::shared_ptr<CLMEltListVector> const &getElementListVector() {
+    return m_ElementsVector;
   }
 
   CLineModelElementList &getElementList() {

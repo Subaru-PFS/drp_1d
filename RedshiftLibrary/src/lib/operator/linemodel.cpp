@@ -489,7 +489,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
         .setAtBegining(); // TODO multiobs, dummy implementation
     m_continuumFittingOperator->setMaskBuilder(
         std::make_shared<COutsideLineMaskBuilder>(
-            m_fittingManager->getElementList()));
+            m_fittingManager->getElementListVector(),
+            m_fittingManager->getSpectraIndex()));
   }
   std::vector<std::shared_ptr<COperatorResult>> chisquareResultsAllTpl;
   TStringList chisquareResultsTplName;
