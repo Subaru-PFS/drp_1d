@@ -38,6 +38,7 @@
 # ============================================================================
 
 import json
+from typing import Optional
 
 from pylibamazed.Exception import APIException
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
@@ -816,8 +817,8 @@ class CustomParametersChecker(ParametersChecker):
         self,
         triggering_condition: bool,
         dependant_condition: bool,
-        error_message: str = None,
-        warning_message: str = None,
+        error_message: Optional[str] = None,
+        warning_message: Optional[str] = None,
         custom_error_message: bool = False,
         custom_warning_message: bool = False,
     ):
