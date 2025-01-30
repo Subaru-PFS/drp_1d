@@ -124,6 +124,10 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       BuildChisquareArray(lmresult, m_linemodel.getSPZGridParams(),
                           m_linemodel.getFirstPassCandidatesZByRank());
 
+  if (m_linemodel.m_opt_continuumcomponent.isContinuumFit())
+    ChisquareArray chisquaresContinuum =
+        BuildContinuumChisquareArray(lmresult, m_linemodel.getSPZGridParams());
+
   /*
   zpriorResult->Redshifts.size());
 
@@ -298,6 +302,39 @@ TFloat64List CLineModelSolve::BuildZpriors(
   }
 
   return zpriors;
+}
+
+ChisquareArray CLineModelSolve::BuildContinuumChisquareArray(
+    const std::shared_ptr<const CLineModelResult> &result,
+    const TZGridListParams &zgridParams) const {
+  std::shared_ptr<CContinuumFitStore> fitStore =
+      m_linemodel.getContinuumFitStoreFirstPass();
+  TFloat64List redshifts = fitStore->GetRedshiftList();
+  Int32 nRedshifts = redshifts.size();
+  ChisquareArray chisquarearray;
+  chisquarearray.redshifts = redshifts;
+  chisquarearray.zstep = m_coarseRedshiftStep;
+  chisquarearray.zgridParams = zgridParams;
+
+  std::vector<std::vector<CContinuumModelSolution>> fitValues =
+      fitStore->GetFitValuesVector();
+  if (fitValues.size() == 0) // i.e. nRedshifts == 0
+    return chisquarearray;
+  Int32 nTemplates = fitValues[0].size();
+  chisquarearray.chisquares.resize(nTemplates);
+  chisquarearray.zpriors.resize(nTemplates);
+  for (Int32 templateIdx = 0; templateIdx < nTemplates; ++templateIdx) {
+    chisquarearray.chisquares[templateIdx].resize(nRedshifts);
+    chisquarearray.zpriors[templateIdx].resize(nRedshifts);
+    for (Int32 zIdx = 0; zIdx < nRedshifts; ++zIdx) {
+      CContinuumModelSolution modelSolution =
+          fitStore->GetFitValues(zIdx, templateIdx);
+      chisquarearray.chisquares[templateIdx][zIdx] = modelSolution.merit;
+      // Question: do we put the right thing there ?
+      chisquarearray.zpriors[templateIdx][zIdx] = modelSolution.tplLogPrior;
+    }
+  }
+  return chisquarearray;
 }
 
 ChisquareArray CLineModelSolve::BuildChisquareArray(
