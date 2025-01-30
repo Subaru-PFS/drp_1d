@@ -91,6 +91,11 @@ CContinuumFitStore::GetFitValues(Int32 idxz,
   return m_fitValues[idxz][continuumCandidateRank];
 }
 
+std::vector<std::vector<CContinuumModelSolution>>
+CContinuumFitStore::GetFitValuesVector() {
+  return m_fitValues;
+}
+
 const CContinuumModelSolution &
 CContinuumFitStore::GetFitValues(Float64 redshiftVal,
                                  Int32 continuumCandidateRank) const {

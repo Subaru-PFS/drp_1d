@@ -130,6 +130,7 @@ public:
   void setHapriorOption(Int32 opt);
   const CSpectrum &
   getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
+  std::shared_ptr<CContinuumFitStore> getContinuumFitStoreFirstPass() const;
 
 private:
   friend class Linemodel::spanRedshift_test;
