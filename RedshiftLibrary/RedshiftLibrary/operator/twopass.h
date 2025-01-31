@@ -61,39 +61,39 @@ public:
   COperatorTwoPass(COperatorTwoPass &&other) noexcept = default;
   COperatorTwoPass &operator=(COperatorTwoPass &&other) noexcept = default;
 
-  void setClassVariables(const Float64 halfWindowSize, const bool zLogSampling,
-                         const TFloat64List &redshifts, const Float64 fineStep);
+  void setTwoPassParameters(const Float64 halfWindowSize,
+                            const bool zLogSampling, const Float64 fineStep);
   TFloat64List spanRedshiftWindow(const Float64 z) const;
   void buildExtendedRedshifts();
   void updateRedshiftGridAndResults(std::shared_ptr<CTwoPassResult> result);
   TZGridListParams getSPZGridParams();
-  TCandidateZbyRank getFirstPassCandidatesZByRank() {
+  TCandidateZbyRank getFirstPassCandidatesZByRank() const {
     return m_firstpass_extremaResult->getCandidatesZByRank();
   }
-  std::shared_ptr<CExtremaResult<T>> getFirstPassExtremaResults() const {
+  std::shared_ptr<const CExtremaResult<T>> getFirstPassExtremaResults() const {
     return m_firstpass_extremaResult;
   }
   std::vector<TFloat64List> getExtendedRedshifts() const {
     return m_extendedRedshifts;
   }
+  TInt32List getzIdxsToCompute(Int32 candidateIdx);
+  void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
 
 protected:
   friend class TwoPass::spanRedshift_test;
-  Float64 m_secondPass_halfwindowsize;
-  bool m_zLogSampling;
-  Float64 m_fineStep;
+  Float64 m_secondPass_halfwindowsize = NAN;
+  bool m_zLogSampling = false;
+  Float64 m_fineStep = NAN;
   std::vector<TFloat64List> m_extendedRedshifts; // z range around extrema
   std::shared_ptr<CExtremaResult<T>> m_firstpass_extremaResult;
 };
 
 template <class T>
-void COperatorTwoPass<T>::setClassVariables(const Float64 halfWindowSize,
-                                            const bool zLogSampling,
-                                            const TFloat64List &redshifts,
-                                            const Float64 fineStep) {
+void COperatorTwoPass<T>::setTwoPassParameters(const Float64 halfWindowSize,
+                                               const bool zLogSampling,
+                                               const Float64 fineStep) {
   m_secondPass_halfwindowsize = halfWindowSize;
   m_zLogSampling = zLogSampling;
-  m_redshifts = redshifts;
   m_fineStep = fineStep;
 }
 
@@ -150,6 +150,27 @@ template <class T> TZGridListParams COperatorTwoPass<T>::getSPZGridParams() {
                     m_firstpass_extremaResult->Redshift(i));
   }
   return centeredZgrid_params;
+}
+
+template <class T>
+TInt32List COperatorTwoPass<T>::getzIdxsToCompute(Int32 candidateIdx) {
+  Int32 nz = m_redshifts.size();
+  auto &extendedRedshifts = m_extendedRedshifts[candidateIdx];
+  TInt32List zIdxsToCompute{};
+  for (Int32 zIdx = 0; zIdx < nz; ++zIdx) {
+    bool isFound =
+        (std::find(extendedRedshifts.begin(), extendedRedshifts.end(),
+                   m_redshifts[zIdx]) != extendedRedshifts.end());
+    if (isFound)
+      zIdxsToCompute.push_back(zIdx);
+  }
+  return zIdxsToCompute;
+}
+
+template <class T>
+void COperatorTwoPass<T>::SetFirstPassCandidates(
+    const TCandidateZbyRank &zCandidates) {
+  m_firstpass_extremaResult = std::make_shared<ExtremaResult>(zCandidates);
 }
 
 } // namespace NSEpic

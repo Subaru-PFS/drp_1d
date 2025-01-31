@@ -1478,7 +1478,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
   }
 }
 
-void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
+void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 zStep,
                               const bool zLogSampling) {
 
   m_tplCategory = Context.GetCurrentCategory();
@@ -1494,7 +1494,7 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
   // below should be part of constructor
   m_redshifts = redshifts;
   // init relevant elements to generate secondpass intervals
-  m_fineStep = finestep;
+  m_fineStep = zStep;
   m_zLogSampling = zLogSampling;
 
   if (Context.GetCurrentMethod() == "lineModelSolve") {
@@ -1503,8 +1503,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
     m_opt_firstpass_fittingmethod =
         ps->GetScoped<std::string>("firstPass.fittingMethod");
-    COperatorTwoPass::setClassVariables(m_secondPass_halfwindowsize,
-                                        zLogSampling, redshifts, finestep);
   }
   //
   if (m_opt_continuumcomponent.isContinuumFit()) {

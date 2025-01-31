@@ -100,7 +100,6 @@ public:
   // velocity fitting groups are defined in the line catalog from v4.0 on.
 
   Int32 m_maxModelSaveCount = 20;
-  Float64 m_secondPass_halfwindowsize; // = 0.005;
   std::string m_tplCategory;
 
   bool m_opt_tplfit_fftprocessing =
@@ -163,8 +162,6 @@ private:
 
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
-  Float64 m_fineStep = NAN;
-  bool m_zLogSampling = false;
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
 

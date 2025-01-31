@@ -127,11 +127,6 @@ public:
       std::shared_ptr<CTemplateFittingResult> result = NULL,
       bool isFirstPass = true,
       const std::vector<Int32> &zIdxsToCompute = {}) override;
-  void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
-  std::shared_ptr<const ExtremaResult>
-  BuildFirstPassExtremaResults(const TOperatorResultMap &resultsFromStore);
-  std::vector<Int32> getzIdxsToCompute(TFloat64List allRedshifts,
-                                       TFloat64List extendedRedshifts);
 
 protected:
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,

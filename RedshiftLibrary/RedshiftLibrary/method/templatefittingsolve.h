@@ -90,26 +90,24 @@ private:
                          std::shared_ptr<const ExtremaResult> extremaResult);
   std::shared_ptr<CTemplateFittingSolveResult> computeTwoPass();
   void computeFirstPass();
-  std::pair<std::shared_ptr<PdfCandidatesZResult>,
-            std::shared_ptr<const ExtremaResult>>
+
+  std::shared_ptr<const ExtremaResult>
   computeFirstPassResults(COperatorPdfz &pdfz);
 
-  std::pair<std::shared_ptr<PdfCandidatesZResult>,
-            std::shared_ptr<const ExtremaResult>>
+  std::shared_ptr<const ExtremaResult>
   computeSecondPassResults(COperatorPdfz &pdfz,
                            const TZGridListParams &zgridParams);
-  void
-  storeFirstPassResults(const COperatorPdfz &pdfz,
-                        std::shared_ptr<const ExtremaResult> extremaResult);
-  void
-  storeSecondPassResults(const COperatorPdfz &pdfz,
-                         std::shared_ptr<const ExtremaResult> extremaResult);
+  void storeFirstPassResults(
+      const COperatorPdfz &pdfz,
+      std::shared_ptr<const ExtremaResult> const &extremaResult);
+  void storeSecondPassResults(
+      const COperatorPdfz &pdfz,
+      std::shared_ptr<const ExtremaResult> const &extremaResult);
   void computeSecondPass(std::shared_ptr<const ExtremaResult> extremaResult);
 
   void Solve(std::shared_ptr<COperatorResultStore> resultStore,
              const std::shared_ptr<const CTemplate> &tpl,
-             Int32 FitEbmvIdx = undefIdx,
-             Int32 FitMeiksinIdx = undefIdx,
+             Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
              std::string parentId = "", std::vector<Int32> zIdxsToCompute = {});
 
   ChisquareArray
@@ -117,11 +115,14 @@ private:
                       std::shared_ptr<const ExtremaResult> fpResults = {},
                       TZGridListParams zgridParams = {}) const;
 
-  std::shared_ptr<const ExtremaResult>
-  buildExtremaResults(const std::string &scopeStr,
-                      const TCandidateZbyRank &ranked_zCandidates,
-                      Float64 overlapThreshold,
-                      std::shared_ptr<const ExtremaResult> fpResults = {});
+  void UpdateFirstPassExtremaResults(
+      const TOperatorResultMap &resultsMapFromStore,
+      std::shared_ptr<const ExtremaResult> const &fpResults);
+
+  std::shared_ptr<const ExtremaResult> buildExtremaResults(
+      const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
+      Float64 overlapThreshold,
+      std::shared_ptr<const ExtremaResult> const &fpResults = {});
   void initSkipSecondPass() override;
   void initTwoPassZStepFactor() override;
   TOperatorResultMap createPerTemplateResultMap(
@@ -145,7 +146,6 @@ private:
   std::shared_ptr<CTemplateFittingResult> m_result;
   Int32 m_opt_extremacount;
   Float64 m_opt_candidatesLogprobaCutThreshold = 0.0;
-  std::shared_ptr<COperatorTemplateFitting> m_castedTemplateFittingOperator;
   bool m_isFirstPass = true;
 };
 
