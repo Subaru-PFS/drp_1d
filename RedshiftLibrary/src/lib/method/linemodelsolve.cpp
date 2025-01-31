@@ -160,7 +160,11 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       1      // one peak/window only
   );
   Float64 continuumEvidence = NAN;
-  if (m_linemodel.m_opt_continuumcomponent.isContinuumFit()) {
+
+  // TODO put this if in a specific method
+  std::string tplContinuumName = "";
+  if (m_opt_continuumcomponent.isContinuumFit() &&
+      m_linemodel.m_opt_continuumcomponent.isFromSpectrum()) {
     CRange zRange(m_redshifts);
     CZGridParam zp(zRange, m_coarseRedshiftStep);
     TZGridListParams zpVector{zp};
@@ -168,6 +172,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
         BuildContinuumChisquareArray(lmresult, zpVector);
     pdfzContinuum.computePDF(chisquaresContinuum);
     continuumEvidence = pdfzContinuum.m_postmargZResult->valMargEvidenceLog;
+    tplContinuumName = "fromSpectrum";
   }
 
   // store PDF results
@@ -195,6 +200,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       std::make_shared<CLineModelSolveResult>(
           ExtremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
           pdfz.m_postmargZResult->valMargEvidenceLog, continuumEvidence);
+  lmsolveresult->setTplContinuumName(tplContinuumName);
 
   return lmsolveresult;
 }

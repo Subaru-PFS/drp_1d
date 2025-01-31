@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
 
@@ -200,7 +201,7 @@ const std::string jsonStringS =
 
 const std::string jsonStringTplFitRules =
     "\"skipSecondPass\" : false,"
-    "\"continuumComponent\" : \"tplFit\","
+    "\"continuumComponent\" : \"tplFitAuto\","
     "\"pdfCombination\" : \"marg\","
     "\"tplRatioIsmFit\" : true,"
     "\"rules\" : \"all\","
@@ -360,6 +361,30 @@ public:
     ctx.reset();
     ctx.loadParameterStore(lambdaString + jsonString +
                            jsonStringTplFitTplRatio);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
+class fixture_LineModelSolveTestContinuumChi2CorrectlySet
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestContinuumChi2CorrectlySet() {
+    fillCatalog();
+    ctx.reset();
+    std::string fullJson = lambdaString + jsonString + jsonStringTplFitRules;
+    std::string target = "\"badChi2Threshold\": 100,";
+    size_t pos = fullJson.find(target);
+    fullJson.replace(pos, target.length(), "\"badChi2Threshold\": 1,");
+
+    ctx.loadParameterStore(fullJson);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -594,6 +619,33 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
+                        fixture_LineModelSolveTestContinuumChi2CorrectlySet) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+
+  auto const &inputContext = *Context.GetInputContext();
+  auto &scope = Context.m_ScopeStack;
+  lineModelSolve.InitRanges(inputContext);
+  CAutoScope method_autoscope(scope, lineModelSolve.m_name, ScopeType::METHOD);
+  CAutoSaveFlagToResultStore saveflag;
+  // auto const &result = compute();
+
+  std::shared_ptr<CLineModelSolveResult> lmSolveResult =
+      std::dynamic_pointer_cast<CLineModelSolveResult>(
+          lineModelSolve.compute());
+  BOOST_CHECK_EQUAL(lmSolveResult->getTplContinuumName(), "fromSpectrum");
+  BOOST_CHECK(lineModelSolve.m_opt_continuumcomponent.isContinuumFit());
+  // Question: j'ai créé cette valeur de test à partir du résultat, c'est pas
+  // bizarre comme valeur ?
+  BOOST_CHECK_CLOSE(lmSolveResult->getContinuumEvidence(), -181.129306, 0.1);
 
   ctx.reset();
 }

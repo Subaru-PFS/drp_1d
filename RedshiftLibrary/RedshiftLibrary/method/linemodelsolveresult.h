@@ -62,10 +62,15 @@ public:
       : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
                         opt_pdfcombination, evidence),
         m_continuumEvidence(continuumEvidence){};
+  const std::string getTplContinuumName() { return tplContinuumName; };
+  std::string setTplContinuumName(const std::string &name) {
+    return tplContinuumName = name;
+  };
+  const Float64 getContinuumEvidence() { return m_continuumEvidence; };
 
 private:
   std::string tplratioName = undefStr;
-  std::string tplcontinuumName = undefStr;
+  std::string tplContinuumName = undefStr;
   Float64 sigma = NAN;
   Float64 snrHa = NAN;
   Float64 lfHa = NAN;
