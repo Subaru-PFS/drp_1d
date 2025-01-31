@@ -124,10 +124,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       BuildChisquareArray(lmresult, m_linemodel.getSPZGridParams(),
                           m_linemodel.getFirstPassCandidatesZByRank());
 
-  if (m_linemodel.m_opt_continuumcomponent.isContinuumFit())
-    ChisquareArray chisquaresContinuum =
-        BuildContinuumChisquareArray(lmresult, m_linemodel.getSPZGridParams());
-
   /*
   zpriorResult->Redshifts.size());
 
@@ -152,10 +148,31 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(chisquares);
 
+  // TODO put this in a separate method
+  COperatorPdfz pdfzContinuum(
+      m_opt_pdfcombination,
+      0.0,                // no peak Separation in 2nd pass
+      0.0,                // cut threshold
+      m_opt_extremacount, // max nb of final (2nd pass) candidates
+      m_zLogSampling,
+      "SPE", // Id_prefix
+      false, // do not allow extrema at border
+      1      // one peak/window only
+  );
+  Float64 continuumEvidence = NAN;
+  if (m_linemodel.m_opt_continuumcomponent.isContinuumFit()) {
+    CRange zRange(m_redshifts);
+    CZGridParam zp(zRange, m_coarseRedshiftStep);
+    TZGridListParams zpVector{zp};
+    ChisquareArray chisquaresContinuum =
+        BuildContinuumChisquareArray(lmresult, zpVector);
+    pdfzContinuum.computePDF(chisquaresContinuum);
+    continuumEvidence = pdfzContinuum.m_postmargZResult->valMargEvidenceLog;
+  }
+
   // store PDF results
   Log.LogInfo(Formatter() << __func__ << ": Storing PDF results");
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
-  // TODO: clean below line once #7646 is solved
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
@@ -177,7 +194,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   std::shared_ptr<CLineModelSolveResult> lmsolveresult =
       std::make_shared<CLineModelSolveResult>(
           ExtremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
-          pdfz.m_postmargZResult->valMargEvidenceLog);
+          pdfz.m_postmargZResult->valMargEvidenceLog, continuumEvidence);
 
   return lmsolveresult;
 }

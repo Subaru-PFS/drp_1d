@@ -57,9 +57,11 @@ class CLineModelSolveResult : public CPdfSolveResult {
 public:
   CLineModelSolveResult(
       const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
-      const std::string &opt_pdfcombination, Float64 evidence)
+      const std::string &opt_pdfcombination, Float64 evidence,
+      Float64 continuumEvidence = NAN)
       : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
-                        opt_pdfcombination, evidence){};
+                        opt_pdfcombination, evidence),
+        m_continuumEvidence(continuumEvidence){};
 
 private:
   std::string tplratioName = undefStr;
@@ -73,6 +75,9 @@ private:
   Float64 LyaAlpha = NAN;
   Float64 LyaDelta = NAN;
   Int32 LyaIgm = undefIdx;
+  Float64 m_continuumEvidence =
+      NAN; // For cases where switches in fromSpectrum, keeps evidence of
+           // continuum for usage in classification
 };
 
 } // namespace NSEpic
