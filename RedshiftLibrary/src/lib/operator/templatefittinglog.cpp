@@ -317,11 +317,11 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
 }
 
 void COperatorTemplateFittingLog::freeFFTPrecomputedBuffers() {
-  if (precomputedFFT_spcFluxOverErr2 != NULL) {
+  if (precomputedFFT_spcFluxOverErr2 != nullptr) {
     fftw_free(precomputedFFT_spcFluxOverErr2);
     precomputedFFT_spcFluxOverErr2 = 0;
   }
-  if (precomputedFFT_spcOneOverErr2 != NULL) {
+  if (precomputedFFT_spcOneOverErr2 != nullptr) {
     fftw_free(precomputedFFT_spcOneOverErr2);
     precomputedFFT_spcOneOverErr2 = 0;
   }

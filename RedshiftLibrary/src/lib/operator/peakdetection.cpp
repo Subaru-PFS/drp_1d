@@ -76,7 +76,7 @@ CPeakDetection::Compute(const CSpectrum &spectrum) {
 
   // No Peak detected, exit
   if (peaksBorders.size() == 0) {
-    return NULL;
+    return nullptr;
   }
 
   RedefineBorders(peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis);

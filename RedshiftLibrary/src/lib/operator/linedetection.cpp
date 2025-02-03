@@ -393,10 +393,10 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
   Float64 const ratioAmp = maxValue_no_continuum / noise_win;
 
   // assign output pointers
-  if (maxFluxnoContinuum != NULL) {
+  if (maxFluxnoContinuum != nullptr) {
     *maxFluxnoContinuum = maxValue_no_continuum;
   }
-  if (noise != NULL)
+  if (noise != nullptr)
     *noise = xmad;
 
   return ratioAmp;
