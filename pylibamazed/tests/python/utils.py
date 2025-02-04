@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.CustomParametersChecker import CustomParametersChecker
 from pylibamazed.redshift import CFlagWarning, WarningCode
 
 default_object_type = "galaxy"
@@ -77,17 +77,12 @@ def make_parameter_dict(**kwargs) -> dict:
 
 
 def make_parameter_dict_at_object_level(**kwargs) -> dict:
-    param_dict = {
-        "spectrumModels": [default_object_type],
-        default_object_type: kwargs
-    }
+    param_dict = {"spectrumModels": [default_object_type], default_object_type: kwargs}
     return param_dict
 
 
 def make_parameter_dict_at_redshift_solver_level(
-        object_level_params=None,
-        object_type=None,
-        **redshift_kwargs
+    object_level_params=None, object_type=None, **redshift_kwargs
 ) -> dict:
     if object_type is None:
         object_type = default_object_type
@@ -96,7 +91,7 @@ def make_parameter_dict_at_redshift_solver_level(
         object_type: {
             "stages": ["redshiftSolver"],
             "redshiftSolver": redshift_kwargs,
-        }
+        },
     }
     if object_level_params is not None:
         for key, val in object_level_params.items():
@@ -104,6 +99,12 @@ def make_parameter_dict_at_redshift_solver_level(
     if redshift_kwargs.get("method") == "lineModelSolve":
         if param_dict.get("lsf") is None:
             param_dict["lsf"] = {}
+    if (
+        redshift_kwargs.get("method") == "templateFittingSolve"
+        and redshift_kwargs.get("templateFittingSolve") is not None
+        and redshift_kwargs.get("templateFittingSolve").get("singlePass") is not False
+    ):
+        param_dict[object_type]["redshiftSolver"]["templateFittingSolve"]["singlePass"] = True
     return param_dict
 
 
@@ -127,10 +128,35 @@ def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwar
             "lineMeasSolver": {
                 "method": "lineMeasSolve",
                 "lineMeasSolve": kwargs,
-            }
-        }
+            },
+        },
     }
     param_dict["lsf"] = {}
+    if object_level_params is not None:
+        for key, val in object_level_params.items():
+            param_dict[default_object_type][key] = val
+    return param_dict
+
+
+def make_parameter_dict_linemeas_solve_piped_linemodel(
+    linemodel_level_params: dict = None, linemeas_level_params: dict = None
+) -> dict:
+    param_dict = make_parameter_dict_at_linemodelsolve_level(**linemodel_level_params)
+    param_dict[default_object_type]["stages"] += ["lineMeasSolver"]
+    linemeas_dict = make_parameter_dict_at_linemeas_solve_level(**linemeas_level_params)
+    del linemeas_dict[default_object_type]["stages"]
+    param_dict[default_object_type] = param_dict[default_object_type] | linemeas_dict[default_object_type]
+    return param_dict
+
+
+def make_parameter_dict_at_reliability_solver_level(object_level_params=None, **kwargs) -> dict:
+    param_dict = {
+        "spectrumModels": [default_object_type],
+        default_object_type: {
+            "stages": ["reliabilitySolver"],
+            "reliabilitySolver": {**kwargs},
+        },
+    }
     if object_level_params is not None:
         for key, val in object_level_params.items():
             param_dict[default_object_type][key] = val
@@ -145,8 +171,8 @@ def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=N
             "reliabilitySolver": {
                 "method": "deepLearningSolver",
                 "deepLearningSolver": kwargs,
-            }
-        }
+            },
+        },
     }
     if object_level_params is not None:
         for key, val in object_level_params.items():
@@ -155,4 +181,4 @@ def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=N
 
 
 def check_from_parameter_dict(param_dict: dict):
-    ParametersChecker(param_dict).custom_check()
+    CustomParametersChecker(param_dict).check()

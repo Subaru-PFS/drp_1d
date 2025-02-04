@@ -48,13 +48,14 @@ using namespace std;
 using namespace NSEpic;
 
 TLineModelElementParam::TLineModelElementParam(CLineVector lines,
-                                               Float64 velocityEmission,
-                                               Float64 velocityAbsorption,
+                                               Float64 velocity,
                                                const std::string &lineWidthType)
-    : m_Lines(std::move(lines)), m_VelocityEmission(velocityEmission),
-      m_VelocityAbsorption(velocityAbsorption),
+    : m_Lines(std::move(lines)), m_Velocity(velocity), m_VelocityStd(NAN),
       m_FittedAmplitudes(m_Lines.size(), NAN),
-      m_FittedAmplitudesStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr) {
+      m_FittedAmplitudesStd(m_Lines.size(), NAN),
+      m_OffsetsStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr),
+      m_defaultVelocity(velocity),
+      m_globalOutsideLambdaRangeList(m_Lines.size(), false) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
   for (Int32 index = 0; index != m_Lines.size(); ++index) {
@@ -126,31 +127,21 @@ bool TLineModelElementParam::isAllAmplitudesNull() const {
                       [](Float64 a) { return a > 0.0; }) == amps.cend();
 }
 
+void TLineModelElementParam::setNullNominalAmplitudesNotFittable() {
+  m_nullNominalAmplitudes = true;
+  for (size_t idx = 0; idx < size(); ++idx) {
+    if (!isOutsideLambdaRangeLine(idx) && GetNominalAmplitude(idx) > 0.0) {
+      m_nullNominalAmplitudes = false;
+      break;
+    }
+  }
+}
+
 /**
  * \brief Returns the fitted amplitude error for the argument index.
  **/
 Float64 TLineModelElementParam::GetFittedAmplitudeStd(Int32 line_index) const {
   return m_FittedAmplitudesStd[line_index];
-}
-
-void TLineModelElementParam::SetVelocityEmission(Float64 vel) {
-  m_VelocityEmission = vel;
-}
-
-void TLineModelElementParam::SetVelocityAbsorption(Float64 vel) {
-  m_VelocityAbsorption = vel;
-}
-
-Float64 TLineModelElementParam::getVelocityEmission() const {
-  return m_VelocityEmission;
-}
-
-Float64 TLineModelElementParam::getVelocityAbsorption() const {
-  return m_VelocityAbsorption;
-}
-
-Float64 TLineModelElementParam::getVelocity() const {
-  return IsEmission() ? m_VelocityEmission : m_VelocityAbsorption;
 }
 
 /*
@@ -167,12 +158,16 @@ void TLineModelElementParam::setVelocity(Float64 vel) {
     THROWG(ErrorCode::INTERNAL_ERROR,
            "Empty line model element, could not set velocity");
 #endif
+  m_Velocity = isfinite(vel) ? vel : m_defaultVelocity;
+}
 
-  if (IsEmission()) {
-    m_VelocityEmission = vel;
-  } else {
-    m_VelocityAbsorption = vel;
-  }
+void TLineModelElementParam::setVelocityStd(Float64 velStd) {
+#ifdef DEBUG
+  if (!GetSize())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Empty line model element, could not set velocity");
+#endif
+  m_VelocityStd = velStd;
 }
 
 /*

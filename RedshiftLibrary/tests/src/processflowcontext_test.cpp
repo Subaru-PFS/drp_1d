@@ -51,8 +51,10 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdaRange\" : [ 4630, 4815 ],"
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 4630, 4815 ],"
     "\"smoothWidth\" : 0.0,"
+    "\"nbSamplesMin\" : 1,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -83,6 +85,7 @@ const std::string jsonString =
     "\"lineTypeFilter\" : \"no\","
     "\"lineForceFilter\" : \"no\"}},"
     "\"templateFittingSolve\" : {"
+    "\"singlePass\" : true,"
     "\"extremaCount\" : 5,"
     "\"overlapThreshold\" : 1,"
     "\"spectrum\" : {\"component\" : \"raw\"},"
@@ -159,8 +162,8 @@ BOOST_AUTO_TEST_CASE(context_test) {
   BOOST_CHECK(Context.getCLineMap().size() ==
               fixture_LineCatalog().lineCatalogSize);
 
-  Context.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-  Context.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
+  Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
+  Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
 
   Context.Init();
   BOOST_CHECK(Context.GetRebinnedSpectrum() = spc);

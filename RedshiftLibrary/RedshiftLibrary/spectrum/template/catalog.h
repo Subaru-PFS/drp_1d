@@ -62,12 +62,11 @@ public:
                                                Int32 i, bool opt_ortho,
                                                bool opt_logsampling) const;
   std::shared_ptr<const CTemplate>
-  GetTemplateByName(const TStringList &tplCategoryList,
-                    const std::string tplName, bool opt_ortho,
-                    bool opt_logsampling) const;
+  GetTemplateByName(const TStringList &tplCategoryList, const std::string name,
+                    bool opt_ortho, bool opt_logsampling) const;
   std::shared_ptr<const CTemplate>
   GetTemplateByName(const TStringList &tplCategoryList,
-                    const std::string tplName) const;
+                    const std::string name) const;
 
   void SetTemplate(const std::shared_ptr<CTemplate> &tpl, Int32 i);
   void ClearTemplates(const std::string &category, bool opt_ortho,
@@ -80,6 +79,7 @@ public:
   };
 
   TTemplateConstRefList GetTemplateList(const TStringList &categoryList) const;
+  TTemplateConstRefList GetTemplateList(const std::string &category) const;
   TTemplateRefList GetTemplateList(const TStringList &categoryList);
 
   TTemplateConstRefList GetOrthoTemplateList(const TStringList &categoryList,
@@ -150,6 +150,12 @@ CTemplateCatalog::GetTemplateList(const TStringList &categoryList) {
 inline TTemplateConstRefList
 CTemplateCatalog::GetTemplateList(const TStringList &categoryList) const {
   return const_TTemplateRefList_cast(GetTemplateList_(categoryList));
+}
+
+//  const getter returning const templates
+inline TTemplateConstRefList
+CTemplateCatalog::GetTemplateList(const std::string &category) const {
+  return const_TTemplateRefList_cast(GetTemplateList_(TStringList{category}));
 }
 
 //  const getter returning const templates

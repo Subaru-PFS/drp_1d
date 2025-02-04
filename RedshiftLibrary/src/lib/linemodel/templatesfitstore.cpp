@@ -44,43 +44,9 @@
 
 using namespace NSEpic;
 
-CTemplatesFitStore::CTemplatesFitStore(const TFloat64List &redshifts)
-    : redshiftgrid(redshifts) {
-  initFitValues();
-  m_fitMaxValues = std::make_shared<fitMaxValues>();
-}
-
-/**
- * @brief CTemplatesFitStore::initFitValues
- * allocate the [nz][n continuum candidates values] structure
- */
-void CTemplatesFitStore::initFitValues() {
-  std::vector<CTplModelSolution> zfitvals;
-  m_fitValues = std::vector<std::vector<CTplModelSolution>>(redshiftgrid.size(),
-                                                            zfitvals);
-}
-
-const TFloat64List &CTemplatesFitStore::GetRedshiftList() const {
-  return redshiftgrid;
-}
-
-Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z) const {
-  auto it = std::find(redshiftgrid.begin(), redshiftgrid.end(), z);
-  if (it != redshiftgrid.end())
-    return std::distance(redshiftgrid.begin(), it);
-  else
-    return -1;
-}
-
-Int32 CTemplatesFitStore::getClosestLowerRedshiftIndex(Float64 z) const {
-  Int32 idx = -1;
-  CIndexing<Float64>::getClosestLowerIndex(redshiftgrid, z, idx);
-  return idx;
-}
-
 /**
  * @brief CTemplatesFitStore::Add
- * @param tplName
+ * @param name
  * @param ismEbmvCoeff
  * @param igmMeiksinIdx
  * @param redshift
@@ -92,21 +58,23 @@ Int32 CTemplatesFitStore::getClosestLowerRedshiftIndex(Float64 z) const {
  *
  * brief: try to insert the fit values into the mFitValues table at the correct
  * idxz:
- *   - no insertion if redshift can't be found in the redshiftgrid
+ *   - no insertion if redshift can't be found in the m_redshiftgrid
  *   - no insertion if the merit is higher than the highest rank continuum
  * candidate
  *   - insertion is done at a given continuum_candidate_rank position wrt merit
  * value
  * @return False if there was a problem.
  */
-void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
+void CTemplatesFitStore::Add(std::string name, Float64 ismEbmvCoeff,
                              Int32 igmMeiksinIdx, Float64 redshift,
-                             Float64 merit, Float64 chiSquare_phot,
-                             Float64 fitAmplitude, Float64 fitAmplitudeError,
+                             Float64 merit, Float64 reducedChi2,
+                             Float64 chiSquare_phot, Float64 fitAmplitude,
+                             Float64 fitAmplitudeError,
                              Float64 fitAmplitudeSigma, Float64 fitDtM,
                              Float64 fitMtM, Float64 logprior, Float64 snr) {
-  CTplModelSolution tmpCContinuumModelSolution;
-  tmpCContinuumModelSolution.tplMerit = merit;
+  CContinuumModelSolution tmpCContinuumModelSolution;
+  tmpCContinuumModelSolution.merit = merit;
+  tmpCContinuumModelSolution.reducedChi2 = reducedChi2;
   tmpCContinuumModelSolution.tplMeritPhot = chiSquare_phot;
   tmpCContinuumModelSolution.tplAmplitude = fitAmplitude;
   tmpCContinuumModelSolution.tplAmplitudeError = fitAmplitudeError;
@@ -114,155 +82,55 @@ void CTemplatesFitStore::Add(std::string tplName, Float64 ismEbmvCoeff,
   tmpCContinuumModelSolution.tplDtM = fitDtM;
   tmpCContinuumModelSolution.tplMtM = fitMtM;
   tmpCContinuumModelSolution.tplLogPrior = logprior;
-  tmpCContinuumModelSolution.tplEbmvCoeff = ismEbmvCoeff;
-  tmpCContinuumModelSolution.tplMeiksinIdx = igmMeiksinIdx;
-  tmpCContinuumModelSolution.tplName = tplName;
-  tmpCContinuumModelSolution.tplRedshift = redshift;
-  tmpCContinuumModelSolution.tplSNR = snr;
+  tmpCContinuumModelSolution.ebmvCoef = ismEbmvCoeff;
+  tmpCContinuumModelSolution.meiksinIdx = igmMeiksinIdx;
+  tmpCContinuumModelSolution.name = name;
+  tmpCContinuumModelSolution.redshift = redshift;
+  tmpCContinuumModelSolution.SNR = snr;
 
-  //
   Int32 idxz = GetRedshiftIndex(redshift);
   if (idxz < 0)
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Unable to find z index for redshift=" << redshift);
 
-  // if chi2 val is the lowest, and condition on tplName, insert at position
+  // if chi2 val is the lowest, and condition on name, insert at position
   // ipos
   auto ipos = std::upper_bound(
       m_fitValues[idxz].begin(), m_fitValues[idxz].end(),
-      std::make_pair(tmpCContinuumModelSolution.tplMerit,
+      std::make_pair(tmpCContinuumModelSolution.merit,
                      std::abs(tmpCContinuumModelSolution.tplAmplitudeSigma)),
-      [](std::pair<Float64, Float64> const &val, CTplModelSolution const &lhs) {
-        if (val.first != lhs.tplMerit)
-          return (val.first < lhs.tplMerit);
+      [](std::pair<Float64, Float64> const &val,
+         CContinuumModelSolution const &lhs) {
+        if (val.first != lhs.merit)
+          return (val.first < lhs.merit);
         return val.second > std::abs(lhs.tplAmplitudeSigma);
       });
 
-  Log.LogDebug(
-      Formatter() << "CTemplatesFitStore::Add iz=" << idxz << " (z=" << redshift
-                  << ") - adding at pos="
-                  << std::distance(m_fitValues[idxz].begin(), ipos)
-                  << "(merit=" << tmpCContinuumModelSolution.tplMerit
-                  << ", ebmv=" << tmpCContinuumModelSolution.tplEbmvCoeff
-                  << ", imeiksin=" << tmpCContinuumModelSolution.tplMeiksinIdx
-                  << ")");
+  Log.LogDebug(Formatter() << "CTemplatesFitStore::Add iz=" << idxz
+                           << " (z=" << redshift << ") - adding at pos="
+                           << std::distance(m_fitValues[idxz].begin(), ipos)
+                           << "(merit=" << tmpCContinuumModelSolution.merit
+                           << ", ebmv=" << tmpCContinuumModelSolution.ebmvCoef
+                           << ", imeiksin="
+                           << tmpCContinuumModelSolution.meiksinIdx << ")");
 
   // insert the new SValue and move all the older candidates position according
   // to ipos found
   m_fitValues[idxz].insert(ipos, tmpCContinuumModelSolution);
 
-  // this is not very secure. it should be checked that all redshifts have the
-  // same fitValues count
-  if (n_continuum_candidates < m_fitValues[idxz].size()) {
-    n_continuum_candidates = m_fitValues[idxz].size();
+  if (getContinuumCount() < m_fitValues[idxz].size()) {
+    m_nContinuumCandidates = m_fitValues[idxz].size();
     Log.LogDebug(Formatter()
-                 << "CTemplatesFitStore::n_continuum_candidates set to "
-                 << n_continuum_candidates << ")");
+                 << "CTemplatesFitStore::m_nContinuumCandidates set to "
+                 << getContinuumCount() << ")");
   }
 }
 
-Int32 CTemplatesFitStore::GetContinuumCount() const {
-  return n_continuum_candidates;
+Int32 CTemplatesFitStore::getContinuumCount() const {
+  return m_nContinuumCandidates;
 }
 
-const CTplModelSolution &
-CTemplatesFitStore::GetFitValues(Int32 idxz,
-                                 Int32 continuumCandidateRank) const {
-  if (continuumCandidateRank > n_continuum_candidates - 1)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Cannot find the "
-                          "correct pre-computed continuum: candidateRank ("
-                       << continuumCandidateRank
-                       << ") >= n_continuum_candidates ("
-                       << n_continuum_candidates << ")");
-  if (continuumCandidateRank < 0)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Cannot find the "
-                          "correct pre-computed continuum: candidateRank ("
-                       << continuumCandidateRank << ") <0");
-
-  if ((idxz < 0) || (idxz > redshiftgrid.size() - 1)) {
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "redshift idx " << idxz << " is outside range");
-  }
-
-  return m_fitValues[idxz][continuumCandidateRank];
-}
-
-const CTplModelSolution &
-CTemplatesFitStore::GetFitValues(Float64 redshiftVal,
-                                 Int32 continuumCandidateRank) const {
-  if (continuumCandidateRank > n_continuum_candidates - 1)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Cannot find the "
-                          "correct pre-computed continuum: candidateRank ("
-                       << continuumCandidateRank
-                       << ") >= n_continuum_candidates ("
-                       << n_continuum_candidates << ")");
-
-  if (continuumCandidateRank < 0)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Cannot find the "
-                          "correct pre-computed continuum: candidateRank("
-                       << continuumCandidateRank << ") <0");
-
-  if (redshiftVal < redshiftgrid.front() || redshiftVal > redshiftgrid.back())
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Looking for redshiftVal=" << redshiftVal
-                       << " outside range [" << redshiftgrid.front() << ", "
-                       << redshiftgrid.back() << "]");
-
-  // find the idxz
-  Int32 idxz = GetRedshiftIndex(redshiftVal);
-
-  if (idxz < 0) {
-    Log.LogDetail(
-        Formatter()
-        << "CTemplatesFitStore::GetFitValues - cannot find the correct "
-           "pre-computed continuum.");
-    Log.LogDetail(Formatter()
-                  << "CTemplatesFitStore::GetFitValues - redshiftVal="
-                  << redshiftVal
-                  << ", but lt "
-                     "m_fitValues[0].redshift="
-                  << redshiftgrid[0]);
-    Log.LogDetail(Formatter()
-                  << "CTemplatesFitStore::GetFitValues - redshiftVal="
-                  << redshiftVal
-                  << ", but ht "
-                     "m_fitValues[m_fitValues.size()-1].redshift="
-                  << redshiftgrid[redshiftgrid.size() - 1]);
-
-    for (Int32 k = 0; k < 10; k++)
-      Log.LogDebug(Formatter()
-                   << "CTemplatesFitStore::GetFitValues - redshiftVal="
-                   << redshiftVal
-                   << ", lt "
-                      "m_fitValues["
-                   << k << "].redshift=" << redshiftgrid[k]);
-
-    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot find redshiftVal");
-  }
-  // CTplModelSolution cms = m_fitValues[idxz][continuumCandidateRank];
-  //   cms.tplRedshift = redshiftVal;
-  return m_fitValues[idxz][continuumCandidateRank];
-}
-
-Float64
-CTemplatesFitStore::FindMaxAmplitudeSigma(Float64 &z,
-                                          CTplModelSolution &fitValues) {
-  Int32 icontinuum = 0;
-  m_fitMaxValues->fitAmplitudeSigmaMAX = -INFINITY;
-  // TemplateFitValues fitValues;
-  for (Int32 i = 0; i < redshiftgrid.size(); i++) {
-    const CTplModelSolution &thisfitValues = m_fitValues[i][icontinuum];
-    if (thisfitValues.tplAmplitudeSigma >
-        m_fitMaxValues->fitAmplitudeSigmaMAX) {
-      m_fitMaxValues->fitAmplitudeSigmaMAX = thisfitValues.tplAmplitudeSigma;
-      z = redshiftgrid[i];
-      fitValues = thisfitValues;
-    }
-  }
-
-  return m_fitMaxValues->fitAmplitudeSigmaMAX;
+Float64 CTemplatesFitStore::getFracAmplitudeSigma(
+    CContinuumModelSolution const &continuum) const {
+  return continuum.tplAmplitudeSigma;
 }

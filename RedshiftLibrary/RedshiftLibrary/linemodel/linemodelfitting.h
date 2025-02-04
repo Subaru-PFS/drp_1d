@@ -56,6 +56,7 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
@@ -69,46 +70,37 @@ class CLineModelFitting {
 
 public:
   CLineModelFitting(
-      const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
+      const std::shared_ptr<COperatorContinuumFitting>
+          &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
   CLineModelFitting(
       const std::shared_ptr<const CSpectrum> &template_,
       const TLambdaRange &lambdaRange,
-      const std::shared_ptr<COperatorTemplateFittingBase>
-          &TFOperator); // only used for template orthogonalization, TODO use
-                        // only one of the future subclasses ? at least inherit
-                        // from clinemodelfitting
+      const std::shared_ptr<COperatorContinuumFitting>
+          &continuumFittingOperator); // only used for template
+                                      // orthogonalization, TODO use only one of
+                                      // the future subclasses ? at least
+                                      // inherit from clinemodelfitting
 
-  void initParameters();
-  void
-  initMembers(const std::shared_ptr<COperatorTemplateFittingBase> &TFOperator,
-              ElementComposition element_composition);
-
-  void LogCatalogInfos();
-
-  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
-  void setContinuumComponent(std::string component);
-  const std::string &getContinuumComponent() const {
+  void setContinuumComponent(TContinuumComponent component);
+  const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
   };
 
   bool initDtd();
-  Float64 EstimateDTransposeD(const std::string &spcComponent) const;
   Float64 EstimateMTransposeM() const;
-  Float64 EstimateLikelihoodCstLog() const;
   Float64 getDTransposeD();
   Float64 getLikelihood_cstLog();
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
-  void setVelocityAbsorptionByGroup(Float64 vel, const TInt32List &inds);
-  void setVelocityEmissionByGroup(Float64 vel, const TInt32List &inds);
+  void setVelocityByGroup(Float64 vel, const TInt32List &inds);
 
   Float64 GetVelocityEmission() const;
   Float64 GetVelocityAbsorption() const;
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
-              CTplModelSolution &continuumModelSolution,
+              CContinuumModelSolution &continuumModelSolution,
               Int32 contreest_iterations = 0, bool enableLogging = 0);
   TFloat64Range &getDTDLambdaRange() { return m_dTransposeDLambdaRange; };
 
@@ -118,10 +110,8 @@ public:
   void setLineRatioType(const std::string &lineratio);
   void SetAbsLinesLimit(Float64 limit);
 
-  Float64 GetRedshift() const;
-
   CMask getOutsideLinesMask() const;
-  Float64 getOutsideLinesSTD(Int32 which) const;
+  std::pair<Float64, Float64> getOutsideLinesRMS(CMask const &line_mask) const;
 
   Int32 computeSpcNSamples() const;
 
@@ -142,22 +132,30 @@ public:
   std::pair<Float64, Float64> getSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
 
-  Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
 
   Int32 setPassMode(Int32 iPass);
   Int32 GetPassNumber() const;
 
-  void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
-  void computeSpectrumFluxWithoutContinuum();
-  bool isContinuumComponentTplfitxx() const {
-    return m_continuumManager->isContinuumComponentTplfitxx();
+  bool isContinuumComponentTplFitXXX() const {
+    return m_continuumManager->isContinuumComponentTplFitXXX();
   }
 
-  Int32 GetModelNonZeroElementsNDdl() const {
-    return m_ElementsVector->GetModelNonZeroElementsNDdl();
+  bool isContinuumComponentPowerLawXXX() const {
+    return m_continuumManager->isContinuumComponentPowerLawXXX();
+  }
+
+  bool isContinuumComponentFitter() const {
+    return m_continuumManager->isContinuumComponentFitter();
+  }
+
+  bool isContinuumComponentNoContinuum() const {
+    return m_continuumManager->isContinuumComponentNoContinuum();
+  }
+
+  Int32 getNonZeroElementsNDdl() const {
+    return m_ElementsVector->getNonZeroElementsNDdl();
   }
 
   const CSpectrum &getSpectrum() const {
@@ -192,7 +190,7 @@ public:
   std::shared_ptr<CContinuumManager> getContinuumManager() {
     return m_continuumManager;
   }
-  std::shared_ptr<const CTplModelSolution> getContinuumFitValues() const {
+  std::shared_ptr<const CContinuumModelSolution> getContinuumFitValues() const {
     return m_continuumFitValues;
   }
 
@@ -203,20 +201,30 @@ public:
 
   std::string const &getLineRatioType() const { return m_lineRatioType; }
 
-  void loadFitContinuumParameters(Int32 icontinuum, Float64 redshift);
-
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
 
-  const CLineMap m_RestLineList;
+  // Multi obs combination/aggregation methods on elements Lists
 
-  Int32 m_pass = 1;
-  bool m_enableAmplitudeOffsets;
-  bool m_enableLbdaOffsets;
+  CSpectraGlobalIndex &getSpectraIndex() { return m_spectraIndex; }
+  void refreshAllModels();
 
-  Float64 m_LambdaOffsetMin = -400.0;
-  Float64 m_LambdaOffsetMax = 400.0;
-  Float64 m_LambdaOffsetStep = 25.0;
+private:
+  void initParameters();
+  void initMembers(const std::shared_ptr<COperatorContinuumFitting>
+                       &continuumFittingOperator,
+                   ElementComposition element_composition);
+
+  void LogCatalogInfos();
+  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
+  Float64 EstimateDTransposeD(const std::string &spcComponent) const;
+  Float64 EstimateLikelihoodCstLog() const;
+  void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
+  void computeSpectrumFluxWithoutContinuum();
+
+  void SetLSF();
+  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
+  void ComputeAndAddOptionalLineProperties(CLineModelSolution &modelSolution);
 
   // Multi obs combination/aggregation methods on elements Lists
 
@@ -228,15 +236,11 @@ public:
                            const TInt32List &subeIdx_list,
                            bool substract_abslinesmodel) const;
 
-  CSpectraGlobalIndex &getSpectraIndex() { return m_spectraIndex; }
-  void refreshAllModels();
+  const CLineMap m_RestLineList;
 
-private:
-  void SetLSF();
+  Int32 m_pass = 1;
 
-  void applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs &polynom_coeffs);
-
-  std::shared_ptr<CTplModelSolution> m_continuumFitValues;
+  std::shared_ptr<CContinuumModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
   CSpcModelVectorPtr m_models;
@@ -268,6 +272,12 @@ private:
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
+  bool m_enableAmplitudeOffsets;
+  bool m_enableLbdaOffsets;
+
+  Float64 m_LambdaOffsetMin = -400.0;
+  Float64 m_LambdaOffsetMax = 400.0;
+  Float64 m_LambdaOffsetStep = 25.0;
 
   mutable CSpectraGlobalIndex m_spectraIndex;
 };

@@ -159,8 +159,13 @@ public:
     return m_ElementParam;
   }
 
-  Float64 GetElementAmplitude() const;
-  Float64 GetElementError() const;
+  Float64 GetElementAmplitude() const {
+    return m_ElementParam->GetElementAmplitude();
+  };
+
+  Float64 GetElementAmplitudeError() const {
+    return m_ElementParam->GetElementAmplitudeError();
+  };
 
   Int32 computeCrossProducts(Float64 redshift,
                              const CSpectrumSpectralAxis &spectralAxis,

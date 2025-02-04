@@ -62,8 +62,13 @@ typedef char Char;
 typedef unsigned char Byte;
 typedef const char *String;
 
+template <typename T> using T3DList = std::vector<std::vector<std::vector<T>>>;
+template <typename T> using T2DList = std::vector<std::vector<T>>;
+template <typename T> using TList = std::vector<T>;
+
 typedef std::vector<Float64> TFloat64List;
 typedef std::map<Int32, Float64> TFloat64Map;
+typedef std::pair<Float64, Float64> TFloat64Pair;
 typedef std::vector<Float32> TFloat32List;
 typedef std::vector<Int64> TInt64List;
 typedef std::vector<bool> TBoolList;
@@ -71,6 +76,8 @@ typedef std::map<Int32, bool> TBoolMap;
 typedef std::vector<Int32> TInt32List;
 typedef std::map<Int32, Int32> TInt32Map;
 typedef std::set<Int32> TInt32Set;
+typedef std::pair<Int16, Int16> TInt16Pair;
+typedef std::pair<Int32, Int32> TInt32Pair;
 typedef std::vector<std::string> TStringList;
 typedef TStringList TScopeStack;
 
@@ -93,9 +100,17 @@ typedef std::vector<SPoint> TPointList;
 typedef UInt8 Mask;
 typedef Float64 Redshift;
 typedef Float64 Sample;
-typedef std::vector<Mask> TMaskList;
-typedef std::vector<Redshift> TRedshiftList;
-typedef std::vector<Sample> TAxisSampleList;
+
+typedef TList<Mask> TMaskList;
+typedef TList<Redshift> TRedshiftList;
+typedef TList<Sample> TAxisSampleList;
+
+struct TIgmIsmIdxs {
+  // Contains the igm / ism indexes to take into account from the igm / ism
+  // elements from context
+  TInt32List igmIdxs;
+  TInt32List ismIdxs;
+};
 
 #include "RedshiftLibrary/common/errorcodes.i"
 #include "RedshiftLibrary/common/warningcodes.i"

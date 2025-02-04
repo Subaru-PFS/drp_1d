@@ -4,6 +4,7 @@
     12510,
     18500
   ],
+  "nbSamplesMin": 1,
   "smoothWidth": 0.0,
   "templateCatalog": {
     "continuumRemoval": {
@@ -81,7 +82,6 @@
               "deltaStepMax": 1
             }
           },
-          "extremaCountB": 0,
           "hAlphaPrior": -1,
           "lineRatioType": "tplRatio",
           "rules": "all",
@@ -93,6 +93,7 @@
           "continuumFit": {
             "negativeThreshold": -5.0,
             "nullThreshold": 3,
+            "badChi2Threshold": 100,
             "fftProcessing": false,
             "ismFit": true,
             "igmFit": false,
@@ -124,7 +125,7 @@
             "halfWindowSize": 0.002,
             "continuumFit": "reFitFirstPass"
           },
-          "secondPassLcFittingMethod": -1,
+          "secondPassLcFittingMethod": "-1",
           "strongLinesPrior": 0.001,
           "nOfZPriorStrength": -1,
           "tplRatio": {

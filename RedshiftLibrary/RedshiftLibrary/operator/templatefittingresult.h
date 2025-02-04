@@ -40,31 +40,34 @@
 #define _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/twopassresult.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
 
 class TFittingIsmIgmResult;
-class CTemplateFittingResult : public COperatorResult {
+class CTemplateFittingResult : public CTwoPassResult {
 
 public:
   CTemplateFittingResult(Int32 n);
   CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
-  void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
+  void set_at_redshift(Int32 i, TFittingIsmIgmResult val,
+                       Int32 igmIdx = undefIdx, Int32 ismIdx = undefIdx);
 
   virtual ~CTemplateFittingResult() = default;
   CTemplateFittingResult(const CTemplateFittingResult &) = default;
   CTemplateFittingResult(CTemplateFittingResult &&) = default;
   CTemplateFittingResult &operator=(const CTemplateFittingResult &) = default;
   CTemplateFittingResult &operator=(CTemplateFittingResult &&) = default;
+  void updateVectors(Int32 idx, Int32 ndup, Int32 count) override;
 
   Float64 SNRCalculation(Float64 dtm, Float64 mtm);
 
-  TFloat64List Redshifts;
-
   // best fit results
   TFloat64List ChiSquare;
+  TFloat64List ReducedChiSquare;
   TFloat64List ChiSquarePhot;
   TFloat64List FitAmplitude;
   TFloat64List FitAmplitudeError;
@@ -87,9 +90,6 @@ public:
   std::vector<std::vector<TInt32List>>
       IgmMeiksinIdxIntermediate; // meiksin idx for each intermediate result
                                  // (for each config [z][Calzetti][Meiksin])
-  // TODO: std::vector<std::vector<TFloat64List>> LogPriorIntermediate
-  // TODO: std::vector<std::vector<TFloat64List>> AmpIntermediate //is needed
-  // for correct prior use in marg. mode tplmodel method
 
   Float64 CstLog = NAN;
   std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra

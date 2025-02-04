@@ -50,7 +50,7 @@ public:
   using CAbstractFitter::CAbstractFitter;
 
 protected:
-  void doFit(Float64 redshift) override;
+  virtual void doFit(Float64 redshift) override;
   virtual void fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
                                                     bool enableOffsetFitting,
                                                     Float64 redshift);

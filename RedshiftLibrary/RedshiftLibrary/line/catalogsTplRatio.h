@@ -80,11 +80,7 @@ public:
 
   bool GetCatalogVelocities(Int32 idx, Float64 &elv, Float64 &alv) const;
   std::vector<std::vector<TFloat64List>> InitLineCorrespondingAmplitudes(
-      const std::vector<TLineModelElementParam_ptr>
-          &LineModelElementList, // TODO refactor this, this should not be a
-                                 // linemodelelementlist, because all the
-                                 // information retrieved from it are not
-                                 // observation/spectrum dependant
+      const std::vector<TLineModelElementParam_ptr> &LineModelElementList,
       Int32 enableISMCalzetti,
       const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
           &ismCorrectionCalzetti) const;

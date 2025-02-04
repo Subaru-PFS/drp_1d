@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   CLineCatalog lineCatalog;
   TFloat64Range range(12500, 18500);
   CLineModelSolution solution;
-  CTplModelSolution c_solution;
+  CContinuumModelSolution c_solution;
   int iterations = 1;
 
   // generate_spectrum(spectrum, 1000, 3500, 12500);

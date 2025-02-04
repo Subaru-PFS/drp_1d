@@ -36,7 +36,7 @@
       "title": "Source size",
       "description": "Must be specified if and only if LSFType=gaussianNISPVSSPSF201707"
     },
-    "gaussianVariablewidthFileName": {
+    "gaussianVariableWidthFileName": {
       "type": "string",
       "title": "Path to file where width array is saved",
       "description": "Must be specified if and only if LSFType=gaussianVariableWidth"

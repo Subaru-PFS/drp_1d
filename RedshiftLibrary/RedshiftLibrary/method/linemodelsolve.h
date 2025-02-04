@@ -40,7 +40,7 @@
 #define _REDSHIFT_METHOD_LINEMODELSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/objectSolve.h"
+#include "RedshiftLibrary/method/twopasssolve.h"
 #include "RedshiftLibrary/operator/linemodel.h"
 
 #include "RedshiftLibrary/processflow/inputcontext.h"
@@ -54,7 +54,7 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolve : public CObjectSolve {
+class CLineModelSolve : public CTwoPassSolve {
 public:
   CLineModelSolve();
 
@@ -64,8 +64,6 @@ public:
   std::shared_ptr<CSolveResult> compute() override;
 
   void Solve();
-  void createRedshiftGrid(const CInputContext &inputContext,
-                          const TFloat64Range &redshiftRange) override;
 
 private:
   ChisquareArray
@@ -89,16 +87,20 @@ private:
   void fillChisquareArrayForTplRatio(
       const std::shared_ptr<const CLineModelResult> &result,
       ChisquareArray &chisquarearray) const;
+
+  void initSkipSecondPass() override;
+  void initTwoPassZStepFactor() override;
+
   COperatorLineModel m_linemodel;
 
   std::string m_opt_lineratiotype;
   std::string m_opt_continuumreest;
-  std::string m_opt_continuumcomponent;
+  TContinuumComponent m_opt_continuumcomponent;
 
   std::string m_opt_pdfcombination;
-  Int64 m_opt_extremacount;
-  Int64 m_opt_extremacountB;
-  Int64 m_opt_maxCandidate;
+  Int32 m_opt_extremacount;
+  Int32 m_opt_extremacountB;
+  Int32 m_opt_maxCandidate;
 
   Float64 m_opt_stronglinesprior;
   Float64 m_opt_haPrior;
@@ -106,10 +108,6 @@ private:
 
   Float64 m_opt_secondpass_halfwindowsize;
   Float64 m_opt_candidatesLogprobaCutThreshold;
-
-  Int32 m_opt_firstpass_largegridstepRatio;
-  bool m_opt_skipsecondpass = false;
-  Float64 m_coarseRedshiftStep = NAN;
 
   bool m_useloglambdasampling;
 };

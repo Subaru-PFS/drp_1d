@@ -73,6 +73,8 @@ void CTemplatesOrthogonalization::Orthogonalize(
     return;
   }
 
+  Log.LogInfo(Formatter() << "Orthogonalize linemodel with " << spectrumModel
+                          << " templates");
   for (bool sampling : samplingList) {
     tplCatalog->m_logsampling = sampling;
     // orthogonalize all templates
@@ -200,21 +202,29 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
       0.; // not relevant in the "fromSpectrum" case;
   tplOrtho->SetLSF(m_LSF);
 
+  // double the template flux, and set the continuum as the initial template
+  // such that withoutContinuumFlux will be template, and continuum will be
+  // template also
+  {
+    auto doubleFlux = tplOrtho->GetFluxAxis();
+    doubleFlux *= 2;
+    tplOrtho->SetFluxAxis(std::move(doubleFlux));
+  }
   std::string saveContinuumEstimationMethod =
       tplOrtho->GetContinuumEstimationMethod();
-  tplOrtho->SetContinuumEstimationMethod("zero");
+  tplOrtho->SetContinuumEstimationMethod(inputTemplate.GetFluxAxis());
 
   // Compute linemodel on the template
   TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
-  std::shared_ptr<COperatorTemplateFitting> TFOperator;
-  CLineModelFitting model(tplOrtho, lambdaRange, TFOperator);
+  std::shared_ptr<COperatorTemplateFitting> continuumFittingOperator;
+  CLineModelFitting model(tplOrtho, lambdaRange, continuumFittingOperator);
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;
-  bool enableLogging = true;
+  bool enableLogging = false;
   CLineModelSolution modelSolution(Context.getCLineMap());
-  CTplModelSolution continuumModelSolution;
+  CContinuumModelSolution continuumModelSolution;
 
   model.fit(redshift, modelSolution, continuumModelSolution,
             contreest_iterations, enableLogging);
@@ -222,39 +232,17 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   // Restore the continuum estimation method
   tplOrtho->SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
-  // get mtm
-  Float64 mtm = model.EstimateMTransposeM();
-
   // Subtract the fitted model from the original template
   model.getSpectraIndex().reset();
   model.getSpectrumModel().refreshModel();
   CSpectrum modelSpc = model.getSpectrumModel().GetModelSpectrum();
-  /*//debug:
-  FILE* f = fopen( "templatesortho_fittedmodel_dbg.txt", "w+" );
-  for( Int32 t=0;t<modelSpc.GetSampleCount();t++)
-  {
-      fprintf( f, "%f %e\n", modelSpc.GetSpectralAxis()[t],
-  modelSpc.GetFluxAxis()[t]);
-  }
-  fclose( f );
-  //*/
 
   const CSpectrumFluxAxis &modelFluxAxis = modelSpc.GetFluxAxis();
-  CSpectrumFluxAxis continuumOrthoFluxAxis = std::move(tplOrtho->GetFluxAxis());
+  CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
   for (Int32 i = 0; i < continuumOrthoFluxAxis.GetSamplesCount(); i++) {
     continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
   }
   tplOrtho->SetFluxAxis(std::move(continuumOrthoFluxAxis));
-
-  /*//debug:
-  FILE* f2 = fopen( "templatesortho_orthotemplate_dbg.txt", "w+" );
-  for( Int32 t=0;t<modelSpc.GetSampleCount();t++)
-  {
-      fprintf( f2, "%f %e\n", modelSpc.GetSpectralAxis()[t],
-  continuumOrthoFluxAxis[t]);
-  }
-  fclose( f2 );
-  //*/
 
   return tplOrtho;
 }

@@ -192,6 +192,14 @@ public:
   TFloat64List spcAxisList = spectrumData.myExtendedLambdaList;
 };
 
+class fixture_SpectralAxisSuperExtended {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumSpectralAxis spcAxis = spectrumData.superExtendedLambdaList;
+  Int32 spcAxisSize = spectrumData.superExtendedLambdaList.size();
+  TFloat64List spcAxisList = spectrumData.superExtendedLambdaList;
+};
+
 class fixture_SpectralAxisQso {
 public:
   fixture_spectralQsoData spcQsoData;
@@ -231,6 +239,12 @@ class fixture_NoiseAxisExtended {
 public:
   fixture_SpectrumData spectrumData;
   CSpectrumNoiseAxis noiseAxis = spectrumData.myExtendedNoiseList;
+};
+
+class fixture_NoiseAxisSuperExtended {
+public:
+  fixture_SpectrumData spectrumData;
+  CSpectrumNoiseAxis noiseAxis = spectrumData.mySuperExtendedNoiseList;
 };
 
 class fixture_NoiseAxisQso {
@@ -276,6 +290,22 @@ public:
   CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
       spectrumData.myExtendedFluxList, fixture_NoiseAxisExtended().noiseAxis);
   TFloat64List fluxAxisList = spectrumData.myExtendedFluxList;
+};
+
+class fixture_FluxAxisExtendedPowerLaw {
+public:
+  fixture_FluxAxisExtendedPowerLaw() {
+    TList<Float64> noise =
+        fixture_NoiseAxisSuperExtended().noiseAxis.GetSamplesVector();
+    std::transform(noise.begin(), noise.end(), noise.begin(),
+                   [](Float64 pixelNoise) { return pixelNoise / 10; });
+    fluxAxis = CSpectrumFluxAxis(spectrumData.myExtendedPowerLawList,
+                                 CSpectrumNoiseAxis(noise));
+  }
+  fixture_SpectrumData spectrumData;
+
+  CSpectrumFluxAxis fluxAxis;
+  TFloat64List fluxAxisList = spectrumData.myExtendedPowerLawList;
 };
 
 class fixture_FluxAxisQso {
@@ -325,6 +355,29 @@ public:
   std::shared_ptr<CSpectrum> spc =
       std::make_shared<CSpectrum>(fixture_SpectralAxisExtended().spcAxis,
                                   fixture_FluxAxisExtended().fluxAxis);
+};
+
+class fixture_SharedPowerLawSpectrumExtended {
+public:
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(fixture_SpectralAxisSuperExtended().spcAxis,
+                                  fixture_FluxAxisExtendedPowerLaw().fluxAxis);
+};
+
+class fixture_SharedPowerLawLowSpectrumExtended {
+public:
+  fixture_SharedPowerLawLowSpectrumExtended() {
+    TList<Float64> lowFlux =
+        fixture_FluxAxisExtendedPowerLaw().fluxAxis.GetSamplesVector();
+    for (Int16 i = 0; i < lowFlux.size(); i++) {
+      // Creates a very noisy signal
+      i % 2 == 0 ? lowFlux[i] = lowFlux[i] : lowFlux[i] = lowFlux[i];
+    }
+    spc = std::make_shared<CSpectrum>(
+        fixture_SpectralAxisSuperExtended().spcAxis,
+        CSpectrumFluxAxis(lowFlux, fixture_NoiseAxisSuperExtended().noiseAxis));
+  }
+  std::shared_ptr<CSpectrum> spc;
 };
 
 class fixture_SharedSpectrum {
@@ -382,6 +435,21 @@ public:
                         {meiksinData25.fluxCorr1, meiksinData25.fluxCorr2}),
       MeiksinCorrection(meiksinData25.lbdaCorr,
                         {meiksinData30.fluxCorr1b, meiksinData30.fluxCorr2b})};
+  TFloat64List z_bins = {2.0, 2.5, 3.0};
+  Int32 idxCount = meiskinCorr[0].fluxcorr.size();
+  TFloat64Range lbdaRange = TFloat64Range(4680., 4713.);
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
+      std::make_shared<CSpectrumFluxCorrectionMeiksin>(meiskinCorr, z_bins);
+};
+
+class fixture_MeiskinCorrection2 {
+public:
+  fixture_MeiksinData25 meiksinData25;
+  fixture_MeiksinData30 meiksinData30;
+  std::vector<MeiksinCorrection> meiskinCorr = {MeiksinCorrection(
+      meiksinData25.lbdaCorr, {meiksinData25.fluxCorr1, meiksinData25.fluxCorr2,
+                               meiksinData25.fluxCorr3})};
+
   TFloat64List z_bins = {2.0, 2.5, 3.0};
   Int32 idxCount = meiskinCorr[0].fluxcorr.size();
   TFloat64Range lbdaRange = TFloat64Range(4680., 4713.);
@@ -504,8 +572,8 @@ class fixture_PhotoData {
 public:
   fixture_PhotoData() {
     TStringList names = {"band1", "band2"};
-    TFloat64List flux = {1e-14, 2e-15};
-    TFloat64List fluxerr = {1e-18, 3e-18};
+    TFloat64List flux = {8.7e-30, 8.69e-30};
+    TFloat64List fluxerr = {5.8e-30, 5.8e-30};
     photoData = std::make_shared<CPhotometricData>(names, flux, fluxerr);
   }
   std::shared_ptr<CPhotometricData> photoData;
@@ -1347,8 +1415,8 @@ public:
   void setCorrections(
       std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin,
       std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti) {
-    Context.setfluxCorrectionCalzetti(ismCorrectionCalzetti);
-    Context.setfluxCorrectionMeiksin(igmCorrectionMeiksin);
+    Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
+    Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
   }
 
   void setCatalog(std::shared_ptr<CTemplateCatalog> catalog) {

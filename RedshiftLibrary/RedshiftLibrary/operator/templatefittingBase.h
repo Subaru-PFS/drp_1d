@@ -45,7 +45,9 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
@@ -61,27 +63,35 @@ class CModelSpectrumResult;
 /**
  * \ingroup Redshift
  */
-class COperatorTemplateFittingBase : public COperator {
+class COperatorTemplateFittingBase : public COperatorContinuumFitting,
+                                     public COperatorTwoPass<TExtremaResult> {
 
 public:
-  COperatorTemplateFittingBase(const TFloat64List &redshifts = TFloat64List());
+  COperatorTemplateFittingBase(const TFloat64List &redshifts);
 
   virtual ~COperatorTemplateFittingBase() = default;
+  COperatorTemplateFittingBase(COperatorTemplateFittingBase const &other) =
+      default;
+  COperatorTemplateFittingBase &
+  operator=(COperatorTemplateFittingBase const &other) = default;
 
-  virtual void SetRedshifts(TFloat64List redshifts) {
-    m_redshifts = std::move(redshifts);
-  };
+  COperatorTemplateFittingBase(COperatorTemplateFittingBase &&other) = default;
+  COperatorTemplateFittingBase &
+  operator=(COperatorTemplateFittingBase &&other) = default;
 
-  virtual std::shared_ptr<COperatorResult> Compute(
+  virtual std::shared_ptr<CTemplateFittingResult> Compute(
       const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
       std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
-      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) = 0;
+      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+      std::shared_ptr<CTemplateFittingResult> result = NULL,
+      bool isFirstPass = true,
+      const std::vector<Int32> &zIdxsToCompute = {}) = 0;
 
   TPhotVal
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
-                       Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
+                       Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
                        Float64 amplitude, const Float64 overlapThreshold,
                        Int32 index,
                        const std::shared_ptr<CModelSpectrumResult> &models);
@@ -89,12 +99,7 @@ public:
     return TPhotVal();
   };
 
-  virtual bool IsFFTProcessing() { return false; };
-
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
-  void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
-    m_maskBuilder = maskBuilder;
-  }
 
 protected:
   virtual void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
@@ -102,15 +107,9 @@ protected:
                              Float64 &overlapFraction,
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);
-  virtual void
-  InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin,
-                   Int32 spcIndex) {
-    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(
-        kstart, kend, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+  virtual void InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
+                                Int32 spcIndex) {
+    m_templateRebined_bf[spcIndex].InitIsmIgmConfig(kstart, kend, redshift);
   };
 
   virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) {
@@ -126,18 +125,12 @@ protected:
   };
 
   // Likelihood
-  virtual Float64 EstimateLikelihoodCstLog() const;
   void applyPositiveAndNonNullConstraint(Float64 amp_sigma,
                                          Float64 &ampl) const;
-
-  std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
-  std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
-  TFloat64List m_redshifts;
 
   std::vector<CTemplate> m_templateRebined_bf;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
   std::vector<CMask> m_mskRebined_bf;
-  std::shared_ptr<CMaskBuilder> m_maskBuilder;
   Float64 m_continuum_null_amp_threshold; // in SNR
 };
 

@@ -71,6 +71,7 @@ void print_flux(TAxisSampleList sample) {
 
 const std::string jsonString =
     "{\"smoothWidth\" : 0.5,"
+    "\"nbSamplesMin\" : 1,"
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
     "\"medianEvenReflection\" : false, "
     "\"method\" : \"irregularSamplingMedian\"}}";
@@ -266,8 +267,8 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   spc.SetContinuumEstimationMethod("raw");
   spc.EstimateContinuum();
   CSpectrumFluxAxis flux_out;
-  spc.SetType(CSpectrum::EType::nType_continuumOnly);
-  BOOST_CHECK(spc.GetType() == 2);
+  spc.SetType(CSpectrum::EType::continuumOnly);
+  BOOST_CHECK(spc.GetType() == CSpectrum::EType::continuumOnly);
   flux_out = spc.GetFluxAxis();
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetContinuumFluxAxis().GetSamplesVector());
@@ -276,8 +277,8 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetContinuumFluxAxis_().GetSamplesVector());
 
-  spc.SetType(CSpectrum::EType::nType_noContinuum);
-  BOOST_CHECK(spc.GetType() == 3);
+  spc.SetType(CSpectrum::EType::noContinuum);
+  BOOST_CHECK(spc.GetType() == CSpectrum::EType::noContinuum);
   spc.ResetContinuum();
   flux_out = spc.GetFluxAxis();
   BOOST_CHECK(flux_out.GetSamplesVector() ==
@@ -287,8 +288,8 @@ BOOST_AUTO_TEST_CASE(setXXX_test) {
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetWithoutContinuumFluxAxis_().GetSamplesVector());
 
-  spc.SetType(CSpectrum::EType::nType_raw);
-  BOOST_CHECK(spc.GetType() == 1);
+  spc.SetType(CSpectrum::EType::raw);
+  BOOST_CHECK(spc.GetType() == CSpectrum::EType::raw);
   flux_out = spc.GetFluxAxis();
   BOOST_CHECK(flux_out.GetSamplesVector() ==
               spc.GetRawFluxAxis().GetSamplesVector());
@@ -346,37 +347,47 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
 
   // ValidateSpectrum
   spc.ApplyAmplitude(0.5);
+  Float64 nbSamplesMin = paramStore->Get<Int32>("nbSamplesMin");
+
   TFloat64Range lambdaRange(spectralList[0], spectralList[spcAxisSize - 1]);
-  BOOST_CHECK_NO_THROW(spc.ValidateSpectrum(lambdaRange, true));
+  BOOST_CHECK_NO_THROW(spc.ValidateSpectrum(lambdaRange, true, nbSamplesMin));
   // not IsValid
   TAxisSampleList rawFlux3 = spc.GetRawFluxAxis_().GetSamplesVector();
   rawFlux3.push_back(5592.);
   spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
-  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, true), AmzException);
+  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, true, nbSamplesMin),
+                    AmzException);
   rawFlux3.pop_back();
   spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
   // correct flux
   rawFlux3[1] = fluxList[1];
   spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
-  spc.ValidateSpectrum(lambdaRange, true);
+  spc.ValidateSpectrum(lambdaRange, true, nbSamplesMin);
   BOOST_CHECK(spc.GetRawFluxAxis_().GetSamplesVector()[1] == fluxList[1]);
   // not ValidateFlux
   rawFlux3[1] = std::numeric_limits<double>::infinity();
   spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
-  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false), AmzException);
+  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false, nbSamplesMin),
+                    AmzException);
   rawFlux3[1] = fluxList[1];
   spc.GetRawFluxAxis_().setSamplesVector(rawFlux3);
   // not ValidateNoise
   TFloat64List error = spc.GetRawFluxAxis_().GetError().GetSamplesVector();
   error[1] = std::numeric_limits<double>::infinity();
   spc.GetRawFluxAxis_().setError(CSpectrumNoiseAxis(error));
-  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false), AmzException);
+  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false, nbSamplesMin),
+                    AmzException);
   error[1] = noiseList[1];
   spc.GetRawFluxAxis_().setError(CSpectrumNoiseAxis(error));
   // LSF spectralAxis don't cover lambdaRange
   spc.SetLSF(LSF);
   TFloat64Range lambdaRange2(4680, 4712);
-  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange2, false), AmzException);
+  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange2, false, nbSamplesMin),
+                    AmzException);
+
+  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange, false, 55), AmzException);
+  TFloat64Range lambdaRange3(4680.3, 4680.7);
+  BOOST_CHECK_THROW(spc.ValidateSpectrum(lambdaRange3, false, 1), AmzException);
 
   // SetContinuumEstimationMethod
   spc.SetContinuumEstimationMethod("raw");

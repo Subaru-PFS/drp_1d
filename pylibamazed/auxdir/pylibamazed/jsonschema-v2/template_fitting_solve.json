@@ -13,13 +13,14 @@
     "igmFit",
     "ismFit",
     "pdfCombination",
-    "enablePhotometry"
+    "enablePhotometry",
+    "singlePass"
   ],
   "additionalProperties": false,
   "properties": {
     "fftProcessing": {
-      "description": "Using FFT for Least-square template fitting (in log lambda)",
-      "type": "bool"
+      "description": "Using FFT for Least-square template fitting (in log lambda). Cannot be used if singlePass is false.",
+      "type": "boolean"
     },
     "overlapThreshold": {
       "description": "Minimal fraction of the spectrum to be covered by the redshifted template to proceed (at each redshift)",
@@ -55,7 +56,7 @@
     },
     "enablePhotometry": {
       "type": "boolean",
-      "description": "Enable the use of photometry data"
+      "description": "Enable the use of photometry data. Cannot be used if singlePass is false."
     },
     "photometry": {
       "type": "object",
@@ -77,15 +78,36 @@
       "properties": {
         "component": {
           "type": "string",
-          "description": "Component of the spectrum (and templates) to fit.\n * **raw**: Full spectrum and templates \n * **nocontinuum**: Continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods \n * **continuum**: continuum of the spectrum and templates \n * **all**: computes all 3 (\"raw\", \"noContinuum\" and \"continuum\") options, i.e. 3 chi2(z) in the resultstore, but only one pdf corresponding to \"raw\" option",
+          "description": "Component of the spectrum (and templates) to fit.\n * **raw**: Full spectrum and templates \n * **nocontinuum**: Continuum subtracted spectrum and templates (see continuumRemoval and templateCatalog.continuumRemoval for the continuum removal methods \n * **continuum**: continuum of the spectrum and templates",
           "enum": [
             "raw",
             "noContinuum",
-            "continuum",
-            "all"
+            "continuum"
           ]
         }
       }
+    },
+    "singlePass": {
+      "type": "boolean",
+      "title": "Use single pass",
+      "description": "Wether to use one pass or two pass for candidates calculation.",
+      "default": false
+    },
+    "firstPass": {
+      "type": "object",
+      "required": [
+        "largeGridStepRatio"
+      ],
+      "properties": {
+        "largeGridStepRatio": {
+          "type": "integer",
+          "title": "Large grid step ratio",
+          "description": "Multiplicative factor of the redshift step size for the first pass: firstpassz step = step * largeGridStepRatio. To use finegrid step, set largegridstep to 0 or 1"
+        }
+      }
+    },
+    "secondPass": {
+      "$ref": "second_pass.json"
     }
   }
 }

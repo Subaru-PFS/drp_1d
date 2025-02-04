@@ -65,8 +65,8 @@ COperatorTemplateFittingLog::COperatorTemplateFittingLog(
   CheckRedshifts();
 }
 
-void COperatorTemplateFittingLog::SetRedshifts(TFloat64List redshifts) {
-  COperatorTemplateFittingBase::SetRedshifts(std::move(redshifts));
+void COperatorTemplateFittingLog::SetRedshifts(const TFloat64List &redshifts) {
+  COperatorTemplateFittingBase::SetRedshifts(redshifts);
   CheckRedshifts();
 }
 
@@ -506,6 +506,8 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       if (fullResultIdx >= result->ChiSquare.size())
         THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
       result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
+      result->ReducedChiSquare[fullResultIdx] =
+          subresult->ReducedChiSquare[isubz];
       result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
       result->FitAmplitudeError[fullResultIdx] =
           subresult->FitAmplitudeError[isubz];
@@ -567,7 +569,8 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           result->ChiSquare[fullResultIdx] =
               dtd + result->FitMtM[fullResultIdx] * ampl * ampl -
               2. * ampl * result->FitDtM[fullResultIdx];
-
+          result->ReducedChiSquare[fullResultIdx] =
+              result->ChiSquare[fullResultIdx] / spectrumRebinedFluxRaw.size();
           Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
                           (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
           if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
@@ -732,6 +735,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
   // prepare best fit data buffer
   TFloat64List bestChi2(nshifts, DBL_MAX);
+  TFloat64List bestReducedChi2(nshifts, DBL_MAX);
   TFloat64List bestFitAmp(nshifts, NAN);
   TFloat64List bestFitAmpErr(nshifts, NAN);
   TFloat64List bestFitAmpSigma(nshifts, NAN);
@@ -851,6 +855,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
         if (bestChi2[k] > chi2[k]) {
           bestChi2[k] = chi2[k];
+          bestReducedChi2[k] = chi2[k] / nSpc;
           bestFitAmp[k] = amp[k];
           bestFitAmpErr[k] = amp_err[k];
           bestFitAmpSigma[k] = amp_sigma[k];
@@ -883,6 +888,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // reversing all vectors
   std::reverse(z_vect.begin(), z_vect.end());
   std::reverse(bestChi2.begin(), bestChi2.end());
+  std::reverse(bestReducedChi2.begin(), bestReducedChi2.end());
   std::reverse(bestFitAmp.begin(), bestFitAmp.end());
   std::reverse(bestFitAmpErr.begin(), bestFitAmpErr.end());
   std::reverse(bestFitAmpSigma.begin(), bestFitAmpSigma.end());
@@ -906,6 +912,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     result->Overlap[k] = TFloat64List(1, 1.0);
   }
   result->ChiSquare = bestChi2;
+  result->ReducedChiSquare = bestReducedChi2;
   result->FitAmplitude = bestFitAmp;
   result->FitAmplitudeError = bestFitAmpErr;
   result->FitAmplitudeSigma = bestFitAmpSigma;
@@ -994,12 +1001,13 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
  *
  * lambdaRange is not clamped
  **/
-std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
+std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
     const std::shared_ptr<const CTemplate> &logSampledTpl,
     Float64 overlapThreshold, std::string opt_interp, bool opt_extinction,
     bool opt_dustFitting, Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx) {
+    Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
+    bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
   Log.LogDetail(Formatter() << "starting computation for template: "
                             << logSampledTpl->GetName());
 
@@ -1057,19 +1065,15 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   // Note: below corresponds to ::BasicFit code except that redshift loop
   // belongs to ::compute
   // Optionally apply some IGM absorption
-  TInt32List MeiksinList;
-  TInt32List EbmvList;
-  m_templateRebined_bf[0].GetIsmIgmIdxList(opt_extinction, opt_dustFitting,
-                                           MeiksinList, EbmvList, FitEbmvIdx,
-                                           FitMeiksinIdx);
-  Int32 nIGMCoeffs = MeiksinList.size();
-  Int32 nISMCoeffs = EbmvList.size();
+  TIgmIsmIdxs igmIsmIdxs = m_templateRebined_bf[0].GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
+  Int32 nIGMCoeffs = igmIsmIdxs.igmIdxs.size();
+  Int32 nISMCoeffs = igmIsmIdxs.ismIdxs.size();
 
   m_enableIGM = opt_extinction;
   m_enableISM = opt_dustFitting;
-  std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>(m_redshifts.size(), nISMCoeffs,
-                                               nIGMCoeffs);
+  result = std::make_shared<CTemplateFittingResult>(m_redshifts.size(),
+                                                    nISMCoeffs, nIGMCoeffs);
   result->Redshifts = m_redshifts;
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {
@@ -1079,7 +1083,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
                << logpriorze.size() << " != " << m_redshifts.size());
   }
 
-  Int32 retFit = FitAllz(result, MeiksinList, EbmvList, logpriorze);
+  Int32 retFit =
+      FitAllz(result, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs, logpriorze);
 
   if (retFit != 0) {
     THROWG(ErrorCode::INTERNAL_ERROR,

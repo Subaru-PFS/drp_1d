@@ -94,8 +94,7 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
           TFloat64Range(chisquarearray.zgridParams[i].zmin,
                         chisquarearray.zgridParams[i].zmax);
   }
-
-  // create ClogZPdfResult
+  // create ClogZPdfResultm
   createPdfResult(chisquarearray);
 
   // build PDF from chisquares and priors
@@ -214,7 +213,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
     const TFloat64Range &redshiftsRange = cand.second;
     std::string id = cand.first;
 
-    // call Find on each secondpass range and retrieve the best  peak
+    // call Find on each secondpass range and retrieve the best peak
     bool invertForMinSearch = false;
     CExtremum extremum_op = CExtremum(
         m_maxPeakCount_per_window, m_peakSeparation, m_meritcut,

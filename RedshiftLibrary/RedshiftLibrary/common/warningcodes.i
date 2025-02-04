@@ -13,9 +13,17 @@ enum class WarningCode {
   FORCED_CONTINUUM_REESTIMATION_TO_NO,          // 11
   LESS_OBSERVED_SAMPLES_THAN_AMPLITUDES_TO_FIT, // 12
   LBFGSPP_ERROR,                                // 13
-  PDF_INTEGRATION_WINDOW_TOO_SMALL,             // 14              
+  PDF_INTEGRATION_WINDOW_TOO_SMALL,             // 14  
+            
   // Python
   UNUSED_PARAMETER,                             // 15
-  SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,       // 16 
-  MULTI_OBS_ARBITRARY_LSF                       // 17
+  SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM,       // 16
+  MULTI_OBS_ARBITRARY_LSF,                      // 17
+  
+  
+  // All new ones here not to change binary codes
+  FORCED_POWERLAW_TO_ZERO,                     // 18
+  NULL_LINES_PROFILE,                          // 19
+  STD_ESTIMATION_FAILED,                       // 20
+  VELOCITY_FIT_RANGE                           // 21
 };

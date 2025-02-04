@@ -71,6 +71,11 @@ private:
                   const CSpectrumSpectralAxis &spectralAxis,
                   const CSpectrumFluxAxis &continuumfluxAxis,
                   gsl_matrix *X) const;
+
+  gsl_matrix *cleanMatrix(const TInt32List &EltsIdx_ini, gsl_matrix *Xini,
+                          TInt32List &EltsIdx,
+                          TInt32List &valid_col_indices) const;
+
   Int32 m_fitc_polyOrder = -1;
 
   std::shared_ptr<CContinuumManager> m_continuumManager;

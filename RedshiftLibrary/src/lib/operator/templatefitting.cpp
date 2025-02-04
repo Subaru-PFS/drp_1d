@@ -53,6 +53,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
@@ -93,29 +94,32 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       (logpriore.size() ==
        tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
 
-  Int32 iEbmvCoeffMin = EbmvList.front();
-  Int32 iEbmvCoeffMax = EbmvList.back();
-
   TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize, m_spectra.size());
 
   TFloat64RangeList currentRanges(m_spectra.size()); // restframe
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size();
+       spcIndex++) { // loop for multi obs
+    // Adapts template bin
     RebinTemplate(tpl, redshift, currentRanges[spcIndex],
                   result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
+    // Sets template indexes between which data is of interest for this given
+    // spectrum / redshift
     currentRanges[spcIndex].getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart[spcIndex], m_kEnd[spcIndex]);
   }
 
-  if (opt_extinction)
-    opt_extinction = igmIsInRange(currentRanges);
+  // get masks & determine number of samples actually used
+  auto const &[mask_list, n_samples] = getMaskListAndNSamples(redshift);
 
+  if (opt_extinction) {
+    opt_extinction = igmIsInRange(currentRanges);
+    m_option_igmFastProcessing = opt_extinction && m_option_igmFastProcessing;
+  }
   if (opt_dustFitting || opt_extinction) {
     for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
       InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
-                       tpl->m_ismCorrectionCalzetti,
-                       tpl->m_igmCorrectionMeiksin, spcIndex);
+                       spcIndex);
     }
   }
 
@@ -163,14 +167,19 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
           ApplyDustCoeff(kEbmv, spcIndex);
       }
 
+      // Priors
       const CPriorHelper::SPriorTZE &logpriorTZE =
           apply_priore ? logpriore[kEbmv] : logpriorTZEempty;
+
       TFittingResult fitRes;
+
+      // Chi2 calculation
       for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
-        fitRes.cross_result +=
-            ComputeCrossProducts(kM, kEbmv_, redshift, spcIndex);
+        fitRes.cross_result += ComputeCrossProducts(
+            kM, kEbmv_, redshift, mask_list[spcIndex], spcIndex);
       }
       ComputeAmplitudeAndChi2(fitRes, logpriorTZE);
+
       Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
                                << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
                                << " meiksinIdx=" << meiksinIdx);
@@ -179,13 +188,14 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
       result.IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
 
+      // if minimizes chi2, sets it as the result
       if (fitRes.chiSquare < result.chiSquare) {
         TFittingResult &result_base = result; // upcasting (slicing)
         result_base = fitRes;                 // slicing, preserving specific
         // TFittingIsmIGmResult members
-
-        result.EbmvCoeff = coeffEBMV;
-        result.MeiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
+        result.reducedChisquare = result.chiSquare / n_samples;
+        result.ebmvCoef = coeffEBMV;
+        result.meiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
         chisquareSetAtLeastOnce = true;
       }
     }
@@ -198,6 +208,26 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   }
 
   return result;
+}
+
+std::pair<TList<CMask>, Int32>
+COperatorTemplateFitting::getMaskListAndNSamples(Float64 redshift) const {
+  // get masks & determine number of samples actually used
+  TList<CMask> mask_list;
+  Int32 n_samples = 0; // total number of samples
+  mask_list.reserve(m_spectra.size());
+  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+    const CMask &mask =
+        m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
+                               *m_lambdaRanges[spcIndex], redshift);
+    for (Int32 pixel_idx = m_kStart[spcIndex]; pixel_idx <= m_kEnd[spcIndex];
+         ++pixel_idx)
+      if (mask[pixel_idx])
+        ++n_samples;
+    mask_list.push_back(std::move(mask));
+  }
+
+  return std::make_pair(std::move(mask_list), n_samples);
 }
 
 void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {
@@ -218,7 +248,8 @@ bool COperatorTemplateFitting::igmIsInRange(
 }
 
 TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
-    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
+    Int32 kM, Int32 kEbmv_, Float64 redshift, CMask const &mask,
+    Int32 spcIndex) {
   const CSpectrumFluxAxis &spcFluxAxis = m_spectra[spcIndex]->GetFluxAxis();
   const TAxisSampleList &Yspc = spcFluxAxis.GetSamplesVector();
   const TAxisSampleList &Ytpl =
@@ -226,9 +257,6 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   const TAxisSampleList &Xtpl =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector();
 
-  const CMask &spcMaskAdditional =
-      m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
-                             *m_lambdaRanges[spcIndex], redshift);
   TCrossProductResult fitResult;
 
   Float64 &sumCross = fitResult.sumCross;
@@ -257,7 +285,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
       sumsIgmSaved = 1;
     }
 
-    if (spcMaskAdditional[j]) {
+    if (mask[j]) {
 
       err2 = 1.0 / (error[j] * error[j]);
 
@@ -362,19 +390,13 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
   }
 }
 
-/**
- * \brief
- *
- * input: if additional_spcMasks size is 0, no additional mask will be used,
- *otherwise its size should match the redshifts list size
- *
- **/
-std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
+std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
     std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
-    const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx) {
+    const CPriorHelper::TPriorZEList &logprior, Int32 FitEbmvIdx,
+    Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
+    bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
   Log.LogDetail(
       Formatter()
       << "  Operator-TemplateFitting: starting computation for template: "
@@ -396,37 +418,44 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
     THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
+  TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
+      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
-  std::shared_ptr<CTemplateFittingResult> result =
-      std::make_shared<CTemplateFittingResult>(m_redshifts.size());
-  TInt32List MeiksinList;
-  TInt32List EbmvList;
-  tpl->GetIsmIgmIdxList(opt_extinction, opt_dustFitting, MeiksinList, EbmvList,
-                        FitEbmvIdx, FitMeiksinIdx);
-
+  if (!result) {
+    result = std::make_shared<CTemplateFittingResult>(m_redshifts.size());
+  }
   result->Redshifts = m_redshifts;
 
-  if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size())
+  if (logprior.size() > 0 && logprior.size() != m_redshifts.size())
     THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "prior list size(" << logpriorze.size()
+           Formatter() << "prior list size(" << logprior.size()
                        << ") does not match the input redshift-list size :"
                        << m_redshifts.size());
 
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
+  std::vector<Int32> zIdxs;
+  if (isFirstPass) {
+    zIdxs.resize(m_redshifts.size());
+    std::iota(zIdxs.begin(), zIdxs.end(), 0);
+  } else
+    zIdxs = zIdxsToCompute;
+  for (Int32 zIdx : zIdxs) {
+    // TODO question est ici comment
+    Float64 redshift = result->Redshifts[zIdx];
+    // TODO move a condition up loop
     const CPriorHelper::TPriorEList &logp =
-        logpriorze.size() > 0 && logpriorze.size() == m_redshifts.size()
-            ? logpriorze[i]
+        logprior.size() > 0 && logprior.size() == m_redshifts.size()
+            ? logprior[zIdx]
             : CPriorHelper::TPriorEList();
-
-    Float64 redshift = result->Redshifts[i];
 
     TFittingIsmIgmResult result_z =
         BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
-                 opt_dustFitting, logp, MeiksinList, EbmvList);
+                 opt_dustFitting, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
-    result->set_at_redshift(i, std::move(result_z));
+    result->set_at_redshift(zIdx, std::move(result_z), FitMeiksinIdx,
+                            FitEbmvIdx);
   }
 
+  // Question what to do with overlap in second pass ?
   // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
@@ -462,4 +491,83 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   result->CstLog = EstimateLikelihoodCstLog();
 
   return result;
+}
+
+/**
+ * \brief
+ *
+ * input: if additional_spcMasks size is 0, no additional mask will be used,
+ *otherwise its size should match the redshifts list size
+ *
+ **/
+
+void COperatorTemplateFitting::SetFirstPassCandidates(
+    const TCandidateZbyRank &zCandidates) {
+  m_firstpass_extremaResult = std::make_shared<ExtremaResult>(zCandidates);
+}
+
+// TODO move in solve and mutualize with buildextremaresult
+std::shared_ptr<const ExtremaResult>
+COperatorTemplateFitting::BuildFirstPassExtremaResults(
+    const TOperatorResultMap &resultsMapFromStore) {
+  // Access the raw extremas results
+  // Converts TCandidateZbyRank m_firstpass_extremaResult.m_ranked_candidates to
+  // ExtremaResult using constructor
+  Int32 extremumCount = m_firstpass_extremaResult->size();
+
+  // Find the common redshifts grid using first result
+  auto firstStoreResult =
+      std::dynamic_pointer_cast<const CTemplateFittingResult>(
+          (*resultsMapFromStore.begin()).second);
+  const TFloat64List &redshifts = firstStoreResult->Redshifts;
+
+  // For each extremum, find its corresponding template
+  for (Int32 iExtremum = 0; iExtremum < extremumCount; iExtremum++) {
+    auto candidate =
+        m_firstpass_extremaResult->getRankedCandidatePtr(iExtremum);
+    Float64 z = candidate->Redshift;
+
+    // Find z index in stored results redshifts grid
+    auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
+    const Int32 zIndex = std::distance(redshifts.begin(), itZ);
+
+    // Find template minimizing chi2 : this is the extremum template
+    Float64 chiSquare = DBL_MAX;
+    std::string name = "";
+    for (auto &resultPair : resultsMapFromStore) {
+      auto tplFitResult =
+          std::dynamic_pointer_cast<const CTemplateFittingResult>(
+              resultPair.second);
+
+      if (tplFitResult->ChiSquare[zIndex] < chiSquare) {
+        chiSquare = tplFitResult->ChiSquare[zIndex];
+        name = resultPair.first;
+      };
+    }
+
+    candidate->fittedContinuum.name = name;
+    auto resultFromStore =
+        std::dynamic_pointer_cast<const CTemplateFittingResult>(
+            resultsMapFromStore.at(name));
+    candidate->fittedContinuum.meiksinIdx =
+        resultFromStore->FitMeiksinIdx[zIndex];
+    candidate->fittedContinuum.ebmvCoef = resultFromStore->FitEbmvCoeff[zIndex];
+    candidate->fittedContinuum.redshift = resultFromStore->Redshifts[zIndex];
+  }
+  return m_firstpass_extremaResult;
+}
+
+std::vector<Int32>
+COperatorTemplateFitting::getzIdxsToCompute(TFloat64List allRedshifts,
+                                            TFloat64List extendedRedshifts) {
+  Int32 nz = allRedshifts.size();
+  std::vector<Int32> zIdxsToCompute{};
+  for (Int32 zIdx = 0; zIdx < nz; ++zIdx) {
+    bool isFound =
+        (std::find(extendedRedshifts.begin(), extendedRedshifts.end(),
+                   allRedshifts[zIdx]) != extendedRedshifts.end());
+    if (isFound)
+      zIdxsToCompute.push_back(zIdx);
+  }
+  return zIdxsToCompute;
 }

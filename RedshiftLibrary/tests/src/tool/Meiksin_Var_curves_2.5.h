@@ -40,6 +40,15 @@
 
 using namespace NSEpic;
 
+TFloat64List divideByTwo(TFloat64List const &initialList) {
+  // TODO see if something exist in cheatsheet for that
+  TFloat64List transformedList(initialList.size());
+  for (size_t i = 0; i < initialList.size(); i++) {
+    transformedList[i] = initialList[i] / 2;
+  }
+  return transformedList;
+}
+
 class fixture_MeiksinData25 {
 public:
   TFloat64List lbdaCorr = {
@@ -5470,4 +5479,5 @@ public:
                             1};
 
   TFloat64List fluxCorr2 = fluxCorr1;
+  TFloat64List fluxCorr3 = divideByTwo(fluxCorr2);
 };

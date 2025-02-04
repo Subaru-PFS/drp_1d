@@ -39,17 +39,14 @@
 import tempfile
 
 import numpy as np
-from pylibamazed.AbstractSpectrumReader import (AbstractSpectrumReader,
-                                                Container)
+from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader, Container
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestSpectrumReaderUtils:
-
     def make_parameters_dict(self, **kwargs):
-        params_dict = dict()
+        params_dict = dict({"version": 2})
         params_dict["lsf"] = dict()
         params_dict["lsf"]["lsfType"] = kwargs.get("lsfType", "fromSpectrumData")
         params_dict["airVacuumMethod"] = kwargs.get("airVacuumMethod", "")
@@ -63,35 +60,39 @@ class TestSpectrumReaderUtils:
             params_dict["filters"] = kwargs.get("filters")
         if kwargs.get("width"):
             params_dict["lsf"]["width"] = kwargs.get("width")
+        params_dict["nbSamplesMin"] = kwargs.get("nbSamplesMin", 0)
         return params_dict
 
     def full_load(self, fsr, **kwargs):
-        obs_id = kwargs.get('obs_id', '')
-        if kwargs.get("multiObsMethod") == "full":
-            wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
-            wave_range = wave_ranges[obs_id]
-        else:
-            wave_range = kwargs.get("spectrum_wave_range", [0, 10])
-        fsr.load_wave(wave_range, kwargs.get('obs_id', ''))
-        fsr.load_flux(wave_range, kwargs.get('obs_id', ''))
-        fsr.load_error(wave_range, kwargs.get('obs_id', ''))
-        fsr.load_lsf(None, kwargs.get('obs_id', ''))
+        multiObsMethod = kwargs.get("multiObsMethod")
+        for obs_id in kwargs.get("obs_ids", [""]):
+            if multiObsMethod == "full" or multiObsMethod == "merge":
+                wave_ranges = kwargs.get("spectrum_wave_range", {obs_id: [0, 10]})
+                wave_range = wave_ranges[obs_id]
+            else:
+                wave_range = kwargs.get("spectrum_wave_range", [0, 10])
+            fsr.load_wave(wave_range, obs_id)
+            fsr.load_flux(wave_range, obs_id)
+            fsr.load_error(wave_range, obs_id)
+            fsr.load_lsf(None, obs_id)
+
+    def initialize_empty_fsr(self, **kwargs):
+        params_dict = self.make_parameters_dict(**kwargs)
+        params = Parameters(params_dict, make_checks=False)
+        cl = CalibrationLibrary(params, tempfile.mkdtemp())
+        fsr = FakeSpectrumReader(params, cl, "000", "range")
+        return fsr
 
     def initialize_fsr_with_data(self, **kwargs):
-        params_dict = self.make_parameters_dict(**kwargs)
-        params = Parameters(params_dict, Checker=FakeParametersChecker)
-        cl = CalibrationLibrary(params, tempfile.mkdtemp())
-        fsr = FakeSpectrumReader("000", params, cl, "000", "range")
+        fsr = self.initialize_empty_fsr(**kwargs)
         self.full_load(fsr, **kwargs)
         return fsr
 
 
 class FakeSpectrumReader(AbstractSpectrumReader):
-
-    def __init__(self, observation_id, parameters: Parameters, calibration_library, source_id, lambda_type):
-        AbstractSpectrumReader.__init__(self, observation_id, parameters, calibration_library, source_id)
+    def __init__(self, parameters: Parameters, calibration_library, source_id, lambda_type):
         self.lambda_type = lambda_type
-        super().__init__(observation_id, parameters, calibration_library, source_id)
+        super().__init__(parameters, calibration_library, source_id)
 
     def load_wave(self, l_range, obs_id=""):
         if self.lambda_type == "random":
@@ -141,9 +142,6 @@ class FakeSpectrumReader(AbstractSpectrumReader):
 
     def load_lsf(self, location, obs_id=""):
         self.lsf_type = "gaussianConstantWidth"
-        lsf = np.ndarray((1,), dtype=np.dtype([("width", '<f8')]))
+        lsf = np.ndarray((1,), dtype=np.dtype([("width", "<f8")]))
         lsf["width"][0] = 3.0
         self.lsf_data.append(lsf, obs_id)
-
-    def load_photometry(self, location):
-        pass

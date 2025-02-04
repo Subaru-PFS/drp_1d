@@ -39,7 +39,7 @@
 
 import pandas as pd
 from pylibamazed.AbstractOutput import root_stages, spectrum_model_stages
-from pylibamazed.Exception import APIException
+from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.redshift import CLog, ErrorCode
 
 zlog = CLog.GetInstance()
@@ -50,22 +50,17 @@ def _create_dataset_from_dict(h5_node, name, source, compress=False):
     if df.empty:
         return
     dtypes = dict()
-    for (k, v) in dict(df.dtypes).items():
+    for k, v in dict(df.dtypes).items():
         if v == "O":
-            dtypes[k] = f'S{df[k].str.len().max()}'
+            dtypes[k] = f"S{df[k].str.len().max()}"
         else:
             dtypes[k] = str(v)
 
     records = df.to_records(index=False, column_dtypes=dtypes)
-    h5_node.create_dataset(name,
-                           records.shape,
-                           records.dtype,
-                           records,
-                           compression="lzf")
+    h5_node.create_dataset(name, records.shape, records.dtype, records, compression="lzf")
 
 
-class H5Writer():
-
+class H5Writer:
     def __init__(self, output):
         self.output = output
         self.excluded_datasets = dict()
@@ -77,18 +72,14 @@ class H5Writer():
                 dsg.attrs[attr_name] = attr
 
     def write_hdf5_object_level(self, object_type, object_results_node):
-        for ds in self.output.get_available_datasets("object",
-                                                     object_type=object_type):
+        for ds in self.output.get_available_datasets("object", object_type=object_type):
             if object_type in self.excluded_datasets and ds in self.excluded_datasets[object_type]:
                 continue
 
             ds_size = self.output.get_dataset_size(object_type, ds)
-            dataset = self.output.get_dataset(object_type,
-                                              ds)
+            dataset = self.output.get_dataset(object_type, ds)
             if ds_size > 1:
-                _create_dataset_from_dict(object_results_node,
-                                          ds,
-                                          dataset)
+                _create_dataset_from_dict(object_results_node, ds, dataset)
             else:
                 object_results_node.create_group(ds)
                 for attr_name, attr in dataset.items():
@@ -104,9 +95,7 @@ class H5Writer():
                 for ds in self.output.get_available_datasets(level, object_type=object_type):
                     if object_type in self.excluded_datasets and ds in self.excluded_datasets[object_type]:
                         continue
-                    dataset = self.output.get_dataset(object_type,
-                                                      ds,
-                                                      rank)
+                    dataset = self.output.get_dataset(object_type, ds, rank)
                     ds_dim = self.output.get_dataset_size(object_type, ds, rank)
                     if ds_dim == 0:
                         continue
@@ -116,12 +105,13 @@ class H5Writer():
                             candidate.get(ds).attrs[attr_name] = attr
                     else:
                         try:
-                            _create_dataset_from_dict(candidate,
-                                                      ds,
-                                                      dataset)
+                            _create_dataset_from_dict(candidate, ds, dataset)
                         except Exception as e:
-                            raise Exception(f"failed to create dataset {ds} : {e}")
+                            raise APIException(
+                                ErrorCode.PYTHON_API_ERROR, f"failed to create dataset {ds} : {e}"
+                            ) from None
 
+    @exception_decorator
     def write_hdf5(self, hdf5_root, spectrum_id):
         try:
             obs = hdf5_root.create_group(spectrum_id)
@@ -135,7 +125,7 @@ class H5Writer():
             for object_type in self.output.object_types:
                 object_results = obs.create_group(object_type)  # h5
                 self.write_hdf5_object_level(object_type, object_results)
-#                self.write_hdf5_method_level(object_type, object_results)
+                #                self.write_hdf5_method_level(object_type, object_results)
                 if self.output.get_nb_candidates(object_type) > 0:
                     self.write_hdf5_candidate_level(object_type, object_results)
                 for stage in spectrum_model_stages:

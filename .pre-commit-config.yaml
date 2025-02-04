@@ -4,11 +4,11 @@
 repos:
   # C++ hooks
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v13.0.1'
+    rev: "v13.0.1"
     hooks:
       - id: clang-format
         types_or: [c++, c]
-        args: ['-style=LLVM', '-i']
+        args: ["-style=LLVM", "-i"]
 
   # Yaml and JSON hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -18,27 +18,14 @@ repos:
         types: [yaml]
       - id: pretty-format-json
         types: [json]
-        args: ['--autofix', '--no-sort-keys']
+        args: ["--autofix", "--no-sort-keys"]
 
   # Python hooks
-  - repo: https://github.com/PyCQA/autoflake
-    rev: v2.1.1
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
     hooks:
-      - id: autoflake
-        files: 'pylibamazed'
-        exclude: 'redshift.py'
-        types: [python]
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.11.5
-    hooks:
-      - id: isort
-        files: 'pylibamazed'
-        exclude: 'redshift.py'
-        types: [python]
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        files: 'pylibamazed'
-        exclude: 'redshift.py'
+      - id: black
+        files: "pylibamazed"
+        exclude: "redshift.py"
+        args: ["--line-length=110"]
         types: [python]

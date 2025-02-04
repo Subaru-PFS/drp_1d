@@ -40,12 +40,16 @@ static const Float64 LSF_MAX_LAMBDA = 30000.0;
 
 static const Float64 OVERLAP_THRESHOLD_PDF_INTEGRATION = 0.3;
 
-static const Int32 MIN_SAMPLE_NUMBER_CONTINUUMM_UNCERTAINTY = 10;
+static const Int32 RMS_MIN_SAMPLE_NUMBER = 10;
 
 static const Float64 SNR_THRESHOLD_FOR_NLINESOVER = 3.0;
 
 static const Float64 MAX_LAMBDA_OFFSET = 400.0; // km/s
 static const Float64 LAMBDA_OFFSET_STEP = 25.0; // km/s;
+
+// For QSO power law calculation, lambda at which the power law coefs changes
+static const Float64 POWER_LOW_WAVELENGTH_CUT = 5400;
+static const Float64 POWER_LAW_N_SAMPLES_MIN_FOR_CONTINUUM_FIT = 10;
 
 } // namespace NSEpic
 #endif

@@ -47,14 +47,16 @@ CLineModelSolution::CLineModelSolution(const CLineMap &restLineList)
       AmplitudesUncertainties(restLineList.size(), NAN),
       SNR(restLineList.size(), NAN), ResidualRMS(restLineList.size(), NAN),
       LambdaObs(restLineList.size(), NAN), Offset(restLineList.size(), NAN),
+      OffsetUncertainty(restLineList.size(), NAN),
       Velocity(restLineList.size(), NAN),
+      VelocityUncertainty(restLineList.size(), NAN),
       CenterContinuumFlux(restLineList.size(), NAN),
       CenterContinuumFluxUncertainty(restLineList.size(), NAN),
       Sigmas(restLineList.size(), NAN), Flux(restLineList.size(), NAN),
       FluxUncertainty(restLineList.size(), NAN),
       FluxDirectIntegration(restLineList.size(), NAN),
       FluxDirectIntegrationUncertainty(restLineList.size(), NAN),
-      OutsideLambdaRange(restLineList.size(), true),
+      NotFitted(restLineList.size(), true),
       fittingGroupInfo(restLineList.size(), undefStr),
       continuum_pCoeff0(restLineList.size(), NAN),
       continuum_pCoeff1(restLineList.size(), NAN),
@@ -66,7 +68,7 @@ CLineModelSolution::CLineModelSolution(const CLineMap &restLineList)
 }
 
 bool CLineModelSolution::isLineValid(Int32 lineIdx) const {
-  if (!lineId.size())
+  if (lineId.empty())
     THROWG(ErrorCode::INTERNAL_ERROR, "lineModelSolution is empty");
-  return !OutsideLambdaRange[lineIdx] & Amplitudes[lineIdx] > 0.0;
+  return !NotFitted[lineIdx] & Amplitudes[lineIdx] > 0.0;
 }

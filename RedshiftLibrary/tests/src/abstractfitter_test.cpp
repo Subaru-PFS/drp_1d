@@ -67,7 +67,8 @@ struct AbstractFitterFixture {
   CTLambdaRangePtrVector lambdaRanges;
   std::shared_ptr<Int32> curObsPtr = std::make_shared<Int32>(0);
   Int32 nb_spectra = 1;
-  CSpectraGlobalIndex *spcIndex = new CSpectraGlobalIndex(nb_spectra);
+  std::unique_ptr<CSpectraGlobalIndex> spcIndex =
+      std::make_unique<CSpectraGlobalIndex>(nb_spectra);
   CLineMap restLineList = CLineMap();
 
   std::shared_ptr<CLMEltListVector> elementsVector =

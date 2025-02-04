@@ -40,18 +40,21 @@
 from pylibamazed.Filter import FilterList, SpectrumFilterItem
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
 from pylibamazed.Parameters import Parameters
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 class TestParamJsonFilterLoader:
-
     def test_load_returns_expected_filters(self, mocker):
         jsonFilterLoader = ParamJsonFilterLoader()
-        params = Parameters({"filters": [
-            {"key": "col1", "instruction": "<", "value": 2},
-            {"key": "col2", "instruction": ">=", "value": 2}
-        ]}, Checker=FakeParametersChecker)
-        assert jsonFilterLoader.get_filters(params) == FilterList([
-            SpectrumFilterItem("col1", "<", 2),
-            SpectrumFilterItem("col2", ">=", 2)
-        ])
+        params = Parameters(
+            {
+                "version": 2,
+                "filters": [
+                    {"key": "col1", "instruction": "<", "value": 2},
+                    {"key": "col2", "instruction": ">=", "value": 2},
+                ],
+            },
+            make_checks=False,
+        )
+        assert jsonFilterLoader.get_filters(params, obs_id="") == FilterList(
+            [SpectrumFilterItem("col1", "<", 2), SpectrumFilterItem("col2", ">=", 2)]
+        )

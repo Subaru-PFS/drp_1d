@@ -161,15 +161,26 @@ public:
     m_spectra.push_back(spectrum);
     m_constSpectra.push_back(spectrum);
   }
+  bool CalzettiInitFailed() const { return !bool(m_ismCorrectionCalzetti); }
+
+  bool MeiksinInitFailed() const { return !bool(m_igmCorrectionMeiksin); }
   void
-  setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+  setFluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
                                &igmcorrectionMeiksin) {
-    m_igmcorrectionMeiksin = igmcorrectionMeiksin;
+    m_igmCorrectionMeiksin = igmcorrectionMeiksin;
   }
-  void setfluxCorrectionCalzetti(
+  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
+  getFluxCorrectionMeiksin() const {
+    return m_igmCorrectionMeiksin;
+  }
+  void setFluxCorrectionCalzetti(
       const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
           &ismcorrectionCalzetti) {
-    m_ismcorrectionCalzetti = ismcorrectionCalzetti;
+    m_ismCorrectionCalzetti = ismcorrectionCalzetti;
+  }
+  std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+  getFluxCorrectionCalzetti() const {
+    return m_ismCorrectionCalzetti;
   }
   void Init();
 
@@ -223,8 +234,8 @@ private:
       m_lineCatalogs;
   std::map<std::string, std::shared_ptr<CLineCatalogsTplRatio>>
       m_lineRatioCatalogCatalogs;
-  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmcorrectionMeiksin;
-  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismcorrectionCalzetti;
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
 

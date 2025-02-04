@@ -157,7 +157,7 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
   auto const &param_EltIgm = m_elementsVector->getElementParam()[iElts];
 
   bool fixedIGM =
-      m_continuumManager->isContinuumComponentTplfitxx() &&
+      (m_continuumManager->isContinuumComponentFitter()) &&
       !m_continuumManager->isContFittedToNull(); // set to false when continuum
                                                  // is fitted to null
 

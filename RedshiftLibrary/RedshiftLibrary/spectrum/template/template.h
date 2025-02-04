@@ -104,24 +104,9 @@ public:
   Int32 GetIgmEndIndex() const;
   Int32 GetIgmEndIndex(Int32 kstart, Int32 kend) const;
 
-  void
-  InitIsmIgmConfig(Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti = nullptr,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin = nullptr);
-  void
-  InitIsmIgmConfig(const TFloat64Range &lbdaRange, Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti = nullptr,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin = nullptr);
-  void
-  InitIsmIgmConfig(Int32 kstart, Int32 kend, Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti = nullptr,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin = nullptr);
+  void InitIsmIgmConfig(Float64 redshift);
+  void InitIsmIgmConfig(const TFloat64Range &lbdaRange, Float64 redshift);
+  void InitIsmIgmConfig(Int32 kstart, Int32 kend, Float64 redshift);
   void DisableIsmIgm();
 
   bool CheckIsmIgmEnabled() const { return !m_NoIsmIgmFluxAxis.isEmpty(); };
@@ -131,10 +116,9 @@ public:
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                        TInt32List &MeiksinList, TInt32List &EbmvList,
-                        Int32 FitEbmvIdx = undefIdx,
-                        Int32 FitMeiksinIdx = undefIdx) const;
+  TIgmIsmIdxs GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
+                               Int32 FitEbmvIdx = undefIdx,
+                               Int32 FitMeiksinIdx = undefIdx) const;
   TInt32List GetIsmIdxList(bool opt_dustFitting,
                            Int32 FitEbmvIdx = undefIdx) const;
   TInt32List GetIgmIdxList(bool opt_extinction,

@@ -47,7 +47,9 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
@@ -98,8 +100,9 @@ struct TFittingIsmIgmResult : TFittingResult {
                             TInt32List(MeiksinListSize, undefIdx)) {}
 
   TFloat64List overlapFraction;
-  Float64 EbmvCoeff = NAN;
-  Int32 MeiksinIdx = undefIdx;
+  Float64 reducedChisquare = INFINITY;
+  Float64 ebmvCoef = NAN;
+  Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
   std::vector<TFloat64List> IsmCalzettiCoeffInterm;
   std::vector<TInt32List> IgmMeiksinIdxInterm;
@@ -108,21 +111,27 @@ struct TFittingIsmIgmResult : TFittingResult {
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
-  COperatorTemplateFitting(const TFloat64List &redshifts = TFloat64List())
+  COperatorTemplateFitting(const TFloat64List &redshifts)
       : COperatorTemplateFittingBase(redshifts), m_kStart(m_spectra.size()),
         m_kEnd(m_spectra.size()){
 
         };
   virtual ~COperatorTemplateFitting() = default;
 
-  std::shared_ptr<COperatorResult>
-  Compute(const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-          std::string opt_interp, bool opt_extinction = false,
-          bool opt_dustFitting = false,
-          Float64 opt_continuum_null_amp_threshold = 0.,
-          const CPriorHelper::TPriorZEList &logpriorze =
-              CPriorHelper::TPriorZEList(),
-          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
+  std::shared_ptr<CTemplateFittingResult> Compute(
+      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
+      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      Float64 opt_continuum_null_amp_threshold = 0.,
+      const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
+      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+      std::shared_ptr<CTemplateFittingResult> result = NULL,
+      bool isFirstPass = true,
+      const std::vector<Int32> &zIdxsToCompute = {}) override;
+  void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
+  std::shared_ptr<const ExtremaResult>
+  BuildFirstPassExtremaResults(const TOperatorResultMap &resultsFromStore);
+  std::vector<Int32> getzIdxsToCompute(TFloat64List allRedshifts,
+                                       TFloat64List extendedRedshifts);
 
 protected:
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
@@ -132,12 +141,16 @@ protected:
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
 
+  virtual std::pair<TList<CMask>, Int32>
+  getMaskListAndNSamples(Float64 redshift) const;
+
   virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
   virtual bool igmIsInRange(const TFloat64RangeList &ranges) const;
 
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                                                    Float64 redshift,
+                                                   CMask const &mask,
                                                    Int32 spcIndex = 0);
 
   virtual void

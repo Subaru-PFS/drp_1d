@@ -60,8 +60,7 @@ class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
 public:
   explicit COperatorTemplateFittingPhot(
       const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
-      const Float64 weight = 1.0,
-      const TFloat64List &redshifts = TFloat64List());
+      const TFloat64List &redshifts, const Float64 weight);
 
 private:
   void checkInputPhotometry() const;
@@ -74,13 +73,8 @@ private:
   void RebinTemplateOnPhotBand(const std::shared_ptr<const CTemplate> &tpl,
                                Float64 redshift);
 
-  void
-  InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin,
-                   Int32 spcIndex) override;
+  void InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
+                        Int32 spcIndex) override;
 
   void init_fast_igm_processing(Int32 EbmvListSize) override;
 
@@ -88,11 +82,15 @@ private:
 
   bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 spcIndex = 0) override;
   bool ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex = 0) override;
+
+  std::pair<TList<CMask>, Int32>
+  getMaskListAndNSamples(Float64 redshift) const override;
+
   void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
                                 TCrossProductResult &fitResult);
 
   TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
-                                           Float64 redshift,
+                                           Float64 redshift, CMask const &mask,
                                            Int32 spcIndex = 0) override;
 
   void ComputeAmplitudeAndChi2(

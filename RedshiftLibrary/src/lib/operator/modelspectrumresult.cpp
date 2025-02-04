@@ -53,12 +53,15 @@ using namespace NSEpic;
  **/
 void CModelSpectrumResult::addModel(const CSpectrum &spc,
                                     const std::string &obsId) {
-  ModelLambda[obsId] = spc.GetSpectralAxis().GetSamplesVector();
-  ModelFlux[obsId] = spc.GetFluxAxis().GetSamplesVector();
-  // probably can add model params as class variable here..
+  addModel(spc.GetSpectralAxis().GetSamplesVector(),
+           spc.GetFluxAxis().GetSamplesVector(), obsId);
 }
 
-void CModelSpectrumResult::addModel(CSpectrum &&spc, const std::string &obsId) {
-  ModelLambda[obsId] = std::move(spc.GetSpectralAxis().GetSamplesVector());
-  ModelFlux[obsId] = std::move(spc.GetFluxAxis().GetSamplesVector());
+void CModelSpectrumResult::addModel(TFloat64List lambda, TFloat64List flux,
+                                    const std::string &obsId) {
+  if (lambda.size() != flux.size())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "lambda and flux should have the same size");
+  ModelLambda[obsId] = std::move(lambda);
+  ModelFlux[obsId] = std::move(flux);
 }

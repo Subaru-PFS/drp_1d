@@ -100,7 +100,7 @@ void CHybridFitter::doFit(Float64 redshift) {
 
 /**
  * \brief Tries to fit subelements considering their overlap.
- * For each entry in GetModelValidElementsIndexes:
+ * For each entry in GetElementsIndicesInsideLambdaRange:
  *   If subelement in the entry already fitted, go for the next entry.
  *   getOverlappingElements for the fitted subelements.
  *   If the overlap is smaller than 2, call fitAmplitude on the entry.
@@ -119,12 +119,9 @@ void CHybridFitter::doFit(Float64 redshift) {
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
-  if (m_enableAmplitudeOffsets)
-    m_ElementsVector->resetAmplitudeOffsets();
-
   m_spectraIndex.reset(); // dummy implementation
 
-  TInt32List validEltsIdx = getElementList().GetModelValidElementsIndexes();
+  TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   TInt32Set indexesFitted;
   for (Int32 iElts : validEltsIdx) {
 
@@ -229,7 +226,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // check if line is visible:
-    if (getElementList()[iElt_lineE]->IsOutsideLambdaRange())
+    if (getElementParam()[iElt_lineE]->isNotFittable() ||
+        getElementParam()[iElt_lineA]->isNotFittable())
       continue;
 
     // find the linesMore unique elements indexes
@@ -240,7 +238,8 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
       auto const &[iElt_lineMore, lineMore_id] =
           m_ElementsVector->findElementIndex(tagMore,
                                              CLine::EType::nType_Emission);
-      if (iElt_lineMore == undefIdx)
+      if (iElt_lineMore == undefIdx ||
+          getElementParam()[iElt_lineMore]->isNotFittable())
         continue;
 
       ilinesMore.push_back(iElt_lineMore);

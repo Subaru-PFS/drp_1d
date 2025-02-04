@@ -39,9 +39,9 @@
 #ifndef _REDSHIFT_COMMON_VECTOROPERATIONS_
 #define _REDSHIFT_COMMON_VECTOROPERATIONS_
 
-#include <vector>
-
 #include "RedshiftLibrary/common/defaults.h"
+
+#include <vector>
 
 namespace NSEpic {
 
@@ -66,5 +66,50 @@ inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
             value); // replace existing values with the defaultV
 }
 
+template <typename T>
+inline TInt32Pair find2DVectorMinIndexes(std::vector<std::vector<T>> vect) {
+  Int32 iMin = 0;
+  Int32 jMin = 0;
+  T valMin = vect[0][0];
+  for (Int32 i = 0; i < vect.size(); i++) {
+    for (Int32 j = 0; j < vect[i].size(); j++) {
+      if (vect[i][j] < valMin) {
+        iMin = i;
+        jMin = j;
+        valMin = vect[i][j];
+      }
+    }
+  }
+  return {iMin, jMin};
+}
+
+inline std::vector<Float64> createLinearInterpVector(Float64 v1, Float64 v2,
+                                                     Float64 n) {
+  // Creates a linear vector from value v1 to value v2 with n elements
+  std::vector<Float64> result;
+  if (n <= 1) {
+    // Handle edge case: return a vector with a single value n1 if n <= 1
+    if (n == 1)
+      result.push_back(v1);
+    return result;
+  }
+
+  Float64 step = (v2 - v1) / (n - 1); // Calculate the step size
+  for (int i = 0; i < n; ++i) {
+    result.push_back(v1 + i * step); // Generate each value
+  }
+  return result;
+}
+
+template <typename T>
+inline std::vector<T> removeFirstAndLast(const std::vector<T> &inputVect) {
+  if (inputVect.size() <= 2) {
+    // If inputVect has 2 or fewer elements, return an empty vector
+    return {};
+  }
+  // Create return vector with elements from inputVect, excluding the first and
+  // last elements
+  return std::vector<T>(inputVect.begin() + 1, inputVect.end() - 1);
+}
 } // namespace NSEpic
 #endif

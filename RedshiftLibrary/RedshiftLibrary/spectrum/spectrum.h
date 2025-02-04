@@ -75,7 +75,7 @@ public:
   };
 
   // FluxAxis components
-  enum EType { nType_raw = 1, nType_continuumOnly = 2, nType_noContinuum = 3 };
+  enum class EType { raw, continuumOnly, noContinuum };
 
   CSpectrum();
   CSpectrum(const std::string &name);
@@ -126,7 +126,8 @@ public:
   bool IsFluxEmpty() const;
   bool IsEmpty() const;
   bool IsValid() const;
-  void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect);
+  void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect,
+                        const Int32 &nbSamplesMin);
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
   void SetPhotData(const std::shared_ptr<const CPhotometricData> &photData);
 
@@ -202,7 +203,7 @@ protected:
   mutable std::string m_estimationMethod;
   mutable bool m_medianEvenReflection;
 
-  mutable EType m_spcType = nType_raw;
+  mutable EType m_spcType = EType::raw;
   CSpectrumFluxAxis m_RawFluxAxis;
   mutable CSpectrumFluxAxis m_ContinuumFluxAxis;
   mutable CSpectrumFluxAxis m_WithoutContinuumFluxAxis;
@@ -221,13 +222,13 @@ inline const CSpectrumSpectralAxis &CSpectrum::GetSpectralAxis() const {
 
 inline const CSpectrumFluxAxis &CSpectrum::GetFluxAxis() const {
   switch (m_spcType) {
-  case nType_raw:
+  case EType::raw:
     return GetRawFluxAxis();
     break;
-  case nType_continuumOnly:
+  case EType::continuumOnly:
     return GetContinuumFluxAxis();
     break;
-  case nType_noContinuum:
+  case EType::noContinuum:
     return GetWithoutContinuumFluxAxis();
     break;
   default:
@@ -237,13 +238,13 @@ inline const CSpectrumFluxAxis &CSpectrum::GetFluxAxis() const {
 
 inline CSpectrumFluxAxis &CSpectrum::GetFluxAxis_() {
   switch (m_spcType) {
-  case nType_raw:
+  case EType::raw:
     return GetRawFluxAxis_();
     break;
-  case nType_continuumOnly:
+  case EType::continuumOnly:
     return GetContinuumFluxAxis_();
     break;
-  case nType_noContinuum:
+  case EType::noContinuum:
     return GetWithoutContinuumFluxAxis_();
     break;
   default:

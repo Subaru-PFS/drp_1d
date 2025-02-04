@@ -16,6 +16,7 @@
       "value": 20
     }
   ],
+  "nbSamplesMin": 1,
   "multiObsMethod": "",
   "lambdaRange": [
     12510,
@@ -98,7 +99,6 @@
               "deltaStepMax": 1
             }
           },
-          "extremaCountB": 0,
           "hAlphaPrior": -1,
           "lineRatioType": "tplRatio",
           "rules": "all",
@@ -110,6 +110,7 @@
           "continuumFit": {
             "negativeThreshold": -5.0,
             "nullThreshold": 3,
+            "badChi2Threshold": 100,
             "fftProcessing": false,
             "ismFit": true,
             "igmFit": false,
@@ -141,7 +142,7 @@
             "halfWindowSize": 0.002,
             "continuumFit": "reFitFirstPass"
           },
-          "secondPassLcFittingMethod": -1,
+          "secondPassLcFittingMethod": "-1",
           "strongLinesPrior": 0.001,
           "nOfZPriorStrength": -1,
           "tplRatio": {

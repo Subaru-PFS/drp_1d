@@ -68,7 +68,7 @@ public:
   int prepareFit(Float64 redshift) override;
   bool init(Float64 redshift, Int32 itratio) override;
 
-  Float64 computeMerit(Int32 itratio) override;
+  virtual std::pair<Float64, Float64> computeMerit(Int32 itratio) override;
   void resetToBestRatio(Float64 redshift) override;
   void setPassMode(Int32 iPass) override;
   void saveResults(Int32 itratio) override { m_savedIdxFitted = itratio; };
@@ -125,6 +125,9 @@ protected:
   std::vector<TFloat64List> m_FittedErrorTplratio;
   std::vector<TFloat64List> m_MtmTplratio;
   std::vector<TFloat64List> m_DtmTplratio;
+  T2DList<bool> m_absLinesNullContinuum;
+  T2DList<bool> m_nullNominalAmplitudes;
+  T2DList<bool> m_nullLineProfiles;
   std::vector<TFloat64List> m_LyaAsymCoeffTplratio;
   std::vector<TFloat64List> m_LyaWidthCoeffTplratio;
   std::vector<TFloat64List> m_LyaDeltaCoeffTplratio;

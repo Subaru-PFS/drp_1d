@@ -58,7 +58,7 @@ public:
                 bool enableLambdaOffsetsFit = false);
 
 protected:
-  void doFit(Float64 redshift) override;
+  virtual void doFit(Float64 redshift) override;
   bool m_opt_enable_improveBalmerFit = false;
   void fitAmplitudesHybrid(Float64 redshift);
   void improveBalmerFit(Float64 redshift);

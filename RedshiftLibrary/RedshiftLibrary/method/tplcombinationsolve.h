@@ -58,11 +58,11 @@ class CResultStore;
 class CTplCombinationSolve : public CObjectSolve {
 
 public:
-  enum EType {
-    nType_raw = 1,
-    nType_continuumOnly = 2,
-    nType_noContinuum = 3,
-    nType_all = 4,
+  enum class EType {
+    raw,
+    continuumOnly,
+    noContinuum,
+    all,
   };
 
   CTplCombinationSolve();
@@ -74,7 +74,7 @@ private:
              const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
              const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
              Float64 overlapThreshold, const std::vector<CMask> &maskList,
-             EType spctype = nType_raw, const std::string &opt_interp = "lin",
+             EType spctype = EType::raw, const std::string &opt_interp = "lin",
              bool opt_extinction = false, bool opt_dustFitting = false);
 
   ChisquareArray
@@ -94,7 +94,7 @@ private:
 
   std::string m_opt_pdfcombination;
   Float64 m_redshiftSeparation;
-  Int64 m_opt_maxCandidate;
+  Int32 m_opt_maxCandidate;
   std::string m_opt_saveintermediateresults;
 };
 

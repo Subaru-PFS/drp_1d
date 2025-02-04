@@ -64,7 +64,7 @@ public:
   CTplCorrManager(CTplCorrManager &&other) = default;
   CTplCorrManager &operator=(CTplCorrManager &&other) = default;
 
-  Float64 computeMerit(Int32 itratio) override;
+  std::pair<Float64, Float64> computeMerit(Int32 itratio) override;
   void saveResults(Int32 itratio) override;
 };
 

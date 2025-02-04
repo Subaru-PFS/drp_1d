@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.12)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.15)
 PROJECT( cpf-redshift )
 
 # Dependencies requirements
@@ -13,11 +13,19 @@ set( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
 message(STATUS "ROOT_DIR = " ${ROOT_DIR})
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR = " ${CMAKE_CURRENT_SOURCE_DIR})
 message(STATUS "CMAKE_BINARY_DIR = " ${CMAKE_BINARY_DIR})
+MESSAGE(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 
 # Regular cmake tools
-FIND_PACKAGE(Python3 COMPONENTS Interpreter REQUIRED)
+FIND_PACKAGE(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+message(STATUS "Python3_INCLUDE_DIRS" = ${Python3_INCLUDE_DIRS})
 FIND_PACKAGE(PkgConfig REQUIRED)
+
+# package required to build python wrapper
+set(SWIG_USE_SWIG_DEPENDENCIES TRUE)
+FIND_PACKAGE(SWIG REQUIRED)
+FIND_PACKAGE(Python REQUIRED Interpreter Development.Module)
+include(UseSWIG)
 
 # Install directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -37,10 +45,12 @@ message(STATUS "Using git revision : " ${GIT_REVISION})
 FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
 MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
 
+# check version.h file to speed up "re pip install --no-build-isolation" command
+include(checkVersion)
+
 # Building environment
 LIST(APPEND cpf-redshift_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/RedshiftLibrary)
-LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+
 if(CMAKE_PREFIX_PATH)
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_PREFIX_PATH}/include)
   LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_PREFIX_PATH}/lib)
@@ -58,6 +68,15 @@ SET(CMAKE_MACOSX_RPATH 1)
 IF(CMAKE_PREFIX_PATH)
   LIST(APPEND CMAKE_INSTALL_RPATH ${CMAKE_PREFIX_PATH}/lib)
 ENDIF()
+
+# Setup thirdparty directory : GSL
+pkg_check_modules(GSL gsl>=${GSL_MINIMUM_REQUIRED} REQUIRED)
+message(STATUS "Found gsl: ${GSL_LINK_LIBRARIES}")
+message(STATUS "GSL_LIBRARY_DIRS = ${GSL_LIBRARY_DIRS}")
+message(STATUS "GSL_INCLUDE_DIRS = ${GSL_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
+LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 
 # Add specific PREFIX PATH for users on Appel osx managed by brew
 list(APPEND CMAKE_PREFIX_PATH /usr/local/opt/openblas/lib)
@@ -118,15 +137,6 @@ find_package(BLAS REQUIRED)
 message(STATUS "BLAS_LIBRARIES = ${BLAS_LIBRARIES}")
 LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${BLAS_LIBRARIES})
 
-# Setup thirdparty directory : GSL
-pkg_check_modules(GSL gsl>=${GSL_MINIMUM_REQUIRED} REQUIRED)
-message(STATUS "Found gsl: ${GSL_LINK_LIBRARIES}")
-message(STATUS "GSL_LIBRARY_DIRS = ${GSL_LIBRARY_DIRS}")
-message(STATUS "GSL_INCLUDE_DIRS = ${GSL_INCLUDE_DIRS}")
-LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
-LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
-LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
-
 # setup thirdparty directory : eigen3
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 message(STATUS "Found eigen")
@@ -148,13 +158,20 @@ MESSAGE("Using third party header only libraries: " "${cpf-redshift_THIRDPARTY_H
 # Setting ccache
 #--------------------------------------------------------
 
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-  set(ENV{CC} "ccache ${CMAKE_C_COMPILER}")
-  set(ENV{CXX} "ccache ${CMAKE_CXX_COMPILER}")
-endif(CCACHE_FOUND)
+find_program(CCACHE_PROGRAM ccache)
+if (CCACHE_PROGRAM)
+    message(NOTICE "Selected CCache: ${CCACHE_PROGRAM}")
+    MESSAGE (STATUS "CCACHE_BASEDIR=${PROJECT_SOURCE_DIR}")
+    MESSAGE (STATUS "CCACHE_DIR=$ENV{CCACHE_DIR}")
+    set(ccacheEnv
+            CCACHE_BASEDIR=${PROJECT_SOURCE_DIR}
+            CCACHE_DIR=$ENV{CCACHE_DIR}
+            CCACHE_SLOPPINESS="pch_defines,file_macro,include_file_ctime"
+            CCACHE_NOHASHDIR=true
+    )
+    set(CMAKE_C_COMPILER_LAUNCHER ${CMAKE_COMMAND} -E env ${ccacheEnv} ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CMAKE_COMMAND} -E env ${ccacheEnv} ${CCACHE_PROGRAM})
+endif ()
 
 #--------------------------------------------------------
 # Preprocessor and linker path
@@ -268,40 +285,42 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/ DESTINATIO
 #--------------------------------------------------------
 # Build python wrapper
 #--------------------------------------------------------
+IF (SKBUILD_PROJECT_NAME)
+  MESSAGE(STATUS "==== python wrapper ====")
+  MESSAGE(STATUS "SWIG_EXECUTABLE =" ${SWIG_EXECUTABLE})
+  MESSAGE(STATUS "Python_EXECUTABLE =" ${Python_EXECUTABLE})
+  MESSAGE(STATUS "SKBUILD_PROJECT_NAME =" ${SKBUILD_PROJECT_NAME})
 
-CONFIGURE_FILE(
-  ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
-)
+  MESSAGE(STATUS "CMAKE_INSTALL_RPATH=" ${CMAKE_INSTALL_RPATH})
+  # Grab the variables from a local Python installation F2PY headers
+  execute_process(
+    COMMAND "${Python_EXECUTABLE}" -c
+            "import numpy; print(numpy.get_include())"
+    OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  MESSAGE(STATUS "NUMPY_INCLUDE_DIR =" ${NUMPY_INCLUDE_DIR})
 
-set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
-  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
-  "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
-)
+  set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
+  swig_add_library(redshift
+    LANGUAGE python
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i
+  )
 
-set(PYTHON_BUILD_FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
-  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
-  "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
-)
+  target_include_directories(redshift PUBLIC ${Python3_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+  
+  MESSAGE (STATUS "cpf-redshift_LINK_DIR :" ${cpf-redshift_LINK_DIR})
+  if (APPLE)
+      set_target_properties(redshift PROPERTIES INSTALL_RPATH "@loader_path")
+  else()
+      set_target_properties(redshift PROPERTIES INSTALL_RPATH "$ORIGIN;${cpf-redshift_LINK_DIR}")
+  endif()
+  target_link_libraries(redshift PUBLIC cpf-redshift ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_HEADERONLY} )
 
-add_custom_target(clean_python_build
-  COMMAND rm -rf ${PYTHON_BUILD_FILES}
-  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Removing existing python build files"
-  VERBATIM
-)
-
+  install(TARGETS redshift DESTINATION pylibamazed)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/redshift.py DESTINATION pylibamazed)
+  install(FILES ${cpf-redshift_BINARY_DIR}/libcpf-redshift.so DESTINATION pylibamazed)
+  #install(FILES ${cpf-redshift_BINARY_DIR}/libcpf-redshift.${LIBEXT} DESTINATION pylibamazed)
+ENDIF (SKBUILD_PROJECT_NAME)
 #--------------------------------------------------------
 # Package deployement and config
 #--------------------------------------------------------
@@ -316,6 +335,8 @@ CONFIGURE_PACKAGE_CONFIG_FILE(
   PATH_VARS cpf-redshift_INCLUDE_DIR cpf-redshift_LINK_DIR
 )
 
+
+IF (NOT SKBUILD_PROJECT_NAME)
 # Configure version file (this is used by find_package to determine a matching version)
 WRITE_BASIC_PACKAGE_VERSION_FILE(
   ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
@@ -327,3 +348,4 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
 )
+ENDIF (NOT SKBUILD_PROJECT_NAME)

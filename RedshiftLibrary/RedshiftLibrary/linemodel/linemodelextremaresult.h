@@ -42,10 +42,10 @@
 #include <unordered_set>
 
 #include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelphotvalueresult.h"
-#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
@@ -56,6 +56,7 @@ class CModelPhotValueResult;
 class CLineModelFitting;
 class CTplratioManager;
 class CLineModelResult;
+class TCandidateZ;
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.i"
 
 template <>
@@ -81,13 +82,10 @@ public:
         m_savedModelSpectrumResults(zCandidates.size()),
         m_modelPhotValues(zCandidates.size()) {
     m_type = "LineModelExtremaResult";
-    for (const auto &cand : zCandidates) {
-      m_ranked_candidates.push_back(
-          std::make_pair<std::string, std::shared_ptr<TLineModelResult>>(
-              std::string(cand.first),
-              std::make_shared<TLineModelResult>(*cand.second)));
-    }
+    SetRankedCandidates(zCandidates);
   };
+
+  CExtremaResult<TLineModelResult>() { m_type = "LineModelExtremaResult"; }
 
   std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,
@@ -97,9 +95,6 @@ public:
   getCandidateDatasetType(const std::string &dataset) const override;
 
   bool HasCandidateDataset(const std::string &dataset) const override;
-
-  std::shared_ptr<const COperatorResult>
-  getCandidateParent(const int &rank, const std::string &dataset) const;
 };
 
 typedef CExtremaResult<TLineModelResult> LineModelExtremaResult;

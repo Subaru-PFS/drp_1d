@@ -59,7 +59,7 @@ CMask COutsideLineMaskBuilder::getMask(
 
   CMask _mask(spectralAxis.GetSamplesCount(), 1);
 
-  TInt32List validEltsIdx = m_elements.GetModelValidElementsIndexes();
+  TInt32List validEltsIdx = m_elements.GetElementsIndicesInsideLambdaRange();
   TInt32List supportIdxes = m_elements.getSupportIndexes(validEltsIdx);
 
   // setting masks
