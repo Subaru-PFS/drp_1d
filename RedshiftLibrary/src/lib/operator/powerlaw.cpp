@@ -229,7 +229,7 @@ COperatorPowerLaw::lnLambda(TAxisSampleList const &lambda) const {
   return lnLambda;
 }
 
-std::shared_ptr<COperatorResult>
+std::shared_ptr<const COperatorResult>
 COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
                            Float64 nullFluxThreshold, std::string method,
                            Int32 FitEbmvIdx, Int32 FitMeiksinIdx) {

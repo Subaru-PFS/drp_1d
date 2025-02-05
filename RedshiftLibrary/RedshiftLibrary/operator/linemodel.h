@@ -79,13 +79,11 @@ public:
   void Init(const TFloat64List &redshifts, Float64 finestep,
             const bool zLogSampling);
 
-  std::shared_ptr<COperatorResult> getResult();
-
-  void ComputeFirstPass();
+  std::shared_ptr<const CLineModelResult> const ComputeFirstPass();
 
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
-  void ComputeSecondPass();
+  std::shared_ptr<const CLineModelResult> const ComputeSecondPass();
 
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
@@ -174,10 +172,11 @@ private:
   bool AllAmplitudesAreZero(const TBoolList &amplitudesZero);
 
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
-  void fitContinuumTemplates(
-      Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
-      std::vector<std::shared_ptr<COperatorResult>> &chisquareResultsAllTpl,
-      TStringList &chisquareResultsTplName);
+  void fitContinuumTemplates(Int32 candidateIdx,
+                             const TFloat64List &redshiftsTplFit,
+                             std::vector<std::shared_ptr<const COperatorResult>>
+                                 &chisquareResultsAllTpl,
+                             TStringList &chisquareResultsTplName);
   void getContinuumInfoFromFirstpassFitStore(Int32 candidateIdx,
                                              TInt32List &meiksinIndices,
                                              TInt32List &ebmvIndices,

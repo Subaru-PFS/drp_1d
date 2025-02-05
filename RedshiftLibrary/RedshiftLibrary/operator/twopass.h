@@ -52,6 +52,13 @@ class spanRedshift_test;
 } // namespace TwoPass
 
 namespace NSEpic {
+struct TsecondPassIndices {
+  Int32 insertionIdx = undefIdx;
+  Int32 initialInsertionIdx = undefIdx;
+  TInt32List overwrittenSourceIndices;
+  std::size_t size = undefIdx;
+};
+
 template <class T> class COperatorTwoPass : public COperatorPass {
 public:
   COperatorTwoPass() = default;
@@ -65,7 +72,11 @@ public:
                             const bool zLogSampling, const Float64 fineStep);
   TFloat64List spanRedshiftWindow(const Float64 z) const;
   void buildExtendedRedshifts();
-  void updateRedshiftGridAndResults(std::shared_ptr<CTwoPassResult> result);
+  TList<TsecondPassIndices> updateRedshiftGrid();
+  void updateVectors(std::shared_ptr<CTwoPassResult> const &result,
+                     TList<TsecondPassIndices> const &insertionIndicesList);
+  void
+  updateRedshiftGridAndResults(std::shared_ptr<CTwoPassResult> const &result);
   TZGridListParams getSPZGridParams();
   TCandidateZbyRank getFirstPassCandidatesZByRank() const {
     return m_firstpass_extremaResult->getCandidatesZByRank();
@@ -76,8 +87,12 @@ public:
   std::vector<TFloat64List> getExtendedRedshifts() const {
     return m_extendedRedshifts;
   }
-  TInt32List getzIdxsToCompute(Int32 candidateIdx);
-  void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
+  TInt32Range getzIdxRangeToCompute(Int32 candidateIdx);
+
+  void
+  SetFirstPassExtremaResults(std::shared_ptr<ExtremaResult> const &result) {
+    m_firstpass_extremaResult = result;
+  };
 
 protected:
   friend class TwoPass::spanRedshift_test;
@@ -129,13 +144,38 @@ template <class T> void COperatorTwoPass<T>::buildExtendedRedshifts() {
 
 template <class T>
 void COperatorTwoPass<T>::updateRedshiftGridAndResults(
-    std::shared_ptr<CTwoPassResult> result) {
+    std::shared_ptr<CTwoPassResult> const &result) {
+  auto const insertionIndicesList = updateRedshiftGrid();
+  updateVectors(result, insertionIndicesList);
+}
 
+template <class T>
+TList<TsecondPassIndices> COperatorTwoPass<T>::updateRedshiftGrid() {
+  TList<TsecondPassIndices> insertionIndicesList;
   for (auto &subgrid : m_extendedRedshifts) {
-    auto const &[imin, ndup] =
+    auto const &[insertionIdx, overwrittenSourceIndices] =
         CZGridListParams::insertSubgrid(subgrid, m_redshifts);
-    result->updateVectors(imin, ndup, subgrid.size());
+
+    // get initial insertion index (taking into acount previous insertions)
+    Int32 initialInsertionIdx = insertionIdx;
+    for (auto const &insertionIndices : insertionIndicesList)
+      if (insertionIndices.insertionIdx < insertionIdx)
+        initialInsertionIdx -= insertionIndices.size;
+
+    insertionIndicesList.push_back({insertionIdx, initialInsertionIdx,
+                                    std::move(overwrittenSourceIndices),
+                                    subgrid.size()});
   }
+  return insertionIndicesList;
+}
+
+template <class T>
+void COperatorTwoPass<T>::updateVectors(
+    std::shared_ptr<CTwoPassResult> const &result,
+    TList<TsecondPassIndices> const &insertionIndicesList) {
+  for (auto const &insertionIndices : insertionIndicesList)
+    result->updateVectors(insertionIndices);
+
   result->Redshifts = m_redshifts;
 }
 
@@ -153,24 +193,13 @@ template <class T> TZGridListParams COperatorTwoPass<T>::getSPZGridParams() {
 }
 
 template <class T>
-TInt32List COperatorTwoPass<T>::getzIdxsToCompute(Int32 candidateIdx) {
-  Int32 nz = m_redshifts.size();
-  auto &extendedRedshifts = m_extendedRedshifts[candidateIdx];
-  TInt32List zIdxsToCompute{};
-  for (Int32 zIdx = 0; zIdx < nz; ++zIdx) {
-    bool isFound =
-        (std::find(extendedRedshifts.begin(), extendedRedshifts.end(),
-                   m_redshifts[zIdx]) != extendedRedshifts.end());
-    if (isFound)
-      zIdxsToCompute.push_back(zIdx);
-  }
-  return zIdxsToCompute;
-}
-
-template <class T>
-void COperatorTwoPass<T>::SetFirstPassCandidates(
-    const TCandidateZbyRank &zCandidates) {
-  m_firstpass_extremaResult = std::make_shared<ExtremaResult>(zCandidates);
+TInt32Range COperatorTwoPass<T>::getzIdxRangeToCompute(Int32 candidateIdx) {
+  auto const &extendedRedshifts = m_extendedRedshifts[candidateIdx];
+  Int32 imin = undefIdx;
+  Int32 imax = undefIdx;
+  TFloat64Range(extendedRedshifts)
+      .getClosedIntervalIndices(m_redshifts, imin, imax);
+  return TInt32Range(imin, imax);
 }
 
 } // namespace NSEpic

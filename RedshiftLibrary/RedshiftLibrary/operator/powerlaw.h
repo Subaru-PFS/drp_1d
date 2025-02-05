@@ -112,7 +112,7 @@ public:
   COperatorPowerLaw &operator=(COperatorPowerLaw &&other) = default;
   ~COperatorPowerLaw() = default;
 
-  std::shared_ptr<COperatorResult>
+  std::shared_ptr<const COperatorResult>
   Compute(bool opt_extinction, bool opt_dustFitting, Float64 nullFluxThreshold,
           std::string method, Int32 FitEbmvIdx, Int32 FitMeiksinIdx);
   void ComputeSpectrumModel(

@@ -124,9 +124,8 @@ public:
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
-      std::shared_ptr<CTemplateFittingResult> result = nullptr,
-      bool isFirstPass = true,
-      const std::vector<Int32> &zIdxsToCompute = {}) override;
+      TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
+      std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 
 protected:
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,

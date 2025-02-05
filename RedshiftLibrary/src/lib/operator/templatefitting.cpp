@@ -394,8 +394,8 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logprior, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
-    bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
+    Int32 FitMeiksinIdx, TInt32Range zIdxRangeToCompute,
+    std::shared_ptr<CTemplateFittingResult> const &result) {
   Log.LogDetail(
       Formatter()
       << "  Operator-TemplateFitting: starting computation for template: "
@@ -420,38 +420,35 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
       opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
-  if (!result) {
-    result = std::make_shared<CTemplateFittingResult>(m_redshifts.size());
-  }
-  result->Redshifts = m_redshifts;
+  std::shared_ptr<CTemplateFittingResult> const templateFittingResult =
+      result == nullptr
+          ? std::make_shared<CTemplateFittingResult>(m_redshifts.size())
+          : result;
+
+  templateFittingResult->Redshifts = m_redshifts;
 
   if (logprior.size() > 0 && logprior.size() != m_redshifts.size())
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "prior list size(" << logprior.size()
                        << ") does not match the input redshift-list size :"
                        << m_redshifts.size());
+  bool hasLogPrior = !logprior.empty();
 
-  std::vector<Int32> zIdxs;
-  if (isFirstPass) {
-    zIdxs.resize(m_redshifts.size());
-    std::iota(zIdxs.begin(), zIdxs.end(), 0);
-  } else
-    zIdxs = zIdxsToCompute;
-  for (Int32 zIdx : zIdxs) {
-    // TODO question est ici comment
-    Float64 redshift = result->Redshifts[zIdx];
+  TInt32List zIdxs;
+  if (zIdxRangeToCompute == TInt32Range(undefIdx, undefIdx))
+    zIdxRangeToCompute = TInt32Range(0, m_redshifts.size() - 1);
+  for (auto zIdx : zIdxRangeToCompute) {
+    Float64 redshift = templateFittingResult->Redshifts[zIdx];
     // TODO move a condition up loop
     const CPriorHelper::TPriorEList &logp =
-        logprior.size() > 0 && logprior.size() == m_redshifts.size()
-            ? logprior[zIdx]
-            : CPriorHelper::TPriorEList();
+        hasLogPrior ? logprior[zIdx] : CPriorHelper::TPriorEList();
 
     TFittingIsmIgmResult result_z =
         BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
                  opt_dustFitting, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
-    result->set_at_redshift(zIdx, std::move(result_z), FitMeiksinIdx,
-                            FitEbmvIdx);
+    templateFittingResult->set_at_redshift(zIdx, std::move(result_z),
+                                           FitMeiksinIdx, FitEbmvIdx);
   }
 
   // Question what to do with overlap in second pass ?
@@ -459,7 +456,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < m_redshifts.size(); i++) {
     bool ok = true;
-    for (auto ov : result->Overlap[i])
+    for (auto ov : templateFittingResult->Overlap[i])
       ok &= (ov >= overlapThreshold);
     if (ok) {
       overlapValidInfZ = m_redshifts[i];
@@ -469,7 +466,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   Float64 overlapValidSupZ = -1;
   for (Int32 i = m_redshifts.size() - 1; i >= 0; i--) {
     bool ok = true;
-    for (auto ov : result->Overlap[i])
+    for (auto ov : templateFittingResult->Overlap[i])
       ok &= (ov >= overlapThreshold);
     if (ok) {
       overlapValidSupZ = m_redshifts[i];
@@ -487,7 +484,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   }
 
   // estimate CstLog for PDF estimation
-  result->CstLog = EstimateLikelihoodCstLog();
+  templateFittingResult->CstLog = EstimateLikelihoodCstLog();
 
-  return result;
+  return templateFittingResult;
 }

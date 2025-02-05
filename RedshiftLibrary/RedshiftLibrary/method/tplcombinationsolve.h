@@ -88,7 +88,7 @@ private:
       const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
       const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
       const TFloat64Range &lambdaRange, Float64 overlapThreshold);
-  std::string getSpecBasedScope(CSpectrum::EType _spctype);
+  std::string getResultName(CSpectrum::EType _spctype);
   void checkTemplates(const TTemplateConstRefList &tplList) const;
   COperatorTplcombination m_tplcombinationOperator;
 

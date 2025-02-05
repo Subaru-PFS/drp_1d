@@ -54,6 +54,11 @@ namespace NSEpic {
 class CSpectrum;
 class CTemplateCatalog;
 
+using TTemplateFittingResultMap =
+    std::map<std::string, std::shared_ptr<CTemplateFittingResult>>;
+using TConstTemplateFittingResultMap =
+    std::map<std::string, std::shared_ptr<const CTemplateFittingResult>>;
+
 /**
  * \ingroup Redshift
  */
@@ -78,56 +83,44 @@ private:
   void InitFittingOperator();
   void LogParameters();
   void CheckTemplateCatalog();
-  std::string getScopeStr() const;
+  std::string getResultName() const;
   EType getFitTypeFromParam(const std::string &component);
 
   std::shared_ptr<CSolveResult> compute() override;
 
   std::shared_ptr<CTemplateFittingSolveResult> computeSinglePass();
 
-  void
-  storeSinglePassResults(const COperatorPdfz &pdfz,
-                         std::shared_ptr<const ExtremaResult> extremaResult);
   std::shared_ptr<CTemplateFittingSolveResult> computeTwoPass();
   void computeFirstPass();
 
   std::shared_ptr<const ExtremaResult>
-  computeFirstPassResults(COperatorPdfz &pdfz);
-
-  std::shared_ptr<const ExtremaResult>
-  computeSecondPassResults(COperatorPdfz &pdfz,
-                           const TZGridListParams &zgridParams);
+  computeResults(COperatorPdfz &pdfz, const TZGridListParams &zgridParams = {});
   void storeFirstPassResults(
       const COperatorPdfz &pdfz,
       std::shared_ptr<const ExtremaResult> const &extremaResult);
-  void storeSecondPassResults(
-      const COperatorPdfz &pdfz,
-      std::shared_ptr<const ExtremaResult> const &extremaResult);
+  void storeResults(const COperatorPdfz &pdfz,
+                    std::shared_ptr<const ExtremaResult> const &extremaResult);
   void computeSecondPass(std::shared_ptr<const ExtremaResult> extremaResult);
 
-  void Solve(std::shared_ptr<COperatorResultStore> resultStore,
-             const std::shared_ptr<const CTemplate> &tpl,
-             Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
-             std::string parentId = "", std::vector<Int32> zIdxsToCompute = {});
+  std::shared_ptr<CTemplateFittingResult>
+  Solve(std::shared_ptr<COperatorResultStore> resultStore,
+        const std::shared_ptr<const CTemplate> &tpl,
+        Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+        std::string parentId = "", Int32 candidateIdx = undefIdx,
+        std::shared_ptr<CTemplateFittingResult> const &result = nullptr);
 
-  ChisquareArray
-  BuildChisquareArray(const std::string &scopeStr,
-                      std::shared_ptr<const ExtremaResult> fpResults = {},
-                      TZGridListParams zgridParams = {}) const;
+  ChisquareArray BuildChisquareArray(const std::string &resultName,
+                                     TZGridListParams zgridParams = {}) const;
 
-  void UpdateFirstPassExtremaResults(
-      const TResultsMap &resultsMapFromStore,
-      std::shared_ptr<const ExtremaResult> const &fpResults);
-
-  std::shared_ptr<const ExtremaResult> buildExtremaResults(
-      const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
-      Float64 overlapThreshold,
-      std::shared_ptr<const ExtremaResult> const &fpResults = {});
+  std::shared_ptr<ExtremaResult>
+  buildExtremaResults(const std::string &resultName,
+                      const TCandidateZbyRank &ranked_zCandidates);
   void initSkipSecondPass() override;
   void initTwoPassZStepFactor() override;
-  TResultsMap createPerTemplateResultMap(
-      const std::string &scopeStr,
-      std::shared_ptr<const ExtremaResult> fpResults) const;
+  TConstTemplateFittingResultMap
+  getPerTemplateResultMap(const std::string &resultName) const;
+  TTemplateFittingResultMap
+  getPerTemplateResultMapCopy(const std::string &resultName) const;
 
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
   std::string m_opt_pdfcombination;
@@ -143,7 +136,6 @@ private:
   Float64 m_photometryWeight = NAN;
   EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
   Float64 m_secondPass_halfwindowsize = NAN;
-  std::shared_ptr<CTemplateFittingResult> m_result;
   Int32 m_opt_extremacount;
   Float64 m_opt_candidatesLogprobaCutThreshold = 0.0;
   bool m_isFirstPass = true;

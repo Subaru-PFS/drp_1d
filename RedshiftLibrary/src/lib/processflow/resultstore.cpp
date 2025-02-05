@@ -117,21 +117,15 @@ COperatorResultStore::GetScopedPerTemplateResult(
   return GetPerTemplateResult(t, GetScopedName(name));
 }
 
-TResultsMap
-COperatorResultStore::GetPerTemplateResult(const std::string &name) const {
+TResultsMap COperatorResultStore::GetPerTemplateResult(
+    const std::string &resultName) const {
   TResultsMap map;
-  TPerTemplateResultsMap::const_iterator templateIterator;
-  for (templateIterator = m_PerTemplateResults.begin();
-       templateIterator != m_PerTemplateResults.end(); ++templateIterator) {
-    std::string tplName = (*templateIterator).first;
 
-    const TResultsMap &resultsMap = (*templateIterator).second;
-    TResultsMap::const_iterator storedResult = resultsMap.find(name);
-    if (storedResult != resultsMap.end()) {
-      map[tplName] = (*storedResult).second;
-    }
+  for (auto &[tplName, resultsMap] : m_PerTemplateResults) {
+    auto foundResult = resultsMap.find(resultName);
+    if (foundResult != resultsMap.end())
+      map[tplName] = (*foundResult).second;
   }
-
   return map;
 }
 
