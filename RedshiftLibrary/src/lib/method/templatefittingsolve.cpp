@@ -435,7 +435,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
 
   Log.LogDetail("templatefittingsolver: building chisquare array");
 
-  TOperatorResultMap templatesResultsMap =
+  TResultsMap templatesResultsMap =
       createPerTemplateResultMap(scopeStr, fpResults);
   bool isSecondPass = bool(fpResults);
   if (isSecondPass)
@@ -449,7 +449,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   chisquarearray.zstep = m_coarseRedshiftStep;
   chisquarearray.zgridParams = zgridParams;
 
-  for (TOperatorResultMap::const_iterator templateResultMap =
+  for (TResultsMap::const_iterator templateResultMap =
            templatesResultsMap.begin();
        templateResultMap != templatesResultsMap.end(); ++templateResultMap) {
     auto templateResult =
@@ -505,7 +505,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
 }
 // TODO move in solve and mutualize with buildextremaresult
 void CTemplateFittingSolve::UpdateFirstPassExtremaResults(
-    const TOperatorResultMap &resultsMapFromStore,
+    const TResultsMap &resultsMapFromStore,
     std::shared_ptr<const ExtremaResult> const &fpResults) {
   // Access the raw extremas results
   // Converts TCandidateZbyRank m_firstpass_extremaResult.m_ranked_candidates to
@@ -559,7 +559,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
   Log.LogDetail(
       "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
 
-  TOperatorResultMap tplFitResultsMap =
+  TResultsMap tplFitResultsMap =
       createPerTemplateResultMap(scopeStr, fpResults);
 
   Int32 extremumCount = ranked_zCandidates.size();
@@ -677,11 +677,11 @@ void CTemplateFittingSolve::initTwoPassZStepFactor() {
           "firstPass.largeGridStepRatio");
 };
 
-TOperatorResultMap CTemplateFittingSolve::createPerTemplateResultMap(
+TResultsMap CTemplateFittingSolve::createPerTemplateResultMap(
     const std::string &scopeStr,
     std::shared_ptr<const ExtremaResult> fpResults) const {
   auto const &resultStore = Context.GetResultStore();
-  TOperatorResultMap tplFitResultsMap =
+  TResultsMap tplFitResultsMap =
       resultStore->GetScopedPerTemplateResult(scopeStr);
   bool isFirstPass = (fpResults == nullptr);
   if (isFirstPass)
@@ -689,7 +689,7 @@ TOperatorResultMap CTemplateFittingSolve::createPerTemplateResultMap(
 
   TStringList fpResultsIds = fpResults->GetIDs();
   for (std::string id : fpResultsIds) {
-    const TOperatorResultMap &tmpMap =
+    const TResultsMap &tmpMap =
         resultStore->GetScopedPerTemplateResult(scopeStr + "_" + id);
     tplFitResultsMap.insert(tmpMap.begin(), tmpMap.end());
   }

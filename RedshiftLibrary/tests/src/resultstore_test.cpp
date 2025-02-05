@@ -60,10 +60,6 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(ResultStore)
 
-typedef std::map<std::string, std::shared_ptr<const COperatorResult>>
-    TResultsMap;
-typedef std::map<std::string, TResultsMap> TPerTemplateResultsMap;
-
 //---------------------------------------------------------------
 // RESULTS MODEL
 //---------------------------------------------------------------
@@ -278,9 +274,8 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
   BOOST_CHECK_THROW(store.GetScopedPerTemplateResult(tpl, "warningFlag_"),
                     AmzException);
 
-  TOperatorResultMap result_out_2 =
-      store.GetScopedPerTemplateResult("warningFlag");
-  TOperatorResultMap::const_iterator it;
+  TResultsMap result_out_2 = store.GetScopedPerTemplateResult("warningFlag");
+  TResultsMap::const_iterator it;
   for (it = result_out_2.begin(); it != result_out_2.end(); ++it) {
     std::string name = (*it).first;
     BOOST_CHECK(result_out_2[name]->getType() == "CFlagLogResult");

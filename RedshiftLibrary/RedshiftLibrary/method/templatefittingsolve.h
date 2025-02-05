@@ -116,7 +116,7 @@ private:
                       TZGridListParams zgridParams = {}) const;
 
   void UpdateFirstPassExtremaResults(
-      const TOperatorResultMap &resultsMapFromStore,
+      const TResultsMap &resultsMapFromStore,
       std::shared_ptr<const ExtremaResult> const &fpResults);
 
   std::shared_ptr<const ExtremaResult> buildExtremaResults(
@@ -125,7 +125,7 @@ private:
       std::shared_ptr<const ExtremaResult> const &fpResults = {});
   void initSkipSecondPass() override;
   void initTwoPassZStepFactor() override;
-  TOperatorResultMap createPerTemplateResultMap(
+  TResultsMap createPerTemplateResultMap(
       const std::string &scopeStr,
       std::shared_ptr<const ExtremaResult> fpResults) const;
 
