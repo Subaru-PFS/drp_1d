@@ -134,37 +134,19 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------
    */
 
-  COperatorPdfz pdfz(
-      m_opt_pdfcombination,
-      0.0,                // no peak Separation in 2nd pass
-      0.0,                // cut threshold
-      m_opt_extremacount, // max nb of final (2nd pass) candidates
-      m_zLogSampling,
-      "SPE", // Id_prefix
-      false, // do not allow extrema at border
-      1      // one peak/window only
-  );
+  COperatorPdfz pdfz = initializePdfz();
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(chisquares);
 
-  // TODO put this in a separate method
-  COperatorPdfz pdfzContinuum(
-      m_opt_pdfcombination,
-      0.0,                // no peak Separation in 2nd pass
-      0.0,                // cut threshold
-      m_opt_extremacount, // max nb of final (2nd pass) candidates
-      m_zLogSampling,
-      "SPE", // Id_prefix
-      false, // do not allow extrema at border
-      1      // one peak/window only
-  );
   Float64 continuumEvidence = NAN;
 
-  // TODO put this if in a specific method
-  std::string tplContinuumName = "";
-  if (m_opt_continuumcomponent.isContinuumFit() &&
-      m_linemodel.m_opt_continuumcomponent.isFromSpectrum()) {
+  bool switchedToFromSpectrum =
+      m_opt_continuumcomponent.isContinuumFit() &&
+      m_linemodel.m_opt_continuumcomponent.isFromSpectrum();
+
+  if (switchedToFromSpectrum) {
+    COperatorPdfz pdfzContinuum = initializePdfz();
     CRange zRange(m_redshifts);
     CZGridParam zp(zRange, m_coarseRedshiftStep);
     TZGridListParams zpVector{zp};
@@ -172,7 +154,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
         BuildContinuumChisquareArray(lmresult, zpVector);
     pdfzContinuum.computePDF(chisquaresContinuum);
     continuumEvidence = pdfzContinuum.m_postmargZResult->valMargEvidenceLog;
-    tplContinuumName = "fromSpectrum";
   }
 
   // store PDF results
@@ -192,17 +173,26 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   // store extrema results
   storeExtremaResults(resultStore, ExtremaResult);
 
-  // SaveContinuumPDF(dataStore, result);
-  //  TBD
-
   // create the solveresult
-  std::shared_ptr<CLineModelSolveResult> lmsolveresult =
+  std::shared_ptr<CLineModelSolveResult> lmSolveResult =
       std::make_shared<CLineModelSolveResult>(
           ExtremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
           pdfz.m_postmargZResult->valMargEvidenceLog, continuumEvidence);
-  lmsolveresult->setTplContinuumName(tplContinuumName);
+  return lmSolveResult;
+}
 
-  return lmsolveresult;
+COperatorPdfz CLineModelSolve::initializePdfz() const {
+  COperatorPdfz pdfz(
+      m_opt_pdfcombination,
+      0.0,                // no peak Separation in 2nd pass
+      0.0,                // cut threshold
+      m_opt_extremacount, // max nb of final (2nd pass) candidates
+      m_zLogSampling,
+      "SPE", // Id_prefix
+      false, // do not allow extrema at border
+      1      // one peak/window only
+  );
+  return pdfz;
 }
 
 void CLineModelSolve::GetZpriorsOptions(
