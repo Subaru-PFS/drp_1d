@@ -71,6 +71,7 @@ public:
 
 private:
   friend class lineModelSolve_test::continuumChi2CorrectlySet_test;
+  COperatorPdfz initializePdfz() const;
   ChisquareArray BuildContinuumChisquareArray(
       const std::shared_ptr<const CLineModelResult> &result,
       const TZGridListParams &spZgridParams) const;

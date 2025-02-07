@@ -61,12 +61,22 @@ public:
       Float64 continuumEvidence = NAN)
       : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
                         opt_pdfcombination, evidence),
-        m_continuumEvidence(continuumEvidence){};
-  const std::string getTplContinuumName() { return tplContinuumName; };
+        m_continuumEvidence(continuumEvidence) {
+    if (!std::isnan(m_continuumEvidence))
+      setSwitchedToFromSpectrum(true);
+    setTplContinuumName("fromSpectrum");
+  };
+  std::string getTplContinuumName() const { return tplContinuumName; };
   std::string setTplContinuumName(const std::string &name) {
     return tplContinuumName = name;
   };
-  const Float64 getContinuumEvidence() { return m_continuumEvidence; };
+  Float64 getContinuumEvidence() const override { return m_continuumEvidence; };
+  bool getSwitchedToFromSpectrum() const override {
+    return m_switchedToFromSpectrum;
+  };
+  void setSwitchedToFromSpectrum(const bool switched) {
+    m_switchedToFromSpectrum = switched;
+  };
 
 private:
   std::string tplratioName = undefStr;
@@ -80,6 +90,7 @@ private:
   Float64 LyaAlpha = NAN;
   Float64 LyaDelta = NAN;
   Int32 LyaIgm = undefIdx;
+  bool m_switchedToFromSpectrum = false;
   Float64 m_continuumEvidence =
       NAN; // For cases where switches in fromSpectrum, keeps evidence of
            // continuum for usage in classification

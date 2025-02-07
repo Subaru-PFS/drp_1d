@@ -68,11 +68,13 @@ public:
   CPdfSolveResult &operator=(CPdfSolveResult const &other) = default;
   CPdfSolveResult(CPdfSolveResult &&other) = default;
   CPdfSolveResult &operator=(CPdfSolveResult &&other) = default;
-
   Int32 m_bestRedshiftMethod = 2; // 0:best chi2 or proba, 2: best marg proba
 
   inline Float64 getMerit() const { return m_merit; }
   inline Float64 getEvidence() const { return m_evidence; }
+  virtual Float64 getContinuumEvidence() const { return m_evidence; };
+  virtual std::string getTplContinuumName() const { return ""; };
+  virtual bool getSwitchedToFromSpectrum() const { return false; };
 
 protected:
   Float64 m_redshift;

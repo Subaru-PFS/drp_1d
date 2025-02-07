@@ -54,33 +54,83 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
   std::map<std::string, Float64> logEvidences;
   std::map<std::string, bool> hasResult;
   std::string stage = "redshiftSolver";
+
+  // Retrieves data from store
   for (const std::string &spectrumModel : inputContext->m_categories) {
     const std::string &method =
-        inputContext->GetParameterStore()->Get<std::string>(
-            spectrumModel + "." + stage + ".method");
-
+        inputContext->GetParameterStore()->getMethodName(spectrumModel, stage);
     if (resultStore->hasSolveResult(spectrumModel, stage, method)) {
       results[spectrumModel] = std::dynamic_pointer_cast<const CPdfSolveResult>(
           resultStore->GetSolveResult(spectrumModel, stage, method).lock());
       hasResult[spectrumModel] = true;
     } else
       hasResult[spectrumModel] = false;
-
     logEvidences[spectrumModel] = -INFINITY;
   }
-  std::shared_ptr<CClassificationResult> classifResult =
-      std::make_shared<CClassificationResult>();
+
+  // Gets evidences
+  for (const std::string &spectrumModel : inputContext->m_categories) {
+    if (hasResult[spectrumModel])
+      logEvidences[spectrumModel] =
+          results[spectrumModel].lock()->getContinuumEvidence();
+    else
+      logEvidences[spectrumModel] = -INFINITY;
+  }
+
+  // Sorts by logEvidence
+  std::vector<std::pair<std::string, Float64>> modelsSortedByEvidence(
+      logEvidences.begin(), logEvidences.end());
+  std::sort(modelsSortedByEvidence.begin(), modelsSortedByEvidence.end(),
+            [](const auto &a, const auto &b) { return a.second > b.second; });
+
+  // Gets succesive switched models
+  std::vector<std::vector<std::string>> successiveSwitchedModels;
+  bool isSuccessive = false;
+  for (const auto &[modelName, _] : modelsSortedByEvidence) {
+    if (!hasResult[modelName])
+      // Sorted evidences -> if does not have result, next ones neither
+      break;
+    if (results[modelName].lock()->getSwitchedToFromSpectrum()) {
+      if (isSuccessive)
+        successiveSwitchedModels[successiveSwitchedModels.size() - 1].push_back(
+            modelName);
+      else
+        successiveSwitchedModels.push_back(std::vector<std::string>{modelName});
+      isSuccessive = true;
+    } else
+      isSuccessive = false;
+  }
+
+  // Updates logEvidence for consecutive switched models
+  for (const auto &switchedGroup : successiveSwitchedModels) {
+    Int32 groupSize = switchedGroup.size();
+    if (groupSize > 1) {
+      std::map<std::string, Float64> switchedEvidences;
+      Float64 sumEvidences = 0;
+      Float64 sumSwitchedEvidences = 0;
+      for (auto const &modelName : switchedGroup) {
+        switchedEvidences[modelName] = results[modelName].lock()->getEvidence();
+        sumEvidences += logEvidences[modelName];
+        sumSwitchedEvidences += switchedEvidences[modelName];
+      }
+      Float64 evidencesRatio = sumEvidences / sumSwitchedEvidences;
+      for (auto const &modelName : switchedGroup) {
+        logEvidences[modelName] = switchedEvidences[modelName] * evidencesRatio;
+      }
+    }
+  }
+
+  // Gets maxLogEvidence
   Float64 MaxLogEvidence = -DBL_MAX;
   for (const std::string &spectrumModel : inputContext->m_categories) {
     if (hasResult[spectrumModel]) {
-      logEvidences[spectrumModel] =
-          results[spectrumModel].lock()->getEvidence();
       if (logEvidences[spectrumModel] > MaxLogEvidence) {
         MaxLogEvidence = logEvidences[spectrumModel];
         typeLabel = spectrumModel;
       }
     }
   }
+
   Log.LogInfo(Formatter() << "Setting object type: " << typeLabel);
   Float64 sum = 0.;
 
@@ -94,6 +144,8 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
     THROWG(ErrorCode::NO_CLASSIFICATION,
            "Classification failed, all probabilities undefined");
   }
+  std::shared_ptr<CClassificationResult> classifResult =
+      std::make_shared<CClassificationResult>();
   for (const std::string &spectrumModel : inputContext->m_categories) {
     if (hasResult[spectrumModel]) {
       Float64 proba = exp(logEvidences[spectrumModel] - MaxLogEvidence);
