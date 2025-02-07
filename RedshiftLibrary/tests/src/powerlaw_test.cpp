@@ -266,8 +266,8 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
-  BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  BOOST_TEST(result2.coefs.second.a == result2.coefs.first.a);
+  BOOST_TEST(result2.coefs.second.b == result2.coefs.first.b);
   Context.reset();
 }
 
@@ -688,4 +688,44 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
 
   Context.reset();
 }
+
+BOOST_AUTO_TEST_CASE(basicfit_default) {
+  // We consider z = 0 here
+  Float64 a = DBL_MIN * 2;
+  Float64 b = -0.5;
+
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(
+      3999, 6498,
+      10); // Checks that OK is spectral axis larger than lambdaRange
+  CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxis, a, b);
+  TFloat64List noise(fluxAxis.GetSamplesVector().size(), 1);
+  fluxAxis.setError(CSpectrumNoiseAxis(noise));
+
+  // Initialize power law operator
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw;
+  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "simple");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_TEST(result.coefs.first.a == 0);
+  BOOST_TEST(result.coefs.first.stda == INFINITY);
+  BOOST_TEST(result.coefs.first.b == 0);
+  BOOST_TEST(result.coefs.first.stdb == INFINITY);
+  BOOST_TEST(result.coefs.second.a == 0);
+  BOOST_TEST(result.coefs.second.stda == INFINITY);
+  BOOST_TEST(result.coefs.second.b == 0);
+  BOOST_TEST(result.coefs.second.stdb == INFINITY);
+  Context.reset();
+}
+
 BOOST_AUTO_TEST_SUITE_END()

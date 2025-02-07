@@ -65,6 +65,7 @@ class basicfit_double_with_var;
 class basicfit_simple_with_extinction;
 class basicfit_multiobs;
 class basicfit_negative;
+class basicfit_default;
 } // namespace powerLawOperator_test
 
 namespace NSEpic {
@@ -117,6 +118,10 @@ public:
   void ComputeSpectrumModel(
       const std::shared_ptr<CContinuumModelSolution> &continuum, Int32 spcIndex,
       const std::shared_ptr<CModelSpectrumResult> &models);
+  bool checkCoefsOrDefault(TPowerLawCoefs &coefs) const;
+  bool checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const;
+  TPowerLawCoefs DEFAULT_COEFS = {0, 0, INFINITY, INFINITY};
+  TPowerLawCoefsPair DEFAULT_COEFS_PAIR = {DEFAULT_COEFS, DEFAULT_COEFS};
 
 protected:
   friend ::PowerLaw_fixture;
@@ -132,6 +137,7 @@ protected:
   friend powerLawOperator_test::basicfit_simple_with_extinction;
   friend powerLawOperator_test::basicfit_multiobs;
   friend powerLawOperator_test::basicfit_negative;
+  friend powerLawOperator_test::basicfit_default;
 
   TPowerLawResult BasicFit(Float64 redshift, bool opt_extinction,
                            bool opt_dustFitting, Float64 nullFluxThreshold,
