@@ -62,13 +62,9 @@ public:
       : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
                         opt_pdfcombination, evidence),
         m_continuumEvidence(continuumEvidence) {
-    if (!std::isnan(m_continuumEvidence))
+    if (!std::isnan(m_continuumEvidence)) {
       setSwitchedToFromSpectrum(true);
-    setTplContinuumName("fromSpectrum");
-  };
-  std::string getTplContinuumName() const { return tplContinuumName; };
-  std::string setTplContinuumName(const std::string &name) {
-    return tplContinuumName = name;
+    }
   };
   Float64 getContinuumEvidence() const override { return m_continuumEvidence; };
   bool getSwitchedToFromSpectrum() const override {

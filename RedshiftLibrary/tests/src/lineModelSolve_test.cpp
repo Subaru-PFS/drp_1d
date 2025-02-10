@@ -641,7 +641,6 @@ BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
   std::shared_ptr<CLineModelSolveResult> lmSolveResult =
       std::dynamic_pointer_cast<CLineModelSolveResult>(
           lineModelSolve.compute());
-  BOOST_CHECK_EQUAL(lmSolveResult->getTplContinuumName(), "fromSpectrum");
   BOOST_CHECK(lineModelSolve.m_opt_continuumcomponent.isContinuumFit());
   // Question: j'ai créé cette valeur de test à partir du résultat, c'est pas
   // bizarre comme valeur ?
