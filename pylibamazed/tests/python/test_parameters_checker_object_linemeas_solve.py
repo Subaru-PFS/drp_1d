@@ -276,3 +276,25 @@ class TestLineMeasSolve:
             param_dict = self._make_parameter_dict(**{"lineModel": {"lya": {"profile": "igm"}}})
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
+
+        class TestEmVelocityFitMin:
+            def _make_parameter_dict(self, **kwargs) -> dict:
+                kwargs["method"] = "lineModelSolve"
+                param_dict = make_parameter_dict_at_linemeas_solve_level(**kwargs)
+                return param_dict
+
+            def test_error_if_em_velocity_fit_min_is_negative_with_velocity_driven(self):
+                param_dict = self._make_parameter_dict(
+                    **{"lineModel": {"lineWidthType": "velocityDriven", "emVelocityFitMin": -0.5}}
+                )
+                with pytest.raises(
+                    APIException,
+                    match=r"lineMeasSolve lineModel emVelocityFit min must be > 0 when lineWidthType is velocityDriven",
+                ):
+                    check_from_parameter_dict(param_dict)
+
+            def test_OK_if_em_velocity_fit_min_is_positive_with_velocity_driven(self):
+                param_dict = self._make_parameter_dict(
+                    **{"lineModel": {"lineWidthType": "velocityDriven", "emVelocityFitMin": 0.5}}
+                )
+                check_from_parameter_dict(param_dict)

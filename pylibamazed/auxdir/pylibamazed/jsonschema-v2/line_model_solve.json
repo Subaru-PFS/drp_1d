@@ -115,7 +115,7 @@
         "emVelocityFitMin": {
           "type": "number",
           "title": "Emission lines velocity min",
-          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines"
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. Must be > 0 if lineWidthType=velocityDriven"
         },
         "emVelocityFitMax": {
           "type": "number",
