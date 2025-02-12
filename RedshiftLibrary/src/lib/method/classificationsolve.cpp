@@ -70,10 +70,14 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
 
   // Gets evidences
   for (const std::string &spectrumModel : inputContext->m_categories) {
-    if (hasResult[spectrumModel])
-      logEvidences[spectrumModel] =
-          results[spectrumModel].lock()->getContinuumEvidence();
-    else
+    if (hasResult[spectrumModel]) {
+      if (results[spectrumModel].lock()->getSwitchedToFromSpectrum())
+        logEvidences[spectrumModel] =
+            results[spectrumModel].lock()->getContinuumEvidence();
+      else
+        logEvidences[spectrumModel] =
+            results[spectrumModel].lock()->getEvidence();
+    } else
       logEvidences[spectrumModel] = -INFINITY;
   }
 
