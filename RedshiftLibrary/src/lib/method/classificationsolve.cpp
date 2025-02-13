@@ -77,8 +77,7 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
       else
         logEvidences[spectrumModel] =
             results[spectrumModel].lock()->getEvidence();
-    } else
-      logEvidences[spectrumModel] = -INFINITY;
+    }
   }
 
   // Sorts by logEvidence
