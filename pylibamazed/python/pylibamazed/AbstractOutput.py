@@ -42,7 +42,7 @@ from abc import ABCMeta, abstractmethod
 
 from pylibamazed.Exception import APIException, exception_decorator, exception_class_decorator
 from pylibamazed.OutputSpecifications import ResultsSpecifications
-from pylibamazed.AbstractReliabilitySolver import get_reliability_dataset_suffix
+from pylibamazed.AbstractReliabilitySolver import get_reliability_solver_name
 from pylibamazed.Parameters import Parameters
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
