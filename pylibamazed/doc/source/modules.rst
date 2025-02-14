@@ -7,7 +7,8 @@ pylibamazed
    warnings
    errors
    powerLaw
-   igmism
+   igmIsm
+   classification
 
 parameters
 ===========

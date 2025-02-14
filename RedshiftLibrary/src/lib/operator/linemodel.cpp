@@ -499,7 +499,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   // fill the fit store with fitted values: only the best fitted values FOR
   // EACH TEMPLATE are used
   if (m_opt_continuumcomponent.isPowerLawXXX()) {
-    // TODO check that chisquareResultsAllTpl size is 1
     const auto &chisquareResult =
         std::dynamic_pointer_cast<CPowerLawResult>(chisquareResultsAllTpl[0]);
     // size 1
@@ -519,10 +518,10 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     }
   } else {
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
-    for (Int32 i = 0; i < nredshiftsTplFitResults; i++) {
+    for (Int32 i = 0; i < nredshiftsTplFitResults; i++) { // zIDX
       Float64 redshift = redshiftsContinuumFit[i];
 
-      for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++) {
+      for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++) { // n templates
         const auto &chisquareResult =
             std::dynamic_pointer_cast<CTemplateFittingResult>(
                 chisquareResultsAllTpl[j]);
@@ -1763,4 +1762,10 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   m_fittingManager->getSpectraIndex()
       .reset(); // TODO dummy implementation, should return all models
   return m_fittingManager->getSpectrumModel().GetModelSpectrum();
+}
+
+std::shared_ptr<CContinuumFitStore>
+COperatorLineModel::getContinuumFitStoreFirstPass() const {
+  // 1 tplfitstore per extrema result
+  return m_tplfitStore_firstpass;
 }

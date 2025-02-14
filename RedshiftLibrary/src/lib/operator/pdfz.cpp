@@ -94,11 +94,8 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
           TFloat64Range(chisquarearray.zgridParams[i].zmin,
                         chisquarearray.zgridParams[i].zmax);
   }
-  // create ClogZPdfResultm
-  createPdfResult(chisquarearray);
 
-  // build PDF from chisquares and priors
-  CombinePDF(chisquarearray);
+  computePDF(chisquarearray);
 
   // find candidates redshifts
   TCandidateZbyID zcandidates =
@@ -204,6 +201,13 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
     THROWG(ErrorCode::INTERNAL_ERROR, " PDF ptr is null");
 
   m_postmargZResult->isPdfValid(); // will throw an error if not
+}
+
+void COperatorPdfz::computePDF(const ChisquareArray &chisquarearray) {
+  // create ClogZPdfResultm
+  createPdfResult(chisquarearray);
+  // build PDF from chisquares and priors
+  CombinePDF(chisquarearray);
 }
 
 TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {

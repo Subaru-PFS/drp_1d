@@ -134,24 +134,31 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------
    */
 
-  COperatorPdfz pdfz(
-      m_opt_pdfcombination,
-      0.0,                // no peak Separation in 2nd pass
-      0.0,                // cut threshold
-      m_opt_extremacount, // max nb of final (2nd pass) candidates
-      m_zLogSampling,
-      "SPE", // Id_prefix
-      false, // do not allow extrema at border
-      1      // one peak/window only
-  );
+  COperatorPdfz pdfz = initializePdfz();
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(chisquares);
 
+  Float64 continuumEvidence = NAN;
+
+  bool switchedToFromSpectrum =
+      m_opt_continuumcomponent.isContinuumFit() &&
+      m_linemodel.m_opt_continuumcomponent.isFromSpectrum();
+
+  if (switchedToFromSpectrum) {
+    COperatorPdfz pdfzContinuum = initializePdfz();
+    CRange zRange(m_redshifts);
+    CZGridParam zp(zRange, m_coarseRedshiftStep);
+    TZGridListParams zpVector{zp};
+    ChisquareArray chisquaresContinuum =
+        BuildContinuumChisquareArray(lmresult, zpVector);
+    pdfzContinuum.computePDF(chisquaresContinuum);
+    continuumEvidence = pdfzContinuum.m_postmargZResult->valMargEvidenceLog;
+  }
+
   // store PDF results
   Log.LogInfo(Formatter() << __func__ << ": Storing PDF results");
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
-  // TODO: clean below line once #7646 is solved
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
@@ -166,16 +173,26 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   // store extrema results
   storeExtremaResults(resultStore, ExtremaResult);
 
-  // SaveContinuumPDF(dataStore, result);
-  //  TBD
-
   // create the solveresult
-  std::shared_ptr<CLineModelSolveResult> lmsolveresult =
+  std::shared_ptr<CLineModelSolveResult> lmSolveResult =
       std::make_shared<CLineModelSolveResult>(
           ExtremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
-          pdfz.m_postmargZResult->valMargEvidenceLog);
+          pdfz.m_postmargZResult->valMargEvidenceLog, continuumEvidence);
+  return lmSolveResult;
+}
 
-  return lmsolveresult;
+COperatorPdfz CLineModelSolve::initializePdfz() const {
+  COperatorPdfz pdfz(
+      m_opt_pdfcombination,
+      0.0,                // no peak Separation in 2nd pass
+      0.0,                // cut threshold
+      m_opt_extremacount, // max nb of final (2nd pass) candidates
+      m_zLogSampling,
+      "SPE", // Id_prefix
+      false, // do not allow extrema at border
+      1      // one peak/window only
+  );
+  return pdfz;
 }
 
 void CLineModelSolve::GetZpriorsOptions(
@@ -298,6 +315,39 @@ TFloat64List CLineModelSolve::BuildZpriors(
   }
 
   return zpriors;
+}
+
+ChisquareArray CLineModelSolve::BuildContinuumChisquareArray(
+    const std::shared_ptr<const CLineModelResult> &result,
+    const TZGridListParams &zgridParams) const {
+  std::shared_ptr<CContinuumFitStore> fitStore =
+      m_linemodel.getContinuumFitStoreFirstPass();
+  TFloat64List redshifts = fitStore->GetRedshiftList();
+  Int32 nRedshifts = redshifts.size();
+  ChisquareArray chisquarearray;
+  chisquarearray.redshifts = redshifts;
+  chisquarearray.zstep = m_coarseRedshiftStep;
+  chisquarearray.zgridParams = zgridParams;
+
+  std::vector<std::vector<CContinuumModelSolution>> fitValues =
+      fitStore->GetFitValuesVector();
+  if (fitValues.size() == 0) // i.e. nRedshifts == 0
+    return chisquarearray;
+  Int32 nTemplates = fitValues[0].size();
+  chisquarearray.chisquares.resize(nTemplates);
+  chisquarearray.zpriors.resize(nTemplates);
+  for (Int32 templateIdx = 0; templateIdx < nTemplates; ++templateIdx) {
+    chisquarearray.chisquares[templateIdx].resize(nRedshifts);
+    chisquarearray.zpriors[templateIdx].resize(nRedshifts);
+    for (Int32 zIdx = 0; zIdx < nRedshifts; ++zIdx) {
+      CContinuumModelSolution modelSolution =
+          fitStore->GetFitValues(zIdx, templateIdx);
+      chisquarearray.chisquares[templateIdx][zIdx] = modelSolution.merit;
+      // Question: do we put the right thing there ?
+      chisquarearray.zpriors[templateIdx][zIdx] = modelSolution.tplLogPrior;
+    }
+  }
+  return chisquarearray;
 }
 
 ChisquareArray CLineModelSolve::BuildChisquareArray(

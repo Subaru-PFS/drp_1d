@@ -280,4 +280,12 @@ Float64 CParameterStore::getMinZStepForFFTProcessing(
   }
   return logGridStep;
 }
+
+std::string CParameterStore::getMethodName(const std::string &spectrumModel,
+                                           const std::string &stage) const {
+  const std::string &method =
+      Get<std::string>(spectrumModel + "." + stage + ".method");
+  return method;
+}
+
 } // namespace NSEpic

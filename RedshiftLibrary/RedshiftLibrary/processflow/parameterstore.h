@@ -147,6 +147,9 @@ public:
       return GetList<T>(name);
   }
 
+  std::string getMethodName(const std::string &spectrumModel,
+                            const std::string &stage) const;
+
   void Set(const std::string &name, const TFloat64List &v);
   void Set(const std::string &name, const TInt64List &v);
   void Set(const std::string &name, const TBoolList &v);
