@@ -14,7 +14,7 @@ ContinuumSNR	model_parameters	True	candidate	fittedContinuum.SNR	extrema_results
 ContinuumMtM	model_parameters	True	candidate	fittedContinuum.tplMtM	extrema_results	f8
 ContinuumDtM	model_parameters	True	candidate	fittedContinuum.tplDtM	extrema_results	f8
 ContinuumLeastSquare	model_parameters	True	candidate	fittedContinuum.merit	extrema_results	f8
-ContinuumReducedLeastSquare	model_parameters	True	candidate	fittedContinuum.reducedChi2	extrema_results	f8
+ContinuumReducedLeastSquare	model_parameters	False	candidate	fittedContinuum.reducedChi2	extrema_results	f8
 ContinuumLeastSquarePhot	model_parameters	True	candidate	fittedContinuum.tplMeritPhot	extrema_results	f8
 ContinuumLogPrior	model_parameters	True	candidate	fittedContinuum.tplLogPrior	extrema_results	f8
 ContinuumPowerLawa1	model_parameters	True	candidate	fittedContinuum.a1	extrema_results	f8
