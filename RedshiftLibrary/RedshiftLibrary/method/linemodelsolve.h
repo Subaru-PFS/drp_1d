@@ -71,7 +71,8 @@ public:
 
 private:
   friend class lineModelSolve_test::continuumChi2CorrectlySet_test;
-  COperatorPdfz initializePdfz() const;
+  COperatorPdfz initializePdfz(Int32 maxPeakPerWindow, Int32 peakSeparation,
+                               Int32 cutThreshold, Int32 extremaCount) const;
   ChisquareArray
   BuildContinuumChisquareArray(const Float64 cstLog,
                                const TZGridListParams &spZgridParams) const;

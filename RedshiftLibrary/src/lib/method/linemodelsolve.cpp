@@ -120,9 +120,13 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
 
   //  suggestion : CSolve::GetCurrentScopeName(CScopeStack)
   //  prepare the linemodel chisquares and prior results for pdf computation
-  ChisquareArray chisquares =
-      BuildChisquareArray(lmresult, m_linemodel.getSPZGridParams(),
-                          m_linemodel.getFirstPassCandidatesZByRank());
+  ChisquareArray chisquares;
+  if (m_opt_skipsecondpass)
+    chisquares = BuildChisquareArray(lmresult);
+  else
+    chisquares =
+        BuildChisquareArray(lmresult, m_linemodel.getSPZGridParams(),
+                            m_linemodel.getFirstPassCandidatesZByRank());
 
   /*
   zpriorResult->Redshifts.size());
@@ -133,8 +137,19 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
 
   /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------
    */
-
-  COperatorPdfz pdfz = initializePdfz();
+  Int32 maxPeakPerWindow = 1;
+  Int32 peakSeparation = 0; // no peak separation in 2nd pass
+  Int32 cutThreshold = 0;
+  Int32 extremaCount = m_opt_extremacount;
+  if (m_opt_skipsecondpass) {
+    maxPeakPerWindow =
+        0; // 0 -> = m_opt_extremacount, cf. COperatorPdfz constructor
+    peakSeparation = 2 * m_opt_secondpass_halfwindowsize;
+    cutThreshold = m_opt_candidatesLogprobaCutThreshold;
+    extremaCount = m_opt_maxCandidate;
+  }
+  COperatorPdfz pdfz = initializePdfz(maxPeakPerWindow, peakSeparation,
+                                      cutThreshold, extremaCount);
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(chisquares);
@@ -146,7 +161,8 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       m_linemodel.m_opt_continuumcomponent.isFromSpectrum();
 
   if (switchedToFromSpectrum) {
-    COperatorPdfz pdfzContinuum = initializePdfz();
+    COperatorPdfz pdfzContinuum = initializePdfz(
+        maxPeakPerWindow, peakSeparation, cutThreshold, extremaCount);
     CRange zRange(m_redshifts);
     CZGridParam zp(zRange, m_coarseRedshiftStep);
     TZGridListParams zpVector{zp};
@@ -181,16 +197,15 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   return lmSolveResult;
 }
 
-COperatorPdfz CLineModelSolve::initializePdfz() const {
-  COperatorPdfz pdfz(
-      m_opt_pdfcombination,
-      0.0,                // no peak Separation in 2nd pass
-      0.0,                // cut threshold
-      m_opt_extremacount, // max nb of final (2nd pass) candidates
-      m_zLogSampling,
-      "SPE", // Id_prefix
-      false, // do not allow extrema at border
-      1      // one peak/window only
+COperatorPdfz CLineModelSolve::initializePdfz(Int32 maxPeakPerWindow,
+                                              Int32 peakSeparation,
+                                              Int32 cutThreshold,
+                                              Int32 extremaCount) const {
+  COperatorPdfz pdfz(m_opt_pdfcombination, peakSeparation, cutThreshold,
+                     extremaCount, m_zLogSampling,
+                     "SPE",           // Id_prefix
+                     false,           // do not allow extrema at border
+                     maxPeakPerWindow // one peak/window only
   );
   return pdfz;
 }
@@ -540,37 +555,38 @@ void CLineModelSolve::Solve() {
   //**************************************************
   std::shared_ptr<const CLineModelResult> lmresult =
       m_linemodel.ComputeFirstPass();
+  if (!m_opt_skipsecondpass) {
+    //**************************************************
+    // Compute z-candidates
+    //**************************************************
+    ChisquareArray chisquares = BuildChisquareArray(lmresult);
 
-  //**************************************************
-  // Compute z-candidates
-  //**************************************************
-  ChisquareArray chisquares = BuildChisquareArray(lmresult);
+    // TODO deal with the case lmresult->Redshifts=1
+    //   Int32 extremacount = 5;
+    COperatorPdfz pdfz(m_opt_pdfcombination,
+                       2 * m_opt_secondpass_halfwindowsize, // peak separation
+                       m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
+                       m_zLogSampling, "FPE", true, 0);
 
-  // TODO deal with the case lmresult->Redshifts=1
-  //   Int32 extremacount = 5;
-  COperatorPdfz pdfz(m_opt_pdfcombination,
-                     2 * m_opt_secondpass_halfwindowsize, // peak separation
-                     m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
-                     m_zLogSampling, "FPE", true, 0);
+    std::shared_ptr<PdfCandidatesZResult> candResult_fp =
+        pdfz.Compute(chisquares);
+    m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
-  std::shared_ptr<PdfCandidatesZResult> candResult_fp =
-      pdfz.Compute(chisquares);
-  m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
+    resultStore->StoreScopedGlobalResult("firstpass_pdf",
+                                         pdfz.m_postmargZResult);
+    // had to duplicate it to allow access from hdf5
+    resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
+                                         pdfz.m_postmargZResult);
 
-  resultStore->StoreScopedGlobalResult("firstpass_pdf", pdfz.m_postmargZResult);
-  // had to duplicate it to allow access from hdf5
-  resultStore->StoreScopedGlobalResult("firstpass_pdf_params",
-                                       pdfz.m_postmargZResult);
-
-  // save linemodel firstpass extrema results
-  std::string firstpassExtremaResultsStr = resultName;
-  firstpassExtremaResultsStr.append("_firstpass_extrema");
-  std::shared_ptr<const LineModelExtremaResult> firstpass_results =
-      std::dynamic_pointer_cast<const LineModelExtremaResult>(
-          m_linemodel.getFirstPassExtremaResults());
-  resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr,
-                                       firstpass_results);
-
+    // save linemodel firstpass extrema results
+    std::string firstpassExtremaResultsStr = resultName;
+    firstpassExtremaResultsStr.append("_firstpass_extrema");
+    std::shared_ptr<const LineModelExtremaResult> firstpass_results =
+        std::dynamic_pointer_cast<const LineModelExtremaResult>(
+            m_linemodel.getFirstPassExtremaResults());
+    resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr,
+                                         firstpass_results);
+  }
   //**************************************************
   // SECOND PASS
   //**************************************************
