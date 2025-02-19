@@ -112,7 +112,7 @@ class ResultStoreOutput(AbstractOutput):
         if type(attribute_info.ResultStore_key) is not str:
             return False
         if rank is not None:
-            method = self.parameters.get_redshift_solver_method(object_type)
+            method = getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
             if self.results_store.HasCandidateDataset(
                 object_type,
                 stage,

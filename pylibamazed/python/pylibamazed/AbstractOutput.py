@@ -39,11 +39,13 @@
 import numpy as np
 import pandas as pd
 from abc import ABCMeta, abstractmethod
+from typing import Optional
 
 from pylibamazed.Exception import APIException, exception_decorator, exception_class_decorator
 from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.AbstractReliabilitySolver import get_reliability_solver_name
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import ESolveMethod
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
 
@@ -248,7 +250,7 @@ class AbstractOutput(metaclass=ABCMeta):
     def _get_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
             method = self._get_method(object_type, dataset)
-            stage = self.parameters.get_stage_from_method(method)
+            stage = self.parameters.get_stage_from_method_str(method)
             return self.get_attribute_from_source(object_type, stage, method, dataset, attribute, rank)
         if object_type:
             if rank is None:
@@ -267,15 +269,15 @@ class AbstractOutput(metaclass=ABCMeta):
     def get_method(self, object_type, dataset):
         return self._get_method(object_type, dataset)
 
-    def _get_method(self, object_type, dataset):
+    def _get_method(self, object_type, dataset) -> Optional[str]:
         if object_type is None:
             return None
         if dataset == "linemeas":
-            return self.parameters.get_linemeas_method(object_type)
+            return getattr(self.parameters.get_linemeas_method(object_type), "value", None)
         elif dataset.startswith("reliability"):
             return get_reliability_solver_name(dataset[len("reliability") :])
         else:
-            return self.parameters.get_redshift_solver_method(object_type)
+            return getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
 
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         return self._has_attribute(object_type, dataset, attribute, rank)
@@ -283,7 +285,7 @@ class AbstractOutput(metaclass=ABCMeta):
     def _has_attribute(self, object_type, dataset, attribute, rank=None):
         if not self.cache:
             method = self._get_method(object_type, dataset)
-            stage = self.parameters.get_stage_from_method(method)
+            stage = self.parameters.get_stage_from_method_str(method)
             return self.has_attribute_in_source(object_type, stage, method, dataset, attribute, rank)
         if not object_type:
             if dataset in self.root_results:
@@ -393,15 +395,15 @@ class AbstractOutput(metaclass=ABCMeta):
 
         return rs, filtered_datasets
 
-    def filter_dataset_attributes(self, ds_name, object_type=None, method: str = None):
+    def filter_dataset_attributes(self, ds_name, object_type=None, method: Optional[str] = None):
         return self._filter_dataset_attributes(ds_name, object_type, method)
 
-    def _filter_dataset_attributes(self, ds_name, object_type=None, method: str = None):
+    def _filter_dataset_attributes(self, ds_name, object_type=None, method: Optional[str] = None):
         ds_attributes = self.results_specifications.get_df_by_dataset(ds_name)
         # filter ds_attributes by extended_results column
         two_pass_solve = True
         if (method is not None) and (object_type is not None):
-            two_pass_solve = self.parameters.is_two_pass_active(method, object_type)
+            two_pass_solve = self.parameters.is_two_pass_active(ESolveMethod(method), object_type)
         if two_pass_solve:
             filtered_df = ds_attributes
         else:
@@ -446,11 +448,11 @@ class AbstractOutput(metaclass=ABCMeta):
 
     def _load_object_level(self, object_type):
         level = "object"
-        rs, object_datasets = self._filter_datasets(level)
+        _, object_datasets = self._filter_datasets(level)
         for dataset in object_datasets:
-            methods = self.parameters.get_solve_methods(object_type)
+            methods = self.parameters.get_solve_methods_str(object_type)
             for method in methods:
-                if method == "lineMeasSolve":
+                if ESolveMethod(method) == ESolveMethod.LINE_MEAS:
                     stage = "lineMeasSolver"
                 else:
                     stage = "redshiftSolver"
@@ -483,10 +485,10 @@ class AbstractOutput(metaclass=ABCMeta):
         level = "method"
         rs, object_datasets = self._filter_datasets(level)
         for ds in object_datasets:
-            methods = self.parameters.get_solve_methods(object_type)
+            methods = self.parameters.get_solve_methods_str(object_type)
             self.object_results[object_type][ds] = dict()
             for method in methods:
-                if method == "lineMeasSolve":
+                if ESolveMethod(method) == ESolveMethod.LINE_MEAS:
                     stage = "lineMeasSolver"
                 else:
                     stage = "redshiftSolver"
@@ -509,7 +511,9 @@ class AbstractOutput(metaclass=ABCMeta):
 
     def _load_candidate_level(self, object_type):
         stage = "redshiftSolver"
-        method = self.parameters.get_redshift_solver_method(object_type)
+        method: Optional[ESolveMethod] = getattr(
+            self.parameters.get_redshift_solver_method(object_type), "value", None
+        )
         if not method:
             return
         level = "candidate"

@@ -37,10 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-import pandas as pd
 import pytest
-from pylibamazed.AbstractOutput import AbstractOutput
-from pylibamazed.Exception import APIException
 from pylibamazed.Parameters import Parameters
 from tests.python.test_parameters_utils import TestParametersUtils
 
@@ -58,7 +55,7 @@ class TestParameters:
 
         # With other solve method
         parameters = Parameters(
-            TestParametersUtils().make_parameters_dict(**{"method": "other"}), make_checks=False
+            TestParametersUtils().make_parameters_dict(**{"method": "lineModelSolve"}), make_checks=False
         )
         parameters.is_tplratio_catalog_needed(TestParametersUtils.default_object_type)
 
@@ -87,7 +84,7 @@ class TestParameters:
                 {
                     "version": 2,
                     "galaxy": {"method": None},
-                    "star": {"stages": ["redshiftSolver"], "redshiftSolver": {"method": "lineModelsolve"}},
+                    "star": {"stages": ["redshiftSolver"], "redshiftSolver": {"method": "lineModelSolve"}},
                     "spectrumModels": ["galaxy", "star"],
                 },
                 make_checks=False,

@@ -139,7 +139,7 @@ class ProcessFlow:
 
     def _run_linemeas_after_classification(self, rso: ResultStoreOutput) -> None:
         classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
-        linemeas_method = self.parameters.get_linemeas_method(classif_model)
+        linemeas_method = getattr(self.parameters.get_linemeas_method(classif_model), "value", None)
         if linemeas_method is None:
             return
         with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
@@ -153,7 +153,7 @@ class ProcessFlow:
         linemeas_method = self.parameters.get_linemeas_method(spectrum_model)
 
         if redshift_solver_method:
-            self.run_redshift_solver(rso, redshift_solver_method)
+            self.run_redshift_solver(rso, redshift_solver_method.value)
 
             if self.parameters.is_tplratio_catalog_needed(spectrum_model):
                 with suppress(ProcessFlowException):
@@ -168,10 +168,10 @@ class ProcessFlow:
 
             if self.parameters.get_linemeas_runmode() == "all" and linemeas_method:
                 self.run_load_linemeas_params(rso)
-                self.run_linemeas_solver(rso, linemeas_method)
+                self.run_linemeas_solver(rso, linemeas_method.value)
 
         elif linemeas_method:  # linemeas alone
-            self.run_linemeas_solver(rso, linemeas_method)
+            self.run_linemeas_solver(rso, linemeas_method.value)
 
     @store_exception
     def initialize(self, rso, spectrum: Spectrum):
@@ -183,7 +183,7 @@ class ProcessFlow:
 
         for object_type in self.parameters.get_spectrum_models():
             if object_type in self.calibration_library.line_catalogs:
-                for method in self.parameters.get_linemodel_methods(object_type):
+                for method in self.parameters.get_linemodel_methods_str(object_type):
                     self.process_flow_context.setLineCatalog(
                         object_type, method, self.calibration_library.line_catalogs[object_type][method]
                     )
