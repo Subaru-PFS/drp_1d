@@ -1764,7 +1764,7 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   return m_fittingManager->getSpectrumModel().GetModelSpectrum();
 }
 
-std::shared_ptr<CContinuumFitStore>
+std::shared_ptr<CContinuumFitStore const> const &
 COperatorLineModel::getContinuumFitStoreFirstPass() const {
   // 1 tplfitstore per extrema result
   return m_tplfitStore_firstpass;

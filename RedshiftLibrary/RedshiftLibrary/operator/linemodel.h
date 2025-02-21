@@ -130,7 +130,8 @@ public:
   void setHapriorOption(Int32 opt);
   const CSpectrum &
   getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
-  std::shared_ptr<CContinuumFitStore> getContinuumFitStoreFirstPass() const;
+  std::shared_ptr<CContinuumFitStore const> const &
+  getContinuumFitStoreFirstPass() const;
 
 private:
   friend class Linemodel::spanRedshift_test;
@@ -191,8 +192,9 @@ private:
   std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
-  std::shared_ptr<CContinuumFitStore> m_tplfitStore_firstpass;
-  std::vector<std::shared_ptr<CContinuumFitStore>> m_tplfitStore_secondpass;
+  std::shared_ptr<CContinuumFitStore const> m_tplfitStore_firstpass;
+  std::vector<std::shared_ptr<CContinuumFitStore const>>
+      m_tplfitStore_secondpass;
   std::vector<TVelocityFitSolution> m_velocitySolutions;
 };
 

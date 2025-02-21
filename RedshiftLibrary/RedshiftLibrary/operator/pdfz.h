@@ -100,6 +100,7 @@ public:
 
   static Float64 logSumExpTrick(const TFloat64List &valproba,
                                 const TFloat64List &redshifts);
+  static Float64 logSumFromLogsTrick(const TFloat64List &logs);
   void computePDF(const ChisquareArray &chisquarearray);
 
 private:

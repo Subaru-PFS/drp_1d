@@ -408,13 +408,13 @@ BOOST_FIXTURE_TEST_CASE(switch_test, fixture_classificationSolveTestSwitched) {
                                                     "classification");
   // calcul ici
   Float64 sumContinuumEvidenceLMS =
-      logEvidence_continuum_ref_1 + logEvidence_continuum_ref_3;
-  Float64 sumEvidenceLMS = logEvidence_ref_1 + logEvidence_ref_3;
+      exp(logEvidence_continuum_ref_1) + exp(logEvidence_continuum_ref_3);
+  Float64 sumEvidenceLMS = exp(logEvidence_ref_1) + exp(logEvidence_ref_3);
   Float64 ratio = sumContinuumEvidenceLMS / sumEvidenceLMS;
-  Float64 evidence1 = logEvidence_ref_1 * ratio;
-  Float64 evidence3 = logEvidence_ref_3 * ratio;
+  Float64 evidence1 = log(exp(logEvidence_ref_1) * ratio);
+  Float64 evidence3 = log(exp(logEvidence_ref_3) * ratio);
 
-  proba_ref_1 = exp(evidence1 - evidence1);
+  proba_ref_1 = exp(0); // evidence1 - evidence1
   proba_ref_2 = exp(logEvidence_ref_2 - evidence1);
   Float64 proba_ref_3 = exp(evidence3 - evidence1);
   sum_ref = proba_ref_1 + proba_ref_2 + proba_ref_3;
