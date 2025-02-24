@@ -61,6 +61,7 @@
 namespace Linemodel {
 class spanRedshift_test;
 class checkSecondPassWindowSize_test;
+class makeVelFitBins_test;
 } // namespace Linemodel
 
 namespace NSEpic {
@@ -136,6 +137,7 @@ public:
 private:
   friend class Linemodel::spanRedshift_test;
   friend class Linemodel::checkSecondPassWindowSize_test;
+  friend class Linemodel::makeVelFitBins_test;
 
   std::shared_ptr<CContinuumFitStore>
   PrecomputeContinuumFit(const TFloat64List &redshifts,
@@ -189,6 +191,8 @@ private:
     return continuumFit == EContinuumFit::retryAll ||
            continuumFit == EContinuumFit::reFitFirstPass;
   }
+  TFloat64List makeVelFitBins(Float64 vInfLim, Float64 vSupLim,
+                              Float64 vStep) const;
   std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;

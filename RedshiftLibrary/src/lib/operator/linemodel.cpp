@@ -1241,14 +1241,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
       idxVelfitGroups.assign(1, TInt32List{});
     }
     // Prepare velocity grid to be checked
-    TFloat64List velfitlist;
-    Int32 nVelSteps = 0;
-    bool optLinVelfit = true; // lin
-    if (optLinVelfit) {
-      nVelSteps = (int)((vSupLim - vInfLim) / vStep);
-      for (Int32 i = 0; i < nVelSteps; i++)
-        velfitlist.push_back(vInfLim + i * vStep);
-    }
+    const TFloat64List velfitlist = makeVelFitBins(vInfLim, vSupLim, vStep);
 
     for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
       Log.LogDetail(Formatter()
@@ -1769,4 +1762,15 @@ std::shared_ptr<CContinuumFitStore const> const &
 COperatorLineModel::getContinuumFitStoreFirstPass() const {
   // 1 tplfitstore per extrema result
   return m_tplfitStore_firstpass;
+}
+
+TFloat64List COperatorLineModel::makeVelFitBins(Float64 vInfLim,
+                                                Float64 vSupLim,
+                                                Float64 vStep) const {
+  TFloat64List velFitBins;
+  Int32 nVelSteps = 0;
+  nVelSteps = std::floor((vSupLim - vInfLim) / vStep + 1);
+  for (Int32 i = 0; i < nVelSteps; ++i)
+    velFitBins.push_back(vInfLim + i * vStep);
+  return velFitBins;
 }
