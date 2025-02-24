@@ -107,18 +107,29 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
   // Updates logEvidence for consecutive switched models
   for (const auto &switchedGroup : successiveSwitchedModels) {
     Int32 groupSize = switchedGroup.size();
+    std::vector<Float64> logEvidencesToSum;
+    std::vector<Float64> switchedLogEvidencesToSum;
     if (groupSize > 1) {
-      std::map<std::string, Float64> switchedEvidences;
-      Float64 sumEvidences = 0;
-      Float64 sumSwitchedEvidences = 0;
+      std::map<std::string, Float64> switchedLogEvidences;
       for (auto const &modelName : switchedGroup) {
-        switchedEvidences[modelName] = results[modelName].lock()->getEvidence();
-        sumEvidences += logEvidences[modelName];
-        sumSwitchedEvidences += switchedEvidences[modelName];
+        switchedLogEvidences[modelName] =
+            results[modelName].lock()->getEvidence();
+        logEvidencesToSum.push_back(logEvidences[modelName]);
+        switchedLogEvidencesToSum.push_back(switchedLogEvidences[modelName]);
       }
-      Float64 evidencesRatio = sumEvidences / sumSwitchedEvidences;
+      Float64 logSumEvidences =
+          COperatorPdfz::logSumFromLogsTrick(logEvidencesToSum);
+      Float64 logSumSwitchedEvidences =
+          COperatorPdfz::logSumFromLogsTrick(switchedLogEvidencesToSum);
+      Float64 logEvidencesRatio =
+          logSumEvidences -
+          logSumSwitchedEvidences; // ratio = sum(evidences) /
+                                   // sum(switchedEvidences) =
+                                   // exp(log(sum(evidences)) -
+                                   // log(sum(switchedEvidences))
       for (auto const &modelName : switchedGroup) {
-        logEvidences[modelName] = switchedEvidences[modelName] * evidencesRatio;
+        logEvidences[modelName] =
+            switchedLogEvidences[modelName] + logEvidencesRatio;
       }
     }
   }

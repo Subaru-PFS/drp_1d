@@ -151,7 +151,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
     CZGridParam zp(zRange, m_coarseRedshiftStep);
     TZGridListParams zpVector{zp};
     ChisquareArray chisquaresContinuum =
-        BuildContinuumChisquareArray(lmresult, zpVector);
+        BuildContinuumChisquareArray(lmresult->cstLog, zpVector);
     pdfzContinuum.computePDF(chisquaresContinuum);
     continuumEvidence = pdfzContinuum.m_postmargZResult->valMargEvidenceLog;
   }
@@ -318,9 +318,8 @@ TFloat64List CLineModelSolve::BuildZpriors(
 }
 
 ChisquareArray CLineModelSolve::BuildContinuumChisquareArray(
-    const std::shared_ptr<const CLineModelResult> &result,
-    const TZGridListParams &zgridParams) const {
-  std::shared_ptr<CContinuumFitStore> fitStore =
+    const Float64 cstLog, const TZGridListParams &zgridParams) const {
+  const std::shared_ptr<CContinuumFitStore const> &fitStore =
       m_linemodel.getContinuumFitStoreFirstPass();
   TFloat64List redshifts = fitStore->GetRedshiftList();
   Int32 nRedshifts = redshifts.size();
@@ -328,23 +327,21 @@ ChisquareArray CLineModelSolve::BuildContinuumChisquareArray(
   chisquarearray.redshifts = redshifts;
   chisquarearray.zstep = m_coarseRedshiftStep;
   chisquarearray.zgridParams = zgridParams;
+  chisquarearray.cstLog = cstLog;
 
-  std::vector<std::vector<CContinuumModelSolution>> fitValues =
-      fitStore->GetFitValuesVector();
-  if (fitValues.size() == 0) // i.e. nRedshifts == 0
+  if (nRedshifts == 0)
     return chisquarearray;
-  Int32 nTemplates = fitValues[0].size();
+  Int32 nTemplates = fitStore->getContinuumCount();
   chisquarearray.chisquares.resize(nTemplates);
-  chisquarearray.zpriors.resize(nTemplates);
+  CZPrior zpriorhelper;
+  TFloat64List zPrior = zpriorhelper.GetConstantLogZPrior(nRedshifts);
   for (Int32 templateIdx = 0; templateIdx < nTemplates; ++templateIdx) {
     chisquarearray.chisquares[templateIdx].resize(nRedshifts);
-    chisquarearray.zpriors[templateIdx].resize(nRedshifts);
+    chisquarearray.zpriors.push_back(zPrior);
     for (Int32 zIdx = 0; zIdx < nRedshifts; ++zIdx) {
       CContinuumModelSolution modelSolution =
           fitStore->GetFitValues(zIdx, templateIdx);
       chisquarearray.chisquares[templateIdx][zIdx] = modelSolution.merit;
-      // Question: do we put the right thing there ?
-      chisquarearray.zpriors[templateIdx][zIdx] = modelSolution.tplLogPrior;
     }
   }
   return chisquarearray;

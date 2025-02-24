@@ -365,21 +365,28 @@ Int32 COperatorPdfz::getIndex(const TFloat64List &redshifts, Float64 z) {
   return solutionIdx;
 }
 
+Float64 COperatorPdfz::logSumFromLogsTrick(const TFloat64List &logs) {
+  // Computes log(sum_i(Ei))
+  Float64 maxLogs = *std::max_element(logs.cbegin(), logs.cend());
+
+  // Using computational trick to sum
+  Float64 transformedSum = 0.0;
+  for (auto &logItem : logs)
+    transformedSum += exp(logItem - maxLogs);
+  Float64 logSumEvidence =
+      maxLogs +
+      log(transformedSum); // here is the marginalized evidence, used for
+  return logSumEvidence;
+}
+
 void COperatorPdfz::ComputeEvidenceAll(const TFloat64List &LogEvidencesWPriorM,
                                        Float64 &MaxiLogEvidence) {
+  // Computes log(sum_i(Ei)) from log(Ei)
   MaxiLogEvidence = *std::max_element(LogEvidencesWPriorM.cbegin(),
                                       LogEvidencesWPriorM.cend());
 
-  Float64 &logSumEvidence = m_postmargZResult->valMargEvidenceLog;
-
-  // Using computational trick to sum the evidences
-  Float64 sumModifiedEvidences = 0.0;
-  for (auto &logEv : LogEvidencesWPriorM)
-    sumModifiedEvidences += exp(logEv - MaxiLogEvidence);
-  logSumEvidence =
-      MaxiLogEvidence +
-      log(sumModifiedEvidences); // here is the marginalized evidence, used for
-                                 // classification
+  m_postmargZResult->valMargEvidenceLog =
+      logSumFromLogsTrick(LogEvidencesWPriorM);
 }
 
 void COperatorPdfz::validateChisquareArray(
@@ -410,11 +417,11 @@ void COperatorPdfz::validateChisquareArray(
   return;
 }
 
-void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
-                                   std::vector<TFloat64List> &logProbaList,
-                                   TFloat64List &LogEvidencesWPriorM,
-                                   TFloat64List &logPriorModel,
-                                   Float64 &MaxiLogEvidence) {
+void COperatorPdfz::ComputeAllPdfs(
+    const ChisquareArray &chisquarearray,
+    std::vector<TFloat64List> &logProbaList,
+    TFloat64List &LogEvidencesWPriorM, // log evidences with prior model
+    TFloat64List &logPriorModel, Float64 &MaxiLogEvidence) {
   const TFloat64List &redshifts = chisquarearray.redshifts;
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;

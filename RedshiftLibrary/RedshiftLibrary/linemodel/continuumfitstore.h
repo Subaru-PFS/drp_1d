@@ -58,7 +58,6 @@ public:
   GetFitValues(Int32 idxz, Int32 continuumCandidateRank) const;
   virtual const CContinuumModelSolution &
   GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
-  std::vector<std::vector<CContinuumModelSolution>> GetFitValuesVector();
   virtual Int32 getContinuumCount() const = 0;
   void initFitValues();
   std::pair<Float64, CContinuumModelSolution const>
