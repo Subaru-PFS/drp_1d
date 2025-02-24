@@ -39,6 +39,7 @@
 import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import WarningCode
+from pylibamazed.ParametersAccessor import ESolveMethod
 from tests.python.utils import (
     WarningUtils,
     check_from_parameter_dict,
@@ -66,16 +67,14 @@ class TestTemplateCombinationSolve:
         assert not WarningUtils.has_any_warning()
 
     def test_warning_if_method_is_not_templateCombinationSolve_but_section_is_present(self, zflag):
-        param_dict = self._make_parameter_dict(**{"method": "sth", "tplCombinationSolve": {}})
+        param_dict = self._make_parameter_dict(
+            **{"method": "lineModelSolve", "lineModelSolve": {}, "tplCombinationSolve": {}}
+        )
         check_from_parameter_dict(param_dict)
         assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
     def test_ok_if_method_is_not_templateCombinationSolve_and_section_is_absent(self, zflag):
-        param_dict = self._make_parameter_dict(
-            **{
-                "method": "sth",
-            }
-        )
+        param_dict = self._make_parameter_dict(**{"method": "lineModelSolve", "lineModelSolve": {}})
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 

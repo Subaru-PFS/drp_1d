@@ -48,6 +48,7 @@ from astropy.io import ascii, fits
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.OutputSpecifications import ResultsSpecifications
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import ESolveMethod
 from pylibamazed.redshift import (
     CalzettiCorrection,
     CFlagWarning,
@@ -232,7 +233,7 @@ class CalibrationLibrary:
             self.templates_catalogs["all"] = CTemplateCatalog()
         self._load_templates("all", template_dir)
 
-    def load_linecatalog(self, object_type, solve_method):
+    def load_linecatalog(self, object_type: str, solve_method: ESolveMethod) -> None:
         line_catalog_file = os.path.join(
             self.calibration_dir, self.parameters.get_linecatalog(object_type, solve_method)
         )
@@ -242,7 +243,7 @@ class CalibrationLibrary:
         zlog.LogInfo(f"Loading {object_type} linecatalog: {line_catalog_file}")
 
         nsigmasupport = self.parameters.get_nsigmasupport(object_type, solve_method)
-        self.line_catalogs[object_type][solve_method] = CLineCatalog(nsigmasupport)
+        self.line_catalogs[object_type][solve_method.value] = CLineCatalog(nsigmasupport)
         try:
             line_catalog = pd.read_csv(
                 line_catalog_file,
@@ -274,7 +275,7 @@ class CalibrationLibrary:
                 "some rows in the linecatalog are duplicating the\
                 same line (name position, type)",
             )
-        self.line_catalogs_df[object_type][solve_method] = line_catalog
+        self.line_catalogs_df[object_type][solve_method.value] = line_catalog
 
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
@@ -285,7 +286,7 @@ class CalibrationLibrary:
                 raise APIException(ErrorCode.PYTHON_API_ERROR, "Profile in linecatalog cannot be asymFixed")
             else:
                 asymParams = TAsymParams(0, 0, 0)
-            self.line_catalogs[object_type][solve_method].AddLineFromParams(
+            self.line_catalogs[object_type][solve_method.value].AddLineFromParams(
                 row.Name,
                 row.WaveLength,
                 row.Type,
@@ -304,7 +305,7 @@ class CalibrationLibrary:
 
         enableIGM = self.parameters.get_solve_method_igm_fit(object_type, solve_method)
         if enableIGM:
-            self.line_catalogs[object_type][solve_method].convertLineProfiles2SYMIGM(self.meiksin)
+            self.line_catalogs[object_type][solve_method.value].convertLineProfiles2SYMIGM(self.meiksin)
 
     def load_line_ratio_catalog_list(self, object_type):
         tplratio_catalog = self.parameters.get_linemodel_tplratio_catalog(object_type)
@@ -499,7 +500,7 @@ class CalibrationLibrary:
                 # load linecatalog for linemodelsolve
 
                 solve_method = self.parameters.get_redshift_solver_method(object_type)
-                if solve_method == "lineModelSolve":
+                if solve_method == ESolveMethod.LINE_MODEL:
                     if linecatalogs:
                         self.load_linecatalog(object_type, solve_method)
 
@@ -508,7 +509,7 @@ class CalibrationLibrary:
                             self.load_line_ratio_catalog_list(object_type)
                             # load linecatalog for linemeassolve
                 linemeas_method = self.parameters.get_linemeas_method(object_type)
-                if linemeas_method == "lineMeasSolve":
+                if linemeas_method == ESolveMethod.LINE_MEAS:
                     if linecatalogs:
                         self.load_linecatalog(object_type, linemeas_method)
                 # Load the reliability model

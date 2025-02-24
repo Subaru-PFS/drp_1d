@@ -41,6 +41,7 @@ import os
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import ESolveMethod
 from tests.python.config import test_dir
 
 calibration_dir = os.path.join(test_dir, "calibration")
@@ -79,13 +80,13 @@ def make_parameters() -> Parameters:
 def test_calibration_linecatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters, calibration_dir)
-    cl.load_linecatalog("galaxy", "lineModelSolve")
+    cl.load_linecatalog("galaxy", ESolveMethod.LINE_MODEL)
 
 
 def test_calibration_lineratiocatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters, calibration_dir)
-    cl.load_linecatalog("galaxy", "lineModelSolve")
+    cl.load_linecatalog("galaxy", ESolveMethod.LINE_MODEL)
     cl.load_line_ratio_catalog_list("galaxy")
 
 

@@ -131,7 +131,7 @@ class CustomParametersChecker(ParametersChecker):
     def _check_lsf_section(self) -> None:
         lsf_needed = False
         for spectrum_model in self.accessor.get_spectrum_models([]):
-            if self.accessor.get_redshift_solver_method(spectrum_model) == "lineModelSolve" or (
+            if self.accessor.get_redshift_solver_method(spectrum_model) == ESolveMethod.LINE_MODEL or (
                 "lineMeasSolver" in self.accessor.get_stages(spectrum_model)
             ):
                 lsf_needed = True
@@ -280,12 +280,12 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_template_dir(self, spectrum_model: str) -> None:
         expected_by_method = self.accessor.get_redshift_solver_method(spectrum_model) in [
-            "templateFittingSolve",
-            "tplCombinationSolve",
+            ESolveMethod.TEMPLATE_FITTING,
+            ESolveMethod.TEMPLATE_COMBINATION,
         ]
         expected_by_continuum = self.accessor.get_redshift_solver_method(
             spectrum_model
-        ) == "lineModelSolve" and self.accessor.get_linemodel_continuum_component(spectrum_model) in [
+        ) == ESolveMethod.LINE_MODEL and self.accessor.get_linemodel_continuum_component(spectrum_model) in [
             "tplFit",
             "tplFitAuto",
         ]
@@ -339,10 +339,10 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_templateFittingSolve_section(self, spectrum_model: str) -> None:
         self._check_dependant_condition(
-            self.accessor.get_redshift_solver_method(spectrum_model) == "templateFittingSolve",
+            self.accessor.get_redshift_solver_method(spectrum_model) == ESolveMethod.TEMPLATE_FITTING,
             self.accessor.get_template_fitting_section(spectrum_model) is not None,
-            error_message=f"templateFittingSolve for object {spectrum_model}",
-            warning_message=f"object {spectrum_model} templateFittingSolve",
+            error_message=f"{ESolveMethod.TEMPLATE_FITTING.value} for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} {ESolveMethod.TEMPLATE_FITTING.value}",
         )
         self._check_templateFittingSolve_ism(spectrum_model)
         self._check_templateFittingSolve_photometry_weight(spectrum_model)
@@ -447,10 +447,10 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_templateCombinationSolve_section(self, spectrum_model: str) -> None:
         self._check_dependant_condition(
-            self.accessor.get_redshift_solver_method(spectrum_model) == "tplCombinationSolve",
+            self.accessor.get_redshift_solver_method(spectrum_model) == ESolveMethod.TEMPLATE_COMBINATION,
             self.accessor.get_template_combination_section(spectrum_model) is not None,
-            error_message=f"tplCombinationSolve for object {spectrum_model}",
-            warning_message=f"object {spectrum_model} tplCombinationSolve",
+            error_message=f"{ESolveMethod.TEMPLATE_COMBINATION.value} for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} {ESolveMethod.TEMPLATE_COMBINATION.value}",
         )
         self._check_templateCombinationSolve_ism(spectrum_model)
 
@@ -485,10 +485,10 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
         self._check_dependant_condition(
-            self.accessor.get_redshift_solver_method(spectrum_model) == "lineModelSolve",
+            self.accessor.get_redshift_solver_method(spectrum_model) == ESolveMethod.LINE_MODEL,
             self.accessor.get_linemodel_solve_section(spectrum_model) is not None,
-            error_message=f"lineModelSolve for object {spectrum_model}",
-            warning_message=f"object {spectrum_model} lineModelSolve",
+            error_message=f"{ESolveMethod.LINE_MODEL.value} for object {spectrum_model}",
+            warning_message=f"object {spectrum_model} {ESolveMethod.LINE_MODEL.value}",
         )
 
     def _check_linemodelsolve_lineratiotype_rules(self, spectrum_model: str):
@@ -558,7 +558,7 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_linemodelsolve_secondpass_section(self, spectrum_model):
         self._check_dependant_condition(
-            self.accessor.get_skipsecondpass("lineModelSolve", spectrum_model) is False,
+            self.accessor.get_skipsecondpass(ESolveMethod.LINE_MODEL, spectrum_model) is False,
             self.accessor.get_secondpass_section(ESolveMethod.LINE_MODEL, spectrum_model) is not None,
             f"object {spectrum_model} lineModelSolve secondPass",
             f"object {spectrum_model} lineModelSolve secondPass",
@@ -606,12 +606,12 @@ class CustomParametersChecker(ParametersChecker):
                 )
 
     def _check_linemodelsolve_lya_fit(self, spectrum_model: str):
-        if self.accessor.get_redshift_solver_method(spectrum_model) == "lineModelSolve":
+        if self.accessor.get_redshift_solver_method(spectrum_model) == ESolveMethod.LINE_MODEL:
             self._check_dependant_condition(
                 self.accessor.get_linemodel_lya_profile(spectrum_model) == "asym",
                 self.accessor.get_linemodel_lya_asym_section(spectrum_model) is not None,
-                error_message=f"lineModelSolve linemodel lya asymProfile section for object {spectrum_model}",
-                warning_message=f"object {spectrum_model} lineModelSolve lineModel lya asymProfile section",
+                error_message=f"{ESolveMethod.LINE_MODEL.value} linemodel lya asymProfile section for object {spectrum_model}",
+                warning_message=f"object {spectrum_model} {ESolveMethod.LINE_MODEL.value} lineModel lya asymProfile section",
             )
 
     def useloglambdasampling_presence_condition(self, spectrum_model):
@@ -639,7 +639,7 @@ class CustomParametersChecker(ParametersChecker):
                 self._check_dependant_condition(
                     velocity_fit,
                     self.accessor.get_velocity_fit_param(
-                        spectrum_model, "lineModelSolve", velocity_type, param
+                        spectrum_model, ESolveMethod.LINE_MODEL, velocity_type, param
                     )
                     is not None,
                     error_message=message,
@@ -662,19 +662,19 @@ class CustomParametersChecker(ParametersChecker):
         if not velocityfit:
             return
         for velocity_type in EVelocityType:
-            velocity = self.accessor.get_velocity(spectrum_model, "lineModelSolve", velocity_type)
+            velocity = self.accessor.get_velocity(spectrum_model, ESolveMethod.LINE_MODEL, velocity_type)
             velocity_fit_min = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Min
+                spectrum_model, ESolveMethod.LINE_MODEL, velocity_type, EVelocityFitParam.Min
             )
             velocity_fit_max = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Max
+                spectrum_model, ESolveMethod.LINE_MODEL, velocity_type, EVelocityFitParam.Max
             )
             velocity_in_range = velocity >= velocity_fit_min and velocity <= velocity_fit_max
             self._check_dependant_condition(
                 velocityfit,
                 velocity_in_range,
                 error_message=(
-                    f"lineModelSolve {self.accessor.get_velocity_name(velocity_type)}"
+                    f"{ESolveMethod.LINE_MODEL.value}  {self.accessor.get_velocity_name(velocity_type)}"
                     f"={velocity} for object {spectrum_model} is outside "
                     f"[{self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)}"
                     f" {self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}]"
@@ -720,7 +720,7 @@ class CustomParametersChecker(ParametersChecker):
                 self._check_dependant_condition(
                     velocity_fit,
                     self.accessor.get_velocity_fit_param(
-                        spectrum_model, "lineMeasSolve", velocity_type, param
+                        spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, param
                     )
                     is not None,
                     error_message=message,
@@ -735,19 +735,19 @@ class CustomParametersChecker(ParametersChecker):
         if not velocity_fit:
             return
         for velocity_type in EVelocityType:
-            velocity = self.accessor.get_velocity(spectrum_model, "lineMeasSolve", velocity_type)
+            velocity = self.accessor.get_velocity(spectrum_model, ESolveMethod.LINE_MEAS, velocity_type)
             velocity_fit_min = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min
+                spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Min
             )
             velocity_fit_max = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max
+                spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Max
             )
             velocity_in_range = velocity >= velocity_fit_min and velocity <= velocity_fit_max
             self._check_dependant_condition(
                 velocity_fit,
                 velocity_in_range,
                 error_message=(
-                    f"lineMeasSolve {self.accessor.get_velocity_name(velocity_type)}"
+                    f"{ESolveMethod.LINE_MEAS.value} {self.accessor.get_velocity_name(velocity_type)}"
                     f"={velocity} for object {spectrum_model} is outside "
                     f"[{self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)},"
                     f" {self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}]="
@@ -763,19 +763,21 @@ class CustomParametersChecker(ParametersChecker):
         linemeas_piped_linemodel = (
             "redshiftSolver" in stages
             and "lineMeasSolver" in stages
-            and redshift_solver_method == "lineModelSolve"
+            and redshift_solver_method == ESolveMethod.LINE_MODEL
         )
         linemeas_velocity_fit = self.accessor.get_linemeas_velocity_fit(spectrum_model)
         if not linemeas_piped_linemodel or not linemeas_velocity_fit:
             return
         linemodel_velocity_fit = self.accessor.get_linemodel_velocity_fit(spectrum_model)
         for velocity_type in EVelocityType:
-            linemodel_velocity = self.accessor.get_velocity(spectrum_model, "lineModelSolve", velocity_type)
+            linemodel_velocity = self.accessor.get_velocity(
+                spectrum_model, ESolveMethod.LINE_MODEL, velocity_type
+            )
             velocity_fit_min = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min
+                spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Min
             )
             velocity_fit_max = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max
+                spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Max
             )
             velocity_in_range = (
                 linemodel_velocity >= velocity_fit_min and linemodel_velocity <= velocity_fit_max
@@ -784,7 +786,7 @@ class CustomParametersChecker(ParametersChecker):
                 linemeas_piped_linemodel and linemeas_velocity_fit and not linemodel_velocity_fit,
                 velocity_in_range,
                 error_message=(
-                    f"lineModelSolve {self.accessor.get_velocity_name(velocity_type)}"
+                    f"{ESolveMethod.LINE_MODEL.value} {self.accessor.get_velocity_name(velocity_type)}"
                     f"={linemodel_velocity} for object {spectrum_model} is outside lineMeasSolve "
                     f"[{self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Min)},"
                     f" {self.accessor.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}]"
@@ -798,10 +800,10 @@ class CustomParametersChecker(ParametersChecker):
                 continue
 
             linemodel_velocity_fit_min = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Min
+                spectrum_model, ESolveMethod.LINE_MODEL, velocity_type, EVelocityFitParam.Min
             )
             linemodel_velocity_fit_max = self.accessor.get_velocity_fit_param(
-                spectrum_model, "lineModelSolve", velocity_type, EVelocityFitParam.Max
+                spectrum_model, ESolveMethod.LINE_MODEL, velocity_type, EVelocityFitParam.Max
             )
             velocity_in_range = (
                 linemodel_velocity_fit_min >= velocity_fit_min
@@ -823,12 +825,12 @@ class CustomParametersChecker(ParametersChecker):
             )
 
     def _check_linemeassolve_lya_fit(self, spectrum_model: str):
-        if self.accessor.get_linemeas_method(spectrum_model) == "lineMeasSolve":
+        if self.accessor.get_linemeas_method(spectrum_model) == ESolveMethod.LINE_MEAS:
             self._check_dependant_condition(
                 self.accessor.get_linemeas_lya_profile(spectrum_model) == "asym",
                 self.accessor.get_linemeas_lya_asym_section(spectrum_model) is not None,
-                error_message=f"lineMeasSolve linemodel lya asymProfile section for object {spectrum_model}",
-                warning_message=f"object {spectrum_model} lineMeasSolve linemodel lya asymProfile section",
+                error_message=f"{ESolveMethod.LINE_MEAS.value} linemodel lya asymProfile section for object {spectrum_model}",
+                warning_message=f"object {spectrum_model} {ESolveMethod.LINE_MEAS.value} linemodel lya asymProfile section",
             )
 
     def _check_dependant_condition(

@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import List
+from typing import List, Optional
 
 from enum import Enum
 from pylibamazed.Exception import APIException, exception_decorator
@@ -131,25 +131,28 @@ class ParametersAccessor:
             self.get_spectrum_model_section, "redshiftSolver", create, spectrum_model
         )
 
-    def get_redshift_solver_method(self, spectrum_model: str) -> str:
+    def get_redshift_solver_method(self, spectrum_model: str) -> Optional[ESolveMethod]:
         if "redshiftSolver" not in self.get_stages(spectrum_model):
             return None
-        method = self._get_on_None(self.get_redshift_solver_section(spectrum_model), "method")
+        method_str = self._get_on_None(self.get_redshift_solver_section(spectrum_model), "method")
         # Not in the get because if method is defined as an empty string in the parameters json
         # we still want method to be "None"
-        if method == "":
-            method = None
-        return method
+        if method_str == "" or method_str is None:
+            return
+        return ESolveMethod(method_str)
 
     def get_linemeas_solver_section(self, spectrum_model: str, create: bool = False) -> dict:
         return self._get_or_create_section(
             self.get_spectrum_model_section, "lineMeasSolver", create, spectrum_model
         )
 
-    def get_linemeas_method(self, spectrum_model: str) -> str:
+    def get_linemeas_method(self, spectrum_model: str) -> Optional[ESolveMethod]:
         if "lineMeasSolver" not in self.get_stages(spectrum_model):
-            return None
-        return self._get_on_None(self.get_linemeas_solver_section(spectrum_model), "method")
+            return
+        method = self._get_on_None(self.get_linemeas_solver_section(spectrum_model), "method")
+        if method is None:
+            return
+        return ESolveMethod(method)
 
     def get_linemeas_solve_section(self, spectrum_model: str, create: bool = False) -> dict:
         return self._get_or_create_section(
@@ -220,15 +223,16 @@ class ParametersAccessor:
             self.parameters["templateCatalog"] = template_catalog_section
         return template_catalog_section
 
-    def get_redshift_solver_method_section(self, spectrum_model: str) -> dict:
+    def get_redshift_solver_method_section(self, spectrum_model: str) -> Optional[dict]:
         method = self.get_redshift_solver_method(spectrum_model)
-        return self._get_on_None(self.get_redshift_solver_section(spectrum_model), method)
+        if method:
+            return self._get_on_None(self.get_redshift_solver_section(spectrum_model), method.value)
 
     def photometry_is_enabled(self):
         for spectrum_model in self.get_spectrum_models([]):
             method = self.get_redshift_solver_method(spectrum_model)
             method_section = self.get_redshift_solver_method_section(spectrum_model)
-            if method == ESolveMethod.LINE_MODEL.value:
+            if method == ESolveMethod.LINE_MODEL:
                 method_section = self._get_on_None(method_section, "lineModel")
             if self._get_on_None(method_section, "enablePhotometry", False):
                 return True
@@ -381,7 +385,7 @@ class ParametersAccessor:
 
     def get_linemodel_em_velocity_fit_min(self, spectrum_model: str):
         return self.get_velocity_fit_param(
-            spectrum_model, "lineModelSolve", EVelocityType.Emission, EVelocityFitParam.Min
+            spectrum_model, ESolveMethod.LINE_MODEL, EVelocityType.Emission, EVelocityFitParam.Min
         )
 
     def get_line_model_photometry(self, spectrum_model: str) -> bool:
@@ -389,15 +393,15 @@ class ParametersAccessor:
             self.get_linemodel_solve_linemodel_section(spectrum_model), "enablePhotometry"
         )
 
-    def get_solve_method_igm_fit(self, spectrum_model: str, solve_method: str) -> bool:
+    def get_solve_method_igm_fit(self, spectrum_model: str, solve_method: ESolveMethod) -> bool:
         igmfit = None
-        if solve_method == ESolveMethod.LINE_MODEL.value:
+        if solve_method == ESolveMethod.LINE_MODEL:
             igmfit = self.get_linemodel_lya_profile(spectrum_model) == "igm"
-        elif solve_method == ESolveMethod.TEMPLATE_FITTING.value:
+        elif solve_method == ESolveMethod.TEMPLATE_FITTING:
             igmfit = self.get_template_fitting_igmfit(spectrum_model)
-        elif solve_method == ESolveMethod.TEMPLATE_COMBINATION.value:
+        elif solve_method == ESolveMethod.TEMPLATE_COMBINATION:
             igmfit = self.get_template_combination_igmfit(spectrum_model)
-        elif solve_method == ESolveMethod.LINE_MEAS.value:
+        elif solve_method == ESolveMethod.LINE_MEAS:
             igmfit = self.get_linemeas_lya_profile(spectrum_model) == "igm"
         return igmfit
 
@@ -415,7 +419,7 @@ class ParametersAccessor:
 
     def get_linemeas_em_velocity_fit_min(self, spectrum_model: str):
         return self.get_velocity_fit_param(
-            spectrum_model, "lineMeasSolve", EVelocityType.Emission, EVelocityFitParam.Min
+            spectrum_model, ESolveMethod.LINE_MEAS, EVelocityType.Emission, EVelocityFitParam.Min
         )
 
     def get_linemeas_lya_section(self, spectrum_model: str) -> dict:
@@ -467,13 +471,13 @@ class ParametersAccessor:
             return None
         return self._get_on_None(solve_section, "firstPass")
 
-    def get_secondpass_section(self, solve_method: ESolveMethod, spectrum_model: str) -> dict:
+    def get_secondpass_section(self, solve_method: ESolveMethod, spectrum_model: str) -> Optional[dict]:
         if solve_method == ESolveMethod.LINE_MODEL:
             solve_section = self.get_linemodel_solve_linemodel_section(spectrum_model)
         elif solve_method == ESolveMethod.TEMPLATE_FITTING:
             solve_section = self.get_template_fitting_section(spectrum_model)
         else:
-            return None
+            return
         return self._get_on_None(solve_section, "secondPass")
 
     def get_secondpass_continuumfit(self, solve_method: ESolveMethod, spectrum_model: str) -> dict:
@@ -512,11 +516,13 @@ class ParametersAccessor:
     def get_linemodel_fitting_method(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "fittingMethod")
 
-    def get_skipsecondpass(self, solve_method: str, spectrum_model: str, default: bool = None) -> bool:
+    def get_skipsecondpass(
+        self, solve_method: ESolveMethod, spectrum_model: str, default: bool = None
+    ) -> bool:
         section = None
-        if solve_method == ESolveMethod.LINE_MODEL.value:
+        if solve_method == ESolveMethod.LINE_MODEL:
             section = self.get_linemodel_solve_linemodel_section(spectrum_model)
-        elif solve_method == ESolveMethod.TEMPLATE_FITTING.value:
+        elif solve_method == ESolveMethod.TEMPLATE_FITTING:
             section = self.get_template_fitting_section(spectrum_model)
         return self._get_on_None(section, "skipSecondPass", default)
 
@@ -542,7 +548,9 @@ class ParametersAccessor:
     def get_velocity_name(velocity_type: EVelocityType) -> str:
         return f"velocity{velocity_type.value}"
 
-    def get_velocity(self, spectrum_model: str, solve_method: str, velocity_type: EVelocityType) -> float:
+    def get_velocity(
+        self, spectrum_model: str, solve_method: ESolveMethod, velocity_type: EVelocityType
+    ) -> float:
         return self._get_on_None(
             self.get_linemodel_section(spectrum_model, solve_method),
             self.get_velocity_name(velocity_type),
@@ -553,7 +561,11 @@ class ParametersAccessor:
         return f"{cls.velocity_fit_prefix_dict[velocity_type]}VelocityFit{param.value}"
 
     def get_velocity_fit_param(
-        self, spectrum_model: str, solve_method: str, velocity_type: EVelocityType, param: EVelocityFitParam
+        self,
+        spectrum_model: str,
+        solve_method: ESolveMethod,
+        velocity_type: EVelocityType,
+        param: EVelocityFitParam,
     ) -> float:
         return self._get_on_None(
             self.get_linemodel_section(spectrum_model, solve_method),
@@ -561,8 +573,8 @@ class ParametersAccessor:
         )
 
     def set_velocity(
-        self, spectrum_model: str, solve_method: str, velocity_type: EVelocityType, value: float
-    ):
+        self, spectrum_model: str, solve_method: ESolveMethod, velocity_type: EVelocityType, value: float
+    ) -> None:
         self.get_linemodel_section(spectrum_model, solve_method)[
             self.get_velocity_name(velocity_type)
         ] = value
@@ -570,11 +582,11 @@ class ParametersAccessor:
     def set_velocity_fit_param(
         self,
         spectrum_model: str,
-        solve_method: str,
+        solve_method: ESolveMethod,
         velocity_type: EVelocityType,
         param: EVelocityFitParam,
         value: float,
-    ):
+    ) -> None:
         self.get_linemodel_section(spectrum_model, solve_method)[
             self.get_velocity_fit_param_name(velocity_type, param)
         ] = value
@@ -597,11 +609,11 @@ class ParametersAccessor:
     def get_linemeas_nsigmasupport(self, spectrum_model: str) -> float:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "nSigmaSupport")
 
-    def get_nsigmasupport(self, spectrum_model: str, method: str) -> float:
+    def get_nsigmasupport(self, spectrum_model: str, method: ESolveMethod) -> float:
         nsigmasupport = None
-        if method == ESolveMethod.LINE_MODEL.value:
+        if method == ESolveMethod.LINE_MODEL:
             nsigmasupport = self.get_linemodel_nsigmasupport(spectrum_model)
-        elif method == ESolveMethod.LINE_MEAS.value:
+        elif method == ESolveMethod.LINE_MEAS:
             nsigmasupport = self.get_linemeas_nsigmasupport(spectrum_model)
         return nsigmasupport
 
@@ -611,19 +623,19 @@ class ParametersAccessor:
     def get_linemeas_linecatalog(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lineCatalog")
 
-    def get_linecatalog(self, spectrum_model: str, method: str) -> str:
+    def get_linecatalog(self, spectrum_model: str, method: ESolveMethod) -> str:
         linecatalog = None
-        if method == ESolveMethod.LINE_MODEL.value:
+        if method == ESolveMethod.LINE_MODEL:
             linecatalog = self.get_linemodel_linecatalog(spectrum_model)
-        elif method == ESolveMethod.LINE_MEAS.value:
+        elif method == ESolveMethod.LINE_MEAS:
             linecatalog = self.get_linemeas_linecatalog(spectrum_model)
         return linecatalog
 
-    def get_linemodel_section(self, spectrum_model, method) -> dict:
+    def get_linemodel_section(self, spectrum_model: str, method: ESolveMethod) -> dict:
         linemodel = None
-        if method == ESolveMethod.LINE_MODEL.value:
+        if method == ESolveMethod.LINE_MODEL:
             linemodel = self.get_linemodel_solve_linemodel_section(spectrum_model)
-        elif method == ESolveMethod.LINE_MEAS.value:
+        elif method == ESolveMethod.LINE_MEAS:
             linemodel = self.get_linemeas_linemodel_section(spectrum_model)
         return linemodel
 
