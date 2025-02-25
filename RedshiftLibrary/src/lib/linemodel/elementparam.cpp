@@ -41,6 +41,7 @@
 #include <cfloat>
 #include <climits>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -58,7 +59,7 @@ TLineModelElementParam::TLineModelElementParam(CLineVector lines,
       m_globalOutsideLambdaRangeList(m_Lines.size(), false) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
-  for (Int32 index = 0; index != m_Lines.size(); ++index) {
+  for (Int32 index = 0; index != ssize(m_Lines); ++index) {
     auto const &line = m_Lines[index];
     m_NominalAmplitudes.push_back(line.GetNominalAmplitude());
     m_Offsets.push_back(line.GetOffset());
@@ -129,7 +130,7 @@ bool TLineModelElementParam::isAllAmplitudesNull() const {
 
 void TLineModelElementParam::setNullNominalAmplitudesNotFittable() {
   m_nullNominalAmplitudes = true;
-  for (size_t idx = 0; idx < size(); ++idx) {
+  for (Int32 idx = 0; idx < size(); ++idx) {
     if (!isOutsideLambdaRangeLine(idx) && GetNominalAmplitude(idx) > 0.0) {
       m_nullNominalAmplitudes = false;
       break;

@@ -41,6 +41,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/size.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -288,14 +289,14 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test4) {
 
   TInt32List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(functionResult.front() == myRange.GetBegin());
-  for (int i = 1; i < functionResult.size(); i++) {
+  for (int i = 1; i < ssize(functionResult); i++) {
     BOOST_CHECK(functionResult[i] - functionResult[i - 1] == delta);
   }
   BOOST_CHECK(myRange.GetEnd() - functionResult.back() < delta);
 
   functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK(functionResult.back() == myRange.GetEnd());
-  for (int i = 0; i < functionResult.size() - 1; i++) {
+  for (int i = 0; i < ssize(functionResult) - 1; i++) {
     BOOST_CHECK(functionResult[i + 1] - functionResult[i] == delta);
   }
   BOOST_CHECK(functionResult.front() - myRange.GetBegin() < delta);
@@ -384,7 +385,7 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test4) {
 
   TFloat64List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK_CLOSE(functionResult.front(), myRange.GetBegin(), precision);
-  for (int i = 1; i < functionResult.size(); i++) {
+  for (int i = 1; i < ssize(functionResult); i++) {
     BOOST_CHECK_CLOSE(functionResult[i] - functionResult[i - 1], delta,
                       precision);
   }
@@ -392,7 +393,7 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test4) {
 
   functionResult = myRange.SpreadOver_backward(delta);
   BOOST_CHECK_CLOSE(functionResult.back(), myRange.GetEnd(), precision);
-  for (int i = 1; i < functionResult.size(); i++) {
+  for (int i = 1; i < ssize(functionResult); i++) {
     BOOST_CHECK_CLOSE(functionResult[i] - functionResult[i - 1], delta,
                       precision);
   }
@@ -492,7 +493,7 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4) {
 
   TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
   BOOST_CHECK_CLOSE(functionResult.front(), myRange.GetBegin(), precision);
-  for (int i = 1; i < functionResult.size(); i++) {
+  for (int i = 1; i < ssize(functionResult); i++) {
     BOOST_CHECK_CLOSE((functionResult[i] + offset) /
                           (functionResult[i - 1] + offset),
                       exp(delta), precision);
@@ -502,7 +503,7 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4) {
 
   functionResult = myRange.SpreadOverLog_backward(delta, offset);
   BOOST_CHECK_CLOSE(functionResult.back(), myRange.GetEnd(), precision);
-  for (int i = 1; i < functionResult.size(); i++) {
+  for (int i = 1; i < ssize(functionResult); i++) {
     BOOST_CHECK_CLOSE((functionResult[i] + offset) /
                           (functionResult[i - 1] + offset),
                       exp(delta), precision);
@@ -640,7 +641,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   TFloat64List myVector(15);
   //    myVector.resize(15);
 
-  for (Int32 i = 0; i < myVector.size(); i++) {
+  for (Int32 i = 0; i < ssize(myVector); i++) {
     myVector[i] = 1 + delta * i;
   }
 
@@ -740,7 +741,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
 BOOST_AUTO_TEST_CASE(Closed_interval) {
   Float64 delta = 1.0;
   TFloat64List myVector(15);
-  for (Int32 i = 0; i < myVector.size(); i++) {
+  for (Int32 i = 0; i < ssize(myVector); i++) {
     myVector[i] = 1 + delta * i;
   }
 

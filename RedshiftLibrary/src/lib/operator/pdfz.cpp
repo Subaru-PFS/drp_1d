@@ -41,6 +41,7 @@
 #include <fstream>
 #include <numeric>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/log/log.h"
@@ -89,7 +90,7 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
     m_parentCandidates =
         TCandidateZbyID(chisquarearray.parentCandidates.cbegin(),
                         chisquarearray.parentCandidates.cend());
-    for (Int32 i = 0; i < chisquarearray.zgridParams.size(); ++i)
+    for (Int32 i = 0; i < ssize(chisquarearray.zgridParams); ++i)
       m_candidatesZRanges[chisquarearray.parentCandidates[i].first] =
           TFloat64Range(chisquarearray.zgridParams[i].zmin,
                         chisquarearray.zgridParams[i].zmax);
@@ -275,12 +276,12 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
                                       "range of less than 2 points");
   }
 
-  for (Int32 k = 0; k < redshifts.size(); k++) {
+  for (Int32 k = 0; k < ssize(redshifts); k++) {
 
     Float64 zstep;
     if (k == 0) {
       zstep = (redshifts[k + 1] - redshifts[k]) * 0.5;
-    } else if (k == redshifts.size() - 1) {
+    } else if (k == ssize(redshifts) - 1) {
       zstep = (redshifts[k] - redshifts[k - 1]) * 0.5;
     } else {
       zstep = (redshifts[k + 1] - redshifts[k - 1]) * 0.5;
@@ -294,7 +295,7 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
 
   Float64 sumModifiedExp = 0.0;
   Float64 modifiedEXPO_previous = exp(valproba[0] - logfactor);
-  for (Int32 k = 1; k < redshifts.size(); k++) {
+  for (Int32 k = 1; k < ssize(redshifts); k++) {
     Float64 modifiedEXPO = exp(valproba[k] - logfactor);
     Float64 trapezArea = (modifiedEXPO + modifiedEXPO_previous) / 2.0;
     trapezArea *= (redshifts[k] - redshifts[k - 1]);
@@ -344,20 +345,20 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
 
   logPdf.resize(redshifts.size());
   TFloat64List Xi2_2withPrior;
-  for (Int32 i = 0; i < merits.size(); i++)
+  for (Int32 i = 0; i < ssize(merits); i++)
     Xi2_2withPrior.push_back(-0.5 * merits[i] + logZPrior[i] - logsumZPrior);
 
   // prepare logLikelihood and LogEvidence
   Float64 logsumexp = logSumExpTrick(Xi2_2withPrior, redshifts);
   logEvidence = cstLog + logsumexp;
 
-  for (Int32 k = 0; k < redshifts.size(); k++)
+  for (Int32 k = 0; k < ssize(redshifts); k++)
     logPdf[k] = Xi2_2withPrior[k] + cstLog - logEvidence;
 }
 
 Int32 COperatorPdfz::getIndex(const TFloat64List &redshifts, Float64 z) {
   Int32 solutionIdx = -1;
-  for (Int32 i2 = 0; i2 < redshifts.size(); i2++)
+  for (Int32 i2 = 0; i2 < ssize(redshifts); i2++)
     if (redshifts[i2] == z) {
       solutionIdx = i2;
       break;
@@ -461,7 +462,7 @@ void COperatorPdfz::ComputeAllPdfs(
   MaxiLogEvidence = -DBL_MAX;
   logProbaList.resize(meritResults.size());
   LogEvidencesWPriorM.resize(meritResults.size());
-  for (Int32 km = 0; km < meritResults.size(); km++)
+  for (Int32 km = 0; km < ssize(meritResults); km++)
     ComputePdf(meritResults[km], redshifts, cstLog, zPriors[km],
                logProbaList[km], logEvidenceList[km]);
 
@@ -474,9 +475,9 @@ void COperatorPdfz::ComputeAllPdfs(
 
 void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 
-  const auto nmodel = chisquarearray.chisquares.size();
+  const Int32 nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
-  const auto zsize = redshifts.size();
+  const Int32 zsize = redshifts.size();
 
   std::vector<TFloat64List> logProbaList;
   TFloat64List LogEvidencesWPriorM;
@@ -535,7 +536,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
   const Float64 &cstLog = chisquarearray.cstLog;
 
-  for (Int32 km = 0; km < meritResults.size(); km++) {
+  for (Int32 km = 0; km < ssize(meritResults); km++) {
     Log.LogDebug(Formatter()
                  << "COperatorPdfz::BestProba: processing chi2-result km="
                  << km);
@@ -549,7 +550,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
     if (m_postmargZResult->redshifts != redshifts)
       THROWG(ErrorCode::INTERNAL_ERROR, "z-bins comparison failed");
 
-    for (Int32 k = 0; k < redshifts.size(); k++)
+    for (Int32 k = 0; k < ssize(redshifts); k++)
       if (true)
         m_postmargZResult->valProbaLog[k] =
             std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
@@ -561,7 +562,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Float64 reldzThreshold = 0.05; // relative difference accepted
   Float64 mindz = DBL_MAX;
   Float64 maxdz = -DBL_MAX;
-  for (Int32 k = 1; k < redshifts.size(); k++) {
+  for (Int32 k = 1; k < ssize(redshifts); k++) {
     Float64 diff = redshifts[k] - redshifts[k - 1];
     mindz = std::min(mindz, diff);
     maxdz = std::max(maxdz, diff);
@@ -574,7 +575,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   // 2. prepare LogEvidence
   Float64 maxi = -DBL_MAX;
   TFloat64List smallVALUES(redshifts.size(), 0.0);
-  for (Int32 k = 0; k < redshifts.size(); k++) {
+  for (Int32 k = 0; k < ssize(redshifts); k++) {
     smallVALUES[k] = m_postmargZResult->valProbaLog[k];
     maxi = std::max(maxi,
                     smallVALUES[k]); // maxi will be used to avoid underflows
@@ -613,9 +614,9 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
  */
 void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
 
-  const auto nmodel = chisquarearray.chisquares.size();
+  const Int32 nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
-  const auto zsize = redshifts.size();
+  const Int32 zsize = redshifts.size();
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
 
   std::vector<TFloat64List> logProbaList;

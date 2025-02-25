@@ -39,6 +39,7 @@
 #include <stdexcept>
 
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 
@@ -54,7 +55,7 @@ CPhotometricData::CPhotometricData(const TStringList &name,
            "fluxerr have not the same size");
   }
 
-  for (Int32 i = 0; i < name.size(); i++) {
+  for (Int32 i = 0; i < ssize(name); i++) {
     m_flux[name[i]] = flux[i];
     m_fluxErr[name[i]] = fluxerr[i];
     m_oneOverErr2[name[i]] = 1. / (fluxerr[i] * fluxerr[i]);

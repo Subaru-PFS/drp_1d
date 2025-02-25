@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 
@@ -596,13 +597,13 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
   TFloat64List samples = range.SpreadOverLogEpsilon(0.01);
 
   TFloat64List samples_truncated(samples.size(), 0.);
-  for (Int32 i = 0; i < samples.size(); i++) {
+  for (Int32 i = 0; i < ssize(samples); i++) {
     samples_truncated[i] = (int)(100 * samples[i]) / 100.0;
   }
 
   Float64 maxAbsRelativeError = 0.0;
   Float64 logGridStep = log(samples_truncated[1] / samples_truncated[0]);
-  for (Int32 i = 1; i < samples_truncated.size(); i++) {
+  for (Int32 i = 1; i < ssize(samples_truncated); i++) {
     Float64 _logGridStep = log(samples_truncated[i] / samples_truncated[i - 1]);
     Float64 relativeErrAbs =
         std::abs((_logGridStep - logGridStep) / logGridStep);
@@ -614,7 +615,7 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
   TFloat64List samples_out = spcAxis.GetSamplesVector();
   Float64 maxAbsRelativeError_out = 0.0;
   logGridStep = log(samples_out[1] / samples_out[0]);
-  for (Int32 i = 1; i < samples_out.size(); i++) {
+  for (Int32 i = 1; i < ssize(samples_out); i++) {
     Float64 _logGridStep = log(samples_out[i] / samples_out[i - 1]);
     Float64 relativeErrAbs =
         std::abs((_logGridStep - logGridStep) / logGridStep);

@@ -40,6 +40,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
@@ -199,9 +200,9 @@ Int32 EstimateXtYSlow(const TFloat64List &X, const TFloat64List &Y,
 
   Int32 nX = X.size();
   Float64 xty = 0.0;
-  for (std::size_t k = 0; k < nShifts; k++) {
+  for (Int32 k = 0; k < nShifts; k++) {
     xty = 0.0;
-    for (std::size_t j = 0; j < nX; j++) {
+    for (Int32 j = 0; j < nX; j++) {
       xty += X[j] * Y[j + k];
     }
     XtY[k] = xty;

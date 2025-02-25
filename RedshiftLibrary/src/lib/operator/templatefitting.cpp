@@ -47,6 +47,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 
+#include "RedshiftLibrary/common/size.h"
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 
@@ -91,13 +92,13 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
   bool apply_priore =
       !logpriore.empty() && !tpl->CalzettiInitFailed() &&
-      (logpriore.size() ==
+      (ssize(logpriore) ==
        tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
 
   TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize, m_spectra.size());
 
   TFloat64RangeList currentRanges(m_spectra.size()); // restframe
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size();
+  for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra);
        spcIndex++) { // loop for multi obs
     // Adapts template bin
     RebinTemplate(tpl, redshift, currentRanges[spcIndex],
@@ -117,7 +118,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     m_option_igmFastProcessing = opt_extinction && m_option_igmFastProcessing;
   }
   if (opt_dustFitting || opt_extinction) {
-    for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+    for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
       InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
                        spcIndex);
     }
@@ -133,8 +134,8 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
     if (kM > 0 && skip_igm_loop) {
       // Now copy from the already calculated k>0 igm values
-      for (Int32 kism = 0; kism < result.ChiSquareInterm.size(); kism++) {
-        for (Int32 kigm = 1; kigm < result.ChiSquareInterm[kism].size();
+      for (Int32 kism = 0; kism < ssize(result.ChiSquareInterm); kism++) {
+        for (Int32 kigm = 1; kigm < ssize(result.ChiSquareInterm[kism]);
              kigm++) {
           result.ChiSquareInterm[kism][kigm] = result.ChiSquareInterm[kism][0];
           result.IsmCalzettiCoeffInterm[kism][kigm] =
@@ -150,7 +151,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
     // Meiksin IGM extinction
     if (opt_extinction) {
-      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+      for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
         if (ApplyMeiksinCoeff(meiksinIdx, spcIndex) && kM == 0)
           skip_igm_loop = false;
       }
@@ -163,7 +164,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
       if (opt_dustFitting) {
         coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
-        for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++)
+        for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++)
           ApplyDustCoeff(kEbmv, spcIndex);
       }
 
@@ -174,7 +175,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       TFittingResult fitRes;
 
       // Chi2 calculation
-      for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+      for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
         fitRes.cross_result += ComputeCrossProducts(
             kM, kEbmv_, redshift, mask_list[spcIndex], spcIndex);
       }
@@ -216,7 +217,7 @@ COperatorTemplateFitting::getMaskListAndNSamples(Float64 redshift) const {
   TList<CMask> mask_list;
   Int32 n_samples = 0; // total number of samples
   mask_list.reserve(m_spectra.size());
-  for (Int32 spcIndex = 0; spcIndex < m_spectra.size(); spcIndex++) {
+  for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
     const CMask &mask =
         m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
                                *m_lambdaRanges[spcIndex], redshift, spcIndex);
@@ -454,7 +455,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   // Question what to do with overlap in second pass ?
   // overlap warning
   Float64 overlapValidInfZ = -1;
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
+  for (Int32 i = 0; i < ssize(m_redshifts); i++) {
     bool ok = true;
     for (auto ov : templateFittingResult->Overlap[i])
       ok &= (ov >= overlapThreshold);

@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
@@ -88,14 +89,14 @@ void CPriorHelper::Init(std::string priorDirPath, Int32 type) {
   setSize(EZTfilesPathList.size());
 
   // set the template names
-  for (Int32 k = 0; k < EZTfilesPathList.size(); k++) {
+  for (Int32 k = 0; k < ssize(EZTfilesPathList); k++) {
     bfs::path fPath = EZTfilesPathList[k];
     std::string fNameStr = fPath.filename().c_str();
     setTNameData(k, fNameStr);
   }
 
   // read the EZT data from files
-  for (Int32 k = 0; k < EZTfilesPathList.size(); k++) {
+  for (Int32 k = 0; k < ssize(EZTfilesPathList); k++) {
     bfs::path fPath = EZTfilesPathList[k];
     std::string fPathStr = (fPath).string();
 
@@ -178,7 +179,7 @@ const TStringList CPriorHelper::loadfilesPathList(
 void CPriorHelper::loadFromFileList(const std::string &sigma_mean,
                                     const TStringList &filePathList) {
   // read the AGaussSigma data from files
-  for (Int32 k = 0; k < filePathList.size(); k++) {
+  for (Int32 k = 0; k < ssize(filePathList); k++) {
     bfs::path fPath = filePathList[k];
     std::string fPathStr = (fPath).string();
 
@@ -197,7 +198,7 @@ void CPriorHelper::loadFromFileList(const std::string &sigma_mean,
 }
 
 void CPriorHelper::setTNameData(Int32 k, std::string tname) {
-  if (k >= m_tplnames.size())
+  if (k >= ssize(m_tplnames))
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "Out-of-bound index k=" << k);
 
@@ -206,7 +207,7 @@ void CPriorHelper::setTNameData(Int32 k, std::string tname) {
 
 void CPriorHelper::setEZTData(Int32 k,
                               const std::vector<TFloat64List> &ezt_data) {
-  if (k >= m_data.size())
+  if (k >= ssize(m_data))
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "Out-of-bound index k=" << k);
 
@@ -217,7 +218,7 @@ void CPriorHelper::setEZTData(Int32 k,
 
 void CPriorHelper::setAGaussmeanData(
     Int32 k, const std::vector<TFloat64List> &agaussmean_data) {
-  if (k >= m_data.size())
+  if (k >= ssize(m_data))
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "Out-of-bound index k=" << k);
 
@@ -228,7 +229,7 @@ void CPriorHelper::setAGaussmeanData(
 
 void CPriorHelper::setAGausssigmaData(
     Int32 k, const std::vector<TFloat64List> &agausssigma_data) {
-  if (k >= m_data.size())
+  if (k >= ssize(m_data))
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "Out-of-bound index k=" << k);
 

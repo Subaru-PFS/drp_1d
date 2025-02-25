@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
@@ -369,7 +370,7 @@ public:
   fixture_SharedPowerLawLowSpectrumExtended() {
     TList<Float64> lowFlux =
         fixture_FluxAxisExtendedPowerLaw().fluxAxis.GetSamplesVector();
-    for (Int16 i = 0; i < lowFlux.size(); i++) {
+    for (Int32 i = 0; i < ssize(lowFlux); i++) {
       // Creates a very noisy signal
       i % 2 == 0 ? lowFlux[i] = lowFlux[i] : lowFlux[i] = lowFlux[i];
     }

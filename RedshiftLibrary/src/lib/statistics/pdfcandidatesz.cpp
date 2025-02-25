@@ -44,6 +44,7 @@
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
@@ -58,7 +59,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID &candidates)
     : m_candidates(candidates) {}
 
 CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List &redshifts) {
-  for (Int32 i = 0; i < redshifts.size(); ++i) {
+  for (Int32 i = 0; i < ssize(redshifts); ++i) {
     const std::string Id = "EXT" + to_string(i);
     m_candidates[Id] = std::make_shared<TCandidateZ>();
     m_candidates[Id]->Redshift = redshifts[i];
@@ -326,14 +327,14 @@ bool CPdfCandidatesZ::getCandidateRobustGaussFit(
 
 //** gaussian fit **//
 struct pdfz_lmfitdata {
-  size_t n;
+  Int32 n;
   Float64 *y;
   Float64 *z;
   Float64 zcenter;
 };
 
 int pdfz_lmfit_f(const gsl_vector *x, void *data, gsl_vector *f) {
-  size_t n = ((struct pdfz_lmfitdata *)data)->n;
+  Int32 n = ((struct pdfz_lmfitdata *)data)->n;
   Float64 *y = ((struct pdfz_lmfitdata *)data)->y;
   Float64 *z = ((struct pdfz_lmfitdata *)data)->z;
   Float64 zcenter = ((struct pdfz_lmfitdata *)data)->zcenter;
@@ -396,9 +397,9 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   // initialize GSL
   const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
 
-  size_t n = kmax - kmin +
-             1; // n samples on the support, /* number of data points to fit */
-  size_t p = 2; // DOF = 1.amplitude + 2.width
+  Int32 n = kmax - kmin +
+            1; // n samples on the support, /* number of data points to fit */
+  Int32 p = 2; // DOF = 1.amplitude + 2.width
 
   Log.LogDebug(
       Formatter() << "    CPdfCandidatesZ::getCandidateSumGaussFit - n=" << n

@@ -44,6 +44,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 
 using namespace NSEpic;
@@ -59,14 +60,14 @@ void print_point(TPointList points) {
 
 void check_points(TPointList points, TPointList test_points) {
   std::cout << " returned peaks: " << points.size() << "\n";
-  for (Int32 i = 0; i < points.size(); i++) {
+  for (Int32 i = 0; i < ssize(points); i++) {
     std::cout << " returned points: " << i << " " << points[i].X << " "
               << points[i].Y << " " << test_points[i].X << " "
               << test_points[i].Y << "\n";
   }
 
   BOOST_CHECK(points.size() == test_points.size());
-  for (int i = 0; i < points.size(); ++i) {
+  for (int i = 0; i < ssize(points); ++i) {
     BOOST_CHECK(
         (points[i].X == test_points[i].X && points[i].Y == test_points[i].Y));
   }
@@ -139,7 +140,7 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_isolated) {
   peaks1.SortIndexes(y);
 
   peaks1.Cut_Threshold(x, y, 2);
-  for (Int32 i = 0; i < x.size(); i++) {
+  for (Int32 i = 0; i < ssize(x); i++) {
     maxPoint.push_back(SPoint(x[i], y[i]));
   }
   check_points(maxPoint, TPointList({{0.1, 5}, {0.6, 6}, {0.8, 8}}));
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_onePeak) {
   peaks1.SortIndexes(y);
 
   peaks1.Cut_Threshold(x, y, 2);
-  for (Int32 i = 0; i < x.size(); i++) {
+  for (Int32 i = 0; i < ssize(x); i++) {
     maxPoint.push_back(SPoint(x[i], y[i]));
   }
   check_points(maxPoint, TPointList({{0.1, 6}, {0.2, 1.2}}));

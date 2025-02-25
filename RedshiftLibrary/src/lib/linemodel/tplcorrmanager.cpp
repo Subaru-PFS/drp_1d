@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/tplcorrmanager.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 
@@ -84,7 +85,7 @@ std::pair<Float64, Float64> CTplCorrManager::computeMerit(Int32 itratio) {
                                 AmplitudesUncertainties, correctedAmplitudes,
                                 m_savedIdxFitted);
 
-  for (Int32 iValidLine = 0; iValidLine != validLinesIndex.size();
+  for (Int32 iValidLine = 0; iValidLine != ssize(validLinesIndex);
        ++iValidLine) {
     auto const [elt_idx, line_idx] = eIdxList[iValidLine];
     auto const &elt_ptr = getElementList()[elt_idx];

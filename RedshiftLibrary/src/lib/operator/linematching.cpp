@@ -38,6 +38,7 @@
 // ============================================================================
 #include <numeric>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/linematching.h"
 
@@ -173,7 +174,7 @@ const CLineMatchingResult::TSolutionSetList CLineMatching::refineSolutions(
 
   CLineMatchingResult::TSolutionSetList newSolutions;
   for (auto currentSet : solutions) {
-    if (currentSet.size() < nThreshold)
+    if (ssize(currentSet) < nThreshold)
       continue;
     std::sort(currentSet.begin(), currentSet.end());
     bool found = false;
@@ -212,7 +213,7 @@ bool CLineMatching::AreSolutionSetsEqual(
     return false;
 
   bool diffFound = false;
-  for (Int32 iSet = 0; iSet < s1.size(); iSet++) {
+  for (Int32 iSet = 0; iSet < ssize(s1); iSet++) {
     if (s1[iSet].DetectedLine != s2[iSet].DetectedLine ||
         s1[iSet].RestLineId != s2[iSet].RestLineId ||
         s1[iSet].Redshift != s2[iSet].Redshift) {

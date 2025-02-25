@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
@@ -141,7 +142,7 @@ void CTplratioManager::duplicateTplratioResult(Int32 idx) {
       m_StrongHalphaELPresentTplratio[idx - 1];
   m_NLinesAboveSNRTplratio[idx] = m_NLinesAboveSNRTplratio[idx - 1];
 
-  for (Int32 iElt = 0; iElt < m_elementsVector->getElementParam().size();
+  for (Int32 iElt = 0; iElt < ssize(m_elementsVector->getElementParam());
        iElt++) {
     m_FittedAmpTplratio[idx][iElt] = m_FittedAmpTplratio[idx - 1][iElt];
     m_FittedErrorTplratio[idx][iElt] = m_FittedErrorTplratio[idx - 1][iElt];
@@ -271,7 +272,7 @@ void CTplratioManager::SetNominalAmplitudes(Int32 iCatalog) {
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "wrong line catalog index: " << iCatalog);
   for (Int32 elt_index = 0;
-       elt_index != m_elementsVector->getElementParam().size(); ++elt_index) {
+       elt_index != ssize(m_elementsVector->getElementParam()); ++elt_index) {
 
     for (Int32 line_index = 0;
          line_index != m_elementsVector->getElementParam()[elt_index]->size();
@@ -350,7 +351,7 @@ const TFloat64List &CTplratioManager::GetChisquareTplratio() const {
 TFloat64List CTplratioManager::GetPriorLinesTplratio() const {
   TFloat64List plinestplratio;
   Int32 eltIdx = 0;
-  for (Int32 ktpl = 0; ktpl < m_LinesLogPriorTplratio.size(); ktpl++) {
+  for (Int32 ktpl = 0; ktpl < ssize(m_LinesLogPriorTplratio); ktpl++) {
     plinestplratio.push_back(m_LinesLogPriorTplratio[ktpl][eltIdx]);
   }
   return plinestplratio;
@@ -534,7 +535,7 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
   // first reinit all the elements:
   setTplratioModel(m_savedIdxFitted, redshift);
 
-  for (Int32 iElt = 0; iElt < m_elementsVector->getElementParam().size();
+  for (Int32 iElt = 0; iElt < ssize(m_elementsVector->getElementParam());
        iElt++) {
     auto &param = m_elementsVector->getElementParam()[iElt];
     param->m_absLinesNullContinuum =
@@ -554,14 +555,14 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
   }
 
   // Lya
-  for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
+  for (Int32 iElts = 0; iElts < ssize(m_elementsVector->getElementParam());
        iElts++)
     m_elementsVector->getElementParam()[iElts]->SetAsymfitParams(
         {m_LyaWidthCoeffTplratio[m_savedIdxFitted][iElts],
          m_LyaAsymCoeffTplratio[m_savedIdxFitted][iElts],
          m_LyaDeltaCoeffTplratio[m_savedIdxFitted][iElts]});
 
-  for (Int32 iElts = 0; iElts < m_elementsVector->getElementParam().size();
+  for (Int32 iElts = 0; iElts < ssize(m_elementsVector->getElementParam());
        iElts++)
     m_elementsVector->getElementParam()[iElts]->SetSymIgmParams(
         TSymIgmParams(m_LyaIgmIdxTplratio[m_savedIdxFitted][iElts], redshift));

@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -58,7 +59,7 @@ Float64 precision = 1e-10;
 // Gaussian definition
 TFloat64List generateGaussian(TFloat64List z, Float64 sigma, Float64 mu) {
   TFloat64List gaussY(z.size());
-  for (Int32 i = 0; i < z.size(); i++) {
+  for (Int32 i = 0; i < ssize(z); i++) {
     gaussY[i] = -log(sigma * std::sqrt(2 * M_PI)) -
                 0.5 * ((z[i] - mu) / sigma) * ((z[i] - mu) / sigma);
   }

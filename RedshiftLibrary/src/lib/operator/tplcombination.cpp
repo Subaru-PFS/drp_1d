@@ -58,6 +58,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/tplcombination.h"
@@ -320,7 +321,7 @@ void COperatorTplcombination::BasicFit(
           fittingResults.COV[iddl][iddc] = COV(iddl, iddc);
         }
       }
-      if (fittingResults.fittingAmplitudes.size() != nddl) {
+      if (ssize(fittingResults.fittingAmplitudes) != nddl) {
         Log.LogDebug(Formatter() << " Found nfittedamps(="
                                  << fittingResults.fittingAmplitudes.size()
                                  << ") "
@@ -395,7 +396,7 @@ void COperatorTplcombination::RebinTemplate(
 
   // Now interpolating all the templates
   Log.LogDebug(" BasicFit - interpolating");
-  for (Int32 ktpl = 0; ktpl < tplList.size(); ktpl++) {
+  for (Int32 ktpl = 0; ktpl < ssize(tplList); ktpl++) {
     const CSpectrumSpectralAxis &tplSpectralAxis =
         tplList[ktpl]->GetSpectralAxis();
     const CSpectrumFluxAxis &tplFluxAxis = tplList[ktpl]->GetFluxAxis();
@@ -482,11 +483,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   // This is a vector of {value,index} pairs
   vector<pair<Float64, Int32>> vp;
   vp.reserve(redshifts.size());
-  for (Int32 i = 0; i < redshifts.size(); i++) {
+  for (Int32 i = 0; i < ssize(redshifts); i++) {
     vp.push_back(make_pair(redshifts[i], i));
   }
   std::sort(vp.begin(), vp.end());
-  for (Int32 i = 0; i < vp.size(); i++) {
+  for (Int32 i = 0; i < ssize(vp); i++) {
     sortedRedshifts.push_back(vp[i].first);
     sortedIndexes.push_back(vp[i].second);
   }
@@ -522,7 +523,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
 
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
+  for (Int32 i = 0; i < ssize(sortedRedshifts); i++) {
     const CMask &additional_spcMask =
         useDefaultMask ? default_spcMask
                        : additional_spcMasks[sortedIndexes[i]];
@@ -559,7 +560,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   // overlap warning
   Float64 overlapValidInfZ = -1;
-  for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
+  for (Int32 i = 0; i < ssize(sortedRedshifts); i++) {
     if (result->Overlap[i].front() >= overlapThreshold) {
       overlapValidInfZ = sortedRedshifts[i];
       break;

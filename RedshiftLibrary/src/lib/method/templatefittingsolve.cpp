@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/modelphotvalueresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
@@ -464,7 +465,7 @@ CTemplateFittingSolve::BuildChisquareArray(const std::string &resultName,
         chisquarearray.chisquares.emplace_back(
             templateResult->ChiSquareIntermediate.size(), DBL_MAX);
         TFloat64List &chisquare = chisquarearray.chisquares.back();
-        for (Int32 kz = 0; kz < templateResult->Redshifts.size(); kz++) {
+        for (Int32 kz = 0; kz < ssize(templateResult->Redshifts); ++kz) {
           chisquare[kz] = templateResult->ChiSquareIntermediate[kz][kism][kigm];
         }
       }
@@ -495,7 +496,7 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
                             "tplFitResultsMap, for tpl="
                          << tplName);
     }
-    for (Int32 kz = 0; kz < tplFitResult->Redshifts.size(); kz++) {
+    for (Int32 kz = 0; kz < ssize(tplFitResult->Redshifts); kz++) {
       if (tplFitResult->Redshifts[kz] != redshifts[kz]) {
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "redshift vector is not the same for tpl="
@@ -554,7 +555,7 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
 
     std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
         std::make_shared<CModelSpectrumResult>();
-    for (int spcIndex = 0; spcIndex < Context.getSpectra().size(); spcIndex++) {
+    for (int spcIndex = 0; spcIndex < ssize(Context.getSpectra()); spcIndex++) {
       const std::string &obsId = Context.getSpectra()[spcIndex]->getObsID();
 
       TPhotVal values = m_templateFittingOperator->ComputeSpectrumModel(

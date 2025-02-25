@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/size.h"
 #include <vector>
 
 namespace NSEpic {
@@ -73,8 +74,8 @@ inline TInt32Pair find2DVectorMinIndexes(std::vector<std::vector<T>> vect) {
   Int32 iMin = 0;
   Int32 jMin = 0;
   T valMin = vect[0][0];
-  for (Int32 i = 0; i < vect.size(); i++) {
-    for (Int32 j = 0; j < vect[i].size(); j++) {
+  for (Int32 i = 0; i < ssize(vect); i++) {
+    for (Int32 j = 0; j < ssize(vect[i]); j++) {
       if (vect[i][j] < valMin) {
         iMin = i;
         jMin = j;

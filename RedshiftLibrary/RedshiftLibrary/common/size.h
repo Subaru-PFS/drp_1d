@@ -38,7 +38,7 @@
 // ============================================================================
 #ifndef _REDSHIFT_COMMON_SIZE_
 #define _REDSHIFT_COMMON_SIZE_
-
+#include <type_traits> // Required for common_type_t
 namespace NSEpic {
 
 template <class C>

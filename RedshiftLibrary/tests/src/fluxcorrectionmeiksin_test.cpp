@@ -43,6 +43,7 @@
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE(overall_test) {
 
   w_index = igmCorrectionMeiksin->getWaveIndex(1220.);
   BOOST_CHECK(w_index ==
-              igmCorrectionMeiksin->m_rawCorrections[0].lbda.size() - 1);
+              ssize(igmCorrectionMeiksin->m_rawCorrections[0].lbda) - 1);
 
   // test getWaveVector :
   TFloat64List w_vec_ref = {1213.02999999983, 1213.07999999983,
@@ -180,7 +181,7 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
   //  range [2.0, 2.5]
   Float64 redshift = 2.1;
   // 7 flux per curve
-  for (std::size_t i = 0; i < igmCorrectionMeiksin->getIdxCount(); i++) {
+  for (Int32 i = 0; i < igmCorrectionMeiksin->getIdxCount(); i++) {
     for (std::size_t j = 0; j < finelbdaGrid.size(); j++) {
       Float64 corr =
           igmCorrectionMeiksin->getCorrection(redshift, i, finelbdaGrid[j]);
@@ -195,7 +196,7 @@ BOOST_AUTO_TEST_CASE(convolveByLSF_test) {
   //  range [2.5, 3.0]
   redshift = 2.7;
   // 7 flux per curve
-  for (std::size_t i = 0; i < igmCorrectionMeiksin->getIdxCount(); i++) {
+  for (Int32 i = 0; i < igmCorrectionMeiksin->getIdxCount(); i++) {
     for (std::size_t j = 0; j < finelbdaGrid.size(); j++) {
       Float64 corr =
           igmCorrectionMeiksin->getCorrection(redshift, i, finelbdaGrid[j]);

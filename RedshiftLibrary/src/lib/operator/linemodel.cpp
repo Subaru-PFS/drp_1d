@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/common/zgridparam.h"
 #include "RedshiftLibrary/extremum/extremum.h"
@@ -171,7 +172,7 @@ COperatorLineModel::ComputeFirstPass() {
 
   //#pragma omp parallel for
   m_fittingManager->logParameters();
-  for (Int32 i = 0; i < m_result->Redshifts.size(); i++) {
+  for (Int32 i = 0; i < ssize(m_result->Redshifts); i++) {
 
     m_result->ChiSquare[i] = m_fittingManager->fit(
         m_result->Redshifts[i], m_result->LineModelSolutions[i],
@@ -303,7 +304,7 @@ void COperatorLineModel::fitContinuumTemplates(
     Log.LogDebug(Formatter()
                  << "Processing " << tplList.size() << " templates");
   }
-  for (Int32 i = 0; i < tplList.size(); i++) {
+  for (Int32 i = 0; i < ssize(tplList); i++) {
     std::shared_ptr<const COperatorResult> templatefittingResult;
     std::string tplname;
     if (m_opt_continuumcomponent.isPowerLawXXX()) {
@@ -525,7 +526,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++) { // zIDX
       Float64 redshift = redshiftsContinuumFit[i];
 
-      for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++) { // n templates
+      for (Int32 j = 0; j < ssize(chisquareResultsAllTpl); j++) { // n templates
         const auto &chisquareResult =
             std::dynamic_pointer_cast<const CTemplateFittingResult>(
                 chisquareResultsAllTpl[j]);
@@ -1249,7 +1250,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
     // Prepare velocity grid to be checked
     const TFloat64List velfitlist = makeVelFitBins(vInfLim, vSupLim, vStep);
 
-    for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
+    for (Int32 kgroup = 0; kgroup < ssize(idxVelfitGroups); kgroup++) {
       Log.LogDetail(Formatter()
                     << "  Operator-Linemodel: manualStep fitting group="
                     << kgroup);
@@ -1371,7 +1372,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
       idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
           CLine::EType::nType_Absorption);
       std::string alv_list_str = "";
-      for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
+      for (Int32 kgroup = 0; kgroup < ssize(idxVelfitGroups); kgroup++) {
         // m_fittingManager->setVelocityAbsorptionByGroup(
         //     m_firstpass_extremaResult->GroupsALv[i][kgroup],
         //     idxVelfitGroups[kgroup]);
@@ -1386,7 +1387,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
       idxVelfitGroups = m_fittingManager->getElementList().GetModelVelfitGroups(
           CLine::EType::nType_Emission);
       std::string elv_list_str = "";
-      for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++) {
+      for (Int32 kgroup = 0; kgroup < ssize(idxVelfitGroups); kgroup++) {
         // m_fittingManager->setVelocityEmissionByGroup(
         // 					     m_firstpass_extremaResult->getRankedCandidate(i)->GroupsELv[kgroup],
         //     idxVelfitGroups[kgroup]);

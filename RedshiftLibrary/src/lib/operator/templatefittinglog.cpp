@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
@@ -398,7 +399,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
     Log.LogDebug(Formatter() << "FitAllz: indexes for full "
                                 "LstSquare calculation, count = "
                              << zsplit.size());
-    for (Int32 k = 0; k < zsplit.size(); k++) {
+    for (Int32 k = 0; k < ssize(zsplit); k++) {
       Log.LogDebug(Formatter() << "FitAllz: indexes ranges: "
                                   "for i="
                                << k << ", zsplit=" << zsplit[k]);
@@ -416,7 +417,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
   Log.LogDebug(Formatter() << "FitAllz: indexes - "
                               "izrangelist calculation, count = "
                            << izrangelist.size());
-  for (Int32 k = 0; k < izrangelist.size(); k++) {
+  for (Int32 k = 0; k < ssize(izrangelist); k++) {
     Log.LogDebug(Formatter()
                  << "FitAllz: indexes ranges: "
                     "for i="
@@ -455,7 +456,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       m_spectra[0]->GetFluxAxis().GetSamplesVector();
   Float64 dtd = 0.0;
   TFloat64List inv_err2(error.size());
-  for (Int32 j = 0; j < error.size(); j++) {
+  for (Int32 j = 0; j < ssize(error); j++) {
     inv_err2[j] = 1.0 / (error[j] * error[j]);
     dtd += spectrumRebinedFluxRaw[j] * spectrumRebinedFluxRaw[j] * inv_err2[j];
   }
@@ -501,9 +502,9 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd);
 
     // copy subresults into global results
-    for (Int32 isubz = 0; isubz < subresult->Redshifts.size(); isubz++) {
+    for (Int32 isubz = 0; isubz < ssize(subresult->Redshifts); isubz++) {
       Int32 fullResultIdx = isubz + izrangelist[k].GetBegin();
-      if (fullResultIdx >= result->ChiSquare.size())
+      if (fullResultIdx >= ssize(result->ChiSquare))
         THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
       result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
       result->ReducedChiSquare[fullResultIdx] =
@@ -600,9 +601,9 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       result->FitMeiksinIdx[fullResultIdx] = subresult->FitMeiksinIdx[isubz];
 
       for (Int32 kism = 0;
-           kism < result->ChiSquareIntermediate[fullResultIdx].size(); kism++) {
+           kism < ssize(result->ChiSquareIntermediate[fullResultIdx]); kism++) {
         for (Int32 kigm = 0;
-             kigm < result->ChiSquareIntermediate[fullResultIdx][kism].size();
+             kigm < ssize(result->ChiSquareIntermediate[fullResultIdx][kism]);
              kigm++) {
           result->ChiSquareIntermediate[fullResultIdx][kism][kigm] =
               subresult->ChiSquareIntermediate[isubz][kism][kigm];
@@ -794,7 +795,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       const TAxisSampleList tplRebinedFluxcorr_cropped(first, last);
       TAxisSampleList tpl2RebinedFlux(nTpl);
 
-      if (tplRebinedFluxcorr_cropped.size() != nTpl) {
+      if (ssize(tplRebinedFluxcorr_cropped) != nTpl) {
         THROWG(ErrorCode::INTERNAL_ERROR, "vector sizes do not match");
       }
       // compute the square of the corrected flux
@@ -817,7 +818,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       Log.LogDebug(Formatter() << "FitRangez: dtd = " << dtd);
 
       // Estimate Chi2
-      if (mtm_vec.size() != dtm_vec_size) {
+      if (ssize(mtm_vec) != dtm_vec_size) {
         freeFFTPlans();
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "xty vector size do not match: dtm size = "
@@ -908,7 +909,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
             intermChi2BufferReversed_array[t];
     }
   }
-  for (Int32 k = 0; k < result->Redshifts.size(); k++) {
+  for (Int32 k = 0; k < ssize(result->Redshifts); k++) {
     result->Overlap[k] = TFloat64List(1, 1.0);
   }
   result->ChiSquare = bestChi2;
@@ -1095,7 +1096,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
 
   // overlap warning
   Float64 overlapValidInfZ = -1;
-  for (Int32 i = 0; i < m_redshifts.size(); i++) {
+  for (Int32 i = 0; i < ssize(m_redshifts); i++) {
     if (result->Overlap[i].front() >= overlapThreshold) {
       overlapValidInfZ = m_redshifts[i];
       break;

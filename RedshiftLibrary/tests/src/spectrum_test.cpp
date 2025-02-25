@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
@@ -63,7 +64,7 @@ using namespace NSEpic;
 
 void print_flux(TAxisSampleList sample) {
   BOOST_TEST_MESSAGE("=======");
-  for (Int32 i = 0; i < sample.size(); i++) {
+  for (Int32 i = 0; i < ssize(sample); i++) {
     BOOST_TEST_MESSAGE(sample[i]);
   }
   BOOST_TEST_MESSAGE("=======");
@@ -318,7 +319,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   TFloat64List continuum = spc.GetContinuumFluxAxis().GetSamplesVector();
   TFloat64List rawFlux = spc.GetRawFluxAxis().GetSamplesVector();
   TFloat64List fluwWithoutContinuum(rawFlux.size(), 0.0);
-  for (Int32 i = 0; i < rawFlux.size(); i++) {
+  for (Int32 i = 0; i < ssize(rawFlux); i++) {
     fluwWithoutContinuum[i] = rawFlux[i] - continuum[i];
   }
   BOOST_CHECK(spc.GetWithoutContinuumFluxAxis().GetSamplesVector() ==
@@ -326,7 +327,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
 
   // Invert
   bool result = spc.InvertFlux();
-  for (Int32 i = 0; i < rawFlux.size(); i++) {
+  for (Int32 i = 0; i < ssize(rawFlux); i++) {
     BOOST_CHECK(spc.GetRawFluxAxis().GetSamplesVector()[i] == -rawFlux[i]);
     BOOST_CHECK(spc.GetContinuumFluxAxis().GetSamplesVector()[i] ==
                 -continuum[i]);
@@ -337,7 +338,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
 
   // ApplyAmplitude
   spc.ApplyAmplitude(2.);
-  for (Int32 i = 0; i < rawFlux.size(); i++) {
+  for (Int32 i = 0; i < ssize(rawFlux); i++) {
     BOOST_CHECK(spc.GetRawFluxAxis().GetSamplesVector()[i] == 2 * rawFlux[i]);
     BOOST_CHECK(spc.GetContinuumFluxAxis().GetSamplesVector()[i] ==
                 2 * continuum[i]);
@@ -392,7 +393,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   // SetContinuumEstimationMethod
   spc.SetContinuumEstimationMethod("raw");
   spc.EstimateContinuum();
-  for (Int32 i = 0; i < rawFlux.size(); i++) {
+  for (Int32 i = 0; i < ssize(rawFlux); i++) {
     BOOST_CHECK(spc.GetRawFluxAxis().GetSamplesVector()[i] == rawFlux[i]);
     BOOST_CHECK(spc.GetContinuumFluxAxis().GetSamplesVector()[i] == rawFlux[i]);
     BOOST_CHECK(spc.GetWithoutContinuumFluxAxis().GetSamplesVector()[i] == 0.0);
@@ -400,7 +401,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
 
   spc.SetContinuumEstimationMethod("zero");
   spc.EstimateContinuum();
-  for (Int32 i = 0; i < rawFlux.size(); i++) {
+  for (Int32 i = 0; i < ssize(rawFlux); i++) {
     BOOST_CHECK(spc.GetRawFluxAxis().GetSamplesVector()[i] == rawFlux[i]);
     BOOST_CHECK(spc.GetContinuumFluxAxis().GetSamplesVector()[i] == 0.);
     BOOST_CHECK(spc.GetWithoutContinuumFluxAxis().GetSamplesVector()[i] ==
@@ -410,7 +411,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   CSpectrum spc_3(spc);
   spc.SetContinuumEstimationMethod(spc_3.GetContinuumFluxAxis());
   spc.EstimateContinuum();
-  for (Int32 i = 0; i < rawFlux.size(); i++) {
+  for (Int32 i = 0; i < ssize(rawFlux); i++) {
     BOOST_CHECK(spc.GetRawFluxAxis().GetSamplesVector()[i] == rawFlux[i]);
     BOOST_CHECK(spc.GetContinuumFluxAxis().GetSamplesVector()[i] == 0.);
     BOOST_CHECK(spc.GetWithoutContinuumFluxAxis().GetSamplesVector()[i] ==
@@ -874,9 +875,9 @@ BOOST_AUTO_TEST_CASE(ExtractTest) {
 
   // check results
   // check size is correct
-  BOOST_CHECK(extractedSpcAxis.size() == s);
-  BOOST_CHECK(extractedFluxAxis.size() == s);
-  BOOST_CHECK(extractedNoiseAxis.size() == s);
+  BOOST_CHECK(ssize(extractedSpcAxis) == s);
+  BOOST_CHECK(ssize(extractedFluxAxis) == s);
+  BOOST_CHECK(ssize(extractedNoiseAxis) == s);
 
   BOOST_CHECK_EQUAL_COLLECTIONS(extractedSpcAxis.begin(),
                                 extractedSpcAxis.end(), correctSpcAxis.begin(),

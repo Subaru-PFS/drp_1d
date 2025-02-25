@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
@@ -64,7 +65,7 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     // n);
     k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[cursor]);
     Float64 xSrcStep = NAN;
-    if (k == Xsrc.size() - 1)
+    if (k == ssize(Xsrc) - 1)
       xSrcStep = Xsrc[k] - Xsrc[k - 1];
     else
       xSrcStep = Xsrc[k + 1] - Xsrc[k];

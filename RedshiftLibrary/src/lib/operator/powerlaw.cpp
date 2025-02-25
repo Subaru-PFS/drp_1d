@@ -40,6 +40,7 @@
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/powerlawresult.h"
@@ -240,7 +241,7 @@ COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
       std::make_shared<CPowerLawResult>(m_redshifts.size());
 
   result->Redshifts = m_redshifts;
-  for (Int32 zIdx = 0; zIdx < m_redshifts.size(); zIdx++) {
+  for (Int32 zIdx = 0; zIdx < ssize(m_redshifts); zIdx++) {
     Float64 redshift = result->Redshifts[zIdx];
     TPowerLawResult result_z = BasicFit(
         redshift, opt_extinction, opt_dustFitting, nullFluxThreshold, method);
@@ -578,7 +579,7 @@ T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
   TList<Float64> spectrumFluxError;
   // Concatenates all curves
   // NB: at the end, lambda is not ordered anymore
-  for (size_t spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
+  for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     TList<Float64> tmpLambda = m_spectra[spectrumIdx]
                                    ->GetSpectralAxis()
                                    .extract(m_firstPixelIdxInRange[spectrumIdx],
@@ -738,7 +739,7 @@ TBoolList COperatorPowerLaw::computeSNRCompliantPixels(
   // Masks pixels with insufficient SNR. In place modification of
   // curve.pixelsToUse
   TBoolList snrCompliant = std::vector<bool>(spectrumFlux.size(), true);
-  for (Int32 pixelIdx = 0; pixelIdx < spectrumFlux.size(); pixelIdx++) {
+  for (Int32 pixelIdx = 0; pixelIdx < ssize(spectrumFlux); pixelIdx++) {
     // Checks that signal / noise ratio is sufficient (> nullFluxThreshold)
     if (spectrumFlux[pixelIdx] <
         nullFluxThreshold * spectrumFluxError[pixelIdx]) {

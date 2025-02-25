@@ -54,6 +54,7 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/line/catalogsTplRatio.h"
@@ -613,7 +614,7 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
   TInt32RangeList nonOverlappingSupportList;
   TBoolList nonOverlappingIsStrongList;
   TInt32List processedSupport;
-  for (Int32 k = 0; k < supportList.size(); k++) {
+  for (Int32 k = 0; k < ssize(supportList); k++) {
     // skip if already fitted
     if (std::find(processedSupport.cbegin(), processedSupport.cend(), k) !=
         processedSupport.cend())
@@ -622,7 +623,7 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
     processedSupport.push_back(k);
     TInt32Range &support = supportList[k];
 
-    for (Int32 l = k + 1; l < supportList.size(); l++) {
+    for (Int32 l = k + 1; l < ssize(supportList); l++) {
       // skip if already fitted
       if (std::find(processedSupport.cbegin(), processedSupport.cend(), l) !=
           processedSupport.cend())
@@ -717,7 +718,7 @@ void CLineModelFitting::LoadModelSolution(
   // but not touched without using template-ratio
 
   TBoolList element_done(getElementParam().size(), false);
-  for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
+  for (Int32 iRestLine = 0; iRestLine < ssize(m_RestLineList); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue; // TODO should throw exception here

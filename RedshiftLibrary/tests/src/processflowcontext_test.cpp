@@ -43,6 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
               lineCatalog);
   Context.m_ScopeStack->push_back("redshiftSolver", ScopeType::STAGE);
   Context.m_ScopeStack->push_back("lineModelSolve", ScopeType::METHOD);
-  BOOST_CHECK(Context.getCLineMap().size() ==
+  BOOST_CHECK(ssize(Context.getCLineMap()) ==
               fixture_LineCatalog().lineCatalogSize);
 
   Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
