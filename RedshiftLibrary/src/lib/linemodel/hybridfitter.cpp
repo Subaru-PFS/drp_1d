@@ -64,7 +64,7 @@ CHybridFitter::CHybridFitter(
 
 void CHybridFitter::doFit(Float64 redshift) {
 
-  m_spectraIndex.reset(); // temporary multiobs implementation
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   // fit the amplitudes of each element independently, unless there is overlap
   fitAmplitudesHybrid(redshift);
 
@@ -119,7 +119,7 @@ void CHybridFitter::doFit(Float64 redshift) {
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
-  m_spectraIndex.reset(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // dummy implementation
 
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   TInt32Set indexesFitted;
@@ -148,19 +148,19 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
                    << " - eltIdx=" << overlappingInds[ifit]);
     }
     if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
       Log.LogDebug("    model: hybrid fit:     Individual fit");
       fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
     } else {
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
       Log.LogDebug("    model: hybrid fit:     Joint fit");
       fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
                                            m_enableLambdaOffsetsFit, redshift);
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
     }
 
     // update the already fitted list

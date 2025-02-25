@@ -51,7 +51,7 @@ using namespace std;
 
 // set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
-  m_spectraIndex.reset(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // dummy implementation
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   if (validEltsIdx.empty())
     return;
@@ -320,13 +320,13 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // refit the positive elements together
   if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
     fitAmplitude(ValidEltsIdx[idx_positive.front()], redshift, undefIdx);
-    m_spectraIndex.reset(); // dummy implementation
+    m_spectraIndex.setAtBegining(); // dummy implementation
     return;
   }
   bool const allPositive2 = fitAmplitudesLinSolve(
       ValidEltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
   if (allPositive2) {
-    m_spectraIndex.reset(); // dummy implementation
+    m_spectraIndex.setAtBegining(); // dummy implementation
     return;
   }
   for (Int32 irefit = 0; irefit < idx_positive.size(); ++irefit) {
@@ -338,7 +338,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                             0.0, errorsfitted[irefit]);
     }
   }
-  m_spectraIndex.reset(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // dummy implementation
 }
 
 void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,

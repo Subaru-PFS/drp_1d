@@ -383,7 +383,8 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 
     // check fitting
     if (atLeastOneOffsetToFit) {
-      m_spectraIndex.reset(); // TODO dummy implementation for hybridfitter
+      m_spectraIndex
+          .setAtBegining(); // TODO dummy implementation for hybridfitter
       Float64 fit = getLeastSquareMeritFast(eltIndex);
       if (fit < bestMerit) {
         bestMerit = fit;
@@ -471,8 +472,8 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
             m = getModelResidualRmsUnderElements({idxLyaE}, true);
 
           } else {
-            m_spectraIndex.reset(); // TODO dummy implementation, even if this
-                                    // line is disabled
+            m_spectraIndex.setAtBegining(); // TODO dummy implementation, even
+                                            // if this line is disabled
             m = getLeastSquareMeritFast(idxLyaE);
           }
           if (m < meritMin) {

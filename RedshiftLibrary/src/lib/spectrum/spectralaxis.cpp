@@ -223,11 +223,10 @@ void CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange,
 
   // weight = Spectrum over lambdarange flag
   for (Int32 i = 0; i < m_Samples.size(); i++) {
-    mask[i] = (Mask)0;
-    // If this sample is somewhere in a valid lambdaRande, tag weight with 1
-
+    mask[i] = Mask(0);
+    // If this sample is somewhere in a valid lambdaRange, tag weight with 1
     if (m_Samples[i] >= range.GetBegin() && m_Samples[i] <= range.GetEnd()) {
-      mask[i] = (Mask)1;
+      mask[i] = Mask(1);
     }
   }
 }

@@ -486,10 +486,11 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   }
   if (ignoreLinesSupport) {
     m_fittingManager->getSpectraIndex()
-        .reset(); // TODO multiobs, dummy implementation
+        .setAtBegining(); // TODO multiobs, dummy implementation
     m_continuumFittingOperator->setMaskBuilder(
         std::make_shared<COutsideLineMaskBuilder>(
-            m_fittingManager->getElementList()));
+            m_fittingManager->getElementListVector(),
+            m_fittingManager->getSpectraIndex()));
   }
   std::vector<std::shared_ptr<COperatorResult>> chisquareResultsAllTpl;
   TStringList chisquareResultsTplName;
@@ -991,7 +992,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
           cont.name == "noContinuum") { // no photometry
         Log.LogDetail("photometry cannot be applied outside tplFit");
       } else {
-        m_fittingManager->getSpectraIndex().reset();
+        m_fittingManager->getSpectraIndex().setAtBegining();
         phot_values = m_fittingManager->getSpectrumModel().getPhotValues();
       }
       ExtremaResult->m_modelPhotValues[i] =
@@ -1760,7 +1761,7 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   m_fittingManager->LoadModelSolution(bestModelSolution);
   m_fittingManager->refreshAllModels();
   m_fittingManager->getSpectraIndex()
-      .reset(); // TODO dummy implementation, should return all models
+      .setAtBegining(); // TODO dummy implementation, should return all models
   return m_fittingManager->getSpectrumModel().GetModelSpectrum();
 }
 

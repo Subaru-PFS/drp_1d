@@ -129,12 +129,12 @@ public:
   void push_back(const CSpectrumModel &model) { m_models.push_back(model); }
 
   CSpectrumModel &getSpectrumModel() {
-    m_spectraIndex.AssertIsValid();
+    m_spectraIndex.assertIsValid();
     return m_models.at(m_spectraIndex.get());
   }
 
   const CSpectrumModel &getSpectrumModel() const {
-    m_spectraIndex.AssertIsValid();
+    m_spectraIndex.assertIsValid();
     return m_models.at(m_spectraIndex.get());
   }
 

@@ -233,7 +233,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   tplOrtho->SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
   // Subtract the fitted model from the original template
-  model.getSpectraIndex().reset();
+  model.getSpectraIndex().setAtBegining();
   model.getSpectrumModel().refreshModel();
   CSpectrum modelSpc = model.getSpectrumModel().GetModelSpectrum();
 
