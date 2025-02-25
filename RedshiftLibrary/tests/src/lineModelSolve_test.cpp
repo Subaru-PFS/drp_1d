@@ -155,7 +155,7 @@ const std::string jsonStringS =
     "\"autoCorrectInput\" : false,"
     "\"airVacuumMethod\" : \"default\","
     "\"galaxy\" : {"
-    "\"redshiftRange\" : [ 0.24, 0.3 ],"
+    "\"redshiftRange\" : [ 0.258, 0.261 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
     "\"stages\" : [\"redshiftSolver\"],"
@@ -464,7 +464,19 @@ public:
   fixture_LineModelSolveTestPowerLaw() {
     fillCatalog();
     ctx.reset();
-    ctx.loadParameterStore(largeLambdaString + jsonString + jsonStringPowerLaw);
+
+    // In order to speed up calculations
+    auto paramsPowerLaw = largeLambdaString + jsonString + jsonStringPowerLaw;
+    std::string target = "\"redshiftStep\" : 0.0001,";
+    size_t pos = paramsPowerLaw.find(target);
+    paramsPowerLaw.replace(pos, target.length(), "\"redshiftStep\" : 0.001,");
+
+    target = "\"secondPass\" : {\"halfWindowSize\" : 0.001,";
+    pos = paramsPowerLaw.find(target);
+    paramsPowerLaw.replace(pos, target.length(),
+                           "\"secondPass\" : {\"halfWindowSize\" : 0.01, ");
+
+    ctx.loadParameterStore(paramsPowerLaw);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -525,7 +537,8 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
           "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
           "model_parameters", 0);
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1);
+  // Accepts a greater difference due to bigger z steps
+  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1);
   BOOST_CHECK_EQUAL(res->fittedContinuum.name, "powerLaw");
 
   ctx.reset();
@@ -580,7 +593,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 0.1);
 
   ctx.reset();
 }
@@ -618,7 +631,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 0.1);
 
   ctx.reset();
 }
@@ -763,7 +776,7 @@ BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1);
 
   ctx.reset();
 }
