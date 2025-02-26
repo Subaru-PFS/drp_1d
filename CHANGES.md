@@ -1,12 +1,16 @@
 # Changelog
 
+## 1.6.3 (2025-02-26)
+### Fixed
+* [#9219] : Add method to calculate continuum chi2
+
 ## 1.6.2 (2025-02-14)
 ### Fixed
 * [#9495] : Fix reliability value accessor
 
 ## 1.6.1 (2025-02-06)
 ### Fixed
-* [#9476] : Adds decorator dependency
+* [#9476] : Add decorator dependency
 
 ## 1.6.0 (2025-01-23)
 ### Added

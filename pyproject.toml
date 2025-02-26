@@ -50,7 +50,7 @@ wheel.packages = ["pylibamazed/python/pylibamazed"]
 
 [tool.setuptools_scm]
 version_file = "pylibamazed/python/pylibamazed/_version.py"
-fallback_version = "1.6.2"
+fallback_version = "1.6.3"
 
 
 [[tool.scikit-build.generate]]
