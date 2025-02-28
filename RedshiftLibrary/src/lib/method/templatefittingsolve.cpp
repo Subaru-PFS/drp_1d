@@ -322,7 +322,8 @@ void CTemplateFittingSolve::computeSecondPass(
   auto const &resultStore = Context.GetResultStore();
 
   m_templateFittingOperator->setTwoPassParameters(
-      m_secondPass_halfwindowsize, m_zLogSampling, m_redshiftStep);
+      m_secondPass_halfwindowsize, m_zLogSampling, m_redshiftStep,
+      m_twoPassZStepFactor);
   m_templateFittingOperator->buildExtendedRedshifts();
 
   auto const insertionIndices = m_templateFittingOperator->updateRedshiftGrid();
@@ -418,48 +419,31 @@ CTemplateFittingSolve::BuildChisquareArray(const std::string &resultName,
     chisquarearray.parentCandidates =
         m_templateFittingOperator->getFirstPassCandidatesZByRank();
 
-  // Should set cstLog ? What does it correspond to ?
-  chisquarearray.cstLog = -1;
   // Question : why coarse step for second pass too ? This is valid for second
   // pass only ?
   chisquarearray.zstep = m_coarseRedshiftStep;
   chisquarearray.zgridParams = zgridParams;
 
   auto templatesResultsMap = getPerTemplateResultMap(resultName);
+  chisquarearray.cstLog = templatesResultsMap.begin()->second->CstLog;
+  Log.LogInfo(Formatter() << "templatefittingsolver: using cstLog = "
+                          << chisquarearray.cstLog);
+  chisquarearray.redshifts = templatesResultsMap.begin()->second->Redshifts;
+  auto const zprior =
+      CZPrior().GetConstantLogZPrior(chisquarearray.redshifts.size());
   for (auto const &[_, templateResult] : templatesResultsMap) {
-    Int32 nISM = -1;
-    Int32 nIGM = -1;
-    if (isSecondPass) {
-      nISM = 1;
-      nIGM = 1;
-    } else {
-      if (templateResult->ChiSquareIntermediate.size() > 0) {
-        nISM = templateResult->ChiSquareIntermediate[0].size();
-        if (templateResult->ChiSquareIntermediate[0].size() > 0) {
-          nIGM = templateResult->ChiSquareIntermediate[0][0].size();
-        }
-      }
-    }
+    auto const &[nISM, nIGM] = templateResult->getIsmIgmSizes();
 
-    // NB for the moment this if else is useless as cstLog set to -1 at the
-    // beginning of this method
-    if (chisquarearray.cstLog == -1) {
-      chisquarearray.cstLog = templateResult->CstLog;
-      Log.LogInfo(Formatter() << "templatefittingsolver: using cstLog = "
-                              << chisquarearray.cstLog);
-    } else if (chisquarearray.cstLog != templateResult->CstLog) {
+    if (chisquarearray.cstLog != templateResult->CstLog) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              Formatter() << "cstLog values do not correspond: val1="
                          << chisquarearray.cstLog
                          << " != val2=" << templateResult->CstLog);
     }
-    chisquarearray.redshifts = templateResult->Redshifts;
 
-    CZPrior zpriorhelper;
     for (Int32 kism = 0; kism < nISM; kism++) {
       for (Int32 kigm = 0; kigm < nIGM; kigm++) {
-        chisquarearray.zpriors.push_back(zpriorhelper.GetConstantLogZPrior(
-            templateResult->Redshifts.size()));
+        chisquarearray.zpriors.push_back(zprior);
 
         // Correct chi2 for ampl. marg
         chisquarearray.chisquares.emplace_back(

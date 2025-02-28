@@ -604,9 +604,15 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       result->LogPrior[fullResultIdx] = logprior;
       result->FitEbmvCoeff[fullResultIdx] = subresult->FitEbmvCoeff[isubz];
       result->FitMeiksinIdx[fullResultIdx] = subresult->FitMeiksinIdx[isubz];
-
+      for (Int32 kigm = 0;
+           kigm < ssize(result->IgmMeiksinIdxIntermediate[fullResultIdx]);
+           kigm++)
+        result->IgmMeiksinIdxIntermediate[fullResultIdx][kigm] =
+            subresult->IgmMeiksinIdxIntermediate[isubz][kigm];
       for (Int32 kism = 0;
            kism < ssize(result->ChiSquareIntermediate[fullResultIdx]); kism++) {
+        result->IsmEbmvIdxIntermediate[fullResultIdx][kism] =
+            subresult->IsmEbmvIdxIntermediate[isubz][kism];
         for (Int32 kigm = 0;
              kigm < ssize(result->ChiSquareIntermediate[fullResultIdx][kism]);
              kigm++) {
@@ -753,19 +759,15 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   TInt32List bestIGMIdx(nshifts, undefIdx);
 
   // prepare intermediate fit data buffer
-  std::vector<std::vector<TFloat64List>> intermediateChi2;
   Int32 nIGMFinal = nIGM;
   if (overrideNIGMTobesaved > nIGM) {
     nIGMFinal = overrideNIGMTobesaved;
   }
-  for (Int32 k = 0; k < nshifts; k++) {
-    std::vector<TFloat64List> _ChiSquareISMList;
-    for (Int32 kism = 0; kism < nISM; kism++) {
-      TFloat64List _chi2List(nIGMFinal, DBL_MAX);
-      _ChiSquareISMList.push_back(_chi2List);
-    }
-    intermediateChi2.push_back(_ChiSquareISMList);
-  }
+  TList<TList<TFloat64List>> intermediateChi2(
+      nshifts, TList<TFloat64List>(nISM, TFloat64List(nIGMFinal, DBL_MAX)));
+  TList<TInt32List> intermediateIsmEbmvIdx(nshifts, EbmvList);
+  TList<TInt32List> intermediateIgmMeiksinIdx(
+      nshifts, enableIGM ? MeiksinList : TInt32List(nIGMFinal, undefIdx));
 
   // note that there is no need to copy the ism/igm cause they already exist in
   // the rebinned template
@@ -815,7 +817,11 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFluxcorr_cropped, dtm_vec,
                   0);
 
-      Int32 dtm_vec_size = dtm_vec.size();
+      if (ssize(dtm_vec) != nshifts)
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "Wrong size of return cross product ("
+                           << dtm_vec.size() << " instead of expected "
+                           << nshifts << ")");
 
       // Estimate MtM: sumT
       TFloat64List mtm_vec;
@@ -824,17 +830,17 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       Log.LogDebug(Formatter() << "FitRangez: dtd = " << dtd);
 
       // Estimate Chi2
-      if (ssize(mtm_vec) != dtm_vec_size) {
+      if (ssize(mtm_vec) != nshifts) {
         freeFFTPlans();
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "xty vector size do not match: dtm size = "
-                           << dtm_vec_size << ", mtm size =" << mtm_vec.size());
+                           << nshifts << ", mtm size =" << mtm_vec.size());
       }
-      TFloat64List chi2(dtm_vec_size, DBL_MAX);
-      TFloat64List amp(dtm_vec_size, DBL_MAX);
-      TFloat64List amp_sigma(dtm_vec_size);
-      TFloat64List amp_err(dtm_vec_size, DBL_MAX);
-      for (Int32 k = 0; k < dtm_vec_size; k++) {
+      TFloat64List chi2(nshifts, DBL_MAX);
+      TFloat64List amp(nshifts, DBL_MAX);
+      TFloat64List amp_sigma(nshifts);
+      TFloat64List amp_err(nshifts, DBL_MAX);
+      for (Int32 k = 0; k < nshifts; k++) {
         if (mtm_vec[k] == 0.0) {
           amp[k] = 0.0;
           amp_err[k] = 0.0;
@@ -850,7 +856,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
         }
       }
 
-      for (Int32 k = 0; k < dtm_vec_size; k++) {
+      for (Int32 k = 0; k < nshifts; k++) {
         intermediateChi2[k][kISM][kIGM] = chi2[k];
         // in the case of 1215A is not in the range, no need to
         // recompute with varying IGM coeff.
@@ -877,8 +883,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(
               m_enableISM
                   ? m_templateRebined_bf[0]
                         .m_ismCorrectionCalzetti->GetEbmvValue(EbmvList[kISM])
-                  : -1.0;
-          bestIGMIdx[k] = enableIGM ? MeiksinList[kIGM] : -1;
+                  : undefIdx;
+          bestIGMIdx[k] = enableIGM ? MeiksinList[kIGM] : undefIdx;
         }
       }
 
@@ -906,20 +912,10 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   std::reverse(bestFitSNR.begin(), bestFitSNR.end());
   std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
   std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
-  TFloat64List intermChi2BufferReversed_array(intermediateChi2.size());
-  for (Int32 kism = 0; kism < nISM; kism++) {
-    for (Int32 kigm = 0; kigm < nIGMFinal; kigm++) {
-      for (Int32 t = 0; t < nshifts; t++)
-        intermChi2BufferReversed_array[t] =
-            intermediateChi2[nshifts - 1 - t][kism][kigm];
-      for (Int32 t = 0; t < nshifts; t++)
-        result->ChiSquareIntermediate[t][kism][kigm] =
-            intermChi2BufferReversed_array[t];
-    }
-  }
-  for (Int32 k = 0; k < ssize(result->Redshifts); k++) {
+  std::reverse(intermediateChi2.begin(), intermediateChi2.end());
+  for (Int32 k = 0; k < ssize(result->Redshifts); k++)
     result->Overlap[k] = TFloat64List(1, 1.0);
-  }
+
   result->ChiSquare = bestChi2;
   result->ReducedChiSquare = bestReducedChi2;
   result->pValue = bestPValue;
@@ -931,7 +927,10 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   result->SNR = bestFitSNR;
   result->FitEbmvCoeff = bestISMCoeff;
   result->FitMeiksinIdx = bestIGMIdx;
-
+  result->ChiSquareIntermediate = intermediateChi2;
+  // no need to reverse the two next: all values identical along z
+  result->IsmEbmvIdxIntermediate = intermediateIsmEbmvIdx;
+  result->IgmMeiksinIdxIntermediate = intermediateIgmMeiksinIdx;
   freeFFTPlans();
   return 0;
 }

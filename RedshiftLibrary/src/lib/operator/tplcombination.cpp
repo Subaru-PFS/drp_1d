@@ -201,10 +201,8 @@ void COperatorTplcombination::BasicFit(
       // Now copy from the already calculated k>0 igm values
       for (auto &Xi2 : fittingResults.ChiSquareInterm)
         Xi2 = TFloat64List(nIGM, Xi2.front());
-      for (auto &ismCoeffs : fittingResults.IsmCalzettiCoeffInterm)
-        ismCoeffs = TFloat64List(nIGM, ismCoeffs.front());
-      for (auto &igmCoeffs : fittingResults.IgmMeiksinIdxInterm)
-        igmCoeffs = TInt32List(nIGM, igmCoeffs.front());
+      fittingResults.IgmMeiksinIdxInterm =
+          TInt32List(nIGM, fittingResults.IgmMeiksinIdxInterm.front());
       break;
     }
     Int32 meiksinIdx = MeiksinList[kigm];
@@ -227,7 +225,9 @@ void COperatorTplcombination::BasicFit(
       }
       if (!igmCorrectionAppliedOnce)
         igmLoopUseless_WavelengthRange = true;
+      meiksinIdx = undefIdx;
     }
+    fittingResults.IgmMeiksinIdxInterm[kigm] = meiksinIdx;
 
     for (Int32 kEbmv_ = 0; kEbmv_ < nISM; kEbmv_++) {
       Int32 kEbmv = EbmvList[kEbmv_];
@@ -240,6 +240,7 @@ void COperatorTplcombination::BasicFit(
         for (Int32 iddl = 0; iddl < nddl; iddl++)
           m_templatesRebined_bf[iddl].ApplyDustCoeff(kEbmv);
       }
+      fittingResults.IsmCalzettiIdxInterm[kEbmv_] = kEbmv;
 
       // preparing the template matrix for computing the Xi2 value
       // the fastigm has its effect mainly on the number of spectrum to consider
@@ -335,17 +336,13 @@ void COperatorTplcombination::BasicFit(
         fittingResults.reducedChiSquare = NSFitQuality::reducedChi2(chisq, n);
         fittingResults.pValue = NSFitQuality::pValue(chisq, n);
         fittingResults.SNR = SNR;
-        fittingResults.meiksinIdx =
-            igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
+        fittingResults.meiksinIdx = meiksinIdx;
         fittingResults.ebmvCoef = coeffEBMV;
         chisquareSetAtLeastOnce = true;
       }
 
       // save the interm chisquares in the intermediate vector
       fittingResults.ChiSquareInterm[kEbmv_][kigm] = chisq;
-      fittingResults.IsmCalzettiCoeffInterm[kEbmv_][kigm] = coeffEBMV;
-      fittingResults.IgmMeiksinIdxInterm[kEbmv_][kigm] =
-          igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
 
       boost::chrono::thread_clock::time_point stop_postprocess =
           boost::chrono::thread_clock::now();
@@ -557,7 +554,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     result->FitEbmvCoeff[i] = fittingResults.ebmvCoef;
     result->FitMeiksinIdx[i] = fittingResults.meiksinIdx;
     result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
-    result->IsmEbmvCoeffIntermediate[i] = fittingResults.IsmCalzettiCoeffInterm;
+    result->IsmEbmvIdxIntermediate[i] = fittingResults.IsmCalzettiIdxInterm;
     result->IgmMeiksinIdxIntermediate[i] = fittingResults.IgmMeiksinIdxInterm;
   }
 

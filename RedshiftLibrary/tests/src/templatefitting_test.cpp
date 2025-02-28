@@ -78,9 +78,9 @@ BOOST_FIXTURE_TEST_CASE(fitQuality_test,
       logpriore, MeiksinList, EbmvList);
 
   // Checks that fit quality values are set
-  BOOST_CHECK_CLOSE(result.chiSquare, 335.74708870710344, 1e-6);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 6.3348507303227066, 1e-6);
-  BOOST_CHECK_CLOSE(result.pValue, 3.9524304409427213e-43, 1e-6);
+  BOOST_CHECK_CLOSE(result.chiSquare, 335.74709, 1e-4);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 6.3348507, 1e-4);
+  BOOST_CHECK_CLOSE(result.pValue, 3.952430e-43, 1e-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

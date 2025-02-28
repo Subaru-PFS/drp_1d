@@ -48,7 +48,7 @@
 
 using namespace NSEpic;
 
-BOOST_AUTO_TEST_SUITE(Linemodel_result)
+BOOST_AUTO_TEST_SUITE(vectorOperations)
 
 BOOST_AUTO_TEST_CASE(insertWithDuplicates_float) {
 
@@ -151,5 +151,77 @@ BOOST_AUTO_TEST_CASE(insertWithDuplicates_commononborder) {
   TFloat64List resultingVect{10, 15, 16, 18, 20, 22, 25, 26, 30};
   BOOST_CHECK(vect.size() == resultingVect.size());
   BOOST_CHECK(vect == resultingVect);
+}
+
+BOOST_AUTO_TEST_CASE(linearInterp_float) {
+  auto r = linearInterp<Float64>(1, 2, 0);
+  BOOST_CHECK_CLOSE(r, 1, 1e-7);
+
+  r = linearInterp<Float64>(1, 2, 1);
+  BOOST_CHECK_CLOSE(r, 2, 1e-7);
+
+  r = linearInterp<Float64>(1, 2, 0.5);
+  BOOST_CHECK_CLOSE(r, 1.5, 1e-7);
+}
+
+BOOST_AUTO_TEST_CASE(linearInterp_int) {
+  auto r = linearInterp<Int32>(1, 2, 0);
+  BOOST_CHECK(r == 1);
+
+  r = linearInterp<Int32>(1, 2, 1);
+  BOOST_CHECK(r == 2);
+
+  r = linearInterp<Int32>(1, 2, 0.5001);
+  BOOST_CHECK(r == 2);
+
+  r = linearInterp<Int32>(1, 2, 0.4999);
+  BOOST_CHECK(r == 1);
+}
+
+BOOST_AUTO_TEST_CASE(createLinearInterpVector_float) {
+  auto r = createLinearInterpVector<Float64>(1, 2, 5);
+  TFloat64List ref = {1, 1.25, 1.5, 1.75, 2};
+  BOOST_CHECK(r == ref);
+
+  r = createLinearInterpVector<Float64>(1, 2, 1);
+  ref = {1};
+  BOOST_CHECK(r == ref);
+
+  r = createLinearInterpVector<Float64>(1, 2, 0);
+  ref = {};
+  BOOST_CHECK(r == ref);
+}
+
+BOOST_AUTO_TEST_CASE(interpolateBetweenDuplicates_float) {
+  TFloat64List source = {-1, 0, 1, 2, 3};
+  Int32 insertionIdx = 1;
+  TInt32List overwrittenSourceIndices = {0, 4, 8};
+  Int32 nInterp = 9;
+  Int32 largeStepFactor = 4;
+  auto r = interpolateBetweenDuplicates<Float64>(
+      source, insertionIdx, overwrittenSourceIndices, nInterp, largeStepFactor);
+  TFloat64List ref = {0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2};
+  BOOST_CHECK(r == ref);
+
+  // incomplete first and last segments
+  insertionIdx = 2;
+  overwrittenSourceIndices = {2};
+  nInterp = 5;
+  r = interpolateBetweenDuplicates<Float64>(
+      source, insertionIdx, overwrittenSourceIndices, nInterp, largeStepFactor);
+  ref = {0.5, 0.75, 1, 1.25, 1.5};
+  BOOST_CHECK(r == ref);
+
+  insertionIdx = 0;
+  BOOST_CHECK_THROW(interpolateBetweenDuplicates<Float64>(
+                        source, insertionIdx, overwrittenSourceIndices, nInterp,
+                        largeStepFactor),
+                    AmzException);
+
+  insertionIdx = 5;
+  BOOST_CHECK_THROW(interpolateBetweenDuplicates<Float64>(
+                        source, insertionIdx, overwrittenSourceIndices, nInterp,
+                        largeStepFactor),
+                    AmzException);
 }
 BOOST_AUTO_TEST_SUITE_END()
