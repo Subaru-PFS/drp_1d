@@ -40,6 +40,7 @@ import numpy as np
 from pylibamazed.redshift import CLogZPdfResult, CZGridListParams, CZGridParam, TFloat64Range
 
 from pylibamazed.AbstractOutput import AbstractOutput
+from pylibamazed.Parameters import Parameters
 
 
 def buildPdfParams(pdf_params, first_pass=False):
@@ -51,6 +52,25 @@ def buildPdfParams(pdf_params, first_pass=False):
     return CZGridListParams(
         [CZGridParam(TFloat64Range(p["zmin"], p["zmax"]), p["zstep"], p["zcenter"]) for p in v]
     )
+
+
+def get_fine_z_grid(object_type: str, parameters: Parameters):
+    p_redshift_range = parameters.get_redshiftrange(object_type)
+    redshift_range = TFloat64Range(p_redshift_range[0], p_redshift_range[1])
+    redshift_step = parameters.get_redshiftstep(object_type)
+    is_log = parameters.get_redshift_sampling(object_type) == "log"
+    grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
+
+    zend = grid_param.getZGrid(is_log)[-1]
+    if parameters.has_two_pass(object_type):
+        ratio = parameters.get_large_grid_ratio(object_type)
+        fp_grid_param = CZGridParam(redshift_range, redshift_step * ratio, np.nan)
+        zend = fp_grid_param.getZGrid(is_log)[-1]
+        
+    redshift_range = TFloat64Range(p_redshift_range[0], zend)
+    grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
+
+    return grid_param.getZGrid(is_log)
 
 
 class BuilderPdfHandler:
