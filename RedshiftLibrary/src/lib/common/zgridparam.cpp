@@ -70,8 +70,8 @@ TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
   return zgrid;
 }
 
-std::tuple<Int32, Int32> CZGridListParams::insertSubgrid(TFloat64List &subgrid,
-                                                         TFloat64List &zgrid) {
+std::tuple<Int32, TInt32List>
+CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
   const Float64 epsilon = 1E-8;
   TFloat64Range range_epsilon = {subgrid.front() - epsilon,
                                  subgrid.back() + epsilon};
@@ -88,7 +88,16 @@ std::tuple<Int32, Int32> CZGridListParams::insertSubgrid(TFloat64List &subgrid,
     subgrid.back() = zgrid.back();
 
   Int32 ndup = imax - imin + 1;
+
+  // Find overwritten indices
+  TInt32List overwrittenSourceIndices(ndup, undefIdx);
+  for (Int32 dup = 0; dup < ndup; ++dup) {
+    Float64 const value_overwritten = zgrid[imin + dup];
+    overwrittenSourceIndices[dup] =
+        CIndexing<Float64>::getCloserIndex(subgrid, value_overwritten);
+  }
+
   insertWithDuplicates(zgrid, imin, subgrid, ndup);
 
-  return std::make_tuple(imin, ndup);
+  return std::make_tuple(imin, overwrittenSourceIndices);
 }

@@ -100,8 +100,8 @@ public:
   static Float64 ComputeFluxes(CSpectrum const &spectrum, Float64 winsize,
                                TInt32Range const &range,
                                TFloat64List mask = TFloat64List(),
-                               Float64 *maxFluxnoContinuum = NULL,
-                               Float64 *noise = NULL);
+                               Float64 *maxFluxnoContinuum = nullptr,
+                               Float64 *noise = nullptr);
 
 private:
   friend class test_linedetection::XMadFind;

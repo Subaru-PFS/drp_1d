@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
 
 BOOST_AUTO_TEST_CASE(operator_test) {
   CSpectrumAxis n0Axis;
-  BOOST_CHECK(n0Axis.GetSamples() == NULL);
+  BOOST_CHECK(n0Axis.GetSamples() == nullptr);
   // One element
   Float64 n1Array[] = {0.5};
   CSpectrumAxis n10Axis(n1Array, 1);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(SampleCount_test) {
 BOOST_AUTO_TEST_CASE(GetSample_test) {
   // No element
   CSpectrumAxis n0Axis;
-  BOOST_CHECK(n0Axis.GetSamples() == NULL);
+  BOOST_CHECK(n0Axis.GetSamples() == nullptr);
   // One element
   Float64 n1Array[] = {0.5};
   CSpectrumAxis n1Axis(n1Array, 1);

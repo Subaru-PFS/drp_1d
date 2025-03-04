@@ -47,6 +47,7 @@
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 
 using namespace NSEpic;
@@ -109,33 +110,40 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
   }
 }
 
-void CLineModelResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
+void CLineModelResult::updateVectors(
+    TsecondPassIndices const &secondPassIndices) {
+  auto const &[insertionIdx, _, overwrittenSourceIndices, count] =
+      secondPassIndices;
 
-  insertWithDuplicates<Float64>(ChiSquare, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ScaleMargCorrection, idx, count, NAN, ndup);
-  insertWithDuplicates(LineModelSolutions, idx, count, CLineModelSolution(),
-                       ndup);
-  insertWithDuplicates(ContinuumModelSolutions, idx, count,
-                       CContinuumModelSolution(), ndup);
-  insertWithDuplicates<Float64>(ChiSquareContinuum, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, idx, count, NAN,
+  Int32 ndup = overwrittenSourceIndices.size();
+  insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(ScaleMargCorrection, insertionIdx, count, NAN,
                                 ndup);
+  insertWithDuplicates(LineModelSolutions, insertionIdx, count,
+                       CLineModelSolution(), ndup);
+  insertWithDuplicates(ContinuumModelSolutions, insertionIdx, count,
+                       CContinuumModelSolution(), ndup);
+  insertWithDuplicates<Float64>(ChiSquareContinuum, insertionIdx, count, NAN,
+                                ndup);
+  insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, insertionIdx,
+                                count, NAN, ndup);
 
   for (auto &xi2Cont : ChiSquareTplContinuum)
-    insertWithDuplicates<Float64>(xi2Cont, idx, count, DBL_MAX, ndup);
+    insertWithDuplicates<Float64>(xi2Cont, insertionIdx, count, DBL_MAX, ndup);
 
   for (Int32 i = 0; i < ChiSquareTplratios.size(); i++) {
-    insertWithDuplicates<Float64>(ChiSquareTplratios[i], idx, count, DBL_MAX,
-                                  ndup);
-    insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i], idx, count,
-                                  0., ndup);
-    insertWithDuplicates<bool>(StrongELPresentTplratios[i], idx, count, false,
-                               ndup);
-    insertWithDuplicates<bool>(StrongHalphaELPresentTplratios[i], idx, count,
+    insertWithDuplicates<Float64>(ChiSquareTplratios[i], insertionIdx, count,
+                                  DBL_MAX, ndup);
+    insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i], insertionIdx,
+                                  count, 0., ndup);
+    insertWithDuplicates<bool>(StrongELPresentTplratios[i], insertionIdx, count,
                                false, ndup);
-    insertWithDuplicates<Int32>(NLinesAboveSNRTplratios[i], idx, count, 0,
-                                ndup);
-    insertWithDuplicates<Float64>(PriorLinesTplratios[i], idx, count, 0., ndup);
+    insertWithDuplicates<bool>(StrongHalphaELPresentTplratios[i], insertionIdx,
+                               count, false, ndup);
+    insertWithDuplicates<Int32>(NLinesAboveSNRTplratios[i], insertionIdx, count,
+                                0, ndup);
+    insertWithDuplicates<Float64>(PriorLinesTplratios[i], insertionIdx, count,
+                                  0., ndup);
   }
 }
 

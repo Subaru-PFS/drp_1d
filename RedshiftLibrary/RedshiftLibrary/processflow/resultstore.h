@@ -72,13 +72,13 @@ template <class T = TTplCombinationResult> class CTplCombinationExtremaResult;
 /**
  * \ingroup Redshift
  */
+using TResultsMap =
+    std::map<std::string, std::shared_ptr<const COperatorResult>>;
+using TPerTemplateResultsMap = std::map<std::string, TResultsMap>;
+
 class COperatorResultStore : public CScopeStore {
 
 public:
-  typedef std::map<std::string, std::shared_ptr<const COperatorResult>>
-      TResultsMap;
-  typedef std::map<std::string, TResultsMap> TPerTemplateResultsMap;
-
   static std::string buildFullname(const std::string &spectrumModel,
                                    const std::string &stage,
                                    const std::string &method,
@@ -94,7 +94,7 @@ public:
   std::weak_ptr<const COperatorResult>
   GetScopedPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                              const std::string &name) const;
-  TOperatorResultMap GetScopedPerTemplateResult(const std::string &name) const;
+  TResultsMap GetScopedPerTemplateResult(const std::string &name) const;
   std::weak_ptr<const COperatorResult>
   GetScopedGlobalResult(const std::string &name) const;
 
@@ -215,7 +215,7 @@ private:
   std::weak_ptr<const COperatorResult>
   GetPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                        const std::string &name) const;
-  TOperatorResultMap GetPerTemplateResult(const std::string &name) const;
+  TResultsMap GetPerTemplateResult(const std::string &name) const;
   std::weak_ptr<const COperatorResult>
   GetGlobalResult(const std::string &name) const;
   std::weak_ptr<const COperatorResult>

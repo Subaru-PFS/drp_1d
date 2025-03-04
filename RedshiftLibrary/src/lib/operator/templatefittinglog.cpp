@@ -317,11 +317,11 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
 }
 
 void COperatorTemplateFittingLog::freeFFTPrecomputedBuffers() {
-  if (precomputedFFT_spcFluxOverErr2 != NULL) {
+  if (precomputedFFT_spcFluxOverErr2 != nullptr) {
     fftw_free(precomputedFFT_spcFluxOverErr2);
     precomputedFFT_spcFluxOverErr2 = 0;
   }
-  if (precomputedFFT_spcOneOverErr2 != NULL) {
+  if (precomputedFFT_spcOneOverErr2 != nullptr) {
     fftw_free(precomputedFFT_spcOneOverErr2);
     precomputedFFT_spcOneOverErr2 = 0;
   }
@@ -1006,8 +1006,8 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
     Float64 overlapThreshold, std::string opt_interp, bool opt_extinction,
     bool opt_dustFitting, Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx, std::shared_ptr<CTemplateFittingResult> result,
-    bool isFirstPass, const std::vector<Int32> &zIdxsToCompute) {
+    Int32 FitMeiksinIdx, TInt32Range zIdxRangeToCompute,
+    std::shared_ptr<CTemplateFittingResult> const &dummyResult) {
   Log.LogDetail(Formatter() << "starting computation for template: "
                             << logSampledTpl->GetName());
 
@@ -1072,8 +1072,8 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
 
   m_enableIGM = opt_extinction;
   m_enableISM = opt_dustFitting;
-  result = std::make_shared<CTemplateFittingResult>(m_redshifts.size(),
-                                                    nISMCoeffs, nIGMCoeffs);
+  auto const result = std::make_shared<CTemplateFittingResult>(
+      m_redshifts.size(), nISMCoeffs, nIGMCoeffs);
   result->Redshifts = m_redshifts;
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {

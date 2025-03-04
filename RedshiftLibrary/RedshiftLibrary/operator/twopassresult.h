@@ -44,10 +44,12 @@
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
+struct TsecondPassIndices;
+
 class CTwoPassResult : public COperatorResult {
 public:
   using COperatorResult::COperatorResult;
-  virtual void updateVectors(Int32 idx, Int32 ndup, Int32 count) = 0;
+  virtual void updateVectors(TsecondPassIndices const &) = 0;
   TFloat64List Redshifts; // z axis
 };
 } // namespace NSEpic

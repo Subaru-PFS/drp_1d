@@ -48,6 +48,8 @@
 namespace NSEpic {
 
 class TFittingIsmIgmResult;
+struct TsecondPassIndices;
+
 class CTemplateFittingResult : public CTwoPassResult {
 
 public:
@@ -61,7 +63,7 @@ public:
   CTemplateFittingResult(CTemplateFittingResult &&) = default;
   CTemplateFittingResult &operator=(const CTemplateFittingResult &) = default;
   CTemplateFittingResult &operator=(CTemplateFittingResult &&) = default;
-  void updateVectors(Int32 idx, Int32 ndup, Int32 count) override;
+  void updateVectors(TsecondPassIndices const &) override;
 
   Float64 SNRCalculation(Float64 dtm, Float64 mtm);
 
@@ -93,6 +95,18 @@ public:
 
   Float64 CstLog = NAN;
   std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra
+
+private:
+  std::pair<Int32, Int32>
+  getIsmIgmSizes(T3DList<Float64> const &ChiSquareIntermediate);
+
+  T3DList<Float64>
+  interpolatedChiSquareIntermediate(TsecondPassIndices const &);
+
+  void interpolatedBetweenTwoSamples(T2DList<Float64> &array1,
+                                     T2DList<Float64> &array2,
+                                     TInt32Range const &destIdxRange,
+                                     T3DList<Float64> dest);
 };
 
 } // namespace NSEpic

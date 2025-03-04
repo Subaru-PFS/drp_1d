@@ -40,11 +40,12 @@
 #define _REDSHIFT_COMMON_VECTOROPERATIONS_
 
 #include "RedshiftLibrary/common/defaults.h"
-
+#include "RedshiftLibrary/common/indexing.h"
 #include <vector>
 
 namespace NSEpic {
 
+// insert source into destination with ndup overlaping elements
 template <typename T>
 inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
                                  std::vector<T> src, Int32 ndup) {
@@ -56,6 +57,7 @@ inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
   std::copy(src_last_insert, src_end, dest.begin() + pos + ninsert);
 }
 
+// insert constant value into destination with ndup overlaping elements
 template <typename T>
 inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
                                  std::size_t count, const T &value,
@@ -86,30 +88,21 @@ inline TInt32Pair find2DVectorMinIndexes(std::vector<std::vector<T>> vect) {
 inline std::vector<Float64> createLinearInterpVector(Float64 v1, Float64 v2,
                                                      Float64 n) {
   // Creates a linear vector from value v1 to value v2 with n elements
-  std::vector<Float64> result;
+  std::vector<Float64> result(n);
   if (n <= 1) {
     // Handle edge case: return a vector with a single value n1 if n <= 1
     if (n == 1)
-      result.push_back(v1);
+      result.front() = v1;
     return result;
   }
 
-  Float64 step = (v2 - v1) / (n - 1); // Calculate the step size
-  for (int i = 0; i < n; ++i) {
-    result.push_back(v1 + i * step); // Generate each value
-  }
+  std::generate(result.begin(), result.end(),
+                [i = 0, v1, v2, f0 = 1. / (n - 1)]() mutable {
+                  auto f = f0 * i++;
+                  return v1 * (1 - f) + v2 * f;
+                });
   return result;
 }
 
-template <typename T>
-inline std::vector<T> removeFirstAndLast(const std::vector<T> &inputVect) {
-  if (inputVect.size() <= 2) {
-    // If inputVect has 2 or fewer elements, return an empty vector
-    return {};
-  }
-  // Create return vector with elements from inputVect, excluding the first and
-  // last elements
-  return std::vector<T>(inputVect.begin() + 1, inputVect.end() - 1);
-}
 } // namespace NSEpic
 #endif

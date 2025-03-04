@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
+#include "RedshiftLibrary/operator/twopass.h"
 
 using namespace NSEpic;
 
@@ -116,22 +117,34 @@ Float64 CTemplateFittingResult::SNRCalculation(Float64 dtm, Float64 mtm) {
   return snr;
 }
 
-void CTemplateFittingResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
-  insertWithDuplicates<Float64>(ChiSquare, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ReducedChiSquare, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ChiSquarePhot, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitAmplitude, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitAmplitudeError, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitAmplitudeSigma, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitEbmvCoeff, idx, count, NAN, ndup);
-  insertWithDuplicates<Int32>(FitMeiksinIdx, idx, count, -1, ndup);
-  insertWithDuplicates<Float64>(FitDtM, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitMtM, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(LogPrior, idx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(SNR, idx, count, NAN, ndup);
+void CTemplateFittingResult::updateVectors(
+    TsecondPassIndices const &secondPassIndices) {
+  auto const &[insertionIdx, initialInsertionIdx, overwrittenSourceIndices,
+               count] = secondPassIndices;
+  Int32 ndup = overwrittenSourceIndices.size();
+  insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(ReducedChiSquare, insertionIdx, count, NAN,
+                                ndup);
+  insertWithDuplicates<Float64>(ChiSquarePhot, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitAmplitude, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitAmplitudeError, insertionIdx, count, NAN,
+                                ndup);
+  insertWithDuplicates<Float64>(FitAmplitudeSigma, insertionIdx, count, NAN,
+                                ndup);
+  insertWithDuplicates<Float64>(FitEbmvCoeff, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Int32>(FitMeiksinIdx, insertionIdx, count, -1, ndup);
+  insertWithDuplicates<Float64>(FitDtM, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(FitMtM, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(LogPrior, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<Float64>(SNR, insertionIdx, count, NAN, ndup);
 
   insertWithDuplicates<std::vector<Float64>>(
-      Overlap, idx, count, std::vector<Float64>(Overlap[0].size(), NAN), ndup);
+      Overlap, insertionIdx, count,
+      std::vector<Float64>(Overlap[0].size(), NAN), ndup);
+
+  auto const chi2ToInsert =
+      interpolatedChiSquareIntermediate(secondPassIndices);
+  insertWithDuplicates(ChiSquareIntermediate, insertionIdx, chi2ToInsert, ndup);
 
   size_t nIsm = 0;
   size_t nIgm = 0;
@@ -141,31 +154,96 @@ void CTemplateFittingResult::updateVectors(Int32 idx, Int32 ndup, Int32 count) {
       nIgm = ChiSquareIntermediate[0][0].size();
   }
 
-  T3DList<Float64> chi2ToInsert(
-      count, T2DList<Float64>(nIsm, std::vector<Float64>(nIgm, NAN)));
-  for (Int32 ismIdx = 0; ismIdx < nIsm; ++ismIdx) {
-    for (Int32 igmIdx = 0; igmIdx < nIgm; ++igmIdx) {
-      Float64 v1 = ChiSquareIntermediate[idx][ismIdx][igmIdx];
-      Float64 v2 = ChiSquareIntermediate[idx + 1][ismIdx][igmIdx];
-      TFloat64List linearVect =
-          removeFirstAndLast(createLinearInterpVector(v1, v2, count + 2));
-      for (Int32 zIdx = 0; zIdx < count; ++zIdx) {
-        chi2ToInsert[zIdx][ismIdx][igmIdx] = linearVect[zIdx];
-      }
-    }
-  }
-
-  insertWithDuplicates<std::vector<std::vector<Float64>>>(
-      ChiSquareIntermediate, idx, chi2ToInsert, ndup);
-
-  // TODO see how to fill this
   T3DList<Float64> toInsertFloat(
       count, T2DList<Float64>(nIsm, std::vector<Float64>(nIgm, NAN)));
   insertWithDuplicates<std::vector<std::vector<Float64>>>(
-      IsmEbmvCoeffIntermediate, idx, toInsertFloat, ndup);
+      IsmEbmvCoeffIntermediate, insertionIdx, toInsertFloat, ndup);
 
   T3DList<Int32> toInsertInt(
       count, T2DList<Int32>(nIsm, std::vector<Int32>(nIgm, -1)));
   insertWithDuplicates<std::vector<std::vector<Int32>>>(
-      IgmMeiksinIdxIntermediate, idx, toInsertInt, ndup);
-};
+      IgmMeiksinIdxIntermediate, insertionIdx, toInsertInt, ndup);
+}
+
+// interpolated values from ChiSquareIntermediate
+T3DList<Float64> CTemplateFittingResult::interpolatedChiSquareIntermediate(
+    TsecondPassIndices const &secondPassIndices) {
+  auto const &[_, initialInsertionIdx, overwrittenSourceIndices, count] =
+      secondPassIndices;
+
+  Int32 ndup = overwrittenSourceIndices.size();
+  auto const &[nIsm, nIgm] = getIsmIgmSizes(ChiSquareIntermediate);
+
+  T3DList<Float64> interpolatedToInsert(
+      count, T2DList<Float64>(nIsm, TList<Float64>(nIgm)));
+
+  // left
+  Int32 dupStart = 0;
+  Int32 const firstSourceIdx = 0;
+  Int32 const firstZidx = 0;
+  if (overwrittenSourceIndices[dupStart] != firstSourceIdx) {
+    Int32 idx = std::max(initialInsertionIdx - 1, firstZidx);
+    Int32 interp_idx1 = firstSourceIdx;
+    Int32 interp_idx2 = overwrittenSourceIndices[dupStart];
+    interpolatedBetweenTwoSamples(
+        ChiSquareIntermediate[idx], ChiSquareIntermediate[idx + 1],
+        TInt32Range(interp_idx1, interp_idx2), interpolatedToInsert);
+    ++dupStart;
+  }
+
+  // right
+  // TODO, handle case ndup==1 ?
+  Int32 dupEnd = ndup - 1;
+  Int32 const lastSourceIdx = count - 1;
+  Int32 const lastZidx = Int32(ChiSquareIntermediate.size()) - 1;
+  if (overwrittenSourceIndices[dupEnd] != lastSourceIdx) {
+    Int32 idx = std::min(initialInsertionIdx + dupEnd + 1, lastZidx);
+    Int32 interp_idx1 = overwrittenSourceIndices[dupEnd];
+    Int32 interp_idx2 = lastSourceIdx;
+    interpolatedBetweenTwoSamples(
+        ChiSquareIntermediate[idx], ChiSquareIntermediate[idx + 1],
+        TInt32Range(interp_idx1, interp_idx2), interpolatedToInsert);
+    --dupEnd;
+  }
+
+  // middle
+  for (Int32 dup = dupStart; dup < dupEnd; ++dup) {
+    Int32 idx = initialInsertionIdx + dup;
+    Int32 interp_idx1 = overwrittenSourceIndices[dup];
+    Int32 interp_idx2 = overwrittenSourceIndices[dup + 1];
+    interpolatedBetweenTwoSamples(
+        ChiSquareIntermediate[idx], ChiSquareIntermediate[idx + 1],
+        TInt32Range(interp_idx1, interp_idx2), interpolatedToInsert);
+  }
+
+  return interpolatedToInsert;
+}
+
+void CTemplateFittingResult::interpolatedBetweenTwoSamples(
+    T2DList<Float64> &array1, T2DList<Float64> &array2,
+    TInt32Range const &destIdxRange, T3DList<Float64> dest) {
+  auto const &[nIsm, nIgm] = getIsmIgmSizes(ChiSquareIntermediate);
+
+  Int32 nInterpolate = destIdxRange.GetLength() + 1;
+  for (Int32 ismIdx = 0; ismIdx < nIsm; ++ismIdx) {
+    for (Int32 igmIdx = 0; igmIdx < nIgm; ++igmIdx) {
+      Float64 v1 = array1[ismIdx][igmIdx];
+      Float64 v2 = array2[ismIdx][igmIdx];
+      TFloat64List linearVect = createLinearInterpVector(v1, v2, nInterpolate);
+      for (Int32 zIdx : destIdxRange)
+        dest[zIdx][ismIdx][igmIdx] = linearVect[zIdx];
+    }
+  }
+}
+
+std::pair<Int32, Int32> CTemplateFittingResult::getIsmIgmSizes(
+    T3DList<Float64> const &ChiSquareIntermediate) {
+  size_t nIsm = 0;
+  size_t nIgm = 0;
+  if (ChiSquareIntermediate.size() > 0) {
+    nIsm = ChiSquareIntermediate[0].size();
+    if (ChiSquareIntermediate[0].size() > 0)
+      nIgm = ChiSquareIntermediate[0][0].size();
+  }
+  return std::make_pair(nIsm, nIgm);
+}

@@ -526,7 +526,7 @@ void CLineModelSolve::storeExtremaResults(
  **/
 
 void CLineModelSolve::Solve() {
-  std::string scopeStr = "lineModel";
+  std::string const resultName = "lineModel";
 
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
 
@@ -538,15 +538,12 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // FIRST PASS
   //**************************************************
-  m_linemodel.ComputeFirstPass();
+  std::shared_ptr<const CLineModelResult> lmresult =
+      m_linemodel.ComputeFirstPass();
 
   //**************************************************
   // Compute z-candidates
   //**************************************************
-  std::shared_ptr<const CLineModelResult> lmresult =
-      std::dynamic_pointer_cast<const CLineModelResult>(
-          m_linemodel.getResult());
-
   ChisquareArray chisquares = BuildChisquareArray(lmresult);
 
   // TODO deal with the case lmresult->Redshifts=1
@@ -566,30 +563,25 @@ void CLineModelSolve::Solve() {
                                        pdfz.m_postmargZResult);
 
   // save linemodel firstpass extrema results
-  std::string firstpassExtremaResultsStr = scopeStr;
+  std::string firstpassExtremaResultsStr = resultName;
   firstpassExtremaResultsStr.append("_firstpass_extrema");
   std::shared_ptr<const LineModelExtremaResult> firstpass_results =
       std::dynamic_pointer_cast<const LineModelExtremaResult>(
           m_linemodel.getFirstPassExtremaResults());
-  resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr.c_str(),
+  resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr,
                                        firstpass_results);
 
   //**************************************************
   // SECOND PASS
   //**************************************************
   if (twoPassIsActive())
-    m_linemodel.ComputeSecondPass();
+    lmresult = m_linemodel.ComputeSecondPass();
 
-  // read it as constant to save it
-  std::shared_ptr<const CLineModelResult> result =
-      std::dynamic_pointer_cast<const CLineModelResult>(
-          m_linemodel.getResult());
-
-  if (!result)
+  if (!lmresult)
     THROWG(ErrorCode::INTERNAL_ERROR, "Failed to get linemodel result");
 
   // save linemodel chisquare results
-  resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
+  resultStore->StoreScopedGlobalResult(resultName, lmresult);
 
   // don't save linemodel extrema results, since will change with pdf
   // computation

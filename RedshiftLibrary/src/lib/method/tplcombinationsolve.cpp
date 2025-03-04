@@ -155,7 +155,7 @@ bool CTplCombinationSolve::Solve(
     const TFloat64List &redshifts, Float64 overlapThreshold,
     const std::vector<CMask> &maskList, EType spctype,
     const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting) {
-  std::string scopeStr = "tplcombination";
+  std::string resultName = "tplcombination";
   // TODO modify as in templatefittingsolve when stabilized
   Int32 _ntype = 0;
   CSpectrum::EType _spctype = CSpectrum::EType::raw;
@@ -205,7 +205,7 @@ bool CTplCombinationSolve::Solve(
           tpl->setRebinInterpMethod(opt_interp);
         });
 
-    scopeStr = getSpecBasedScope(_spctype);
+    resultName = getResultName(_spctype);
     if (_spctype == CSpectrum::EType::noContinuum)
       enable_dustFitting = 0;
 
@@ -220,7 +220,7 @@ bool CTplCombinationSolve::Solve(
 
     // Store results
     Log.LogDetail("tplcombinationsolver: Save tplcombination results");
-    resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
+    resultStore->StoreScopedGlobalResult(resultName, result);
   }
 
   // restore component types
@@ -255,7 +255,7 @@ void CTplCombinationSolve::checkTemplates(
   }
 }
 
-std::string CTplCombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
+std::string CTplCombinationSolve::getResultName(CSpectrum::EType _spctype) {
   if (_spctype == CSpectrum::EType::continuumOnly)
     // use continuum only
     return "tplcombination_continuum";

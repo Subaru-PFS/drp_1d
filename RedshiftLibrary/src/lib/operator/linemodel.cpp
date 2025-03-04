@@ -81,7 +81,8 @@ using namespace std;
  * @brief COperatorLineModel::ComputeFirstPass
  * @return 0=no errors, -1=error
  */
-void COperatorLineModel::ComputeFirstPass() {
+std::shared_ptr<const CLineModelResult> const
+COperatorLineModel::ComputeFirstPass() {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_opt_continuumcomponent =
       ps->GetScoped<std::string>("lineModel.continuumComponent");
@@ -235,6 +236,7 @@ void COperatorLineModel::ComputeFirstPass() {
                           << duration_firstpass_seconds << " sec");
   Log.LogInfo(Formatter() << "<proc-lm-firstpass><"
                           << (Int32)duration_firstpass_seconds << ">");
+  return m_result;
 }
 
 bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero) {
@@ -270,7 +272,7 @@ bool COperatorLineModel::isfftprocessingActive(Int32 redshiftsTplFitCount) {
 
 void COperatorLineModel::fitContinuumTemplates(
     Int32 candidateIdx, const TFloat64List &redshiftsContinuumFit,
-    std::vector<std::shared_ptr<COperatorResult>> &chisquareResultsAllTpl,
+    std::vector<std::shared_ptr<const COperatorResult>> &chisquareResultsAllTpl,
     TStringList &chisquareResultsTplName) {
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
@@ -302,7 +304,7 @@ void COperatorLineModel::fitContinuumTemplates(
                  << "Processing " << tplList.size() << " templates");
   }
   for (Int32 i = 0; i < tplList.size(); i++) {
-    std::shared_ptr<COperatorResult> templatefittingResult;
+    std::shared_ptr<const COperatorResult> templatefittingResult;
     std::string tplname;
     if (m_opt_continuumcomponent.isPowerLawXXX()) {
       auto castedOperator = std::dynamic_pointer_cast<COperatorPowerLaw>(
@@ -492,7 +494,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
             m_fittingManager->getElementListVector(),
             m_fittingManager->getSpectraIndex()));
   }
-  std::vector<std::shared_ptr<COperatorResult>> chisquareResultsAllTpl;
+  std::vector<std::shared_ptr<const COperatorResult>> chisquareResultsAllTpl;
   TStringList chisquareResultsTplName;
   fitContinuumTemplates(candidateIdx, redshiftsContinuumFit,
                         chisquareResultsAllTpl, chisquareResultsTplName);
@@ -501,7 +503,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   // EACH TEMPLATE are used
   if (m_opt_continuumcomponent.isPowerLawXXX()) {
     const auto &chisquareResult =
-        std::dynamic_pointer_cast<CPowerLawResult>(chisquareResultsAllTpl[0]);
+        std::dynamic_pointer_cast<const CPowerLawResult>(
+            chisquareResultsAllTpl[0]);
     // size 1
     Float64 bestFitSNR = 0.0;
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
@@ -524,7 +527,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
       for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++) { // n templates
         const auto &chisquareResult =
-            std::dynamic_pointer_cast<CTemplateFittingResult>(
+            std::dynamic_pointer_cast<const CTemplateFittingResult>(
                 chisquareResultsAllTpl[j]);
 
         std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
@@ -707,7 +710,8 @@ void COperatorLineModel::SetFirstPassCandidates(
   }
 }
 
-void COperatorLineModel::ComputeSecondPass() {
+std::shared_ptr<const CLineModelResult> const
+COperatorLineModel::ComputeSecondPass() {
 
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
@@ -810,6 +814,8 @@ void COperatorLineModel::ComputeSecondPass() {
 
   m_fittingManager->getContinuumManager()->SetFitContinuum_Option(
       savedFitContinuumOption);
+
+  return m_result;
 }
 
 std::shared_ptr<LineModelExtremaResult>
@@ -1478,7 +1484,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
   }
 }
 
-void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
+void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 zStep,
                               const bool zLogSampling) {
 
   m_tplCategory = Context.GetCurrentCategory();
@@ -1494,7 +1500,7 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
   // below should be part of constructor
   m_redshifts = redshifts;
   // init relevant elements to generate secondpass intervals
-  m_fineStep = finestep;
+  m_fineStep = zStep;
   m_zLogSampling = zLogSampling;
 
   if (Context.GetCurrentMethod() == "lineModelSolve") {
@@ -1503,8 +1509,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
 
     m_opt_firstpass_fittingmethod =
         ps->GetScoped<std::string>("firstPass.fittingMethod");
-    COperatorTwoPass::setClassVariables(m_secondPass_halfwindowsize,
-                                        zLogSampling, redshifts, finestep);
   }
   //
   if (m_opt_continuumcomponent.isContinuumFit()) {
@@ -1545,10 +1549,6 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 finestep,
     m_opt_continuum_bad_chi2_threshold =
         ps->GetScoped<Float64>("continuumFit.badChi2Threshold");
   }
-}
-
-std::shared_ptr<COperatorResult> COperatorLineModel::getResult() {
-  return m_result;
 }
 
 /**
