@@ -649,14 +649,11 @@ BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
   lineModelSolve.InitRanges(inputContext);
   CAutoScope method_autoscope(scope, lineModelSolve.m_name, ScopeType::METHOD);
   CAutoSaveFlagToResultStore saveflag;
-  // auto const &result = compute();
 
   std::shared_ptr<CLineModelSolveResult> lmSolveResult =
       std::dynamic_pointer_cast<CLineModelSolveResult>(
           lineModelSolve.compute());
   BOOST_CHECK(lineModelSolve.m_opt_continuumcomponent.isContinuumFit());
-  // Question: j'ai créé cette valeur de test à partir du résultat, c'est pas
-  // bizarre comme valeur ?
   BOOST_CHECK_CLOSE(lmSolveResult->getContinuumEvidence(), 1883.5584, 0.1);
 
   ctx.reset();

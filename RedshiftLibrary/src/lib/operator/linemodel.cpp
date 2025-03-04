@@ -515,7 +515,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
           ->Add(chisquareResult->FitEbmvCoeff[i],
                 chisquareResult->FitMeiksinIdx[i], redshift,
                 chisquareResult->ChiSquare[i],
-                chisquareResult->ReducedChiSquare[i], chisquareResult->coefs[i],
+                chisquareResult->ReducedChiSquare[i],
+                chisquareResult->pValue[i], chisquareResult->coefs[i],
                 chisquareResult->SNR[i]);
 
       if (chisquareResult->SNR[i] > bestFitSNR)
@@ -536,7 +537,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                   chisquareResult->FitMeiksinIdx[i], redshift,
                   chisquareResult->ChiSquare[i],
                   chisquareResult->ReducedChiSquare[i],
-                  chisquareResult->ChiSquarePhot[i],
+                  chisquareResult->pValue[i], chisquareResult->ChiSquarePhot[i],
                   chisquareResult->FitAmplitude[i],
                   chisquareResult->FitAmplitudeError[i],
                   chisquareResult->FitAmplitudeSigma[i],
@@ -583,7 +584,7 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 bool COperatorLineModel::updateContinuumComponentIfBadChi2(
     CContinuumModelSolution const &fitValues) {
 
-  // check if min_z reducedChisquare is not to big
+  // check if min_z reducedChiSquare is not to big
   auto const min_chi2_r = fitValues.reducedChi2;
   bool const good_cont = min_chi2_r <= m_opt_continuum_bad_chi2_threshold;
 

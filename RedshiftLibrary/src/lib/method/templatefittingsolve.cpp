@@ -536,8 +536,9 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // Fill all the remaing attributes
     candidate->fittedContinuum.merit = bestResult->ChiSquare[zIndex];
     candidate->fittedContinuum.tplMeritPhot = bestResult->ChiSquarePhot[zIndex];
-    candidate->fittedContinuum.reducedChi2 =
-        bestResult->ReducedChiSquare[zIndex];
+    candidate->fittedContinuum.reducedChi2 = bestResult->ReducedChiSquare[zIndex];
+    candidate->fittedContinuum.pValue = bestResult->pValue[zIndex];
+    candidate->fittedContinuum.tplAmplitude = bestResult->FitAmplitude[zIndex];
     candidate->fittedContinuum.tplAmplitude = bestResult->FitAmplitude[zIndex];
     candidate->fittedContinuum.tplAmplitudeError =
         bestResult->FitAmplitudeError[zIndex];
