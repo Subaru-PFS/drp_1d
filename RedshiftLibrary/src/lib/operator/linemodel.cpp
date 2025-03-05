@@ -669,6 +669,7 @@ void COperatorLineModel::evaluateAndUpdateContinuumComponent(
 
   // get smallest reduced chi2 at all z
   auto const &fitValues_of_min_chi2_r = continuumFitStore->FindMinReducedChi2();
+  m_result->minContinuumReducedChi2 = fitValues_of_min_chi2_r.reducedChi2;
   if (updateContinuumComponentIfBadChi2(fitValues_of_min_chi2_r))
     return;
 

@@ -172,3 +172,4 @@ Coeffs	continuum_polynom	True	candidate	fittedContinuum.pCoeffs	extrema_results	
 LineMask	line_mask	True	candidate	OutsideLinesMask	extrema_results	i
 LineMask	linemeas_line_mask	True	object	OutsideLinesMask	extrema_results	i
 <BandName>PhotometricModel	PhotometricModel	False	candidate	m_photValues[band_name]	extrema_results	f8
+MinContinuumReducedChi2		goodness_fit		False	object		minContinuumReducedChi2		solveResult		f8			

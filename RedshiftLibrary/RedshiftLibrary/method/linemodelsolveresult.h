@@ -90,6 +90,7 @@ private:
   Float64 m_continuumEvidence =
       NAN; // For cases where switches in fromSpectrum, keeps evidence of
            // continuum for usage in classification
+  Float64 minContinuumReducedChi2 = 0.;
 };
 
 } // namespace NSEpic

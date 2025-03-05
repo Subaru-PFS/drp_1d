@@ -130,6 +130,8 @@ public:
   Int32 nSpcSamples = 0;
   Float64 dTransposeD = 0.0;
   Float64 cstLog = 0.0;
+
+  Float64 minContinuumReducedChi2 = 0.0;
 };
 
 } // namespace NSEpic
