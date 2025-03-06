@@ -100,7 +100,7 @@ public:
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
               CContinuumModelSolution &continuumModelSolution,
-              Int32 contreest_iterations = 0, bool enableLogging = 0);
+              Int32 contreest_iterations = 0, bool fullSolution = false);
   TFloat64Range &getDTDLambdaRange() { return m_dTransposeDLambdaRange; };
 
   void SetFittingMethod(const std::string &fitMethod,
@@ -226,7 +226,7 @@ private:
   void computeSpectrumFluxWithoutContinuum();
 
   void SetLSF();
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
+  CLineModelSolution GetModelSolution(bool fullSolution = false);
   void ComputeAndAddOptionalLineProperties(CLineModelSolution &modelSolution);
 
   // Multi obs combination/aggregation methods on elements Lists

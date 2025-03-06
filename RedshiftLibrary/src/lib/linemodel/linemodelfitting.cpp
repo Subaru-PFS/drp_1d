@@ -351,7 +351,7 @@ void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
 Float64 CLineModelFitting::fit(Float64 redshift,
                                CLineModelSolution &modelSolution,
                                CContinuumModelSolution &continuumModelSolution,
-                               Int32 contreest_iterations, bool enableLogging) {
+                               Int32 contreest_iterations, bool fullSolution) {
   // initialize the model spectrum
   m_fitter->m_cont_reestim_iterations = contreest_iterations;
 
@@ -400,8 +400,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         bestMerit = _merit;
         bestMeritPrior = _meritprior;
         savedIdxContinuumFitted = k;
-        Int32 modelSolutionLevel =
-            m_lineRatioType == "rules" ? Int32(enableLogging) : 0;
+        bool modelSolutionLevel =
+            m_lineRatioType == "rules" ? fullSolution : false;
         modelSolution = GetModelSolution(modelSolutionLevel);
         continuumModelSolution =
             m_continuumManager->GetContinuumModelSolutionCopy();
@@ -414,7 +414,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     }
   }
 
-  if (!enableLogging)
+  if (!fullSolution)
     return bestMerit;
 
   if (isContinuumComponentFitter()) {
@@ -427,8 +427,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   }
   if (m_lineRatioType == "tplRatio") {
     m_lineRatioManager->resetToBestRatio(redshift);
-    Int32 modelSolutionLevel = Int32(enableLogging);
-    modelSolution = GetModelSolution(modelSolutionLevel);
+    modelSolution = GetModelSolution(fullSolution);
     continuumModelSolution =
         m_continuumManager->GetContinuumModelSolutionCopy();
   }
@@ -792,6 +791,7 @@ void CLineModelFitting::LoadModelSolution(
   return;
 }
 
+// should be called only on final candidates
 void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     CLineModelSolution &modelSolution) {
 
@@ -958,7 +958,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
  **/
 // this is not really a const method as spectrum model(s) have to be modified
 // (cf CSpectrumModel::getContinuumUncertainty)
-CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
+CLineModelSolution CLineModelFitting::GetModelSolution(bool fullSolution) {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
 
@@ -1011,7 +1011,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
 
   // brief, to save processing time, do not estimate fluxes
   // and high level line properties
-  if (opt_level)
+  if (fullSolution)
     ComputeAndAddOptionalLineProperties(modelSolution);
 
   return modelSolution;
