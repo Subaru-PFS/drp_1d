@@ -36,24 +36,29 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
-#define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 
-#include <memory>
-#include <vector>
+using namespace NSEpic;
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
-#include "RedshiftLibrary/method/solveresult.h"
+CLineModelSolveResult::CLineModelSolveResult(
+    const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
+    const std::string &opt_pdfcombination, Float64 evidence,
+    Float64 continuumEvidence)
+    : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
+                      opt_pdfcombination, evidence),
+      m_continuumEvidence(continuumEvidence) {
+  if (!std::isnan(m_continuumEvidence)) {
+    setSwitchedToFromSpectrum(true);
+  }
+}
 
-namespace NSEpic {
+Float64 CLineModelSolveResult::getContinuumEvidence() const {
+  return m_continuumEvidence;
+};
+bool CLineModelSolveResult::getSwitchedToFromSpectrum() const {
+  return m_switchedToFromSpectrum;
+}
 
-/**
- * \ingroup Redshift
- */
-#include "RedshiftLibrary/method/linemodelsolveresult.i"
-
-} // namespace NSEpic
-
-#endif
+void CLineModelSolveResult::setSwitchedToFromSpectrum(const bool switched) {
+  m_switchedToFromSpectrum = switched;
+}

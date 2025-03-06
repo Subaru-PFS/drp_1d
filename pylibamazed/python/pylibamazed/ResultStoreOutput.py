@@ -174,7 +174,16 @@ class ResultStoreOutput(AbstractOutput):
     def has_dataset_in_source(self, object_type, stage, method, dataset):
         if dataset == "classification":
             return self.results_store.HasDataset(dataset, dataset, dataset, "solveResult")
-        return self.results_store.HasDataset(object_type or "", stage or "", method or "", dataset)
+
+        ds_attributes = self.filter_dataset_attributes(dataset, object_type)
+        has_dataset = True
+        if not len(ds_attributes):
+            return False
+        for rs_key in ds_attributes.ResultStore_key.unique():
+            has_dataset = has_dataset and self.results_store.HasDataset(
+                object_type or "", stage or "", method or "", rs_key
+            )
+        return has_dataset
 
     def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
         rs = self.results_specifications.get_df_by_dataset(dataset)
