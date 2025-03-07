@@ -323,7 +323,7 @@ TFloat64Range CSpectrumLogRebinning::logRebinTemplateCatalog(
     Float64 log_zmin_new_p1 = log(zmin_new + 1.);
     Float64 log_zmax_new_p1 = log(zmax_new + 1.);
     Int32 nb_z = Int32(
-        ceil((log_zmax_new_p1 - log_zmin_new_p1) / m_logGridStep / SSratio));
+        floor((log_zmax_new_p1 - log_zmin_new_p1) / m_logGridStep / SSratio));
     zmax_new = exp(log_zmin_new_p1 + nb_z * m_logGridStep * SSratio) - 1.;
   }
   TFloat64Range zrange(zmin_new,
