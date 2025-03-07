@@ -40,6 +40,7 @@
 #include <iostream>
 #include <string>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
@@ -475,7 +476,7 @@ void CLineModelSolve::fillChisquareArrayForTplRatio(
   bool zPriorLines = false;
   Log.LogDetail(Formatter() << __func__ << ": PriorLinesTplratios.size()="
                             << result->PriorLinesTplratios.size());
-  if (result->PriorLinesTplratios.size() == ntplratios) {
+  if (ssize(result->PriorLinesTplratios) == ntplratios) {
     zPriorLines = true;
     Log.LogDetail(Formatter() << __func__ << ": Lines Prior enabled");
   } else {
@@ -507,7 +508,7 @@ void CLineModelSolve::fillChisquareArrayForTplRatio(
 
         // need to add maxscalemargcorr ?
     }*/
-    if (!zPriorLines || result->PriorLinesTplratios[k].size() != zsize)
+    if (!zPriorLines || ssize(result->PriorLinesTplratios[k]) != zsize)
       continue;
 
     for (Int32 kz = 0; kz < zsize; kz++)

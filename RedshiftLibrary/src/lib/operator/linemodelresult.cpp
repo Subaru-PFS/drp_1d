@@ -41,6 +41,7 @@
 #include <string>
 
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
@@ -65,7 +66,7 @@ using namespace NSEpic;
 void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
                             Int32 nTemplates, Int32 nTplratios,
                             TFloat64List tplratiosPriors) {
-  if (tplratiosPriors.size() != nTplratios) {
+  if (ssize(tplratiosPriors) != nTplratios) {
     THROWG(
         ErrorCode::INTERNAL_ERROR,
         Formatter()
@@ -131,7 +132,7 @@ void CLineModelResult::updateVectors(
   for (auto &xi2Cont : ChiSquareTplContinuum)
     insertWithDuplicates<Float64>(xi2Cont, insertionIdx, count, DBL_MAX, ndup);
 
-  for (Int32 i = 0; i < ChiSquareTplratios.size(); i++) {
+  for (Int32 i = 0; i < ssize(ChiSquareTplratios); i++) {
     insertWithDuplicates<Float64>(ChiSquareTplratios[i], insertionIdx, count,
                                   DBL_MAX, ndup);
     insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i], insertionIdx,
@@ -174,7 +175,7 @@ void CLineModelResult::SetChisquareTplratioResult(
   if (tplratioManager->GetChisquareTplratio().size() < 1)
     return;
 
-  if (index_z >= Redshifts.size())
+  if (index_z >= ssize(Redshifts))
     THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
 
   if (tplratioManager->GetChisquareTplratio().size() !=
@@ -189,7 +190,7 @@ void CLineModelResult::SetChisquareTplratioResult(
           tplratioManager->GetPriorLinesTplratio().size())
     THROWG(ErrorCode::INTERNAL_ERROR, "vector sizes do not match");
 
-  for (Int32 k = 0; k < tplratioManager->GetChisquareTplratio().size(); k++) {
+  for (Int32 k = 0; k < ssize(tplratioManager->GetChisquareTplratio()); k++) {
     ChiSquareTplratios[k][index_z] = tplratioManager->GetChisquareTplratio()[k];
     ScaleMargCorrectionTplratios[k][index_z] =
         tplratioManager->GetScaleMargTplratio()[k];
@@ -207,12 +208,12 @@ void CLineModelResult::SetChisquareTplratioResult(
 
 void CLineModelResult::SetChisquareTplratioResultFromPrevious(Int32 index_z) {
 
-  if (index_z >= Redshifts.size())
+  if (index_z >= ssize(Redshifts))
     THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
 
   auto previous = index_z - 1;
 
-  for (Int32 k = 0; k < ChiSquareTplratios.size(); k++) {
+  for (Int32 k = 0; k < ssize(ChiSquareTplratios); k++) {
     ChiSquareTplratios[k][index_z] = ChiSquareTplratios[k][previous];
     ScaleMargCorrectionTplratios[k][index_z] =
         ScaleMargCorrectionTplratios[k][previous];
@@ -249,14 +250,14 @@ TFloat64List CLineModelResult::getChisquareTplratioResult(Int32 index_z) {
 
 TFloat64List CLineModelResult::getScaleMargCorrTplratioResult(Int32 index_z) {
   TFloat64List scaleMargCorrTplratio;
-  if (index_z >= Redshifts.size()) {
+  if (index_z >= ssize(Redshifts)) {
     return scaleMargCorrTplratio;
   }
   if (ScaleMargCorrectionTplratios.size() < 1) {
     return scaleMargCorrTplratio;
   }
 
-  for (Int32 k = 0; k < ScaleMargCorrectionTplratios.size(); k++) {
+  for (Int32 k = 0; k < ssize(ScaleMargCorrectionTplratios); k++) {
     scaleMargCorrTplratio.push_back(ScaleMargCorrectionTplratios[k][index_z]);
   }
 
@@ -265,11 +266,11 @@ TFloat64List CLineModelResult::getScaleMargCorrTplratioResult(Int32 index_z) {
 
 TBoolList CLineModelResult::getStrongELPresentTplratioResult(Int32 index_z) {
   TBoolList _strongELPresentTplratio;
-  if (index_z >= Redshifts.size() || StrongELPresentTplratios.size() < 1) {
+  if (index_z >= ssize(Redshifts) || StrongELPresentTplratios.size() < 1) {
     return _strongELPresentTplratio;
   }
 
-  for (Int32 k = 0; k < StrongELPresentTplratios.size(); k++) {
+  for (Int32 k = 0; k < ssize(StrongELPresentTplratios); k++) {
     _strongELPresentTplratio.push_back(StrongELPresentTplratios[k][index_z]);
   }
 
@@ -278,12 +279,12 @@ TBoolList CLineModelResult::getStrongELPresentTplratioResult(Int32 index_z) {
 
 TBoolList CLineModelResult::getHaELPresentTplratioResult(Int32 index_z) {
   TBoolList _strongHaPresentTplratio;
-  if (index_z >= Redshifts.size() ||
+  if (index_z >= ssize(Redshifts) ||
       StrongHalphaELPresentTplratios.size() < 1) {
     return _strongHaPresentTplratio;
   }
 
-  for (Int32 k = 0; k < StrongHalphaELPresentTplratios.size(); k++) {
+  for (Int32 k = 0; k < ssize(StrongHalphaELPresentTplratios); k++) {
     _strongHaPresentTplratio.push_back(
         StrongHalphaELPresentTplratios[k][index_z]);
   }
@@ -293,14 +294,14 @@ TBoolList CLineModelResult::getHaELPresentTplratioResult(Int32 index_z) {
 
 TInt32List CLineModelResult::getNLinesAboveSNRTplratioResult(Int32 index_z) {
   TInt32List priorTplratio;
-  if (index_z >= Redshifts.size()) {
+  if (index_z >= ssize(Redshifts)) {
     return priorTplratio;
   }
   if (NLinesAboveSNRTplratios.size() < 1) {
     return priorTplratio;
   }
 
-  for (Int32 k = 0; k < NLinesAboveSNRTplratios.size(); k++) {
+  for (Int32 k = 0; k < ssize(NLinesAboveSNRTplratios); k++) {
     priorTplratio.push_back(NLinesAboveSNRTplratios[k][index_z]);
   }
 
@@ -309,14 +310,14 @@ TInt32List CLineModelResult::getNLinesAboveSNRTplratioResult(Int32 index_z) {
 
 TFloat64List CLineModelResult::getPriorLinesTplratioResult(Int32 index_z) {
   TFloat64List priorTplratio;
-  if (index_z >= Redshifts.size()) {
+  if (index_z >= ssize(Redshifts)) {
     return priorTplratio;
   }
   if (PriorLinesTplratios.size() < 1) {
     return priorTplratio;
   }
 
-  for (Int32 k = 0; k < PriorLinesTplratios.size(); k++) {
+  for (Int32 k = 0; k < ssize(PriorLinesTplratios); k++) {
     priorTplratio.push_back(PriorLinesTplratios[k][index_z]);
   }
 
@@ -328,7 +329,7 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
                                                   Float64 fitThres) const {
   Int32 nSol = 0;
   TInt32List indexesSols;
-  for (Int32 j = 0; j < LineModelSolutions[solutionIdx].Amplitudes.size();
+  for (Int32 j = 0; j < ssize(LineModelSolutions[solutionIdx].Amplitudes);
        j++) {
     Int32 line_id = LineModelSolutions[solutionIdx].lineId[j];
     // skip if already sol
@@ -372,10 +373,10 @@ TBoolList CLineModelResult::getStrongLinesPresence(
            (filterType == 2 && line.IsEmission());
   };
   TBoolList strongIsPresent(linemodelsols.size(), false);
-  for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
+  for (Int32 solutionIdx = 0; solutionIdx < ssize(linemodelsols);
        solutionIdx++) {
     // search for the first strong line, with valid amplitude
-    for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
+    for (Int32 j = 0; j < ssize(linemodelsols[solutionIdx].Amplitudes); j++) {
       Int32 line_id = linemodelsols[solutionIdx].lineId[j];
       if (lineDoesntMatchStrongFilter(restLineList.at(line_id)))
         continue;
@@ -409,11 +410,11 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
     const std::vector<CLineModelSolution> &linemodelsols) const {
   TBoolList isHaStrongest(linemodelsols.size(), false);
   std::string ampMaxLineTag = undefStr;
-  for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
+  for (Int32 solutionIdx = 0; solutionIdx < ssize(linemodelsols);
        solutionIdx++) {
     Float64 ampMax = -DBL_MAX;
     ampMaxLineTag = undefStr;
-    for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
+    for (Int32 j = 0; j < ssize(linemodelsols[solutionIdx].Amplitudes); j++) {
       Int32 line_id = linemodelsols[solutionIdx].lineId[j];
       if (!restLineList.at(line_id).IsEmission() ||
           linemodelsols[solutionIdx].NotFitted[j])
@@ -443,7 +444,7 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
 
 Float64 CLineModelResult::getMinChiSquare() const {
   Float64 min = DBL_MAX;
-  for (int i = 0; i < Redshifts.size(); i++) {
+  for (int i = 0; i < ssize(Redshifts); i++) {
     if (min > ChiSquare[i]) {
       min = ChiSquare[i];
     }
@@ -453,7 +454,7 @@ Float64 CLineModelResult::getMinChiSquare() const {
 
 Float64 CLineModelResult::getMaxChiSquare() const {
   Float64 max = -DBL_MAX;
-  for (int i = 0; i < Redshifts.size(); i++) {
+  for (int i = 0; i < ssize(Redshifts); i++) {
     if (max < ChiSquare[i]) {
       max = ChiSquare[i];
     }

@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 
@@ -83,7 +84,7 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   if (n == 0)
     THROWG(ErrorCode::INTERNAL_ERROR, "input X vector is empty");
 
-  if (n != yAxis.size())
+  if (n != ssize(yAxis))
     THROWG(ErrorCode::INTERNAL_ERROR,
            "input X and Y vector do not have the same size");
 
@@ -118,7 +119,7 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   SortIndexes(maxY);
 
   Int32 keepMinN = 1;
-  if (m_meritCut > 0.0 && maxX.size() > keepMinN) {
+  if (m_meritCut > 0.0 && ssize(maxX) > keepMinN) {
     Cut_Threshold(maxX, maxY, keepMinN);
   }
 
@@ -138,7 +139,7 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
 void CExtremum::assertPeakSeparation(TFloat64List &maxX) const {
 
   std::sort(maxX.begin(), maxX.end());
-  for (Int32 i = 0; i < maxX.size() - 1; i++) {
+  for (Int32 i = 0; i < ssize(maxX) - 1; i++) {
     TFloat64Range windowh(
         maxX[i + 1] - m_extrema_separation / 2 * (1 + maxX[i + 1]),
         maxX[i + 1] + m_extrema_separation / 2 * (1 + maxX[i + 1]));
@@ -157,7 +158,7 @@ void CExtremum::assertPeakSeparation(TFloat64List &maxX) const {
 
 void CExtremum::assertPeakSeparation(TPointList &maxPoint) const {
   TFloat64List maxX(maxPoint.size());
-  for (Int32 i = 0; i < maxPoint.size(); i++)
+  for (Int32 i = 0; i < ssize(maxPoint); i++)
     maxX[i] = maxPoint[i].X;
   assertPeakSeparation(maxX);
 }
@@ -174,20 +175,20 @@ void CExtremum::Cut_Threshold(TFloat64List &maxX, TFloat64List &maxY,
   if (maxX.size() == 0)
     THROWG(ErrorCode::INTERNAL_ERROR, " empty MaxX arg");
 
-  if (maxX.size() <= keepMinN)
+  if (ssize(maxX) <= keepMinN)
     return;
 
   TFloat64List newX;
   TFloat64List newY;
-  for (Int32 i = 0; i < maxX.size(); i++) {
+  for (Int32 i = 0; i < ssize(maxX); i++) {
     Float64 meritDiff = maxY[m_sortedIndexes[0]] - maxY[i];
     if (meritDiff <= m_meritCut) {
       newX.push_back(maxX[i]);
       newY.push_back(maxY[i]);
     }
   }
-  if (newX.size() < keepMinN)
-    for (Int32 isort = newX.size(); isort < keepMinN; isort++) {
+  if (ssize(newX) < keepMinN)
+    for (Int32 isort = ssize(newX); isort < keepMinN; isort++) {
       Int32 i = m_sortedIndexes[isort];
       auto it = std::lower_bound(newX.begin(), newX.end(), maxX[i]);
       Int32 index = it - newX.begin();
@@ -204,8 +205,8 @@ TPointList CExtremum::FilterOutNeighboringPeaksAndTruncate(
 
   TPointList maxPoint;
 
-  if (maxX.size() <= keepmin) {
-    for (Int32 i = 0; i < maxX.size(); i++) {
+  if (ssize(maxX) <= keepmin) {
+    for (Int32 i = 0; i < ssize(maxX); i++) {
       maxPoint.push_back(SPoint(maxX[m_sortedIndexes[i]],
                                 m_SignSearch * maxY[m_sortedIndexes[i]]));
     }

@@ -40,6 +40,7 @@
 #include <cmath>
 #include <numeric>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
@@ -53,7 +54,7 @@ using namespace std;
  **/
 TInt32List CLineModelElementList::GetElementsIndicesInsideLambdaRange() const {
   TInt32List validIndices;
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+  for (Int32 iElts = 0; iElts < ssize(m_Elements); iElts++) {
     if (!m_Elements[iElts]->IsOutsideLambdaRange())
       validIndices.push_back(iElts);
   }
@@ -132,7 +133,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
   auto const &refLinesList = refElement_param->GetLines();
   auto const refLineType = refElement_param->GetElementType();
 
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+  for (Int32 iElts = 0; iElts < ssize(m_Elements); iElts++) {
     const auto &element = *m_Elements[iElts];
     const auto &element_param = element.getElementParam();
 
@@ -158,7 +159,7 @@ TInt32List CLineModelElementList::getOverlappingElements(
       auto eltLine = linesElt[eltLineIdx];
       if (element.IsOutsideLambdaRangeLine(eltLineIdx))
         continue;
-      for (Int32 refLineIdx = 0; refLineIdx != refLinesList.size();
+      for (Int32 refLineIdx = 0; refLineIdx != ssize(refLinesList);
            ++refLineIdx) {
         auto const &refLine = refLinesList[refLineIdx];
         if (refElement.IsOutsideLambdaRangeLine(refLineIdx))
@@ -258,7 +259,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
     support.insert(support.end(), s.begin(), s.end());
   }
 
-  for (Int32 iS = 0; iS < support.size(); iS++) {
+  for (Int32 iS = 0; iS < ssize(support); iS++) {
     for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++)
       indexes.push_back(j);
   }
@@ -446,7 +447,7 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
     const TFloat64Range &lambdaRange, Float64 redshift) const {
 
   TInt32RangeList indexRangeList(eIdx_list.size());
-  for (Int32 i = 0; i < eIdx_list.size(); i++) {
+  for (Int32 i = 0; i < ssize(eIdx_list); i++) {
     Int32 const eIdx = eIdx_list[i];
     Int32 const subeIdx = subeIdx_list[i];
     auto const &elt = m_Elements[eIdx];

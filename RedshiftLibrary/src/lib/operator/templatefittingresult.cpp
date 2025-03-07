@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/twopass.h"
@@ -85,8 +86,9 @@ void CTemplateFittingResult::set_at_redshift(Int32 i, TFittingIsmIgmResult val,
   Overlap[i] = val.overlapFraction;
 
   bool isNotFromLineModelSolve =
-      ChiSquareIntermediate[i].size() > ismIdx &&
-      ChiSquareIntermediate[i][ismIdx].size() > igmIdx;
+      ismIdx != -1 && igmIdx != -1 &&
+      ssize(ChiSquareIntermediate[i]) > ismIdx &&
+      ssize(ChiSquareIntermediate[i][ismIdx]) > igmIdx;
   bool isSecondPass = igmIdx != undefIdx && ismIdx != undefIdx;
 
   if (isSecondPass && isNotFromLineModelSolve) {

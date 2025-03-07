@@ -36,53 +36,19 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/log/log.h"
+#ifndef _REDSHIFT_COMMON_SIZE_
+#define _REDSHIFT_COMMON_SIZE_
+#include <type_traits> // Required for common_type_t
+namespace NSEpic {
 
-using namespace NSEpic;
-using namespace std;
-
-void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
-                      const TFloat64Range &range,
-                      const CSpectrumSpectralAxis &targetSpectralAxis,
-                      CMask &rebinedMask, const std::string opt_error_interp,
-                      const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
-                      Int32 &cursor) {
-
-  const TAxisSampleList &Xsrc = m_spectrum.GetSpectralAxis().GetSamplesVector();
-  const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
-
-  // nearest sample, lookup
-  Int32 k = 0;
-  Int32 n = m_spectrum.GetSampleCount();
-  const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
-  while (cursor < targetSpectralAxis.GetSamplesCount() &&
-         Xtgt[cursor] <= range.GetEnd()) {
-    // k = gsl_interp_bsearch
-    // (Xsrc.data(), Xtgt[j], kprev,
-    // n);
-    k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[cursor]);
-    Float64 xSrcStep = NAN;
-    if (k == ssize(Xsrc) - 1)
-      xSrcStep = Xsrc[k] - Xsrc[k - 1];
-    else
-      xSrcStep = Xsrc[k + 1] - Xsrc[k];
-
-    // closest value
-    rebinedFluxAxis[cursor] = Ysrc[k];
-
-    if (opt_error_interp != "no") {
-
-      error_tmp[cursor] = Error[k];
-      if (opt_error_interp == "rebinVariance") {
-        Float64 xStepCompensation = computeXStepCompensation(
-            targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
-      }
-    }
-    rebinedMask[cursor] = 1;
-    cursor++;
-  }
+template <class C>
+constexpr auto ssize(const C &c)
+    -> std::common_type_t<std::ptrdiff_t,
+                          std::make_signed_t<decltype(c.size())>> {
+  using R = std::common_type_t<std::ptrdiff_t,
+                               std::make_signed_t<decltype(c.size())>>;
+  return static_cast<R>(c.size());
 }
+
+} // namespace NSEpic
+#endif

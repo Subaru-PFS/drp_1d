@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================using
 #include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 
 using namespace NSEpic;
@@ -61,7 +62,7 @@ TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
   TFloat64List zgrid = m_zparams.front().getZGrid(logsampling);
 
   // if needed create and insert 2nd pass subgrids into main grid
-  for (Int32 i = 1; i < m_zparams.size(); i++) {
+  for (Int32 i = 1; i < ssize(m_zparams); i++) {
     // create a centered sub grid around Zcand
     TFloat64List subgrid = m_zparams[i].getZGrid(logsampling);
     // insert it into main gridgetZGrid

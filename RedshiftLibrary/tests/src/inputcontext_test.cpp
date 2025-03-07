@@ -39,6 +39,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
@@ -223,9 +224,9 @@ BOOST_AUTO_TEST_CASE(getterSetter_test) {
   BOOST_CHECK(inputCtx.GetLineCatalog("galaxy", "lineModelSolve") ==
               lineCatalog);
 
-  BOOST_CHECK(
-      inputCtx.GetFilteredLineMap("galaxy", "lineModelSolve", "no", "no")
-          .size() == fixture_LineCatalog().lineCatalogSize);
+  BOOST_CHECK(ssize(inputCtx.GetFilteredLineMap("galaxy", "lineModelSolve",
+                                                "no", "no")) ==
+              fixture_LineCatalog().lineCatalogSize);
 
   BOOST_CHECK(inputCtx.m_ismCorrectionCalzetti == nullptr);
   inputCtx.setFluxCorrectionCalzetti(ismCorrectionCalzetti);

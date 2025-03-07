@@ -36,11 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/powerlaw/doublevardata.h"
 #include "tests/src/powerlaw/simplevardata.h"
 #include "tests/src/tool/inputContextLight.h"
+
 #include <boost/test/unit_test.hpp>
 
 #include <random>
@@ -77,7 +79,7 @@ void PowerLaw_fixture::Init(std::string jsonString,
 
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  for (Int16 spectrumIdx = 0; spectrumIdx < spcList.size(); spectrumIdx++) {
+  for (Int16 spectrumIdx = 0; spectrumIdx < ssize(spcList); spectrumIdx++) {
     spcList[spectrumIdx]->SetLSF(LSF);
     Context.addSpectrum(spcList[spectrumIdx]);
   }

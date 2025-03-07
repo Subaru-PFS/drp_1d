@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/processflow/scopestore.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include <numeric>
 
@@ -62,7 +63,7 @@ std::string CScopeStore::GetCurrentScopeName() const {
 
 std::string CScopeStore::getCurrentScopeNameAt(int depth) const {
   std::string name;
-  if (m_ScopeStack->size() < depth)
+  if (ssize(*m_ScopeStack) < depth)
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "Scope smaller than" << depth);
 

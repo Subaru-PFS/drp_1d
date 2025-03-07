@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
@@ -103,7 +104,7 @@ void T3DCurve::setIsExtincted(T3DList<bool> inputIsExtincted) {
 }
 
 void T3DCurve::setIsSnrCompliant(TList<bool> inputIsSnrCompliant) {
-  if (inputIsSnrCompliant.size() != size())
+  if (ssize(inputIsSnrCompliant) != size())
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Incompatible isSnrCompliant sizes, input "
                        << inputIsSnrCompliant.size() << "vs curve " << size());
@@ -111,7 +112,7 @@ void T3DCurve::setIsSnrCompliant(TList<bool> inputIsSnrCompliant) {
 }
 
 void T3DCurve::setMask(TList<uint8_t> inputMask) {
-  if (inputMask.size() != size())
+  if (ssize(inputMask) != size())
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Incompatible inputMask sizes, input "
                        << inputMask.size() << "vs curve " << size());
@@ -147,7 +148,7 @@ TCurve T3DCurve::toCoefCurve(Int16 igmIdx, Int16 ismIdx) const {
   checkIsmIdx(ismIdx);
   TCurve curve;
   curve.reserve(size());
-  for (size_t pixelIdx = 0; pixelIdx < size(); pixelIdx++) {
+  for (Int32 pixelIdx = 0; pixelIdx < size(); pixelIdx++) {
     if (pixelIsCoefValid(igmIdx, ismIdx, pixelIdx))
       curve.push_back({lambda[pixelIdx], flux[igmIdx][ismIdx][pixelIdx],
                        fluxError[igmIdx][ismIdx][pixelIdx]});

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesortho.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -86,7 +87,7 @@ void CTemplatesOrthogonalization::Orthogonalize(
     bool partial = (sampling && tplCatalog->GetTemplateCount(spectrumModel))
                        ? true
                        : false; // need to replace only some of the ortho
-    for (Int32 i = 0; i < TplList.size(); i++) {
+    for (Int32 i = 0; i < ssize(TplList); i++) {
       const CTemplate tpl = *TplList[i];
       if (partial && tplCatalog->GetTemplate(spectrumModel, i))
         break; // ortho template  is already there

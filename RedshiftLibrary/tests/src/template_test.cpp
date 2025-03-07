@@ -43,6 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -135,9 +136,10 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   CTemplate tpl10(tpl9, maskList);
   BOOST_CHECK(tpl10.m_NoIsmIgmFluxAxis.GetSamplesCount() == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_NoIsmIgmFluxAxis[0] == fluxAxisList[1]);
-  BOOST_CHECK(tpl10.m_computedDustCoeff.size() == spcAxisSize - 1);
+  BOOST_CHECK(ssize(tpl10.m_computedDustCoeff) == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_computedDustCoeff[0] == 1.);
-  BOOST_CHECK(tpl10.m_computedMeiksingCoeff.size() == spcAxisSize - 1);
+  BOOST_CHECK(ssize(tpl10.m_computedDustCoeff) == spcAxisSize - 1);
+  BOOST_CHECK(ssize(tpl10.m_computedMeiksingCoeff) == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_computedMeiksingCoeff[0] == 1.);
 
   TFloat64List maskList2(spcAxisSize, 0);
@@ -184,8 +186,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
 
   tplStar.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
   BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxAxisList);
-  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
-  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedMeiksingCoeff) == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedDustCoeff) == spcAxisSize);
 
   // InitIsmIgmConfig with lambdarange & redshift -> range outside spectral axis
   TFloat64Range lbdaRange(1, 860);
@@ -195,8 +197,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   lbdaRange.SetEnd(spcAxisList[spcAxisSize - 1]);
   tplStar.InitIsmIgmConfig(lbdaRange, 2.86);
   BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxAxisList);
-  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
-  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedMeiksingCoeff) == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedDustCoeff) == spcAxisSize);
 
   tplStar.ApplyAmplitude(1.);
   tplStar.InitIsmIgmConfig(lbdaRange, 2.86);
@@ -205,8 +207,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   // InitIsmIgmConfig with redshift
   tplStar.InitIsmIgmConfig(2.86);
   BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxAxisList);
-  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
-  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedMeiksingCoeff) == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedDustCoeff) == spcAxisSize);
   Context.reset();
 }
 
@@ -359,7 +361,7 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   BOOST_CHECK(meiksinList[0] == -1);
 
   meiksinList = tpl5.GetIgmIdxList(1, -1);
-  BOOST_CHECK(meiksinList.size() == idxCount);
+  BOOST_CHECK(ssize(meiksinList) == idxCount);
   ref_list = {0, 1};
   BOOST_CHECK(meiksinList == ref_list);
 

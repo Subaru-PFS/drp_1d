@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/zprior.h"
@@ -68,7 +69,7 @@ TFloat64List CZPrior::GetStrongLinePresenceLogZPrior(
   Float64 logprobaPresent = 0.0;
   Float64 logprobaAbsent = log(penalization_factor);
   TFloat64List logzPrior(linePresence.size(), logprobaAbsent);
-  for (Int32 kz = 0; kz < linePresence.size(); kz++) {
+  for (Int32 kz = 0; kz < ssize(linePresence); kz++) {
     if (linePresence[kz]) {
       logzPrior[kz] = logprobaPresent;
     }
@@ -109,7 +110,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
   TFloat64List logzPrior(redshifts.size(), -INFINITY);
 
   Float64 maxP = -DBL_MAX;
-  for (Int32 kz = 0; kz < redshifts.size(); kz++) {
+  for (Int32 kz = 0; kz < ssize(redshifts); kz++) {
     Float64 z = redshifts[kz];
     Float64 z2 = z * z;
     Float64 z3 = z2 * z;

@@ -40,6 +40,7 @@
 #include <climits>
 
 #include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/gaussianfit/gaussianfit.h"
 #include "RedshiftLibrary/line/linedetected.h"
 #include "RedshiftLibrary/log/log.h"
@@ -285,7 +286,7 @@ TInt32Range CLineDetection::LimitGaussianFitStartAndStop(
     }
   }
 
-  if (i < peaksBorders.size() - 1) {
+  if (i < ssize(peaksBorders) - 1) {
     if (peaksBorders[i + 1].GetBegin() > -1)
       fitStop = min(peaksBorders[i + 1].GetBegin(), fitStop);
   }
@@ -420,7 +421,7 @@ void CLineDetection::Retest(CLineDetectionResult &result,
 
   CSpectrumSpectralAxis const &wavesAxis = spectrum.GetSpectralAxis();
   // check if the retest peaks center are in the range of a strong peak
-  for (int k = 0; k < retestPeaks.size(); k++) {
+  for (int k = 0; k < ssize(retestPeaks); k++) {
     Float64 start = wavesAxis[retestPeaks[k].GetBegin()];
     Float64 stop = wavesAxis[retestPeaks[k].GetEnd()];
     Float64 center = (stop + start) / 2.0;
@@ -480,7 +481,7 @@ void CLineDetection::RemoveStrongFromSpectra(
   }
 
   // build toExclude to be non-intersecting stronglines
-  for (int k = 0; k < selectedretestPeaks.size(); k++) {
+  for (int k = 0; k < ssize(selectedretestPeaks); k++) {
     TInt32Range line = TInt32Range(wavesAxis[selectedretestPeaks[k].GetBegin()],
                                    wavesAxis[selectedretestPeaks[k].GetEnd()]);
     for (auto &[id, strong] : toExclude) {
@@ -516,7 +517,7 @@ void CLineDetection::RemoveStrongFromSpectra(
       reducedindexesMap[k] += 1;
   }
 
-  for (int k = 0; k < selectedretestPeaks.size(); k++) {
+  for (int k = 0; k < ssize(selectedretestPeaks); k++) {
     TInt32Range reducedrange(
         reducedindexesMap[selectedretestPeaks[k].GetBegin()],
         reducedindexesMap[selectedretestPeaks[k].GetEnd()]);

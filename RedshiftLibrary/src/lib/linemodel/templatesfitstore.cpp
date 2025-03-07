@@ -39,6 +39,7 @@
 #include <climits>
 
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
@@ -118,7 +119,7 @@ void CTemplatesFitStore::Add(std::string name, Float64 ismEbmvCoeff,
   // to ipos found
   m_fitValues[idxz].insert(ipos, tmpCContinuumModelSolution);
 
-  if (getContinuumCount() < m_fitValues[idxz].size()) {
+  if (getContinuumCount() < ssize(m_fitValues[idxz])) {
     m_nContinuumCandidates = m_fitValues[idxz].size();
     Log.LogDebug(Formatter()
                  << "CTemplatesFitStore::m_nContinuumCandidates set to "

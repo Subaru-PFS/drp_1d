@@ -40,6 +40,7 @@
 #include <cfloat>
 #include <climits>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
@@ -857,7 +858,7 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
 
   os << "\n";
   os << "m_asymLineIndices \n";
-  for (Int32 i = 0; i < m_ElementParam->m_asymLineIndices.size(); i++)
+  for (Int32 i = 0; i < ssize(m_ElementParam->m_asymLineIndices); i++)
     os << i << "\t" << m_ElementParam->m_asymLineIndices[i] << "\n";
 }
 

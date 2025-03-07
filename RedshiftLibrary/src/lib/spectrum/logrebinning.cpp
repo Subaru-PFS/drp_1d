@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/logrebinning.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 
 namespace bfs = boost::filesystem;
@@ -281,7 +282,7 @@ CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(
     const TFloat64Range &lambdarange,
     Int32 count) const { // spreadoverlog expects m_Begin to be non-log value
   TFloat64List axis = lambdarange.SpreadOverLogEpsilon(m_logGridStep);
-  if (axis.size() != count) {
+  if (ssize(axis) != count) {
     THROWG(ErrorCode::INTERNAL_ERROR,
            "computed axis does not have the expected samples number");
   }

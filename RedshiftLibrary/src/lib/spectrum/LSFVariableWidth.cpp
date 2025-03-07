@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/spectrum/LSFVariableWidth.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/log/log.h"
 using namespace NSEpic;
@@ -81,7 +82,7 @@ bool CLSFGaussianVariableWidth::IsValid() const {
   if (!m_width.size()) {
     THROWG(ErrorCode::BAD_COUNTMATCH, "Width array cannot be null ");
   }
-  if (m_spcAxis.GetSamplesCount() != m_width.size()) {
+  if (m_spcAxis.GetSamplesCount() != ssize(m_width)) {
     THROWG(ErrorCode::BAD_COUNTMATCH,
            "Sizes do not match between Spectral axis "
            "and width axis");

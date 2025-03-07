@@ -38,6 +38,7 @@
 // ============================================================================
 #include <cfloat>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
@@ -322,7 +323,7 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
       chisquarearray.chisquares.emplace_back(
           result->ChiSquareIntermediate.size(), DBL_MAX);
       TFloat64List &logLikelihoodCorrected = chisquarearray.chisquares.back();
-      for (Int32 kz = 0; kz < result->ChiSquareIntermediate.size(); kz++)
+      for (Int32 kz = 0; kz < ssize(result->ChiSquareIntermediate); kz++)
         logLikelihoodCorrected[kz] =
             result->ChiSquareIntermediate
                 [kz][kism]
