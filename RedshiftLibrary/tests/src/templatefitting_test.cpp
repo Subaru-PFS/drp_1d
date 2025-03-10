@@ -36,36 +36,51 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
-#define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
+#include <boost/test/unit_test.hpp>
 
-#include <vector>
+#include "RedshiftLibrary/operator/powerlaw.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "tests/src/templatefittingfortests.h"
+#include "tests/src/tool/inputContextLight.h"
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/continuumfitstore.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-namespace NSEpic {
+using namespace NSEpic;
 
-class CTemplatesFitStore : public CContinuumFitStore {
-public:
-  using CContinuumFitStore::CContinuumFitStore;
+BOOST_AUTO_TEST_SUITE(templateFitting_test)
 
-  void Add(std::string name, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
-           Float64 redshift, Float64 merit, Float64 reducedChi2, Float64 pValue,
-           Float64 chiSquare_phot, Float64 fitAmplitude,
-           Float64 fitAmplitudeError, Float64 fitAmplitudeSigma, Float64 fitDtM,
-           Float64 fitMtM, Float64 logprior, Float64 snr);
+BOOST_FIXTURE_TEST_CASE(fitQuality_test,
+                        fixture_TemplateFittingSolveTestNoFFT) {
 
-  Int32 getContinuumCount() const override;
+  // Prepares contexte for BasicFit
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CTemplateFittingSolve templateFittingSolve;
 
-private:
-  Float64 getFracAmplitudeSigma(
-      CContinuumModelSolution const &continuum) const override;
-  Int32 m_nContinuumCandidates = 0;
-};
+  auto const &inputContext = *Context.GetInputContext();
+  templateFittingSolve.InitRanges(inputContext);
 
-} // namespace NSEpic
+  auto templateFittingOperator =
+      COperatorTemplateFitting(templateFittingSolve.m_redshifts);
 
-#endif
+  // Prepares arguments for BasicFit
+  std::shared_ptr<const CTemplate> tpl = fixture_SharedGalaxyTemplate().tpl;
+  Float64 redshift = templateFittingSolve.m_redshifts[0];
+  Float64 overlapThreshold = 1;
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+  CPriorHelper::TPriorEList logpriore = CPriorHelper::TPriorEList();
+  auto MeiksinList = {0};
+  auto EbmvList = {0};
+
+  auto result = templateFittingOperator.BasicFit(
+      tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
+      logpriore, MeiksinList, EbmvList);
+
+  // Checks that fit quality values are set
+  BOOST_CHECK_CLOSE(result.chiSquare, 335.74708870710344, 1e-6);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 6.3348507303227066, 1e-6);
+  BOOST_CHECK_CLOSE(result.pValue, 3.9524304409427213e-43, 1e-6);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

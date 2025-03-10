@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/operator/powerlawresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/statistics/fitquality.h"
 
 #include <Eigen/Dense>
 #include <algorithm>
@@ -107,16 +108,19 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                            return fluxCurve.pixelIsChi2Valid(pixelIdx);
                          });
   if (N < m_nLogSamplesMin) {
+    Int32 const nPixels = fluxCurve.size();
     auto const constantLawsCoef =
         computeConstantLawCoefs(fluxCurve.toCurve(0, 0));
     T2DPowerLawCoefsPair coefs(1,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
     // reset snrCompliant to true everywhere for computing chi2
-    fluxCurve.setIsSnrCompliant(TBoolList(fluxCurve.size(), true));
+    fluxCurve.setIsSnrCompliant(TBoolList(nPixels, true));
     auto const chi2 = computeChi2(fluxCurve, coefs);
     TPowerLawResult result;
     result.chiSquare = chi2[0][0];
-    result.reducedChiSquare = result.chiSquare / fluxCurve.size();
+    result.reducedChiSquare =
+        NSFitQuality::reducedChi2(result.chiSquare, nPixels);
+    result.pValue = NSFitQuality::pValue(result.chiSquare, nPixels);
     result.coefs = constantLawsCoef;
     if (opt_extinction)
       result.meiksinIdx = undefIdx;
@@ -139,7 +143,8 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                     [&emittedCurve](Int32 pixelIdx) {
                       return emittedCurve.pixelIsChi2Valid(pixelIdx);
                     });
-  result.reducedChiSquare = chi2Result.chi2 / N;
+  result.reducedChiSquare = NSFitQuality::reducedChi2(chi2Result.chi2, N);
+  result.pValue = NSFitQuality::pValue(chi2Result.chi2, N);
   result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
   if (opt_extinction)
     result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];

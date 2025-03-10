@@ -42,13 +42,14 @@ using namespace NSEpic;
 
 CPowerLawResult::CPowerLawResult(Int32 n)
     : COperatorResult("CPowerLawResult"), Redshifts(n), ChiSquare(n),
-      ReducedChiSquare(n), fluxError(n), coefs(n), FitEbmvCoeff(n),
+      ReducedChiSquare(n), pValue(n), fluxError(n), coefs(n), FitEbmvCoeff(n),
       FitMeiksinIdx(n), IsmEbmvCoeffIntermediate(n),
       IgmMeiksinIdxIntermediate(n), SNR(n) {}
 
 void CPowerLawResult::set_at_redshift(Int32 zIdx, TPowerLawResult result) {
   ChiSquare[zIdx] = result.chiSquare;
   ReducedChiSquare[zIdx] = result.reducedChiSquare;
+  pValue[zIdx] = result.pValue;
   coefs[zIdx] = result.coefs;
   FitEbmvCoeff[zIdx] = result.ebmvCoef;
   FitMeiksinIdx[zIdx] = result.meiksinIdx;

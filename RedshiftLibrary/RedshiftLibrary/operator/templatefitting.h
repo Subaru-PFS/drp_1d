@@ -58,6 +58,10 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
+namespace templateFitting_test {
+class fitQuality_test;
+}
+
 namespace NSEpic {
 
 struct TCrossProductResult {
@@ -100,7 +104,8 @@ struct TFittingIsmIgmResult : TFittingResult {
                             TInt32List(MeiksinListSize, undefIdx)) {}
 
   TFloat64List overlapFraction;
-  Float64 reducedChisquare = INFINITY;
+  Float64 reducedChiSquare = INFINITY;
+  Float64 pValue = 0;
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
@@ -128,6 +133,7 @@ public:
       std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 
 protected:
+  friend class templateFitting_test::fitQuality_test;
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
                                 Float64 redshift, Float64 overlapThreshold,
                                 bool opt_extinction, bool opt_dustFitting,

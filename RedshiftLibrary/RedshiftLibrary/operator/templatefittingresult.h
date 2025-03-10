@@ -70,6 +70,7 @@ public:
   // best fit results
   TFloat64List ChiSquare;
   TFloat64List ReducedChiSquare;
+  TFloat64List pValue;
   TFloat64List ChiSquarePhot;
   TFloat64List FitAmplitude;
   TFloat64List FitAmplitudeError;

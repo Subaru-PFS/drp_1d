@@ -63,6 +63,7 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/statistics/fitquality.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -191,10 +192,13 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
 
       // if minimizes chi2, sets it as the result
       if (fitRes.chiSquare < result.chiSquare) {
-        TFittingResult &result_base = result; // upcasting (slicing)
-        result_base = fitRes;                 // slicing, preserving specific
-        // TFittingIsmIGmResult members
-        result.reducedChisquare = result.chiSquare / n_samples;
+        TFittingResult &result_base =
+            result; // upcasting (slicing) slicing, preserving specific
+                    // TFittingIsmIGmResult members
+        result_base = fitRes;
+        result.reducedChiSquare =
+            NSFitQuality::reducedChi2(result.chiSquare, n_samples);
+        result.pValue = NSFitQuality::pValue(result.chiSquare, n_samples);
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
         chisquareSetAtLeastOnce = true;

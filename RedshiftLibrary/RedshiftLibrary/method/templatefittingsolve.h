@@ -49,6 +49,13 @@
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
+namespace templateFitting_test {
+class fitQuality_test;
+}
+
+namespace templateFittingSolve_test {
+class computeNoFFT_test;
+}
 namespace NSEpic {
 
 class CSpectrum;
@@ -78,6 +85,8 @@ public:
   CTemplateFittingSolve();
 
 private:
+  friend class templateFitting_test::fitQuality_test;
+  friend class templateFittingSolve_test::computeNoFFT_test;
   void PopulateParameters(
       const std::shared_ptr<const CParameterStore> &parameterStore);
   void InitFittingOperator();

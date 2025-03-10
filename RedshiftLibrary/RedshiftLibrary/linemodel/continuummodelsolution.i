@@ -28,6 +28,7 @@ struct CContinuumModelSolution {
   // Common
   Float64 merit = NAN;
   Float64 reducedChi2 = NAN;
+  Float64 pValue = NAN;
   Float64 SNR = NAN;
   Int32 meiksinIdx = undefIdx;
   Float64 ebmvCoef = NAN;

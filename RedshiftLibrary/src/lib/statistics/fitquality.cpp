@@ -36,36 +36,25 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
-#define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
-#include <vector>
-
+#include "RedshiftLibrary/statistics/fitquality.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/continuumfitstore.h"
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-namespace NSEpic {
+#include "RedshiftLibrary/common/exception.h"
 
-class CTemplatesFitStore : public CContinuumFitStore {
-public:
-  using CContinuumFitStore::CContinuumFitStore;
+namespace NSEpic::NSFitQuality {
+Float64 reducedChi2(const Float64 chi2, const Int32 nPixels) {
+  if (nPixels <= 0)
+    THROWG(ErrorCode::INTERNAL_ERROR, "nPixels must be > 0 ");
+  return chi2 / nPixels;
+}
 
-  void Add(std::string name, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
-           Float64 redshift, Float64 merit, Float64 reducedChi2, Float64 pValue,
-           Float64 chiSquare_phot, Float64 fitAmplitude,
-           Float64 fitAmplitudeError, Float64 fitAmplitudeSigma, Float64 fitDtM,
-           Float64 fitMtM, Float64 logprior, Float64 snr);
-
-  Int32 getContinuumCount() const override;
-
-private:
-  Float64 getFracAmplitudeSigma(
-      CContinuumModelSolution const &continuum) const override;
-  Int32 m_nContinuumCandidates = 0;
-};
-
-} // namespace NSEpic
-
-#endif
+Float64 pValue(const Float64 chi2, const Int32 nPixels) {
+  if (nPixels <= 1)
+    THROWG(ErrorCode::INTERNAL_ERROR, "nPixels must be > 2 ");
+  if (chi2 > DBL_MAX)
+    return 0;
+  boost::math::chi_squared chi2Dist(nPixels - 1);
+  Float64 p = boost::math::cdf(boost::math::complement(chi2Dist, chi2));
+  return p;
+}
+} // namespace NSEpic::NSFitQuality

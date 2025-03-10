@@ -36,6 +36,10 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+
+#ifndef INPUT_CONTEXT_LIGHT_FOR_TESTS
+#define INPUT_CONTEXT_LIGHT_FOR_TESTS
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/size.h"
@@ -1447,3 +1451,5 @@ public:
 
   void reset() { Context.reset(); }
 };
+
+#endif

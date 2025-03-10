@@ -66,6 +66,7 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/statistics/fitquality.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -331,7 +332,8 @@ void COperatorTplcombination::BasicFit(
 
       if (chisq < fittingResults.chiSquare) {
         fittingResults.chiSquare = chisq;
-        fittingResults.reducedChisquare = chisq / n;
+        fittingResults.reducedChiSquare = NSFitQuality::reducedChi2(chisq, n);
+        fittingResults.pValue = NSFitQuality::pValue(chisq, n);
         fittingResults.SNR = SNR;
         fittingResults.meiksinIdx =
             igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
@@ -543,7 +545,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              additional_spcMask, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
     result->ChiSquare[i] = fittingResults.chiSquare;
-    result->ReducedChiSquare[i] = fittingResults.reducedChisquare;
+    result->ReducedChiSquare[i] = fittingResults.reducedChiSquare;
+    result->pValue[i] = fittingResults.pValue;
     result->Overlap[i] = fittingResults.overlapFraction;
     result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
     result->FitAmplitudeSigma[i] = fittingResults.fittingAmplitudeSigmas;

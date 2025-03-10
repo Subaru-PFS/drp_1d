@@ -46,7 +46,7 @@ using namespace NSEpic;
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n)
     : CTwoPassResult("CTemplateFittingResult"), ChiSquare(n),
-      ReducedChiSquare(n), ChiSquarePhot(n), FitAmplitude(n),
+      ReducedChiSquare(n), pValue(n), ChiSquarePhot(n), FitAmplitude(n),
       FitAmplitudeError(n), FitAmplitudeSigma(n), FitEbmvCoeff(n),
       FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n),
       ChiSquareIntermediate(n), IsmEbmvCoeffIntermediate(n),
@@ -71,7 +71,8 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
 void CTemplateFittingResult::set_at_redshift(Int32 i, TFittingIsmIgmResult val,
                                              Int32 igmIdx, Int32 ismIdx) {
   ChiSquare[i] = val.chiSquare;
-  ReducedChiSquare[i] = val.reducedChisquare;
+  ReducedChiSquare[i] = val.reducedChiSquare;
+  pValue[i] = val.pValue;
   ChiSquarePhot[i] = val.chiSquare_phot;
   FitAmplitude[i] = val.ampl;
   FitAmplitudeError[i] = val.ampl_err;
@@ -127,6 +128,7 @@ void CTemplateFittingResult::updateVectors(
   insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
   insertWithDuplicates<Float64>(ReducedChiSquare, insertionIdx, count, NAN,
                                 ndup);
+  insertWithDuplicates<Float64>(pValue, insertionIdx, count, NAN, ndup);
   insertWithDuplicates<Float64>(ChiSquarePhot, insertionIdx, count, NAN, ndup);
   insertWithDuplicates<Float64>(FitAmplitude, insertionIdx, count, NAN, ndup);
   insertWithDuplicates<Float64>(FitAmplitudeError, insertionIdx, count, NAN,

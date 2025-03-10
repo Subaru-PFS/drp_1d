@@ -53,7 +53,7 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
-namespace templateFittingSolve_test {
+namespace templateFittingLog_test {
 class EstimateXtY_test;
 };
 
@@ -86,7 +86,7 @@ public:
                                    const TFloat64Range &redshiftrange) const;
 
 private:
-  friend class templateFittingSolve_test::EstimateXtY_test;
+  friend class templateFittingLog_test::EstimateXtY_test;
   Float64 m_logstep;
   Int32 m_ssRatio;
 

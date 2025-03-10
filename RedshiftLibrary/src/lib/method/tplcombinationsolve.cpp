@@ -386,6 +386,7 @@ CTplCombinationSolve::buildExtremaResults(
     candidate->fittedContinuum.merit = TplFitResult->ChiSquare[idx];
     candidate->fittedContinuum.reducedChi2 =
         TplFitResult->ReducedChiSquare[idx];
+    candidate->fittedContinuum.pValue = TplFitResult->pValue[idx];
     candidate->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[idx];
     candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[idx];
     candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[idx];
