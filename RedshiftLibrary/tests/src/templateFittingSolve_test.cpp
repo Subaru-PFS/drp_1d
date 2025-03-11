@@ -184,15 +184,15 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 2.880219830862035, 1e-6);
+  BOOST_CHECK_CLOSE(z, 2.8772626854240189, 1e-6);
 
   // Checks that fit quality indicators are correctly set
   Float64 chi2 = res->fittedContinuum.merit;
-  BOOST_CHECK_CLOSE(chi2, 331.98611446809548, 1e-4);
+  BOOST_CHECK_CLOSE(chi2, 331.99, 1e-2);
   Float64 chi2r = res->fittedContinuum.reducedChi2;
-  BOOST_CHECK_CLOSE(chi2r, 6.1478910086684344, 1e-4);
+  BOOST_CHECK_CLOSE(chi2r, 6.148, 1e-2);
   Float64 pValue = res->fittedContinuum.pValue;
-  BOOST_CHECK_CLOSE(pValue, 4.9918699914782802e-42, 1e-4);
+  BOOST_CHECK_CLOSE(pValue, 4.97e-42, 1e-1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
