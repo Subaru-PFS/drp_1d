@@ -268,7 +268,7 @@ class TestLineModelSolve:
                             "secondPass": {"continuumFit": ""},
                         }
                     }
-                }
+                },
             )
             if continuum_component == "tplFitAuto":
                 param_dict["continuumRemoval"] = {}
