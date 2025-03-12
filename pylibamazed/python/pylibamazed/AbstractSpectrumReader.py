@@ -181,7 +181,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         """
         pass  # implemenation not mandatory
 
-    def load_all(self, resource, obs_id_list=[""]) -> Spectrum:
+    def load_all(self, resource, obs_id_list=[""]) -> None:
         """
         Load all components of the spectrum. Reimplement this if resources are different
 

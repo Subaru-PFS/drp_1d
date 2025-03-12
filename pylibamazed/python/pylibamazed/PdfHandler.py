@@ -39,7 +39,7 @@
 import numpy as np
 from pylibamazed.redshift import CLogZPdfResult, CZGridListParams, CZGridParam, TFloat64Range
 
-from pylibamazed import AbstractOutput
+from pylibamazed.AbstractOutput import AbstractOutput
 
 
 def buildPdfParams(pdf_params, first_pass=False):

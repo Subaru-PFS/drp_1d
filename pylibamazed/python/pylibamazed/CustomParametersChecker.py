@@ -37,7 +37,6 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-import json
 from typing import Optional
 
 from pylibamazed.Exception import APIException
@@ -107,7 +106,7 @@ class CustomParametersChecker(ParametersChecker):
             if filter_name not in authorized_cols_names:
                 raise APIException(ErrorCode.INVALID_PARAMETER_FILE, f"Unknown filter key {filter_name}")
 
-    def _check_filters_format(self, json: json) -> None:
+    def _check_filters_format(self, json: list) -> None:
         if type(json) is not list:
             raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Input filters json must be a list")
 

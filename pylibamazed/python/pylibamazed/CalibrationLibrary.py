@@ -152,7 +152,7 @@ class CalibrationLibrary:
     @exception_decorator
     def __init__(self, parameters: Parameters, calibration_dir):
         self.parameters = parameters
-        self.calibration_dir = os.path.expanduser(calibration_dir)
+        self.calibration_dir: str = os.path.expanduser(calibration_dir)
         self.templates_catalogs = dict()
         self.templates_ratios = dict()
         self.line_catalogs = dict()

@@ -38,6 +38,7 @@
 # ============================================================================
 from pylibamazed.CustomParametersChecker import CustomParametersChecker
 from pylibamazed.redshift import CFlagWarning, WarningCode
+from typing import Optional, Union, Dict
 
 default_object_type = "galaxy"
 
@@ -82,11 +83,11 @@ def make_parameter_dict_at_object_level(**kwargs) -> dict:
 
 
 def make_parameter_dict_at_redshift_solver_level(
-    object_level_params=None, object_type=None, **redshift_kwargs
+    object_level_params=None, object_type: Optional[str] = None, **redshift_kwargs
 ) -> dict:
     if object_type is None:
         object_type = default_object_type
-    param_dict = {
+    param_dict: Dict[str, Union[list, Dict]] = {
         "spectrumModels": [object_type],
         object_type: {
             "stages": ["redshiftSolver"],
@@ -99,12 +100,13 @@ def make_parameter_dict_at_redshift_solver_level(
     if redshift_kwargs.get("method") == "lineModelSolve":
         if param_dict.get("lsf") is None:
             param_dict["lsf"] = {}
+    tfs = redshift_kwargs.get("templateFittingSolve")
     if (
         redshift_kwargs.get("method") == "templateFittingSolve"
-        and redshift_kwargs.get("templateFittingSolve") is not None
-        and redshift_kwargs.get("templateFittingSolve").get("singlePass") is not False
+        and tfs is not None
+        and tfs.get("singlePass") is not False
     ):
-        param_dict[object_type]["redshiftSolver"]["templateFittingSolve"]["singlePass"] = True
+        param_dict[object_type]["redshiftSolver"]["templateFittingSolve"]["singlePass"] = True  # type: ignore
     return param_dict
 
 
@@ -119,7 +121,7 @@ def make_parameter_dict_at_linemodelsolve_level(**kwargs):
 
 
 def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwargs) -> dict:
-    param_dict = {
+    param_dict: Dict = {
         "spectrumModels": [default_object_type],
         default_object_type: {
             "lineMeasDzHalf": 0.1,
@@ -139,7 +141,7 @@ def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwar
 
 
 def make_parameter_dict_linemeas_solve_piped_linemodel(
-    linemodel_level_params: dict = None, linemeas_level_params: dict = None
+    linemodel_level_params: Dict, linemeas_level_params: Dict
 ) -> dict:
     param_dict = make_parameter_dict_at_linemodelsolve_level(**linemodel_level_params)
     param_dict[default_object_type]["stages"] += ["lineMeasSolver"]
@@ -150,7 +152,7 @@ def make_parameter_dict_linemeas_solve_piped_linemodel(
 
 
 def make_parameter_dict_at_reliability_solver_level(object_level_params=None, **kwargs) -> dict:
-    param_dict = {
+    param_dict: Dict = {
         "spectrumModels": [default_object_type],
         default_object_type: {
             "stages": ["reliabilitySolver"],
@@ -164,7 +166,7 @@ def make_parameter_dict_at_reliability_solver_level(object_level_params=None, **
 
 
 def make_parameter_dict_at_reliability_deep_learning_level(object_level_params=None, **kwargs) -> dict:
-    param_dict = {
+    param_dict: Dict = {
         "spectrumModels": [default_object_type],
         default_object_type: {
             "stages": ["reliabilitySolver"],

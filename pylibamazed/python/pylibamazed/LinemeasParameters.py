@@ -144,6 +144,11 @@ class LinemeasParameters:
         self, parameter: Parameters, spectrum_model: str, velocity_type: EVelocityType
     ):
         solve_method = parameter.get_linemeas_method(spectrum_model)
+        if solve_method is None:
+            raise APIException(
+                ErrorCode.INTERNAL_ERROR,
+                "No linemeas method: this method should not be called",
+            )
         velocity = parameter.get_velocity(spectrum_model, solve_method, velocity_type)
         if velocity is None:
             raise APIException(
