@@ -181,7 +181,6 @@ CContinuumFitStore::FindMaxAmplitudeSigma() const {
 
 CContinuumModelSolution const &CContinuumFitStore::FindMinReducedChi2() const {
   Int32 const icontinum = 0;
-  Float64 max_reduced_chi2 = -INFINITY;
   auto const max_elt = std::min_element(
       m_fitValues.cbegin(), m_fitValues.cend(),
       [this](std::vector<CContinuumModelSolution> const &left_fitValues,
@@ -194,7 +193,6 @@ CContinuumModelSolution const &CContinuumFitStore::FindMinReducedChi2() const {
 
 CContinuumModelSolution const &CContinuumFitStore::FindMaxPValue() const {
   Int32 const icontinum = 0;
-  Float64 maxPValue = -INFINITY;
   auto const max_elt = std::max_element(
       m_fitValues.cbegin(), m_fitValues.cend(),
       [this](std::vector<CContinuumModelSolution> const &left_fitValues,
