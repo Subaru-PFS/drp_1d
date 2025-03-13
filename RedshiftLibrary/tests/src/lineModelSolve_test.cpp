@@ -532,14 +532,19 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
       "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
-  std::shared_ptr<const TExtremaResult> res =
-      Context.GetResultStore()->GetExtremaResult(
-          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
-          "model_parameters", 0);
+  auto res = Context.GetResultStore()->GetLineModelResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters", 0);
+
   Float64 z = res->Redshift;
   // Accepts a greater difference due to bigger z steps
   BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1);
   BOOST_CHECK_EQUAL(res->fittedContinuum.name, "powerLaw");
+
+  // Checks Merit, reducedChi2 and pValue presence in resultStore
+  BOOST_CHECK_CLOSE(res->Merit, 116299.57931821454, 1e-4);
+  BOOST_CHECK_CLOSE(res->reducedChi2, 174.62399297029211, 1e-4);
+  BOOST_CHECK_CLOSE(res->pValue, 0, 1e-4);
 
   ctx.reset();
 }

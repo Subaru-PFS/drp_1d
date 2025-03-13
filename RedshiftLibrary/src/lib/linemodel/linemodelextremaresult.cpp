@@ -42,7 +42,9 @@
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/statistics/fitquality.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
@@ -79,6 +81,8 @@ void TLineModelResult::updateFromModel(
     const std::shared_ptr<const CLineModelResult> &lmresult,
     bool estimateLeastSquareFast, int idx) {
   Merit = lmresult->ChiSquare[idx];
+  reducedChi2 = NSFitQuality::reducedChi2(Merit, lmresult->nSpcSamples);
+  pValue = NSFitQuality::pValue(Merit, lmresult->nSpcSamples);
 
   // LineModelSolutions
   Elv = lmresult->LineModelSolutions[idx].EmissionVelocity;
