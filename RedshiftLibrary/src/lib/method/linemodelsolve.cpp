@@ -196,6 +196,8 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
           ExtremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
           pdfz.m_postmargZResult->valMargEvidenceLog, continuumEvidence);
   lmSolveResult->minContinuumReducedChi2 = lmresult->minContinuumReducedChi2;
+  lmSolveResult->maxFitAmplitudeSigma = lmresult->maxFitAmplitudeSigma;
+  lmSolveResult->maxPValue = lmresult->maxPValue;
   return lmSolveResult;
 }
 

@@ -147,7 +147,7 @@ Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	
 LinemeasLyaIgm	linemeas_parameters	False	object	LyaIgm	linemeas	f8
 ModelLambda	linemeas_model<ObsID>	False	object	ModelLambda[obs_id]	linemeas_model	f8
 ModelFlux	linemeas_model<ObsID>	False	object	ModelFlux[obs_id]	linemeas_model	f8
-Reliability	reliability<relName>	False	object	python	python	f8
+Reliability	reliability<relName>	False	object	notRelevant	notRelevant	f8
 FirstpassLogZPdfNative	firstpass_pdf	True	object	valProbaLog	firstpass_pdf	f8
 ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i
 InitWarningFlags	init_warningFlag	False	root	flagValue	init_warningFlag	i
@@ -173,3 +173,6 @@ LineMask	line_mask	True	candidate	OutsideLinesMask	extrema_results	i
 LineMask	linemeas_line_mask	True	object	OutsideLinesMask	linemeas	i
 <BandName>PhotometricModel	PhotometricModel	False	candidate	m_photValues[band_name]	extrema_results	f8
 MinContinuumReducedChi2	goodness_fit	False	object	minContinuumReducedChi2	solveResult	f8
+MaxFitAmplitudeSigma	goodness_fit	False	object	maxFitAmplitudeSigma	solveResult	f8
+MaxPValue	goodness_fit	False	object	maxPValue	solveResult	f8
+SwitchedToFromSpectrum	goodness_fit	True	object	m_switchedToFromSpectrum	solveResult	f8

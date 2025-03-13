@@ -655,7 +655,12 @@ BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
       std::dynamic_pointer_cast<CLineModelSolveResult>(
           lineModelSolve.compute());
   BOOST_CHECK(lineModelSolve.m_opt_continuumcomponent.isContinuumFit());
-  BOOST_CHECK_CLOSE(lmSolveResult->getContinuumEvidence(), 1883.5584, 0.1);
+  BOOST_CHECK_CLOSE(lmSolveResult->getContinuumEvidence(), 1883.5584, 1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->minContinuumReducedChi2, 6.4338527454274024,
+                    1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->maxFitAmplitudeSigma, 8.4786296286559519,
+                    1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->maxPValue, 1.5165937452759085e-56, 1E-4);
 
   ctx.reset();
 }

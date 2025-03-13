@@ -132,6 +132,8 @@ public:
   Float64 cstLog = 0.0;
 
   Float64 minContinuumReducedChi2 = 0.0;
+  Float64 maxFitAmplitudeSigma = 0;
+  Float64 maxPValue = 0;
 };
 
 } // namespace NSEpic

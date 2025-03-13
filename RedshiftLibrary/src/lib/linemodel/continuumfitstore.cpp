@@ -191,3 +191,16 @@ CContinuumModelSolution const &CContinuumFitStore::FindMinReducedChi2() const {
       });
   return (*max_elt)[icontinum];
 }
+
+CContinuumModelSolution const &CContinuumFitStore::FindMaxPValue() const {
+  Int32 const icontinum = 0;
+  Float64 maxPValue = -INFINITY;
+  auto const max_elt = std::max_element(
+      m_fitValues.cbegin(), m_fitValues.cend(),
+      [this](std::vector<CContinuumModelSolution> const &left_fitValues,
+             std::vector<CContinuumModelSolution> const &right_fitValues) {
+        return left_fitValues[icontinum].pValue >
+               right_fitValues[icontinum].pValue;
+      });
+  return (*max_elt)[icontinum];
+}

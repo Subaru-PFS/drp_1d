@@ -669,13 +669,17 @@ void COperatorLineModel::evaluateAndUpdateContinuumComponent(
 
   // get smallest reduced chi2 at all z
   auto const &fitValues_of_min_chi2_r = continuumFitStore->FindMinReducedChi2();
-  m_result->minContinuumReducedChi2 = fitValues_of_min_chi2_r.reducedChi2;
-  if (updateContinuumComponentIfBadChi2(fitValues_of_min_chi2_r))
-    return;
-
+  auto const &fitValues_of_max_p_value = continuumFitStore->FindMaxPValue();
   // get greatest continuum amplitude at all z
   auto const &[max_fitamplitudeSigma, fitValues_of_max_amplitude] =
       continuumFitStore->FindMaxAmplitudeSigma();
+
+  m_result->minContinuumReducedChi2 = fitValues_of_min_chi2_r.reducedChi2;
+  m_result->maxPValue = fitValues_of_max_p_value.pValue;
+  m_result->maxFitAmplitudeSigma = max_fitamplitudeSigma;
+
+  if (updateContinuumComponentIfBadChi2(fitValues_of_min_chi2_r))
+    return;
 
   if (updateContinuumComponentIfNegative(max_fitamplitudeSigma,
                                          fitValues_of_max_amplitude))
