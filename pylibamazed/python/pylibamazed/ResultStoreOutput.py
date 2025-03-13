@@ -172,15 +172,19 @@ class ResultStoreOutput(AbstractOutput):
             return hasattr(operator_result, attribute_info.OperatorResult_name)
 
     def has_dataset_in_source(self, object_type, stage, method, dataset):
+        """Checks that at least one of the attributes of the dataset is present in the result store"""
         if dataset == "classification":
             return self.results_store.HasDataset(dataset, dataset, dataset, "solveResult")
 
+        # Gets all rows corresponding to given dataset
         ds_attributes = self.filter_dataset_attributes(dataset, object_type)
-        has_dataset = True
         if not len(ds_attributes):
             return False
+
+        # Checks that at least one of the attributes of the selected rows is present in the result store
+        has_dataset = False
         for rs_key in ds_attributes.ResultStore_key.unique():
-            has_dataset = has_dataset and self.results_store.HasDataset(
+            has_dataset = has_dataset or self.results_store.HasDataset(
                 object_type or "", stage or "", method or "", rs_key
             )
         return has_dataset
