@@ -532,10 +532,10 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
       "model_parameters");
   BOOST_CHECK(resType == "TLineModelResult");
 
-  auto res = Context.GetResultStore()->GetLineModelResult(
-      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
-      "model_parameters", 0);
-
+  auto res = std::dynamic_pointer_cast<const TLineModelResult>(
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0));
   Float64 z = res->Redshift;
   // Accepts a greater difference due to bigger z steps
   BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1);
