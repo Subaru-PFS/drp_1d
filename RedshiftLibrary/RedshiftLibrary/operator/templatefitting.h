@@ -126,7 +126,7 @@ public:
       std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
-      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+      Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
       TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
       std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 

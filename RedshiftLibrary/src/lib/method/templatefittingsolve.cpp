@@ -340,9 +340,12 @@ void CTemplateFittingSolve::computeSecondPass(
     const std::string &candidateName = extremaResult->ID(candidateIdx);
     std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(
         {m_category}, candidate->fittedContinuum.name);
-    Int32 igmIdx = candidate->fittedContinuum.meiksinIdx;
-    Int32 ismIdx = Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
-        candidate->fittedContinuum.ebmvCoef);
+    Int32 igmIdx =
+        m_extinction ? candidate->fittedContinuum.meiksinIdx : undefIdx;
+    Int32 ismIdx = m_dustFit
+                       ? Context.getFluxCorrectionCalzetti()->GetEbmvIndex(
+                             candidate->fittedContinuum.ebmvCoef)
+                       : undefIdx;
     auto const tplFitResult =
         templatesResultsMap[candidate->fittedContinuum.name];
     Solve(resultStore, tpl, ismIdx, igmIdx, candidateName, candidateIdx,
