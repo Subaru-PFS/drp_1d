@@ -48,7 +48,8 @@ CPdfSolveResult::CPdfSolveResult(
     const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
     const std::string &opt_pdfcombination, Float64 evidence)
     : CSolveResult(type),
+      m_bestRedshiftMethod(opt_pdfcombination == "marg" ? 2 : 0),
+      m_redshift(BestExtremumResult->Redshift),
       m_merit(opt_pdfcombination == "marg" ? BestExtremumResult->ValSumProba
                                            : BestExtremumResult->ValProba),
-      m_bestRedshiftMethod(opt_pdfcombination == "marg" ? 2 : 0),
-      m_redshift(BestExtremumResult->Redshift), m_evidence(evidence) {}
+      m_evidence(evidence) {}

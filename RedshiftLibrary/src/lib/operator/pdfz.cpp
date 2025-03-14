@@ -57,12 +57,13 @@ COperatorPdfz::COperatorPdfz(const std::string &opt_combine,
                              const std::string &Id_prefix,
                              bool allow_extrema_at_border,
                              Int32 maxPeakCount_per_window)
-    : m_opt_combine(opt_combine), m_peakSeparation(peakSeparation),
-      m_meritcut(meritcut), m_allow_extrema_at_border(allow_extrema_at_border),
+    : m_opt_combine(opt_combine),
       m_maxPeakCount_per_window(maxPeakCount_per_window <= 0
                                     ? maxCandidate
                                     : maxPeakCount_per_window),
       m_maxCandidate(maxCandidate), m_redshiftLogSampling(redshiftLogSampling),
+      m_peakSeparation(peakSeparation),
+      m_allow_extrema_at_border(allow_extrema_at_border), m_meritcut(meritcut),
       m_Id_prefix(Id_prefix) {}
 
 /*

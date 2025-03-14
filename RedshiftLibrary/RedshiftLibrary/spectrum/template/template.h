@@ -125,14 +125,13 @@ private:
   friend class Template::InitIsmIgmConfig_test;
   friend class Template::ApplyDustCoeff_test;
 
-  std::string m_Category;
-
   Int32 m_kDust = -1;
   Int32 m_meiksinIdx = -1;
   Int32 m_meiksinRedshiftIdx = -1;
 
+  std::string m_Category;
+
   Int32 m_IsmIgm_kstart = -1, m_Ism_kend = -1, m_Igm_kend = -1;
-  CSpectrumFluxAxis m_NoIsmIgmFluxAxis;
 
   // below vectors should be updated each time we change m_kDust, m_meiksinIdx
   // for a specific redshift
@@ -143,6 +142,7 @@ private:
       m_computedMeiksingCoeff; // vector of spectrum size containing computed
                                // igm coeff at a specific Z at m_meiksin and
                                // this for all lambdas in the spectrum
+  CSpectrumFluxAxis m_NoIsmIgmFluxAxis;
 };
 
 // override Flux Setters to reset ism/igm
