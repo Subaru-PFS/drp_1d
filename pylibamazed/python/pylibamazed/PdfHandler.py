@@ -37,10 +37,11 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import numpy as np
-from pylibamazed.redshift import CLogZPdfResult, CZGridListParams, CZGridParam, TFloat64Range
+from pylibamazed.redshift import CLogZPdfResult, CZGridListParams, CZGridParam, TFloat64Range, ErrorCode
 
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Parameters import Parameters
+from pylibamazed.Exception import APIException
 
 
 def buildPdfParams(pdf_params, first_pass=False):
@@ -54,29 +55,34 @@ def buildPdfParams(pdf_params, first_pass=False):
     )
 
 
-def get_fine_z_grid(object_type: str, parameters: Parameters):
-    p_redshift_range = parameters.get_redshiftrange(object_type)
+def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
+    method = parameters.get_redshift_solver_method(spectrum_model)
+    if parameters.get_skipsecondpass(method, spectrum_model, False):
+        raise APIException(
+            ErrorCode.PYTHON_API_ERROR, "get_final_regular_z_grid cannot be called with skipSecondPass"
+        )
+
+    p_redshift_range = parameters.get_redshiftrange(spectrum_model)
     redshift_range = TFloat64Range(p_redshift_range[0], p_redshift_range[1])
-    redshift_step = parameters.get_redshiftstep(object_type)
-    is_log = parameters.get_redshift_sampling(object_type) == "log"
+    redshift_step = parameters.get_redshiftstep(spectrum_model)
+    is_log = parameters.is_log_sampling(spectrum_model)
+
     grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
 
-    zend = grid_param.getZGrid(is_log)[-1]
-    if parameters.has_two_pass(object_type):
-        ratio = parameters.get_large_grid_ratio(object_type)
+    if parameters.has_two_pass(spectrum_model):
+        ratio = parameters.get_large_grid_ratio(spectrum_model)
         fp_grid_param = CZGridParam(redshift_range, redshift_step * ratio, np.nan)
         zend = fp_grid_param.getZGrid(is_log)[-1]
-        
-    redshift_range = TFloat64Range(p_redshift_range[0], zend)
-    grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
+        redshift_range = TFloat64Range(p_redshift_range[0], zend)
+        grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
 
     return grid_param.getZGrid(is_log)
 
 
 class BuilderPdfHandler:
-    def add_params(self, abstract_output: AbstractOutput, object_type, logsampling, first_pass=False):
+    def add_params(self, abstract_output: AbstractOutput, spectrum_model, logsampling, first_pass=False):
         self.abstract_output = abstract_output
-        self.object_type = object_type
+        self.spectrum_model = spectrum_model
         self.logsampling = logsampling
         self.first_pass = first_pass
         return self
@@ -89,9 +95,9 @@ class BuilderPdfHandler:
             dataset_prefix = "firstpass_"
             name_prefix = "Firstpass"
 
-        pdf_params = self.abstract_output.get_dataset(self.object_type, dataset_prefix + "pdf_params")
+        pdf_params = self.abstract_output.get_dataset(self.spectrum_model, dataset_prefix + "pdf_params")
         c_pdf_params = buildPdfParams(pdf_params, self.first_pass)
-        pdf_proba = self.abstract_output.get_dataset(self.object_type, dataset_prefix + "pdf")[
+        pdf_proba = self.abstract_output.get_dataset(self.spectrum_model, dataset_prefix + "pdf")[
             name_prefix + "LogZPdfNative"
         ]
 

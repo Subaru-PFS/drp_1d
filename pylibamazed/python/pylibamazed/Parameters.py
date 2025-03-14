@@ -219,7 +219,7 @@ class Parameters(ParametersAccessor):
 
     def get_large_grid_ratio(self, spectrum_model: str):
         method = self.get_redshift_solver_method(spectrum_model)
-        try:
-            return self.get_firstpass_section(method, spectrum_model)["largeGridStepRatio"]
-        except:
-            raise Exception(f'failed to get large grid step ratio on {spectrum_model} meth {method}')
+        return super().get_large_grid_ratio(spectrum_model, method)
+
+    def is_log_sampling(self, spectrum_model: str):
+        return self.get_redshift_sampling(spectrum_model) == "log"
