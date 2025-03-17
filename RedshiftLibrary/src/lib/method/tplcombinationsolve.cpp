@@ -164,18 +164,6 @@ bool CTplCombinationSolve::Solve(
                                      CSpectrum::EType::noContinuum,
                                      CSpectrum::EType::continuumOnly};
 
-  Int32 enable_extinction =
-      0; // TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-  if (opt_extinction) {
-    enable_extinction = 1;
-  }
-  Int32 enable_dustFitting = 0;
-  if (opt_dustFitting) {
-    enable_dustFitting =
-        1; // here we dont distinguish between using on single ismCoeff or
-           // iterating over all coeffs. Default to all!
-  }
-
   // prepare the list of components/templates
   const TTemplateConstRefList &tplList =
       tplCatalog.GetTemplateList(TStringList{m_category});
@@ -207,14 +195,12 @@ bool CTplCombinationSolve::Solve(
         });
 
     resultName = getResultName(_spctype);
-    if (_spctype == CSpectrum::EType::noContinuum)
-      enable_dustFitting = 0;
 
     // Compute merit function
     auto result = std::dynamic_pointer_cast<CTplCombinationResult>(
-        m_tplcombinationOperator.Compute(
-            spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList,
-            opt_interp, enable_extinction, enable_dustFitting));
+        m_tplcombinationOperator.Compute(spc, tplList, lambdaRange, redshifts,
+                                         overlapThreshold, maskList, opt_interp,
+                                         opt_extinction, opt_dustFitting));
 
     if (!result)
       return false;
