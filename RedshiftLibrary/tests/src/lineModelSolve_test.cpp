@@ -643,12 +643,13 @@ BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
                              ScopeType::STAGE);
   CLineModelSolve lineModelSolve;
+  CAutoScope method_autoscope(Context.m_ScopeStack, lineModelSolve.m_name,
+                              ScopeType::METHOD);
+  CAutoSaveFlagToResultStore saveflag;
 
   auto const &inputContext = *Context.GetInputContext();
   auto &scope = Context.m_ScopeStack;
   lineModelSolve.InitRanges(inputContext);
-  CAutoScope method_autoscope(scope, lineModelSolve.m_name, ScopeType::METHOD);
-  CAutoSaveFlagToResultStore saveflag;
 
   std::shared_ptr<CLineModelSolveResult> lmSolveResult =
       std::dynamic_pointer_cast<CLineModelSolveResult>(

@@ -56,6 +56,8 @@ BOOST_FIXTURE_TEST_CASE(fitQuality_test,
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
                              ScopeType::STAGE);
   CTemplateFittingSolve templateFittingSolve;
+  CAutoScope method_autoscope(Context.m_ScopeStack, templateFittingSolve.m_name,
+                              ScopeType::METHOD);
 
   auto const &inputContext = *Context.GetInputContext();
   templateFittingSolve.InitRanges(inputContext);
