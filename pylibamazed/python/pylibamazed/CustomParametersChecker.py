@@ -617,7 +617,7 @@ class CustomParametersChecker(ParametersChecker):
     def _check_linemeas_runmode(self):
         for spectrum_model in self.accessor.get_spectrum_models([]):
             if "lineMeasSolver" in self.accessor.get_stages(spectrum_model):
-                self._check_dependant_parameter_presence(
+                self._check_dependant_condition(
                     True,
                     self.accessor.get_linemeas_runmode() is not None,
                     error_message=f"LineMeasSolve stage present, lineMeasRunMode parameter is mandatory",
