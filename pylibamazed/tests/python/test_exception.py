@@ -141,9 +141,9 @@ def test_exception():
     with pytest.raises(exception, match=msg) as exc_info:
         try:
             raise_Exception()
-        except Exception as e:
-            APIException.fromException(e)
-            raise APIException.fromException(e) from None
+        except Exception as ex:
+            APIException.fromException(ex)
+            raise APIException.fromException(ex) from None
     e = exc_info.value
     assert e.getFileName() == filename
     assert e.getMethod() == method

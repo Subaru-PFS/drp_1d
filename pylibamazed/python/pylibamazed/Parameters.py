@@ -123,15 +123,17 @@ class Parameters(ParametersAccessor):
     def get_objects_solve_methods_str(self) -> dict[str, str]:
         ret = dict()
         for spectrum_model in self.get_spectrum_models():
-            if self.get_redshift_solver_method(spectrum_model):
-                ret[spectrum_model] = self.get_redshift_solver_method(spectrum_model).value
+            redshift_solver_method = self.get_redshift_solver_method(spectrum_model)
+            if redshift_solver_method is not None:
+                ret[spectrum_model] = redshift_solver_method.value
         return ret
 
     def get_objects_linemeas_methods(self) -> dict[str, str]:
         ret = dict()
         for spectrum_model in self.get_spectrum_models():
-            if self.get_linemeas_method(spectrum_model):
-                ret[spectrum_model] = self.get_linemeas_method(spectrum_model).value
+            linemeas_method = self.get_linemeas_method(spectrum_model)
+            if linemeas_method is not None:
+                ret[spectrum_model] = linemeas_method.value
         return ret
 
     def is_tplratio_catalog_needed(self, spectrum_model) -> bool:
@@ -173,12 +175,16 @@ class Parameters(ParametersAccessor):
         return z_solver_found
 
     def is_linemeas_alone(self, spectrum_model: str) -> bool:
-        return self.get_linemeas_method(spectrum_model) and not self.get_redshift_solver_method(
-            spectrum_model
+        return (
+            self.get_linemeas_method(spectrum_model) is not None
+            and self.get_redshift_solver_method(spectrum_model) is None
         )
 
     def is_linemeas_piped(self, spectrum_model: str) -> bool:
-        return self.get_linemeas_method(spectrum_model) and self.get_redshift_solver_method(spectrum_model)
+        return (
+            self.get_linemeas_method(spectrum_model) is not None
+            and self.get_redshift_solver_method(spectrum_model) is not None
+        )
 
     def get_lambda_range_min(self):
         if self.get_multiobs_method() != "full":

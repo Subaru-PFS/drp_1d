@@ -59,7 +59,8 @@ class ParametersConverterSelector:
     def __init__(self, accept_v1: bool = False):
         self.accept_v1 = accept_v1
 
-    def get_converter(self, version: int) -> ParametersConverter:
+    def get_converter(self, version: int) -> type[ParametersConverter]:
+        Converter: type[ParametersConverter]
         if version == 1:
             # if not self.accept_v1:
             #     raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Deprecated parameters file version")

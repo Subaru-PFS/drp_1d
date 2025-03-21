@@ -26,6 +26,19 @@ repos:
     hooks:
       - id: black
         files: "pylibamazed"
-        exclude: "redshift.py"
         args: ["--line-length=110"]
         types: [python]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v1.15.0'
+    hooks:
+      - id: mypy
+        files: "pylibamazed"
+        exclude: "redshift.py"
+        args: [
+          "--ignore-missing-imports",
+          "--disable-error-code=attr-defined",
+          "--disable-error-code=var-annotated",
+          "--disable-error-code=import-untyped",
+          "--follow-imports=silent"
+          ]
