@@ -72,8 +72,9 @@ void COperatorResultStore::StoreResult(
 
   TResultsMap::iterator it = map.find(scopedName);
   if (it != map.end()) {
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           "Can not store results: result already exists");
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Can not store results: result"
+                                          << scopedName << " already exists");
   }
   map[scopedName] = result;
 }
@@ -439,8 +440,18 @@ void COperatorResultStore::StoreGlobalResult(
 }
 
 void COperatorResultStore::StoreScopedFlagResult(const std::string &name) {
-  StoreScopedGlobalResult(name, std::make_shared<const CFlagLogResult>(
-                                    Flag.getBitMask(), Flag.getListMessages()));
+
+  if (hasCurrentMethodWarningFlag()) {
+
+    auto currentFlag = *(std::dynamic_pointer_cast<const CFlagLogResult>(
+        GetScopedGlobalResult(name).lock()));
+    auto newFlag = CFlagLogResult(Flag.getBitMask(), Flag.getListMessages());
+    StoreScopedGlobalResult(
+        name, std::make_shared<const CFlagLogResult>(currentFlag + newFlag));
+  } else
+    StoreScopedGlobalResult(
+        name, std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
+                                                     Flag.getListMessages()));
 }
 
 std::weak_ptr<const COperatorResult>

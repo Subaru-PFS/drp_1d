@@ -45,4 +45,7 @@ public:
 
   Int32 flagValue;
   TWarningMsgList msgList;
+
+  // Overload the + operator
+  CFlagLogResult operator+(const CFlagLogResult& other) const;
 };

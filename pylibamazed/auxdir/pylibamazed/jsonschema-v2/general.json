@@ -11,7 +11,8 @@
     "smoothWidth",
     "autoCorrectInput",
     "spectrumModels",
-    "nbSamplesMin"
+    "nbSamplesMin",
+    "secondPassAfterClassification"
   ],
   "additionalProperties": false,
   "patternProperties": {
@@ -182,6 +183,11 @@
       "type": "integer",
       "title": "Minimum number of samples in a spectrum",
       "description": ""
+    },
+    "secondPassAfterClassification": {
+      "type": "boolean",
+      "title": "Second pass after classification",
+      "description": "Run second pass only on classified spectrum model"
     }
   }
 }

@@ -919,6 +919,16 @@ class CObjectSolve{
     void Compute();
 };
 
+class CTwoPassSolve : public CObjectSolve {
+public:
+  CTwoPassSolve()=delete;
+    void Compute();
+    void initForClassificationAfterFirstPass();
+    void setRunSecondPassFromResultStore();
+};
+
+
+  
   class CClassificationSolve:public CSolve
   {
 
@@ -934,7 +944,7 @@ class CObjectSolve{
 
     CReliabilitySolve();
   };
-  class CLineModelSolve:public CObjectSolve
+  class CLineModelSolve:public CTwoPassSolve
   {
 
   public:
@@ -949,7 +959,7 @@ class CObjectSolve{
     CLineMeasSolve();
   };
 
-  class CTemplateFittingSolve : public CObjectSolve
+  class CTemplateFittingSolve : public CTwoPassSolve
 {
   public:
 

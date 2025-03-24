@@ -557,9 +557,13 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // FIRST PASS
   //**************************************************
-  std::shared_ptr<const CLineModelResult> lmresult =
-      m_linemodel.ComputeFirstPass();
-  if (!m_opt_skipsecondpass) {
+  std::shared_ptr<const CLineModelResult> lmresult;
+  if (!skipFirstPass())
+    lmresult = m_linemodel.ComputeFirstPass();
+  else
+    lmresult = std::dynamic_pointer_cast<const CLineModelResult>(
+        resultStore->GetScopedGlobalResult(resultName).lock());
+  if (twoPassIsActive()) {
     //**************************************************
     // Compute z-candidates
     //**************************************************
@@ -609,9 +613,10 @@ void CLineModelSolve::Solve() {
 
 void CLineModelSolve::initSkipSecondPass() {
 
-  m_opt_skipsecondpass =
-      Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
-          "lineModel.skipSecondPass");
+  if (!m_opt_skipsecondpass)
+    m_opt_skipsecondpass =
+        Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
+            "lineModel.skipSecondPass");
 };
 
 void CLineModelSolve::initTwoPassZStepFactor() {

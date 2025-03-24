@@ -74,6 +74,29 @@ void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
   }
 }
 
+bool CTwoPassSolve::twoPassIsActive() const {
+  return !m_opt_singlePass && !m_opt_skipsecondpass;
+}
+
+bool CTwoPassSolve::firstPassOnly() const { return m_opt_skipsecondpass; }
+
+bool CTwoPassSolve::skipFirstPass() const {
+  return m_runSecondPassFromResultStore;
+}
+
+bool CTwoPassSolve::finalPdfFromFirstPass() const {
+  return m_opt_skipsecondpass;
+}
+
+void CTwoPassSolve::initForClassificationAfterFirstPass() {
+  m_opt_skipsecondpass = true;
+}
+
+void CTwoPassSolve::setRunSecondPassFromResultStore() {
+  m_opt_skipsecondpass = false;
+  m_runSecondPassFromResultStore = true;
+}
+
 const std::unordered_map<std::string, EContinuumFit>
     CTwoPassSolve::str2ContinuumFit = {
         {"retryAll", EContinuumFit::retryAll},

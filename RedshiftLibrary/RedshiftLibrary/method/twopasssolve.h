@@ -59,19 +59,28 @@ public:
                           const TFloat64Range &redshiftRange);
   static const std::unordered_map<std::string, EContinuumFit> str2ContinuumFit;
 
+  void initForClassificationAfterFirstPass();
+  void setRunSecondPassFromResultStore();
+
 protected:
   virtual void initSkipSecondPass() = 0;
   virtual void initTwoPassZStepFactor() = 0;
-  bool twoPassIsActive() const {
-    return !m_opt_singlePass && !m_opt_skipsecondpass;
-  }
-  bool firstPassOnly() const { return m_opt_skipsecondpass; }
+  bool twoPassIsActive() const;
+  bool firstPassOnly() const;
   bool isSinglePass() const { return m_opt_singlePass; }
+  bool skipFirstPass() const;
+
+  bool finalPdfFromFirstPass() const;
 
   Float64 m_coarseRedshiftStep = NAN;
   Float64 m_twoPassZStepFactor = NAN;
   bool m_opt_skipsecondpass = false;
   bool m_opt_singlePass = false;
+
+  // Internal options for 1st pass -> classification -> 2nd pass on classified
+
+  bool m_runSecondPassFromResultStore =
+      false; // run second pass with a linemodelResult taken from result store
 };
 
 } // namespace NSEpic
