@@ -113,9 +113,9 @@ private:
 
   std::shared_ptr<CTemplateFittingResult>
   Solve(std::shared_ptr<COperatorResultStore> resultStore,
-        const std::shared_ptr<const CTemplate> &tpl,
-        Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
-        std::string parentId = "", Int32 candidateIdx = undefIdx,
+        const std::shared_ptr<const CTemplate> &tpl, Int32 FitEbmvIdx = allIdx,
+        Int32 FitMeiksinIdx = allIdx, std::string parentId = "",
+        Int32 candidateIdx = undefIdx,
         std::shared_ptr<CTemplateFittingResult> const &result = nullptr);
 
   ChisquareArray BuildChisquareArray(const std::string &resultName,

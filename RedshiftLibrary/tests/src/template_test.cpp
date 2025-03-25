@@ -332,47 +332,10 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   igmEndIndex = tpl3.GetIgmEndIndex(spcAxisSize - 2, spcAxisSize - 1);
   BOOST_CHECK(igmEndIndex == -1);
 
-  // GetIsmIdxList
-  CTemplate tpl4("name", "category", tplStar.GetSpectralAxis(), fluxAxisList);
-  TInt32List ebmvList;
-  tpl4.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
-
-  ebmvList = tpl4.GetIsmIdxList(0, 1);
-  BOOST_CHECK(ebmvList.size() == 1);
-  BOOST_CHECK(ebmvList[0] == -1);
-
-  ebmvList = tpl4.GetIsmIdxList(1, -1);
-  BOOST_CHECK(ebmvList.size() == 10);
-  TInt32List ref_list = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  BOOST_CHECK(ebmvList == ref_list);
-
-  ebmvList = tpl4.GetIsmIdxList(1, 3);
-  BOOST_CHECK(ebmvList.size() == 1);
-  BOOST_CHECK(ebmvList[0] == 3);
-
-  // GetIgmIdxList
-  CTemplate tpl5("name", "category", tplStar.GetSpectralAxis(), fluxAxisList);
-  TInt32List meiksinList;
-
-  tpl5.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
-
-  meiksinList = tpl5.GetIgmIdxList(0, 1);
-  BOOST_CHECK(meiksinList.size() == 1);
-  BOOST_CHECK(meiksinList[0] == -1);
-
-  meiksinList = tpl5.GetIgmIdxList(1, -1);
-  BOOST_CHECK(ssize(meiksinList) == idxCount);
-  ref_list = {0, 1};
-  BOOST_CHECK(meiksinList == ref_list);
-
-  meiksinList = tpl5.GetIgmIdxList(1, 3);
-  BOOST_CHECK(meiksinList.size() == 1);
-  BOOST_CHECK(meiksinList[0] == 3);
-
   // GetIsmIgmIdxList
-  TIgmIsmIdxs igmIsmIdxs = tpl5.GetIsmIgmIdxList(1, 1, 3, 3);
-  BOOST_CHECK(igmIsmIdxs.igmIdxs == meiksinList);
-  BOOST_CHECK(igmIsmIdxs.ismIdxs == ebmvList);
+  TIgmIsmIdxs igmIsmIdxs = tpl3.GetIsmIgmIdxList(1, 1, 3, 3);
+  BOOST_CHECK(igmIsmIdxs.igmIdxs == TInt32List{3});
+  BOOST_CHECK(igmIsmIdxs.ismIdxs == TInt32List{3});
 
   Context.reset();
 }

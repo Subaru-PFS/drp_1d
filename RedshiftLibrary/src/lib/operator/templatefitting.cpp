@@ -84,12 +84,10 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
-  bool amplForcePositive = true;
   bool chisquareSetAtLeastOnce = false;
 
   Int32 EbmvListSize = EbmvList.size();
   Int32 MeiksinListSize = MeiksinList.size();
-  m_option_igmFastProcessing = (MeiksinListSize > 1 ? true : false);
 
   bool apply_priore =
       !logpriore.empty() && !tpl->CalzettiInitFailed() &&
@@ -114,10 +112,11 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   // get masks & determine number of samples actually used
   auto const &[mask_list, n_samples] = getMaskListAndNSamples(redshift);
 
-  if (opt_extinction) {
+  if (opt_extinction)
     opt_extinction = igmIsInRange(currentRanges);
-    m_option_igmFastProcessing = opt_extinction && m_option_igmFastProcessing;
-  }
+  m_option_igmFastProcessing =
+      (opt_extinction && (MeiksinListSize > 1)) ? true : false;
+
   if (opt_dustFitting || opt_extinction) {
     for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
       InitIsmIgmConfig(redshift, m_kStart[spcIndex], m_kEnd[spcIndex],
@@ -131,32 +130,31 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
   // Loop on the meiksin Idx
-  bool skip_igm_loop = true;
+  bool igmNotapplicable = true;
   for (Int32 kM = 0; kM < MeiksinListSize; kM++) {
-    if (kM > 0 && skip_igm_loop) {
+    if (kM > 0 && igmNotapplicable) {
       // Now copy from the already calculated k>0 igm values
-      for (Int32 kism = 0; kism < ssize(result.ChiSquareInterm); kism++) {
-        for (Int32 kigm = 1; kigm < ssize(result.ChiSquareInterm[kism]);
-             kigm++) {
+      for (Int32 kigm = 1; kigm < ssize(result.IgmMeiksinIdxInterm); kigm++)
+        result.IgmMeiksinIdxInterm[kigm] = result.IgmMeiksinIdxInterm[0];
+      for (Int32 kism = 0; kism < ssize(result.ChiSquareInterm); kism++)
+        for (Int32 kigm = 1; kigm < ssize(result.ChiSquareInterm[kism]); kigm++)
           result.ChiSquareInterm[kism][kigm] = result.ChiSquareInterm[kism][0];
-          result.IsmCalzettiCoeffInterm[kism][kigm] =
-              result.IsmCalzettiCoeffInterm[kism][0];
-          result.IgmMeiksinIdxInterm[kism][kigm] =
-              result.IgmMeiksinIdxInterm[kism][0];
-        }
-      }
       break;
     }
-    Int32 meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
-                                        // being the median extinction value)
+    Int32 meiksinIdx = undefIdx;
 
     // Meiksin IGM extinction
     if (opt_extinction) {
-      for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
-        if (ApplyMeiksinCoeff(meiksinIdx, spcIndex) && kM == 0)
-          skip_igm_loop = false;
-      }
+      meiksinIdx = MeiksinList[kM]; // index for the Meiksin curve (0-6; 3
+                                    // being the median extinction value)
+      for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++)
+        if (ApplyMeiksinCoeff(meiksinIdx, spcIndex))
+          igmNotapplicable = false;
+      if (igmNotapplicable)
+        meiksinIdx = undefIdx;
     }
+
+    result.IgmMeiksinIdxInterm[kM] = meiksinIdx;
 
     // Loop on the EBMV dust coeff
     for (Int32 kEbmv_ = 0; kEbmv_ < EbmvListSize; kEbmv_++) {
@@ -168,6 +166,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++)
           ApplyDustCoeff(kEbmv, spcIndex);
       }
+      result.IsmCalzettiIdxInterm[kEbmv_] = kEbmv;
 
       // Priors
       const CPriorHelper::SPriorTZE &logpriorTZE =
@@ -187,8 +186,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
                                << " meiksinIdx=" << meiksinIdx);
 
       result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
-      result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
-      result.IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
 
       // if minimizes chi2, sets it as the result
       if (fitRes.chiSquare < result.chiSquare) {
@@ -200,7 +197,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
             NSFitQuality::reducedChi2(result.chiSquare, n_samples);
         result.pValue = NSFitQuality::pValue(result.chiSquare, n_samples);
         result.ebmvCoef = coeffEBMV;
-        result.meiksinIdx = skip_igm_loop ? undefIdx : meiksinIdx;
+        result.meiksinIdx = meiksinIdx;
         chisquareSetAtLeastOnce = true;
       }
     }
@@ -452,8 +449,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
         BasicFit(tpl, redshift, overlapThreshold, opt_extinction,
                  opt_dustFitting, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
-    templateFittingResult->set_at_redshift(zIdx, std::move(result_z),
-                                           FitMeiksinIdx, FitEbmvIdx);
+    templateFittingResult->set_at_redshift(zIdx, std::move(result_z));
   }
 
   // Question what to do with overlap in second pass ?

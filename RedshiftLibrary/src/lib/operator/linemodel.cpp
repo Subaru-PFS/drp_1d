@@ -299,8 +299,8 @@ void COperatorLineModel::fitContinuumTemplates(
     else
       tplList = tplCatalog->GetOrthoTemplateList(TStringList{m_tplCategory},
                                                  fftprocessing);
-    ebmvIndices.assign(tplList.size(), undefIdx);
-    meiksinIndices.assign(tplList.size(), undefIdx);
+    ebmvIndices.assign(tplList.size(), allIdx);
+    meiksinIndices.assign(tplList.size(), allIdx);
     Log.LogDebug(Formatter()
                  << "Processing " << tplList.size() << " templates");
   }

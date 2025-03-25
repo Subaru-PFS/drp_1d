@@ -115,24 +115,20 @@ TIgmIsmIdxs CProcessFlowContext::GetIsmIgmIdxList(bool opt_extinction,
 TInt32List CProcessFlowContext::GetIsmIdxList(bool opt_dustFitting,
                                               Int32 FitEbmvIdx) const {
 
-  if (m_inputContext->CalzettiInitFailed() && opt_dustFitting)
+  if (!opt_dustFitting) // Ism deactivated
+    return TInt32List{undefIdx};
+
+  if (m_inputContext->CalzettiInitFailed())
     THROWG(ErrorCode::INTERNAL_ERROR, "missing Calzetti initialization");
 
-  Int32 EbmvListSize = 1;
-  if (opt_dustFitting && FitEbmvIdx == undefIdx)
-    EbmvListSize = getFluxCorrectionCalzetti()->GetNPrecomputedEbmvCoeffs();
+  if (FitEbmvIdx != allIdx)
+    return TInt32List{FitEbmvIdx};
 
+  // all indices
+  Int32 const EbmvListSize =
+      getFluxCorrectionCalzetti()->GetNPrecomputedEbmvCoeffs();
   TInt32List EbmvList(EbmvListSize);
-
-  if (!opt_dustFitting) { // Ism deactivated
-    EbmvList[0] = -1;
-    return EbmvList;
-  }
-
-  if (FitEbmvIdx != undefIdx)
-    EbmvList[0] = FitEbmvIdx;
-  else
-    std::iota(EbmvList.begin(), EbmvList.end(), 0);
+  std::iota(EbmvList.begin(), EbmvList.end(), 0);
 
   return EbmvList;
 }
@@ -140,25 +136,18 @@ TInt32List CProcessFlowContext::GetIsmIdxList(bool opt_dustFitting,
 TInt32List CProcessFlowContext::GetIgmIdxList(bool opt_extinction,
                                               Int32 FitMeiksinIdx) const {
 
-  if (m_inputContext->MeiksinInitFailed() && opt_extinction)
+  if (!opt_extinction)
+    return TInt32List{undefIdx};
+
+  if (m_inputContext->MeiksinInitFailed())
     THROWG(ErrorCode::INTERNAL_ERROR, "missing Meiksin initialization");
 
-  Int32 MeiksinListSize = 1;
-  if (opt_extinction && FitMeiksinIdx == undefIdx)
-    MeiksinListSize =
-        getFluxCorrectionMeiksin()->getIdxCount(); // TODO à passer en arg
+  if (FitMeiksinIdx != allIdx)
+    return TInt32List{FitMeiksinIdx};
 
+  Int32 const MeiksinListSize = getFluxCorrectionMeiksin()->getIdxCount();
   TInt32List MeiksinList(MeiksinListSize);
-
-  if (!opt_extinction) {
-    MeiksinList[0] = -1;
-    return MeiksinList;
-  }
-
-  if (FitMeiksinIdx != undefIdx)
-    MeiksinList[0] = FitMeiksinIdx;
-  else
-    std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
+  std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
 
   return MeiksinList;
 }

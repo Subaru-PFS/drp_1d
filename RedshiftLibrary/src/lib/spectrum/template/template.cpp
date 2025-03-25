@@ -370,15 +370,3 @@ TIgmIsmIdxs CTemplate::GetIsmIgmIdxList(bool opt_extinction,
   return Context.GetIsmIgmIdxList(opt_extinction, opt_dustFitting, fitEbmvIdx,
                                   fitMeiksinIdx);
 }
-
-TInt32List CTemplate::GetIsmIdxList(bool opt_dustFitting,
-                                    Int32 fitEbmvIdx) const {
-
-  return Context.GetIsmIdxList(opt_dustFitting, fitEbmvIdx);
-}
-
-TInt32List CTemplate::GetIgmIdxList(bool opt_extinction,
-                                    Int32 fitMeiksinIdx) const {
-
-  return Context.GetIgmIdxList(opt_extinction, fitMeiksinIdx);
-}

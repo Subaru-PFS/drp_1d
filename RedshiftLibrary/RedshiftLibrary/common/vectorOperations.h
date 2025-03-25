@@ -39,17 +39,21 @@
 #ifndef _REDSHIFT_COMMON_VECTOROPERATIONS_
 #define _REDSHIFT_COMMON_VECTOROPERATIONS_
 
+#include <vector>
+
+#include <boost/range/combine.hpp>
+
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/common/size.h"
-#include <vector>
 
 namespace NSEpic {
 
 // insert source into destination with ndup overlaping elements
 template <typename T>
 inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
-                                 std::vector<T> src, Int32 ndup) {
+                                 std::vector<T> const &src, Int32 ndup) {
   const auto src_first = src.cbegin();
   const auto src_end = src.cend();
   const auto src_last_insert = src.cend() - ndup;
@@ -86,10 +90,19 @@ inline TInt32Pair find2DVectorMinIndexes(std::vector<std::vector<T>> vect) {
   return {iMin, jMin};
 }
 
-inline std::vector<Float64> createLinearInterpVector(Float64 v1, Float64 v2,
-                                                     Float64 n) {
+template <typename T> inline T linearInterp(T v1, T v2, Float64 f) {
+  return v1 * (1 - f) + v2 * f;
+}
+
+// NGP interpolation for intergers
+template <> inline Int32 linearInterp(Int32 v1, Int32 v2, Float64 f) {
+  return f < 0.5 ? v1 : v2;
+}
+
+template <typename T>
+std::vector<T> createLinearInterpVector(T const &v1, T const &v2, Int32 n) {
   // Creates a linear vector from value v1 to value v2 with n elements
-  std::vector<Float64> result(n);
+  std::vector<T> result(n);
   if (n <= 1) {
     // Handle edge case: return a vector with a single value n1 if n <= 1
     if (n == 1)
@@ -100,9 +113,96 @@ inline std::vector<Float64> createLinearInterpVector(Float64 v1, Float64 v2,
   std::generate(result.begin(), result.end(),
                 [i = 0, v1, v2, f0 = 1. / (n - 1)]() mutable {
                   auto f = f0 * i++;
-                  return v1 * (1 - f) + v2 * f;
+                  return linearInterp(v1, v2, f);
                 });
   return result;
+}
+
+// createLinearInterpVector specialization for vector<T>
+template <typename T>
+T2DList<T> createLinearInterpVector(TList<T> const &v1, TList<T> const &v2,
+                                    Int32 n) {
+  T2DList<T> result(n, TList<T>(v1.size())); // n x v1.size
+  for (Int32 i = 0; i < ssize(v1); ++i) {
+    auto const r_i = createLinearInterpVector(v1[i], v2[i], n);
+    for (Int32 j = 0; j < n; ++j)
+      result[j][i] = r_i[j];
+  }
+  return result;
+}
+
+template <typename T>
+void interpolateBetweenTwoSamples(T const &v1, T const &v2, Int32 nInterpolate,
+                                  TList<T> &dest, Int32 const &destIdx,
+                                  Int32 start = undefIdx,
+                                  Int32 end = undefIdx) {
+
+  if (start == undefIdx)
+    start = 0;
+  if (end == undefIdx)
+    end = nInterpolate;
+  auto const interpVect = createLinearInterpVector(v1, v2, nInterpolate);
+  std::copy(interpVect.cbegin() + start, interpVect.cbegin() + end,
+            dest.begin() + destIdx);
+}
+
+template <typename T>
+TList<T>
+interpolateBetweenDuplicates(TList<T> const &source, Int32 insertionIdx,
+                             TInt32List const &overwrittenSourceIndices,
+                             Int32 nInterpolate, Int32 largeStepFactor) {
+
+  Int32 ndup = overwrittenSourceIndices.size();
+
+  TList<T> interpVect(nInterpolate);
+
+  Int32 dupStart = 0;
+  // handle eventually incomplete first segment:
+  //   if incomplete, interpolate the full segment and insert into interpVect
+  //   only the required portion using the start index
+  if (overwrittenSourceIndices[dupStart] != 0) {
+    if (insertionIdx < 1)
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "the first incomplete fine segment is below the begining of the "
+             "coarse z grid");
+    Int32 idx = insertionIdx - 1;
+    Int32 const interpIdx = 0;
+    Int32 const start = largeStepFactor - overwrittenSourceIndices[dupStart];
+    Int32 const end = largeStepFactor;
+    interpolateBetweenTwoSamples(source[idx], source[idx + 1],
+                                 largeStepFactor + 1, interpVect, interpIdx,
+                                 start, end);
+    ++dupStart; // start the main loop one segment later
+  }
+
+  Int32 dupEnd = ndup - 1;
+  // handle eventually incomplete last segment:
+  //   if incomplete, interpolate the full segment and insert into interpVect
+  //   only the required portion using the end index
+  Int32 const lastZidx = Int32(source.size()) - 1;
+  if (overwrittenSourceIndices[dupEnd] != nInterpolate - 1) {
+    if (insertionIdx + ndup > lastZidx)
+      THROWG(ErrorCode::INTERNAL_ERROR, "the last incomplete fine segment is "
+                                        "above the end of the coarse z grid");
+    Int32 const idx = insertionIdx + dupEnd;
+    Int32 const interpIdx = overwrittenSourceIndices[dupEnd];
+    Int32 const start = 0;
+    Int32 const end = nInterpolate - interpIdx;
+    interpolateBetweenTwoSamples(source[idx], source[idx + 1],
+                                 largeStepFactor + 1, interpVect, interpIdx,
+                                 start, end);
+    --dupEnd; // end the main loop one segment before
+  }
+
+  // middle
+  for (Int32 dup = dupStart; dup < dupEnd; ++dup) {
+    Int32 const idx = insertionIdx + dup;
+    Int32 const interpIdx = overwrittenSourceIndices[dup];
+    interpolateBetweenTwoSamples(source[idx], source[idx + 1],
+                                 largeStepFactor + 1, interpVect, interpIdx);
+  }
+
+  return interpVect;
 }
 
 } // namespace NSEpic

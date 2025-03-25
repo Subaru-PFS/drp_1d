@@ -126,9 +126,6 @@ void COperatorTplcombination::BasicFit(
       m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
       kStart, kEnd);
 
-  Int32 kStart_model =
-      kStart; // mainly used at high redshifts, when desextincting spectrum is
-              // happenning with null coeffs
   if (opt_extinction || opt_dustFitting)
     for (auto &tpl : m_templatesRebined_bf)
       tpl.InitIsmIgmConfig(kStart, kEnd, redshift);
@@ -139,9 +136,6 @@ void COperatorTplcombination::BasicFit(
   // determine min and max value of ebmv coeff
   Int32 nISM = EbmvList.size();
   Int32 nIGM = MeiksinList.size();
-
-  Int32 iEbmvCoeffMin = EbmvList.front();
-  Int32 iEbmvCoeffMax = EbmvList.back();
 
   // Linear fit
   Int32 n = kEnd - kStart + 1;
@@ -180,12 +174,6 @@ void COperatorTplcombination::BasicFit(
   Float64 dtd_complement =
       0.; // value mainly relevant with DisextinctData method
 
-  // create a template with cte flux = 1, to be used only when disextincting
-  // data and noise
-  CTemplate identityTemplate(
-      "identity", "idle", m_templatesRebined_bf.front().GetSpectralAxis(),
-      std::move(CSpectrumFluxAxis(
-          m_templatesRebined_bf.front().GetSampleCount(), 1)));
   // Prepare the fit data, once for all
   Float64 yi;
   Float64 ei;
@@ -201,10 +189,8 @@ void COperatorTplcombination::BasicFit(
       // Now copy from the already calculated k>0 igm values
       for (auto &Xi2 : fittingResults.ChiSquareInterm)
         Xi2 = TFloat64List(nIGM, Xi2.front());
-      for (auto &ismCoeffs : fittingResults.IsmCalzettiCoeffInterm)
-        ismCoeffs = TFloat64List(nIGM, ismCoeffs.front());
-      for (auto &igmCoeffs : fittingResults.IgmMeiksinIdxInterm)
-        igmCoeffs = TInt32List(nIGM, igmCoeffs.front());
+      fittingResults.IgmMeiksinIdxInterm =
+          TInt32List(nIGM, fittingResults.IgmMeiksinIdxInterm.front());
       break;
     }
     Int32 meiksinIdx = MeiksinList[kigm];
@@ -212,22 +198,19 @@ void COperatorTplcombination::BasicFit(
     bool igmCorrectionAppliedOnce = false;
     // applyMeiksin on all templates
     if (opt_extinction) {
-      if (currentRange.GetBegin() / (1 + redshift) >
-          RESTLAMBDA_LYA) // bug??: why dividing by (1+z) if currentRange is
-                          // already in restframe??
-        // if(COperatorTemplateFitting::CheckLyaIsInCurrentRange(currentRange))
-        igmCorrectionAppliedOnce = false;
-      else {
-        igmCorrectionAppliedOnce =
-            true; // since we are multiplying the bools, rather init to true
-        for (Int32 iddl = 0; iddl < nddl; iddl++) {
-          igmCorrectionAppliedOnce &=
+      igmCorrectionAppliedOnce = false;
+      if (currentRange.GetBegin() <= RESTLAMBDA_LYA) { // igm is in range
+        for (Int32 iddl = 0; iddl < nddl; iddl++)
+          igmCorrectionAppliedOnce =
+              igmCorrectionAppliedOnce ||
               m_templatesRebined_bf[iddl].ApplyMeiksinCoeff(meiksinIdx);
-        }
       }
-      if (!igmCorrectionAppliedOnce)
+      if (!igmCorrectionAppliedOnce) {
         igmLoopUseless_WavelengthRange = true;
+        meiksinIdx = undefIdx;
+      }
     }
+    fittingResults.IgmMeiksinIdxInterm[kigm] = meiksinIdx;
 
     for (Int32 kEbmv_ = 0; kEbmv_ < nISM; kEbmv_++) {
       Int32 kEbmv = EbmvList[kEbmv_];
@@ -240,6 +223,7 @@ void COperatorTplcombination::BasicFit(
         for (Int32 iddl = 0; iddl < nddl; iddl++)
           m_templatesRebined_bf[iddl].ApplyDustCoeff(kEbmv);
       }
+      fittingResults.IsmCalzettiIdxInterm[kEbmv_] = kEbmv;
 
       // preparing the template matrix for computing the Xi2 value
       // the fastigm has its effect mainly on the number of spectrum to consider
@@ -335,17 +319,13 @@ void COperatorTplcombination::BasicFit(
         fittingResults.reducedChiSquare = NSFitQuality::reducedChi2(chisq, n);
         fittingResults.pValue = NSFitQuality::pValue(chisq, n);
         fittingResults.SNR = SNR;
-        fittingResults.meiksinIdx =
-            igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
+        fittingResults.meiksinIdx = meiksinIdx;
         fittingResults.ebmvCoef = coeffEBMV;
         chisquareSetAtLeastOnce = true;
       }
 
       // save the interm chisquares in the intermediate vector
       fittingResults.ChiSquareInterm[kEbmv_][kigm] = chisq;
-      fittingResults.IsmCalzettiCoeffInterm[kEbmv_][kigm] = coeffEBMV;
-      fittingResults.IgmMeiksinIdxInterm[kEbmv_][kigm] =
-          igmCorrectionAppliedOnce ? meiksinIdx : undefIdx;
 
       boost::chrono::thread_clock::time_point stop_postprocess =
           boost::chrono::thread_clock::now();
@@ -557,7 +537,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     result->FitEbmvCoeff[i] = fittingResults.ebmvCoef;
     result->FitMeiksinIdx[i] = fittingResults.meiksinIdx;
     result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
-    result->IsmEbmvCoeffIntermediate[i] = fittingResults.IsmCalzettiCoeffInterm;
+    result->IsmEbmvIdxIntermediate[i] = fittingResults.IsmCalzettiIdxInterm;
     result->IgmMeiksinIdxIntermediate[i] = fittingResults.IgmMeiksinIdxInterm;
   }
 

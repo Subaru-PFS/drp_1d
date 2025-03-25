@@ -54,9 +54,9 @@ class spanRedshift_test;
 namespace NSEpic {
 struct TsecondPassIndices {
   Int32 insertionIdx = undefIdx;
-  Int32 initialInsertionIdx = undefIdx;
   TInt32List overwrittenSourceIndices;
   std::size_t size = undefIdx;
+  Int32 largeStepFactor;
 };
 
 template <class T> class COperatorTwoPass : public COperatorPass {
@@ -69,7 +69,8 @@ public:
   COperatorTwoPass &operator=(COperatorTwoPass &&other) noexcept = default;
 
   void setTwoPassParameters(const Float64 halfWindowSize,
-                            const bool zLogSampling, const Float64 fineStep);
+                            const bool zLogSampling, const Float64 fineStep,
+                            Int32 twoPassZStepFactor);
   TFloat64List spanRedshiftWindow(const Float64 z) const;
   void buildExtendedRedshifts();
   TList<TsecondPassIndices> updateRedshiftGrid();
@@ -99,6 +100,7 @@ protected:
   Float64 m_secondPass_halfwindowsize = NAN;
   bool m_zLogSampling = false;
   Float64 m_fineStep = NAN;
+  Int32 m_twoPassZStepFactor = undefIdx;
   std::vector<TFloat64List> m_extendedRedshifts; // z range around extrema
   std::shared_ptr<CExtremaResult<T>> m_firstpass_extremaResult;
 };
@@ -106,10 +108,12 @@ protected:
 template <class T>
 void COperatorTwoPass<T>::setTwoPassParameters(const Float64 halfWindowSize,
                                                const bool zLogSampling,
-                                               const Float64 fineStep) {
+                                               const Float64 fineStep,
+                                               Int32 twoPassZStepFactor) {
   m_secondPass_halfwindowsize = halfWindowSize;
   m_zLogSampling = zLogSampling;
   m_fineStep = fineStep;
+  m_twoPassZStepFactor = twoPassZStepFactor;
 }
 
 template <class T>
@@ -156,15 +160,9 @@ TList<TsecondPassIndices> COperatorTwoPass<T>::updateRedshiftGrid() {
     auto const &[insertionIdx, overwrittenSourceIndices] =
         CZGridListParams::insertSubgrid(subgrid, m_redshifts);
 
-    // get initial insertion index (taking into acount previous insertions)
-    Int32 initialInsertionIdx = insertionIdx;
-    for (auto const &insertionIndices : insertionIndicesList)
-      if (insertionIndices.insertionIdx < insertionIdx)
-        initialInsertionIdx -= insertionIndices.size;
-
-    insertionIndicesList.push_back({insertionIdx, initialInsertionIdx,
+    insertionIndicesList.push_back({insertionIdx,
                                     std::move(overwrittenSourceIndices),
-                                    subgrid.size()});
+                                    subgrid.size(), m_twoPassZStepFactor});
   }
   return insertionIndicesList;
 }

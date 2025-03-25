@@ -113,7 +113,7 @@ void CLineModelResult::Init(TFloat64List redshifts, CLineMap restLines,
 
 void CLineModelResult::updateVectors(
     TsecondPassIndices const &secondPassIndices) {
-  auto const &[insertionIdx, _, overwrittenSourceIndices, count] =
+  auto const &[insertionIdx, overwrittenSourceIndices, count, _] =
       secondPassIndices;
 
   Int32 ndup = overwrittenSourceIndices.size();

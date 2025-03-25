@@ -98,10 +98,8 @@ struct TFittingIsmIgmResult : TFittingResult {
                        Int32 spcsize = 1)
       : overlapFraction(spcsize, NAN),
         ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
-        IsmCalzettiCoeffInterm(EbmvListSize,
-                               TFloat64List(MeiksinListSize, NAN)),
-        IgmMeiksinIdxInterm(EbmvListSize,
-                            TInt32List(MeiksinListSize, undefIdx)) {}
+        IsmCalzettiIdxInterm(EbmvListSize, undefIdx),
+        IgmMeiksinIdxInterm(MeiksinListSize, undefIdx) {}
 
   TFloat64List overlapFraction;
   Float64 reducedChiSquare = INFINITY;
@@ -109,8 +107,8 @@ struct TFittingIsmIgmResult : TFittingResult {
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
-  std::vector<TFloat64List> IsmCalzettiCoeffInterm;
-  std::vector<TInt32List> IgmMeiksinIdxInterm;
+  TInt32List IsmCalzettiIdxInterm;
+  TInt32List IgmMeiksinIdxInterm;
 };
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
@@ -128,7 +126,7 @@ public:
       std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
-      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
+      Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
       TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
       std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 

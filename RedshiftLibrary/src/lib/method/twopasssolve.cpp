@@ -45,8 +45,6 @@ void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
                                        const TFloat64Range &redshiftRange) {
 
   {
-    auto &scope = Context.m_ScopeStack;
-    CAutoScope method_autoscope(scope, m_name, ScopeType::METHOD);
     initSkipSecondPass();
     if (!isSinglePass()) {
       // As long as we are in a two pass configuration, use coarse grid, wether

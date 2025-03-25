@@ -208,12 +208,12 @@ public:
     return m_inputContext->getRebinnedSpectra();
   }
   TIgmIsmIdxs GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                               Int32 FitEbmvIdx = undefIdx,
-                               Int32 FitMeiksinIdx = undefIdx) const;
+                               Int32 FitEbmvIdx = allIdx,
+                               Int32 FitMeiksinIdx = allIdx) const;
   TInt32List GetIsmIdxList(bool opt_dustFitting,
-                           Int32 FitEbmvIdx = undefIdx) const;
+                           Int32 FitEbmvIdx = allIdx) const;
   TInt32List GetIgmIdxList(bool opt_extinction,
-                           Int32 FitMeiksinIdx = undefIdx) const;
+                           Int32 FitMeiksinIdx = allIdx) const;
 
   std::shared_ptr<CScopeStack> m_ScopeStack;
 

@@ -55,8 +55,9 @@ class CTemplateFittingResult : public CTwoPassResult {
 public:
   CTemplateFittingResult(Int32 n);
   CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
-  void set_at_redshift(Int32 i, TFittingIsmIgmResult val,
-                       Int32 igmIdx = undefIdx, Int32 ismIdx = undefIdx);
+  void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
+  Int32 getIsmIndexInIntermediate(Int32 ebmvIdx) const;
+  Int32 getIgmIndexInIntermediate(Int32 zIdx, Int32 igmIndex) const;
 
   virtual ~CTemplateFittingResult() = default;
   CTemplateFittingResult(const CTemplateFittingResult &) = default;
@@ -66,6 +67,8 @@ public:
   void updateVectors(TsecondPassIndices const &) override;
 
   Float64 SNRCalculation(Float64 dtm, Float64 mtm);
+
+  std::pair<Int32, Int32> getIsmIgmSizes() const;
 
   // best fit results
   TFloat64List ChiSquare;
@@ -86,28 +89,15 @@ public:
   std::vector<std::vector<TFloat64List>>
       ChiSquareIntermediate; // chi2 for each intermediate results (for each
                              // config [z][Calzetti][Meiksin])
-  std::vector<std::vector<TFloat64List>>
-      IsmEbmvCoeffIntermediate; // calzetti dust coeff for each intermediate
-                                // result (for each config
-                                // [z][Calzetti][Meiksin])
-  std::vector<std::vector<TInt32List>>
+  std::vector<TInt32List> IsmEbmvIdxIntermediate; // calzetti dust idx for each
+                                                  // intermediate result (for
+                                                  // each config [z][Calzetti])
+  std::vector<TInt32List>
       IgmMeiksinIdxIntermediate; // meiksin idx for each intermediate result
-                                 // (for each config [z][Calzetti][Meiksin])
+                                 // (for each config [z][Meiksin])
 
   Float64 CstLog = NAN;
   std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra
-
-private:
-  std::pair<Int32, Int32>
-  getIsmIgmSizes(T3DList<Float64> const &ChiSquareIntermediate);
-
-  T3DList<Float64>
-  interpolatedChiSquareIntermediate(TsecondPassIndices const &);
-
-  void interpolatedBetweenTwoSamples(T2DList<Float64> &array1,
-                                     T2DList<Float64> &array2,
-                                     TInt32Range const &destIdxRange,
-                                     T3DList<Float64> dest);
 };
 
 } // namespace NSEpic

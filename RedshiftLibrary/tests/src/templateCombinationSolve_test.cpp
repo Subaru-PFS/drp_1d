@@ -203,7 +203,7 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);
+  BOOST_CHECK_CLOSE(z, 5.1545691054521061, 1e-6);
 
   ctx.reset();
 }
@@ -281,7 +281,7 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);
+  BOOST_CHECK_CLOSE(z, 5.1484176126057015, 1e-6);
 
   ctx.reset();
 }
@@ -320,7 +320,7 @@ BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 5.1299999999999999, 1e-6);
+  BOOST_CHECK_CLOSE(z, 5.1545691054521061, 1e-6);
 
   ctx.reset();
 }

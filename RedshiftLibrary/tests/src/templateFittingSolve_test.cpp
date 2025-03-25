@@ -144,11 +144,11 @@ BOOST_FIXTURE_TEST_CASE(compute2Pass_test,
 
   // Checks that fit quality indicators are correctly set
   Float64 chi2 = res->fittedContinuum.merit;
-  BOOST_CHECK_CLOSE(chi2, 332.39827811512555, 1e-4);
+  BOOST_CHECK_CLOSE(chi2, 332.98456972515265, 1e-4);
   Float64 chi2r = res->fittedContinuum.reducedChi2;
-  BOOST_CHECK_CLOSE(chi2r, 6.2716656248136893, 1e-4);
+  BOOST_CHECK_CLOSE(chi2r, 6.2827277306632574, 1e-4);
   Float64 pValue = res->fittedContinuum.pValue;
-  BOOST_CHECK_CLOSE(pValue, 1.6442425635585607e-42, 1e-4);
+  BOOST_CHECK_CLOSE(pValue, 1.2813114284900139e-42, 1e-4);
 }
 
 BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
