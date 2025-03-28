@@ -78,7 +78,11 @@ def make_parameter_dict(**kwargs) -> dict:
 
 
 def make_parameter_dict_at_object_level(**kwargs) -> dict:
-    param_dict = {"spectrumModels": [default_object_type], default_object_type: kwargs}
+    param_dict = {
+        "lineMeasRunMode": "pipe",
+        "spectrumModels": [default_object_type],
+        default_object_type: kwargs,
+    }
     return param_dict
 
 
@@ -122,6 +126,7 @@ def make_parameter_dict_at_linemodelsolve_level(**kwargs):
 
 def make_parameter_dict_at_linemeas_solve_level(object_level_params=None, **kwargs) -> dict:
     param_dict: Dict = {
+        "lineMeasRunMode": "pipe",
         "spectrumModels": [default_object_type],
         default_object_type: {
             "lineMeasDzHalf": 0.1,
@@ -144,6 +149,7 @@ def make_parameter_dict_linemeas_solve_piped_linemodel(
     linemodel_level_params: Dict, linemeas_level_params: Dict
 ) -> dict:
     param_dict = make_parameter_dict_at_linemodelsolve_level(**linemodel_level_params)
+    param_dict["lineMeasRunMode"] = "pipe"
     param_dict[default_object_type]["stages"] += ["lineMeasSolver"]
     linemeas_dict = make_parameter_dict_at_linemeas_solve_level(**linemeas_level_params)
     del linemeas_dict[default_object_type]["stages"]

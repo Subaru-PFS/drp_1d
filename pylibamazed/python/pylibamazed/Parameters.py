@@ -199,7 +199,7 @@ class Parameters(ParametersAccessor):
 
     def get_lambda_range_max(self):
         if self.get_multiobs_method() != "full":
-            return self.get_lambda_range()[0]
+            return self.get_lambda_range()[1]
         else:
             ret = 0
             for obs_id in self.get_observation_ids():
