@@ -207,3 +207,19 @@ class Parameters(ParametersAccessor):
                 if cur > ret:
                     ret = cur
             return ret
+
+    def has_two_pass(self, spectrum_model: str):
+        method = self.get_redshift_solver_method(spectrum_model)
+        if method == ESolveMethod.LINE_MODEL:
+            return not self.get_skipsecondpass(method, spectrum_model)
+        elif method == ESolveMethod.TEMPLATE_FITTING:
+            return not self.get_template_fitting_single_pass(spectrum_model)
+        else:
+            return False
+
+    def get_large_grid_ratio(self, spectrum_model: str):
+        method = self.get_redshift_solver_method(spectrum_model)
+        return super().get_large_grid_ratio(spectrum_model, method)
+
+    def is_log_sampling(self, spectrum_model: str):
+        return self.get_redshift_sampling(spectrum_model) == "log"

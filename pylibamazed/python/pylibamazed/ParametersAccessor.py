@@ -672,3 +672,7 @@ class ParametersAccessor:
             child_section = {}
             parent_section[child_section_name] = child_section
         return child_section
+
+    def get_large_grid_ratio(self, spectrum_model: str, method: ESolveMethod):
+        section = self.get_firstpass_section(method, spectrum_model)
+        return self._get_on_None(section, "largeGridStepRatio")

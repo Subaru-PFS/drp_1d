@@ -234,7 +234,7 @@ class AbstractOutput(metaclass=ABCMeta):
         if not self.cache:
             self._load_object_level(object_type)
         pdfHandle = pdf_builder.add_params(
-            self, object_type, self.parameters.get_redshift_sampling(object_type) == "log"
+            self, object_type, self.parameters.is_log_sampling(object_type)
         ).build()
         if "Native" not in attribute:
             pdfHandle.convertToRegular()

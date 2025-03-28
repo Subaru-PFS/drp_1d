@@ -62,7 +62,7 @@ class DeepLearningSolve(AbstractReliabilitySolver):
     def get_probas(self, output, model, model_parameters):
         c_zgrid_zend = model_parameters["zgrid_end"]
 
-        logsampling = self.parameters.get_redshift_sampling(self.object_type) == "log"
+        logsampling = self.parameters.is_log_sampling(self.object_type)
         output.load_object_level(self.object_type)
 
         pdf = BuilderPdfHandler().add_params(output, self.object_type, logsampling).build()
