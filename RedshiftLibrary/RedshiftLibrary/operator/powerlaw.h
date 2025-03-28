@@ -83,11 +83,9 @@ typedef std::pair<TPowerLawCoefs, TPowerLawCoefs> TPowerLawCoefsPair;
 typedef std::vector<std::vector<TPowerLawCoefsPair>> T2DPowerLawCoefsPair;
 typedef std::pair<T2DPowerLawCoefs, T2DPowerLawCoefs> TPair2DPowerLawCoefs;
 
-// FOr one z
-struct TPowerLawResult {
+// For one z
+struct TPowerLawResult : TContinuumResult {
   Float64 chiSquare = INFINITY;
-  Float64 reducedChiSquare = INFINITY;
-  Float64 pValue = 0;
   TPowerLawCoefsPair coefs;
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
@@ -157,8 +155,6 @@ private:
   Int32 m_nIsmCurves;
 
   TList<Int32> m_nPixels;
-  TList<Int32> m_firstPixelIdxInRange;
-  TList<Int32> m_lastPixelIdxInRange;
   Float64 m_lambdaCut;
   Int32 m_nSpectra;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
@@ -182,8 +178,9 @@ private:
                                T2DPowerLawCoefsPair const &coefs);
   TChi2Result findMinChi2OnIgmIsm(T3DCurve const &curve,
                                   T2DPowerLawCoefsPair const &coefs);
-  Float64 theoreticalFluxAtLambda(TPowerLawCoefsPair coefs, Float64 lambda);
-  Float64 computePowerLaw(TPowerLawCoefs coefs, Float64 lambda);
+  Float64 theoreticalFluxAtLambda(TPowerLawCoefsPair coefs,
+                                  Float64 lambda) const;
+  Float64 computePowerLaw(TPowerLawCoefs coefs, Float64 lambda) const;
   TPowerLawCoefs compute2PassSimplePowerLawCoefs(TCurve const &lnCurves) const;
   TPowerLawCoefsPair
   compute2PassDoublePowerLawCoefs(TCurve const &lnCurves) const;
@@ -207,7 +204,13 @@ private:
       std::optional<TPowerLawCoefs> const &coefsFirstEstim =
           std::nullopt) const;
   Float64 computeEstimatedFlux(TPowerLawCoefs const &coefs, Float64 x) const;
+  TFloat64List computeModelFlux(const TFloat64List &lambdaRestAxis,
+                                const Float64 redshift, const Int32 meiksinIdx,
+                                const Float64 ebmvCoef, const Float64 a1,
+                                const Float64 b1, const Float64 a2,
+                                const Float64 b2) const;
 };
+
 } // namespace NSEpic
 
 #endif

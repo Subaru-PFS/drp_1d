@@ -53,7 +53,8 @@ struct TCurveElement {
 
 struct TCurve {
   TCurve();
-  TCurve(TList<Float64> lambda, TList<Float64> flux, TList<Float64> fluxError);
+  TCurve(TList<Float64> lambda, TList<Float64> flux, TList<Float64> fluxError,
+         TList<uint8_t> mask = {});
 
   TCurveElement get_at_index(Int32 idx) const;
 
@@ -63,6 +64,7 @@ struct TCurve {
   void setLambda(TFloat64List inputLambda);
 
   void setFlux(TList<Float64> inputFlux);
+  void setMask(TList<uint8_t> mask);
   void setFluxError(TList<Float64> inputFluxError);
   void sort();
   void reserve(Int32 size);
@@ -79,11 +81,13 @@ struct TCurve {
   Float64 getLambdaAt(Int32 pixelIdx) const;
   Float64 getFluxAt(Int32 pixelIdx) const;
   Float64 getFluxErrorAt(Int32 pixelIdx) const;
+  TFloat64List getUnmaskedFlux() const;
 
 private:
   TAxisSampleList lambda;
   TFloat64List flux;
   TFloat64List fluxError;
+  TList<uint8_t> mask;
 };
 
 } // namespace NSEpic

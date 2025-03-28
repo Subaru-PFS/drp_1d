@@ -508,9 +508,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       if (fullResultIdx >= ssize(result->ChiSquare))
         THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
       result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
-      result->ReducedChiSquare[fullResultIdx] =
-          subresult->ReducedChiSquare[isubz];
-      result->pValue[fullResultIdx] = subresult->pValue[isubz];
+      result->FitQuality[fullResultIdx] = subresult->FitQuality[isubz];
       result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
       result->FitAmplitudeError[fullResultIdx] =
           subresult->FitAmplitudeError[isubz];
@@ -574,9 +572,10 @@ Int32 COperatorTemplateFittingLog::FitAllz(
                                2. * ampl * result->FitDtM[fullResultIdx];
           const Int32 nPixels = spectrumRebinedFluxRaw.size();
           result->ChiSquare[fullResultIdx] = chi2;
-          result->ReducedChiSquare[fullResultIdx] =
+          result->FitQuality[fullResultIdx].reducedChiSquare =
               NSFitQuality::reducedChi2(chi2, nPixels);
-          result->pValue[fullResultIdx] = NSFitQuality::pValue(chi2, nPixels);
+          result->FitQuality[fullResultIdx].pValue =
+              NSFitQuality::pValue(chi2, nPixels);
           Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
                           (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
           if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
@@ -747,8 +746,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
   // prepare best fit data buffer
   TFloat64List bestChi2(nshifts, DBL_MAX);
-  TFloat64List bestReducedChi2(nshifts, DBL_MAX);
-  TFloat64List bestPValue(nshifts, DBL_MAX);
+  std::vector<TFitQuality> bestFitQuality(nshifts);
   TFloat64List bestFitAmp(nshifts, NAN);
   TFloat64List bestFitAmpErr(nshifts, NAN);
   TFloat64List bestFitAmpSigma(nshifts, NAN);
@@ -868,8 +866,9 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
         if (bestChi2[k] > chi2[k]) {
           bestChi2[k] = chi2[k];
-          bestReducedChi2[k] = NSFitQuality::reducedChi2(chi2[k], nSpc);
-          bestPValue[k] = NSFitQuality::pValue(chi2[k], nSpc);
+          bestFitQuality[k].reducedChiSquare =
+              NSFitQuality::reducedChi2(chi2[k], nSpc);
+          bestFitQuality[k].pValue = NSFitQuality::pValue(chi2[k], nSpc);
           bestFitAmp[k] = amp[k];
           bestFitAmpErr[k] = amp_err[k];
           bestFitAmpSigma[k] = amp_sigma[k];
@@ -902,8 +901,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // reversing all vectors
   std::reverse(z_vect.begin(), z_vect.end());
   std::reverse(bestChi2.begin(), bestChi2.end());
-  std::reverse(bestReducedChi2.begin(), bestReducedChi2.end());
-  std::reverse(bestPValue.begin(), bestPValue.end());
+  std::reverse(bestFitQuality.begin(), bestFitQuality.end());
   std::reverse(bestFitAmp.begin(), bestFitAmp.end());
   std::reverse(bestFitAmpErr.begin(), bestFitAmpErr.end());
   std::reverse(bestFitAmpSigma.begin(), bestFitAmpSigma.end());
@@ -917,8 +915,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     result->Overlap[k] = TFloat64List(1, 1.0);
 
   result->ChiSquare = bestChi2;
-  result->ReducedChiSquare = bestReducedChi2;
-  result->pValue = bestPValue;
+  result->FitQuality = bestFitQuality;
   result->FitAmplitude = bestFitAmp;
   result->FitAmplitudeError = bestFitAmpErr;
   result->FitAmplitudeSigma = bestFitAmpSigma;

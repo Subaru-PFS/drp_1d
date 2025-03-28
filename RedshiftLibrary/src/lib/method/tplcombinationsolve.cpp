@@ -371,8 +371,24 @@ CTplCombinationSolve::buildExtremaResults(
     auto candidate = extremaResult->getRankedCandidatePtr(i);
     candidate->fittedContinuum.merit = TplFitResult->ChiSquare[idx];
     candidate->fittedContinuum.reducedChi2 =
-        TplFitResult->ReducedChiSquare[idx];
-    candidate->fittedContinuum.pValue = TplFitResult->pValue[idx];
+        TplFitResult->FitQuality[idx].reducedChiSquare;
+    candidate->fittedContinuum.pValue = TplFitResult->FitQuality[idx].pValue;
+    candidate->fittedContinuum.meanResiduals =
+        TplFitResult->FitQuality[idx].meanResiduals;
+    candidate->fittedContinuum.stdResiduals =
+        TplFitResult->FitQuality[idx].stdResiduals;
+    candidate->fittedContinuum.skewnessResiduals =
+        TplFitResult->FitQuality[idx].skewnessResiduals;
+    candidate->fittedContinuum.kurtosisResiduals =
+        TplFitResult->FitQuality[idx].kurtosisResiduals;
+    candidate->fittedContinuum.ksResiduals =
+        TplFitResult->FitQuality[idx].ksResiduals;
+    candidate->fittedContinuum.ksStdResiduals =
+        TplFitResult->FitQuality[idx].ksStdResiduals;
+    candidate->fittedContinuum.ksStdMeanResiduals =
+        TplFitResult->FitQuality[idx].ksStdMeanResiduals;
+    candidate->fittedContinuum.andersonResiduals =
+        TplFitResult->FitQuality[idx].andersonResiduals;
     candidate->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[idx];
     candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[idx];
     candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[idx];

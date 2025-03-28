@@ -193,12 +193,43 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
             result; // upcasting (slicing) slicing, preserving specific
                     // TFittingIsmIGmResult members
         result_base = fitRes;
-        result.reducedChiSquare =
+        result.fitQuality.reducedChiSquare =
             NSFitQuality::reducedChi2(result.chiSquare, n_samples);
-        result.pValue = NSFitQuality::pValue(result.chiSquare, n_samples);
+        result.fitQuality.pValue =
+            NSFitQuality::pValue(result.chiSquare, n_samples);
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = meiksinIdx;
         chisquareSetAtLeastOnce = true;
+
+        const Int32 nSpectra = ssize(m_spectra);
+
+        std::vector<TFloat64List> spcFlux(nSpectra);
+        std::transform(m_spectra.begin(), m_spectra.end(), spcFlux.begin(),
+                       [](const std::shared_ptr<const CSpectrum> &spectrum) {
+                         return spectrum->GetFluxAxis().GetSamplesVector();
+                       });
+
+        std::vector<TFloat64List> spcFluxError(nSpectra);
+        std::transform(
+            m_spectra.begin(), m_spectra.end(), spcFluxError.begin(),
+            [](const std::shared_ptr<const CSpectrum> &spectrum) {
+              return spectrum->GetFluxAxis().GetError().GetSamplesVector();
+            });
+
+        const Float64 amp = fitRes.ampl;
+        std::vector<TFloat64List> tplFlux(nSpectra);
+        std::transform(m_templateRebined_bf.begin(), m_templateRebined_bf.end(),
+                       tplFlux.begin(), [amp](CTemplate &tpl) {
+                         auto flux = tpl.GetFluxAxis().GetSamplesVector();
+                         std::transform(flux.begin(), flux.end(), flux.begin(),
+                                        [amp](const Float64 sample) {
+                                          return sample * amp;
+                                        });
+
+                         return flux;
+                       });
+
+        addQualityFitResidualsToResult(result, spcFlux, tplFlux, spcFluxError);
       }
     }
   }

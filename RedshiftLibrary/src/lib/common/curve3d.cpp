@@ -136,6 +136,7 @@ TCurve T3DCurve::toCurve(Int16 igmIdx, Int16 ismIdx) const {
   curve.setLambda(lambda);
   curve.setFlux(flux[igmIdx][ismIdx]);
   curve.setFluxError(fluxError[igmIdx][ismIdx]);
+  curve.setMask(mask);
   return curve;
 }
 

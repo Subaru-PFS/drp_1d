@@ -49,10 +49,11 @@ using namespace NSEpic;
 TCurve::TCurve() {}
 
 TCurve::TCurve(TList<Float64> lambda, TList<Float64> flux,
-               TList<Float64> fluxError) {
+               TList<Float64> fluxError, TList<uint8_t> mask) {
   setLambda(std::move(lambda));
   setFlux(std::move(flux));
   setFluxError(std::move(fluxError));
+  setMask(std::move(mask));
 }
 
 void TCurve::checkIdx(Int32 idx) const {
@@ -94,6 +95,8 @@ void TCurve::setLambda(TFloat64List inputLambda) {
 
 void TCurve::setFlux(TList<Float64> inputFlux) { flux = std::move(inputFlux); }
 
+void TCurve::setMask(TList<uint8_t> inputMask) { mask = std::move(inputMask); }
+
 void TCurve::setFluxError(TList<Float64> inputFluxError) {
   fluxError = std::move(inputFluxError);
 }
@@ -129,4 +132,14 @@ void TCurve::sort() {
   lambda = std::move(lambdaSorted);
   flux = std::move(FluxSorted);
   fluxError = std::move(fluxErrorSorted);
+}
+
+TFloat64List TCurve::getUnmaskedFlux() const {
+  if (mask.empty())
+    return flux;
+  TFloat64List unmaskedFlux(size(), NAN);
+  for (Int32 pixelIdx = 0; pixelIdx < size(); pixelIdx++) {
+    unmaskedFlux[pixelIdx] = mask[pixelIdx] ? flux[pixelIdx] : NAN;
+  }
+  return unmaskedFlux;
 }

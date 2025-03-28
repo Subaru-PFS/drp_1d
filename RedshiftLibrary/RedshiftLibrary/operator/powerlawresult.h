@@ -40,6 +40,7 @@
 #define _REDSHIFT_OPERATOR_POWERLAWRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/result.h"
@@ -50,12 +51,11 @@ class CPowerLawResult : public COperatorResult {
 public:
   CPowerLawResult(Int32 n);
   virtual ~CPowerLawResult() = default;
-  void set_at_redshift(Int32 zIdx, TPowerLawResult result);
+  void set_at_redshift(const Int32 zIdx, TPowerLawResult result);
 
   TFloat64List Redshifts;
   TFloat64List ChiSquare;
-  TFloat64List ReducedChiSquare;
-  TFloat64List pValue;
+  std::vector<TFitQuality> FitQuality;
   TFloat64List fluxError;
   TList<TPowerLawCoefsPair> coefs;
 

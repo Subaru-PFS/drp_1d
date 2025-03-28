@@ -44,10 +44,11 @@
 
 using namespace NSEpic;
 
-void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
-                         Float64 redshift, Float64 chi2, Float64 reducedChi2,
-                         Float64 pValue, TPowerLawCoefsPair powerLawCoefs,
-                         Float64 snr) {
+void CPowerLawStore::Add(const Float64 ismEbmvCoeff, const Int32 igmMeiksinIdx,
+                         const Float64 redshift, const Float64 chi2,
+                         const TFitQuality &fitQuality,
+                         const TPowerLawCoefsPair &powerLawCoefs,
+                         const Float64 snr) {
   CContinuumModelSolution tmpCContinuumModelSolution;
   tmpCContinuumModelSolution.name = "powerLaw";
   tmpCContinuumModelSolution.a1 = powerLawCoefs.first.a;
@@ -62,8 +63,16 @@ void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
   tmpCContinuumModelSolution.meiksinIdx = igmMeiksinIdx;
   tmpCContinuumModelSolution.redshift = redshift;
   tmpCContinuumModelSolution.merit = chi2;
-  tmpCContinuumModelSolution.reducedChi2 = reducedChi2;
-  tmpCContinuumModelSolution.pValue = pValue;
+  tmpCContinuumModelSolution.reducedChi2 = fitQuality.reducedChiSquare;
+  tmpCContinuumModelSolution.pValue = fitQuality.pValue;
+  tmpCContinuumModelSolution.meanResiduals = fitQuality.meanResiduals;
+  tmpCContinuumModelSolution.stdResiduals = fitQuality.stdResiduals;
+  tmpCContinuumModelSolution.skewnessResiduals = fitQuality.skewnessResiduals;
+  tmpCContinuumModelSolution.kurtosisResiduals = fitQuality.kurtosisResiduals;
+  tmpCContinuumModelSolution.ksResiduals = fitQuality.ksResiduals;
+  tmpCContinuumModelSolution.ksStdResiduals = fitQuality.ksStdResiduals;
+  tmpCContinuumModelSolution.ksStdMeanResiduals = fitQuality.ksStdMeanResiduals;
+  tmpCContinuumModelSolution.andersonResiduals = fitQuality.andersonResiduals;
   tmpCContinuumModelSolution.SNR = snr;
 
   Int32 idxz = GetRedshiftIndex(redshift);

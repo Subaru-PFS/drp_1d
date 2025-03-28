@@ -98,7 +98,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf[spcIndex].MeiksinInitFailed()) {
-      THROWG(ErrorCode::INTERNAL_ERROR, "IGM in not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
     }
     ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   }

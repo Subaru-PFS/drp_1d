@@ -514,10 +514,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       std::dynamic_pointer_cast<CPowerLawStore>(continuumFitStore)
           ->Add(chisquareResult->FitEbmvCoeff[i],
                 chisquareResult->FitMeiksinIdx[i], redshift,
-                chisquareResult->ChiSquare[i],
-                chisquareResult->ReducedChiSquare[i],
-                chisquareResult->pValue[i], chisquareResult->coefs[i],
-                chisquareResult->SNR[i]);
+                chisquareResult->ChiSquare[i], chisquareResult->FitQuality[i],
+                chisquareResult->coefs[i], chisquareResult->SNR[i]);
 
       if (chisquareResult->SNR[i] > bestFitSNR)
         bestFitSNR = chisquareResult->SNR[i];
@@ -535,9 +533,8 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
         std::dynamic_pointer_cast<CTemplatesFitStore>(continuumFitStore)
             ->Add(chisquareResultsTplName[j], chisquareResult->FitEbmvCoeff[i],
                   chisquareResult->FitMeiksinIdx[i], redshift,
-                  chisquareResult->ChiSquare[i],
-                  chisquareResult->ReducedChiSquare[i],
-                  chisquareResult->pValue[i], chisquareResult->ChiSquarePhot[i],
+                  chisquareResult->ChiSquare[i], chisquareResult->FitQuality[i],
+                  chisquareResult->ChiSquarePhot[i],
                   chisquareResult->FitAmplitude[i],
                   chisquareResult->FitAmplitudeError[i],
                   chisquareResult->FitAmplitudeSigma[i],

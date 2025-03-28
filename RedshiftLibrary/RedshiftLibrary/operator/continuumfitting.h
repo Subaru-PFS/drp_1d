@@ -58,6 +58,26 @@ class CSpectrum;
 class COperatorResult;
 class CModelSpectrumResult;
 
+struct TFitQuality {
+  Float64 reducedChiSquare = INFINITY;
+  Float64 pValue = 0;
+  Float64 meanResiduals = INFINITY;
+  Float64 stdResiduals = INFINITY;
+  Float64 skewnessResiduals = INFINITY;
+  Float64 kurtosisResiduals = INFINITY;
+  Float64 ksResiduals = INFINITY;
+  Float64 ksStdResiduals = INFINITY;
+  Float64 ksStdMeanResiduals = INFINITY;
+  Float64 andersonResiduals = INFINITY;
+  Int32 nPixels = 0;
+};
+
+struct TContinuumResult {
+  Float64 ebmvCoef = NAN;
+  Int32 meiksinIdx = undefIdx;
+  TFitQuality fitQuality;
+};
+
 /**
  * \ingroup Redshift
  */
@@ -74,8 +94,24 @@ protected:
   std::shared_ptr<CMaskBuilder> m_maskBuilder;
   std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
+  TInt32List m_kStart, m_kEnd;
 
   virtual Float64 EstimateLikelihoodCstLog() const;
+  void addQualityFitResidualsToResult(TContinuumResult &result,
+                                      const TFloat64List &spcFlux,
+                                      const TFloat64List &modelFlux,
+                                      const TFloat64List &spcFluxError,
+                                      const Int32 kStart = 0,
+                                      Int32 kend = -1) const;
+
+  void addQualityFitResidualsToResult(
+      TContinuumResult &result, const std::vector<TFloat64List> &spcFlux,
+      const std::vector<TFloat64List> &modelFlux,
+      const std::vector<TFloat64List> &spcFluxError,
+      const TInt32List &kStartArg = {}, const TInt32List &kEndArg = {}) const;
+
+  Float64 computeNPixels(const Int32 spcIdx, const TInt32List &kStart,
+                         const TInt32List &kEnd) const;
 };
 } // namespace NSEpic
 

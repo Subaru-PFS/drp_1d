@@ -209,7 +209,7 @@ public:
 
   // Multi obs combination/aggregation methods on elements Lists
 
-  CSpectraGlobalIndex &getSpectraIndex() { return m_spectraIndex; }
+  CSpectraGlobalIndex &getSpectraIndex() const { return m_spectraIndex; }
   void refreshAllModels();
 
 private:

@@ -40,6 +40,16 @@
 #include "RedshiftLibrary/statistics/fitquality.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include <boost/accumulators/statistics/skewness.hpp>
+#include <boost/math/distributions/empirical_cumulative_distribution_function.hpp>
+#include <boost/math/distributions/normal.hpp>
+#include <boost/math/statistics/anderson_darling.hpp>
+#include <gsl/gsl_statistics_double.h>
+
+using boost::math::cdf;
+using boost::math::complement;
+using boost::math::empirical_cumulative_distribution_function;
+using boost::math::statistics::anderson_darling_normality_statistic;
 
 namespace NSEpic::NSFitQuality {
 Float64 reducedChi2(const Float64 chi2, const Int32 nPixels) {
@@ -54,7 +64,94 @@ Float64 pValue(const Float64 chi2, const Int32 nPixels) {
   if (chi2 > DBL_MAX)
     return 0;
   boost::math::chi_squared chi2Dist(nPixels - 1);
-  Float64 p = boost::math::cdf(boost::math::complement(chi2Dist, chi2));
+  Float64 p = cdf(complement(chi2Dist, chi2));
   return p;
 }
+
+Float64 mean(const TFloat64List &data) {
+  const Int32 n = data.size();
+  if (n == 0)
+    return NAN;
+  return gsl_stats_mean(data.data(), 1, n);
+}
+
+Float64 var(const TFloat64List &data, const Float64 mean) {
+  const Int32 n = data.size();
+  if (n < 2)
+    return NAN;
+  return gsl_stats_variance_m(data.data(), 1, n, mean);
+}
+
+Float64 stdev(const TFloat64List &data, const Float64 mean) {
+  return std::sqrt(var(data, mean));
+}
+
+Float64 skewness(const TFloat64List &data, const Float64 mean,
+                 const Float64 stdev) {
+  Int32 n = data.size();
+  if (n < 1)
+    return NAN;
+  return gsl_stats_skew_m_sd(data.data(), 1, n, mean, stdev);
+}
+
+Float64 kurtosis(const TFloat64List &data, const Float64 mean) {
+  // Fisher-Pearson kurtosis measurement
+  const Int32 n = data.size();
+  if (n < 1)
+    return NAN;
+  Float64 invN = 1.0 / n;
+  // Compute second and fourth central moments
+  Float64 sum2 = 0.0;
+  Float64 sum4 = 0.0;
+  for (Float64 r : data) {
+    Float64 diff = r - mean;
+    Float64 diff2 = diff * diff;
+    sum2 += diff2;
+    sum4 += diff2 * diff2;
+  }
+
+  // Compute kurtosis excess
+  Float64 invNSum2 = invN * sum2;
+  return (invN * sum4) / (invNSum2 * invNSum2) - 3.0;
+}
+
+Float64 kurtosisGsl(const TFloat64List &data, const Float64 mean,
+                    const Float64 stdev) {
+  // Fisher-Pearson kurtosis measurement
+  const Int32 n = data.size();
+  if (n < 1)
+    return NAN;
+  return gsl_stats_kurtosis_m_sd(data.data(), 1, n, mean, stdev);
+}
+
+Float64 andersonDarlingTest(const TFloat64List data) {
+  // NB this method can also take mean and std if needed
+  return anderson_darling_normality_statistic(data);
+}
+
+Float64 ksTest(const TFloat64List &data, const Float64 mean,
+               const Float64 stdev, const bool sorted) {
+  auto dataBis = data;
+  auto empiricalCdf =
+      empirical_cumulative_distribution_function(std::move(dataBis), sorted);
+  boost::math::normal dist(mean, stdev);
+
+  Float64 maxDiff = 0.0;
+  for (Int32 i = 0; i < data.size(); i++) {
+    const Float64 diff =
+        std::abs(empiricalCdf(data[i]) - boost::math::cdf(dist, data[i]));
+    if (diff > maxDiff)
+      maxDiff = diff;
+  }
+
+  return maxDiff;
+}
+
+Float64 computeResidual(const Float64 expData, const Float64 refData,
+                        const Float64 expDataError) {
+  if (expDataError == 0.0)
+    return NAN;
+  return (expData - refData) / expDataError;
+};
+
 } // namespace NSEpic::NSFitQuality

@@ -93,7 +93,7 @@ struct TFittingResult {
   TCrossProductResult cross_result;
 };
 
-struct TFittingIsmIgmResult : TFittingResult {
+struct TFittingIsmIgmResult : TFittingResult, TContinuumResult {
   TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize,
                        Int32 spcsize = 1)
       : overlapFraction(spcsize, NAN),
@@ -102,10 +102,6 @@ struct TFittingIsmIgmResult : TFittingResult {
         IgmMeiksinIdxInterm(MeiksinListSize, undefIdx) {}
 
   TFloat64List overlapFraction;
-  Float64 reducedChiSquare = INFINITY;
-  Float64 pValue = 0;
-  Float64 ebmvCoef = NAN;
-  Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
   TInt32List IsmCalzettiIdxInterm;
   TInt32List IgmMeiksinIdxInterm;
@@ -115,10 +111,7 @@ class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
   COperatorTemplateFitting(const TFloat64List &redshifts)
-      : COperatorTemplateFittingBase(redshifts), m_kStart(m_spectra.size()),
-        m_kEnd(m_spectra.size()){
-
-        };
+      : COperatorTemplateFittingBase(redshifts){};
   virtual ~COperatorTemplateFitting() = default;
 
   std::shared_ptr<CTemplateFittingResult> Compute(
@@ -156,8 +149,6 @@ protected:
                           const CPriorHelper::SPriorTZE &logpriorTZ) const;
 
   bool m_option_igmFastProcessing;
-  TInt32List m_kStart, m_kEnd;
-
   std::vector<TFloat64List> m_sumCross_outsideIGM;
   std::vector<TFloat64List> m_sumT_outsideIGM;
   std::vector<TFloat64List> m_sumS_outsideIGM;

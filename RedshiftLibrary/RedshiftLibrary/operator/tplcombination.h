@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
@@ -85,7 +86,7 @@ struct STplcombination_basicfitresult : TFittingIsmIgmResult {
   std::vector<TFloat64List> COV;
 };
 
-class COperatorTplcombination {
+class COperatorTplcombination : public COperatorContinuumFitting {
 public:
   std::shared_ptr<COperatorResult>
   Compute(const CSpectrum &spectrum, const TTemplateConstRefList &tplList,

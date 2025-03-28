@@ -45,6 +45,19 @@
 namespace NSEpic::NSFitQuality {
 Float64 reducedChi2(const Float64 chi2, const Int32 N);
 Float64 pValue(const Float64 chi2, const Int32 nPixels);
+Float64 mean(const TFloat64List &data);
+Float64 var(const TFloat64List &data, const Float64 mean);
+Float64 stdev(const TFloat64List &data, const Float64 mean);
+Float64 skewness(const TFloat64List &data, const Float64 mean,
+                 const Float64 stdev);
+Float64 andersonDarlingTest(const TFloat64List data);
+Float64 kurtosis(const TFloat64List &data, const Float64 mean);
+Float64 kurtosisGsl(const TFloat64List &data, const Float64 mean,
+                    const Float64 stdev);
+Float64 ksTest(const TFloat64List &data, const Float64 mean,
+               const Float64 stdev, bool sorted);
+Float64 computeResidual(const Float64 expData, const Float64 refData,
+                        const Float64 expError);
 }; // namespace NSEpic::NSFitQuality
 
 #endif

@@ -534,8 +534,24 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     candidate->fittedContinuum.merit = bestResult->ChiSquare[zIndex];
     candidate->fittedContinuum.tplMeritPhot = bestResult->ChiSquarePhot[zIndex];
     candidate->fittedContinuum.reducedChi2 =
-        bestResult->ReducedChiSquare[zIndex];
-    candidate->fittedContinuum.pValue = bestResult->pValue[zIndex];
+        bestResult->FitQuality[zIndex].reducedChiSquare;
+    candidate->fittedContinuum.pValue = bestResult->FitQuality[zIndex].pValue;
+    candidate->fittedContinuum.meanResiduals =
+        bestResult->FitQuality[zIndex].meanResiduals;
+    candidate->fittedContinuum.stdResiduals =
+        bestResult->FitQuality[zIndex].stdResiduals;
+    candidate->fittedContinuum.skewnessResiduals =
+        bestResult->FitQuality[zIndex].skewnessResiduals;
+    candidate->fittedContinuum.kurtosisResiduals =
+        bestResult->FitQuality[zIndex].kurtosisResiduals;
+    candidate->fittedContinuum.ksResiduals =
+        bestResult->FitQuality[zIndex].ksResiduals;
+    candidate->fittedContinuum.ksStdResiduals =
+        bestResult->FitQuality[zIndex].ksStdResiduals;
+    candidate->fittedContinuum.ksStdMeanResiduals =
+        bestResult->FitQuality[zIndex].ksStdMeanResiduals;
+    candidate->fittedContinuum.andersonResiduals =
+        bestResult->FitQuality[zIndex].andersonResiduals;
     candidate->fittedContinuum.tplAmplitude = bestResult->FitAmplitude[zIndex];
     candidate->fittedContinuum.tplAmplitude = bestResult->FitAmplitude[zIndex];
     candidate->fittedContinuum.tplAmplitudeError =

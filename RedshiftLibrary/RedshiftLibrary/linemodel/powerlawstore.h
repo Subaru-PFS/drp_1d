@@ -51,9 +51,10 @@ class CPowerLawStore : public CContinuumFitStore {
 public:
   using CContinuumFitStore::CContinuumFitStore;
   Int32 getContinuumCount() const override { return 1; };
-  void Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx, Float64 redshift,
-           Float64 chi2, Float64 reducedChi2, Float64 pValue,
-           TPowerLawCoefsPair powerlawCoefs, Float64 snr);
+  void Add(const Float64 ismEbmvCoeff, const Int32 igmMeiksinIdx,
+           const Float64 redshift, const Float64 chi2,
+           const TFitQuality &fitQuality,
+           const TPowerLawCoefsPair &powerlawCoefs, const Float64 snr);
 
 private:
   Float64 getFracAmplitudeSigma(
