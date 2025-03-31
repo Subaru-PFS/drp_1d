@@ -456,7 +456,7 @@ class AbstractOutput(metaclass=ABCMeta):
                     stage = "lineMeasSolver"
                 else:
                     stage = "redshiftSolver"
-                if self.has_dataset_in_source(object_type, stage, method, dataset.replace("<ObsID>", "")):
+                if self.has_dataset_in_source(object_type, stage, method, dataset):
                     if "<ObsID>" in dataset:
                         for obs_id in self.parameters.get_observation_ids():
                             self.object_results[object_type][dataset.replace("<ObsID>", obs_id)] = dict()
