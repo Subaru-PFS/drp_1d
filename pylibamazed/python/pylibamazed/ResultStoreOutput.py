@@ -228,8 +228,13 @@ class ResultStoreOutput(AbstractOutput):
             or_type = self.results_store.GetGlobalResultType(
                 object_type, stage, method, attribute_info.ResultStore_key
             )
-            getter = getattr(self.results_store, "Get" + or_type[1:])
-            return getter(object_type, stage, method, attribute_info.ResultStore_key)
+            try:
+                getter = getattr(self.results_store, "Get" + or_type[1:])
+                return getter(object_type, stage, method, attribute_info.ResultStore_key)
+            except:
+                raise APIException(
+                    ErrorCode.OUTPUT_READER_ERROR, "Unknown OperatorResult type {}".format(str(or_type))
+                )
         elif attribute_info.level == "candidate":
             or_type = self.results_store.GetCandidateResultType(
                 object_type,
