@@ -80,6 +80,7 @@
 %shared_ptr(TLSFGaussianConstantResolutionArgs)
 %shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
 %shared_ptr(CLineModelSolution)
+%shared_ptr(CLineModelSolveResult)
 %shared_ptr(CPhotometricData)
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
@@ -121,6 +122,7 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
@@ -439,6 +441,7 @@ public:
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
+%include "method/linemodelsolveresult.i"
 %include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/logZPdfResult.i"
@@ -609,6 +612,10 @@ class COperatorResultStore
                                             const std::string &name,
                                             const std::string &dataset,
                                             const int &rank) const;
+
+  std::shared_ptr<const CLineModelSolveResult>
+  GetLineModelSolveResult(const std::string &spectrumModel, const std::string &stage,
+			  const std::string &method, const std::string &name) const;
 
   const std::string&  GetGlobalResultType(const std::string& objectType, const std::string& stage,
                                           const std::string& method,

@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
@@ -409,6 +410,16 @@ int COperatorResultStore::getNbRedshiftCandidates(
         ->size();
 
   return 0;
+}
+
+std::shared_ptr<const CLineModelSolveResult>
+COperatorResultStore::GetLineModelSolveResult(const std::string &spectrumModel,
+                                              const std::string &stage,
+                                              const std::string &method,
+                                              const std::string &name) const {
+
+  return std::dynamic_pointer_cast<const CLineModelSolveResult>(
+      GetGlobalResult(spectrumModel, stage, method, name).lock());
 }
 
 void COperatorResultStore::StoreScopedPerTemplateResult(

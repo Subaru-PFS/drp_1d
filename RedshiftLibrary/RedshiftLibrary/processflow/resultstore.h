@@ -65,6 +65,7 @@ class CModelSpectrumResult;
 class CModelPhotValueResult;
 class CLineModelSolution;
 class CFlagLogResult;
+class CLineModelSolveResult;
 template <class T = TLineModelResult> class CLineModelExtremaResult;
 template <class T = TTplCombinationResult> class CTplCombinationExtremaResult;
 //  class CLineModelExtremaResult<TLineModelResult>;
@@ -181,6 +182,12 @@ public:
                           const std::string &stage, const std::string &method,
                           const std::string &name, const std::string &dataset,
                           const int &rank) const;
+
+  std::shared_ptr<const CLineModelSolveResult>
+  GetLineModelSolveResult(const std::string &spectrumModel,
+                          const std::string &stage, const std::string &method,
+                          const std::string &name) const;
+
   int getNbRedshiftCandidates(const std::string &spectrumModel,
                               const std::string &stage,
                               const std::string &method) const;
