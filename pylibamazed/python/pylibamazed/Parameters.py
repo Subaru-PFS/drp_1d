@@ -217,9 +217,5 @@ class Parameters(ParametersAccessor):
         else:
             return False
 
-    def get_large_grid_ratio(self, spectrum_model: str):
-        method = self.get_redshift_solver_method(spectrum_model)
-        return super().get_large_grid_ratio(spectrum_model, method)
-
     def is_log_sampling(self, spectrum_model: str):
         return self.get_redshift_sampling(spectrum_model) == "log"

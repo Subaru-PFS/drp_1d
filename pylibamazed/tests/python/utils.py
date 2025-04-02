@@ -91,7 +91,7 @@ def make_parameter_dict_at_redshift_solver_level(
 ) -> dict:
     if object_type is None:
         object_type = default_object_type
-    param_dict: Dict[str, Union[list, Dict]] = {
+    param_dict: Dict = {
         "version": 2,
         "spectrumModels": [object_type],
         object_type: {
