@@ -57,12 +57,16 @@ def buildPdfParams(pdf_params, first_pass=False):
 
 def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
     method = parameters.get_redshift_solver_method(spectrum_model)
+    if method is None:
+        return None
     if parameters.get_skipsecondpass(method, spectrum_model, False):
         raise APIException(
             ErrorCode.PYTHON_API_ERROR, "get_final_regular_z_grid cannot be called with skipSecondPass"
         )
 
     p_redshift_range = parameters.get_redshiftrange(spectrum_model)
+    if p_redshift_range is None:
+        return None
     redshift_range = TFloat64Range(p_redshift_range[0], p_redshift_range[1])
     redshift_step = parameters.get_redshiftstep(spectrum_model)
     is_log = parameters.is_log_sampling(spectrum_model)
@@ -70,7 +74,9 @@ def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
     grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
 
     if parameters.has_two_pass(spectrum_model):
-        ratio = parameters.get_large_grid_ratio(spectrum_model)
+        ratio = parameters.get_large_grid_ratio(spectrum_model, method)
+        if ratio is None:
+            return None
         fp_grid_param = CZGridParam(redshift_range, redshift_step * ratio, np.nan)
         zend = fp_grid_param.getZGrid(is_log)[-1]
         redshift_range = TFloat64Range(p_redshift_range[0], zend)

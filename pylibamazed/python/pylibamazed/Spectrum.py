@@ -56,7 +56,6 @@ from pylibamazed.redshift import (
 )
 from pylibamazed.Filter import FilterList
 from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
-from typing import Type
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -75,7 +74,7 @@ class Spectrum:
         lsf,
         photometric_data,
         wave_frame="vacuum",
-        filter_loader_class: Type[AbstractFilterLoader] = ParamJsonFilterLoader,
+        filter_loader_class: type[AbstractFilterLoader] = ParamJsonFilterLoader,
     ):
         self.source_id = str(source_id)
         self.parameters = parameters

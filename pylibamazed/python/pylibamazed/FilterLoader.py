@@ -39,7 +39,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, List, Optional, Type
+from typing import TYPE_CHECKING, List, Optional
 
 from pylibamazed.Filter import FilterItem, FilterList, SpectrumFilterItem
 
@@ -52,7 +52,7 @@ class AbstractFilterLoader:
 
     def __init__(
         self,
-        FilterItemClass=Type[FilterItem],
+        FilterItemClass=type[FilterItem],
     ):
         # dictionary name of the key in FilterItem object: name of the key in json
         self.FilterItemClass = FilterItemClass
