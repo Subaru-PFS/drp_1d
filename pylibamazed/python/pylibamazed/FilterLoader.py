@@ -48,8 +48,6 @@ if TYPE_CHECKING:
 
 
 class AbstractFilterLoader:
-    keys = ["key", "instruction", "value"]
-
     def __init__(
         self,
         FilterFactory=FilterFactory,

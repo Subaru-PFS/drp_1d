@@ -37,7 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.Filter import FilterList, FilterItem
+from pylibamazed.Filter import FilterList, FilterItem, FilterMorphology
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
 from pylibamazed.Parameters import Parameters
 
@@ -51,10 +51,15 @@ class TestParamJsonFilterLoader:
                 "filters": [
                     {"key": "col1", "instruction": "<", "value": 2},
                     {"key": "col2", "instruction": ">=", "value": 2},
+                    {"key": "morphology", "instruction": "opening", "value": [1, 1]},
                 ],
             },
             make_checks=False,
         )
         assert jsonFilterLoader.get_filters(params, obs_id="") == FilterList(
-            [FilterItem("col1", "<", 2), FilterItem("col2", ">=", 2)]
+            [
+                FilterItem("col1", "<", 2),
+                FilterItem("col2", ">=", 2),
+                FilterMorphology("morphology", "opening", [1, 1]),
+            ]
         )
