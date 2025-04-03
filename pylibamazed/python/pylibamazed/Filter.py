@@ -37,14 +37,16 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 from typing import Callable, List, Any
-
+from abc import ABCMeta, abstractmethod
+from scipy.ndimage import binary_closing, binary_opening, binary_dilation, binary_erosion
 import pandas as pd
+import numpy as np
+
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import ErrorCode
-from pylibamazed.Utils import LogicUtils
 
 
-class FilterItem:
+class AbstractFilterItem(metaclass=ABCMeta):
     """Creates a filter object.
 
     This filter object is composed of 3 items:
@@ -52,8 +54,6 @@ class FilterItem:
     - instruction: what type of comparison we want to make
     - value: with which value we want to make the comparison
     """
-
-    allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
 
     def __init__(self, key: str, instruction: str, value: Any):
         self.check_instruction(instruction)
@@ -72,19 +72,43 @@ class FilterItem:
 
     def __eq__(self, __value: object) -> bool:
         return (
-            type(self) == type(__value)
+            type(self) is type(__value)
             and self.key == __value.key
             and self.instruction == __value.instruction
             and self.value == __value.value
         )
 
-    def compliant_lines(self, df: pd.DataFrame) -> pd.Series:
+    def apply(self, df: pd.DataFrame) -> pd.Series:
         if self.key not in df:
             raise APIException(ErrorCode.INVALID_FILTER_KEY, f"Column {self.key} does not exist")
-        comparator = self._comparator_from_instruction()
-        return comparator(df[self.key])
+        action = self._action_from_instruction()
+        return action(df[self.key])
 
-    def _comparator_from_instruction(self) -> Callable:
+    @abstractmethod
+    def _action_from_instruction(self) -> Callable:
+        raise NotImplementedError("Implement in derived class")
+
+    @classmethod
+    def check_instruction(cls, instruction: str):
+        if instruction not in cls.allowed_instructions:
+            raise APIException(
+                ErrorCode.INVALID_FILTER_INSTRUCTION,
+                f"Instruction {instruction} is not registered."
+                f"Allowed instructions are: {cls.allowed_instructions}",
+            )
+
+
+def FilterFactory(key: str, instruction: str, value: Any) -> AbstractFilterItem:
+    if key == "morphology":
+        return FilterMorphology(key, instruction, value)
+    else:
+        return FilterItem(key, instruction, value)
+
+
+class FilterItem(AbstractFilterItem):
+    allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
+
+    def _action_from_instruction(self) -> Callable:
         str_to_action = {
             "<": self._inf,
             ">": self._sup,
@@ -141,18 +165,30 @@ class FilterItem:
     def _bitwise_not_xor(self, a):
         return ~(a ^ self.value).astype(bool)
 
-    @classmethod
-    def check_instruction(cls, instruction: str):
-        if instruction not in cls.allowed_instructions:
-            raise APIException(
-                ErrorCode.INVALID_FILTER_INSTRUCTION,
-                f"Instruction {instruction} is not registered."
-                f"Allowed instructions are: {cls.allowed_instructions}",
-            )
 
+class FilterMorphology(AbstractFilterItem):
+    allowed_instructions = ["opening", "closing", "erosion", "dilation"]
 
-class SpectrumFilterItem(FilterItem):
-    pass
+    def _action_from_instruction(self) -> Callable:
+        str_to_action = {
+            "opening": self._opening,
+            "closing": self._closing,
+            "erosion": self._erosion,
+            "dilation": self._dilation,
+        }
+        return str_to_action[self.instruction]
+
+    def _opening(self, a):
+        return binary_opening(a, self.value)
+
+    def _closing(self, a):
+        return binary_closing(a, self.value)
+
+    def _erosion(self, a):
+        return binary_erosion(a, self.value)
+
+    def _dilation(self, a):
+        return binary_dilation(a, self.value)
 
 
 class FilterList:
@@ -176,5 +212,8 @@ class FilterList:
     def apply(self, df: pd.DataFrame):
         if not self.items:
             return None
-        condition_list = [filt.compliant_lines(df) for filt in self.items]
-        return LogicUtils.cumulate_conditions(condition_list)
+        condition = np.ones(len(df), dtype=bool)
+        for filt in self.items:
+            df_ = pd.DataFrame({filt.key: condition}) if type(filt) is FilterMorphology else df
+            condition &= filt.apply(df_)
+        return condition

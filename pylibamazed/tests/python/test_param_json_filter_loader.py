@@ -37,7 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.Filter import FilterList, SpectrumFilterItem
+from pylibamazed.Filter import FilterList, FilterItem
 from pylibamazed.FilterLoader import ParamJsonFilterLoader
 from pylibamazed.Parameters import Parameters
 
@@ -56,5 +56,5 @@ class TestParamJsonFilterLoader:
             make_checks=False,
         )
         assert jsonFilterLoader.get_filters(params, obs_id="") == FilterList(
-            [SpectrumFilterItem("col1", "<", 2), SpectrumFilterItem("col2", ">=", 2)]
+            [FilterItem("col1", "<", 2), FilterItem("col2", ">=", 2)]
         )
