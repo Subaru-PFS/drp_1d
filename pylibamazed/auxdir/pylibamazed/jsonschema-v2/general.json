@@ -26,6 +26,8 @@
       "minItems": 2,
       "maxItems": 2,
       "items": {
+        "title": "wavelength",
+        "description": "wavelength in Angstroms",
         "type": "number",
         "minimum": 0
       }
@@ -53,11 +55,15 @@
       "title": "Lambda range in Angstroms. Is an array (range) for mono obs, and a dictionary of ranges for multiobs. ",
       "anyOf": [
         {
+          "title": "lambda range",
           "$ref": "#/$defs/lambdaRange"
         },
         {
           "type": "object",
+          "title": "Dictionnary of lambda ranges",
+          "description": "each key corresponds to one observation",
           "additionalProperties": {
+            "title": "lambda range",
             "$ref": "#/$defs/lambdaRange"
           }
         }
@@ -127,11 +133,15 @@
       "description": "List (or for multiobs a dictionary of List) of filters to apply for pixel selection on spectra.",
       "anyOf": [
         {
+          "title": "filters list",
           "$ref": "filters.json"
         },
         {
           "type": "object",
+          "title": "dictionnary of filters list",
+          "description": "each key corresponds to one observation",
           "additionalProperties": {
+            "title": "filters list",
             "$ref": "filters.json"
           }
         }

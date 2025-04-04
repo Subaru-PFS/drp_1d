@@ -16,7 +16,7 @@
       "value": 20
     },
     {
-      "key": "morphology",
+      "type": "morphology",
       "instruction": "opening",
       "value": [
         1,

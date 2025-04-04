@@ -111,7 +111,7 @@ class TestFilterListMorphology:
         filter = FilterList()
         filter.add_filter(FilterItem("col1", ">", 12))
         filter.add_filter(FilterItem("col2", "<", 10))
-        filter.add_filter(FilterMorphology("morphology", "opening", [1, 1]))
+        filter.add_filter(FilterMorphology("opening", [1, 1]))
         df["amazed_mask"] = filter.apply(df)
         expected["amazed_mask"] = [False, False, False, True, True]
         ComparisonUtils.compare_dataframe_without_index(df, expected)

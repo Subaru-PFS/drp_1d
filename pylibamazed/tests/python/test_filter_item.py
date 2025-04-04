@@ -104,6 +104,9 @@ class TestFilterItem:
         with pytest.raises(APIException, match=r"INVALID_FILTER_KEY"):
             filter.apply(df)
 
+        with pytest.raises(APIException, match=r"INTERNAL_ERROR"):
+            filter.apply()
+
     def test_repr(self):
         filter = FilterItem("col1", "<", 2)
         assert filter.__repr__() == "Filter {'key': 'col1', 'instruction': '<', 'value': 2}"
@@ -119,54 +122,54 @@ class TestFilterItem:
 
 class TestFilterMorphology:
     def test_init(self):
-        FilterMorphology("morphology", "opening", [1, 1])
+        FilterMorphology("opening", [1, 1])
 
     # Init raises error if unkown instruction
     with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
-        FilterMorphology("T", "unkown", [1, 1])
+        FilterMorphology("unkown", [1, 1])
 
     def test_apply_opening(self):
-        filter = FilterMorphology("morphology", "opening", [1, 1])
-        condition = np.array([True, True, False], dtype=bool)
-        df = pd.DataFrame({"morphology": condition})
+        filter = FilterMorphology("opening", [1, 1])
+        mask = pd.Series(np.array([True, True, False], dtype=bool))
 
-        assert np.array_equal(filter.apply(df), condition)  # no change
+        assert np.array_equal(filter.apply(mask=mask), mask)  # no change
 
-        df = pd.DataFrame({"morphology": [0, 1, 0]})
-        assert np.array_equal(filter.apply(df), [0, 0, 0])  # isolated removed
+        mask = pd.Series([0, 1, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 0])  # isolated removed
 
-        df = pd.DataFrame({"morphology": [1, 0, 0]})
-        assert np.array_equal(filter.apply(df), [0, 0, 0])  # isolated on left border removed
+        mask = pd.Series([1, 0, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 0])  # isolated on left border removed
 
-        df = pd.DataFrame({"morphology": [0, 0, 1]})
-        assert np.array_equal(filter.apply(df), [0, 0, 0])  # isolated on right border removed
+        mask = pd.Series([0, 0, 1])
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 0])  # isolated on right border removed
+
+        # apply without mask raises error
+        with pytest.raises(APIException, match=r"INTERNAL_ERROR"):
+            filter.apply()
 
     def test_apply_closing(self):
-        filter = FilterMorphology("morphology", "closing", [1, 1])
-        condition = np.array([False, False, True], dtype=bool)
-        df = pd.DataFrame({"morphology": condition})
+        filter = FilterMorphology("closing", [1, 1])
+        mask = pd.Series(np.array([False, False, True], dtype=bool))
 
-        assert np.array_equal(filter.apply(df), condition)  # no change
+        assert np.array_equal(filter.apply(mask=mask), mask)  # no change
 
-        df = pd.DataFrame({"morphology": [0, 1, 0, 1]})
-        assert np.array_equal(filter.apply(df), [0, 1, 1, 1])  # isolated removed
+        mask = pd.Series([0, 1, 0, 1])
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1, 1])  # isolated removed
 
-        df = pd.DataFrame({"morphology": [0, 1, 1]})
-        assert np.array_equal(filter.apply(df), [0, 1, 1])  # isolated on left border not removed
+        mask = pd.Series([0, 1, 1])
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1])  # isolated on left border not removed
 
-        df = pd.DataFrame({"morphology": [0, 1, 1, 0]})
-        assert np.array_equal(filter.apply(df), [0, 1, 1, 0])  # isolated on right border not removed
+        mask = pd.Series([0, 1, 1, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1, 0])  # isolated on right border not removed
 
     def test_apply_erosion(self):
-        filter = FilterMorphology("morphology", "erosion", [1, 1, 1])
-        condition = np.array([False, True, True, True, False], dtype=bool)
-        df = pd.DataFrame({"morphology": condition})
+        filter = FilterMorphology("erosion", [1, 1, 1])
+        mask = pd.Series(np.array([False, True, True, True, False], dtype=bool))
 
-        assert np.array_equal(filter.apply(df), [0, 0, 1, 0, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 1, 0, 0])
 
     def test_apply_dilation(self):
-        filter = FilterMorphology("morphology", "dilation", [1, 1, 1])
-        condition = np.array([False, False, True, False, False], dtype=bool)
-        df = pd.DataFrame({"morphology": condition})
+        filter = FilterMorphology("dilation", [1, 1, 1])
+        mask = pd.Series(np.array([False, False, True, False, False], dtype=bool))
 
-        assert np.array_equal(filter.apply(df), [0, 1, 1, 1, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1, 1, 0])

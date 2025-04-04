@@ -51,7 +51,7 @@ class TestParamJsonFilterLoader:
                 "filters": [
                     {"key": "col1", "instruction": "<", "value": 2},
                     {"key": "col2", "instruction": ">=", "value": 2},
-                    {"key": "morphology", "instruction": "opening", "value": [1, 1]},
+                    {"type": "morphology", "instruction": "opening", "value": [1, 1]},
                 ],
             },
             make_checks=False,
@@ -60,6 +60,6 @@ class TestParamJsonFilterLoader:
             [
                 FilterItem("col1", "<", 2),
                 FilterItem("col2", ">=", 2),
-                FilterMorphology("morphology", "opening", [1, 1]),
+                FilterMorphology("opening", [1, 1]),
             ]
         )

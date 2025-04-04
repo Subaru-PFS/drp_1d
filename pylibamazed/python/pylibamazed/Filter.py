@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import Callable, List, Any
+from typing import Callable, List, Any, Optional
 from abc import ABCMeta, abstractmethod
 from scipy.ndimage import binary_closing, binary_opening, binary_dilation, binary_erosion
 import pandas as pd
@@ -78,11 +78,9 @@ class AbstractFilterItem(metaclass=ABCMeta):
             and self.value == __value.value
         )
 
-    def apply(self, df: pd.DataFrame) -> pd.Series:
-        if self.key not in df:
-            raise APIException(ErrorCode.INVALID_FILTER_KEY, f"Column {self.key} does not exist")
-        action = self._action_from_instruction()
-        return action(df[self.key])
+    @abstractmethod
+    def apply(self, df: Optional[pd.DataFrame] = None, mask: Optional[pd.Series] = None) -> pd.Series:
+        raise NotImplementedError("Implement in derived class")
 
     @abstractmethod
     def _action_from_instruction(self) -> Callable:
@@ -98,15 +96,30 @@ class AbstractFilterItem(metaclass=ABCMeta):
             )
 
 
-def FilterFactory(key: str, instruction: str, value: Any) -> AbstractFilterItem:
-    if key == "morphology":
-        return FilterMorphology(key, instruction, value)
+def filterFactory(filterDict: dict) -> AbstractFilterItem:
+    filterType = filterDict.get("type", "byValue")
+    if filterType == "byValue":
+        return FilterItem(filterDict["key"], filterDict["instruction"], filterDict["value"])
+    elif filterType == "morphology":
+        return FilterMorphology(filterDict["instruction"], filterDict["value"])
     else:
-        return FilterItem(key, instruction, value)
+        raise APIException(ErrorCode.INTERNAL_ERROR, f"Wrong filter type: {filterType}")
 
 
 class FilterItem(AbstractFilterItem):
     allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
+
+    def apply(self, df: Optional[pd.DataFrame] = None, mask: Optional[pd.Series] = None) -> pd.Series:
+        if df is None:
+            raise APIException(ErrorCode.INTERNAL_ERROR, "df parameter is None, should be a pandas DataFrame")
+        if self.key not in df:
+            raise APIException(ErrorCode.INVALID_FILTER_KEY, f"Column {self.key} does not exist")
+        action = self._action_from_instruction()
+        newMask = action(df[self.key])
+        if mask is None:
+            return newMask
+        else:
+            return newMask & mask
 
     def _action_from_instruction(self) -> Callable:
         str_to_action = {
@@ -169,6 +182,15 @@ class FilterItem(AbstractFilterItem):
 class FilterMorphology(AbstractFilterItem):
     allowed_instructions = ["opening", "closing", "erosion", "dilation"]
 
+    def __init__(self, instruction: str, value: List):
+        super().__init__("unused", instruction, value)
+
+    def apply(self, df: pd.DataFrame = None, mask: pd.Series = None) -> pd.Series:
+        if mask is None:
+            raise APIException(ErrorCode.INTERNAL_ERROR, "mask paramater is None, should be a pandas Series")
+        action = self._action_from_instruction()
+        return action(mask)
+
     def _action_from_instruction(self) -> Callable:
         str_to_action = {
             "opening": self._opening,
@@ -212,8 +234,7 @@ class FilterList:
     def apply(self, df: pd.DataFrame):
         if not self.items:
             return None
-        condition = np.ones(len(df), dtype=bool)
+        currentMask = pd.Series(np.ones(len(df), dtype=bool))
         for filt in self.items:
-            df_ = pd.DataFrame({filt.key: condition}) if type(filt) is FilterMorphology else df
-            condition &= filt.apply(df_)
-        return condition
+            currentMask = filt.apply(df, currentMask)
+        return currentMask
