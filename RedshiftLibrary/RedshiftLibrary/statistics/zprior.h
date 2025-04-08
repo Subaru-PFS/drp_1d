@@ -79,8 +79,8 @@ private:
 
   void NormalizePrior(TFloat64List &logzPrior) const;
 
-  const TFloat64List &m_redshifts;
   bool m_normalizePrior;
+  const TFloat64List &m_redshifts;
 };
 
 } // namespace NSEpic

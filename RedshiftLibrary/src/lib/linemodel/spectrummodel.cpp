@@ -54,10 +54,9 @@ CSpectrumModel::CSpectrumModel(
     const std::shared_ptr<CContinuumModelSolution> &continuumModelSolution,
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
     Int32 spcIndex)
-    : m_Elements(elements), m_inputSpc(spc), m_SpectrumModel(*(spc)),
+    : m_continuumFittingOperator(continuumFittingOperator), m_inputSpc(spc),
       m_RestLineList(restLineList), m_fitContinuum(continuumModelSolution),
-      m_continuumFittingOperator(continuumFittingOperator),
-      m_spcIndex(spcIndex) {
+      m_SpectrumModel(*(spc)), m_Elements(elements), m_spcIndex(spcIndex) {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);

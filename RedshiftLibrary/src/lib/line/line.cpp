@@ -92,13 +92,14 @@ CLine::CLine(const string &name, Float64 pos, EType type,
       m_strID(str_id) {}
 
 CLine::CLine(const CLine &other)
-    : m_Type(other.m_Type),
+    : m_Name(other.m_Name), m_Pos(other.m_Pos), m_Type(other.m_Type),
+      m_Force(other.m_Force),
       m_Profile(other.m_Profile->Clone()), // deep copy for m_Profile
-      m_Force(other.m_Force), m_Pos(other.m_Pos), m_Offset(other.m_Offset),
-      m_Name(other.m_Name), m_GroupName(other.m_GroupName),
+      m_GroupName(other.m_GroupName),
       m_NominalAmplitude(other.m_NominalAmplitude),
-      m_OffsetFit(other.m_OffsetFit), m_VelGroupName(other.m_VelGroupName),
-      m_id(other.m_id), m_strID(other.m_strID) {}
+      m_VelGroupName(other.m_VelGroupName), m_id(other.m_id),
+      m_Offset(other.m_Offset), m_OffsetFit(other.m_OffsetFit),
+      m_strID(other.m_strID) {}
 
 CLine &CLine::operator=(const CLine &other) {
   m_id = other.m_id;

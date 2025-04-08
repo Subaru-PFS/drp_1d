@@ -186,30 +186,31 @@ protected:
   CSpectrumFluxAxis &GetContinuumFluxAxis_();
   CSpectrumFluxAxis &GetWithoutContinuumFluxAxis_();
 
-  CSpectrumSpectralAxis m_SpectralAxis;
-  std::shared_ptr<const CLSF> m_LSF;
-  std::shared_ptr<const CPhotometricData> m_photData;
-  mutable std::unique_ptr<CRebin> m_rebin;
-
   void EstimateContinuum() const;
   void ResetContinuum() const;
 
-  std::string m_Name;
-  std::string m_obsId = "";
-  std::string m_FullPath;
-
   // Continuum removal parameters
-  mutable Float64 m_medianWindowSize;
   mutable std::string m_estimationMethod;
+  mutable Float64 m_medianWindowSize;
   mutable bool m_medianEvenReflection;
 
+  std::string m_Name;
   mutable EType m_spcType = EType::raw;
-  CSpectrumFluxAxis m_RawFluxAxis;
-  mutable CSpectrumFluxAxis m_ContinuumFluxAxis;
-  mutable CSpectrumFluxAxis m_WithoutContinuumFluxAxis;
+  std::shared_ptr<const CLSF> m_LSF;
 
   // Flag
   mutable bool alreadyRemoved = false;
+
+  std::string m_FullPath;
+
+  CSpectrumSpectralAxis m_SpectralAxis;
+  mutable std::unique_ptr<CRebin> m_rebin;
+  std::shared_ptr<const CPhotometricData> m_photData;
+  std::string m_obsId = "";
+
+  CSpectrumFluxAxis m_RawFluxAxis;
+  mutable CSpectrumFluxAxis m_ContinuumFluxAxis;
+  mutable CSpectrumFluxAxis m_WithoutContinuumFluxAxis;
 };
 
 inline Int32 CSpectrum::GetSampleCount() const {

@@ -98,9 +98,9 @@ struct T3DCurve {
 private:
   Int32 nIgm;
   Int32 nIsm;
-  TList<Float64> lambda;
   T3DList<Float64> flux;
   T3DList<Float64> fluxError;
+  TList<Float64> lambda;
   T3DList<bool> isExtincted;
   TList<bool> isSnrCompliant;
   TList<uint8_t> mask;

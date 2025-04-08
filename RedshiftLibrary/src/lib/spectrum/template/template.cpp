@@ -67,37 +67,36 @@ CTemplate::CTemplate(const std::string &name, const std::string &category,
 }
 
 CTemplate::CTemplate(const CTemplate &other)
-    : CSpectrum(other), m_kDust(other.m_kDust),
-      m_meiksinIdx(other.m_meiksinIdx),
+    : CSpectrum(other), m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
+      m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin),
+      m_kDust(other.m_kDust), m_meiksinIdx(other.m_meiksinIdx),
       m_meiksinRedshiftIdx(other.m_meiksinRedshiftIdx),
       m_Category(other.m_Category), m_IsmIgm_kstart(other.m_IsmIgm_kstart),
       m_Ism_kend(other.m_Ism_kend), m_Igm_kend(other.m_Igm_kend),
       m_computedDustCoeff(other.m_computedDustCoeff),
       m_computedMeiksingCoeff(other.m_computedMeiksingCoeff),
-      m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
-      m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin),
       m_NoIsmIgmFluxAxis(other.m_NoIsmIgmFluxAxis) {}
 
 CTemplate::CTemplate(CTemplate &&other)
-    : CSpectrum(std::move(other)), m_kDust(other.m_kDust),
-      m_meiksinIdx(other.m_meiksinIdx),
+    : CSpectrum(std::move(other)),
+      m_ismCorrectionCalzetti(std::move(other.m_ismCorrectionCalzetti)),
+      m_igmCorrectionMeiksin(std::move(other.m_igmCorrectionMeiksin)),
+      m_kDust(other.m_kDust), m_meiksinIdx(other.m_meiksinIdx),
       m_meiksinRedshiftIdx(other.m_meiksinRedshiftIdx),
       m_Category(std::move(other.m_Category)),
       m_IsmIgm_kstart(other.m_IsmIgm_kstart), m_Ism_kend(other.m_Ism_kend),
       m_Igm_kend(other.m_Igm_kend),
       m_computedDustCoeff(std::move(other.m_computedDustCoeff)),
       m_computedMeiksingCoeff(std::move(other.m_computedMeiksingCoeff)),
-      m_ismCorrectionCalzetti(std::move(other.m_ismCorrectionCalzetti)),
-      m_igmCorrectionMeiksin(std::move(other.m_igmCorrectionMeiksin)),
       m_NoIsmIgmFluxAxis(std::move(other.m_NoIsmIgmFluxAxis)) {}
 
 CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
-    : CSpectrum(other, mask), m_kDust(other.m_kDust),
-      m_meiksinIdx(other.m_meiksinIdx),
-      m_meiksinRedshiftIdx(other.m_meiksinRedshiftIdx),
-      m_Category(other.m_Category),
+    : CSpectrum(other, mask),
       m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
-      m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin) {
+      m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin),
+      m_kDust(other.m_kDust), m_meiksinIdx(other.m_meiksinIdx),
+      m_meiksinRedshiftIdx(other.m_meiksinRedshiftIdx),
+      m_Category(other.m_Category) {
   if (other.CheckIsmIgmEnabled()) {
     TFloat64Range otherRange(other.m_SpectralAxis[other.m_IsmIgm_kstart],
                              other.m_SpectralAxis[other.m_Ism_kend]);

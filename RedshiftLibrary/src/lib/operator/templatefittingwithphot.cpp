@@ -46,8 +46,8 @@ using namespace std;
 COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
     const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
     const TFloat64List &redshifts, const Float64 weight)
-    : COperatorTemplateFitting(redshifts), m_photBandCat(photbandcat),
-      m_weight(weight) {
+    : COperatorTemplateFitting(redshifts), m_weight(weight),
+      m_photBandCat(photbandcat) {
 
   if (m_spectra.size() > 1)
     THROWG(ErrorCode::MULTIOBS_WITH_PHOTOMETRY_NOTIMPLEMENTED,

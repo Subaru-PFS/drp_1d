@@ -116,13 +116,14 @@ private:
                                            Int32 &BeginIndex,
                                            Int32 &EndIndex) const;
   TFloat64List applySign(const TFloat64List &yAxis, bool invertSearch) const;
+
   Int32 m_MaxPeakCount;
-  TFloat64Range m_XRange;
+  Float64 m_extrema_separation;
   Float64 m_meritCut;
   const Float64 m_SignSearch;
-  Float64 m_extrema_separation;
-  bool m_PeakSeparationActive = true;
   bool m_allow_extrema_at_border = true;
+  bool m_PeakSeparationActive = true;
+  TFloat64Range m_XRange;
   mutable TInt32List m_sortedIndexes;
 };
 

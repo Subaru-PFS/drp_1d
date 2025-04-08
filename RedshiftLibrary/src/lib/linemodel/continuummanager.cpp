@@ -58,7 +58,7 @@ CContinuumManager::CContinuumManager(
     const CSpectraGlobalIndex &spcGlobIndex)
     : m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategory(Context.GetCurrentCategory()), m_models(models),
-      m_fitContinuum(continuumModelSolution), m_spectraIndex(spcGlobIndex) {
+      m_spectraIndex(spcGlobIndex), m_fitContinuum(continuumModelSolution) {
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets

@@ -49,9 +49,9 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n)
     : CTwoPassResult("CTemplateFittingResult"), ChiSquare(n),
       ReducedChiSquare(n), pValue(n), ChiSquarePhot(n), FitAmplitude(n),
       FitAmplitudeError(n), FitAmplitudeSigma(n), FitEbmvCoeff(n),
-      FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n),
+      FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n), SNR(n),
       ChiSquareIntermediate(n), IsmEbmvIdxIntermediate(n),
-      IgmMeiksinIdxIntermediate(n), SNR(n), Overlap(n) {
+      IgmMeiksinIdxIntermediate(n), Overlap(n) {
   Redshifts.resize(n);
 }
 
