@@ -176,8 +176,10 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
 
   // store PDF results
   Log.LogInfo(Formatter() << __func__ << ": Storing PDF results");
-  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
-  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult,
+                                       m_runSecondPassFromResultStore);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult,
+                                       m_runSecondPassFromResultStore);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
@@ -530,7 +532,8 @@ void CLineModelSolve::fillChisquareArrayForTplRatio(
 void CLineModelSolve::storeExtremaResults(
     std::shared_ptr<COperatorResultStore> resultStore,
     std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const {
-  resultStore->StoreScopedGlobalResult("extrema_results", ExtremaResult);
+  resultStore->StoreScopedGlobalResult("extrema_results", ExtremaResult,
+                                       m_runSecondPassFromResultStore);
 
   Int32 nResults = ExtremaResult->size();
 }
@@ -560,9 +563,11 @@ void CLineModelSolve::Solve() {
   std::shared_ptr<const CLineModelResult> lmresult;
   if (!skipFirstPass())
     lmresult = m_linemodel.ComputeFirstPass();
-  else
+  else {
     lmresult = std::dynamic_pointer_cast<const CLineModelResult>(
         resultStore->GetScopedGlobalResult(resultName).lock());
+    m_linemodel.retrieveContinuumFitStoreFirstPass();
+  }
   if (twoPassIsActive()) {
     //**************************************************
     // Compute z-candidates
@@ -600,12 +605,16 @@ void CLineModelSolve::Solve() {
   //**************************************************
   if (twoPassIsActive())
     lmresult = m_linemodel.ComputeSecondPass();
-
+  else
+    resultStore->StoreScopedGlobalResult(
+        "continuumFitStore", m_linemodel.getContinuumFitStoreFirstPass());
   if (!lmresult)
     THROWG(ErrorCode::INTERNAL_ERROR, "Failed to get linemodel result");
 
   // save linemodel chisquare results
-  resultStore->StoreScopedGlobalResult(resultName, lmresult);
+
+  resultStore->StoreScopedGlobalResult(resultName, lmresult,
+                                       m_runSecondPassFromResultStore);
 
   // don't save linemodel extrema results, since will change with pdf
   // computation

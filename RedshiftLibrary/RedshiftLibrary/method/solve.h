@@ -66,6 +66,8 @@ protected:
   TFloat64Range m_lambdaRange;
   const std::string m_name;
 
+  bool m_overwriteSolveResult = false;
+
 public:
   CSolve(const std::string &name);
   virtual ~CSolve() = default;

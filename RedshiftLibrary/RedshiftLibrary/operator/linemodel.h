@@ -130,6 +130,7 @@ public:
   getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
   std::shared_ptr<CContinuumFitStore const> const &
   getContinuumFitStoreFirstPass() const;
+  void retrieveContinuumFitStoreFirstPass();
 
 private:
   friend class Linemodel::spanRedshift_test;

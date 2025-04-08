@@ -91,7 +91,8 @@ public:
                               const std::string &path, const std::string &name,
                               std::shared_ptr<const COperatorResult> result);
   void StoreGlobalResult(const std::string &path, const std::string &name,
-                         std::shared_ptr<const COperatorResult> result);
+                         std::shared_ptr<const COperatorResult> result,
+                         bool overwrite = false);
   std::weak_ptr<const COperatorResult>
   GetScopedPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                              const std::string &name) const;
@@ -200,14 +201,16 @@ public:
                       const std::string &method) const;
   // From DataStore, above should be removed and integrated into these
   void StoreGlobalResult(const std::string &name,
-                         std::shared_ptr<const COperatorResult> result);
+                         std::shared_ptr<const COperatorResult> result,
+                         bool overwrite = false);
 
   void
   StoreScopedPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                                const std::string &name,
                                std::shared_ptr<const COperatorResult> result);
   void StoreScopedGlobalResult(const std::string &name,
-                               std::shared_ptr<const COperatorResult> result);
+                               std::shared_ptr<const COperatorResult> result,
+                               bool overwrite = false);
   void StoreScopedFlagResult(const std::string &name);
 
   void reset() {
@@ -235,8 +238,9 @@ protected:
 
   void StoreResult(TResultsMap &map, const std::string &path,
                    const std::string &name,
-                   std::shared_ptr<const COperatorResult> result);
-
+                   std::shared_ptr<const COperatorResult> result,
+                   bool overwrite = false);
+  void deleteCurrentMethodWarningFlag();
   TPerTemplateResultsMap m_PerTemplateResults;
   TResultsMap m_GlobalResults;
 };

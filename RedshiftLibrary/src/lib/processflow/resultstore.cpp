@@ -62,7 +62,7 @@ COperatorResultStore::COperatorResultStore(
 
 void COperatorResultStore::StoreResult(
     TResultsMap &map, const std::string &path, const std::string &name,
-    std::shared_ptr<const COperatorResult> result) {
+    std::shared_ptr<const COperatorResult> result, bool overwrite) {
   std::string scopedName;
   if (!path.empty()) {
     scopedName = path;
@@ -71,7 +71,7 @@ void COperatorResultStore::StoreResult(
   scopedName.append(name);
 
   TResultsMap::iterator it = map.find(scopedName);
-  if (it != map.end()) {
+  if (it != map.end() && !overwrite) {
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "Can not store results: result"
                                           << scopedName << " already exists");
@@ -92,8 +92,8 @@ void COperatorResultStore::StorePerTemplateResult(
 
 void COperatorResultStore::StoreGlobalResult(
     const std::string &path, const std::string &name,
-    std::shared_ptr<const COperatorResult> result) {
-  StoreResult(m_GlobalResults, path, name, result);
+    std::shared_ptr<const COperatorResult> result, bool overwrite) {
+  StoreResult(m_GlobalResults, path, name, result, overwrite);
 }
 
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
@@ -392,6 +392,12 @@ bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
   return (it != m_GlobalResults.end());
 }
 
+void COperatorResultStore::deleteCurrentMethodWarningFlag() {
+  TResultsMap::const_iterator it =
+      m_GlobalResults.find(GetScopedNameAt("warningFlag", ScopeType::METHOD));
+  m_GlobalResults.erase(it);
+}
+
 int COperatorResultStore::getNbRedshiftCandidates(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method) const {
@@ -430,22 +436,36 @@ void COperatorResultStore::StoreScopedPerTemplateResult(
 }
 
 void COperatorResultStore::StoreScopedGlobalResult(
-    const std::string &name, std::shared_ptr<const COperatorResult> result) {
-  StoreGlobalResult(GetCurrentScopeName(), name, result);
+    const std::string &name, std::shared_ptr<const COperatorResult> result,
+    bool overwrite) {
+  StoreGlobalResult(GetCurrentScopeName(), name, result, overwrite);
 }
 
 void COperatorResultStore::StoreGlobalResult(
-    const std::string &name, std::shared_ptr<const COperatorResult> result) {
-  StoreGlobalResult("", name, result);
+    const std::string &name, std::shared_ptr<const COperatorResult> result,
+    bool overwrite) {
+  StoreGlobalResult("", name, result, overwrite);
 }
 
 void COperatorResultStore::StoreScopedFlagResult(const std::string &name) {
 
-  if (hasCurrentMethodWarningFlag()) {
+  Log.LogInfo(Formatter() << "storing " << name << " at depth "
+                          << (int)getScopeDepth());
+  if (getScopeDepth() == 3)
+    Log.LogInfo(Formatter()
+                << "testing "
+                << GetScopedNameAt("warningFlag", ScopeType::METHOD));
 
+  if (getScopeDepth() == 3 && hasCurrentMethodWarningFlag()) {
+    Log.LogInfo("replacing former method warning flag");
     auto currentFlag = *(std::dynamic_pointer_cast<const CFlagLogResult>(
         GetScopedGlobalResult(name).lock()));
+    Log.LogInfo("got current warning flag");
     auto newFlag = CFlagLogResult(Flag.getBitMask(), Flag.getListMessages());
+    Log.LogInfo("create new warning flag");
+    deleteCurrentMethodWarningFlag();
+    Log.LogInfo("old warning flag deleted, storing addition");
+
     StoreScopedGlobalResult(
         name, std::make_shared<const CFlagLogResult>(currentFlag + newFlag));
   } else

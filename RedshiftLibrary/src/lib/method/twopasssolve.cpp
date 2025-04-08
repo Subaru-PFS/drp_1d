@@ -95,6 +95,7 @@ void CTwoPassSolve::initForClassificationAfterFirstPass() {
 void CTwoPassSolve::setRunSecondPassFromResultStore() {
   m_opt_skipsecondpass = false;
   m_runSecondPassFromResultStore = true;
+  m_overwriteSolveResult = true;
 }
 
 const std::unordered_map<std::string, EContinuumFit>
