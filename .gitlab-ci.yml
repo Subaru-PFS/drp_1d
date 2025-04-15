@@ -298,7 +298,7 @@ push-rc-38-osx:
 
 # Manylinux2014 stages
 .manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014-9270
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PLATFORM: "manylinux2014_x86_64"
     ENABLE_GCC10: "False"
