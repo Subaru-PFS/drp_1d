@@ -73,8 +73,7 @@ struct AbstractFitterFixture {
 
   std::shared_ptr<CLMEltListVector> elementsVector =
       std::make_shared<CLMEltListVector>(
-          lambdaRanges, *spcIndex, restLineList,
-          ElementComposition::EmissionAbsorption);
+          *spcIndex, restLineList, ElementComposition::EmissionAbsorption);
   CCSpectrumVectorPtr inputSpcs;
   CSpcModelVectorPtr spectrumModels;
 

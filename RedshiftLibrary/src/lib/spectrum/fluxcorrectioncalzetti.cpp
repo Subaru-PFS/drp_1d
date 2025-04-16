@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
@@ -70,7 +71,7 @@ CSpectrumFluxCorrectionCalzetti::CSpectrumFluxCorrectionCalzetti(
   m_dataDustCoeff.resize(m_nEbmvCoeff * m_dataCalzetti.size());
   for (Int32 kDust = 0; kDust < m_nEbmvCoeff; kDust++) {
     Float64 coeffEBMV = GetEbmvValue(kDust);
-    for (Int32 kCalzetti = 0; kCalzetti < m_dataCalzetti.size(); kCalzetti++) {
+    for (Int32 kCalzetti = 0; kCalzetti < ssize(m_dataCalzetti); kCalzetti++) {
       m_dataDustCoeff[kDust * m_dataCalzetti.size() + kCalzetti] =
           pow(10.0, -0.4 * m_dataCalzetti[kCalzetti] * coeffEBMV);
     }

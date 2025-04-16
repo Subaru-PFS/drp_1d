@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "tests/src/tool/inputContextLight.h"
@@ -166,7 +167,7 @@ BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
       logRebinning.computeTargetLogSpectralAxis(lbdaRange, 10);
 
   BOOST_CHECK(tgtAxis.GetSamplesCount() == 10);
-  for (std::size_t i = 0; i < tgtAxis.GetSamplesCount(); i++)
+  for (Int32 i = 0; i < tgtAxis.GetSamplesCount(); i++)
     BOOST_CHECK_CLOSE(tgtAxis.GetSamplesVector()[i], tgtRef[i], 1e-6);
 
   BOOST_CHECK_THROW(logRebinning.computeTargetLogSpectralAxis(lbdaRange, 8),

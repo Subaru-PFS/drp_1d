@@ -1,7 +1,7 @@
 {
-    "linemodel": {
-	
-	    "continuumfit":{"fftprocessing":true}
-	
+  "linemodel": {
+    "continuumfit": {
+      "fftprocessing": true
     }
+  }
 }

@@ -36,11 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/powerlaw/doublevardata.h"
 #include "tests/src/powerlaw/simplevardata.h"
 #include "tests/src/tool/inputContextLight.h"
+
 #include <boost/test/unit_test.hpp>
 
 #include <random>
@@ -77,12 +79,11 @@ void PowerLaw_fixture::Init(std::string jsonString,
 
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
-  for (Int16 spectrumIdx = 0; spectrumIdx < spcList.size(); spectrumIdx++) {
+  for (Int16 spectrumIdx = 0; spectrumIdx < ssize(spcList); spectrumIdx++) {
     spcList[spectrumIdx]->SetLSF(LSF);
     Context.addSpectrum(spcList[spectrumIdx]);
   }
 
-  // TODO see if could be removed
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   Context.setTemplateCatalog(catalog);
@@ -154,12 +155,7 @@ void PowerLaw_fixture::addNoiseAxis(CSpectrumFluxAxis &fluxAxis) {
   // Calculate the mean of flux and divide by 10
   Int32 n = fluxAxis.GetSamplesVector().size();
   auto const &fluxVector = fluxAxis.GetSamplesVector();
-  // Float64 const meanFlux = std::reduce(fluxVector.begin(), fluxVector.end())
-  // / n;
-
-  // compute the stdev of the flux axis, with a constant value
   Float64 const SNR = 5000;
-  // TFloat64List stdev(n, meanFlux/SNR);
   // compute the stdev of the flux axis, with a constant SNR
   TFloat64List stdev(n);
   std::transform(fluxVector.begin(), fluxVector.end(), stdev.begin(),
@@ -167,14 +163,7 @@ void PowerLaw_fixture::addNoiseAxis(CSpectrumFluxAxis &fluxAxis) {
 
   // Build random normal noise realization
   TFloat64List noisyFluxValues(n);
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  // compute constant stdev realization
-  // std::normal_distribution dis(0.0, meanFlux / SNR);
-  // std::transform(fluxVector.begin(), fluxVector.end(),
-  // noisyFluxValues.begin(),
-  //                [&dis, &gen](Float64 flux) { return flux + dis(gen); });
-  // compute constant SNR realization
+  std::mt19937 gen(7);
   std::transform(fluxVector.begin(), fluxVector.end(), stdev.begin(),
                  noisyFluxValues.begin(), [&gen](Float64 flux, Float64 stdev) {
                    std::normal_distribution dis(flux, stdev);
@@ -252,6 +241,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
   BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  BOOST_CHECK_CLOSE(result.chiSquare, 258.18913104295547, 1e-4);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.036904140734761, 1e-4);
+  BOOST_CHECK_CLOSE(result.pValue, 0.31517836228746177, 1e-4);
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -266,8 +258,11 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   // Accepts a 1% error for calculated coefs
   BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
-  BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  BOOST_TEST(result2.coefs.second.a == result2.coefs.first.a);
+  BOOST_TEST(result2.coefs.second.b == result2.coefs.first.b);
+  BOOST_CHECK_CLOSE(result.chiSquare, 258.18913104295547, 1e-4);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.036904140734761, 1e-4);
+  BOOST_CHECK_CLOSE(result.pValue, 0.31517836228746177, 1e-4);
   Context.reset();
 }
 
@@ -314,6 +309,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.first.stdb == 0.4533861348305359,
              boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.chiSquare, 278.1289308870019, 1e-4);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.1169836581807304, 1e-4);
+  BOOST_CHECK_CLOSE(result.pValue, 0.091549255634287813, 1e-4);
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -337,6 +335,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result2.coefs.first.stdb == 0.008048716415326033,
              boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.chiSquare, 278.1289308870019, 1e-4);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.1169836581807304, 1e-4);
+  BOOST_CHECK_CLOSE(result.pValue, 0.091549255634287813, 1e-4);
   Context.reset();
 }
 
@@ -371,6 +372,9 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   BOOST_TEST(result.coefs.second.a == a2,
              boost::test_tools::tolerance(10.)); // a2 has big errors
   BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.chiSquare, 258.0642219227999, 1e-4);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.0364024976819273, 1e-4);
+  BOOST_CHECK_CLOSE(result.pValue, 0.31712094704529448, 1e-4);
   Context.reset();
 }
 
@@ -423,6 +427,9 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
              boost::test_tools::tolerance(0.01));
   BOOST_TEST(result.coefs.second.stdb == 0.0066342065076361876,
              boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.chiSquare, 594.61208512806786, 1e-4);
+  BOOST_CHECK_CLOSE(result.reducedChiSquare, 0.99102014188011311, 1e-4);
+  BOOST_CHECK_CLOSE(result.pValue, 0.54292694313783707, 1e-4);
   Context.reset();
 }
 
@@ -688,4 +695,47 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
 
   Context.reset();
 }
+
+BOOST_AUTO_TEST_CASE(basicfit_default) {
+  // We consider z = 0 here
+  Float64 a = DBL_MIN * 2;
+  Float64 b = -0.5;
+
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(
+      3999, 6498,
+      10); // Checks that OK is spectral axis larger than lambdaRange
+  CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxis, a, b);
+  TFloat64List noise(fluxAxis.GetSamplesVector().size(), 1);
+  fluxAxis.setError(CSpectrumNoiseAxis(noise));
+
+  // Initialize power law operator
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw;
+  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "simple");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_TEST(result.coefs.first.a == 0);
+  BOOST_TEST(result.coefs.first.stda == INFINITY);
+  BOOST_TEST(result.coefs.first.b == 0);
+  BOOST_TEST(result.coefs.first.stdb == INFINITY);
+  BOOST_TEST(result.coefs.second.a == 0);
+  BOOST_TEST(result.coefs.second.stda == INFINITY);
+  BOOST_TEST(result.coefs.second.b == 0);
+  BOOST_TEST(result.coefs.second.stdb == INFINITY);
+  BOOST_TEST(result.chiSquare == INFINITY);
+  BOOST_TEST(result.reducedChiSquare == INFINITY);
+  BOOST_TEST(result.pValue == 0);
+  Context.reset();
+}
+
 BOOST_AUTO_TEST_SUITE_END()

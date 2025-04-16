@@ -38,6 +38,7 @@
 // ============================================================================
 #include <cfloat>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 
 namespace bpt = boost::property_tree;
@@ -53,7 +54,7 @@ void CParameterStore::Set(const std::string &name, const TFloat64List &v) {
 
   bpt::ptree array;
 
-  for (Int32 i = 0; i < v.size(); i++) {
+  for (Int32 i = 0; i < ssize(v); i++) {
     bpt::ptree item;
     item.put("", v[i]);
 
@@ -69,7 +70,7 @@ void CParameterStore::Set(const std::string &name, const TStringList &v) {
 
   bpt::ptree array;
 
-  for (Int32 i = 0; i < v.size(); i++) {
+  for (Int32 i = 0; i < ssize(v); i++) {
     bpt::ptree item;
     item.put("", v[i]);
 
@@ -94,7 +95,7 @@ void CParameterStore::Set(const std::string &name, const TInt64List &v) {
 
   bpt::ptree array;
 
-  for (Int32 i = 0; i < v.size(); i++) {
+  for (Int32 i = 0; i < ssize(v); i++) {
     bpt::ptree item;
     item.put("", v[i]);
 
@@ -110,7 +111,7 @@ void CParameterStore::Set(const std::string &name, const TBoolList &v) {
 
   bpt::ptree array;
 
-  for (Int32 i = 0; i < v.size(); i++) {
+  for (Int32 i = 0; i < ssize(v); i++) {
     bpt::ptree item;
     item.put("", v[i]);
 
@@ -280,4 +281,12 @@ Float64 CParameterStore::getMinZStepForFFTProcessing(
   }
   return logGridStep;
 }
+
+std::string CParameterStore::getMethodName(const std::string &spectrumModel,
+                                           const std::string &stage) const {
+  const std::string &method =
+      Get<std::string>(spectrumModel + "." + stage + ".method");
+  return method;
+}
+
 } // namespace NSEpic

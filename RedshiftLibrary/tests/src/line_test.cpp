@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(MatchingTest1) {
   TFloat64Range redshiftrange(0.0, 5.0);
   auto result = lineMatching.Compute(detectedCatalog, restFrameCatalog,
                                      redshiftrange, 2, 0.002);
-  BOOST_CHECK(result != NULL);
+  BOOST_CHECK(result != nullptr);
 
   Float64 res = result->GetMeanRedshiftSolutionByIndex(0);
   BOOST_CHECK(fabs(res - (shiftLambda - 1)) < 0.0001);
@@ -173,7 +173,7 @@ i<linePosList.size(); i++)
     CLineMatching lineMatching;
     TFloat64Range redshiftrange( 0.0, 2.0);
     auto result = lineMatching.Compute(detectedCatalog, restFrameCatalog,
-redshiftrange, 1, 0.002 ); BOOST_CHECK( result != NULL );
+redshiftrange, 1, 0.002 ); BOOST_CHECK( result != nullptr );
 
     //Load LineMatching reference results
     TFloat64List zListRef = UtilLoadLineMatchingResults(DATA_ROOT_DIR

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/linematchingresult.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/rules.h"
 #include "RedshiftLibrary/log/log.h"
 
@@ -62,7 +63,7 @@ bool CLineMatchingResult::GetBestRedshift(Float64 &Redshift,
   if (selectedResults.size() > 0) {
     int iStrongMax = -1;
     int nStrongMax = -1;
-    for (Int32 iSol = 0; iSol < selectedResults.size(); iSol++) {
+    for (Int32 iSol = 0; iSol < ssize(selectedResults); iSol++) {
       int currentNStrongRestLines = getNStrongRestLines(selectedResults[iSol]);
       if (currentNStrongRestLines > nStrongMax) {
         iStrongMax = iSol;
@@ -114,9 +115,9 @@ CLineMatchingResult::TSolutionSetList
 CLineMatchingResult::GetSolutionsListOverNumber(Int32 number) const {
   // select results by matching number
   TSolutionSetList selectedResults;
-  for (Int32 iSol = 0; iSol < SolutionSetList.size(); iSol++) {
+  for (Int32 iSol = 0; iSol < ssize(SolutionSetList); iSol++) {
     TSolutionSet currentSet = SolutionSetList[iSol];
-    if (currentSet.size() > number) {
+    if (ssize(currentSet) > number) {
       selectedResults.push_back(currentSet);
     }
   }
@@ -132,7 +133,7 @@ CLineMatchingResult::GetAverageRedshiftListOverNumber(Int32 number) const {
   TFloat64List selectedRedshift;
   CLineMatchingResult::TSolutionSetList selectedResults =
       GetSolutionsListOverNumber(number);
-  for (Int32 j = 0; j < selectedResults.size(); j++) {
+  for (Int32 j = 0; j < ssize(selectedResults); j++) {
     Float64 z = GetMeanRedshiftSolution(selectedResults[j]);
     selectedRedshift.push_back(z);
   }
@@ -147,7 +148,7 @@ TFloat64List CLineMatchingResult::GetRoundedRedshiftCandidatesOverNumber(
     Int32 number, Float64 step) const {
   TFloat64List selectedRedshift = GetAverageRedshiftListOverNumber(number);
   TFloat64List roundedRedshift;
-  for (Int32 j = 0; j < selectedRedshift.size(); j++) {
+  for (Int32 j = 0; j < ssize(selectedRedshift); j++) {
     Float64 zround = Float64(int(selectedRedshift[j] / step + 0.5f) * step);
     roundedRedshift.push_back(zround);
   }
@@ -164,7 +165,7 @@ TFloat64List CLineMatchingResult::GetExtendedRedshiftCandidatesOverNumber(
       GetRoundedRedshiftCandidatesOverNumber(number, step);
   TFloat64List extendedRedshifts;
   Int32 halfk = rangeWidth / step / 2.0;
-  for (Int32 j = 0; j < roundedRedshift.size(); j++) {
+  for (Int32 j = 0; j < ssize(roundedRedshift); j++) {
     for (Int32 k = -halfk; k < halfk; k++) {
       Float64 z = roundedRedshift[j] + k * step;
       extendedRedshifts.push_back(z);
@@ -182,13 +183,13 @@ TFloat64List CLineMatchingResult::GetExtendedRedshiftCandidatesOverNumber(
  * "index".
  */
 Float64 CLineMatchingResult::GetMeanRedshiftSolutionByIndex(Int32 index) const {
-  if (index > SolutionSetList.size() - 1) {
+  if (index > ssize(SolutionSetList) - 1) {
     return -1.0;
   }
 
   Float64 redshiftMean = 0.0;
   const TSolutionSet &currentSet = SolutionSetList[index];
-  for (Int32 i = 0; i < currentSet.size(); i++) {
+  for (Int32 i = 0; i < ssize(currentSet); i++) {
     redshiftMean += currentSet[i].Redshift;
   }
   redshiftMean /= currentSet.size();
@@ -202,7 +203,7 @@ Float64
 CLineMatchingResult::GetMeanRedshiftSolution(const TSolutionSet &s) const {
   TSolutionSet currentSet = s;
   Float64 redshiftMean = 0.0;
-  for (Int32 i = 0; i < currentSet.size(); i++) {
+  for (Int32 i = 0; i < ssize(currentSet); i++) {
     redshiftMean += currentSet[i].Redshift;
   }
   redshiftMean /= (float)currentSet.size();
@@ -221,7 +222,7 @@ Int32 CLineMatchingResult::getNStrongRestLines(const TSolutionSet &s) const {
   TSolutionSet currentSet = s;
   Int32 nStrong = 0;
   Float64 tol = 0.11;
-  for (Int32 i = 0; i < currentSet.size(); i++) {
+  for (Int32 i = 0; i < ssize(currentSet); i++) {
     Int32 found = 0;
     for (auto const &[iStrongRestLine, StrongRestLine] : strongRestLineList) {
       if (fabs(currentSet[i].RestLine.GetPosition() -
@@ -248,9 +249,9 @@ Int32 CLineMatchingResult::GetMaxMatchingNumber() const {
   }
 
   Int32 maxNumber = 0;
-  for (Int32 i = 0; i < SolutionSetList.size(); i++) {
+  for (Int32 i = 0; i < ssize(SolutionSetList); i++) {
     TSolutionSet currentSet = SolutionSetList[i];
-    if (maxNumber < currentSet.size()) {
+    if (maxNumber < ssize(currentSet)) {
       maxNumber = currentSet.size();
     }
   }
@@ -275,7 +276,7 @@ void CLineMatchingResult::FilterWithRules(CSpectrum spc,
   TSolutionSetList _solutionSetList;
   Log.LogDebug(Formatter() << "There are " << SolutionSetList.size()
                            << " solutions to test.");
-  for (Int32 i = 0; i < SolutionSetList.size(); i++) {
+  for (Int32 i = 0; i < ssize(SolutionSetList); i++) {
     TSolutionSet currentSet = SolutionSetList[i];
     Float64 z = GetMeanRedshiftSolution(currentSet);
     Int32 ruleId = rules.check(z, currentSet);

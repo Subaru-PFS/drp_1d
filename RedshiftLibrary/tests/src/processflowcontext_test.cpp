@@ -43,6 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -114,6 +115,8 @@ public:
   std::shared_ptr<CLineCatalog> lineCatalog = fixture_LineCatalog().lineCatalog;
   std::shared_ptr<CLineCatalogsTplRatio> lineRatioTplCatalog =
       fixture_LineRatioTplCatalog().lineRatioTplCatalog;
+
+  Int32 idxCount = fixture_MeiskinCorrection().idxCount;
 };
 
 BOOST_FIXTURE_TEST_SUITE(processflowcontext_test,
@@ -159,7 +162,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
               lineCatalog);
   Context.m_ScopeStack->push_back("redshiftSolver", ScopeType::STAGE);
   Context.m_ScopeStack->push_back("lineModelSolve", ScopeType::METHOD);
-  BOOST_CHECK(Context.getCLineMap().size() ==
+  BOOST_CHECK(ssize(Context.getCLineMap()) ==
               fixture_LineCatalog().lineCatalogSize);
 
   Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
@@ -218,6 +221,52 @@ BOOST_AUTO_TEST_CASE(context_test) {
   gsl_matrix *covarMatrix = gsl_matrix_alloc(dim, dim);
   BOOST_CHECK_THROW(gsl_matrix_set(covarMatrix, 0, 1, 1.0), AmzException);
   gsl_matrix_free(covarMatrix);
+}
+
+BOOST_AUTO_TEST_CASE(context_ism_igm_test) {
+  Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
+  Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
+
+  // GetIsmIdxList
+  TInt32List ebmvList = Context.GetIsmIdxList(false, 1);
+  BOOST_CHECK(ebmvList.size() == 1);
+  BOOST_CHECK(ebmvList[0] == undefIdx);
+
+  ebmvList = Context.GetIsmIdxList(true, undefIdx);
+  BOOST_CHECK(ebmvList.size() == 1);
+  BOOST_CHECK(ebmvList[0] == undefIdx);
+
+  ebmvList = Context.GetIsmIdxList(true, allIdx);
+  BOOST_CHECK(ebmvList.size() == 10);
+  TInt32List ref_list = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  BOOST_CHECK(ebmvList == ref_list);
+
+  ebmvList = Context.GetIsmIdxList(true, 3);
+  BOOST_CHECK(ebmvList.size() == 1);
+  BOOST_CHECK(ebmvList[0] == 3);
+
+  // GetIgmIdxList
+  TInt32List meiksinList = Context.GetIgmIdxList(false, 1);
+  BOOST_CHECK(meiksinList.size() == 1);
+  BOOST_CHECK(meiksinList[0] == undefIdx);
+
+  meiksinList = Context.GetIgmIdxList(true, undefIdx);
+  BOOST_CHECK(meiksinList.size() == 1);
+  BOOST_CHECK(meiksinList[0] == undefIdx);
+
+  meiksinList = Context.GetIgmIdxList(true, allIdx);
+  BOOST_CHECK(ssize(meiksinList) == idxCount);
+  ref_list = {0, 1};
+  BOOST_CHECK(meiksinList == ref_list);
+
+  meiksinList = Context.GetIgmIdxList(true, 3);
+  BOOST_CHECK(meiksinList.size() == 1);
+  BOOST_CHECK(meiksinList[0] == 3);
+
+  // GetIsmIgmIdxList
+  TIgmIsmIdxs igmIsmIdxs = Context.GetIsmIgmIdxList(true, true, 3, 3);
+  BOOST_CHECK(igmIsmIdxs.igmIdxs == meiksinList);
+  BOOST_CHECK(igmIsmIdxs.ismIdxs == ebmvList);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

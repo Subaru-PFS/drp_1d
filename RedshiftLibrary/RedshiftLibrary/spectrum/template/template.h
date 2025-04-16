@@ -117,26 +117,21 @@ public:
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
   TIgmIsmIdxs GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                               Int32 FitEbmvIdx = undefIdx,
-                               Int32 FitMeiksinIdx = undefIdx) const;
-  TInt32List GetIsmIdxList(bool opt_dustFitting,
-                           Int32 FitEbmvIdx = undefIdx) const;
-  TInt32List GetIgmIdxList(bool opt_extinction,
-                           Int32 FitMeiksinIdx = undefIdx) const;
+                               Int32 FitEbmvIdx = allIdx,
+                               Int32 FitMeiksinIdx = allIdx) const;
 
 private:
   friend class Template::Constructor_test;
   friend class Template::InitIsmIgmConfig_test;
   friend class Template::ApplyDustCoeff_test;
 
-  std::string m_Category;
-
   Int32 m_kDust = -1;
   Int32 m_meiksinIdx = -1;
   Int32 m_meiksinRedshiftIdx = -1;
 
+  std::string m_Category;
+
   Int32 m_IsmIgm_kstart = -1, m_Ism_kend = -1, m_Igm_kend = -1;
-  CSpectrumFluxAxis m_NoIsmIgmFluxAxis;
 
   // below vectors should be updated each time we change m_kDust, m_meiksinIdx
   // for a specific redshift
@@ -147,6 +142,7 @@ private:
       m_computedMeiksingCoeff; // vector of spectrum size containing computed
                                // igm coeff at a specific Z at m_meiksin and
                                // this for all lambdas in the spectrum
+  CSpectrumFluxAxis m_NoIsmIgmFluxAxis;
 };
 
 // override Flux Setters to reset ism/igm

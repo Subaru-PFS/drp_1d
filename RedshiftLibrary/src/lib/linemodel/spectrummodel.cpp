@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/element.h"
@@ -53,10 +54,9 @@ CSpectrumModel::CSpectrumModel(
     const std::shared_ptr<CContinuumModelSolution> &continuumModelSolution,
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
     Int32 spcIndex)
-    : m_Elements(elements), m_inputSpc(spc), m_SpectrumModel(*(spc)),
+    : m_continuumFittingOperator(continuumFittingOperator), m_inputSpc(spc),
       m_RestLineList(restLineList), m_fitContinuum(continuumModelSolution),
-      m_continuumFittingOperator(continuumFittingOperator),
-      m_spcIndex(spcIndex) {
+      m_SpectrumModel(*(spc)), m_Elements(elements), m_spcIndex(spcIndex) {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
@@ -307,7 +307,7 @@ CSpectrumModel::GetContinuumWeightedSumInRange(
   Float64 weighted_sum = 0.;
   Float64 total_weight = 0.;
   Float64 total_weight_square = 0.;
-  for (size_t idx = 0; idx <= indexRange.GetLength(); ++idx) {
+  for (Int32 idx = 0; idx <= indexRange.GetLength(); ++idx) {
     Int32 const lambda_idx = indexRange.GetBegin() + idx;
     Float64 const lambda = spectralAxis[lambda_idx];
     Float64 const w = weights[idx];
@@ -470,7 +470,7 @@ void CSpectrumModel::setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
     }
     if (alpha != 1.0) {
       Float64 lbdaTerm = 1.0;
-      for (Int32 kCoeff = 0; kCoeff < polyCoeffs.size(); kCoeff++) {
+      for (Int32 kCoeff = 0; kCoeff < ssize(polyCoeffs); kCoeff++) {
         m_ContinuumFluxAxis[k] += (1. - alpha) * polyCoeffs[kCoeff] * lbdaTerm;
         lbdaTerm *= spcSpectralAxis[k];
       }
@@ -495,7 +495,7 @@ std::pair<Float64, Float64> CSpectrumModel::getFluxDirectIntegration(
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   Int32 nlines = eIdx_list.size();
-  if (nlines != subeIdx_list.size())
+  if (nlines != ssize(subeIdx_list))
     THROWG(ErrorCode::INTERNAL_ERROR, " index sizes do not match");
   TInt32RangeList indexRangeList = m_Elements->getlambdaIndexesUnderLines(
       eIdx_list, subeIdx_list, N_SIGMA_SUPPORT_DI, spectralAxis, lambdaRange,

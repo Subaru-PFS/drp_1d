@@ -55,14 +55,13 @@ public:
   TFloat64List Redshifts;
   TFloat64List ChiSquare;
   TFloat64List ReducedChiSquare;
+  TFloat64List pValue;
   TFloat64List fluxError;
   TList<TPowerLawCoefsPair> coefs;
 
   TFloat64List FitEbmvCoeff;
   TFloat64List FitMeiksinIdx;
   TFloat64List SNR;
-  T3DList<Float64> IsmEbmvCoeffIntermediate;
-  T3DList<Int16> IgmMeiksinIdxIntermediate;
   Float64 CstLog = NAN;
 
 private:

@@ -105,10 +105,11 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
 CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
                      CSpectrumFluxAxis fluxAxis,
                      const std::shared_ptr<const CLSF> &lsf)
-    : m_SpectralAxis(std::move(spectralAxis)),
-      m_RawFluxAxis(std::move(fluxAxis)), m_estimationMethod(""),
-      m_medianWindowSize(-1), m_medianEvenReflection(true), m_Name(""),
-      m_LSF(lsf), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))) {
+    : m_estimationMethod(""), m_medianWindowSize(-1),
+      m_medianEvenReflection(true), m_Name(""), m_LSF(lsf),
+      m_SpectralAxis(std::move(spectralAxis)),
+      m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))),
+      m_RawFluxAxis(std::move(fluxAxis)) {
   if (!IsValid()) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -122,13 +123,14 @@ CSpectrum::CSpectrum(const CSpectrum &other)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
-      m_SpectralAxis(other.m_SpectralAxis), m_RawFluxAxis(other.m_RawFluxAxis),
-      m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
-      m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
-      m_spcType(other.m_spcType), m_LSF(other.m_LSF), m_Name(other.m_Name),
+      m_Name(other.m_Name), m_spcType(other.m_spcType), m_LSF(other.m_LSF),
       alreadyRemoved(other.alreadyRemoved),
+      m_SpectralAxis(other.m_SpectralAxis),
       m_rebin(CRebin::create(other.m_rebin->getType(), *this)),
-      m_photData(other.m_photData), m_obsId(other.m_obsId) {
+      m_photData(other.m_photData), m_obsId(other.m_obsId),
+      m_RawFluxAxis(other.m_RawFluxAxis),
+      m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
+      m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis) {
   if (!IsValid()) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -140,15 +142,15 @@ CSpectrum::CSpectrum(CSpectrum &&other)
     : m_estimationMethod(std::move(other.m_estimationMethod)),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
+      m_Name(std::move(other.m_Name)), m_spcType(other.m_spcType),
+      m_LSF(std::move(other.m_LSF)), alreadyRemoved(other.alreadyRemoved),
       m_SpectralAxis(std::move(other.m_SpectralAxis)),
-      m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
-      m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
-      m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)),
-      m_spcType(other.m_spcType), m_LSF(std::move(other.m_LSF)),
-      m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved),
       m_rebin(CRebin::create(other.m_rebin->getType(), *this)),
       m_photData(std::move(other.m_photData)),
-      m_obsId(std::move(other.m_obsId)) {
+      m_obsId(std::move(other.m_obsId)),
+      m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
+      m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
+      m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)) {
   if (!IsValid()) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "

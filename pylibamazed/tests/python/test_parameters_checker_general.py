@@ -39,7 +39,11 @@
 import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.CustomParametersChecker import CustomParametersChecker
-from tests.python.utils import WarningUtils, make_parameter_dict_at_redshift_solver_level
+from tests.python.utils import (
+    WarningUtils,
+    make_parameter_dict_at_redshift_solver_level,
+    make_parameter_dict_at_linemeas_solve_level,
+)
 
 
 class TestParametersCheckGeneral:
@@ -162,3 +166,17 @@ class TestParametersCheckGeneral:
             param_dict["photometryBand"] = "sth"
             CustomParametersChecker(param_dict).check()
             assert WarningUtils.has_any_warning()
+
+    class TestLineMeasRunMode:
+        def _make_param_dict(self, **kwargs):
+            param_dict = make_parameter_dict_at_linemeas_solve_level(
+                object_level_params={"stages": ["lineMeasSolver"]},
+            )
+
+            return param_dict
+
+        def test_linemeas_no_run_mode_raises_an_error(self):
+            param_dict = self._make_param_dict()
+            del param_dict["lineMeasRunMode"]
+            with pytest.raises(APIException, match=r"Missing parameter"):
+                CustomParametersChecker(param_dict).check()

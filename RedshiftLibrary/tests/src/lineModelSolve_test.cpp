@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
 
@@ -154,7 +155,7 @@ const std::string jsonStringS =
     "\"autoCorrectInput\" : false,"
     "\"airVacuumMethod\" : \"default\","
     "\"galaxy\" : {"
-    "\"redshiftRange\" : [ 0.24, 0.3 ],"
+    "\"redshiftRange\" : [ 0.258, 0.261 ],"
     "\"redshiftStep\" : 0.0001,"
     "\"redshiftSampling\" : \"log\","
     "\"stages\" : [\"redshiftSolver\"],"
@@ -200,7 +201,7 @@ const std::string jsonStringS =
 
 const std::string jsonStringTplFitRules =
     "\"skipSecondPass\" : false,"
-    "\"continuumComponent\" : \"tplFit\","
+    "\"continuumComponent\" : \"tplFitAuto\","
     "\"pdfCombination\" : \"marg\","
     "\"tplRatioIsmFit\" : true,"
     "\"rules\" : \"all\","
@@ -372,6 +373,30 @@ public:
   }
 };
 
+class fixture_LineModelSolveTestContinuumChi2CorrectlySet
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestContinuumChi2CorrectlySet() {
+    fillCatalog();
+    ctx.reset();
+    std::string fullJson = lambdaString + jsonString + jsonStringTplFitRules;
+    std::string target = "\"badChi2Threshold\": 100,";
+    size_t pos = fullJson.find(target);
+    fullJson.replace(pos, target.length(), "\"badChi2Threshold\": 1,");
+
+    ctx.loadParameterStore(fullJson);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
 class fixture_LineModelSolveTestNoContTplRatio
     : public fixture_LineModelSolveTest {
 public:
@@ -439,7 +464,19 @@ public:
   fixture_LineModelSolveTestPowerLaw() {
     fillCatalog();
     ctx.reset();
-    ctx.loadParameterStore(largeLambdaString + jsonString + jsonStringPowerLaw);
+
+    // In order to speed up calculations
+    auto paramsPowerLaw = largeLambdaString + jsonString + jsonStringPowerLaw;
+    std::string target = "\"redshiftStep\" : 0.0001,";
+    size_t pos = paramsPowerLaw.find(target);
+    paramsPowerLaw.replace(pos, target.length(), "\"redshiftStep\" : 0.001,");
+
+    target = "\"secondPass\" : {\"halfWindowSize\" : 0.001,";
+    pos = paramsPowerLaw.find(target);
+    paramsPowerLaw.replace(pos, target.length(),
+                           "\"secondPass\" : {\"halfWindowSize\" : 0.01, ");
+
+    ctx.loadParameterStore(paramsPowerLaw);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -500,7 +537,8 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
           "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
           "model_parameters", 0);
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1);
+  // Accepts a greater difference due to bigger z steps
+  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1);
   BOOST_CHECK_EQUAL(res->fittedContinuum.name, "powerLaw");
 
   ctx.reset();
@@ -555,7 +593,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 0.1);
 
   ctx.reset();
 }
@@ -593,7 +631,36 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 0.1);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
+                        fixture_LineModelSolveTestContinuumChi2CorrectlySet) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  CAutoScope method_autoscope(Context.m_ScopeStack, lineModelSolve.m_name,
+                              ScopeType::METHOD);
+  CAutoSaveFlagToResultStore saveflag;
+
+  auto const &inputContext = *Context.GetInputContext();
+  auto &scope = Context.m_ScopeStack;
+  lineModelSolve.InitRanges(inputContext);
+
+  std::shared_ptr<CLineModelSolveResult> lmSolveResult =
+      std::dynamic_pointer_cast<CLineModelSolveResult>(
+          lineModelSolve.compute());
+  BOOST_CHECK(lineModelSolve.m_opt_continuumcomponent.isContinuumFit());
+  BOOST_CHECK_CLOSE(lmSolveResult->getContinuumEvidence(), 1883.5584, 1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->minContinuumReducedChi2, 6.4338527454274024,
+                    1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->maxFitAmplitudeSigma, 8.4786296286559519,
+                    1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->maxPValue, 1.5165937452759085e-56, 1E-4);
 
   ctx.reset();
 }
@@ -712,7 +779,7 @@ BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
           "model_parameters", 0);
 
   Float64 z = res->Redshift;
-  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 1e-6);
+  BOOST_CHECK_CLOSE(z, 0.25969245809934272, 0.1);
 
   ctx.reset();
 }

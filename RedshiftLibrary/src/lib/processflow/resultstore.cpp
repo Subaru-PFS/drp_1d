@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
@@ -117,25 +118,19 @@ COperatorResultStore::GetScopedPerTemplateResult(
   return GetPerTemplateResult(t, GetScopedName(name));
 }
 
-TOperatorResultMap
-COperatorResultStore::GetPerTemplateResult(const std::string &name) const {
-  TOperatorResultMap map;
-  TPerTemplateResultsMap::const_iterator templateIterator;
-  for (templateIterator = m_PerTemplateResults.begin();
-       templateIterator != m_PerTemplateResults.end(); ++templateIterator) {
-    std::string tplName = (*templateIterator).first;
+TResultsMap COperatorResultStore::GetPerTemplateResult(
+    const std::string &resultName) const {
+  TResultsMap map;
 
-    const TResultsMap &resultsMap = (*templateIterator).second;
-    TResultsMap::const_iterator storedResult = resultsMap.find(name);
-    if (storedResult != resultsMap.end()) {
-      map[tplName] = (*storedResult).second;
-    }
+  for (auto &[tplName, resultsMap] : m_PerTemplateResults) {
+    auto foundResult = resultsMap.find(resultName);
+    if (foundResult != resultsMap.end())
+      map[tplName] = (*foundResult).second;
   }
-
   return map;
 }
 
-TOperatorResultMap COperatorResultStore::GetScopedPerTemplateResult(
+TResultsMap COperatorResultStore::GetScopedPerTemplateResult(
     const std::string &name) const {
   return GetPerTemplateResult(GetScopedName(name));
 }
@@ -415,6 +410,16 @@ int COperatorResultStore::getNbRedshiftCandidates(
         ->size();
 
   return 0;
+}
+
+std::shared_ptr<const CLineModelSolveResult>
+COperatorResultStore::GetLineModelSolveResult(const std::string &spectrumModel,
+                                              const std::string &stage,
+                                              const std::string &method,
+                                              const std::string &name) const {
+
+  return std::dynamic_pointer_cast<const CLineModelSolveResult>(
+      GetGlobalResult(spectrumModel, stage, method, name).lock());
 }
 
 void COperatorResultStore::StoreScopedPerTemplateResult(

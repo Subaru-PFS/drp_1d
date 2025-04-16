@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
@@ -45,12 +46,10 @@
 using namespace NSEpic;
 using namespace std;
 
-CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
-                                   const CSpectraGlobalIndex &spcIndex,
+CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                                    const CLineMap &restLineList,
                                    ElementComposition element_composition)
-    : m_lambdaRanges(lambdaranges), m_spectraIndex(spcIndex),
-      m_RestLineList(restLineList) {
+    : m_spectraIndex(spcIndex), m_RestLineList(restLineList) {
 
   switch (element_composition) {
   case ElementComposition::Default:
@@ -76,16 +75,6 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
   }
 }
 
-CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
-                                   const CLineMap &restLineList)
-    : m_RestLineList(restLineList), m_spectraIndex(1) { // for unit test
-
-  m_ElementsVector.push_back(eltlist);
-
-  for (auto elt : m_ElementsVector[0])
-    m_ElementsParams.push_back(elt->getElementParam());
-}
-
 TInt32List CLMEltListVector::getValidElementIndices() const {
   TInt32List EltIndices(m_ElementsParams.size());
   std::iota(EltIndices.begin(), EltIndices.end(), 0);
@@ -105,7 +94,7 @@ CLMEltListVector::getValidElementIndices(TInt32List const &EltIndices) const {
 
 Int32 CLMEltListVector::getNonZeroElementsNDdl() const {
   Int32 nddl = 0;
-  for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {
+  for (Int32 elt_index = 0; elt_index < ssize(m_ElementsParams); elt_index++) {
     if (m_ElementsParams[elt_index]->isNotFittable())
       continue;
     if (!m_ElementsParams[elt_index]->isAllAmplitudesNull())
@@ -256,7 +245,7 @@ std::vector<std::pair<Int32, TInt32List>>
 CLMEltListVector::getIgmLinesIndices() const {
 
   std::vector<std::pair<Int32, TInt32List>> indices;
-  for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+  for (Int32 elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
     auto const &line_indices = m_ElementsParams[elt_idx]->m_asymLineIndices;
     if (!line_indices.empty())
       indices.push_back({elt_idx, line_indices});
@@ -296,10 +285,10 @@ void CLMEltListVector::resetAsymfitParams() {
 }
 
 void CLMEltListVector::computeGlobalOutsideLambdaRange() {
-  for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+  for (Int32 elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
     m_ElementsParams[elt_idx]->m_globalOutsideLambdaRange =
         computeOutsideLambdaRange(elt_idx);
-    for (size_t line_idx = 0; line_idx < m_ElementsParams[elt_idx]->size();
+    for (Int32 line_idx = 0; line_idx < ssize(*m_ElementsParams[elt_idx]);
          ++line_idx)
       m_ElementsParams[elt_idx]->m_globalOutsideLambdaRangeList[line_idx] =
           computeOutsideLambdaRangeLine(elt_idx, line_idx);
@@ -338,7 +327,7 @@ void CLMEltListVector::setNullNominalAmplitudesNotFittable() {
 
 void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
     CSpcModelVectorPtr const &models) {
-  for (size_t eIdx = 0; eIdx < getNbElements(); ++eIdx) {
+  for (Int32 eIdx = 0; eIdx < getNbElements(); ++eIdx) {
     auto const &elt_param_ptr = m_ElementsParams[eIdx];
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
     if (elt_param_ptr->GetElementType() != CLine::EType::nType_Absorption ||

@@ -69,16 +69,14 @@ class TestTemplateFittingSolve:
         assert not WarningUtils.has_any_warning()
 
     def test_warning_if_method_is_not_templateFittingSolve_but_section_is_present(self, zflag):
-        param_dict = self._make_parameter_dict(**{"method": "sth", "templateFittingSolve": {}})
+        param_dict = self._make_parameter_dict(
+            **{"method": "lineModelSolve", "templateFittingSolve": {}, "lineModelSolve": {}}
+        )
         check_from_parameter_dict(param_dict)
         assert WarningUtils.has_any_warning()
 
     def test_ok_if_method_is_not_templateFittingSolve_and_section_is_absent(self, zflag):
-        param_dict = self._make_parameter_dict(
-            **{
-                "method": "sth",
-            }
-        )
+        param_dict = self._make_parameter_dict(**{"method": "lineModelSolve", "lineModelSolve": {}})
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning()
 

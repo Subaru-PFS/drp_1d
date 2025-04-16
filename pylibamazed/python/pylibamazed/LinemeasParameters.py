@@ -37,8 +37,10 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import pandas as pd
+from typing import Optional
+
 from pylibamazed.Parameters import Parameters
-from pylibamazed.ParametersAccessor import EVelocityType, EVelocityFitParam, ParametersAccessor
+from pylibamazed.ParametersAccessor import EVelocityType, EVelocityFitParam, ParametersAccessor, ESolveMethod
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.redshift import ErrorCode, CLog, WarningCode, CFlagWarning
 from pylibamazed.Exception import APIException
@@ -74,7 +76,9 @@ class LinemeasParameters:
     def load_from_result_store(
         self, parameter: Parameters, output: ResultStoreOutput, spectrum_model: str
     ) -> None:
-        redshift_solver_method = parameter.get_redshift_solver_method(spectrum_model)
+        redshift_solver_method: Optional[ESolveMethod] = getattr(
+            parameter.get_redshift_solver_method(spectrum_model), "value", None
+        )
         self.redshift_ref[spectrum_model] = output.get_attribute_from_source(
             spectrum_model,
             "redshiftSolver",
@@ -99,11 +103,11 @@ class LinemeasParameters:
         for spectrum_model in self.redshift_ref.keys():
             self._replace_nan_with_parameter(parameter, spectrum_model)
             parameter.set_redshiftref(spectrum_model, self.redshift_ref[spectrum_model])
-            if parameter.get_linemodel_section(spectrum_model, "lineMeasSolve") is not None:
+            if parameter.get_linemodel_section(spectrum_model, ESolveMethod.LINE_MEAS) is not None:
                 for velocity_type in self.velocity:
                     parameter.set_velocity(
                         spectrum_model,
-                        "lineMeasSolve",
+                        ESolveMethod.LINE_MEAS,
                         velocity_type,
                         self.velocity[velocity_type][spectrum_model],
                     )
@@ -116,7 +120,9 @@ class LinemeasParameters:
         spectrum_model: str,
         velocity_type: EVelocityType,
     ):
-        redshift_solver = parameter.get_redshift_solver_method(spectrum_model)
+        redshift_solver: Optional[ESolveMethod] = getattr(
+            parameter.get_redshift_solver_method(spectrum_model), "value", None
+        )
         velocity_name = self._get_catalog_velocity_name(velocity_type)
         try:
             velocity = output.get_attribute_from_source(
@@ -137,12 +143,17 @@ class LinemeasParameters:
     def _get_velocity_from_linemeas_parameters(
         self, parameter: Parameters, spectrum_model: str, velocity_type: EVelocityType
     ):
-        linemeas_solver = parameter.get_linemeas_method(spectrum_model)
-        velocity = parameter.get_velocity(spectrum_model, linemeas_solver, velocity_type)
+        solve_method = parameter.get_linemeas_method(spectrum_model)
+        if solve_method is None:
+            raise APIException(
+                ErrorCode.INTERNAL_ERROR,
+                "No linemeas method: this method should not be called",
+            )
+        velocity = parameter.get_velocity(spectrum_model, solve_method, velocity_type)
         if velocity is None:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
-                f"missing parameter {spectrum_model}.lineMeasSolver.{linemeas_solver}."
+                f"missing parameter {spectrum_model}.lineMeasSolver.{solve_method.value}.lineModel"
                 f"{ParametersAccessor.get_velocity_name(velocity_type)}",
             )
         return velocity
@@ -166,9 +177,9 @@ class LinemeasParameters:
         if not velocityfit:
             return
         for velocity_type in EVelocityType:
-            velocity = parameter.get_velocity(spectrum_model, "lineMeasSolve", velocity_type)
+            velocity = parameter.get_velocity(spectrum_model, ESolveMethod.LINE_MEAS, velocity_type)
             velocity_bound = parameter.get_velocity_fit_param(
-                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min
+                spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Min
             )
             if velocity < velocity_bound:
                 warning_message = (
@@ -180,15 +191,15 @@ class LinemeasParameters:
                 )
                 zflag.warning(WarningCode.VELOCITY_FIT_RANGE, warning_message)
                 parameter.set_velocity_fit_param(
-                    spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Min, velocity
+                    spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Min, velocity
                 )
 
             velocity_bound = parameter.get_velocity_fit_param(
-                spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max
+                spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Max
             )
             if velocity > velocity_bound:
                 warning_message = (
-                    f"lineMeasSolve input velocity {parameter.get_velocity_name(velocity_type)}"
+                    f"{ESolveMethod.LINE_MEAS.value} input velocity {parameter.get_velocity_name(velocity_type)}"
                     f"={velocity} for object {spectrum_model} is above "
                     f"{parameter.get_velocity_fit_param_name(velocity_type, EVelocityFitParam.Max)}"
                     f"={velocity_bound}:"
@@ -196,5 +207,5 @@ class LinemeasParameters:
                 )
                 zflag.warning(WarningCode.VELOCITY_FIT_RANGE, warning_message)
                 parameter.set_velocity_fit_param(
-                    spectrum_model, "lineMeasSolve", velocity_type, EVelocityFitParam.Max, velocity
+                    spectrum_model, ESolveMethod.LINE_MEAS, velocity_type, EVelocityFitParam.Max, velocity
                 )

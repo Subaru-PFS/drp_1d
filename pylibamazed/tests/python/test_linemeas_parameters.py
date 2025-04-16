@@ -43,7 +43,7 @@ from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import WarningCode
 from pylibamazed.Parameters import Parameters
-from pylibamazed.ParametersAccessor import EVelocityType, EVelocityFitParam
+from pylibamazed.ParametersAccessor import EVelocityType, EVelocityFitParam, ESolveMethod
 from pylibamazed.LinemeasParameters import LinemeasParameters
 from tests.python.test_parameters_utils import TestParametersUtils
 from tests.python import utils
@@ -121,11 +121,13 @@ class TestLinemeasParameters:
         lp.update_parameters(parameters)
         assert parameters.get_spectrum_model_section(utils.default_object_type)["redshiftref"] == 1.0
         assert (
-            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Absorption)
+            parameters.get_velocity(
+                utils.default_object_type, ESolveMethod.LINE_MEAS, EVelocityType.Absorption
+            )
             == 200
         )
         assert (
-            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Emission)
+            parameters.get_velocity(utils.default_object_type, ESolveMethod.LINE_MEAS, EVelocityType.Emission)
             == 1000
         )
 
@@ -140,15 +142,21 @@ class TestLinemeasParameters:
 
         assert parameters.get_spectrum_model_section(utils.default_object_type)["redshiftref"] == 1.0
         assert (
-            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Absorption)
+            parameters.get_velocity(
+                utils.default_object_type, ESolveMethod.LINE_MEAS, EVelocityType.Absorption
+            )
             == 200
         )
         assert (
-            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Emission) == 400
+            parameters.get_velocity(utils.default_object_type, ESolveMethod.LINE_MEAS, EVelocityType.Emission)
+            == 400
         )
         assert (
             parameters.get_velocity_fit_param(
-                utils.default_object_type, "lineMeasSolve", EVelocityType.Emission, EVelocityFitParam.Min
+                utils.default_object_type,
+                ESolveMethod.LINE_MEAS,
+                EVelocityType.Emission,
+                EVelocityFitParam.Min,
             )
             == 400
         )
@@ -164,16 +172,21 @@ class TestLinemeasParameters:
 
         assert parameters.get_spectrum_model_section(utils.default_object_type)["redshiftref"] == 1.0
         assert (
-            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Absorption)
+            parameters.get_velocity(
+                utils.default_object_type, ESolveMethod.LINE_MEAS, EVelocityType.Absorption
+            )
             == 200
         )
         assert (
-            parameters.get_velocity(utils.default_object_type, "lineMeasSolve", EVelocityType.Emission)
+            parameters.get_velocity(utils.default_object_type, ESolveMethod.LINE_MEAS, EVelocityType.Emission)
             == 2500
         )
         assert (
             parameters.get_velocity_fit_param(
-                utils.default_object_type, "lineMeasSolve", EVelocityType.Emission, EVelocityFitParam.Max
+                utils.default_object_type,
+                ESolveMethod.LINE_MEAS,
+                EVelocityType.Emission,
+                EVelocityFitParam.Max,
             )
             == 2500
         )

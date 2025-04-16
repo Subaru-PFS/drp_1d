@@ -58,6 +58,10 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
+namespace templateFitting_test {
+class fitQuality_test;
+}
+
 namespace NSEpic {
 
 struct TCrossProductResult {
@@ -94,18 +98,17 @@ struct TFittingIsmIgmResult : TFittingResult {
                        Int32 spcsize = 1)
       : overlapFraction(spcsize, NAN),
         ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
-        IsmCalzettiCoeffInterm(EbmvListSize,
-                               TFloat64List(MeiksinListSize, NAN)),
-        IgmMeiksinIdxInterm(EbmvListSize,
-                            TInt32List(MeiksinListSize, undefIdx)) {}
+        IsmCalzettiIdxInterm(EbmvListSize, undefIdx),
+        IgmMeiksinIdxInterm(MeiksinListSize, undefIdx) {}
 
   TFloat64List overlapFraction;
-  Float64 reducedChisquare = INFINITY;
+  Float64 reducedChiSquare = INFINITY;
+  Float64 pValue = 0;
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
-  std::vector<TFloat64List> IsmCalzettiCoeffInterm;
-  std::vector<TInt32List> IgmMeiksinIdxInterm;
+  TInt32List IsmCalzettiIdxInterm;
+  TInt32List IgmMeiksinIdxInterm;
 };
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
@@ -123,17 +126,12 @@ public:
       std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
-      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
-      std::shared_ptr<CTemplateFittingResult> result = NULL,
-      bool isFirstPass = true,
-      const std::vector<Int32> &zIdxsToCompute = {}) override;
-  void SetFirstPassCandidates(const TCandidateZbyRank &zCandidates);
-  std::shared_ptr<const ExtremaResult>
-  BuildFirstPassExtremaResults(const TOperatorResultMap &resultsFromStore);
-  std::vector<Int32> getzIdxsToCompute(TFloat64List allRedshifts,
-                                       TFloat64List extendedRedshifts);
+      Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
+      TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
+      std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 
 protected:
+  friend class templateFitting_test::fitQuality_test;
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
                                 Float64 redshift, Float64 overlapThreshold,
                                 bool opt_extinction, bool opt_dustFitting,

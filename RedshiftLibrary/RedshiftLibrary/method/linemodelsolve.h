@@ -46,6 +46,10 @@
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
+namespace lineModelSolve_test {
+class continuumChi2CorrectlySet_test;
+}
+
 namespace NSEpic {
 
 class CSpectrum;
@@ -66,6 +70,13 @@ public:
   void Solve();
 
 private:
+  friend class lineModelSolve_test::continuumChi2CorrectlySet_test;
+  COperatorPdfz initializePdfz(Int32 maxPeakPerWindow, Int32 peakSeparation,
+                               Int32 cutThreshold, Int32 extremaCount) const;
+  ChisquareArray
+  BuildContinuumChisquareArray(const Float64 cstLog,
+                               const TZGridListParams &spZgridParams) const;
+
   ChisquareArray
   BuildChisquareArray(const std::shared_ptr<const CLineModelResult> &result,
                       const TZGridListParams &zgridParams = {},

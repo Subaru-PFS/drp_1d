@@ -84,10 +84,9 @@ public:
       std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
-      Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx,
-      std::shared_ptr<CTemplateFittingResult> result = NULL,
-      bool isFirstPass = true,
-      const std::vector<Int32> &zIdxsToCompute = {}) = 0;
+      Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
+      TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
+      std::shared_ptr<CTemplateFittingResult> const &result = nullptr) = 0;
 
   TPhotVal
   ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,

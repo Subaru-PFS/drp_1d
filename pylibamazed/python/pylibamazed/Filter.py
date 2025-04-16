@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import Callable, List
+from typing import Callable, List, Any
 
 import pandas as pd
 from pylibamazed.Exception import APIException
@@ -55,7 +55,7 @@ class FilterItem:
 
     allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
 
-    def __init__(self, key: str, instruction: str, value: any):
+    def __init__(self, key: str, instruction: str, value: Any):
         self.check_instruction(instruction)
         self.key = key
         self.instruction = instruction

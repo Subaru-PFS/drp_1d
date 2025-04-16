@@ -84,10 +84,6 @@ protected:
   std::string m_type;
 };
 
-typedef std::vector<std::shared_ptr<COperatorResult>> TOperatorResultList;
-typedef std::map<std::string, std::shared_ptr<const COperatorResult>>
-    TOperatorResultMap;
-
 } // namespace NSEpic
 
 #endif

@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/operator/peakdetection.h"
 
 #include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/operator/peakdetectionresult.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
@@ -76,7 +77,7 @@ CPeakDetection::Compute(const CSpectrum &spectrum) {
 
   // No Peak detected, exit
   if (peaksBorders.size() == 0) {
-    return NULL;
+    return nullptr;
   }
 
   RedefineBorders(peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis);
@@ -84,7 +85,7 @@ CPeakDetection::Compute(const CSpectrum &spectrum) {
   result->PeakList = peaksBorders;
   TInt32RangeList peaksBordersEnlarged = peaksBorders;
   if (m_enlargeRate) {
-    for (Int32 i = 0; i < peaksBorders.size(); i++) {
+    for (Int32 i = 0; i < ssize(peaksBorders); i++) {
       TInt32Range fitRange = FindGaussianFitStartAndStop(
           i, peaksBorders, m_enlargeRate, spectralAxis.GetSamplesCount());
       peaksBordersEnlarged[i] = fitRange;
@@ -111,7 +112,7 @@ CPeakDetection::FindGaussianFitStartAndStop(Int32 i,
       fitStart = max(peaksBorders[i - 1].GetEnd(), fitStart);
   }
 
-  if (i < peaksBorders.size() - 1) {
+  if (i < ssize(peaksBorders) - 1) {
     if (peaksBorders[i + 1].GetBegin() > -1)
       fitStop = min(peaksBorders[i + 1].GetBegin(), fitStop);
   }

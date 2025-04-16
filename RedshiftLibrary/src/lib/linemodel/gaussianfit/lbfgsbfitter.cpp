@@ -38,6 +38,7 @@
 // ============================================================================
 #include <unsupported/Eigen/NumericalDiff>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
 
 using namespace std;
@@ -72,7 +73,7 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
 
   // precompute data sum square
   Float64 sumSquare = 0.;
-  for (Int32 i = 0; i < m_xInds->size(); i++) {
+  for (Int32 i = 0; i < ssize(*m_xInds); i++) {
     Float64 xi, yi, ei, ei2;
     Int32 idx = (*m_xInds)[i];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
@@ -91,7 +92,7 @@ void CLbfgsbFitter::CLeastSquare::operator()(const VectorXd &x,
   CPolynomCoeffsNormalized pCoeffs = unpack(x);
 
   m_fitter->m_spectraIndex
-      .reset(); // temporary multiobs implementation (might be
+      .setAtBegining(); // temporary multiobs implementation (might be
   //  useless -> investigate)
   val(0, 0) = ComputeLeastSquare(pCoeffs);
 
@@ -180,7 +181,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
 
   // after velocities and wavelength offsets:
   // reset the support (lines outside range)
-  m_fitter->m_spectraIndex.reset();
+  m_fitter->m_spectraIndex.setAtBegining();
   for (Int32 eltIndex : *m_EltsIdx) {
     auto &elt_ptr = m_fitter->getElementList()[eltIndex];
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
@@ -191,7 +192,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
   // unpack amplitudes and set them
   // be carefull, since it depends on line validity
   TFloat64List amps(x.begin(), x.begin() + m_EltsIdx->size());
-  for (Int32 i = 0; i < m_EltsIdx->size(); ++i) {
+  for (Int32 i = 0; i < ssize(*m_EltsIdx); ++i) {
     Log.LogDebug(Formatter() << "amplitude[" << i << "]= " << amps[i]);
     m_fitter->m_ElementsVector->SetElementAmplitude((*m_EltsIdx)[i], amps[i],
                                                     0.0);
@@ -213,7 +214,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
     const CPolynomCoeffsNormalized &pCoeffs) const {
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
-  for (Int32 i = 0; i < m_xInds->size(); i++) {
+  for (Int32 i = 0; i < ssize(*m_xInds); i++) {
     Float64 xi, yi, ei, ei2;
     Int32 idx = (*m_xInds)[i];
     xi = (*m_spectralAxis)[idx];
@@ -249,7 +250,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
-  for (Int32 i = 0; i < m_xInds->size(); i++) {
+  for (Int32 i = 0; i < ssize(*m_xInds); i++) {
     Float64 xi, yi, ei, ei2;
     Int32 idx = (*m_xInds)[i];
     xi = (*m_spectralAxis)[idx];
@@ -300,7 +301,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
     // add squared diff
     sumSquare += (fval * fval - 2.0 * yi * fval) / ei2;
     Float64 residual = -2.0 * (yi - fval) / ei2;
-    for (Int32 eltIndex = 0; eltIndex < m_EltsIdx->size(); ++eltIndex) {
+    for (Int32 eltIndex = 0; eltIndex < ssize(*m_EltsIdx); ++eltIndex) {
       // squared diff derivative wrt amplitudes
       grad[eltIndex] += residual * ampsGrad[eltIndex];
 
@@ -500,7 +501,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   VectorXd v_xGuess(nddl);
 
   // compute amplitudes initial guess using CSvdFitter
-  m_spectraIndex.reset();
+  m_spectraIndex.setAtBegining();
   for (auto eltIndex : EltsIdx) {
     auto &elt_param = getElementParam()[eltIndex];
     // set velocity guess
@@ -516,7 +517,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                             getLambdaRange());
   }
   m_ElementsVector->computeGlobalLineValidity(m_models);
-  m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
+  m_spectraIndex
+      .setAtBegining(); // dummy reset, TO BE CORRECTED for full multiobs
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
   Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
@@ -705,24 +707,24 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // lines, and possibly underestimate the uncertainty in such a case
 
   // reset the support (lines outside range)
-  m_spectraIndex.reset();
+  m_spectraIndex.setAtBegining();
   for (Int32 eltIndex : EltsIdx) {
     auto &elt_ptr = getElementList()[eltIndex];
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
   m_ElementsVector->computeGlobalLineValidity(m_models);
-  m_spectraIndex.reset();
+  m_spectraIndex.setAtBegining();
   // recompute model with estimated params (needed
   // for noise estimation from residual)
-  for (Int32 i = 0; i < EltsIdx.size(); ++i) {
+  for (Int32 i = 0; i < ssize(EltsIdx); ++i) {
     Float64 const amp = v_xResult[i] / normFactor;
     m_ElementsVector->SetElementAmplitude(EltsIdx[i], amp, NAN);
   }
   getModel().refreshModelUnderElements(EltsIdx);
 
-  for (Int32 i = 0; i < EltsIdx.size(); ++i) {
-    m_spectraIndex.reset();
+  for (Int32 i = 0; i < ssize(EltsIdx); ++i) {
+    m_spectraIndex.setAtBegining();
     auto const &elt = getElementList()[EltsIdx[i]];
     Float64 const amp = v_xResult[i] / normFactor;
 
@@ -741,7 +743,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
       if (elt->IsOutsideLambdaRangeLine(line_idx))
         continue;
       auto const range = elt->getSupportSubElt(line_idx);
-      m_spectraIndex.reset(); // dummy reset, TO BE CORRECTED for full multiobs
+      m_spectraIndex
+          .setAtBegining(); // dummy reset, TO BE CORRECTED for full multiobs
       pixsize += getSpectrum().GetSpectralAxis().GetMeanResolution(range);
       ++nlines;
     }

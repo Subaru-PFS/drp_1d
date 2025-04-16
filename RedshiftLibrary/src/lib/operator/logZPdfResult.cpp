@@ -40,6 +40,7 @@
 
 #include <gsl/gsl_interp.h>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
@@ -90,7 +91,7 @@ void CLogZPdfResult::setZGridParams(const CZGridListParams &paramList) {
 
 CZGridListParams CLogZPdfResult::getZGridParams() const {
   TZGridListParams zparams(zmin.size());
-  for (int i = 0; i < zcenter.size(); i++)
+  for (int i = 0; i < ssize(zcenter); i++)
     zparams[i] =
         CZGridParam(TFloat64Range(zmin[i], zmax[i]), zstep[i], zcenter[i]);
   return CZGridListParams(std::move(zparams));
@@ -115,7 +116,7 @@ void CLogZPdfResult::interpolateOnGrid(TFloat64List targetGrid) {
                   valProbaLog.size());
   gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
 
-  for (Int32 j = 0; j < targetGrid.size(); j++) {
+  for (Int32 j = 0; j < ssize(targetGrid); j++) {
     Float64 Xrebin = targetGrid[j];
     if (Xrebin < redshifts.front() || Xrebin > redshifts.back()) {
       continue;
@@ -142,7 +143,7 @@ void CLogZPdfResult::convertToRegular(bool fine) {
 
   // set new zgrid params
   if (fine) {
-    for (Int32 i = 2; i < zstep.size(); ++i)
+    for (Int32 i = 2; i < ssize(zstep); ++i)
       if (zstep[1] != zstep[i])
         THROWG(ErrorCode::INTERNAL_ERROR,
                "cannot convert to regular with different steps "
@@ -218,7 +219,7 @@ void CLogZPdfResult::isPdfValid() const {
     THROWG(ErrorCode::FLAT_ZPDF, "PDF is flat");
 
   // is pdf any value nan ?
-  for (Int32 k = 0; k < valProbaLog.size(); k++)
+  for (Int32 k = 0; k < ssize(valProbaLog); k++)
     if (valProbaLog[k] != valProbaLog[k])
       THROWG(ErrorCode::INTERNAL_ERROR, "PDF has nan or invalid values");
 

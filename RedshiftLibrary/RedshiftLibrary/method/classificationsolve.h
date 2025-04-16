@@ -46,6 +46,7 @@
 namespace classificationSolve_test { // boost_test_suite
 // all boost_auto_test_case that use private method
 class compute_test;
+class switch_test;
 } // namespace classificationSolve_test
 namespace NSEpic {
 
@@ -56,6 +57,7 @@ public:
 
 private:
   friend class classificationSolve_test::compute_test;
+  friend class classificationSolve_test::switch_test;
 
   std::shared_ptr<CSolveResult> compute() override;
 

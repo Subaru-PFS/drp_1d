@@ -42,6 +42,8 @@
 #include <cmath>
 #include <vector>
 
+#include <boost/iterator/counting_iterator.hpp>
+
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/flag.h"
@@ -120,6 +122,9 @@ public:
   const T &GetBegin() const { return m_Begin; }
 
   const T &GetEnd() const { return m_End; }
+
+  auto begin() const { return boost::counting_iterator<T>(m_Begin); }
+  auto end() const { return boost::counting_iterator<T>(m_End + 1); }
 
   T GetLength() const { return m_End - m_Begin; }
 

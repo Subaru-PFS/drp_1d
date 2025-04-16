@@ -65,6 +65,7 @@ class basicfit_double_with_var;
 class basicfit_simple_with_extinction;
 class basicfit_multiobs;
 class basicfit_negative;
+class basicfit_default;
 } // namespace powerLawOperator_test
 
 namespace NSEpic {
@@ -86,6 +87,7 @@ typedef std::pair<T2DPowerLawCoefs, T2DPowerLawCoefs> TPair2DPowerLawCoefs;
 struct TPowerLawResult {
   Float64 chiSquare = INFINITY;
   Float64 reducedChiSquare = INFINITY;
+  Float64 pValue = 0;
   TPowerLawCoefsPair coefs;
   Float64 ebmvCoef = NAN;
   Int32 meiksinIdx = undefIdx;
@@ -111,12 +113,16 @@ public:
   COperatorPowerLaw &operator=(COperatorPowerLaw &&other) = default;
   ~COperatorPowerLaw() = default;
 
-  std::shared_ptr<COperatorResult>
+  std::shared_ptr<const COperatorResult>
   Compute(bool opt_extinction, bool opt_dustFitting, Float64 nullFluxThreshold,
           std::string method, Int32 FitEbmvIdx, Int32 FitMeiksinIdx);
   void ComputeSpectrumModel(
       const std::shared_ptr<CContinuumModelSolution> &continuum, Int32 spcIndex,
       const std::shared_ptr<CModelSpectrumResult> &models);
+  bool checkCoefsOrDefault(TPowerLawCoefs &coefs) const;
+  bool checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const;
+  TPowerLawCoefs DEFAULT_COEFS = {0, 0, INFINITY, INFINITY};
+  TPowerLawCoefsPair DEFAULT_COEFS_PAIR = {DEFAULT_COEFS, DEFAULT_COEFS};
 
 protected:
   friend ::PowerLaw_fixture;
@@ -132,6 +138,7 @@ protected:
   friend powerLawOperator_test::basicfit_simple_with_extinction;
   friend powerLawOperator_test::basicfit_multiobs;
   friend powerLawOperator_test::basicfit_negative;
+  friend powerLawOperator_test::basicfit_default;
 
   TPowerLawResult BasicFit(Float64 redshift, bool opt_extinction,
                            bool opt_dustFitting, Float64 nullFluxThreshold,

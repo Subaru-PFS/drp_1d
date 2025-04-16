@@ -61,6 +61,7 @@
 namespace Linemodel {
 class spanRedshift_test;
 class checkSecondPassWindowSize_test;
+class makeVelFitBins_test;
 } // namespace Linemodel
 
 namespace NSEpic {
@@ -78,13 +79,11 @@ public:
   void Init(const TFloat64List &redshifts, Float64 finestep,
             const bool zLogSampling);
 
-  std::shared_ptr<COperatorResult> getResult();
-
-  void ComputeFirstPass();
+  std::shared_ptr<const CLineModelResult> const ComputeFirstPass();
 
   void SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
 
-  void ComputeSecondPass();
+  std::shared_ptr<const CLineModelResult> const ComputeSecondPass();
 
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
@@ -99,7 +98,6 @@ public:
   // velocity fitting groups are defined in the line catalog from v4.0 on.
 
   Int32 m_maxModelSaveCount = 20;
-  Float64 m_secondPass_halfwindowsize; // = 0.005;
   std::string m_tplCategory;
 
   bool m_opt_tplfit_fftprocessing =
@@ -130,10 +128,13 @@ public:
   void setHapriorOption(Int32 opt);
   const CSpectrum &
   getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
+  std::shared_ptr<CContinuumFitStore const> const &
+  getContinuumFitStoreFirstPass() const;
 
 private:
   friend class Linemodel::spanRedshift_test;
   friend class Linemodel::checkSecondPassWindowSize_test;
+  friend class Linemodel::makeVelFitBins_test;
 
   std::shared_ptr<CContinuumFitStore>
   PrecomputeContinuumFit(const TFloat64List &redshifts,
@@ -159,8 +160,6 @@ private:
 
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_fittingManager;
-  Float64 m_fineStep = NAN;
-  bool m_zLogSampling = false;
   Int32 m_estimateLeastSquareFast = 0;
   void fitVelocity(Int32 Zidx, Int32 candidateIdx, Int32 contreest_iterations);
 
@@ -173,10 +172,11 @@ private:
   bool AllAmplitudesAreZero(const TBoolList &amplitudesZero);
 
   bool isfftprocessingActive(Int32 redshiftsTplFitCount);
-  void fitContinuumTemplates(
-      Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
-      std::vector<std::shared_ptr<COperatorResult>> &chisquareResultsAllTpl,
-      TStringList &chisquareResultsTplName);
+  void fitContinuumTemplates(Int32 candidateIdx,
+                             const TFloat64List &redshiftsTplFit,
+                             std::vector<std::shared_ptr<const COperatorResult>>
+                                 &chisquareResultsAllTpl,
+                             TStringList &chisquareResultsTplName);
   void getContinuumInfoFromFirstpassFitStore(Int32 candidateIdx,
                                              TInt32List &meiksinIndices,
                                              TInt32List &ebmvIndices,
@@ -187,11 +187,14 @@ private:
     return continuumFit == EContinuumFit::retryAll ||
            continuumFit == EContinuumFit::reFitFirstPass;
   }
+  TFloat64List makeVelFitBins(Float64 vInfLim, Float64 vSupLim,
+                              Float64 vStep) const;
   std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;
-  std::shared_ptr<CContinuumFitStore> m_tplfitStore_firstpass;
-  std::vector<std::shared_ptr<CContinuumFitStore>> m_tplfitStore_secondpass;
+  std::shared_ptr<CContinuumFitStore const> m_tplfitStore_firstpass;
+  std::vector<std::shared_ptr<CContinuumFitStore const>>
+      m_tplfitStore_secondpass;
   std::vector<TVelocityFitSolution> m_velocitySolutions;
 };
 

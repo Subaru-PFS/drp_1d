@@ -40,6 +40,7 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_multifit_nlin.h>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/svdlcfitter.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -74,7 +75,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   // re-interpolate the continuum on the grid
   m_continuumManager->reinterpolateContinuumResetAmp();
 
-  m_spectraIndex.reset(); // TODO dummy impl
+  m_spectraIndex.setAtBegining(); // TODO dummy impl
 
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
 
@@ -115,7 +116,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
     TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
     Float64 redshift) {
-  m_spectraIndex.reset(); // TODO dummy impl
+  m_spectraIndex.setAtBegining(); // TODO dummy impl
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();
@@ -199,7 +200,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
   Int32 sameSign = 1;
   Float64 a0 = gsl_vector_get(c, 0) / normFactor;
-  for (Int32 iddl = 1; iddl < EltsIdxToFit.size(); iddl++) {
+  for (Int32 iddl = 1; iddl < ssize(EltsIdxToFit); iddl++) {
     Float64 const a = gsl_vector_get(c, iddl) / normFactor;
     sameSign &= std::signbit(a0 * a);
   }
@@ -212,7 +213,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     Float64 const var = gsl_matrix_get(cov, iddl, iddl);
     errorsfitted[valid_col] = sqrt(var) / normFactor;
     ampsfitted[valid_col] = gsl_vector_get(c, iddl) / normFactor;
-    if (iddl < EltsIdxToFit.size())
+    if (iddl < ssize(EltsIdxToFit))
       m_ElementsVector->SetElementAmplitude(
           EltsIdxToFit[iddl], ampsfitted[valid_col], errorsfitted[valid_col]);
   }
@@ -271,7 +272,7 @@ gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
   Int32 nline = Xini->size1;
   Int32 ncol_ini = Xini->size2;
   gsl_matrix *X = Xini;
-  for (Int32 iddl = 0; iddl < EltsIdx.size(); ++iddl) {
+  for (Int32 iddl = 0; iddl < ssize(EltsIdx); ++iddl) {
     auto const col_view = gsl_matrix_const_column(Xini, iddl);
     if (gsl_blas_dnrm2(&col_view.vector) > DBL_MIN) {
       valid_col_indices.push_back(iddl);
@@ -305,7 +306,7 @@ gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
   Int32 ncol = ncol_ini - (EltsIdx.size() - EltsIdxToFit.size());
   X = gsl_matrix_alloc(nline, ncol);
   // copy the valid columns
-  for (Int32 icol = 0; icol != EltsIdxToFit.size(); ++icol) {
+  for (Int32 icol = 0; icol != ssize(EltsIdxToFit); ++icol) {
     Int32 const valid_col_idx = valid_col_indices[icol];
     auto col_view = gsl_matrix_column(Xini, valid_col_idx);
     gsl_matrix_set_col(X, icol, &col_view.vector);

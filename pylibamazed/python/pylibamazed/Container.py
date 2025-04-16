@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Optional
 
 T = TypeVar("T")
 
@@ -68,7 +68,7 @@ class Container(Generic[T]):
         self._check_type(dataToAppend)
         self.data[obs_id] = dataToAppend
 
-    def get(self, obs_id="") -> T:
+    def get(self, obs_id="") -> Optional[T]:
         return self.data.get(obs_id)
 
     def keys(self):

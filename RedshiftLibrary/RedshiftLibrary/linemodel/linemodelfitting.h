@@ -73,15 +73,14 @@ public:
       const std::shared_ptr<COperatorContinuumFitting>
           &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
-  CLineModelFitting(
-      const std::shared_ptr<const CSpectrum> &template_,
-      const TLambdaRange &lambdaRange,
-      const std::shared_ptr<COperatorContinuumFitting>
-          &continuumFittingOperator); // only used for template
-                                      // orthogonalization, TODO use only one of
-                                      // the future subclasses ? at least
-                                      // inherit from clinemodelfitting
 
+  // only used for template orthogonalization,
+  // TODO use only one of the future subclasses ?
+  //      at least inherit from clinemodelfitting
+  CLineModelFitting(const std::shared_ptr<const CSpectrum> &template_,
+                    const TLambdaRange &lambdaRange,
+                    const std::shared_ptr<COperatorContinuumFitting>
+                        &continuumFittingOperator);
   void setContinuumComponent(TContinuumComponent component);
   const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
@@ -101,7 +100,7 @@ public:
 
   Float64 fit(Float64 redshift, CLineModelSolution &modelSolution,
               CContinuumModelSolution &continuumModelSolution,
-              Int32 contreest_iterations = 0, bool enableLogging = 0);
+              Int32 contreest_iterations = 0, bool fullSolution = false);
   TFloat64Range &getDTDLambdaRange() { return m_dTransposeDLambdaRange; };
 
   void SetFittingMethod(const std::string &fitMethod,
@@ -124,7 +123,7 @@ public:
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
     // TODO temp basic impl
-    m_spectraIndex.reset();
+    m_spectraIndex.setAtBegining();
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
@@ -169,6 +168,10 @@ public:
 
   const CSpectrumModel &getSpectrumModel() const {
     return m_models->getSpectrumModel();
+  }
+
+  std::shared_ptr<CLMEltListVector> const &getElementListVector() {
+    return m_ElementsVector;
   }
 
   CLineModelElementList &getElementList() {
@@ -223,7 +226,7 @@ private:
   void computeSpectrumFluxWithoutContinuum();
 
   void SetLSF();
-  CLineModelSolution GetModelSolution(Int32 opt_level = 0);
+  CLineModelSolution GetModelSolution(bool fullSolution = false);
   void ComputeAndAddOptionalLineProperties(CLineModelSolution &modelSolution);
 
   // Multi obs combination/aggregation methods on elements Lists

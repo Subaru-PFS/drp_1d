@@ -63,6 +63,7 @@ public:
   std::pair<Float64, CContinuumModelSolution const>
   FindMaxAmplitudeSigma() const;
   CContinuumModelSolution const &FindMinReducedChi2() const;
+  CContinuumModelSolution const &FindMaxPValue() const;
 
 protected:
   TFloat64List m_redshiftgrid;

@@ -38,6 +38,7 @@
 // ============================================================================
 #include <cfloat>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
@@ -155,25 +156,13 @@ bool CTplCombinationSolve::Solve(
     const TFloat64List &redshifts, Float64 overlapThreshold,
     const std::vector<CMask> &maskList, EType spctype,
     const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting) {
-  std::string scopeStr = "tplcombination";
+  std::string resultName = "tplcombination";
   // TODO modify as in templatefittingsolve when stabilized
   Int32 _ntype = 0;
   CSpectrum::EType _spctype = CSpectrum::EType::raw;
   CSpectrum::EType _spctypetab[3] = {CSpectrum::EType::raw,
                                      CSpectrum::EType::noContinuum,
                                      CSpectrum::EType::continuumOnly};
-
-  Int32 enable_extinction =
-      0; // TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-  if (opt_extinction) {
-    enable_extinction = 1;
-  }
-  Int32 enable_dustFitting = 0;
-  if (opt_dustFitting) {
-    enable_dustFitting =
-        1; // here we dont distinguish between using on single ismCoeff or
-           // iterating over all coeffs. Default to all!
-  }
 
   // prepare the list of components/templates
   const TTemplateConstRefList &tplList =
@@ -205,22 +194,20 @@ bool CTplCombinationSolve::Solve(
           tpl->setRebinInterpMethod(opt_interp);
         });
 
-    scopeStr = getSpecBasedScope(_spctype);
-    if (_spctype == CSpectrum::EType::noContinuum)
-      enable_dustFitting = 0;
+    resultName = getResultName(_spctype);
 
     // Compute merit function
     auto result = std::dynamic_pointer_cast<CTplCombinationResult>(
-        m_tplcombinationOperator.Compute(
-            spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList,
-            opt_interp, enable_extinction, enable_dustFitting));
+        m_tplcombinationOperator.Compute(spc, tplList, lambdaRange, redshifts,
+                                         overlapThreshold, maskList, opt_interp,
+                                         opt_extinction, opt_dustFitting));
 
     if (!result)
       return false;
 
     // Store results
     Log.LogDetail("tplcombinationsolver: Save tplcombination results");
-    resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
+    resultStore->StoreScopedGlobalResult(resultName, result);
   }
 
   // restore component types
@@ -255,7 +242,7 @@ void CTplCombinationSolve::checkTemplates(
   }
 }
 
-std::string CTplCombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
+std::string CTplCombinationSolve::getResultName(CSpectrum::EType _spctype) {
   if (_spctype == CSpectrum::EType::continuumOnly)
     // use continuum only
     return "tplcombination_continuum";
@@ -322,7 +309,7 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
       chisquarearray.chisquares.emplace_back(
           result->ChiSquareIntermediate.size(), DBL_MAX);
       TFloat64List &logLikelihoodCorrected = chisquarearray.chisquares.back();
-      for (Int32 kz = 0; kz < result->ChiSquareIntermediate.size(); kz++)
+      for (Int32 kz = 0; kz < ssize(result->ChiSquareIntermediate); kz++)
         logLikelihoodCorrected[kz] =
             result->ChiSquareIntermediate
                 [kz][kism]
@@ -385,6 +372,7 @@ CTplCombinationSolve::buildExtremaResults(
     candidate->fittedContinuum.merit = TplFitResult->ChiSquare[idx];
     candidate->fittedContinuum.reducedChi2 =
         TplFitResult->ReducedChiSquare[idx];
+    candidate->fittedContinuum.pValue = TplFitResult->pValue[idx];
     candidate->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[idx];
     candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[idx];
     candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[idx];

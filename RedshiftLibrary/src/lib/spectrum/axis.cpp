@@ -40,6 +40,7 @@
 #include <numeric>
 
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 
@@ -47,14 +48,14 @@ using namespace NSEpic;
 using namespace std;
 
 CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
-  for (Int32 i = 0; i < m_Samples.size(); i++) {
+  for (Int32 i = 0; i < ssize(m_Samples); i++) {
     m_Samples[i] *= op;
   }
   return *this;
 }
 
 CSpectrumAxis &CSpectrumAxis::operator/=(const Float64 op) {
-  for (Int32 i = 0; i < m_Samples.size(); i++) {
+  for (Int32 i = 0; i < ssize(m_Samples); i++) {
     m_Samples[i] /= op;
   }
   return *this;
@@ -84,7 +85,7 @@ TFloat64List CSpectrumAxis::maskVector(const TFloat64List &mask,
   Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
   outputVector.clear();
   outputVector.reserve(sum);
-  for (Int32 i = 0; i < mask.size(); i++) {
+  for (Int32 i = 0; i < ssize(mask); i++) {
     if (mask[i] == 1.)
       outputVector.push_back(inputVector[i]);
   }

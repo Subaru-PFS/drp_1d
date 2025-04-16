@@ -41,7 +41,7 @@ import json
 import copy
 
 from pylibamazed.Exception import APIException, exception_decorator
-from pylibamazed.ParametersAccessor import ParametersAccessor
+from pylibamazed.ParametersAccessor import ParametersAccessor, ESolveMethod
 from pylibamazed.ParametersConverter import ParametersConverterSelector
 from pylibamazed.ParametersExtender import ParametersExtender
 from pylibamazed.redshift import ErrorCode
@@ -87,17 +87,17 @@ class Parameters(ParametersAccessor):
             raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Parameter version must be an integer")
         return version
 
-    def get_solve_methods(self, spectrum_model) -> dict:
+    def get_solve_methods_str(self, spectrum_model: str) -> list[str]:
         method = self.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.get_linemeas_method(spectrum_model)
-        methods = []
+        methods: list[str] = []
         if method:
-            methods.append(method)
+            methods.append(method.value)
         if linemeas_method:
-            methods.append(linemeas_method)
+            methods.append(linemeas_method.value)
         return methods
 
-    def get_stage_from_method(self, method: str) -> str:
+    def get_stage_from_method_str(self, method: str) -> str:
         if method == "lineMeasSolve":
             return "lineMeasSolver"
         else:
@@ -110,38 +110,40 @@ class Parameters(ParametersAccessor):
                     if stage in self.parameters.get(spectrum_model, []):
                         del self.parameters[spectrum_model][stage]
 
-    def get_linemodel_methods(self, spectrum_model):
-        methods = []
+    def get_linemodel_methods_str(self, spectrum_model) -> list[str]:
+        methods: list[str] = []
         linemeas_method = self.get_linemeas_method(spectrum_model)
         solve_method = self.get_redshift_solver_method(spectrum_model)
         if linemeas_method:
-            methods.append(linemeas_method)
-        if solve_method == "lineModelSolve":
-            methods.append(solve_method)
+            methods.append(linemeas_method.value)
+        if solve_method == ESolveMethod.LINE_MODEL:
+            methods.append(solve_method.value)
         return methods
 
-    def get_objects_solve_methods(self):
+    def get_objects_solve_methods_str(self) -> dict[str, str]:
         ret = dict()
         for spectrum_model in self.get_spectrum_models():
-            if self.get_redshift_solver_method(spectrum_model):
-                ret[spectrum_model] = self.get_redshift_solver_method(spectrum_model)
+            redshift_solver_method = self.get_redshift_solver_method(spectrum_model)
+            if redshift_solver_method is not None:
+                ret[spectrum_model] = redshift_solver_method.value
         return ret
 
-    def get_objects_linemeas_methods(self):
+    def get_objects_linemeas_methods(self) -> dict[str, str]:
         ret = dict()
         for spectrum_model in self.get_spectrum_models():
-            if self.get_linemeas_method(spectrum_model):
-                ret[spectrum_model] = self.get_linemeas_method(spectrum_model)
+            linemeas_method = self.get_linemeas_method(spectrum_model)
+            if linemeas_method is not None:
+                ret[spectrum_model] = linemeas_method.value
         return ret
 
     def is_tplratio_catalog_needed(self, spectrum_model) -> bool:
         solve_method = self.get_redshift_solver_method(spectrum_model)
-        if solve_method == "lineModelSolve":
+        if solve_method == ESolveMethod.LINE_MODEL:
             return self.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"]
         else:
             return False
 
-    def stage_enabled(self, spectrum_model, stage):
+    def stage_enabled(self, spectrum_model, stage) -> bool:
         if stage == "redshiftSolver":
             return self.get_redshift_solver_method(spectrum_model) is not None
         elif stage == "lineMeasSolver":
@@ -158,7 +160,7 @@ class Parameters(ParametersAccessor):
         else:
             raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown stage {stage}")
 
-    def is_two_pass_active(self, solve_method: str, spectrum_model):
+    def is_two_pass_active(self, solve_method: ESolveMethod, spectrum_model):
         return not self.get_skipsecondpass(solve_method, spectrum_model, True)
 
     def to_json(self):
@@ -173,12 +175,16 @@ class Parameters(ParametersAccessor):
         return z_solver_found
 
     def is_linemeas_alone(self, spectrum_model: str) -> bool:
-        return self.get_linemeas_method(spectrum_model) and not self.get_redshift_solver_method(
-            spectrum_model
+        return (
+            self.get_linemeas_method(spectrum_model) is not None
+            and self.get_redshift_solver_method(spectrum_model) is None
         )
 
     def is_linemeas_piped(self, spectrum_model: str) -> bool:
-        return self.get_linemeas_method(spectrum_model) and self.get_redshift_solver_method(spectrum_model)
+        return (
+            self.get_linemeas_method(spectrum_model) is not None
+            and self.get_redshift_solver_method(spectrum_model) is not None
+        )
 
     def get_lambda_range_min(self):
         if self.get_multiobs_method() != "full":
@@ -193,7 +199,7 @@ class Parameters(ParametersAccessor):
 
     def get_lambda_range_max(self):
         if self.get_multiobs_method() != "full":
-            return self.get_lambda_range()[0]
+            return self.get_lambda_range()[1]
         else:
             ret = 0
             for obs_id in self.get_observation_ids():
@@ -201,3 +207,15 @@ class Parameters(ParametersAccessor):
                 if cur > ret:
                     ret = cur
             return ret
+
+    def has_two_pass(self, spectrum_model: str):
+        method = self.get_redshift_solver_method(spectrum_model)
+        if method == ESolveMethod.LINE_MODEL:
+            return not self.get_skipsecondpass(method, spectrum_model)
+        elif method == ESolveMethod.TEMPLATE_FITTING:
+            return not self.get_template_fitting_single_pass(spectrum_model)
+        else:
+            return False
+
+    def is_log_sampling(self, spectrum_model: str):
+        return self.get_redshift_sampling(spectrum_model) == "log"

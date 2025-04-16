@@ -1,15 +1,15 @@
 {
-    "TemplateFittingSolve": {
-        "extremacount": 5,
-        "overlapThreshold": 1,
-        "spectrum": {
-            "component": "raw"
-        },
-        "fftprocessing": false,
-        "interpolation": "precomputedfinegrid",
-        "extinction": true,
-        "dustfit": true,
-        "pdfcombination": "marg",
-        "enablephotometry": false
-    }
+  "TemplateFittingSolve": {
+    "extremacount": 5,
+    "overlapThreshold": 1,
+    "spectrum": {
+      "component": "raw"
+    },
+    "fftprocessing": false,
+    "interpolation": "precomputedfinegrid",
+    "extinction": true,
+    "dustfit": true,
+    "pdfcombination": "marg",
+    "enablephotometry": false
+  }
 }

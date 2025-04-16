@@ -41,6 +41,7 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 
@@ -171,7 +172,7 @@ Float64 CSpectrumSpectralAxis::GetResolution(Float64 atWavelength) const {
   if (atWavelength >= 0.0) {
     i = GetIndexAtWaveLength(atWavelength);
 
-    if (i > m_Samples.size() - 1)
+    if (i > ssize(m_Samples) - 1)
       i = m_Samples.size() - 1;
     if (i < 1)
       i = 1;
@@ -222,12 +223,11 @@ void CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange,
   mask.SetSize(m_Samples.size());
 
   // weight = Spectrum over lambdarange flag
-  for (Int32 i = 0; i < m_Samples.size(); i++) {
-    mask[i] = (Mask)0;
-    // If this sample is somewhere in a valid lambdaRande, tag weight with 1
-
+  for (Int32 i = 0; i < ssize(m_Samples); i++) {
+    mask[i] = Mask(0);
+    // If this sample is somewhere in a valid lambdaRange, tag weight with 1
     if (m_Samples[i] >= range.GetBegin() && m_Samples[i] <= range.GetEnd()) {
-      mask[i] = (Mask)1;
+      mask[i] = Mask(1);
     }
   }
 }
@@ -336,7 +336,7 @@ bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const {
             // truncatd decimals)
   Float64 maxAbsRelativeError = 0.0;
   Float64 lbda1 = m_Samples[0];
-  for (Int32 t = 1; t < m_Samples.size(); t++) {
+  for (Int32 t = 1; t < ssize(m_Samples); t++) {
     Float64 lbda2 = m_Samples[t];
     Float64 _logGridStep = log(lbda2 / lbda1);
 
@@ -421,7 +421,7 @@ CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
   }
   if (ilbda.GetBegin() < 0)
     THROWG(ErrorCode::INTERNAL_ERROR, "range's lower bound < 0");
-  if (ilbda.GetEnd() > m_Samples.size() - 1)
+  if (ilbda.GetEnd() > ssize(m_Samples) - 1)
     THROWG(ErrorCode::INTERNAL_ERROR, "range's upper bound > samples size");
 
   Int32 s = GetSamplesCount();

@@ -48,26 +48,32 @@
 namespace NSEpic {
 
 class TFittingIsmIgmResult;
+struct TsecondPassIndices;
+
 class CTemplateFittingResult : public CTwoPassResult {
 
 public:
   CTemplateFittingResult(Int32 n);
   CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
-  void set_at_redshift(Int32 i, TFittingIsmIgmResult val,
-                       Int32 igmIdx = undefIdx, Int32 ismIdx = undefIdx);
+  void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
+  Int32 getIsmIndexInIntermediate(Int32 ebmvIdx) const;
+  Int32 getIgmIndexInIntermediate(Int32 zIdx, Int32 igmIndex) const;
 
   virtual ~CTemplateFittingResult() = default;
   CTemplateFittingResult(const CTemplateFittingResult &) = default;
   CTemplateFittingResult(CTemplateFittingResult &&) = default;
   CTemplateFittingResult &operator=(const CTemplateFittingResult &) = default;
   CTemplateFittingResult &operator=(CTemplateFittingResult &&) = default;
-  void updateVectors(Int32 idx, Int32 ndup, Int32 count) override;
+  void updateVectors(TsecondPassIndices const &) override;
 
   Float64 SNRCalculation(Float64 dtm, Float64 mtm);
+
+  std::pair<Int32, Int32> getIsmIgmSizes() const;
 
   // best fit results
   TFloat64List ChiSquare;
   TFloat64List ReducedChiSquare;
+  TFloat64List pValue;
   TFloat64List ChiSquarePhot;
   TFloat64List FitAmplitude;
   TFloat64List FitAmplitudeError;
@@ -83,13 +89,12 @@ public:
   std::vector<std::vector<TFloat64List>>
       ChiSquareIntermediate; // chi2 for each intermediate results (for each
                              // config [z][Calzetti][Meiksin])
-  std::vector<std::vector<TFloat64List>>
-      IsmEbmvCoeffIntermediate; // calzetti dust coeff for each intermediate
-                                // result (for each config
-                                // [z][Calzetti][Meiksin])
-  std::vector<std::vector<TInt32List>>
+  std::vector<TInt32List> IsmEbmvIdxIntermediate; // calzetti dust idx for each
+                                                  // intermediate result (for
+                                                  // each config [z][Calzetti])
+  std::vector<TInt32List>
       IgmMeiksinIdxIntermediate; // meiksin idx for each intermediate result
-                                 // (for each config [z][Calzetti][Meiksin])
+                                 // (for each config [z][Meiksin])
 
   Float64 CstLog = NAN;
   std::vector<TFloat64List> Overlap; // overlap rate by redshift by spectra

@@ -46,7 +46,8 @@ using namespace NSEpic;
 
 void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
                          Float64 redshift, Float64 chi2, Float64 reducedChi2,
-                         TPowerLawCoefsPair powerLawCoefs, Float64 snr) {
+                         Float64 pValue, TPowerLawCoefsPair powerLawCoefs,
+                         Float64 snr) {
   CContinuumModelSolution tmpCContinuumModelSolution;
   tmpCContinuumModelSolution.name = "powerLaw";
   tmpCContinuumModelSolution.a1 = powerLawCoefs.first.a;
@@ -62,6 +63,7 @@ void CPowerLawStore::Add(Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
   tmpCContinuumModelSolution.redshift = redshift;
   tmpCContinuumModelSolution.merit = chi2;
   tmpCContinuumModelSolution.reducedChi2 = reducedChi2;
+  tmpCContinuumModelSolution.pValue = pValue;
   tmpCContinuumModelSolution.SNR = snr;
 
   Int32 idxz = GetRedshiftIndex(redshift);

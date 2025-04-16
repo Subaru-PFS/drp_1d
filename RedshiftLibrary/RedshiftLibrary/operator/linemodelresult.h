@@ -56,6 +56,7 @@
 namespace NSEpic {
 
 class CTemplatesFitStore;
+struct TsecondPassIndices;
 
 class CLineModelResult : public CTwoPassResult {
 public:
@@ -92,7 +93,7 @@ public:
   TBoolList getHaELPresentTplratioResult(Int32 index_z);
   TInt32List getNLinesAboveSNRTplratioResult(Int32 index_z);
   TFloat64List getPriorLinesTplratioResult(Int32 index_z);
-  void updateVectors(Int32 idx, Int32 ndup, Int32 count) override;
+  void updateVectors(TsecondPassIndices const &) override;
 
   // Merit results
   TFloat64List ChiSquare;           // min chi2
@@ -129,6 +130,10 @@ public:
   Int32 nSpcSamples = 0;
   Float64 dTransposeD = 0.0;
   Float64 cstLog = 0.0;
+
+  Float64 minContinuumReducedChi2 = 0.0;
+  Float64 maxFitAmplitudeSigma = 0;
+  Float64 maxPValue = 0;
 };
 
 } // namespace NSEpic

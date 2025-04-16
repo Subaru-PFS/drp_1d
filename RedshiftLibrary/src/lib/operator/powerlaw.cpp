@@ -40,11 +40,13 @@
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/powerlawresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/statistics/fitquality.h"
 
 #include <Eigen/Dense>
 #include <algorithm>
@@ -106,16 +108,19 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                            return fluxCurve.pixelIsChi2Valid(pixelIdx);
                          });
   if (N < m_nLogSamplesMin) {
+    Int32 const nPixels = fluxCurve.size();
     auto const constantLawsCoef =
         computeConstantLawCoefs(fluxCurve.toCurve(0, 0));
     T2DPowerLawCoefsPair coefs(1,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
     // reset snrCompliant to true everywhere for computing chi2
-    fluxCurve.setIsSnrCompliant(TBoolList(fluxCurve.size(), true));
+    fluxCurve.setIsSnrCompliant(TBoolList(nPixels, true));
     auto const chi2 = computeChi2(fluxCurve, coefs);
     TPowerLawResult result;
     result.chiSquare = chi2[0][0];
-    result.reducedChiSquare = result.chiSquare / fluxCurve.size();
+    result.reducedChiSquare =
+        NSFitQuality::reducedChi2(result.chiSquare, nPixels);
+    result.pValue = NSFitQuality::pValue(result.chiSquare, nPixels);
     result.coefs = constantLawsCoef;
     if (opt_extinction)
       result.meiksinIdx = undefIdx;
@@ -138,7 +143,8 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                     [&emittedCurve](Int32 pixelIdx) {
                       return emittedCurve.pixelIsChi2Valid(pixelIdx);
                     });
-  result.reducedChiSquare = chi2Result.chi2 / N;
+  result.reducedChiSquare = NSFitQuality::reducedChi2(chi2Result.chi2, N);
+  result.pValue = NSFitQuality::pValue(chi2Result.chi2, N);
   result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
   if (opt_extinction)
     result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
@@ -229,7 +235,7 @@ COperatorPowerLaw::lnLambda(TAxisSampleList const &lambda) const {
   return lnLambda;
 }
 
-std::shared_ptr<COperatorResult>
+std::shared_ptr<const COperatorResult>
 COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
                            Float64 nullFluxThreshold, std::string method,
                            Int32 FitEbmvIdx, Int32 FitMeiksinIdx) {
@@ -240,7 +246,7 @@ COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
       std::make_shared<CPowerLawResult>(m_redshifts.size());
 
   result->Redshifts = m_redshifts;
-  for (Int32 zIdx = 0; zIdx < m_redshifts.size(); zIdx++) {
+  for (Int32 zIdx = 0; zIdx < ssize(m_redshifts); zIdx++) {
     Float64 redshift = result->Redshifts[zIdx];
     TPowerLawResult result_z = BasicFit(
         redshift, opt_extinction, opt_dustFitting, nullFluxThreshold, method);
@@ -297,8 +303,7 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
 
       if (N < m_nLogSamplesMin) {
         addTooFewSamplesWarning(N, igmIdx, ismIdx, __func__);
-        powerLawsCoefs[igmIdx][ismIdx] = {{0, 0, INFINITY, INFINITY},
-                                          {0, 0, INFINITY, INFINITY}};
+        powerLawsCoefs[igmIdx][ismIdx] = DEFAULT_COEFS_PAIR;
       } else {
         TCurve curve = lnCurve.toCoefCurve(igmIdx, ismIdx);
         if (method == "full") {
@@ -334,6 +339,7 @@ COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
   mean_amplitude /= sum_inv_var;
   Float64 mean_amplitude_std = 1.0 / sqrt(sum_inv_var);
   TPowerLawCoefs coefs{mean_amplitude, 0.0, mean_amplitude_std, INFINITY};
+  checkCoefsOrDefault(coefs);
   return TPowerLawCoefsPair{coefs, coefs};
 }
 
@@ -367,15 +373,33 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
     powerLawsCoefs = compute2PassDoublePowerLawCoefs(lnCurve);
   }
 
+  checkCoefsOrDefault(powerLawsCoefs);
   return powerLawsCoefs;
 };
 
 TPowerLawCoefs COperatorPowerLaw::compute2PassSimplePowerLawCoefs(
     TCurve const &lnCurves) const {
-  TPowerLawCoefs coefsFirstEstim = computeSimplePowerLawCoefs(lnCurves);
-  TPowerLawCoefs coefsSecondEstim =
-      computeSimplePowerLawCoefs(lnCurves, coefsFirstEstim);
-  return coefsSecondEstim;
+  TPowerLawCoefs coefs = computeSimplePowerLawCoefs(lnCurves);
+  bool validCoefs = checkCoefsOrDefault(coefs);
+  if (validCoefs)
+    coefs = computeSimplePowerLawCoefs(lnCurves, coefs);
+  return coefs;
+}
+
+bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefs &coefs) const {
+  if (coefs.a < DBL_MIN) {
+    coefs = DEFAULT_COEFS;
+    return false;
+  }
+  return true;
+}
+
+bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const {
+  if (coefs.first.a < DBL_MIN || coefs.second.a < DBL_MIN) {
+    coefs = DEFAULT_COEFS_PAIR;
+    return false;
+  }
+  return true;
 }
 
 TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
@@ -419,10 +443,11 @@ TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(
     TCurve const &lnCurves) const {
   // Make a first calculation of power law coefficients without taking into
   // account the noise
-  TPowerLawCoefsPair coefsFirstEstim = computeDoublePowerLawCoefs(lnCurves);
-  TPowerLawCoefsPair coefsSecondEstim =
-      computeDoublePowerLawCoefs(lnCurves, coefsFirstEstim);
-  return coefsSecondEstim;
+  TPowerLawCoefsPair coefs = computeDoublePowerLawCoefs(lnCurves);
+  bool validCoefs = checkCoefsOrDefault(coefs);
+  if (validCoefs)
+    coefs = computeDoublePowerLawCoefs(lnCurves, coefs);
+  return coefs;
 }
 
 TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
@@ -559,7 +584,7 @@ T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
   TList<Float64> spectrumFluxError;
   // Concatenates all curves
   // NB: at the end, lambda is not ordered anymore
-  for (size_t spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
+  for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     TList<Float64> tmpLambda = m_spectra[spectrumIdx]
                                    ->GetSpectralAxis()
                                    .extract(m_firstPixelIdxInRange[spectrumIdx],
@@ -719,7 +744,7 @@ TBoolList COperatorPowerLaw::computeSNRCompliantPixels(
   // Masks pixels with insufficient SNR. In place modification of
   // curve.pixelsToUse
   TBoolList snrCompliant = std::vector<bool>(spectrumFlux.size(), true);
-  for (Int32 pixelIdx = 0; pixelIdx < spectrumFlux.size(); pixelIdx++) {
+  for (Int32 pixelIdx = 0; pixelIdx < ssize(spectrumFlux); pixelIdx++) {
     // Checks that signal / noise ratio is sufficient (> nullFluxThreshold)
     if (spectrumFlux[pixelIdx] <
         nullFluxThreshold * spectrumFluxError[pixelIdx]) {

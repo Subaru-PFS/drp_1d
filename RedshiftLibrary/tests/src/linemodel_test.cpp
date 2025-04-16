@@ -47,32 +47,29 @@ using namespace NSEpic;
 using namespace std;
 BOOST_AUTO_TEST_SUITE(Linemodel)
 
-BOOST_AUTO_TEST_CASE(updateRedshiftGridAndResults_test) {
-  /*//TODO
-    Float64 z = 5.;
-  Float64 step = 1;
-  TFloat64List redshifts{0, 5, 9};
-  std::string redshiftSampling = "lin";
-  Float64 secondPass_halfwindowsize = 0.5;
-  Int32 ref_idx = 3; // todo
-  TFloat64List extendedRedshifts_ref{2, 3, 4, 5, 6, 7, 8};
+BOOST_AUTO_TEST_CASE(makeVelFitBins_test) {
+  Float64 precision = 1e-6;
 
-  // prepare object
+  // "Round" step
   COperatorLineModel op;
-  op.m_redshifts = redshifts;
-  op.m_fineStep = step;
-  op.m_zLogSampling = (redshiftSampling == "log");
-  op.m_secondPass_halfwindowsize = secondPass_halfwindowsize;
-  op.UpdateRedshiftGridAndResults();
-      // verifications:
-      auto it = std::is_sorted_until(m_redshifts.begin(), m_redshifts.end());
-      auto _j = std::distance(m_redshifts.begin(), it);
+  Float64 vInfLim = 0;
+  Float64 vSupLim = 1;
+  Float64 vStep = 0.25;
+  TFloat64List velFitBins = op.makeVelFitBins(vInfLim, vSupLim, vStep);
+  BOOST_CHECK_EQUAL(velFitBins.size(), 5);
+  BOOST_CHECK_CLOSE(velFitBins[0], 0, precision);
+  BOOST_CHECK_CLOSE(velFitBins[1], 0.25, precision);
+  BOOST_CHECK_CLOSE(velFitBins[2], 0.5, precision);
+  BOOST_CHECK_CLOSE(velFitBins[3], 0.75, precision);
+  BOOST_CHECK_CLOSE(velFitBins[4], 1, precision);
 
-      if (!std::is_sorted(std::begin(m_redshifts), std::end(m_redshifts)))
-        THROWG(ErrorCode::INTERNAL_ERROR, "lineModel vector is not sorted");
-
-    if (m_result->Redshifts.size() != m_redshifts.size())
-      THROWG(ErrorCode::INTERNAL_ERROR, "lineModel sizes do not match");
-  */
+  // Truncated step
+  vStep = 0.3;
+  velFitBins = op.makeVelFitBins(vInfLim, vSupLim, vStep);
+  BOOST_CHECK_EQUAL(velFitBins.size(), 4);
+  BOOST_CHECK_CLOSE(velFitBins[0], 0, precision);
+  BOOST_CHECK_CLOSE(velFitBins[1], 0.3, precision);
+  BOOST_CHECK_CLOSE(velFitBins[2], 0.6, precision);
+  BOOST_CHECK_CLOSE(velFitBins[3], 0.9, precision);
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -64,7 +65,7 @@ CHybridFitter::CHybridFitter(
 
 void CHybridFitter::doFit(Float64 redshift) {
 
-  m_spectraIndex.reset(); // temporary multiobs implementation
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   // fit the amplitudes of each element independently, unless there is overlap
   fitAmplitudesHybrid(redshift);
 
@@ -119,7 +120,7 @@ void CHybridFitter::doFit(Float64 redshift) {
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
-  m_spectraIndex.reset(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // dummy implementation
 
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   TInt32Set indexesFitted;
@@ -142,25 +143,25 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
     Log.LogDebug(Formatter() << "    model: hybrid fit: #" << iElts
                              << " - N overlapping=" << overlappingInds.size());
-    for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
+    for (Int32 ifit = 0; ifit < ssize(overlappingInds); ifit++) {
       Log.LogDebug(Formatter()
                    << "    model: hybrid fit:     overlapping #" << ifit
                    << " - eltIdx=" << overlappingInds[ifit]);
     }
     if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
       Log.LogDebug("    model: hybrid fit:     Individual fit");
       fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
     } else {
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
       Log.LogDebug("    model: hybrid fit:     Joint fit");
       fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
                                            m_enableLambdaOffsetsFit, redshift);
-      m_spectraIndex.reset(); // temporary multiobs implementation
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
     }
 
     // update the already fitted list
@@ -207,7 +208,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     return;
   }
 
-  for (Int32 itag = 0; itag < linetagsE.size(); itag++) {
+  for (Int32 itag = 0; itag < ssize(linetagsE); itag++) {
     std::string tagE = linetagsE[itag];
     std::string tagA = linetagsA[itag];
 
@@ -233,7 +234,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     // find the linesMore unique elements indexes
     TInt32List ilinesMore;
     TInt32List linesMoreIds;
-    for (Int32 imore = 0; imore < linetagsMore[itag].size(); imore++) {
+    for (Int32 imore = 0; imore < ssize(linetagsMore[itag]); imore++) {
       std::string tagMore = linetagsMore[itag][imore];
       auto const &[iElt_lineMore, lineMore_id] =
           m_ElementsVector->findElementIndex(tagMore,
@@ -248,7 +249,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     std::sort(ilinesMore.begin(), ilinesMore.end());
     ilinesMore.erase(std::unique(ilinesMore.begin(), ilinesMore.end()),
                      ilinesMore.end());
-    for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
+    for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
       Log.LogDebug(Formatter() << "    model: balmerImprove more tags = "
                                << ilinesMore[imore]);
     }
@@ -278,7 +279,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
         getElementParam()[iElt_lineE]->GetFittedAmplitudeStd(lineE_id);
     TFloat64List ampsMore;
     TFloat64List ampErrorsMore;
-    for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
+    for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
       Float64 amp = getElementParam()[ilinesMore[imore]]->GetFittedAmplitude(0);
       Float64 ampErr =
           getElementParam()[ilinesMore[imore]]->GetFittedAmplitudeStd(0);
@@ -289,7 +290,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
     TInt32List eltsIdx;
     eltsIdx.push_back(iElt_lineA);
     eltsIdx.push_back(iElt_lineE);
-    for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
+    for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
       eltsIdx.push_back(ilinesMore[imore]);
     }
     TFloat64List ampsfitted;
@@ -309,7 +310,7 @@ void CHybridFitter::improveBalmerFit(Float64 redshift) {
                                             amp_errorA / nominal_ampA);
       m_ElementsVector->SetElementAmplitude(iElt_lineE, ampE / nominal_ampE,
                                             amp_errorE / nominal_ampE);
-      for (Int32 imore = 0; imore < ilinesMore.size(); imore++) {
+      for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
         Float64 nominal_ampMore =
             getElementParam()[ilinesMore[imore]]->GetNominalAmplitude(
                 linesMoreIds[imore]);

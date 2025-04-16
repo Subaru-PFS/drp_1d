@@ -112,7 +112,7 @@ class ResultStoreOutput(AbstractOutput):
         if type(attribute_info.ResultStore_key) is not str:
             return False
         if rank is not None:
-            method = self.parameters.get_redshift_solver_method(object_type)
+            method = getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
             if self.results_store.HasCandidateDataset(
                 object_type,
                 stage,
@@ -172,9 +172,22 @@ class ResultStoreOutput(AbstractOutput):
             return hasattr(operator_result, attribute_info.OperatorResult_name)
 
     def has_dataset_in_source(self, object_type, stage, method, dataset):
+        """Checks that at least one of the attributes of the dataset is present in the result store"""
         if dataset == "classification":
             return self.results_store.HasDataset(dataset, dataset, dataset, "solveResult")
-        return self.results_store.HasDataset(object_type or "", stage or "", method or "", dataset)
+
+        # Gets all rows corresponding to given dataset
+        ds_attributes = self.filter_dataset_attributes(dataset, object_type)
+        if not len(ds_attributes):
+            return False
+
+        # Checks that at least one of the attributes of the selected rows is present in the result store
+        has_dataset = False
+        for rs_key in ds_attributes.ResultStore_key.unique():
+            has_dataset = has_dataset or self.results_store.HasDataset(
+                object_type or "", stage or "", method or "", rs_key
+            )
+        return has_dataset
 
     def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
         rs = self.results_specifications.get_df_by_dataset(dataset)
@@ -215,8 +228,13 @@ class ResultStoreOutput(AbstractOutput):
             or_type = self.results_store.GetGlobalResultType(
                 object_type, stage, method, attribute_info.ResultStore_key
             )
-            getter = getattr(self.results_store, "Get" + or_type[1:])
-            return getter(object_type, stage, method, attribute_info.ResultStore_key)
+            try:
+                getter = getattr(self.results_store, "Get" + or_type[1:])
+                return getter(object_type, stage, method, attribute_info.ResultStore_key)
+            except:
+                raise APIException(
+                    ErrorCode.OUTPUT_READER_ERROR, "Unknown OperatorResult type {}".format(str(or_type))
+                )
         elif attribute_info.level == "candidate":
             or_type = self.results_store.GetCandidateResultType(
                 object_type,

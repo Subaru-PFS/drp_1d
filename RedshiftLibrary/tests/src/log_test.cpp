@@ -45,6 +45,7 @@
 #include <regex>
 
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/filehandler.h"
 
@@ -56,7 +57,7 @@ namespace bfs = boost::filesystem;
 
 std::pair<std::string, std::string> splitString(int n,
                                                 const std::string &input) {
-  if (input.size() <= n) {
+  if (ssize(input) <= n) {
     return {input, ""};
   } else {
     return {input.substr(0, n), input.substr(n)};
@@ -141,7 +142,7 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
   std::string logMessage;
   std::regex timestampPattern(
       "\\b\\w{3} \\w{3}\\s{1,2}\\d{1,2} \\d{2}:\\d{2}:\\d{2} \\d{4}\\b");
-  for (Int32 i = 0; i < lines.size(); i++) {
+  for (Int32 i = 0; i < ssize(lines); i++) {
     if (i == 0)
       line_ref = "Warning: test log warning";
     else if (i == 1)

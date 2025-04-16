@@ -74,7 +74,7 @@ class Spectrum:
         lsf,
         photometric_data,
         wave_frame="vacuum",
-        filter_loader_class: AbstractFilterLoader = ParamJsonFilterLoader,
+        filter_loader_class: type[AbstractFilterLoader] = ParamJsonFilterLoader,
     ):
         self.source_id = str(source_id)
         self.parameters = parameters

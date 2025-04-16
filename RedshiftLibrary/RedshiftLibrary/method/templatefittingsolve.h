@@ -49,10 +49,22 @@
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
+namespace templateFitting_test {
+class fitQuality_test;
+}
+
+namespace templateFittingSolve_test {
+class computeNoFFT_test;
+}
 namespace NSEpic {
 
 class CSpectrum;
 class CTemplateCatalog;
+
+using TTemplateFittingResultMap =
+    std::map<std::string, std::shared_ptr<CTemplateFittingResult>>;
+using TConstTemplateFittingResultMap =
+    std::map<std::string, std::shared_ptr<const CTemplateFittingResult>>;
 
 /**
  * \ingroup Redshift
@@ -73,60 +85,51 @@ public:
   CTemplateFittingSolve();
 
 private:
+  friend class templateFitting_test::fitQuality_test;
+  friend class templateFittingSolve_test::computeNoFFT_test;
   void PopulateParameters(
       const std::shared_ptr<const CParameterStore> &parameterStore);
   void InitFittingOperator();
   void LogParameters();
   void CheckTemplateCatalog();
-  std::string getScopeStr() const;
+  std::string getResultName() const;
   EType getFitTypeFromParam(const std::string &component);
 
   std::shared_ptr<CSolveResult> compute() override;
 
   std::shared_ptr<CTemplateFittingSolveResult> computeSinglePass();
 
-  void
-  storeSinglePassResults(const COperatorPdfz &pdfz,
-                         std::shared_ptr<const ExtremaResult> extremaResult);
   std::shared_ptr<CTemplateFittingSolveResult> computeTwoPass();
   void computeFirstPass();
-  std::pair<std::shared_ptr<PdfCandidatesZResult>,
-            std::shared_ptr<const ExtremaResult>>
-  computeFirstPassResults(COperatorPdfz &pdfz);
-
-  std::pair<std::shared_ptr<PdfCandidatesZResult>,
-            std::shared_ptr<const ExtremaResult>>
-  computeSecondPassResults(COperatorPdfz &pdfz,
-                           const TZGridListParams &zgridParams);
-  void
-  storeFirstPassResults(const COperatorPdfz &pdfz,
-                        std::shared_ptr<const ExtremaResult> extremaResult);
-  void
-  storeSecondPassResults(const COperatorPdfz &pdfz,
-                         std::shared_ptr<const ExtremaResult> extremaResult);
-  void computeSecondPass(std::shared_ptr<const ExtremaResult> extremaResult);
-
-  void Solve(std::shared_ptr<COperatorResultStore> resultStore,
-             const std::shared_ptr<const CTemplate> &tpl,
-             Int32 FitEbmvIdx = undefIdx,
-             Int32 FitMeiksinIdx = undefIdx,
-             std::string parentId = "", std::vector<Int32> zIdxsToCompute = {});
-
-  ChisquareArray
-  BuildChisquareArray(const std::string &scopeStr,
-                      std::shared_ptr<const ExtremaResult> fpResults = {},
-                      TZGridListParams zgridParams = {}) const;
 
   std::shared_ptr<const ExtremaResult>
-  buildExtremaResults(const std::string &scopeStr,
-                      const TCandidateZbyRank &ranked_zCandidates,
-                      Float64 overlapThreshold,
-                      std::shared_ptr<const ExtremaResult> fpResults = {});
+  computeResults(COperatorPdfz &pdfz, const TZGridListParams &zgridParams = {});
+  void storeFirstPassResults(
+      const COperatorPdfz &pdfz,
+      std::shared_ptr<const ExtremaResult> const &extremaResult);
+  void storeResults(const COperatorPdfz &pdfz,
+                    std::shared_ptr<const ExtremaResult> const &extremaResult);
+  void computeSecondPass(std::shared_ptr<const ExtremaResult> extremaResult);
+
+  std::shared_ptr<CTemplateFittingResult>
+  Solve(std::shared_ptr<COperatorResultStore> resultStore,
+        const std::shared_ptr<const CTemplate> &tpl, Int32 FitEbmvIdx = allIdx,
+        Int32 FitMeiksinIdx = allIdx, std::string parentId = "",
+        Int32 candidateIdx = undefIdx,
+        std::shared_ptr<CTemplateFittingResult> const &result = nullptr);
+
+  ChisquareArray BuildChisquareArray(const std::string &resultName,
+                                     TZGridListParams zgridParams = {}) const;
+
+  std::shared_ptr<ExtremaResult>
+  buildExtremaResults(const std::string &resultName,
+                      const TCandidateZbyRank &ranked_zCandidates);
   void initSkipSecondPass() override;
   void initTwoPassZStepFactor() override;
-  TOperatorResultMap createPerTemplateResultMap(
-      const std::string &scopeStr,
-      std::shared_ptr<const ExtremaResult> fpResults) const;
+  TConstTemplateFittingResultMap
+  getPerTemplateResultMap(const std::string &resultName) const;
+  TTemplateFittingResultMap
+  getPerTemplateResultMapCopy(const std::string &resultName) const;
 
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
   std::string m_opt_pdfcombination;
@@ -142,10 +145,8 @@ private:
   Float64 m_photometryWeight = NAN;
   EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
   Float64 m_secondPass_halfwindowsize = NAN;
-  std::shared_ptr<CTemplateFittingResult> m_result;
   Int32 m_opt_extremacount;
   Float64 m_opt_candidatesLogprobaCutThreshold = 0.0;
-  std::shared_ptr<COperatorTemplateFitting> m_castedTemplateFittingOperator;
   bool m_isFirstPass = true;
 };
 

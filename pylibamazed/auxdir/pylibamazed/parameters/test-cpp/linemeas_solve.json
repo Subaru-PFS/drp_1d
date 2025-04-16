@@ -1,25 +1,25 @@
 {
-    "lambdaRange": [
-        4680,
-        4712
-    ],
-    "smoothWidth": 0.0,
-    "templateCatalog": {
-        "continuumRemoval": {
-            "method": "zero",
-            "medianKernelWidth": 75,
-            "medianEvenReflection": true
-        }
-    },
+  "lambdaRange": [
+    4680,
+    4712
+  ],
+  "smoothWidth": 0.0,
+  "templateCatalog": {
     "continuumRemoval": {
-        "method": "irregularSamplingMedian",
-        "medianKernelWidth": 400,
-        "medianEvenReflection": true
-    },
-    "lsf": {
-        "lsfType": "gaussianConstantResolution",
-        "resolution": 4300
-    },
-    "spectrumModels": [],
-    "autoCorrectInput": false
+      "method": "zero",
+      "medianKernelWidth": 75,
+      "medianEvenReflection": true
+    }
+  },
+  "continuumRemoval": {
+    "method": "irregularSamplingMedian",
+    "medianKernelWidth": 400,
+    "medianEvenReflection": true
+  },
+  "lsf": {
+    "lsfType": "gaussianConstantResolution",
+    "resolution": 4300
+  },
+  "spectrumModels": [],
+  "autoCorrectInput": false
 }

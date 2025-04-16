@@ -7,7 +7,8 @@ pylibamazed
    warnings
    errors
    powerLaw
-   igmism
+   igmIsm
+   classification
 
 parameters
 ===========
@@ -15,3 +16,12 @@ parameters
    :maxdepth: 4
 
    json-schema/general
+
+
+Developer doc
+=============
+
+.. toctree::
+   :maxdepth: 4
+
+   developer-doc/pdf

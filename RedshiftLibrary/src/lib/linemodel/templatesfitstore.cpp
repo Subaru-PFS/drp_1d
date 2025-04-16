@@ -39,6 +39,7 @@
 #include <climits>
 
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
@@ -67,7 +68,7 @@ using namespace NSEpic;
  */
 void CTemplatesFitStore::Add(std::string name, Float64 ismEbmvCoeff,
                              Int32 igmMeiksinIdx, Float64 redshift,
-                             Float64 merit, Float64 reducedChi2,
+                             Float64 merit, Float64 reducedChi2, Float64 pValue,
                              Float64 chiSquare_phot, Float64 fitAmplitude,
                              Float64 fitAmplitudeError,
                              Float64 fitAmplitudeSigma, Float64 fitDtM,
@@ -75,6 +76,7 @@ void CTemplatesFitStore::Add(std::string name, Float64 ismEbmvCoeff,
   CContinuumModelSolution tmpCContinuumModelSolution;
   tmpCContinuumModelSolution.merit = merit;
   tmpCContinuumModelSolution.reducedChi2 = reducedChi2;
+  tmpCContinuumModelSolution.pValue = pValue;
   tmpCContinuumModelSolution.tplMeritPhot = chiSquare_phot;
   tmpCContinuumModelSolution.tplAmplitude = fitAmplitude;
   tmpCContinuumModelSolution.tplAmplitudeError = fitAmplitudeError;
@@ -118,7 +120,7 @@ void CTemplatesFitStore::Add(std::string name, Float64 ismEbmvCoeff,
   // to ipos found
   m_fitValues[idxz].insert(ipos, tmpCContinuumModelSolution);
 
-  if (getContinuumCount() < m_fitValues[idxz].size()) {
+  if (getContinuumCount() < ssize(m_fitValues[idxz])) {
     m_nContinuumCandidates = m_fitValues[idxz].size();
     Log.LogDebug(Formatter()
                  << "CTemplatesFitStore::m_nContinuumCandidates set to "

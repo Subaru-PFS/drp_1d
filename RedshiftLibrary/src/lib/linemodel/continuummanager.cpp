@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
@@ -57,7 +58,7 @@ CContinuumManager::CContinuumManager(
     const CSpectraGlobalIndex &spcGlobIndex)
     : m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategory(Context.GetCurrentCategory()), m_models(models),
-      m_fitContinuum(continuumModelSolution), m_spectraIndex(spcGlobIndex) {
+      m_spectraIndex(spcGlobIndex), m_fitContinuum(continuumModelSolution) {
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
@@ -304,9 +305,9 @@ void CContinuumManager::reinterpolateContinuumResetAmp() {
 
 void CContinuumManager::setFitContinuumFromFittedAmps(
     TFloat64List &ampsfitted, TInt32List &validEltsIdx) {
-  m_fitContinuum->tplAmplitude = ampsfitted[validEltsIdx.size()];
+  m_fitContinuum->tplAmplitude = ampsfitted[ssize(validEltsIdx)];
   TFloat64List polyCoeffs;
-  for (Int32 kpoly = validEltsIdx.size() + 1; kpoly < ampsfitted.size();
+  for (Int32 kpoly = ssize(validEltsIdx) + 1; kpoly < ssize(ampsfitted);
        kpoly++) {
     polyCoeffs.push_back(ampsfitted[kpoly]);
   }

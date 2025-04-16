@@ -43,6 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -135,9 +136,10 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   CTemplate tpl10(tpl9, maskList);
   BOOST_CHECK(tpl10.m_NoIsmIgmFluxAxis.GetSamplesCount() == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_NoIsmIgmFluxAxis[0] == fluxAxisList[1]);
-  BOOST_CHECK(tpl10.m_computedDustCoeff.size() == spcAxisSize - 1);
+  BOOST_CHECK(ssize(tpl10.m_computedDustCoeff) == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_computedDustCoeff[0] == 1.);
-  BOOST_CHECK(tpl10.m_computedMeiksingCoeff.size() == spcAxisSize - 1);
+  BOOST_CHECK(ssize(tpl10.m_computedDustCoeff) == spcAxisSize - 1);
+  BOOST_CHECK(ssize(tpl10.m_computedMeiksingCoeff) == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_computedMeiksingCoeff[0] == 1.);
 
   TFloat64List maskList2(spcAxisSize, 0);
@@ -184,8 +186,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
 
   tplStar.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
   BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxAxisList);
-  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
-  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedMeiksingCoeff) == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedDustCoeff) == spcAxisSize);
 
   // InitIsmIgmConfig with lambdarange & redshift -> range outside spectral axis
   TFloat64Range lbdaRange(1, 860);
@@ -195,8 +197,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   lbdaRange.SetEnd(spcAxisList[spcAxisSize - 1]);
   tplStar.InitIsmIgmConfig(lbdaRange, 2.86);
   BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxAxisList);
-  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
-  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedMeiksingCoeff) == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedDustCoeff) == spcAxisSize);
 
   tplStar.ApplyAmplitude(1.);
   tplStar.InitIsmIgmConfig(lbdaRange, 2.86);
@@ -205,8 +207,8 @@ BOOST_AUTO_TEST_CASE(InitIsmIgmConfig_test) {
   // InitIsmIgmConfig with redshift
   tplStar.InitIsmIgmConfig(2.86);
   BOOST_CHECK(tplStar.m_NoIsmIgmFluxAxis.GetSamplesVector() == fluxAxisList);
-  BOOST_CHECK(tplStar.m_computedMeiksingCoeff.size() == spcAxisSize);
-  BOOST_CHECK(tplStar.m_computedDustCoeff.size() == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedMeiksingCoeff) == spcAxisSize);
+  BOOST_CHECK(ssize(tplStar.m_computedDustCoeff) == spcAxisSize);
   Context.reset();
 }
 
@@ -330,47 +332,10 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   igmEndIndex = tpl3.GetIgmEndIndex(spcAxisSize - 2, spcAxisSize - 1);
   BOOST_CHECK(igmEndIndex == -1);
 
-  // GetIsmIdxList
-  CTemplate tpl4("name", "category", tplStar.GetSpectralAxis(), fluxAxisList);
-  TInt32List ebmvList;
-  tpl4.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
-
-  ebmvList = tpl4.GetIsmIdxList(0, 1);
-  BOOST_CHECK(ebmvList.size() == 1);
-  BOOST_CHECK(ebmvList[0] == -1);
-
-  ebmvList = tpl4.GetIsmIdxList(1, -1);
-  BOOST_CHECK(ebmvList.size() == 10);
-  TInt32List ref_list = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  BOOST_CHECK(ebmvList == ref_list);
-
-  ebmvList = tpl4.GetIsmIdxList(1, 3);
-  BOOST_CHECK(ebmvList.size() == 1);
-  BOOST_CHECK(ebmvList[0] == 3);
-
-  // GetIgmIdxList
-  CTemplate tpl5("name", "category", tplStar.GetSpectralAxis(), fluxAxisList);
-  TInt32List meiksinList;
-
-  tpl5.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);
-
-  meiksinList = tpl5.GetIgmIdxList(0, 1);
-  BOOST_CHECK(meiksinList.size() == 1);
-  BOOST_CHECK(meiksinList[0] == -1);
-
-  meiksinList = tpl5.GetIgmIdxList(1, -1);
-  BOOST_CHECK(meiksinList.size() == idxCount);
-  ref_list = {0, 1};
-  BOOST_CHECK(meiksinList == ref_list);
-
-  meiksinList = tpl5.GetIgmIdxList(1, 3);
-  BOOST_CHECK(meiksinList.size() == 1);
-  BOOST_CHECK(meiksinList[0] == 3);
-
   // GetIsmIgmIdxList
-  TIgmIsmIdxs igmIsmIdxs = tpl5.GetIsmIgmIdxList(1, 1, 3, 3);
-  BOOST_CHECK(igmIsmIdxs.igmIdxs == meiksinList);
-  BOOST_CHECK(igmIsmIdxs.ismIdxs == ebmvList);
+  TIgmIsmIdxs igmIsmIdxs = tpl3.GetIsmIgmIdxList(1, 1, 3, 3);
+  BOOST_CHECK(igmIsmIdxs.igmIdxs == TInt32List{3});
+  BOOST_CHECK(igmIsmIdxs.ismIdxs == TInt32List{3});
 
   Context.reset();
 }
