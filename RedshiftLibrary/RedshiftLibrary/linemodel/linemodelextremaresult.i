@@ -57,6 +57,8 @@ public:
 
   Float64 MeritContinuum = NAN; // best continum  chi2
   Float64 Merit = NAN;          // fullmodel best chi2
+  Float64 reducedChi2 = NAN;    
+  Float64 pValue = NAN;         
 
   Float64 CorrScaleMarg = NAN; // extrema scale marg. correction
   Int32 NDof = undefIdx;            // non zero elements in the lambdarange

@@ -28,6 +28,8 @@ ContinuumPowerLawb1std	model_parameters	True	candidate	fittedContinuum.b1std	ext
 ContinuumPowerLawb2std	model_parameters	True	candidate	fittedContinuum.b2std	extrema_results	f8
 LinesRatioName	model_parameters	False	candidate	FittedTplratioName	extrema_results	S60
 LeastSquare	model_parameters	False	candidate	Merit	extrema_results	f8
+ReducedChi2	model_parameters	False	candidate	reducedChi2	extrema_results	f8
+PValue	model_parameters	False	candidate	pValue	extrema_results	f8
 VelocityEmission	model_parameters	False	candidate	Elv	extrema_results	f8
 VelocityAbsorption	model_parameters	False	candidate	Alv	extrema_results	f8
 EmissionLinesSNR	model_parameters	False	candidate	ELSNR	extrema_results	f8
