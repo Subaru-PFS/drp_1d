@@ -42,9 +42,7 @@ from pylibamazed.Paths import results_specifications_filename
 
 class ResultsSpecifications:
     def __init__(self, specs_path: str = results_specifications_filename):
-        self.rs = pd.read_csv(
-            specs_path, sep='\t', dtype={'format': object}
-        )
+        self.rs = pd.read_csv(specs_path, sep="\t", dtype={"format": object})
         self.rs["index_col"] = self.rs["name"]
         self.rs.set_index("index_col", inplace=True)
 

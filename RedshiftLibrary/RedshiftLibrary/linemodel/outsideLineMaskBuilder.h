@@ -40,21 +40,27 @@
 #ifndef _REDSHIFT_OUTSIDE_LINE_MASK_BUILDER
 #define _REDSHIFT_OUTSIDE_LINE_MASK_BUILDER
 
+#include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
 
 namespace NSEpic {
 class CLineModelElementList;
-
+class CLMEltListVector;
 class COutsideLineMaskBuilder : public CMaskBuilder {
 public:
-  COutsideLineMaskBuilder(CLineModelElementList &elements);
+  COutsideLineMaskBuilder(
+      std::shared_ptr<CLMEltListVector> const &elements_vector,
+      CSpectraGlobalIndex const &spcIndex);
 
   CMask getMask(const CSpectrumSpectralAxis &spectralAxis,
-                const TFloat64Range &lamdbdaRange, const Float64 &redshift);
+                const TFloat64Range &lamdbdaRange, const Float64 &redshift,
+                Int32 spc_index = 0) override;
 
 private:
-  CLineModelElementList &m_elements;
+  std::shared_ptr<CLMEltListVector> m_ElementsVector;
+  CSpectraGlobalIndex m_spcIndex;
 };
+
 } // namespace NSEpic
 
 #endif

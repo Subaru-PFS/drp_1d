@@ -27,6 +27,15 @@
       ],
       "description": "\n * **\"\"**: no multiobs \n * **\"full\"**: giving one spectra by observation to the lib \n * **\"merge\"**: merge observations in a single spectra"
     },
+    "linemeas_runmode": {
+      "type": "string",
+      "enum": [
+        "all",
+        "classif"
+      ],
+      "title": "Run mode for line measurement",
+      "description": "Option to run line measurement per spectrum on models : \n * **\"all\"**: all models \n * **\"classif\"**: only the classified one"
+    },
     "star": {
       "$ref": "objects.json"
     },

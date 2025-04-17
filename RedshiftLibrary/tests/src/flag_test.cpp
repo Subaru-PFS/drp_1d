@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/consolehandler.h"
 
 using namespace NSEpic;
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(some_test) {
 
   // Recover flagList
   TWarningMsgList listMsg = Flag.getListMessages();
-  for (Int32 i = 0; i < listMsg.size(); i++) {
+  for (Int32 i = 0; i < ssize(listMsg); i++) {
     BOOST_CHECK(listMsg[i].first == listMsg_ref[i].first);
     BOOST_CHECK(listMsg[i].second == listMsg_ref[i].second);
   }
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(some_test) {
 
   // Recover flagList
   listMsg = Flag.getListMessages();
-  for (Int32 i = 0; i < listMsg.size(); i++) {
+  for (Int32 i = 0; i < ssize(listMsg); i++) {
     BOOST_CHECK(listMsg[i].first == listMsg_ref[i].first);
     BOOST_CHECK(listMsg[i].second == listMsg_ref[i].second);
   }
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(some_test) {
 
   // Recover flagList
   listMsg = Flag.getListMessages();
-  for (Int32 i = 0; i < listMsg.size(); i++) {
+  for (Int32 i = 0; i < ssize(listMsg); i++) {
     BOOST_CHECK(listMsg[i].first == listMsg_ref[i].first);
     BOOST_CHECK(listMsg[i].second == listMsg_ref[i].second);
   }

@@ -47,10 +47,15 @@ namespace NSEpic {
 class CMaskBuilder {
 public:
   CMaskBuilder() = default;
+  virtual ~CMaskBuilder() = default;
+  CMaskBuilder(CMaskBuilder const &) = default;
+  CMaskBuilder(CMaskBuilder &&) = default;
+  CMaskBuilder &operator=(CMaskBuilder const &) = default;
+  CMaskBuilder &operator=(CMaskBuilder &&) = default;
 
   virtual CMask getMask(const CSpectrumSpectralAxis &spectralAxis,
                         const TFloat64Range &lamdbdaRange,
-                        const Float64 &redshift);
+                        const Float64 &redshift, Int32 spc_index = 0);
 };
 
 } // namespace NSEpic

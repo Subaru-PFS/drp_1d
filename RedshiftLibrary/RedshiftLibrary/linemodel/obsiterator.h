@@ -44,7 +44,7 @@
 #include <memory>
 
 #include "RedshiftLibrary/common/datatypes.h"
-
+#include "RedshiftLibrary/common/exception.h"
 namespace NSEpic {
 
 class CSpectraGlobalIndex {
@@ -90,14 +90,21 @@ public:
 
   Int32 get() const { return *m_currentIndex; }
 
+  void set(Int32 index) {
+    *m_currentIndex = index;
+    assertIsValid();
+  }
+
   Iterator current() const { return Iterator(m_currentIndex); }
 
-  bool isValid() const { return *m_currentIndex < *m_endIndex; }
-  void AssertIsValid() const {
+  bool isValid() const {
+    return *m_currentIndex >= 0 && *m_currentIndex < *m_endIndex;
+  }
+  void assertIsValid() const {
     if (!isValid())
       THROWG(ErrorCode::INVALID_SPECTRUM_INDEX, "Invalid spectrum index");
   };
-  void reset() { *m_currentIndex = 0; }
+  void setAtBegining() { *m_currentIndex = 0; }
 
   CSpectraGlobalIndex(Int32 nbObs) {
     m_currentIndex = std::make_shared<Int32>(0);

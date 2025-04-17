@@ -44,21 +44,23 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/linemodel/continuumfitstore.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/pdfz.h"
-#include "RedshiftLibrary/operator/tplmodelsolution.h"
+#include "RedshiftLibrary/operator/twopassresult.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
 namespace NSEpic {
 
 class CTemplatesFitStore;
+struct TsecondPassIndices;
 
-class CLineModelResult : public COperatorResult {
+class CLineModelResult : public CTwoPassResult {
 public:
-  CLineModelResult() : COperatorResult("CLineModelResult"){};
+  CLineModelResult() : CTwoPassResult("CLineModelResult"){};
 
   void Init(TFloat64List redshifts, CLineMap restLines, Int32 nTplContinuum,
             Int32 nTplratios, TFloat64List tplratiosPriors);
@@ -75,10 +77,10 @@ public:
 
   Float64 getMinChiSquare() const;
   Float64 getMaxChiSquare() const;
-  void SetChisquareTplContinuumResult(
+  void SetChisquareContinuumResult(
       Int32 index,
-      const std::shared_ptr<const CTemplatesFitStore> &tplFitStore);
-  void SetChisquareTplContinuumResultFromPrevious(Int32 index);
+      const std::shared_ptr<const CContinuumFitStore> &tplFitStore);
+  void SetChisquareContinuumResultFromPrevious(Int32 index);
   void
   SetChisquareTplratioResult(Int32 index,
                              std::shared_ptr<CTplratioManager> tplratioManager);
@@ -91,10 +93,9 @@ public:
   TBoolList getHaELPresentTplratioResult(Int32 index_z);
   TInt32List getNLinesAboveSNRTplratioResult(Int32 index_z);
   TFloat64List getPriorLinesTplratioResult(Int32 index_z);
-  void updateVectors(Int32 idx, Int32 ndup, Int32 count);
+  void updateVectors(TsecondPassIndices const &) override;
 
   // Merit results
-  TFloat64List Redshifts;           // z axis
   TFloat64List ChiSquare;           // min chi2
   TFloat64List ScaleMargCorrection; // margCorrection for min chi2
 
@@ -123,12 +124,16 @@ public:
       ChiSquareTplContinuum; // chi2 for all continuum templates fited
 
   std::vector<CLineModelSolution> LineModelSolutions;
-  std::vector<CTplModelSolution> ContinuumModelSolutions;
+  std::vector<CContinuumModelSolution> ContinuumModelSolutions;
 
   CLineMap restLineList;
   Int32 nSpcSamples = 0;
   Float64 dTransposeD = 0.0;
   Float64 cstLog = 0.0;
+
+  Float64 minContinuumReducedChi2 = 0.0;
+  Float64 maxFitAmplitudeSigma = 0;
+  Float64 maxPValue = 0;
 };
 
 } // namespace NSEpic

@@ -64,7 +64,7 @@ public:
   CRulesManager(CRulesManager &&other) = default;
   CRulesManager &operator=(CRulesManager &&other) = default;
 
-  Float64 computeMerit(Int32 itratio) override;
+  std::pair<Float64, Float64> computeMerit(Int32 itratio) override;
 
   const TStringList &GetModelRulesLog() const;
   void setRulesOption(std::string rulesOption = "");

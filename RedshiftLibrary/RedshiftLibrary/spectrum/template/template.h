@@ -104,24 +104,9 @@ public:
   Int32 GetIgmEndIndex() const;
   Int32 GetIgmEndIndex(Int32 kstart, Int32 kend) const;
 
-  void
-  InitIsmIgmConfig(Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti = nullptr,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin = nullptr);
-  void
-  InitIsmIgmConfig(const TFloat64Range &lbdaRange, Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti = nullptr,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin = nullptr);
-  void
-  InitIsmIgmConfig(Int32 kstart, Int32 kend, Float64 redshift,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                       &ismCorrectionCalzetti = nullptr,
-                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                       &igmCorrectionMeiksin = nullptr);
+  void InitIsmIgmConfig(Float64 redshift);
+  void InitIsmIgmConfig(const TFloat64Range &lbdaRange, Float64 redshift);
+  void InitIsmIgmConfig(Int32 kstart, Int32 kend, Float64 redshift);
   void DisableIsmIgm();
 
   bool CheckIsmIgmEnabled() const { return !m_NoIsmIgmFluxAxis.isEmpty(); };
@@ -131,28 +116,22 @@ public:
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
       m_ismCorrectionCalzetti;
   std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  void GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
-                        TInt32List &MeiksinList, TInt32List &EbmvList,
-                        Int32 FitEbmvIdx = undefIdx,
-                        Int32 FitMeiksinIdx = undefIdx) const;
-  TInt32List GetIsmIdxList(bool opt_dustFitting,
-                           Int32 FitEbmvIdx = undefIdx) const;
-  TInt32List GetIgmIdxList(bool opt_extinction,
-                           Int32 FitMeiksinIdx = undefIdx) const;
+  TIgmIsmIdxs GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
+                               Int32 FitEbmvIdx = allIdx,
+                               Int32 FitMeiksinIdx = allIdx) const;
 
 private:
   friend class Template::Constructor_test;
   friend class Template::InitIsmIgmConfig_test;
   friend class Template::ApplyDustCoeff_test;
 
-  std::string m_Category;
-
   Int32 m_kDust = -1;
   Int32 m_meiksinIdx = -1;
   Int32 m_meiksinRedshiftIdx = -1;
 
+  std::string m_Category;
+
   Int32 m_IsmIgm_kstart = -1, m_Ism_kend = -1, m_Igm_kend = -1;
-  CSpectrumFluxAxis m_NoIsmIgmFluxAxis;
 
   // below vectors should be updated each time we change m_kDust, m_meiksinIdx
   // for a specific redshift
@@ -163,6 +142,7 @@ private:
       m_computedMeiksingCoeff; // vector of spectrum size containing computed
                                // igm coeff at a specific Z at m_meiksin and
                                // this for all lambdas in the spectrum
+  CSpectrumFluxAxis m_NoIsmIgmFluxAxis;
 };
 
 // override Flux Setters to reset ism/igm

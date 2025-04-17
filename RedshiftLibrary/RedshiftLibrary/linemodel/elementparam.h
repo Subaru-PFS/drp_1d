@@ -62,19 +62,17 @@ enum class ElementComposition {
 
 struct TLineModelElementParam {
 
-  TLineModelElementParam(CLineVector lines, Float64 velocityEmission,
-                         Float64 velocityAbsorption,
+  TLineModelElementParam(CLineVector lines, Float64 velocity,
                          const std::string &lineWidthType);
 
   CLineVector m_Lines;
-  Float64 m_VelocityEmission =
-      NAN; // TODO there should be one unique velocity, and m_isEmissions
-           // determines whether it is emission or absorption velocity
-  Float64 m_VelocityAbsorption = NAN;
+  Float64 m_Velocity = NAN;
+  Float64 m_VelocityStd = NAN;
   TFloat64List m_FittedAmplitudes;
   TFloat64List m_FittedAmplitudesStd;
   TFloat64List m_NominalAmplitudes;
   TFloat64List m_Offsets;
+  TFloat64List m_OffsetsStd;
   TInt32Map m_LinesIds;
   std::string m_fittingGroupInfo;
   TPolynomCoeffs m_ampOffsetsCoeffs;
@@ -90,8 +88,21 @@ struct TLineModelElementParam {
   Float64 m_absLinesLimit =
       1.0; //-1: disable the ABS lines amplitude cut, any other value is
            // used as a limit for the abs line coeff (typically: 1.0)
+  Float64 m_defaultVelocity;
   CLine::EType m_type;
   bool m_isEmission;
+
+  // global (considering all spectra) validity of the element:
+  // element is outside range (all element lines, ie no line is visible)
+  bool m_globalOutsideLambdaRange = false;
+  // visibility of each line of the element
+  std::vector<bool> m_globalOutsideLambdaRangeList;
+  // null continuum under all element absorption lines
+  bool m_absLinesNullContinuum = false;
+  // all visible element lines have null nominal amplitudes
+  bool m_nullNominalAmplitudes = false;
+  // the profile is null on the element (all lines) support
+  bool m_nullLineProfiles = false;
 
   void init(const std::string &widthType);
   const Float64 &getSumGauss() const { return m_sumGauss; }
@@ -110,10 +121,9 @@ struct TLineModelElementParam {
   Int32 getSignFactor(Int32 line_index) const;
   Float64 GetSignFactor(Int32 line_index) const;
 
-  const CLineVector &GetLines() { return m_Lines; }
-  Float64 getVelocity() {
-    return m_isEmission ? m_VelocityEmission : m_VelocityAbsorption;
-  }
+  Float64 getVelocity() const { return m_Velocity; }
+  Float64 getVelocityStd() const { return m_VelocityStd; };
+
   TAsymParams GetAsymfitParams(Int32 asym_line_index = 0) const {
     if (!m_asymLineIndices.size())
       return TAsymParams(); // case where no asymprofile in linecatalog
@@ -170,21 +180,19 @@ struct TLineModelElementParam {
     fastd[index] = fittedAmpStd * nominalAmplitude;
   }
 
-  void setAmplitudes(Float64 A, Float64 AStd,
-                     const std::vector<bool> &outsideLambdaRangeList,
-                     bool outsideLambdaRange) {
+  void setAmplitudes(Float64 A, Float64 AStd) {
     auto &fa = m_FittedAmplitudes;
     auto &fastd = m_FittedAmplitudesStd;
     auto &na = m_NominalAmplitudes;
 
-    if (std::isnan(A) || outsideLambdaRange) {
+    if (std::isnan(A) || isNotFittable()) {
       fa.assign(size(), NAN);
       fastd.assign(size(), NAN);
       return;
     }
 
     for (Int32 index = 0; index != size(); ++index) {
-      if (outsideLambdaRangeList[index]) {
+      if (m_globalOutsideLambdaRangeList[index]) {
         fa[index] = NAN;
         fastd[index] = NAN;
         continue;
@@ -212,15 +220,29 @@ struct TLineModelElementParam {
     m_Lines[line_index].SetProfile(std::move(profile));
   }
 
-  Float64 GetElementAmplitude() const {
+  Int32 GetElementValidLine() const {
+    if (isNotFittable())
+      return undefIdx;
     for (Int32 line_idx = 0; line_idx != size(); ++line_idx) {
       auto const &nominal_amplitude = m_NominalAmplitudes[line_idx];
-      if (!std::isnan(m_FittedAmplitudes[line_idx]) &&
-          nominal_amplitude != 0.0) {
-        return m_FittedAmplitudes[line_idx] / nominal_amplitude;
-      }
+      if (!std::isnan(m_FittedAmplitudes[line_idx]) && nominal_amplitude != 0.0)
+        return line_idx;
     }
-    return NAN;
+    return undefIdx;
+  }
+
+  Float64 GetElementAmplitude() const {
+    Int32 line_idx = GetElementValidLine();
+    if (line_idx == undefIdx)
+      return NAN;
+    return m_FittedAmplitudes[line_idx] / m_NominalAmplitudes[line_idx];
+  }
+
+  Float64 GetElementAmplitudeError() const {
+    Int32 line_idx = GetElementValidLine();
+    if (line_idx == undefIdx)
+      return NAN;
+    return m_FittedAmplitudesStd[line_idx] / m_NominalAmplitudes[line_idx];
   }
 
   void resetLambdaOffsets() {
@@ -231,7 +253,13 @@ struct TLineModelElementParam {
   void setLambdaOffset(Int32 line_index, Float64 val) {
     m_Offsets[line_index] = val;
   }
+  void setLambdaOffsetStd(Int32 line_index, Float64 val) {
+    m_OffsetsStd[line_index] = val;
+  }
   Float64 getLambdaOffset(Int32 line_index) { return m_Offsets[line_index]; }
+  Float64 getLambdaOffsetStd(Int32 line_index) {
+    return m_OffsetsStd[line_index];
+  }
 
   void resetFittingParams();
   void resetAsymfitParams() {
@@ -253,6 +281,18 @@ struct TLineModelElementParam {
 
   CLine::EType GetElementType() const { return m_type; };
   bool IsEmission() const { return m_isEmission; };
+  bool IsAbsorption() const { return !m_isEmission; };
+
+  bool isFittable() const { return !isNotFittable(); }
+
+  bool isNotFittable() const {
+    return m_globalOutsideLambdaRange || m_nullNominalAmplitudes ||
+           m_absLinesNullContinuum || m_nullLineProfiles;
+  }
+
+  bool isOutsideLambdaRangeLine(Int32 line_index) const {
+    return m_globalOutsideLambdaRangeList[line_index];
+  }
 
   const CLineVector &GetLines() const { return m_Lines; };
   const TInt32Map &GetLinesIndices() const { return m_LinesIds; };
@@ -266,18 +306,15 @@ struct TLineModelElementParam {
   Float64 GetFittedAmplitudeStd(Int32 line_index) const;
 
   bool isAllAmplitudesNull() const;
+  void setNullNominalAmplitudesNotFittable();
 
   bool LimitFittedAmplitude(Int32 line_index, Float64 limit);
   void SetAllOffsetsEnabled(Float64 val);
   bool SetAbsLinesLimit(Float64 limit);
   Float64 GetAbsLinesLimit() const;
 
-  void SetVelocityEmission(Float64 vel);
-  Float64 getVelocityEmission() const;
-  void SetVelocityAbsorption(Float64 vel);
-  Float64 getVelocityAbsorption() const;
-  Float64 getVelocity() const;
   void setVelocity(Float64 vel);
+  void setVelocityStd(Float64 velStd);
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,
                                  Float64 x0, Float64 sigma,

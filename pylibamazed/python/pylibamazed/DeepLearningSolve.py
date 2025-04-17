@@ -1,0 +1,104 @@
+# ============================================================================
+#
+# This file is part of: AMAZED
+#
+# Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+#
+# https://www.lam.fr/
+#
+# This software is a computer program whose purpose is to estimate the
+# spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+# from there 1D spectrum.
+#
+# This software is governed by the CeCILL-C license under French law and
+# abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL-C
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# "http://www.cecill.info".
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-C license and that you accept its terms.
+# ============================================================================
+
+import numpy as np
+from pylibamazed.Exception import APIException
+from pylibamazed.PdfHandler import BuilderPdfHandler
+from pylibamazed.redshift import ErrorCode
+from pylibamazed.ResultStoreOutput import ResultStoreOutput
+from pylibamazed.AbstractReliabilitySolver import AbstractReliabilitySolver, register_reliability_solver
+
+
+class DeepLearningSolve(AbstractReliabilitySolver):
+    def Compute(self, source):
+        # context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
+        output = ResultStoreOutput(
+            source.GetResultStore(),
+            self.parameters,
+            auto_load=False,
+            extended_results=False,
+        )
+
+        model = self.calibration_library.reliability_models[self.object_type]
+        model_parameters = self.calibration_library.reliability_parameters[self.object_type]
+        return self.get_probas(output, model, model_parameters)["success"]
+
+    def get_probas(self, output, model, model_parameters):
+        c_zgrid_zend = model_parameters["zgrid_end"]
+
+        logsampling = self.parameters.is_log_sampling(self.object_type)
+        output.load_object_level(self.object_type)
+
+        pdf = BuilderPdfHandler().add_params(output, self.object_type, logsampling).build()
+        pdf.convertToRegular(True, c_zgrid_zend)
+
+        zgrid = pdf.redshifts
+        pdfval = pdf.valProbaLog
+
+        zgrid_end = zgrid[-1]
+        if pdfval.shape[0] != model.input_shape[1]:
+            raise APIException(
+                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES, "PDF and model shapes are not compatible"
+            )
+        # The model needs a PDF, not LogPDF
+        zend_diff = (zgrid_end - c_zgrid_zend) / zgrid_end
+        if zend_diff > 1e-6:
+            raise APIException(
+                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
+                "PDF and model shapes are not compatible, zgrid differ in the end : "
+                f"{zgrid_end} != {c_zgrid_zend}",
+            )
+        z_step = (zgrid[-1] + 1) / (zgrid[-2] + 1)
+        c_zrange_step = model_parameters["zrange_step"]
+        step_diff = (np.exp(c_zrange_step) - z_step) / z_step
+        if step_diff > 1e-6:
+            raise APIException(
+                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
+                "PDF and model shapes are not compatible, zgrid differ in the end : "
+                f"{z_step} != {np.exp(c_zrange_step)}",
+            )
+        ret = dict()
+        classes = model_parameters["classes"]
+        probas = model.predict(np.exp(pdfval[None, :, None]))
+        for i in range(1, len(classes)):
+            ret[classes[i]] = probas[0, i]
+        return ret
+
+
+register_reliability_solver("deepLearningSolver", DeepLearningSolve, "deep")

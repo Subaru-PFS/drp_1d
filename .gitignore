@@ -3,6 +3,7 @@
 ###############################################
 build*/
 RedshiftLibrary/RedshiftLibrary/version.h
+RedshiftLibrary/RedshiftLibrary/version.h.ref
 RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp
 RedshiftLibrary/RedshiftLibrary/redshift_wrap.h
 
@@ -19,6 +20,7 @@ tools/CMakeFiles/
 *.includes
 *.files
 *.sh
+*.whl
 
 bin/*
 coverage/
@@ -67,7 +69,7 @@ pylibamazed/python/pylibamazed/redshift.py
 pylibamazed/python/pylibamazed/resources/
 *.egg*
 wheel
-
+*_version.py
 swig_ext.py
 
 lib/*.so

@@ -7,7 +7,7 @@
     "betaA",
     "betaTE",
     "betaZ",
-    "catalogDirpath"
+    "catalogDirPath"
   ],
   "additionalProperties": false,
   "properties": {
@@ -26,7 +26,7 @@
       "title": "Beta Z",
       "description": "Weight to redshift prior (redshift bins), the chi2 penalty is thus `-2 betaZ log(P(z))`"
     },
-    "catalogDirpath": {
+    "catalogDirPath": {
       "type": "string",
       "title": "Catalog directory path",
       "description": "Absolute path to the calibration file containing the parameters probability, empty string unset all priors"

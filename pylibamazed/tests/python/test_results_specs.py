@@ -55,7 +55,7 @@ def test_get_dataframe_by_criteria():
         "level": "candidate",
         "OperatorResult_name": "Redshift",
         "ResultStore_key": "extrema_results",
-        "hdf5_type": "f8"
+        "hdf5_type": "f8",
     }
     name_df = pd.DataFrame(name_data, index=REDSHIFT_INDEX)
     test_name_df = rs.get_df_by_name("Redshift")
@@ -68,7 +68,7 @@ def test_get_dataframe_by_criteria():
         "level": ["candidate", "candidate"],
         "OperatorResult_name": ["ModelLambda[obs_id]", "ModelFlux[obs_id]"],
         "ResultStore_key": ["extrema_results", "extrema_results"],
-        "hdf5_type": ["f8", "f8"]
+        "hdf5_type": ["f8", "f8"],
     }
     dataset_df = pd.DataFrame(dataset_data, index=MODEL_INDEXES)
     test_dataset_df = rs.get_df_by_dataset("model<ObsID>")
@@ -81,7 +81,7 @@ def test_get_dataframe_by_criteria():
         "level": "method",
         "OperatorResult_name": "flagValue",
         "ResultStore_key": "warningFlag",
-        "hdf5_type": "i"
+        "hdf5_type": "i",
     }
     level_df = pd.DataFrame(level_data, index=METHOD_INDEX)
     test_level_df = rs.get_df_by_level("method")

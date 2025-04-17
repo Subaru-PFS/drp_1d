@@ -37,19 +37,19 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
 using namespace std;
 
-CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
-                                   const CSpectraGlobalIndex &spcIndex,
+CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                                    const CLineMap &restLineList,
                                    ElementComposition element_composition)
-    : m_lambdaRanges(lambdaranges), m_spectraIndex(spcIndex),
-      m_RestLineList(restLineList) {
+    : m_spectraIndex(spcIndex), m_RestLineList(restLineList) {
 
   switch (element_composition) {
   case ElementComposition::Default:
@@ -75,20 +75,27 @@ CLMEltListVector::CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
   }
 }
 
-CLMEltListVector::CLMEltListVector(CLineModelElementList eltlist,
-                                   const CLineMap &restLineList)
-    : m_RestLineList(restLineList), m_spectraIndex(1) { // for unit test
-
-  m_ElementsVector.push_back(eltlist);
-
-  for (auto elt : m_ElementsVector[0])
-    m_ElementsParams.push_back(elt->getElementParam());
+TInt32List CLMEltListVector::getValidElementIndices() const {
+  TInt32List EltIndices(m_ElementsParams.size());
+  std::iota(EltIndices.begin(), EltIndices.end(), 0);
+  return getValidElementIndices(EltIndices);
 }
 
-Int32 CLMEltListVector::GetModelNonZeroElementsNDdl() const {
+TInt32List
+CLMEltListVector::getValidElementIndices(TInt32List const &EltIndices) const {
+  TInt32List valid_indices;
+  std::copy_if(EltIndices.cbegin(), EltIndices.cend(),
+               std::back_inserter(valid_indices), [this](Int32 elt_idx) {
+                 return m_ElementsParams[elt_idx]->isFittable();
+               });
+
+  return valid_indices;
+}
+
+Int32 CLMEltListVector::getNonZeroElementsNDdl() const {
   Int32 nddl = 0;
-  for (Int32 elt_index = 0; elt_index < m_ElementsParams.size(); elt_index++) {
-    if (isOutsideLambdaRange(elt_index))
+  for (Int32 elt_index = 0; elt_index < ssize(m_ElementsParams); elt_index++) {
+    if (m_ElementsParams[elt_index]->isNotFittable())
       continue;
     if (!m_ElementsParams[elt_index]->isAllAmplitudesNull())
       nddl++;
@@ -118,15 +125,13 @@ void CLMEltListVector::AddElementParam(CLineVector lines) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   auto const ps = Context.GetParameterStore();
-  Float64 const velocityEmission = ps->GetScoped<Float64>("velocityEmission");
-  Float64 const velocityAbsorption =
-      ps->GetScoped<Float64>("velocityAbsorption");
+  Float64 const velocity = lines.front().IsEmission()
+                               ? ps->GetScoped<Float64>("velocityEmission")
+                               : ps->GetScoped<Float64>("velocityAbsorption");
+
   std::string lineWidthType = ps->GetScoped<std::string>("lineWidthType");
   m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
-      std::move(lines), velocityEmission, velocityAbsorption, lineWidthType));
-
-  m_globalOutsideLambdaRangeList.push_back(std::vector<bool>(nb_lines, false));
-  m_globalOutsideLambdaRange.push_back(false);
+      std::move(lines), velocity, lineWidthType));
 }
 
 void CLMEltListVector::fillElements() {
@@ -240,7 +245,7 @@ std::vector<std::pair<Int32, TInt32List>>
 CLMEltListVector::getIgmLinesIndices() const {
 
   std::vector<std::pair<Int32, TInt32List>> indices;
-  for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+  for (Int32 elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
     auto const &line_indices = m_ElementsParams[elt_idx]->m_asymLineIndices;
     if (!line_indices.empty())
       indices.push_back({elt_idx, line_indices});
@@ -256,19 +261,12 @@ CLMEltListVector::getIgmLinesIndices() const {
  **/
 void CLMEltListVector::SetElementAmplitude(Int32 eltIndex, Float64 A,
                                            Float64 AStd) {
-  m_ElementsParams[eltIndex]->setAmplitudes(
-      A, AStd, m_globalOutsideLambdaRangeList[eltIndex],
-      m_globalOutsideLambdaRange[eltIndex]);
+  m_ElementsParams[eltIndex]->setAmplitudes(A, AStd);
 }
 
 void CLMEltListVector::resetLambdaOffsets() {
   for (auto &ep : m_ElementsParams)
     ep->resetLambdaOffsets();
-}
-
-void CLMEltListVector::resetAmplitudeOffsets() {
-  for (auto &ep : m_ElementsParams)
-    ep->resetAmplitudeOffset();
 }
 
 void CLMEltListVector::resetElementsFittingParam(bool enableAmplitudeOffsets) {
@@ -286,18 +284,65 @@ void CLMEltListVector::resetAsymfitParams() {
   }
 }
 
-void CLMEltListVector::setGlobalOutsideLambdaRangeFromSpectra() {
-  for (size_t elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
-    m_globalOutsideLambdaRange[elt_idx] = computeOutsideLambdaRange(elt_idx);
-    for (size_t line_idx = 0; line_idx < m_ElementsParams[elt_idx]->size();
+void CLMEltListVector::computeGlobalOutsideLambdaRange() {
+  for (Int32 elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+    m_ElementsParams[elt_idx]->m_globalOutsideLambdaRange =
+        computeOutsideLambdaRange(elt_idx);
+    for (Int32 line_idx = 0; line_idx < ssize(*m_ElementsParams[elt_idx]);
          ++line_idx)
-      m_globalOutsideLambdaRangeList[elt_idx][line_idx] =
+      m_ElementsParams[elt_idx]->m_globalOutsideLambdaRangeList[line_idx] =
           computeOutsideLambdaRangeLine(elt_idx, line_idx);
   }
 }
 
-const std::vector<bool> &
-CLMEltListVector::getOutsideLambdaRangeList(Int32 elt_index) const {
-
-  return m_globalOutsideLambdaRangeList[elt_index];
+void CLMEltListVector::setAllAbsLinesFittable() {
+  m_allAbsLinesNoContinuum = false;
+  for (auto const &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_absLinesNullContinuum = false; // reset all
+  }
 }
+
+void CLMEltListVector::setAllAbsLinesNotFittable() {
+  m_allAbsLinesNoContinuum = true;
+  for (auto const &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_absLinesNullContinuum = false; // reset all
+    if (elt_param_ptr->GetElementType() == CLine::EType::nType_Absorption)
+      elt_param_ptr->m_absLinesNullContinuum = true;
+  }
+}
+
+void CLMEltListVector::resetNullLineProfiles() {
+  for (auto &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_nullLineProfiles = false;
+  }
+}
+
+void CLMEltListVector::setNullNominalAmplitudesNotFittable() {
+  for (auto &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_nullNominalAmplitudes = false; // reset all
+    if (!elt_param_ptr->m_globalOutsideLambdaRange)
+      elt_param_ptr->setNullNominalAmplitudesNotFittable();
+  }
+}
+
+void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
+    CSpcModelVectorPtr const &models) {
+  for (Int32 eIdx = 0; eIdx < getNbElements(); ++eIdx) {
+    auto const &elt_param_ptr = m_ElementsParams[eIdx];
+    elt_param_ptr->m_absLinesNullContinuum = false; // reset all
+    if (elt_param_ptr->GetElementType() != CLine::EType::nType_Absorption ||
+        elt_param_ptr->m_globalOutsideLambdaRange)
+      continue;
+    if (m_allAbsLinesNoContinuum ||
+        models->getMaxContinuumUnderElement(eIdx) <= 0.)
+      elt_param_ptr->m_absLinesNullContinuum = true;
+  }
+}
+
+void CLMEltListVector::computeGlobalLineValidity(
+    CSpcModelVectorPtr const &models) {
+  computeGlobalOutsideLambdaRange();
+  setNullNominalAmplitudesNotFittable();
+  setAbsLinesNullContinuumNotFittable(models);
+  resetNullLineProfiles();
+};

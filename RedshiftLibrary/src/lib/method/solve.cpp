@@ -50,15 +50,11 @@ CSolve::CSolve(const std::string &name)
     : m_category(Context.GetCurrentCategory()), m_name(name) {}
 
 void CSolve::Compute() {
-  auto const &inputContext = *Context.GetInputContext();
-  auto &scope = Context.m_ScopeStack;
-  InitRanges(inputContext);
-  {
-    CAutoScope method_autoscope(scope, m_name, ScopeType::METHOD);
-    CAutoSaveFlagToResultStore saveflag;
-    auto const &result = compute();
-    saveToResultStore(result);
-  }
+  CAutoScope method_autoscope(Context.m_ScopeStack, m_name, ScopeType::METHOD);
+  CAutoSaveFlagToResultStore saveflag;
+  InitRanges(*Context.GetInputContext());
+  auto const &result = compute();
+  saveToResultStore(result);
 }
 
 void CSolve::saveToResultStore(

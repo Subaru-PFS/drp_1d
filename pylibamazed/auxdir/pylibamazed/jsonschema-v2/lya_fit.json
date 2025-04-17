@@ -80,12 +80,12 @@
           "title": "Delta fit step",
           "description": "Tabulation of Lya offset, step value (in Angtr\u00f6ms)"
         },
-        "swicthFixedToFit": {
+        "switchFixedToFit": {
           "type": "boolean",
           "title": "Force Lya fit",
           "description": "For `ASYMFIXED` profiles only: \n * **true**: fit Lya shape (alpha, width & offset) and forget values from template-ratio catalog \n * **false**: use Lya shape values from template-ratio catalog."
         },
-        "swicthFitToFixed": {
+        "switchFitToFixed": {
           "type": "boolean",
           "title": "Force lya fit disabling",
           "description": "For ASYMFIT profiles only: \n * **true**: set hard coded values for Lya shape (alpha=2.0, width=2.0, offset=0.0) \n * **false**: fit or use template-ratio values depending on lyaforcefit parameter."

@@ -68,21 +68,17 @@ BOOST_AUTO_TEST_CASE(Instance) {
   rs.push_back(std::move(lineAsym));
 
   TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "combined");
+      std::make_shared<TLineModelElementParam>(rs, 1.0, "combined");
 
   // BOOST_CHECK_THROW(CLineModelElement(fdata, "foobar"), AmzException);
 
   CLineModelElement element = CLineModelElement(fdata);
-  BOOST_CHECK_CLOSE(1.0, fdata->getVelocityEmission(), 0.01);
-  BOOST_CHECK_CLOSE(1.1, fdata->getVelocityAbsorption(), 0.01);
+  BOOST_CHECK_CLOSE(1.0, fdata->getVelocity(), 0.01);
   BOOST_CHECK(fdata->GetElementType() == CLine::EType::nType_Emission);
   BOOST_CHECK(fdata->IsEmission());
   BOOST_CHECK(element.GetSize() == 2);
-  fdata->SetVelocityEmission(2.0);
-  BOOST_CHECK_CLOSE(2.0, fdata->getVelocityEmission(), 0.01);
-
-  fdata->SetVelocityAbsorption(2.1);
-  BOOST_CHECK_CLOSE(2.1, fdata->getVelocityAbsorption(), 0.01);
+  fdata->setVelocity(2.0);
+  BOOST_CHECK_CLOSE(2.0, fdata->getVelocity(), 0.01);
 
   TAsymParams const params = {2.2, 2.3, 2.4};
   fdata->SetAsymfitParams(params);
@@ -114,12 +110,12 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
 
   TLineModelElementParam_ptr fdata_id =
       std::make_shared<TLineModelElementParam>(
-          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., 3000, "instrumentDriven");
+          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., "instrumentDriven");
   TLineModelElementParam_ptr fdata_c = std::make_shared<TLineModelElementParam>(
-      rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., 3000, "combined");
+      rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., "combined");
   TLineModelElementParam_ptr fdata_vd =
       std::make_shared<TLineModelElementParam>(
-          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., 3000, "velocityDriven");
+          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., "velocityDriven");
 
   CLineModelElement elementID = CLineModelElement(fdata_id);      //,
   CLineModelElement elementcombined = CLineModelElement(fdata_c); //,
@@ -164,7 +160,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
   TLineModelElementParam_ptr fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "combined");
+      std::make_shared<TLineModelElementParam>(rs, 1.0, "combined");
 
   CLineModelElement element = CLineModelElement(fdata);
 
@@ -204,7 +200,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   std::shared_ptr<TLineModelElementParam> fdata =
-      std::make_shared<TLineModelElementParam>(rs, 1.0, 1.1, "velocityDriven");
+      std::make_shared<TLineModelElementParam>(rs, 1.0, "velocityDriven");
 
   CLineModelElement element = CLineModelElement(fdata);
 

@@ -38,8 +38,7 @@
 # ============================================================================
 
 import numpy as np
-from pylibamazed.redshift import (CPhotBandCatalog, CPhotometricBand,
-                                  CPhotometricData)
+from pylibamazed.redshift import CPhotBandCatalog, CPhotometricBand, CPhotometricData
 
 
 def test_CPhotometricData():
@@ -54,8 +53,8 @@ def test_CPhotometricData():
 
 
 def test_CPhotometricBand():
-    lbda = np.arange(12000., 12500., 13.)
-    trans = np.full(lbda.size, .7)
+    lbda = np.arange(12000.0, 12500.0, 13.0)
+    trans = np.full(lbda.size, 0.7)
     pb = CPhotometricBand(trans, lbda)
 
     assert np.all(pb.GetTransmission() == trans)
@@ -63,12 +62,12 @@ def test_CPhotometricBand():
 
 
 def test_CPhotBandCatalog():
-    lbda1 = np.arange(12000., 12500., 13.)
-    trans1 = np.full(lbda1.size, .7)
+    lbda1 = np.arange(12000.0, 12500.0, 13.0)
+    trans1 = np.full(lbda1.size, 0.7)
     pb1 = CPhotometricBand(trans1, lbda1)
 
-    lbda2 = np.arange(14000., 14300., 13.)
-    trans2 = np.full(lbda2.size, .6)
+    lbda2 = np.arange(14000.0, 14300.0, 13.0)
+    trans2 = np.full(lbda2.size, 0.6)
     pb2 = CPhotometricBand(trans2, lbda2)
 
     names = ("band1", "band2")

@@ -135,25 +135,20 @@ public:
   static EForce string2Force(std::string const &s);
 
 protected:
-  Int32 m_id = undefIdx;
-  EType m_Type = EType::nType_Emission;
-  CLineProfile_ptr m_Profile = nullptr;
-  EForce m_Force = EForce::nForce_Weak;
-  Float64 m_Pos = 0.;
-  Float64 m_Offset = 0.;
-
   std::string m_Name = "";
-
+  Float64 m_Pos = 0.;
+  EType m_Type = EType::nType_Emission;
+  EForce m_Force = EForce::nForce_Weak;
+  CLineProfile_ptr m_Profile = nullptr;
   // for multiline group
   std::string m_GroupName = "";
   Float64 m_NominalAmplitude = 0.;
-
-  // for offset fitting
-  bool m_OffsetFit = false;
-
   // for velocity fitting
   std::string m_VelGroupName = "";
-
+  Int32 m_id = undefIdx;
+  Float64 m_Offset = 0.;
+  // for offset fitting
+  bool m_OffsetFit = false;
   std::string m_strID;
 };
 

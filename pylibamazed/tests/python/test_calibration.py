@@ -41,24 +41,20 @@ import os
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import ESolveMethod
 from tests.python.config import test_dir
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 calibration_dir = os.path.join(test_dir, "calibration")
 
 
 def make_parameters() -> Parameters:
-
     parameters_dict = {
+        "version": 2,
         "spectrumModels": ["galaxy"],
-        "ebmv": {
-            "count": 3,
-            "start": 0.0,
-            "step": 0.5
-        },
+        "ebmv": {"count": 3, "start": 0.0, "step": 0.5},
         "lsf": {
             "lsfType": "gaussianVariableWidth",
-            "gaussianVariableWidthFileName": "LSF/EuclidNISPVSSPSF201707.fits"
+            "gaussianVariableWidthFileName": "LSF/EuclidNISPVSSPSF201707.fits",
         },
         "galaxy": {
             "stages": ["redshiftSolver"],
@@ -70,27 +66,27 @@ def make_parameters() -> Parameters:
                         "tplRatioCatalog": "lineratiocataloglists/lineratiocatalogs_v16/",
                         "tplRatioIsmFit": True,
                         "nSigmaSupport": 8,
-                        "lya": {"profile": "igm"}
+                        "lya": {"profile": "igm"},
                     }
                 }
-            }
+            },
         },
         "photometryTransmissionDir": "photometric_transmission/EL-COSMOSv2/",
-        "photometryBand": ["H", "J", "Y", "riz"]
+        "photometryBand": ["H", "J", "Y", "riz"],
     }
-    return Parameters(parameters_dict, Checker=FakeParametersChecker)
+    return Parameters(parameters_dict, make_checks=False)
 
 
 def test_calibration_linecatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters, calibration_dir)
-    cl.load_linecatalog("galaxy", "lineModelSolve")
+    cl.load_linecatalog("galaxy", ESolveMethod.LINE_MODEL)
 
 
 def test_calibration_lineratiocatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters, calibration_dir)
-    cl.load_linecatalog("galaxy", "lineModelSolve")
+    cl.load_linecatalog("galaxy", ESolveMethod.LINE_MODEL)
     cl.load_line_ratio_catalog_list("galaxy")
 
 

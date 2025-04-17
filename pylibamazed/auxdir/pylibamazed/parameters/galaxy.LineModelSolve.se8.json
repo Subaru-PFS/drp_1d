@@ -1,20 +1,20 @@
 {
-"linemodel": {
-        "linetypefilter": "E",
-        "linewidthtype": "combined",
-        "emvelocityfitmin": 100,
-        "emvelocityfitmax": 700,
-        "igmfit": false,
-        "continuumfit": {
-          "fftprocessing": false,
-          "igmfit": false
-        },
-        "firstpass": {
-          "largegridstepratio": 11
-        },
-        "secondpass": {
-          "halfwindowsize":0.002
-        },
-        "stronglinesprior": 1e-3
-      }
+  "linemodel": {
+    "linetypefilter": "E",
+    "linewidthtype": "combined",
+    "emvelocityfitmin": 100,
+    "emvelocityfitmax": 700,
+    "igmfit": false,
+    "continuumfit": {
+      "fftprocessing": false,
+      "igmfit": false
+    },
+    "firstpass": {
+      "largegridstepratio": 11
+    },
+    "secondpass": {
+      "halfwindowsize": 0.002
+    },
+    "stronglinesprior": 0.001
+  }
 }

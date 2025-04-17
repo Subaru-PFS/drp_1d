@@ -10,7 +10,8 @@
     "extremaRedshiftSeparation",
     "smoothWidth",
     "autoCorrectInput",
-    "spectrumModels"
+    "spectrumModels",
+    "nbSamplesMin"
   ],
   "additionalProperties": false,
   "patternProperties": {
@@ -42,7 +43,7 @@
         "array",
         "object"
       ],
-      "title": "Lambda range in Angstroms. Is a array (range) for mono obs, and a dictionary of ranges for multiobs",
+      "title": "Lambda range in Angstroms. Is an array (range) for mono obs, and a dictionary of ranges for multiobs. ",
       "minItems": 2,
       "maxItems": 2,
       "prefixItems": [
@@ -55,7 +56,7 @@
       ],
       "items": false
     },
-    "airvacuumMethod": {
+    "airVacuumMethod": {
       "type": "string",
       "enum": [
         "",
@@ -68,6 +69,15 @@
       ],
       "title": "Air vaccum method",
       "description": "Method to apply for the air to vacuum wavelength conversion when reading input spectrum. Currently \"default\" method corresponds to morton2000"
+    },
+    "lineMeasRunMode": {
+      "type": "string",
+      "enum": [
+        "all",
+        "classif"
+      ],
+      "title": "Run mode for line measurement",
+      "description": "Option to run line measurement per spectrum on models : \n * **\"all\"**: all models \n * **\"classif\"**: only the classified one"
     },
     "extremaRedshiftSeparation": {
       "type": "number",
@@ -106,7 +116,10 @@
       }
     },
     "filters": {
-      "type": "array",
+      "type": [
+        "array",
+        "object"
+      ],
       "title": "Filters",
       "description": "List of filters to apply for pixel selection on spectra.\n Example: we want to select the pixels for which \n 1. flag corresponding to 8 is absent \n 2. flag corresponding to 4 is present or flag is 0 : \n [{\"key\": \"Flag\", \"instruction\": \"^\", \"value\": \"8\"}, {\"key\": \"Flag\", \"instruction\": \"0&\", \"value\": \"4\"}]",
       "items": {
@@ -179,6 +192,11 @@
       "title": "Continuum removal",
       "description": "",
       "$ref": "continuum_removal.json"
+    },
+    "nbSamplesMin": {
+      "type": "integer",
+      "title": "Minimum number of samples in a spectrum",
+      "description": ""
     }
   }
 }

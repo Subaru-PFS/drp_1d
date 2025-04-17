@@ -48,47 +48,16 @@ using namespace std;
 
 COperatorTemplateFittingBase::COperatorTemplateFittingBase(
     const TFloat64List &redshifts)
-    : m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()), m_redshifts(redshifts),
-      m_templateRebined_bf(m_spectra.size()),
+    : COperatorContinuumFitting(), m_templateRebined_bf(m_spectra.size()),
       m_spcSpectralAxis_restframe(m_spectra.size()),
-      m_mskRebined_bf(m_spectra.size()),
-      m_maskBuilder(std::make_shared<CMaskBuilder>()){};
-
-/**
- * \brief this function estimates the likelihood_cstLog term withing the
- * wavelength range
- **/
-Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog() const {
-  Float64 cstLog = 0.0;
-  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
-       boost::combine(m_spectra, m_lambdaRanges)) {
-    const CSpectrumSpectralAxis &spcSpectralAxis =
-        spectrum_ptr->GetSpectralAxis();
-    const TFloat64List &error =
-        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
-
-    Int32 numDevs = 0;
-
-    Float64 sumLogNoise = 0.0;
-
-    Int32 imin;
-    Int32 imax;
-    lambdaRange_ptr->getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
-    for (Int32 j = imin; j <= imax; j++) {
-      numDevs++;
-      sumLogNoise += log(error[j]);
-    }
-    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
-  }
-  return cstLog;
-}
+      m_mskRebined_bf(m_spectra.size()) {
+  SetRedshifts(redshifts);
+};
 
 // return tuple with photmetric values
 TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
     const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 EbmvCoeff, Int32 meiksinIdx, Float64 amplitude,
+    Float64 ebmvCoef, Int32 meiksinIdx, Float64 amplitude,
     const Float64 overlapThreshold, Int32 spcIndex,
     const std::shared_ptr<CModelSpectrumResult> &models) {
   Log.LogDetail(
@@ -105,24 +74,23 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   const TAxisSampleList &Xspc =
       m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
 
-  if ((EbmvCoeff > 0.) || (meiksinIdx > -1)) {
+  if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
     Int32 kstart = undefIdx;
     Int32 kend = undefIdx;
     currentRange.getClosedIntervalIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         kstart, kend);
-    InitIsmIgmConfig(redshift, kstart, kend, tpl->m_ismCorrectionCalzetti,
-                     tpl->m_igmCorrectionMeiksin, spcIndex);
+    InitIsmIgmConfig(redshift, kstart, kend, spcIndex);
   }
 
-  if (EbmvCoeff > 0.) {
+  if (ebmvCoef > 0.) {
     if (m_templateRebined_bf[spcIndex].CalzettiInitFailed()) {
       THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
         m_templateRebined_bf[spcIndex].m_ismCorrectionCalzetti->GetEbmvIndex(
-            EbmvCoeff);
+            ebmvCoef);
 
     if (idxEbmv != -1)
       ApplyDustCoeff(idxEbmv, spcIndex);
@@ -140,11 +108,10 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   const CSpectrumFluxAxis &modelflux =
       m_templateRebined_bf[spcIndex].GetFluxAxis();
   CSpectrumSpectralAxis modelwav =
-      m_templateRebined_bf[spcIndex]
-          .GetSpectralAxis(); // needs a copy to be shifted
-  modelwav.ShiftByWaveLength((1.0 + redshift),
-                             CSpectrumSpectralAxis::nShiftForward);
-  models->addModel(CSpectrum(std::move(modelwav), modelflux),
+      m_templateRebined_bf[spcIndex].GetSpectralAxis().ShiftByWaveLength(
+          (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
+  models->addModel(std::move(modelwav.GetSamplesVector()),
+                   modelflux.GetSamplesVector(),
                    m_spectra[spcIndex]->getObsID());
   return spcIndex > 0 ? TPhotVal() : getIntegratedFluxes();
 }
@@ -162,10 +129,9 @@ void COperatorTemplateFittingBase::RebinTemplate(
       m_lambdaRanges[spcIndex]->GetEnd() / onePlusRedshift);
 
   // redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
-  // Shouldn't ShiftByWaveLength be static ?
-  m_spcSpectralAxis_restframe[spcIndex].ShiftByWaveLength(
-      Context.getSpectra()[spcIndex]->GetSpectralAxis(), onePlusRedshift,
-      CSpectrumSpectralAxis::nShiftBackward);
+  m_spcSpectralAxis_restframe[spcIndex] =
+      Context.getSpectra()[spcIndex]->GetSpectralAxis().ShiftByWaveLength(
+          onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
   m_spcSpectralAxis_restframe[spcIndex].ClampLambdaRange(
       lambdaRange_restframe, spcLambdaRange_restframe);
 

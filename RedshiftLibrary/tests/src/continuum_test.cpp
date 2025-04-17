@@ -38,6 +38,7 @@
 // ============================================================================
 #include <boost/test/unit_test.hpp>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
@@ -47,7 +48,7 @@ using namespace std;
 
 void print_flux(TAxisSampleList sample) {
   BOOST_TEST_MESSAGE("=======");
-  for (Int32 i = 0; i < sample.size(); i++) {
+  for (Int32 i = 0; i < ssize(sample); i++) {
     BOOST_TEST_MESSAGE(sample[i]);
   }
   BOOST_TEST_MESSAGE("=======");
@@ -65,7 +66,13 @@ BOOST_AUTO_TEST_CASE(median_test) {
 
   // odd n_points     : rest part is on right side
   // even n_points    : no rest part
-  // In this context n_points is always odd
+
+  // n_points = 0
+  n_points = 0;
+  y_out = sample.MedianSmooth(y_in, n_points);
+  BOOST_TEST_MESSAGE("n_points = 0");
+  BOOST_CHECK(y_out == y_in);
+  print_flux(y_out);
 
   // n_points = 1 > y_out == y_in
   n_points = 1;
@@ -88,7 +95,7 @@ BOOST_AUTO_TEST_CASE(median_test) {
   // i = 0 : n_points = 2 in CMedian::Find
   BOOST_CHECK(y_out[0] == (y_in[0] + y_in[1]) / (n_points - 1));
   // i in [1,9] : n_points =3 in CMedian::Find
-  for (Int32 i = 1; i < y_out.size() - 1; i++) {
+  for (Int32 i = 1; i < ssize(y_out) - 1; i++) {
     BOOST_CHECK(y_out[i] == y_in[i]);
   }
   // i = 10 : n_points = 2 in CMedian::Find
@@ -131,7 +138,7 @@ BOOST_AUTO_TEST_CASE(median_test) {
   BOOST_CHECK(y_out[0] == (y_in[0] + y_in[1]) / (n_points - 1));
   // i in [1,9] : n_points = 3 in CMedian::Find
   TFloat64List y_in_sorted(3);
-  for (Int32 i = 1; i < y_out.size() - 1; i++) {
+  for (Int32 i = 1; i < ssize(y_out) - 1; i++) {
     std::copy(y_in.begin() + (i - 1), y_in.begin() + (i + 2),
               y_in_sorted.begin());
     std::sort(y_in_sorted.begin(), y_in_sorted.end());
@@ -153,7 +160,13 @@ BOOST_AUTO_TEST_CASE(mean_test) {
 
   // odd n_range  : rest part is on right side
   // even n_range : no rest part
-  // In this context range is always even
+
+  // n_range null
+  n_range = 0;
+  y_out = sample.MeanSmooth(y_in, n_range);
+  BOOST_TEST_MESSAGE("n_range = 0");
+  BOOST_CHECK(y_out == y_in);
+  print_flux(y_out);
 
   // n_range = 1 > y_out == y_in
   n_range = 1;
@@ -173,7 +186,7 @@ BOOST_AUTO_TEST_CASE(mean_test) {
   y_out = sample.MeanSmooth(y_in, n_range);
   BOOST_TEST_MESSAGE("n_range = 2");
   BOOST_CHECK(y_out.front() == y_in.front());
-  for (Int32 i = 1; i < y_out.size(); i++) {
+  for (Int32 i = 1; i < ssize(y_out); i++) {
     BOOST_CHECK(y_out[i] == (y_in[i] + y_in[i - 1]) / n_range);
   }
   print_flux(y_out);

@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import Callable, List
+from typing import Callable, List, Any
 
 import pandas as pd
 from pylibamazed.Exception import APIException
@@ -55,31 +55,32 @@ class FilterItem:
 
     allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
 
-    def __init__(self, key: str, instruction: str, value: any):
+    def __init__(self, key: str, instruction: str, value: Any):
         self.check_instruction(instruction)
         self.key = key
         self.instruction = instruction
         self.value = value
 
     def __repr__(self):
-        return "Filter " + str({
-            "key": self.key,
-            "instruction": self.instruction,
-            "value": self.value,
-        })
+        return "Filter " + str(
+            {
+                "key": self.key,
+                "instruction": self.instruction,
+                "value": self.value,
+            }
+        )
 
     def __eq__(self, __value: object) -> bool:
-        return type(self) == type(__value) \
-            and self.key == __value.key \
-            and self.instruction == __value.instruction \
+        return (
+            type(self) == type(__value)
+            and self.key == __value.key
+            and self.instruction == __value.instruction
             and self.value == __value.value
+        )
 
     def compliant_lines(self, df: pd.DataFrame) -> pd.Series:
         if self.key not in df:
-            raise APIException(
-                ErrorCode.INVALID_FILTER_KEY,
-                f"Column {self.key} does not exist"
-            )
+            raise APIException(ErrorCode.INVALID_FILTER_KEY, f"Column {self.key} does not exist")
         comparator = self._comparator_from_instruction()
         return comparator(df[self.key])
 
@@ -146,7 +147,7 @@ class FilterItem:
             raise APIException(
                 ErrorCode.INVALID_FILTER_INSTRUCTION,
                 f"Instruction {instruction} is not registered."
-                f"Allowed instructions are: {cls.allowed_instructions}"
+                f"Allowed instructions are: {cls.allowed_instructions}",
             )
 
 
@@ -172,8 +173,8 @@ class FilterList:
     def add_filter(self, filter) -> None:
         self.items.append(filter)
 
-    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+    def apply(self, df: pd.DataFrame):
         if not self.items:
-            return df
+            return None
         condition_list = [filt.compliant_lines(df) for filt in self.items]
-        return df[LogicUtils.cumulate_conditions(condition_list)]
+        return LogicUtils.cumulate_conditions(condition_list)

@@ -1,23 +1,23 @@
 {
-    "redshiftSampling": "log",
-    "stages": null,
-    "lineMeasDzHalf": 0.0,
-    "lineMeasRedshiftStep": 0.0001,
-    "lineMeasSolve": {
-        "lineModel": {
-            "nSigmaSupport": 8,
-            "lineWidthType": "combined",
-            "fittingMethod": "hybrid",
-            "polynomialDegree": 2,
-            "velocityFit": false,
-            "ampOffsetFit": "true",
-            "lbdaOffsetFit": "true",
-            "emVelocityFitMin": 10,
-            "emVelocityFitMax": 400,
-            "absVelocityFitMin": 150,
-            "absVelocityFitMax": 500,
-            "lineRatioType": "rules",
-            "rules": "no"
-        }
+  "redshiftSampling": "log",
+  "stages": null,
+  "lineMeasDzHalf": 0.0,
+  "lineMeasRedshiftStep": 0.0001,
+  "lineMeasSolve": {
+    "lineModel": {
+      "nSigmaSupport": 8,
+      "lineWidthType": "combined",
+      "fittingMethod": "hybrid",
+      "polynomialDegree": 2,
+      "velocityFit": false,
+      "ampOffsetFit": "true",
+      "lbdaOffsetFit": "true",
+      "emVelocityFitMin": 10,
+      "emVelocityFitMax": 400,
+      "absVelocityFitMin": 150,
+      "absVelocityFitMax": 500,
+      "lineRatioType": "rules",
+      "rules": "no"
     }
+  }
 }

@@ -47,7 +47,9 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
@@ -55,6 +57,10 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
+
+namespace templateFitting_test {
+class fitQuality_test;
+}
 
 namespace NSEpic {
 
@@ -92,39 +98,40 @@ struct TFittingIsmIgmResult : TFittingResult {
                        Int32 spcsize = 1)
       : overlapFraction(spcsize, NAN),
         ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
-        IsmCalzettiCoeffInterm(EbmvListSize,
-                               TFloat64List(MeiksinListSize, NAN)),
-        IgmMeiksinIdxInterm(EbmvListSize,
-                            TInt32List(MeiksinListSize, undefIdx)) {}
+        IsmCalzettiIdxInterm(EbmvListSize, undefIdx),
+        IgmMeiksinIdxInterm(MeiksinListSize, undefIdx) {}
 
   TFloat64List overlapFraction;
-  Float64 EbmvCoeff = NAN;
-  Int32 MeiksinIdx = undefIdx;
+  Float64 reducedChiSquare = INFINITY;
+  Float64 pValue = 0;
+  Float64 ebmvCoef = NAN;
+  Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
-  std::vector<TFloat64List> IsmCalzettiCoeffInterm;
-  std::vector<TInt32List> IgmMeiksinIdxInterm;
+  TInt32List IsmCalzettiIdxInterm;
+  TInt32List IgmMeiksinIdxInterm;
 };
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
-  COperatorTemplateFitting(const TFloat64List &redshifts = TFloat64List())
+  COperatorTemplateFitting(const TFloat64List &redshifts)
       : COperatorTemplateFittingBase(redshifts), m_kStart(m_spectra.size()),
         m_kEnd(m_spectra.size()){
 
         };
   virtual ~COperatorTemplateFitting() = default;
 
-  std::shared_ptr<COperatorResult>
-  Compute(const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-          std::string opt_interp, bool opt_extinction = false,
-          bool opt_dustFitting = false,
-          Float64 opt_continuum_null_amp_threshold = 0.,
-          const CPriorHelper::TPriorZEList &logpriorze =
-              CPriorHelper::TPriorZEList(),
-          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
+  std::shared_ptr<CTemplateFittingResult> Compute(
+      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
+      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      Float64 opt_continuum_null_amp_threshold = 0.,
+      const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
+      Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
+      TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
+      std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 
 protected:
+  friend class templateFitting_test::fitQuality_test;
   TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
                                 Float64 redshift, Float64 overlapThreshold,
                                 bool opt_extinction, bool opt_dustFitting,
@@ -132,12 +139,16 @@ protected:
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
 
+  virtual std::pair<TList<CMask>, Int32>
+  getMaskListAndNSamples(Float64 redshift) const;
+
   virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
   virtual bool igmIsInRange(const TFloat64RangeList &ranges) const;
 
   virtual TCrossProductResult ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                                                    Float64 redshift,
+                                                   CMask const &mask,
                                                    Int32 spcIndex = 0);
 
   virtual void

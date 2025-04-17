@@ -60,9 +60,7 @@ void CRebin::compute(const TFloat64Range &range,
                                       "included in spectral axis");
   }
 
-  CSpectrumFluxAxis rebinedFluxAxis =
-      std::move(rebinedSpectrum.GetRawFluxAxis());
-  rebinedFluxAxis.SetSize(s); // does not re-allocate if already allocated
+  CSpectrumFluxAxis rebinedFluxAxis(s);
   rebinedMask.SetSize(s);
 
   const TAxisSampleList &Xtgt = targetSpectralAxis.GetSamplesVector();
@@ -92,7 +90,7 @@ void CRebin::compute(const TFloat64Range &range,
 
   rebinedFluxAxis.setError(CSpectrumNoiseAxis(error_tmp));
   rebinedSpectrum.ResetContinuum();
-  rebinedSpectrum.SetType(CSpectrum::EType::nType_raw);
+  rebinedSpectrum.SetType(CSpectrum::EType::raw);
   rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,
                                          std::move(rebinedFluxAxis));
 }

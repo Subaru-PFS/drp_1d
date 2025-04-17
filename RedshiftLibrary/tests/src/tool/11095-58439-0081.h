@@ -36,6 +36,9 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+
+#ifndef FIXTURES_SPECTRAL_QSO_DATA_FOR_TESTS
+#define FIXTURES_SPECTRAL_QSO_DATA_FOR_TESTS
 #include "RedshiftLibrary/common/datatypes.h"
 
 using namespace NSEpic;
@@ -240,3 +243,5 @@ public:
       3.723137E-18, 3.550377E-18, 3.545069E-18, 4.081188E-18, 5.47091E-18,
       6.45586E-18,  5.780145E-18};
 };
+
+#endif

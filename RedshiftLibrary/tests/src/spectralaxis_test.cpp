@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 
@@ -121,8 +122,8 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   // ShiftByWaveLength linear forward
   const TFloat64List n7Array{2., 3.};
   const CSpectrumSpectralAxis n7Axis(n7Array);
-  const CSpectrumSpectralAxis n7ShiftForward(
-      n7Axis, 10.1, CSpectrumSpectralAxis::nShiftForward);
+  const CSpectrumSpectralAxis n7ShiftForward =
+      n7Axis.ShiftByWaveLength(10.1, CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(n7ShiftForward.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(n7ShiftForward[0], 20.2, 1.e-12);
   BOOST_CHECK_CLOSE(n7ShiftForward[1], 30.3, 1.e-12);
@@ -134,37 +135,37 @@ BOOST_AUTO_TEST_CASE(ShiftByWaveLength_test) {
   CSpectrumSpectralAxis spcAxisShifted;
 
   // test wavelengthOffset < 0.
-  BOOST_CHECK_THROW(
-      spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, -2.,
-                                       CSpectrumSpectralAxis::nShiftForward),
-      AmzException);
+  BOOST_CHECK_THROW(spcAxisOrigin.ShiftByWaveLength(
+                        -2., CSpectrumSpectralAxis::nShiftForward),
+                    AmzException);
 
   // ShiftByWaveLength linear forward
-  spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 10.1,
-                                   CSpectrumSpectralAxis::nShiftForward);
+  spcAxisShifted = spcAxisOrigin.ShiftByWaveLength(
+      10.1, CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted[0], 20.2, 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 30.3, 1.e-12);
   spcAxisShifted.clear();
 
   // ShiftByWaveLength linear backward
-  spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 2,
-                                   CSpectrumSpectralAxis::nShiftBackward);
+  spcAxisShifted =
+      spcAxisOrigin.ShiftByWaveLength(2, CSpectrumSpectralAxis::nShiftBackward);
   BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted[0], 1., 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 3. / 2, 1.e-12);
   spcAxisShifted.clear();
 
   // ShiftByWaveLength zero shift
-  spcAxisShifted.ShiftByWaveLength(spcAxisOrigin, 0.,
-                                   CSpectrumSpectralAxis::nShiftForward);
+  spcAxisShifted =
+      spcAxisOrigin.ShiftByWaveLength(0., CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(spcAxisShifted.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted[0], 2., 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted[1], 3., 1.e-12);
 
   // ShiftByWaveLength
   CSpectrumSpectralAxis spcAxisShifted2(spcAxisOrigin);
-  spcAxisShifted2.ShiftByWaveLength(8., CSpectrumSpectralAxis::nShiftForward);
+  spcAxisShifted2 = spcAxisShifted2.ShiftByWaveLength(
+      8., CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(spcAxisShifted2.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(spcAxisShifted2[0], 16., 1.e-12);
   BOOST_CHECK_CLOSE(spcAxisShifted2[1], 24., 1.e-12);
@@ -596,13 +597,13 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
   TFloat64List samples = range.SpreadOverLogEpsilon(0.01);
 
   TFloat64List samples_truncated(samples.size(), 0.);
-  for (Int32 i = 0; i < samples.size(); i++) {
+  for (Int32 i = 0; i < ssize(samples); i++) {
     samples_truncated[i] = (int)(100 * samples[i]) / 100.0;
   }
 
   Float64 maxAbsRelativeError = 0.0;
   Float64 logGridStep = log(samples_truncated[1] / samples_truncated[0]);
-  for (Int32 i = 1; i < samples_truncated.size(); i++) {
+  for (Int32 i = 1; i < ssize(samples_truncated); i++) {
     Float64 _logGridStep = log(samples_truncated[i] / samples_truncated[i - 1]);
     Float64 relativeErrAbs =
         std::abs((_logGridStep - logGridStep) / logGridStep);
@@ -614,7 +615,7 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
   TFloat64List samples_out = spcAxis.GetSamplesVector();
   Float64 maxAbsRelativeError_out = 0.0;
   logGridStep = log(samples_out[1] / samples_out[0]);
-  for (Int32 i = 1; i < samples_out.size(); i++) {
+  for (Int32 i = 1; i < ssize(samples_out); i++) {
     Float64 _logGridStep = log(samples_out[i] / samples_out[i - 1]);
     Float64 relativeErrAbs =
         std::abs((_logGridStep - logGridStep) / logGridStep);

@@ -41,6 +41,7 @@
 #include <fstream>
 #include <numeric>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/log/log.h"
@@ -56,12 +57,13 @@ COperatorPdfz::COperatorPdfz(const std::string &opt_combine,
                              const std::string &Id_prefix,
                              bool allow_extrema_at_border,
                              Int32 maxPeakCount_per_window)
-    : m_opt_combine(opt_combine), m_peakSeparation(peakSeparation),
-      m_meritcut(meritcut), m_allow_extrema_at_border(allow_extrema_at_border),
+    : m_opt_combine(opt_combine),
       m_maxPeakCount_per_window(maxPeakCount_per_window <= 0
                                     ? maxCandidate
                                     : maxPeakCount_per_window),
       m_maxCandidate(maxCandidate), m_redshiftLogSampling(redshiftLogSampling),
+      m_peakSeparation(peakSeparation),
+      m_allow_extrema_at_border(allow_extrema_at_border), m_meritcut(meritcut),
       m_Id_prefix(Id_prefix) {}
 
 /*
@@ -89,17 +91,13 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray) {
     m_parentCandidates =
         TCandidateZbyID(chisquarearray.parentCandidates.cbegin(),
                         chisquarearray.parentCandidates.cend());
-    for (Int32 i = 0; i < chisquarearray.zgridParams.size(); ++i)
+    for (Int32 i = 0; i < ssize(chisquarearray.zgridParams); ++i)
       m_candidatesZRanges[chisquarearray.parentCandidates[i].first] =
           TFloat64Range(chisquarearray.zgridParams[i].zmin,
                         chisquarearray.zgridParams[i].zmax);
   }
 
-  // create ClogZPdfResult
-  createPdfResult(chisquarearray);
-
-  // build PDF from chisquares and priors
-  CombinePDF(chisquarearray);
+  computePDF(chisquarearray);
 
   // find candidates redshifts
   TCandidateZbyID zcandidates =
@@ -207,6 +205,13 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
   m_postmargZResult->isPdfValid(); // will throw an error if not
 }
 
+void COperatorPdfz::computePDF(const ChisquareArray &chisquarearray) {
+  // create ClogZPdfResultm
+  createPdfResult(chisquarearray);
+  // build PDF from chisquares and priors
+  CombinePDF(chisquarearray);
+}
+
 TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   TCandidateZbyID candidates;
   const TFloat64List zgrid = m_postmargZResult->redshifts;
@@ -214,7 +219,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
     const TFloat64Range &redshiftsRange = cand.second;
     std::string id = cand.first;
 
-    // call Find on each secondpass range and retrieve the best  peak
+    // call Find on each secondpass range and retrieve the best peak
     bool invertForMinSearch = false;
     CExtremum extremum_op = CExtremum(
         m_maxPeakCount_per_window, m_peakSeparation, m_meritcut,
@@ -272,12 +277,12 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
                                       "range of less than 2 points");
   }
 
-  for (Int32 k = 0; k < redshifts.size(); k++) {
+  for (Int32 k = 0; k < ssize(redshifts); k++) {
 
     Float64 zstep;
     if (k == 0) {
       zstep = (redshifts[k + 1] - redshifts[k]) * 0.5;
-    } else if (k == redshifts.size() - 1) {
+    } else if (k == ssize(redshifts) - 1) {
       zstep = (redshifts[k] - redshifts[k - 1]) * 0.5;
     } else {
       zstep = (redshifts[k + 1] - redshifts[k - 1]) * 0.5;
@@ -291,7 +296,7 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
 
   Float64 sumModifiedExp = 0.0;
   Float64 modifiedEXPO_previous = exp(valproba[0] - logfactor);
-  for (Int32 k = 1; k < redshifts.size(); k++) {
+  for (Int32 k = 1; k < ssize(redshifts); k++) {
     Float64 modifiedEXPO = exp(valproba[k] - logfactor);
     Float64 trapezArea = (modifiedEXPO + modifiedEXPO_previous) / 2.0;
     trapezArea *= (redshifts[k] - redshifts[k - 1]);
@@ -341,20 +346,20 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
 
   logPdf.resize(redshifts.size());
   TFloat64List Xi2_2withPrior;
-  for (Int32 i = 0; i < merits.size(); i++)
+  for (Int32 i = 0; i < ssize(merits); i++)
     Xi2_2withPrior.push_back(-0.5 * merits[i] + logZPrior[i] - logsumZPrior);
 
   // prepare logLikelihood and LogEvidence
   Float64 logsumexp = logSumExpTrick(Xi2_2withPrior, redshifts);
   logEvidence = cstLog + logsumexp;
 
-  for (Int32 k = 0; k < redshifts.size(); k++)
+  for (Int32 k = 0; k < ssize(redshifts); k++)
     logPdf[k] = Xi2_2withPrior[k] + cstLog - logEvidence;
 }
 
 Int32 COperatorPdfz::getIndex(const TFloat64List &redshifts, Float64 z) {
   Int32 solutionIdx = -1;
-  for (Int32 i2 = 0; i2 < redshifts.size(); i2++)
+  for (Int32 i2 = 0; i2 < ssize(redshifts); i2++)
     if (redshifts[i2] == z) {
       solutionIdx = i2;
       break;
@@ -362,21 +367,28 @@ Int32 COperatorPdfz::getIndex(const TFloat64List &redshifts, Float64 z) {
   return solutionIdx;
 }
 
+Float64 COperatorPdfz::logSumFromLogsTrick(const TFloat64List &logs) {
+  // Computes log(sum_i(Ei))
+  Float64 maxLogs = *std::max_element(logs.cbegin(), logs.cend());
+
+  // Using computational trick to sum
+  Float64 transformedSum = 0.0;
+  for (auto &logItem : logs)
+    transformedSum += exp(logItem - maxLogs);
+  Float64 logSumEvidence =
+      maxLogs +
+      log(transformedSum); // here is the marginalized evidence, used for
+  return logSumEvidence;
+}
+
 void COperatorPdfz::ComputeEvidenceAll(const TFloat64List &LogEvidencesWPriorM,
                                        Float64 &MaxiLogEvidence) {
+  // Computes log(sum_i(Ei)) from log(Ei)
   MaxiLogEvidence = *std::max_element(LogEvidencesWPriorM.cbegin(),
                                       LogEvidencesWPriorM.cend());
 
-  Float64 &logSumEvidence = m_postmargZResult->valMargEvidenceLog;
-
-  // Using computational trick to sum the evidences
-  Float64 sumModifiedEvidences = 0.0;
-  for (auto &logEv : LogEvidencesWPriorM)
-    sumModifiedEvidences += exp(logEv - MaxiLogEvidence);
-  logSumEvidence =
-      MaxiLogEvidence +
-      log(sumModifiedEvidences); // here is the marginalized evidence, used for
-                                 // classification
+  m_postmargZResult->valMargEvidenceLog =
+      logSumFromLogsTrick(LogEvidencesWPriorM);
 }
 
 void COperatorPdfz::validateChisquareArray(
@@ -407,11 +419,11 @@ void COperatorPdfz::validateChisquareArray(
   return;
 }
 
-void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
-                                   std::vector<TFloat64List> &logProbaList,
-                                   TFloat64List &LogEvidencesWPriorM,
-                                   TFloat64List &logPriorModel,
-                                   Float64 &MaxiLogEvidence) {
+void COperatorPdfz::ComputeAllPdfs(
+    const ChisquareArray &chisquarearray,
+    std::vector<TFloat64List> &logProbaList,
+    TFloat64List &LogEvidencesWPriorM, // log evidences with prior model
+    TFloat64List &logPriorModel, Float64 &MaxiLogEvidence) {
   const TFloat64List &redshifts = chisquarearray.redshifts;
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
@@ -451,7 +463,7 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
   MaxiLogEvidence = -DBL_MAX;
   logProbaList.resize(meritResults.size());
   LogEvidencesWPriorM.resize(meritResults.size());
-  for (Int32 km = 0; km < meritResults.size(); km++)
+  for (Int32 km = 0; km < ssize(meritResults); km++)
     ComputePdf(meritResults[km], redshifts, cstLog, zPriors[km],
                logProbaList[km], logEvidenceList[km]);
 
@@ -464,9 +476,9 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
 
 void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 
-  const auto nmodel = chisquarearray.chisquares.size();
+  const Int32 nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
-  const auto zsize = redshifts.size();
+  const Int32 zsize = redshifts.size();
 
   std::vector<TFloat64List> logProbaList;
   TFloat64List LogEvidencesWPriorM;
@@ -525,7 +537,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
   const Float64 &cstLog = chisquarearray.cstLog;
 
-  for (Int32 km = 0; km < meritResults.size(); km++) {
+  for (Int32 km = 0; km < ssize(meritResults); km++) {
     Log.LogDebug(Formatter()
                  << "COperatorPdfz::BestProba: processing chi2-result km="
                  << km);
@@ -539,7 +551,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
     if (m_postmargZResult->redshifts != redshifts)
       THROWG(ErrorCode::INTERNAL_ERROR, "z-bins comparison failed");
 
-    for (Int32 k = 0; k < redshifts.size(); k++)
+    for (Int32 k = 0; k < ssize(redshifts); k++)
       if (true)
         m_postmargZResult->valProbaLog[k] =
             std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
@@ -551,7 +563,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Float64 reldzThreshold = 0.05; // relative difference accepted
   Float64 mindz = DBL_MAX;
   Float64 maxdz = -DBL_MAX;
-  for (Int32 k = 1; k < redshifts.size(); k++) {
+  for (Int32 k = 1; k < ssize(redshifts); k++) {
     Float64 diff = redshifts[k] - redshifts[k - 1];
     mindz = std::min(mindz, diff);
     maxdz = std::max(maxdz, diff);
@@ -564,7 +576,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   // 2. prepare LogEvidence
   Float64 maxi = -DBL_MAX;
   TFloat64List smallVALUES(redshifts.size(), 0.0);
-  for (Int32 k = 0; k < redshifts.size(); k++) {
+  for (Int32 k = 0; k < ssize(redshifts); k++) {
     smallVALUES[k] = m_postmargZResult->valProbaLog[k];
     maxi = std::max(maxi,
                     smallVALUES[k]); // maxi will be used to avoid underflows
@@ -603,9 +615,9 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
  */
 void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
 
-  const auto nmodel = chisquarearray.chisquares.size();
+  const Int32 nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
-  const auto zsize = redshifts.size();
+  const Int32 zsize = redshifts.size();
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
 
   std::vector<TFloat64List> logProbaList;

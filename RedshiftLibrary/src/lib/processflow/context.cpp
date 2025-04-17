@@ -101,3 +101,53 @@ std::shared_ptr<const CPhotBandCatalog>
 CProcessFlowContext::GetPhotBandCatalog() {
   return m_inputContext->GetPhotBandCatalog();
 }
+
+TIgmIsmIdxs CProcessFlowContext::GetIsmIgmIdxList(bool opt_extinction,
+                                                  bool opt_dustFitting,
+                                                  Int32 FitEbmvIdx,
+                                                  Int32 FitMeiksinIdx) const {
+  TIgmIsmIdxs igmIsmIdxs;
+  igmIsmIdxs.igmIdxs = GetIgmIdxList(opt_extinction, FitMeiksinIdx);
+  igmIsmIdxs.ismIdxs = GetIsmIdxList(opt_dustFitting, FitEbmvIdx);
+  return igmIsmIdxs;
+}
+
+TInt32List CProcessFlowContext::GetIsmIdxList(bool opt_dustFitting,
+                                              Int32 FitEbmvIdx) const {
+
+  if (!opt_dustFitting) // Ism deactivated
+    return TInt32List{undefIdx};
+
+  if (m_inputContext->CalzettiInitFailed())
+    THROWG(ErrorCode::INTERNAL_ERROR, "missing Calzetti initialization");
+
+  if (FitEbmvIdx != allIdx)
+    return TInt32List{FitEbmvIdx};
+
+  // all indices
+  Int32 const EbmvListSize =
+      getFluxCorrectionCalzetti()->GetNPrecomputedEbmvCoeffs();
+  TInt32List EbmvList(EbmvListSize);
+  std::iota(EbmvList.begin(), EbmvList.end(), 0);
+
+  return EbmvList;
+}
+
+TInt32List CProcessFlowContext::GetIgmIdxList(bool opt_extinction,
+                                              Int32 FitMeiksinIdx) const {
+
+  if (!opt_extinction)
+    return TInt32List{undefIdx};
+
+  if (m_inputContext->MeiksinInitFailed())
+    THROWG(ErrorCode::INTERNAL_ERROR, "missing Meiksin initialization");
+
+  if (FitMeiksinIdx != allIdx)
+    return TInt32List{FitMeiksinIdx};
+
+  Int32 const MeiksinListSize = getFluxCorrectionMeiksin()->getIdxCount();
+  TInt32List MeiksinList(MeiksinListSize);
+  std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
+
+  return MeiksinList;
+}

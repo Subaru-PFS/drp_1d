@@ -44,74 +44,73 @@ from pylibamazed.Filter import SpectrumFilterItem
 
 
 class TestSpectrumFilterItem:
-
     def test_init(self):
         # Init ok if known instruction
-        SpectrumFilterItem('T', '<', 1)
+        SpectrumFilterItem("T", "<", 1)
 
         # Init raises error if unkown instruction
         with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
-            SpectrumFilterItem('T', 'unkown', 1)
+            SpectrumFilterItem("T", "unkown", 1)
 
     def test_compliant_lines(self):
-        df = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
+        df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
 
-        filter = SpectrumFilterItem('col1', '<', 2)
+        filter = SpectrumFilterItem("col1", "<", 2)
         assert filter.compliant_lines(df).equals(pd.Series([True, False, False]))
 
-        filter.instruction = '>'
+        filter.instruction = ">"
         assert filter.compliant_lines(df).equals(pd.Series([False, False, True]))
 
-        filter.instruction = '<='
+        filter.instruction = "<="
         assert filter.compliant_lines(df).equals(pd.Series([True, True, False]))
 
-        filter.instruction = '>='
+        filter.instruction = ">="
         assert filter.compliant_lines(df).equals(pd.Series([False, True, True]))
 
         filter.instruction = "="
         assert filter.compliant_lines(df).equals(pd.Series([False, True, False]))
 
-        filter.instruction = '!='
+        filter.instruction = "!="
         assert filter.compliant_lines(df).equals(pd.Series([True, False, True]))
 
-        filter.instruction = 'in'
+        filter.instruction = "in"
         filter.value = [2, 3, 4]
         assert filter.compliant_lines(df).equals(pd.Series([False, True, True]))
 
-        filter.instruction = '~in'
+        filter.instruction = "~in"
         filter.value = [2, 3, 4]
         assert filter.compliant_lines(df).equals(pd.Series([True, False, False]))
 
-        filter.instruction = '&'
+        filter.instruction = "&"
         filter.value = 1
         assert filter.compliant_lines(df).equals(pd.Series([True, False, True]))
 
-        df2 = pd.DataFrame({'col1': [0, 1, 2, 3]})
-        filter.instruction = '0&'
+        df2 = pd.DataFrame({"col1": [0, 1, 2, 3]})
+        filter.instruction = "0&"
         assert filter.compliant_lines(df2).equals(pd.Series([True, True, False, True]))
 
-        filter.instruction = '^'
+        filter.instruction = "^"
         assert filter.compliant_lines(df2).equals(pd.Series([True, False, True, True]))
 
-        filter.instruction = '~^'
+        filter.instruction = "~^"
         assert filter.compliant_lines(df2).equals(pd.Series([False, True, False, False]))
 
         filter.value = 1
-        filter.instruction = '~&'
+        filter.instruction = "~&"
         assert filter.compliant_lines(df2).equals(pd.Series([True, False, True, False]))
 
-        filter.key = 'unexistant col'
+        filter.key = "unexistant col"
         with pytest.raises(APIException, match=r"INVALID_FILTER_KEY"):
             filter.compliant_lines(df)
 
     def test_repr(self):
-        filter = SpectrumFilterItem('col1', '<', 2)
+        filter = SpectrumFilterItem("col1", "<", 2)
         assert filter.__repr__() == "Filter {'key': 'col1', 'instruction': '<', 'value': 2}"
 
     def test_check_instructions(self):
         # Instruction is registered -> OK
-        SpectrumFilterItem.check_instruction('>')
+        SpectrumFilterItem.check_instruction(">")
 
         # Instruction is not registered -> error
         with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
-            SpectrumFilterItem.check_instruction('unkown')
+            SpectrumFilterItem.check_instruction("unkown")

@@ -40,11 +40,10 @@
 import copy
 
 from pylibamazed.ParametersAccessor import ParametersAccessor
-from pylibamazed.ParametersChecker import ParametersChecker
+from pylibamazed.CustomParametersChecker import CustomParametersChecker
 
 
 class ParametersExtender:
-
     default_continuum_removal_method = "default"
     default_median_kernel_width = -1
     default_median_even_reflection = True
@@ -52,12 +51,13 @@ class ParametersExtender:
     default_continuum_removal_section = {
         "method": default_continuum_removal_method,
         "medianKernelWidth": default_median_kernel_width,
-        "medianEvenReflection": default_median_even_reflection
+        "medianEvenReflection": default_median_even_reflection,
     }
 
-    def __init__(self, Accessor=ParametersAccessor, Checker=ParametersChecker):
+    def __init__(self, version: int, Accessor=ParametersAccessor, Checker=CustomParametersChecker):
         self.Accessor = Accessor
         self.Checker = Checker
+        self.version = version
 
     def extend(self, parameters: dict):
         self.initial_accessor = self.Accessor(parameters)
@@ -87,8 +87,9 @@ class ParametersExtender:
         is_present = self.checker.template_catalog_continuum_removal_presence_condition()
         if not is_present:
             self.extended_accessor.get_template_catalog_section(True)
-            self.extended_accessor.get_template_catalog_section()["continuumRemoval"] = \
-                self.default_continuum_removal_section
+            self.extended_accessor.get_template_catalog_section()[
+                "continuumRemoval"
+            ] = self.default_continuum_removal_section
 
     def _extend_continuum_reestimation(self):
         for spectrum_model in self.initial_accessor.get_spectrum_models([]):
@@ -96,7 +97,8 @@ class ParametersExtender:
             if not is_present:
                 self.extended_accessor.get_linemodel_solve_linemodel_section(True)
                 self.extended_accessor.get_linemodel_solve_linemodel_section(spectrum_model, True)[
-                    "continuumReestimation"] = "no"
+                    "continuumReestimation"
+                ] = "no"
 
     def _extend_useloglambdasampling(self):
         for spectrum_model in self.initial_accessor.get_spectrum_models([]):
@@ -104,13 +106,16 @@ class ParametersExtender:
             if not is_present:
                 self.extended_accessor.get_linemodel_solve_linemodel_section(True)
                 self.extended_accessor.get_linemodel_solve_linemodel_section(spectrum_model, True)[
-                    "useLogLambdaSampling"] = False
+                    "useLogLambdaSampling"
+                ] = False
 
     def _extend_mediankernel(self):
         for fromTemplateCatalog in [False, True]:
             is_present = self.checker.median_kernel_presence_condition(fromTemplateCatalog)
             if not is_present:
                 self.extended_accessor.get_continuum_removal_section(fromTemplateCatalog, True)[
-                    "medianKernelWidth"] = self.default_median_kernel_width
+                    "medianKernelWidth"
+                ] = self.default_median_kernel_width
                 self.extended_accessor.get_continuum_removal_section(fromTemplateCatalog)[
-                    "medianEvenReflection"] = self.default_median_even_reflection
+                    "medianEvenReflection"
+                ] = self.default_median_even_reflection

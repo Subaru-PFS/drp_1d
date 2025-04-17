@@ -100,12 +100,7 @@ protected:
 
   void initFit(Float64 redshift);
 
-  void resetElementsFittingParam();
-
   void resetLambdaOffsets() { m_ElementsVector->resetLambdaOffsets(); };
-  void setGlobalOutsideLambdaRangeFromSpectra() {
-    m_ElementsVector->setGlobalOutsideLambdaRangeFromSpectra();
-  }
 
   void fitLyaProfile(Float64 redshift);
 
@@ -125,23 +120,23 @@ protected:
 
   CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
   const CSpectrumModel &getModel() const {
-    m_spectraIndex.AssertIsValid();
+    m_spectraIndex.assertIsValid();
     return m_models->getSpectrumModel();
   }
   const CSpectrum &getSpectrum() {
-    m_spectraIndex.AssertIsValid();
+    m_spectraIndex.assertIsValid();
     return *((*m_inputSpcs).at(m_spectraIndex.get()));
   }
   const TLambdaRange &getLambdaRange() {
-    m_spectraIndex.AssertIsValid();
+    m_spectraIndex.assertIsValid();
     return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
   CLineModelElementList &getElementList() {
-    m_spectraIndex.AssertIsValid();
+    m_spectraIndex.assertIsValid();
     return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    m_spectraIndex.AssertIsValid();
+    m_spectraIndex.assertIsValid();
     return m_ElementsVector->getElementList();
   }
 
@@ -151,7 +146,6 @@ protected:
   const std::vector<TLineModelElementParam_ptr> &getElementParam() const {
     return m_ElementsVector->getElementParam();
   }
-  bool isOutsideLambdaRange(Int32 elt_index);
 
   Int32 m_nbElements;
 

@@ -75,7 +75,7 @@ public:
   };
 
   // FluxAxis components
-  enum EType { nType_raw = 1, nType_continuumOnly = 2, nType_noContinuum = 3 };
+  enum class EType { raw, continuumOnly, noContinuum };
 
   CSpectrum();
   CSpectrum(const std::string &name);
@@ -126,7 +126,8 @@ public:
   bool IsFluxEmpty() const;
   bool IsEmpty() const;
   bool IsValid() const;
-  void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect);
+  void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect,
+                        const Int32 &nbSamplesMin);
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
   void SetPhotData(const std::shared_ptr<const CPhotometricData> &photData);
 
@@ -185,30 +186,31 @@ protected:
   CSpectrumFluxAxis &GetContinuumFluxAxis_();
   CSpectrumFluxAxis &GetWithoutContinuumFluxAxis_();
 
-  CSpectrumSpectralAxis m_SpectralAxis;
-  std::shared_ptr<const CLSF> m_LSF;
-  std::shared_ptr<const CPhotometricData> m_photData;
-  mutable std::unique_ptr<CRebin> m_rebin;
-
   void EstimateContinuum() const;
   void ResetContinuum() const;
 
-  std::string m_Name;
-  std::string m_obsId = "";
-  std::string m_FullPath;
-
   // Continuum removal parameters
-  mutable Float64 m_medianWindowSize;
   mutable std::string m_estimationMethod;
+  mutable Float64 m_medianWindowSize;
   mutable bool m_medianEvenReflection;
 
-  mutable EType m_spcType = nType_raw;
-  CSpectrumFluxAxis m_RawFluxAxis;
-  mutable CSpectrumFluxAxis m_ContinuumFluxAxis;
-  mutable CSpectrumFluxAxis m_WithoutContinuumFluxAxis;
+  std::string m_Name;
+  mutable EType m_spcType = EType::raw;
+  std::shared_ptr<const CLSF> m_LSF;
 
   // Flag
   mutable bool alreadyRemoved = false;
+
+  std::string m_FullPath;
+
+  CSpectrumSpectralAxis m_SpectralAxis;
+  mutable std::unique_ptr<CRebin> m_rebin;
+  std::shared_ptr<const CPhotometricData> m_photData;
+  std::string m_obsId = "";
+
+  CSpectrumFluxAxis m_RawFluxAxis;
+  mutable CSpectrumFluxAxis m_ContinuumFluxAxis;
+  mutable CSpectrumFluxAxis m_WithoutContinuumFluxAxis;
 };
 
 inline Int32 CSpectrum::GetSampleCount() const {
@@ -221,13 +223,13 @@ inline const CSpectrumSpectralAxis &CSpectrum::GetSpectralAxis() const {
 
 inline const CSpectrumFluxAxis &CSpectrum::GetFluxAxis() const {
   switch (m_spcType) {
-  case nType_raw:
+  case EType::raw:
     return GetRawFluxAxis();
     break;
-  case nType_continuumOnly:
+  case EType::continuumOnly:
     return GetContinuumFluxAxis();
     break;
-  case nType_noContinuum:
+  case EType::noContinuum:
     return GetWithoutContinuumFluxAxis();
     break;
   default:
@@ -237,13 +239,13 @@ inline const CSpectrumFluxAxis &CSpectrum::GetFluxAxis() const {
 
 inline CSpectrumFluxAxis &CSpectrum::GetFluxAxis_() {
   switch (m_spcType) {
-  case nType_raw:
+  case EType::raw:
     return GetRawFluxAxis_();
     break;
-  case nType_continuumOnly:
+  case EType::continuumOnly:
     return GetContinuumFluxAxis_();
     break;
-  case nType_noContinuum:
+  case EType::noContinuum:
     return GetWithoutContinuumFluxAxis_();
     break;
   default:

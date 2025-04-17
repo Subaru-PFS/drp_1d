@@ -43,24 +43,26 @@
 using namespace NSEpic;
 
 COutsideLineMaskBuilder::COutsideLineMaskBuilder(
-    CLineModelElementList &elements)
-    : m_elements(elements) {}
+    std::shared_ptr<CLMEltListVector> const &elements_vector,
+    CSpectraGlobalIndex const &spcIndex)
+    : m_ElementsVector(elements_vector), m_spcIndex(spcIndex) {}
 
 CMask COutsideLineMaskBuilder::getMask(
     const CSpectrumSpectralAxis &spectralAxis, const TFloat64Range &lambdaRange,
-    const Float64 &redshift) {
-  // prepare the elements support
-  for (Int32 iElts = 0; iElts < m_elements.size(); iElts++) {
-    m_elements[iElts]->getElementParam()->resetAsymfitParams();
-    m_elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
-  }
+    const Float64 &redshift, Int32 spc_index) {
 
-  // initialize the model spectrum
+  m_spcIndex.set(spc_index);
+  auto &elements = m_ElementsVector->getElementList();
+  // prepare the elements support
+  for (auto &elt : elements) {
+    elt->getElementParam()->resetAsymfitParams();
+    elt->prepareSupport(spectralAxis, redshift, lambdaRange);
+  }
 
   CMask _mask(spectralAxis.GetSamplesCount(), 1);
 
-  TInt32List validEltsIdx = m_elements.GetModelValidElementsIndexes();
-  TInt32List supportIdxes = m_elements.getSupportIndexes(validEltsIdx);
+  TInt32List validEltsIdx = elements.GetElementsIndicesInsideLambdaRange();
+  TInt32List supportIdxes = elements.getSupportIndexes(validEltsIdx);
 
   // setting masks
   for (auto i : supportIdxes)

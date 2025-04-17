@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/randomfitter.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -57,7 +58,7 @@ void CRandomFitter::doFit(Float64 redshift) {
                           << std::fixed << std::setprecision(2)
                           << coeffAmpAbsorption);
   // fit the model amplitudes individually
-  for (Int32 iElts = 0; iElts < getElementParam().size(); iElts++) {
+  for (Int32 iElts = 0; iElts < ssize(getElementParam()); iElts++) {
     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
     Float64 err = 1e-22;
     Float64 amax = meanContinuum;
@@ -96,14 +97,14 @@ Float64 CRandomFitter::getContinuumMeanUnderElement(Int32 eltId) const {
       return 0.0;
     }
     TInt32RangeList s = getElementList()[iElts]->getSupport();
-    for (Int32 iS = 0; iS < s.size(); iS++) {
+    for (Int32 iS = 0; iS < ssize(s); iS++) {
       support.push_back(s[iS]);
     }
   }
 
   const auto &ContinuumFluxAxis = getModel().getContinuumFluxAxis();
   // const auto & ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
-  for (Int32 iS = 0; iS < support.size(); iS++) {
+  for (Int32 iS = 0; iS < ssize(support); iS++) {
     for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
       n++;
       // w = 1.0 / ErrorNoContinuum[j];

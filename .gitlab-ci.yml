@@ -16,6 +16,8 @@ variables:
   IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
   SONARQUBE_URL: https://sonarqube.lam.fr
   DOC_VERSION: ""
+  CCACHE_BASEDIR: $CI_PROJECT_DIR
+  CCACHE_DIR: $CI_PROJECT_DIR/ccache
 
 # Specific Rules
 .trigger-rules:
@@ -63,7 +65,7 @@ test-osx:
   when: manual
   script:
     - source /Users/grunner/venv/amazed$PYTHON_VERSION/bin/activate
-    - python setup.py bdist_wheel
+    - pip wheel --wheel-dir dist .
     - delocate-wheel -w wheel/ dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
     - cd /
@@ -125,16 +127,33 @@ push-rc-38-osx:
     - wheel38-osx
 
 # Linux stages
+.build-linux-cmake-old:
+  stage: build
+  script:
+    - source /venv/p39/bin/activate
+    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
+    - mkdir -p build
+    - cd build
+    - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
+    - make -j 12
+    - make install
+  after_script:
+    - ccache --show-stats
+  cache:
+    policy: push
+    untracked: true
+
 .build-linux:
   stage: build
   script:
     - source /venv/p39/bin/activate
-    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/gcc-toolset-10/enable; fi
-    - mkdir -p build
-    - cd build
-    - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
-    - make -j4
-    - make install
+    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
+    - pip install . -v -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
+    # - cd build-pip
+    # - pip install ninja
+    # - ninja install
+  after_script:
+    - ccache --show-stats
   cache:
     policy: push
     untracked: true
@@ -144,11 +163,11 @@ push-rc-38-osx:
   stage: build-coverage
   script:
     - source /venv/p39/bin/activate
-    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/gcc-toolset-10/enable; fi
+    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
-    - make -j4
+    - make -j 12
     - make test
     - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
     - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --html -o index.html --root .
@@ -166,8 +185,9 @@ push-rc-38-osx:
 .test-linux:
   stage: test
   script:
-    - cd build
-    - make test
+    - cd build-pip
+    - pip install ninja
+    - ninja test
   cache:
     policy: pull
     untracked: true
@@ -176,10 +196,11 @@ push-rc-38-osx:
   stage: build-wheel
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
-    - python setup.py bdist_wheel
+    - python -m build -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.BUILD_TESTING=OFF
+    - ccache --show-stats
     - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - python -c "import pylibamazed; import importlib.metadata; print(importlib.metadata.version('pylibamazed'))"
     - cd /
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
   after_script:
@@ -264,7 +285,6 @@ push-rc-38-osx:
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - pip install -r pip-doc-requirements.txt
-    - generate-schema-doc --config template_name=md pylibamazed/auxdir/pylibamazed/jsonschema-v1 pylibamazed/doc/source/json-schema-deprecated/
     - generate-schema-doc --config template_name=md pylibamazed/auxdir/pylibamazed/jsonschema-v2 pylibamazed/doc/source/json-schema/
     - sphinx-build -b html pylibamazed/doc/source public/$DOC_VERSION
   artifacts:
@@ -278,7 +298,7 @@ push-rc-38-osx:
 
 # Manylinux2014 stages
 .manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014-9270
   variables:
     PLATFORM: "manylinux2014_x86_64"
     ENABLE_GCC10: "False"
@@ -295,14 +315,6 @@ test-manylinux2014:
     - .manylinux2014
     - .test-linux
 
-wheel38-manylinux2014:
-  variables:
-    PYTHON_VERSION: "38"
-  when: manual
-  extends:
-    - .manylinux2014
-    - .wheel-linux
-
 wheel39-manylinux2014:
   variables:
     PYTHON_VERSION: "39"
@@ -318,13 +330,21 @@ wheel311-manylinux2014:
     - .manylinux2014
     - .wheel-linux
 
-pytest38-manylinux2014:
+wheel312-manylinux2014:
   variables:
-    PYTHON_VERSION: "38"
+    PYTHON_VERSION: "312"
   when: manual
   extends:
     - .manylinux2014
-    - .pytest-linux
+    - .wheel-linux
+
+wheel313-manylinux2014:
+  variables:
+    PYTHON_VERSION: "313"
+  when: manual
+  extends:
+    - .manylinux2014
+    - .wheel-linux
 
 pytest39-manylinux2014:
   variables:
@@ -341,13 +361,21 @@ pytest311-manylinux2014:
     - .manylinux2014
     - .pytest-linux
 
-pytest38-coverage-manylinux2014:
+pytest312-manylinux2014:
   variables:
-    PYTHON_VERSION: "38"
+    PYTHON_VERSION: "312"
   when: manual
   extends:
     - .manylinux2014
-    - .pytest-coverage-linux
+    - .pytest-linux
+
+pytest313-manylinux2014:
+  variables:
+    PYTHON_VERSION: "313"
+  when: manual
+  extends:
+    - .manylinux2014
+    - .pytest-linux
 
 pytest39-coverage-manylinux2014: 
   rules :
@@ -371,14 +399,21 @@ pytest311-coverage-manylinux2014:
     - .manylinux2014
     - .pytest-coverage-linux
 
-push-rc-38-manylinux2014:
+pytest312-coverage-manylinux2014:
   variables:
-    PYTHON_VERSION: "38"
+    PYTHON_VERSION: "312"
+  when: manual
   extends:
     - .manylinux2014
-    - .push-rc-linux
-  dependencies:
-    - wheel38-manylinux2014
+    - .pytest-coverage-linux
+
+pytest313-coverage-manylinux2014:
+  variables:
+    PYTHON_VERSION: "313"
+  when: manual
+  extends:
+    - .manylinux2014
+    - .pytest-coverage-linux
 
 push-rc-39-manylinux2014:
   variables:
@@ -397,6 +432,24 @@ push-rc-311-manylinux2014:
     - .push-rc-linux
   dependencies:
     - wheel311-manylinux2014
+
+push-rc-312-manylinux2014:
+  variables:
+    PYTHON_VERSION: "312"
+  extends:
+    - .manylinux2014
+    - .push-rc-linux
+  dependencies:
+    - wheel312-manylinux2014
+
+push-rc-313-manylinux2014:
+  variables:
+    PYTHON_VERSION: "313"
+  extends:
+    - .manylinux2014
+    - .push-rc-linux
+  dependencies:
+    - wheel313-manylinux2014
 
 coverage-manylinux2014:
   rules :

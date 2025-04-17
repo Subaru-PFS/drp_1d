@@ -41,6 +41,20 @@
 
 #include <sstream>
 
+inline std::ostream &operator<<(std::ostream &out,
+                                const std::vector<double> &v) {
+  auto it = v.begin();
+  out << '[';
+  if (it != v.end()) {
+    out << *it;
+    for (it++; it != v.end(); it++)
+      out << ", " << *it;
+  }
+  out << ']';
+
+  return out;
+}
+
 class Formatter {
 public:
   Formatter() {}

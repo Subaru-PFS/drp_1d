@@ -55,7 +55,7 @@ namespace NSEpic {
 class COperatorResult {
 
 public:
-  COperatorResult(const std::string &type) : m_type(type){};
+  COperatorResult(const std::string &type = "COperatorResult") : m_type(type){};
   virtual ~COperatorResult() = default;
   COperatorResult(const COperatorResult &) = default;
   COperatorResult(COperatorResult &&) = default;
@@ -81,12 +81,8 @@ public:
   }
 
 protected:
-  std::string m_type = "COperatorResult";
+  std::string m_type;
 };
-
-typedef std::vector<std::shared_ptr<COperatorResult>> TOperatorResultList;
-typedef std::map<std::string, std::shared_ptr<const COperatorResult>>
-    TOperatorResultMap;
 
 } // namespace NSEpic
 

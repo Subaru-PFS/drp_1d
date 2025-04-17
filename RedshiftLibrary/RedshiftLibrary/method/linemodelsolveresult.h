@@ -52,28 +52,7 @@ namespace NSEpic {
 /**
  * \ingroup Redshift
  */
-class CLineModelSolveResult : public CPdfSolveResult {
-
-public:
-  CLineModelSolveResult(
-      const std::shared_ptr<const TCandidateZ> &BestExtremumResult,
-      const std::string &opt_pdfcombination, Float64 evidence)
-      : CPdfSolveResult("CLineModelSolveResult", BestExtremumResult,
-                        opt_pdfcombination, evidence){};
-
-private:
-  std::string tplratioName = undefStr;
-  std::string tplcontinuumName = undefStr;
-  Float64 sigma = NAN;
-  Float64 snrHa = NAN;
-  Float64 lfHa = NAN;
-  Float64 snrOII = NAN;
-  Float64 lfOII = NAN;
-  Float64 LyaWidthCoeff = NAN;
-  Float64 LyaAlpha = NAN;
-  Float64 LyaDelta = NAN;
-  Int32 LyaIgm = undefIdx;
-};
+#include "RedshiftLibrary/method/linemodelsolveresult.i"
 
 } // namespace NSEpic
 

@@ -91,6 +91,8 @@ void CInputContext::RebinInputs() {
       m_ParameterStore->hasToLogRebin(m_categories, fft_processing);
   if (!m_use_LogLambaSpectrum)
     return;
+
+  Log.LogInfo("Rebining input spectra in logarithmic wavelength steps");
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
        boost::combine(m_spectra, m_lambdaRanges)) {
     if (spectrum_ptr->GetSpectralAxis().IsLogSampled()) {
@@ -175,10 +177,13 @@ void CInputContext::setLineRatioCatalogCatalog(
 
 void CInputContext::Init() {
   m_categories = m_ParameterStore->GetList<std::string>("spectrumModels");
+  std::string categories_msg = "Spectrum Model categories:";
   for (std::string cat : m_categories)
-    Log.LogInfo(cat);
+    categories_msg += "  " + cat;
+  Log.LogInfo(categories_msg);
 
   // set template continuum removal parameters
+  // TODO correct this to make it non mandatory if powerlaw for instance ?
   m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
 
   bool enableInputSpcCorrect = m_ParameterStore->Get<bool>("autoCorrectInput");
@@ -186,7 +191,7 @@ void CInputContext::Init() {
   // non clamped lambdaRange: to be clamped depending on used spectra
   for (auto spectrum : m_spectra) {
     TFloat64Range lambdaRange;
-    if (m_spectra.size() > 1)
+    if (m_ParameterStore->Get<std::string>("multiObsMethod") == "full")
       lambdaRange = m_ParameterStore->Get<TFloat64Range>(
           Formatter() << "lambdaRange." << spectrum->getObsID());
     else
@@ -205,17 +210,18 @@ void CInputContext::Init() {
     spectrum_ptr->GetSpectralAxis().ClampLambdaRange(*lambdaRange_ptr,
                                                      *clampedLambdaRange_ptr);
   }
-
+  Float64 nbSamplesMin = m_ParameterStore->Get<Int32>("nbSamplesMin");
   // validate spectra and initialize spectra continuum removal
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
        boost::combine(m_spectra, m_lambdaRanges)) {
-    spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect);
+    spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect,
+                                   nbSamplesMin);
     spectrum_ptr->InitSpectrumContinuum(*m_ParameterStore);
     // convolve IGM by LSF
 
-    if (!m_igmcorrectionMeiksin->isConvolved() ||
+    if (!m_igmCorrectionMeiksin->isConvolved() ||
         m_ParameterStore->Get<std::string>("lsf.lsfType") == "fromSpectrumData")
-      m_igmcorrectionMeiksin->convolveByLSF(spectrum_ptr->GetLSF(),
+      m_igmCorrectionMeiksin->convolveByLSF(spectrum_ptr->GetLSF(),
                                             *lambdaRange_ptr);
   }
 
@@ -223,7 +229,7 @@ void CInputContext::Init() {
   m_TemplateCatalog->m_logsampling = 0;
   m_TemplateCatalog->m_orthogonal = 0;
   m_TemplateCatalog->SetIsmIgmCorrection(
-      m_ParameterStore, m_igmcorrectionMeiksin, m_ismcorrectionCalzetti);
+      m_ParameterStore, m_igmCorrectionMeiksin, m_ismCorrectionCalzetti);
 
   // log-lambda resampling if needed
   RebinInputs();
@@ -232,8 +238,8 @@ void CInputContext::Init() {
   if (m_use_LogLambaSpectrum) {
     for (auto const &[spectrum_ptr, lambdaRange_ptr, rebinedSpectrum_ptr] :
          boost::combine(m_spectra, m_lambdaRanges, m_rebinnedSpectra)) {
-      rebinedSpectrum_ptr->ValidateSpectrum(*lambdaRange_ptr,
-                                            enableInputSpcCorrect);
+      rebinedSpectrum_ptr->ValidateSpectrum(
+          *lambdaRange_ptr, enableInputSpcCorrect, nbSamplesMin);
       rebinedSpectrum_ptr->SetLSF(spectrum_ptr->GetLSF());
     }
   }

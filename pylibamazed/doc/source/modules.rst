@@ -6,14 +6,9 @@ pylibamazed
 
    warnings
    errors
-   AbstractOutput
-   AbstractSpectrumReader
-   CalibrationLibrary
-   Hdf5Output
-   OutputSpecifications
-   ResultStoreOutput
-   lsf
-   r_specifications
+   powerLaw
+   igmIsm
+   classification
 
 parameters
 ===========
@@ -21,3 +16,12 @@ parameters
    :maxdepth: 4
 
    json-schema/general
+
+
+Developer doc
+=============
+
+.. toctree::
+   :maxdepth: 4
+
+   developer-doc/pdf

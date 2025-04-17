@@ -40,59 +40,114 @@
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/objectSolve.h"
+#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/method/twopasssolve.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
+namespace templateFitting_test {
+class fitQuality_test;
+}
+
+namespace templateFittingSolve_test {
+class computeNoFFT_test;
+}
 namespace NSEpic {
 
 class CSpectrum;
 class CTemplateCatalog;
 
+using TTemplateFittingResultMap =
+    std::map<std::string, std::shared_ptr<CTemplateFittingResult>>;
+using TConstTemplateFittingResultMap =
+    std::map<std::string, std::shared_ptr<const CTemplateFittingResult>>;
+
 /**
  * \ingroup Redshift
  */
-class CTemplateFittingSolve : public CObjectSolve {
+class CTemplateFittingSolve : public CTwoPassSolve {
 
 public:
-  enum EType {
-    nType_raw = 1,
-    nType_continuumOnly = 2,
-    nType_noContinuum = 3,
-    nType_all = 4,
+  enum class EType {
+    raw,
+    continuumOnly,
+    noContinuum,
+    all,
   };
+
+  static const std::unordered_map<EType, CSpectrum::EType>
+      fittingTypeToSpectrumType;
 
   CTemplateFittingSolve();
 
 private:
+  friend class templateFitting_test::fitQuality_test;
+  friend class templateFittingSolve_test::computeNoFFT_test;
+  void PopulateParameters(
+      const std::shared_ptr<const CParameterStore> &parameterStore);
+  void InitFittingOperator();
+  void LogParameters();
+  void CheckTemplateCatalog();
+  std::string getResultName() const;
+  EType getFitTypeFromParam(const std::string &component);
+
   std::shared_ptr<CSolveResult> compute() override;
 
-  void Solve(std::shared_ptr<COperatorResultStore> resultStore,
-             const std::shared_ptr<const CTemplate> &tpl,
-             Float64 overlapThreshold, std::vector<CMask> maskList,
-             EType spctype = nType_raw, std::string opt_interp = "lin",
-             bool opt_extinction = false, bool opt_dustFitting = false);
+  std::shared_ptr<CTemplateFittingSolveResult> computeSinglePass();
 
-  ChisquareArray
-  BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store,
-                      const std::string &scopeStr) const;
+  std::shared_ptr<CTemplateFittingSolveResult> computeTwoPass();
+  void computeFirstPass();
 
-  std::shared_ptr<const ExtremaResult> buildExtremaResults(
-      shared_ptr<const COperatorResultStore> store, const std::string &scopeStr,
-      const TCandidateZbyRank &ranked_zCandidates,
-      const CTemplateCatalog &tplCatalog, Float64 overlapThreshold);
+  std::shared_ptr<const ExtremaResult>
+  computeResults(COperatorPdfz &pdfz, const TZGridListParams &zgridParams = {});
+  void storeFirstPassResults(
+      const COperatorPdfz &pdfz,
+      std::shared_ptr<const ExtremaResult> const &extremaResult);
+  void storeResults(const COperatorPdfz &pdfz,
+                    std::shared_ptr<const ExtremaResult> const &extremaResult);
+  void computeSecondPass(std::shared_ptr<const ExtremaResult> extremaResult);
 
-  void StoreExtremaResults(
-      std::shared_ptr<COperatorResultStore> dataStore,
-      std::shared_ptr<const ExtremaResult> &ExtremaResult) const;
+  std::shared_ptr<CTemplateFittingResult>
+  Solve(std::shared_ptr<COperatorResultStore> resultStore,
+        const std::shared_ptr<const CTemplate> &tpl, Int32 FitEbmvIdx = allIdx,
+        Int32 FitMeiksinIdx = allIdx, std::string parentId = "",
+        Int32 candidateIdx = undefIdx,
+        std::shared_ptr<CTemplateFittingResult> const &result = nullptr);
+
+  ChisquareArray BuildChisquareArray(const std::string &resultName,
+                                     TZGridListParams zgridParams = {}) const;
+
+  std::shared_ptr<ExtremaResult>
+  buildExtremaResults(const std::string &resultName,
+                      const TCandidateZbyRank &ranked_zCandidates);
+  void initSkipSecondPass() override;
+  void initTwoPassZStepFactor() override;
+  TConstTemplateFittingResultMap
+  getPerTemplateResultMap(const std::string &resultName) const;
+  TTemplateFittingResultMap
+  getPerTemplateResultMapCopy(const std::string &resultName) const;
 
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
-
   std::string m_opt_pdfcombination;
   Float64 m_redshiftSeparation;
-  Int64 m_opt_maxCandidate;
+  Int32 m_opt_maxCandidate;
+  Float64 m_overlapThreshold;
+  EType m_spectrumType = EType::raw;
+  std::string m_interpolation;
+  bool m_extinction;
+  bool m_dustFit;
+  bool m_fftProcessing;
+  bool m_usePhotometry = false;
+  Float64 m_photometryWeight = NAN;
+  EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
+  Float64 m_secondPass_halfwindowsize = NAN;
+  Int32 m_opt_extremacount;
+  Float64 m_opt_candidatesLogprobaCutThreshold = 0.0;
+  bool m_isFirstPass = true;
 };
 
 } // namespace NSEpic

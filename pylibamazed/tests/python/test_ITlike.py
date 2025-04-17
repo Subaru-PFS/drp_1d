@@ -48,7 +48,6 @@ from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
 from pylibamazed.ProcessFlow import ProcessFlow
 from tests.python.config import test_dir
-from tests.python.fake_parameters_checker import FakeParametersChecker
 
 
 def read_photometry_fromfile(fname):
@@ -104,9 +103,7 @@ def get_parameters(parameters_file_path):
 
 def get_observation(input_file_path):
     input_spectra_path = os.path.join(test_dir, input_file_path)
-    observation = pd.read_table(
-        input_spectra_path, delimiter=" ", names=["ProcessingID"]
-    )
+    observation = pd.read_table(input_spectra_path, delimiter=" ", names=["ProcessingID"])
     return observation
 
 
@@ -125,14 +122,11 @@ def get_spectra(config, observation):
 
 def add_photometry_to_reader(config, observation, reader):
     phot_fname = (
-        os.path.join(test_dir, config["spectrum_dir"])
-        + "/"
-        + str(observation.ProcessingID[0])
-        + "_phot.txt"
+        os.path.join(test_dir, config["spectrum_dir"]) + "/" + str(observation.ProcessingID[0]) + "_phot.txt"
     )
     if os.path.exists(phot_fname):
         phot = read_photometry_fromfile(phot_fname)
-        reader.load_photometry(phot)
+        reader.add_photometry(phot)
 
 
 def save_output(output, config, observation):
@@ -147,7 +141,7 @@ def save_output(output, config, observation):
 
 def test_ITLikeTest():
     config = make_config()
-    param = Parameters(get_parameters(config["parameters_file"]), Checker=FakeParametersChecker)
+    param = Parameters(get_parameters(config["parameters_file"]), make_checks=False)
     process_flow = ProcessFlow(config, param)
     observation = get_observation(config["input_file"])
 
@@ -155,26 +149,29 @@ def test_ITLikeTest():
     spectra = get_spectra(config, observation)
 
     reader = ASCIISpectrumReader(
-        observation_id=observation.ProcessingID[0],
         parameters=param,
         calibration_library=process_flow.calibration_library,
         source_id=observation.ProcessingID[0],
     )
 
-    reader.load_all(spectra)
-    add_photometry_to_reader(config, observation, reader)
+    with reader:
+        reader.load_all(spectra)
+        add_photometry_to_reader(config, observation, reader)
+        spectrum = reader.get_spectrum()
 
-    output = process_flow.run(reader)  # passing spectra reader to launch amazed
+    output = process_flow.run(spectrum)
 
     # check results (no errors)
-    for spectrum_model, stage in (("", "init"),
-                                  ("galaxy", "redshiftSolver"),
-                                  ("galaxy", "linemeas_catalog_load"),
-                                  ("galaxy", "lineMeasSolver"),
-                                  ("galaxy", "subClassifSolver"),
-                                  ("galaxy", "reliabilitySolver"),
-                                  ("", "classification"),
-                                  ("", "load_result_store")):
+    for spectrum_model, stage in (
+        ("", "init"),
+        ("galaxy", "redshiftSolver"),
+        ("galaxy", "linemeas_catalog_load"),
+        ("galaxy", "lineMeasSolver"),
+        ("galaxy", "subClassifSolver"),
+        ("galaxy", "reliabilitySolver"),
+        ("", "classification"),
+        ("", "load_result_store"),
+    ):
         if output.has_error(spectrum_model, stage):
             print("object_type", spectrum_model, "stage", stage, output.get_error(spectrum_model, stage))
         assert output.has_error(spectrum_model, stage) is False

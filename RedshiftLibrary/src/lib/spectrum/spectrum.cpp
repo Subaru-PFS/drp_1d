@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
@@ -104,10 +105,11 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
 CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
                      CSpectrumFluxAxis fluxAxis,
                      const std::shared_ptr<const CLSF> &lsf)
-    : m_SpectralAxis(std::move(spectralAxis)),
-      m_RawFluxAxis(std::move(fluxAxis)), m_estimationMethod(""),
-      m_medianWindowSize(-1), m_medianEvenReflection(true), m_Name(""),
-      m_LSF(lsf), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))) {
+    : m_estimationMethod(""), m_medianWindowSize(-1),
+      m_medianEvenReflection(true), m_Name(""), m_LSF(lsf),
+      m_SpectralAxis(std::move(spectralAxis)),
+      m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))),
+      m_RawFluxAxis(std::move(fluxAxis)) {
   if (!IsValid()) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -121,13 +123,14 @@ CSpectrum::CSpectrum(const CSpectrum &other)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
-      m_SpectralAxis(other.m_SpectralAxis), m_RawFluxAxis(other.m_RawFluxAxis),
-      m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
-      m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
-      m_spcType(other.m_spcType), m_LSF(other.m_LSF), m_Name(other.m_Name),
+      m_Name(other.m_Name), m_spcType(other.m_spcType), m_LSF(other.m_LSF),
       alreadyRemoved(other.alreadyRemoved),
+      m_SpectralAxis(other.m_SpectralAxis),
       m_rebin(CRebin::create(other.m_rebin->getType(), *this)),
-      m_photData(other.m_photData), m_obsId(other.m_obsId) {
+      m_photData(other.m_photData), m_obsId(other.m_obsId),
+      m_RawFluxAxis(other.m_RawFluxAxis),
+      m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
+      m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis) {
   if (!IsValid()) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -139,15 +142,15 @@ CSpectrum::CSpectrum(CSpectrum &&other)
     : m_estimationMethod(std::move(other.m_estimationMethod)),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
+      m_Name(std::move(other.m_Name)), m_spcType(other.m_spcType),
+      m_LSF(std::move(other.m_LSF)), alreadyRemoved(other.alreadyRemoved),
       m_SpectralAxis(std::move(other.m_SpectralAxis)),
-      m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
-      m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
-      m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)),
-      m_spcType(other.m_spcType), m_LSF(std::move(other.m_LSF)),
-      m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved),
       m_rebin(CRebin::create(other.m_rebin->getType(), *this)),
       m_photData(std::move(other.m_photData)),
-      m_obsId(std::move(other.m_obsId)) {
+      m_obsId(std::move(other.m_obsId)),
+      m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
+      m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
+      m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)) {
   if (!IsValid()) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
@@ -224,7 +227,7 @@ void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis &fluxaxis) {
   }
 
   ResetContinuum();
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   m_rebin->reset();
   m_RawFluxAxis = fluxaxis;
 }
@@ -238,7 +241,7 @@ void CSpectrum::SetFluxAxis(CSpectrumFluxAxis &&fluxaxis) {
   }
 
   ResetContinuum();
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   m_rebin->reset();
   m_RawFluxAxis = std::move(fluxaxis);
 }
@@ -253,7 +256,7 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
   }
 
   ResetContinuum();
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   m_rebin->reset();
 
   m_SpectralAxis = std::move(spcaxis);
@@ -273,7 +276,7 @@ void CSpectrum::InitSpectrumContinuum(CParameterStore &parameterStore) {
       parameterStore.Get<Float64>("continuumRemoval.medianKernelWidth");
   bool medianEvenReflection =
       parameterStore.Get<bool>("continuumRemoval.medianEvenReflection");
-  SetType(EType::nType_raw);
+  SetType(EType::raw);
   if (smoothWidth > 0) {
     m_RawFluxAxis.ApplyMeanSmooth(smoothWidth);
   }
@@ -308,7 +311,8 @@ void CSpectrum::EstimateContinuum() const {
     continuum.SetMedianKernelWidth(m_medianWindowSize);
     continuum.SetMeanKernelWidth(m_medianWindowSize);
     continuum.SetMedianEvenReflection(m_medianEvenReflection);
-    RemoveContinuum(continuum);
+    if (!RemoveContinuum(continuum))
+      THROWG(ErrorCode::INTERNAL_ERROR, "Continuum removal failed");
     Log.LogDetail(Formatter() << "Continuum estimation - medianKernelWidth ="
                               << m_medianWindowSize);
   } else if (m_estimationMethod == "raw") {
@@ -323,7 +327,7 @@ void CSpectrum::EstimateContinuum() const {
     m_WithoutContinuumFluxAxis = m_RawFluxAxis;
     m_WithoutContinuumFluxAxis.Subtract(m_ContinuumFluxAxis);
   } else {
-    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown Estimation method");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unknown continuum estimation method");
   }
 
   Log.LogDetail("===============================================");
@@ -644,7 +648,8 @@ void CSpectrum::ApplyAmplitude(Float64 amplitude) {
 }
 
 void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
-                                 bool enableInputSpcCorrect) {
+                                 bool enableInputSpcCorrect,
+                                 const Int32 &nbSamplesMin) {
   if (!IsValid())
     THROWG(ErrorCode::INVALID_SPECTRUM,
            "Invalid spectrum with empty axes or non-matching "
@@ -660,6 +665,20 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
   Float64 lmin = clampedlambdaRange.GetBegin();
   Float64 lmax = clampedlambdaRange.GetEnd();
 
+  Int32 imin, imax;
+  try {
+    clampedlambdaRange.getClosedIntervalIndices(
+        m_SpectralAxis.GetSamplesVector(), imin, imax);
+  } catch (const AmzException &e) {
+    THROWG(ErrorCode::INVALID_SPECTRUM,
+           Formatter() << "Invalid spectrum after clamping to [" << lmin << ","
+                       << lmax << "] has no samples : " << e.what());
+  }
+  if (imax - imin + 1 < nbSamplesMin)
+    THROWG(ErrorCode::INVALID_SPECTRUM,
+           Formatter() << "Invalid spectrum after clamping to [" << lmin << ","
+                       << lmax << "] , has " << imax - imin + 1
+                       << " samples, less than " << nbSamplesMin);
   // Check if the Spectrum is valid on the clamped lambdarange
   if (enableInputSpcCorrect)
     if (correctSpectrum(lmin, lmax))

@@ -11,6 +11,7 @@
     "ignorelinesupport",
     "negativethreshold",
     "nullthreshold",
+    "badChi2Threshold",
     "priors"
   ],
   "additionalProperties": false,
@@ -50,6 +51,11 @@
       "type": "number",
       "title": "Null threshold",
       "description": "Threshold for the fitted continuum amplitude in sigma units. When the amplitude is below `threshold * sigma`, continuum component is forced to nocontinuum"
+    },
+    "badChi2Threshold": {
+      "type": "number",
+      "title": "bad reduced chi square threshold",
+      "description": "threshold above which the best reduced chi2 of the fitted continuum is treated as bad.\n When in auto modes (tplFitAuto, powerLawAuto) in case of bad fit the continuum is filtered out instead of using the fit"
     },
     "priors": {
       "$ref": "line_model_priors.json"

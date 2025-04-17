@@ -38,6 +38,7 @@
 // ============================================================================
 #include <cfloat>
 
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
@@ -85,17 +86,17 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
 
   std::string scopeStr = "tplcombination";
 
-  EType _type = nType_raw;
+  EType _type = EType::raw;
   if (opt_spcComponent == "raw") {
-    _type = nType_raw;
+    _type = EType::raw;
   } else if (opt_spcComponent == "noContinuum") {
-    _type = nType_noContinuum;
+    _type = EType::noContinuum;
     scopeStr = "tplcombination_nocontinuum";
   } else if (opt_spcComponent == "continuum") {
-    _type = nType_continuumOnly;
+    _type = EType::continuumOnly;
     scopeStr = "tplcombination_continuum";
   } else if (opt_spcComponent == "all") {
-    _type = nType_all;
+    _type = EType::all;
   } else {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unknown spectrum component");
   }
@@ -120,7 +121,7 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
         opt_dustFit);
 
   COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0,
-                     m_opt_maxCandidate, m_redshiftSampling == "log");
+                     m_opt_maxCandidate, m_zLogSampling);
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
@@ -128,8 +129,6 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
   // save in resultstore pdf results
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
-  // save in resultstore candidates results
-  resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
   // for each candidate, get best model by reading from datastore and selecting
   // best fit
@@ -145,7 +144,7 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
 
   std::shared_ptr<CTplCombinationSolveResult> solveResult =
       std::make_shared<CTplCombinationSolveResult>(
-          extremaResult->m_ranked_candidates[0].second, m_opt_pdfcombination,
+          extremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
           pdfz.m_postmargZResult->valMargEvidenceLog);
 
   return solveResult;
@@ -157,33 +156,22 @@ bool CTplCombinationSolve::Solve(
     const TFloat64List &redshifts, Float64 overlapThreshold,
     const std::vector<CMask> &maskList, EType spctype,
     const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting) {
-  std::string scopeStr = "tplcombination";
-  Int32 _ntype = 1;
-  CSpectrum::EType _spctype = CSpectrum::nType_raw;
-  CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw,
-                                     CSpectrum::nType_noContinuum,
-                                     CSpectrum::nType_continuumOnly};
-
-  Int32 enable_extinction =
-      0; // TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-  if (opt_extinction) {
-    enable_extinction = 1;
-  }
-  Int32 enable_dustFitting = 0;
-  if (opt_dustFitting) {
-    enable_dustFitting =
-        1; // here we dont distinguish between using on single ismCoeff or
-           // iterating over all coeffs. Default to all!
-  }
+  std::string resultName = "tplcombination";
+  // TODO modify as in templatefittingsolve when stabilized
+  Int32 _ntype = 0;
+  CSpectrum::EType _spctype = CSpectrum::EType::raw;
+  CSpectrum::EType _spctypetab[3] = {CSpectrum::EType::raw,
+                                     CSpectrum::EType::noContinuum,
+                                     CSpectrum::EType::continuumOnly};
 
   // prepare the list of components/templates
   const TTemplateConstRefList &tplList =
       tplCatalog.GetTemplateList(TStringList{m_category});
   checkTemplates(tplList);
 
-  // case: nType_all
-  if (spctype == nType_all)
-    _ntype = 3;
+  // case: all
+  if (spctype == EType::all)
+    _ntype = 2;
 
   const CSpectrum::EType save_spcType = spc.GetType();
   std::vector<CSpectrum::EType> save_tplTypes(tplList.size());
@@ -192,8 +180,8 @@ bool CTplCombinationSolve::Solve(
                    return tpl->GetType();
                  });
 
-  for (Int32 i = 0; i < _ntype; i++) {
-    if (spctype == nType_all)
+  for (Int32 i = 0; i <= _ntype; i++) {
+    if (spctype == EType::all)
       _spctype = _spctypetab[i];
     else
       _spctype = static_cast<CSpectrum::EType>(spctype);
@@ -206,22 +194,20 @@ bool CTplCombinationSolve::Solve(
           tpl->setRebinInterpMethod(opt_interp);
         });
 
-    scopeStr = getSpecBasedScope(_spctype);
-    if (_spctype == CSpectrum::nType_noContinuum)
-      enable_dustFitting = 0;
+    resultName = getResultName(_spctype);
 
     // Compute merit function
     auto result = std::dynamic_pointer_cast<CTplCombinationResult>(
-        m_tplcombinationOperator.Compute(
-            spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList,
-            opt_interp, enable_extinction, enable_dustFitting));
+        m_tplcombinationOperator.Compute(spc, tplList, lambdaRange, redshifts,
+                                         overlapThreshold, maskList, opt_interp,
+                                         opt_extinction, opt_dustFitting));
 
     if (!result)
       return false;
 
     // Store results
     Log.LogDetail("tplcombinationsolver: Save tplcombination results");
-    resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
+    resultStore->StoreScopedGlobalResult(resultName, result);
   }
 
   // restore component types
@@ -256,16 +242,16 @@ void CTplCombinationSolve::checkTemplates(
   }
 }
 
-std::string CTplCombinationSolve::getSpecBasedScope(CSpectrum::EType _spctype) {
-  if (_spctype == CSpectrum::nType_continuumOnly)
+std::string CTplCombinationSolve::getResultName(CSpectrum::EType _spctype) {
+  if (_spctype == CSpectrum::EType::continuumOnly)
     // use continuum only
     return "tplcombination_continuum";
 
-  if (_spctype == CSpectrum::nType_raw)
+  if (_spctype == CSpectrum::EType::raw)
     // use full spectrum
     return "tplcombination";
 
-  if (_spctype == CSpectrum::nType_noContinuum)
+  if (_spctype == CSpectrum::EType::noContinuum)
     // use spectrum without continuum
     return "tplcombination_nocontinuum";
   else
@@ -323,7 +309,7 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
       chisquarearray.chisquares.emplace_back(
           result->ChiSquareIntermediate.size(), DBL_MAX);
       TFloat64List &logLikelihoodCorrected = chisquarearray.chisquares.back();
-      for (Int32 kz = 0; kz < result->ChiSquareIntermediate.size(); kz++)
+      for (Int32 kz = 0; kz < ssize(result->ChiSquareIntermediate); kz++)
         logLikelihoodCorrected[kz] =
             result->ChiSquareIntermediate
                 [kz][kism]
@@ -382,25 +368,22 @@ CTplCombinationSolve::buildExtremaResults(
     const Int32 idx = std::distance(redshifts.begin(), itZ);
 
     // Fill extrema Result
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMerit =
-        TplFitResult->ChiSquare[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeritPhot =
-        TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplMeiksinIdx =
-        TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplEbmvCoeff =
-        TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeList =
-        TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeErrorList =
+    auto candidate = extremaResult->getRankedCandidatePtr(i);
+    candidate->fittedContinuum.merit = TplFitResult->ChiSquare[idx];
+    candidate->fittedContinuum.reducedChi2 =
+        TplFitResult->ReducedChiSquare[idx];
+    candidate->fittedContinuum.pValue = TplFitResult->pValue[idx];
+    candidate->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[idx];
+    candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[idx];
+    candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[idx];
+    candidate->FittedTplAmplitudeList = TplFitResult->FitAmplitude[idx];
+    candidate->FittedTplAmplitudeErrorList =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeSigmaList =
+    candidate->FittedTplAmplitudeSigmaList =
         TplFitResult->FitAmplitudeSigma[idx];
-    extremaResult->m_ranked_candidates[i].second->FittedTplCovMatrix =
-        TplFitResult->FitCOV[idx];
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplLogPrior = NAN;
-    extremaResult->m_ranked_candidates[i].second->fittedTpl.tplSNR =
-        TplFitResult->SNR[idx];
+    candidate->FittedTplCovMatrix = TplFitResult->FitCOV[idx];
+    candidate->fittedContinuum.tplLogPrior = NAN;
+    candidate->fittedContinuum.SNR = TplFitResult->SNR[idx];
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;

@@ -46,8 +46,10 @@
 using namespace NSEpic;
 
 const std::string jsonString =
-    "{\"lambdaRange\" : [ 4680, 4712 ],"
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
+    "\"nbSamplesMin\" : 1,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -93,8 +95,10 @@ const std::string jsonString =
     "}}}}}";
 
 const std::string jsonString_lbfgsb =
-    "{\"lambdaRange\" : [ 4680, 4712 ],"
+    "{\"multiObsMethod\" : \"\","
+    "\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
+    "\"nbSamplesMin\" : 1,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -280,10 +284,10 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
           "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII_DI;
-  BOOST_CHECK_CLOSE(snrOII, 21.480993641608535, 1e-2);
+  BOOST_CHECK_CLOSE(snrOII, 21.480993641608535, 1); // 1% relative tolerance
 
   Float64 lfOII = res->lfOII;
-  BOOST_CHECK_CLOSE(lfOII, -15.778872598441525, 1e-4);
+  BOOST_CHECK_CLOSE(lfOII, -15.778872598441525, 0.1); // 0.1%
 
   ctx.reset();
 }

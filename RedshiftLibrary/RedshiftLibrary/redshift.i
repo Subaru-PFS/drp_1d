@@ -80,6 +80,7 @@
 %shared_ptr(TLSFGaussianConstantResolutionArgs)
 %shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
 %shared_ptr(CLineModelSolution)
+%shared_ptr(CLineModelSolveResult)
 %shared_ptr(CPhotometricData)
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
@@ -121,6 +122,7 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
@@ -130,7 +132,6 @@
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/modelphotvalueresult.h"
-#include "RedshiftLibrary/operator/tplmodelsolution.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
@@ -440,6 +441,7 @@ public:
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
+%include "method/linemodelsolveresult.i"
 %include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/logZPdfResult.i"
@@ -450,30 +452,9 @@ public:
 %include "operator/modelspectrumresult.i"
 %include "operator/modelphotvalueresult.i"
 %include "linemodel/linemodelsolution.i"
+%include "linemodel/continuummodelsolution.i"
 %include "common/errorcodes.i"
 %include "common/warningcodes.i"
-
-struct CTplModelSolution {
-
-  // template continuum
-  std::string tplName = undefStr;
-  Float64 tplAmplitude = NAN;
-  Float64 tplAmplitudeError = NAN;
-  Float64 tplAmplitudeSigma = NAN;
-  Float64 tplEbmvCoeff = NAN;
-  Int32 tplMeiksinIdx = undefIdx;
-  Float64 tplRedshift = NAN;
-
-  Float64 tplMerit = NAN;
-  Float64 tplMeritPhot = NAN;
-  Float64 tplDtM = NAN;
-  Float64 tplMtM = NAN;
-  Float64 tplLogPrior = 0.;
-  Float64 tplSNR = NAN;
-
-  // polynom
-  TFloat64List pCoeffs;
-};
 
 class CProcessFlowContext {
 public:
@@ -486,8 +467,8 @@ public:
   void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog);
   void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog);
   void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum);
-  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin);
-  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti);
+  void setFluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin);
+  void setFluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti);
   void reset();
 
   const std::shared_ptr<COperatorResultStore> &GetResultStore();
@@ -598,7 +579,8 @@ class COperatorResultStore
 										 const std::string& method,
 										 const std::string& name ,
                      const std::string &dataset,
-										 const int& rank
+										 const int& rank,
+                     bool firstpassResults
 									       ) const;
 
 
@@ -630,6 +612,10 @@ class COperatorResultStore
                                             const std::string &name,
                                             const std::string &dataset,
                                             const int &rank) const;
+
+  std::shared_ptr<const CLineModelSolveResult>
+  GetLineModelSolveResult(const std::string &spectrumModel, const std::string &stage,
+			  const std::string &method, const std::string &name) const;
 
   const std::string&  GetGlobalResultType(const std::string& objectType, const std::string& stage,
                                           const std::string& method,
@@ -804,6 +790,7 @@ class CLSFFactory : public CSingleton<CLSFFactory>
 typedef struct{
     virtual ~TLSFArguments(){};
     TLSFArguments()=default;
+    TLSFArguments(const std::shared_ptr<const CParameterStore>& parameterStore);
     TLSFArguments(const TLSFArguments & other) = default; 
     TLSFArguments(TLSFArguments && other) = default; 
     TLSFArguments& operator=(const TLSFArguments& other) = default;  
@@ -875,8 +862,12 @@ public:
 %}
 
 %pythonprepend AmzException::LogError() const %{
+    if self.logged:
+      return
     if not args:
       args = (self.__str__(), )
+
+    self.logged = True
 %}
 
 class AmzException : public std::exception
@@ -894,8 +885,11 @@ class AmzException : public std::exception
   const std::string &getMessage() const;
 
   const std::string &getFileName() const;
+  void setFilename(std::string const &filename_);
   const std::string &getMethod() const;
+  void setMethod(std::string const &method_);
   int getLine() const;
+  void setLine(int line_);
 
   void LogError(const std::string &msg = std::string()) const;
 
@@ -903,13 +897,14 @@ class AmzException : public std::exception
 
 %pythoncode %{
   def _AmzException__str__(self):
-    msg = f"{self.getErrorCode().name}:{self.getMessage()}"
+    msg = f"{self.getErrorCode().name}: {self.getMessage()}"
     filename = self.getFileName()
     if filename:
       msg += f" [{filename}:{self.getLine()}:{self.getMethod()}]"
     return msg
 
   AmzException.__str__ = _AmzException__str__
+  AmzException.logged = False
 %}
 
 class CSolve{

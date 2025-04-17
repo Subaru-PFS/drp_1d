@@ -42,6 +42,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/line/ruleStrongHigherThanWeak.h"
+#include "RedshiftLibrary/linemodel/obsiterator.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
 
 using namespace std;
 using namespace boost;
@@ -50,85 +53,75 @@ using namespace NSEpic;
 
 class RuleStrongHigherThanWeak_fixture {
 public:
-  static CLine createLine(std::string name, CLine::EForce force, Int32 id);
-  static CLineModelElement createCLineModelElement(CLineVector lines,
-                                                   std::vector<Float64> amps);
-  static CLineModelElementList
-  createElementList(vector<CLineModelElement> elements, Int32 nElements);
-  CLineModelElementList makeSomeElementList(Float64 weak1Amp, Float64 weak2Amp,
-                                            Float64 strong1Amp,
-                                            Float64 strong2Amp);
+  void setLineModelElementsAmplitudes(TFloat64List amps);
+
+  CLineCatalog line_catalog = makeLineCatalog();
+  CLMEltListVector element_list_vector = makeElementListVector();
+
+private:
+  CLine createLine(std::string const &name, CLine::EForce force, Int32 id,
+                   std::string const &group);
+  CLineCatalog makeLineCatalog();
+  CLMEltListVector makeElementListVector();
 };
 
-CLine RuleStrongHigherThanWeak_fixture::createLine(std::string name,
+CLine RuleStrongHigherThanWeak_fixture::createLine(std::string const &name,
                                                    CLine::EForce force,
-                                                   Int32 id) {
+                                                   Int32 id,
+                                                   std::string const &group) {
   return CLine(name, -1., CLine::EType::nType_Emission,
-               std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force,
-               0., false, undefStr, 1.0, "Em1", id, std::to_string(id));
+               std::make_unique<CLineProfileSYM>(), force, 0., false, group,
+               1.0, "Em1", id, std::to_string(id));
 };
 
-CLineModelElement RuleStrongHigherThanWeak_fixture::createCLineModelElement(
-    CLineVector lines, std::vector<Float64> amps) {
-  TLineModelElementParam_ptr elementParam_ptr =
-      std::make_shared<TLineModelElementParam>(lines, 1.0, 1.1,
-                                               "instrumentDriven");
-  CLineModelElement cLineModelElement(elementParam_ptr);
-
-  cLineModelElement.m_ElementParam->m_FittedAmplitudes = amps;
-  cLineModelElement.m_ElementParam->m_NominalAmplitudes = amps;
-  cLineModelElement.m_ElementParam->m_FittedAmplitudesStd =
-      TFloat64List(lines.size());
-
-  // Forces model elements to be included in lambda range
-  cLineModelElement.m_OutsideLambdaRangeList.assign(lines.size(), false);
-
-  return cLineModelElement;
+CLineCatalog RuleStrongHigherThanWeak_fixture::makeLineCatalog() {
+  CLineCatalog line_catalog;
+  CLineProfile_ptr profilesym = std::make_unique<CLineProfileSYM>();
+  line_catalog.Add(
+      createLine("LineWeak1", CLine::EForce::nForce_Weak, 0, "groupWeak"));
+  line_catalog.Add(
+      createLine("LineWeak2", CLine::EForce::nForce_Weak, 1, "groupWeak"));
+  line_catalog.Add(createLine("LineStrong1", CLine::EForce::nForce_Strong, 2,
+                              "groupStrong"));
+  line_catalog.Add(createLine("LineStrong2", CLine::EForce::nForce_Strong, 3,
+                              "groupStrong"));
+  return line_catalog;
 }
 
-CLineModelElementList RuleStrongHigherThanWeak_fixture::createElementList(
-    vector<CLineModelElement> elements, Int32 nElements) {
-  CLineModelElementList elementList;
-  int i;
-  for (i = 0; i < nElements; i++) {
-    elementList.push_back(std::make_shared<CLineModelElement>(elements[i]));
+CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
+  CLineMap const &lm = line_catalog.GetList();
+  CSpectraGlobalIndex spc_index = CSpectraGlobalIndex(1);
+  CAutoScope autoscope1(Context.m_ScopeStack, "model",
+                        ScopeType::SPECTRUMMODEL);
+  CAutoScope autoscope2(Context.m_ScopeStack, "stage", ScopeType::STAGE);
+  CAutoScope autoscope3(Context.m_ScopeStack, "methodSolve", ScopeType::METHOD);
+  std::string const jsonString = {
+      "{\"model\" : {\"stage\": {\"methodSolve\": {\"lineModel\": {"
+      "\"velocityEmission\": 100,"
+      "\"lineWidthType\": \"instrumentDriven\""
+      "}}}}}"};
+  Context.LoadParameterStore(jsonString);
+  CLMEltListVector element_list_vector =
+      CLMEltListVector(spc_index, lm, ElementComposition::Default);
+  spc_index.setAtBegining();
+  for (auto &elt : element_list_vector.getElementList()) {
+    elt->m_OutsideLambdaRangeList.assign(2, false);
+    elt->computeOutsideLambdaRange();
   }
-  return elementList;
+  return element_list_vector;
 }
 
-CLineModelElementList RuleStrongHigherThanWeak_fixture::makeSomeElementList(
-    Float64 weak1Amp, Float64 weak2Amp, Float64 strong1Amp,
-    Float64 strong2Amp) {
-  CLineProfile_ptr profilesym =
-      std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
+void RuleStrongHigherThanWeak_fixture::setLineModelElementsAmplitudes(
+    TFloat64List amps) {
+  auto &param1 = *(element_list_vector.getElementParam()[0]);
+  param1.m_FittedAmplitudes = {amps[2], amps[3]};
+  param1.m_NominalAmplitudes = {amps[2], amps[3]};
+  param1.m_FittedAmplitudesStd = TFloat64List(param1.size());
 
-  CLine lineWeak1 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineWeak1", CLine::EForce::nForce_Weak, 0);
-  CLine lineWeak2 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineWeak2", CLine::EForce::nForce_Weak, 1);
-  CLine lineStrong1 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineStrong1", CLine::EForce::nForce_Strong, 2);
-  CLine lineStrong2 = RuleStrongHigherThanWeak_fixture::createLine(
-      "LineStrong2", CLine::EForce::nForce_Strong, 3);
-  CLineMap lm;
-  CLineModelElement weakElement1 =
-      RuleStrongHigherThanWeak_fixture::createCLineModelElement(
-          {lineWeak1, lineWeak2}, {weak1Amp, weak2Amp});
-  weakElement1.computeOutsideLambdaRange();
-  CLineModelElement strongElement1 =
-      RuleStrongHigherThanWeak_fixture::createCLineModelElement(
-          {lineStrong1, lineStrong2}, {strong1Amp, strong2Amp});
-  strongElement1.computeOutsideLambdaRange();
-  CLineModelElementList elementList =
-      RuleStrongHigherThanWeak_fixture::createElementList(
-          {weakElement1, strongElement1}, 2);
-
-  CRuleStrongHigherThanWeak rule;
-  CLMEltListVector lmeltlistv = CLMEltListVector(elementList, lm);
-  // compute outside lambdarange list here
-  rule.SetUp(true, CLine::EType::nType_Emission);
-  rule.Correct(lmeltlistv);
-  return elementList;
+  auto &param2 = *(element_list_vector.getElementParam()[1]);
+  param2.m_FittedAmplitudes = {amps[0], amps[1]};
+  param2.m_NominalAmplitudes = {amps[0], amps[1]};
+  param2.m_FittedAmplitudesStd = TFloat64List(param2.size());
 }
 
 BOOST_FIXTURE_TEST_SUITE(RuleStrongHigherThanWeak_test,
@@ -142,19 +135,19 @@ BOOST_AUTO_TEST_CASE(Correct_test_no_change) {
   Float64 lineStrong1InitialAmplitude = 1.8;
   Float64 lineStrong2InitialAmplitude = 2.;
 
-  CLineModelElementList elementList =
-      RuleStrongHigherThanWeak_fixture::makeSomeElementList(
-          lineWeak1InitialAmplitude, lineWeak2InitialAmplitude,
-          lineStrong1InitialAmplitude, lineStrong2InitialAmplitude);
+  setLineModelElementsAmplitudes(
+      {lineWeak1InitialAmplitude, lineWeak2InitialAmplitude,
+       lineStrong1InitialAmplitude, lineStrong2InitialAmplitude});
 
-  Float64 correctedAmpWeak1 =
-      elementList[0]->m_ElementParam->m_FittedAmplitudes[0];
-  Float64 correctedAmpWeak2 =
-      elementList[0]->m_ElementParam->m_FittedAmplitudes[1];
-  Float64 correctedAmpStrong1 =
-      elementList[1]->m_ElementParam->m_FittedAmplitudes[0];
-  Float64 correctedAmpStrong2 =
-      elementList[1]->m_ElementParam->m_FittedAmplitudes[1];
+  CRuleStrongHigherThanWeak rule;
+  rule.SetUp(true, CLine::EType::nType_Emission);
+  rule.Correct(element_list_vector);
+
+  auto &params = element_list_vector.getElementParam();
+  Float64 correctedAmpWeak1 = params[1]->m_FittedAmplitudes[0];
+  Float64 correctedAmpWeak2 = params[1]->m_FittedAmplitudes[1];
+  Float64 correctedAmpStrong1 = params[0]->m_FittedAmplitudes[0];
+  Float64 correctedAmpStrong2 = params[0]->m_FittedAmplitudes[1];
 
   BOOST_CHECK(correctedAmpWeak1 == lineWeak1InitialAmplitude);
   BOOST_CHECK(correctedAmpWeak2 == lineWeak2InitialAmplitude);
@@ -170,20 +163,20 @@ BOOST_AUTO_TEST_CASE(Correct_test_one_high_weak) {
 
   Float64 lineStrong1InitialAmplitude = 2;
   Float64 lineStrong2InitialAmplitude = 2.2;
+  setLineModelElementsAmplitudes(
+      {lineWeak1InitialAmplitude, lineWeak2InitialAmplitude,
+       lineStrong1InitialAmplitude, lineStrong2InitialAmplitude});
 
-  CLineModelElementList elementList =
-      RuleStrongHigherThanWeak_fixture::makeSomeElementList(
-          lineWeak1InitialAmplitude, lineWeak2InitialAmplitude,
-          lineStrong1InitialAmplitude, lineStrong2InitialAmplitude);
+  CRuleStrongHigherThanWeak rule;
 
-  Float64 correctedAmpWeak1 =
-      elementList[0]->m_ElementParam->m_FittedAmplitudes[0];
-  Float64 correctedAmpWeak2 =
-      elementList[0]->m_ElementParam->m_FittedAmplitudes[1];
-  Float64 correctedAmpStrong1 =
-      elementList[1]->m_ElementParam->m_FittedAmplitudes[0];
-  Float64 correctedAmpStrong2 =
-      elementList[1]->m_ElementParam->m_FittedAmplitudes[1];
+  rule.SetUp(true, CLine::EType::nType_Emission);
+  rule.Correct(element_list_vector);
+
+  auto &params = element_list_vector.getElementParam();
+  Float64 correctedAmpWeak1 = params[1]->m_FittedAmplitudes[0];
+  Float64 correctedAmpWeak2 = params[1]->m_FittedAmplitudes[1];
+  Float64 correctedAmpStrong1 = params[0]->m_FittedAmplitudes[0];
+  Float64 correctedAmpStrong2 = params[0]->m_FittedAmplitudes[1];
 
   Float64 reductionCoef =
       lineStrong1InitialAmplitude / lineWeak2InitialAmplitude;

@@ -57,10 +57,9 @@ CLineRatioManager::CLineRatioManager(
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
-    : m_elementsVector(elementsVector), m_models(models),
-      m_inputSpcs(inputSpcs), m_lambdaRanges(lambdaRanges),
-      m_continuumManager(continuumManager), m_RestLineList(restLineList),
-      m_spectraIndex(spcIndex) {
+    : m_elementsVector(elementsVector), m_inputSpcs(inputSpcs),
+      m_lambdaRanges(lambdaRanges), m_models(models), m_spectraIndex(spcIndex),
+      m_continuumManager(continuumManager), m_RestLineList(restLineList) {
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -157,7 +156,7 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
   auto const &param_EltIgm = m_elementsVector->getElementParam()[iElts];
 
   bool fixedIGM =
-      m_continuumManager->isContinuumComponentTplfitxx() &&
+      (m_continuumManager->isContinuumComponentFitter()) &&
       !m_continuumManager->isContFittedToNull(); // set to false when continuum
                                                  // is fitted to null
 

@@ -4,8 +4,7 @@
   "title": "Spectrum model",
   "type": "object",
   "required": [
-    "method",
-    "deepLearningSolver"
+    "method"
   ],
   "additionalProperties": false,
   "properties": {
@@ -16,7 +15,8 @@
       "items": {
         "type": "string",
         "enum": [
-          "deepLearningSolver"
+          "deepLearningSolver",
+          "skLearnSolver"
         ]
       }
     },
@@ -31,6 +31,29 @@
           "type": "string",
           "title": "Reliability path",
           "description": "Relative path to the neural network model"
+        }
+      }
+    },
+    "skLearnSolver": {
+      "title": "Scikit learn solver",
+      "required": [
+        "skLearnClassifier",
+        "classifierFile"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "skLearnClassifier": {
+          "type": "string",
+          "title": "Classification method",
+          "enum": [
+            "histGradientBoostingClassifier",
+            "randomForestClassifier"
+          ]
+        },
+        "classifierFile": {
+          "type": "string",
+          "title": "Classifier file",
+          "description": "Path to the classifier serialisation file"
         }
       }
     }

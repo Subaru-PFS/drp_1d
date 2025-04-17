@@ -21,12 +21,19 @@ class CSpectrum;
 class CTemplateCatalog;
 class CSpectrumFluxCorrectionCalzetti;
 
-class CTplModelSolution;
+class CContinuumModelSolution;
 
 class CContinuumManager {
+
 public:
+  enum class EFitType {
+    interactiveFitting = 0,
+    precomputedFitStore = 1,
+    fixedValues = 2
+  };
+
   CContinuumManager(const CSpcModelVectorPtr &models,
-                    std::shared_ptr<CTplModelSolution>,
+                    std::shared_ptr<CContinuumModelSolution>,
                     const CSpectraGlobalIndex &spcGlobIndex);
 
   const CSpectrumModel &getModel() const {
@@ -34,33 +41,43 @@ public:
   }
   CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
 
-  Int32 SetFitContinuum_FitStore(
-      const std::shared_ptr<const CTemplatesFitStore> &fitStore);
-  void SetFitContinuum_SNRMax(Float64 snr_max);
-  void SetFitContinuum_Option(Int32 opt);
-  Int32 GetFitContinuum_Option() const;
+  void SetFitContinuum_FitStore(
+      const std::shared_ptr<const CContinuumFitStore> &fitStore);
+  void SetFitContinuum_Option(EFitType opt);
+  EFitType GetFitContinuum_Option() const;
 
-  const std::shared_ptr<const CTemplatesFitStore> &
+  const std::shared_ptr<const CContinuumFitStore> &
   GetFitContinuum_FitStore() const;
   std::shared_ptr<CPriorHelper> SetFitContinuum_PriorHelper();
   void LoadFitContinuum(Int32 icontinuum, Float64 redshift);
 
-  void SetFitContinuum_FitValues(const CTplModelSolution &cms) {
+  void SetFitContinuum_FitValues(const CContinuumModelSolution &cms) {
     *m_fitContinuum = cms;
   }
 
   Float64 getContinuumScaleMargCorrection() const;
-  bool isContinuumComponentTplfitxx() const {
-    return m_ContinuumComponent == "tplFit" ||
-           m_ContinuumComponent == "tplFitAuto";
+  bool isContinuumComponentTplFitXXX() const {
+    return m_ContinuumComponent.isTplFitXXX();
   }
+  bool isContinuumComponentPowerLawXXX() const {
+    return m_ContinuumComponent.isPowerLawXXX();
+  }
+  bool isContinuumComponentFitter() const {
+    return m_ContinuumComponent.isContinuumFit();
+  }
+
+  bool isContinuumComponentNoContinuum() const {
+    return m_ContinuumComponent.isNoContinuum();
+  }
+
   Float64 getFitContinuum_snr() const;
-  CTplModelSolution GetContinuumModelSolutionCopy() const;
-  std::shared_ptr<const CTplModelSolution> GetContinuumModelSolution() const {
+  CContinuumModelSolution GetContinuumModelSolutionCopy() const;
+  std::shared_ptr<const CContinuumModelSolution>
+  GetContinuumModelSolution() const {
     return m_fitContinuum;
   }
-  void setContinuumComponent(std::string component);
-  const std::string &getContinuumComponent() const {
+  void setContinuumComponent(TContinuumComponent component);
+  const TContinuumComponent &getContinuumComponent() const {
     return m_ContinuumComponent;
   };
 
@@ -71,9 +88,9 @@ public:
   void reinterpolateContinuumResetAmp();
 
   bool isContFittedToNull();
-  Int32 getFittedMeiksinIndex() { return m_fitContinuum->tplMeiksinIdx; }
+  Int32 getFittedMeiksinIndex() { return m_fitContinuum->meiksinIdx; }
   Float64 getFitSum() {
-    if (!isContinuumComponentTplfitxx())
+    if (!isContinuumComponentTplFitXXX())
       return 0.0;
     return m_fitContinuum->tplMeritPhot +
            m_fitContinuum->tplLogPrior; // unconditionnal sum (if photometry
@@ -96,21 +113,19 @@ private:
 
   std::shared_ptr<CPriorHelper> m_fitContinuum_priorhelper;
 
-  std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
+  std::shared_ptr<const CContinuumFitStore> m_fitContinuum_tplfitStore;
 
   CSpcModelVectorPtr m_models;
 
   CSpectraGlobalIndex m_spectraIndex;
 
-  std::string m_ContinuumComponent;
-  Int32 m_fitContinuum_option;
+  TContinuumComponent m_ContinuumComponent;
+  EFitType m_fitContinuum_option;
   Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
 
-  std::shared_ptr<CTplModelSolution> m_fitContinuum;
-  std::shared_ptr<fitMaxValues> m_fitContinuumMaxValues;
+  std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
 
-  // m_fitContinuum_option==2 for now
   Float64 m_fitContinuum_tplFitAlpha = 0.;
 
   void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr,

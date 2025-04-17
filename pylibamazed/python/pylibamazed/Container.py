@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Optional
 
 T = TypeVar("T")
 
@@ -44,12 +44,12 @@ T = TypeVar("T")
 class Container(Generic[T]):
     def __init__(self, **kwargs):
         self.data: dict[str, T] = dict()
-        if (kwargs):
+        if kwargs:
             for key in kwargs:
                 self.append(kwargs[key], key)
 
     def __repr__(self):
-        repr = ''
+        repr = ""
         for key in self.data:
             repr += f"\n{key}: {self.data[key]}"
         return repr
@@ -68,7 +68,7 @@ class Container(Generic[T]):
         self._check_type(dataToAppend)
         self.data[obs_id] = dataToAppend
 
-    def get(self, obs_id="") -> T:
+    def get(self, obs_id="") -> Optional[T]:
         return self.data.get(obs_id)
 
     def keys(self):

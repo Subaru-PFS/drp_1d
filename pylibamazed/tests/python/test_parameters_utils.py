@@ -39,13 +39,12 @@
 
 
 class TestParametersUtils:
-
     default_object_type = "object_type"
 
     def make_input_parameters(self, **kwargs) -> dict:
         input_parameters = {
+            "version": 2,
             self.default_object_type: {
-                "version": 2,
                 "redshiftSampling": "some redshift sampling",
                 "stages": ["redshiftSolver", "lineMeasSolver"],
                 "redshiftSolver": {
@@ -55,7 +54,7 @@ class TestParametersUtils:
                             "skipSecondPass": True,
                             "lineRatioType": "tplRatio",
                         }
-                    }
+                    },
                 },
                 "lineMeasSolver": {
                     "method": "lineMeasSolve",
@@ -64,18 +63,16 @@ class TestParametersUtils:
                             "velocityAbsorption": None,
                             "velocityEmission": None,
                         }
-                    }
-                }
+                    },
+                },
             },
-            "spectrumModels": [self.default_object_type]
+            "spectrumModels": [self.default_object_type],
         }
         return input_parameters
 
     def make_config(self) -> dict:
         config = {
-            "linemeascatalog": {
-                self.default_object_type: "somefile.csv"
-            },
+            "linemeascatalog": {self.default_object_type: "somefile.csv"},
             "linemeas_catalog_columns": {
                 self.default_object_type: {
                     "Redshift": "redshift_column_name",

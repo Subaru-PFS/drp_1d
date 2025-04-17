@@ -53,10 +53,10 @@ CRulesManager::CRulesManager(
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList, spcIndex) {}
 
-Float64 CRulesManager::computeMerit(Int32 iratio) {
+std::pair<Float64, Float64> CRulesManager::computeMerit(Int32 iratio) {
   applyRules(true);
   getModel().refreshModel();
-  return getLeastSquareMerit();
+  return std::make_pair(getLeastSquareMerit(), 0.0);
 }
 
 /**
@@ -69,7 +69,7 @@ Float64 CRulesManager::computeMerit(Int32 iratio) {
  *emission and then for absorption.
  **/
 void CRulesManager::applyRules(bool enableLogs) {
-  m_spectraIndex.reset(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // dummy implementation
   if (m_rulesoption == "no") {
     return;
   }

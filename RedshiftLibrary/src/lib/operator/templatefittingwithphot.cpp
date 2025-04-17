@@ -45,9 +45,9 @@ using namespace std;
 
 COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
     const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
-    const Float64 weight, const TFloat64List &redshifts)
-    : COperatorTemplateFitting(redshifts), m_photBandCat(photbandcat),
-      m_weight(weight) {
+    const TFloat64List &redshifts, const Float64 weight)
+    : COperatorTemplateFitting(redshifts), m_weight(weight),
+      m_photBandCat(photbandcat) {
 
   if (m_spectra.size() > 1)
     THROWG(ErrorCode::MULTIOBS_WITH_PHOTOMETRY_NOTIMPLEMENTED,
@@ -114,12 +114,9 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CSpectrumSpectralAxis &photSpectralAxis_restframe =
         m_photSpectralAxis_restframe[bandName];
     CTemplate &templateRebined_phot = m_templateRebined_phot[bandName];
-
-    CSpectrumSpectralAxis photSpectralaxis = bandLambda;
-
-    photSpectralAxis_restframe.ShiftByWaveLength(
-        photSpectralaxis, onePlusRedshift,
-        CSpectrumSpectralAxis::nShiftBackward);
+    photSpectralAxis_restframe = bandLambda;
+    photSpectralAxis_restframe.ShiftByWaveLengthInPlace(
+        onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
 
     CMask mskRebined;
     const TFloat64Range lambdaRange_restframe =
@@ -138,25 +135,18 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
   }
 }
 
-void COperatorTemplateFittingPhot::InitIsmIgmConfig(
-    Float64 redshift, Int32 kstart, Int32 kend,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin,
-    Int32 spcIndex) {
+void COperatorTemplateFittingPhot::InitIsmIgmConfig(Float64 redshift,
+                                                    Int32 kstart, Int32 kend,
+                                                    Int32 spcIndex) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(redshift, kstart, kend,
-                                             ismCorrectionCalzetti,
-                                             igmCorrectionMeiksin, spcIndex);
+  COperatorTemplateFitting::InitIsmIgmConfig(redshift, kstart, kend, spcIndex);
 
   if (spcIndex > 0)
     return;
 
   // init ism & igm on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
-    band.second.InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
-                                 igmCorrectionMeiksin);
+    band.second.InitIsmIgmConfig(redshift);
 }
 
 void COperatorTemplateFittingPhot::init_fast_igm_processing(
@@ -216,10 +206,19 @@ bool COperatorTemplateFittingPhot::ApplyDustCoeff(Int32 kEbmv, Int32 spcIndex) {
   return ret;
 }
 
+std::pair<TList<CMask>, Int32>
+COperatorTemplateFittingPhot::getMaskListAndNSamples(Float64 redshift) const {
+  auto &&[mask_list, n_samples] =
+      COperatorTemplateFitting::getMaskListAndNSamples(redshift);
+  n_samples += m_sortedBandNames.size();
+  return std::make_pair(std::move(mask_list), n_samples);
+}
+
 TCrossProductResult COperatorTemplateFittingPhot::ComputeCrossProducts(
-    Int32 kM, Int32 kEbmv_, Float64 redshift, Int32 spcIndex) {
+    Int32 kM, Int32 kEbmv_, Float64 redshift, CMask const &mask,
+    Int32 spcIndex) {
   TCrossProductResult crossResult =
-      COperatorTemplateFitting::ComputeCrossProducts(kM, kEbmv_, redshift,
+      COperatorTemplateFitting::ComputeCrossProducts(kM, kEbmv_, redshift, mask,
                                                      spcIndex);
   if (spcIndex == 0)
     ComputePhotCrossProducts(kM, kEbmv_, crossResult);

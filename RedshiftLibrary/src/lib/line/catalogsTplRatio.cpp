@@ -42,6 +42,7 @@
 #include <numeric>
 #include <string>
 
+#include "RedshiftLibrary/common/size.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -89,7 +90,7 @@ CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
 
   for (Int32 iCatalog = 0; iCatalog != GetCatalogsCount(); ++iCatalog) {
     auto const &catalog = GetCatalog(iCatalog);
-    for (Int32 elt_index = 0; elt_index != LineModelElementsParams.size();
+    for (Int32 elt_index = 0; elt_index != ssize(LineModelElementsParams);
          ++elt_index) {
       auto &elt_param_ptr = LineModelElementsParams[elt_index];
       auto &correspondingNominalAmp =
@@ -127,15 +128,15 @@ void CLineCatalogsTplRatio::logLineNominalAmp(
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti) const {
 
-  for (Int32 k = 0; k != lineCatalogCorrespondingNominalAmp.size(); ++k) {
+  for (Int32 k = 0; k != ssize(lineCatalogCorrespondingNominalAmp); ++k) {
     Log.LogDebug(Formatter() << "log linesCorrespondingNominalAmp for "
                              << m_lineRatioCatalogs[k].getName());
     for (Int32 elt_index = 0;
-         elt_index != lineCatalogCorrespondingNominalAmp[k].size();
+         elt_index != ssize(lineCatalogCorrespondingNominalAmp[k]);
          ++elt_index) {
       for (Int32 line_index = 0;
            line_index !=
-           lineCatalogCorrespondingNominalAmp[k][elt_index].size();
+           ssize(lineCatalogCorrespondingNominalAmp[k][elt_index]);
            ++line_index) {
         Float64 ebv = enableISMCalzetti
                           ? ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
@@ -177,7 +178,7 @@ Float64 CLineCatalogsTplRatio::GetBestFit(const TInt32List &validLinesIndex,
 
   // mask is unique and independent from catalogs
   TBoolList mask;
-  for (Int32 idx = 0; idx != validLinesIndex.size(); ++idx)
+  for (Int32 idx = 0; idx != ssize(validLinesIndex); ++idx)
     mask.push_back(negativefittedValues(idx) ? false : true);
 
   for (size_t icat = 0; icat < m_lineRatioCatalogs.size(); ++icat) {
@@ -201,7 +202,7 @@ Float64 CLineCatalogsTplRatio::GetBestFit(const TInt32List &validLinesIndex,
     return coeffMin;
 
   // fill the corrected amplitudes vector
-  for (Int32 idx = 0; idx != validLinesIndex.size(); ++idx) {
+  for (Int32 idx = 0; idx != ssize(validLinesIndex); ++idx) {
     if (mask[idx])
       amplitudesCorrected[idx] = bestFitAmplitudes[idx];
   }
@@ -261,7 +262,7 @@ Float64 CLineCatalogsTplRatio::computeFitValue(
   Float64 sumCross = 0.0;
   Float64 sumTPL2 = 0.0;
 
-  for (Int32 i = 0; i != ampsLM.size(); ++i) {
+  for (Int32 i = 0; i != ssize(ampsLM); ++i) {
     Float64 err2 = 1.0 / (errLM[i] * errLM[i]);
 
     sumCross += ampsLM[i] * ampsTPL[i] * err2;
@@ -277,7 +278,7 @@ Float64 CLineCatalogsTplRatio::computeFitValue(
   Float64 ampl = sumCross / sumTPL2;
   Float64 fit = 0.0;
   ampsCorrected.assign(ampsLM.size(), NAN);
-  for (Int32 i = 0; i != ampsLM.size(); ++i) {
+  for (Int32 i = 0; i != ssize(ampsLM); ++i) {
     // compute the chi2
     Float64 const err2 = 1.0 / (errLM[i] * errLM[i]);
     Float64 const diff = ampsLM[i] - ampl * ampsTPL[i];

@@ -50,7 +50,7 @@ using namespace NSEpic;
 CLog::CLog() {
   Int32 i;
   for (i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
-    m_HandlerTable[i] = NULL;
+    m_HandlerTable[i] = nullptr;
   }
 }
 
@@ -112,7 +112,7 @@ void CLog::RemoveHandler(CLogHandler &handler) {
 
   for (i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
     if (m_HandlerTable[i] == &handler) {
-      m_HandlerTable[i] = NULL;
+      m_HandlerTable[i] = nullptr;
       break;
     }
   }
@@ -126,7 +126,7 @@ void CLog::AddHandler(CLogHandler &handler) {
   Int32 i;
 
   for (i = 0; i < LOG_HANDLER_TABLE_SIZE; i++) {
-    if (m_HandlerTable[i] == NULL) {
+    if (m_HandlerTable[i] == nullptr) {
       m_HandlerTable[i] = &handler;
       break;
     }
@@ -163,7 +163,7 @@ std::string CLog::GetHeader(CLog::ELevel logLevel) {
     header = "";
     break;
   default:
-    return NULL;
+    return nullptr;
   }
 
   return header;

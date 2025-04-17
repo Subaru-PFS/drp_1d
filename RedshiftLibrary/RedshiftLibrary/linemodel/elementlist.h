@@ -44,23 +44,17 @@
 
 namespace NSEpic {
 class CLineModelSolution;
+class CSpcModelVector;
 class CLineModelElementList {
 private:
   std::vector<std::shared_ptr<CLineModelElement>> m_Elements;
 
 public:
-  TInt32List m_elementsDisabledIndexes;
-
-  TInt32List GetModelValidElementsIndexes() const;
-  TInt32List getValidElementIndices(CLine::EType lineTypeFilter) const;
-
-  Float64 GetElementAmplitude(Int32 j) const;
-
+  TInt32List GetElementsIndicesInsideLambdaRange() const;
+  TInt32List getNonZeroElementIndices(CLine::EType lineTypeFilter) const;
   TInt32List getOverlappingElements(Int32 ind, const TInt32Set &excludedInd,
                                     Float64 redshift,
                                     Float64 overlapThres) const;
-
-  Int32 GetModelValidElementsNDdl() const;
 
   std::vector<TInt32List> GetModelVelfitGroups(CLine::EType lineType) const;
 
@@ -75,10 +69,6 @@ public:
       const CSpectrumSpectralAxis &spectralAxis,
       CSpectrumFluxAxis &modelfluxAxis, const TInt32List &eIdx_list = {},
       CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
-
-  bool IsElementIndexInDisabledList(Int32 index) const;
-  void SetElementIndexesDisabledAuto();
-  void ResetElementIndexesDisabled();
 
   Float64 getScaleMargCorrection(Int32 Eltidx = undefIdx) const;
   bool GetModelStrongEmissionLinePresent() const;
@@ -129,13 +119,9 @@ public:
 
 class CLMEltListVector {
 public:
-  CLMEltListVector(CTLambdaRangePtrVector lambdaranges,
-                   const CSpectraGlobalIndex &spcIndex,
+  CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                    const CLineMap &restLineList,
                    ElementComposition element_composition);
-  CLMEltListVector(CLineModelElementList eltlist,
-                   const CLineMap &restLineList); // for unit test
-
   CLMEltListVector() = delete;
 
   std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
@@ -149,24 +135,19 @@ public:
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
   std::vector<std::pair<Int32, TInt32List>> getIgmLinesIndices() const;
 
-  bool isOutsideLambdaRangeLine(Int32 elt_index, Int32 line_index) const {
-    return m_globalOutsideLambdaRangeList[elt_index][line_index];
-  }
-  bool isOutsideLambdaRange(Int32 elt_index) const {
-    return m_globalOutsideLambdaRange[elt_index];
-  }
-  const std::vector<bool> &getOutsideLambdaRangeList(Int32 elt_index) const;
-
   CLineModelElementList &getElementList() {
     return m_ElementsVector.at(m_spectraIndex.get());
   }
+
   const CLineModelElementList &getElementList() const {
     return m_ElementsVector.at(m_spectraIndex.get());
   }
+
   // TODO Rename to getElementsParams
   std::vector<TLineModelElementParam_ptr> &getElementParam() {
     return m_ElementsParams;
   }
+
   const std::vector<TLineModelElementParam_ptr> &getElementParam() const {
     return m_ElementsParams;
   }
@@ -174,24 +155,34 @@ public:
   void SetElementAmplitude(Int32 eltIndex, Float64 A, Float64 AStd);
 
   void resetLambdaOffsets();
-  void resetAmplitudeOffsets();
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
   void resetAsymfitParams();
 
-  void setGlobalOutsideLambdaRangeFromSpectra();
-
-  Int32 GetModelNonZeroElementsNDdl() const;
+  void computeGlobalOutsideLambdaRange();
+  void setNullNominalAmplitudesNotFittable();
+  void setAbsLinesNullContinuumNotFittable(
+      std::shared_ptr<CSpcModelVector> const &models);
+  void setAllAbsLinesFittable();
+  void setAllAbsLinesNotFittable();
+  void resetNullLineProfiles();
+  void
+  computeGlobalLineValidity(std::shared_ptr<CSpcModelVector> const &models);
+  TInt32List getValidElementIndices(TInt32List const &EltIndices) const;
+  TInt32List getValidElementIndices() const;
+  Int32 getNonZeroElementsNDdl() const;
 
 private:
-  std::vector<CLineModelElementList> m_ElementsVector;
-  std::vector<TLineModelElementParam_ptr> m_ElementsParams;
-  CTLambdaRangePtrVector m_lambdaRanges;
+  std::vector<CLineModelElementList>
+      m_ElementsVector; // number of multiobs spectrum
+  std::vector<TLineModelElementParam_ptr>
+      m_ElementsParams; // number of LineModelElements
   mutable CSpectraGlobalIndex m_spectraIndex;
 
   const CLineMap &m_RestLineList;
 
-  std::vector<bool> m_globalOutsideLambdaRange;
-  std::vector<std::vector<bool>> m_globalOutsideLambdaRangeList;
+  // when spectrum component is "noContinuum" set to true
+  // to invalid all absorption lines of all element
+  bool m_allAbsLinesNoContinuum = false;
 
   void AddElementParam(CLineVector lines);
   void fillElements();

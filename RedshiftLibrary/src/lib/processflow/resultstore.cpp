@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
@@ -99,9 +100,9 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
   TPerTemplateResultsMap::const_iterator it1 =
       m_PerTemplateResults.find(t->GetName());
   if (it1 != m_PerTemplateResults.end()) {
-    const TResultsMap &m = (*it1).second;
-    TResultsMap::const_iterator it2 = m.find(name);
-    if (it2 != m.end()) {
+    const TResultsMap &resultsMap = (*it1).second;
+    TResultsMap::const_iterator it2 = resultsMap.find(name);
+    if (it2 != resultsMap.end()) {
       return (*it2).second;
     }
   }
@@ -117,25 +118,19 @@ COperatorResultStore::GetScopedPerTemplateResult(
   return GetPerTemplateResult(t, GetScopedName(name));
 }
 
-TOperatorResultMap
-COperatorResultStore::GetPerTemplateResult(const std::string &name) const {
-  TOperatorResultMap map;
-  TPerTemplateResultsMap::const_iterator it;
-  for (it = m_PerTemplateResults.begin(); it != m_PerTemplateResults.end();
-       ++it) {
-    std::string tplName = (*it).first;
+TResultsMap COperatorResultStore::GetPerTemplateResult(
+    const std::string &resultName) const {
+  TResultsMap map;
 
-    const TResultsMap &m = (*it).second;
-    TResultsMap::const_iterator it2 = m.find(name);
-    if (it2 != m.end()) {
-      map[tplName] = (*it2).second;
-    }
+  for (auto &[tplName, resultsMap] : m_PerTemplateResults) {
+    auto foundResult = resultsMap.find(resultName);
+    if (foundResult != resultsMap.end())
+      map[tplName] = (*foundResult).second;
   }
-
   return map;
 }
 
-TOperatorResultMap COperatorResultStore::GetScopedPerTemplateResult(
+TResultsMap COperatorResultStore::GetScopedPerTemplateResult(
     const std::string &name) const {
   return GetPerTemplateResult(GetScopedName(name));
 }
@@ -264,13 +259,14 @@ COperatorResultStore::GetTplCombinationResult(const std::string &spectrumModel,
 std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name,
-    const std::string &dataset, const int &rank) const
+    const std::string &dataset, const int &rank,
+    bool firstpassCorrespondingResult) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
-          ->getCandidate(rank, dataset);
+          ->getCandidate(rank, dataset, firstpassCorrespondingResult);
   std::shared_ptr<const TExtremaResult> tlm =
       std::dynamic_pointer_cast<const TExtremaResult>(cop);
   return tlm;
@@ -414,6 +410,16 @@ int COperatorResultStore::getNbRedshiftCandidates(
         ->size();
 
   return 0;
+}
+
+std::shared_ptr<const CLineModelSolveResult>
+COperatorResultStore::GetLineModelSolveResult(const std::string &spectrumModel,
+                                              const std::string &stage,
+                                              const std::string &method,
+                                              const std::string &name) const {
+
+  return std::dynamic_pointer_cast<const CLineModelSolveResult>(
+      GetGlobalResult(spectrumModel, stage, method, name).lock());
 }
 
 void COperatorResultStore::StoreScopedPerTemplateResult(

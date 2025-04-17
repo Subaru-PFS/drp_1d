@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
@@ -278,7 +279,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
   BOOST_CHECK(LSF->IsValid() == true);
   BOOST_CHECK(LSF->checkAvailability(13000) == true);
   BOOST_CHECK(LSF->getSpectralRange() == TFloat64Range(12000.0, 21000.0));
-  for (Int32 i = 0; i < spcAxis.size(); i++) {
+  for (Int32 i = 0; i < ssize(spcAxis); i++) {
     BOOST_CHECK(LSF->GetWidth(spcAxis[i]) == widthList[i]);
   }
 

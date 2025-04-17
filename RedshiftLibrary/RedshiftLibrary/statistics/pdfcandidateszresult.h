@@ -47,11 +47,18 @@
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
 namespace NSEpic {
+
+template <typename T>
+using TCandidateZResultbyRank =
+    std::vector<std::pair<std::string, std::shared_ptr<T>>>;
 template <class T> class CPdfCandidateszResult : public COperatorResult {
 
 public:
   CPdfCandidateszResult(Int32 optMethod = 0)
-      : COperatorResult("PdfCandidatesZResult"), m_optMethod(optMethod){};
+      : COperatorResult("PdfCandidatesZResult"), m_optMethod(optMethod) {
+    // For T deriving from TCandidateZ classes only.
+    static_assert(std::is_base_of<TCandidateZ, T>::value);
+  };
 
   // rule of 5 defaults
   CPdfCandidateszResult(const CPdfCandidateszResult &) = default;
@@ -59,6 +66,40 @@ public:
   CPdfCandidateszResult &operator=(const CPdfCandidateszResult &) = default;
   CPdfCandidateszResult &operator=(CPdfCandidateszResult &&) = default;
   virtual ~CPdfCandidateszResult() = default;
+  Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
+
+  Int32 size() const { return m_ranked_candidates.size(); }
+
+  std::shared_ptr<const T> getRankedCandidateCPtr(int rank) const {
+    return std::dynamic_pointer_cast<const T>(m_ranked_candidates[rank].second);
+  }
+
+  const std::shared_ptr<T> &getRankedCandidatePtr(int rank) const {
+    return m_ranked_candidates[rank].second;
+  }
+
+  TCandidateZResultbyRank<T> m_ranked_candidates;
+
+  TCandidateZbyRank getCandidatesZByRank() {
+    TCandidateZbyRank ret;
+    for (auto &cand : m_ranked_candidates) {
+      ret.push_back(std::make_pair(
+          cand.first, std::dynamic_pointer_cast<TCandidateZ>(cand.second)));
+    }
+    return ret;
+  }
+
+  std::shared_ptr<const COperatorResult>
+  getCandidateParent(const int &rank, const std::string &dataset) const {
+    if (dataset == "model_parameters") {
+      return std::dynamic_pointer_cast<TCandidateZ>(
+                 m_ranked_candidates[rank].second)
+          ->ParentObject;
+    }
+
+    else
+      THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
+  }
 
   TStringList GetIDs() const {
     TStringList ids;
@@ -67,14 +108,30 @@ public:
       ids.push_back(c.first);
     return ids;
   }
-  Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
 
-  Int32 size() const { return m_ranked_candidates.size(); }
-  T getCandidateDataset(int rank, std::string dataset) {
-    return m_ranked_candidates[rank].second;
+  std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
+
+  Float64 Redshift(Int32 i) const {
+    return m_ranked_candidates[i].second->Redshift;
+  }
+  Float64 ValProba(Int32 i) const {
+    return m_ranked_candidates[i].second->ValProba;
+  }
+  Float64 ValSumProba(Int32 i) const {
+    return m_ranked_candidates[i].second->ValSumProba;
+  }
+  Float64 DeltaZ(Int32 i) const {
+    return m_ranked_candidates[i].second->Deltaz;
   }
 
-  std::vector<std::pair<std::string, std::shared_ptr<T>>> m_ranked_candidates;
+  void SetRankedCandidates(const TCandidateZbyRank &zCandidates) {
+    // Upcasts zCandidates
+    m_ranked_candidates.clear();
+    for (const auto &cand : zCandidates) {
+      m_ranked_candidates.push_back(std::make_pair(
+          std::string(cand.first), std::make_shared<T>(*cand.second)));
+    }
+  }
 };
 
 typedef CPdfCandidateszResult<TCandidateZ> PdfCandidatesZResult;

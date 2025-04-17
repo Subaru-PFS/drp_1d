@@ -44,6 +44,9 @@ using namespace NSEpic;
 std::shared_ptr<const COperatorResult>
 ExtremaResult::getCandidate(const int &rank, const std::string &dataset,
                             bool firstpassResults) const {
+  if (firstpassResults) {
+    return getCandidateParent(rank, dataset);
+  }
   if (dataset == "model_parameters")
     return m_ranked_candidates[rank].second;
   else if (dataset == "model")

@@ -98,8 +98,8 @@ void CRule2SingleLinesAmplitude::Correct(
                              << " has same index as line " << m_LineB);
     return;
   }
-  if (LineModelElementList.getElementList()[iEltA]->IsOutsideLambdaRange() ==
-      false) {
+  if (LineModelElementList.getElementParam()[iEltA]->isFittable() &&
+      LineModelElementList.getElementParam()[iEltB]->isFittable()) {
     Float64 ampA =
         LineModelElementList.getElementParam()[iEltA]->GetFittedAmplitude(idA);
     Float64 ampB =

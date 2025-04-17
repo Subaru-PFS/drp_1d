@@ -95,14 +95,23 @@ public:
     m_inputContext->setLineRatioCatalogCatalog(spectrumModel, catalog);
   }
   void
-  setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+  setFluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
                                &igmcorrectionMeiksin) {
-    m_inputContext->setfluxCorrectionMeiksin(igmcorrectionMeiksin);
+    m_inputContext->setFluxCorrectionMeiksin(igmcorrectionMeiksin);
   };
-  void setfluxCorrectionCalzetti(
+
+  std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
+  getFluxCorrectionMeiksin() const {
+    return m_inputContext->getFluxCorrectionMeiksin();
+  };
+  void setFluxCorrectionCalzetti(
       const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
           &ismcorrectionCalzetti) {
-    m_inputContext->setfluxCorrectionCalzetti(ismcorrectionCalzetti);
+    m_inputContext->setFluxCorrectionCalzetti(ismcorrectionCalzetti);
+  };
+  std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+  getFluxCorrectionCalzetti() const {
+    return m_inputContext->getFluxCorrectionCalzetti();
   };
 
   void Init();
@@ -198,6 +207,13 @@ public:
   getRebinnedSpectra() const {
     return m_inputContext->getRebinnedSpectra();
   }
+  TIgmIsmIdxs GetIsmIgmIdxList(bool opt_extinction, bool opt_dustFitting,
+                               Int32 FitEbmvIdx = allIdx,
+                               Int32 FitMeiksinIdx = allIdx) const;
+  TInt32List GetIsmIdxList(bool opt_dustFitting,
+                           Int32 FitEbmvIdx = allIdx) const;
+  TInt32List GetIgmIdxList(bool opt_extinction,
+                           Int32 FitMeiksinIdx = allIdx) const;
 
   std::shared_ptr<CScopeStack> m_ScopeStack;
 
@@ -209,13 +225,6 @@ private:
   std::shared_ptr<COperatorResultStore> m_ResultStore;
   std::shared_ptr<CParameterStore> m_parameterStore;
   std::shared_ptr<CInputContext> m_inputContext;
-
-  // added below variables - to discuss if we only define them here (and no more
-  // in processflow)
-
-  TFloat64Range m_redshiftRange;
-  TFloat64List m_redshifts;
-  std::string m_redshiftSampling;
 };
 
 } // namespace NSEpic

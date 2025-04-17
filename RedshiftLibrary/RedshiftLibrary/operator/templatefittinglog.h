@@ -53,7 +53,7 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
-namespace templateFittingSolve_test {
+namespace templateFittingLog_test {
 class EstimateXtY_test;
 };
 
@@ -65,17 +65,17 @@ public:
   COperatorTemplateFittingLog(const TFloat64List &redshifts);
   ~COperatorTemplateFittingLog();
 
-  void SetRedshifts(TFloat64List redshifts) override;
+  void SetRedshifts(const TFloat64List &redshifts) override;
   void CheckRedshifts();
 
-  std::shared_ptr<COperatorResult>
-  Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
-          Float64 overlapThreshold, std::string opt_interp,
-          bool opt_extinction = false, bool opt_dustFitting = false,
-          Float64 opt_continuum_null_amp_threshold = 0.,
-          const CPriorHelper::TPriorZEList &logpriorze =
-              CPriorHelper::TPriorZEList(),
-          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx) override;
+  std::shared_ptr<CTemplateFittingResult> Compute(
+      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
+      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      Float64 opt_continuum_null_amp_threshold = 0.,
+      const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
+      Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
+      TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
+      std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 
   inline bool IsFFTProcessing() override { return true; };
 
@@ -86,7 +86,7 @@ public:
                                    const TFloat64Range &redshiftrange) const;
 
 private:
-  friend class templateFittingSolve_test::EstimateXtY_test;
+  friend class templateFittingLog_test::EstimateXtY_test;
   Float64 m_logstep;
   Int32 m_ssRatio;
 

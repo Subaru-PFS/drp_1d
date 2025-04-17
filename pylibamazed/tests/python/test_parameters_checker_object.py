@@ -39,16 +39,17 @@
 import pytest
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import WarningCode
-from tests.python.utils import (WarningUtils, check_from_parameter_dict,
-                                make_parameter_dict_at_linemeas_solve_level,
-                                make_parameter_dict_at_object_level,
-                                make_parameter_dict_at_redshift_solver_level)
+from tests.python.utils import (
+    WarningUtils,
+    check_from_parameter_dict,
+    make_parameter_dict_at_linemeas_solve_level,
+    make_parameter_dict_at_object_level,
+    make_parameter_dict_at_redshift_solver_level,
+)
 
 
 class TestParametersCheckerObject:
-
     class TestObjectLinemeasDzhalf:
-
         def _make_param_dict(self, **kwargs):
             return make_parameter_dict_at_linemeas_solve_level(**kwargs)
 
@@ -71,7 +72,6 @@ class TestParametersCheckerObject:
             assert WarningUtils.has_any_warning()
 
     class TestObjectLinemeasredshiftStep:
-
         def _make_param_dict(self, **kwargs):
             return make_parameter_dict_at_linemeas_solve_level(**kwargs)
 
@@ -94,104 +94,93 @@ class TestParametersCheckerObject:
             assert WarningUtils.has_any_warning()
 
     class TestObjectReliability:
-
         def _make_parameter_dict(self, **kwargs) -> dict:
             return make_parameter_dict_at_object_level(**kwargs)
 
         def test_error_if_reliability_enabled_without_corresponding_section(self):
-            param_dict = self._make_parameter_dict(**{
-                "stages": ["reliabilitySolver"]
-            })
+            param_dict = self._make_parameter_dict(**{"stages": ["reliabilitySolver"]})
             with pytest.raises(APIException, match=r"Missing parameter galaxy reliabilitySolver"):
                 check_from_parameter_dict(param_dict)
 
         def test_OK_if_reliability_enabled_with_corresponding_section(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "stages": ["reliabilitySolver"],
-                "reliabilitySolver": {}
-            })
+            param_dict = self._make_parameter_dict(
+                **{"stages": ["reliabilitySolver"], "reliabilitySolver": {}}
+            )
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
         def test_warning_if_reliability_disabled_but_section_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{
-                "stages": ["redshiftSolver"],
-                "reliabilitySolver": {}
-            })
+            param_dict = self._make_parameter_dict(**{"stages": ["redshiftSolver"], "reliabilitySolver": {}})
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
     class TestTemplateDir:
-
         def test_error_if_templateFittingSolve_without_template_dir(self):
-            param_dict = make_parameter_dict_at_redshift_solver_level(**{
-                "method": "templateFittingSolve", "templateFittingSolve": {}
-            })
+            param_dict = make_parameter_dict_at_redshift_solver_level(
+                **{"method": "templateFittingSolve", "templateFittingSolve": {}}
+            )
             with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_error_if_templateCombinationSolve_without_template_dir(self):
-            param_dict = make_parameter_dict_at_redshift_solver_level(**{
-                "method": "tplCombinationSolve", "tplCombinationSolve": {}
-            })
+            param_dict = make_parameter_dict_at_redshift_solver_level(
+                **{"method": "tplCombinationSolve", "tplCombinationSolve": {}}
+            )
             with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_error_if_lineModelSolve_and_continuum_tplfit_without_template_dir(self):
-            param_dict = make_parameter_dict_at_redshift_solver_level(**{
-                "method": "lineModelSolve",
-                "lineModelSolve": {
-                    "lineModel": {
-                        "continuumComponent": "tplFit",  # This is the important line
-                        "continuumFit": {},
-                        "secondPass": {
-                            "continuumFit": "sth"
+            param_dict = make_parameter_dict_at_redshift_solver_level(
+                **{
+                    "method": "lineModelSolve",
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": "tplFit",  # This is the important line
+                            "continuumFit": {},
+                            "secondPass": {"continuumFit": "sth"},
                         }
-                    }
+                    },
                 }
-            })
+            )
             param_dict["continuumRemoval"] = {}
             with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_error_if_lineModelSolve_and_continuum_tplfitauto_without_template_dir(self):
-            param_dict = make_parameter_dict_at_redshift_solver_level(**{
-                "method": "lineModelSolve",
-                "lineModelSolve": {
-                    "lineModel": {
-                        "continuumComponent": "tplFitAuto",  # This is the important line
-                        "continuumFit": {},
-                        "secondPass": {
-                            "continuumFit": "sth"
-                        },
-                    }
+            param_dict = make_parameter_dict_at_redshift_solver_level(
+                **{
+                    "method": "lineModelSolve",
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": "tplFitAuto",  # This is the important line
+                            "continuumFit": {},
+                            "secondPass": {"continuumFit": "sth"},
+                        }
+                    },
                 }
-            })
+            )
             param_dict["continuumRemoval"] = {}
             with pytest.raises(APIException, match=r"Missing parameter galaxy templateDir"):
                 check_from_parameter_dict(param_dict)
 
         def test_warning_if_template_dir_is_present_but_no_solve_method(self, zflag):
-            param_dict = make_parameter_dict_at_object_level(**{
-                "stages": [],
-                "templateDir": "sth"
-            })
+            param_dict = make_parameter_dict_at_object_level(**{"stages": [], "templateDir": "sth"})
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
 
         def test_warning_if_template_dir_is_present_but_linemodelsolve_without_tplfit(self, zflag):
-            param_dict = make_parameter_dict_at_redshift_solver_level(**{
-                "method": "lineModelSolve",
-                "lineModelSolve": {
-                    "lineModel": {
-                        "continuumComponent": "sth",  # This is the important line
-                        "continuumFit": {},
-                        "secondPass": {
-                            "continuumFit": "sth"
-                        },
-                    }
+            param_dict = make_parameter_dict_at_redshift_solver_level(
+                **{
+                    "method": "lineModelSolve",
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": "sth",  # This is the important line
+                            "continuumFit": {},
+                            "secondPass": {"continuumFit": "sth"},
+                        }
+                    },
                 }
-            })
+            )
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)

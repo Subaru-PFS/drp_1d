@@ -79,7 +79,7 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
         pass
         # self.lsf_type = "no_lsf"
 
-    def load_photometry(self, phot, obs_id=""):
+    def add_photometry(self, phot):
         self.photometric_data.append(phot)
 
     def load_others(self, spectrum, obs_id: str = ""):
@@ -93,11 +93,3 @@ class ASCIISpectrumReader(AbstractSpectrumReader):
                 self.others[col_name] = Container(**{obs_id: col_data})
             else:
                 self.others[col_name].append(col_data, obs_id)
-
-    # spectrum here is a CSpectrum
-    def load_all(self, spectrum):
-        self.load_wave(spectrum)
-        self.load_flux(spectrum)
-        self.load_error(spectrum)
-        self.load_lsf(spectrum)
-        self.load_others(spectrum)

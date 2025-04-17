@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================using
 #include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 
 using namespace NSEpic;
@@ -61,7 +62,7 @@ TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
   TFloat64List zgrid = m_zparams.front().getZGrid(logsampling);
 
   // if needed create and insert 2nd pass subgrids into main grid
-  for (Int32 i = 1; i < m_zparams.size(); i++) {
+  for (Int32 i = 1; i < ssize(m_zparams); i++) {
     // create a centered sub grid around Zcand
     TFloat64List subgrid = m_zparams[i].getZGrid(logsampling);
     // insert it into main gridgetZGrid
@@ -70,8 +71,8 @@ TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
   return zgrid;
 }
 
-std::tuple<Int32, Int32> CZGridListParams::insertSubgrid(TFloat64List &subgrid,
-                                                         TFloat64List &zgrid) {
+std::tuple<Int32, TInt32List>
+CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
   const Float64 epsilon = 1E-8;
   TFloat64Range range_epsilon = {subgrid.front() - epsilon,
                                  subgrid.back() + epsilon};
@@ -88,7 +89,16 @@ std::tuple<Int32, Int32> CZGridListParams::insertSubgrid(TFloat64List &subgrid,
     subgrid.back() = zgrid.back();
 
   Int32 ndup = imax - imin + 1;
+
+  // Find overwritten indices
+  TInt32List overwrittenSourceIndices(ndup, undefIdx);
+  for (Int32 dup = 0; dup < ndup; ++dup) {
+    Float64 const value_overwritten = zgrid[imin + dup];
+    overwrittenSourceIndices[dup] =
+        CIndexing<Float64>::getCloserIndex(subgrid, value_overwritten);
+  }
+
   insertWithDuplicates(zgrid, imin, subgrid, ndup);
 
-  return std::make_tuple(imin, ndup);
+  return std::make_tuple(imin, overwrittenSourceIndices);
 }

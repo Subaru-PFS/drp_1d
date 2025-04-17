@@ -37,19 +37,19 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
-
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
-    std::shared_ptr<const CTplModelSolution> cms) {
-  fittedTpl = *cms;
-  fittedTpl.tplName =
-      fittedTpl.tplAmplitude ? fittedTpl.tplName : "noContinuum";
+    const CContinuumModelSolution &cms) {
+  fittedContinuum = cms;
+  fittedContinuum.name =
+      fittedContinuum.tplAmplitude ? fittedContinuum.name : "noContinuum";
 }
 
 void TLineModelResult::updateFromLineModelSolution(
@@ -81,8 +81,8 @@ void TLineModelResult::updateFromModel(
   Merit = lmresult->ChiSquare[idx];
 
   // LineModelSolutions
-  Elv = lmel->GetVelocityEmission();
-  Alv = lmel->GetVelocityAbsorption();
+  Elv = lmresult->LineModelSolutions[idx].EmissionVelocity;
+  Alv = lmresult->LineModelSolutions[idx].AbsorptionVelocity;
 
   if (!estimateLeastSquareFast) {
     MeritContinuum = lmel->getLeastSquareContinuumMerit();
@@ -95,16 +95,14 @@ void TLineModelResult::updateFromModel(
   if (lmel->getLineRatioType() == "rules")
     snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa_DI = lmresult->LineModelSolutions[idx].lfHa_DI;
-  if (lmel->getLineRatioType() == "rules")
-    snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
+  snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
 
   // store model OII SNR & Flux
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
   if (lmel->getLineRatioType() == "rules")
     snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII_DI = lmresult->LineModelSolutions[idx].lfOII_DI;
-  if (lmel->getLineRatioType() == "rules")
-    snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
+  snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
 
   // store Lya fitting parameters
   LyaWidthCoeff = lmresult->LineModelSolutions[idx].LyaWidthCoeff;
@@ -125,7 +123,7 @@ void TLineModelResult::updateFromModel(
 
   StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
-  NDof = lmel->GetModelNonZeroElementsNDdl();
+  NDof = lmel->getNonZeroElementsNDdl();
 
   Int32 const nddl = lmresult->LineModelSolutions[idx].nDDL;
   bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
@@ -147,31 +145,30 @@ void TLineModelResult::updateFromModel(
   // save the outsideLinesMask
   OutsideLinesMask = lmel->getOutsideLinesMask();
 
-  OutsideLinesResidualRMS = lmel->getOutsideLinesSTD(1);
-  OutsideLinesInputStDevRMS = lmel->getOutsideLinesSTD(2);
+  std::tie(OutsideLinesResidualRMS, OutsideLinesInputStDevRMS) =
+      lmel->getOutsideLinesRMS(OutsideLinesMask);
 
-  if (OutsideLinesInputStDevRMS > 0.0) {
-    Float64 ratioSTD = OutsideLinesResidualRMS / OutsideLinesInputStDevRMS;
-    Float64 ratio_thres = 1.5;
-    if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
-      Flag.warning(
-          WarningCode::ESTIMATED_STD_FAR_FROM_INPUT,
-          Formatter()
-              << "  TLineModelResult::" << __func__
-              << ": StDev estimation outside lines do not match: ratio = "
-              << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
-              << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
-    } else {
-      Log.LogInfo(Formatter()
-                  << "  Operator-Linemodel: StDev estimations outside lines "
-                     "match: ratio = "
-                  << ratioSTD << ", residual RMS = " << OutsideLinesResidualRMS
-                  << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
-    }
+  if (std::isnan(OutsideLinesResidualRMS) ||
+      std::isnan(OutsideLinesInputStDevRMS)) {
+    Flag.warning(WarningCode::STD_ESTIMATION_FAILED,
+                 "StDev estimation outside lines failed");
+    return;
+  }
+
+  Float64 ratioSTD = OutsideLinesResidualRMS / OutsideLinesInputStDevRMS;
+  Float64 ratio_thres = 1.5;
+  if (abs(ratioSTD) > ratio_thres || abs(ratioSTD) < 1. / ratio_thres) {
+    Flag.warning(WarningCode::ESTIMATED_STD_FAR_FROM_INPUT,
+                 Formatter()
+                     << "StDev estimation outside lines do not match: ratio = "
+                     << ratioSTD
+                     << ", residual RMS = " << OutsideLinesResidualRMS
+                     << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
   } else {
-    THROWG(ErrorCode::STDESTIMATION_FAILED,
-           Formatter() << "Unable to get spectrum mean Standard "
-                          "Deviation estimations");
+    Log.LogInfo(Formatter()
+                << "StDev estimations outside lines match: ratio = " << ratioSTD
+                << ", residual RMS = " << OutsideLinesResidualRMS
+                << ", Input Noise RMS = " << OutsideLinesInputStDevRMS);
   }
 }
 
@@ -219,15 +216,4 @@ bool LineModelExtremaResult::HasCandidateDataset(
           dataset == "continuum" || dataset == "fitted_lines" ||
           dataset == "fp_fitted_lines" || dataset == "line_mask" ||
           dataset == "continuum_polynom" || dataset == "PhotometricModel");
-}
-
-std::shared_ptr<const COperatorResult>
-LineModelExtremaResult::getCandidateParent(const int &rank,
-                                           const std::string &dataset) const {
-  if (dataset == "model_parameters") {
-    return m_ranked_candidates[rank].second->ParentObject;
-  }
-
-  else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
 }

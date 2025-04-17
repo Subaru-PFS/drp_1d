@@ -38,8 +38,15 @@
 # ============================================================================
 
 import pytest
-from pylibamazed.PdfHandler import BuilderPdfHandler, buildPdfParams
+from pylibamazed.PdfHandler import BuilderPdfHandler, buildPdfParams, get_final_regular_z_grid
+from pylibamazed.Parameters import Parameters
 from tests.python.test_pdf_handler_utils import PdfHandlerTestUtils
+from tests.python.utils import make_parameter_dict_at_linemodelsolve_level
+from tests.python.utils import (
+    WarningUtils,
+    check_from_parameter_dict,
+    make_parameter_dict_at_redshift_solver_level,
+)
 
 
 class TestBuildPdfParams:
@@ -51,34 +58,22 @@ class TestBuildPdfParams:
 
 
 class TestBuildPdfhandler:
-
     def test_first_pass(self):
         abstract_output = PdfHandlerTestUtils.abstract_output()
         abstract_output.object_results = {
             "some_object_type": {
                 "firstpass_pdf_params": PdfHandlerTestUtils.pdf_params(),
-                "firstpass_pdf": {
-                    "FirstpassLogZPdfNative": ""
-                }
+                "firstpass_pdf": {"FirstpassLogZPdfNative": ""},
             }
         }
-        BuilderPdfHandler().add_params(
-            abstract_output, "some_object_type", True, True
-        ).build()
+        BuilderPdfHandler().add_params(abstract_output, "some_object_type", True, True).build()
 
     def test_other_pass(self):
         abstract_output = PdfHandlerTestUtils.abstract_output()
         abstract_output.object_results = {
-            'some_object_type': {
-                "pdf_params": PdfHandlerTestUtils.pdf_params(),
-                "pdf": {
-                    "LogZPdfNative": ""
-                }
-            }
+            "some_object_type": {"pdf_params": PdfHandlerTestUtils.pdf_params(), "pdf": {"LogZPdfNative": ""}}
         }
-        BuilderPdfHandler().add_params(
-            abstract_output, "some_object_type", True
-        ).build()
+        BuilderPdfHandler().add_params(abstract_output, "some_object_type", True).build()
 
 
 class TestPdfHandlerClass:
@@ -103,3 +98,24 @@ class TestPdfHandlerClass:
 
     def test_getSumTrapez(self):
         self.pdf_handler.getSumTrapez()
+
+
+class TestGetFinalRegularZgrid:
+    def _make_parameter_dict(self, **kwargs) -> dict:
+        kwargs["method"] = "lineModelSolve"
+        param_dict = make_parameter_dict_at_redshift_solver_level(**kwargs)
+        return param_dict
+
+    def test(self):
+        param_dict = self._make_parameter_dict(
+            object_level_params={"redshiftRange": [0, 1], "redshiftStep": 0.1, "redshiftSampling": "log"},
+            **{
+                "lineModelSolve": {
+                    "lineModel": {
+                        "firstPass": {"largeGridStepRatio": 5},
+                        "skipSecondPass": False,
+                    }
+                }
+            },
+        )
+        get_final_regular_z_grid("galaxy", Parameters(param_dict, make_checks=False))

@@ -43,7 +43,7 @@ using namespace NSEpic;
 
 CMask CMaskBuilder::getMask(const CSpectrumSpectralAxis &spectralAxis,
                             const TFloat64Range &lamdbdaRange,
-                            const Float64 &redshift) {
+                            const Float64 &redshift, Int32 spc_index) {
   CMask mask(spectralAxis.GetSamplesCount(), 1);
   return mask;
 }

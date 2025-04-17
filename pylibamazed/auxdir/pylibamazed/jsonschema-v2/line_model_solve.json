@@ -25,11 +25,10 @@
         "lineRatioType",
         "continuumComponent",
         "strongLinesPrior",
-        "euclidNHaemittersStrength",
+        "nOfZPriorStrength",
         "pdfCombination",
         "nSigmaSupport",
-        "haPrior",
-        "extremaCountB",
+        "hAlphaPrior",
         "enablePhotometry",
         "lya",
         "firstPass",
@@ -79,6 +78,7 @@
         "fittingMethod": {
           "type": "string",
           "enum": [
+            "ones",
             "individual",
             "svd",
             "hybrid",
@@ -115,7 +115,7 @@
         "emVelocityFitMin": {
           "type": "number",
           "title": "Emission lines velocity min",
-          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines"
+          "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. Must be > 0 if lineWidthType=velocityDriven"
         },
         "emVelocityFitMax": {
           "type": "number",
@@ -206,10 +206,12 @@
             "fromSpectrum",
             "tplFit",
             "tplFitAuto",
-            "noContinuum"
+            "noContinuum",
+            "powerLaw",
+            "powerLawAuto"
           ],
           "title": "Continuum processing method",
-          "description": "Selects the method for processing the continuum: \n * **fromSpectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplFit\", but switch to \"fromSpectrum\" if the fitted continuum amplitude is found significantly negative (at all z)"
+          "description": "Selects the method for processing the continuum: \n * **fromspectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplfit\", but switch to \"fromspectrum\" if the fitted continuum amplitude is found significantly negative (at all z) \n * **powerLaw**: Fits continuum with two power laws \n * **powerLawAuto**: Switches to fromSpectrum if continuum amplitude is unphysical"
         },
         "continuumReestimation": {
           "type": "string",
@@ -226,7 +228,7 @@
           "title": "Strong lines prior",
           "description": "\n * **-1**: no prior \n * **else**: use this value (positive below 1) as a low probability when no strong line is measured (the measured amplitude is s>0) & probability is set to 1 when a strong line is observed"
         },
-        "euclidNHaemittersStrength": {
+        "nOfZPriorStrength": {
           "type": "number",
           "title": "Pozetti N(z) prior",
           "description": "Strength (beta) of the penalty. The chi2 penalty is -2 beta log(P(z)). No penalty for a negative or zero values"
@@ -245,15 +247,10 @@
           "title": "Support size",
           "description": "Full (not half) size of each line support in sigma of the gaussian profile "
         },
-        "haPrior": {
+        "hAlphaPrior": {
           "type": "number",
           "title": "Ha prior",
           "description": "\n * **-1**: no prior \n * **positive below 1**: low multiplicative prior probability (posterior penalization) when Ha line is not measured (the measured amplitude is <=0 or is not the strongest measured line) \n * **else**: prior probability is set to 1 when Ha line is strongest measured line, typical value between 1e-1 to 1e-5"
-        },
-        "extremaCountB": {
-          "type": "integer",
-          "title": "Extrema count B",
-          "description": "Number of extrema retained after the firstPass B: \n * **0**: toggle OFF the firstPass B\n * **>0**: toggle ON the pass B"
         },
         "enablePhotometry": {
           "type": "boolean",
@@ -295,7 +292,7 @@
           "description": "During the 2nd pass, after fitting of all the parameters, redo a joint fit of continuum and linemodel amplitudes and eventually a 2nd order polynomial using an SVD on the full observed range (heavy computation). \n * **-1**: skip this step \n * **svdlcp2**: refit continuum, linemodel and 2nd order polynomial \n * **svdlc**: refit only continuum and linemodel (usefull if we don't trust the continuum/linemodel orthogonalization, because it is done on a free linemodel or a mask)"
         },
         "secondPass": {
-          "$ref": "line_model_second_pass.json"
+          "$ref": "second_pass.json"
         },
         "pdf": {
           "type": "object",

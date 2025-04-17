@@ -39,6 +39,7 @@
 #include <algorithm>
 
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
@@ -47,11 +48,11 @@ using namespace NSEpic;
 
 CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
     std::vector<MeiksinCorrection> meiksinCorrectionCurves, TFloat64List zbins)
-    : m_rawCorrections(std::move(meiksinCorrectionCurves)),
+    : m_zbins(std::move(zbins)),
+      m_rawCorrections(std::move(meiksinCorrectionCurves)),
       m_LambdaMin(m_rawCorrections.at(0).lbda.at(0)),
       m_LambdaMax(RESTLAMBDA_LYA),
-      m_LambdaSize(m_rawCorrections.at(0).lbda.size()),
-      m_zbins(std::move(zbins)) {}
+      m_LambdaSize(m_rawCorrections.at(0).lbda.size()) {}
 
 Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
     Float64 redshift, Int32 meiksinIdx, Float64 lambdaRest) const {
@@ -112,7 +113,7 @@ Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const {
   TFloat64Index::getClosestLowerIndex(m_zbins, z, index);
 
   // keep last curves above last bin
-  if (index == m_zbins.size() - 1)
+  if (index == ssize(m_zbins) - 1)
     --index;
   return index;
 }
@@ -210,7 +211,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
   Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
   Float64 sigmaSupport =
       lsf->GetProfile()->GetNSigmaSupport() / 2. / (1.0 + z_center);
-  for (std::size_t i = indices.GetBegin(); i <= indices.GetEnd(); i++) {
+  for (Int32 i = indices.GetBegin(); i <= indices.GetEnd(); i++) {
     Float64 lambda0 = fineLambdas[i]; // lambda restframe
 
     // compute the LSF kernel centered at lambda0 (restframe)
@@ -246,6 +247,8 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
  */
 void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
     const std::shared_ptr<const CLSF> &lsf, const TFloat64Range &convolRange) {
+
+  Log.LogInfo("Convolving igm extinction by the LSF");
 
   m_convolRange = convolRange;
 

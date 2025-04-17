@@ -37,8 +37,8 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-class DictUtils:
 
+class DictUtils:
     @staticmethod
     def rename_key(dict: dict, old_key: str, new_key: str):
         # Warning no security for already existing new_key
@@ -48,7 +48,7 @@ class DictUtils:
     @staticmethod
     def contains_key(dict: dict, key: str) -> bool:
         return dict.get(key) is not None
-    
+
     @staticmethod
     def delete(dict: dict, key: str):
         if DictUtils.contains_key(dict, key):

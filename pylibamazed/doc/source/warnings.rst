@@ -72,14 +72,29 @@ Possible warning codes list
    If this warning appears many times, consider increasing in the parameter
    second pass `halfWindowSize` value.
 
+**FORCED_POWERLAW_TO_ZERO**
+   For QSO power law fitting: many samples have fluxes too low compared to SNR to be taken into account.
+   Power law coefficients are set to zero.
+
 **UNUSED_PARAMETER**
    A parameter has been defined in the parameters file but it is not used. 
    NB: Some parameters are usefull only under some conditions.
 
 **SPECTRUM_WAVELENGTH_TIGHTER_THAN_PARAM**
-   Parameters lambda range goes beyond spectrum range.
+   Parameters lambda range goes beyond spectrum range. This means that a part of the lambda range specified in the parameters will not be studied.
 
 **MULTI_OBS_ARBITRARY_LSF**
   Happens in the case of multi obs, for which only one lsf is support.
   Only the lsf of the first observation is taken into account and applied
   to all observations.
+
+**NULL_LINES_PROFILE**
+   One line profile is null (zero flux) on all its samples: the corresponding line is discarded
+
+**STD_ESTIMATION_FAILED**
+   The number of samples available to estimate the RMS of the residual is too low. 
+
+**VELOCITY_FIT_RANGE**
+   The lineMeas velocity fit range does not include the input velocity
+   (comming from either the previous redhiftSolver stage, input lineMeas catalog).
+   The range is thus extended to contain this velocity.

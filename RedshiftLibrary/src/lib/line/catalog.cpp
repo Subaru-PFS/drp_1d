@@ -174,8 +174,7 @@ template <typename TLine>
 void CLineCatalogBase<TLine>::setAsymProfileAndParams(
     const std::string &profile, TAsymParams params) {
 
-  for (auto &it : m_List) {
-    auto &line = it.second;
+  for (auto &[_, line] : m_List) {
     if (line.GetProfile()->isAsymFit() || line.GetProfile()->isAsymFixed())
       line.setProfileAndParams(profile, params, m_nSigmaSupport);
   }
@@ -185,8 +184,7 @@ template <typename TLine>
 void CLineCatalogBase<TLine>::convertLineProfiles2SYMIGM(
     const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection) {
 
-  for (auto &it : m_List) {
-    auto &line = it.second;
+  for (auto &[_, line] : m_List) {
     if (!line.IsEmission())
       continue;
     if (line.GetName() == linetags::lya_em ||

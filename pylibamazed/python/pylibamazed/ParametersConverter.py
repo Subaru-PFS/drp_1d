@@ -46,28 +46,33 @@ from pylibamazed.redshift import ErrorCode
 
 
 class ParametersConverter(ABC):
-    """ Converts raw input parameters into treed parameters, used for custom checks and pylibamazed
+    """Converts raw input parameters into treed parameters, used for custom checks and pylibamazed
     calculations
     """
+
     @abstractmethod
     def convert(self, raw_params: dict) -> dict:
         pass
 
 
 class ParametersConverterSelector:
-    def get_converter(self, version: int) -> ParametersConverter:
+    def __init__(self, accept_v1: bool = False):
+        self.accept_v1 = accept_v1
+
+    def get_converter(self, version: int) -> type[ParametersConverter]:
+        Converter: type[ParametersConverter]
         if version == 1:
+            # if not self.accept_v1:
+            #     raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Deprecated parameters file version")
             Converter = ParametersConverterV1
         elif version == 2:
             Converter = ParametersConverterV2
         else:
-            raise APIException(ErrorCode.INVALID_PARAMETER_FILE,
-                               f"Unexpected parameters version {version}")
+            raise APIException(ErrorCode.INVALID_PARAMETER_FILE, f"Unexpected parameters version {version}")
         return Converter
 
 
 class ParametersConverterV2(ParametersConverter):
-
     def convert(self, raw_params: dict) -> dict:
         params = raw_params.copy()
 
@@ -85,13 +90,15 @@ class ParametersConverterV1(ParametersConverter):
         params_str = json.dumps(params)
         renaming_df = pd.read_csv(v1_to_treed_filename)
         for _, row in renaming_df.iterrows():
-            params_str = params_str.replace(
-                f"\"{row.loc['old_name']}\"", f"\"{row.loc['new_name']}\"")
+            params_str = params_str.replace(f"\"{row.loc['old_name']}\"", f"\"{row.loc['new_name']}\"")
         renamed_params = json.loads(params_str)
 
         self.update_redshift_part(renamed_params)
         self.update_linemeas_part(renamed_params)
         self.update_reliability_part(renamed_params)
+        self.update_sections_names(renamed_params)
+
+        renamed_params["version"] = 2
         return renamed_params
 
     def update_redshift_part(self, renamed_params):
@@ -104,8 +111,19 @@ class ParametersConverterV1(ParametersConverter):
             for redshift_method in redshift_methods:
                 if redshift_method in renamed_params[spectrum_model]:
                     renamed_params[spectrum_model].setdefault("redshiftSolver", {})
-                    renamed_params[spectrum_model]["redshiftSolver"][redshift_method] = \
-                        renamed_params[spectrum_model].pop(redshift_method)
+                    renamed_params[spectrum_model]["redshiftSolver"][redshift_method] = renamed_params[
+                        spectrum_model
+                    ].pop(redshift_method)
+
+                    # Converts int -1 to string -1 for secondPassLcFittingMethod
+                    if redshift_method == "lineModelSolve":
+                        self.update_secondPassLcFittingMethod(renamed_params, spectrum_model)
+
+    def update_secondPassLcFittingMethod(self, renamed_params, spectrum_model):
+        # Expects lineModel key to be present
+        linemodel = renamed_params[spectrum_model]["redshiftSolver"]["lineModelSolve"]["lineModel"]
+        if linemodel.get("secondPassLcFittingMethod") == -1:
+            linemodel["secondPassLcFittingMethod"] = "-1"
 
     def update_linemeas_part(self, renamed_params):
         for spectrum_model in renamed_params.get("spectrumModels", []):
@@ -113,7 +131,7 @@ class ParametersConverterV1(ParametersConverter):
                 renamed_params[spectrum_model].setdefault("stages", []).append("lineMeasSolver")
                 renamed_params[spectrum_model]["lineMeasSolver"] = {
                     "method": "lineMeasSolve",
-                    "lineMeasSolve": renamed_params[spectrum_model].pop("lineMeasSolve")
+                    "lineMeasSolve": renamed_params[spectrum_model].pop("lineMeasSolve"),
                 }
 
     def update_reliability_part(self, renamed_params):
@@ -121,10 +139,22 @@ class ParametersConverterV1(ParametersConverter):
             if renamed_params[spectrum_model].pop("enable_reliability", False):
                 renamed_params[spectrum_model].setdefault("stages", []).append("reliabilitySolver")
                 renamed_params[spectrum_model]["reliabilitySolver"] = {
-                    "method": "deepLearningSolver",
+                    "method": ["deepLearningSolver"],
                     "deepLearningSolver": {
                         "reliabilityModel": renamed_params[spectrum_model].pop("reliabilityModel")
-                    }
+                    },
                 }
             else:
                 renamed_params[spectrum_model].pop("reliabilityModel", None)
+
+    def update_sections_names(self, renamed_params):
+        # Loops on all the v1 authorized spectrum models names
+        for spectrum_model in ["galaxy", "star", "qso", "sn"]:
+            # Updates <key> by spectrumModel_<key>
+            if spectrum_model in renamed_params.get("spectrumModels", []):
+                renamed_params["spectrumModel_" + spectrum_model] = renamed_params[spectrum_model]
+                del renamed_params[spectrum_model]
+            # Deletes the section if it is not used
+            elif spectrum_model in renamed_params.keys():
+                renamed_params.pop(spectrum_model)
+            # If section is expected but absent, an error will be raised in the checker, not here

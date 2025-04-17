@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
 
   std::shared_ptr<const CPeakDetectionResult> result;
   result = peakDetection.Compute(spc);
-  BOOST_CHECK(result != NULL);
+  BOOST_CHECK(result != nullptr);
   BOOST_CHECK_EQUAL(result->PeakList[0], TInt32Range(3, 5));
   BOOST_CHECK_EQUAL(result->EnlargedPeakList[0], TInt32Range(0, 10));
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   spc.SetSpectralAndFluxAxes(spectralAxis, modelfluxAxis);
   result = peakDetection.Compute(spc);
 
-  BOOST_CHECK(result == NULL);
+  BOOST_CHECK(result == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

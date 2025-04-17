@@ -1,7 +1,7 @@
 # drp_1d
 The **pylibamazed** library for Subaru-PFS project.
 
-## Requirements
+## About ?
 
 pylibamazed is a Python package wrapping numerical algorithms for the analysis of 1D spectroscopic data of astrophysical sources.
 
@@ -14,6 +14,8 @@ pylibamazed is a Python package wrapping numerical algorithms for the analysis o
 * Estimate radial velocity
 * Measure fluxes of emission lines
 
+The pylibamazed algorithms are mainly developped in C++ and wrapped in Python. These algorithms are dependant on the thirdparties listed below. It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install these thirdparties. To install third parties using pylibamazed internal script, refer to the related [third parties](#Third-parties-install-guide) section.
+
 ## Requirements
 
 `drp_1d` has the following strict requirements:
@@ -23,86 +25,111 @@ pylibamazed is a Python package wrapping numerical algorithms for the analysis o
 * [swig](http://www.swig.org/) >=4.0
 
 
-## Dependencies
-
-`pylibamazed` depends on following third parties:
-* [boost](https://www.boost.org/) >=1.74
+Required third parties:
+* [boost](https://www.boost.org/) ==1.74
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
 * [openblas](https://www.openblas.net/) >= 0.3.19
 * [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.0
-* [lbfgspp](https://lbfgspp.statr.me) == 0.2.0-13-g563106b
+* [lbfgspp](https://lbfgspp.statr.me) == 0.3.0
 
 lbfgspp needs to be installed from source
-
 Required python packages:
-* [numpy](https://www.numpy.org/) >=1.16.0
+* [numpy](https://www.numpy.org/) >=1.25.0
 * [astropy](https://www.astropy.org/) >=3.1.1
 * [cython](https://cython.org/) >=0.17.0
 * [pandas](https://pandas.pydata.org/) >=1.0.0
 * [h5py](https://www.h5py.org/) >=2.9
+* [pytest-mock](https://pypi.org/project/pytest-mock/) >=3.11.1
+* [jsonschema](https://pypi.org/project/jsonschema/) >=4.17.3
+* [ninja](https://pypi.org/project/ninja/) >=1.11
 
-### Installing dependencies on CentOS7
+### Build and install
 
-As root:
+Prerequisites to install pylibamazed from source code:
 
-    yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-    yum install -y git gcc-c++ make cmake3 swig boost-devel cfitsio-devel \
-      patchelf python36u python36u-libs python36u-devel python36u-pip
+* [gcc](https://gcc.gnu.org/)
+* [python](https://www.python.org/) >=3.8
+* [cmake](https://cmake.org/) >=3.15
+* [swig](http://www.swig.org/) >=4.1
 
-### Installing dependencies on Debian - buster
+To install the `pylibamazed` python module, run :
 
-As root:
+    pip install . 
 
-    apt-get update
-    apt-get install -y git g++ cmake swig pkg-config libboost-all-dev libgsl-dev \
-      libcfitsio-dev libfftw3-dev python3 python3-pip
-
-
-
-### Installing python dependencies
-
-Activate your virtual environment as needed then install python dependencies with `pip`:
-
-    pip install numpy
-    pip install astropy
+All the building stages are managed by the python package manager. Several options is used to drive the python package deployement or the C++ part building.
 
 
-## Installing pylibamazed
+### Build options
 
-### Building C++ code from source
+The build process uses the `pip` package manager.
 
-As a user:
+#### cmake.define.CMAKE_PREFIX_PATH
 
-    git clone git@github.com:Subaru-PFS/drp_1d.git
-    mkdir drp_1d/build
-    cd drp_1d/build
-    cmake ..
-    make -j 4
-    make install
+If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify the corresponding directory as follows
 
-You can specify install directory with `CMAKE_INSTALL_PREFIX` (defaults to `$HOME/local`).
+    pip install -v . -C cmake.define.CMAKE_PREFIX_PATH=/your/thirdparties/directory
 
-    cmake .. -DCMAKE_INSTALL_PREFIX=/my/path/local
+#### cmake.build-type
 
-If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify the  corresponding directory as follows
+You can build the library either in `Release`, `Debug` or `Coverage` mode (default to `Release`). For instance to build pylibamazed in Debug mode, run: 
 
-    cmake .. -DCMAKE_PREFIX_PATH=/my/thirdparty/directory    
+    pip install -v . -C cmake.build-type=Debug
 
-### Installing pylibamazed python module from pip
 
-From `drp_1d` root directory:
+#### cmake.define.BUILD_TESTING
 
-    pip install .
+To speed up the building time, you can disable test :
 
-### Testing an installed pylibamazed
+    pip install -v . -C cmake.define.BUILD_TESTING=OFF
 
-From `drp_1d` root directory:
+#### build-dir
 
-    cd build/
-    make test
+You can specify a directory for C++ building files. Tests are also available in this directory.
 
+    pip install -v . -C build-dir=build
+
+#### --no-build-isolation
+
+For developers. In order to speed up the compilation of the library and the installation of the python module, you must use the following options `build-dir=build` and `--no-build-isolation`
+
+These options, requires to mandatory install the following packages in your virtural environement.
+
+    pip install scikit-build-core numpy setuptools_scm ninja
+
+Then, you can run the following command to build the library and install the python module
+
+    pip install -v -C build-dir=build --no-build-isolation
+
+### Test C++ part
+
+To test the C++ part, in `pylibamazed` root directory, run:
+
+    pip install -v . -C build-dir=build
+    cd build
+    ninja test
+
+### Test python part
+
+To test the python part, in `pylibamazed` root directory, run:
+
+    pip install -v . -C build-dir=build
+    pytest
+
+
+## Additional documentation
+
+The python API documentation could be generated as follows:
+
+Build the documentation:
+
+    cd $ROOT_DIR/pylibamazed/doc
+    make html
+
+Then open in your web browser:
+
+    $ROOT_DIR/pylibamazed/build/html/index.html
 
 ## Third parties installation guide
 
@@ -156,9 +183,9 @@ Other command line options:
 
     python tools/buildandinstallthirdparty.py fftw cfitsio --force
 
-## Tests
+## Python code coverage
 
-In order to launch tests and see coverage, **in pylibamazed folder**
+In order to launch tests and see python code coverage, **in pylibamazed folder**
 ```
 coverage run --source=pylibamazed -m pytest
 coverage report
@@ -166,6 +193,17 @@ coverage html
 ```
 Drag and drop the created index.js in your web navigator
 
+## Create a wheel
+
+To create a wheel, you need to previously install `build` package.
+
+    pip install build
+
+Then to create a wheel, run the command :
+
+    python -m build -C build-dir=build -C cmake.define.BUILD_TESTING=OFF -C cmake.define.CMAKE_PREFIX_PATH=/your/thirdparties/directory
+
+The wheel is available in the `dist` directory.
 
 ## Contacts
 

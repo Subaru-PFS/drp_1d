@@ -96,13 +96,13 @@ public:
           bool opt_dustFitting = false,
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
-          Int32 FitEbmvIdx = undefIdx, Int32 FitMeiksinIdx = undefIdx);
+          Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx);
 
   Float64 ComputeDtD(const CSpectrumFluxAxis &spcFluxAxis,
                      const TInt32Range &range); // could be also made static
   std::shared_ptr<CModelSpectrumResult> ComputeSpectrumModel(
       const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
-      Float64 redshift, Float64 EbmvCoeff, Int32 meiksinIdx,
+      Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
       const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
       const Float64 overlapThreshold);
 

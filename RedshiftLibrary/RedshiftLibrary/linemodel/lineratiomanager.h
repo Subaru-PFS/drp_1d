@@ -51,7 +51,7 @@ class CSpectrumModel;
 class CSpectrum;
 class CContinuumManager;
 class CLineModelSolution;
-class CTplModelSolution;
+class CContinuumModelSolution;
 class CAbstractFitter;
 
 class CLineRatioManager {
@@ -73,7 +73,7 @@ public:
 
   virtual int prepareFit(Float64 redshift) { return 1; }
   virtual bool init(Float64 redshift, Int32 itratio = -1);
-  virtual Float64 computeMerit(Int32 itratio) = 0;
+  virtual std::pair<Float64, Float64> computeMerit(Int32 itratio) = 0;
   virtual void resetToBestRatio(Float64 redshift) {}
   virtual void saveResults(Int32 itratio) {}
   virtual void setPassMode(Int32 iPass);
