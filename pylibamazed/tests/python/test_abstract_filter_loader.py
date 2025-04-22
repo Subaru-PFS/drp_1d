@@ -37,11 +37,10 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 
-from pylibamazed.Filter import SpectrumFilterItem
 from pylibamazed.FilterLoader import AbstractFilterLoader
 from pylibamazed.Parameters import Parameters
 
 
 class TestAbstractFilterLoader:
     def test_useless(self):
-        AbstractFilterLoader(SpectrumFilterItem).get_filters(Parameters({}, make_checks=False), "")
+        AbstractFilterLoader()

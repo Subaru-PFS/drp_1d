@@ -48,29 +48,6 @@ from tests.python.utils import (
 
 class TestParametersCheckGeneral:
     class TestFilters:
-        class TestFiltersFormat:
-            def test_ok_if_filter_format_is_correct(self, zflag):
-                parametersDict = {"filters": [{"key": "errors", "instruction": "^", "value": "8"}]}
-                CustomParametersChecker(parametersDict).check()
-                assert not WarningUtils.has_any_warning()
-
-            def test_error_if_filters_is_not_a_list(self):
-                parametersDict = {"filters": {"key": "errors", "instruction": "^", "value": "8"}}
-                with pytest.raises(APIException, match=r"Input filters json must be a list"):
-                    CustomParametersChecker(parametersDict).check()
-
-            def test_error_if_filters_is_missing_a_key(self):
-                parametersDict = {"filters": [{"key": "errors", "instruction": "^"}]}
-                with pytest.raises(APIException, match=r"Filters"):
-                    CustomParametersChecker(parametersDict).check()
-
-            def test_error_if_filters_has_an_additional_key(self):
-                parametersDict = {
-                    "filters": [{"key": "errors", "instruction": "^", "value": "8", "errorKey": "123"}]
-                }
-                with pytest.raises(APIException, match=r"Filters"):
-                    CustomParametersChecker(parametersDict).check()
-
         class TestFiltersKeys:
             def test_no_error_if_no_filter(self, zflag):
                 parametersDict = {}

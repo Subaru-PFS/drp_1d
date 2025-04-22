@@ -1,0 +1,95 @@
+{
+  "$id": "filters",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Filters list",
+  "description": "List of filters to apply for pixel selection on spectra.\n Example: we want to select the pixels for which \n 1. flag corresponding to 8 is absent \n 2. flag corresponding to 4 is present or flag is 0 : \n [{\"key\": \"Flag\", \"instruction\": \"^\", \"value\": \"8\"}, {\"key\": \"Flag\", \"instruction\": \"0&\", \"value\": \"4\"}]",
+  "type": "array",
+  "items": {
+    "title": "filter",
+    "description": "specification of the filter",
+    "anyOf": [
+      {
+        "type": "object",
+        "title": "Filter byValue",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "byValue"
+          },
+          "key": {
+            "type": "string",
+            "title": "Column name",
+            "description": "Name of the spectrum column to filter on"
+          },
+          "instruction": {
+            "type": "string",
+            "enum": [
+              "<",
+              ">",
+              "<=",
+              ">=",
+              "=",
+              "in",
+              "~in",
+              "!=",
+              "~&",
+              "&",
+              "0&",
+              "^",
+              "~^"
+            ],
+            "title": "Comparison type",
+            "description": "\n * **in**: value must the be a list of possible value \n * **~in**: not in \n * **!=**: different \n * **& / ~&**: binary and / not binary and \n * **0&**: binary and or 0 \n * **^ / ~^**: xor / not xor"
+          },
+          "value": {
+            "title": "Value to compare with",
+            "description": "Possible values are int - float - list of numbers (for `in` and `!in` only)"
+          }
+        },
+        "required": [
+          "key",
+          "instruction",
+          "value"
+        ]
+      },
+      {
+        "type": "object",
+        "title": "Morphology Filter",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "morphology"
+          },
+          "instruction": {
+            "type": "string",
+            "title": "bitwise morphology operation",
+            "enum": [
+              "opening",
+              "closing",
+              "erosion",
+              "dilation"
+            ]
+          },
+          "value": {
+            "title": "kernel of morphology operation",
+            "decription": "array of integers in [0, 1]",
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "number",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "instruction",
+          "value"
+        ]
+      }
+    ]
+  }
+}

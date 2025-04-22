@@ -95,9 +95,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_filters(self, obs_id: str):
         filters = self.accessor.get_filters(default=[], obs_id=obs_id)
-        self._check_filters_format(filters)
 
-        DEFAULT_COLUMN_NAMES = ["waves", "fluxes", "errors"]
+        DEFAULT_COLUMN_NAMES = ["waves", "fluxes", "errors", "unused"]
         if not filters:
             return
         filter_keys = [filt["key"] for filt in filters]
@@ -106,20 +105,6 @@ class CustomParametersChecker(ParametersChecker):
         for filter_name in filter_keys:
             if filter_name not in authorized_cols_names:
                 raise APIException(ErrorCode.INVALID_PARAMETER_FILE, f"Unknown filter key {filter_name}")
-
-    def _check_filters_format(self, json: list) -> None:
-        if type(json) is not list:
-            raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Input filters json must be a list")
-
-        for filt in json:
-            json_keys = self.filter_loader.keys
-            different_keys = set(filt.keys()) != set(json_keys)
-            different_length = len(filt.keys()) != len(json_keys)
-            if different_keys or different_length:
-                raise APIException(
-                    ErrorCode.INVALID_PARAMETER_FILE,
-                    f"Filters: each dictionary in json list must have exactly the following keys {json_keys}",
-                )
 
     def _check_lsf(self) -> None:
         self._check_lsf_section()

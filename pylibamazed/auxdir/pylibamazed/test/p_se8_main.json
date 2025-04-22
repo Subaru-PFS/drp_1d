@@ -33,8 +33,9 @@
   "spectrumModels": [
     "galaxy"
   ],
+  "lineMeasRunMode": "all",
   "autoCorrectInput": false,
-  "galaxy": {
+  "spectrumModel_galaxy": {
     "redshiftRange": [
       0.9001832537307723,
       1.70026612
@@ -58,7 +59,7 @@
           "fittingMethod": "individual",
           "lineWidthType": "combined",
           "velocityEmission": 100,
-          "velocityAbsorption": 100,
+          "velocityAbsorption": 150,
           "velocityFit": true,
           "ampOffsetFit": false,
           "lbdaOffsetFit": false,
@@ -162,6 +163,8 @@
           "fittingMethod": "hybrid",
           "polynomialDegree": 2,
           "velocityFit": false,
+          "velocityEmission": 100,
+          "velocityAbsorption": 150,
           "lineRatioType": "rules",
           "rules": "no",
           "improveBalmerFit": true,
