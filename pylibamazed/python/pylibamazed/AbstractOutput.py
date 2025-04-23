@@ -170,6 +170,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return self._get_attribute(None, "context_warningFlag", "ContextWarningFlags")
         elif root == "InitWarningFlags":
             return self._get_attribute(None, "init_warningFlag", "InitWarningFlags")
+        elif root == "objectInfo":
+            return self._get_attribute(None, "objectInfo", attr_name)
         elif "WarningFlags" in attr_name:
             return self._get_attribute(root, "warningFlag", attr_name)
         else:
