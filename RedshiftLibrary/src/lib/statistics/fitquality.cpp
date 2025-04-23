@@ -40,6 +40,8 @@
 #include "RedshiftLibrary/statistics/fitquality.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/size.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include <boost/accumulators/statistics/skewness.hpp>
 #include <boost/math/distributions/empirical_cumulative_distribution_function.hpp>
 #include <boost/math/distributions/normal.hpp>
@@ -52,6 +54,13 @@ using boost::math::empirical_cumulative_distribution_function;
 using boost::math::statistics::anderson_darling_normality_statistic;
 
 namespace NSEpic::NSFitQuality {
+
+Float64 chi2(const TFloat64List &residuals) {
+  return std::accumulate(
+      residuals.begin(), residuals.end(), 0.0,
+      [](Float64 sum, Float64 val) { return sum + val * val; });
+}
+
 Float64 reducedChi2(const Float64 chi2, const Int32 nPixels) {
   if (nPixels <= 0)
     THROWG(ErrorCode::INTERNAL_ERROR, "nPixels must be > 0 ");
@@ -94,27 +103,6 @@ Float64 skewness(const TFloat64List &data, const Float64 mean,
   return gsl_stats_skew_m_sd(data.data(), 1, n, mean, stdev);
 }
 
-Float64 kurtosis(const TFloat64List &data, const Float64 mean) {
-  // Fisher-Pearson kurtosis measurement
-  const Int32 n = data.size();
-  if (n < 1)
-    return NAN;
-  Float64 invN = 1.0 / n;
-  // Compute second and fourth central moments
-  Float64 sum2 = 0.0;
-  Float64 sum4 = 0.0;
-  for (Float64 r : data) {
-    Float64 diff = r - mean;
-    Float64 diff2 = diff * diff;
-    sum2 += diff2;
-    sum4 += diff2 * diff2;
-  }
-
-  // Compute kurtosis excess
-  Float64 invNSum2 = invN * sum2;
-  return (invN * sum4) / (invNSum2 * invNSum2) - 3.0;
-}
-
 Float64 kurtosisGsl(const TFloat64List &data, const Float64 mean,
                     const Float64 stdev) {
   // Fisher-Pearson kurtosis measurement
@@ -124,9 +112,10 @@ Float64 kurtosisGsl(const TFloat64List &data, const Float64 mean,
   return gsl_stats_kurtosis_m_sd(data.data(), 1, n, mean, stdev);
 }
 
-Float64 andersonDarlingTest(const TFloat64List data) {
+Float64 andersonDarlingTest(const TFloat64List &data, Float64 mean,
+                            Float64 stdev) {
   // NB this method can also take mean and std if needed
-  return anderson_darling_normality_statistic(data);
+  return anderson_darling_normality_statistic(data, mean, stdev);
 }
 
 Float64 ksTest(const TFloat64List &data, const Float64 mean,
@@ -153,5 +142,101 @@ Float64 computeResidual(const Float64 expData, const Float64 refData,
     return NAN;
   return (expData - refData) / expDataError;
 };
+
+TFitQuality computeFitQuality(TFloat64List &&spcFlux, TFloat64List &&modelFlux,
+                              TFloat64List &&spcFluxError, const Int32 kStart,
+                              Int32 kEnd, Float64 chi2) {
+  // kEnd set to -1 means take the full spectrum
+  if (ssize(spcFlux) != ssize(modelFlux) ||
+      ssize(spcFlux) != ssize(spcFluxError)) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "m_spectra, spcFlux, modelFlux and "
+                                      "spcFluxError must be of the same size");
+  }
+  const Int32 nPixels = ssize(spcFlux);
+  if (kEnd == -1)
+    kEnd = nPixels - 1;
+
+  return computeFitQuality(
+      std::vector<TFloat64List>(1, std::move(spcFlux)),
+      std::vector<TFloat64List>(1, std::move(modelFlux)),
+      std::vector<TFloat64List>(1, std::move(spcFluxError)),
+      TInt32List(1, kStart), TInt32List(1, kEnd), chi2);
+}
+
+TFitQuality computeFitQuality(std::vector<TFloat64List> &&spcFlux,
+                              std::vector<TFloat64List> &&modelFlux,
+                              std::vector<TFloat64List> &&spcFluxError,
+                              const TInt32List &kStart, const TInt32List &kEnd,
+                              Float64 chi2) {
+  // It is expected that the input vectors are of the same size
+
+  if (ssize(spcFlux) != ssize(modelFlux) || ssize(spcFlux) != ssize(kStart) ||
+      ssize(spcFlux) != ssize(kEnd) || ssize(spcFlux) != ssize(spcFluxError)) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "m_spectra, spcFlux, modelFlux and "
+                                      "spcFluxError must be of the same size");
+    for (Int32 spcIdx = 0; spcIdx < ssize(spcFlux); spcIdx++) {
+      if (ssize(spcFlux[spcIdx]) != ssize(modelFlux[spcIdx]) ||
+          ssize(spcFlux[spcIdx]) != ssize(spcFluxError[spcIdx])) {
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "spcFlux, modelFlux and spcFluxError must be of "
+                              "the same size at spectrum index "
+                           << spcIdx);
+      }
+    }
+  }
+
+  const Int32 nSpectra = ssize(spcFlux);
+  // Compute the maximum number of pixels used to compute residuals in order to
+  // reserve enough space in vector
+  Int32 nTotPixels = 0;
+  for (Int32 spcIdx = 0; spcIdx < nSpectra; spcIdx++) {
+    nTotPixels += kEnd[spcIdx] - kStart[spcIdx] + 1;
+    ;
+  }
+
+  TFloat64List residuals;
+  residuals.reserve(nTotPixels);
+  Int32 sumNPixels = 0;
+  for (Int32 spcIdx = 0; spcIdx < nSpectra; spcIdx++) {
+    for (Int32 pixelIdx = kStart[spcIdx]; pixelIdx <= kEnd[spcIdx];
+         pixelIdx++) {
+      const Float64 residual = NSFitQuality::computeResidual(
+          spcFlux[spcIdx][pixelIdx], modelFlux[spcIdx][pixelIdx],
+          spcFluxError[spcIdx][pixelIdx]);
+      if (std::isnan(residual))
+        continue;
+      residuals.push_back(residual);
+      sumNPixels += 1;
+    }
+  }
+  std::sort(residuals.begin(), residuals.end());
+
+  if (std::isnan(chi2))
+    chi2 = NSFitQuality::chi2(residuals);
+  TFitQuality fitQuality;
+  fitQuality.reducedChiSquare = NSFitQuality::reducedChi2(chi2, sumNPixels);
+  fitQuality.pValue = NSFitQuality::pValue(chi2, sumNPixels);
+
+  fitQuality.meanResiduals = NSFitQuality::mean(residuals);
+  fitQuality.stdResiduals =
+      NSFitQuality::stdev(residuals, fitQuality.meanResiduals);
+  fitQuality.skewnessResiduals = NSFitQuality::skewness(
+      residuals, fitQuality.meanResiduals, fitQuality.stdResiduals);
+  fitQuality.kurtosisResiduals = NSFitQuality::kurtosisGsl(
+      residuals, fitQuality.meanResiduals, fitQuality.stdResiduals);
+  fitQuality.ksResiduals = NSFitQuality::ksTest(residuals, 0, 1, true);
+  fitQuality.ksStdResiduals = NAN;
+  fitQuality.ksStdMeanResiduals = NAN;
+  if (fitQuality.stdResiduals > DBL_MIN) {
+    fitQuality.ksStdResiduals =
+        NSFitQuality::ksTest(residuals, 0, fitQuality.stdResiduals, true);
+    fitQuality.ksStdMeanResiduals = NSFitQuality::ksTest(
+        residuals, fitQuality.meanResiduals, fitQuality.stdResiduals, true);
+  }
+  fitQuality.andersonResiduals = NSFitQuality::andersonDarlingTest(
+      residuals, fitQuality.meanResiduals, fitQuality.stdResiduals);
+  fitQuality.nPixels = sumNPixels;
+  return fitQuality;
+}
 
 } // namespace NSEpic::NSFitQuality

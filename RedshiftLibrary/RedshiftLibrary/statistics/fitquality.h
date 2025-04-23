@@ -40,9 +40,11 @@
 #define _REDSHIFT_STATISTICS_FIT_QUALITY_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include <boost/math/distributions.hpp>
 
 namespace NSEpic::NSFitQuality {
+Float64 chi2(const TFloat64List &residuals);
 Float64 reducedChi2(const Float64 chi2, const Int32 N);
 Float64 pValue(const Float64 chi2, const Int32 nPixels);
 Float64 mean(const TFloat64List &data);
@@ -50,14 +52,24 @@ Float64 var(const TFloat64List &data, const Float64 mean);
 Float64 stdev(const TFloat64List &data, const Float64 mean);
 Float64 skewness(const TFloat64List &data, const Float64 mean,
                  const Float64 stdev);
-Float64 andersonDarlingTest(const TFloat64List data);
-Float64 kurtosis(const TFloat64List &data, const Float64 mean);
+Float64 andersonDarlingTest(const TFloat64List &data, Float64 mean,
+                            Float64 stdev);
 Float64 kurtosisGsl(const TFloat64List &data, const Float64 mean,
                     const Float64 stdev);
 Float64 ksTest(const TFloat64List &data, const Float64 mean,
                const Float64 stdev, bool sorted);
 Float64 computeResidual(const Float64 expData, const Float64 refData,
                         const Float64 expError);
+
+TFitQuality computeFitQuality(TFloat64List &&spcFlux, TFloat64List &&modelFlux,
+                              TFloat64List &&spcFluxError, const Int32 kStart,
+                              Int32 kend, Float64 chi2 = NAN);
+
+TFitQuality computeFitQuality(
+
+    std::vector<TFloat64List> &&spcFlux, std::vector<TFloat64List> &&modelFlux,
+    std::vector<TFloat64List> &&spcFluxError, const TInt32List &kStartArg,
+    const TInt32List &kEndArg, Float64 chi2 = NAN);
 }; // namespace NSEpic::NSFitQuality
 
 #endif

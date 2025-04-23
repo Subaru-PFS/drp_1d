@@ -1038,7 +1038,6 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       savedModels++;
     }
     auto candidate = ExtremaResult->getRankedCandidatePtr(i);
-    // code here has been moved to TLineModelResult::updateFromModel
     candidate->updateFromModel(m_fittingManager, m_result,
                                m_estimateLeastSquareFast, idx);
 

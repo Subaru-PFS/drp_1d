@@ -152,6 +152,10 @@ protected:
   std::vector<TFloat64List> m_sumCross_outsideIGM;
   std::vector<TFloat64List> m_sumT_outsideIGM;
   std::vector<TFloat64List> m_sumS_outsideIGM;
+
+private:
+  void updateQualityFitWithResult(TFittingIsmIgmResult &result,
+                                  const std::shared_ptr<const CTemplate> &tpl);
 };
 
 } // namespace NSEpic

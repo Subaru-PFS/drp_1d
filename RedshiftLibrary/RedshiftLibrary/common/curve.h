@@ -40,8 +40,6 @@
 #define _REDSHIFT_CURVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 namespace NSEpic {
 
@@ -54,7 +52,8 @@ struct TCurveElement {
 struct TCurve {
   TCurve();
   TCurve(TList<Float64> lambda, TList<Float64> flux, TList<Float64> fluxError,
-         TList<uint8_t> mask = {});
+         TList<uint8_t> mask = {}, TList<bool> isExtincted = {},
+         TList<bool> isSnrCompliant = {});
 
   TCurveElement get_at_index(Int32 idx) const;
 
@@ -66,6 +65,8 @@ struct TCurve {
   void setFlux(TList<Float64> inputFlux);
   void setMask(TList<uint8_t> mask);
   void setFluxError(TList<Float64> inputFluxError);
+  void setIsExtincted(TList<bool> isExtincted);
+  void setIsSnrCompliant(TList<bool> isSnrCompliant);
   void sort();
   void reserve(Int32 size);
 
@@ -77,17 +78,30 @@ struct TCurve {
   TFloat64List &&getFlux() && { return std::move(flux); };
   const TFloat64List &getFluxError() const & { return fluxError; };
   TFloat64List &&getFluxError() && { return std::move(fluxError); };
+  const TList<uint8_t> &getMask() const & { return mask; };
+  TList<uint8_t> &&getMask() && { return std::move(mask); };
+  const TList<bool> &getIsExtincted() const & { return isExtincted; };
+  TList<bool> &&getIsExtincted() && { return std::move(isExtincted); };
+  const TList<bool> &getIsSnrCompliant() const & { return isSnrCompliant; };
+  TList<bool> &&getIsSnrCompliant() && { return std::move(isSnrCompliant); };
 
   Float64 getLambdaAt(Int32 pixelIdx) const;
   Float64 getFluxAt(Int32 pixelIdx) const;
   Float64 getFluxErrorAt(Int32 pixelIdx) const;
-  TFloat64List getUnmaskedFlux() const;
+  TFloat64List computeUnmasked(const TFloat64List &data) const;
+  TFloat64List computeUnmaskedFlux() const;
+  TFloat64List computeUnmaskedFluxError() const;
+  TFloat64List computeUnmaskedLambda() const;
+  bool pixelIsChi2Valid(Int32 pixelIdx) const;
+  bool pixelIsChi2AndSNRValid(Int32 pixelIdx) const;
 
 private:
   TAxisSampleList lambda;
   TFloat64List flux;
   TFloat64List fluxError;
   TList<uint8_t> mask;
+  TList<bool> isExtincted;
+  TList<bool> isSnrCompliant;
 };
 
 } // namespace NSEpic

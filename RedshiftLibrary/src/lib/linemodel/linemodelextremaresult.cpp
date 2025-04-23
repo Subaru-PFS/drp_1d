@@ -83,6 +83,7 @@ void TLineModelResult::updateFromModel(
   Merit = lmresult->ChiSquare[idx];
   reducedChi2 = NSFitQuality::reducedChi2(Merit, lmresult->nSpcSamples);
   pValue = NSFitQuality::pValue(Merit, lmresult->nSpcSamples);
+  // TODO add here
 
   //  LineModelSolutions
   Elv = lmresult->LineModelSolutions[idx].EmissionVelocity;

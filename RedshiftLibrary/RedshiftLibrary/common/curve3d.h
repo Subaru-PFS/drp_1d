@@ -41,14 +41,12 @@
 
 #include "RedshiftLibrary/common/curve.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 namespace NSEpic {
 
 struct T3DCurve {
   T3DCurve(Int32 nigm, Int32 nism);
-  T3DCurve(TCurve &&curve);
+  T3DCurve(TCurve curve);
 
   Int32 size() const { return lambda.size(); }
 
@@ -69,10 +67,11 @@ struct T3DCurve {
   void setFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx,
                       Float64 value);
 
-  TCurve toCurve(Int16 igmIdx, Int16 ismIdx) const;
+  TCurve toCurve(Int16 igmIdx, Int16 ismIdx) &&;
   TCurve toCoefCurve(Int16 igmIdx, Int16 ismIdx) const;
 
   bool pixelIsCoefValid(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
+  bool pixelIsChi2AndSNRValid(Int32 pixelIdx) const;
   bool pixelIsChi2Valid(Int32 pixelIdx) const;
 
   void checkIgmIdx(Int16 igmIdx) const;

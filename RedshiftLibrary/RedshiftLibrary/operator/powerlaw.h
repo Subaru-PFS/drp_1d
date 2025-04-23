@@ -46,7 +46,6 @@
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/pass.h"
-#include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
@@ -87,8 +86,6 @@ typedef std::pair<T2DPowerLawCoefs, T2DPowerLawCoefs> TPair2DPowerLawCoefs;
 struct TPowerLawResult : TContinuumResult {
   Float64 chiSquare = INFINITY;
   TPowerLawCoefsPair coefs;
-  Float64 ebmvCoef = NAN;
-  Int32 meiksinIdx = undefIdx;
 };
 
 struct TChi2Result {
@@ -175,7 +172,8 @@ private:
                                       Float64 nullFluxThreshold) const;
   T3DCurve computeLnCurve(T3DCurve const &emittedCurve) const;
   T2DList<Float64> computeChi2(T3DCurve const &curve3D,
-                               T2DPowerLawCoefsPair const &coefs);
+                               T2DPowerLawCoefsPair const &coefs,
+                               const bool applySNRThreshold = true);
   TChi2Result findMinChi2OnIgmIsm(T3DCurve const &curve,
                                   T2DPowerLawCoefsPair const &coefs);
   Float64 theoreticalFluxAtLambda(TPowerLawCoefsPair coefs,

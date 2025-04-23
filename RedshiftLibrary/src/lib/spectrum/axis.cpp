@@ -37,20 +37,16 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include <algorithm>
-#include <numeric>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 
 using namespace NSEpic;
-using namespace std;
 
 CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
-  for (Int32 i = 0; i < ssize(m_Samples); i++) {
-    m_Samples[i] *= op;
-  }
+  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
+                 [op](Float64 sample) { return sample * op; });
   return *this;
 }
 

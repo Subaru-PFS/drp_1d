@@ -39,8 +39,6 @@
 #include <algorithm> // std::sort
 #include <climits>
 #include <cmath>
-#include <iostream>
-#include <sstream>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -52,12 +50,10 @@
 #include <gsl/gsl_spline.h>
 
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
-#include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -193,54 +189,56 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
             result; // upcasting (slicing) slicing, preserving specific
                     // TFittingIsmIGmResult members
         result_base = fitRes;
-        result.fitQuality.reducedChiSquare =
-            NSFitQuality::reducedChi2(result.chiSquare, n_samples);
-        result.fitQuality.pValue =
-            NSFitQuality::pValue(result.chiSquare, n_samples);
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = meiksinIdx;
+        result.ampl = fitRes.ampl;
         chisquareSetAtLeastOnce = true;
-
-        const Int32 nSpectra = ssize(m_spectra);
-
-        std::vector<TFloat64List> spcFlux(nSpectra);
-        std::transform(m_spectra.begin(), m_spectra.end(), spcFlux.begin(),
-                       [](const std::shared_ptr<const CSpectrum> &spectrum) {
-                         return spectrum->GetFluxAxis().GetSamplesVector();
-                       });
-
-        std::vector<TFloat64List> spcFluxError(nSpectra);
-        std::transform(
-            m_spectra.begin(), m_spectra.end(), spcFluxError.begin(),
-            [](const std::shared_ptr<const CSpectrum> &spectrum) {
-              return spectrum->GetFluxAxis().GetError().GetSamplesVector();
-            });
-
-        const Float64 amp = fitRes.ampl;
-        std::vector<TFloat64List> tplFlux(nSpectra);
-        std::transform(m_templateRebined_bf.begin(), m_templateRebined_bf.end(),
-                       tplFlux.begin(), [amp](CTemplate &tpl) {
-                         auto flux = tpl.GetFluxAxis().GetSamplesVector();
-                         std::transform(flux.begin(), flux.end(), flux.begin(),
-                                        [amp](const Float64 sample) {
-                                          return sample * amp;
-                                        });
-
-                         return flux;
-                       });
-
-        addQualityFitResidualsToResult(result, spcFlux, tplFlux, spcFluxError);
       }
     }
+    if (!chisquareSetAtLeastOnce) {
+      THROWG(
+          ErrorCode::INVALID_MERIT_VALUES,
+          Formatter() << "Template " << tpl->GetName()
+                      << ": Not even one single valid fit/merit value found");
+    }
   }
-
-  if (!chisquareSetAtLeastOnce) {
-    THROWG(ErrorCode::INVALID_MERIT_VALUES,
-           Formatter() << "Template " << tpl->GetName()
-                       << ": Not even one single valid fit/merit value found");
-  }
-
+  updateQualityFitWithResult(result, tpl);
   return result;
+}
+
+void COperatorTemplateFitting::updateQualityFitWithResult(
+    TFittingIsmIgmResult &result, const std::shared_ptr<const CTemplate> &tpl) {
+  const Int32 nSpectra = ssize(m_spectra);
+
+  std::vector<TFloat64List> spcFlux(nSpectra);
+  for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
+    if (result.meiksinIdx != undefIdx)
+      ApplyMeiksinCoeff(result.meiksinIdx, spcIndex);
+    if (result.ebmvCoef != -1)
+      ApplyDustCoeff(
+          tpl->m_ismCorrectionCalzetti->GetEbmvIndex(result.ebmvCoef),
+          spcIndex);
+  }
+  std::transform(m_spectra.begin(), m_spectra.end(), spcFlux.begin(),
+                 [](const std::shared_ptr<const CSpectrum> &spectrum) {
+                   return spectrum->GetFluxAxis().GetSamplesVector();
+                 });
+
+  std::vector<TFloat64List> spcFluxError(nSpectra);
+  std::transform(m_spectra.begin(), m_spectra.end(), spcFluxError.begin(),
+                 [](const std::shared_ptr<const CSpectrum> &spectrum) {
+                   return spectrum->GetFluxAxis().GetError().GetSamplesVector();
+                 });
+
+  const Float64 amp = result.ampl;
+  std::vector<TFloat64List> tplFlux(nSpectra);
+  std::transform(m_templateRebined_bf.begin(), m_templateRebined_bf.end(),
+                 tplFlux.begin(), [amp](CTemplate &tpl) {
+                   return (tpl.GetFluxAxis() * amp).GetSamplesVector();
+                 });
+  result.fitQuality = NSFitQuality::computeFitQuality(
+      std::move(spcFlux), std::move(tplFlux), std::move(spcFluxError), m_kStart,
+      m_kEnd, result.chiSquare);
 }
 
 std::pair<TList<CMask>, Int32>

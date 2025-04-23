@@ -97,15 +97,13 @@ BOOST_AUTO_TEST_CASE(kurtosis_test) {
   const auto mean = NSFitQuality::mean(data);
   const auto stdev = NSFitQuality::stdev(data, mean);
 
-  BOOST_CHECK(std::isnan(NSFitQuality::kurtosis({}, mean)));
-  BOOST_CHECK_CLOSE(NSFitQuality::kurtosis(data, mean), -0.83776239907727845,
-                    1e-4);
+  BOOST_CHECK(std::isnan(NSFitQuality::kurtosisGsl({}, mean, stdev)));
+  BOOST_CHECK_CLOSE(NSFitQuality::kurtosisGsl(data, mean, stdev),
+                    -1.41141727279147, 1e-4);
   const auto linspaceArray = linspace(0, 1, 500);
   const auto linspaceArrayMean = NSFitQuality::mean(linspaceArray);
   const auto linspaceArrayStd =
       NSFitQuality::stdev(linspaceArray, linspaceArrayMean);
-  BOOST_CHECK_CLOSE(NSFitQuality::kurtosis(linspaceArray, linspaceArrayMean),
-                    -1.2000096000384002, 1e-4);
   BOOST_CHECK_CLOSE(NSFitQuality::kurtosisGsl(linspaceArray, linspaceArrayMean,
                                               linspaceArrayStd),
                     -1.2072023616766467, 1e-4);
@@ -113,7 +111,9 @@ BOOST_AUTO_TEST_CASE(kurtosis_test) {
 
 BOOST_AUTO_TEST_CASE(andersonDarlingTest_test) {
   const auto data = {0., 1., 3., 3., 5., 7., 10.};
-  BOOST_CHECK_CLOSE(NSFitQuality::andersonDarlingTest(data),
+  const auto mean = NSFitQuality::mean(data);
+  const auto stdev = NSFitQuality::stdev(data, mean);
+  BOOST_CHECK_CLOSE(NSFitQuality::andersonDarlingTest(data, mean, stdev),
                     0.22083660833332985, 1e-4);
 }
 

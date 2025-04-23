@@ -39,8 +39,6 @@
 
 #include "RedshiftLibrary/common/curve.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include <numeric>
 
@@ -49,11 +47,14 @@ using namespace NSEpic;
 TCurve::TCurve() {}
 
 TCurve::TCurve(TList<Float64> lambda, TList<Float64> flux,
-               TList<Float64> fluxError, TList<uint8_t> mask) {
+               TList<Float64> fluxError, TList<uint8_t> mask,
+               TList<bool> isExtincted, TList<bool> isSnrCompliant) {
   setLambda(std::move(lambda));
   setFlux(std::move(flux));
   setFluxError(std::move(fluxError));
   setMask(std::move(mask));
+  setIsSnrCompliant(isSnrCompliant);
+  setIsExtincted(isExtincted);
 }
 
 void TCurve::checkIdx(Int32 idx) const {
@@ -97,6 +98,14 @@ void TCurve::setFlux(TList<Float64> inputFlux) { flux = std::move(inputFlux); }
 
 void TCurve::setMask(TList<uint8_t> inputMask) { mask = std::move(inputMask); }
 
+void TCurve::setIsSnrCompliant(TList<bool> inputIsSnrCompliant) {
+  isSnrCompliant = std::move(inputIsSnrCompliant);
+}
+
+void TCurve::setIsExtincted(TList<bool> inputIsExtincted) {
+  isExtincted = std::move(inputIsExtincted);
+}
+
 void TCurve::setFluxError(TList<Float64> inputFluxError) {
   fluxError = std::move(inputFluxError);
 }
@@ -134,12 +143,30 @@ void TCurve::sort() {
   fluxError = std::move(fluxErrorSorted);
 }
 
-TFloat64List TCurve::getUnmaskedFlux() const {
-  if (mask.empty())
-    return flux;
-  TFloat64List unmaskedFlux(size(), NAN);
-  for (Int32 pixelIdx = 0; pixelIdx < size(); pixelIdx++) {
-    unmaskedFlux[pixelIdx] = mask[pixelIdx] ? flux[pixelIdx] : NAN;
+TFloat64List TCurve::computeUnmasked(const TFloat64List &data) const {
+  if (data.size() != size())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "TCurve::" << __func__
+                       << ": Trying to compute unmasked data with a different "
+                          "size than the curve");
+  TFloat64List unmasked;
+  unmasked.reserve(size());
+  Int32 pixelIdx = -1;
+  for (Int32 pixelIdx = 0; pixelIdx < size(); ++pixelIdx) {
+    if (mask[pixelIdx])
+      unmasked.push_back(data[pixelIdx]);
   }
-  return unmaskedFlux;
+  return unmasked;
+}
+
+TFloat64List TCurve::computeUnmaskedFlux() const {
+  return computeUnmasked(flux);
+}
+
+TFloat64List TCurve::computeUnmaskedFluxError() const {
+  return computeUnmasked(fluxError);
+}
+
+TFloat64List TCurve::computeUnmaskedLambda() const {
+  return computeUnmasked(lambda);
 }

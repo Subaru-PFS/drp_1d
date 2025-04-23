@@ -43,14 +43,9 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/photometry/photometricdata.h"
-#include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/statistics/priorhelper.h"
 
 namespace NSEpic {
 
@@ -97,21 +92,6 @@ protected:
   TInt32List m_kStart, m_kEnd;
 
   virtual Float64 EstimateLikelihoodCstLog() const;
-  void addQualityFitResidualsToResult(TContinuumResult &result,
-                                      const TFloat64List &spcFlux,
-                                      const TFloat64List &modelFlux,
-                                      const TFloat64List &spcFluxError,
-                                      const Int32 kStart = 0,
-                                      Int32 kend = -1) const;
-
-  void addQualityFitResidualsToResult(
-      TContinuumResult &result, const std::vector<TFloat64List> &spcFlux,
-      const std::vector<TFloat64List> &modelFlux,
-      const std::vector<TFloat64List> &spcFluxError,
-      const TInt32List &kStartArg = {}, const TInt32List &kEndArg = {}) const;
-
-  Float64 computeNPixels(const Int32 spcIdx, const TInt32List &kStart,
-                         const TInt32List &kEnd) const;
 };
 } // namespace NSEpic
 

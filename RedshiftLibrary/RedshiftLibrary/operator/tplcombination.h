@@ -66,21 +66,13 @@ struct STplcombination_basicfitresult : TFittingIsmIgmResult {
       : TFittingIsmIgmResult(EbmvListSize, MeiksinListSize),
         fittingAmplitudes(componentCount, NAN),
         fittingAmplitudeErrors(componentCount, NAN),
-        fittingAmplitudeSigmas(componentCount, NAN),
-        fittingAmplitudesInterm(
-            EbmvListSize,
-            std::vector<TFloat64List>(MeiksinListSize,
-                                      TFloat64List(componentCount, NAN))),
-        tplNames(componentCount),
+        fittingAmplitudeSigmas(componentCount, NAN), tplNames(componentCount),
         COV(componentCount, TFloat64List(componentCount, NAN)){};
 
   TFloat64List fittingAmplitudes;
   TFloat64List fittingAmplitudeErrors;
   TFloat64List fittingAmplitudeSigmas;
-
-  std::vector<std::vector<TFloat64List>>
-      fittingAmplitudesInterm; // intermediate amplitudes
-  TStringList tplNames;        // cause combination of templates
+  TStringList tplNames; // cause combination of templates
 
   Float64 SNR = NAN;
   std::vector<TFloat64List> COV;
@@ -106,6 +98,8 @@ public:
       Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
       const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
       const Float64 overlapThreshold);
+  void updateQualityFitWithResult(STplcombination_basicfitresult &result,
+                                  const Int32 nddl, const CSpectrum &spectrum);
 
 private:
   void BasicFit_preallocateBuffers(const CSpectrum &spectrum,
@@ -137,6 +131,8 @@ private:
                                 const Int32 imin_lbda);
   Float64 GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, Int32 kStart,
                         Int32 n);
+  void applyIGMISM(const Int32 meiksinIdx, const Float64 ebmvCoef,
+                   const Int32 nddl);
 };
 
 } // namespace NSEpic

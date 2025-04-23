@@ -87,3 +87,8 @@ lib/*.so
 
 # Folder with draft files
 draft
+
+# clang files
+.cache
+
+.git

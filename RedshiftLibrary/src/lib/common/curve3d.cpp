@@ -46,13 +46,16 @@ using namespace NSEpic;
 
 T3DCurve::T3DCurve(Int32 nIgm, Int32 nIsm) : nIgm(nIgm), nIsm(nIsm){};
 
-T3DCurve::T3DCurve(TCurve &&curve)
+T3DCurve::T3DCurve(TCurve curve)
     : nIgm(1), nIsm(1),
       flux(
           T3DList<Float64>(1, T2DList<Float64>(1, std::move(curve).getFlux()))),
       fluxError(T3DList<Float64>(
           1, T2DList<Float64>(1, std::move(curve).getFluxError()))),
-      lambda(std::move(curve).getLambda()){};
+      lambda(std::move(curve).getLambda()), mask(std::move(curve).getMask()),
+      isExtincted(T3DList<bool>(
+          1, T2DList<bool>(1, std::move(curve).getIsExtincted()))),
+      isSnrCompliant(std::move(curve).getIsSnrCompliant()){};
 
 void T3DCurve::extendIgmIsm(Int32 nIgm_, Int32 nIsm_) {
   if (nIgm != 1 && nIsm != 1)
@@ -123,7 +126,7 @@ void T3DCurve::setLambda(TFloat64List inputLambda) {
   lambda = std::move(inputLambda);
 }
 
-TCurve T3DCurve::toCurve(Int16 igmIdx, Int16 ismIdx) const {
+TCurve T3DCurve::toCurve(Int16 igmIdx, Int16 ismIdx) && {
   if (ismIdx > nIsm)
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "T3DCurve::toCurve ismIdx = " << ismIdx << " < "
@@ -133,10 +136,12 @@ TCurve T3DCurve::toCurve(Int16 igmIdx, Int16 ismIdx) const {
            Formatter() << "T3DCurve::toCurve ismIdx = " << igmIdx << " < "
                        << nIgm);
   TCurve curve;
-  curve.setLambda(lambda);
-  curve.setFlux(flux[igmIdx][ismIdx]);
-  curve.setFluxError(fluxError[igmIdx][ismIdx]);
-  curve.setMask(mask);
+  curve.setLambda(std::move(lambda));
+  curve.setFlux(std::move(flux[igmIdx][ismIdx]));
+  curve.setFluxError(std::move(fluxError[igmIdx][ismIdx]));
+  curve.setMask(std::move(mask));
+  curve.setIsSnrCompliant(std::move(isSnrCompliant));
+  curve.setIsExtincted(std::move(isExtincted[igmIdx][ismIdx]));
   return curve;
 }
 
@@ -164,6 +169,10 @@ bool T3DCurve::pixelIsCoefValid(Int16 igmIdx, Int16 ismIdx,
 }
 
 bool T3DCurve::pixelIsChi2Valid(Int32 pixelIdx) const {
+  return pixelIdx < size() && mask[pixelIdx];
+}
+
+bool T3DCurve::pixelIsChi2AndSNRValid(Int32 pixelIdx) const {
   return pixelIdx < size() && isSnrCompliant[pixelIdx] && mask[pixelIdx];
 }
 

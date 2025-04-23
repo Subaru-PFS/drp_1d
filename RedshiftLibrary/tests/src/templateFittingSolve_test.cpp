@@ -40,14 +40,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
-#include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/templatefittingfortests.h"
-#include "tests/src/tool/inputContextLight.h"
 
 using namespace NSEpic;
 
@@ -90,15 +86,15 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
 
   // Checks that fit quality indicators are correctly set
   BOOST_CHECK_CLOSE(res->fittedContinuum.merit, 366.77585884307723, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.reducedChi2, 6.6686519789650403, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 4.6089808815878171e-48, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.reducedChi2, 6.9202992234542871, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 6.4935092732764014e-49, 1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 0.74992846452048112,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 2.4926853627717862,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.skewnessResiduals, 2.4156922366549645,
                     1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, 5.4277587136004293,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, 5.1127303529994856,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.ksResiduals, 0.11124487273552974,
                     1e-4);

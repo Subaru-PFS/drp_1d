@@ -39,8 +39,6 @@
 #include <algorithm> // std::sort
 #include <climits>
 #include <cmath>
-#include <numeric>
-#include <sstream>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
@@ -53,13 +51,11 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/tplcombination.h"
 #include "RedshiftLibrary/operator/tplcombinationresult.h"
@@ -68,7 +64,6 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/fitquality.h"
 
-namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
@@ -162,8 +157,6 @@ void COperatorTplcombination::BasicFit(
                                "normalization Factor="
                             << normFactor);
 
-  bool option_igmFastProcessing =
-      (MeiksinList.size() == 1 ? false : true); // TODO
   bool igmLoopUseless_WavelengthRange = false;
   fittingResults.chiSquare = INFINITY; // final best Xi2 value
   Float64 chisq, SNR;
@@ -180,6 +173,8 @@ void COperatorTplcombination::BasicFit(
     gsl_vector_set(y, i, yi);              // y[i] = yi
     gsl_vector_set(w, i, 1.0 / (ei * ei)); // w[i] = 1/(ei*ei)
   }
+  TFloat64List modelFluxWithAmp(spcFluxAxis.GetSamplesCount(), 0);
+
   for (Int32 kigm = 0; kigm < nIGM; kigm++) {
     if (igmLoopUseless_WavelengthRange) {
       // Now copy from the already calculated k>0 igm values
@@ -294,8 +289,6 @@ void COperatorTplcombination::BasicFit(
         sE += err2;
       }
       SNR = std::sqrt(sA / sE);
-      fittingResults.fittingAmplitudesInterm[kEbmv_][kigm] =
-          fittingResults.fittingAmplitudes; // saving
 
       // save covariance matrix into MtM
       for (Int32 iddl = 0; iddl < nddl; iddl++) {
@@ -311,23 +304,17 @@ void COperatorTplcombination::BasicFit(
                                  << nddl << ")");
       }
 
-      // TODO see here not good
       if (chisq < fittingResults.chiSquare) {
         fittingResults.chiSquare = chisq;
-        fittingResults.fitQuality.reducedChiSquare =
-            NSFitQuality::reducedChi2(chisq, n);
-        fittingResults.fitQuality.pValue = NSFitQuality::pValue(chisq, n);
-        TFloat64List modelFluxWithAmp(spcFluxAxis.GetSamplesCount(), 0);
+        std::fill(modelFluxWithAmp.begin(), modelFluxWithAmp.end(), 0);
         for (Int32 tplIdx = 0; tplIdx < nddl; tplIdx++) {
-          for (Int32 pixelIdx = m_kStart[0]; pixelIdx < m_kEnd[0]; pixelIdx++) {
+          for (Int32 pixelIdx = m_kStart[0]; pixelIdx <= m_kEnd[0];
+               ++pixelIdx) {
             modelFluxWithAmp[pixelIdx] +=
                 m_templatesRebined_bf[tplIdx].GetFluxAxis()[pixelIdx] *
                 fittingResults.fittingAmplitudes[tplIdx];
           }
         }
-        addQualityFitResidualsToResult(
-            fittingResults, spcFluxAxis.GetSamplesVector(), modelFluxWithAmp,
-            spcError.GetSamplesVector(), m_kStart[0], m_kEnd[0]);
         fittingResults.SNR = SNR;
         fittingResults.meiksinIdx = meiksinIdx;
         fittingResults.ebmvCoef = coeffEBMV;
@@ -350,10 +337,6 @@ void COperatorTplcombination::BasicFit(
     } // end iterating over ISM
   }   // end iterating over IGM
 
-  // fittingResults.modelSpectrum =
-  // CSpectrum(CSpectrumSpectralAxis(std::move(spc_extract)),
-  // CSpectrumFluxAxis(std::move(modelFlux)));
-
   gsl_matrix_free(X);
   gsl_vector_free(y);
   gsl_vector_free(w);
@@ -364,6 +347,13 @@ void COperatorTplcombination::BasicFit(
     THROWG(ErrorCode::INVALID_MERIT_VALUES,
            Formatter() << "Not even one single valid fit/merit value found");
   }
+
+  TFloat64List flux = spcFluxAxis.GetSamplesVector();
+  TFloat64List error = spcError.GetSamplesVector();
+
+  fittingResults.fitQuality = NSFitQuality::computeFitQuality(
+      std::move(flux), std::move(modelFluxWithAmp), std::move(error),
+      m_kStart[0], m_kEnd[0], fittingResults.chiSquare);
 }
 
 void COperatorTplcombination::RebinTemplate(

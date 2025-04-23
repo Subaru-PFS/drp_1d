@@ -103,71 +103,62 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   auto N = std::count_if(boost::counting_iterator<Int32>(0),
                          boost::counting_iterator<Int32>(fluxCurve.size()),
                          [&fluxCurve](Int32 pixelIdx) {
-                           return fluxCurve.pixelIsChi2Valid(pixelIdx);
+                           return fluxCurve.pixelIsChi2AndSNRValid(pixelIdx);
                          });
-
+  TPowerLawResult result;
+  TCurve curve;
   if (N < m_nLogSamplesMin) {
+    // If the number of valid pixels is too low, set igm / ism indexes to 0 and
+    // constant power law
     Int32 const nPixels = fluxCurve.size();
-    auto const curve = fluxCurve.toCurve(0, 0);
+    curve = std::move(fluxCurve).toCurve(0, 0);
     auto const constantLawsCoef = computeConstantLawCoefs(curve);
     T2DPowerLawCoefsPair coefs(1,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
-    // reset snrCompliant to true everywhere for computing chi2
-    fluxCurve.setIsSnrCompliant(TBoolList(nPixels, true));
-    auto const chi2 = computeChi2(fluxCurve, coefs);
-    TPowerLawResult result;
+    // Create a 3D curve to compute chi2
+    auto curve3D = T3DCurve(std::move(curve));
+    auto const chi2 = computeChi2(curve3D, coefs);
+
     result.chiSquare = chi2[0][0];
-    result.fitQuality.nPixels = nPixels;
-    result.fitQuality.reducedChiSquare =
-        NSFitQuality::reducedChi2(result.chiSquare, nPixels);
-    result.fitQuality.pValue = NSFitQuality::pValue(result.chiSquare, nPixels);
     result.coefs = constantLawsCoef;
     if (opt_extinction)
       result.meiksinIdx = undefIdx;
     if (opt_dustFitting)
       result.ebmvCoef = 0.0;
 
-    const auto modelFlux = computeModelFlux(
-        curve.getLambda(), redshift, result.meiksinIdx, result.ebmvCoef,
-        constantLawsCoef.first.a, constantLawsCoef.first.b,
-        constantLawsCoef.second.a, constantLawsCoef.second.b);
-    addQualityFitResidualsToResult(result, curve.getFlux(), modelFlux,
-                                   curve.getFluxError());
-    return result;
+    // Curve ownership back to 1D Curve
+    curve = std::move(curve3D).toCurve(0, 0);
+  } else {
+    T3DCurve emittedCurve = computeEmittedCurve(redshift, opt_extinction,
+                                                opt_dustFitting, fluxCurve);
+
+    // Step 3. Compute power law coefs and chi2
+    T2DPowerLawCoefsPair coefs = powerLawCoefs3D(emittedCurve, method);
+    TChi2Result chi2Result = findMinChi2OnIgmIsm(emittedCurve, coefs);
+    // Step 4. Creates result
+    result.chiSquare = chi2Result.chi2;
+    result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
+    if (opt_extinction)
+      result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
+    if (opt_dustFitting)
+      result.ebmvCoef = m_ismCorrectionCalzetti->GetEbmvValue(
+          m_ismIdxList[chi2Result.ismIdx]);
+    curve =
+        (std::move(emittedCurve)).toCurve(chi2Result.igmIdx, chi2Result.ismIdx);
   }
-
-  T3DCurve emittedCurve =
-      computeEmittedCurve(redshift, opt_extinction, opt_dustFitting, fluxCurve);
-
-  // Step 3. Compute power law coefs and chi2
-  T2DPowerLawCoefsPair coefs = powerLawCoefs3D(emittedCurve, method);
-  TChi2Result chi2Result = findMinChi2OnIgmIsm(emittedCurve, coefs);
-  // Step 4. Creates result
-  TPowerLawResult result;
-  result.chiSquare = chi2Result.chi2;
-  N = std::count_if(boost::counting_iterator<Int32>(0),
-                    boost::counting_iterator<Int32>(emittedCurve.size()),
-                    [&emittedCurve](Int32 pixelIdx) {
-                      return emittedCurve.pixelIsChi2Valid(pixelIdx);
-                    });
-  result.fitQuality.reducedChiSquare =
-      NSFitQuality::reducedChi2(chi2Result.chi2, N);
-  result.fitQuality.pValue = NSFitQuality::pValue(chi2Result.chi2, N);
-
-  result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
-  if (opt_extinction)
-    result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
-  if (opt_dustFitting)
-    result.ebmvCoef =
-        m_ismCorrectionCalzetti->GetEbmvValue(m_ismIdxList[chi2Result.ismIdx]);
-  const auto curveAtIgmIsm =
-      emittedCurve.toCurve(chi2Result.igmIdx, chi2Result.ismIdx);
-  const auto modelFlux = computeModelFlux(
-      curveAtIgmIsm.getLambda(), redshift, result.meiksinIdx, result.ebmvCoef,
-      result.coefs.first.a, result.coefs.first.b, result.coefs.second.a,
-      result.coefs.second.b);
-  addQualityFitResidualsToResult(result, curveAtIgmIsm.getUnmaskedFlux(),
-                                 modelFlux, curveAtIgmIsm.getFluxError());
+  auto modelFlux = computeModelFlux(
+      curve.computeUnmaskedLambda(), redshift, result.meiksinIdx,
+      result.ebmvCoef, result.coefs.first.a, result.coefs.first.b,
+      result.coefs.second.a, result.coefs.second.b);
+  T2DPowerLawCoefsPair coefs(1, TList<TPowerLawCoefsPair>(1, result.coefs));
+  auto flux = curve.computeUnmaskedFlux();
+  auto nUnmaskedPixels = ssize(flux) - 1;
+  auto error = curve.computeUnmaskedFluxError();
+  auto const chi2WithAllSNR =
+      computeChi2(T3DCurve(std::move(curve)), coefs, false)[0][0];
+  result.fitQuality = NSFitQuality::computeFitQuality(
+      std::move(flux), std::move(modelFlux), std::move(error), 0,
+      nUnmaskedPixels, chi2WithAllSNR);
   return result;
 };
 
@@ -216,7 +207,17 @@ Float64 COperatorPowerLaw::computePowerLaw(TPowerLawCoefs coefs,
 
 T2DList<Float64>
 COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
-                               T2DPowerLawCoefsPair const &coefs) {
+                               T2DPowerLawCoefsPair const &coefs,
+                               const bool applySNRThreshold) {
+  std::function<bool(Int32)> considerPixel;
+  if (applySNRThreshold)
+    considerPixel = [curve3D](Int32 pixelIdx) {
+      return curve3D.pixelIsChi2AndSNRValid(pixelIdx);
+    };
+  else
+    considerPixel = [curve3D](Int32 pixelIdx) {
+      return curve3D.pixelIsChi2Valid(pixelIdx);
+    };
   Int32 nIgmCurves = curve3D.getNIgm();
   Int32 nIsmCurves = curve3D.getNIsm();
   T2DList<Float64> chi2_all(nIgmCurves, TList<Float64>(nIsmCurves, INFINITY));
@@ -225,7 +226,7 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
     for (Int32 ismIdx = 0; ismIdx < nIsmCurves; ismIdx++) {
       Float64 chi2 = 0.0;
       for (Int32 pixelIdx = 0; pixelIdx < m_nPixels[0]; pixelIdx++) {
-        if (curve3D.pixelIsChi2Valid(pixelIdx)) {
+        if (considerPixel(pixelIdx)) {
           Float64 theoreticalFlux =
               curve3D.getIsExtinctedAt(igmIdx, ismIdx, pixelIdx)
                   ? 0
@@ -344,8 +345,8 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
 
 TPowerLawCoefsPair
 COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
-  auto const &flux = emittedCurve.getFlux();
-  auto const &error = emittedCurve.getFluxError();
+  auto const &flux = emittedCurve.computeUnmaskedFlux();
+  auto const &error = emittedCurve.computeUnmaskedFluxError();
   TFloat64List inverse_var(error.size());
   std::transform(error.cbegin(), error.cend(), inverse_var.begin(),
                  [](Float64 v) { return 1.0 / (v * v); });
