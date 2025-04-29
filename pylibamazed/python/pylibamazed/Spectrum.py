@@ -56,6 +56,7 @@ from pylibamazed.redshift import (
 )
 from pylibamazed.Filter import FilterList
 from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
+from pylibamazed.DocDecorator import doc_method
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -65,6 +66,8 @@ class Spectrum:
     """
     class for spectrum interface
     """
+
+    source_id: str
 
     def __init__(
         self,
@@ -105,6 +108,7 @@ class Spectrum:
         return False
 
     @property
+    @doc_method
     def observation_ids(self):
         return self._dataframe.index.levels[0]
 
@@ -112,7 +116,8 @@ class Spectrum:
     def observation_number(self):
         return len(self.observation_ids)
 
-    def _get_dataframe(self, obs_id=None, filtered_only=True) -> pd.DataFrame:
+    @doc_method
+    def get_dataframe(self, obs_id=None, filtered_only=True) -> pd.DataFrame:
         """
         Get spectra pandas dataframe
             * all spectra if obs_id=None or merge
@@ -134,17 +139,18 @@ class Spectrum:
             return df
 
     def get_index(self, obs_id="", filtered_only=True) -> pd.Index:
-        df = self._get_dataframe(obs_id, filtered_only)
+        df = self.get_dataframe(obs_id, filtered_only)
         return df.index
 
     def get_samples_number(self, obs_id="", filtered_only=True) -> int:
         return len(self.get_index(obs_id, filtered_only))
 
+    @doc_method
     def get_wave(self, obs_id="", filtered_only=True, vacuum=True) -> pd.Series:
         """
         :return: wavelength
-        : if obs_id is None return the unmerged wavelength of all observations
-        : if obs_id is "" return the merged wavelength of all observations/
+            : if obs_id is None return the unmerged wavelength of all observations
+            : if obs_id is "" return the merged wavelength of all observations/
         :type: pandas.series
         """
         wave_column = "wave"
@@ -156,24 +162,26 @@ class Spectrum:
                 wave_column = "wave_air"
         if self._is_obs_id_merge(obs_id):
             wave_column = "wave_merged"
-        spectrum = self._get_dataframe(obs_id, filtered_only)
+        spectrum = self.get_dataframe(obs_id, filtered_only)
         return spectrum[wave_column]
 
+    @doc_method
     def get_flux(self, obs_id="", filtered_only=True) -> pd.Series:
         """
         :return: wavelength
         :rtype: pandas.series
         """
-        spectrum = self._get_dataframe(obs_id, filtered_only)
+        spectrum = self.get_dataframe(obs_id, filtered_only)
 
         return spectrum["flux"]
 
+    @doc_method
     def get_error(self, obs_id="", filtered_only=True) -> pd.Series:
         """
         :return: error
         :rtype: pandas.series
         """
-        spectrum = self._get_dataframe(obs_id, filtered_only)
+        spectrum = self.get_dataframe(obs_id, filtered_only)
         return spectrum["error"]
 
     def get_mask(self, obs_id=""):
@@ -182,11 +190,12 @@ class Spectrum:
                  (not original mask column if present, use get_others)
         :rtype: pandas.series
         """
-        df = self._get_dataframe(obs_id, filtered_only=False)
+        df = self.get_dataframe(obs_id, filtered_only=False)
         if "amazed_mask" not in df:
             return pd.Series(True, df.index)
         return df["amazed_mask"]
 
+    @doc_method
     def get_others(self, obs_id: str = "", filtered_only=True) -> pd.DataFrame:
         """
         Return a dataframe with the filtered non-mandatory columns of the spectrum.
@@ -194,7 +203,7 @@ class Spectrum:
         :param obs_id: name of the observation
         :return: dataframe with the data of the other columns of the spectrum
         """
-        spectrum = self._get_dataframe(obs_id, filtered_only)
+        spectrum = self.get_dataframe(obs_id, filtered_only)
         col = spectrum.columns != "amazed_mask"
         col &= spectrum.columns != "wave_air"
         col &= spectrum.columns != "wave_merged"
@@ -204,6 +213,7 @@ class Spectrum:
 
         return spectrum.loc[:, col]
 
+    @doc_method
     def get_lsf(self, obs_id=""):
         """
         :return: lsf
@@ -211,6 +221,7 @@ class Spectrum:
         """
         return self._lsf
 
+    @doc_method
     def get_photometric_data(self):
         return self._photometric_data
 
@@ -360,6 +371,7 @@ class Spectrum:
             return
         self.masks[obs_id] = filters.apply(self._dataframe.loc[obs_id])
 
+    @doc_method
     def init(self):
         """
         Does three things :

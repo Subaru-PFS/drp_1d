@@ -41,7 +41,7 @@ from typing import List, Optional
 from enum import Enum
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.redshift import CLog, ErrorCode
-
+from pylibamazed.DocDecorator import doc_method
 
 zlog = CLog.GetInstance()
 
@@ -71,7 +71,7 @@ class EVelocityFitParam(Enum):
 
 
 class ParametersAccessor:
-    velocity_fit_prefix_dict = {
+    _velocity_fit_prefix_dict = {
         EVelocityType.Absorption: "abs",
         EVelocityType.Emission: "em",
     }
@@ -110,12 +110,14 @@ class ParametersAccessor:
     def get_multiobs_method(self) -> Optional[str]:
         return self.parameters.get("multiObsMethod")
 
+    @doc_method
     def get_spectrum_models(self, default=None) -> List[str]:
         return self.parameters.get("spectrumModels", default)
 
     def get_linemeas_runmode(self) -> Optional[str]:
         return self.parameters.get("lineMeasRunMode")
 
+    @doc_method
     def get_spectrum_model_section(self, spectrum_model, create=False) -> dict:
         spectrum_model_section = self.parameters.get(spectrum_model, {})
         if create and spectrum_model_section == {}:
@@ -130,6 +132,7 @@ class ParametersAccessor:
             self.get_spectrum_model_section, "redshiftSolver", create, spectrum_model
         )
 
+    @doc_method
     def get_redshift_solver_method(self, spectrum_model: str) -> Optional[ESolveMethod]:
         if "redshiftSolver" not in self.get_stages(spectrum_model):
             return None
@@ -145,6 +148,7 @@ class ParametersAccessor:
             self.get_spectrum_model_section, "lineMeasSolver", create, spectrum_model
         )
 
+    @doc_method
     def get_linemeas_method(self, spectrum_model: str) -> Optional[ESolveMethod]:
         if "lineMeasSolver" not in self.get_stages(spectrum_model):
             return None
@@ -562,7 +566,7 @@ class ParametersAccessor:
 
     @classmethod
     def get_velocity_fit_param_name(cls, velocity_type: EVelocityType, param: EVelocityFitParam) -> str:
-        return f"{cls.velocity_fit_prefix_dict[velocity_type]}VelocityFit{param.value}"
+        return f"{cls._velocity_fit_prefix_dict[velocity_type]}VelocityFit{param.value}"
 
     def get_velocity_fit_param(
         self,

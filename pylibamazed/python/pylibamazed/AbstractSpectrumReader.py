@@ -53,6 +53,7 @@ from pylibamazed.redshift import (
     ErrorCode,
     WarningCode,
 )
+from pylibamazed.DocDecorator import doc_method
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -60,6 +61,7 @@ zflag = CFlagWarning.GetInstance()
 reader_classes = dict()
 
 
+@doc_method
 def register_reader(reader_name: str, reader):
     reader_classes[reader_name] = reader
 
@@ -88,6 +90,8 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
 
     """
 
+    source_id: str
+
     @exception_decorator
     def __init__(self, parameters: Parameters, calibration_library, source_id: str):
         """Constructor method"""
@@ -109,7 +113,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         # pandas dataframe to instanciate Spectrum
         self.spectra_dataframe = pd.DataFrame()
 
-    # setup context manger to automatize cleaning after getting sepectrum
+    # setup context manger to automatize cleaning after getting spectrum
     def __enter__(self):
         return self
 
@@ -118,6 +122,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         return False
 
     @abstractmethod
+    @doc_method
     def load_wave(self, resource, obs_id=""):
         """Append the spectral axis in self.wave , units are in Angstrom by default
 
@@ -128,6 +133,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         raise NotImplementedError("Implement in derived class")
 
     @abstractmethod
+    @doc_method
     def load_flux(self, resource, obs_id=""):
         """Append the flux in self.flux , units are in erg.cm-2 by default
 
@@ -138,6 +144,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         raise NotImplementedError("Implement in derived class")
 
     @abstractmethod
+    @doc_method
     def load_error(self, resource, obs_id=""):
         """Append the variance in self.error , units are in erg.cm-2 by default
 
@@ -148,8 +155,9 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         raise NotImplementedError("Implement in derived class")
 
     @abstractmethod
+    @doc_method
     def load_lsf(self, resource, obs_id=""):
-        """Append the spectral axis in self.flux , units are in erg.cm-2 by default
+        """Optional, append the spectral axis in self.flux , units are in erg.cm-2 by default
 
         :param resource: resource where the error can be found, no restriction for type (can be a path, a
            file handler, an hdf5 node,...)
@@ -157,8 +165,9 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         """
         raise NotImplementedError("Implement in derived class")
 
+    @doc_method
     def load_photometry(self, resource):
-        """Append the photometric data in self.photometric_data , units are in erg.cm-2 by default
+        """Optional, append the photometric data in self.photometric_data , units are in erg.cm-2 by default
 
         :param resource: resource where the error can be found, no restriction for type (can be a path, a
             file handler, an hdf5 node,...)
@@ -166,28 +175,33 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         """
         pass  # implementation not mandatory
 
+    @doc_method
     def load_others(self, resource, obs_id=""):
-        """Appends other data in self.others
+        """Optional, appends other data in self.others
 
         :param resource: resource where other data vector indexed by the wavelengths
+
         can be found, no restriction for type (can be a path, a file handler, an hdf5 node,...)
         """
         pass  # implementation not mandatory
 
+    @doc_method
     def set_air_or_vaccum(self, resource):
         """
-        Set w_frame to "air" or "vaccum" (default is vacuum).
+        Optional, set w_frame to "air" or "vaccum" (default is vacuum).
         frame should be deduced from resource.
         """
         pass  # implemenation not mandatory
 
+    @doc_method
     def load_all(self, resource, obs_id_list=[""]) -> None:
         """
         Load all components of the spectrum. Reimplement this if resources are different
 
         :param resource: resource where wave, flux, error, lsf and photometry can be found
-               obs_id_list: list of obs id, will loop on them to load all observations,
-                            note: only usefull when resource does not need to be updated between observations
+        :param obs_id_list: list of obs id, will loop on them to load all observations,
+
+        note: only usefull when resource does not need to be updated between observations
         """
         #  on first observation only:
         if self.waves.size() == 0:
@@ -200,6 +214,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
             self.load_others(resource, obs_id)
             self.load_lsf(resource, obs_id)
 
+    @doc_method
     def load_and_get_spectrum(self, resource, obs_id_list=[""]) -> Spectrum:
         """
         Load all components of the spectrum, build and return Spectrum, then clean memory (re load necessary)
@@ -210,6 +225,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         return spectrum
 
     @exception_decorator
+    @doc_method
     def get_spectrum(self) -> Spectrum:
         self._check_spectrum_is_loaded()
         if not self._sizes_are_consistent():
@@ -244,6 +260,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
 
         return spectrum
 
+    @doc_method
     def clean(self):
         """
         clean the Containers

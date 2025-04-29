@@ -1,6 +1,8 @@
 Errors
 ========
 
+``ErrorCode`` is an enum of the different possible error codes.
+
 Possible error codes list (incomplete)
 
 **INVALID_MERIT_VALUES**
