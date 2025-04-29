@@ -54,9 +54,9 @@ class ESolveMethod(Enum):
 
 
 class EContinuumFit(Enum):
-    FROM_FIRST_PASS = "fromFirstPass"
+    FROM_FIRST_PASS = "fromFirstPass"  # nosec B105
     RETRY_ALL = "retryAll"
-    REFIT_FIRST_PASS = "reFitFirstPass"
+    REFIT_FIRST_PASS = "reFitFirstPass"  # nosec B105
 
 
 class EVelocityType(Enum):
