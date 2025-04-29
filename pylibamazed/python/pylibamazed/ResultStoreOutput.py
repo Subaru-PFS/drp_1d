@@ -181,6 +181,8 @@ class ResultStoreOutput(AbstractOutput):
         if not len(ds_attributes):
             return False
 
+        if dataset == "continuum_quality" and stage != "redshiftSolver":
+            return False
         # Checks that at least one of the attributes of the selected rows is present in the result store
         has_dataset = False
         for rs_key in ds_attributes.ResultStore_key.unique():
