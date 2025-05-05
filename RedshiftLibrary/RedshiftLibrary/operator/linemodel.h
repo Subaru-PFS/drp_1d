@@ -189,6 +189,11 @@ private:
   }
   TFloat64List makeVelFitBins(Float64 vInfLim, Float64 vSupLim,
                               Float64 vStep) const;
+
+  void addFitQualityToCandidate(
+      const std::shared_ptr<TLineModelResult> &candidate,
+      const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel)
+      const;
   std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;

@@ -40,15 +40,12 @@
 #include <boost/format.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/common/vectorOperations.h"
-#include "RedshiftLibrary/common/zgridparam.h"
-#include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
 #include "RedshiftLibrary/linemodel/outsideLineMaskBuilder.h"
 #include "RedshiftLibrary/linemodel/powerlawstore.h"
@@ -72,7 +69,7 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/statistics/deltaz.h"
+#include "RedshiftLibrary/statistics/fitquality.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
 using namespace NSEpic;
@@ -1041,8 +1038,10 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
     candidate->updateFromModel(m_fittingManager, m_result,
                                m_estimateLeastSquareFast, idx);
 
-    // save the continuum tpl fitting results
+    addFitQualityToCandidate(candidate,
+                             ExtremaResult->m_savedModelSpectrumResults[i]);
 
+    // save the continuum tpl fitting results
     candidate->updateFromContinuumModelSolution(
         *m_fittingManager->getContinuumFitValues());
 
@@ -1776,4 +1775,48 @@ TFloat64List COperatorLineModel::makeVelFitBins(Float64 vInfLim,
   for (Int32 i = 0; i < nVelSteps; ++i)
     velFitBins.push_back(vInfLim + i * vStep);
   return velFitBins;
+}
+
+void COperatorLineModel::addFitQualityToCandidate(
+    const std::shared_ptr<TLineModelResult> &candidate,
+    const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel)
+    const {
+  auto spectra = Context.getSpectra();
+
+  Int32 nSpectra = spectra.size();
+  std::vector<TFloat64List> spcFlux(nSpectra);
+  std::transform(spectra.begin(), spectra.end(), spcFlux.begin(),
+                 [](const std::shared_ptr<const CSpectrum> &spectrum) {
+                   return spectrum->GetFluxAxis().GetSamplesVector();
+                 });
+
+  std::vector<TFloat64List> spcFluxError(nSpectra);
+  std::transform(spectra.begin(), spectra.end(), spcFluxError.begin(),
+                 [](const std::shared_ptr<const CSpectrum> &spectrum) {
+                   return spectrum->GetFluxAxis().GetError().GetSamplesVector();
+                 });
+  std::vector<TFloat64List> modelFlux(nSpectra);
+  std::transform(
+      spectra.begin(), spectra.end(), modelFlux.begin(),
+      [candidateModel](const std::shared_ptr<const CSpectrum> &spectrum) {
+        return candidateModel->ModelFlux.at(spectrum->getObsID());
+      });
+
+  TInt32List kEnd(nSpectra);
+  for (Int32 i = 0; i < nSpectra; ++i) {
+    kEnd[i] = spcFlux[i].size() - 1;
+  }
+  TFitQuality fitQuality = NSFitQuality::computeFitQuality(
+      std::move(spcFlux), std::move(modelFlux), std::move(spcFluxError),
+      TInt32List(nSpectra, 0), kEnd);
+  candidate->pValue = fitQuality.pValue;
+  candidate->reducedChi2 = fitQuality.reducedChiSquare;
+  candidate->meanResiduals = fitQuality.meanResiduals;
+  candidate->stdResiduals = fitQuality.stdResiduals;
+  candidate->skewnessResiduals = fitQuality.skewnessResiduals;
+  candidate->kurtosisResiduals = fitQuality.kurtosisResiduals;
+  candidate->ksResiduals = fitQuality.ksResiduals;
+  candidate->ksStdResiduals = fitQuality.ksStdResiduals;
+  candidate->ksStdMeanResiduals = fitQuality.ksStdMeanResiduals;
+  candidate->andersonResiduals = fitQuality.andersonResiduals;
 }

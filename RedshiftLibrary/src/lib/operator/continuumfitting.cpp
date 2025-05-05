@@ -40,7 +40,6 @@
 
 #include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/statistics/fitquality.h"
 
 using namespace NSEpic;
 using namespace std;
