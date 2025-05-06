@@ -154,9 +154,16 @@ interpolateBetweenDuplicates(TList<T> const &source, Int32 insertionIdx,
 
   Int32 ndup = overwrittenSourceIndices.size();
 
+  Int32 dupStart = 0;
+  Int32 dupEnd = ndup - 1;
+  Int32 const lastInsertIdx = ssize(source) - 1 - dupEnd;
+
+  // check insertion Idx
+  if ((insertionIdx < 0) || (insertionIdx > lastInsertIdx))
+    THROWG(ErrorCode::INTERNAL_ERROR, "insertion Idx is out of bound");
+
   TList<T> interpVect(nInterpolate);
 
-  Int32 dupStart = 0;
   // handle eventually incomplete first segment:
   //   if incomplete, interpolate the full segment and insert into interpVect
   //   only the required portion using the start index
@@ -175,13 +182,11 @@ interpolateBetweenDuplicates(TList<T> const &source, Int32 insertionIdx,
     ++dupStart; // start the main loop one segment later
   }
 
-  Int32 dupEnd = ndup - 1;
   // handle eventually incomplete last segment:
   //   if incomplete, interpolate the full segment and insert into interpVect
   //   only the required portion using the end index
-  Int32 const lastZidx = Int32(source.size()) - 1;
   if (overwrittenSourceIndices[dupEnd] != nInterpolate - 1) {
-    if (insertionIdx + ndup > lastZidx)
+    if (insertionIdx > lastInsertIdx - 1)
       THROWG(ErrorCode::INTERNAL_ERROR, "the last incomplete fine segment is "
                                         "above the end of the coarse z grid");
     Int32 const idx = insertionIdx + dupEnd;
