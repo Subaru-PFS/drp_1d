@@ -234,7 +234,7 @@ class FilterList:
     def apply(self, df: pd.DataFrame):
         if not self.items:
             return None
-        currentMask = pd.Series(np.ones(len(df), dtype=bool))
+        currentMask = pd.Series(np.ones(len(df), dtype=bool), index=df.index)
         for filt in self.items:
             currentMask = filt.apply(df, currentMask)
         return currentMask
