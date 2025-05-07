@@ -63,15 +63,14 @@ void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
     CObjectSolve::createRedshiftGrid(
         inputContext, redshiftRange); // fall back to creating fine grid
     Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
+                << "Two-pass: 1st pass coarse zgrid auto disabled: "
                    "raw "
                 << m_redshifts.size() << " redshifts will be calculated");
   } else {
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid enabled: "
-                << m_redshifts.size()
-                << " redshifts "
-                   "will be calculated on the coarse grid");
+    Log.LogInfo(Formatter() << "Two-pass: 1st pass coarse zgrid enabled: "
+                            << m_redshifts.size()
+                            << " redshifts "
+                               "will be calculated on the coarse grid");
   }
 }
 

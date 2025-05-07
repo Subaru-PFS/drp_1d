@@ -130,7 +130,7 @@ protected:
   std::vector<CTemplate> m_templateRebined_bf;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
   std::vector<CMask> m_mskRebined_bf;
-  Float64 m_continuum_null_amp_threshold; // in SNR
+  Float64 m_continuum_null_amp_threshold = 0; // in SNR
 };
 
 } // namespace NSEpic

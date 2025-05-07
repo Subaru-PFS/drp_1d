@@ -72,8 +72,8 @@ BOOST_FIXTURE_TEST_CASE(fitQuality_test,
   bool opt_extinction = false;
   bool opt_dustFitting = false;
   CPriorHelper::TPriorEList logpriore = CPriorHelper::TPriorEList();
-  auto MeiksinList = {0};
-  auto EbmvList = {0};
+  auto MeiksinList = {undefIdx};
+  auto EbmvList = {undefIdx};
 
   auto result = templateFittingOperator.BasicFit(
       tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
