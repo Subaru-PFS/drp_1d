@@ -44,8 +44,7 @@
 #include <boost/range/combine.hpp>
 
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/size.h"
 
 namespace NSEpic {

@@ -1781,34 +1781,44 @@ void COperatorLineModel::addFitQualityToCandidate(
     const std::shared_ptr<TLineModelResult> &candidate,
     const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel)
     const {
-  auto spectra = Context.getSpectra();
+  const auto &spectra = Context.getSpectra();
+  const auto &lambdaRanges = Context.getClampedLambdaRanges();
 
   Int32 nSpectra = spectra.size();
+
+  TInt32List kStart(nSpectra);
+  TInt32List kEnd(nSpectra);
+
   std::vector<TFloat64List> spcFlux(nSpectra);
+  std::vector<TFloat64List> spcFluxError(nSpectra);
+  std::vector<TFloat64List> modelFlux(nSpectra);
+
+  for (Int32 spcIdx = 0; spcIdx < nSpectra; ++spcIdx) {
+    const auto &spectrum = spectra[spcIdx];
+    kStart[spcIdx] = spectrum->GetSpectralAxis().GetIndexAtWaveLength(
+        lambdaRanges[spcIdx]->GetBegin());
+    kEnd[spcIdx] = spectrum->GetSpectralAxis().GetIndexAtWaveLength(
+        lambdaRanges[spcIdx]->GetEnd());
+  }
+
   std::transform(spectra.begin(), spectra.end(), spcFlux.begin(),
                  [](const std::shared_ptr<const CSpectrum> &spectrum) {
                    return spectrum->GetFluxAxis().GetSamplesVector();
                  });
 
-  std::vector<TFloat64List> spcFluxError(nSpectra);
   std::transform(spectra.begin(), spectra.end(), spcFluxError.begin(),
                  [](const std::shared_ptr<const CSpectrum> &spectrum) {
                    return spectrum->GetFluxAxis().GetError().GetSamplesVector();
                  });
-  std::vector<TFloat64List> modelFlux(nSpectra);
   std::transform(
       spectra.begin(), spectra.end(), modelFlux.begin(),
       [candidateModel](const std::shared_ptr<const CSpectrum> &spectrum) {
         return candidateModel->ModelFlux.at(spectrum->getObsID());
       });
 
-  TInt32List kEnd(nSpectra);
-  for (Int32 i = 0; i < nSpectra; ++i) {
-    kEnd[i] = spcFlux[i].size() - 1;
-  }
-  TFitQuality fitQuality = NSFitQuality::computeFitQuality(
-      std::move(spcFlux), std::move(modelFlux), std::move(spcFluxError),
-      TInt32List(nSpectra, 0), kEnd);
+  TFitQuality fitQuality =
+      NSFitQuality::computeFitQuality(std::move(spcFlux), std::move(modelFlux),
+                                      std::move(spcFluxError), kStart, kEnd);
   candidate->pValue = fitQuality.pValue;
   candidate->reducedChi2 = fitQuality.reducedChiSquare;
   candidate->meanResiduals = fitQuality.meanResiduals;

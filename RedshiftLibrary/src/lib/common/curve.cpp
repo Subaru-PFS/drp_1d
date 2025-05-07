@@ -39,6 +39,7 @@
 
 #include "RedshiftLibrary/common/curve.h"
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include <numeric>
 
@@ -144,7 +145,7 @@ void TCurve::sort() {
 }
 
 TFloat64List TCurve::computeUnmasked(const TFloat64List &data) const {
-  if (data.size() != size())
+  if (ssize(data) != size())
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "TCurve::" << __func__
                        << ": Trying to compute unmasked data with a different "

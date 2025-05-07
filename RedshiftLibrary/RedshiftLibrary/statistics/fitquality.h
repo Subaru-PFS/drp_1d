@@ -65,11 +65,12 @@ TFitQuality computeFitQuality(TFloat64List &&spcFlux, TFloat64List &&modelFlux,
                               TFloat64List &&spcFluxError, const Int32 kStart,
                               Int32 kend, Float64 chi2 = NAN);
 
-TFitQuality computeFitQuality(
-
-    std::vector<TFloat64List> &&spcFlux, std::vector<TFloat64List> &&modelFlux,
-    std::vector<TFloat64List> &&spcFluxError, const TInt32List &kStartArg,
-    const TInt32List &kEndArg, Float64 chi2 = NAN);
+TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
+                              const std::vector<TFloat64List> &modelFlux,
+                              const std::vector<TFloat64List> &spcFluxError,
+                              const TInt32List &kStartArg,
+                              const TInt32List &kEndArg, Float64 chi2 = NAN,
+                              const std::vector<CMask> &mask = {});
 }; // namespace NSEpic::NSFitQuality
 
 #endif

@@ -577,7 +577,6 @@ Int32 CLineModelFitting::computeSpcNSamples() const {
         getSpectrum().GetSpectralAxis();
     imin = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
     imax = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
-    // Question : aren't we missing a +1 here ?
     nSamples += abs(imax - imin);
   }
 

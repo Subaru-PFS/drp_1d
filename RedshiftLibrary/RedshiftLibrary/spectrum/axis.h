@@ -80,18 +80,14 @@ public:
   CSpectrumAxis extract(Int32 startIdx, Int32 endIdx) const;
   bool isEmpty() const;
   friend CSpectrumAxis operator*(const CSpectrumAxis &axis, const Float64 op) {
-    TFloat64List multipliedSamples(axis.GetSamplesCount());
-    std::transform(axis.GetSamplesVector().begin(),
-                   axis.GetSamplesVector().end(), multipliedSamples.begin(),
-                   [op](Float64 sample) { return sample * op; });
-    return CSpectrumAxis(multipliedSamples);
-    ;
+    CSpectrumAxis multipliedAxis = axis;
+    multipliedAxis *= op;
+    return multipliedAxis;
   }
 
   friend CSpectrumAxis operator*(const Float64 op, const CSpectrumAxis &axis) {
     return axis * op;
   }
-  friend CSpectrumAxis operator*(const Float64 op, const CSpectrumAxis &axis);
 
 protected:
   TAxisSampleList m_Samples;

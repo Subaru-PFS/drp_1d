@@ -126,7 +126,7 @@ Float64 ksTest(const TFloat64List &data, const Float64 mean,
   boost::math::normal dist(mean, stdev);
 
   Float64 maxDiff = 0.0;
-  for (Int32 i = 0; i < data.size(); i++) {
+  for (Int32 i = 0; i < ssize(data); i++) {
     const Float64 diff =
         std::abs(empiricalCdf(data[i]) - boost::math::cdf(dist, data[i]));
     if (diff > maxDiff)
@@ -163,24 +163,30 @@ TFitQuality computeFitQuality(TFloat64List &&spcFlux, TFloat64List &&modelFlux,
       TInt32List(1, kStart), TInt32List(1, kEnd), chi2);
 }
 
-TFitQuality computeFitQuality(std::vector<TFloat64List> &&spcFlux,
-                              std::vector<TFloat64List> &&modelFlux,
-                              std::vector<TFloat64List> &&spcFluxError,
+TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
+                              const std::vector<TFloat64List> &modelFlux,
+                              const std::vector<TFloat64List> &spcFluxError,
                               const TInt32List &kStart, const TInt32List &kEnd,
-                              Float64 chi2) {
+                              Float64 chi2, const std::vector<CMask> &mask) {
   // It is expected that the input vectors are of the same size
 
+  const bool useMask = mask.empty() ? false : true;
+
   if (ssize(spcFlux) != ssize(modelFlux) || ssize(spcFlux) != ssize(kStart) ||
-      ssize(spcFlux) != ssize(kEnd) || ssize(spcFlux) != ssize(spcFluxError)) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "m_spectra, spcFlux, modelFlux and "
-                                      "spcFluxError must be of the same size");
+      ssize(spcFlux) != ssize(kEnd) || ssize(spcFlux) != ssize(spcFluxError) ||
+      (useMask && ssize(spcFlux) != ssize(mask))) {
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "m_spectra, spcFlux, modelFlux,  "
+           "spcFluxError and mask must be of the same size");
     for (Int32 spcIdx = 0; spcIdx < ssize(spcFlux); spcIdx++) {
       if (ssize(spcFlux[spcIdx]) != ssize(modelFlux[spcIdx]) ||
-          ssize(spcFlux[spcIdx]) != ssize(spcFluxError[spcIdx])) {
+          ssize(spcFlux[spcIdx]) != ssize(spcFluxError[spcIdx]) ||
+          (useMask && ssize(spcFlux[spcIdx]) != mask[spcIdx].GetMasksCount())) {
         THROWG(ErrorCode::INTERNAL_ERROR,
-               Formatter() << "spcFlux, modelFlux and spcFluxError must be of "
-                              "the same size at spectrum index "
-                           << spcIdx);
+               Formatter()
+                   << "spcFlux, modelFlux, spcFluxError and mask must be of "
+                      "the same size at spectrum index "
+                   << spcIdx);
       }
     }
   }
@@ -194,19 +200,25 @@ TFitQuality computeFitQuality(std::vector<TFloat64List> &&spcFlux,
     ;
   }
 
+  const auto isMasked = [useMask](const std::vector<CMask> &mask, Int32 spcIdx,
+                                  Int32 pixelIdx) {
+    return !useMask || mask[spcIdx][pixelIdx];
+  };
   TFloat64List residuals;
   residuals.reserve(nTotPixels);
   Int32 sumNPixels = 0;
   for (Int32 spcIdx = 0; spcIdx < nSpectra; spcIdx++) {
     for (Int32 pixelIdx = kStart[spcIdx]; pixelIdx <= kEnd[spcIdx];
          pixelIdx++) {
-      const Float64 residual = NSFitQuality::computeResidual(
-          spcFlux[spcIdx][pixelIdx], modelFlux[spcIdx][pixelIdx],
-          spcFluxError[spcIdx][pixelIdx]);
-      if (std::isnan(residual))
-        continue;
-      residuals.push_back(residual);
-      sumNPixels += 1;
+      if (isMasked(mask, spcIdx, pixelIdx)) {
+        const Float64 residual = NSFitQuality::computeResidual(
+            spcFlux[spcIdx][pixelIdx], modelFlux[spcIdx][pixelIdx],
+            spcFluxError[spcIdx][pixelIdx]);
+        if (std::isnan(residual))
+          continue;
+        residuals.push_back(residual);
+        sumNPixels += 1;
+      }
     }
   }
   std::sort(residuals.begin(), residuals.end());

@@ -49,8 +49,6 @@
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/operator/twopass.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
-#include "RedshiftLibrary/processflow/result.h"
-#include "RedshiftLibrary/spectrum/maskBuilder.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 

@@ -45,11 +45,11 @@ using namespace NSEpic;
 using namespace std;
 
 COperatorContinuumFitting::COperatorContinuumFitting()
-    : m_kStart(Context.getSpectra().size()),
-      m_kEnd(Context.getSpectra().size()),
-      m_maskBuilder(std::make_shared<CMaskBuilder>()),
+    : m_maskBuilder(std::make_shared<CMaskBuilder>()),
       m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+      m_lambdaRanges(Context.getClampedLambdaRanges()),
+      m_kStart(Context.getSpectra().size()),
+      m_kEnd(Context.getSpectra().size()){};
 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the

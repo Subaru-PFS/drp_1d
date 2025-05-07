@@ -38,9 +38,9 @@
 
 #include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
 
@@ -52,10 +52,11 @@ T3DCurve::T3DCurve(TCurve curve)
           T3DList<Float64>(1, T2DList<Float64>(1, std::move(curve).getFlux()))),
       fluxError(T3DList<Float64>(
           1, T2DList<Float64>(1, std::move(curve).getFluxError()))),
-      lambda(std::move(curve).getLambda()), mask(std::move(curve).getMask()),
+      lambda(std::move(curve).getLambda()),
       isExtincted(T3DList<bool>(
           1, T2DList<bool>(1, std::move(curve).getIsExtincted()))),
-      isSnrCompliant(std::move(curve).getIsSnrCompliant()){};
+      isSnrCompliant(std::move(curve).getIsSnrCompliant()),
+      mask(std::move(curve).getMask()){};
 
 void T3DCurve::extendIgmIsm(Int32 nIgm_, Int32 nIsm_) {
   if (nIgm != 1 && nIsm != 1)

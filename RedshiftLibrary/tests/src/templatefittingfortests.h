@@ -43,8 +43,6 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
-#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"

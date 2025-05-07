@@ -45,6 +45,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/size.h"
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
@@ -191,7 +192,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
         result_base = fitRes;
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = meiksinIdx;
-        result.ampl = fitRes.ampl;
         chisquareSetAtLeastOnce = true;
       }
     }
@@ -202,14 +202,14 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
                       << ": Not even one single valid fit/merit value found");
     }
   }
-  updateQualityFitWithResult(result, tpl);
+  updateQualityFitWithResult(result, tpl, mask_list);
   return result;
 }
 
 void COperatorTemplateFitting::updateQualityFitWithResult(
-    TFittingIsmIgmResult &result, const std::shared_ptr<const CTemplate> &tpl) {
+    TFittingIsmIgmResult &result, const std::shared_ptr<const CTemplate> &tpl,
+    const std::vector<CMask> &mask) {
   const Int32 nSpectra = ssize(m_spectra);
-
   std::vector<TFloat64List> spcFlux(nSpectra);
   for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
     if (result.meiksinIdx != undefIdx)
@@ -238,7 +238,7 @@ void COperatorTemplateFitting::updateQualityFitWithResult(
                  });
   result.fitQuality = NSFitQuality::computeFitQuality(
       std::move(spcFlux), std::move(tplFlux), std::move(spcFluxError), m_kStart,
-      m_kEnd, result.chiSquare);
+      m_kEnd, result.chiSquare, mask);
 }
 
 std::pair<TList<CMask>, Int32>
