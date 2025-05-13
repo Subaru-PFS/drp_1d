@@ -177,7 +177,11 @@ class ProcessFlow:
                 with suppress(ProcessFlowException):
                     self.run_reliability_solver(rso)
 
-            if self.parameters.get_linemeas_runmode() == "all" and linemeas_method:
+            if (
+                self.parameters.get_linemeas_runmode() == "all"
+                and linemeas_method
+                and mode != ESpectrumModelProcessingMode("fp_only")
+            ):
                 self.run_load_linemeas_params(rso)
                 self.run_linemeas_solver(rso, linemeas_method.value)
 
