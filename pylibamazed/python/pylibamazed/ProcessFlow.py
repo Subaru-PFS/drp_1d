@@ -46,6 +46,8 @@ from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.Parameters import Parameters
 from pylibamazed.Spectrum import Spectrum
+from datetime import datetime
+import resource
 
 # NB: DO NOT REMOVE - these libs are used in globals
 from pylibamazed.redshift import CClassificationSolve  # noqa F401
@@ -81,6 +83,14 @@ class ProcessFlowException(Exception):
     pass
 
 
+def _get_time():
+    ret = dict()
+    ret["clock"] = datetime.now()
+    ret["user"] = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+    ret["system"] = resource.getrusage(resource.RUSAGE_SELF).ru_stime
+    return ret
+
+
 class ProcessFlow:
     @exception_decorator
     def __init__(self, config, parameters: Parameters):
@@ -104,6 +114,17 @@ class ProcessFlow:
         # save context warning flag to reinject at each spectrum
         resultStore = self.process_flow_context.GetResultStore()
         self.context_warning_Flag = resultStore.GetFlagLogResult("", "", "", "context_warningFlag")
+        self.begin_perfs = {"clock": None, "user": None, "system": None}
+
+    def _start_perfs(self):
+        self.begin_perfs = _get_time()
+
+    def _get_perfs(self):
+        end = _get_time()
+        perfs = dict()
+        for k in self.begin_perfs.keys():
+            perfs[k] = end[k] - self.begin_perfs[k]
+        return perfs
 
     @decorator
     def store_exception(func, self, rso, *args, **kwargs):
@@ -165,8 +186,14 @@ class ProcessFlow:
         linemeas_method = self.parameters.get_linemeas_method(spectrum_model)
 
         if redshift_solver_method:
+            self._start_perfs()
             self.run_redshift_solver(rso, redshift_solver_method.value, mode)
-
+            rso.set_perfs(
+                spectrum_model,
+                "redshiftSolver",
+                self._get_perfs(),
+                mode.value,
+            )
             if self.parameters.is_tplratio_catalog_needed(spectrum_model):
                 with suppress(ProcessFlowException):
                     self.run_sub_classification_solver(rso)
@@ -182,8 +209,10 @@ class ProcessFlow:
                 and linemeas_method
                 and mode != ESpectrumModelProcessingMode("fp_only")
             ):
+                self._start_perfs()
                 self.run_load_linemeas_params(rso)
                 self.run_linemeas_solver(rso, linemeas_method.value)
+                rso.set_perfs(spectrum_model, "lineMeasSolver", self._get_perfs())
 
         elif linemeas_method:  # linemeas alone
             self.run_linemeas_solver(rso, linemeas_method.value)
@@ -197,6 +226,7 @@ class ProcessFlow:
 
     @store_exception
     def initialize(self, rso, spectrum: Spectrum):
+        self._start_perfs()
         zlog.LogInfo("Context initialization")
         self.process_flow_context.reset()
 
@@ -233,6 +263,7 @@ class ProcessFlow:
 
         self.process_flow_context.LoadParameterStore(parameters.to_json())
         self.process_flow_context.Init()
+        rso.set_perfs(None, "init", self._get_perfs())
 
     @push_scope("redshiftSolver", ScopeType.STAGE)
     @store_exception
