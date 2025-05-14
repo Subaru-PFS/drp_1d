@@ -49,16 +49,18 @@ struct TCurveElement {
   Float64 fluxError;
 };
 
-struct TCurve {
+class T3DCurve;
+class TCurve {
+public:
   TCurve();
   TCurve(TList<Float64> lambda, TList<Float64> flux, TList<Float64> fluxError,
          TList<uint8_t> mask = {}, TList<bool> isExtincted = {},
          TList<bool> isSnrCompliant = {});
-
+  TCurve(T3DCurve &&, Int16 igmIdx = 0, Int16 ismIdx = 0);
   TCurveElement get_at_index(Int32 idx) const;
 
   void push_back(TCurveElement const &elem);
-  Int32 size() const;
+  Int32 size() const { return lambda.size(); };
 
   void setLambda(TFloat64List inputLambda);
 
@@ -69,8 +71,6 @@ struct TCurve {
   void setIsSnrCompliant(TList<bool> isSnrCompliant);
   void sort();
   void reserve(Int32 size);
-
-  void checkIdx(Int32 pixelIdx) const;
 
   const TAxisSampleList &getLambda() const & { return lambda; };
   TAxisSampleList &&getLambda() && { return std::move(lambda); };
@@ -88,14 +88,16 @@ struct TCurve {
   Float64 getLambdaAt(Int32 pixelIdx) const;
   Float64 getFluxAt(Int32 pixelIdx) const;
   Float64 getFluxErrorAt(Int32 pixelIdx) const;
-  TFloat64List computeUnmasked(const TFloat64List &data) const;
   TFloat64List computeUnmaskedFlux() const;
   TFloat64List computeUnmaskedFluxError() const;
   TFloat64List computeUnmaskedLambda() const;
   bool pixelIsChi2Valid(Int32 pixelIdx) const;
   bool pixelIsChi2AndSNRValid(Int32 pixelIdx) const;
 
-private:
+protected:
+  void checkIdx(Int32 pixelIdx) const;
+  TFloat64List computeUnmasked(const TFloat64List &data) const;
+
   TAxisSampleList lambda;
   TFloat64List flux;
   TFloat64List fluxError;

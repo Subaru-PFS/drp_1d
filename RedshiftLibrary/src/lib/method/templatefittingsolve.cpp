@@ -264,7 +264,7 @@ void CTemplateFittingSolve::computeFirstPass() {
   const CTemplateCatalog &tplCatalog = *(Context.GetTemplateCatalog());
 
   for (auto tpl : tplCatalog.GetTemplateList(m_category)) {
-    auto const tplFitResult = Solve(resultStore, tpl);
+    auto const tplFitResult = Solve(*tpl);
     hasResult = true;
     // Store results
     std::string resultName = getResultName();
@@ -338,7 +338,7 @@ void CTemplateFittingSolve::computeSecondPass(
        ++candidateIdx) {
     auto candidate = extremaResult->getRankedCandidateCPtr(candidateIdx);
     const std::string &candidateName = extremaResult->ID(candidateIdx);
-    std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(
+    auto const &tpl = *tplCatalog.GetTemplateByName(
         {m_category}, candidate->fittedContinuum.name);
     Int32 igmIdx =
         m_extinction ? candidate->fittedContinuum.meiksinIdx : undefIdx;
@@ -348,8 +348,7 @@ void CTemplateFittingSolve::computeSecondPass(
                        : undefIdx;
     auto const tplFitResult =
         templatesResultsMap[candidate->fittedContinuum.name];
-    Solve(resultStore, tpl, ismIdx, igmIdx, candidateName, candidateIdx,
-          tplFitResult);
+    Solve(tpl, ismIdx, igmIdx, candidateName, candidateIdx, tplFitResult);
   }
 
   // save all template results
@@ -362,9 +361,8 @@ void CTemplateFittingSolve::computeSecondPass(
 }
 
 std::shared_ptr<CTemplateFittingResult> CTemplateFittingSolve::Solve(
-    std::shared_ptr<COperatorResultStore> resultStore,
-    const std::shared_ptr<const CTemplate> &tpl, Int32 FitEbmvIdx,
-    Int32 FitMeiksinIdx, std::string parentId, Int32 candidateIdx,
+    const CTemplate &tpl, Int32 FitEbmvIdx, Int32 FitMeiksinIdx,
+    std::string parentId, Int32 candidateIdx,
     std::shared_ptr<CTemplateFittingResult> const &result) {
 
   // For saving initial spectra fitting types and template type
@@ -372,7 +370,7 @@ std::shared_ptr<CTemplateFittingResult> CTemplateFittingSolve::Solve(
   CSpectrum::EType save_tplType;
   for (auto spc : Context.getSpectra())
     save_spcTypes.push_back(spc->GetType());
-  save_tplType = tpl->GetType();
+  save_tplType = tpl.GetType();
 
   // If fitting type is all, loop on all spectrum fitting types
   // otherwise, just use the corresponding one
@@ -380,11 +378,11 @@ std::shared_ptr<CTemplateFittingResult> CTemplateFittingSolve::Solve(
 
   for (auto spc : Context.getSpectra())
     spc->SetType(spectrumType);
-  tpl->SetType(spectrumType);
+  tpl.SetType(spectrumType);
 
   if (m_spectrumType == EType::noContinuum)
     m_dustFit = false;
-  tpl->setRebinInterpMethod(m_interpolation);
+  tpl.setRebinInterpMethod(m_interpolation);
 
   TInt32Range zIdxRangeToCompute =
       candidateIdx == undefIdx
@@ -405,7 +403,7 @@ std::shared_ptr<CTemplateFittingResult> CTemplateFittingSolve::Solve(
   int i = 0;
   for (auto spc : Context.getSpectra())
     spc->SetType(save_spcTypes[i++]);
-  tpl->SetType(save_tplType);
+  tpl.SetType(save_tplType);
 
   return templateFittingResult;
 }
@@ -561,30 +559,26 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     candidate->fittedContinuum.SNR = bestResult->SNR[zIndex];
     candidate->fittedContinuum.tplLogPrior = bestResult->LogPrior[zIndex];
 
-    // make sure tpl is non-rebinned
     const CTemplateCatalog &tplCatalog = *(Context.GetTemplateCatalog());
     bool currentSampling = tplCatalog.m_logsampling;
-    tplCatalog.m_logsampling = false;
-    std::shared_ptr<const CTemplate> tpl =
-        tplCatalog.GetTemplateByName({m_category}, bestName);
+    tplCatalog.m_logsampling = false; // make sure tpl is non-rebinned
+    auto const &tpl = *tplCatalog.GetTemplateByName({m_category}, bestName);
+    tplCatalog.m_logsampling = currentSampling;
 
-    std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
-        std::make_shared<CModelSpectrumResult>();
+    auto const spcmodelPtr = std::make_shared<CModelSpectrumResult>();
     for (int spcIndex = 0; spcIndex < ssize(Context.getSpectra()); spcIndex++) {
       const std::string &obsId = Context.getSpectra()[spcIndex]->getObsID();
 
-      TPhotVal values = m_templateFittingOperator->ComputeSpectrumModel(
-          tpl, z, bestResult->FitEbmvCoeff[zIndex],
-          bestResult->FitMeiksinIdx[zIndex], bestResult->FitAmplitude[zIndex],
-          m_overlapThreshold, spcIndex, spcmodelPtr);
+      auto &&[spcModel, photModel] =
+          m_templateFittingOperator->ComputeSpectrumModel(
+              tpl, z, bestResult->FitEbmvCoeff[zIndex],
+              bestResult->FitMeiksinIdx[zIndex],
+              bestResult->FitAmplitude[zIndex], m_overlapThreshold, spcIndex);
+      (*spcmodelPtr).insert(std::move(spcModel));
 
-      if (spcmodelPtr == nullptr)
-        THROWG(ErrorCode::INTERNAL_ERROR, "Could not "
-                                          "compute spectrum model");
-      tplCatalog.m_logsampling = currentSampling;
-
-      extremaResult->m_modelPhotValues[iExtremum] =
-          std::make_shared<const CModelPhotValueResult>(values);
+      if (spcIndex == 0)
+        extremaResult->m_modelPhotValues[iExtremum] =
+            std::make_shared<const CModelPhotValueResult>(std::move(photModel));
     }
     extremaResult->m_savedModelSpectrumResults[iExtremum] = spcmodelPtr;
   }

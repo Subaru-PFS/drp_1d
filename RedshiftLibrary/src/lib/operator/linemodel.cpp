@@ -57,6 +57,7 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/linemodel.h"
 #include "RedshiftLibrary/operator/modelphotvalueresult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/operator/powerlawresult.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
@@ -327,7 +328,7 @@ void COperatorLineModel::fitContinuumTemplates(
               m_continuumFittingOperator);
       castedOperator->SetRedshifts(redshiftsContinuumFit);
       templatefittingResult = castedOperator->Compute(
-          tplList[i], overlapThreshold, opt_interp, m_opt_tplfit_extinction,
+          *tplList[i], overlapThreshold, opt_interp, m_opt_tplfit_extinction,
           m_opt_tplfit_dustFit, m_opt_continuum_null_amp_threshold, zePriorData,
           ebmvIndices[i], meiksinIndices[i]);
     }
@@ -974,21 +975,21 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       // 0=save model, (DEFAULT)
       // 1=save model with lines removed,
       // 2=save model with only Em. lines removed.
-      for (auto &obs : m_fittingManager->getSpectraIndex()) {
+      for ([[maybe_unused]] auto &obs : m_fittingManager->getSpectraIndex()) {
 
         if (overrideModelSavedType == 0) {
-          resultspcmodel->addModel(
+          resultspcmodel->insert(CModelSpectrumResult(
               m_fittingManager->getSpectrumModel().GetModelSpectrum(),
-              m_fittingManager->getSpectrum().getObsID());
+              m_fittingManager->getSpectrum().getObsID()));
         } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
           auto lineTypeFilter = CLine::EType::nType_All;
           if (overrideModelSavedType == 2)
             lineTypeFilter = CLine::EType::nType_Emission;
 
-          resultspcmodel->addModel(
+          resultspcmodel->insert(CModelSpectrumResult(
               m_fittingManager->getSpectrumModel()
                   .GetObservedSpectrumWithLinesRemoved(lineTypeFilter),
-              m_fittingManager->getSpectrum().getObsID());
+              m_fittingManager->getSpectrum().getObsID()));
         }
       }
       ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
@@ -1020,17 +1021,18 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
 
       std::shared_ptr<CModelSpectrumResult> baselineResult =
           std::make_shared<CModelSpectrumResult>();
-      for (auto &obs : m_fittingManager->getSpectraIndex()) {
+      for ([[maybe_unused]] auto &obs : m_fittingManager->getSpectraIndex()) {
 
         // Save the reestimated continuum, only the first
         // n=maxSaveNLinemodelContinua extrema
-        baselineResult->addModel(m_fittingManager->getSpectrum()
+        baselineResult->insert(
+            CModelSpectrumResult(m_fittingManager->getSpectrum()
                                      .GetSpectralAxis()
                                      .GetSamplesVector(),
                                  m_fittingManager->getSpectrumModel()
                                      .GetModelContinuum()
                                      .GetSamplesVector(),
-                                 m_fittingManager->getSpectrum().getObsID());
+                                 m_fittingManager->getSpectrum().getObsID()));
       }
       ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
       savedModels++;
@@ -1788,40 +1790,43 @@ void COperatorLineModel::addFitQualityToCandidate(
 
   Int32 nSpectra = spectra.size();
 
-  TInt32List kStart(nSpectra);
-  TInt32List kEnd(nSpectra);
+  TInt32List kStartAll;
+  TInt32List kEndAll;
+  kStartAll.reserve(nSpectra);
+  kEndAll.reserve(nSpectra);
 
-  std::vector<TFloat64List> spcFlux(nSpectra);
-  std::vector<TFloat64List> spcFluxError(nSpectra);
-  std::vector<TFloat64List> modelFlux(nSpectra);
-
-  for (Int32 spcIdx = 0; spcIdx < nSpectra; ++spcIdx) {
-    const auto &spectrum = spectra[spcIdx];
-    kStart[spcIdx] = spectrum->GetSpectralAxis().GetIndexAtWaveLength(
-        lambdaRanges[spcIdx]->GetBegin());
-    kEnd[spcIdx] = spectrum->GetSpectralAxis().GetIndexAtWaveLength(
-        lambdaRanges[spcIdx]->GetEnd());
-    --kEnd[spcIdx];
+  for (auto const &[spectrum, lambdaRange] :
+       boost::combine(spectra, lambdaRanges)) {
+    kStartAll.push_back(spectrum->GetSpectralAxis().GetIndexAtWaveLength(
+        lambdaRange->GetBegin()));
+    kEndAll.push_back(spectrum->GetSpectralAxis().GetIndexAtWaveLength(
+        lambdaRange->GetEnd()));
   }
 
-  std::transform(spectra.begin(), spectra.end(), spcFlux.begin(),
-                 [](const std::shared_ptr<const CSpectrum> &spectrum) {
-                   return spectrum->GetFluxAxis().GetSamplesVector();
-                 });
+  std::vector<TFloat64List> spcFlux;
+  std::vector<TFloat64List> spcFluxError;
+  std::vector<TFloat64List> modelFlux;
+  spcFlux.reserve(nSpectra);
+  spcFluxError.reserve(nSpectra);
+  modelFlux.reserve(nSpectra);
 
-  std::transform(spectra.begin(), spectra.end(), spcFluxError.begin(),
-                 [](const std::shared_ptr<const CSpectrum> &spectrum) {
-                   return spectrum->GetFluxAxis().GetError().GetSamplesVector();
-                 });
-  std::transform(
-      spectra.begin(), spectra.end(), modelFlux.begin(),
-      [candidateModel](const std::shared_ptr<const CSpectrum> &spectrum) {
-        return candidateModel->ModelFlux.at(spectrum->getObsID());
-      });
+  for (auto const &[spc, kStart, kEnd] :
+       boost::combine(spectra, kStartAll, kEndAll)) {
+    auto const &fluxBegin = spc->GetFluxAxis().GetSamplesVector().cbegin();
+    spcFlux.push_back(TFloat64List(fluxBegin + kStart, fluxBegin + kEnd));
+
+    auto const &errorBegin =
+        spc->GetFluxAxis().GetError().GetSamplesVector().cbegin();
+    spcFluxError.push_back(
+        TFloat64List(errorBegin + kStart, errorBegin + kEnd));
+
+    auto const modelBegin =
+        candidateModel->ModelFlux.at(spc->getObsID()).cbegin();
+    modelFlux.push_back(TFloat64List(modelBegin + kStart, modelBegin + kEnd));
+  }
 
   TFitQuality fitQuality = NSFitQuality::computeFitQuality(
-      std::move(spcFlux), std::move(modelFlux), std::move(spcFluxError), kStart,
-      kEnd, candidate->Merit, nPixels);
+      spcFlux, modelFlux, spcFluxError, candidate->Merit, nPixels);
   candidate->pValue = fitQuality.pValue;
   candidate->reducedChi2 = fitQuality.reducedChiSquare;
   candidate->meanResiduals = fitQuality.meanResiduals;

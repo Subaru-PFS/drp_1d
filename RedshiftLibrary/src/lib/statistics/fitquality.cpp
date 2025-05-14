@@ -143,38 +143,38 @@ Float64 computeResidual(const Float64 expData, const Float64 refData,
   return (expData - refData) / expDataError;
 };
 
-TFitQuality computeFitQuality(TFloat64List &&spcFlux, TFloat64List &&modelFlux,
-                              TFloat64List &&spcFluxError, const Int32 kStart,
-                              Int32 kEnd, Float64 chi2, Int32 nPixels) {
+TFitQuality computeFitQuality(TFloat64List spcFlux, TFloat64List modelFlux,
+                              TFloat64List spcFluxError, Float64 chi2,
+                              Int32 nPixels) {
   // kEnd set to -1 means take the full spectrum
   if (ssize(spcFlux) != ssize(modelFlux) ||
       ssize(spcFlux) != ssize(spcFluxError)) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "m_spectra, spcFlux, modelFlux and "
+    THROWG(ErrorCode::INTERNAL_ERROR, "spcFlux, modelFlux and "
                                       "spcFluxError must be of the same size");
   }
 
-  if (kEnd == undefIdx)
-    kEnd = ssize(spcFlux) - 1;
+  TList<TFloat64List> spcFluxVect;
+  TList<TFloat64List> modelFluxVect;
+  TList<TFloat64List> spcFluxErrorVect;
+  spcFluxVect.push_back(std::move(spcFlux));
+  modelFluxVect.push_back((std::move(modelFlux)));
+  spcFluxErrorVect.push_back(std::move(spcFluxError));
 
-  return computeFitQuality(
-      std::vector<TFloat64List>(1, std::move(spcFlux)),
-      std::vector<TFloat64List>(1, std::move(modelFlux)),
-      std::vector<TFloat64List>(1, std::move(spcFluxError)),
-      TInt32List(1, kStart), TInt32List(1, kEnd), chi2, nPixels);
+  return computeFitQuality(spcFluxVect, modelFluxVect, spcFluxErrorVect, chi2,
+                           nPixels);
 }
 
 TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
                               const std::vector<TFloat64List> &modelFlux,
                               const std::vector<TFloat64List> &spcFluxError,
-                              const TInt32List &kStart, const TInt32List &kEnd,
                               Float64 chi2, Int32 nPixels,
                               const std::vector<CMask> &mask) {
   // It is expected that the input vectors are of the same size
 
   const bool useMask = mask.empty() ? false : true;
 
-  if (ssize(spcFlux) != ssize(modelFlux) || ssize(spcFlux) != ssize(kStart) ||
-      ssize(spcFlux) != ssize(kEnd) || ssize(spcFlux) != ssize(spcFluxError) ||
+  if (ssize(spcFlux) != ssize(modelFlux) ||
+      ssize(spcFlux) != ssize(spcFluxError) ||
       (useMask && ssize(spcFlux) != ssize(mask))) {
     THROWG(ErrorCode::INTERNAL_ERROR,
            "m_spectra, spcFlux, modelFlux,  "
@@ -196,10 +196,8 @@ TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
   // Compute the maximum number of pixels used to compute residuals in order to
   // reserve enough space in vector
   Int32 nTotPixels = 0;
-  for (Int32 spcIdx = 0; spcIdx < nSpectra; spcIdx++) {
-    nTotPixels += kEnd[spcIdx] - kStart[spcIdx] + 1;
-    ;
-  }
+  for (auto const &vect : spcFlux)
+    nTotPixels += vect.size();
 
   const auto isMasked = [useMask](const std::vector<CMask> &mask, Int32 spcIdx,
                                   Int32 pixelIdx) {
@@ -208,9 +206,8 @@ TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
   TFloat64List residuals;
   residuals.reserve(nTotPixels);
   Int32 sumNPixels = 0;
-  for (Int32 spcIdx = 0; spcIdx < nSpectra; spcIdx++) {
-    for (Int32 pixelIdx = kStart[spcIdx]; pixelIdx <= kEnd[spcIdx];
-         pixelIdx++) {
+  for (Int32 spcIdx = 0; spcIdx != nSpectra; spcIdx++) {
+    for (Int32 pixelIdx = 0; pixelIdx != ssize(spcFlux[spcIdx]); pixelIdx++) {
       if (isMasked(mask, spcIdx, pixelIdx)) {
         const Float64 residual = NSFitQuality::computeResidual(
             spcFlux[spcIdx][pixelIdx], modelFlux[spcIdx][pixelIdx],

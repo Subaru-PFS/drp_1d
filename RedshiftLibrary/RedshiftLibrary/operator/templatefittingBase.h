@@ -78,20 +78,18 @@ public:
   operator=(COperatorTemplateFittingBase &&other) = default;
 
   virtual std::shared_ptr<CTemplateFittingResult> Compute(
-      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      const CTemplate &tpl, Float64 overlapThreshold, std::string opt_interp,
+      bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
       TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
       std::shared_ptr<CTemplateFittingResult> const &result = nullptr) = 0;
 
-  TPhotVal
-  ComputeSpectrumModel(const std::shared_ptr<const CTemplate> &tpl,
-                       Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
-                       Float64 amplitude, const Float64 overlapThreshold,
-                       Int32 index,
-                       const std::shared_ptr<CModelSpectrumResult> &models);
+  std::pair<CModelSpectrumResult, TPhotVal>
+  ComputeSpectrumModel(const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef,
+                       Int32 meiksinIdx, Float64 amplitude,
+                       const Float64 overlapThreshold, Int32 index);
   virtual TPhotVal getIntegratedFluxes(Float64 ampl = 1.0) const {
     return TPhotVal();
   };
@@ -99,8 +97,8 @@ public:
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
 
 protected:
-  virtual void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
-                             Float64 redshift, TFloat64Range &currentRange,
+  virtual void RebinTemplate(const CTemplate &tpl, Float64 redshift,
+                             TFloat64Range &currentRange,
                              Float64 &overlapFraction,
                              const Float64 overlapThreshold,
                              Int32 spcIndex = 0);

@@ -115,8 +115,8 @@ public:
   virtual ~COperatorTemplateFitting() = default;
 
   std::shared_ptr<CTemplateFittingResult> Compute(
-      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      const CTemplate &tpl, Float64 overlapThreshold, std::string opt_interp,
+      bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
@@ -125,9 +125,9 @@ public:
 
 protected:
   friend class templateFitting_test::fitQuality_test;
-  TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
-                                Float64 redshift, Float64 overlapThreshold,
-                                bool opt_extinction, bool opt_dustFitting,
+  TFittingIsmIgmResult BasicFit(const CTemplate &tpl, Float64 redshift,
+                                Float64 overlapThreshold, bool opt_extinction,
+                                bool opt_dustFitting,
                                 const CPriorHelper::TPriorEList &logpriore,
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
@@ -155,9 +155,7 @@ protected:
 
 private:
   void updateQualityFitWithResult(TFittingIsmIgmResult &result,
-                                  const std::shared_ptr<const CTemplate> &tpl,
-                                  const std::vector<CMask> &mask,
-                                  Int32 nPixels);
+                                  std::vector<CMask> &&maskList, Int32 nPixels);
 };
 
 } // namespace NSEpic

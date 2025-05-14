@@ -299,11 +299,11 @@ BOOST_AUTO_TEST_CASE(GetMask) {
   const TFloat64List array{1., 3., 4., 10.};
   CMask mask;
   const TFloat64Range range(0.5, 5.);
-  Mask result[] = {1, 1, 1, 0};
+  TMaskList result = {1, 1, 1, 0};
 
   const CSpectrumSpectralAxis axis(array);
   axis.GetMask(range, mask);
-  BOOST_CHECK(std::equal(result, result + 4, mask.GetMasks()));
+  BOOST_CHECK(mask.getMaskList() == result);
 }
 
 BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapFraction) {

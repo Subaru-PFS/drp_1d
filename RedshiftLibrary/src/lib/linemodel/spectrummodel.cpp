@@ -667,7 +667,7 @@ CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
  * Apply the template continuum by interpolating the grid as define in Init
  * Continuum
  */
-Int32 CSpectrumModel::ApplyContinuumTplOnGrid(
+void CSpectrumModel::ApplyContinuumTplOnGrid(
     const std::shared_ptr<const CTemplate> &tpl, Float64 zcontinuum) {
   m_fitContinuum->name = tpl->GetName();
   Int32 n = tpl->GetSampleCount();
@@ -687,46 +687,34 @@ Int32 CSpectrumModel::ApplyContinuumTplOnGrid(
   std::string inter_opt = "spline";
   tpl->setRebinInterpMethod(inter_opt);
   Float64 overlapThreshold = 1., amplitude = 1.;
-  std::shared_ptr<CModelSpectrumResult> spcmodel =
-      std::make_shared<CModelSpectrumResult>();
-  m_photValues =
+
+  CModelSpectrumResult spcmodel;
+  std::tie(spcmodel, m_photValues) =
       (std::dynamic_pointer_cast<COperatorTemplateFittingBase>(
            m_continuumFittingOperator))
-          ->ComputeSpectrumModel(tpl, zcontinuum, m_fitContinuum->ebmvCoef,
+          ->ComputeSpectrumModel(*tpl, zcontinuum, m_fitContinuum->ebmvCoef,
                                  m_fitContinuum->meiksinIdx, amplitude,
-                                 overlapThreshold, m_spcIndex, spcmodel);
-  if (spcmodel == nullptr)
-    THROWG(ErrorCode::INTERNAL_ERROR, "Couldnt compute spectrum model");
+                                 overlapThreshold, m_spcIndex);
 
-  // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not
-  // AxisSampleList
   m_observeGridContinuumFlux =
-      std::move((*spcmodel).ModelFlux.at(m_inputSpc->getObsID()));
-
-  return 0;
+      std::move(spcmodel.ModelFlux.at(m_inputSpc->getObsID()));
 }
 
-Int32 CSpectrumModel::ApplyContinuumPowerLawOnGrid(
-    std::shared_ptr<CContinuumModelSolution> const &continuum) {
+void CSpectrumModel::ApplyContinuumPowerLawOnGrid(
+    CContinuumModelSolution const &continuum) {
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
 
-  std::shared_ptr<CModelSpectrumResult> spcmodel =
-      std::make_shared<CModelSpectrumResult>();
-
-  (std::dynamic_pointer_cast<COperatorPowerLaw>(m_continuumFittingOperator))
-      ->ComputeSpectrumModel(continuum, m_spcIndex, spcmodel);
-
-  if (spcmodel == nullptr)
-    THROWG(ErrorCode::INTERNAL_ERROR, "Couldnt compute spectrum model");
+  auto spcmodel =
+      (std::dynamic_pointer_cast<COperatorPowerLaw>(m_continuumFittingOperator))
+          ->ComputeSpectrumModel(continuum, m_spcIndex);
 
   m_observeGridContinuumFlux =
-      std::move((*spcmodel).ModelFlux.at(m_inputSpc->getObsID()));
+      std::move(spcmodel.ModelFlux.at(m_inputSpc->getObsID()));
   for (Int32 k = 0; k < m_ContinuumFluxAxis.GetSamplesCount(); k++) {
     m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k];
     m_spcFluxAxisNoContinuum[k] =
         m_SpcFluxAxis[k] - as_const(m_ContinuumFluxAxis)[k];
   }
-  return 0;
 }
 
 void CSpectrumModel::initObserveGridContinuumFlux(Int32 size) {

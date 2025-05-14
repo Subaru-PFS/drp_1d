@@ -38,7 +38,9 @@
 // ============================================================================
 #include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
+#include <memory>
 
 namespace NSEpic {
 
@@ -83,10 +85,7 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
     bestModelSolution =
         m_linemodel.computeForLineMeas(inputContext, m_redshifts, bestz);
   }
-
-  std::shared_ptr<CModelSpectrumResult> modelspc =
-      std::make_shared<CModelSpectrumResult>();
-  modelspc->addModel(
+  auto modelspc = std::make_shared<CModelSpectrumResult>(
       m_linemodel.getFittedModelWithoutcontinuum(bestModelSolution),
       inputContext->GetSpectrum()->getObsID());
   std::shared_ptr<const CLineModelSolution> res =

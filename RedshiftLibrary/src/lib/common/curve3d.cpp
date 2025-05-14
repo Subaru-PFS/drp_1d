@@ -37,6 +37,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/common/curve3d.h"
+#include "RedshiftLibrary/common/curve.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
@@ -46,33 +47,25 @@ using namespace NSEpic;
 
 T3DCurve::T3DCurve(Int32 nIgm, Int32 nIsm) : nIgm(nIgm), nIsm(nIsm){};
 
-T3DCurve::T3DCurve(TCurve curve)
-    : nIgm(1), nIsm(1),
-      flux(
-          T3DList<Float64>(1, T2DList<Float64>(1, std::move(curve).getFlux()))),
-      fluxError(T3DList<Float64>(
-          1, T2DList<Float64>(1, std::move(curve).getFluxError()))),
-      lambda(std::move(curve).getLambda()),
-      isExtincted(T3DList<bool>(
-          1, T2DList<bool>(1, std::move(curve).getIsExtincted()))),
-      isSnrCompliant(std::move(curve).getIsSnrCompliant()),
-      mask(std::move(curve).getMask()){};
+T3DCurve::T3DCurve(TCurve &&curve, Int32 nIgm_, Int32 nIsm_)
+    : TCurve(std::move(curve)), nIgm(nIgm_), nIsm(nIsm_),
+      flux(T3DList<Float64>(1, T2DList<Float64>(1))),
+      fluxError(T3DList<Float64>(1, T2DList<Float64>(1))),
+      isExtincted(T3DList<bool>(1, T2DList<bool>(1))) {
 
-void T3DCurve::extendIgmIsm(Int32 nIgm_, Int32 nIsm_) {
-  if (nIgm != 1 && nIsm != 1)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "initial size should be (1,1), instead of (nIgm="
-                       << nIgm << ", nIsm=" << nIsm << ")");
-
-  nIgm = nIgm_;
-  nIsm = nIsm_;
+  flux[0][0] = std::move(TCurve::flux);
+  fluxError[0][0] = std::move(TCurve::fluxError);
+  isExtincted[0][0] = std::move(TCurve::isExtincted);
 
   flux[0].resize(nIsm, flux[0][0]);
   flux.resize(nIgm, flux[0]);
 
   fluxError[0].resize(nIsm, fluxError[0][0]);
   fluxError.resize(nIgm, fluxError[0]);
-}
+
+  isExtincted[0].resize(nIsm, isExtincted[0][0]);
+  isExtincted.resize(nIgm, isExtincted[0]);
+};
 
 template <typename T>
 void T3DCurve::checkCurveElement(T3DList<T> const &inputElement,
@@ -107,50 +100,24 @@ void T3DCurve::setIsExtincted(T3DList<bool> inputIsExtincted) {
   isExtincted = std::move(inputIsExtincted);
 }
 
-void T3DCurve::setIsSnrCompliant(TList<bool> inputIsSnrCompliant) {
-  if (ssize(inputIsSnrCompliant) != size())
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Incompatible isSnrCompliant sizes, input "
-                       << inputIsSnrCompliant.size() << "vs curve " << size());
-  isSnrCompliant = std::move(inputIsSnrCompliant);
-}
-
-void T3DCurve::setMask(TList<uint8_t> inputMask) {
-  if (ssize(inputMask) != size())
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Incompatible inputMask sizes, input "
-                       << inputMask.size() << "vs curve " << size());
-  mask = std::move(inputMask);
-}
-
-void T3DCurve::setLambda(TFloat64List inputLambda) {
-  lambda = std::move(inputLambda);
-}
-
 TCurve T3DCurve::toCurve(Int16 igmIdx, Int16 ismIdx) && {
   if (ismIdx > nIsm)
     THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "T3DCurve::toCurve ismIdx = " << ismIdx << " < "
-                       << nIsm);
+           Formatter() << "ismIdx = " << ismIdx << " < " << nIsm);
   if (igmIdx > nIgm)
     THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "T3DCurve::toCurve ismIdx = " << igmIdx << " < "
-                       << nIgm);
-  TCurve curve;
-  curve.setLambda(std::move(lambda));
+           Formatter() << "ismIdx = " << igmIdx << " < " << nIgm);
+  TCurve &curve = *this;
   curve.setFlux(std::move(flux[igmIdx][ismIdx]));
   curve.setFluxError(std::move(fluxError[igmIdx][ismIdx]));
-  curve.setMask(std::move(mask));
-  curve.setIsSnrCompliant(std::move(isSnrCompliant));
   curve.setIsExtincted(std::move(isExtincted[igmIdx][ismIdx]));
-  return curve;
+  return std::move(curve);
 }
 
 TCurve T3DCurve::toCoefCurve(Int16 igmIdx, Int16 ismIdx) const {
   if (ismIdx > nIsm)
     THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "T3DCurve::toCurve ismIdx = " << ismIdx << " < "
-                       << nIsm);
+           Formatter() << "ismIdx = " << ismIdx << " < " << nIsm);
   checkIgmIdx(igmIdx);
   checkIsmIdx(ismIdx);
   TCurve curve;
@@ -169,39 +136,22 @@ bool T3DCurve::pixelIsCoefValid(Int16 igmIdx, Int16 ismIdx,
          !isExtincted[igmIdx][ismIdx][pixelIdx];
 }
 
-bool T3DCurve::pixelIsChi2Valid(Int32 pixelIdx) const {
-  return pixelIdx < size() && mask[pixelIdx];
-}
-
-bool T3DCurve::pixelIsChi2AndSNRValid(Int32 pixelIdx) const {
-  return pixelIdx < size() && isSnrCompliant[pixelIdx] && mask[pixelIdx];
-}
-
 void T3DCurve::checkIgmIdx(Int16 igmIdx) const {
   if (igmIdx > nIgm)
-    THROWG(ErrorCode::INTERNAL_ERROR, Formatter() << "T3DCurve::" << __func__
-                                                  << ": igmIdx = " << igmIdx
-                                                  << " > " << nIgm);
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "igmIdx = " << igmIdx << " > " << nIgm);
 }
 
 void T3DCurve::checkIsmIdx(Int16 ismIdx) const {
   if (ismIdx > nIsm)
-    THROWG(ErrorCode::INTERNAL_ERROR, Formatter() << "T3DCurve::" << __func__
-                                                  << "ismIdx = " << ismIdx
-                                                  << " > " << nIsm);
-}
-
-void T3DCurve::checkPixelIdx(Int16 pixelIdx) const {
-  if (pixelIdx > size())
-    THROWG(ErrorCode::INTERNAL_ERROR, Formatter() << "T3DCurve::" << __func__
-                                                  << "pixelIdx = " << pixelIdx
-                                                  << " > " << size());
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "ismIdx = " << ismIdx << " > " << nIsm);
 }
 
 void T3DCurve::checkIdxs(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const {
   checkIgmIdx(igmIdx);
   checkIsmIdx(ismIdx);
-  checkPixelIdx(pixelIdx);
+  checkIdx(pixelIdx);
 }
 
 void T3DCurve::setFluxAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx,
@@ -214,11 +164,6 @@ void T3DCurve::setFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx,
                               Float64 value) {
   checkIdxs(igmIdx, ismIdx, pixelIdx);
   fluxError[igmIdx][ismIdx][pixelIdx] = value;
-};
-
-Float64 T3DCurve::getLambdaAt(Int32 pixelIdx) const {
-  checkPixelIdx(pixelIdx);
-  return lambda[pixelIdx];
 };
 
 Float64 T3DCurve::getFluxAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const {

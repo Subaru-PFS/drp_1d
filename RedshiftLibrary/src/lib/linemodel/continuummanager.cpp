@@ -127,7 +127,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
                        << static_cast<Int32>(m_fitContinuum_option));
   // Retrieve the best template, otherwise Getter throws an error
   if (isContinuumComponentPowerLawXXX()) {
-    getModel().ApplyContinuumPowerLawOnGrid(m_fitContinuum);
+    getModel().ApplyContinuumPowerLawOnGrid(*m_fitContinuum);
   } else {
     std::shared_ptr<const CTemplate> tpl =
         m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->name);

@@ -112,8 +112,7 @@ private:
   void computeSecondPass(std::shared_ptr<const ExtremaResult> extremaResult);
 
   std::shared_ptr<CTemplateFittingResult>
-  Solve(std::shared_ptr<COperatorResultStore> resultStore,
-        const std::shared_ptr<const CTemplate> &tpl, Int32 FitEbmvIdx = allIdx,
+  Solve(const CTemplate &tpl, Int32 FitEbmvIdx = allIdx,
         Int32 FitMeiksinIdx = allIdx, std::string parentId = "",
         Int32 candidateIdx = undefIdx,
         std::shared_ptr<CTemplateFittingResult> const &result = nullptr);

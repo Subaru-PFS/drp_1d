@@ -39,6 +39,7 @@
 #include <algorithm> // std::sort
 #include <climits>
 #include <cmath>
+#include <iterator>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
@@ -348,12 +349,19 @@ void COperatorTplcombination::BasicFit(
            Formatter() << "Not even one single valid fit/merit value found");
   }
 
-  TFloat64List flux = spcFluxAxis.GetSamplesVector();
-  TFloat64List error = spcError.GetSamplesVector();
+  TFloat64List const &flux = spcFluxAxis.GetSamplesVector();
+  TFloat64List const &error = spcError.GetSamplesVector();
+  TFloat64List fluxInRange(flux.cbegin() + m_kStart[0],
+                           flux.cbegin() + m_kEnd[0] + 1);
+  TFloat64List errorInRange(error.cbegin() + m_kStart[0],
+                            error.cbegin() + m_kEnd[0] + 1);
+  TFloat64List modelInRange(
+      std::move_iterator(modelFluxWithAmp.begin() + m_kStart[0]),
+      std::move_iterator(modelFluxWithAmp.begin() + m_kEnd[0] + 1));
 
   fittingResults.fitQuality = NSFitQuality::computeFitQuality(
-      std::move(flux), std::move(modelFluxWithAmp), std::move(error),
-      m_kStart[0], m_kEnd[0], fittingResults.chiSquare, n);
+      std::move(fluxInRange), std::move(modelInRange), std::move(errorInRange),
+      fittingResults.chiSquare, n);
 }
 
 void COperatorTplcombination::RebinTemplate(
@@ -571,8 +579,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   return result;
 }
 
-std::shared_ptr<CModelSpectrumResult>
-COperatorTplcombination::ComputeSpectrumModel(
+CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
     const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
@@ -636,11 +643,9 @@ COperatorTplcombination::ComputeSpectrumModel(
   // Deallocate the rebined template and mask buffers
   m_templatesRebined_bf.clear();
   m_masksRebined_bf.clear();
-  std::shared_ptr<CModelSpectrumResult> ret =
-      std::make_shared<CModelSpectrumResult>();
-  ret->addModel(std::move(modelSpcAxis.GetSamplesVector()),
-                std::move(modelFlux), "");
-  return ret;
+
+  return CModelSpectrumResult(std::move(modelSpcAxis.GetSamplesVector()),
+                              std::move(modelFlux), "");
 }
 
 /**
