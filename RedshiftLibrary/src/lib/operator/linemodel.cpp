@@ -39,6 +39,7 @@
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
+#include <iterator>
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
@@ -1799,6 +1800,7 @@ void COperatorLineModel::addFitQualityToCandidate(
         lambdaRanges[spcIdx]->GetBegin());
     kEnd[spcIdx] = spectrum->GetSpectralAxis().GetIndexAtWaveLength(
         lambdaRanges[spcIdx]->GetEnd());
+    --kEnd[spcIdx];
   }
 
   std::transform(spectra.begin(), spectra.end(), spcFlux.begin(),

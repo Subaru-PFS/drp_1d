@@ -543,16 +543,16 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
 
   // Checks Merit, reducedChi2 and pValue presence in resultStore
   BOOST_CHECK_CLOSE(res->Merit, 116299.57931821454, 1e-4);
-  BOOST_CHECK_CLOSE(res->reducedChi2, 174.36218788338005, 1e-4);
+  BOOST_CHECK_CLOSE(res->reducedChi2, 174.62399297029202, 1e-4);
   BOOST_CHECK_CLOSE(res->pValue, 0, 1e-4);
-  BOOST_CHECK_CLOSE(res->meanResiduals, -0.07772343016264692, 1e-4);
-  BOOST_CHECK_CLOSE(res->stdResiduals, 13.214308266732269, 1e-4);
-  BOOST_CHECK_CLOSE(res->skewnessResiduals, 6.7125231867411266, 1e-4);
-  BOOST_CHECK_CLOSE(res->kurtosisResiduals, 105.46105272594733, 1e-4);
-  BOOST_CHECK_CLOSE(res->ksResiduals, 0.49250301789752127, 1e-4);
-  BOOST_CHECK_CLOSE(res->ksStdResiduals, 0.49250369286550255, 1e-4);
-  BOOST_CHECK_CLOSE(res->ksStdMeanResiduals, 0.49015722242987414, 1e-4);
-  BOOST_CHECK_CLOSE(res->andersonResiduals, 233.33606833798069, 1e-4);
+  BOOST_CHECK_CLOSE(res->meanResiduals, -0.077840134758103141, 1e-4);
+  BOOST_CHECK_CLOSE(res->stdResiduals, 13.224239760490484, 1e-4);
+  BOOST_CHECK_CLOSE(res->skewnessResiduals, 6.7074936982876734, 1e-4);
+  BOOST_CHECK_CLOSE(res->kurtosisResiduals, 105.29820217726626, 1e-4);
+  BOOST_CHECK_CLOSE(res->ksResiduals, 0.49249176372964421, 1e-4);
+  BOOST_CHECK_CLOSE(res->ksStdResiduals, 0.49249243738438331, 1e-4);
+  BOOST_CHECK_CLOSE(res->ksStdMeanResiduals, 0.4901442085184422, 1e-4);
+  BOOST_CHECK_CLOSE(res->andersonResiduals, 232.95412252894781, 1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 5.0401306164046407e-07,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 8.4795422657788838e-07,
