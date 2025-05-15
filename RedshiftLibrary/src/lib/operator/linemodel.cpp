@@ -1040,7 +1040,8 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
                                m_estimateLeastSquareFast, idx);
 
     addFitQualityToCandidate(candidate,
-                             ExtremaResult->m_savedModelSpectrumResults[i]);
+                             ExtremaResult->m_savedModelSpectrumResults[i],
+                             m_result->nSpcSamples);
 
     // save the continuum tpl fitting results
     candidate->updateFromContinuumModelSolution(
@@ -1780,8 +1781,8 @@ TFloat64List COperatorLineModel::makeVelFitBins(Float64 vInfLim,
 
 void COperatorLineModel::addFitQualityToCandidate(
     const std::shared_ptr<TLineModelResult> &candidate,
-    const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel)
-    const {
+    const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel,
+    Int32 nPixels) const {
   const auto &spectra = Context.getSpectra();
   const auto &lambdaRanges = Context.getClampedLambdaRanges();
 
@@ -1818,9 +1819,9 @@ void COperatorLineModel::addFitQualityToCandidate(
         return candidateModel->ModelFlux.at(spectrum->getObsID());
       });
 
-  TFitQuality fitQuality =
-      NSFitQuality::computeFitQuality(std::move(spcFlux), std::move(modelFlux),
-                                      std::move(spcFluxError), kStart, kEnd);
+  TFitQuality fitQuality = NSFitQuality::computeFitQuality(
+      std::move(spcFlux), std::move(modelFlux), std::move(spcFluxError), kStart,
+      kEnd, candidate->Merit, nPixels);
   candidate->pValue = fitQuality.pValue;
   candidate->reducedChi2 = fitQuality.reducedChiSquare;
   candidate->meanResiduals = fitQuality.meanResiduals;

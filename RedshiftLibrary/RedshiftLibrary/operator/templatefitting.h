@@ -156,7 +156,8 @@ protected:
 private:
   void updateQualityFitWithResult(TFittingIsmIgmResult &result,
                                   const std::shared_ptr<const CTemplate> &tpl,
-                                  const std::vector<CMask> &mask);
+                                  const std::vector<CMask> &mask,
+                                  Int32 nPixels);
 };
 
 } // namespace NSEpic

@@ -202,13 +202,13 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
                       << ": Not even one single valid fit/merit value found");
     }
   }
-  updateQualityFitWithResult(result, tpl, mask_list);
+  updateQualityFitWithResult(result, tpl, mask_list, n_samples);
   return result;
 }
 
 void COperatorTemplateFitting::updateQualityFitWithResult(
     TFittingIsmIgmResult &result, const std::shared_ptr<const CTemplate> &tpl,
-    const std::vector<CMask> &mask) {
+    const std::vector<CMask> &mask, Int32 nPixels) {
   const Int32 nSpectra = ssize(m_spectra);
   std::vector<TFloat64List> spcFlux(nSpectra);
   for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
@@ -238,7 +238,7 @@ void COperatorTemplateFitting::updateQualityFitWithResult(
                  });
   result.fitQuality = NSFitQuality::computeFitQuality(
       std::move(spcFlux), std::move(tplFlux), std::move(spcFluxError), m_kStart,
-      m_kEnd, result.chiSquare, mask);
+      m_kEnd, result.chiSquare, nPixels, mask);
 }
 
 std::pair<TList<CMask>, Int32>

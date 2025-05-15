@@ -714,9 +714,9 @@ BOOST_AUTO_TEST_CASE(basicfit_default) {
   BOOST_CHECK_EQUAL(result.coefs.second.stda, INFINITY);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.stdb, INFINITY);
-  BOOST_CHECK_EQUAL(result.chiSquare, INFINITY);
-  BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, INFINITY);
-  BOOST_CHECK_EQUAL(result.fitQuality.pValue, 0);
+  BOOST_CHECK_EQUAL(result.chiSquare, 0);
+  BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, 0);
+  BOOST_CHECK_EQUAL(result.fitQuality.pValue, 1);
   Context.reset();
 }
 

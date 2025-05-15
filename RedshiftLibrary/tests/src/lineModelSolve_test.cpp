@@ -622,7 +622,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 0.1);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 1.1668695466023917e-57, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 9.3173592584984399e-57, 1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 1.079885111724705,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 2.5984491932539444,
@@ -700,11 +700,11 @@ BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
           lineModelSolve.compute());
   BOOST_CHECK(lineModelSolve.m_opt_continuumcomponent.isContinuumFit());
   BOOST_CHECK_CLOSE(lmSolveResult->getContinuumEvidence(), 1883.5584, 1E-4);
-  BOOST_CHECK_CLOSE(lmSolveResult->minContinuumReducedChi2, 6.6766396414812661,
+  BOOST_CHECK_CLOSE(lmSolveResult->minContinuumReducedChi2, 6.4338527454274024,
                     1E-4);
   BOOST_CHECK_CLOSE(lmSolveResult->maxFitAmplitudeSigma, 8.4786296286559519,
                     1E-4);
-  BOOST_CHECK_CLOSE(lmSolveResult->maxPValue, 1.9044284724670653e-57, 1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->maxPValue, 1.5165937452759085e-56, 1E-4);
 
   auto res = std::dynamic_pointer_cast<const TLineModelResult>(
       Context.GetResultStore()->GetExtremaResult(

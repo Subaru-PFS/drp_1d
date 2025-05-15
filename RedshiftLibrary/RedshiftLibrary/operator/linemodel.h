@@ -192,8 +192,8 @@ private:
 
   void addFitQualityToCandidate(
       const std::shared_ptr<TLineModelResult> &candidate,
-      const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel)
-      const;
+      const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel,
+      Int32 nPixels) const;
   std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;

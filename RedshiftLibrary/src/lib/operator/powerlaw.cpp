@@ -117,7 +117,7 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
     // Create a 3D curve to compute chi2
     auto curve3D = T3DCurve(std::move(curve));
-    auto const chi2 = computeChi2(curve3D, coefs);
+    auto const chi2 = computeChi2(curve3D, coefs, false);
 
     result.chiSquare = chi2[0][0];
     result.coefs = constantLawsCoef;
@@ -154,11 +154,9 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   auto flux = curve.computeUnmaskedFlux();
   auto nUnmaskedPixels = ssize(flux) - 1;
   auto error = curve.computeUnmaskedFluxError();
-  auto const chi2WithAllSNR =
-      computeChi2(T3DCurve(std::move(curve)), coefs, false)[0][0];
-  result.fitQuality = NSFitQuality::computeFitQuality(
-      std::move(flux), std::move(modelFlux), std::move(error), 0,
-      nUnmaskedPixels, chi2WithAllSNR);
+  result.fitQuality =
+      NSFitQuality::computeFitQuality(std::move(flux), std::move(modelFlux),
+                                      std::move(error), 0, nUnmaskedPixels);
   return result;
 };
 
@@ -225,6 +223,7 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
   for (Int32 igmIdx = 0; igmIdx < nIgmCurves; igmIdx++) {
     for (Int32 ismIdx = 0; ismIdx < nIsmCurves; ismIdx++) {
       Float64 chi2 = 0.0;
+      Int32 nPixels = 0;
       for (Int32 pixelIdx = 0; pixelIdx < m_nPixels[0]; pixelIdx++) {
         if (considerPixel(pixelIdx)) {
           Float64 theoreticalFlux =
@@ -236,9 +235,10 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
               curve3D.getFluxAt(igmIdx, ismIdx, pixelIdx) - theoreticalFlux;
           diff = diff / curve3D.getFluxErrorAt(igmIdx, ismIdx, pixelIdx);
           chi2 += diff * diff;
+          ++nPixels;
         }
       }
-      if (chi2 > 0)
+      if (nPixels > 0)
         chi2_all[igmIdx][ismIdx] = chi2;
     }
   }

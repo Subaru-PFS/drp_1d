@@ -145,29 +145,30 @@ Float64 computeResidual(const Float64 expData, const Float64 refData,
 
 TFitQuality computeFitQuality(TFloat64List &&spcFlux, TFloat64List &&modelFlux,
                               TFloat64List &&spcFluxError, const Int32 kStart,
-                              Int32 kEnd, Float64 chi2) {
+                              Int32 kEnd, Float64 chi2, Int32 nPixels) {
   // kEnd set to -1 means take the full spectrum
   if (ssize(spcFlux) != ssize(modelFlux) ||
       ssize(spcFlux) != ssize(spcFluxError)) {
     THROWG(ErrorCode::INTERNAL_ERROR, "m_spectra, spcFlux, modelFlux and "
                                       "spcFluxError must be of the same size");
   }
-  const Int32 nPixels = ssize(spcFlux);
-  if (kEnd == -1)
-    kEnd = nPixels - 1;
+
+  if (kEnd == undefIdx)
+    kEnd = ssize(spcFlux) - 1;
 
   return computeFitQuality(
       std::vector<TFloat64List>(1, std::move(spcFlux)),
       std::vector<TFloat64List>(1, std::move(modelFlux)),
       std::vector<TFloat64List>(1, std::move(spcFluxError)),
-      TInt32List(1, kStart), TInt32List(1, kEnd), chi2);
+      TInt32List(1, kStart), TInt32List(1, kEnd), chi2, nPixels);
 }
 
 TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
                               const std::vector<TFloat64List> &modelFlux,
                               const std::vector<TFloat64List> &spcFluxError,
                               const TInt32List &kStart, const TInt32List &kEnd,
-                              Float64 chi2, const std::vector<CMask> &mask) {
+                              Float64 chi2, Int32 nPixels,
+                              const std::vector<CMask> &mask) {
   // It is expected that the input vectors are of the same size
 
   const bool useMask = mask.empty() ? false : true;
@@ -225,6 +226,14 @@ TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
 
   if (std::isnan(chi2))
     chi2 = NSFitQuality::chi2(residuals);
+  else {
+    // if chi2 is given as input then nPixels should be given as well.
+    if (nPixels == undefIdx)
+      THROWG(ErrorCode::INTERNAL_ERROR, "undefined nPixels argument, it should "
+                                        "be given since chi2 was given");
+    sumNPixels = nPixels;
+  }
+
   TFitQuality fitQuality;
   fitQuality.reducedChiSquare = NSFitQuality::reducedChi2(chi2, sumNPixels);
   fitQuality.pValue = NSFitQuality::pValue(chi2, sumNPixels);

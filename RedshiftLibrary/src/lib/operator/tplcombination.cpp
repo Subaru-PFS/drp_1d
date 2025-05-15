@@ -353,7 +353,7 @@ void COperatorTplcombination::BasicFit(
 
   fittingResults.fitQuality = NSFitQuality::computeFitQuality(
       std::move(flux), std::move(modelFluxWithAmp), std::move(error),
-      m_kStart[0], m_kEnd[0], fittingResults.chiSquare);
+      m_kStart[0], m_kEnd[0], fittingResults.chiSquare, n);
 }
 
 void COperatorTplcombination::RebinTemplate(
