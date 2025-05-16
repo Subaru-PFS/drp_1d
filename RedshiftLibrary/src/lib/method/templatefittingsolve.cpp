@@ -502,14 +502,24 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     // find the corresponding Z
     auto const zIndex = CIndexing<Float64>::getIndex(redshifts, z);
 
-    // find the min chisquare at corresponding redshift
-    using TPairTplFitResult =
-        std::pair<std::string, std::shared_ptr<const CTemplateFittingResult>>;
-    auto const &[bestName, bestResult] = *std::min_element(
-        tplFitResultsMap.cbegin(), tplFitResultsMap.cend(),
-        [zIndex](TPairTplFitResult const &l, TPairTplFitResult const &r) {
-          return l.second->ChiSquare[zIndex] < r.second->ChiSquare[zIndex];
-        });
+    std::string bestName;
+    std::shared_ptr<const CTemplateFittingResult> bestResult;
+    if (m_isFirstPass) {
+      // find the min chisquare at corresponding redshift to get the best
+      // template
+      std::tie(bestName, bestResult) = *std::min_element(
+          tplFitResultsMap.cbegin(), tplFitResultsMap.cend(),
+          [zIndex](auto const &l, auto const &r) {
+            return l.second->ChiSquare[zIndex] < r.second->ChiSquare[zIndex];
+          });
+    } else {
+      // get the first pass template name
+      auto const &firstPassResult =
+          m_templateFittingOperator->getFirstPassExtremaResults();
+      bestName = firstPassResult->getRankedCandidateCPtr(iExtremum)
+                     ->fittedContinuum.name;
+      bestResult = tplFitResultsMap.at(bestName);
+    }
 
     // Fill extrema Result
     // only usefull attributes for 1st pass in two-pass mode, to build chisquare
