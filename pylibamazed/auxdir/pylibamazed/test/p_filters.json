@@ -58,6 +58,7 @@
     "galaxy"
   ],
   "autoCorrectInput": false,
+  "secondPassAfterClassification": false,
   "galaxy": {
     "redshiftRange": [
       0.9001832537307723,
