@@ -96,7 +96,8 @@ void CInputContext::RebinInputs() {
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
        boost::combine(m_spectra, m_lambdaRanges)) {
     if (spectrum_ptr->GetSpectralAxis().IsLogSampled()) {
-      addRebinSpectrum(std::make_shared<CSpectrum>(spectrum_ptr->GetName()));
+      addRebinSpectrum(std::make_shared<CSpectrum>(spectrum_ptr->GetName(),
+                                                   spectrum_ptr->getObsID()));
       CSpectrumSpectralAxis spcWav = spectrum_ptr->GetSpectralAxis();
       spcWav.RecomputePreciseLoglambda(); // in case input spectral values have
                                           // been rounded

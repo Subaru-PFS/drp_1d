@@ -78,7 +78,7 @@ public:
   enum class EType { raw, continuumOnly, noContinuum };
 
   CSpectrum();
-  CSpectrum(const std::string &name);
+  CSpectrum(const std::string &name, const std::string &obsId = "");
   CSpectrum(const CSpectrum &other);
   CSpectrum(CSpectrum &&other);
   CSpectrum(const CSpectrum &other, const TFloat64List &mask);

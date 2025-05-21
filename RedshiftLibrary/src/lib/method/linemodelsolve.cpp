@@ -179,7 +179,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
   resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
-  const CSpectrum &spc = *(inputContext->GetSpectrum(m_useloglambdasampling));
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       m_linemodel.buildExtremaResults(
           candidateResult->m_ranked_candidates,

@@ -1785,22 +1785,21 @@ void COperatorLineModel::addFitQualityToCandidate(
     const std::shared_ptr<TLineModelResult> &candidate,
     const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel,
     Int32 nPixels) const {
-  const auto &spectra = Context.getSpectra();
-  const auto &lambdaRanges = Context.getClampedLambdaRanges();
 
-  Int32 nSpectra = spectra.size();
+  Int32 nSpectra = *m_fittingManager->getSpectraIndex().end();
 
   TInt32List kStartAll;
   TInt32List kEndAll;
   kStartAll.reserve(nSpectra);
   kEndAll.reserve(nSpectra);
 
-  for (auto const &[spectrum, lambdaRange] :
-       boost::combine(spectra, lambdaRanges)) {
-    kStartAll.push_back(spectrum->GetSpectralAxis().GetIndexAtWaveLength(
-        lambdaRange->GetBegin()));
-    kEndAll.push_back(spectrum->GetSpectralAxis().GetIndexAtWaveLength(
-        lambdaRange->GetEnd()));
+  for ([[maybe_unused]] auto &obs : m_fittingManager->getSpectraIndex()) {
+    auto const &spectrum = m_fittingManager->getSpectrum();
+    auto const &lambdaRange = m_fittingManager->getLambdaRange();
+    kStartAll.push_back(spectrum.GetSpectralAxis().GetIndexAtWaveLength(
+        lambdaRange.GetBegin()));
+    kEndAll.push_back(
+        spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd()));
   }
 
   std::vector<TFloat64List> spcFlux;
@@ -1810,18 +1809,21 @@ void COperatorLineModel::addFitQualityToCandidate(
   spcFluxError.reserve(nSpectra);
   modelFlux.reserve(nSpectra);
 
-  for (auto const &[spc, kStart, kEnd] :
-       boost::combine(spectra, kStartAll, kEndAll)) {
-    auto const &fluxBegin = spc->GetFluxAxis().GetSamplesVector().cbegin();
+  for (auto &obs : m_fittingManager->getSpectraIndex()) {
+    auto const &spc = m_fittingManager->getSpectrum();
+    auto const kStart = kStartAll[obs];
+    auto const kEnd = kEndAll[obs];
+
+    auto const &fluxBegin = spc.GetFluxAxis().GetSamplesVector().cbegin();
     spcFlux.push_back(TFloat64List(fluxBegin + kStart, fluxBegin + kEnd));
 
     auto const &errorBegin =
-        spc->GetFluxAxis().GetError().GetSamplesVector().cbegin();
+        spc.GetFluxAxis().GetError().GetSamplesVector().cbegin();
     spcFluxError.push_back(
         TFloat64List(errorBegin + kStart, errorBegin + kEnd));
 
     auto const modelBegin =
-        candidateModel->ModelFlux.at(spc->getObsID()).cbegin();
+        candidateModel->ModelFlux.at(spc.getObsID()).cbegin();
     modelFlux.push_back(TFloat64List(modelBegin + kStart, modelBegin + kEnd));
   }
 

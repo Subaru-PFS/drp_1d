@@ -165,7 +165,8 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
   }
 
   // prepare return rebinned vector
-  auto spectrumRebinedLog = make_shared<CSpectrum>(spectrum.GetName());
+  auto spectrumRebinedLog =
+      make_shared<CSpectrum>(spectrum.GetName(), spectrum.getObsID());
   CMask mskRebinedLog;
 
   const CSpectrumSpectralAxis targetSpectralAxis =
