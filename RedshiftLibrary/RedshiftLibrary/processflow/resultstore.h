@@ -100,6 +100,9 @@ public:
   std::weak_ptr<const COperatorResult>
   GetScopedGlobalResult(const std::string &name) const;
 
+  std::shared_ptr<COperatorResult>
+  GetAndDeleteScopedGlobalResult(const std::string &name);
+
   const std::string &GetGlobalResultType(const std::string &spectrumModel,
                                          const std::string &stage,
                                          const std::string &method,

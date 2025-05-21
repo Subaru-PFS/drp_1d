@@ -564,8 +564,10 @@ void CLineModelSolve::Solve() {
   if (!skipFirstPass())
     lmresult = m_linemodel.ComputeFirstPass();
   else {
-    lmresult = std::dynamic_pointer_cast<const CLineModelResult>(
-        resultStore->GetScopedGlobalResult(resultName).lock());
+    auto or_ = resultStore->GetAndDeleteScopedGlobalResult(resultName);
+    auto lmr = std::dynamic_pointer_cast<CLineModelResult>(or_);
+    m_linemodel.setResult(lmr);
+    lmresult = lmr;
     m_linemodel.retrieveContinuumFitStoreFirstPass();
   }
   if (twoPassIsActive()) {
@@ -613,8 +615,7 @@ void CLineModelSolve::Solve() {
 
   // save linemodel chisquare results
 
-  resultStore->StoreScopedGlobalResult(resultName, lmresult,
-                                       m_runSecondPassFromResultStore);
+  resultStore->StoreScopedGlobalResult(resultName, lmresult);
 
   // don't save linemodel extrema results, since will change with pdf
   // computation

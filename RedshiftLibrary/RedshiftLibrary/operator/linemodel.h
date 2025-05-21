@@ -131,6 +131,7 @@ public:
   std::shared_ptr<CContinuumFitStore const> const &
   getContinuumFitStoreFirstPass() const;
   void retrieveContinuumFitStoreFirstPass();
+  void setResult(std::shared_ptr<CLineModelResult> res) { m_result = res; }
 
 private:
   friend class Linemodel::spanRedshift_test;

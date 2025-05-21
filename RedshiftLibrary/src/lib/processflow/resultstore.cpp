@@ -161,6 +161,16 @@ COperatorResultStore::GetScopedGlobalResult(const std::string &name) const {
   return GetGlobalResult(GetScopedName(name));
 }
 
+std::shared_ptr<COperatorResult>
+COperatorResultStore::GetAndDeleteScopedGlobalResult(const std::string &name) {
+  // std::shared_ptr<const COperatorResult> a=
+  // std::shared_ptr<>(GetGlobalResult(GetScopedName(name)).lock());
+  auto a = GetGlobalResult(GetScopedName(name));
+  auto ret = std::const_pointer_cast<COperatorResult>(a.lock());
+  m_GlobalResults.erase(GetScopedName(name));
+  return ret;
+}
+
 std::string COperatorResultStore::buildFullname(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name) {
