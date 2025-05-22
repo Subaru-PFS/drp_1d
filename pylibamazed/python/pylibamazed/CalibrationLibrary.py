@@ -87,9 +87,26 @@ def _get_linecatalog_strid(lineCatalog_df):
         for w, n, t in zip(lineCatalog_df.WaveLength, lineCatalog_df.Name, lineCatalog_df.Type)
     ]
 
+def load_sklearn_classifier(path, classifier):
+    zlog.LogInfo(f"reliability: loading scikit-learn {classifier} for galaxy")
+    try:
+        from sklearn.base import ClassifierMixin # Mixin class for all classifiers in scikit-learn.
+        import joblib
+    except ImportError:
+        raise APIException(ErrorCode.INTERNAL_ERROR, "scikit-learn is required to compute the reliability"
+        )
+    ret = dict()
+    clf = joblib.load(path)
+    if not isinstance(clf, ClassifierMixin):
+        raise APIException(
+            ErrorCode.BAD_FILEFORMAT, "classifier is not sklearn.base.ClassifierMixin type"
+        )
+    ret["classifier"] = clf
+    ret["classes"] = ["failure", "success"]
+    return ret
 
 def load_reliability_model(model_path, parameters: Parameters, object_type):
-    zlog.LogInfo(f"Loading reliability neural network for {object_type}")
+    zlog.LogInfo(f"reliability: loading neural network for {object_type}")
     try:
         # to avoid annoying messages about gpu/cuda availability
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -170,8 +187,7 @@ class CalibrationLibrary:
 
         self.calzetti = None
         self.meiksin = None
-        self.reliability_models = {}
-        self.reliability_parameters = dict()
+        self.reliability = dict()
 
     def _load_templates(self, object_type, path):
         """
@@ -514,13 +530,30 @@ class CalibrationLibrary:
                         self.load_linecatalog(object_type, linemeas_method)
                 # Load the reliability model
                 if self.parameters.get_reliability_enabled(object_type) and reliability:
-                    model_path = os.path.join(
-                        self.calibration_dir, self.parameters.get_reliability_model(object_type)
-                    )
-                    mp = load_reliability_model(model_path, self.parameters, object_type)
-                    self.reliability_models[object_type] = mp["model"]
-                    self.reliability_parameters[object_type] = mp["parameters"]
-
+                    for reliability_solver in self.parameters.get_reliability_methods(object_type):
+                        zlog.LogInfo(f"reliability:solver initialisation for {reliability_solver}")
+                        if reliability_solver == "deepLearningSolver":
+                            self.reliability["deep"] = dict()
+                            self.reliability["deep"][object_type] = dict()
+                            self.reliability["deep"][object_type]["models"] = list()
+                            model_path = os.path.join(
+                                self.calibration_dir,
+                                self.parameters.get_reliability_model(object_type)
+                                )
+                            mp = load_reliability_model(model_path, self.parameters, object_type)
+                            self.reliability["deep"][object_type]["models"].append(mp["model"])
+                            self.reliability["deep"][object_type]["parameters"] = mp["parameters"]
+                        if reliability_solver == "skLearnSolver":
+                            self.reliability["sklearn"] = dict()
+                            self.reliability["sklearn"][object_type] = dict()
+                            classifier = self.parameters.get_sk_learn_classifier(object_type)
+                            classifier_file = os.path.join(
+                                self.calibration_dir,
+                                self.parameters.get_sk_learn_classifier_file(object_type)
+                                )
+                            clf_dict = load_sklearn_classifier(classifier_file, classifier)
+                            self.reliability["sklearn"][object_type]["classifier"] = clf_dict["classifier"]
+                            self.reliability["sklearn"][object_type]["classes"] = clf_dict["classes"]
             if self.parameters.get_lsf_type() != "fromSpectrumData":
                 self.load_lsf()
 
