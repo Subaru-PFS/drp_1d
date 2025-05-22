@@ -45,7 +45,7 @@ from tests.python.utils import (
 )
 
 
-class TestTemplateFittingSolve:
+class TestReliabilitySolve:
     def _make_parameter_dict(self, **kwargs) -> dict:
         param_dict = make_parameter_dict_at_reliability_solver_level(**kwargs)
         return param_dict
@@ -65,34 +65,34 @@ class TestTemplateFittingSolve:
         check_from_parameter_dict(param_dict)
         assert WarningUtils.has_any_warning()
 
-    def test_error_if_method_is_skLearnClassifier_and_section_is_absent(self):
-        param_dict = self._make_parameter_dict(**{"method": ["skLearnClassifier"]})
-        with pytest.raises(APIException, match=r"Missing parameter galaxy skLearnClassifier"):
+    def test_error_if_method_is_skLearnSolver_and_section_is_absent(self):
+        param_dict = self._make_parameter_dict(**{"method": ["skLearnSolver"]})
+        with pytest.raises(APIException, match=r"Missing parameter galaxy skLearnSolver"):
             check_from_parameter_dict(param_dict)
 
-    def test_OK_if_method_is_skLearnClassifier_and_section_is_present(self, zflag):
-        param_dict = self._make_parameter_dict(**{"method": ["skLearnClassifier"], "skLearnClassifier": {}})
+    def test_OK_if_method_is_skLearnSolver_and_section_is_present(self, zflag):
+        param_dict = self._make_parameter_dict(**{"method": ["skLearnSolver"], "skLearnSolver": {}})
         check_from_parameter_dict(param_dict)
         assert not WarningUtils.has_any_warning()
 
-    def test_warning_if_method_is_not_skLearnClassifier_but_section_is_present(self, zflag):
-        param_dict = self._make_parameter_dict(**{"method": ["lalala"], "skLearnClassifier": {}})
+    def test_warning_if_method_is_not_skLearnSolver_but_section_is_present(self, zflag):
+        param_dict = self._make_parameter_dict(**{"method": ["lalala"], "skLearnSolver": {}})
         check_from_parameter_dict(param_dict)
         assert WarningUtils.has_any_warning()
 
     def test_error_if_one_section_absent(self):
         param_dict = self._make_parameter_dict(
-            **{"method": ["skLearnClassifier", "deepLearningSolver"], "deepLearningSolver": {}}
+            **{"method": ["skLearnSolver", "deepLearningSolver"], "skLearnSolver": {}}
         )
-        with pytest.raises(APIException, match=r"Missing parameter galaxy skLearnClassifier"):
+        with pytest.raises(APIException, match=r"Missing parameter galaxy deepLearningSolver"):
             check_from_parameter_dict(param_dict)
 
     def test_OK_if_both_methods_and_sections_are_present(self, zflag):
         param_dict = self._make_parameter_dict(
             **{
-                "method": ["skLearnClassifier", "deepLearningSolver"],
+                "method": ["skLearnSolver", "deepLearningSolver"],
                 "deepLearningSolver": {},
-                "skLearnClassifier": {},
+                "skLearnSolver": {},
             }
         )
         check_from_parameter_dict(param_dict)
