@@ -316,10 +316,10 @@ class CustomParametersChecker(ParametersChecker):
             f"{spectrum_model} reliabilitySolver deepLearningSolver",
         )
         self._check_dependant_condition(
-            "skLearnClassifier" in self.accessor.get_reliability_methods(spectrum_model),
-            self.accessor.get_sk_learn_classifier_solver_section(spectrum_model) is not None,
-            f"{spectrum_model} skLearnClassifier",
-            f"{spectrum_model} reliabilitySolver skLearnClassifier",
+            "skLearnSolver" in self.accessor.get_reliability_methods(spectrum_model),
+            self.accessor.get_sk_learn_solver_section(spectrum_model) is not None,
+            f"{spectrum_model} skLearnSolver",
+            f"{spectrum_model} reliabilitySolver skLearnSolver",
         )
 
     def _check_templateFittingSolve_section(self, spectrum_model: str) -> None:
