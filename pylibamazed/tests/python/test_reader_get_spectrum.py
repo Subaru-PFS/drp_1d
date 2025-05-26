@@ -176,12 +176,12 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
         spectra.init()
 
         # Check size is correct for spectrum first obs
-        spectrum_id1 = spectra.get_dataframe("1")
+        spectrum_id1 = spectra._get_dataframe("1")
 
         assert len(spectrum_id1.index) == 4
 
         # Check size is correct for second obs
-        spectrum_id2 = spectra.get_dataframe("2")
+        spectrum_id2 = spectra._get_dataframe("2")
         assert len(spectrum_id2.index) == 4
 
     def test_nb_samples_min(self):
