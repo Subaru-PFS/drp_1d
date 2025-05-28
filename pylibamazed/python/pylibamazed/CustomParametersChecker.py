@@ -66,6 +66,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_continuum_removal()
         self._check_templateCatalog_continuum_removal()
         self._check_linemeas_runmode()
+        self._check_classif_after_fp()
         for object in self.accessor.get_spectrum_models([]):
             self._check_object(object)
 
@@ -837,6 +838,16 @@ class CustomParametersChecker(ParametersChecker):
                 error_message=f"{ESolveMethod.LINE_MEAS.value} linemodel lya asymProfile section for object {spectrum_model}",
                 warning_message=f"object {spectrum_model} {ESolveMethod.LINE_MEAS.value} linemodel lya asymProfile section",
             )
+
+    def _check_classif_after_fp(self):
+        if self.accessor.second_pass_after_classification():
+            for sm in self.accessor.get_spectrum_models():
+                rsm = self.accessor.get_redshift_solver_method(sm)
+                if rsm != ESolveMethod.LINE_MODEL:
+                    raise APIException(
+                        ErrorCode.INVALID_PARAMETER_FILE,
+                        "secondPassAfterClassification available only if all redshift solvers are lineModel",
+                    )
 
     def _check_dependant_condition(
         self,

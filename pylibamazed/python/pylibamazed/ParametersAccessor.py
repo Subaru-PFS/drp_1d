@@ -679,5 +679,6 @@ class ParametersAccessor:
     def get_large_grid_ratio(self, spectrum_model: str, method: ESolveMethod):
         section = self.get_firstpass_section(method, spectrum_model)
         return self._get_on_None(section, "largeGridStepRatio")
+
     def second_pass_after_classification(self):
         return self.parameters["secondPassAfterClassification"]

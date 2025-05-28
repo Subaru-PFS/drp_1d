@@ -308,7 +308,7 @@ class ProcessFlow:
     def load_result_store(self, rso):
         rso.load_all()
 
-    def run_method(self, method, rso=None, mode=None):
+    def run_method(self, method, mode=None):
         method_to_solver = {
             "classificationSolve": "CClassificationSolve",
             "lineMeasSolve": "CLineMeasSolve",
