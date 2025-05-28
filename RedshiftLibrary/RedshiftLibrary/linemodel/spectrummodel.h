@@ -127,11 +127,10 @@ public:
     return m_spcFluxAxisNoContinuum;
   }
 
-  Int32 ApplyContinuumPowerLawOnGrid(
-      std::shared_ptr<CContinuumModelSolution> const &continuum);
+  void ApplyContinuumPowerLawOnGrid(CContinuumModelSolution const &continuum);
 
-  Int32 ApplyContinuumTplOnGrid(const std::shared_ptr<const CTemplate> &tpl,
-                                Float64 zcontinuum);
+  void ApplyContinuumTplOnGrid(const std::shared_ptr<const CTemplate> &tpl,
+                               Float64 zcontinuum);
   void initObserveGridContinuumFlux(Int32 size);
   const TPhotVal &getPhotValues() const { return m_photValues; };
 

@@ -46,12 +46,12 @@
 using namespace NSEpic;
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n)
-    : CTwoPassResult("CTemplateFittingResult"), ChiSquare(n),
-      ReducedChiSquare(n), pValue(n), ChiSquarePhot(n), FitAmplitude(n),
-      FitAmplitudeError(n), FitAmplitudeSigma(n), FitEbmvCoeff(n),
-      FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n), SNR(n),
-      ChiSquareIntermediate(n), IsmEbmvIdxIntermediate(n),
-      IgmMeiksinIdxIntermediate(n), Overlap(n) {
+    : CTwoPassResult("CTemplateFittingResult"), ChiSquare(n), FitQuality(n),
+      ChiSquarePhot(n), FitAmplitude(n), FitAmplitudeError(n),
+      FitAmplitudeSigma(n), FitEbmvCoeff(n), FitMeiksinIdx(n), FitDtM(n),
+      FitMtM(n), LogPrior(n), SNR(n), ChiSquareIntermediate(n),
+      IsmEbmvIdxIntermediate(n), IgmMeiksinIdxIntermediate(n),
+      Overlap(n) {
   Redshifts.resize(n);
 }
 
@@ -77,8 +77,7 @@ Int32 CTemplateFittingResult::getIgmIndexInIntermediate(Int32 zIdx,
 void CTemplateFittingResult::set_at_redshift(Int32 i,
                                              TFittingIsmIgmResult val) {
   ChiSquare[i] = val.chiSquare;
-  ReducedChiSquare[i] = val.reducedChiSquare;
-  pValue[i] = val.pValue;
+  FitQuality[i] = val.fitQuality;
   ChiSquarePhot[i] = val.chiSquare_phot;
   FitAmplitude[i] = val.ampl;
   FitAmplitudeError[i] = val.ampl_err;
@@ -135,9 +134,7 @@ void CTemplateFittingResult::updateVectors(
       secondPassIndices;
   Int32 ndup = overwrittenSourceIndices.size();
   insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ReducedChiSquare, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(pValue, insertionIdx, count, NAN, ndup);
+  insertWithDuplicates<TFitQuality>(FitQuality, insertionIdx, count, {}, ndup);
   insertWithDuplicates<Float64>(ChiSquarePhot, insertionIdx, count, NAN, ndup);
   insertWithDuplicates<Float64>(FitAmplitude, insertionIdx, count, NAN, ndup);
   insertWithDuplicates<Float64>(FitAmplitudeError, insertionIdx, count, NAN,

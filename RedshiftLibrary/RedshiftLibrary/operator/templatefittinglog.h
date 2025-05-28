@@ -69,8 +69,8 @@ public:
   void CheckRedshifts();
 
   std::shared_ptr<CTemplateFittingResult> Compute(
-      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      const CTemplate &tpl, Float64 overlapThreshold, std::string opt_interp,
+      bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,

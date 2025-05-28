@@ -508,9 +508,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       if (fullResultIdx >= ssize(result->ChiSquare))
         THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
       result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
-      result->ReducedChiSquare[fullResultIdx] =
-          subresult->ReducedChiSquare[isubz];
-      result->pValue[fullResultIdx] = subresult->pValue[isubz];
+      result->FitQuality[fullResultIdx] = subresult->FitQuality[isubz];
       result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
       result->FitAmplitudeError[fullResultIdx] =
           subresult->FitAmplitudeError[isubz];
@@ -574,9 +572,10 @@ Int32 COperatorTemplateFittingLog::FitAllz(
                                2. * ampl * result->FitDtM[fullResultIdx];
           const Int32 nPixels = spectrumRebinedFluxRaw.size();
           result->ChiSquare[fullResultIdx] = chi2;
-          result->ReducedChiSquare[fullResultIdx] =
+          result->FitQuality[fullResultIdx].reducedChiSquare =
               NSFitQuality::reducedChi2(chi2, nPixels);
-          result->pValue[fullResultIdx] = NSFitQuality::pValue(chi2, nPixels);
+          result->FitQuality[fullResultIdx].pValue =
+              NSFitQuality::pValue(chi2, nPixels);
           Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
                           (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
           if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
@@ -747,8 +746,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
   // prepare best fit data buffer
   TFloat64List bestChi2(nshifts, DBL_MAX);
-  TFloat64List bestReducedChi2(nshifts, DBL_MAX);
-  TFloat64List bestPValue(nshifts, DBL_MAX);
+  std::vector<TFitQuality> bestFitQuality(nshifts);
   TFloat64List bestFitAmp(nshifts, NAN);
   TFloat64List bestFitAmpErr(nshifts, NAN);
   TFloat64List bestFitAmpSigma(nshifts, NAN);
@@ -868,8 +866,9 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
         if (bestChi2[k] > chi2[k]) {
           bestChi2[k] = chi2[k];
-          bestReducedChi2[k] = NSFitQuality::reducedChi2(chi2[k], nSpc);
-          bestPValue[k] = NSFitQuality::pValue(chi2[k], nSpc);
+          bestFitQuality[k].reducedChiSquare =
+              NSFitQuality::reducedChi2(chi2[k], nSpc);
+          bestFitQuality[k].pValue = NSFitQuality::pValue(chi2[k], nSpc);
           bestFitAmp[k] = amp[k];
           bestFitAmpErr[k] = amp_err[k];
           bestFitAmpSigma[k] = amp_sigma[k];
@@ -902,8 +901,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // reversing all vectors
   std::reverse(z_vect.begin(), z_vect.end());
   std::reverse(bestChi2.begin(), bestChi2.end());
-  std::reverse(bestReducedChi2.begin(), bestReducedChi2.end());
-  std::reverse(bestPValue.begin(), bestPValue.end());
+  std::reverse(bestFitQuality.begin(), bestFitQuality.end());
   std::reverse(bestFitAmp.begin(), bestFitAmp.end());
   std::reverse(bestFitAmpErr.begin(), bestFitAmpErr.end());
   std::reverse(bestFitAmpSigma.begin(), bestFitAmpSigma.end());
@@ -917,8 +915,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     result->Overlap[k] = TFloat64List(1, 1.0);
 
   result->ChiSquare = bestChi2;
-  result->ReducedChiSquare = bestReducedChi2;
-  result->pValue = bestPValue;
+  result->FitQuality = bestFitQuality;
   result->FitAmplitude = bestFitAmp;
   result->FitAmplitudeError = bestFitAmpErr;
   result->FitAmplitudeSigma = bestFitAmpSigma;
@@ -1011,40 +1008,40 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
  * lambdaRange is not clamped
  **/
 std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
-    const std::shared_ptr<const CTemplate> &logSampledTpl,
-    Float64 overlapThreshold, std::string opt_interp, bool opt_extinction,
-    bool opt_dustFitting, Float64 opt_continuum_null_amp_threshold,
+    const CTemplate &logSampledTpl, Float64 overlapThreshold,
+    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+    Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx, TInt32Range zIdxRangeToCompute,
     std::shared_ptr<CTemplateFittingResult> const &dummyResult) {
   Log.LogDetail(Formatter() << "starting computation for template: "
-                            << logSampledTpl->GetName());
+                            << logSampledTpl.GetName());
 
-  if (opt_dustFitting && logSampledTpl->CalzettiInitFailed())
+  if (opt_dustFitting && logSampledTpl.CalzettiInitFailed())
     THROWG(ErrorCode::INTERNAL_ERROR, "ISM is no initialized");
 
   if (opt_dustFitting &&
       FitEbmvIdx >=
-          logSampledTpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()) {
+          logSampledTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()) {
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << " Invalid calzetti index: (FitEbmvIdx=" << FitEbmvIdx
                        << ",while NPrecomputedEbmvCoeffs="
-                       << logSampledTpl->m_ismCorrectionCalzetti
+                       << logSampledTpl.m_ismCorrectionCalzetti
                               ->GetNPrecomputedEbmvCoeffs()
                        << ")");
   }
 
-  if (opt_extinction && logSampledTpl->MeiksinInitFailed()) {
+  if (opt_extinction && logSampledTpl.MeiksinInitFailed()) {
     THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
 
-  if (!logSampledTpl->GetSpectralAxis().IsLogSampled()) {
+  if (!logSampledTpl.GetSpectralAxis().IsLogSampled()) {
     THROWG(ErrorCode::INTERNAL_ERROR, "template is not log sampled");
   }
   // check if spc and tpl have same step
   const Float64 epsilon = 1E-8;
   if (std::abs(m_spectra[0]->GetSpectralAxis().GetlogGridStep() -
-               logSampledTpl->GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
+               logSampledTpl.GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
       epsilon)
     THROWG(ErrorCode::INTERNAL_ERROR,
            "tpl and spc are not sampled with the same step");
@@ -1053,15 +1050,15 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
 
   // subsample template if necessary
   if (m_ssRatio == 1) { // no required subsampling
-    m_templateRebined_bf[0] = *logSampledTpl;
+    m_templateRebined_bf[0] = logSampledTpl;
   } else {
     TInt32Range ilbda = FindTplSpectralIndex(m_spectra[0]->GetSpectralAxis(),
-                                             logSampledTpl->GetSpectralAxis(),
+                                             logSampledTpl.GetSpectralAxis(),
                                              TFloat64Range(m_redshifts));
     TFloat64List mask_tpl =
-        logSampledTpl->GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
+        logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
 
-    m_templateRebined_bf[0] = CTemplate(*logSampledTpl, mask_tpl);
+    m_templateRebined_bf[0] = CTemplate(logSampledTpl, mask_tpl);
     // double make sure that subsampled spectrum is well sampled
     if (!m_templateRebined_bf[0].GetSpectralAxis().IsLogSampled(m_logstep)) {
       THROWG(ErrorCode::INTERNAL_ERROR,
@@ -1119,10 +1116,9 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   }
   if (overlapValidInfZ != m_redshifts.front() ||
       overlapValidSupZ != m_redshifts.back()) {
-    Log.LogInfo(Formatter()
-                << "overlap warning for " << logSampledTpl->GetName()
-                << ": minz=" << overlapValidInfZ
-                << ", maxz=" << overlapValidSupZ);
+    Log.LogInfo(Formatter() << "overlap warning for " << logSampledTpl.GetName()
+                            << ": minz=" << overlapValidInfZ
+                            << ", maxz=" << overlapValidSupZ);
   }
 
   // estimate CstLog for PDF estimation

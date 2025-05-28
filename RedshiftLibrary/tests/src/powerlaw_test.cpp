@@ -242,8 +242,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
   BOOST_CHECK_EQUAL(result.coefs.second.b, result.coefs.first.b);
   BOOST_CHECK_CLOSE(result.chiSquare, 258.18913104295547, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.036904140734761, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.31517836228746177, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.036904140734761,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.31517836228746177, 1e-4);
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -261,8 +262,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
   BOOST_CHECK_EQUAL(result2.coefs.second.a, result2.coefs.first.a);
   BOOST_CHECK_EQUAL(result2.coefs.second.b, result2.coefs.first.b);
   BOOST_CHECK_CLOSE(result.chiSquare, 258.18913104295547, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.036904140734761, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.31517836228746177, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.036904140734761,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.31517836228746177, 1e-4);
   Context.reset();
 }
 
@@ -304,8 +306,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   BOOST_CHECK_CLOSE(result.coefs.first.stda, 5.634124732229189e-16, 1);
   BOOST_CHECK_CLOSE(result.coefs.first.stdb, 0.4533861348305359, 1);
   BOOST_CHECK_CLOSE(result.chiSquare, 278.1289308870019, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.1169836581807304, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.091549255634287813, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.1169836581807304,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.091549255634287813, 1e-4);
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -324,8 +327,9 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   BOOST_CHECK_CLOSE(result2.coefs.first.stda, 1.0296994218492315e-17, 1);
   BOOST_CHECK_CLOSE(result2.coefs.first.stdb, 0.008048716415326033, 1);
   BOOST_CHECK_CLOSE(result.chiSquare, 278.1289308870019, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.1169836581807304, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.091549255634287813, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.1169836581807304,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.091549255634287813, 1e-4);
   Context.reset();
 }
 
@@ -360,8 +364,9 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   BOOST_CHECK_CLOSE(result.coefs.second.a, a2, 10); // a2 has big errors
   BOOST_CHECK_CLOSE(result.coefs.second.b, b2, 1);
   BOOST_CHECK_CLOSE(result.chiSquare, 258.0642219227999, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.0364024976819273, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.31712094704529448, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.0364024976819273,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.31712094704529448, 1e-4);
   Context.reset();
 }
 
@@ -407,8 +412,9 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
   BOOST_CHECK_CLOSE(result.coefs.second.stda, 6.868548415411009e-19, 1e-2);
   BOOST_CHECK_CLOSE(result.coefs.second.stdb, 0.0066342065076361876, 1e-2);
   BOOST_CHECK_CLOSE(result.chiSquare, 594.61208512806786, 1e-2);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 0.99102014188011311, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.54292694313783707, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 0.99102014188011311,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.54292694313783707, 1e-4);
   Context.reset();
 }
 
@@ -708,9 +714,9 @@ BOOST_AUTO_TEST_CASE(basicfit_default) {
   BOOST_CHECK_EQUAL(result.coefs.second.stda, INFINITY);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.stdb, INFINITY);
-  BOOST_CHECK_EQUAL(result.chiSquare, INFINITY);
-  BOOST_CHECK_EQUAL(result.reducedChiSquare, INFINITY);
-  BOOST_CHECK_EQUAL(result.pValue, 0);
+  BOOST_CHECK_EQUAL(result.chiSquare, 0);
+  BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, 0);
+  BOOST_CHECK_EQUAL(result.fitQuality.pValue, 1);
   Context.reset();
 }
 

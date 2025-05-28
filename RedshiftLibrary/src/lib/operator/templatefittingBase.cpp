@@ -55,11 +55,10 @@ COperatorTemplateFittingBase::COperatorTemplateFittingBase(
 };
 
 // return tuple with photmetric values
-TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 ebmvCoef, Int32 meiksinIdx, Float64 amplitude,
-    const Float64 overlapThreshold, Int32 spcIndex,
-    const std::shared_ptr<CModelSpectrumResult> &models) {
+std::pair<CModelSpectrumResult, TPhotVal>
+COperatorTemplateFittingBase::ComputeSpectrumModel(
+    const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
+    Float64 amplitude, const Float64 overlapThreshold, Int32 spcIndex) {
   Log.LogDetail(
       Formatter()
       << "  Operator-COperatorTemplateFitting: building spectrum model "
@@ -98,7 +97,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf[spcIndex].MeiksinInitFailed()) {
-      THROWG(ErrorCode::INTERNAL_ERROR, "IGM in not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
     }
     ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   }
@@ -110,16 +109,16 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   CSpectrumSpectralAxis modelwav =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().ShiftByWaveLength(
           (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
-  models->addModel(std::move(modelwav.GetSamplesVector()),
-                   modelflux.GetSamplesVector(),
-                   m_spectra[spcIndex]->getObsID());
-  return spcIndex > 0 ? TPhotVal() : getIntegratedFluxes();
+  CModelSpectrumResult model(std::move(modelwav.GetSamplesVector()),
+                             modelflux.GetSamplesVector(),
+                             m_spectra[spcIndex]->getObsID());
+  return std::make_pair(std::move(model),
+                        spcIndex > 0 ? TPhotVal() : getIntegratedFluxes());
 }
 
 void COperatorTemplateFittingBase::RebinTemplate(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    TFloat64Range &currentRange, Float64 &overlapFraction,
-    const Float64 overlapThreshold, Int32 spcIndex) {
+    const CTemplate &tpl, Float64 redshift, TFloat64Range &currentRange,
+    Float64 &overlapFraction, const Float64 overlapThreshold, Int32 spcIndex) {
   Float64 onePlusRedshift = 1.0 + redshift;
 
   // shift lambdaRange backward to be in restframe
@@ -136,7 +135,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
       lambdaRange_restframe, spcLambdaRange_restframe);
 
   // the spectral and tpl axis should be in the same scale
-  const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
+  const CSpectrumSpectralAxis &tplSpectralAxis = tpl.GetSpectralAxis();
 
   // Compute clamped lambda range over template in restframe
   TFloat64Range tplLambdaRange;
@@ -146,8 +145,8 @@ void COperatorTemplateFittingBase::RebinTemplate(
   TFloat64Range::Intersect(tplLambdaRange, spcLambdaRange_restframe,
                            intersectedLambdaRange);
 
-  tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe[spcIndex],
-             m_templateRebined_bf[spcIndex], m_mskRebined_bf[spcIndex]);
+  tpl.Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe[spcIndex],
+            m_templateRebined_bf[spcIndex], m_mskRebined_bf[spcIndex]);
 
   // overlapFraction
   overlapFraction = m_spcSpectralAxis_restframe[spcIndex]

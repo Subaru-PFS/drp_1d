@@ -36,12 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/core/allocator_access.hpp>
 #include <iostream>
 
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/size.h"
 
 using namespace NSEpic;
 
@@ -49,7 +52,6 @@ BOOST_AUTO_TEST_SUITE(Mask)
 
 BOOST_AUTO_TEST_CASE(Mask1) {
   CMask mask;
-  const NSEpic::Mask *data;
 
   mask.SetSize(4);
 
@@ -60,19 +62,22 @@ BOOST_AUTO_TEST_CASE(Mask1) {
   mask[2] = 2;
   mask[3] = 3;
 
-  for (Int32 n = 0; n < (Int32)mask.GetMasksCount(); n++) {
-    BOOST_CHECK(mask[n] == n);
+  TMaskList ref{0, 1, 2, 3};
+  BOOST_CHECK(mask.getMaskList() == ref);
+  for (Int32 n = 0; n < mask.GetMasksCount(); n++) {
+    BOOST_CHECK_EQUAL(mask[n], n);
   }
 
-  data = mask.GetMasks();
-  BOOST_CHECK(data[1] == 1 && data[3] == 3);
+  CMask mask2(std::move(mask), 1, 3);
+  CMask ref2(TMaskList{1, 2});
+  BOOST_CHECK(mask2.getMaskList() == ref2.getMaskList());
 }
 
 BOOST_AUTO_TEST_CASE(Mask2) {
   CMask mask1(2);
   CMask mask2(2);
 
-  BOOST_CHECK(mask1.GetMasksCount() == 2);
+  BOOST_CHECK_EQUAL(mask1.GetMasksCount(), 2);
 
   mask1[0] = 0xf0;
   mask1[1] = 0x80;
@@ -81,40 +86,38 @@ BOOST_AUTO_TEST_CASE(Mask2) {
 
   mask2 &= mask1; // mask1=f080 mask2=0080
 
-  BOOST_CHECK(mask2[0] == 0 && mask2[1] == 0x80);
+  BOOST_CHECK_EQUAL(mask2[0], 0);
+  BOOST_CHECK_EQUAL(mask2[1], 0x80);
 
-  BOOST_CHECK(mask1.IntersectWith(mask2) == true); // mask1=0080 mask2=0080
-  BOOST_CHECK(mask1[0] == 0 && mask1[1] == 0x80);
+  mask1.IntersectWith(mask2); // mask1=0080 mask2=0080
+  BOOST_CHECK_EQUAL(mask1[0], 0);
+  BOOST_CHECK_EQUAL(mask1[1], 0x80);
 
-  mask1[1] = 0x7f;                                 // mask1=007f mask2=0080
-  BOOST_CHECK(mask1.IntersectWith(mask2) == true); // mask1=0000 mask2=0080
-  BOOST_CHECK(mask1[0] == 0 && mask1[1] == 0);
-  BOOST_CHECK(mask2[0] == 0 && mask2[1] == 0x80);
+  mask1[1] = 0x7f;            // mask1=007f mask2=0080
+  mask1.IntersectWith(mask2); // mask1=0000 mask2=0080
+  BOOST_CHECK_EQUAL(mask1[0], 0);
+  BOOST_CHECK_EQUAL(mask1[1], 0);
+  BOOST_CHECK_EQUAL(mask2[0], 0);
+  BOOST_CHECK_EQUAL(mask2[1], 0x80);
 
   mask1[0] = 0x0f;
   mask1[1] = 0xf0;
   mask2[0] = 0xf0;
   mask2[1] = 0x0f; // mask1=0ff0 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.CompouteOverlapFraction(mask2), 1.0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.ComputeOverlapFraction(mask2), 1.0, 1e-6);
 
   mask1[0] = 0;
   mask1[1] = 0; // mask1=0000 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.CompouteOverlapFraction(mask2), 0, 1e-6);
+  BOOST_CHECK_CLOSE(mask1.ComputeOverlapFraction(mask2), 0, 1e-6);
   // TODO : should better raise an exception
 
   mask1.SetSize(3);
   mask1[2] = 0x01; // mask1=000001 mask2=f00f
-  BOOST_CHECK_CLOSE(mask1.CompouteOverlapFraction(mask2), -1.0, 1e-6);
-  // TODO : should better raise an exception
-
-  mask1 &= mask2;
-  BOOST_CHECK(mask1.GetMasksCount() == 3);
-  BOOST_CHECK(mask1[0] == 0 && mask1[1] == 0 && mask1[2] == 1);
-
-  BOOST_CHECK(mask1.IntersectWith(mask2) == false);
-
-  BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapFraction(mask2), -1.0,
-                    1e-6);
+  BOOST_CHECK_THROW(mask1.ComputeOverlapFraction(mask2), AmzException);
+  BOOST_CHECK_THROW(mask1 &= mask2, AmzException);
+  BOOST_CHECK_THROW(mask1.IntersectWith(mask2), AmzException);
+  BOOST_CHECK_THROW(mask1.IntersectAndComputeOverlapFraction(mask2),
+                    AmzException);
 
   mask1.SetSize(2);
   mask1[0] = 0x0f;

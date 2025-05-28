@@ -40,14 +40,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
-#include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/templatefittingfortests.h"
-#include "tests/src/tool/inputContextLight.h"
 
 using namespace NSEpic;
 
@@ -89,13 +85,25 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
   BOOST_CHECK_CLOSE(z, 2.8770415147926256, 1e-6);
 
   // Checks that fit quality indicators are correctly set
-  Float64 chi2 = res->fittedContinuum.merit;
-  BOOST_CHECK_CLOSE(chi2, 366.77585884307723, 1e-4);
-  Float64 chi2r = res->fittedContinuum.reducedChi2;
-  BOOST_CHECK_CLOSE(chi2r, 6.6686519789650403, 1e-4);
-  Float64 pValue = res->fittedContinuum.pValue;
-  BOOST_CHECK_CLOSE(pValue, 4.6089808815878171e-48, 1e-4);
-
+  BOOST_CHECK_CLOSE(res->fittedContinuum.merit, 366.77585884307723, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.reducedChi2, 6.6686519789650403, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 4.6089808815878171e-48, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 0.74992846452048112,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 2.4926853627717862,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.skewnessResiduals, 2.4156922366549645,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, 5.1127303529994856,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksResiduals, 0.11124487273552974,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdResiduals, 0.26284967710067192,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdMeanResiduals,
+                    0.30692167604051857, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 7.2096655554220144,
+                    1e-4);
   Context.reset();
 }
 

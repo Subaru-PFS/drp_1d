@@ -43,20 +43,35 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/photometry/photometricdata.h"
-#include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/statistics/priorhelper.h"
 
 namespace NSEpic {
 
 class CSpectrum;
 class COperatorResult;
 class CModelSpectrumResult;
+
+struct TFitQuality {
+  Float64 reducedChiSquare = INFINITY;
+  Float64 pValue = 0;
+  Float64 meanResiduals = INFINITY;
+  Float64 stdResiduals = INFINITY;
+  Float64 skewnessResiduals = INFINITY;
+  Float64 kurtosisResiduals = INFINITY;
+  Float64 ksResiduals = INFINITY;
+  Float64 ksStdResiduals = INFINITY;
+  Float64 ksStdMeanResiduals = INFINITY;
+  Float64 andersonResiduals = INFINITY;
+  Int32 nPixels = 0;
+};
+
+struct TContinuumResult {
+  Float64 ebmvCoef = NAN;
+  Int32 meiksinIdx = undefIdx;
+  TFitQuality fitQuality;
+};
 
 /**
  * \ingroup Redshift
@@ -74,6 +89,7 @@ protected:
   std::shared_ptr<CMaskBuilder> m_maskBuilder;
   std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
+  TInt32List m_kStart, m_kEnd;
 
   virtual Float64 EstimateLikelihoodCstLog() const;
 };

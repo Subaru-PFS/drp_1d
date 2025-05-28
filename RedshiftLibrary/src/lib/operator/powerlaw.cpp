@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/operator/continuumfitting.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/powerlawresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
@@ -66,16 +67,15 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
   m_spectra = Context.getSpectra();
   m_nSpectra = m_spectra.size();
   m_nPixels.resize(m_nSpectra);
-  m_firstPixelIdxInRange.resize(m_nSpectra);
-  m_lastPixelIdxInRange.resize(m_nSpectra);
+  m_kStart.resize(m_nSpectra);
+  m_kEnd.resize(m_nSpectra);
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     const CSpectrumSpectralAxis &spectrumLambda =
         Context.getSpectra()[spectrumIdx]->GetSpectralAxis();
     m_lambdaRanges[spectrumIdx]->getClosedIntervalIndices(
-        spectrumLambda.GetSamplesVector(), m_firstPixelIdxInRange[spectrumIdx],
-        m_lastPixelIdxInRange[spectrumIdx]);
-    m_nPixels[spectrumIdx] = m_lastPixelIdxInRange[spectrumIdx] -
-                             m_firstPixelIdxInRange[spectrumIdx] + 1;
+        spectrumLambda.GetSamplesVector(), m_kStart[spectrumIdx],
+        m_kEnd[spectrumIdx]);
+    m_nPixels[spectrumIdx] = m_kEnd[spectrumIdx] - m_kStart[spectrumIdx] + 1;
   }
   m_igmCorrectionMeiksin = Context.getFluxCorrectionMeiksin();
   m_ismCorrectionCalzetti = Context.getFluxCorrectionCalzetti();
@@ -97,60 +97,61 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                                             bool opt_dustFitting,
                                             Float64 nullFluxThreshold,
                                             std::string method) {
-  // Question: what to do with this ?
-  // m_option_igmFastProcessing = (m_nIgmCurves > 1 ? true : false);
-  T3DCurve fluxCurve = initializeFluxCurve(redshift, nullFluxThreshold);
+
+  TCurve curve = initializeFluxCurve(redshift, nullFluxThreshold);
 
   // handle null or negative spectrum
   auto N = std::count_if(boost::counting_iterator<Int32>(0),
-                         boost::counting_iterator<Int32>(fluxCurve.size()),
-                         [&fluxCurve](Int32 pixelIdx) {
-                           return fluxCurve.pixelIsChi2Valid(pixelIdx);
+                         boost::counting_iterator<Int32>(curve.size()),
+                         [&curve](Int32 pixelIdx) {
+                           return curve.pixelIsChi2AndSNRValid(pixelIdx);
                          });
+  TPowerLawResult result;
   if (N < m_nLogSamplesMin) {
-    Int32 const nPixels = fluxCurve.size();
-    auto const constantLawsCoef =
-        computeConstantLawCoefs(fluxCurve.toCurve(0, 0));
+    // If the number of valid pixels is too low, set igm / ism indexes to 0 and
+    // constant power law
+    Int32 const nPixels = curve.size();
+    auto const constantLawsCoef = computeConstantLawCoefs(curve);
     T2DPowerLawCoefsPair coefs(1,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
-    // reset snrCompliant to true everywhere for computing chi2
-    fluxCurve.setIsSnrCompliant(TBoolList(nPixels, true));
-    auto const chi2 = computeChi2(fluxCurve, coefs);
-    TPowerLawResult result;
+    // Create a temporary 3D curve to compute chi2
+    auto curve3D = T3DCurve(std::move(curve));
+    auto const chi2 = computeChi2(curve3D, coefs, false);
+    curve = TCurve(std::move(curve3D));
+
     result.chiSquare = chi2[0][0];
-    result.reducedChiSquare =
-        NSFitQuality::reducedChi2(result.chiSquare, nPixels);
-    result.pValue = NSFitQuality::pValue(result.chiSquare, nPixels);
     result.coefs = constantLawsCoef;
     if (opt_extinction)
       result.meiksinIdx = undefIdx;
     if (opt_dustFitting)
       result.ebmvCoef = 0.0;
-    return result;
+
+  } else {
+    T3DCurve emittedCurve = computeEmittedCurve(
+        redshift, opt_extinction, opt_dustFitting, std::move(curve));
+
+    // Step 3. Compute power law coefs and chi2
+    T2DPowerLawCoefsPair coefs = powerLawCoefs3D(emittedCurve, method);
+    TChi2Result chi2Result = findMinChi2OnIgmIsm(emittedCurve, coefs);
+    // Step 4. Creates result
+    result.chiSquare = chi2Result.chi2;
+    result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
+    if (opt_extinction)
+      result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
+    if (opt_dustFitting)
+      result.ebmvCoef = m_ismCorrectionCalzetti->GetEbmvValue(
+          m_ismIdxList[chi2Result.ismIdx]);
+    curve =
+        TCurve(std::move(emittedCurve), chi2Result.igmIdx, chi2Result.ismIdx);
   }
-
-  T3DCurve emittedCurve =
-      computeEmittedCurve(redshift, opt_extinction, opt_dustFitting, fluxCurve);
-
-  // Step 3. Compute power law coefs and chi2
-  T2DPowerLawCoefsPair coefs = powerLawCoefs3D(emittedCurve, method);
-  TChi2Result chi2Result = findMinChi2OnIgmIsm(emittedCurve, coefs);
-  // Step 4. Creates result
-  TPowerLawResult result;
-  result.chiSquare = chi2Result.chi2;
-  N = std::count_if(boost::counting_iterator<Int32>(0),
-                    boost::counting_iterator<Int32>(emittedCurve.size()),
-                    [&emittedCurve](Int32 pixelIdx) {
-                      return emittedCurve.pixelIsChi2Valid(pixelIdx);
-                    });
-  result.reducedChiSquare = NSFitQuality::reducedChi2(chi2Result.chi2, N);
-  result.pValue = NSFitQuality::pValue(chi2Result.chi2, N);
-  result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
-  if (opt_extinction)
-    result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
-  if (opt_dustFitting)
-    result.ebmvCoef =
-        m_ismCorrectionCalzetti->GetEbmvValue(m_ismIdxList[chi2Result.ismIdx]);
+  auto modelFlux =
+      computeModelFlux(curve.computeUnmaskedLambda(), redshift,
+                       result.meiksinIdx, result.ebmvCoef, result.coefs);
+  T2DPowerLawCoefsPair coefs(1, TList<TPowerLawCoefsPair>(1, result.coefs));
+  auto flux = curve.computeUnmaskedFlux();
+  auto error = curve.computeUnmaskedFluxError();
+  result.fitQuality = NSFitQuality::computeFitQuality(
+      std::move(flux), std::move(modelFlux), std::move(error));
   return result;
 };
 
@@ -181,25 +182,19 @@ COperatorPowerLaw::findMinChi2OnIgmIsm(T3DCurve const &curve3D,
           chiSquareInterm[minChi2Idxs.first][minChi2Idxs.second]};
 }
 
-Float64 COperatorPowerLaw::theoreticalFluxAtLambda(TPowerLawCoefsPair fullCoefs,
-                                                   Float64 lambda) {
-  Float64 theoreticalFlux = NAN;
-  if (lambda < m_lambdaCut)
-    theoreticalFlux = computePowerLaw(fullCoefs.first, lambda);
-  else
-    theoreticalFlux = computePowerLaw(fullCoefs.second, lambda);
-
-  return theoreticalFlux;
-}
-
-Float64 COperatorPowerLaw::computePowerLaw(TPowerLawCoefs coefs,
-                                           Float64 lambda) {
-  return coefs.a * std::pow(lambda, coefs.b);
-}
-
 T2DList<Float64>
 COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
-                               T2DPowerLawCoefsPair const &coefs) {
+                               T2DPowerLawCoefsPair const &coefs,
+                               const bool applySNRThreshold) {
+  std::function<bool(Int32)> considerPixel;
+  if (applySNRThreshold)
+    considerPixel = [&curve3D](Int32 pixelIdx) {
+      return curve3D.pixelIsChi2AndSNRValid(pixelIdx);
+    };
+  else
+    considerPixel = [&curve3D](Int32 pixelIdx) {
+      return curve3D.pixelIsChi2Valid(pixelIdx);
+    };
   Int32 nIgmCurves = curve3D.getNIgm();
   Int32 nIsmCurves = curve3D.getNIsm();
   T2DList<Float64> chi2_all(nIgmCurves, TList<Float64>(nIsmCurves, INFINITY));
@@ -207,20 +202,22 @@ COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
   for (Int32 igmIdx = 0; igmIdx < nIgmCurves; igmIdx++) {
     for (Int32 ismIdx = 0; ismIdx < nIsmCurves; ismIdx++) {
       Float64 chi2 = 0.0;
+      Int32 nPixels = 0;
       for (Int32 pixelIdx = 0; pixelIdx < m_nPixels[0]; pixelIdx++) {
-        if (curve3D.pixelIsChi2Valid(pixelIdx)) {
+        if (considerPixel(pixelIdx)) {
           Float64 theoreticalFlux =
               curve3D.getIsExtinctedAt(igmIdx, ismIdx, pixelIdx)
                   ? 0
-                  : theoreticalFluxAtLambda(coefs[igmIdx][ismIdx],
-                                            curve3D.getLambdaAt(pixelIdx));
+                  : computeDoublePowerLaw(coefs[igmIdx][ismIdx],
+                                          curve3D.getLambdaAt(pixelIdx));
           Float64 diff =
               curve3D.getFluxAt(igmIdx, ismIdx, pixelIdx) - theoreticalFlux;
           diff = diff / curve3D.getFluxErrorAt(igmIdx, ismIdx, pixelIdx);
           chi2 += diff * diff;
+          ++nPixels;
         }
       }
-      if (chi2 > 0)
+      if (nPixels > 0)
         chi2_all[igmIdx][ismIdx] = chi2;
     }
   }
@@ -327,8 +324,8 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
 
 TPowerLawCoefsPair
 COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
-  auto const &flux = emittedCurve.getFlux();
-  auto const &error = emittedCurve.getFluxError();
+  auto const flux = emittedCurve.computeUnmaskedFlux();
+  auto const error = emittedCurve.computeUnmaskedFluxError();
   TFloat64List inverse_var(error.size());
   std::transform(error.cbegin(), error.cend(), inverse_var.begin(),
                  [](Float64 v) { return 1.0 / (v * v); });
@@ -415,8 +412,8 @@ TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
   for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
     Float64 w = 1;
     if (coefsFirstEstim.has_value()) {
-      Float64 estimatedFlux = computeEstimatedFlux(
-          coefsFirstEstim.value(), lnCurve.getLambdaAt(pixelIdx));
+      Float64 estimatedFlux = computePowerLaw(
+          coefsFirstEstim.value(), std::exp(lnCurve.getLambdaAt(pixelIdx)));
       w = lnCurve.getFluxErrorAt(pixelIdx) / estimatedFlux;
     }
     Float64 X = lnCurve.getLambdaAt(pixelIdx) / w;
@@ -491,7 +488,7 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
     if (xi < xc) {
       if (coefsFirstEstim.has_value()) {
         Float64 estimatedFlux =
-            computeEstimatedFlux(coefsFirstEstim.value().first, xi);
+            computePowerLaw(coefsFirstEstim.value().first, std::exp(xi));
         wi = (estimatedFlux * estimatedFlux) /
              (lnCurve.getFluxErrorAt(pixelIdx) *
               lnCurve.getFluxErrorAt(pixelIdx));
@@ -505,7 +502,7 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
     } else {
       if (coefsFirstEstim.has_value()) {
         Float64 estimatedFlux =
-            computeEstimatedFlux(coefsFirstEstim.value().second, xi);
+            computePowerLaw(coefsFirstEstim.value().second, std::exp(xi));
         wi = (estimatedFlux * estimatedFlux) /
              (lnCurve.getFluxErrorAt(pixelIdx) *
               lnCurve.getFluxErrorAt(pixelIdx));
@@ -573,8 +570,8 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
   return {{a1, b1, sigmaa1, sigmab1}, {a2, b2, sigmaa2, sigmab2}};
 }
 
-T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
-                                                Float64 nullFluxThreshold) {
+TCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
+                                              Float64 nullFluxThreshold) {
   // In order to take into account ism, igm we initialize a template with a flux
   // at 1 we then divide the initial flux by the template flux value once ism
   // igm has been applied
@@ -585,30 +582,30 @@ T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
   // Concatenates all curves
   // NB: at the end, lambda is not ordered anymore
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
-    TList<Float64> tmpLambda = m_spectra[spectrumIdx]
-                                   ->GetSpectralAxis()
-                                   .extract(m_firstPixelIdxInRange[spectrumIdx],
-                                            m_lastPixelIdxInRange[spectrumIdx])
-                                   .GetSamplesVector();
+    TList<Float64> tmpLambda =
+        m_spectra[spectrumIdx]
+            ->GetSpectralAxis()
+            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+            .GetSamplesVector();
     spectrumLambda.insert(spectrumLambda.end(),
                           std::make_move_iterator(tmpLambda.begin()),
                           std::make_move_iterator(tmpLambda.end()));
 
-    TList<Float64> tmpFlux = m_spectra[spectrumIdx]
-                                 ->GetFluxAxis()
-                                 .extract(m_firstPixelIdxInRange[spectrumIdx],
-                                          m_lastPixelIdxInRange[spectrumIdx])
-                                 .GetSamplesVector();
+    TList<Float64> tmpFlux =
+        m_spectra[spectrumIdx]
+            ->GetFluxAxis()
+            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+            .GetSamplesVector();
     spectrumFlux.insert(spectrumFlux.end(),
                         std::make_move_iterator(tmpFlux.begin()),
                         std::make_move_iterator(tmpFlux.end()));
 
-    TList<Float64> tmpError = m_spectra[spectrumIdx]
-                                  ->GetFluxAxis()
-                                  .GetError()
-                                  .extract(m_firstPixelIdxInRange[spectrumIdx],
-                                           m_lastPixelIdxInRange[spectrumIdx])
-                                  .GetSamplesVector();
+    TList<Float64> tmpError =
+        m_spectra[spectrumIdx]
+            ->GetFluxAxis()
+            .GetError()
+            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+            .GetSamplesVector();
     spectrumFluxError.insert(spectrumFluxError.end(),
                              std::make_move_iterator(tmpError.begin()),
                              std::make_move_iterator(tmpError.end()));
@@ -624,22 +621,19 @@ T3DCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
   ;
 
   // Step 2. Transform spectrum data
-
   // Initializes usable pixels
   spectrumLambdaAxis.blueShiftInplace(redshift);
+
   TBoolList snrCompliantPixels = computeSNRCompliantPixels(
       spectrumFlux, spectrumFluxError, nullFluxThreshold);
-  TCurve fluxCurve1D({spectrumLambdaAxis.GetSamplesVector(),
-                      std::move(spectrumFlux), std::move(spectrumFluxError)});
+  TCurve fluxCurve1D(spectrumLambdaAxis.GetSamplesVector(),
+                     std::move(spectrumFlux), std::move(spectrumFluxError),
+                     std::move(maskedPixels),
+                     TBoolList(spectrumLambdaAxis.GetSamplesCount(), false),
+                     std::move(snrCompliantPixels));
   fluxCurve1D.sort();
 
-  T3DCurve fluxCurve3D(std::move(fluxCurve1D));
-  fluxCurve3D.setIsSnrCompliant(std::move(snrCompliantPixels));
-  fluxCurve3D.setMask(std::move(maskedPixels));
-  fluxCurve3D.setIsExtincted(
-      T3DList<bool>(1, T2DList<bool>(1, TBoolList(fluxCurve3D.size(), false))));
-
-  return fluxCurve3D;
+  return fluxCurve1D;
 }
 
 T3DList<Float64> COperatorPowerLaw::computeIsmIgmCorrections(
@@ -701,13 +695,13 @@ TList<Float64> COperatorPowerLaw::computeIsmIgmCorrection(
 T3DCurve COperatorPowerLaw::computeEmittedCurve(Float64 redshift,
                                                 bool opt_extinction,
                                                 bool opt_dustFitting,
-                                                T3DCurve &fluxCurve) {
+                                                TCurve &&fluxCurve_) {
   // In order to take into account ism, igm we initialize a template with a flux
   // at 1 we then divide the initial flux by the template flux value once ism
   // igm has been applied
   // Set m_ismIgmCorrections
 
-  fluxCurve.extendIgmIsm(m_nIgmCurves, m_nIsmCurves);
+  T3DCurve fluxCurve(std::move(fluxCurve_), m_nIgmCurves, m_nIsmCurves);
 
   T3DList<bool> isExtincted(
       m_nIgmCurves,
@@ -753,40 +747,34 @@ TBoolList COperatorPowerLaw::computeSNRCompliantPixels(
   }
   return snrCompliant;
 }
-Float64 COperatorPowerLaw::computeEstimatedFlux(TPowerLawCoefs const &coefs,
-                                                Float64 x) const {
-  // with x = ln(lambda)
-  return coefs.a * std::pow(std::exp(x), coefs.b);
+
+TFloat64List COperatorPowerLaw::computeModelFlux(
+    const TFloat64List &lambdaRestAxis, const Float64 redshift,
+    const Int32 meiksinIdx, const Float64 ebmvCoef,
+    const TPowerLawCoefsPair &coefs) const {
+  TList<Float64> const correctionCoefs =
+      computeIsmIgmCorrection(redshift, lambdaRestAxis, meiksinIdx, ebmvCoef);
+  TList<Float64> fluxObs(lambdaRestAxis.size(), NAN);
+  for (size_t pixelIdx = 0; pixelIdx < lambdaRestAxis.size(); pixelIdx++) {
+    fluxObs[pixelIdx] = computeDoublePowerLaw(coefs, lambdaRestAxis[pixelIdx]) *
+                        correctionCoefs[pixelIdx];
+  }
+  return fluxObs;
 }
 
-void COperatorPowerLaw::ComputeSpectrumModel(
-    const std::shared_ptr<CContinuumModelSolution> &continuum, Int32 spcIndex,
-    const std::shared_ptr<CModelSpectrumResult> &models) {
+CModelSpectrumResult COperatorPowerLaw::ComputeSpectrumModel(
+    const CContinuumModelSolution &continuum, Int32 spcIndex) {
 
   auto const &lambdaObsAxis = m_spectra[spcIndex]->GetSpectralAxis();
   auto const &lambdaObs = lambdaObsAxis.GetSamplesVector();
-  auto const lambdaRestAxis = lambdaObsAxis.blueShift(continuum->redshift);
+  auto const lambdaRestAxis =
+      lambdaObsAxis.blueShift(continuum.redshift).GetSamplesVector();
 
-  // Calculates ism igm corrections for given lambdaRest / redshift
-  // TODO check here
-  TList<Float64> const correctionCoefs =
-      computeIsmIgmCorrection(continuum->redshift, lambdaRestAxis,
-                              continuum->meiksinIdx, continuum->ebmvCoef);
-  // Use lambda rest to calculate flux rest and apply ism igm on flux rest to
-  // get flux obs
-  TList<Float64> fluxObs(lambdaObs.size(), NAN);
-  for (size_t pixelIdx = 0; pixelIdx < lambdaObs.size(); pixelIdx++) {
-    fluxObs[pixelIdx] =
-        theoreticalFluxAtLambda(
-            {{continuum->a1, continuum->b1}, {continuum->a2, continuum->b2}},
-            lambdaRestAxis.GetSamplesVector()[pixelIdx]) *
-        correctionCoefs[pixelIdx];
-  }
+  auto fluxObs = computeModelFlux(
+      lambdaRestAxis, continuum.redshift, continuum.meiksinIdx,
+      continuum.ebmvCoef,
+      {{continuum.a1, continuum.b1}, {continuum.a2, continuum.b2}});
 
-  Float64 overlapFraction = 0.0;
-  TFloat64Range currentRange;
-
-  models->addModel(lambdaObs, std::move(fluxObs),
-                   m_spectra[spcIndex]->getObsID());
-  return;
+  return CModelSpectrumResult(lambdaObs, std::move(fluxObs),
+                              m_spectra[spcIndex]->getObsID());
 }

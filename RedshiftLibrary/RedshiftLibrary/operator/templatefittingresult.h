@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/twopassresult.h"
 #include "RedshiftLibrary/processflow/result.h"
@@ -55,7 +56,7 @@ class CTemplateFittingResult : public CTwoPassResult {
 public:
   CTemplateFittingResult(Int32 n);
   CTemplateFittingResult(Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
-  void set_at_redshift(Int32 i, TFittingIsmIgmResult val);
+  void set_at_redshift(const Int32 i, TFittingIsmIgmResult val);
   Int32 getIsmIndexInIntermediate(Int32 ebmvIdx) const;
   Int32 getIgmIndexInIntermediate(Int32 zIdx, Int32 igmIndex) const;
 
@@ -72,8 +73,7 @@ public:
 
   // best fit results
   TFloat64List ChiSquare;
-  TFloat64List ReducedChiSquare;
-  TFloat64List pValue;
+  std::vector<TFitQuality> FitQuality;
   TFloat64List ChiSquarePhot;
   TFloat64List FitAmplitude;
   TFloat64List FitAmplitudeError;

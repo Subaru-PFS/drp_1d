@@ -66,17 +66,25 @@ using namespace NSEpic;
  * value
  * @return False if there was a problem.
  */
-void CTemplatesFitStore::Add(std::string name, Float64 ismEbmvCoeff,
-                             Int32 igmMeiksinIdx, Float64 redshift,
-                             Float64 merit, Float64 reducedChi2, Float64 pValue,
-                             Float64 chiSquare_phot, Float64 fitAmplitude,
-                             Float64 fitAmplitudeError,
-                             Float64 fitAmplitudeSigma, Float64 fitDtM,
-                             Float64 fitMtM, Float64 logprior, Float64 snr) {
+void CTemplatesFitStore::Add(
+    const std::string &name, const Float64 ismEbmvCoeff,
+    const Int32 igmMeiksinIdx, const Float64 redshift, const Float64 merit,
+    const TFitQuality &fitQuality, const Float64 chiSquare_phot,
+    const Float64 fitAmplitude, const Float64 fitAmplitudeError,
+    const Float64 fitAmplitudeSigma, const Float64 fitDtM, const Float64 fitMtM,
+    const Float64 logprior, const Float64 snr) {
   CContinuumModelSolution tmpCContinuumModelSolution;
   tmpCContinuumModelSolution.merit = merit;
-  tmpCContinuumModelSolution.reducedChi2 = reducedChi2;
-  tmpCContinuumModelSolution.pValue = pValue;
+  tmpCContinuumModelSolution.reducedChi2 = fitQuality.reducedChiSquare;
+  tmpCContinuumModelSolution.pValue = fitQuality.pValue;
+  tmpCContinuumModelSolution.meanResiduals = fitQuality.meanResiduals;
+  tmpCContinuumModelSolution.stdResiduals = fitQuality.stdResiduals;
+  tmpCContinuumModelSolution.skewnessResiduals = fitQuality.skewnessResiduals;
+  tmpCContinuumModelSolution.kurtosisResiduals = fitQuality.kurtosisResiduals;
+  tmpCContinuumModelSolution.ksResiduals = fitQuality.ksResiduals;
+  tmpCContinuumModelSolution.ksStdResiduals = fitQuality.ksStdResiduals;
+  tmpCContinuumModelSolution.ksStdMeanResiduals = fitQuality.ksStdMeanResiduals;
+  tmpCContinuumModelSolution.andersonResiduals = fitQuality.andersonResiduals;
   tmpCContinuumModelSolution.tplMeritPhot = chiSquare_phot;
   tmpCContinuumModelSolution.tplAmplitude = fitAmplitude;
   tmpCContinuumModelSolution.tplAmplitudeError = fitAmplitudeError;

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================using
 #include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 

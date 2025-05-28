@@ -38,9 +38,9 @@
 // ============================================================================
 
 #include "RedshiftLibrary/common/curve.h"
+#include "RedshiftLibrary/common/curve3d.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
+#include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include <numeric>
 
@@ -49,17 +49,25 @@ using namespace NSEpic;
 TCurve::TCurve() {}
 
 TCurve::TCurve(TList<Float64> lambda, TList<Float64> flux,
-               TList<Float64> fluxError) {
+               TList<Float64> fluxError, TList<uint8_t> mask,
+               TList<bool> isExtincted, TList<bool> isSnrCompliant) {
   setLambda(std::move(lambda));
   setFlux(std::move(flux));
   setFluxError(std::move(fluxError));
+  setMask(std::move(mask));
+  setIsSnrCompliant(isSnrCompliant);
+  setIsExtincted(isExtincted);
+}
+
+TCurve::TCurve(T3DCurve &&curve, Int16 igmIdx, Int16 ismIdx) {
+  *this = std::move(curve).toCurve(igmIdx, ismIdx);
 }
 
 void TCurve::checkIdx(Int32 idx) const {
   if (idx > size())
     THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "TCurve::" << __func__ << ": Trying to get index "
-                       << idx << "outside of curve with size " << size());
+           Formatter() << "Trying to get index " << idx
+                       << "outside of curve with size " << size());
 }
 
 TCurveElement TCurve::get_at_index(Int32 idx) const {
@@ -86,13 +94,32 @@ void TCurve::push_back(TCurveElement const &elem) {
   fluxError.push_back(elem.fluxError);
 }
 
-Int32 TCurve::size() const { return lambda.size(); }
-
 void TCurve::setLambda(TFloat64List inputLambda) {
   lambda = std::move(inputLambda);
 }
 
 void TCurve::setFlux(TList<Float64> inputFlux) { flux = std::move(inputFlux); }
+
+void TCurve::setMask(TList<uint8_t> inputMask) {
+  if (ssize(inputMask) != size())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Incompatible inputMask sizes, input "
+                       << inputMask.size() << "vs curve " << size());
+  mask = std::move(inputMask);
+}
+
+void TCurve::setIsSnrCompliant(TList<bool> inputIsSnrCompliant) {
+  if (ssize(inputIsSnrCompliant) != size())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Incompatible isSnrCompliant sizes, input "
+                       << inputIsSnrCompliant.size() << "vs curve " << size());
+
+  isSnrCompliant = std::move(inputIsSnrCompliant);
+}
+
+void TCurve::setIsExtincted(TList<bool> inputIsExtincted) {
+  isExtincted = std::move(inputIsExtincted);
+}
 
 void TCurve::setFluxError(TList<Float64> inputFluxError) {
   fluxError = std::move(inputFluxError);
@@ -117,16 +144,60 @@ void TCurve::sort() {
             [this](size_t i1, size_t i2) { return lambda[i1] < lambda[i2]; });
 
   // Use the sorted indices to reorder lambda, flux, and fluxError
-  std::vector<Float64> lambdaSorted(lambda.size()), FluxSorted(flux.size()),
-      fluxErrorSorted(fluxError.size());
+  TFloat64List lambdaSorted(size()), FluxSorted(size()),
+      fluxErrorSorted(size());
+  TList<uint8_t> maskSorted(size());
+  TBoolList isExtinctedSorted(size()), isSnrCompliantSorted(size());
   for (std::size_t i = 0; i < sortingIndices.size(); ++i) {
     lambdaSorted[i] = lambda[sortingIndices[i]];
     FluxSorted[i] = flux[sortingIndices[i]];
     fluxErrorSorted[i] = fluxError[sortingIndices[i]];
+    maskSorted[i] = mask[sortingIndices[i]];
+    isExtinctedSorted[i] = isExtincted[sortingIndices[i]];
+    isSnrCompliantSorted[i] = isSnrCompliant[sortingIndices[i]];
   }
 
   // Assign the sorted vectors back to the original vectors
   lambda = std::move(lambdaSorted);
   flux = std::move(FluxSorted);
   fluxError = std::move(fluxErrorSorted);
+  mask = std::move(maskSorted);
+  isExtincted = std::move(isExtinctedSorted);
+  isSnrCompliant = std::move(isSnrCompliantSorted);
+}
+
+TFloat64List TCurve::computeUnmasked(const TFloat64List &data) const {
+  if (ssize(data) != size())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "TCurve::" << __func__
+                       << ": Trying to compute unmasked data with a different "
+                          "size than the curve");
+  TFloat64List unmasked;
+  unmasked.reserve(size());
+  Int32 pixelIdx = -1;
+  for (Int32 pixelIdx = 0; pixelIdx < size(); ++pixelIdx) {
+    if (mask[pixelIdx])
+      unmasked.push_back(data[pixelIdx]);
+  }
+  return unmasked;
+}
+
+TFloat64List TCurve::computeUnmaskedFlux() const {
+  return computeUnmasked(flux);
+}
+
+TFloat64List TCurve::computeUnmaskedFluxError() const {
+  return computeUnmasked(fluxError);
+}
+
+TFloat64List TCurve::computeUnmaskedLambda() const {
+  return computeUnmasked(lambda);
+}
+
+bool TCurve::pixelIsChi2Valid(Int32 pixelIdx) const {
+  return pixelIdx < size() && mask[pixelIdx];
+}
+
+bool TCurve::pixelIsChi2AndSNRValid(Int32 pixelIdx) const {
+  return pixelIdx < size() && isSnrCompliant[pixelIdx] && mask[pixelIdx];
 }

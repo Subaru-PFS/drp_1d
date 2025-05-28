@@ -58,8 +58,9 @@ CSpectrum::CSpectrum()
       m_medianEvenReflection(true), m_Name(""),
       m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))) {}
 
-CSpectrum::CSpectrum(const std::string &name)
-    : m_Name(name), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))){};
+CSpectrum::CSpectrum(const std::string &name, const std::string &obsId)
+    : m_Name(name), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))),
+      m_obsId(obsId){};
 
 CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
     : m_estimationMethod(other.m_estimationMethod),

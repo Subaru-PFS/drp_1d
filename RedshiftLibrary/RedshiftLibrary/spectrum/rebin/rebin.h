@@ -53,7 +53,6 @@ namespace NSEpic {
 class CRebin {
 
 public:
-  CRebin() = default;
   CRebin(const CSpectrum &spectrum) : m_spectrum(spectrum){};
   virtual ~CRebin() = default;
 

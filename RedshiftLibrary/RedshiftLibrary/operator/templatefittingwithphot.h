@@ -65,13 +65,12 @@ public:
 private:
   void checkInputPhotometry() const;
 
-  void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
-                     Float64 redshift, TFloat64Range &currentRange,
-                     Float64 &overlapFraction, const Float64 overlapThreshold,
+  void RebinTemplate(const CTemplate &tpl, Float64 redshift,
+                     TFloat64Range &currentRange, Float64 &overlapFraction,
+                     const Float64 overlapThreshold,
                      Int32 spcIndex = 0) override;
 
-  void RebinTemplateOnPhotBand(const std::shared_ptr<const CTemplate> &tpl,
-                               Float64 redshift);
+  void RebinTemplateOnPhotBand(const CTemplate &tpl, Float64 redshift);
 
   void InitIsmIgmConfig(Float64 redshift, Int32 kstart, Int32 kend,
                         Int32 spcIndex) override;

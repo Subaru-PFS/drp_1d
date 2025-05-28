@@ -91,9 +91,8 @@ void COperatorTemplateFittingPhot::checkInputPhotometry() const {
 }
 
 void COperatorTemplateFittingPhot::RebinTemplate(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    TFloat64Range &currentRange, Float64 &overlapFraction,
-    const Float64 overlapThreshold, Int32 spcIndex) {
+    const CTemplate &tpl, Float64 redshift, TFloat64Range &currentRange,
+    Float64 &overlapFraction, const Float64 overlapThreshold, Int32 spcIndex) {
 
   COperatorTemplateFittingBase::RebinTemplate(
       tpl, redshift, currentRange, overlapFraction, overlapThreshold, spcIndex);
@@ -102,8 +101,8 @@ void COperatorTemplateFittingPhot::RebinTemplate(
     RebinTemplateOnPhotBand(tpl, redshift);
 }
 
-void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift) {
+void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(const CTemplate &tpl,
+                                                           Float64 redshift) {
 
   Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -121,8 +120,8 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CMask mskRebined;
     const TFloat64Range lambdaRange_restframe =
         photSpectralAxis_restframe.GetLambdaRange();
-    tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
-               templateRebined_phot, mskRebined);
+    tpl.Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
+              templateRebined_phot, mskRebined);
 
     const Float64 overlapFraction =
         photSpectralAxis_restframe.IntersectMaskAndComputeOverlapFraction(

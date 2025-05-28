@@ -39,25 +39,23 @@
 #include <algorithm> // std::sort
 #include <climits>
 #include <cmath>
-#include <iostream>
-#include <sstream>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/size.h"
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+#include <iterator>
 
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
-#include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -80,8 +78,8 @@ using namespace std;
  * @param priorjoint_pISM_tpl_z : vector size = nISM, joint prior p(ISM, TPL, Z)
  */
 TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 overlapThreshold, bool opt_extinction, bool opt_dustFitting,
+    const CTemplate &tpl, Float64 redshift, Float64 overlapThreshold,
+    bool opt_extinction, bool opt_dustFitting,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
   bool chisquareSetAtLeastOnce = false;
@@ -90,9 +88,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   Int32 MeiksinListSize = MeiksinList.size();
 
   bool apply_priore =
-      !logpriore.empty() && !tpl->CalzettiInitFailed() &&
+      !logpriore.empty() && !tpl.CalzettiInitFailed() &&
       (ssize(logpriore) ==
-       tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
+       tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
 
   TFittingIsmIgmResult result(EbmvListSize, MeiksinListSize, m_spectra.size());
 
@@ -110,7 +108,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   }
 
   // get masks & determine number of samples actually used
-  auto const &[mask_list, n_samples] = getMaskListAndNSamples(redshift);
+  auto &&[mask_list, n_samples] = getMaskListAndNSamples(redshift);
 
   if (opt_extinction)
     opt_extinction = igmIsInRange(currentRanges);
@@ -162,7 +160,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       Float64 coeffEBMV = -1.0; // no ism by default
 
       if (opt_dustFitting) {
-        coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
+        coeffEBMV = tpl.m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
         for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++)
           ApplyDustCoeff(kEbmv, spcIndex);
       }
@@ -193,23 +191,69 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
             result; // upcasting (slicing) slicing, preserving specific
                     // TFittingIsmIGmResult members
         result_base = fitRes;
-        result.reducedChiSquare =
-            NSFitQuality::reducedChi2(result.chiSquare, n_samples);
-        result.pValue = NSFitQuality::pValue(result.chiSquare, n_samples);
         result.ebmvCoef = coeffEBMV;
         result.meiksinIdx = meiksinIdx;
         chisquareSetAtLeastOnce = true;
       }
     }
+    if (!chisquareSetAtLeastOnce) {
+      THROWG(
+          ErrorCode::INVALID_MERIT_VALUES,
+          Formatter() << "Template " << tpl.GetName()
+                      << ": Not even one single valid fit/merit value found");
+    }
   }
-
-  if (!chisquareSetAtLeastOnce) {
-    THROWG(ErrorCode::INVALID_MERIT_VALUES,
-           Formatter() << "Template " << tpl->GetName()
-                       << ": Not even one single valid fit/merit value found");
-  }
-
+  updateQualityFitWithResult(result, std::move(mask_list), n_samples);
   return result;
+}
+
+void COperatorTemplateFitting::updateQualityFitWithResult(
+    TFittingIsmIgmResult &result, std::vector<CMask> &&maskList,
+    Int32 nPixels) {
+  const Int32 nSpectra = ssize(m_spectra);
+
+  for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
+    if (result.meiksinIdx != undefIdx)
+      ApplyMeiksinCoeff(result.meiksinIdx, spcIndex);
+    if (result.ebmvCoef != -1)
+      ApplyDustCoeff(
+          m_templateRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(
+              result.ebmvCoef),
+          spcIndex);
+  }
+
+  std::vector<TFloat64List> spcFluxInRange;
+  std::vector<TFloat64List> spcFluxErrorInRange;
+  std::vector<TFloat64List> modelFluxInRange;
+  std::vector<CMask> maskInRange;
+  spcFluxInRange.reserve(nSpectra);
+  spcFluxErrorInRange.reserve(nSpectra);
+  modelFluxInRange.reserve(nSpectra);
+  maskInRange.reserve(nSpectra);
+
+  for (auto const &[spc, tpl, mask, kStart, kEnd] : boost::combine(
+           m_spectra, m_templateRebined_bf, maskList, m_kStart, m_kEnd)) {
+    auto const &fluxBegin = spc->GetFluxAxis().GetSamplesVector().cbegin();
+    spcFluxInRange.push_back(
+        TFloat64List(fluxBegin + kStart, fluxBegin + kEnd + 1));
+
+    auto const &errorBegin =
+        spc->GetFluxAxis().GetError().GetSamplesVector().cbegin();
+    spcFluxErrorInRange.push_back(
+        TFloat64List(errorBegin + kStart, errorBegin + kEnd + 1));
+
+    auto const scaledTpl = tpl.GetFluxAxis() * result.ampl;
+    auto const tplBegin =
+        std::move_iterator(scaledTpl.GetSamplesVector().cbegin());
+    modelFluxInRange.push_back(
+        TFloat64List(tplBegin + kStart, tplBegin + kEnd + 1));
+
+    maskInRange.push_back(CMask(std::move(mask), kStart, kEnd + 1));
+  }
+
+  result.fitQuality = NSFitQuality::computeFitQuality(
+      spcFluxInRange, modelFluxInRange, spcFluxErrorInRange, result.chiSquare,
+      nPixels, maskInRange);
 }
 
 std::pair<TList<CMask>, Int32>
@@ -392,8 +436,8 @@ void COperatorTemplateFitting::ComputeAmplitudeAndChi2(
 }
 
 std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-    std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+    const CTemplate &tpl, Float64 overlapThreshold, std::string opt_interp,
+    bool opt_extinction, bool opt_dustFitting,
     Float64 opt_continuum_null_amp_threshold,
     const CPriorHelper::TPriorZEList &logprior, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx, TInt32Range zIdxRangeToCompute,
@@ -401,26 +445,26 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
   Log.LogDetail(
       Formatter()
       << "  Operator-TemplateFitting: starting computation for template: "
-      << tpl->GetName());
+      << tpl.GetName());
 
-  if (opt_dustFitting && tpl->CalzettiInitFailed())
+  if (opt_dustFitting && tpl.CalzettiInitFailed())
     THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
 
   if (opt_dustFitting &&
-      FitEbmvIdx >= tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs())
+      FitEbmvIdx >= tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs())
     THROWG(
         ErrorCode::INTERNAL_ERROR,
         Formatter() << "Invalid calzetti index. (FitEbmvIdx=" << FitEbmvIdx
                     << ", while NPrecomputedEbmvCoeffs="
-                    << tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()
+                    << tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()
                     << ")");
 
-  if (opt_extinction && tpl->MeiksinInitFailed()) {
+  if (opt_extinction && tpl.MeiksinInitFailed()) {
     THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
-  TIgmIsmIdxs igmIsmIdxs = tpl->GetIsmIgmIdxList(
-      opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
+  TIgmIsmIdxs igmIsmIdxs = tpl.GetIsmIgmIdxList(opt_extinction, opt_dustFitting,
+                                                FitEbmvIdx, FitMeiksinIdx);
 
   std::shared_ptr<CTemplateFittingResult> const templateFittingResult =
       result == nullptr
@@ -478,7 +522,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
       overlapValidSupZ != m_redshifts[m_redshifts.size() - 1]) {
     Log.LogInfo(Formatter()
                 << "  Operator-TemplateFitting: overlap warning for "
-                << tpl->GetName()
+                << tpl.GetName()
                 << ": "
                    "minz="
                 << overlapValidInfZ << ", maxz=" << overlapValidSupZ);

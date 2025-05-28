@@ -38,9 +38,7 @@
 // ============================================================================
 #include <boost/range/combine.hpp>
 
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
@@ -49,7 +47,9 @@ using namespace std;
 COperatorContinuumFitting::COperatorContinuumFitting()
     : m_maskBuilder(std::make_shared<CMaskBuilder>()),
       m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+      m_lambdaRanges(Context.getClampedLambdaRanges()),
+      m_kStart(Context.getSpectra().size()),
+      m_kEnd(Context.getSpectra().size()){};
 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the
