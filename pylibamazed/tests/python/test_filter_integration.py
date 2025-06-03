@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-
+import pandas as pd
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
 from pylibamazed.Parameters import Parameters
 from pylibamazed.ProcessFlow import ProcessFlow
@@ -65,3 +65,5 @@ class TestFilterIntegration:
         spectrum.init()
         # Checks that the number of waves kept has decreased (6 to 3) with filtering
         assert len(spectrum.get_wave()) == 3
+
+        assert (spectrum.get_mask() == pd.Series([True, True, True, False, False, False])).all()

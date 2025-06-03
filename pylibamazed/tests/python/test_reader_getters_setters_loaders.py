@@ -60,6 +60,10 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
         fsr = self.initialize_fsr_with_data()
         fsr.get_spectrum().get_error()
 
+    def test_get_mask(self):
+        fsr = self.initialize_fsr_with_data()
+        fsr.get_spectrum().get_mask()
+
     def test_get_lsf(self):
         fsr = self.initialize_fsr_with_data()
         fsr.get_spectrum().get_lsf()
