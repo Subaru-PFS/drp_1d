@@ -6,6 +6,7 @@
 * [9196] : Add a new Machine Learning reliability based on [sckit learn gradient boosting](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html)
 
 ## Changed
+* [9774] : API: added get_mask method to retrive the mask associated with the filters (and set get_dataframe private)
 
 ## Removed
 
