@@ -7,6 +7,7 @@
 
 ## Changed
 * [9774] : API: added get_mask method to retrive the mask associated with the filters (and set get_dataframe private)
+* [9726] : Parameters: add a check to prevent the combination of fftProcessing and ignoreLinesupport in lineModelSolve.lineModel.continuumFit
 
 ## Removed
 
