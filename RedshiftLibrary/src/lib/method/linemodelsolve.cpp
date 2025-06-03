@@ -561,7 +561,7 @@ void CLineModelSolve::Solve() {
   // FIRST PASS
   //**************************************************
   std::shared_ptr<const CLineModelResult> lmresult;
-  if (!skipFirstPass())
+  if (!secondPassFromResultStore())
     lmresult = m_linemodel.ComputeFirstPass();
   else {
     auto or_ = resultStore->GetAndDeleteScopedGlobalResult(resultName);

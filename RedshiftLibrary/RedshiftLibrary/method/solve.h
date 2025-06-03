@@ -72,25 +72,35 @@ public:
   CSolve(const std::string &name);
   virtual ~CSolve() = default;
   CSolve(CSolve const &other) = default;
-  CSolve &operator=(CSolve const &other) = default;
+  CSolve &operator=(CSolve const &other) = delete;
   CSolve(CSolve &&other) = default;
-  CSolve &operator=(CSolve &&other) = default;
+  CSolve &operator=(CSolve &&other) = delete;
 
   void Compute();
+  virtual void initForClassificationAfterFirstPass(){};
+  virtual void setRunSecondPassFromResultStore(){};
+
+protected:
+  virtual bool secondPassFromResultStore() const { return false; };
 };
 
 // automatically save flag to resultstore when leaving scope, even with
 // exceptions
 class CAutoSaveFlagToResultStore {
 public:
-  CAutoSaveFlagToResultStore() = default;
+  CAutoSaveFlagToResultStore(bool overwriteFlag = false)
+      : m_overwriteFlag(overwriteFlag){};
   ~CAutoSaveFlagToResultStore() {
-    Context.GetResultStore()->StoreScopedFlagResult("warningFlag");
+    Context.GetResultStore()->StoreScopedFlagResult("warningFlag",
+                                                    m_overwriteFlag);
     Flag.resetFlag();
   };
   CAutoSaveFlagToResultStore(CAutoSaveFlagToResultStore const &) = delete;
   CAutoSaveFlagToResultStore &
   operator=(CAutoSaveFlagToResultStore const &) = delete;
+
+private:
+  bool m_overwriteFlag = false;
 };
 
 } // namespace NSEpic

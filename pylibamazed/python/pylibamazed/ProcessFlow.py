@@ -45,6 +45,7 @@ from decorator import decorator
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.Parameters import Parameters
+from pylibamazed.ParametersAccessor import ESolveMethod
 from pylibamazed.Spectrum import Spectrum
 from datetime import datetime
 import resource
@@ -73,7 +74,7 @@ zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
 
 
-class ESpectrumModelProcessingMode(Enum):
+class EProcessingMode(Enum):
     TWO_OR_SINGLE_PASS = "normal"
     FIRST_PASS_ONLY = "fp_only"
     SECOND_PASS_AND_PDF = "finish"
@@ -148,21 +149,21 @@ class ProcessFlow:
             rso.load_root()
             return rso
 
-        spectrum_model_processing_mode = ESpectrumModelProcessingMode("normal")
+        processing_mode = EProcessingMode("normal")
         if self.parameters.second_pass_after_classification():
-            spectrum_model_processing_mode = ESpectrumModelProcessingMode("fp_only")
+            processing_mode = EProcessingMode("fp_only")
         # loop on spectrum models (galaxy, star, qso, ...)
         for spectrum_model in self.parameters.get_spectrum_models():
             with push_scope(spectrum_model, ScopeType.SPECTRUMMODEL):
                 with suppress(ProcessFlowException):
-                    self.process_spectrum_model(rso, spectrum_model_processing_mode)
+                    self.process_spectrum_model(rso, processing_mode)
 
         if self.parameters.is_a_redshift_solver_used():
             with suppress(ProcessFlowException):
                 self.run_classification_solver(rso)
-                # Running linemeas only on classified model (if any)
-                if self.parameters.second_pass_after_classification():
+                if processing_mode == EProcessingMode("fp_only"):
                     self.finish_spectra_model_processing(rso)
+                # Running linemeas only on classified model (if any)
                 if self.parameters.get_linemeas_runmode() == "classif":
                     self._run_linemeas_after_classification(rso)
         with suppress(ProcessFlowException):
@@ -179,7 +180,7 @@ class ProcessFlow:
             self.run_load_linemeas_params(rso)
             self.run_linemeas_solver(rso, linemeas_method)
 
-    def process_spectrum_model(self, rso: ResultStoreOutput, mode: ESpectrumModelProcessingMode) -> None:
+    def process_spectrum_model(self, rso: ResultStoreOutput, mode: EProcessingMode) -> None:
         spectrum_model = self.scope_spectrum_model
 
         redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
@@ -207,7 +208,7 @@ class ProcessFlow:
             if (
                 self.parameters.get_linemeas_runmode() == "all"
                 and linemeas_method
-                and mode != ESpectrumModelProcessingMode("fp_only")
+                and mode != EProcessingMode("fp_only")
             ):
                 self._start_perfs()
                 self.run_load_linemeas_params(rso)
@@ -220,9 +221,14 @@ class ProcessFlow:
     @store_exception
     def finish_spectra_model_processing(self, rso):
         for spectrum_model in self.parameters.get_spectrum_models():
+            redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
+            if redshift_solver_method is None:
+                continue
+            if redshift_solver_method != ESolveMethod.LINE_MODEL:
+                continue
             with push_scope(spectrum_model, ScopeType.SPECTRUMMODEL):
                 with suppress(ProcessFlowException):
-                    self.process_spectrum_model(rso, ESpectrumModelProcessingMode("finish"))
+                    self.process_spectrum_model(rso, EProcessingMode("finish"))
 
     @store_exception
     def initialize(self, rso, spectrum: Spectrum):
@@ -268,14 +274,14 @@ class ProcessFlow:
     @push_scope("redshiftSolver", ScopeType.STAGE)
     @store_exception
     def run_redshift_solver(self, rso, method, mode):
-        if mode == ESpectrumModelProcessingMode.SECOND_PASS_AND_PDF:
+        if mode == EProcessingMode.SECOND_PASS_AND_PDF:
             spectrum_model = self.scope_spectrum_model
             classif_model = rso.get_attribute_from_source("root", None, None, "classification", "Type")
             is_classified = spectrum_model == classif_model
             if is_classified:
-                self.run_method(method, rso, mode)
+                self.run_method(method, mode)
         else:
-            self.run_method(method, rso, mode)
+            self.run_method(method, mode)
 
     @push_scope("lineMeasSolver", ScopeType.STAGE)
     @store_exception
@@ -353,9 +359,9 @@ class ProcessFlow:
         solver = solver_method()
         zlog.LogInfo(f"Running method {method} on mode {mode}")
         if mode is not None:
-            if mode == ESpectrumModelProcessingMode.FIRST_PASS_ONLY:
+            if mode == EProcessingMode.FIRST_PASS_ONLY:
                 solver.initForClassificationAfterFirstPass()
-            elif mode == ESpectrumModelProcessingMode.SECOND_PASS_AND_PDF:
+            elif mode == EProcessingMode.SECOND_PASS_AND_PDF:
                 solver.setRunSecondPassFromResultStore()
         solver.Compute()
 

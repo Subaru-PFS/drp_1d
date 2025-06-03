@@ -123,7 +123,7 @@ public:
                   const std::string &method, const std::string &name) const;
   bool hasContextWarningFlag() const;
   bool hasInitWarningFlag() const;
-  bool hasCurrentMethodWarningFlag() const;
+  bool hasCurrentScopeWarningFlag() const;
 
   std::shared_ptr<const CClassificationResult>
   GetClassificationResult(const std::string &spectrumModel,
@@ -214,7 +214,7 @@ public:
   void StoreScopedGlobalResult(const std::string &name,
                                std::shared_ptr<const COperatorResult> result,
                                bool overwrite = false);
-  void StoreScopedFlagResult(const std::string &name);
+  void StoreScopedFlagResult(const std::string &name, bool overwrite = false);
 
   void reset() {
     m_GlobalResults.clear();
@@ -243,7 +243,6 @@ protected:
                    const std::string &name,
                    std::shared_ptr<const COperatorResult> result,
                    bool overwrite = false);
-  void deleteCurrentMethodWarningFlag();
   TPerTemplateResultsMap m_PerTemplateResults;
   TResultsMap m_GlobalResults;
 };

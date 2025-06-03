@@ -36,7 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-%module(directors="1") redshift
+%module redshift
 
 %include typemaps.i
 %include std_string.i
@@ -92,8 +92,6 @@
 %shared_ptr(CSpectrumFluxCorrectionMeiksin)
 %shared_ptr(CSpectrumFluxCorrectionCalzetti) 
 %shared_ptr(TZgridListParams)
-%feature("director");
-%feature("nodirector") CSpectrumFluxAxis;
 
 %{
 #define SWIG_FILE_WITH_INIT
@@ -909,22 +907,24 @@ class AmzException : public std::exception
 
 class CSolve{
  public:
-  CSolve()=delete;
-    void Compute();
+   CSolve() = delete;
+   void Compute();
+   virtual void initForClassificationAfterFirstPass();
+   virtual void setRunSecondPassFromResultStore();
 };
 
 class CObjectSolve{
  public:
-  CSolve()=delete;
-    void Compute();
+   CSolve()=delete;
+   void Compute();
 };
 
 class CTwoPassSolve : public CObjectSolve {
 public:
-  CTwoPassSolve()=delete;
-    void Compute();
-    void initForClassificationAfterFirstPass();
-    void setRunSecondPassFromResultStore();
+  CTwoPassSolve() = delete;
+  void Compute();
+  virtual void initForClassificationAfterFirstPass() override;
+  virtual void setRunSecondPassFromResultStore() override;
 };
 
 

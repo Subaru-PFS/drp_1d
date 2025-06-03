@@ -78,14 +78,8 @@ bool CTwoPassSolve::twoPassIsActive() const {
   return !m_opt_singlePass && !m_opt_skipsecondpass;
 }
 
-bool CTwoPassSolve::firstPassOnly() const { return m_opt_skipsecondpass; }
-
-bool CTwoPassSolve::skipFirstPass() const {
+bool CTwoPassSolve::secondPassFromResultStore() const {
   return m_runSecondPassFromResultStore;
-}
-
-bool CTwoPassSolve::finalPdfFromFirstPass() const {
-  return m_opt_skipsecondpass;
 }
 
 void CTwoPassSolve::initForClassificationAfterFirstPass() {

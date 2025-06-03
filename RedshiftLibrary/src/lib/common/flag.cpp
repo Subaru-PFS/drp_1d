@@ -76,15 +76,12 @@ void CFlagWarning::resetFlag() {
 
 const TWarningMsgList &CFlagWarning::getListMessages() { return m_messageList; }
 
-CFlagLogResult CFlagLogResult::operator+(const CFlagLogResult &other) const {
-  // Combine flagValues (add them)
-  Int32 newFlagValue = this->flagValue & other.flagValue;
-
-  // Merge msgLists (concatenate them)
-  TWarningMsgList newMsgList = this->msgList;
-  newMsgList.insert(newMsgList.end(), other.msgList.begin(),
-                    other.msgList.end());
-
-  // Return a new CFlagLogResult object
-  return CFlagLogResult(newFlagValue, std::move(newMsgList));
+CFlagLogResult NSEpic::operator+(CFlagLogResult &&left,
+                                 CFlagLogResult &&right) {
+  CFlagLogResult flag = std::move(left);
+  flag.flagValue &= right.flagValue;
+  flag.msgList.insert(flag.msgList.end(),
+                      std::move_iterator(right.msgList.begin()),
+                      std::move_iterator(right.msgList.end()));
+  return flag;
 }

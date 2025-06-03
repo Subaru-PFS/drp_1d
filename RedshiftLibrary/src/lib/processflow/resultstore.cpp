@@ -396,16 +396,10 @@ bool COperatorResultStore::hasInitWarningFlag() const {
   return (it != m_GlobalResults.end());
 }
 
-bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
+bool COperatorResultStore::hasCurrentScopeWarningFlag() const {
   TResultsMap::const_iterator it =
-      m_GlobalResults.find(GetScopedNameAt("warningFlag", ScopeType::METHOD));
+      m_GlobalResults.find(GetScopedName("warningFlag"));
   return (it != m_GlobalResults.end());
-}
-
-void COperatorResultStore::deleteCurrentMethodWarningFlag() {
-  TResultsMap::const_iterator it =
-      m_GlobalResults.find(GetScopedNameAt("warningFlag", ScopeType::METHOD));
-  m_GlobalResults.erase(it);
 }
 
 int COperatorResultStore::getNbRedshiftCandidates(
@@ -457,31 +451,18 @@ void COperatorResultStore::StoreGlobalResult(
   StoreGlobalResult("", name, result, overwrite);
 }
 
-void COperatorResultStore::StoreScopedFlagResult(const std::string &name) {
+void COperatorResultStore::StoreScopedFlagResult(const std::string &name,
+                                                 bool overwrite) {
+  auto newFlag = CFlagLogResult(Flag.getBitMask(), Flag.getListMessages());
 
-  Log.LogInfo(Formatter() << "storing " << name << " at depth "
-                          << (int)getScopeDepth());
-  if (getScopeDepth() == 3)
-    Log.LogInfo(Formatter()
-                << "testing "
-                << GetScopedNameAt("warningFlag", ScopeType::METHOD));
+  if (overwrite && hasCurrentScopeWarningFlag()) {
+    auto currentFlag = std::move(*(std::dynamic_pointer_cast<CFlagLogResult>(
+        GetAndDeleteScopedGlobalResult(name))));
+    newFlag = std::move(currentFlag) + std::move(newFlag);
+  }
 
-  if (getScopeDepth() == 3 && hasCurrentMethodWarningFlag()) {
-    Log.LogInfo("replacing former method warning flag");
-    auto currentFlag = *(std::dynamic_pointer_cast<const CFlagLogResult>(
-        GetScopedGlobalResult(name).lock()));
-    Log.LogInfo("got current warning flag");
-    auto newFlag = CFlagLogResult(Flag.getBitMask(), Flag.getListMessages());
-    Log.LogInfo("create new warning flag");
-    deleteCurrentMethodWarningFlag();
-    Log.LogInfo("old warning flag deleted, storing addition");
-
-    StoreScopedGlobalResult(
-        name, std::make_shared<const CFlagLogResult>(currentFlag + newFlag));
-  } else
-    StoreScopedGlobalResult(
-        name, std::make_shared<const CFlagLogResult>(Flag.getBitMask(),
-                                                     Flag.getListMessages()));
+  StoreScopedGlobalResult(
+      name, std::make_shared<const CFlagLogResult>(std::move(newFlag)));
 }
 
 std::weak_ptr<const COperatorResult>

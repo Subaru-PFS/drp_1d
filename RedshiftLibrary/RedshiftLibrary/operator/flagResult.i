@@ -47,5 +47,5 @@ public:
   TWarningMsgList msgList;
 
   // Overload the + operator
-  CFlagLogResult operator+(const CFlagLogResult& other) const;
+  friend CFlagLogResult operator+(CFlagLogResult &&left, CFlagLogResult &&right);
 };

@@ -56,21 +56,18 @@ class CTwoPassSolve : public CObjectSolve {
 public:
   using CObjectSolve::CObjectSolve;
   void createRedshiftGrid(const CInputContext &inputContext,
-                          const TFloat64Range &redshiftRange);
+                          const TFloat64Range &redshiftRange) override;
   static const std::unordered_map<std::string, EContinuumFit> str2ContinuumFit;
 
-  void initForClassificationAfterFirstPass();
-  void setRunSecondPassFromResultStore();
+  virtual void initForClassificationAfterFirstPass() override;
+  virtual void setRunSecondPassFromResultStore() override;
 
 protected:
   virtual void initSkipSecondPass() = 0;
   virtual void initTwoPassZStepFactor() = 0;
   bool twoPassIsActive() const;
-  bool firstPassOnly() const;
   bool isSinglePass() const { return m_opt_singlePass; }
-  bool skipFirstPass() const;
-
-  bool finalPdfFromFirstPass() const;
+  virtual bool secondPassFromResultStore() const override;
 
   Float64 m_coarseRedshiftStep = NAN;
   Float64 m_twoPassZStepFactor = NAN;

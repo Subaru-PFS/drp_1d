@@ -1773,7 +1773,7 @@ void COperatorLineModel::retrieveContinuumFitStoreFirstPass() {
   std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
 
   m_tplfitStore_firstpass = std::dynamic_pointer_cast<const CContinuumFitStore>(
-      resultStore->GetScopedGlobalResult("continuumFitStore").lock());
+      resultStore->GetAndDeleteScopedGlobalResult("continuumFitStore"));
 }
 
 TFloat64List COperatorLineModel::makeVelFitBins(Float64 vInfLim,
