@@ -38,67 +38,72 @@
 # ============================================================================
 
 import numpy as np
+import sklearn
+from collections import OrderedDict
 from pylibamazed.Exception import APIException
-from pylibamazed.PdfHandler import BuilderPdfHandler
 from pylibamazed.redshift import ErrorCode
+from pylibamazed.redshift import CLog
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.AbstractReliabilitySolver import AbstractReliabilitySolver, register_reliability_solver
 
+zlog = CLog.GetInstance()
 
-class DeepLearningSolve(AbstractReliabilitySolver):
+class SkLearnSolve(AbstractReliabilitySolver):
     def Compute(self, source):
-        # context.copyFineZPFD_IntoResultStore(self.parameters.get_redshift_sampling(self.object_type))
         output = ResultStoreOutput(
             source.GetResultStore(),
             self.parameters,
             auto_load=False,
             extended_results=False,
         )
-        model = self.calibration_library.reliability["deep"][self.object_type]["models"][0]
-        model_parameters = self.calibration_library.reliability["deep"][self.object_type]["parameters"]
-        success = model_parameters["classes"][-1]
-        return self.get_probas(output, model, model_parameters)[success]
+        zlog.LogInfo(f"SkLearnSolver: Compute reliability for {self.object_type}")
+        classifier = self.calibration_library.reliability["sklearn"][self.object_type]["classifier"]
+        classes = self.calibration_library.reliability["sklearn"][self.object_type]["classes"]
+        success = classes[-1]
+        return self.get_probas(output, classifier, classes)[success]
 
-    def get_probas(self, output, model, model_parameters):
-        c_zgrid_zend = model_parameters["zgrid_end"]
-
-        logsampling = self.parameters.is_log_sampling(self.object_type)
+    def get_probas(self, output, classifier, classes):
         output.load_object_level(self.object_type)
+        attributes = OrderedDict( {
+            'A_IMAGE':"",
+            'ELLIPTICITY':"",
+            'POINT_LIKE_PROB':"",
+            'MAG_VIS':"",
+            'MER_Y_MAG':"",
+            'MER_J_MAG':"",
+            'MER_H_MAG':"",
+            'NDITH':"",
+            'LSF_SIG':"",
+            'Z':"galaxy.Redshift",
+            'Z_ERR':"galaxy.RedshiftUncertainty",
+            'Z_PROB':"",
+            'HA_FLUX':"galaxy.lfHaNII",
+            'HA_SNR':"galaxy.snrHaNII",
+            'OII_FLUX':"galaxy.lfOII",
+            'OII_SNR':"galaxy.snrOII",
+            'VEL_EMI':"galaxy.VelocityEmission",
+            'RELIABILITY':"",
+            'SPEC_COLOR':"",
+            'SNR_MEAN':"",
+            'SNR_STD':"",
+            'NDITH_MEAN':"",
+            'NDITH_STD':"" 
+            }
+        )
+        col_used = ['LSF_SIG', 'Z', 'Z_ERR', 'HA_FLUX', 'HA_SNR', 'OII_FLUX', 'OII_SNR', 'VEL_EMI']
 
-        pdf = BuilderPdfHandler().add_params(output, self.object_type, logsampling).build()
-        pdf.convertToRegular(True, c_zgrid_zend)
-
-        zgrid = pdf.redshifts
-        pdfval = pdf.valProbaLog
-
-        zgrid_end = zgrid[-1]
-        if pdfval.shape[0] != model.input_shape[1]:
-            raise APIException(
-                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES, "PDF and model shapes are not compatible"
-            )
-        # The model needs a PDF, not LogPDF
-        zend_diff = (zgrid_end - c_zgrid_zend) / zgrid_end
-        if zend_diff > 1e-6:
-            raise APIException(
-                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
-                "PDF and model shapes are not compatible, zgrid differ in the end : "
-                f"{zgrid_end} != {c_zgrid_zend}",
-            )
-        z_step = (zgrid[-1] + 1) / (zgrid[-2] + 1)
-        c_zrange_step = model_parameters["zrange_step"]
-        step_diff = (np.exp(c_zrange_step) - z_step) / z_step
-        if step_diff > 1e-6:
-            raise APIException(
-                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES,
-                "PDF and model shapes are not compatible, zgrid differ in the end : "
-                f"{z_step} != {np.exp(c_zrange_step)}",
-            )
+        v = np.ndarray([len(col_used)])
+        idx = 0 
+        for k,att in enumerate(attributes.items()):
+            if k in col_used and att!="":
+                v[idx] =  output.get_attribute_short(self.object_type, att)
+                idx += 1
+            
         ret = dict()
-        classes = model_parameters["classes"]
-        probas = model.predict(np.exp(pdfval[None, :, None]))
-        for i in range(1, len(classes)):
-            ret[classes[i]] = probas[0, i]
+        probas = classifier.predict_proba(v.reshape(1,-1))
+        for i,c in enumerate(classes):
+            ret[c] = float(probas[0, i])
+        zlog.LogInfo(f"SkLearnSolver: probas are {ret}")
         return ret
 
-
-register_reliability_solver("deepLearningSolver", DeepLearningSolve, "deep")
+register_reliability_solver("skLearnSolver", SkLearnSolve, "sk")

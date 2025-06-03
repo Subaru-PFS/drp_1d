@@ -60,6 +60,7 @@ from pylibamazed.AbstractReliabilitySolver import (
     get_reliability_dataset_suffix,
 )
 import pylibamazed.DeepLearningSolve
+import pylibamazed.SkLearnSolve
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.ScopeManager import get_scope_spectrum_model, get_scope_stage, push_scope
 from pylibamazed.SubType import SubType
@@ -161,7 +162,6 @@ class ProcessFlow:
 
             if (
                 self.parameters.get_reliability_enabled(spectrum_model)
-                and spectrum_model in self.calibration_library.reliability_models
             ):
                 with suppress(ProcessFlowException):
                     self.run_reliability_solver(rso)
@@ -235,7 +235,7 @@ class ProcessFlow:
     @store_exception
     def run_reliability_solver(self, rso):
         for solver_name in self.parameters.get_reliability_methods(self.scope_spectrum_model):
-            #            for name in self.parameters.get
+            zlog.LogInfo(f"run reliability with {solver_name}")
             solver = get_reliability_solver_from_name(solver_name)
             dataset_suffix = get_reliability_dataset_suffix(solver_name)
             rel = solver(self.scope_spectrum_model, self.parameters, self.calibration_library)
