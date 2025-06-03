@@ -2,9 +2,10 @@
 ## 1.7
 
 ## Added
+* [9528] : Add several goodness of fit using normality of the residuals (mean, standard deviation, skewness, kurtosis, KS-test, Anderson-Darling test)
+* [9196] : Add a new Machine Learning reliability based on [sckit learn gradient boosting](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html)
 
 ## Changed
-* [9528] : Add several goodness of fit using normality of the residuals (mean, standard deviation, skewness, kurtosis, KS-test, Anderson-Darling test)
 
 ## Removed
 
