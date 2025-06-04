@@ -82,7 +82,7 @@ class AbstractOutput(metaclass=ABCMeta):
         self.spectrum_id = spectrum_id
         self.root_results = dict()
         self.object_results = dict()
-        self.perfs = dict()
+        self.perfs = pd.DataFrame(columns=["stage", "clock", "user", "system"])
         self.extended_results = extended_results
         self.results_specifications = ResultsSpecifications(specs_path)
         self.object_types = self.parameters.get_spectrum_models()
@@ -618,26 +618,15 @@ class AbstractOutput(metaclass=ABCMeta):
                 zlog.LogDebug(f"could not extract {attribute} : {e}")
         return ret
 
-    def set_perfs(self, spectrum_model, stage, perfs, mode=None):
-        if not spectrum_model:
-            self.perfs[stage] = perfs
-            return
-        if spectrum_model not in self.perfs.keys():
-            self.perfs[spectrum_model] = dict()
-        if mode and mode != "normal":
-            if stage not in self.perfs[spectrum_model].keys():
-                self.perfs[spectrum_model][stage] = dict()
-            self.perfs[spectrum_model][stage][mode] = perfs
-            return
-        self.perfs[spectrum_model][stage] = perfs
+    def get_all_perfs(self):
+        return self.perfs
 
-    def get_perfs(self, spectrum_model, stage, mode=None):
-        try:
-            if not spectrum_model:
-                return self.perfs[stage]
-            if mode:
-                return self.perfs[spectrum_model][stage][mode]
-            else:
-                return self.perfs[spectrum_model][stage]
-        except:
-            return None
+    def get_perfs(self, spectrum_model, stage, mode="normal"):
+        if spectrum_model is None:
+            name = stage
+        else:
+            name = ".".join((stage, spectrum_model))
+            if mode != "normal":
+                name = ".".join((name, mode))
+        row = self.perfs["stage"] == name
+        return self.perfs.loc[row]

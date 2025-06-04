@@ -45,18 +45,22 @@ from pylibamazed.redshift import CLog, ErrorCode
 zlog = CLog.GetInstance()
 
 
-def _create_dataset_from_dict(h5_node, name, source, compress=False):
-    df = pd.DataFrame(source)
-    if df.empty:
-        return
+def _dtypes_from_df(df):
     dtypes = dict()
     for k, v in dict(df.dtypes).items():
         if v == "O":
             dtypes[k] = f"S{df[k].str.len().max()}"
         else:
             dtypes[k] = str(v)
+    return dtypes
 
-    records = df.to_records(index=False, column_dtypes=dtypes)
+
+def _create_dataset_from_dict(h5_node, name, source):
+    df = pd.DataFrame(source)
+    if df.empty:
+        return
+
+    records = df.to_records(index=False, column_dtypes=_dtypes_from_df(df))
     h5_node.create_dataset(name, records.shape, records.dtype, records, compression="lzf")
 
 
@@ -111,6 +115,11 @@ class H5Writer:
                                 ErrorCode.PYTHON_API_ERROR, f"failed to create dataset {ds} : {e}"
                             ) from None
 
+    def write_hdf5_perfs(self, hdf5_spectrum_node):
+        perf_df = self.output.get_all_perfs()
+        records = perf_df.to_records(index=False, column_dtypes=_dtypes_from_df(perf_df))
+        hdf5_spectrum_node.create_dataset("perfs", records.shape, records.dtype, records)
+
     @exception_decorator
     def write_hdf5(self, hdf5_root, spectrum_id):
         try:
@@ -131,6 +140,8 @@ class H5Writer:
                 for stage in spectrum_model_stages:
                     if self.output.has_error(object_type, stage):
                         self.write_error(object_results, object_type, stage)
+
+            self.write_hdf5_perfs(obs)
 
         except Exception as e:
             raise APIException(ErrorCode.EXTERNAL_LIB_ERROR, f"Failed writing h5: {e}") from e

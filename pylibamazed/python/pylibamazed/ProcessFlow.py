@@ -76,8 +76,8 @@ zlog = CLog.GetInstance()
 
 class EProcessingMode(Enum):
     TWO_OR_SINGLE_PASS = "normal"
-    FIRST_PASS_ONLY = "fp_only"
-    SECOND_PASS_AND_PDF = "finish"
+    FIRST_PASS_ONLY = "firstPass"
+    SECOND_PASS_AND_PDF = "secondPass"
 
 
 class ProcessFlowException(Exception):
@@ -125,6 +125,7 @@ class ProcessFlow:
         perfs = dict()
         for k in self.begin_perfs.keys():
             perfs[k] = end[k] - self.begin_perfs[k]
+        perfs["clock"] = perfs["clock"].total_seconds()
         return perfs
 
     @decorator
@@ -151,7 +152,7 @@ class ProcessFlow:
 
         processing_mode = EProcessingMode("normal")
         if self.parameters.second_pass_after_classification():
-            processing_mode = EProcessingMode("fp_only")
+            processing_mode = EProcessingMode("firstPass")
         # loop on spectrum models (galaxy, star, qso, ...)
         for spectrum_model in self.parameters.get_spectrum_models():
             with push_scope(spectrum_model, ScopeType.SPECTRUMMODEL):
@@ -161,7 +162,7 @@ class ProcessFlow:
         if self.parameters.is_a_redshift_solver_used():
             with suppress(ProcessFlowException):
                 self.run_classification_solver(rso)
-                if processing_mode == EProcessingMode("fp_only"):
+                if processing_mode == EProcessingMode.FIRST_PASS_ONLY:
                     self.finish_spectra_model_processing(rso)
                 # Running linemeas only on classified model (if any)
                 if self.parameters.get_linemeas_runmode() == "classif":
@@ -189,7 +190,7 @@ class ProcessFlow:
         if redshift_solver_method:
             self._start_perfs()
             self.run_redshift_solver(rso, redshift_solver_method.value, mode)
-            rso.set_perfs(
+            rso.store_perfs(
                 spectrum_model,
                 "redshiftSolver",
                 self._get_perfs(),
@@ -208,12 +209,12 @@ class ProcessFlow:
             if (
                 self.parameters.get_linemeas_runmode() == "all"
                 and linemeas_method
-                and mode != EProcessingMode("fp_only")
+                and mode != EProcessingMode.FIRST_PASS_ONLY
             ):
                 self._start_perfs()
                 self.run_load_linemeas_params(rso)
                 self.run_linemeas_solver(rso, linemeas_method.value)
-                rso.set_perfs(spectrum_model, "lineMeasSolver", self._get_perfs())
+                rso.store_perfs(spectrum_model, "lineMeasSolver", self._get_perfs())
 
         elif linemeas_method:  # linemeas alone
             self.run_linemeas_solver(rso, linemeas_method.value)
@@ -228,7 +229,7 @@ class ProcessFlow:
                 continue
             with push_scope(spectrum_model, ScopeType.SPECTRUMMODEL):
                 with suppress(ProcessFlowException):
-                    self.process_spectrum_model(rso, EProcessingMode("finish"))
+                    self.process_spectrum_model(rso, EProcessingMode("secondPass"))
 
     @store_exception
     def initialize(self, rso, spectrum: Spectrum):
@@ -269,7 +270,7 @@ class ProcessFlow:
 
         self.process_flow_context.LoadParameterStore(parameters.to_json())
         self.process_flow_context.Init()
-        rso.set_perfs(None, "init", self._get_perfs())
+        rso.store_perfs(None, "init", self._get_perfs())
 
     @push_scope("redshiftSolver", ScopeType.STAGE)
     @store_exception
