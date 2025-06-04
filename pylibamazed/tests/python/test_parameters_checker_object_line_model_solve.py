@@ -97,6 +97,21 @@ class TestLineModelSolve:
             with pytest.raises(APIException, match=r"cannot activate both fft and photometry"):
                 check_from_parameter_dict(param_dict)
 
+        def test_error_if_activate_fft_and_ignore_line_support(self):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {"continuumFit": {"fftProcessing": True, "ignoreLineSupport": True}}
+                    }
+                }
+            )
+            with pytest.raises(
+                APIException,
+                match=r"LineModelSolve continuumFit fftProcessing "
+                r"and ignoreLinesSupport are incompatible",
+            ):
+                check_from_parameter_dict(param_dict)
+
     class TestFirstPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
             kwargs["method"] = "lineModelSolve"

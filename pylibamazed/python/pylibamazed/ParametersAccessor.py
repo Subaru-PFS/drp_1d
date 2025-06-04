@@ -462,6 +462,9 @@ class ParametersAccessor:
     def get_linemodel_continuumfit_fft(self, spectrum_model: str) -> dict:
         return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "fftProcessing")
 
+    def get_linemodel_continuumfit_ignoreLinesSupport(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "ignoreLineSupport")
+
     def get_firstpass_section(self, solve_method: ESolveMethod, spectrum_model: str) -> Optional[dict]:
         solve_section: dict
         if solve_method == ESolveMethod.LINE_MODEL:
