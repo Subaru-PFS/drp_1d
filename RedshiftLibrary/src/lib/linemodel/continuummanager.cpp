@@ -65,8 +65,6 @@ CContinuumManager::CContinuumManager(
   // available
   m_fitContinuum_option = EFitType::interactiveFitting;
 
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   setContinuumComponent(
       TContinuumComponent(ps->GetScoped<std::string>("continuumComponent")));
@@ -80,7 +78,6 @@ CContinuumManager::CContinuumManager(
 }
 
 std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
-  CAutoScope a = CAutoScope(Context.m_ScopeStack, "lineModel");
   CAutoScope b = CAutoScope(Context.m_ScopeStack, "continuumFit");
   CAutoScope c = CAutoScope(Context.m_ScopeStack, "priors");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();

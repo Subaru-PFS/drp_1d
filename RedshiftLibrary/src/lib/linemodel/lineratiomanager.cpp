@@ -61,7 +61,6 @@ CLineRatioManager::CLineRatioManager(
       m_lambdaRanges(lambdaRanges), m_models(models), m_spectraIndex(spcIndex),
       m_continuumManager(continuumManager), m_RestLineList(restLineList) {
 
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   bool useAsymProfile = ps->GetScoped<std::string>("lya.profile") == "asym";

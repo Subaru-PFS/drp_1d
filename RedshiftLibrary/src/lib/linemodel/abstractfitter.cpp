@@ -68,7 +68,6 @@ CAbstractFitter::CAbstractFitter(
   m_nbElements = m_ElementsVector->getNbElements();
 
   std::string method = Context.GetCurrentMethod();
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   bool useAsymProfile = ps->GetScoped<std::string>("lya.profile") == "asym";
   if (useAsymProfile &

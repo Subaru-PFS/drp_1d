@@ -58,9 +58,8 @@ CHybridFitter::CHybridFitter(
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  if (ps->GetScoped<std::string>("lineModel.lineRatioType") == "rules")
-    m_opt_enable_improveBalmerFit =
-        ps->GetScoped<bool>("lineModel.improveBalmerFit");
+  if (ps->GetScoped<std::string>("lineRatioType") == "rules")
+    m_opt_enable_improveBalmerFit = ps->GetScoped<bool>("improveBalmerFit");
 }
 
 void CHybridFitter::doFit(Float64 redshift) {

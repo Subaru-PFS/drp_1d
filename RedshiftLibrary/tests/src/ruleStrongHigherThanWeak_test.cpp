@@ -95,6 +95,7 @@ CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
                         ScopeType::SPECTRUMMODEL);
   CAutoScope autoscope2(Context.m_ScopeStack, "stage", ScopeType::STAGE);
   CAutoScope autoscope3(Context.m_ScopeStack, "methodSolve", ScopeType::METHOD);
+  CAutoScope autoscope4(Context.m_ScopeStack, "lineModel");
   std::string const jsonString = {
       "{\"model\" : {\"stage\": {\"methodSolve\": {\"lineModel\": {"
       "\"velocityEmission\": 100,"

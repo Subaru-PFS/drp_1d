@@ -147,31 +147,29 @@ private:
   };
 
   const bool m_enableVelocityFitting =
-      Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit");
+      Context.GetParameterStore()->GetScoped<bool>("velocityFit");
 
   const Float64 m_velfitMinE =
-      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
-                                    "lineModel.emVelocityFitMin")
-                              : NAN;
+      m_enableVelocityFitting
+          ? Context.GetParameterStore()->GetScoped<Float64>("emVelocityFitMin")
+          : NAN;
   const Float64 m_velfitMaxE =
-      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
-                                    "lineModel.emVelocityFitMax")
-                              : NAN;
+      m_enableVelocityFitting
+          ? Context.GetParameterStore()->GetScoped<Float64>("emVelocityFitMax")
+          : NAN;
   const Float64 m_velfitMinA =
-      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
-                                    "lineModel.absVelocityFitMin")
-                              : NAN;
+      m_enableVelocityFitting
+          ? Context.GetParameterStore()->GetScoped<Float64>("absVelocityFitMin")
+          : NAN;
   const Float64 m_velfitMaxA =
-      m_enableVelocityFitting ? Context.GetParameterStore()->GetScoped<Float64>(
-                                    "lineModel.absVelocityFitMax")
-                              : NAN;
+      m_enableVelocityFitting
+          ? Context.GetParameterStore()->GetScoped<Float64>("absVelocityFitMax")
+          : NAN;
 
   const Float64 m_velIniGuessE =
-      Context.GetParameterStore()->GetScoped<Float64>(
-          "lineModel.velocityEmission");
+      Context.GetParameterStore()->GetScoped<Float64>("velocityEmission");
   const Float64 m_velIniGuessA =
-      Context.GetParameterStore()->GetScoped<Float64>(
-          "lineModel.velocityAbsorption");
+      Context.GetParameterStore()->GetScoped<Float64>("velocityAbsorption");
 };
 } // namespace NSEpic
 #endif
