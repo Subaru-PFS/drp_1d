@@ -91,13 +91,17 @@ public:
                               const std::string &path, const std::string &name,
                               std::shared_ptr<const COperatorResult> result);
   void StoreGlobalResult(const std::string &path, const std::string &name,
-                         std::shared_ptr<const COperatorResult> result);
+                         std::shared_ptr<const COperatorResult> result,
+                         bool overwrite = false);
   std::weak_ptr<const COperatorResult>
   GetScopedPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                              const std::string &name) const;
   TResultsMap GetScopedPerTemplateResult(const std::string &name) const;
   std::weak_ptr<const COperatorResult>
   GetScopedGlobalResult(const std::string &name) const;
+
+  std::shared_ptr<COperatorResult>
+  GetAndDeleteScopedGlobalResult(const std::string &name);
 
   const std::string &GetGlobalResultType(const std::string &spectrumModel,
                                          const std::string &stage,
@@ -119,7 +123,7 @@ public:
                   const std::string &method, const std::string &name) const;
   bool hasContextWarningFlag() const;
   bool hasInitWarningFlag() const;
-  bool hasCurrentMethodWarningFlag() const;
+  bool hasCurrentScopeWarningFlag() const;
 
   std::shared_ptr<const CClassificationResult>
   GetClassificationResult(const std::string &spectrumModel,
@@ -200,15 +204,17 @@ public:
                       const std::string &method) const;
   // From DataStore, above should be removed and integrated into these
   void StoreGlobalResult(const std::string &name,
-                         std::shared_ptr<const COperatorResult> result);
+                         std::shared_ptr<const COperatorResult> result,
+                         bool overwrite = false);
 
   void
   StoreScopedPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
                                const std::string &name,
                                std::shared_ptr<const COperatorResult> result);
   void StoreScopedGlobalResult(const std::string &name,
-                               std::shared_ptr<const COperatorResult> result);
-  void StoreScopedFlagResult(const std::string &name);
+                               std::shared_ptr<const COperatorResult> result,
+                               bool overwrite = false);
+  void StoreScopedFlagResult(const std::string &name, bool overwrite = false);
 
   void reset() {
     m_GlobalResults.clear();
@@ -235,8 +241,8 @@ protected:
 
   void StoreResult(TResultsMap &map, const std::string &path,
                    const std::string &name,
-                   std::shared_ptr<const COperatorResult> result);
-
+                   std::shared_ptr<const COperatorResult> result,
+                   bool overwrite = false);
   TPerTemplateResultsMap m_PerTemplateResults;
   TResultsMap m_GlobalResults;
 };

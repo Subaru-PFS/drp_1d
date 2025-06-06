@@ -48,9 +48,9 @@ public:
   using CSolve::CSolve;
   virtual ~CObjectSolve() = default;
   CObjectSolve(CObjectSolve const &other) = default;
-  CObjectSolve &operator=(CObjectSolve const &other) = default;
+  CObjectSolve &operator=(CObjectSolve const &other) = delete;
   CObjectSolve(CObjectSolve &&other) = default;
-  CObjectSolve &operator=(CObjectSolve &&other) = default;
+  CObjectSolve &operator=(CObjectSolve &&other) = delete;
 
 protected:
   void InitRanges(const CInputContext &inputContext) override;

@@ -86,7 +86,6 @@ void CRulesManager::setRulesOption(std::string rulesOption) {
 
   m_Regulament.CreateRulesFromJSONFiles();
   if (rulesOption == "") {
-    CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
     m_rulesoption = ps->GetScoped<std::string>("rules");
   } else

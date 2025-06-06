@@ -82,6 +82,7 @@ class AbstractOutput(metaclass=ABCMeta):
         self.spectrum_id = spectrum_id
         self.root_results = dict()
         self.object_results = dict()
+        self.perfs = pd.DataFrame(columns=["stage", "clock", "user", "system"])
         self.extended_results = extended_results
         self.results_specifications = ResultsSpecifications(specs_path)
         self.object_types = self.parameters.get_spectrum_models()
@@ -174,6 +175,17 @@ class AbstractOutput(metaclass=ABCMeta):
             return self._get_attribute(None, "objectInfo", attr_name)
         elif "WarningFlags" in attr_name:
             return self._get_attribute(root, "warningFlag", attr_name)
+        elif root == "perfs":
+            if attr_parts[1] == "init":
+                return self.get_perfs(None, "init")[attr_parts[2]]
+            else:
+                spectrum_model = attr_parts[1]
+                stage = attr_parts[2]
+                mode = None
+                if len(attr_parts) == 5:
+                    mode = attr_parts[3]
+                perf = attr_parts[-1]
+                return self.get_perfs(spectrum_model, stage, mode)[perf]
         else:
             object_type = root
             LINES_DATASETS = ["linemeas", "fitted_lines"]
@@ -605,3 +617,16 @@ class AbstractOutput(metaclass=ABCMeta):
             except Exception as e:
                 zlog.LogDebug(f"could not extract {attribute} : {e}")
         return ret
+
+    def get_all_perfs(self):
+        return self.perfs
+
+    def get_perfs(self, spectrum_model, stage, mode="normal"):
+        if spectrum_model is None:
+            name = stage
+        else:
+            name = ".".join((stage, spectrum_model))
+            if mode != "normal":
+                name = ".".join((name, mode))
+        row = self.perfs["stage"] == name
+        return self.perfs.loc[row]

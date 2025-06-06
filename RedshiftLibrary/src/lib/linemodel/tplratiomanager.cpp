@@ -58,8 +58,6 @@ CTplratioManager::CTplratioManager(
                         continuumManager, restLineList, spcIndex) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-
   m_CatalogTplRatio = Context.GetTplRatioCatalog();
   initTplratioCatalogs(
       Context.GetParameterStore()->GetScoped<bool>("tplRatioIsmFit"));

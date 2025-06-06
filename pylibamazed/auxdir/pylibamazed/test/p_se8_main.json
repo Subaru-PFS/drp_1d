@@ -35,6 +35,7 @@
   ],
   "lineMeasRunMode": "all",
   "autoCorrectInput": false,
+  "secondPassAfterClassification": false,
   "spectrumModel_galaxy": {
     "redshiftRange": [
       0.9001832537307723,

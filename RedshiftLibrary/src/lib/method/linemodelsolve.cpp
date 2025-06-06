@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -66,35 +67,35 @@ CLineModelSolve::CLineModelSolve() : CTwoPassSolve("lineModelSolve") {}
 bool CLineModelSolve::PopulateParameters(
     std::shared_ptr<const CParameterStore> parameterStore) {
 
-  m_opt_lineratiotype =
-      parameterStore->GetScoped<std::string>("lineModel.lineRatioType");
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
+
+  m_opt_lineratiotype = parameterStore->GetScoped<std::string>("lineRatioType");
 
   m_opt_continuumreest =
-      parameterStore->GetScoped<std::string>("lineModel.continuumReestimation");
+      parameterStore->GetScoped<std::string>("continuumReestimation");
   m_opt_continuumcomponent = TContinuumComponent(
-      parameterStore->GetScoped<std::string>("lineModel.continuumComponent"));
+      parameterStore->GetScoped<std::string>("continuumComponent"));
 
   m_opt_pdfcombination =
-      parameterStore->GetScoped<std::string>("lineModel.pdfCombination");
-  m_opt_extremacount =
-      parameterStore->GetScoped<Int32>("lineModel.extremaCount");
+      parameterStore->GetScoped<std::string>("pdfCombination");
+  m_opt_extremacount = parameterStore->GetScoped<Int32>("extremaCount");
   m_opt_maxCandidate =
-      parameterStore->GetScoped<Int32>("lineModel.firstPass.extremaCount");
+      parameterStore->GetScoped<Int32>("firstPass.extremaCount");
 
   m_opt_stronglinesprior =
-      parameterStore->GetScoped<Float64>("lineModel.strongLinesPrior");
-  m_opt_haPrior = parameterStore->GetScoped<Float64>("lineModel.hAlphaPrior");
+      parameterStore->GetScoped<Float64>("strongLinesPrior");
+  m_opt_haPrior = parameterStore->GetScoped<Float64>("hAlphaPrior");
   m_opt_euclidNHaEmittersPriorStrength =
-      parameterStore->GetScoped<Float64>("lineModel.nOfZPriorStrength");
+      parameterStore->GetScoped<Float64>("nOfZPriorStrength");
 
   m_opt_secondpass_halfwindowsize =
-      parameterStore->GetScoped<Float64>("lineModel.secondPass.halfWindowSize");
+      parameterStore->GetScoped<Float64>("secondPass.halfWindowSize");
 
   m_opt_candidatesLogprobaCutThreshold =
-      parameterStore->GetScoped<Float64>("lineModel.extremaCutProbaThreshold");
+      parameterStore->GetScoped<Float64>("extremaCutProbaThreshold");
 
   m_useloglambdasampling =
-      parameterStore->GetScoped<bool>("lineModel.useLogLambdaSampling");
+      parameterStore->GetScoped<bool>("useLogLambdaSampling");
   return true;
 }
 
@@ -175,8 +176,10 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
 
   // store PDF results
   Log.LogInfo(Formatter() << __func__ << ": Storing PDF results");
-  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
-  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
+  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult,
+                                       m_runSecondPassFromResultStore);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult,
+                                       m_runSecondPassFromResultStore);
 
   // Get linemodel results at extrema (recompute spectrum model etc.)
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
@@ -529,7 +532,8 @@ void CLineModelSolve::fillChisquareArrayForTplRatio(
 void CLineModelSolve::storeExtremaResults(
     std::shared_ptr<COperatorResultStore> resultStore,
     std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const {
-  resultStore->StoreScopedGlobalResult("extrema_results", ExtremaResult);
+  resultStore->StoreScopedGlobalResult("extrema_results", ExtremaResult,
+                                       m_runSecondPassFromResultStore);
 
   Int32 nResults = ExtremaResult->size();
 }
@@ -556,9 +560,17 @@ void CLineModelSolve::Solve() {
   //**************************************************
   // FIRST PASS
   //**************************************************
-  std::shared_ptr<const CLineModelResult> lmresult =
-      m_linemodel.ComputeFirstPass();
-  if (!m_opt_skipsecondpass) {
+  std::shared_ptr<const CLineModelResult> lmresult;
+  if (!secondPassFromResultStore())
+    lmresult = m_linemodel.ComputeFirstPass();
+  else {
+    auto or_ = resultStore->GetAndDeleteScopedGlobalResult(resultName);
+    auto lmr = std::dynamic_pointer_cast<CLineModelResult>(or_);
+    m_linemodel.setResult(lmr);
+    lmresult = lmr;
+    m_linemodel.retrieveContinuumFitStoreFirstPass();
+  }
+  if (twoPassIsActive()) {
     //**************************************************
     // Compute z-candidates
     //**************************************************
@@ -595,11 +607,14 @@ void CLineModelSolve::Solve() {
   //**************************************************
   if (twoPassIsActive())
     lmresult = m_linemodel.ComputeSecondPass();
-
+  else
+    resultStore->StoreScopedGlobalResult(
+        "continuumFitStore", m_linemodel.getContinuumFitStoreFirstPass());
   if (!lmresult)
     THROWG(ErrorCode::INTERNAL_ERROR, "Failed to get linemodel result");
 
   // save linemodel chisquare results
+
   resultStore->StoreScopedGlobalResult(resultName, lmresult);
 
   // don't save linemodel extrema results, since will change with pdf
@@ -608,9 +623,10 @@ void CLineModelSolve::Solve() {
 
 void CLineModelSolve::initSkipSecondPass() {
 
-  m_opt_skipsecondpass =
-      Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
-          "lineModel.skipSecondPass");
+  if (!m_opt_skipsecondpass)
+    m_opt_skipsecondpass =
+        Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
+            "lineModel.skipSecondPass");
 };
 
 void CLineModelSolve::initTwoPassZStepFactor() {

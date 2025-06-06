@@ -42,11 +42,13 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/linemodel/continuumfitstore.h"
 #include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+
 namespace NSEpic {
 
-class CContinuumFitStore {
+class CContinuumFitStore : public COperatorResult {
 public:
   CContinuumFitStore(const TFloat64List &redshifts);
 

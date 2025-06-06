@@ -123,7 +123,6 @@ bool CLMEltListVector::computeOutsideLambdaRange(Int32 elt_index) {
 void CLMEltListVector::AddElementParam(CLineVector lines) {
   size_t nb_lines = lines.size();
 
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   auto const ps = Context.GetParameterStore();
   Float64 const velocity = lines.front().IsEmission()
                                ? ps->GetScoped<Float64>("velocityEmission")

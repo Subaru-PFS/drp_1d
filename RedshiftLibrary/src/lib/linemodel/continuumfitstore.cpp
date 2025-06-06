@@ -46,7 +46,7 @@
 using namespace NSEpic;
 
 CContinuumFitStore::CContinuumFitStore(const TFloat64List &redshifts)
-    : m_redshiftgrid(redshifts) {
+    : COperatorResult("CContinuumFitStore"), m_redshiftgrid(redshifts) {
   initFitValues();
 }
 

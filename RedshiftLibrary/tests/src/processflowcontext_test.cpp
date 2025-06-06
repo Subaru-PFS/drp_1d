@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
 
@@ -162,9 +163,11 @@ BOOST_AUTO_TEST_CASE(context_test) {
               lineCatalog);
   Context.m_ScopeStack->push_back("redshiftSolver", ScopeType::STAGE);
   Context.m_ScopeStack->push_back("lineModelSolve", ScopeType::METHOD);
-  BOOST_CHECK(ssize(Context.getCLineMap()) ==
-              fixture_LineCatalog().lineCatalogSize);
-
+  {
+    CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
+    BOOST_CHECK(ssize(Context.getCLineMap()) ==
+                fixture_LineCatalog().lineCatalogSize);
+  }
   Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
   Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
 

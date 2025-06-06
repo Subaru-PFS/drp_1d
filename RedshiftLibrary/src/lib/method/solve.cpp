@@ -51,7 +51,7 @@ CSolve::CSolve(const std::string &name)
 
 void CSolve::Compute() {
   CAutoScope method_autoscope(Context.m_ScopeStack, m_name, ScopeType::METHOD);
-  CAutoSaveFlagToResultStore saveflag;
+  CAutoSaveFlagToResultStore saveflag(secondPassFromResultStore());
   InitRanges(*Context.GetInputContext());
   auto const &result = compute();
   saveToResultStore(result);
@@ -60,5 +60,6 @@ void CSolve::Compute() {
 void CSolve::saveToResultStore(
     std::shared_ptr<CSolveResult> const &result) const {
   auto const &resultStore = Context.GetResultStore();
-  resultStore->StoreScopedGlobalResult("solveResult", result);
+  resultStore->StoreScopedGlobalResult("solveResult", result,
+                                       m_overwriteSolveResult);
 }

@@ -122,8 +122,6 @@ CLineModelFitting::CLineModelFitting(
 }
 
 void CLineModelFitting::initParameters() {
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingMethod");
   m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");

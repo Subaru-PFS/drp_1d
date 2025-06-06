@@ -47,9 +47,8 @@
 
 using namespace std;
 namespace NSEpic {
-
 #include "RedshiftLibrary/operator/flagResult.i"
-
-}
+CFlagLogResult operator+(CFlagLogResult &&left, CFlagLogResult &&right);
+} // namespace NSEpic
 
 #endif

@@ -331,7 +331,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
 void CLbfgsbFitter::resetSupport(Float64 redshift) {
 
   // set velocity at max value (to set largest line overlapping)
-  if (Context.GetParameterStore()->GetScoped<bool>("lineModel.velocityFit")) {
+  if (Context.GetParameterStore()->GetScoped<bool>("velocityFit")) {
     for (auto param : getElementParam()) {
       Float64 const velocity =
           param->IsEmission() ? m_velfitMaxE : m_velfitMaxA;

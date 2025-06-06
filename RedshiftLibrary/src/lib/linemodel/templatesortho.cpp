@@ -190,6 +190,8 @@ bool CTemplatesOrthogonalization::hasLogRebinnedTemplatesChanged(
 std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     const CTemplate &inputTemplate) {
 
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
+
   std::shared_ptr<CTemplate> tplOrtho =
       std::make_shared<CTemplate>(inputTemplate);
 

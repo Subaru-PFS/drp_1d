@@ -62,7 +62,7 @@ COperatorResultStore::COperatorResultStore(
 
 void COperatorResultStore::StoreResult(
     TResultsMap &map, const std::string &path, const std::string &name,
-    std::shared_ptr<const COperatorResult> result) {
+    std::shared_ptr<const COperatorResult> result, bool overwrite) {
   std::string scopedName;
   if (!path.empty()) {
     scopedName = path;
@@ -71,9 +71,10 @@ void COperatorResultStore::StoreResult(
   scopedName.append(name);
 
   TResultsMap::iterator it = map.find(scopedName);
-  if (it != map.end()) {
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           "Can not store results: result already exists");
+  if (it != map.end() && !overwrite) {
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Can not store results: result"
+                                          << scopedName << " already exists");
   }
   map[scopedName] = result;
 }
@@ -91,8 +92,8 @@ void COperatorResultStore::StorePerTemplateResult(
 
 void COperatorResultStore::StoreGlobalResult(
     const std::string &path, const std::string &name,
-    std::shared_ptr<const COperatorResult> result) {
-  StoreResult(m_GlobalResults, path, name, result);
+    std::shared_ptr<const COperatorResult> result, bool overwrite) {
+  StoreResult(m_GlobalResults, path, name, result, overwrite);
 }
 
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
@@ -158,6 +159,16 @@ COperatorResultStore::GetGlobalResult(const std::string &name) const {
 std::weak_ptr<const COperatorResult>
 COperatorResultStore::GetScopedGlobalResult(const std::string &name) const {
   return GetGlobalResult(GetScopedName(name));
+}
+
+std::shared_ptr<COperatorResult>
+COperatorResultStore::GetAndDeleteScopedGlobalResult(const std::string &name) {
+  // std::shared_ptr<const COperatorResult> a=
+  // std::shared_ptr<>(GetGlobalResult(GetScopedName(name)).lock());
+  auto a = GetGlobalResult(GetScopedName(name));
+  auto ret = std::const_pointer_cast<COperatorResult>(a.lock());
+  m_GlobalResults.erase(GetScopedName(name));
+  return ret;
 }
 
 std::string COperatorResultStore::buildFullname(
@@ -385,9 +396,9 @@ bool COperatorResultStore::hasInitWarningFlag() const {
   return (it != m_GlobalResults.end());
 }
 
-bool COperatorResultStore::hasCurrentMethodWarningFlag() const {
+bool COperatorResultStore::hasCurrentScopeWarningFlag() const {
   TResultsMap::const_iterator it =
-      m_GlobalResults.find(GetScopedNameAt("warningFlag", ScopeType::METHOD));
+      m_GlobalResults.find(GetScopedName("warningFlag"));
   return (it != m_GlobalResults.end());
 }
 
@@ -429,18 +440,29 @@ void COperatorResultStore::StoreScopedPerTemplateResult(
 }
 
 void COperatorResultStore::StoreScopedGlobalResult(
-    const std::string &name, std::shared_ptr<const COperatorResult> result) {
-  StoreGlobalResult(GetCurrentScopeName(), name, result);
+    const std::string &name, std::shared_ptr<const COperatorResult> result,
+    bool overwrite) {
+  StoreGlobalResult(GetCurrentScopeName(), name, result, overwrite);
 }
 
 void COperatorResultStore::StoreGlobalResult(
-    const std::string &name, std::shared_ptr<const COperatorResult> result) {
-  StoreGlobalResult("", name, result);
+    const std::string &name, std::shared_ptr<const COperatorResult> result,
+    bool overwrite) {
+  StoreGlobalResult("", name, result, overwrite);
 }
 
-void COperatorResultStore::StoreScopedFlagResult(const std::string &name) {
-  StoreScopedGlobalResult(name, std::make_shared<const CFlagLogResult>(
-                                    Flag.getBitMask(), Flag.getListMessages()));
+void COperatorResultStore::StoreScopedFlagResult(const std::string &name,
+                                                 bool overwrite) {
+  auto newFlag = CFlagLogResult(Flag.getBitMask(), Flag.getListMessages());
+
+  if (overwrite && hasCurrentScopeWarningFlag()) {
+    auto currentFlag = std::move(*(std::dynamic_pointer_cast<CFlagLogResult>(
+        GetAndDeleteScopedGlobalResult(name))));
+    newFlag = std::move(currentFlag) + std::move(newFlag);
+  }
+
+  StoreScopedGlobalResult(
+      name, std::make_shared<const CFlagLogResult>(std::move(newFlag)));
 }
 
 std::weak_ptr<const COperatorResult>

@@ -83,6 +83,7 @@ struct AbstractFitterFixture {
     CAutoScope autoscope3(Context.m_ScopeStack, method, ScopeType::METHOD);
     const std::string jsonString = createInputJson(method, igmFit);
     Context.LoadParameterStore(jsonString);
+    CAutoScope autoscope4(Context.m_ScopeStack, "lineModel");
     CTestFitter testFitter(elementsVector, inputSpcs, lambdaRanges,
                            spectrumModels, restLineList, *spcIndex);
     return testFitter;
