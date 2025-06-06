@@ -188,9 +188,9 @@ class ProcessFlow:
         if self.parameters.is_a_redshift_solver_used():
             with suppress(ProcessFlowException):
                 classif_model = self._run_classification_solver()
+                if processing_mode == EProcessingMode.FIRST_PASS_ONLY:
+                    self._run_second_pass_after_classification(classif_model)
                 with push_scope(classif_model, ScopeType.SPECTRUMMODEL):
-                    if processing_mode == EProcessingMode.FIRST_PASS_ONLY:
-                        self._run_second_pass_after_classification(classif_model)
                     # Running linemeas only on classified model (if any)
                     if self.parameters.get_linemeas_runmode() == "classif":
                         self._run_linemeas_after_classification(classif_model)
@@ -241,14 +241,22 @@ class ProcessFlow:
         self.process_flow_context.LoadParameterStore(parameters.to_json())
         self.process_flow_context.Init()
 
-    def _process_spectrum_model(self, mode: EProcessingMode) -> None:
+    def _process_spectrum_model(self, mode: EProcessingMode, classified=True) -> None:
         spectrum_model = self._scope_spectrum_model
 
         redshift_solver_method = self.parameters.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.parameters.get_linemeas_method(spectrum_model)
 
         if redshift_solver_method:
-            self._run_redshift_solver(redshift_solver_method.value, mode)
+            if mode != EProcessingMode.SECOND_PASS_AND_PDF:
+                self._run_redshift_solver(redshift_solver_method.value, mode)
+
+            elif classified and (redshift_solver_method == ESolveMethod.LINE_MODEL):
+                self._run_redshift_solver(redshift_solver_method.value, mode)
+
+            if mode == EProcessingMode.FIRST_PASS_ONLY:
+                return
+
             if self.parameters.is_tplratio_catalog_needed(spectrum_model):
                 with suppress(ProcessFlowException):
                     self._run_sub_classification_solver()
@@ -272,11 +280,10 @@ class ProcessFlow:
         self._run_linemeas_solver(linemeas_method)
 
     def _run_second_pass_after_classification(self, classif_model: str) -> None:
-        # for spectrum_model in self.parameters.get_spectrum_models():
-        redshift_solver_method = self.parameters.get_redshift_solver_method(classif_model)
-        if redshift_solver_method != ESolveMethod.LINE_MODEL:
-            return
-        self._process_spectrum_model(EProcessingMode("secondPass"))
+        for spectrum_model in self.parameters.get_spectrum_models():
+            with push_scope(spectrum_model, ScopeType.SPECTRUMMODEL):
+                classified = spectrum_model == classif_model
+                self._process_spectrum_model(EProcessingMode("secondPass"), classified)
 
     @push_scope("redshiftSolver", ScopeType.STAGE)
     @_store_perfs()
