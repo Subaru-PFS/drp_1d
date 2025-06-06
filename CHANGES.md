@@ -4,6 +4,8 @@
 ## Added
 * [9528] : Add several goodness of fit using normality of the residuals (mean, standard deviation, skewness, kurtosis, KS-test, Anderson-Darling test)
 * [9196] : Add a new Machine Learning reliability based on [sckit learn gradient boosting](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html)
+* [9259] : Compute second pass after classification (only for lineModelSolve redshift solver)
+* [9542] : Performances by stage and spectrum_model (clock, user and sytem times)
 
 ## Changed
 * [9774] : API: added get_mask method to retrive the mask associated with the filters (and set get_dataframe private)
