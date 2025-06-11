@@ -201,6 +201,21 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
   BOOST_CHECK_CLOSE(chi2r, 6.148, 1e-2);
   Float64 pValue = res->fittedContinuum.pValue;
   BOOST_CHECK_CLOSE(pValue, 4.97e-42, 1e-1);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, -0.43943998160372039,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 2.560344849941961, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.skewnessResiduals, 2.36210144651124,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, 4.9798049519834757,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksResiduals, 0.502887137726843466,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdResiduals, 0.35844771484577703,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdMeanResiduals, 0.2909871113086267,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 6.7027381135264434,
+                    1e-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
