@@ -269,7 +269,7 @@ class ProcessFlow:
             if mode != EProcessingMode.SECOND_PASS_AND_PDF:
                 self._run_redshift_solver(redshift_solver_method.value, mode)
 
-            elif classified and (redshift_solver_method == ESolveMethod.LINE_MODEL):
+            elif classified:
                 self._run_redshift_solver(redshift_solver_method.value, mode)
 
             if mode == EProcessingMode.FIRST_PASS_ONLY:

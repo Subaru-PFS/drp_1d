@@ -60,6 +60,9 @@ void CSolve::Compute() {
 void CSolve::saveToResultStore(
     std::shared_ptr<CSolveResult> const &result) const {
   auto const &resultStore = Context.GetResultStore();
+  Log.LogInfo(Formatter() << "save solveResult overwrite="
+                          << m_overwriteSolveResult);
+
   resultStore->StoreScopedGlobalResult("solveResult", result,
                                        m_overwriteSolveResult);
 }

@@ -106,7 +106,7 @@ void CTemplateFittingSolve::PopulateParameters(
     m_secondPassContinuumFit = str2ContinuumFit.at(
         parameterStore->GetScoped<std::string>("secondPass.continuumFit"));
 
-    m_secondPass_halfwindowsize =
+    m_opt_secondpass_halfwindowsize =
         parameterStore->GetScoped<Float64>("secondPass.halfWindowSize");
   }
 }
@@ -166,7 +166,7 @@ std::string CTemplateFittingSolve::getResultName() const {
   };
 
   std::string resultName = spectrumTypeToStr.at(m_spectrumType);
-  if (twoPassIsActive() && m_isFirstPass)
+  if (!m_opt_singlePass && m_isFirstPass)
     resultName += "_firstpass";
 
   return resultName;
@@ -230,25 +230,42 @@ CTemplateFittingSolve::computeSinglePass() {
 std::shared_ptr<CTemplateFittingSolveResult>
 CTemplateFittingSolve::computeTwoPass() {
   // First pass
-  computeFirstPass();
+  if (!secondPassFromResultStore())
+    computeFirstPass();
+  else {
+    ;
+  }
+  std::shared_ptr<const ExtremaResult> extremaResult;
+  if (twoPassIsActive()) {
 
-  COperatorPdfz pdfz(m_opt_pdfcombination,
-                     2 * m_secondPass_halfwindowsize, // peak separation
-                     m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
-                     m_zLogSampling, "FPE", true, 0);
+    COperatorPdfz pdfz(m_opt_pdfcombination,
+                       2 * m_opt_secondpass_halfwindowsize, // peak separation
+                       m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,
+                       m_zLogSampling, "FPE", true, 0);
+    extremaResult = computeResults(pdfz);
 
-  auto extremaResult = computeResults(pdfz);
+    storeFirstPassResults(pdfz, extremaResult);
 
-  storeFirstPassResults(pdfz, extremaResult);
-
-  // Second pass
-  computeSecondPass(extremaResult);
-
+    // Second pass
+    computeSecondPass(extremaResult);
+  }
   TZGridListParams zgridParams = m_templateFittingOperator->getSPZGridParams();
-  COperatorPdfz pdfz2(m_opt_pdfcombination, 0.0,
-                      m_opt_candidatesLogprobaCutThreshold, m_opt_extremacount,
-                      m_zLogSampling, "SPE", false, 1);
+  Int32 maxPeakPerWindow = 1;
+  Int32 peakSeparation = 0; // no peak separation in 2nd pass
+  Int32 cutThreshold = 0;
+  Int32 extremaCount = m_opt_extremacount;
+  if (m_opt_skipsecondpass) {
+    maxPeakPerWindow =
+        0; // 0 -> = m_opt_extremacount, cf. COperatorPdfz constructor
+    peakSeparation = 2 * m_opt_secondpass_halfwindowsize;
+    cutThreshold = m_opt_candidatesLogprobaCutThreshold;
+    extremaCount = m_opt_maxCandidate;
+  }
+
+  COperatorPdfz pdfz2 = initializePdfz(maxPeakPerWindow, peakSeparation,
+                                       cutThreshold, extremaCount);
   extremaResult = computeResults(pdfz2, zgridParams);
+
   storeResults(pdfz2, extremaResult);
 
   auto templateFittingSolveResult =
@@ -309,9 +326,12 @@ void CTemplateFittingSolve::storeResults(
 
 ) {
   auto const &resultStore = Context.GetResultStore();
-  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
-  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult);
-  resultStore->StoreScopedGlobalResult("extrema_results", extremaResult);
+  resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult,
+                                       m_runSecondPassFromResultStore);
+  resultStore->StoreScopedGlobalResult("pdf_params", pdfz.m_postmargZResult,
+                                       m_runSecondPassFromResultStore);
+  resultStore->StoreScopedGlobalResult("extrema_results", extremaResult,
+                                       m_runSecondPassFromResultStore);
   Log.LogInfo("CTemplateFittingSolve::StoreExtremaResults: Templatefitting, "
               "saving extrema results");
 }
@@ -322,7 +342,7 @@ void CTemplateFittingSolve::computeSecondPass(
   auto const &resultStore = Context.GetResultStore();
 
   m_templateFittingOperator->setTwoPassParameters(
-      m_secondPass_halfwindowsize, m_zLogSampling, m_redshiftStep,
+      m_opt_secondpass_halfwindowsize, m_zLogSampling, m_redshiftStep,
       m_twoPassZStepFactor);
   m_templateFittingOperator->buildExtendedRedshifts();
 
@@ -350,7 +370,6 @@ void CTemplateFittingSolve::computeSecondPass(
         templatesResultsMap[candidate->fittedContinuum.name];
     Solve(tpl, ismIdx, igmIdx, candidateName, candidateIdx, tplFitResult);
   }
-
   // save all template results
   for (auto const [tplName, tplFitResult] : templatesResultsMap) {
     std::shared_ptr<const CTemplate> tpl =
@@ -587,7 +606,7 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
 }
 
 void CTemplateFittingSolve::initSkipSecondPass() {
-  m_opt_skipsecondpass = false;
+
   m_opt_singlePass =
       Context.GetInputContext()->GetParameterStore()->GetScoped<bool>(
           "singlePass");

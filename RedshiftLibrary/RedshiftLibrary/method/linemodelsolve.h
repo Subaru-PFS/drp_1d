@@ -71,8 +71,6 @@ public:
 
 private:
   friend class lineModelSolve_test::continuumChi2CorrectlySet_test;
-  COperatorPdfz initializePdfz(Int32 maxPeakPerWindow, Int32 peakSeparation,
-                               Int32 cutThreshold, Int32 extremaCount) const;
   ChisquareArray
   BuildContinuumChisquareArray(const Float64 cstLog,
                                const TZGridListParams &spZgridParams) const;
@@ -108,16 +106,14 @@ private:
   std::string m_opt_continuumreest;
   TContinuumComponent m_opt_continuumcomponent;
 
-  std::string m_opt_pdfcombination;
   Int32 m_opt_extremacount;
-  Int32 m_opt_extremacountB;
+
   Int32 m_opt_maxCandidate;
 
   Float64 m_opt_stronglinesprior;
   Float64 m_opt_haPrior;
   Float64 m_opt_euclidNHaEmittersPriorStrength;
 
-  Float64 m_opt_secondpass_halfwindowsize;
   Float64 m_opt_candidatesLogprobaCutThreshold;
 
   bool m_useloglambdasampling;

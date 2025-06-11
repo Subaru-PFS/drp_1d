@@ -131,7 +131,7 @@ private:
   getPerTemplateResultMapCopy(const std::string &resultName) const;
 
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
-  std::string m_opt_pdfcombination;
+
   Float64 m_redshiftSeparation;
   Int32 m_opt_maxCandidate;
   Float64 m_overlapThreshold;
@@ -143,7 +143,7 @@ private:
   bool m_usePhotometry = false;
   Float64 m_photometryWeight = NAN;
   EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
-  Float64 m_secondPass_halfwindowsize = NAN;
+
   Int32 m_opt_extremacount;
   Float64 m_opt_candidatesLogprobaCutThreshold = 0.0;
   bool m_isFirstPass = true;
