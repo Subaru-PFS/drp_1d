@@ -13,6 +13,7 @@
 ### Fixed
 * [9615] : Fix unintentional numerous warnings when continuum is null and fitting absorption lines
 * [9616] : Fix linemeas "empty line element list to fit"
+* [9836] : Fixed templateFitting 2nd pass evidence saved in ResultStore
 
 ## 1.8.0 (2025-06-06)
 ### Added

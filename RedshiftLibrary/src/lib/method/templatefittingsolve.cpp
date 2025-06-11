@@ -254,7 +254,7 @@ CTemplateFittingSolve::computeTwoPass() {
   auto templateFittingSolveResult =
       std::make_shared<CTemplateFittingSolveResult>(
           extremaResult->getRankedCandidateCPtr(0), m_opt_pdfcombination,
-          pdfz.m_postmargZResult->valMargEvidenceLog);
+          pdfz2.m_postmargZResult->valMargEvidenceLog);
   return templateFittingSolveResult;
 }
 
