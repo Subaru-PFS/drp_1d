@@ -55,10 +55,8 @@ public:
            const Float64 redshift, const Float64 chi2,
            const TFitQuality &fitQuality,
            const TPowerLawCoefsPair &powerlawCoefs, const Float64 snr);
-
-private:
-  Float64 getFracAmplitudeSigma(
-      CContinuumModelSolution const &continuum) const override;
+  Float64 getFracAmplitudeSigma(Int32 idxz,
+                                Int32 continuumCandidateRank) const override;
 };
 
 } // namespace NSEpic

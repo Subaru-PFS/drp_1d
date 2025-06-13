@@ -40,11 +40,8 @@
 #define _REDSHIFT_LINEMODEL_CONTINUUMFITSTORE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/continuumfitstore.h"
 #include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 
@@ -64,6 +61,8 @@ public:
   void initFitValues();
   std::pair<Float64, CContinuumModelSolution const>
   FindMaxAmplitudeSigma() const;
+  virtual Float64 getFracAmplitudeSigma(Int32 idxz,
+                                        Int32 continuumCandidateRank) const = 0;
   CContinuumModelSolution const &FindMinReducedChi2() const;
   CContinuumModelSolution const &FindMaxPValue() const;
 
@@ -71,8 +70,6 @@ protected:
   TFloat64List m_redshiftgrid;
   std::vector<std::vector<CContinuumModelSolution>>
       m_fitValues; //[nz][m_nContinuumCandidates]
-  virtual Float64
-  getFracAmplitudeSigma(CContinuumModelSolution const &continuum) const = 0;
 
 private:
 };

@@ -140,7 +140,9 @@ Int32 CTemplatesFitStore::getContinuumCount() const {
   return m_nContinuumCandidates;
 }
 
-Float64 CTemplatesFitStore::getFracAmplitudeSigma(
-    CContinuumModelSolution const &continuum) const {
+Float64
+CTemplatesFitStore::getFracAmplitudeSigma(Int32 idxz,
+                                          Int32 continuumCandidateRank) const {
+  auto const &continuum = m_fitValues[idxz][continuumCandidateRank];
   return continuum.tplAmplitudeSigma;
 }

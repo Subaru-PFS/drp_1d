@@ -40,7 +40,6 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/line/linetags.h"
-#include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -56,13 +55,12 @@ CSpectrumModel::CSpectrumModel(
     Int32 spcIndex)
     : m_continuumFittingOperator(continuumFittingOperator), m_inputSpc(spc),
       m_RestLineList(restLineList), m_fitContinuum(continuumModelSolution),
-      m_SpectrumModel(*(spc)), m_Elements(elements), m_spcIndex(spcIndex) {
-  const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
-  m_SpcFluxAxis.SetSize(spectrumSampleCount);
-  m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
-  m_spcFluxAxisNoContinuum.setError(m_inputSpc->GetFluxAxis().GetError());
-  m_ContinuumFluxAxis.SetSize(spectrumSampleCount);
-}
+      m_SpectrumModel(*(spc)), m_Elements(elements),
+      m_ContinuumFluxAxis(m_inputSpc->GetSampleCount()),
+      m_SpcFluxAxis(m_inputSpc->GetSampleCount()),
+      m_spcFluxAxisNoContinuum(m_SpcFluxAxis,
+                               m_inputSpc->GetFluxAxis().GetError()),
+      m_spcIndex(spcIndex) {}
 
 /**
  * \brief Returns a pointer to m_SpectrumModel.
@@ -718,5 +716,5 @@ void CSpectrumModel::ApplyContinuumPowerLawOnGrid(
 }
 
 void CSpectrumModel::initObserveGridContinuumFlux(Int32 size) {
-  m_observeGridContinuumFlux.resize(size);
+  m_observeGridContinuumFlux.assign(size, 0.);
 }

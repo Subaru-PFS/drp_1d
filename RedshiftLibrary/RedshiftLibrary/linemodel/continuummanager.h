@@ -66,6 +66,10 @@ public:
     return m_ContinuumComponent.isContinuumFit();
   }
 
+  bool isContinuumComponentFromSpectrum() const {
+    return m_ContinuumComponent.isFromSpectrum();
+  }
+
   bool isContinuumComponentNoContinuum() const {
     return m_ContinuumComponent.isNoContinuum();
   }
@@ -87,7 +91,9 @@ public:
   void reinterpolateContinuum(Float64 redshift);
   void reinterpolateContinuumResetAmp();
 
-  bool isContFittedToNull();
+  bool isContFittedToNull() const {
+    return isContinuumComponentFitter() && m_continuumFittedToNull;
+  };
   Int32 getFittedMeiksinIndex() { return m_fitContinuum->meiksinIdx; }
   Float64 getFitSum() {
     if (!isContinuumComponentTplFitXXX())
@@ -120,6 +126,7 @@ private:
   CSpectraGlobalIndex m_spectraIndex;
 
   TContinuumComponent m_ContinuumComponent;
+  bool m_continuumFittedToNull = false;
   EFitType m_fitContinuum_option;
   Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
   Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;

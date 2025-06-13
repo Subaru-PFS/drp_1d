@@ -9,6 +9,7 @@
 ### Removed
 * [9830] : Remove CFITSIO dependency
 ### Fixed
+* [9615] fix unintentional numerous warnings when continuum is null and fitting absorption lines
 
 ## 1.8.0 (2025-06-06)
 ### Added
