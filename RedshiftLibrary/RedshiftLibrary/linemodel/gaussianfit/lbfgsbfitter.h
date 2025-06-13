@@ -40,7 +40,6 @@
 #define _REDSHIFT_LBFGSB_FITTER_
 
 #include <Eigen/Core>
-#include <LBFGSB.h>
 
 #include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"

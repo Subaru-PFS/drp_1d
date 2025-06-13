@@ -3,6 +3,7 @@
 ## 1.9
 ### Added
 ### Changed
+* [9830] : Switch to lBFGSb v0.4.0
 ### Deprecated
 ### Removed
 ### Fixed
