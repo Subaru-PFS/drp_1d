@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
 ## 1.8.0 (2025-06-06)
 ### Added
 * [9528] : Add several goodness of fit using normality of the residuals (mean, standard deviation, skewness, kurtosis, KS-test, Anderson-Darling test)
