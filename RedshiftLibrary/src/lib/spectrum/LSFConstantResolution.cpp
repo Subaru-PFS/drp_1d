@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
-#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -48,9 +47,7 @@ CLSFGaussianConstantResolution::CLSFGaussianConstantResolution(
     : CLSF(GaussianConstantResolution,
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
       m_Resolution(resolution) {
-  if (!IsValid())
-    THROWG(ErrorCode::INVALID_LSF,
-           Formatter() << "invalid LSF, resolution=" << m_Resolution);
+  IsValid(true);
 }
 
 Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda,
@@ -63,8 +60,14 @@ Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda,
   return defaultSigma;
 }
 
-bool CLSFGaussianConstantResolution::IsValid() const {
-  return (m_Resolution > 1.);
+bool CLSFGaussianConstantResolution::IsValid(bool throwError) const {
+  if (m_Resolution <= 1.) {
+    if (throwError)
+      THROWG(ErrorCode::INVALID_LSF,
+             Formatter() << "invalid LSF, resolution=" << m_Resolution);
+    return false;
+  }
+  return true;
 }
 
 Float64 CLSFGaussianConstantResolution::computeResolution(Float64 lambda,

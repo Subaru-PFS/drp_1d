@@ -38,12 +38,9 @@
 // ============================================================================
 #include <boost/test/unit_test.hpp>
 
-#include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "tests/src/tool/inputContextLight.h"
 

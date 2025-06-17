@@ -53,16 +53,24 @@ public:
       : CLSF(GaussianConstantWidth,
              std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
         m_width(width) {
-    if (!IsValid())
-      THROWG(ErrorCode::INVALID_LSF, Formatter()
-                                         << "invalid LSF, width=" << m_width);
+    IsValid(true);
   };
 
   Float64 GetWidth(Float64 lambda, bool cliplambda = false) const override {
     return m_width;
   };
 
-  bool IsValid() const override { return (m_width > 0.0); };
+  bool IsValid(const bool throwError = false) const override {
+    if (m_width <= 0.0) {
+      if (throwError) {
+        THROWG(ErrorCode::INVALID_LSF, Formatter()
+                                           << "invalid LSF, width " << m_width
+                                           << " is negative");
+      }
+      return false;
+    }
+    return true;
+  };
 
   static std::shared_ptr<CLSF>
   make_LSF(const std::shared_ptr<const TLSFArguments> &args);

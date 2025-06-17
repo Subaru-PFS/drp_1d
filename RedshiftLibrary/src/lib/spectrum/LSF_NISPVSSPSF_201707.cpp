@@ -76,4 +76,6 @@ Float64 CLSFGaussianNISPVSSPSF201707::GetWidth(Float64 lambda,
   return width;
 }
 
-bool CLSFGaussianNISPVSSPSF201707::IsValid() const { return true; }
+bool CLSFGaussianNISPVSSPSF201707::IsValid(bool throwError) const {
+  return true;
+}

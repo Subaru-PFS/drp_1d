@@ -40,20 +40,14 @@
 #ifndef INPUT_CONTEXT_LIGHT_FOR_TESTS
 #define INPUT_CONTEXT_LIGHT_FOR_TESTS
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
-#include "RedshiftLibrary/processflow/scopestore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
-#include "RedshiftLibrary/spectrum/rebin/rebin.h"
-#include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "tests/src/tool/11095-58439-0081.h"
 #include "tests/src/tool/134845168.h"

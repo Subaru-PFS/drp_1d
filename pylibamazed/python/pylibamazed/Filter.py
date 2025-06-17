@@ -187,7 +187,7 @@ class FilterMorphology(AbstractFilterItem):
 
     def apply(self, df: pd.DataFrame = None, mask: pd.Series = None) -> pd.Series:
         if mask is None:
-            raise APIException(ErrorCode.INTERNAL_ERROR, "mask paramater is None, should be a pandas Series")
+            raise APIException(ErrorCode.INTERNAL_ERROR, "mask parameter is None, should be a pandas Series")
         action = self._action_from_instruction()
         return action(mask)
 

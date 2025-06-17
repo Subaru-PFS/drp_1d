@@ -147,8 +147,9 @@ void CInputContext::RebinInputs() {
 void CInputContext::OrthogonalizeTemplates() {
   Float64 lambda =
       (m_lambdaRanges[0]->GetBegin() + m_lambdaRanges[0]->GetEnd()) / 2;
+
   if (m_spectra[0]->GetLSF() == nullptr)
-    THROWG(ErrorCode::LSF_NOT_LOADED, "No defined lsf");
+    THROWG(ErrorCode::IE_LSF_NOT_LOADED, "No defined lsf");
   Float64 resolution = CLSFGaussianConstantResolution::computeResolution(
       lambda, m_spectra[0]->GetLSF()->GetWidth(lambda));
   std::shared_ptr<TLSFArguments> args =

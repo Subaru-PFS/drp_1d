@@ -125,7 +125,7 @@ public:
   bool IsNoiseEmpty() const;
   bool IsFluxEmpty() const;
   bool IsEmpty() const;
-  bool IsValid() const;
+  bool IsValid(const bool throwError = false) const;
   void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect,
                         const Int32 &nbSamplesMin);
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
@@ -305,11 +305,6 @@ inline const std::shared_ptr<const CLSF> CSpectrum::GetLSF() const {
 
 inline bool CSpectrum::IsEmpty() const {
   return m_SpectralAxis.isEmpty() || GetFluxAxis().isEmpty();
-}
-
-inline bool CSpectrum::IsValid() const {
-  return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() &&
-         !IsEmpty() && m_SpectralAxis.isSorted();
 }
 
 inline bool CSpectrum::IsFluxEmpty() const { return GetFluxAxis().isEmpty(); }

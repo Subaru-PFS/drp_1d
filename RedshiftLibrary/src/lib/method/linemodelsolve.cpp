@@ -363,8 +363,9 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
 
   if (m_opt_pdfcombination != "bestChi2" &&
       m_opt_pdfcombination != "bestproba" && m_opt_pdfcombination != "marg")
-    THROWG(ErrorCode::BAD_PARAMETER_VALUE,
-           "PdfCombination can only be {bestchi2, bestproba, marg");
+    THROWG(ErrorCode::IE_INVALID_PARAMETER,
+           Formatter() << "Bad pdfCombination option: " << m_opt_pdfcombination
+                       << ". Valid options are: bestChi2, bestproba, marg ");
 
   ChisquareArray chisquarearray;
   std::vector<TFloat64List> &chisquares = chisquarearray.chisquares;

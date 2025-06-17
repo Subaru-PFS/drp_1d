@@ -425,11 +425,7 @@ void COperatorTplcombination::RebinTemplate(
         m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapFraction(
             lambdaRange_restframe, itplMask);
 
-    // Check for overlap rate
-    if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-      THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
-             Formatter() << "overlapFraction of " << overlapFraction);
-    }
+    checkTemplateOverlap(overlapFraction, overlapThreshold);
   }
   currentRange = intersectedAllLambdaRange;
   return;

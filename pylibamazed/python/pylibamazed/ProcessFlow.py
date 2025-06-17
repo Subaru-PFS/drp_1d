@@ -331,6 +331,7 @@ class ProcessFlow:
     @_store_exception  # NOTE: an exception raised in one reliability method prevent the following to be run
     def _run_reliability_solver(self) -> None:
         reliability_methods = self.parameters.get_reliability_methods(self._scope_spectrum_model)
+        # Proposition : vérifier que bien présent dans le python checker, et transformer en INTERNAL_ERROR ou IE_INVALID_PARAMETER
         if reliability_methods is None:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER, f"{self._scope_spectrum_model}.reliabilitySolver.method empty"
@@ -393,7 +394,7 @@ class ProcessFlow:
             "tplCombinationSolve": "CTplCombinationSolve",
         }
         if method_to_solver[method] not in globals():
-            raise APIException(ErrorCode.INVALID_PARAMETER, "Unknown method {}".format(method))
+            raise APIException(ErrorCode.IE_INVALID_PARAMETER, "Unknown method {}".format(method))
         solver_method = globals()[method_to_solver[method]]
         solver = solver_method()
         zlog.LogInfo(f"Running method {method} on mode {mode}")

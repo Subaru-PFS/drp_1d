@@ -95,10 +95,10 @@ public:
       return std::dynamic_pointer_cast<TCandidateZ>(
                  m_ranked_candidates[rank].second)
           ->ParentObject;
-    }
-
-    else
-      THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
+    } else
+      THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, Formatter()
+                                               << "Unknown dataset " << dataset
+                                               << "for parentObject");
   }
 
   TStringList GetIDs() const {

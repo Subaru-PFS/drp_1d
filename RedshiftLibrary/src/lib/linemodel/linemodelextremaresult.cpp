@@ -191,7 +191,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[rank];
   else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, Formatter()
+                                             << "Unknown dataset " << dataset);
 }
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
@@ -208,7 +209,8 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[0]->getType();
   else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, Formatter()
+                                             << "Unknown dataset " << dataset);
 }
 
 bool LineModelExtremaResult::HasCandidateDataset(

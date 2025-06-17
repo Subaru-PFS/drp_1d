@@ -40,6 +40,7 @@
 #define _REDSHIFT_CURVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include <cstdint>
 
 namespace NSEpic {
 

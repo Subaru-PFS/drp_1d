@@ -65,7 +65,7 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
 
     def test_non_multi_obs_naming_restrictions(self):
         fsr = self.initialize_fsr_with_data(**{"obs_ids": ["name that shouldn't be here"]})
-        with pytest.raises(APIException, match=r"INVALID_NAME"):
+        with pytest.raises(APIException, match=r"INVALID_SPECTRUM"):
             fsr.get_spectrum()
 
     def test_wavelength_duplicates_error(self):

@@ -42,10 +42,9 @@
 #include <cfloat>
 #include <cmath>
 #include <map>
-#include <memory>
+#include <memory> // To keep for auto include in all files
 #include <set>
 #include <string>
-#include <type_traits>
 #include <vector>
 namespace NSEpic {
 #ifndef NULL

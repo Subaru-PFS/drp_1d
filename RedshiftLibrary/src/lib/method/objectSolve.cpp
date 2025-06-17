@@ -77,10 +77,8 @@ void CObjectSolve::GetRedshiftSampling(const CInputContext &inputContext,
     redshiftRange = searchLogRebin->second.zrange;
     redshiftStep = inputContext.getLogGridStep();
     if (!m_zLogSampling)
-      THROWG(ErrorCode::BAD_PARAMETER_VALUE,
-             Formatter() << "CSolve::" << __func__
-                         << ": redshiftsampling param should be set to log "
-                            "since FFTprocessing is used");
+      THROWG(ErrorCode::IE_INVALID_PARAMETER,
+             "redshiftsampling must be set to log since FFTprocessing is used");
 
   } else {
     // default is to read from the scoped paramStore

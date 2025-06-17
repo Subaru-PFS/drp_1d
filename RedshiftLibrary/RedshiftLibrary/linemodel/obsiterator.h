@@ -97,13 +97,29 @@ public:
 
   Iterator current() const { return Iterator(m_currentIndex); }
 
-  bool isValid() const {
-    return *m_currentIndex >= 0 && *m_currentIndex < *m_endIndex;
+  bool isValid(bool throwError = false) const {
+    // Checks that current index is positive and less than end index
+
+    bool valid = true;
+    std::string message = "";
+    if (*m_currentIndex < 0) {
+      valid = false;
+      message = "Current index is negative: " + std::to_string(*m_currentIndex);
+    } else if (*m_currentIndex >= *m_endIndex) {
+      valid = false;
+      message =
+          "Current index is out of range: " + std::to_string(*m_currentIndex) +
+          ", end index is: " + std::to_string(*m_endIndex);
+    }
+
+    if (!valid && throwError)
+      THROWG(ErrorCode::INVALID_SPECTRUM_INDEX, message);
+
+    return valid;
   }
-  void assertIsValid() const {
-    if (!isValid())
-      THROWG(ErrorCode::INVALID_SPECTRUM_INDEX, "Invalid spectrum index");
-  };
+
+  void assertIsValid() const { isValid(true); }
+
   void setAtBegining() { *m_currentIndex = 0; }
 
   CSpectraGlobalIndex(Int32 nbObs) {

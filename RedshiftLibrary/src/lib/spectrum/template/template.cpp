@@ -106,7 +106,7 @@ CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
                                           m_IsmIgm_kstart, m_Ism_kend);
     } catch (const AmzException &exception) {
       if (exception.getErrorCode() ==
-          ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE) {
+          ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE) {
         rangeIsMasked = true;
       } else {
         throw exception;

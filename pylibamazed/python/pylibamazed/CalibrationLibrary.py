@@ -87,23 +87,22 @@ def _get_linecatalog_strid(lineCatalog_df):
         for w, n, t in zip(lineCatalog_df.WaveLength, lineCatalog_df.Name, lineCatalog_df.Type)
     ]
 
+
 def load_sklearn_classifier(path, classifier):
     zlog.LogInfo(f"reliability: loading scikit-learn {classifier} for galaxy")
     try:
-        from sklearn.base import ClassifierMixin # Mixin class for all classifiers in scikit-learn.
+        from sklearn.base import ClassifierMixin  # Mixin class for all classifiers in scikit-learn.
         import joblib
     except ImportError:
-        raise APIException(ErrorCode.INTERNAL_ERROR, "scikit-learn is required to compute the reliability"
-        )
+        raise APIException(ErrorCode.IMPORT_ERROR, "scikit-learn is required to compute the reliability")
     ret = dict()
     clf = joblib.load(path)
     if not isinstance(clf, ClassifierMixin):
-        raise APIException(
-            ErrorCode.BAD_FILEFORMAT, "classifier is not sklearn.base.ClassifierMixin type"
-        )
+        raise APIException(ErrorCode.BAD_FILEFORMAT, "classifier is not sklearn.base.ClassifierMixin type")
     ret["classifier"] = clf
     ret["classes"] = ["failure", "success"]
     return ret
+
 
 def load_reliability_model(model_path, parameters: Parameters, object_type):
     zlog.LogInfo(f"reliability: loading neural network for {object_type}")
@@ -279,11 +278,11 @@ class CalibrationLibrary:
             )
         except pd.errors.ParserError as e:
             raise APIException(
-                ErrorCode.BAD_FILEFORMAT, f"bad line catalog {line_catalog_file} cause :{e}"
+                ErrorCode.LINE_CATALOG_ERROR, f"bad line catalog {line_catalog_file} cause :{e}"
             ) from None
         except Exception as e:
             raise APIException(
-                ErrorCode.PYTHON_API_ERROR, f"bad line catalog {line_catalog_file} cause :{e}"
+                ErrorCode.LINE_CATALOG_ERROR, f"bad line catalog {line_catalog_file} cause :{e}"
             ) from None
 
         # force "-1" to undefStr (for compatibility)
@@ -303,7 +302,7 @@ class CalibrationLibrary:
             elif row.Profile == "ASYMFIT":
                 asymParams = TAsymParams(2.0, 2.0, 0.0)
             elif row.Profile == "ASYMFIXED":
-                raise APIException(ErrorCode.PYTHON_API_ERROR, "Profile in linecatalog cannot be asymFixed")
+                raise APIException(ErrorCode.LINE_CATALOG_ERROR, "Profile in linecatalog cannot be asymFixed")
             else:
                 asymParams = TAsymParams(0, 0, 0)
             self.line_catalogs[object_type][solve_method.value].AddLineFromParams(
@@ -541,9 +540,8 @@ class CalibrationLibrary:
                             self.reliability["deep"][object_type] = dict()
                             self.reliability["deep"][object_type]["models"] = list()
                             model_path = os.path.join(
-                                self.calibration_dir,
-                                self.parameters.get_reliability_model(object_type)
-                                )
+                                self.calibration_dir, self.parameters.get_reliability_model(object_type)
+                            )
                             mp = load_reliability_model(model_path, self.parameters, object_type)
                             self.reliability["deep"][object_type]["models"].append(mp["model"])
                             self.reliability["deep"][object_type]["parameters"] = mp["parameters"]
@@ -553,8 +551,8 @@ class CalibrationLibrary:
                             classifier = self.parameters.get_sk_learn_classifier(object_type)
                             classifier_file = os.path.join(
                                 self.calibration_dir,
-                                self.parameters.get_sk_learn_classifier_file(object_type)
-                                )
+                                self.parameters.get_sk_learn_classifier_file(object_type),
+                            )
                             clf_dict = load_sklearn_classifier(classifier_file, classifier)
                             self.reliability["sklearn"][object_type]["classifier"] = clf_dict["classifier"]
                             self.reliability["sklearn"][object_type]["classes"] = clf_dict["classes"]
@@ -576,7 +574,7 @@ class CalibrationLibrary:
             return tpl_ratio_conf["sub_type"]
         except KeyError:
             raise APIException(
-                ErrorCode.PYTHON_API_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
+                ErrorCode.TPL_RATIO_CATALOG_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
             ) from None
 
     @exception_decorator
@@ -620,6 +618,6 @@ class CalibrationLibrary:
                     lines_ids[line_name] = line_id
                 except Exception:
                     raise APIException(
-                        ErrorCode.PYTHON_API_ERROR, f"Could not find {line_name} in catalog"
+                        ErrorCode.LINE_CATALOG_ERROR, f"Could not find {line_name} in catalog"
                     ) from None
         return lines_ids

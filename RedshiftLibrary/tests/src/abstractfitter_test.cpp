@@ -39,11 +39,8 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
-#include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
-#include "RedshiftLibrary/linemodel/individualfitter.h"
 #include "RedshiftLibrary/linemodel/obsiterator.h"
-#include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include <boost/test/unit_test.hpp>

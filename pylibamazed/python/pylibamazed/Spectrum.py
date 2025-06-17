@@ -335,8 +335,9 @@ class Spectrum:
         if len(self._dataframe["wave_merged"].unique()) != len(self._dataframe.index):
             raise APIException(ErrorCode.UNALLOWED_DUPLICATES, "Duplicates in multi-obs merged wavelengths")
 
+        # Proposition: changer cette erreur en  internal error car self._dataframe.sort_values(["wave"], inplace=True) au début de la méthode donc ne devrait pas arriver
         if not (np.diff(self._dataframe["wave_merged"]) > 0).all():
-            raise APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
+            raise APIException(ErrorCode.IE_UNSORTED_ARRAY, "Wavelenghts are not sorted")
 
     def _check_wavelengths(self):
         """Looks if lambda range specified in parameters is contained in spectrum range."""

@@ -81,11 +81,11 @@ void CTemplateFittingSolve::PopulateParameters(
 
   if (m_spectrumType == EType::noContinuum) {
     if (m_dustFit)
-      THROWG(ErrorCode::BAD_PARAMETER_VALUE,
+      THROWG(ErrorCode::IE_INVALID_PARAMETER,
              "noContinuum option incompatible with ismFit");
     if (m_extinction)
-      THROWG(ErrorCode::BAD_PARAMETER_VALUE,
-             "noContinuum option incompatible with ismFit");
+      THROWG(ErrorCode::IE_INVALID_PARAMETER,
+             "noContinuum option incompatible with igmFit");
   }
 
   m_fftProcessing = parameterStore->GetScoped<bool>("fftProcessing");
@@ -114,7 +114,7 @@ void CTemplateFittingSolve::PopulateParameters(
 void CTemplateFittingSolve::InitFittingOperator() {
   const CTemplateCatalog &tplCatalog = *(Context.GetTemplateCatalog());
   if (m_fftProcessing && m_usePhotometry)
-    THROWG(ErrorCode::FFT_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+    THROWG(ErrorCode::IE_FFT_WITH_PHOTOMETRY_NOTIMPLEMENTED,
            "fftProcessing not "
            "implemented with photometry enabled");
 

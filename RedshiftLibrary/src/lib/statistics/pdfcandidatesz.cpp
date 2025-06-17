@@ -38,14 +38,12 @@
 // ============================================================================
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-#include <iostream>
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
 
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
