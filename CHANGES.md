@@ -6,6 +6,7 @@
 * [9830] : Switch to lBFGSb v0.4.0
 ### Deprecated
 ### Removed
+* [9830] : Remove CFITSIO dependency
 ### Fixed
 
 ## 1.8.0 (2025-06-06)
