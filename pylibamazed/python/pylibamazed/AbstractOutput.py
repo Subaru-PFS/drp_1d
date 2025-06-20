@@ -430,7 +430,7 @@ class AbstractOutput(metaclass=ABCMeta):
         # filter ds_attributes by extended_results column
         two_pass_solve = True
         if (method is not None) and (object_type is not None):
-            two_pass_solve = self.parameters.is_two_pass_active(ESolveMethod(method), object_type)
+            two_pass_solve = self.parameters.is_two_pass_active(object_type)
         if two_pass_solve:
             filtered_df = ds_attributes
         else:
