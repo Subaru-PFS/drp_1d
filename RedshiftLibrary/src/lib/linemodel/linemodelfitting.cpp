@@ -747,7 +747,7 @@ void CLineModelFitting::LoadModelSolution(
     elt_param->setVelocity(modelSolution.Velocity[iRestLine]);
     elt_param->SetFittingGroupInfo(modelSolution.fittingGroupInfo[iRestLine]);
     if (m_enableAmplitudeOffsets) {
-      TPolynomCoeffs contPolynomCoeffs = {
+      CPolynomCoeffs contPolynomCoeffs = {
           modelSolution.continuum_pCoeff0[iRestLine],
           modelSolution.continuum_pCoeff1[iRestLine],
           modelSolution.continuum_pCoeff2[iRestLine]};
@@ -821,9 +821,9 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     if (m_enableAmplitudeOffsets) {
       const auto &polynom_coeffs =
           m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
-      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
-      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
-      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
+      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.m_a0;
+      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.m_a1;
+      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.m_a2;
     }
 
     auto const [cont, cont_std] =

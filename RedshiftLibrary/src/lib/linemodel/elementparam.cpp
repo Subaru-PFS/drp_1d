@@ -200,7 +200,7 @@ const std::string &TLineModelElementParam::GetFittingGroupInfo() const {
   return m_fittingGroupInfo;
 }
 
-const TPolynomCoeffs &TLineModelElementParam::GetPolynomCoeffs() const {
+const CPolynomCoeffs &TLineModelElementParam::GetPolynomCoeffs() const {
   return m_ampOffsetsCoeffs;
 }
 

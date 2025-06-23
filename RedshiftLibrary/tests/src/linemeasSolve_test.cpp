@@ -39,6 +39,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
@@ -283,11 +284,11 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
       Context.GetResultStore()->GetLineModelSolution(
           "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
-  Float64 snrOII = res->snrOII_DI;
-  BOOST_CHECK_CLOSE(snrOII, 21.480993641608535, 1); // 1% relative tolerance
+  BOOST_CHECK_CLOSE(res->snrOII_DI, 21.480993641608535, 1);
 
-  Float64 lfOII = res->lfOII;
-  BOOST_CHECK_CLOSE(lfOII, -15.778872598441525, 0.1); // 0.1%
+  BOOST_CHECK_CLOSE(res->lfOII_DI, -15.78954228328228, 0.1); // 0.1%
+
+  BOOST_CHECK_CLOSE(res->lfOII, -15.778872598441525, 0.1); // 0.1%
 
   ctx.reset();
 }

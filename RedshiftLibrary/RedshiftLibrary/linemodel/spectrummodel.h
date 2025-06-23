@@ -91,7 +91,7 @@ public:
   std::tuple<Float64, Float64, Float64>
   GetContinuumWeightedSumInRange(TInt32Range const &indexRange,
                                  TFloat64List const &weights,
-                                 TPolynomCoeffs const &polynomCoeffs) const;
+                                 CPolynomCoeffs const &polynomCoeffs) const;
 
   std::tuple<Float64, Float64, Float64>
   getContinuumSquaredResidualInRange(TInt32Range const &indexRange);

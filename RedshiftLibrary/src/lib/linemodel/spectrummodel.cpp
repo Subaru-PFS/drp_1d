@@ -298,7 +298,7 @@ CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
 std::tuple<Float64, Float64, Float64>
 CSpectrumModel::GetContinuumWeightedSumInRange(
     TInt32Range const &indexRange, TFloat64List const &weights,
-    const TPolynomCoeffs &polynomCoeffs) const {
+    const CPolynomCoeffs &polynomCoeffs) const {
 
   auto const &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 

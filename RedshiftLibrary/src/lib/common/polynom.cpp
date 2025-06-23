@@ -38,67 +38,99 @@
 // ============================================================================
 
 #include "RedshiftLibrary/common/polynom.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include <tuple>
 
 using namespace NSEpic;
 
-TPolynomCoeffs::TPolynomCoeffs(const TFloat64List &coeffs) {
+CPolynomCoeffs::CPolynomCoeffs(const TFloat64List &coeffs) {
   if (coeffs.size() <= degree)
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter()
                << "input array too small to initialize a polynomial of degree "
                << degree);
-  a0 = coeffs[0];
-  a1 = coeffs[1];
-  a2 = coeffs[2];
+  m_a0 = coeffs[0];
+  m_a1 = coeffs[1];
+  m_a2 = coeffs[2];
 }
 
-Float64 TPolynomCoeffs::getValue(Float64 x) const {
-  Float64 val = a0;
-  val += a1 * x;
-  val += a2 * x * x;
+Float64 CPolynomCoeffs::getValue(Float64 x) const {
+
+  Float64 val = m_a2 * x;
+  val += m_a1;
+  val *= x;
+  val += m_a0;
+
   return val;
 }
 
-Float64 TPolynomCoeffs::getValueAndGrad(Float64 x, TFloat64List &grad) const {
-  grad.resize(degree + 1);
+TFloat64List CPolynomCoeffs::getPowers(Float64 x) const {
+  TFloat64List grad(degree + 1);
   grad[0] = 1.0;
   grad[1] = x;
   grad[2] = x * x;
-  return grad[0] * a0 + grad[1] * a1 + grad[2] * a2;
+  return grad;
 }
 
-constexpr Int32 TPolynomCoeffs::degree;
-
-void CPolynomCoeffsNormalized::getCoeffs(Float64 &a0_, Float64 &a1_,
-                                         Float64 &a2_) const {
-  a0_ = a0 + a1 * x0red + a2 * x0red * x0red;
-  a1_ = (a1 + 2 * a2 * x0red) / scale;
-  a2_ = a2 / (scale * scale);
+Float64 CPolynomCoeffs::getVariance(Float64 x) const {
+  Eigen::Vector3d powerx(getPowers(x).data());
+  auto const var = powerx.transpose() * m_covar * powerx;
+  return var;
 }
 
-void CPolynomCoeffsNormalized::setCoeffs(Float64 a0_, Float64 a1_,
-                                         Float64 a2_) {
-  a2 = a2_ * scale * scale;
-  a1 = a1_ * scale - 2 * a2 * x0red;
-  a0 = a0_ - a1 * x0red - a2 * x0red * x0red;
+CPolynomCoeffs CPolynomCoeffs::operator*(Float64 factor) const {
+  CPolynomCoeffs poly;
+  poly.m_a0 = m_a0 * factor;
+  poly.m_a1 = m_a1 * factor;
+  poly.m_a2 = m_a2 * factor;
+
+  poly.m_covar = m_covar * (factor * factor);
+  return poly;
 }
 
-Float64 CPolynomCoeffsNormalized::getValue(Float64 x) const {
-  Float64 xred = x / scale + x0red;
-  Float64 val = a0;
-  val += a1 * xred;
-  val += a2 * xred * xred;
-  return val;
+constexpr Int32 CPolynomCoeffs::degree;
+
+CPolynomCoeffsNormalized::CPolynomCoeffsNormalized(Float64 x0_, Float64 scale_)
+    : m_x0red(-x0_ / scale_), m_scale(scale_),
+      m_convCoeff({{1.0, m_x0red, m_x0red * m_x0red},
+                   {0.0, 1 / m_scale, 2 * m_x0red / m_scale},
+                   {0.0, 0.0, 1 / (m_scale * m_scale)}}),
+      m_convCoeffInv(
+          {{1.0, -m_scale * m_x0red, m_scale * m_scale * m_x0red * m_x0red},
+           {0.0, m_scale, -2 * m_scale * m_scale * m_x0red},
+           {0.0, 0.0, m_scale * m_scale}}){};
+
+CPolynomCoeffs CPolynomCoeffsNormalized::getPolynomCoeffs() const {
+  CPolynomCoeffs poly;
+  auto const coeffs = Eigen::Vector3d{m_a0, m_a1, m_a2};
+  auto const coeffs_out = m_convCoeff * coeffs;
+  poly.m_a0 = coeffs_out(0);
+  poly.m_a1 = coeffs_out(1);
+  poly.m_a2 = coeffs_out(2);
+
+  if (!m_covar.isZero())
+    poly.m_covar = m_convCoeff.transpose() * m_covar * m_convCoeff;
+  return poly;
 }
 
-Float64 CPolynomCoeffsNormalized::getValueAndGrad(Float64 x,
-                                                  TFloat64List &grad) const {
-  Float64 xred = x / scale + x0red;
-  grad.resize(degree + 1);
-  grad[0] = 1.0;
-  grad[1] = xred;
-  grad[2] = xred * xred;
-  return grad[0] * a0 + grad[1] * a1 + grad[2] * a2;
+void CPolynomCoeffsNormalized::setFromPolynomCoeffs(
+    const CPolynomCoeffs &poly) {
+  auto const coeffs_in = Eigen::Vector3d{poly.m_a0, poly.m_a1, poly.m_a2};
+  auto const coeffs = m_convCoeffInv * coeffs_in;
+  m_a0 = coeffs(0);
+  m_a1 = coeffs(1);
+  m_a2 = coeffs(2);
+
+  if (!poly.m_covar.isZero())
+    m_covar = m_convCoeffInv.transpose() * poly.m_covar * m_convCoeffInv;
+}
+
+std::pair<Float64, TFloat64List>
+CPolynomCoeffsNormalized::getValueAndGradiant(Float64 x) const {
+  Float64 xred = getXred(x);
+  Float64 val = CPolynomCoeffs::getValue(xred);
+  TFloat64List grad = CPolynomCoeffs::getCoeffGradiant(xred);
+  return std::make_pair(val, grad);
 }

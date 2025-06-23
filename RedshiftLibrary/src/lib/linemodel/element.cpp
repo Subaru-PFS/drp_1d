@@ -71,7 +71,7 @@ void TLineModelElementParam::resetFittingParams() {
   m_FittedAmplitudes.assign(size(), NAN);
   m_FittedAmplitudesStd.assign(size(), NAN);
   m_fittingGroupInfo = undefStr;
-  m_ampOffsetsCoeffs = TPolynomCoeffs();
+  m_ampOffsetsCoeffs = CPolynomCoeffs();
 
   m_sumGauss = NAN;
   m_sumCross = NAN;
