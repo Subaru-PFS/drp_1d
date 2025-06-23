@@ -39,6 +39,7 @@
 #include <unsupported/Eigen/NumericalDiff>
 
 #include "RedshiftLibrary/common/size.h"
+#include "RedshiftLibrary/linemodel/gaussianfit/LBFGSB.h" // need inverse_hessian getter implemented in LBFGSB to include from the original
 #include "RedshiftLibrary/linemodel/gaussianfit/lbfgsbfitter.h"
 
 using namespace std;

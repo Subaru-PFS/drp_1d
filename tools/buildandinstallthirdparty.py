@@ -129,16 +129,6 @@ def _boost_build(path, prefix, options, extra_flags=''):
                   shared='shared' if options.shared else 'static'))
 
 
-def _cfitsio_build(path, prefix, options, extra_flags=''):
-    print("Starting build for : " + path)
-    os.system("cd {path}; ./configure --enable-reentrant --prefix={prefix} "
-              "--enable-sse2 --enable-ssse3 ;"
-              "make -j{parallel} {shared}; make install; cd ../".format(
-                  path=path, prefix=prefix,
-                  parallel=options.parallel,
-                  shared='shared' if options.shared else 'all-nofitsio'))
-
-
 def _openblas_build(path, prefix, options, extra_flags=''):
     os.system("cd {path} ;"
               "make -j{parallel} {extra_flags}; make install PREFIX={prefix} {extra_flags}".format(
@@ -180,14 +170,6 @@ libDict = {
         "build": _standard_build,
         "extra_flags": ""
     },
-    "cfitsio": {
-        "path": "cfitsio-3.36",
-        "src": "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/"
-        "cfitsio3360.tar.gz",
-        "check_file": "libcfitsio",
-        "build": _cfitsio_build,
-        "extra_flags": ''
-    },
     "openblas": {
         "path": "openblas-0.3.19",
         "src": "https://github.com/xianyi/OpenBLAS/archive/"
@@ -205,9 +187,9 @@ libDict = {
         "extra_flags": ""
     },
     "lbfgspp": {
-        "path": "LBFGSpp-0.3.0",
+        "path": "LBFGSpp-0.4.0",
         "src": "https://github.com/yixuan/LBFGSpp/archive/refs/tags/"
-        "v0.3.0.zip",
+        "v0.4.0.zip",
         "check_file": "",
         "build": _lbfgspp_build,
         "extra_flags": ""
