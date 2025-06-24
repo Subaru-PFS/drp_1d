@@ -242,6 +242,9 @@ private:
   GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index, Float64 redshift);
 
   std::pair<Float64, Float64>
+  GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index, Float64 redshift);
+
+  std::pair<Float64, Float64>
   getFluxDirectIntegration(const TInt32List &eIdx_list,
                            const TInt32List &subeIdx_list,
                            bool substract_abslinesmodel) const;

@@ -75,6 +75,8 @@ TFloat64List CPolynomCoeffs::getPowers(Float64 x) const {
 }
 
 Float64 CPolynomCoeffs::getVariance(Float64 x) const {
+  if (m_covar.isZero())
+    return NAN;
   Eigen::Vector3d powerx(getPowers(x).data());
   auto const var = powerx.transpose() * m_covar * powerx;
   return var;
