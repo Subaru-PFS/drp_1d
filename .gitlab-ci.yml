@@ -199,7 +199,7 @@ push-rc-38-osx:
     - python -m build -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.BUILD_TESTING=OFF
     - ccache --show-stats
     - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
-    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
     - python -c "import pylibamazed; import importlib.metadata; print(importlib.metadata.version('pylibamazed'))"
     - cd /
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
@@ -218,7 +218,7 @@ push-rc-38-osx:
   stage: python-test
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
-    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
     - pytest
   after_script:
     - source /venv/p$PYTHON_VERSION/bin/activate
@@ -231,7 +231,7 @@ push-rc-38-osx:
   stage: pytest-coverage
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
-    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
     - cd pylibamazed
     - coverage run --source=pylibamazed -m pytest
     - coverage report
@@ -255,7 +255,7 @@ push-rc-38-osx:
   when: manual
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
   cache:
     policy: pull
     untracked: true
