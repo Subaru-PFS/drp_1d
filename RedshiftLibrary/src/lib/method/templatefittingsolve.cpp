@@ -232,9 +232,7 @@ CTemplateFittingSolve::computeTwoPass() {
   // First pass
   if (!secondPassFromResultStore())
     computeFirstPass();
-  else {
-    ;
-  }
+
   std::shared_ptr<const ExtremaResult> extremaResult;
   if (twoPassIsActive()) {
 
