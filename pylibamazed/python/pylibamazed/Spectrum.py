@@ -116,8 +116,7 @@ class Spectrum:
     def observation_number(self):
         return len(self.observation_ids)
 
-    @doc_method
-    def get_dataframe(self, obs_id=None, filtered_only=True) -> pd.DataFrame:
+    def _get_dataframe(self, obs_id=None, filtered_only=True) -> pd.DataFrame:
         """
         Get spectra pandas dataframe
             * all spectra if obs_id=None or merge
@@ -139,7 +138,7 @@ class Spectrum:
             return df
 
     def get_index(self, obs_id="", filtered_only=True) -> pd.Index:
-        df = self.get_dataframe(obs_id, filtered_only)
+        df = self._get_dataframe(obs_id, filtered_only)
         return df.index
 
     def get_samples_number(self, obs_id="", filtered_only=True) -> int:
@@ -162,7 +161,7 @@ class Spectrum:
                 wave_column = "wave_air"
         if self._is_obs_id_merge(obs_id):
             wave_column = "wave_merged"
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
         return spectrum[wave_column]
 
     @doc_method
@@ -171,7 +170,7 @@ class Spectrum:
         :return: wavelength
         :rtype: pandas.series
         """
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
 
         return spectrum["flux"]
 
@@ -181,7 +180,7 @@ class Spectrum:
         :return: error
         :rtype: pandas.series
         """
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
         return spectrum["error"]
 
     def get_mask(self, obs_id=""):
@@ -190,7 +189,7 @@ class Spectrum:
                  (not original mask column if present, use get_others)
         :rtype: pandas.series
         """
-        df = self.get_dataframe(obs_id, filtered_only=False)
+        df = self._get_dataframe(obs_id, filtered_only=False)
         if "amazed_mask" not in df:
             return pd.Series(True, df.index)
         return df["amazed_mask"]
@@ -203,7 +202,7 @@ class Spectrum:
         :param obs_id: name of the observation
         :return: dataframe with the data of the other columns of the spectrum
         """
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
         col = spectrum.columns != "amazed_mask"
         col &= spectrum.columns != "wave_air"
         col &= spectrum.columns != "wave_merged"
