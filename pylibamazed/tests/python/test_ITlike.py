@@ -44,7 +44,6 @@ import tempfile
 import h5py
 import pandas as pd
 from pylibamazed.ASCIISpectrumReader import ASCIISpectrumReader
-from pylibamazed.H5Writer import H5Writer
 from pylibamazed.Parameters import Parameters
 from pylibamazed.ProcessFlow import ProcessFlow
 from tests.python.config import test_dir
@@ -129,16 +128,6 @@ def add_photometry_to_reader(config, observation, reader):
         reader.add_photometry(phot)
 
 
-def save_output(output, config, observation):
-    # save in temporary file
-    tf = tempfile.TemporaryFile()
-    output_file = h5py.File(tf, "w")
-    writer = H5Writer(output)
-    writer.excluded_datasets = config["excluded_datasets"]
-    writer.write_hdf5(output_file, str(observation.ProcessingID[0]))
-    output_file.close()
-
-
 def test_ITLikeTest():
     config = make_config()
     param = Parameters(get_parameters(config["parameters_file"]), make_checks=False)
@@ -175,8 +164,3 @@ def test_ITLikeTest():
         if output.has_error(spectrum_model, stage):
             print("object_type", spectrum_model, "stage", stage, output.get_error(spectrum_model, stage))
         assert output.has_error(spectrum_model, stage) is False
-
-    # add calls to output
-    # accessOutputData(output)
-
-    save_output(output, config, observation)
