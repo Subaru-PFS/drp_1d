@@ -8,6 +8,7 @@
 ### Deprecated
 ### Removed
 * [9830] : Remove CFITSIO dependency
+* [8363] : Remove HDF5 writer
 ### Fixed
 * [9615] : Fix unintentional numerous warnings when continuum is null and fitting absorption lines
 * [9616] : Fix linemeas "empty line element list to fit"
