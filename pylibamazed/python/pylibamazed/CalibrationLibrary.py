@@ -166,6 +166,10 @@ class CalibrationLibrary:
     :type calibration_dir: path
     """
 
+    #: Contains the lines catalog corresponding to each spectrum model and solve method
+    line_catalogs_df: dict
+    parameters: Parameters
+
     @exception_decorator
     def __init__(self, parameters: Parameters, calibration_dir):
         self.parameters = parameters

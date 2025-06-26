@@ -36,62 +36,13 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import Generic, TypeVar, Optional
-from pylibamazed.DocDecorator import doc_method
-
-T = TypeVar("T")
+from functools import wraps
 
 
-class Container(Generic[T]):
-    def __init__(self, **kwargs):
-        self.data: dict[str, T] = dict()
-        if kwargs:
-            for key in kwargs:
-                self.append(kwargs[key], key)
+def doc_method(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
 
-    def __repr__(self):
-        repr = ""
-        for key in self.data:
-            repr += f"\n{key}: {self.data[key]}"
-        return repr
-
-    def __eq__(self, __value__):
-        if type(self) != type(__value__):
-            return False
-        if len(self.data) != len(__value__.data):
-            return False
-        for key in self.data:
-            if not all(self.data.get(key) == __value__.get(key)):
-                return False
-        return True
-
-    @doc_method
-    def append(self, dataToAppend: T, obs_id=""):
-        self._check_type(dataToAppend)
-        self.data[obs_id] = dataToAppend
-
-    @doc_method
-    def get(self, obs_id="") -> Optional[T]:
-        return self.data.get(obs_id)
-
-    @doc_method
-    def keys(self):
-        return self.data.keys()
-
-    @doc_method
-    def size(self) -> int:
-        return len(self.data)
-
-    def _check_type(self, dataToCheck):
-        """
-        Check the type of some data to append to the Container.
-
-        Throws an error if the type does not match the type of already
-        stored data.
-
-        :param dataToCheck: data passed to the `append` method
-        :type dataToCheck: any
-        """
-        for value in self.data.values():
-            if type(value) != type(dataToCheck):
-                raise TypeError(f"Data for container must be of the declared {type(value)} type")
+    wrapper.is_doc_method = True
+    return wrapper

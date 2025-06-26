@@ -70,6 +70,7 @@ from pylibamazed.ScopeManager import get_scope_spectrum_model, get_scope_stage, 
 from pylibamazed.SubType import SubType
 from pylibamazed.LinemeasParameters import LinemeasParameters
 from enum import Enum
+from pylibamazed.DocDecorator import doc_method
 
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
@@ -105,8 +106,19 @@ def store_flags(name="warningFlag"):
 
 
 class ProcessFlow:
+    # The input ``Parameters`` object
+    parameters: Parameters
+    # The ``CalibrationLibrary`` object built in ``ProcessFlow`` initialization
+    calibration_library: CalibrationLibrary
+
     @exception_decorator
     def __init__(self, config: dict[str, Any], parameters: Parameters):
+        """
+        :param config: dictionary with at least two keys:
+            - ``calibration_dir``: Absolute path to the calibration directory
+            - ``extended_results``: process flow returns with all outputs possible
+        :param parameters: as defined in :doc:`/api/methods/parameters`
+        """
         _check_config(config)
         _check_lineMeasValidity(config, parameters)
         self.parameters: Parameters = parameters
@@ -164,7 +176,9 @@ class ProcessFlow:
             )
 
     @exception_decorator
+    @doc_method
     def run(self, spectrum: Spectrum) -> ResultStoreOutput:
+        """Launches the process flow"""
         resultStore = self.process_flow_context.GetResultStore()
         self.rso = ResultStoreOutput(
             resultStore, self.parameters, auto_load=False, extended_results=self.extended_results
@@ -229,12 +243,16 @@ class ProcessFlow:
         spectrum.push_in_context()
 
         parameters = copy.deepcopy(self.parameters)
-        if self.config.get("linemeascatalog"):
+
+        catalog = self.config.get("linemeascatalog")
+        catalog_columns = self.config.get("linemeas_catalog_columns")
+
+        if catalog is not None and catalog_columns is not None:
             lp = LinemeasParameters()
             lp.load_from_catalogs(
                 spectrum.source_id,
-                self.config["linemeascatalog"],
-                self.config["linemeas_catalog_columns"],
+                catalog,
+                catalog_columns,
             )
             lp.update_parameters(parameters)
 

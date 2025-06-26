@@ -45,9 +45,12 @@ from pylibamazed.ParametersAccessor import ParametersAccessor, ESolveMethod
 from pylibamazed.ParametersConverter import ParametersConverterSelector
 from pylibamazed.ParametersExtender import ParametersExtender
 from pylibamazed.redshift import ErrorCode
+from pylibamazed.DocDecorator import doc_method
 
 
 class Parameters(ParametersAccessor):
+    """Loads a raw parameters dictionary and provides access to its components."""
+
     defined_stages = ["redshiftSolver", "lineMeasSolver", "reliabilitySolver"]
 
     @exception_decorator
@@ -59,6 +62,13 @@ class Parameters(ParametersAccessor):
         ConverterSelector=ParametersConverterSelector,
         Extender=ParametersExtender,
     ):
+        """
+        Initializes the Parameters object from a raw parameters dictionary.
+
+        :param raw_params: The raw parameters to be processed. This dictionary must follow the structure defined in :doc:`/json-schema/general`.
+        :param make_checks: If True (default), validates the parameters. This includes checking that all required sections are present,
+                         unknown parameters are flagged, and parameter values are consistent.
+        """
         version = self.get_json_schema_version(raw_params)
         converter = ConverterSelector(accepts_v1).get_converter(version)
         converted_parameters = converter().convert(raw_params)
@@ -79,6 +89,7 @@ class Parameters(ParametersAccessor):
         ret.parameters = copy.deepcopy(self.parameters, memo)
         return ret
 
+    @doc_method
     def get_json_schema_version(self, raw_parameters: dict):
         version = raw_parameters.get("version")
         if version is None:
@@ -87,6 +98,7 @@ class Parameters(ParametersAccessor):
             raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Parameter version must be an integer")
         return version
 
+    @doc_method
     def get_solve_methods_str(self, spectrum_model: str) -> list[str]:
         method = self.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.get_linemeas_method(spectrum_model)
@@ -128,6 +140,7 @@ class Parameters(ParametersAccessor):
                 ret[spectrum_model] = redshift_solver_method.value
         return ret
 
+    @doc_method
     def get_objects_linemeas_methods(self) -> dict[str, str]:
         ret = dict()
         for spectrum_model in self.get_spectrum_models():
@@ -143,6 +156,7 @@ class Parameters(ParametersAccessor):
         else:
             return False
 
+    @doc_method
     def stage_enabled(self, spectrum_model, stage) -> bool:
         if stage == "redshiftSolver":
             return self.get_redshift_solver_method(spectrum_model) is not None

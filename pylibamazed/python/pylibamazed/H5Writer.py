@@ -41,6 +41,8 @@ import pandas as pd
 from pylibamazed.AbstractOutput import root_stages, spectrum_model_stages
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.redshift import CLog, ErrorCode
+from pylibamazed.DocDecorator import doc_method
+from pylibamazed.ResultStoreOutput import ResultStoreOutput
 
 zlog = CLog.GetInstance()
 
@@ -65,7 +67,14 @@ def _create_dataset_from_dict(h5_node, name, source):
 
 
 class H5Writer:
-    def __init__(self, output):
+    #: For each spectrum model, contains a list of strings describing the datasets not to write into the output hdf5 file
+    excluded_datasets: dict[str, list[str]]
+
+    def __init__(self, output: ResultStoreOutput):
+        """
+        :param output: the result of a``ProcessFlow`` ``run`` method.
+        """
+
         self.output = output
         self.excluded_datasets = dict()
 
@@ -121,7 +130,9 @@ class H5Writer:
         hdf5_spectrum_node.create_dataset("perfs", records.shape, records.dtype, records)
 
     @exception_decorator
-    def write_hdf5(self, hdf5_root, spectrum_id):
+    @doc_method
+    def write_hdf5(self, hdf5_root: str, spectrum_id: str) -> None:
+        """Writes ``output`` in file ``hdf5_root`` in a group named ``spectrum_id``"""
         try:
             obs = hdf5_root.create_group(spectrum_id)
             self.write_hdf5_root(obs)

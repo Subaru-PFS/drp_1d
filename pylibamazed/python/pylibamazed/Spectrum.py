@@ -56,6 +56,7 @@ from pylibamazed.redshift import (
 )
 from pylibamazed.Filter import FilterList
 from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
+from pylibamazed.DocDecorator import doc_method
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -65,6 +66,8 @@ class Spectrum:
     """
     class for spectrum interface
     """
+
+    source_id: str
 
     def __init__(
         self,
@@ -105,6 +108,7 @@ class Spectrum:
         return False
 
     @property
+    @doc_method
     def observation_ids(self):
         return self._dataframe.index.levels[0]
 
@@ -140,11 +144,12 @@ class Spectrum:
     def get_samples_number(self, obs_id="", filtered_only=True) -> int:
         return len(self.get_index(obs_id, filtered_only))
 
+    @doc_method
     def get_wave(self, obs_id="", filtered_only=True, vacuum=True) -> pd.Series:
         """
         :return: wavelength
-        : if obs_id is None return the unmerged wavelength of all observations
-        : if obs_id is "" return the merged wavelength of all observations/
+            : if obs_id is None return the unmerged wavelength of all observations
+            : if obs_id is "" return the merged wavelength of all observations/
         :type: pandas.series
         """
         wave_column = "wave"
@@ -159,6 +164,7 @@ class Spectrum:
         spectrum = self._get_dataframe(obs_id, filtered_only)
         return spectrum[wave_column]
 
+    @doc_method
     def get_flux(self, obs_id="", filtered_only=True) -> pd.Series:
         """
         :return: wavelength
@@ -168,6 +174,7 @@ class Spectrum:
 
         return spectrum["flux"]
 
+    @doc_method
     def get_error(self, obs_id="", filtered_only=True) -> pd.Series:
         """
         :return: error
@@ -187,6 +194,7 @@ class Spectrum:
             return pd.Series(True, df.index)
         return df["amazed_mask"]
 
+    @doc_method
     def get_others(self, obs_id: str = "", filtered_only=True) -> pd.DataFrame:
         """
         Return a dataframe with the filtered non-mandatory columns of the spectrum.
@@ -204,6 +212,7 @@ class Spectrum:
 
         return spectrum.loc[:, col]
 
+    @doc_method
     def get_lsf(self, obs_id=""):
         """
         :return: lsf
@@ -211,6 +220,7 @@ class Spectrum:
         """
         return self._lsf
 
+    @doc_method
     def get_photometric_data(self):
         return self._photometric_data
 
@@ -360,6 +370,7 @@ class Spectrum:
             return
         self.masks[obs_id] = filters.apply(self._dataframe.loc[obs_id])
 
+    @doc_method
     def init(self):
         """
         Does three things :

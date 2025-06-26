@@ -57,7 +57,7 @@ class LinemeasParameters:
     def _get_catalog_velocity_name(self, velocity_type: EVelocityType) -> str:
         return f"Velocity{velocity_type.value}"
 
-    def load_from_catalogs(self, source_id: str, catalogs: dict, catalog_columns: dict):
+    def load_from_catalogs(self, source_id: str, catalogs: dict, catalog_columns: dict) -> None:
         for spectrum_model in catalogs.keys():
             lm = pd.read_csv(catalogs[spectrum_model], sep="\t", dtype={"ProcessingID": object})
             lm = lm[lm.ProcessingID == source_id]

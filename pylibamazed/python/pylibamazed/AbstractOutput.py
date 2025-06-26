@@ -48,6 +48,7 @@ from pylibamazed.Parameters import Parameters
 from pylibamazed.ParametersAccessor import ESolveMethod
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
+from pylibamazed.DocDecorator import doc_method
 
 root_stages = ["init", "classification", "load_result_store"]
 
@@ -70,6 +71,11 @@ zlog = CLog.GetInstance()
 
 @exception_class_decorator(logging=True)
 class AbstractOutput(metaclass=ABCMeta):
+    #: the ``Parameters`` object used to run the process flow
+    parameters: Parameters
+    #: result, per spectrum model
+    object_results: dict
+
     @exception_decorator
     def __init__(
         self,
@@ -119,12 +125,14 @@ class AbstractOutput(metaclass=ABCMeta):
     def load_errors(self):
         pass
 
+    @doc_method
     def has_error(self, object_type, stage):
         return self._has_error(object_type, stage)
 
     def _has_error(self, object_type, stage):
         return self._get_error_full_name(object_type, stage) in self.errors
 
+    @doc_method
     def get_error(self, object_type, stage):
         return self._get_error(object_type, stage)
 
@@ -258,6 +266,7 @@ class AbstractOutput(metaclass=ABCMeta):
             pdf_attribute = pdfHandle.valProbaLog
         return pdf_attribute
 
+    @doc_method
     def get_attribute(self, object_type, dataset, attribute, rank=None):
         return self._get_attribute(object_type, dataset, attribute, rank)
 
@@ -293,6 +302,7 @@ class AbstractOutput(metaclass=ABCMeta):
         else:
             return getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
 
+    @doc_method
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         return self._has_attribute(object_type, dataset, attribute, rank)
 
@@ -360,10 +370,12 @@ class AbstractOutput(metaclass=ABCMeta):
         else:
             raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown level " + level)
 
+    @doc_method
     def get_candidate_data(self, object_type, rank, data_name):
         mp = self.object_results[object_type]["model_parameters"][rank][data_name]
         return mp
 
+    @doc_method
     def get_dataset(self, object_type, dataset, rank=None):
         if object_type:
             if rank is not None:
@@ -374,6 +386,7 @@ class AbstractOutput(metaclass=ABCMeta):
             return self.root_results[dataset]
 
     # TODO more robust version, should iterate over candidate datasets and check existence
+    @doc_method
     def get_nb_candidates(self, object_type):
         available_datasets = self._get_available_datasets("candidate", object_type)
         if len(available_datasets) > 0:
