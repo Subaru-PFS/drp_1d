@@ -75,7 +75,7 @@ TFloat64List CPolynomCoeffs::getPowers(Float64 x) const {
 }
 
 Float64 CPolynomCoeffs::getVariance(Float64 x) const {
-  if (m_covar.isZero())
+  if ((m_covar.array() == 0.0).all())
     return NAN;
   Eigen::Vector3d powerx(getPowers(x).data());
   auto const var = powerx.transpose() * m_covar * powerx;
@@ -112,7 +112,7 @@ CPolynomCoeffs CPolynomCoeffsNormalized::getPolynomCoeffs() const {
   poly.m_a1 = coeffs_out(1);
   poly.m_a2 = coeffs_out(2);
 
-  if (!m_covar.isZero())
+  if ((m_covar.array() != 0.0).any())
     poly.m_covar = m_convCoeff.transpose() * m_covar * m_convCoeff;
   return poly;
 }
@@ -125,7 +125,7 @@ void CPolynomCoeffsNormalized::setFromPolynomCoeffs(
   m_a1 = coeffs(1);
   m_a2 = coeffs(2);
 
-  if (!poly.m_covar.isZero())
+  if ((poly.m_covar.array() != 0.0).any())
     m_covar = m_convCoeffInv.transpose() * poly.m_covar * m_convCoeffInv;
 }
 

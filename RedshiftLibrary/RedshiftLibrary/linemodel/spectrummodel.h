@@ -79,7 +79,7 @@ public:
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   const CSpectrum &GetModelSpectrum() const;
-  const CSpectrumFluxAxis &GetModelContinuum() const;
+  CSpectrumFluxAxis GetModelContinuum() const;
 
   CSpectrum GetObservedSpectrumWithLinesRemoved(
       CLine::EType lineTypeFilter = CLine::EType::nType_All);
@@ -149,6 +149,7 @@ private:
   CSpectrum m_SpectrumModel; // model
   CLineModelElementList m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
+  CSpectrumFluxAxis m_PolynomialUnderLinesFluxAxis;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting

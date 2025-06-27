@@ -85,14 +85,20 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
     bestModelSolution =
         m_linemodel.computeForLineMeas(inputContext, m_redshifts, bestz);
   }
-  auto modelspc = std::make_shared<CModelSpectrumResult>(
-      m_linemodel.getFittedModelWithoutcontinuum(bestModelSolution),
-      inputContext->GetSpectrum()->getObsID());
+  auto &&[modelSpcResult, continuumSpcResult] = m_linemodel.getFittedModel(
+      bestModelSolution, inputContext->GetSpectrum()->getObsID());
   std::shared_ptr<const CLineModelSolution> res =
       std::make_shared<CLineModelSolution>(std::move(bestModelSolution));
+  auto modelSpcResultPtr =
+      std::make_shared<const CModelSpectrumResult>(std::move(modelSpcResult));
+  auto continuumSpcResultPtr = std::make_shared<const CModelSpectrumResult>(
+      std::move(continuumSpcResult));
   resultStore->StoreScopedGlobalResult("linemeas", res);
-  resultStore->StoreScopedGlobalResult("linemeas_parameters", res);
-  resultStore->StoreScopedGlobalResult("linemeas_model", modelspc);
+  resultStore->StoreScopedGlobalResult("linemeas_parameters", std::move(res));
+  resultStore->StoreScopedGlobalResult("linemeas_model",
+                                       std::move(modelSpcResultPtr));
+  resultStore->StoreScopedGlobalResult("linemeas_continuum",
+                                       std::move(continuumSpcResultPtr));
   return std::make_shared<CLineMeasSolveResult>(CLineMeasSolveResult());
 }
 

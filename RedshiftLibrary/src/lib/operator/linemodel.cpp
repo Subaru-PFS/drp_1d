@@ -1740,20 +1740,31 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
 
 /**
  * @brief Compute spectrum model.
- * TODO: currently it only works for linemeas since we do not the continuum
  * @param z : best redshift
  * @param bestModelSolution : linemodel solution corresponding to the best Z
  * @return std::shared_ptr<const CModelSpectrumResult>
+ * NOTE: the continuum solution should be loaded already (in case of continuum
+ * fitted)
  */
-const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
-    const CLineModelSolution &bestModelSolution) {
+std::pair<CModelSpectrumResult, CModelSpectrumResult>
+COperatorLineModel::getFittedModel(const CLineModelSolution &bestModelSolution,
+                                   std::string const &obsID) {
   // make sure polynom info are correctly set. it s up to refresh model to use
   // these coeffs
   m_fittingManager->LoadModelSolution(bestModelSolution);
   m_fittingManager->refreshAllModels();
   m_fittingManager->getSpectraIndex()
       .setAtBegining(); // TODO dummy implementation, should return all models
-  return m_fittingManager->getSpectrumModel().GetModelSpectrum();
+  auto &modelSpectrum = m_fittingManager->getSpectrumModel().GetModelSpectrum();
+  CModelSpectrumResult modelSpectrumResult(modelSpectrum, obsID);
+  CModelSpectrumResult continuumSpectrumResult(
+      modelSpectrum.GetSpectralAxis().GetSamplesVector(),
+      m_fittingManager->getSpectrumModel()
+          .GetModelContinuum()
+          .GetSamplesVector(),
+      obsID);
+  return std::make_pair(std::move(modelSpectrumResult),
+                        std::move(continuumSpectrumResult));
 }
 
 std::shared_ptr<CContinuumFitStore const> const &
