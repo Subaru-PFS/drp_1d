@@ -37,6 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
+#include <algorithm>
+#include <cmath>
+#include <functional>
 
 using namespace NSEpic;
 
@@ -71,4 +74,72 @@ bool CLineModelSolution::isLineValid(Int32 lineIdx) const {
   if (lineId.empty())
     THROWG(ErrorCode::INTERNAL_ERROR, "lineModelSolution is empty");
   return !NotFitted[lineIdx] & Amplitudes[lineIdx] > 0.0;
+}
+
+size_t CLineModelSolution::size() const { return Flux.size(); }
+
+void CLineModelSolution::computeSigmaUncertainty(
+    const std::string &lineWidthType) {
+  if (lineWidthType == "instrumentDriven") {
+    SigmasUncertainty = TFloat64List(size(), 0.);
+    // TODO handle the case where lsf uncertainty is available
+  } else if (lineWidthType == "velocityDriven") {
+    SigmasUncertainty = TFloat64List(size(), 1 / SPEED_OF_LIGHT_IN_VACCUM);
+
+    std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
+                   LambdaObs.begin(), SigmasUncertainty.begin(),
+                   std::multiplies<>{});
+    std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
+                   VelocityUncertainty.begin(), SigmasUncertainty.begin(),
+                   std::divides<>{});
+  } else if (lineWidthType == "combined") {
+    SigmasUncertainty = TFloat64List(
+        size(), 1 / (SPEED_OF_LIGHT_IN_VACCUM * SPEED_OF_LIGHT_IN_VACCUM));
+    std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
+                   LambdaObs.begin(), SigmasUncertainty.begin(),
+                   std::multiplies<>{});
+    std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
+                   LambdaObs.begin(), SigmasUncertainty.begin(),
+                   std::multiplies<>{});
+    std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
+                   Velocity.begin(), SigmasUncertainty.begin(),
+                   std::multiplies<>{});
+    std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
+                   VelocityUncertainty.begin(), SigmasUncertainty.begin(),
+                   std::multiplies<>{});
+    std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
+                   Sigmas.begin(), SigmasUncertainty.begin(), std::divides<>{});
+  }
+}
+void CLineModelSolution::computeEquivalentWidth() {
+  double (*dabs)(double) = &std::abs;
+  double (*dsqrt)(double) = &std::sqrt;
+  EquivalentWidth = Flux;
+  std::transform(EquivalentWidth.cbegin(), EquivalentWidth.cend(),
+                 EquivalentWidth.begin(), dabs);
+  std::transform(EquivalentWidth.begin(), EquivalentWidth.end(),
+                 CenterContinuumFlux.begin(), EquivalentWidth.begin(),
+                 std::divides<>{});
+  EquivalentWidthUncertainty = FluxUncertainty;
+  std::transform(EquivalentWidthUncertainty.begin(),
+                 EquivalentWidthUncertainty.end(), Flux.begin(),
+                 EquivalentWidthUncertainty.begin(), std::divides<>{});
+  std::transform(EquivalentWidthUncertainty.begin(),
+                 EquivalentWidthUncertainty.end(),
+                 EquivalentWidthUncertainty.begin(),
+                 EquivalentWidthUncertainty.begin(), std::multiplies<>{});
+  auto b = CenterContinuumFluxUncertainty;
+  std::transform(b.begin(), b.end(), CenterContinuumFlux.begin(), b.begin(),
+                 std::divides<>{});
+  std::transform(b.begin(), b.end(), b.begin(), b.begin(), std::multiplies<>{});
+
+  std::transform(EquivalentWidthUncertainty.begin(),
+                 EquivalentWidthUncertainty.end(), b.begin(),
+                 EquivalentWidthUncertainty.begin(), std::plus<>{});
+  std::transform(EquivalentWidthUncertainty.begin(),
+                 EquivalentWidthUncertainty.end(),
+                 EquivalentWidthUncertainty.begin(), dsqrt);
+  std::transform(EquivalentWidthUncertainty.begin(),
+                 EquivalentWidthUncertainty.end(), EquivalentWidth.begin(),
+                 EquivalentWidthUncertainty.begin(), std::multiplies<>{});
 }

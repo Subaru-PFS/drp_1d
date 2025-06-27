@@ -85,6 +85,11 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
     bestModelSolution =
         m_linemodel.computeForLineMeas(inputContext, m_redshifts, bestz);
   }
+  auto const ps = Context.GetParameterStore();
+  std::string lineWidthType =
+      ps->GetScoped<std::string>("lineModel.lineWidthType");
+  bestModelSolution.computeSigmaUncertainty(lineWidthType);
+  bestModelSolution.computeEquivalentWidth();
   auto &&[modelSpcResult, continuumSpcResult] = m_linemodel.getFittedModel(
       bestModelSolution, inputContext->GetSpectrum()->getObsID());
   std::shared_ptr<const CLineModelSolution> res =
