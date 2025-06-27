@@ -747,7 +747,7 @@ void CLineModelFitting::LoadModelSolution(
     elt_param->setVelocity(modelSolution.Velocity[iRestLine]);
     elt_param->SetFittingGroupInfo(modelSolution.fittingGroupInfo[iRestLine]);
     if (m_enableAmplitudeOffsets) {
-      TPolynomCoeffs contPolynomCoeffs = {
+      CPolynomCoeffs contPolynomCoeffs = {
           modelSolution.continuum_pCoeff0[iRestLine],
           modelSolution.continuum_pCoeff1[iRestLine],
           modelSolution.continuum_pCoeff2[iRestLine]};
@@ -821,13 +821,20 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     if (m_enableAmplitudeOffsets) {
       const auto &polynom_coeffs =
           m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
-      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
-      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
-      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
+      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.m_a0;
+      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.m_a1;
+      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.m_a2;
     }
 
-    auto const [cont, cont_std] =
-        GetMeanContinuumUnderLine(eIdx, line_index, modelSolution.Redshift);
+    Float64 cont, cont_std;
+    if (m_fittingmethod == "svd" || m_fittingmethod == "hybrid" ||
+        m_fittingmethod == "lbfgsb")
+      std::tie(cont, cont_std) =
+          GetContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
+    else
+      std::tie(cont, cont_std) =
+          GetMeanContinuumUnderLine(eIdx, line_index, modelSolution.Redshift);
+
     modelSolution.CenterContinuumFlux[iRestLine] = cont;
     modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_std;
 
@@ -1270,6 +1277,25 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
                           : NAN;
 
   return std::make_pair(continuum, std);
+}
+
+std::pair<Float64, Float64>
+CLineModelFitting::GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
+                                               Float64 redshift) {
+  for (auto &spcIndex : m_spectraIndex) {
+    // TODO check this : it has been added because it caused Line position does
+    // not belong to LSF range with lsf variable width
+    auto const &elt = *m_ElementsVector->getElementList()[eltIdx];
+    if (elt.IsOutsideLambdaRangeLine(line_index))
+      continue;
+
+    auto &model = getSpectrumModel();
+    auto const &spectralAxis = model.GetModelSpectrum().GetSpectralAxis();
+    auto const &continuumFluxAxis = model.GetModelContinuum();
+    return elt.GetContinuumAtCenterProfile(line_index, spectralAxis, redshift,
+                                           continuumFluxAxis);
+  }
+  return std::make_pair(NAN, NAN);
 }
 
 std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(

@@ -42,7 +42,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 
@@ -75,7 +75,7 @@ struct TLineModelElementParam {
   TFloat64List m_OffsetsStd;
   TInt32Map m_LinesIds;
   std::string m_fittingGroupInfo;
-  TPolynomCoeffs m_ampOffsetsCoeffs;
+  CPolynomCoeffs m_ampOffsetsCoeffs;
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;
   Float64 m_dtmFree =
@@ -267,17 +267,17 @@ struct TLineModelElementParam {
       m_Lines[index].resetAsymFitParams();
   }
   void SetFittingGroupInfo(const std::string &val) { m_fittingGroupInfo = val; }
-  void resetAmplitudeOffset() { m_ampOffsetsCoeffs = TPolynomCoeffs(); }
-  void SetPolynomCoeffs(const TPolynomCoeffs &coeffs) {
+  void resetAmplitudeOffset() { m_ampOffsetsCoeffs = CPolynomCoeffs(); }
+  void SetPolynomCoeffs(const CPolynomCoeffs &coeffs) {
     m_ampOffsetsCoeffs = coeffs;
   }
   /**
    * @brief Look for polynom coeffs corresponding to one specific Line
    *
    * @param eIdx
-   * @return TPolynomCoeffs
+   * @return CPolynomCoeffs
    */
-  const TPolynomCoeffs &GetPolynomCoeffs() const { return m_ampOffsetsCoeffs; }
+  const CPolynomCoeffs &GetPolynomCoeffs() const { return m_ampOffsetsCoeffs; }
 
   CLine::EType GetElementType() const { return m_type; };
   bool IsEmission() const { return m_isEmission; };

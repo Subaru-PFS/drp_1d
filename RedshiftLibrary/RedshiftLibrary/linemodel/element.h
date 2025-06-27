@@ -101,7 +101,7 @@ public:
   EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
                      const TFloat64Range &lambdaRange, Float64 winsizeAngstrom);
 
-  Float64 GetContinuumAtCenterProfile(
+  std::pair<Float64, Float64> GetContinuumAtCenterProfile(
       Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
       Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
       bool enableAmplitudeOffsets = false) const;

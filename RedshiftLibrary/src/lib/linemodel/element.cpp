@@ -71,7 +71,7 @@ void TLineModelElementParam::resetFittingParams() {
   m_FittedAmplitudes.assign(size(), NAN);
   m_FittedAmplitudesStd.assign(size(), NAN);
   m_fittingGroupInfo = undefStr;
-  m_ampOffsetsCoeffs = TPolynomCoeffs();
+  m_ampOffsetsCoeffs = CPolynomCoeffs();
 
   m_sumGauss = NAN;
   m_sumCross = NAN;
@@ -151,7 +151,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
  * returns -999/-9999 if center profile not in range
  *
  */
-Float64 CLineModelElement::GetContinuumAtCenterProfile(
+std::pair<Float64, Float64> CLineModelElement::GetContinuumAtCenterProfile(
     Int32 line_id, const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
     const CSpectrumFluxAxis &continuumfluxAxis,
     bool enableAmplitudeOffsets) const {
@@ -160,16 +160,18 @@ Float64 CLineModelElement::GetContinuumAtCenterProfile(
   Int32 IdxCenterProfile = spectralAxis.GetIndexAtWaveLength(mu);
   if (IdxCenterProfile < 0 ||
       IdxCenterProfile > continuumfluxAxis.GetSamplesCount() - 1) {
-    return NAN;
+    return std::make_pair(NAN, NAN);
   }
 
   Float64 cont = continuumfluxAxis[IdxCenterProfile];
+  Float64 contStd = NAN;
 
-  if (enableAmplitudeOffsets)
-    cont += getElementParam()->GetPolynomCoeffs().getValue(
-        spectralAxis[IdxCenterProfile]);
-
-  return cont;
+  if (enableAmplitudeOffsets) {
+    auto const &polyCoeffs = getElementParam()->GetPolynomCoeffs();
+    cont += polyCoeffs.getValue(spectralAxis[IdxCenterProfile]);
+    contStd = std::sqrt(polyCoeffs.getVariance(spectralAxis[IdxCenterProfile]));
+  }
+  return std::make_pair(cont, contStd);
 }
 
 /**
