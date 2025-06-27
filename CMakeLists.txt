@@ -39,10 +39,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 
 # Get library revision
-include(gitrevision)
-message(STATUS "Using git revision : " ${GIT_REVISION})
-FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
-MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
+#include(gitrevision)
+#message(STATUS "Using git revision : " ${GIT_REVISION})
+#FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
+#MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
 
 # check version.h file to speed up "re pip install --no-build-isolation" command
 include(checkVersion)
