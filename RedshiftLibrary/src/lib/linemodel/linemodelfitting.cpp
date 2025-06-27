@@ -311,23 +311,30 @@ bool CLineModelFitting::initDtd() {
 }
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
-  if (isContinuumComponentNoContinuum())
+  if (isContinuumComponentNoContinuum()) {
+    m_ElementsVector->setAllAbsLinesNotFittable();
     return;
+  }
 
-  if (!isContinuumComponentFitter()) {
+  if (isContinuumComponentFromSpectrum()) {
     for (auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().setContinuumToInputSpc();
     }
-    return;
-  }
-
-  // the support has to be already computed
-  // when LoadFitContinuum() is called
-  for (auto &spcIndex : m_spectraIndex) {
-    getSpectrumModel().initObserveGridContinuumFlux(
-        getSpectrum().GetSampleCount());
+  } else {
+    // the support has to be already computed
+    // when LoadFitContinuum() is called
+    for (auto &spcIndex : m_spectraIndex)
+      getSpectrumModel().initObserveGridContinuumFlux(
+          getSpectrum().GetSampleCount());
     m_continuumManager->LoadFitContinuum(k, redshift);
   }
+
+  computeSpectrumFluxWithoutContinuum();
+
+  if (isContinuumFittedToNull())
+    m_ElementsVector->setAllAbsLinesNotFittable();
+  else
+    m_ElementsVector->setAllAbsLinesFittable();
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
@@ -378,11 +385,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     Float64 _meritprior = 0.; // only relevant for "tplRatio"
 
     prepareAndLoadContinuum(k, redshift);
-    if (!isContinuumComponentNoContinuum()) {
-      computeSpectrumFluxWithoutContinuum();
-      m_ElementsVector->setAllAbsLinesFittable();
-    } else
-      m_ElementsVector->setAllAbsLinesNotFittable();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
@@ -419,9 +421,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (isContinuumComponentFitter()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
-      for (auto &spcIndex : m_spectraIndex) {
-        m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, redshift);
-      }
+      m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, redshift);
     }
   }
   if (m_lineRatioType == "tplRatio") {

@@ -149,10 +149,17 @@ public:
     return m_continuumManager->isContinuumComponentFitter();
   }
 
+  bool isContinuumComponentFromSpectrum() const {
+    return m_continuumManager->isContinuumComponentFromSpectrum();
+  }
+
   bool isContinuumComponentNoContinuum() const {
     return m_continuumManager->isContinuumComponentNoContinuum();
   }
 
+  bool isContinuumFittedToNull() const {
+    return m_continuumManager->isContFittedToNull();
+  }
   Int32 getNonZeroElementsNDdl() const {
     return m_ElementsVector->getNonZeroElementsNDdl();
   }

@@ -83,8 +83,11 @@ void CPowerLawStore::Add(const Float64 ismEbmvCoeff, const Int32 igmMeiksinIdx,
   m_fitValues[idxz].push_back(std::move(tmpCContinuumModelSolution));
 };
 
-Float64 CPowerLawStore::getFracAmplitudeSigma(
-    CContinuumModelSolution const &continuum) const {
+Float64
+CPowerLawStore::getFracAmplitudeSigma(Int32 idxz,
+                                      Int32 continuumCandidateRank) const {
+
+  auto const &continuum = m_fitValues[idxz][continuumCandidateRank];
   return std::max(continuum.a1 / continuum.a1std,
                   continuum.a2 / continuum.a2std);
 };

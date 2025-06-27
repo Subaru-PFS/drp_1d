@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/continuummanager.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 
 #include "RedshiftLibrary/processflow/autoscope.h"
@@ -45,8 +46,6 @@
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/operator/powerlaw.h"
-#include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
 using namespace NSEpic;
@@ -106,52 +105,60 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   if (m_fitContinuum_option ==
       EFitType::precomputedFitStore) { // using precomputed fit store, i.e.,
                                        // fitValues
-    CContinuumModelSolution fitValues =
-        m_fitContinuum_tplfitStore->GetFitValues(redshift, icontinuum);
+    Int32 const idxZ = m_fitContinuum_tplfitStore->GetRedshiftIndex(redshift);
+    CContinuumModelSolution const &fitValues =
+        m_fitContinuum_tplfitStore->GetFitValues(idxZ, icontinuum);
     if (fitValues.name.empty()) {
       THROWG(ErrorCode::INTERNAL_ERROR, "Empty template name");
     }
 
     *m_fitContinuum = fitValues;
-  } else if (m_fitContinuum_option == EFitType::fixedValues) {
-    // values unmodified nothing to do
-  } else {
+    Float64 amplitudeSNR =
+        m_fitContinuum_tplfitStore->getFracAmplitudeSigma(idxZ, icontinuum);
+    if (amplitudeSNR < m_opt_fitcontinuum_null_amp_threshold)
+      m_continuumFittedToNull = true;
+  } else if (m_fitContinuum_option != EFitType::fixedValues) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Cannot parse fitContinuum_option");
   }
   if (m_fitContinuum->name.empty())
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "Failed to load-fit continuum for cfitopt="
                        << static_cast<Int32>(m_fitContinuum_option));
-  // Retrieve the best template, otherwise Getter throws an error
-  if (isContinuumComponentPowerLawXXX()) {
-    getModel().ApplyContinuumPowerLawOnGrid(*m_fitContinuum);
-  } else {
-    std::shared_ptr<const CTemplate> tpl =
-        m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->name);
 
-    getModel().ApplyContinuumTplOnGrid(tpl, m_fitContinuum->redshift);
+  for (auto &spcIndex : m_spectraIndex) {
 
-    setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
-                                 m_fitContinuum->tplAmplitudeError,
-                                 m_fitContinuum->pCoeffs);
+    // Retrieve the best template, otherwise Getter throws an error
+    if (isContinuumComponentPowerLawXXX()) {
+      getModel().ApplyContinuumPowerLawOnGrid(*m_fitContinuum);
+    } else {
+      std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
+          {m_tplCategory}, m_fitContinuum->name);
 
-    Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded: "
-                             << m_fitContinuum->name);
-    Log.LogDebug(Formatter()
-                 << "    model : LoadFitContinuum, loaded with A="
-                 << m_fitContinuum->tplAmplitude
-                 << ", with A_error=" << m_fitContinuum->tplAmplitudeError);
-    Log.LogDebug(Formatter()
-                 << "    model : LoadFitContinuum, loaded with DustCoeff="
-                 << m_fitContinuum->ebmvCoef
-                 << ", with meiksinIdx=" << m_fitContinuum->meiksinIdx);
-    Log.LogDebug(Formatter()
-                 << "    model : LoadFitContinuum, loaded with dtm="
-                 << m_fitContinuum->tplDtM
-                 << ", with mtm=" << m_fitContinuum->tplMtM
-                 << "with logprior=" << m_fitContinuum->tplLogPrior);
-    Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded with snr="
-                             << m_fitContinuum->SNR);
+      getModel().ApplyContinuumTplOnGrid(tpl, m_fitContinuum->redshift);
+
+      setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
+                                   m_fitContinuum->tplAmplitudeError,
+                                   m_fitContinuum->pCoeffs);
+
+      Log.LogDebug(Formatter() << "    model : LoadFitContinuum, loaded: "
+                               << m_fitContinuum->name);
+      Log.LogDebug(Formatter()
+                   << "    model : LoadFitContinuum, loaded with A="
+                   << m_fitContinuum->tplAmplitude
+                   << ", with A_error=" << m_fitContinuum->tplAmplitudeError);
+      Log.LogDebug(Formatter()
+                   << "    model : LoadFitContinuum, loaded with DustCoeff="
+                   << m_fitContinuum->ebmvCoef
+                   << ", with meiksinIdx=" << m_fitContinuum->meiksinIdx);
+      Log.LogDebug(Formatter()
+                   << "    model : LoadFitContinuum, loaded with dtm="
+                   << m_fitContinuum->tplDtM
+                   << ", with mtm=" << m_fitContinuum->tplMtM
+                   << "with logprior=" << m_fitContinuum->tplLogPrior);
+      Log.LogDebug(Formatter()
+                   << "    model : LoadFitContinuum, loaded with snr="
+                   << m_fitContinuum->SNR);
+    }
   }
 }
 
@@ -251,11 +258,6 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum->tplLogPrior);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAlpha="
                           << m_fitContinuum_tplFitAlpha);
-}
-
-bool CContinuumManager::isContFittedToNull() {
-  return m_fitContinuum->tplAmplitude < m_opt_fitcontinuum_null_amp_threshold *
-                                            m_fitContinuum->tplAmplitudeError;
 }
 
 void CContinuumManager::setContinuumComponent(TContinuumComponent component) {

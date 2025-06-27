@@ -63,10 +63,10 @@ public:
            const Float64 snr);
 
   Int32 getContinuumCount() const override;
+  Float64 getFracAmplitudeSigma(Int32 idxz,
+                                Int32 continuumCandidateRank) const override;
 
 private:
-  Float64 getFracAmplitudeSigma(
-      CContinuumModelSolution const &continuum) const override;
   Int32 m_nContinuumCandidates = 0;
 };
 
