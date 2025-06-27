@@ -2,6 +2,7 @@
 
 ## 1.9
 ### Added
+* [9715] : Add goodness of fit for template fitting with FFT processing algorithm
 ### Changed
 * [9830] : Switch to lBFGSb v0.4.0
 ### Deprecated
