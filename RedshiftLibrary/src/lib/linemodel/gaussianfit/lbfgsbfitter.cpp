@@ -518,6 +518,9 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                             getLambdaRange());
   }
   m_ElementsVector->computeGlobalLineValidity(m_models);
+  auto const ValidEltsIdx = m_ElementsVector->getValidElementIndices(EltsIdx);
+  if (ValidEltsIdx.empty())
+    return;
   m_spectraIndex
       .setAtBegining(); // dummy reset, TO BE CORRECTED for full multiobs
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
