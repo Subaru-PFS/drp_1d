@@ -453,12 +453,16 @@ Int32 COperatorTemplateFittingLog::FitAllz(
   const TAxisSampleList &error =
       m_spectra[0]->GetFluxAxis().GetError().GetSamplesVector();
   ;
+  const Int32 nRedshifts = result->Redshifts.size();
   const TAxisSampleList &spectrumRebinedFluxRaw =
       m_spectra[0]->GetFluxAxis().GetSamplesVector();
+  const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
   Float64 dtd = 0.0;
-  TFloat64List inv_err2(error.size());
+  TFloat64List inv_err2(nSpcPixels);
+  TFloat64List inv_err(nSpcPixels);
   for (Int32 j = 0; j < ssize(error); j++) {
-    inv_err2[j] = 1.0 / (error[j] * error[j]);
+    inv_err[j] = 1.0 / error[j];
+    inv_err2[j] = inv_err[j] * inv_err[j];
     dtd += spectrumRebinedFluxRaw[j] * spectrumRebinedFluxRaw[j] * inv_err2[j];
   }
 
@@ -468,7 +472,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     TFloat64Range zrange =
         TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()],
                       result->Redshifts[izrangelist[k].GetEnd()]);
-    if (m_enableIGM && result->Redshifts.size() > 1) {
+    if (m_enableIGM && nRedshifts > 1) {
       TFloat64List::const_iterator first = result->Redshifts.begin() +
                                            izrangelist[k].GetBegin(),
                                    last = result->Redshifts.begin() +
@@ -481,7 +485,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
 
     } else {
       subresult = std::make_shared<CTemplateFittingResult>(
-          result->Redshifts.size(), EbmvList.size(), MeiksinList.size());
+          nRedshifts, EbmvList.size(), MeiksinList.size());
       subresult->Redshifts = result->Redshifts;
     }
 
@@ -490,8 +494,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
                              << ", max=" << zrange.GetEnd());
     Log.LogDebug(Formatter()
                  << "FitAllz: full zmin=" << result->Redshifts[0]
-                 << ", full zmax="
-                 << result->Redshifts[result->Redshifts.size() - 1]);
+                 << ", full zmax=" << result->Redshifts[nRedshifts - 1]);
     Log.LogDebug(Formatter() << "FitAllz: indexes tpl crop: "
                                 "lbda min="
                              << ilbda.GetBegin() << ", max=" << ilbda.GetEnd());
@@ -570,12 +573,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           const Float64 chi2 = dtd +
                                result->FitMtM[fullResultIdx] * ampl * ampl -
                                2. * ampl * result->FitDtM[fullResultIdx];
-          const Int32 nPixels = spectrumRebinedFluxRaw.size();
           result->ChiSquare[fullResultIdx] = chi2;
-          result->FitQuality[fullResultIdx].reducedChiSquare =
-              NSFitQuality::reducedChi2(chi2, nPixels);
-          result->FitQuality[fullResultIdx].pValue =
-              NSFitQuality::pValue(chi2, nPixels);
           Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
                           (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
           if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
@@ -603,6 +601,31 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       result->LogPrior[fullResultIdx] = logprior;
       result->FitEbmvCoeff[fullResultIdx] = subresult->FitEbmvCoeff[isubz];
       result->FitMeiksinIdx[fullResultIdx] = subresult->FitMeiksinIdx[isubz];
+
+      if (m_enableIGM && result->FitMeiksinIdx[fullResultIdx] != -1)
+        ApplyMeiksinCoeff(result->FitMeiksinIdx[fullResultIdx]);
+      if (m_enableISM && result->FitEbmvCoeff[fullResultIdx] != -1)
+        ApplyDustCoeff(
+            m_templateRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(
+                result->FitEbmvCoeff[fullResultIdx]));
+
+      // Compute model flux
+      const auto &tplRebinedFluxRaw{
+          m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector()};
+
+      const Int32 firstTplIdx = ilbda.GetBegin() + isubz;
+      TAxisSampleList modelFlux{tplRebinedFluxRaw.begin() + firstTplIdx,
+                                tplRebinedFluxRaw.begin() + firstTplIdx +
+                                    nSpcPixels};
+      for (auto lambdaIdx = 0; lambdaIdx < ssize(modelFlux); ++lambdaIdx) {
+        modelFlux[lambdaIdx] =
+            modelFlux[lambdaIdx] * result->FitAmplitude[fullResultIdx];
+      }
+
+      result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
+          spectrumRebinedFluxRaw, modelFlux, error,
+          result->ChiSquare[fullResultIdx], nSpcPixels);
+
       for (Int32 kigm = 0;
            kigm < ssize(result->IgmMeiksinIdxIntermediate[fullResultIdx]);
            kigm++)
@@ -1071,7 +1094,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   // Note: below corresponds to ::BasicFit code except that redshift loop
   // belongs to ::compute
   // Optionally apply some IGM absorption
-  TIgmIsmIdxs igmIsmIdxs = m_templateRebined_bf[0].GetIsmIgmIdxList(
+  TIgmIsmIdxs igmIsmIdxs = m_templateRebined_bf.front().GetIsmIgmIdxList(
       opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
   Int32 nIGMCoeffs = igmIsmIdxs.igmIdxs.size();
   Int32 nISMCoeffs = igmIsmIdxs.ismIdxs.size();
