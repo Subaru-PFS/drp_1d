@@ -77,9 +77,9 @@ zlog = CLog.GetInstance()
 
 
 class EProcessingMode(Enum):
-    TWO_OR_SINGLE_PASS = "normal"
-    FIRST_PASS_ONLY = "firstPass"
-    SECOND_PASS_AND_PDF = "secondPass"
+    TWO_OR_SINGLE_PASS = "normal"  # nosec B105
+    FIRST_PASS_ONLY = "firstPass"  # nosec B105
+    SECOND_PASS_AND_PDF = "secondPass"  # nosec B105
 
 
 class ProcessFlowException(Exception):
