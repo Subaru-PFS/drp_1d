@@ -68,12 +68,16 @@ protected:
   bool twoPassIsActive() const;
   bool isSinglePass() const { return m_opt_singlePass; }
   virtual bool secondPassFromResultStore() const override;
+  COperatorPdfz initializePdfz(Int32 maxPeakPerWindow, Int32 peakSeparation,
+                               Int32 cutThreshold, Int32 extremaCount) const;
 
   Float64 m_coarseRedshiftStep = NAN;
   Float64 m_twoPassZStepFactor = NAN;
   bool m_opt_skipsecondpass = false;
   bool m_opt_singlePass = false;
 
+  std::string m_opt_pdfcombination;
+  Float64 m_opt_secondpass_halfwindowsize;
   // Internal options for 1st pass -> classification -> 2nd pass on classified
 
   bool m_runSecondPassFromResultStore =

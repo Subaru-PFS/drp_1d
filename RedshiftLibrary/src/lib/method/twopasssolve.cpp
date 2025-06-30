@@ -92,6 +92,19 @@ void CTwoPassSolve::setRunSecondPassFromResultStore() {
   m_overwriteSolveResult = true;
 }
 
+COperatorPdfz CTwoPassSolve::initializePdfz(Int32 maxPeakPerWindow,
+                                            Int32 peakSeparation,
+                                            Int32 cutThreshold,
+                                            Int32 extremaCount) const {
+  COperatorPdfz pdfz(m_opt_pdfcombination, peakSeparation, cutThreshold,
+                     extremaCount, m_zLogSampling,
+                     "SPE",           // Id_prefix
+                     false,           // do not allow extrema at border
+                     maxPeakPerWindow // one peak/window only
+  );
+  return pdfz;
+}
+
 const std::unordered_map<std::string, EContinuumFit>
     CTwoPassSolve::str2ContinuumFit = {
         {"retryAll", EContinuumFit::retryAll},

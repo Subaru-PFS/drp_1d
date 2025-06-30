@@ -3,6 +3,7 @@
 ## 1.9
 ### Added
 * [9715] : Add goodness of fit for template fitting with FFT processing algorithm
+* [9393] : Compute second pass after classification for templateFittingSolve
 ### Changed
 * [9830] : Switch to lBFGSb v0.4.0
 * [9355] : Use lBFGSb inverse Hessian approximation to compute linemeas uncertainties
@@ -13,6 +14,7 @@
 ### Fixed
 * [9615] : Fix unintentional numerous warnings when continuum is null and fitting absorption lines
 * [9616] : Fix linemeas "empty line element list to fit"
+* [9836] : Fix template fitting 2nd pass evidence saved in ResultStore
 
 ## 1.8.0 (2025-06-06)
 ### Added

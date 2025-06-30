@@ -428,19 +428,11 @@ class AbstractOutput(metaclass=ABCMeta):
     def _filter_dataset_attributes(self, ds_name, object_type=None, method: Optional[str] = None):
         ds_attributes = self.results_specifications.get_df_by_dataset(ds_name)
         # filter ds_attributes by extended_results column
-        two_pass_solve = True
-        if (method is not None) and (object_type is not None):
-            two_pass_solve = self.parameters.is_two_pass_active(ESolveMethod(method), object_type)
-        if two_pass_solve:
-            filtered_df = ds_attributes
-        else:
-            # retrieves results which are not firstpass results
-            filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
 
         if self.extended_results:
-            return filtered_df
-        filtered_df = filtered_df.loc[~ds_attributes["extended_results"]]
-        return filtered_df
+            return ds_attributes
+        ds_attributes = ds_attributes.loc[~ds_attributes["extended_results"]]
+        return ds_attributes
 
     def load_root(self):
         self._load_root()

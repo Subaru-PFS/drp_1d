@@ -174,8 +174,14 @@ class Parameters(ParametersAccessor):
         else:
             raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown stage {stage}")
 
-    def is_two_pass_active(self, solve_method: ESolveMethod, spectrum_model):
-        return not self.get_skipsecondpass(solve_method, spectrum_model, True)
+    def is_two_pass_active(self, spectrum_model):
+        solve_method = self.get_redshift_solver_method(spectrum_model)
+        if solve_method == ESolveMethod.TEMPLATE_FITTING:
+            return not self.get_template_fitting_single_pass(spectrum_model)
+        elif solve_method == ESolveMethod.LINE_MODEL:
+            return not self.get_skipsecondpass(solve_method, spectrum_model)
+        else:
+            return False
 
     def to_json(self):
         return json.dumps(self.parameters)
