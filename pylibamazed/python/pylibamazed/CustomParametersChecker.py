@@ -99,7 +99,7 @@ class CustomParametersChecker(ParametersChecker):
         DEFAULT_COLUMN_NAMES = ["waves", "fluxes", "errors", "unused"]
         if not filters:
             return
-        filter_keys = [filt["key"] for filt in filters]
+        filter_keys = [filt["key"] for filt in filters if filt.get("type", "byValue") == "byValue"]
         authorized_cols_names = DEFAULT_COLUMN_NAMES + self.accessor.get_additional_cols(default=[])
 
         for filter_name in filter_keys:
