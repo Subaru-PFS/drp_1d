@@ -26,7 +26,7 @@ Required third parties:
 * [fftw](http://www.fftw.org/) >=3.3.8
 * [openblas](https://www.openblas.net/) >= 0.3.19
 * [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.0
-* [lbfgspp](https://lbfgspp.statr.me) == 0.3.0
+* [lbfgspp](https://lbfgspp.statr.me) == 0.4.0
 
 Required python packages:
 * [numpy](https://www.numpy.org/) >=1.25.0
