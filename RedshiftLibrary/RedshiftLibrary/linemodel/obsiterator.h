@@ -45,6 +45,13 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+
+#define ASSERT_SpectraGlobalIndex_IS_VALID(globalIndex)                        \
+  do {                                                                         \
+    auto const &[isValid, msg] = (globalIndex).isValid();                      \
+    ASSERT(isValid, ErrorCode::INVALID_SPECTRUM_INDEX, msg);                   \
+  } while (0)
+
 namespace NSEpic {
 
 class CSpectraGlobalIndex {
@@ -92,33 +99,24 @@ public:
 
   void set(Int32 index) {
     *m_currentIndex = index;
-    assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(*this);
   }
 
   Iterator current() const { return Iterator(m_currentIndex); }
 
-  bool isValid(bool throwError = false) const {
-    // Checks that current index is positive and less than end index
-
-    bool valid = true;
+  std::pair<bool, std::string> isValid() const {
+    // Checks that current index is positive and less than end index and sets
+    // error message
     std::string message = "";
     if (*m_currentIndex < 0) {
-      valid = false;
       message = "Current index is negative: " + std::to_string(*m_currentIndex);
     } else if (*m_currentIndex >= *m_endIndex) {
-      valid = false;
       message =
           "Current index is out of range: " + std::to_string(*m_currentIndex) +
           ", end index is: " + std::to_string(*m_endIndex);
     }
-
-    if (!valid && throwError)
-      THROWG(ErrorCode::INVALID_SPECTRUM_INDEX, message);
-
-    return valid;
+    return std::make_pair(message == "", message);
   }
-
-  void assertIsValid() const { isValid(true); }
 
   void setAtBegining() { *m_currentIndex = 0; }
 

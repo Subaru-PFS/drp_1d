@@ -878,7 +878,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
           break;
         }
       }
-      if (!m_spectraIndex.isValid())
+      if (!m_spectraIndex.isValid().first)
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "Failed finding a spectrum containing"
                            << line_index << " at " << modelSolution.Redshift);
@@ -1031,9 +1031,12 @@ void CLineModelFitting::SetLSF() {
     if (lsf == nullptr) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              "Cannot enable LSF, LSF spectrum member is not initialized");
-    } else if (!lsf->IsValid()) {
+    }
+    const auto &[valid, message] = lsf->IsValid();
+
+    if (!valid) {
       THROWG(ErrorCode::INTERNAL_ERROR,
-             " Cannot enable LSF, LSF spectrum member is not valid");
+             " Cannot enable LSF, LSF spectrum member is not valid " + message);
     }
     for (Int32 j = 0; j < getElementList().size(); j++) {
       getElementList()[j]->SetLSF(

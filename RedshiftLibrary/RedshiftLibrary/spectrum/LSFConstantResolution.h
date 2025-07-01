@@ -50,7 +50,7 @@ public:
   CLSFGaussianConstantResolution(const Float64 resolution);
 
   Float64 GetWidth(Float64 lambda, bool cliplambda = false) const override;
-  bool IsValid(const bool throwError = false) const override;
+  std::pair<bool, std::string> IsValid() const override;
 
   static std::shared_ptr<CLSF>
   make_LSF(const std::shared_ptr<const TLSFArguments> &args);

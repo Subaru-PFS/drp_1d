@@ -749,7 +749,6 @@ class CLSF
  public:
   virtual ~CLSF();
   virtual Float64 GetWidth(Float64 lambda, bool cliplambda = false) const=0;
-  virtual bool IsValid() const=0;
 protected:
   CLSF();
 };
@@ -760,7 +759,6 @@ class CLSFGaussianConstantWidth : public CLSF
   CLSFGaussianConstantWidth(const Float64 sigma=0.0);
   ~CLSFGaussianConstantWidth();
   Float64 GetWidth(Float64 lambda) const;
-  bool IsValid() const;
 };
 
 class CLSFGaussianVariableWidth : public CLSF
@@ -769,7 +767,6 @@ class CLSFGaussianVariableWidth : public CLSF
   CLSFGaussianVariableWidth(const std::shared_ptr<const TLSFGaussianVarWidthArgs>& args);
   ~CLSFGaussianVariableWidth();
   Float64 GetWidth(Float64 lambda) const;
-  bool IsValid() const;
 };
 
 class CLSFFactory : public CSingleton<CLSFFactory>

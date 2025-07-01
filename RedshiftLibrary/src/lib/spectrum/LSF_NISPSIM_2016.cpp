@@ -54,4 +54,6 @@ Float64 CLSFGaussianNISPSIM2016::GetWidth(Float64 lambda,
   return instrumentSigma;
 }
 
-bool CLSFGaussianNISPSIM2016::IsValid(bool throwError) const { return true; }
+std::pair<bool, std::string> CLSFGaussianNISPSIM2016::IsValid() const {
+  return std::make_pair(true, "");
+}

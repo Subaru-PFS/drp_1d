@@ -43,6 +43,12 @@
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 
+#define ASSERT_lsf_IS_VALID(lsf)                                               \
+  do {                                                                         \
+    auto const &[isValid, msg] = (lsf).IsValid();                              \
+    ASSERT(isValid, ErrorCode::INVALID_LSF, msg);                              \
+  } while (0)
+
 namespace LSF_test {
 class LSF_constantWidth_test;
 }
@@ -124,7 +130,7 @@ public:
   virtual TFloat64Range getSpectralRange() const {
     return TFloat64Range(LSF_MIN_LAMBDA, LSF_MAX_LAMBDA);
   };
-  virtual bool IsValid(const bool throwError = false) const = 0;
+  virtual std::pair<bool, std::string> IsValid() const = 0;
   Float64 GetProfileVal(Float64 lambda, Float64 lambda0 = 0.) const;
   TFloat64List getNormalizedProfileVector(TFloat64List lambda,
                                           Float64 lambda0) const;

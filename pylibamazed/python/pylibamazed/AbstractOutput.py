@@ -158,6 +158,7 @@ class AbstractOutput(metaclass=ABCMeta):
             self._load_candidate_level(object_type)
         self.cache = True
 
+    @doc_method
     def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
         return self._get_attribute_short(attribute, lines_ids, pdf_builder)
 

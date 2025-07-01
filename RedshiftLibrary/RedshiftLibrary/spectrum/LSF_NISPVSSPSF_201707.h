@@ -40,7 +40,6 @@
 #define _REDSHIFT_SPECTRUM_LSFBYEXTRINSIC_NISPVSSPSF2017_COMPONENTS_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 namespace NSEpic {
 /**
@@ -50,7 +49,7 @@ class CLSFGaussianNISPVSSPSF201707 : public CLSF {
 public:
   CLSFGaussianNISPVSSPSF201707(Float64 sourcesize = 0.1);
   Float64 GetWidth(Float64 lambda, bool cliplambda = false) const override;
-  bool IsValid(const bool throwError = false) const override;
+  std::pair<bool, std::string> IsValid() const override;
 
   static std::shared_ptr<CLSF>
   make_LSF(const std::shared_ptr<const TLSFArguments> &args);

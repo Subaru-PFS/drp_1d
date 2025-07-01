@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -53,7 +54,7 @@ CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(
     : CLSF(GaussianVariableWidth,
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
       m_width(args->width), m_spcAxis(args->lambdas) {
-  IsValid(true);
+  ASSERT_lsf_IS_VALID(*this);
 }
 
 Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
@@ -63,7 +64,6 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
     lambda = getSpectralRange().Clamp(lambda);
 
   if (!checkAvailability(lambda))
-    // Suggestion: add more info on lambda range and spectralAxis range
     THROWG(ErrorCode::INSUFFICIENT_LSF_COVERAGE,
            Formatter() << " lambda = " << lambda
                        << "outside spectralAxis range [" << m_spcAxis[0] << ", "
@@ -81,22 +81,23 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
   return m_width[idx] * (1 - t) + m_width[idx + 1] * t;
 }
 
-bool CLSFGaussianVariableWidth::IsValid(bool throwError) const {
+std::pair<bool, std::string> CLSFGaussianVariableWidth::IsValid() const {
+  bool valid = true;
+  std::string message = "";
   if (!m_width.size()) {
-    THROWG(ErrorCode::BAD_COUNTMATCH, "Width array cannot be null ");
+    message = "Width array cannot be null";
+    valid = false;
   }
   if (m_spcAxis.GetSamplesCount() != ssize(m_width)) {
-    THROWG(ErrorCode::BAD_COUNTMATCH,
-           Formatter() << "Sizes do not match between Spectral axis ("
-                       << m_spcAxis.GetSamplesCount() << ") and width axis ("
-                       << ssize(m_width) << ")");
+    message = Formatter() << "Sizes do not match between Spectral axis ("
+                          << m_spcAxis.GetSamplesCount() << ") and width axis ("
+                          << ssize(m_width) << ")";
+    valid = false;
   }
   for (Float64 w : m_width)
     if (w <= 0.) {
-      if (throwError)
-        THROWG(ErrorCode::INVALID_LSF,
-               Formatter() << "invalid LSF, width=" << w << " <= 0");
-      return false;
+      message = Formatter() << "invalid LSF, width=" << w << " <= 0";
+      valid = false;
     }
-  return true;
+  return std::make_pair(valid, message);
 }

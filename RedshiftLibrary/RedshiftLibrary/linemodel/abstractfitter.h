@@ -119,23 +119,23 @@ protected:
 
   CSpectrumModel &getModel() { return m_models->getSpectrumModel(); }
   const CSpectrumModel &getModel() const {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return m_models->getSpectrumModel();
   }
   const CSpectrum &getSpectrum() {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return *((*m_inputSpcs).at(m_spectraIndex.get()));
   }
   const TLambdaRange &getLambdaRange() {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return *(m_lambdaRanges.at(m_spectraIndex.get()));
   }
   CLineModelElementList &getElementList() {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return m_ElementsVector->getElementList();
   }
   const CLineModelElementList &getElementList() const {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return m_ElementsVector->getElementList();
   }
 

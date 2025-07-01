@@ -574,7 +574,7 @@ class CalibrationLibrary:
             return tpl_ratio_conf["sub_type"]
         except KeyError:
             raise APIException(
-                ErrorCode.TPL_RATIO_CATALOG_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
+                ErrorCode.INTERNAL_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
             ) from None
 
     @exception_decorator
@@ -618,6 +618,6 @@ class CalibrationLibrary:
                     lines_ids[line_name] = line_id
                 except Exception:
                     raise APIException(
-                        ErrorCode.LINE_CATALOG_ERROR, f"Could not find {line_name} in catalog"
+                        ErrorCode.LINE_NOT_FOUND, f"Could not find {line_name} in catalog"
                     ) from None
         return lines_ids

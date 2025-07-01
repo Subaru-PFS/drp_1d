@@ -60,7 +60,7 @@ public:
   const std::string &getType() const { return m_type; }
   virtual const std::string &
   getCandidateDatasetType(const std::string &dataset) const {
-    THROWG(ErrorCode::UNSUPPORTED_OPERATION,
+    THROWG(ErrorCode::IE_UNSUPPORTED_OPERATION,
            "This operator result does not support this operation");
   }
   virtual std::shared_ptr<const COperatorResult>

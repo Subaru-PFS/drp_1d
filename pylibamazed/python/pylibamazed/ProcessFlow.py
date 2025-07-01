@@ -331,10 +331,9 @@ class ProcessFlow:
     @_store_exception  # NOTE: an exception raised in one reliability method prevent the following to be run
     def _run_reliability_solver(self) -> None:
         reliability_methods = self.parameters.get_reliability_methods(self._scope_spectrum_model)
-        # Proposition : vérifier que bien présent dans le python checker, et transformer en INTERNAL_ERROR ou IE_INVALID_PARAMETER
         if reliability_methods is None:
             raise APIException(
-                ErrorCode.INVALID_PARAMETER, f"{self._scope_spectrum_model}.reliabilitySolver.method empty"
+                ErrorCode.IE_INVALID_PARAMETER, f"{self._scope_spectrum_model}.reliabilitySolver.method empty"
             )
         for solver_name in reliability_methods:
             zlog.LogInfo(f"run reliability with {solver_name}")

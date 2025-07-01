@@ -76,6 +76,7 @@ Its public methods are:
   ResultStoreOutput.get_candidate_data
   ResultStoreOutput.get_nb_candidates
   ResultStoreOutput.get_dataset
+  ResultStoreOutput.get_attribute_short
 
 And its public attributes are:
 
