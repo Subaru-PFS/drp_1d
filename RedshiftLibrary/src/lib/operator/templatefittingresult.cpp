@@ -50,8 +50,7 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n)
       ChiSquarePhot(n), FitAmplitude(n), FitAmplitudeError(n),
       FitAmplitudeSigma(n), FitEbmvCoeff(n), FitMeiksinIdx(n), FitDtM(n),
       FitMtM(n), LogPrior(n), SNR(n), ChiSquareIntermediate(n),
-      IsmEbmvIdxIntermediate(n), IgmMeiksinIdxIntermediate(n),
-      Overlap(n) {
+      IsmEbmvIdxIntermediate(n), IgmMeiksinIdxIntermediate(n), Overlap(n) {
   Redshifts.resize(n);
 }
 
@@ -100,8 +99,17 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
 
     // here we have only one (ism,igm) computed in val.
     Int32 ismIdx = getIsmIndexInIntermediate(val.IsmCalzettiIdxInterm.front());
+    // Small trick here : usually, if igm is at -1 in first pass, second pass
+    // will be outside of igm range too and IgmMeiksinIdxIntermediate will
+    // contain only -1 values in second pass, so getIgmIndexInIntermediate will
+    // return 0. However if candidate is a the border of igm range, some part of
+    // the second pass window can be inside igm range. getIgmIndexInIntermediate
+    // will contain values from 0 to 6 and trying to find index -1 inside will
+    // throw an error. We therefore arbitrarily force igmIdx to 0.
     Int32 igmIdx =
-        getIgmIndexInIntermediate(i, val.IgmMeiksinIdxInterm.front());
+        val.IgmMeiksinIdxInterm.front() == -1
+            ? 0
+            : getIgmIndexInIntermediate(i, val.IgmMeiksinIdxInterm.front());
 
     ChiSquareIntermediate[i][ismIdx][igmIdx] =
         std::move(val.ChiSquareInterm[0][0]);
