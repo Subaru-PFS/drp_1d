@@ -72,6 +72,13 @@ class TestParametersCheckGeneral:
                 CustomParametersChecker(parametersDict).check()
                 assert not WarningUtils.has_any_warning()
 
+            def test_ok_if_filter_is_not_type_byValue(self, zflag):
+                parametersDict = {
+                    "filters": [{"instruction": "opening", "value": [1, 1], "type": "morphology"}],
+                }
+                CustomParametersChecker(parametersDict).check()
+                assert not WarningUtils.has_any_warning()
+
     class TestPhotometryTransmissionDir:
         def _make_param_dict(self, **kwargs):
             new_kwargs = kwargs.copy()

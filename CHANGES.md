@@ -16,6 +16,7 @@
 * [9616] : Fix linemeas "empty line element list to fit"
 * [9836] : Fix template fitting 2nd pass evidence saved in ResultStore
 * [9885] : Fix template fitting 2nd pass with candidate at igm border
+* [9878] : Fix morphology filters
 
 ## 1.8.0 (2025-06-06)
 ### Added
