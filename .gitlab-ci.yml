@@ -164,13 +164,11 @@ push-rc-38-osx:
   script:
     - source /venv/p39/bin/activate
     - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
-    - mkdir -p build
+    - pip install . -v -C build-dir=build -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR -C cmake.build-type=Coverage
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
-    - make -j 12
-    - make test
-    - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
-    - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --html -o index.html --root .
+    - ninja test
+    - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR} --gcov-ignore-errors all
+    - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --html -o index.html --root . --gcov-ignore-errors all
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     paths:
