@@ -1,6 +1,13 @@
 # Changelog
 
-## 1.9
+## 1.11
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## 1.10.0 (2025-07-02)
 ### Added
 * [9715] : Add goodness of fit for template fitting with FFT processing algorithm
 * [9393] : Compute second pass after classification for templateFittingSolve
