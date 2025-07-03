@@ -37,14 +37,13 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/linemodel/tplcorrmanager.h"
+#include "RedshiftLibrary/linemodel/ratiotofreemanager.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/line/catalogsTplRatio.h"
-#include "RedshiftLibrary/linemodel/spectrummodel.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
 
 using namespace NSEpic;
 
-CTplCorrManager::CTplCorrManager(
+CRatioToFreeManager::CRatioToFreeManager(
     const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
@@ -52,58 +51,66 @@ CTplCorrManager::CTplCorrManager(
     const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
     : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList, spcIndex),
+      CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
+                    continuumManager, restLineList, spcIndex),
       CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
-                       continuumManager, restLineList, spcIndex) {}
-
-std::pair<Float64, Float64> CTplCorrManager::computeMerit(Int32 itratio) {
-  m_spectraIndex.setAtBegining(); // dummy implementation
-
-  getModel().refreshModel();
-  TFloat64List Amplitudes;
-  TFloat64List AmplitudesUncertainties; // noise sigma
-  std::vector<std::pair<Int32, Int32>> eIdxList;
-  TInt32List validLinesIndex;
-  for (auto [i_lineCatalog, line_it] =
-           std::pair(Int32(0), m_RestLineList.cbegin());
-       line_it != m_RestLineList.cend(); ++i_lineCatalog, ++line_it) {
-    Int32 const line_id = line_it->first;
-    auto const [elt_idx, elt_line_idx] =
-        getElementList().findElementIndex(line_id);
-    if (elt_idx == undefIdx)
-      continue;
-    auto const &elt_ptr = getElementList()[elt_idx];
-    auto const &elt_param_ptr = elt_ptr->getElementParam();
-    if (elt_ptr->IsOutsideLambdaRangeLine(elt_line_idx))
-      continue;
-    eIdxList.push_back(std::pair(
-        elt_idx, elt_line_idx)); // save elt_idx, line_idx for next loop
-    validLinesIndex.push_back(i_lineCatalog);
-    Amplitudes.push_back(elt_param_ptr->GetFittedAmplitude(elt_line_idx));
-    AmplitudesUncertainties.push_back(
-        elt_param_ptr->GetFittedAmplitudeStd(elt_line_idx));
-  }
-  TFloat64List correctedAmplitudes;
-  m_CatalogTplRatio->GetBestFit(validLinesIndex, Amplitudes,
-                                AmplitudesUncertainties, correctedAmplitudes,
-                                m_savedIdxFitted);
-
-  for (Int32 iValidLine = 0; iValidLine != ssize(validLinesIndex);
-       ++iValidLine) {
-    auto const [elt_idx, line_idx] = eIdxList[iValidLine];
-    auto const &elt_ptr = getElementList()[elt_idx];
-    auto const &elt_param_ptr = elt_ptr->getElementParam();
-
-    Float64 const er =
-        AmplitudesUncertainties[iValidLine]; // not modifying the fitting error
-                                             // for now
-    Float64 const nominalAmp = elt_param_ptr->GetNominalAmplitude(line_idx);
-    m_elementsVector->SetElementAmplitude(
-        elt_idx, correctedAmplitudes[iValidLine] / nominalAmp, er);
-  }
-  getModel().refreshModel();
-  return std::make_pair(getLeastSquareMerit(), 0.0);
+                       continuumManager, restLineList, spcIndex){};
+void CRatioToFreeManager::setPassMode(Int32 iPass) {
+  CLineRatioManager::setPassMode(iPass);
+  if (m_pass != 1 && m_pass != 2)
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "m_pass must be 1 or 2, got " << m_pass);
+  m_pass = iPass;
 }
 
-void CTplCorrManager::saveResults(Int32 itratio) {
-  //  m_tplratioBestTplName = bestTplratioName; done in computeMerit directly
+int CRatioToFreeManager::prepareFit(Float64 redshift) {
+  int prepare = 0;
+  if (m_pass == 1)
+    prepare = CTplratioManager::prepareFit(redshift);
+  else if (m_pass == 2)
+    prepare = CLineRatioManager::prepareFit(redshift);
+  return prepare;
+}
+
+std::pair<Float64, Float64> CRatioToFreeManager::computeMerit(Int32 itratio) {
+  std::pair<Float64, Float64> merit;
+  if (m_pass == 1) {
+    merit = CTplratioManager::computeMerit(itratio);
+  } else if (m_pass == 2) {
+    merit = CRulesManager::computeMerit(itratio);
+  }
+  return merit;
+}
+
+void CRatioToFreeManager::saveResults(Int32 itratio) {
+  if (m_pass == 1)
+    CTplratioManager::saveResults(itratio);
+  else if (m_pass == 2)
+    CLineRatioManager::saveResults(itratio);
+};
+
+void CRatioToFreeManager::setChiSquareRatioResult(
+    const Int32 index_z, const std::shared_ptr<CLineModelResult> &lmResult) {
+  if (m_pass == 1) {
+    CTplratioManager::setChiSquareRatioResult(index_z, lmResult);
+  } else if (m_pass == 2) {
+    if (GetChisquareTplratio().size() < 1)
+      return;
+
+    if (index_z >= ssize(lmResult->Redshifts))
+      THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
+    auto const &nRatios = getTplratio_count();
+    for (Int32 k = 0; k < nRatios; k++) {
+      lmResult->ChiSquareTplratios[k][index_z] = GetChisquareTplratio()[0];
+      lmResult->ScaleMargCorrectionTplratios[k][index_z] =
+          GetScaleMargTplratio()[0];
+      lmResult->StrongELPresentTplratios[k][index_z] =
+          GetStrongELPresentTplratio()[0];
+      lmResult->StrongHalphaELPresentTplratios[k][index_z] =
+          getHaELPresentTplratio()[0];
+      lmResult->NLinesAboveSNRTplratios[k][index_z] =
+          GetNLinesAboveSNRTplratio()[0];
+      lmResult->PriorLinesTplratios[k][index_z] = GetPriorLinesTplratio()[0];
+    }
+  }
 }

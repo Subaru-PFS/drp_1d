@@ -133,6 +133,9 @@ public:
                                Float64 zcontinuum);
   void initObserveGridContinuumFlux(Int32 size);
   const TPhotVal &getPhotValues() const { return m_photValues; };
+  void setElements(std::shared_ptr<CLineModelElementList> const &elements) {
+    m_Elements = elements;
+  };
 
 private:
   CSpectrumFluxAxis
@@ -232,6 +235,12 @@ public:
   void setEnableAmplitudeOffsets(bool enableAmplitudeOffsets) {
     for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;
+    }
+  }
+
+  void setModelsElements(std::shared_ptr<CLineModelElementList> elements) {
+    for (auto &model : m_models) {
+      model.setElements(elements);
     }
   }
 

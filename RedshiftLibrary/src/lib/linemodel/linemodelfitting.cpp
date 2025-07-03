@@ -91,10 +91,11 @@ CLineModelFitting::CLineModelFitting(
   m_lambdaRanges = // std::make_shared<std::vector<std::shared_ptr<const
                    // TLambdaRange>>>(
       Context.getClampedLambdaRanges(m_useloglambdasampling);
-
-  initMembers(continuumFittingOperator, element_composition);
-  setLineRatioType(m_lineRatioType);
-  if (m_lineRatioType == "rules")
+  auto const &lineRatioType = CLineRatioManager::stringToType.at(
+      Context.GetParameterStore()->GetScoped<std::string>("lineRatioType"));
+  initMembers(continuumFittingOperator, lineRatioType, element_composition);
+  setLineRatioType(lineRatioType);
+  if (isLineRatioRules())
     dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
 }
 
@@ -111,11 +112,12 @@ CLineModelFitting::CLineModelFitting(
   initParameters();
   // override ortho specific parameters
   m_fittingmethod = "hybrid";
-  // temporary options override to be removed when full tpl ortho is implemented
-  m_lineRatioType = "rules";
 
-  initMembers(continuumFittingOperator, ElementComposition::Default);
-  setLineRatioType(m_lineRatioType);
+  auto const &lineRatioType = CLineRatioManager::EType::rules;
+  initMembers(continuumFittingOperator, lineRatioType,
+              ElementComposition::Default);
+  // temporary options override to be removed when full tpl ortho is implemented
+  setLineRatioType(lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
   setContinuumComponent(TContinuumComponent("fromSpectrum"));
@@ -126,8 +128,6 @@ void CLineModelFitting::initParameters() {
   m_fittingmethod = ps->GetScoped<std::string>("fittingMethod");
   m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");
   m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaOffsetFit");
-
-  m_lineRatioType = ps->GetScoped<std::string>("lineRatioType");
 
   if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_opt_firstpass_fittingmethod =
@@ -149,22 +149,21 @@ void CLineModelFitting::initParameters() {
 
 void CLineModelFitting::initMembers(
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
-    ElementComposition element_composition) {
+    CLineRatioManager::EType const &lineRatioType,
+    ElementComposition const &element_composition) {
 
   m_nominalWidthDefault = 13.4; // euclid 1 px
   m_continuumFitValues = std::make_shared<CContinuumModelSolution>();
   m_models = std::make_shared<CSpcModelVector>(m_spectraIndex);
-  if (element_composition == ElementComposition::Default &&
-      (m_lineRatioType == "tplRatio" || m_lineRatioType == "tplCorr"))
-    element_composition = ElementComposition::EmissionAbsorption;
-  m_ElementsVector = std::make_shared<CLMEltListVector>(
-      m_spectraIndex, m_RestLineList, element_composition);
+  setElementsVector(lineRatioType, element_composition);
   for (auto &spcIndex : m_spectraIndex) {
     Log.LogDetail(Formatter() << "    model: Continuum winsize found is "
                               << std::fixed << std::setprecision(2)
                               << getSpectrum().GetMedianWinsize() << " A");
     m_models->push_back(CSpectrumModel(
-        std::make_shared<CLineModelElementList>(getElementList()),
+        std::make_shared<CLineModelElementList>(
+            getElementList()), // NB on pourrait enlever ce shared ptr pour en
+                               // faire directement un CLineModelElementList
         getSpectrumPtr(), m_RestLineList, m_continuumFitValues,
         continuumFittingOperator, m_spectraIndex.get()));
   }
@@ -176,10 +175,46 @@ void CLineModelFitting::initMembers(
                    m_enableLbdaOffsets);
   SetLSF();
   LogCatalogInfos();
-
-  // TODO restore check the continuum flux axis for NaN
 }
-// hook
+
+void CLineModelFitting::reloadFor2ndPass(
+    const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
+    const ElementComposition &element_composition) {
+
+  // TODO : faire + propre => get it from lineratiomanager for instance
+  m_pass = 2;
+  auto const &lineRatioType = m_lineRatioManager->getStrictType();
+
+  setElementsVector(lineRatioType, element_composition);
+
+  for (auto &spcIndex : m_spectraIndex) {
+    m_models->setModelsElements(std::make_shared<CLineModelElementList>(
+        m_ElementsVector->getElementList()));
+  }
+
+  // Updates fitting method to hybrid for line ratio
+  SetFittingMethod("hybrid", m_enableAmplitudeOffsets, m_enableLbdaOffsets);
+  SetLSF();
+  LogCatalogInfos();
+  setLineRatioManager(lineRatioType);
+  if (isLineRatioRules())
+    dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
+}
+
+void CLineModelFitting::setElementsVector(
+    CLineRatioManager::EType const &lineRatioType,
+    ElementComposition const &element_composition) {
+  // Here must pass lineRatioType as arg because is used before
+  // m_lineRatioManager initialization
+  ElementComposition effectiveComposition = element_composition;
+  if (element_composition == ElementComposition::Default &&
+      (lineRatioType == CLineRatioManager::EType::tplRatio ||
+       lineRatioType == CLineRatioManager::EType::tplCorr ||
+       (lineRatioType == CLineRatioManager::EType::ratioToFree && m_pass == 1)))
+    effectiveComposition = ElementComposition::EmissionAbsorption;
+  m_ElementsVector = std::make_shared<CLMEltListVector>(
+      m_spectraIndex, m_RestLineList, effectiveComposition);
+}
 
 void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << "m_pass" << m_pass);
@@ -199,8 +234,6 @@ void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << "nominalWidthDefault=" << m_nominalWidthDefault);
 
   Log.LogDetail(Formatter() << "fittingMethod=" << m_fittingmethod);
-
-  Log.LogDetail(Formatter() << "lineRatioType=" << m_lineRatioType);
 
   // Log.LogDetail(Formatter()<<"tplCatalog="<<m_tplCatalog);
   // Log.LogDetail(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
@@ -370,7 +403,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     initDtd();
 
   Int32 ntplratio = m_lineRatioManager->prepareFit(
-      redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
+      redshift); // multiple fitting steps for lineRatioType=tplratio
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplFitXXX() && !m_forcedisableMultipleContinuumfit)
@@ -382,7 +415,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   for (Int32 k = 0; k < nContinuum; k++) {
 
     Float64 _merit = INFINITY;
-    Float64 _meritprior = 0.; // only relevant for "tplRatio"
+    Float64 _meritprior = 0.; // only relevant for "tplRatio" and "ratioToFree"
 
     prepareAndLoadContinuum(k, redshift);
 
@@ -401,8 +434,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         bestMerit = _merit;
         bestMeritPrior = _meritprior;
         savedIdxContinuumFitted = k;
-        bool modelSolutionLevel =
-            m_lineRatioType == "rules" ? fullSolution : false;
+        bool modelSolutionLevel = isLineRatioRules() ? fullSolution : false;
         modelSolution = GetModelSolution(modelSolutionLevel);
         continuumModelSolution =
             m_continuumManager->GetContinuumModelSolutionCopy();
@@ -424,7 +456,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, redshift);
     }
   }
-  if (m_lineRatioType == "tplRatio") {
+  if (isLineRatioTplRatio()) {
     m_lineRatioManager->resetToBestRatio(redshift);
     modelSolution = GetModelSolution(fullSolution);
     continuumModelSolution =
@@ -445,7 +477,8 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
   m_models->setEnableAmplitudeOffsets(enableAmplitudeOffsets);
 }
 
-void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
+void CLineModelFitting::setLineRatioType(
+    CLineRatioManager::EType lineRatioType) {
   m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
       lineRatioType, m_ElementsVector, m_models, m_inputSpcs, m_lambdaRanges,
       m_continuumManager, m_RestLineList, m_fitter, m_spectraIndex);
@@ -886,7 +919,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     auto [fluxDI, snrDI] = getFluxDirectIntegration(
         eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
     modelSolution.Flux[iRestLine] = flux;
-    if (getLineRatioType() == "rules")
+    if (isLineRatioRules())
       modelSolution.FluxUncertainty[iRestLine] = fluxError;
     modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
     modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
@@ -911,7 +944,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
         modelSolution.snrHa_DI = snrDI;
         modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
         modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
-        if (getLineRatioType() == "rules")
+        if (isLineRatioRules())
           modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
       }
     }
@@ -934,7 +967,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
         modelSolution.snrOII_DI = snrDI;
         modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
         modelSolution.lfOII = flux_oii > 0.0 ? log10(flux_oii) : -INFINITY;
-        if (getLineRatioType() == "rules")
+        if (isLineRatioRules())
           modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
       }
     }
@@ -995,7 +1028,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(bool fullSolution) {
     modelSolution.Amplitudes[iRestLine] = amp;
     Float64 ampError = elt_param_vect[eIdx]->m_FittedAmplitudesStd[line_index];
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
-    if (getLineRatioType() == "rules")
+    if (isLineRatioRules())
       modelSolution.SNR[iRestLine] = std::abs(amp) / ampError;
 
     modelSolution.LambdaObs[iRestLine] =
@@ -1067,7 +1100,7 @@ void CLineModelFitting::setVelocityByGroup(Float64 vel,
 Float64 CLineModelFitting::GetVelocityEmission() const {
 
   // no global emission or absorption velocities
-  if (m_lineRatioType == "rules" && m_fittingmethod == "lbfgsb")
+  if (isLineRatioRules() && m_fittingmethod == "lbfgsb")
     return NAN;
 
   // find 1st emission element
@@ -1084,7 +1117,7 @@ Float64 CLineModelFitting::GetVelocityEmission() const {
 
 Float64 CLineModelFitting::GetVelocityAbsorption() const {
   // no global emission or absorption velocities
-  if (m_lineRatioType == "rules" && m_fittingmethod == "lbfgsb")
+  if (isLineRatioRules() && m_fittingmethod == "lbfgsb")
     return NAN;
 
   // find 1st emission element
@@ -1321,3 +1354,8 @@ std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
 }
 
 void CLineModelFitting::refreshAllModels() { m_models->refreshAllModels(); }
+
+void CLineModelFitting::setChiSquareRatioResult(
+    const Int32 index_z, const std::shared_ptr<CLineModelResult> &lmResult) {
+  return m_lineRatioManager->setChiSquareRatioResult(index_z, lmResult);
+};

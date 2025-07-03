@@ -292,7 +292,7 @@ void CLineRatioManager::logParameters() {
 }
 
 std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
-    const std::string &lineRatioType,
+    const EType &lineRatioType,
     const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
@@ -300,15 +300,19 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
     const CSpectraGlobalIndex &spcIndex) {
   std::shared_ptr<CLineRatioManager> ret;
-  if (lineRatioType == "tplRatio")
+  if (lineRatioType == EType::tplRatio)
     ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
                          continuumManager, restLineList, spcIndex));
-  else if (lineRatioType == "tplCorr")
+  else if (lineRatioType == EType::ratioToFree)
+    ret = std::make_shared<CRatioToFreeManager>(
+        CRatioToFreeManager(elementsVector, models, inputSpcs, lambdaRanges,
+                            continuumManager, restLineList, spcIndex));
+  else if (lineRatioType == EType::tplCorr)
     ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList, spcIndex));
-  else if (lineRatioType == "rules")
+  else if (lineRatioType == EType::rules)
     ret = std::make_shared<CRulesManager>(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
                       continuumManager, restLineList, spcIndex));
@@ -328,3 +332,10 @@ void CLineRatioManager::refreshAllModels() {
     getModel().refreshModel();
   }
 }
+
+const std::map<std::string, CLineRatioManager::EType>
+    CLineRatioManager::stringToType = {
+        {"tplRatio", CLineRatioManager::EType::tplRatio},
+        {"ratioToFree", CLineRatioManager::EType::ratioToFree},
+        {"tplCorr", CLineRatioManager::EType::tplCorr},
+        {"rules", CLineRatioManager::EType::rules}};

@@ -77,6 +77,7 @@ class TestLineModelSolve:
             if kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("lineRatioType") in [
                 "tplRatio",
                 "tplCorr",
+                "ratioToFree",
             ]:
                 kwargs["lineModelSolve"]["lineModel"]["firstPass"] = {"tplRatioIsmFit": False}
             param_dict = make_parameter_dict_at_redshift_solver_level(**kwargs)
@@ -107,7 +108,7 @@ class TestLineModelSolve:
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
-        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr", "ratioToFree"])
         def test_OK_if_lineRatioType_is_tplratio_and_tplratio_params_are_present(self, zflag, tpl_ratio):
             param_dict = self._make_parameter_dict(
                 **{
@@ -123,7 +124,7 @@ class TestLineModelSolve:
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
-        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr", "ratioToFree"])
         def test_error_if_lineRatioType_is_tplratio_and_missing_tplratio_catalog(self, tpl_ratio):
             param_dict = self._make_parameter_dict(
                 **{
@@ -138,7 +139,7 @@ class TestLineModelSolve:
             with pytest.raises(APIException, match=r"Missing parameter lineModelSolve tplRatioCatalog"):
                 check_from_parameter_dict(param_dict)
 
-        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr", "ratioToFree"])
         def test_error_if_lineRatioType_is_tplratio_and_missing_tplratio_ismfit(self, tpl_ratio):
             param_dict = self._make_parameter_dict(
                 **{

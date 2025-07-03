@@ -496,7 +496,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_lineratiotype_tplratio_catalog(self, spectrum_model):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model)
+            in ["tplRatio", "tplCorr", "ratioToFree"],
             self.accessor.get_linemodel_tplratio_catalog(spectrum_model) is not None,
             error_message=f"lineModelSolve tplRatioCatalog for object {spectrum_model}",
             warning_message=f"object {spectrum_model} lineModelSolve tplRatioCatalog",
@@ -504,7 +505,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_lineratiotype_tplratio_ismfit(self, spectrum_model):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model)
+            in ["tplRatio", "tplCorr", "ratioToFree"],
             self.accessor.get_linemodel_tplratio_ismfit(spectrum_model) is not None,
             error_message=f"lineModelSolve tplRatioIsmFit for object {spectrum_model}",
             warning_message=f"object {spectrum_model} lineModelSolve tplRatioIsmFit",
@@ -583,7 +585,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_linemodelsolve_firstpass_tplratio_ismfit(self, spectrum_model: str):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model)
+            in ["tplRatio", "tplCorr", "ratioToFree"],
             self.accessor.get_linemodel_firstpass_tplratio_ismfit(spectrum_model) is not None,
             f"object {spectrum_model} lineModelSolve firstpass tplRatioIsmFit",
             f"object {spectrum_model} lineModelSolve firstpass tplRatioIsmFit",

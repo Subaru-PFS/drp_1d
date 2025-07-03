@@ -48,7 +48,7 @@ namespace NSEpic {
 
 class CLineCatalogsTplRatio;
 
-class CTplratioManager : public CLineRatioManager {
+class CTplratioManager : virtual public CLineRatioManager {
 public:
   CTplratioManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
                    const CSpcModelVectorPtr &models,
@@ -106,6 +106,14 @@ public:
       const std::vector<CPriorHelper::SPriorTZE> &logPriorDataTplRatio);
 
   bool m_opt_firstpass_forcedisableTplratioISMfit = true;
+  void setNRatios(Int32 nRatios) { m_nRatios = nRatios; }
+  CLineRatioManager::EType getStrictType() const override {
+    return EType::tplRatio;
+  };
+  bool isTplRatio() const override { return true; };
+  void setChiSquareRatioResult(
+      const Int32 index_z,
+      const std::shared_ptr<CLineModelResult> &lmResult) override;
 
 protected:
   void initMerit(Int32 ntplratio);
@@ -154,6 +162,7 @@ protected:
 
 private:
   void fillHalphaArray(Int32 idx);
+  Int32 m_nRatios = 0;
 };
 
 } // namespace NSEpic

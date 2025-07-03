@@ -41,7 +41,6 @@
 #define _REDSHIFT_LINE_RATIO_MANAGER_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/obsiterator.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
@@ -53,6 +52,7 @@ class CContinuumManager;
 class CLineModelSolution;
 class CContinuumModelSolution;
 class CAbstractFitter;
+class CLineModelResult;
 
 class CLineRatioManager {
 public:
@@ -71,6 +71,9 @@ public:
   CLineRatioManager(CLineRatioManager &&other) = default;
   CLineRatioManager &operator=(CLineRatioManager &&other) = default;
 
+  enum EType { tplRatio, ratioToFree, tplCorr, rules };
+  static const std::map<std::string, EType> stringToType;
+
   virtual int prepareFit(Float64 redshift) { return 1; }
   virtual bool init(Float64 redshift, Int32 itratio = -1);
   virtual std::pair<Float64, Float64> computeMerit(Int32 itratio) = 0;
@@ -84,6 +87,13 @@ public:
   virtual Int32 getTplratio_count() const { return 0; }
 
   virtual void logParameters();
+  virtual EType getStrictType() const = 0;
+  virtual void
+  setChiSquareRatioResult(const Int32 index_z,
+                          const std::shared_ptr<CLineModelResult> &lmResult){};
+  virtual bool isRules() const { return false; };
+  virtual bool isTplRatio() const { return false; };
+  virtual bool isTplCorr() const { return false; };
 
   void SetLeastSquareFastEstimationEnabled(Int32 enabled) {
   } // TODO, called in computeFirstPass in the general case but only active when
@@ -91,13 +101,18 @@ public:
 
   void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
   static std::shared_ptr<CLineRatioManager> makeLineRatioManager(
-      const std::string &lineRatioType,
+      const EType &lineRatioType,
       const std::shared_ptr<CLMEltListVector> &elementsVector,
       const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
       const CTLambdaRangePtrVector &lambdaRanges,
       std::shared_ptr<CContinuumManager> continuumManager,
       const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
       const CSpectraGlobalIndex &spcIndex);
+
+  void
+  setElementsVector(const std::shared_ptr<CLMEltListVector> &elementsVectors) {
+    m_elementsVector = elementsVectors;
+  }
 
 protected:
   void setLyaProfile(Float64 redshift, const CLineMap &lineList);

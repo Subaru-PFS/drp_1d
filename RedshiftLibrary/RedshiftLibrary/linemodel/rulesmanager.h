@@ -46,7 +46,7 @@
 
 namespace NSEpic {
 
-class CRulesManager : public CLineRatioManager {
+class CRulesManager : virtual public CLineRatioManager {
 public:
   CRulesManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
                 const CSpcModelVectorPtr &models,
@@ -68,6 +68,10 @@ public:
 
   const TStringList &GetModelRulesLog() const;
   void setRulesOption(std::string rulesOption = "");
+  CLineRatioManager::EType getStrictType() const override {
+    return EType::rules;
+  };
+  bool isRules() const override { return true; };
 
 private:
   void applyRules(bool enableLogging);

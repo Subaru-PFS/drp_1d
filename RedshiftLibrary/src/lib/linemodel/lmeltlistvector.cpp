@@ -57,7 +57,7 @@ CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
     LoadCatalog();
     break;
   case ElementComposition::EmissionAbsorption:
-    //"tplRatio" and "tplCorr"
+    //"tplRatio", "ratioToFree" and "tplCorr"
     // load the tplratio catalog with only 1 element for all lines
     // LoadCatalogOneMultiline(restLineList);
     // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for

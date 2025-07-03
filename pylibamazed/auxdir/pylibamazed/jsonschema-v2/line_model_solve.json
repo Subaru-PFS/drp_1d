@@ -173,10 +173,11 @@
           "enum": [
             "tplRatio",
             "rules",
-            "tplCorr"
+            "tplCorr",
+            "ratioToFree"
           ],
           "title": "Line ratio type",
-          "description": "\n * **rules**: fit all lines amplitude independently with eventually some constraints (see rules parameter below) \n * **tplRatio**: fit one amplitude with fixed line ratios coming from template-ratio catalogs \n * **tplcorr**: after a linemodel \"free\", adjusts the best template ratio using the amplitudes vector as data, the global amplitude is the free parameter."
+          "description": "\n * **rules**: fit all lines amplitude independently with eventually some constraints (see rules parameter below) \n * **tplRatio**: fit one amplitude with fixed line ratios coming from template-ratio catalogs \n * **tplcorr**: after a linemodel \"free\", adjusts the best template ratio using the amplitudes vector as data, the global amplitude is the free parameter \n * **ratioToFree**: after a first pass with a tplRatio, do a \"free\" second pass, releasing the ratio constraints"
         },
         "rules": {
           "type": "string",

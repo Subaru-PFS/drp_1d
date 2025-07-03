@@ -39,7 +39,6 @@
 
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;

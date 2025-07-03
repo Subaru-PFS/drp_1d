@@ -102,7 +102,7 @@ private:
 
   COperatorLineModel m_linemodel;
 
-  std::string m_opt_lineratiotype;
+  CLineRatioManager::EType m_opt_lineratiotype;
   std::string m_opt_continuumreest;
   TContinuumComponent m_opt_continuumcomponent;
 
