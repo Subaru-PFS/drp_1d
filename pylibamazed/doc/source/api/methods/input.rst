@@ -118,7 +118,6 @@ Its public methods are:
 .. autosummary::
     Spectrum.get_flux
     Spectrum.get_wave
-    Spectrum.get_dataframe
     Spectrum.get_error
     Spectrum.get_others
     Spectrum.get_lsf

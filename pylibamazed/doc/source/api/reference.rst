@@ -127,16 +127,6 @@ ErrorCode
 
 Enum containing all regirstered error codes. See :doc:`/api/errorswarnings/errors`. 
 
-H5Writer
---------
-
-.. currentmodule:: pylibamazed.H5Writer
-
-.. autoclass:: H5Writer
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
 Parameters
 ----------
 
