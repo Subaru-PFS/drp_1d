@@ -395,6 +395,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return 0
 
     def get_level(self, dataset):
+        if dataset == "objectInfo":
+            return "root"
         if dataset.startswith("reliability"):
             return "object"
         dataset_entries = self.results_specifications.get_df_by_dataset(dataset)
