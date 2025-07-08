@@ -641,3 +641,94 @@ sonar-scanner-rockylinux:
   dependencies:
     - coverage-rockylinux
 
+# amazed-almalinux9-empty-pckg-python stages
+.almalinux9-empty-pckg-python:
+  image: $IMAGE_BUILD_DIR/amazed-almalinux9-empty-pckg-python
+  when: manual
+  variables:
+    PLATFORM: "manylinux_2_36_x86_64"
+    ENABLE_GCC10: "False"
+  cache:
+    key: "almalinux9-empty-pckg-python-$CI_COMMIT_REF_SLUG"
+
+build-almalinux9-empty-pckg-python:
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .build-linux
+
+test-almalinux9-empty-pckg-python:
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .test-linux
+
+wheel39-almalinux9-empty-pckg-python:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .wheel-linux
+
+wheel311-almalinux9-empty-pckg-python:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .wheel-linux
+
+pytest39-almalinux9-empty-pckg-python:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .pytest-linux
+
+pytest311-almalinux9-empty-pckg-python:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .pytest-linux
+
+pytest39-coverage-almalinux9-empty-pckg-python: 
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .pytest-coverage-linux
+
+pytest311-coverage-almalinux9-empty-pckg-python:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .pytest-coverage-linux
+
+push-rc-39-almalinux9-empty-pckg-python:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .push-rc-linux
+  dependencies:
+    - wheel39-almalinux9-empty-pckg-python
+
+push-rc-311-almalinux9-empty-pckg-python:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .push-rc-linux
+  dependencies:
+    - wheel311-almalinux9-empty-pckg-python
+
+coverage-almalinux9-empty-pckg-python:
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .build-coverage-linux
+
+sonar-scanner-almalinux9-empty-pckg-python:
+  extends:
+    - .almalinux9-empty-pckg-python
+    - .sonar-linux
+  dependencies:
+    - coverage-almalinux9-empty-pckg-python
