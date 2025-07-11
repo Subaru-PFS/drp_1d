@@ -66,7 +66,7 @@ public:
   // applying Rule of zero
   CSpectrumLogRebinning(CInputContext &inputContext);
   std::shared_ptr<CSpectrum> loglambdaRebinSpectrum(
-      CSpectrum const &spectrum,
+      const std::shared_ptr<CSpectrum> &spectrum,
       std::string const &errorRebinMethod = "rebinVariance") const;
   std::shared_ptr<CTemplate>
   loglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl,

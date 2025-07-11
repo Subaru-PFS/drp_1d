@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
+#include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
@@ -96,8 +97,8 @@ void CInputContext::RebinInputs() {
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
        boost::combine(m_spectra, m_lambdaRanges)) {
     if (spectrum_ptr->GetSpectralAxis().IsLogSampled()) {
-      addRebinSpectrum(std::make_shared<CSpectrum>(spectrum_ptr->GetName(),
-                                                   spectrum_ptr->getObsID()));
+      addRebinFullSpectrum(std::make_shared<CFullSpectrum>(
+          spectrum_ptr->GetName(), spectrum_ptr->getObsID()));
       CSpectrumSpectralAxis spcWav = spectrum_ptr->GetSpectralAxis();
       spcWav.RecomputePreciseLoglambda(); // in case input spectral values have
                                           // been rounded
@@ -108,11 +109,11 @@ void CInputContext::RebinInputs() {
       lambdaRange_ptr->getClosedIntervalIndices(spcWav.GetSamplesVector(),
                                                 kstart, kend);
       // save into the rebinnedSpectrum
-      m_rebinnedSpectra.back()->SetSpectralAndFluxAxes(
+      m_rebinnedFullSpectra.back()->SetSpectralAndFluxAxes(
           spcWav.extract(kstart, kend),
           spectrum_ptr->GetFluxAxis().extract(kstart, kend));
       m_logGridStep =
-          m_rebinnedSpectra.back()->GetSpectralAxis().GetlogGridStep();
+          m_rebinnedFullSpectra.back()->GetSpectralAxis().GetlogGridStep();
     } else {
       m_logGridStep =
           m_ParameterStore->getMinZStepForFFTProcessing(fft_processing);
@@ -120,15 +121,15 @@ void CInputContext::RebinInputs() {
   }
   Log.LogInfo(Formatter() << "loggrid step=" << m_logGridStep);
   std::string const errorRebinMethod = "rebinVariance";
-  CSpectrumLogRebinning logReb(*this);
 
   for (auto const &[spectrum_ptr, lambdaRange_ptr,
                     rebinnedClampedLambdaRange_ptr] :
-       boost::combine(m_spectra, m_lambdaRanges,
+       boost::combine(m_fullSpectra, m_lambdaRanges,
                       m_rebinnedClampedLambdaRanges)) {
+    CSpectrumLogRebinning logReb(*this);
     if (!spectrum_ptr->GetSpectralAxis().IsLogSampled())
-      addRebinSpectrum(
-          logReb.loglambdaRebinSpectrum(*spectrum_ptr, errorRebinMethod));
+      addRebinFullSpectrum(std::dynamic_pointer_cast<CFullSpectrum>(
+          logReb.loglambdaRebinSpectrum(spectrum_ptr, errorRebinMethod)));
 
     TFloat64Range zrange;
     for (std::string cat : m_categories) {
@@ -138,8 +139,14 @@ void CInputContext::RebinInputs() {
       }
     }
     // Initialize rebinned clamped lambda range
-    m_rebinnedSpectra.back()->GetSpectralAxis().ClampLambdaRange(
+    m_rebinnedFullSpectra.back()->GetSpectralAxis().ClampLambdaRange(
         *lambdaRange_ptr, *rebinnedClampedLambdaRange_ptr);
+  }
+
+  for (auto const &spectrum_ptr : m_rebinnedFullSpectra) {
+    addRebinSpectrum(
+        std::make_shared<CSpectrum>(spectrum_ptr->getUnmaskedSpectrum()));
+    // TODO handle lambda ranges
   }
   return;
 }
@@ -267,4 +274,11 @@ void CInputContext::resetSpectrumSpecific() {
   m_lineCatalogs.clear();
   m_lineRatioCatalogCatalogs.clear();
   m_photBandCatalog.reset();
+}
+
+void CInputContext::addFullSpectrum(
+    const std::shared_ptr<CFullSpectrum> &spectrum) {
+  m_fullSpectra.push_back(spectrum);
+  m_spectra.push_back(spectrum->getUnmaskedSpectrum());
+  m_constSpectra.push_back(spectrum->getUnmaskedSpectrum());
 }

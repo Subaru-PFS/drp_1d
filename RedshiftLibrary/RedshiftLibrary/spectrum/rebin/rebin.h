@@ -42,8 +42,8 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
 /**

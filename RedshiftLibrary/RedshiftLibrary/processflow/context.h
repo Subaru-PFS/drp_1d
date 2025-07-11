@@ -120,12 +120,13 @@ public:
   std::shared_ptr<const CParameterStore>
   LoadParameterStore(const std::string &paramsJSONString);
 
-  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false) const {
-    return m_inputContext->GetSpectrum(rebinned);
+  std::shared_ptr<const CSpectrum> GetSpectrum() const {
+    return m_inputContext->GetSpectrum();
   }
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
     return m_inputContext->GetRebinnedSpectrum();
   }
+
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_inputContext->GetTemplateCatalog();
   }
@@ -199,10 +200,13 @@ public:
   getSpectra(bool rebinned = false) const {
     if (rebinned)
       return m_inputContext->getRebinnedSpectra();
-    else
-      return m_inputContext->getSpectra();
+    return m_inputContext->getSpectra();
   }
 
+  const std::vector<std::shared_ptr<const CFullSpectrum>> &
+  getRebinnedFullSpectra() const {
+    return m_inputContext->getRebinnedFullSpectra();
+  }
   const std::vector<std::shared_ptr<const CSpectrum>> &
   getRebinnedSpectra() const {
     return m_inputContext->getRebinnedSpectra();

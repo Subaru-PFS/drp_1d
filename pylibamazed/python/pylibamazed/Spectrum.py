@@ -49,6 +49,7 @@ from pylibamazed.redshift import (
     CPhotometricData,
     CProcessFlowContext,
     CSpectrum,
+    CFullSpectrum,
     CSpectrumFluxAxis_withError,
     CSpectrumSpectralAxis,
     ErrorCode,
@@ -228,7 +229,10 @@ class Spectrum:
         ctx = CProcessFlowContext.GetInstance()
         cpp_spectra = self._make_cspectra()
         for cpp_spectrum in cpp_spectra.values():
-            ctx.addSpectrum(cpp_spectrum)
+            if self.parameters.full_spectrum_required():
+                ctx.addFullSpectrum(cpp_spectrum)
+            else:
+                ctx.addSpectrum(cpp_spectrum)
 
     def _make_clsf(self):
         lsf_factory = CLSFFactory.GetInstance()
@@ -277,7 +281,10 @@ class Spectrum:
         return cpp_spectra
 
     def _make_cspectrum(self, spectralaxis, signal, cpp_lsf, cpp_phot, obs_id="") -> CSpectrum:
-        cpp_spectrum = CSpectrum(spectralaxis, signal)
+        if self.parameters.full_spectrum_required():
+            cpp_spectrum = CFullSpectrum(spectralaxis, signal, self.get_mask(obs_id).astype(int))
+        else:
+            cpp_spectrum = CSpectrum(spectralaxis, signal)
         cpp_spectrum.SetName(self.source_id)
         cpp_spectrum.setObsID(obs_id)
         cpp_spectrum.SetLSF(cpp_lsf)

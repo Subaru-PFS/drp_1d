@@ -62,7 +62,7 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
 /**
  * Brief: Get loglambdastep and update the zrange accordingly
  * Below code relies on the fact that both loglambda grid and the
- log(Redshift+1) grid follows the same arithmetic progession with a common step
+ log(Redshift+1) grid follows the same arithmetic progression with a common step
  * if spectrum is already rebinned, then it imposes the rebinning and the
  creation of zGrid
  * Otherwise, it's the input zrange that decides on the rebinning param.
@@ -70,8 +70,8 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
  should be modified to use 1+redshiftstep for the common ratio (or construct the
  grid using arithmetic log progression).
 */
-void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
-                                           const TFloat64Range &lambdaRange) {
+void CSpectrumLogRebinning::setupRebinning(
+    const std::shared<CSpectrum> &spectrum, const TFloat64Range &lambdaRange) {
   if (spectrum.GetSpectralAxis().IsLogSampled(m_logGridStep)) {
     // compute reference lambda range
     // (the effective lambda range of log-sampled spectrum when initial spectrum

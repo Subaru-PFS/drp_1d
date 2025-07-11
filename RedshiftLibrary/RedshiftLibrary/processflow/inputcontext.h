@@ -58,6 +58,7 @@ class OrthogonalizeTemplates_test;
 namespace NSEpic {
 class CSpectrumLogRebinning; // forward declaration
 class CSpectrum;
+class CFullSpectrum;
 class CTemplateCatalog;
 class CLineCatalog;
 class CParameterStore;
@@ -70,9 +71,8 @@ public:
   CInputContext(std::shared_ptr<CParameterStore> paramStore);
 
   // const getters
-  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false,
-                                               int i = 0) const {
-    return const_cast<CInputContext *>(this)->GetSpectrum(rebinned, i);
+  std::shared_ptr<const CSpectrum> GetSpectrum(int i = 0) const {
+    return const_cast<CInputContext *>(this)->GetSpectrum(i);
   }
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
     return const_cast<CInputContext *>(this)->GetRebinnedSpectrum(i);
@@ -82,6 +82,10 @@ public:
     return m_constSpectra;
   }
 
+  const std::vector<std::shared_ptr<const CFullSpectrum>> &
+  getRebinnedFullSpectra() const {
+    return m_constRebinnedFullSpectra;
+  }
   const std::vector<std::shared_ptr<const CSpectrum>> &
   getRebinnedSpectra() const {
     return m_constRebinnedSpectra;
@@ -103,12 +107,8 @@ public:
   }
 
   // mutable getters
-  const std::shared_ptr<CSpectrum> &GetSpectrum(bool rebinned = false,
-                                                int i = 0) {
-    if (rebinned)
-      return m_rebinnedSpectra[i];
-    else
-      return m_spectra[i];
+  const std::shared_ptr<CSpectrum> &GetSpectrum(int i = 0) {
+    return m_spectra[i];
   }
   const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum(int i = 0) {
     return m_rebinnedSpectra[i];
@@ -161,6 +161,9 @@ public:
     m_spectra.push_back(spectrum);
     m_constSpectra.push_back(spectrum);
   }
+
+  void addFullSpectrum(const std::shared_ptr<CFullSpectrum> &spectrum);
+
   bool CalzettiInitFailed() const { return !bool(m_ismCorrectionCalzetti); }
 
   bool MeiksinInitFailed() const { return !bool(m_igmCorrectionMeiksin); }
@@ -217,8 +220,13 @@ private:
   friend class inputContext_test::OrthogonalizeTemplates_test;
 
   std::vector<std::shared_ptr<CSpectrum>> m_spectra;
+  std::vector<std::shared_ptr<CFullSpectrum>> m_fullSpectra;
+
+  std::vector<std::shared_ptr<CFullSpectrum>> m_rebinnedFullSpectra;
   std::vector<std::shared_ptr<CSpectrum>> m_rebinnedSpectra;
+
   std::vector<std::shared_ptr<const CSpectrum>> m_constSpectra;
+  std::vector<std::shared_ptr<const CFullSpectrum>> m_constRebinnedFullSpectra;
   std::vector<std::shared_ptr<const CSpectrum>> m_constRebinnedSpectra;
 
   std::vector<std::shared_ptr<TFloat64Range>> m_lambdaRanges;
@@ -241,6 +249,10 @@ private:
 
   void OrthogonalizeTemplates();
   void RebinInputs();
+  void addRebinFullSpectrum(const std::shared_ptr<CFullSpectrum> &spectrum) {
+    m_rebinnedFullSpectra.push_back(spectrum);
+    m_constRebinnedFullSpectra.push_back(spectrum);
+  }
   void addRebinSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
     m_rebinnedSpectra.push_back(spectrum);
     m_constRebinnedSpectra.push_back(spectrum);
