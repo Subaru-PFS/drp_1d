@@ -94,11 +94,10 @@ class SkLearnSolve(AbstractReliabilitySolver):
 
         v = np.ndarray([len(col_used)])
         idx = 0 
-        for k,att in enumerate(attributes.items()):
+        for k,att in attributes.items():
             if k in col_used and att!="":
                 v[idx] =  output.get_attribute_short(self.object_type, att)
                 idx += 1
-            
         ret = dict()
         probas = classifier.predict_proba(v.reshape(1,-1))
         for i,c in enumerate(classes):
