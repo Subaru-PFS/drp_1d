@@ -96,7 +96,8 @@ class SkLearnSolve(AbstractReliabilitySolver):
         idx = 0 
         for k,att in attributes.items():
             if k in col_used and att!="":
-                v[idx] =  output.get_attribute_short(self.object_type, att)
+                # v[idx] = output.get_attribute_short(self.object_type, att)
+                v[idx] = output.get_attribute(self.object_type, "model_parameters", att, None)
                 idx += 1
         ret = dict()
         probas = classifier.predict_proba(v.reshape(1,-1))
