@@ -37,7 +37,6 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include <cstdarg>
-#include <iostream>
 
 #include <boost/format.hpp>
 

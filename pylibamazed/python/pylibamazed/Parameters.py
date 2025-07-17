@@ -172,7 +172,7 @@ class Parameters(ParametersAccessor):
         elif stage == "subClassifSolver":
             return self.is_tplratio_catalog_needed(spectrum_model)
         else:
-            raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown stage {stage}")
+            raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Unknown stage {stage}")
 
     def is_two_pass_active(self, spectrum_model):
         solve_method = self.get_redshift_solver_method(spectrum_model)

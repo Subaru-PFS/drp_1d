@@ -38,10 +38,12 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/LSFVariableWidth.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
-#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
+
 using namespace NSEpic;
 using namespace std;
 
@@ -52,8 +54,7 @@ CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(
     : CLSF(GaussianVariableWidth,
            std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
       m_width(args->width), m_spcAxis(args->lambdas) {
-  if (!IsValid())
-    THROWG(ErrorCode::INVALID_LSF, "invalid LSF");
+  ASSERT_lsf_IS_VALID(*this);
 }
 
 Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
@@ -64,7 +65,9 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
 
   if (!checkAvailability(lambda))
     THROWG(ErrorCode::INSUFFICIENT_LSF_COVERAGE,
-           " lambda outside spectralAxis range");
+           Formatter() << " lambda = " << lambda
+                       << "outside spectralAxis range [" << m_spcAxis[0] << ", "
+                       << m_spcAxis[m_width.size() - 1] << "]");
 
   Int32 idx = undefIdx;
   TFloat64Index::getClosestLowerIndex(m_spcAxis.GetSamplesVector(), lambda,
@@ -78,17 +81,23 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
   return m_width[idx] * (1 - t) + m_width[idx + 1] * t;
 }
 
-bool CLSFGaussianVariableWidth::IsValid() const {
+std::pair<bool, std::string> CLSFGaussianVariableWidth::IsValid() const {
+  bool valid = true;
+  std::string message = "";
   if (!m_width.size()) {
-    THROWG(ErrorCode::BAD_COUNTMATCH, "Width array cannot be null ");
+    message = "Width array cannot be null";
+    valid = false;
   }
   if (m_spcAxis.GetSamplesCount() != ssize(m_width)) {
-    THROWG(ErrorCode::BAD_COUNTMATCH,
-           "Sizes do not match between Spectral axis "
-           "and width axis");
+    message = Formatter() << "Sizes do not match between Spectral axis ("
+                          << m_spcAxis.GetSamplesCount() << ") and width axis ("
+                          << ssize(m_width) << ")";
+    valid = false;
   }
   for (Float64 w : m_width)
-    if (w <= 0.)
-      return false;
-  return true;
+    if (w <= 0.) {
+      message = Formatter() << "invalid LSF, width=" << w << " <= 0";
+      valid = false;
+    }
+  return std::make_pair(valid, message);
 }

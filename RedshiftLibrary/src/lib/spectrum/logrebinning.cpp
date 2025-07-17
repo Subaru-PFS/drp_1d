@@ -249,7 +249,12 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
   if (!overlapFull) {
     THROWG(ErrorCode::INSUFFICIENT_TEMPLATE_COVERAGE,
            Formatter() << "overlap found to be lower than 1.0 for template "
-                       << tpl->GetName());
+                       << tpl->GetName() << ". lambda range tpl: ["
+                       << lambdaRange_tpl.GetBegin() << ", "
+                       << lambdaRange_tpl.GetEnd() << "], spectral axis ["
+                       << tpl->GetSpectralAxis()[0] << ", "
+                       << tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1]
+                       << "]");
   }
 
   const CSpectrumSpectralAxis targetSpectralAxis =

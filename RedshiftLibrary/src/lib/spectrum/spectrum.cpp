@@ -111,11 +111,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
       m_SpectralAxis(std::move(spectralAxis)),
       m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))),
       m_RawFluxAxis(std::move(fluxAxis)) {
-  if (!IsValid()) {
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes, non-matching size "
-           "or unsorted spectral axis");
-  }
+  ASSERT_CSpectrum_IS_VALID(*this);
 }
 
 // copy constructor
@@ -132,11 +128,7 @@ CSpectrum::CSpectrum(const CSpectrum &other)
       m_RawFluxAxis(other.m_RawFluxAxis),
       m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
       m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis) {
-  if (!IsValid()) {
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes, non-matching size "
-           "or unsorted spectral axis");
-  }
+  ASSERT_CSpectrum_IS_VALID(*this);
 }
 
 CSpectrum::CSpectrum(CSpectrum &&other)
@@ -152,11 +144,7 @@ CSpectrum::CSpectrum(CSpectrum &&other)
       m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
       m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
       m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)) {
-  if (!IsValid()) {
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes, non-matching size "
-           "or unsorted spectral axis");
-  }
+  ASSERT_CSpectrum_IS_VALID(*this);
 }
 
 CSpectrum::~CSpectrum() {}
@@ -265,10 +253,7 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
 }
 
 void CSpectrum::InitSpectrumContinuum(CParameterStore &parameterStore) {
-  if (!IsValid())
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes, non-matching size "
-           "or unsorted spectral axis");
+  ASSERT_CSpectrum_IS_VALID(*this);
 
   Float64 smoothWidth = parameterStore.Get<Float64>("smoothWidth");
   std::string medianRemovalMethod =
@@ -534,10 +519,7 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
 
 bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                                 Float64 coeffCorr) {
-  if (!IsValid())
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes, non-matching size "
-           "or unsorted spectral axis");
+  ASSERT_CSpectrum_IS_VALID(*this);
 
   Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
   Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
@@ -630,10 +612,7 @@ void CSpectrum::Rebin(const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CSpectrum &rebinedSpectrum, CMask &rebinedMask,
                       const std::string &opt_error_interp) const {
-  if (!IsValid())
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes, non-matching size "
-           "or unsorted spectral axis");
+  ASSERT_CSpectrum_IS_VALID(*this);
 
   m_rebin->compute(range, targetSpectralAxis, rebinedSpectrum, rebinedMask,
                    opt_error_interp);
@@ -651,10 +630,7 @@ void CSpectrum::ApplyAmplitude(Float64 amplitude) {
 void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
                                  bool enableInputSpcCorrect,
                                  const Int32 &nbSamplesMin) {
-  if (!IsValid())
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes or non-matching "
-           "size or unsorted spectral axis");
+  ASSERT_CSpectrum_IS_VALID(*this);
 
   TFloat64Range clampedlambdaRange;
   m_SpectralAxis.ClampLambdaRange(lambdaRange, clampedlambdaRange);
@@ -735,4 +711,23 @@ std::pair<Float64, Float64> CSpectrum::integrateFluxes_usingTrapez(
     }
   }
   return std::make_pair(sumFlux, sumErr);
+}
+
+std::pair<bool, std::string> CSpectrum::IsValid() const {
+  bool isValid = true;
+  std::string message = "Invalid spectrum : ";
+  if (m_SpectralAxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount()) {
+    isValid = false;
+    message += "spectral and flux axis have different sizes";
+  } else if (IsEmpty()) {
+    isValid = false;
+    message += "empty";
+  } else if (!m_SpectralAxis.isSorted()) {
+    isValid = false;
+    message += " not sorted";
+  } else {
+    message = "";
+  };
+
+  return std::make_pair(isValid, message);
 }

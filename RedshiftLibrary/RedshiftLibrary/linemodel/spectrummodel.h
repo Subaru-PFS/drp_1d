@@ -167,12 +167,12 @@ public:
   void push_back(const CSpectrumModel &model) { m_models.push_back(model); }
 
   CSpectrumModel &getSpectrumModel() {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return m_models.at(m_spectraIndex.get());
   }
 
   const CSpectrumModel &getSpectrumModel() const {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return m_models.at(m_spectraIndex.get());
   }
 

@@ -63,7 +63,7 @@ def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
         return None
     if parameters.get_skipsecondpass(method, spectrum_model, False):
         raise APIException(
-            ErrorCode.PYTHON_API_ERROR, "get_final_regular_z_grid cannot be called with skipSecondPass"
+            ErrorCode.IE_INVALID_PARAMETER, "get_final_regular_z_grid cannot be called with skipSecondPass"
         )
 
     p_redshift_range = parameters.get_redshiftrange(spectrum_model)

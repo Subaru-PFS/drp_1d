@@ -124,8 +124,9 @@ Float64 CDeltaz::Compute(const TFloat64List &merits,
   }
   c0 = sum / sum2;
   if (c0 <= 0)
-    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
-                                             << "impossible to compute sigma");
+
+    THROWG(ErrorCode::IE_DZ_NOT_COMPUTABLE,
+           Formatter() << "impossible to compute sigma");
 
   sigma = sqrt(1.0 / c0);
   return sigma;
@@ -144,8 +145,9 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
 
   Int32 n = izmax - izmin + 1;
   if (n < 3)
-    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
-                                             << "impossible to compute sigma");
+
+    THROWG(ErrorCode::IE_DZ_NOT_COMPUTABLE,
+           Formatter() << "impossible to compute sigma");
 
   X = gsl_matrix_alloc(n, 3);
   y = gsl_vector_alloc(n);
@@ -211,7 +213,7 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // results.SigmaZ[indz] = sigma;
   // results.LogAreaCorrectedExtrema[indz] = zcorr;
   if (c2 <= 0)
-    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
-                                             << "impossible to compute sigma");
+    THROWG(ErrorCode::IE_DZ_NOT_COMPUTABLE,
+           Formatter() << "impossible to compute sigma");
   return sigma;
 }

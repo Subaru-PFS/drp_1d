@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/method/solveresult.h"
 
 namespace NSEpic {

@@ -41,7 +41,9 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/processflow/result.h"
+
 namespace NSEpic {
 
 /**

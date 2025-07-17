@@ -120,9 +120,11 @@ std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
   if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(std::move(*this)));
 
-  THROWG(ErrorCode::INVALID_PARAMETER,
-         "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolver.interpolation");
+  THROWG(
+      ErrorCode::IE_INVALID_PARAMETER,
+      Formatter() << "Unsupported value : " << opt_interp
+                  << " Only {lin, precomputedfinegrid, ngp, spline} values are "
+                     "supported for TemplateFittingSolver.interpolation");
 }
 
 std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
@@ -136,7 +138,9 @@ std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
   if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(spectrum));
 
-  THROWG(ErrorCode::INVALID_PARAMETER,
-         "Only {lin, precomputedfinegrid, ngp, spline} values are "
-         "supported for TemplateFittingSolver.interpolation");
+  THROWG(
+      ErrorCode::IE_INVALID_PARAMETER,
+      Formatter() << "Unsupported value : " << opt_interp
+                  << " Only {lin, precomputedfinegrid, ngp, spline} values are "
+                     "supported for TemplateFittingSolver.interpolation");
 }

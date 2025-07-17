@@ -298,7 +298,7 @@ public:
                                    const T &value, Int32 &i_min,
                                    Int32 &i_max) const {
     if (value < m_Begin || value > m_End) {
-      THROWG(ErrorCode::CRANGE_VALUE_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VALUE_OUTSIDERANGE,
              Formatter() << "Value " << value << " not inside ]" << m_Begin
                          << "," << m_End << "[");
     }
@@ -308,7 +308,7 @@ public:
     }
 
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
-      THROWG(ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
              Formatter() << "]" << m_Begin << "," << m_End
                          << "[ not inside ordered_values");
     }
@@ -333,7 +333,7 @@ public:
       THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
     }
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
-      THROWG(ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
              Formatter() << "]" << m_Begin << "," << m_End
                          << "[ not inside ordered_values");
     }
@@ -358,7 +358,7 @@ public:
       THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
     }
     if (m_End < ordered_values.front() || m_Begin > ordered_values.back()) {
-      THROWG(ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
              Formatter() << "]" << m_Begin << "," << m_End
                          << "[ not inside ordered_values");
     }
@@ -376,7 +376,7 @@ public:
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
     if (i_min > i_max) {
-      THROWG(ErrorCode::CRANGE_NO_INTERSECTION,
+      THROWG(ErrorCode::IE_CRANGE_NO_INTERSECTION,
              Formatter() << "There is no sample inside range (min,max indices=["
                          << i_min << "," << i_max << "]");
     }

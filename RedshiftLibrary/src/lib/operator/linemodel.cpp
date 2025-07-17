@@ -1470,8 +1470,7 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 zStep,
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  m_opt_continuumcomponent =
-      ps->GetScoped<std::string>("continuumComponent");
+  m_opt_continuumcomponent = ps->GetScoped<std::string>("continuumComponent");
 
   // below should be part of constructor
   m_redshifts = redshifts;
@@ -1489,8 +1488,7 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 zStep,
   //
   if (m_opt_continuumcomponent.isContinuumFit()) {
 
-    m_opt_fitcontinuum_maxN =
-        ps->GetScoped<Int32>("continuumFit.count");
+    m_opt_fitcontinuum_maxN = ps->GetScoped<Int32>("continuumFit.count");
     if (m_opt_continuumcomponent.isPowerLawXXX()) {
       m_opt_fitcontinuum_maxN = 1;
     }
@@ -1504,11 +1502,9 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 zStep,
         m_opt_tplfit_fftprocessing; // TODO add a real parameter or remove
                                     // this member
     if (ps->HasScoped<bool>("enablePhotometry"))
-      m_opt_tplfit_use_photometry =
-          ps->GetScoped<bool>("enablePhotometry");
+      m_opt_tplfit_use_photometry = ps->GetScoped<bool>("enablePhotometry");
     m_opt_tplfit_dustFit = ps->GetScoped<bool>("continuumFit.ismFit");
-    m_opt_tplfit_extinction =
-        ps->GetScoped<bool>("continuumFit.igmFit");
+    m_opt_tplfit_extinction = ps->GetScoped<bool>("continuumFit.igmFit");
 
     m_opt_tplfit_ignoreLinesSupport =
         ps->GetScoped<bool>("continuumFit.ignoreLineSupport");
@@ -1697,13 +1693,17 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       inputContext->GetParameterStore();
   if (params->GetScoped<bool>("velocityFit") &&
       params->GetScoped<std::string>("fittingMethod") != "lbfgsb")
-    THROWG(ErrorCode::INVALID_PARAMETER,
-           "velocityFit implemented only for lbfgsb ftting method");
+    THROWG(ErrorCode::IE_INVALID_PARAMETER,
+           Formatter() << "velocityFit implemented only for lbfgsb ftting "
+                          "method, but fitting method is "
+                       << params->GetScoped<std::string>("fittingMethod"));
 
   Int32 amplitudeOffsetsDegree = params->GetScoped<Int32>("polynomialDegree");
   if (amplitudeOffsetsDegree < 0 || amplitudeOffsetsDegree > 2)
-    THROWG(ErrorCode::INVALID_PARAMETER, "the polynomial degree "
-                                         "parameter should be between 0 and 2");
+    THROWG(ErrorCode::IE_INVALID_PARAMETER,
+           Formatter() << "the polynomial degree "
+                          "parameter should be between 0 and 2, but is "
+                       << amplitudeOffsetsDegree);
 
   makeContinuumFittingOperator(m_redshifts);
 

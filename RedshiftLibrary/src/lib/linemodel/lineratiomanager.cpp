@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
@@ -312,9 +313,11 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
                       continuumManager, restLineList, spcIndex));
   else
-    THROWG(ErrorCode::INVALID_PARAMETER,
-           "Only {tplratio, rules, tpcorr} values are "
-           "supported for linemodel.lineRatioType");
+    THROWG(ErrorCode::IE_INVALID_PARAMETER,
+           Formatter()
+               << "Only {tplratio, rules, tpcorr} values are "
+                  "supported for linemodel.lineRatioType. Parameter value is: "
+               << lineRatioType);
   ret->setFitter(fitter);
 
   return ret;

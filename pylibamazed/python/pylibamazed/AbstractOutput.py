@@ -158,6 +158,7 @@ class AbstractOutput(metaclass=ABCMeta):
             self._load_candidate_level(object_type)
         self.cache = True
 
+    @doc_method
     def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
         return self._get_attribute_short(attribute, lines_ids, pdf_builder)
 
@@ -228,7 +229,7 @@ class AbstractOutput(metaclass=ABCMeta):
                 col_name = attr_name
                 if line_name not in lines_ids:
                     raise APIException(
-                        ErrorCode.INTERNAL_ERROR, f"Line {line_name}  not found in {lines_ids}"
+                        ErrorCode.LINE_NOT_FOUND, f"Line {line_name}  not found in {lines_ids}"
                     )
                 if dataset == "linemeas":
                     index_col = "LinemeasLineID"
@@ -339,7 +340,7 @@ class AbstractOutput(metaclass=ABCMeta):
                     return 0
                 first_attr = next(iter(self.object_results[object_type][dataset].values()))
             else:
-                raise APIException(ErrorCode.INTERNAL_ERROR, "Dataset " + dataset + " does not exist")
+                raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Dataset " + dataset + " does not exist")
         else:
             if len(self.object_results[object_type][dataset][rank]):
                 first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
@@ -369,7 +370,7 @@ class AbstractOutput(metaclass=ABCMeta):
                     datasets.append(d)
             return datasets
         else:
-            raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown level " + level)
+            raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Unknown level " + level)
 
     @doc_method
     def get_candidate_data(self, object_type, rank, data_name):

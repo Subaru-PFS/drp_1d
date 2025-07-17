@@ -50,7 +50,7 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
       m_photBandCat(photbandcat) {
 
   if (m_spectra.size() > 1)
-    THROWG(ErrorCode::MULTIOBS_WITH_PHOTOMETRY_NOTIMPLEMENTED,
+    THROWG(ErrorCode::IE_MULTIOBS_WITH_PHOTOMETRY_NOTIMPLEMENTED,
            "Photometry not supported with multiobs");
   // check availability and coherence of photometric bands & data
   checkInputPhotometry();
@@ -127,10 +127,7 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(const CTemplate &tpl,
         photSpectralAxis_restframe.IntersectMaskAndComputeOverlapFraction(
             lambdaRange_restframe, mskRebined);
 
-    if (overlapFraction < 1.0) {
-      THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
-             Formatter() << "tpl overlap too small: " << overlapFraction);
-    }
+    checkTemplateOverlap(overlapFraction, 1.0);
   }
 }
 

@@ -38,6 +38,7 @@
 // ============================================================================
 #include <boost/range/combine.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
@@ -153,11 +154,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
                         .IntersectMaskAndComputeOverlapFraction(
                             lambdaRange_restframe, m_mskRebined_bf[spcIndex]);
 
-  // Check for overlap rate
-  if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-    THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
-           Formatter() << "tpl overlap rate is too small: " << overlapFraction);
-  }
+  checkTemplateOverlap(overlapFraction, overlapThreshold);
 
   // the spectral axis should be in the same scale
   currentRange = intersectedLambdaRange;

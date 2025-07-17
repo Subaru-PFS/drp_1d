@@ -244,7 +244,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         if not self.parameters.get_multiobs_method():
             # Add check names if multiobs type is null
             if list(self._get_observation_ids()) != [""]:
-                raise APIException(ErrorCode.INVALID_NAME, "Non multi obs observations cannot be named")
+                raise APIException(ErrorCode.INVALID_SPECTRUM, "Non multi obs observations cannot be named")
 
         self._merge_spectrum_in_dataframe()
 
