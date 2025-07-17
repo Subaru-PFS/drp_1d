@@ -185,7 +185,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return self._get_attribute(root, "warningFlag", attr_name)
         elif root == "perfs":
             if attr_parts[1] == "init":
-                return self.get_perfs(None, "init")[attr_parts[2]]
+                perf = attr_parts[2]
+                return self.get_perfs(None, "init")[perf].at[0, perf]
             else:
                 spectrum_model = attr_parts[1]
                 stage = attr_parts[2]
@@ -193,7 +194,7 @@ class AbstractOutput(metaclass=ABCMeta):
                 if len(attr_parts) == 5:
                     mode = attr_parts[3]
                 perf = attr_parts[-1]
-                return self.get_perfs(spectrum_model, stage, mode)[perf]
+                return self.get_perfs(spectrum_model, stage, mode)[perf].at[0, perf]
         else:
             object_type = root
             LINES_DATASETS = ["linemeas", "fitted_lines"]
@@ -395,6 +396,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return 0
 
     def get_level(self, dataset):
+        if dataset == "objectInfo":
+            return "root"
         if dataset.startswith("reliability"):
             return "object"
         dataset_entries = self.results_specifications.get_df_by_dataset(dataset)
