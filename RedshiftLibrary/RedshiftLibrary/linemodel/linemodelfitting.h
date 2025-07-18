@@ -106,7 +106,7 @@ public:
   void SetFittingMethod(const std::string &fitMethod,
                         bool enableAmplitudeOffsets = false,
                         bool enableLambdaOffsetsFit = false);
-  void setLineRatioType(CLineRatioManager::EType lineratio);
+  void setLineRatioManager(CLineRatioManager::EType lineratio);
   void SetAbsLinesLimit(Float64 limit);
 
   CMask getOutsideLinesMask() const;

@@ -94,7 +94,7 @@ CLineModelFitting::CLineModelFitting(
   auto const &lineRatioType = CLineRatioManager::stringToType.at(
       Context.GetParameterStore()->GetScoped<std::string>("lineRatioType"));
   initMembers(continuumFittingOperator, lineRatioType, element_composition);
-  setLineRatioType(lineRatioType);
+  setLineRatioManager(lineRatioType);
   if (isLineRatioRules())
     dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
 }
@@ -117,7 +117,7 @@ CLineModelFitting::CLineModelFitting(
   initMembers(continuumFittingOperator, lineRatioType,
               ElementComposition::Default);
   // temporary options override to be removed when full tpl ortho is implemented
-  setLineRatioType(lineRatioType);
+  setLineRatioManager(lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
   setContinuumComponent(TContinuumComponent("fromSpectrum"));
@@ -477,7 +477,7 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
   m_models->setEnableAmplitudeOffsets(enableAmplitudeOffsets);
 }
 
-void CLineModelFitting::setLineRatioType(
+void CLineModelFitting::setLineRatioManager(
     CLineRatioManager::EType lineRatioType) {
   m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
       lineRatioType, m_ElementsVector, m_models, m_inputSpcs, m_lambdaRanges,
