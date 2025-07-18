@@ -48,7 +48,7 @@ using namespace std;
 
 // make a wrapper for this ?
 CSpectrumModel::CSpectrumModel(
-    const std::shared_ptr<CLineModelElementList> &elements,
+    const CLineModelElementList &elements,
     const std::shared_ptr<const CSpectrum> &spc, const CLineMap &restLineList,
     const std::shared_ptr<CContinuumModelSolution> &continuumModelSolution,
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
@@ -92,8 +92,8 @@ void CSpectrumModel::reinitModelUnderElements(const TInt32List &filterEltsIdx,
   CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
   // init spectrum model with continuum
   for (Int32 iElts : filterEltsIdx)
-    (*m_Elements)[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis,
-                                            lineIdx);
+    m_Elements[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis,
+                                         lineIdx);
   m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
 }
 
@@ -104,19 +104,19 @@ void CSpectrumModel::refreshModel(CLine::EType lineTypeFilter) {
 
   if (m_enableAmplitudeOffsets) {
     // add amplitude offsets
-    m_Elements->addToSpectrumAmplitudeOffset(m_SpectrumModel.GetSpectralAxis(),
-                                             modelFluxAxis);
+    m_Elements.addToSpectrumAmplitudeOffset(m_SpectrumModel.GetSpectralAxis(),
+                                            modelFluxAxis);
   }
 
   // create spectrum model
-  Int32 nElements = m_Elements->size();
+  Int32 nElements = m_Elements.size();
   for (Int32 iElts = 0; iElts < nElements; iElts++) {
     auto const lineType =
-        (*m_Elements)[iElts]->getElementParam()->GetElementType();
+        m_Elements[iElts]->getElementParam()->GetElementType();
     if (lineTypeFilter == CLine::EType::nType_All ||
         lineTypeFilter == lineType) {
-      (*m_Elements)[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis,
-                                               m_ContinuumFluxAxis, m_Redshift);
+      m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis,
+                                            m_ContinuumFluxAxis, m_Redshift);
     }
   }
 
@@ -134,7 +134,7 @@ void CSpectrumModel::refreshModelUnderElements(const TInt32List &filterEltsIdx,
   CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
   // create spectrum model
   for (Int32 iElts : filterEltsIdx)
-    (*m_Elements)[iElts]->addToSpectrumModel(
+    m_Elements[iElts]->addToSpectrumModel(
         spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift, lineIdx);
 
   m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
@@ -216,8 +216,8 @@ CSpectrum CSpectrumModel::GetObservedSpectrumWithLinesRemoved(
   Float64 alphaMax = 0.9; // alpha blend = 0: only lineSubtractedFlux,
                           // alpha=1: only continuum
   TInt32List nonZeroValidEltsIdx =
-      m_Elements->getNonZeroElementIndices(lineTypeFilter);
-  TInt32List supportIdxes = m_Elements->getSupportIndexes(nonZeroValidEltsIdx);
+      m_Elements.getNonZeroElementIndices(lineTypeFilter);
+  TInt32List supportIdxes = m_Elements.getSupportIndexes(nonZeroValidEltsIdx);
   if (supportIdxes.size() > 0) {
     for (Int32 idx : supportIdxes) {
       Float64 weighting =
@@ -240,7 +240,7 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
   Float64 currentLbda = spectralAxis[sampleIndex];
 
   for (const Int32 iElts : EltsIdx) {
-    for (const auto &range : (*m_Elements)[iElts]->getTheoreticalSupport()) {
+    for (const auto &range : m_Elements[iElts]->getTheoreticalSupport()) {
       if (sampleIndex <= range.GetBegin() || sampleIndex >= range.GetEnd())
         continue;
 
@@ -267,7 +267,7 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
 std::pair<TInt32Range, TFloat64List>
 CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
                                        Float64 redshift) const {
-  auto const &elt = (*m_Elements)[eIdx];
+  auto const &elt = m_Elements[eIdx];
   auto const &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
   auto const &profile = elt->getElementParam()->getLineProfile(line_id);
@@ -349,7 +349,7 @@ CSpectrumModel::getContinuumSquaredResidualInRange(
   Float64 nsum = 0;
   Float64 nsum2 = 0.0;
   TInt32List nonZeroValidEltsIdx =
-      m_Elements->getNonZeroElementIndices(CLine::EType::nType_All);
+      m_Elements.getNonZeroElementIndices(CLine::EType::nType_All);
   for (Int32 t = indexRange.GetBegin(); t <= indexRange.GetEnd(); t++) {
     Float64 weight =
         1.0 - GetWeightingAnyLineCenterProximity(t, nonZeroValidEltsIdx);
@@ -367,7 +367,7 @@ Float64 CSpectrumModel::getMaxContinuumUnderElement(Int32 eIdx) const {
 
   // TODO add ampoffset polynomial ?
 
-  TInt32List xInds = m_Elements->getSupportIndexes({eIdx});
+  TInt32List xInds = m_Elements.getSupportIndexes({eIdx});
   if (xInds.empty())
     return -INFINITY;
   return *std::max_element(xInds.begin(), xInds.end(),
@@ -406,7 +406,7 @@ CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
   Float64 diff = 0.0;
   Float64 sumErr = 0.0;
 
-  TInt32List xInds = m_Elements->getSupportIndexes(EltsIdx);
+  TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
   for (Int32 const j : xInds) {
     diff = (Yspc[j] - Ymodel[j]);
     Float64 const w = with_weight ? 1.0 / (error[j] * error[j]) : 1.0;
@@ -495,7 +495,7 @@ std::pair<Float64, Float64> CSpectrumModel::getFluxDirectIntegration(
   Int32 nlines = eIdx_list.size();
   if (nlines != ssize(subeIdx_list))
     THROWG(ErrorCode::INTERNAL_ERROR, " index sizes do not match");
-  TInt32RangeList indexRangeList = m_Elements->getlambdaIndexesUnderLines(
+  TInt32RangeList indexRangeList = m_Elements.getlambdaIndexesUnderLines(
       eIdx_list, subeIdx_list, N_SIGMA_SUPPORT_DI, spectralAxis, lambdaRange,
       m_Redshift);
 
@@ -535,8 +535,8 @@ CSpectrumModel::getContinuumUnderLines(const TInt32RangeList &indexRangeList,
   CSpectrumFluxAxis ampOffsetModelFlux;
   if (m_enableAmplitudeOffsets) {
     ampOffsetModelFlux = CSpectrumFluxAxis(spectralAxis.GetSamplesCount());
-    m_Elements->addToSpectrumAmplitudeOffset(spectralAxis, ampOffsetModelFlux,
-                                             eIdx_list);
+    m_Elements.addToSpectrumAmplitudeOffset(spectralAxis, ampOffsetModelFlux,
+                                            eIdx_list);
   }
 
   // compute continuum
@@ -562,7 +562,7 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
 
   auto isElementInvalid = [this](Int32 eIdx, Int32 line_index) {
     return eIdx < 0 || line_index < 0 ||
-           (*m_Elements)[eIdx]->IsOutsideLambdaRangeLine(line_index);
+           m_Elements[eIdx]->IsOutsideLambdaRangeLine(line_index);
   };
 
   const auto lineList = {linetags::halpha_em,   linetags::oIIIa_em,
@@ -599,13 +599,12 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
     if (!isEmission)
       continue;
 
-    auto const &[eIdx, line_index] = m_Elements->findElementIndex(line_id);
+    auto const &[eIdx, line_index] = m_Elements.findElementIndex(line_id);
     if (isElementInvalid(eIdx, line_index))
       continue;
 
-    auto const &[mu, sigma] =
-        (*m_Elements)[eIdx]->getObservedPositionAndLineWidth(m_Redshift,
-                                                             line_index, false);
+    auto const &[mu, sigma] = m_Elements[eIdx]->getObservedPositionAndLineWidth(
+        m_Redshift, line_index, false);
     Float64 fluxDI = NAN;
     Float64 snrDI = NAN;
     TInt32List eIdx_line(1, eIdx);
@@ -647,9 +646,9 @@ CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   CSpectrumFluxAxis modelfluxAxis(spectralAxis.GetSamplesCount());
 
-  Int32 nElements = m_Elements->size();
+  Int32 nElements = m_Elements.size();
   for (Int32 eIdx : eIdx_list) {
-    const auto &elt = (*m_Elements)[eIdx];
+    const auto &elt = m_Elements[eIdx];
     elt->initSpectrumModel(modelfluxAxis, getContinuumFluxAxis());
 
     auto const lineType = elt->getElementParam()->GetElementType();

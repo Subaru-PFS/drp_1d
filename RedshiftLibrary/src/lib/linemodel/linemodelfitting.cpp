@@ -161,11 +161,8 @@ void CLineModelFitting::initMembers(
                               << std::fixed << std::setprecision(2)
                               << getSpectrum().GetMedianWinsize() << " A");
     m_models->push_back(CSpectrumModel(
-        std::make_shared<CLineModelElementList>(
-            getElementList()), // NB on pourrait enlever ce shared ptr pour en
-                               // faire directement un CLineModelElementList
-        getSpectrumPtr(), m_RestLineList, m_continuumFitValues,
-        continuumFittingOperator, m_spectraIndex.get()));
+        getElementList(), getSpectrumPtr(), m_RestLineList,
+        m_continuumFitValues, continuumFittingOperator, m_spectraIndex.get()));
   }
 
   m_continuumManager = std::make_shared<CContinuumManager>(
@@ -181,15 +178,13 @@ void CLineModelFitting::reloadFor2ndPass(
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
     const ElementComposition &element_composition) {
 
-  // TODO : faire + propre => get it from lineratiomanager for instance
   m_pass = 2;
   auto const &lineRatioType = m_lineRatioManager->getStrictType();
 
   setElementsVector(lineRatioType, element_composition);
 
   for (auto &spcIndex : m_spectraIndex) {
-    m_models->setModelsElements(std::make_shared<CLineModelElementList>(
-        m_ElementsVector->getElementList()));
+    m_models->setModelsElements(m_ElementsVector->getElementList());
   }
 
   // Updates fitting method to hybrid for line ratio
