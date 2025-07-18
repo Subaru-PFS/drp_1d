@@ -257,8 +257,8 @@ void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
   m_fineLambdaSize = finelbdaGrid.size();
 
   // std::vector<MeiksinCorrection> corrections(m_rawCorrections.size());
+  m_corrections.clear();
   m_corrections.resize(m_rawCorrections.size());
-
   for (std::size_t i = 0; i < m_rawCorrections.size(); i++) {
     // z_center = (m_zbins[i + 1] + m_zbins[i]) / 2.;
     TFloat64Range zbin(m_zbins[i], m_zbins[i + 1]);
