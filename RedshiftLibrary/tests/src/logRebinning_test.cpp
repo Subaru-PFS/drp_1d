@@ -101,22 +101,28 @@ BOOST_FIXTURE_TEST_SUITE(LogRebinning_test, fixture_logRebinningTest)
 Float64 precision = 1e-12;
 
 BOOST_AUTO_TEST_CASE(Constructor_test) {
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
   BOOST_CHECK(logRebinning.m_logGridStep == ctx_logSampled->m_logGridStep);
 
-  CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled);
+  CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled,
+                                           *ctx_logSampled->GetFullSpectrum(),
+                                           *ctx_logSampled->getLambdaRange());
   BOOST_CHECK(logRebinningNotLog.m_logGridStep ==
               ctx_notLogSampled->m_logGridStep);
 }
 
 BOOST_AUTO_TEST_CASE(setupRebinning_test) {
   // use context just for create CSpectrumLogRebinning object
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
 
   // logSampled spectrum
   CSpectrumAxis lbdaAxis({exp(2), exp(3), exp(4)});
   CSpectrumFluxAxis fluxAxis({0, 0, 0});
-  CSpectrum spc_1(lbdaAxis, fluxAxis);
+  CFullSpectrum spc_1(lbdaAxis, fluxAxis);
   TFloat64Range lbdaRange(exp(3), exp(6));
 
   logRebinning.m_logGridStep = 0.1;
@@ -158,7 +164,9 @@ BOOST_AUTO_TEST_CASE(setupRebinning_test) {
 
 BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
   // use context just for create CSpectrumLogRebinning object
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
 
   TFloat64Range lbdaRange(1, 10000);
   TFloat64List tgtRef = lbdaRange.SpreadOverLogEpsilon(1.);
@@ -176,19 +184,23 @@ BOOST_AUTO_TEST_CASE(computeTargetLogSpectralAxis_test) {
 
 BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
   // create logSampled spectrum
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
 
-  BOOST_CHECK_THROW(
-      logRebinning.loglambdaRebinSpectrum(*ctx_logSampled->GetSpectrum(), "no"),
-      AmzException);
+  BOOST_CHECK_THROW(logRebinning.loglambdaRebinSpectrum(
+                        *ctx_logSampled->GetFullSpectrum(), "no"),
+                    AmzException);
 
   // create not logSampled spectrum
-  CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled);
+  CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled,
+                                           *ctx_logSampled->GetFullSpectrum(),
+                                           *ctx_logSampled->getLambdaRange());
   ctx_notLogSampled->GetSpectrum()->SetName("spc_notLog");
 
   std::shared_ptr<CSpectrum> spcLogRebinning =
       logRebinningNotLog.loglambdaRebinSpectrum(
-          *ctx_notLogSampled->GetSpectrum(), "no");
+          *ctx_notLogSampled->GetFullSpectrum(), "no");
   BOOST_CHECK(spcLogRebinning->GetName() == "spc_notLog");
   BOOST_CHECK(spcLogRebinning->GetSpectralAxis().IsLogSampled() == true);
   TFloat64Range lbdaRange(4680.4680234007774, 4711.9324472744638);
@@ -203,13 +215,15 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
       CSpectrumSpectralAxis(TFloat64List{1212, 1212.4, 1213}),
       CSpectrumFluxAxis(TFloat64List{0, 0, 0}));
   BOOST_CHECK_THROW(logRebinningNotLog.loglambdaRebinSpectrum(
-                        *ctx_notLogSampled->GetSpectrum(), "no"),
+                        *ctx_notLogSampled->GetFullSpectrum(), "no"),
                     AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(isRebinningNeeded_test) {
   TFloat64Range lbdaRange(4680.282, 4712.085);
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
   logRebinning.m_logGridStep = 0.8;
 
   // 1st case
@@ -243,7 +257,9 @@ BOOST_AUTO_TEST_CASE(isRebinningNeeded_test) {
 
 BOOST_AUTO_TEST_CASE(checkTemplateAlignment_test) {
   // create logSampled spectrum
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
 
   TFloat64Range lbdaRange(4680.282, 4712.085);
 
@@ -257,7 +273,9 @@ BOOST_AUTO_TEST_CASE(checkTemplateAlignment_test) {
 
 BOOST_AUTO_TEST_CASE(inferTemplateRebinningSetup_test) {
   // create not logSampled spectrum
-  CSpectrumLogRebinning logRebinning(*ctx_notLogSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_notLogSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
 
   TFloat64Range lbdaRange;
   Float64 zmin_new = 0.01;
@@ -283,7 +301,9 @@ BOOST_AUTO_TEST_CASE(inferTemplateRebinningSetup_test) {
 
 BOOST_AUTO_TEST_CASE(loglambdaRebinTemplate_test) {
   // create logSampled spectrum
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
 
   TFloat64Range lbdaRange;
   Float64 zmin_new = 2.84;
@@ -323,7 +343,9 @@ BOOST_AUTO_TEST_CASE(logRebinTemplateCatalog_test) {
   // create logSampled spectrum
   fillCatalog();
   ctx_logSampled->setTemplateCatalog(catalog);
-  CSpectrumLogRebinning logRebinning(*ctx_logSampled);
+  CSpectrumLogRebinning logRebinning(*ctx_logSampled,
+                                     *ctx_logSampled->GetFullSpectrum(),
+                                     *ctx_logSampled->getLambdaRange());
 
   BOOST_CHECK_NO_THROW(logRebinning.logRebinTemplateCatalog("star"));
   BOOST_CHECK_NO_THROW(logRebinning.logRebinTemplateCatalog("galaxy"));

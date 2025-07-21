@@ -77,9 +77,17 @@ public:
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum(int i = 0) const {
     return const_cast<CInputContext *>(this)->GetRebinnedSpectrum(i);
   }
+  std::shared_ptr<const CFullSpectrum> GetFullSpectrum(int i = 0) const {
+    return const_cast<CInputContext *>(this)->getFullSpectra()[i];
+  }
 
   const std::vector<std::shared_ptr<const CSpectrum>> &getSpectra() const {
     return m_constSpectra;
+  }
+
+  const std::vector<std::shared_ptr<const CFullSpectrum>> &
+  getFullSpectra() const {
+    return m_constFullSpectra;
   }
 
   const std::vector<std::shared_ptr<const CFullSpectrum>> &
@@ -228,6 +236,7 @@ private:
   std::vector<std::shared_ptr<const CSpectrum>> m_constSpectra;
   std::vector<std::shared_ptr<const CFullSpectrum>> m_constRebinnedFullSpectra;
   std::vector<std::shared_ptr<const CSpectrum>> m_constRebinnedSpectra;
+  std::vector<std::shared_ptr<const CFullSpectrum>> m_constFullSpectra;
 
   std::vector<std::shared_ptr<TFloat64Range>> m_lambdaRanges;
   std::vector<std::shared_ptr<TFloat64Range>> m_clampedLambdaRanges;

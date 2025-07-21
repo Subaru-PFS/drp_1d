@@ -45,18 +45,12 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
+CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext,
+                                             const CFullSpectrum &spc,
+                                             const TLambdaRange &lambdaRange)
     : m_inputContext(inputContext) {
   m_logGridStep = m_inputContext.getLogGridStep();
-  std::shared_ptr<CSpectrum> spc;
-  if (inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()) {
-    spc =
-        m_inputContext
-            .GetRebinnedSpectrum(); // retrieve the corrected rebinned spectrum
-  } else {
-    spc = m_inputContext.GetSpectrum();
-  }
-  setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
+  setupRebinning(spc, lambdaRange);
 }
 
 /**
@@ -70,8 +64,8 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
  should be modified to use 1+redshiftstep for the common ratio (or construct the
  grid using arithmetic log progression).
 */
-void CSpectrumLogRebinning::setupRebinning(
-    const std::shared<CSpectrum> &spectrum, const TFloat64Range &lambdaRange) {
+void CSpectrumLogRebinning::setupRebinning(const CFullSpectrum &spectrum,
+                                           const TFloat64Range &lambdaRange) {
   if (spectrum.GetSpectralAxis().IsLogSampled(m_logGridStep)) {
     // compute reference lambda range
     // (the effective lambda range of log-sampled spectrum when initial spectrum
@@ -122,8 +116,8 @@ void CSpectrumLogRebinning::setupRebinning(
  *  Rebin the spectrum with the calculated logGridStep if spectrum not already
  * rebinned: step1: construct the spectralAxis step2: do the rebin
  */
-std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
-    CSpectrum const &spectrum, std::string const &errorRebinMethod) const {
+std::shared_ptr<CFullSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
+    CFullSpectrum const &spectrum, std::string const &errorRebinMethod) const {
   TFloat64Range lambdaRange_spc;
   Int32 loglambda_count_spc;
   if (spectrum.GetSpectralAxis().IsLogSampled()) {
@@ -166,7 +160,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
 
   // prepare return rebinned vector
   auto spectrumRebinedLog =
-      make_shared<CSpectrum>(spectrum.GetName(), spectrum.getObsID());
+      make_shared<CFullSpectrum>(spectrum.GetName(), spectrum.getObsID());
   CMask mskRebinedLog;
 
   const CSpectrumSpectralAxis targetSpectralAxis =

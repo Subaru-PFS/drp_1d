@@ -122,14 +122,15 @@ void CInputContext::RebinInputs() {
   Log.LogInfo(Formatter() << "loggrid step=" << m_logGridStep);
   std::string const errorRebinMethod = "rebinVariance";
 
-  for (auto const &[spectrum_ptr, lambdaRange_ptr,
-                    rebinnedClampedLambdaRange_ptr] :
-       boost::combine(m_fullSpectra, m_lambdaRanges,
-                      m_rebinnedClampedLambdaRanges)) {
-    CSpectrumLogRebinning logReb(*this);
+  for (auto const &[spectrum_ptr, lambdaRange_ptr, const_spectrum_ptr,
+                    const_lambdaRange_ptr, rebinnedClampedLambdaRange_ptr] :
+       boost::combine(m_fullSpectra, m_lambdaRanges, m_constFullSpectra,
+                      m_constLambdaRanges, m_rebinnedClampedLambdaRanges)) {
+    CSpectrumLogRebinning logReb(*this, *const_spectrum_ptr,
+                                 *const_lambdaRange_ptr);
     if (!spectrum_ptr->GetSpectralAxis().IsLogSampled())
-      addRebinFullSpectrum(std::dynamic_pointer_cast<CFullSpectrum>(
-          logReb.loglambdaRebinSpectrum(spectrum_ptr, errorRebinMethod)));
+      addRebinFullSpectrum(
+          logReb.loglambdaRebinSpectrum(*spectrum_ptr, errorRebinMethod));
 
     TFloat64Range zrange;
     for (std::string cat : m_categories) {
@@ -144,8 +145,7 @@ void CInputContext::RebinInputs() {
   }
 
   for (auto const &spectrum_ptr : m_rebinnedFullSpectra) {
-    addRebinSpectrum(
-        std::make_shared<CSpectrum>(spectrum_ptr->getUnmaskedSpectrum()));
+    addRebinSpectrum(spectrum_ptr->getUnmaskedSpectrum());
     // TODO handle lambda ranges
   }
   return;
@@ -279,6 +279,7 @@ void CInputContext::resetSpectrumSpecific() {
 void CInputContext::addFullSpectrum(
     const std::shared_ptr<CFullSpectrum> &spectrum) {
   m_fullSpectra.push_back(spectrum);
+  m_constFullSpectra.push_back(spectrum);
   m_spectra.push_back(spectrum->getUnmaskedSpectrum());
   m_constSpectra.push_back(spectrum->getUnmaskedSpectrum());
 }

@@ -300,8 +300,8 @@ BOOST_AUTO_TEST_CASE(initAndReset_test) {
   // multi-obs
   CInputContext inputCtx3(paramStoreMO);
   setInputDataMO(inputCtx3);
-  BOOST_CHECK(inputCtx3.GetSpectrum(0, 0)->getObsID() == "1");
-  BOOST_CHECK(inputCtx3.GetSpectrum(0, 1)->getObsID() == "2");
+  BOOST_CHECK(inputCtx3.GetSpectrum(0)->getObsID() == "1");
+  BOOST_CHECK(inputCtx3.GetSpectrum(1)->getObsID() == "2");
   inputCtx3.Init();
   BOOST_CHECK(inputCtx3.GetRebinnedSpectrum(0) != nullptr);
   BOOST_CHECK(inputCtx3.GetRebinnedSpectrum(1) != nullptr);
