@@ -7,6 +7,7 @@
 ### Changed
 * [9851] : Rename & homogenize quality indicators in output specifications
 * [9859] : Update error codes & messages
+* [9917] : FitQuality: convert the error to a warning when there is less than 1 or 2 pixels
 ### Deprecated
 ### Removed
 ### Fixed
