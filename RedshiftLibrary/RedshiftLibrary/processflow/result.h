@@ -66,12 +66,12 @@ public:
   virtual std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,
                bool firstpassResults = false) const {
-    THROWG(ErrorCode::UNSUPPORTED_OPERATION,
+    THROWG(ErrorCode::IE_UNSUPPORTED_METHOD,
            "This operator result does not support this operation");
   }
 
   virtual bool HasCandidateDataset(const std::string &dataset) const {
-    THROWG(ErrorCode::UNSUPPORTED_OPERATION,
+    THROWG(ErrorCode::IE_UNSUPPORTED_METHOD,
            "This operator result does not support this operation");
   }
 

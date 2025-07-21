@@ -156,7 +156,7 @@ public:
 
   const std::string &GetCurrentCategory() const {
     if (!m_ScopeStack->has_type(ScopeType::SPECTRUMMODEL))
-      THROWG(ErrorCode::SCOPESTACK_ERROR,
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
              Formatter() << "cannot get current " << ScopeType::SPECTRUMMODEL
                          << " since not in scope");
     return m_ScopeStack->get_type_value(ScopeType::SPECTRUMMODEL);
@@ -164,17 +164,17 @@ public:
 
   const std::string &GetCurrentStage() const {
     if (!m_ScopeStack->has_type(ScopeType::STAGE))
-      THROWG(ErrorCode::SCOPESTACK_ERROR, Formatter() << "cannot get current "
-                                                      << ScopeType::STAGE
-                                                      << " since not in scope");
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
+             Formatter() << "cannot get current " << ScopeType::STAGE
+                         << " since not in scope");
     return m_ScopeStack->get_type_value(ScopeType::STAGE);
   }
 
   const std::string &GetCurrentMethod() const {
     if (!m_ScopeStack->has_type(ScopeType::METHOD))
-      THROWG(ErrorCode::SCOPESTACK_ERROR, Formatter() << "cannot get current "
-                                                      << ScopeType::METHOD
-                                                      << " since not in scope");
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
+             Formatter() << "cannot get current " << ScopeType::METHOD
+                         << " since not in scope");
     return m_ScopeStack->get_type_value(ScopeType::METHOD);
   }
 

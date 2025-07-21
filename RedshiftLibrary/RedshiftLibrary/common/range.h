@@ -304,7 +304,8 @@ public:
     }
 
     if (ordered_values.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST,
+             "Input ordered values is an empty vector.");
     }
 
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
@@ -330,7 +331,8 @@ public:
                                    Int32 &i_min, Int32 &i_max) const {
 
     if (ordered_values.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST,
+             "Input ordered values is an empty vector.");
     }
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
       THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
@@ -355,7 +357,8 @@ public:
   void getClosedIntervalIndices(const std::vector<T> &ordered_values,
                                 Int32 &i_min, Int32 &i_max) const {
     if (ordered_values.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST,
+             "Input ordered values is an empty vector.");
     }
     if (m_End < ordered_values.front() || m_Begin > ordered_values.back()) {
       THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
@@ -417,7 +420,7 @@ public:
   joinIntersections(std::vector<CRange<T>> ranges) {
 
     if (ranges.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ranges is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST, "Input ranges is an empty vector.");
     }
 
     if (ranges.size() == 1)
