@@ -93,9 +93,8 @@ class ParametersExtender:
 
     def _extend_continuum_reestimation(self):
         for spectrum_model in self.initial_accessor.get_spectrum_models([]):
-            is_present = self.checker.linemodelsolve_continuumreestimation_presence_condition(spectrum_model)
+            is_present = self.checker.continuumreestimation_must_be_present(spectrum_model)
             if not is_present:
-                self.extended_accessor.get_linemodel_solve_linemodel_section(True)
                 self.extended_accessor.get_linemodel_solve_linemodel_section(spectrum_model, True)[
                     "continuumReestimation"
                 ] = "no"
@@ -104,18 +103,17 @@ class ParametersExtender:
         for spectrum_model in self.initial_accessor.get_spectrum_models([]):
             is_present = self.checker.useloglambdasampling_presence_condition(spectrum_model)
             if not is_present:
-                self.extended_accessor.get_linemodel_solve_linemodel_section(True)
                 self.extended_accessor.get_linemodel_solve_linemodel_section(spectrum_model, True)[
                     "useLogLambdaSampling"
                 ] = False
 
     def _extend_mediankernel(self):
-        for fromTemplateCatalog in [False, True]:
-            is_present = self.checker.median_kernel_presence_condition(fromTemplateCatalog)
+        for from_template_catalog in [False, True]:
+            is_present = self.checker.median_kernel_presence_condition(from_template_catalog)
             if not is_present:
-                self.extended_accessor.get_continuum_removal_section(fromTemplateCatalog, True)[
+                self.extended_accessor.get_continuum_removal_section(from_template_catalog, True)[
                     "medianKernelWidth"
                 ] = self.default_median_kernel_width
-                self.extended_accessor.get_continuum_removal_section(fromTemplateCatalog)[
+                self.extended_accessor.get_continuum_removal_section(from_template_catalog)[
                     "medianEvenReflection"
                 ] = self.default_median_even_reflection

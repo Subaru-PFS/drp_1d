@@ -512,12 +512,12 @@ class CustomParametersChecker(ParametersChecker):
             warning_message=f"object {spectrum_model} lineModelSolve tplRatioIsmFit",
         )
 
-    def linemodelsolve_continuumreestimation_presence_condition(self, spectrum_model):
+    def continuumreestimation_must_be_present(self, spectrum_model):
         return self.accessor.get_linemodel_fitting_method(spectrum_model) == "hybrid"
 
     def _check_linemodelsolve_continuumreestimation(self, spectrum_model):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_continuum_component(spectrum_model) == "fromSpectrum",
+            self.continuumreestimation_must_be_present(spectrum_model),
             self.accessor.get_linemodel_continuum_reestimation(spectrum_model) is not None,
             error_message=f"object {spectrum_model} lineModelSolve continuumReestimation",
             warning_message=f"object {spectrum_model} lineModelSolve continuumReestimation",
