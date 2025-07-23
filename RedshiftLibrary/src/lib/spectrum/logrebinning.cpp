@@ -171,7 +171,7 @@ std::shared_ptr<CFullSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
                                  0.5 * m_logGridStep);
 
   // rebin the spectrum
-  spectrum.setRebinInterpMethod(m_rebinMethod);
+  spectrum.setRebinInterpMethod("linFull");
   spectrum.Rebin(spcLbdaRange, targetSpectralAxis, *spectrumRebinedLog,
                  mskRebinedLog, errorRebinMethod);
 

@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinLinearFull.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinSpline.h"
 
@@ -119,6 +120,8 @@ std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
     return std::unique_ptr<CRebin>(new CRebinSpline(std::move(*this)));
   if (opt_interp == "ngp")
     return std::unique_ptr<CRebin>(new CRebinNgp(std::move(*this)));
+  if (opt_interp == "linFull")
+    return std::unique_ptr<CRebin>(new CRebinLinearFull(std::move(*this)));
 
   THROWG(
       ErrorCode::IE_INVALID_PARAMETER,
