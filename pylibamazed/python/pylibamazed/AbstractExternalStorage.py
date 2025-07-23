@@ -36,7 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-
+from abc import ABCMeta, abstractmethod
 import os
 
 import h5py
@@ -59,7 +59,7 @@ def get_storage_from_name(storage_name):
     return READER_CLASSES[storage_name]
 
 
-class AbstractExternalStorage:
+class AbstractExternalStorage(metaclass=ABCMeta):
     """
     Class dedicated to opening spectrum files and return their data for the readers
     to load it into themselves.
@@ -94,8 +94,9 @@ class AbstractExternalStorage:
         self.resource = None
         return False
 
+    @abstractmethod
     @doc_method
-    def read(self, spectrum_id, obs_id: str = ""):
+    def read(self, spectrum_id, obs_id: str = "", path: str = ""):
         """
         Read a spectrum file and return its data.
 
@@ -108,6 +109,7 @@ class AbstractExternalStorage:
         """
         raise NotImplementedError("Implement in derived class")
 
+    @abstractmethod
     @doc_method
     def close(self, resource):
         """
