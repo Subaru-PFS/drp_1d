@@ -103,7 +103,7 @@ class SkLearnSolve(AbstractReliabilitySolver):
         probas = classifier.predict_proba(v.reshape(1,-1))
         for i,c in enumerate(classes):
             ret[c] = float(probas[0, i])
-        zlog.LogInfo(f"SkLearnSolver: probas are {ret}")
+        zlog.LogInfo(f"SkLearnSolver: probas are {ret} for {v.reshape(1,-1)}")
         return ret
 
 register_reliability_solver("skLearnSolver", SkLearnSolve, "sk")
