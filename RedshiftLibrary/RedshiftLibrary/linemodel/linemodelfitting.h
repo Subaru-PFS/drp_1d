@@ -234,10 +234,11 @@ public:
   void initMembers(const std::shared_ptr<COperatorContinuumFitting>
                        &continuumFittingOperator,
                    CLineRatioManager::EType const &lineRatioType,
-                   ElementComposition const &element_composition);
-  void reloadFor2ndPass(const std::shared_ptr<COperatorContinuumFitting>
-                            &continuumFittingOperator,
-                        const ElementComposition &element_composition);
+                   ElementComposition element_composition);
+  void reloadFor2ndPass(
+      const std::shared_ptr<COperatorContinuumFitting>
+          &continuumFittingOperator,
+      ElementComposition element_composition = ElementComposition::Default);
   void
   setChiSquareRatioResult(const Int32 index_z,
                           const std::shared_ptr<CLineModelResult> &lmResult);

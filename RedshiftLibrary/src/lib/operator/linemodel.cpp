@@ -695,8 +695,7 @@ COperatorLineModel::ComputeSecondPass() {
       boost::chrono::thread_clock::now();
   if (m_fittingManager->getLineRatioStrictType() ==
       CLineRatioManager::EType::ratioToFree) {
-    m_fittingManager->reloadFor2ndPass(m_continuumFittingOperator,
-                                       ElementComposition::Default);
+    m_fittingManager->reloadFor2ndPass(m_continuumFittingOperator);
   }
   m_fittingManager->setPassMode(2);
 

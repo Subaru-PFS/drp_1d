@@ -176,7 +176,7 @@
                 "tplCorr"
               ],
               "title": "Line ratio type",
-              "description": "\n * **rules**: fit all lines amplitude independently with eventualy some constraints (see rules parameter below) \n * **tplRatio**: fit one amplitude with fixed line ratios coming from template-ratio catalogs \n * **ratioToFree**: after a first pass with a tplRatio, do a \"free\" second pass, releasing the ratio constraints"
+              "description": "\n * **rules**: fit all lines amplitude independently with eventualy some constraints (see rules parameter below) \n * **tplRatio**: fit one amplitude with fixed line ratios coming from template-ratio catalogs"
             },
             "rules": {
               "type": "string",

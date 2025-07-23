@@ -68,7 +68,7 @@ int CRatioToFreeManager::prepareFit(Float64 redshift) {
   if (m_pass == 1)
     prepare = CTplratioManager::prepareFit(redshift);
   else if (m_pass == 2)
-    prepare = CLineRatioManager::prepareFit(redshift);
+    prepare = CRulesManager::prepareFit(redshift);
   return prepare;
 }
 
@@ -86,7 +86,7 @@ void CRatioToFreeManager::saveResults(Int32 itratio) {
   if (m_pass == 1)
     CTplratioManager::saveResults(itratio);
   else if (m_pass == 2)
-    CLineRatioManager::saveResults(itratio);
+    CRulesManager::saveResults(itratio);
 };
 
 void CRatioToFreeManager::setChiSquareRatioResult(

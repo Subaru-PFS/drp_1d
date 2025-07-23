@@ -91,7 +91,7 @@ CLineModelFitting::CLineModelFitting(
   m_lambdaRanges = // std::make_shared<std::vector<std::shared_ptr<const
                    // TLambdaRange>>>(
       Context.getClampedLambdaRanges(m_useloglambdasampling);
-  auto const &lineRatioType = CLineRatioManager::stringToType.at(
+  auto lineRatioType = CLineRatioManager::stringToType.at(
       Context.GetParameterStore()->GetScoped<std::string>("lineRatioType"));
   initMembers(continuumFittingOperator, lineRatioType, element_composition);
   setLineRatioManager(lineRatioType);
@@ -113,7 +113,7 @@ CLineModelFitting::CLineModelFitting(
   // override ortho specific parameters
   m_fittingmethod = "hybrid";
 
-  auto const &lineRatioType = CLineRatioManager::EType::rules;
+  auto lineRatioType = CLineRatioManager::EType::rules;
   initMembers(continuumFittingOperator, lineRatioType,
               ElementComposition::Default);
   // temporary options override to be removed when full tpl ortho is implemented
@@ -150,11 +150,16 @@ void CLineModelFitting::initParameters() {
 void CLineModelFitting::initMembers(
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
     CLineRatioManager::EType const &lineRatioType,
-    ElementComposition const &element_composition) {
+    ElementComposition element_composition) {
 
   m_nominalWidthDefault = 13.4; // euclid 1 px
   m_continuumFitValues = std::make_shared<CContinuumModelSolution>();
   m_models = std::make_shared<CSpcModelVector>(m_spectraIndex);
+  if (element_composition == ElementComposition::Default &&
+      (lineRatioType == CLineRatioManager::EType::tplRatio ||
+       lineRatioType == CLineRatioManager::EType::tplCorr ||
+       lineRatioType == CLineRatioManager::EType::ratioToFree))
+    element_composition = ElementComposition::EmissionAbsorption;
   setElementsVector(lineRatioType, element_composition);
   for (auto &spcIndex : m_spectraIndex) {
     Log.LogDetail(Formatter() << "    model: Continuum winsize found is "
@@ -176,12 +181,11 @@ void CLineModelFitting::initMembers(
 
 void CLineModelFitting::reloadFor2ndPass(
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
-    const ElementComposition &element_composition) {
+    ElementComposition element_composition) {
 
-  m_pass = 2;
-  auto const &lineRatioType = m_lineRatioManager->getStrictType();
+  auto lineRatioType = m_lineRatioManager->getStrictType();
 
-  setElementsVector(lineRatioType, element_composition);
+  setElementsVector(lineRatioType, ElementComposition::Default);
 
   for (auto &spcIndex : m_spectraIndex) {
     m_models->setModelsElements(m_ElementsVector->getElementList());
@@ -202,13 +206,8 @@ void CLineModelFitting::setElementsVector(
   // Here must pass lineRatioType as arg because is used before
   // m_lineRatioManager initialization
   ElementComposition effectiveComposition = element_composition;
-  if (element_composition == ElementComposition::Default &&
-      (lineRatioType == CLineRatioManager::EType::tplRatio ||
-       lineRatioType == CLineRatioManager::EType::tplCorr ||
-       (lineRatioType == CLineRatioManager::EType::ratioToFree && m_pass == 1)))
-    effectiveComposition = ElementComposition::EmissionAbsorption;
   m_ElementsVector = std::make_shared<CLMEltListVector>(
-      m_spectraIndex, m_RestLineList, effectiveComposition);
+      m_spectraIndex, m_RestLineList, element_composition);
 }
 
 void CLineModelFitting::logParameters() {
