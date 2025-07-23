@@ -112,6 +112,25 @@ class TestLineModelSolve:
             ):
                 check_from_parameter_dict(param_dict)
 
+        @pytest.mark.parametrize("method", ["powerLaw", "powerLawAuto"])
+        def test_error_if_powerlaw_and_not_ignore_line_support(self, method):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": method,
+                            "continuumFit": {"ignoreLineSupport": False},
+                        }
+                    }
+                }
+            )
+            param_dict["continuumRemoval"] = {}  # For powerLawAuto
+            with pytest.raises(
+                APIException,
+                match=r"method is powerLaw or powerLawAuto, ignoreLineSupport must be set to true",
+            ):
+                check_from_parameter_dict(param_dict)
+
     class TestFirstPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
             kwargs["method"] = "lineModelSolve"
