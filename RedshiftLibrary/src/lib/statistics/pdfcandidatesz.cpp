@@ -431,14 +431,15 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   gsl_vector_view w = gsl_vector_view_array(weights.data(), n);
 
   // This is the data to be fitted;
-  double y[n], z[n];
+  TFloat64List y(n);
+  TFloat64List z(n);
   for (Int32 i = 0; i < n; i++) {
     Float64 idx = i + kmin;
     y[i] = exp(valprobalog[idx]) / normFactor;
     z[i] = redshifts[idx];
   }
 
-  struct pdfz_lmfitdata d = {n, y, z, zc};
+  struct pdfz_lmfitdata d = {n, y.data(), z.data(), zc};
   gsl_multifit_function_fdf f;
   f.f = &pdfz_lmfit_f;
   f.df = &pdfz_lmfit_df;

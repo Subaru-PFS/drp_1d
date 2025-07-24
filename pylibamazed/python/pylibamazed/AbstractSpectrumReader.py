@@ -297,7 +297,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
             if not lsf_obs_ids:
                 raise APIException(
                     ErrorCode.LSF_NOT_LOADED,
-                    "No LSF loaded in reader, " "lsftype=fromSpectrumData " "parameter cannot be applied",
+                    "No LSF loaded in reader, lsftype=fromSpectrumData parameter cannot be applied",
                 )
             obs_id = next(iter(lsf_obs_ids))
             if len(lsf_obs_ids) > 1:

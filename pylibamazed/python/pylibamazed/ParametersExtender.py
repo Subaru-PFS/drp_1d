@@ -54,15 +54,17 @@ class ParametersExtender:
         "medianEvenReflection": default_median_even_reflection,
     }
 
-    def __init__(self, version: int, Accessor=ParametersAccessor, Checker=CustomParametersChecker):
-        self.Accessor = Accessor
-        self.Checker = Checker
+    def __init__(
+        self, version: int, accessor_class=ParametersAccessor, checker_class=CustomParametersChecker
+    ):
+        self.accessor_class = accessor_class
+        self.checker_class = checker_class
         self.version = version
 
     def extend(self, parameters: dict):
-        self.initial_accessor = self.Accessor(parameters)
-        self.extended_accessor = self.Accessor(copy.deepcopy(parameters))
-        self.checker = self.Checker(parameters)
+        self.initial_accessor = self.accessor_class(parameters)
+        self.extended_accessor = self.accessor_class(copy.deepcopy(parameters))
+        self.checker = self.checker_class(parameters)
 
         self._extend_continuum_removal()
         self._extend_template_catalog_continuum_removal()

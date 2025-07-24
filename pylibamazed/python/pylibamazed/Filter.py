@@ -55,6 +55,8 @@ class AbstractFilterItem(metaclass=ABCMeta):
     - value: with which value we want to make the comparison
     """
 
+    allowed_instructions = []
+
     def __init__(self, key: str, instruction: str, value: Any):
         self.check_instruction(instruction)
         self.key = key

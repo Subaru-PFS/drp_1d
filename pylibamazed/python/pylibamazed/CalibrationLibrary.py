@@ -40,6 +40,8 @@
 import glob
 import json
 import os
+from typing import Dict
+
 
 import h5py
 import numpy as np
@@ -116,7 +118,7 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
             ErrorCode.RELIABILITY_NEEDS_TENSORFLOW, "Tensorflow is required to compute the reliability"
         ) from None
     ret = dict()
-    model_ha = h5py.File(model_path).attrs
+    model_ha: Dict[str, str] = h5py.File(model_path).attrs
     keras_model_version = model_ha["keras_version"].split(".")
     keras_system_version = keras.__version__.split(".")
     if keras_model_version[0] > keras_system_version[0]:

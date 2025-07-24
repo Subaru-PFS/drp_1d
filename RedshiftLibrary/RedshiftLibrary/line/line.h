@@ -127,7 +127,7 @@ public:
 
   const std::string &GetName() const { return m_Name; };
   const std::string &GetGroupName() const { return m_GroupName; };
-  const Float64 GetNominalAmplitude() const { return m_NominalAmplitude; };
+  Float64 GetNominalAmplitude() const { return m_NominalAmplitude; };
   const std::string &GetVelGroupName() const { return m_VelGroupName; };
   const std::string &GetStrID() const { return m_strID; };
 
