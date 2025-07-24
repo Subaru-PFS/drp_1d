@@ -47,7 +47,7 @@ using namespace std;
 
 CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
                              CSpectrumFluxAxis fluxAxis,
-                             TMaskList &invalidPixels)
+                             const TMaskList &invalidPixels)
     : CSpectrum(spectralAxis, fluxAxis), m_mask(invalidPixels) {}
 CFullSpectrum::CFullSpectrum(const CSpectrum &other, const TFloat64List &mask)
     : CSpectrum(other, mask) {}

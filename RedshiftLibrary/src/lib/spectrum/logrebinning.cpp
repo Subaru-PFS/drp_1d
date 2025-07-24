@@ -45,6 +45,19 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
+CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
+    : m_inputContext(inputContext) {
+  m_logGridStep = m_inputContext.getLogGridStep();
+  std::shared_ptr<CFullSpectrum> spc;
+  if (inputContext.GetFullSpectrum()->GetSpectralAxis().IsLogSampled()) {
+    spc = m_inputContext.GetRebinnedFullSpectrum(); // retrieve the corrected
+                                                    // rebinned spectrum
+  } else {
+    spc = m_inputContext.GetFullSpectrum();
+  }
+  setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
+}
+
 CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext,
                                              const CFullSpectrum &spc,
                                              const TLambdaRange &lambdaRange)

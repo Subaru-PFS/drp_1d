@@ -67,7 +67,7 @@ public:
   Mask &operator[](const Int32 i);
   Float64 ComputeOverlapFraction(const CMask &other) const;
   Float64 IntersectAndComputeOverlapFraction(const CMask &other) const;
-
+  CMask extract(Int32 startIdx, Int32 endIdx) const;
   void IntersectWith(const CMask &other);
   Int32 GetMaskedSampleCount() const;
   Int32 GetUnMaskedSampleCount() const;

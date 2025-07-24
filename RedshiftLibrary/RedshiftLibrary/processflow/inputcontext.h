@@ -118,8 +118,14 @@ public:
   const std::shared_ptr<CSpectrum> &GetSpectrum(int i = 0) {
     return m_spectra[i];
   }
+  const std::shared_ptr<CFullSpectrum> &GetFullSpectrum(int i = 0) {
+    return m_fullSpectra[i];
+  }
   const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum(int i = 0) {
     return m_rebinnedSpectra[i];
+  }
+  const std::shared_ptr<CFullSpectrum> &GetRebinnedFullSpectrum(int i = 0) {
+    return m_rebinnedFullSpectra[i];
   }
   const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     return m_TemplateCatalog;

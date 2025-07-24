@@ -133,6 +133,17 @@ public:
     ctx.setPhotoBandCatalog(photoBandCatalog);
     spc->SetPhotData(photoData);
   }
+  void InitFull(std::string fullJsonString) {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(fullJsonString);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.addFullSpectrum(fullSpc, LSF);
+    ctx.initContext();
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+  }
 
   std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
@@ -142,6 +153,7 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
+  std::shared_ptr<CFullSpectrum> fullSpc = fixture_SharedSpectrum().fullSpc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -187,8 +199,8 @@ class fixture_TemplateFittingSolveTestFFT
 public:
   fixture_Context ctx;
   fixture_TemplateFittingSolveTestFFT() {
-    spc = fixture_SharedSpectrumExtended().spc;
-    Init(jsonString + jsonStringFFT);
+    fullSpc = fixture_SharedSpectrumExtended().fullSpc;
+    InitFull(jsonString + jsonStringFFT);
   }
 };
 

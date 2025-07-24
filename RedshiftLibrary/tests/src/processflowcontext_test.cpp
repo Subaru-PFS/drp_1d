@@ -109,6 +109,8 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CFullSpectrum> fullSpc =
+      fixture_SharedSpectrumExtended().fullSpc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -139,9 +141,9 @@ BOOST_AUTO_TEST_CASE(context_test) {
                                       "templateFittingSolve",
                                       "solveResult") == false);
 
-  spc->SetLSF(LSF);
-  Context.addSpectrum(spc);
-  BOOST_CHECK(Context.GetSpectrum() == spc);
+  fullSpc->SetLSF(LSF);
+  Context.addFullSpectrum(fullSpc);
+  BOOST_CHECK(Context.GetFullSpectrum() == fullSpc);
 
   BOOST_CHECK(Context.getRebinnedSpectra().size() == 0);
 
@@ -172,7 +174,7 @@ BOOST_AUTO_TEST_CASE(context_test) {
   Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
 
   Context.Init();
-  BOOST_CHECK(Context.GetRebinnedSpectrum() = spc);
+  BOOST_CHECK(Context.GetRebinnedSpectrum() = fullSpc);
 
   std::shared_ptr<const TFloat64Range> lbdaRange =
       std::make_shared<const TFloat64Range>(4630, 4815);

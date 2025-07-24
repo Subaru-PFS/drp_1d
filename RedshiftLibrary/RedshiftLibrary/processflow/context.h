@@ -76,6 +76,9 @@ public:
   void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
     m_inputContext->addSpectrum(spectrum);
   }
+  void addFullSpectrum(const std::shared_ptr<CFullSpectrum> &spectrum) {
+    m_inputContext->addFullSpectrum(spectrum);
+  }
   void
   setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog) {
     m_inputContext->setTemplateCatalog(templateCatalog);
@@ -122,6 +125,9 @@ public:
 
   std::shared_ptr<const CSpectrum> GetSpectrum() const {
     return m_inputContext->GetSpectrum();
+  }
+  std::shared_ptr<const CSpectrum> GetFullSpectrum() const {
+    return m_inputContext->GetFullSpectrum();
   }
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
     return m_inputContext->GetRebinnedSpectrum();

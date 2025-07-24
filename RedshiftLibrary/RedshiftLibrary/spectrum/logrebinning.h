@@ -64,6 +64,7 @@ class CSpectrumLogRebinning {
 
 public:
   // applying Rule of zero
+  CSpectrumLogRebinning(CInputContext &inputContext);
   CSpectrumLogRebinning(CInputContext &inputContext, const CFullSpectrum &spc,
                         const TLambdaRange &lambdaRange);
   std::shared_ptr<CFullSpectrum> loglambdaRebinSpectrum(

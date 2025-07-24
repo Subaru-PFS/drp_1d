@@ -95,7 +95,7 @@ void CInputContext::RebinInputs() {
 
   Log.LogInfo("Rebining input spectra in logarithmic wavelength steps");
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
-       boost::combine(m_spectra, m_lambdaRanges)) {
+       boost::combine(m_fullSpectra, m_lambdaRanges)) {
     if (spectrum_ptr->GetSpectralAxis().IsLogSampled()) {
       addRebinFullSpectrum(std::make_shared<CFullSpectrum>(
           spectrum_ptr->GetName(), spectrum_ptr->getObsID()));
@@ -112,6 +112,9 @@ void CInputContext::RebinInputs() {
       m_rebinnedFullSpectra.back()->SetSpectralAndFluxAxes(
           spcWav.extract(kstart, kend),
           spectrum_ptr->GetFluxAxis().extract(kstart, kend));
+      CMask rMask = spectrum_ptr->getMask().extract(kstart, kend);
+
+      m_rebinnedFullSpectra.back()->setMask(rMask);
       m_logGridStep =
           m_rebinnedFullSpectra.back()->GetSpectralAxis().GetlogGridStep();
     } else {
@@ -126,8 +129,7 @@ void CInputContext::RebinInputs() {
                     const_lambdaRange_ptr, rebinnedClampedLambdaRange_ptr] :
        boost::combine(m_fullSpectra, m_lambdaRanges, m_constFullSpectra,
                       m_constLambdaRanges, m_rebinnedClampedLambdaRanges)) {
-    CSpectrumLogRebinning logReb(*this, *const_spectrum_ptr,
-                                 *const_lambdaRange_ptr);
+    CSpectrumLogRebinning logReb(*this);
     if (!spectrum_ptr->GetSpectralAxis().IsLogSampled())
       addRebinFullSpectrum(
           logReb.loglambdaRebinSpectrum(*spectrum_ptr, errorRebinMethod));
@@ -206,6 +208,8 @@ void CInputContext::Init() {
     else
       lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdaRange");
     m_lambdaRanges.push_back(std::make_shared<TFloat64Range>(lambdaRange));
+    m_constLambdaRanges.push_back(
+        std::make_shared<const TFloat64Range>(lambdaRange));
     m_clampedLambdaRanges.emplace_back(new TFloat64Range());
     m_rebinnedClampedLambdaRanges.emplace_back(new TFloat64Range());
     m_constClampedLambdaRanges.push_back(m_clampedLambdaRanges.back());
@@ -261,6 +265,10 @@ void CInputContext::resetSpectrumSpecific() {
   m_constSpectra.clear();
   m_rebinnedSpectra.clear();
   m_constRebinnedSpectra.clear();
+  m_fullSpectra.clear();
+  m_constFullSpectra.clear();
+  m_rebinnedFullSpectra.clear();
+  m_constRebinnedFullSpectra.clear();
   m_lambdaRanges.clear();
   m_rebinnedClampedLambdaRanges.clear();
   m_clampedLambdaRanges.clear();

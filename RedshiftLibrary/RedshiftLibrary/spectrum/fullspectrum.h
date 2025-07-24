@@ -47,7 +47,7 @@ namespace NSEpic {
 class CFullSpectrum : public CSpectrum {
 public:
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis,
-                TMaskList &invalidPixels);
+                const TMaskList &invalidPixels);
   CFullSpectrum(const std::string &name, const std::string &obsId = "");
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
 
