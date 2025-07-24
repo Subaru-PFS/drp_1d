@@ -108,7 +108,6 @@ BOOST_AUTO_TEST_CASE(Extremum_PlankDetection) {
   TFloat64List y_plank_low = {5.0, 0.0, 0.0, 0.0, 0.0, 9.5,
                               0.2, 0.5, 8.0, 1.0, 4.0};
 
-  Float64 radius = 0.005;
   peaks1.SetMaxPeakCount(2);
   peaks1.SetXRange(TFloat64Range(-10.0, 10.0));
   bool isFirstPass = false;
@@ -132,7 +131,6 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_isolated) {
   TFloat64List x = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
   TFloat64List y = {1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0};
 
-  Float64 radius = 0.005;
   peaks1.SetMaxPeakCount(5);
   peaks1.SetXRange(TFloat64Range(-10.0, 10.0));
   peaks1.SetMeritCut(3);
@@ -152,7 +150,6 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_onePeak) {
   TFloat64List x = {0.0, 0.1, 0.2};
   TFloat64List y = {1.0, 6.0, 1.2};
 
-  Float64 radius = 0.005;
   peaks1.SetMaxPeakCount(5);
   peaks1.SetXRange(TFloat64Range(-10.0, 10.0));
   peaks1.SetMeritCut(3);

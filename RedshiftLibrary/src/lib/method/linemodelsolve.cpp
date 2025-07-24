@@ -530,8 +530,6 @@ void CLineModelSolve::storeExtremaResults(
     std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const {
   resultStore->StoreScopedGlobalResult("extrema_results", ExtremaResult,
                                        m_runSecondPassFromResultStore);
-
-  Int32 nResults = ExtremaResult->size();
 }
 
 /**

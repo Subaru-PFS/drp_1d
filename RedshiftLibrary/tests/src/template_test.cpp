@@ -221,13 +221,13 @@ BOOST_AUTO_TEST_CASE(ApplyDustCoeff_test) {
 
   tplStar.InitIsmIgmConfig(1, 2, 2.86);
 
-  bool res = tplStar.ApplyDustCoeff(-1);
+  tplStar.ApplyDustCoeff(-1);
   BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxAxisList);
 
-  res = tplStar.ApplyDustCoeff(-2);
+  tplStar.ApplyDustCoeff(-2);
   BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxAxisList);
 
-  res = tplStar.ApplyDustCoeff(2);
+  tplStar.ApplyDustCoeff(2);
   Int32 coeff1 =
       (Int32)(2 * ismCorrectionCalzetti->m_dataCalzetti.size() +
               round(spcAxisList[1] - ismCorrectionCalzetti->getLambdaMin()));

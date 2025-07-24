@@ -68,7 +68,7 @@ CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
     // load each line alone in one element (linemeas)
     LoadCatalogOneLineByElement();
   }
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     m_ElementsVector.push_back(CLineModelElementList());
     fillElements();
@@ -105,7 +105,7 @@ Int32 CLMEltListVector::getNonZeroElementsNDdl() const {
 
 bool CLMEltListVector::computeOutsideLambdaRangeLine(Int32 elt_index,
                                                      Int32 line_index) {
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRangeLine(line_index))
       return false;
   }
@@ -113,7 +113,7 @@ bool CLMEltListVector::computeOutsideLambdaRangeLine(Int32 elt_index,
 }
 
 bool CLMEltListVector::computeOutsideLambdaRange(Int32 elt_index) {
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     if (!getElementList()[elt_index]->IsOutsideLambdaRange())
       return false;
   }
@@ -121,7 +121,6 @@ bool CLMEltListVector::computeOutsideLambdaRange(Int32 elt_index) {
 }
 
 void CLMEltListVector::AddElementParam(CLineVector lines) {
-  size_t nb_lines = lines.size();
 
   auto const ps = Context.GetParameterStore();
   Float64 const velocity = lines.front().IsEmission()
@@ -188,7 +187,7 @@ void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
 
 Float64 CLMEltListVector::getScaleMargCorrection(Int32 Eltidx) const {
   Float64 smc = 0;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     smc += getElementList().getScaleMargCorrection(Eltidx);
   }

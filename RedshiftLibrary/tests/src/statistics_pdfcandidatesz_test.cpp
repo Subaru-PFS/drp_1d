@@ -363,8 +363,7 @@ BOOST_AUTO_TEST_CASE(getCandidateRobustGaussFit_test) {
 
   TFloat64Range zrange_2(gaussZ.front() + 1e-6, gaussZ.back() - 1e-6);
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(gaussZ);
-  bool fitSuccessful =
-      zcand_op.getCandidateRobustGaussFit(gaussZ, gaussY, zrange_2, candidate);
+  zcand_op.getCandidateRobustGaussFit(gaussZ, gaussY, zrange_2, candidate);
 
   BOOST_CHECK_CLOSE(candidate->GaussAmp * candidate->GaussSigma *
                         sqrt(2 * M_PI),
@@ -401,7 +400,7 @@ BOOST_AUTO_TEST_CASE(computeCandidatesDeltaz) {
 
   // Deltaz is not nan anymore after calling computeCandidatesDeltaz
   for (auto &c : zcand_op.m_candidates) {
-    BOOST_CHECK(~isnan(c.second->Deltaz));
+    BOOST_CHECK(!isnan(c.second->Deltaz));
   }
 }
 

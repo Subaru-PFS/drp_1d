@@ -310,7 +310,6 @@ TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange(
  *
  */
 Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength(Float64 waveLength) const {
-  Int32 m;
   Int32 lo = 0;
   Int32 hi = GetSamplesCount() - 1;
 

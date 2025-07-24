@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(noiseAxis[2] == 2.0);
 
   // Invert
-  bool res = noiseAxis.Invert();
+  noiseAxis.Invert();
   BOOST_CHECK(noiseAxis.GetSamplesCount() == 3);
   BOOST_CHECK(noiseAxis[0] == 0.5);
   BOOST_CHECK(noiseAxis[1] == 0.5);

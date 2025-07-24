@@ -62,13 +62,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   bfs::path noisePath;
   bfs::path linecatalogPath;
 
-  auto lineTypeFilter = CLine::EType::nType_Emission;
-  auto forceFilter = CLine::EForce::nForce_Strong;
   string opt_lineWidthType = "velocityDriven";
-  Float64 opt_nsigmasupport = 8.;
-  Float64 initVelocity = 50.0;
-  Float64 opt_velocityEmission = initVelocity;
-  Float64 opt_velocityAbsorption = initVelocity;
   string opt_rules = "no";
   string opt_rigidity = "rules";
 
@@ -80,7 +74,6 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   TFloat64Range range(12500, 18500);
   CLineModelSolution solution;
   CContinuumModelSolution c_solution;
-  int iterations = 1;
 
   // generate_spectrum(spectrum, 1000, 3500, 12500);
   /*  noisePath = generate_noise_fits(1000, 3500, 12500);
@@ -90,8 +83,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
   std::string lsfType = "gaussianConstantWidth";
   Float64 width = 13.;
-std:
-  shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
+  std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CParameterStore> store =
       std::make_shared<CParameterStore>(scopeStack);
   store->Set("lsf.width", width);

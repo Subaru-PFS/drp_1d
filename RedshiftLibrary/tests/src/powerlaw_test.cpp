@@ -270,8 +270,6 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
 
 BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   // We consider z = 0 here
-  Float64 a = 1.5e-16;
-  Float64 b = -0.5;
   nMinSamples = 10;
 
   TList<Float64> lambda = fixture_powerLawSimpleVar().lambda;
@@ -375,10 +373,6 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
   bool opt_dustFitting = false;
 
   nMinSamples = 10;
-  Float64 a1 = 1.5e-16;
-  Float64 b1 = -0.5;
-  Float64 b2 = -0.2;
-  Float64 a2 = computea2(a1, b1, b2, xc);
 
   TList<Float64> lambda = fixture_powerLawDoubleVar().lambda;
   TList<Float64> flux = fixture_powerLawDoubleVar().flux;
@@ -642,7 +636,6 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
   Float64 a1 = -1.5e-16;
   Float64 b1 = 0.0;
   Float64 b2 = 0.0;
-  Float64 a2 = computea2(a1, b1, b2, xc2);
 
   CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 50);
   CSpectrumSpectralAxis spectralAxisRest1 =

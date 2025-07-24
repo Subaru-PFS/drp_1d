@@ -197,10 +197,6 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     return tplOrtho;
 
   std::string opt_continuumcomponent = "fromSpectrum";
-  Float64 opt_continuum_neg_threshold =
-      -INFINITY; // not relevant in the "fromSpectrum" case
-  Float64 opt_continuum_nullamp_threshold =
-      0.; // not relevant in the "fromSpectrum" case;
   tplOrtho->SetLSF(m_LSF);
 
   // double the template flux, and set the continuum as the initial template

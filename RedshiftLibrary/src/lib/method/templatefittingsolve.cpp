@@ -369,7 +369,7 @@ void CTemplateFittingSolve::computeSecondPass(
     Solve(tpl, ismIdx, igmIdx, candidateName, candidateIdx, tplFitResult);
   }
   // save all template results
-  for (auto const [tplName, tplFitResult] : templatesResultsMap) {
+  for (auto const &[tplName, tplFitResult] : templatesResultsMap) {
     std::shared_ptr<const CTemplate> tpl =
         tplCatalog.GetTemplateByName({m_category}, tplName);
     resultStore->StoreScopedPerTemplateResult(tpl, getResultName(),
@@ -584,7 +584,6 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
 
     auto const spcmodelPtr = std::make_shared<CModelSpectrumResult>();
     for (int spcIndex = 0; spcIndex < ssize(Context.getSpectra()); spcIndex++) {
-      const std::string &obsId = Context.getSpectra()[spcIndex]->getObsID();
 
       auto &&[spcModel, photModel] =
           m_templateFittingOperator->ComputeSpectrumModel(

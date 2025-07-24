@@ -770,7 +770,6 @@ BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
   CAutoSaveFlagToResultStore saveflag;
 
   auto const &inputContext = *Context.GetInputContext();
-  auto &scope = Context.m_ScopeStack;
   lineModelSolve.InitRanges(inputContext);
 
   std::shared_ptr<CLineModelSolveResult> lmSolveResult =
@@ -827,8 +826,6 @@ BOOST_FIXTURE_TEST_CASE(computeNoContTplRatio_test,
       Context.GetResultStore()->GetExtremaResult(
           "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
           "model_parameters", 0);
-
-  Float64 z = res->Redshift;
 
   ctx.reset();
 }

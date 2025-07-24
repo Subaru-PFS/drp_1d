@@ -96,6 +96,9 @@ void CScopeStack::set_type_level(ScopeType type) {
              Formatter() << "cannot set type " << ScopeType::METHOD
                          << " if current scope is not " << ScopeType::STAGE);
     break;
+  case ScopeType::UNDEFINED:
+    // Question: what to do in the UNDEFINED case?
+    break;
   }
 
   // insert (type, rank)

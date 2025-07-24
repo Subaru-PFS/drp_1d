@@ -71,9 +71,6 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
   RebinTemplate(tpl, redshift, currentRange, overlapFraction, overlapThreshold,
                 spcIndex);
 
-  const TAxisSampleList &Xspc =
-      m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
-
   if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
     Int32 kstart = undefIdx;
     Int32 kend = undefIdx;

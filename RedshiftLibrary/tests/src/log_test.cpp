@@ -124,8 +124,6 @@ BOOST_AUTO_TEST_CASE(fileHandler_test) {
   message = Formatter() << "test log warning without timestamp";
   Log.logEntry(message, Log.nLevel_Warning, false);
 
-  CMutex &mutex = Log.GetSynchMutex();
-
   std::string line;
   std::ifstream myfile(logFile.c_str());
   TStringList lines;
