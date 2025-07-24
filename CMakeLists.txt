@@ -183,6 +183,7 @@ ADD_DEFINITIONS(-DLBFGSBFITTER)
 # Adds specific warnings to include in compilation
 ADD_DEFINITIONS(-Wsign-compare)
 ADD_DEFINITIONS(-Wreorder)
+ADD_DEFINITIONS(-Wall)
 
 # Treate compilation warnings as errors
 SET(CMAKE_COMPILE_WARNING_AS_ERROR ON)

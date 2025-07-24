@@ -437,8 +437,6 @@ CTemplateFittingSolve::BuildChisquareArray(const std::string &resultName,
     chisquarearray.parentCandidates =
         m_templateFittingOperator->getFirstPassCandidatesZByRank();
 
-  // Question : why coarse step for second pass too ? This is valid for second
-  // pass only ?
   chisquarearray.zstep = m_coarseRedshiftStep;
   chisquarearray.zgridParams = zgridParams;
 

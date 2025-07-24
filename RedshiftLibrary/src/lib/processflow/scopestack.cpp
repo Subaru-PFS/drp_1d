@@ -97,7 +97,6 @@ void CScopeStack::set_type_level(ScopeType type) {
                          << " if current scope is not " << ScopeType::STAGE);
     break;
   case ScopeType::UNDEFINED:
-    // Question: what to do in the UNDEFINED case?
     break;
   }
 

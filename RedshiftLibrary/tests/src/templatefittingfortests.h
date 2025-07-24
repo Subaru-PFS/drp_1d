@@ -117,7 +117,6 @@ const std::string jsonStringNoFFT = {
     "\"secondPass\": {\"continuumFit\": \"fromFirstPass\", \"halfWindowSize\": "
     "0.001}"
     "}}}}"};
-// Question: here on halfwindowsize : should it be < redshiftStep ?
 
 class fixture_TemplateFittingCommon {
 public:
