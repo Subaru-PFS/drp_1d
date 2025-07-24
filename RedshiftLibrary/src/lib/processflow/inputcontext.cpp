@@ -125,10 +125,7 @@ void CInputContext::RebinInputs() {
   Log.LogInfo(Formatter() << "loggrid step=" << m_logGridStep);
   std::string const errorRebinMethod = "rebinVariance";
 
-  for (auto const &[spectrum_ptr, lambdaRange_ptr, const_spectrum_ptr,
-                    const_lambdaRange_ptr, rebinnedClampedLambdaRange_ptr] :
-       boost::combine(m_fullSpectra, m_lambdaRanges, m_constFullSpectra,
-                      m_constLambdaRanges, m_rebinnedClampedLambdaRanges)) {
+  for (auto const &spectrum_ptr : m_fullSpectra) {
     CSpectrumLogRebinning logReb(*this);
     if (!spectrum_ptr->GetSpectralAxis().IsLogSampled())
       addRebinFullSpectrum(
@@ -141,14 +138,16 @@ void CInputContext::RebinInputs() {
         m_logRebin.insert({cat, SRebinResults{zrange}});
       }
     }
-    // Initialize rebinned clamped lambda range
-    m_rebinnedFullSpectra.back()->GetSpectralAxis().ClampLambdaRange(
-        *lambdaRange_ptr, *rebinnedClampedLambdaRange_ptr);
   }
 
-  for (auto const &spectrum_ptr : m_rebinnedFullSpectra) {
+  for (auto const &[spectrum_ptr, lambdaRange_ptr,
+                    rebinnedClampedLambdaRange_ptr] :
+       boost::combine(m_rebinnedFullSpectra, m_lambdaRanges,
+                      m_rebinnedClampedLambdaRanges)) {
     addRebinSpectrum(spectrum_ptr->getUnmaskedSpectrum());
-    // TODO handle lambda ranges
+    // Initialize rebinned clamped lambda range
+    m_rebinnedSpectra.back()->GetSpectralAxis().ClampLambdaRange(
+        *lambdaRange_ptr, *rebinnedClampedLambdaRange_ptr);
   }
   return;
 }
@@ -237,7 +236,14 @@ void CInputContext::Init() {
       m_igmCorrectionMeiksin->convolveByLSF(spectrum_ptr->GetLSF(),
                                             *lambdaRange_ptr);
   }
-
+  if (m_fullSpectra.size()) {
+    for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+         boost::combine(m_fullSpectra, m_lambdaRanges)) {
+      spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect,
+                                     nbSamplesMin); // not mandatory
+      spectrum_ptr->InitSpectrumContinuum(*m_ParameterStore);
+    }
+  }
   // insert extinction correction objects if needed
   m_TemplateCatalog->m_logsampling = 0;
   m_TemplateCatalog->m_orthogonal = 0;
@@ -249,11 +255,20 @@ void CInputContext::Init() {
 
   // validate log-lambda resampled spectra
   if (m_use_LogLambaSpectrum) {
-    for (auto const &[spectrum_ptr, lambdaRange_ptr, rebinedSpectrum_ptr] :
-         boost::combine(m_spectra, m_lambdaRanges, m_rebinnedSpectra)) {
+    for (auto const &[spectrum_ptr, lambdaRange_ptr, rebinedFullSpectrum_ptr,
+                      rebinedSpectrum_ptr] :
+         boost::combine(m_fullSpectra, m_lambdaRanges, m_rebinnedFullSpectra,
+                        m_rebinnedSpectra)) {
+      Log.LogInfo("validate rebinned spectrum");
       rebinedSpectrum_ptr->ValidateSpectrum(
           *lambdaRange_ptr, enableInputSpcCorrect, nbSamplesMin);
+      Log.LogInfo("validate rebinned full spectrum");
+
+      rebinedFullSpectrum_ptr->ValidateSpectrum(
+          *lambdaRange_ptr, enableInputSpcCorrect,
+          nbSamplesMin); // not mandatory (should be identical as above)
       rebinedSpectrum_ptr->SetLSF(spectrum_ptr->GetLSF());
+      rebinedFullSpectrum_ptr->SetLSF(spectrum_ptr->GetLSF());
     }
   }
   // template orthogonalisation with linemodel

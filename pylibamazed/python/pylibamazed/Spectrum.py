@@ -54,6 +54,7 @@ from pylibamazed.redshift import (
     CSpectrumSpectralAxis,
     ErrorCode,
     WarningCode,
+    TMaskList,
 )
 from pylibamazed.Filter import FilterList
 from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
@@ -272,17 +273,19 @@ class Spectrum:
         cpp_phot = self._make_photometric_data()
 
         obs_ids = self._get_obs_ids()
-
+        filtered_only = not self.parameters.full_spectrum_required()
         for obs_id in obs_ids:
-            spectralaxis = CSpectrumSpectralAxis(self.get_wave(obs_id))
-            signal = CSpectrumFluxAxis_withError(self.get_flux(obs_id), self.get_error(obs_id))
+            spectralaxis = CSpectrumSpectralAxis(self.get_wave(obs_id, filtered_only))
+            signal = CSpectrumFluxAxis_withError(
+                self.get_flux(obs_id, filtered_only), self.get_error(obs_id, filtered_only)
+            )
             cpp_spectra[obs_id] = self._make_cspectrum(spectralaxis, signal, cpp_lsf, cpp_phot, obs_id)
 
         return cpp_spectra
 
     def _make_cspectrum(self, spectralaxis, signal, cpp_lsf, cpp_phot, obs_id="") -> CSpectrum:
         if self.parameters.full_spectrum_required():
-            cpp_spectrum = CFullSpectrum(spectralaxis, signal, self.get_mask(obs_id).astype(int))
+            cpp_spectrum = CFullSpectrum(spectralaxis, signal, TMaskList(self.get_mask(obs_id).tolist()))
         else:
             cpp_spectrum = CSpectrum(spectralaxis, signal)
         cpp_spectrum.SetName(self.source_id)

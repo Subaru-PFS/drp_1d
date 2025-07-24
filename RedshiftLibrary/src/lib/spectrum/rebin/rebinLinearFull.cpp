@@ -69,7 +69,7 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       if (origin.getMask()[k] && origin.getMask()[k + 1])
         rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
       else
-        rebinedFluxAxis[cursor] = INFINITY;
+        rebinedFluxAxis[cursor] = 0;
 
       rebinedMask[cursor] = 1;
 
@@ -83,9 +83,15 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
         Float64 xStepCompensation = computeXStepCompensation(
             targetSpectralAxis, Xtgt, cursor, xSrcStep);
         error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
-      } else
-        error_tmp[cursor] = INFINITY;
-
+      } else {
+        Log.LogInfo(Formatter()
+                    << "set error to dbl_min at " << cursor
+                    << " mask before=" << (Int32)origin.getMask()[k]
+                    << " after=" << (Int32)origin.getMask()[k + 1] << " at "
+                    << targetSpectralAxis[cursor] << " between" << Xsrc[k]
+                    << " and " << Xsrc[k + 1]);
+        error_tmp[cursor] = DBL_MIN;
+      }
       cursor++;
     }
 

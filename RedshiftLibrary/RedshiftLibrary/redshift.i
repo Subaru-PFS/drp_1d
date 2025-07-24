@@ -59,6 +59,7 @@
 %shared_ptr(CLSFGaussianConstantWidth)
 %shared_ptr(CLSFGaussianVariableWidth)
 %shared_ptr(CSpectrum)
+%shared_ptr(CFullSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
 %shared_ptr(CSpectrumNoiseAxis)
@@ -118,6 +119,7 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
+#include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
@@ -465,6 +467,7 @@ public:
   void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog);
   void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog);
   void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum);
+  void addFullSpectrum(const std::shared_ptr<CFullSpectrum> &spectrum);
   void setFluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin);
   void setFluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti);
   void reset();
@@ -670,6 +673,30 @@ class CSpectrum
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
+class CFullSpectrum: public CSpectrum
+{
+ %rename(CFullSpectrum_default) CFullSpectrum();
+ public:
+
+  CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, TMaskList invalidPixels);
+  std::shared_ptr<const CLSF> GetLSF() const;
+  void SetLSF(const std::shared_ptr<const CLSF>& lsf);
+  void SetPhotData(const std::shared_ptr<const CPhotometricData>& photData);
+  CSpectrumFluxAxis& GetFluxAxis();
+  CSpectrumSpectralAxis& GetSpectralAxis();
+  const CSpectrumNoiseAxis&  GetErrorAxis() const;
+  TLambdaRange GetLambdaRange() const;
+  %apply Float64& OUTPUT { Float64& mean };
+  %apply Float64& OUTPUT { Float64& std };
+
+  void  SetName( const char* name );
+  const std::string GetName() const;
+
+  void setObsID(const std::string& obsID);
+
+  void ValidateNoise( Float64 LambdaMin,  Float64 LambdaMax ) const;
+  bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
+};
 
 %rename(CSpectrumAxis_default) CSpectrumAxis();
 %rename(CSpectrumAxis_empty) CSpectrumAxis(Int32 n);

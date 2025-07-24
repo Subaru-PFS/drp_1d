@@ -47,7 +47,7 @@ using namespace std;
 
 CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
                              CSpectrumFluxAxis fluxAxis,
-                             const TMaskList &invalidPixels)
+                             TMaskList invalidPixels)
     : CSpectrum(spectralAxis, fluxAxis), m_mask(invalidPixels) {}
 CFullSpectrum::CFullSpectrum(const CSpectrum &other, const TFloat64List &mask)
     : CSpectrum(other, mask) {}
@@ -73,12 +73,33 @@ void CFullSpectrum::Rebin(const TFloat64Range &range,
                           const CSpectrumSpectralAxis &targetSpectralAxis,
                           CFullSpectrum &rebinedSpectrum, CMask &rebinedMask,
                           const std::string &opt_error_interp) const {
-  if (!IsValid())
-    THROWG(ErrorCode::INVALID_SPECTRUM,
-           "Invalid spectrum with empty axes, non-matching size "
-           "or unsorted spectral axis");
+  ASSERT_CSpectrum_IS_VALID(*this);
 
   m_rebin->compute(range, targetSpectralAxis, rebinedSpectrum, rebinedMask,
                    opt_error_interp);
-  rebinedSpectrum.setMask(rebinedMask);
+
+  CMask newMask(rebinedSpectrum.GetSampleCount(), 1);
+  for (Int32 index = 0; index < rebinedSpectrum.GetSampleCount(); index++) {
+    auto lambda = targetSpectralAxis[index];
+    auto originIndex = m_SpectralAxis.GetIndexAtWaveLength(lambda);
+    if (originIndex == 0 && m_mask[originIndex] == 0)
+      newMask[index] = 0;
+    else if (m_mask[originIndex] == 0 || m_mask[originIndex - 1] == 0) {
+      Log.LogInfo(Formatter() << "setting mask to false at " << index
+                              << " after " << originIndex);
+      newMask[index] = 0;
+    }
+  }
+  rebinedSpectrum.setMask(newMask);
+}
+
+bool CFullSpectrum::checkCorrectness(bool valid, Int32 index) const {
+
+  if (!valid)
+    Log.LogDebug(Formatter()
+                 << "Invalid pixel with mask =" << (Int32)m_mask[index]);
+  if (!valid && m_mask[index] == 0)
+    return true;
+  else
+    return valid;
 }

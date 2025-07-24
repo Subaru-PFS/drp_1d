@@ -453,7 +453,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
   TBoolList validSamples = flux.checkFlux();
   for (Int32 i = iMin; i < iMax; i++) {
     // collect invalid values
-    if (!validSamples[i]) {
+    if (!checkCorrectness(validSamples[i], i)) {
       ++nInvalid;
       ++invalidElements[to_string(flux[i])];
     }
@@ -501,7 +501,7 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   // check noise
   TBoolList validSamples = GetFluxAxis().GetError().checkNoise();
   for (Int32 i = iMin; i < iMax; i++) {
-    if (!validSamples[i]) {
+    if (!checkCorrectness(validSamples[i], i)) {
       ++nInvalid;
       invalidElements[to_string(error[i])]++;
     }

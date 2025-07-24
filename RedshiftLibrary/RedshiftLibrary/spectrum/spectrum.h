@@ -149,6 +149,7 @@ public:
   bool RemoveContinuum(CContinuum &remover) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;
+  virtual bool checkCorrectness(bool valid, Int32 index) const { return valid; }
   bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                        Float64 coeffCorr = 10.0);
 

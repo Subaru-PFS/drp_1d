@@ -47,7 +47,8 @@ namespace NSEpic {
 class CFullSpectrum : public CSpectrum {
 public:
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis,
-                const TMaskList &invalidPixels);
+                TMaskList invalidPixels);
+
   CFullSpectrum(const std::string &name, const std::string &obsId = "");
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
 
@@ -62,6 +63,7 @@ public:
   //    mutable std::unique_ptr<CRebin<CFullSpectrum>> m_fullRebin;
   const CMask &getMask() const { return m_mask; }
   void setMask(const CMask &mask) { m_mask = mask; }
+  bool checkCorrectness(bool valid, Int32 index) const override;
 
 protected:
   CMask m_mask;
