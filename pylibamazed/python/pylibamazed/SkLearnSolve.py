@@ -59,8 +59,12 @@ class SkLearnSolve(AbstractReliabilitySolver):
         classifier = self.calibration_library.reliability["sklearn"][self.object_type]["classifier"]
         classes = self.calibration_library.reliability["sklearn"][self.object_type]["classes"]
         success = classes[-1]
-        return self.get_probas(output, classifier, classes)[success]
+        try: 
+            return self.get_probas(output, classifier, classes)[success]
+        except APIException:
+            return None
 
+        
     def get_probas(self, output, classifier, classes):
         output.load_object_level(self.object_type)
         attributes = OrderedDict( {
@@ -98,6 +102,8 @@ class SkLearnSolve(AbstractReliabilitySolver):
             if k in col_used:
                 if att != "":
                     v[idx] = output.get_attribute_short(att, lines_ids)
+                    if v[idx] is None:
+                        raise APIException(ErrorCode.RELIABILITY_MISSING_ATTRIBUTE, f"missing attribute {att}")
                 else:
                     v[idx] = np.nan
                 idx += 1
