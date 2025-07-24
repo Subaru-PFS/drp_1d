@@ -96,8 +96,11 @@ class SkLearnSolve(AbstractReliabilitySolver):
         idx = 0 
         lines_ids = [] 
         for k,att in attributes.items():
-            if k in col_used and att!="":
-                v[idx] = output.get_attribute_short(att, lines_ids)
+            if k in col_used:
+                if att != "":
+                    v[idx] = output.get_attribute_short(att, lines_ids)
+                else:
+                    v[idx] = np.nan
                 idx += 1
         ret = dict()
         probas = classifier.predict_proba(v.reshape(1,-1))
