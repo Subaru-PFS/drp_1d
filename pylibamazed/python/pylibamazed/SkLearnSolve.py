@@ -56,7 +56,6 @@ class SkLearnSolve(AbstractReliabilitySolver):
             auto_load=False,
             extended_results=False,
         )
-        zlog.LogInfo(f"SkLearnSolver: Compute reliability for {self.object_type}")
         classifier = self.calibration_library.reliability["sklearn"][self.object_type]["classifier"]
         classes = self.calibration_library.reliability["sklearn"][self.object_type]["classes"]
         success = classes[-1]
@@ -106,7 +105,7 @@ class SkLearnSolve(AbstractReliabilitySolver):
         probas = classifier.predict_proba(v.reshape(1,-1))
         for i,c in enumerate(classes):
             ret[c] = float(probas[0, i])
-        zlog.LogInfo(f"SkLearnSolver: probas are {ret} for {v}")
+        #zlog.LogInfo(f"SkLearnSolver: probas are {ret} for {v}")
         return ret
 
 register_reliability_solver("skLearnSolver", SkLearnSolve, "sk")
