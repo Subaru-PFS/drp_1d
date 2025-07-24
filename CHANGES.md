@@ -3,9 +3,13 @@
 ## 1.11
 ### Added
 ### Changed
+- [9851] : Rename & homogenize quality indicators in output specifications
+- [9859] : Update error codes & messages
 ### Deprecated
 ### Removed
 ### Fixed
+- [9945] : Fix memory leak in the convolution of the IGM extinction curves
+- [9899] : [api] Fix get_attribute_short for objectInfo and performances
 
 ## 1.10.0 (2025-07-02)
 ### Added
