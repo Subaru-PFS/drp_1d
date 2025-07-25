@@ -14,6 +14,7 @@
 ### Fixed
 * [9945] : Fix memory leak in the convolution of the IGM extinction curves
 * [9899] : [api] Fix get_attribute_short for objectInfo and performances
+* [9970] : Fix linemeas continuum flux under line uncertainty
 
 ## 1.10.0 (2025-07-02)
 ### Added
