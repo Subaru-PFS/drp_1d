@@ -66,6 +66,7 @@ def register_reader(reader_name: str, reader):
     reader_classes[reader_name] = reader
 
 
+@doc_method
 def get_reader_from_name(reader_name):
     return reader_classes[reader_name]
 

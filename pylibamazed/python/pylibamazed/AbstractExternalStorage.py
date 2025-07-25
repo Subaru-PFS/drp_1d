@@ -54,6 +54,7 @@ def register_storage(storage_name, storage):
     READER_CLASSES[storage_name] = storage
 
 
+@doc_method
 def get_storage_from_name(storage_name):
     return READER_CLASSES[storage_name]
 

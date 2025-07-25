@@ -56,6 +56,9 @@ CalibrationLibrary
   :undoc-members:
   :show-inheritance:
 
+.. automodule:: pylibamazed.CalibrationLibrary
+   :members:
+
 CLog
 ----
 
@@ -122,6 +125,44 @@ Container
   :undoc-members:
   :show-inheritance:
 
+CSpectrum
+---------------------------
+
+.. currentmodule:: pylibamazed.redshift
+
+.. autoclass:: CSpectrum
+   :members:
+   :undoc-members:
+
+   .. automethod:: SetName
+
+CSpectrumFluxAxis_withError
+---------------------------
+
+.. currentmodule:: pylibamazed.redshift
+
+.. autoclass:: CSpectrumFluxAxis_withError
+   :members:
+   :undoc-members:
+
+CSpectrumSpectralAxis
+---------------------------
+
+.. currentmodule:: pylibamazed.redshift
+
+.. autoclass:: CSpectrumSpectralAxis
+   :members:
+   :undoc-members:
+
+DeepLearningSolve
+-----------------
+.. currentmodule:: pylibamazed.DeepLearningSolve
+
+.. autoclass:: DeepLearningSolve
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
 ErrorCode
 ---------
 
@@ -172,6 +213,15 @@ ResultStoreOutput
   :undoc-members:
   :show-inheritance:
   :inherited-members:
+
+SkLearnSolve
+------------
+.. currentmodule:: pylibamazed.SkLearnSolve
+
+.. autoclass:: SkLearnSolve
+  :members:
+  :undoc-members:
+  :show-inheritance:
 
 Spectrum
 ---------

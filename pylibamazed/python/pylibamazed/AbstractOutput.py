@@ -332,6 +332,7 @@ class AbstractOutput(metaclass=ABCMeta):
         else:
             return False
 
+    @doc_method
     def get_dataset_size(self, object_type, dataset, rank=None):
         first_attr = None
         if rank is None:
@@ -615,6 +616,7 @@ class AbstractOutput(metaclass=ABCMeta):
     def get_candidate_group_name(self, rank):
         return "candidate" + chr(rank + 65)  # 0=A, 1=B,....
 
+    @doc_method
     def get_attributes(self, attributes, lines_ids):
         ret = dict()
         ret["ProcessingID"] = self.spectrum_id
