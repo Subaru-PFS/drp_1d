@@ -44,11 +44,14 @@ from pylibamazed.Exception import APIException
 from pylibamazed.redshift import ErrorCode
 from pylibamazed.redshift import CLog
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
+from pylibamazed.DocDecorator import doc_method
 from pylibamazed.AbstractReliabilitySolver import AbstractReliabilitySolver, register_reliability_solver
 
 zlog = CLog.GetInstance()
 
+
 class SkLearnSolve(AbstractReliabilitySolver):
+    @doc_method
     def Compute(self, source):
         output = ResultStoreOutput(
             source.GetResultStore(),
@@ -59,59 +62,64 @@ class SkLearnSolve(AbstractReliabilitySolver):
         classifier = self.calibration_library.reliability["sklearn"][self.object_type]["classifier"]
         classes = self.calibration_library.reliability["sklearn"][self.object_type]["classes"]
         success = classes[-1]
-        try: 
+        try:
             return self.get_probas(output, classifier, classes)[success]
         except APIException:
             return None
 
-        
+    @doc_method
     def get_probas(self, output, classifier, classes):
         output.load_object_level(self.object_type)
-        attributes = OrderedDict( {
-            'A_IMAGE':"",
-            'ELLIPTICITY':"",
-            'POINT_LIKE_PROB':"",
-            'MAG_VIS':"",
-            'MER_Y_MAG':"",
-            'MER_J_MAG':"",
-            'MER_H_MAG':"",
-            'NDITH':"",
-            'LSF_SIG':"",
-            'Z':"galaxy.Redshift",
-            'Z_ERR':"galaxy.RedshiftUncertainty",
-            'Z_PROB':"",
-            'HA_FLUX':"galaxy.lfHaNII",
-            'HA_SNR':"galaxy.snrHaNII",
-            'OII_FLUX':"galaxy.lfOII",
-            'OII_SNR':"galaxy.snrOII",
-            'VEL_EMI':"galaxy.VelocityEmission",
-            'RELIABILITY':"",
-            'SPEC_COLOR':"",
-            'SNR_MEAN':"",
-            'SNR_STD':"",
-            'NDITH_MEAN':"",
-            'NDITH_STD':"" 
+        attributes = OrderedDict(
+            {
+                "A_IMAGE": "",
+                "ELLIPTICITY": "",
+                "POINT_LIKE_PROB": "",
+                "MAG_VIS": "",
+                "MER_Y_MAG": "",
+                "MER_J_MAG": "",
+                "MER_H_MAG": "",
+                "NDITH": "",
+                "LSF_SIG": "",
+                "Z": "galaxy.Redshift",
+                "Z_ERR": "galaxy.RedshiftUncertainty",
+                "Z_PROB": "",
+                "HA_FLUX": "galaxy.lfHaNII",
+                "HA_SNR": "galaxy.snrHaNII",
+                "OII_FLUX": "galaxy.lfOII",
+                "OII_SNR": "galaxy.snrOII",
+                "VEL_EMI": "galaxy.VelocityEmission",
+                "RELIABILITY": "",
+                "SPEC_COLOR": "",
+                "SNR_MEAN": "",
+                "SNR_STD": "",
+                "NDITH_MEAN": "",
+                "NDITH_STD": "",
             }
         )
-        col_used = ['LSF_SIG', 'Z', 'Z_ERR', 'HA_FLUX', 'HA_SNR', 'OII_FLUX', 'OII_SNR', 'VEL_EMI']
+        col_used = ["LSF_SIG", "Z", "Z_ERR", "HA_FLUX", "HA_SNR", "OII_FLUX", "OII_SNR", "VEL_EMI"]
 
         v = np.ndarray([len(col_used)])
-        idx = 0 
-        lines_ids = [] 
-        for k,att in attributes.items():
+        idx = 0
+        lines_ids = []
+        for k, att in attributes.items():
             if k in col_used:
                 if att != "":
                     v[idx] = output.get_attribute_short(att, lines_ids)
                     if v[idx] is None:
-                        raise APIException(ErrorCode.RELIABILITY_MISSING_ATTRIBUTE, f"missing attribute {att}")
+                        raise APIException(
+                            ErrorCode.RELIABILITY_MISSING_ATTRIBUTE, f"missing attribute {att}"
+                        )
                 else:
                     v[idx] = np.nan
                 idx += 1
         ret = dict()
-        probas = classifier.predict_proba(v.reshape(1,-1))
-        for i,c in enumerate(classes):
+        probas = classifier.predict_proba(v.reshape(1, -1))
+        for i, c in enumerate(classes):
             ret[c] = float(probas[0, i])
-        zlog.LogDetail(f"SkLearnSolver: probas are {ret} for {v}")
+        d = {c: t for c, t in zip(col_used, v)}
+        zlog.LogDetail(f"SkLearnSolver: probas are {ret} for {d}")
         return ret
+
 
 register_reliability_solver("skLearnSolver", SkLearnSolve, "sk")
