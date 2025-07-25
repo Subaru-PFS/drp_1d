@@ -152,7 +152,11 @@ class Parameters(ParametersAccessor):
     def is_tplratio_catalog_needed(self, spectrum_model) -> bool:
         solve_method = self.get_redshift_solver_method(spectrum_model)
         if solve_method == ESolveMethod.LINE_MODEL:
-            return self.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"]
+            return self.get_linemodel_line_ratio_type(spectrum_model) in [
+                "tplRatio",
+                "tplCorr",
+                "ratioToFree",
+            ]
         else:
             return False
 

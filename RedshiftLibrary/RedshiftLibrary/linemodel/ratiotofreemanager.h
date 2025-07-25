@@ -37,39 +37,41 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#ifndef _REDSHIFT_TPLCORR_MANAGER_
-#define _REDSHIFT_TPLCORR_MANAGER_
+#ifndef _REDSHIFT_RATIO_TO_FREE_MANAGER_
+#define _REDSHIFT_RATIO_TO_FREE_MANAGER_
 
-#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/rulesmanager.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
-#include "RedshiftLibrary/statistics/priorhelper.h"
 
 namespace NSEpic {
 
 class CLineCatalogsTplRatio;
 
-class CTplCorrManager : public CTplratioManager {
+class CRatioToFreeManager : public CRulesManager, public CTplratioManager {
 public:
-  CTplCorrManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
-                  const CSpcModelVectorPtr &models,
-                  const CCSpectrumVectorPtr &inputSpcs,
-                  const CTLambdaRangePtrVector &lambdaRanges,
-                  std::shared_ptr<CContinuumManager> continuumManager,
-                  const CLineMap &restLineList,
-                  const CSpectraGlobalIndex &spcIndex);
-  CTplCorrManager() = delete;
-  CTplCorrManager(CTplCorrManager const &other) = default;
-  CTplCorrManager &operator=(CTplCorrManager const &other) = default;
-
-  CTplCorrManager(CTplCorrManager &&other) = default;
-  CTplCorrManager &operator=(CTplCorrManager &&other) = default;
-
+  CRatioToFreeManager(const std::shared_ptr<CLMEltListVector> &elementsVector,
+                      const CSpcModelVectorPtr &models,
+                      const CCSpectrumVectorPtr &inputSpcs,
+                      const CTLambdaRangePtrVector &lambdaRanges,
+                      std::shared_ptr<CContinuumManager> continuumManager,
+                      const CLineMap &restLineList,
+                      const CSpectraGlobalIndex &spcIndex);
+  void setPassMode(Int32 iPass) override;
+  int prepareFit(Float64 redshift) override;
   std::pair<Float64, Float64> computeMerit(Int32 itratio) override;
   void saveResults(Int32 itratio) override;
   CLineRatioManager::EType getStrictType() const override {
-    return EType::tplCorr;
+    return EType::ratioToFree;
   };
-  bool isTplCorr() const override { return true; };
+  bool isTplRatio() const override { return m_pass == 1; };
+  bool isRules() const override { return m_pass == 2; };
+
+  void setChiSquareRatioResult(
+      const Int32 index_z,
+      const std::shared_ptr<CLineModelResult> &lmResult) override;
+
+private:
+  Int32 m_pass = 1;
 };
 
 } // namespace NSEpic

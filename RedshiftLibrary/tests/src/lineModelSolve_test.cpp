@@ -241,6 +241,26 @@ const std::string jsonStringTplFitTplRatio =
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
     "\"catalogDirPath\" : \"\"}}}}}}}";
 
+const std::string jsonStringTplFitRatioToFree =
+    "\"skipSecondPass\" : false,"
+    "\"continuumComponent\" : \"noContinuum\","
+    "\"pdfCombination\" : \"marg\","
+    "\"tplRatioIsmFit\" : true,"
+    "\"rules\" : \"all\","
+    "\"improveBalmerFit\" : true,"
+    "\"lineRatioType\": \"ratioToFree\","
+    "\"enablePhotometry\" : false, "
+    "\"continuumFit\" : { \"ignoreLineSupport\": false,"
+    "\"negativeThreshold\": -5.0,"
+    "\"count\" : 1,"
+    "\"nullThreshold\": 3,"
+    "\"badChi2Threshold\": 100,"
+    "\"ismFit\" : true,"
+    "\"igmFit\" : true,"
+    "\"fftProcessing\": false, "
+    "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
+    "\"catalogDirPath\" : \"\"}}}}}}}";
+
 const std::string jsonStringnoContinuumTplRatio =
     "\"skipSecondPass\" : true,"
     "\"continuumComponent\" : \"noContinuum\","
@@ -361,6 +381,26 @@ public:
     ctx.reset();
     ctx.loadParameterStore(lambdaString + jsonString +
                            jsonStringTplFitTplRatio);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+    ctx.addSpectrum(spc, LSF);
+    ctx.setLineRatioCatalogCatalog("galaxy", lineRatioTplCatalog);
+    ctx.setLineCatalog("galaxy", "lineModelSolve", lineCatalog);
+    ctx.initContext();
+    lineRatioTplCatalog->addLineRatioCatalog(*lineRatioCatalog);
+  }
+};
+
+class fixture_LineModelSolveTestTplFitRatioToFree
+    : public fixture_LineModelSolveTest {
+public:
+  fixture_LineModelSolveTestTplFitRatioToFree() {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(lambdaString + jsonString +
+                           jsonStringTplFitRatioToFree);
     ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
     ctx.setCatalog(catalog);
     ctx.setPhotoBandCatalog(photoBandCatalog);
@@ -644,6 +684,44 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
 
 BOOST_FIXTURE_TEST_CASE(computeTplFitTplRatio_test,
                         fixture_LineModelSolveTestTplFitTplRatio) {
+  CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
+                                     ScopeType::SPECTRUMMODEL);
+  CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",
+                             ScopeType::STAGE);
+  CLineModelSolve lineModelSolve;
+  BOOST_REQUIRE_NO_THROW(lineModelSolve.Compute());
+
+  std::weak_ptr<const COperatorResult> result_out =
+      Context.GetResultStore()->GetSolveResult("galaxy", "redshiftSolver",
+                                               "lineModelSolve");
+  BOOST_CHECK(result_out.lock()->getType() == "CLineModelSolveResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  result_out = Context.GetResultStore()->GetLogZPdfResult(
+      "galaxy", "redshiftSolver", "lineModelSolve", "pdf_params");
+  BOOST_CHECK(result_out.lock()->getType() == "CLogZPdfResult");
+
+  std::string resType = Context.GetResultStore()->GetCandidateResultType(
+      "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+      "model_parameters");
+  BOOST_CHECK(resType == "TLineModelResult");
+
+  std::shared_ptr<const TExtremaResult> res =
+      Context.GetResultStore()->GetExtremaResult(
+          "galaxy", "redshiftSolver", "lineModelSolve", "extrema_results",
+          "model_parameters", 0);
+
+  Float64 z = res->Redshift;
+  BOOST_CHECK_CLOSE(z, 0.2596216267268967, 0.1);
+
+  ctx.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(computeTplFitRatioToFree_test,
+                        fixture_LineModelSolveTestTplFitRatioToFree) {
   CAutoScope spectrumModel_autoscope(Context.m_ScopeStack, "galaxy",
                                      ScopeType::SPECTRUMMODEL);
   CAutoScope stage_autoscope(Context.m_ScopeStack, "redshiftSolver",

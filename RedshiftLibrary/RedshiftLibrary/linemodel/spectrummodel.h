@@ -57,7 +57,7 @@ class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
   CSpectrumModel(
-      const std::shared_ptr<CLineModelElementList> &elements,
+      const CLineModelElementList &elements,
       const std::shared_ptr<const CSpectrum> &spc,
       const CLineMap &m_RestLineList,
       const std::shared_ptr<CContinuumModelSolution> &continuumModelSolution,
@@ -133,6 +133,9 @@ public:
                                Float64 zcontinuum);
   void initObserveGridContinuumFlux(Int32 size);
   const TPhotVal &getPhotValues() const { return m_photValues; };
+  void setElements(CLineModelElementList const &elements) {
+    m_Elements = elements;
+  };
 
 private:
   CSpectrumFluxAxis
@@ -144,7 +147,7 @@ private:
   std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
-  std::shared_ptr<CLineModelElementList> m_Elements;
+  CLineModelElementList m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
@@ -232,6 +235,12 @@ public:
   void setEnableAmplitudeOffsets(bool enableAmplitudeOffsets) {
     for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;
+    }
+  }
+
+  void setModelsElements(const CLineModelElementList &elements) {
+    for (auto &model : m_models) {
+      model.setElements(elements);
     }
   }
 

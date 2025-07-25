@@ -157,10 +157,7 @@ COperatorLineModel::ComputeFirstPass() {
     if (m_opt_continuumcomponent.isContinuumFit())
       m_result->SetChisquareContinuumResult(i, m_tplfitStore_firstpass);
 
-    if (m_fittingManager->getLineRatioType() == "tplRatio")
-      m_result->SetChisquareTplratioResult(
-          i, dynamic_pointer_cast<CTplratioManager>(
-                 m_fittingManager->m_lineRatioManager));
+    m_fittingManager->setChiSquareRatioResult(i, m_result);
 
     m_result->ChiSquareContinuum[i] =
         m_estimateLeastSquareFast
@@ -696,8 +693,12 @@ COperatorLineModel::ComputeSecondPass() {
 
   boost::chrono::thread_clock::time_point start_secondpass =
       boost::chrono::thread_clock::now();
-  // Set model parameters to SECOND-PASS
+  if (m_fittingManager->getLineRatioStrictType() ==
+      CLineRatioManager::EType::ratioToFree) {
+    m_fittingManager->reloadFor2ndPass(m_continuumFittingOperator);
+  }
   m_fittingManager->setPassMode(2);
+
   CContinuumManager::EFitType savedFitContinuumOption =
       m_fittingManager->getContinuumManager()
           ->GetFitContinuum_Option(); // the first time was set in
@@ -915,10 +916,8 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
         m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
     m_result->ScaleMargCorrection[idx] =
         m_fittingManager->getScaleMargCorrection();
-    if (m_fittingManager->getLineRatioType() == "tplRatio")
-      m_result->SetChisquareTplratioResult(
-          idx, std::dynamic_pointer_cast<CTplratioManager>(
-                   m_fittingManager->m_lineRatioManager));
+    m_fittingManager->setChiSquareRatioResult(idx, m_result);
+
     if (!m_estimateLeastSquareFast)
       m_result->ChiSquareContinuum[idx] =
           m_fittingManager->getLeastSquareContinuumMerit();
@@ -986,7 +985,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
               m_result->LineModelSolutions[idx]);
 
       // CModelRulesResult
-      if (m_fittingManager->getLineRatioType() == "rules") {
+      if (m_fittingManager->isLineRatioRules()) {
         ExtremaResult->m_savedModelRulesResults[i] =
             std::make_shared<CModelRulesResult>(
                 std::dynamic_pointer_cast<CRulesManager>(
@@ -1024,7 +1023,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
     candidate->updateFromContinuumModelSolution(
         *m_fittingManager->getContinuumFitValues());
 
-    if (m_fittingManager->getLineRatioType() == "tplRatio")
+    if (m_fittingManager->isLineRatioTplRatio())
       candidate->updateTplRatioFromModel(
           std::dynamic_pointer_cast<CTplratioManager>(
               m_fittingManager->m_lineRatioManager));
@@ -1092,8 +1091,6 @@ void COperatorLineModel::EstimateSecondPassParameters() {
     // the extrema selected
     Int32 contreest_iterations = (opt_continuumreest == "always") ? 1 : 0;
 
-    // model.LoadModelSolution(m_result->LineModelSolutions[idx]);
-
     m_fittingManager->fit(
         m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
         m_result->ContinuumModelSolutions[idx], contreest_iterations, false);
@@ -1135,8 +1132,9 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
   const Float64 velfitMinA = ps->GetScoped<Float64>("absVelocityFitMin");
   const Float64 velfitMaxA = ps->GetScoped<Float64>("absVelocityFitMax");
   const Float64 velfitStepA = ps->GetScoped<Float64>("absVelocityFitStep");
-  const std::string opt_lineRatioType =
-      ps->GetScoped<std::string>("lineRatioType");
+  const CLineRatioManager::EType opt_lineRatioType =
+      CLineRatioManager::stringToType.at(
+          ps->GetScoped<std::string>("lineRatioType"));
   const std::string opt_fittingmethod =
       ps->GetScoped<std::string>("fittingMethod");
 
@@ -1167,14 +1165,14 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
   // fit the emission and absorption width by minimizing the
   // linemodel merit with linemodel "hybrid" fitting method
   m_fittingManager->SetFittingMethod("hybrid");
-  if (opt_lineRatioType == "tplRatio") {
+  if (opt_lineRatioType == CLineRatioManager::EType::tplRatio) {
     m_fittingManager->SetFittingMethod("individual");
     std::dynamic_pointer_cast<CTplratioManager>(
         m_fittingManager->m_lineRatioManager)
         ->SetForcedisableTplratioISMfit(
             std::dynamic_pointer_cast<CTplratioManager>(
                 m_fittingManager->m_lineRatioManager)
-                ->m_opt_firstpass_forcedisableTplratioISMfit); // TODO: add
+                ->m_opt_firstpass_forcedisableTplratioISMfit);
   }
 
   std::vector<TInt32List> idxVelfitGroups;
@@ -1306,7 +1304,7 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
   }
   // restore some params
   m_fittingManager->m_fitter = std::move(saved_fitter);
-  if (m_fittingManager->getLineRatioType() == "tplRatio")
+  if (m_fittingManager->isLineRatioTplRatio())
     std::dynamic_pointer_cast<CTplratioManager>(
         m_fittingManager->m_lineRatioManager)
         ->SetForcedisableTplratioISMfit(
@@ -1440,10 +1438,9 @@ void COperatorLineModel::RecomputeAroundCandidates(
         // nothing to do when fromfirstpass: keep
         // m_result->ChiSquareTplContinuum from first pass
       }
-      if (m_fittingManager->getLineRatioType() == "tplRatio")
-        m_result->SetChisquareTplratioResult(
-            iz, std::dynamic_pointer_cast<CTplratioManager>(
-                    m_fittingManager->m_lineRatioManager));
+
+      m_fittingManager->setChiSquareRatioResult(iz, m_result);
+
       if (!m_estimateLeastSquareFast) {
         m_result->ChiSquareContinuum[iz] =
             m_fittingManager->getLeastSquareContinuumMerit();
@@ -1709,10 +1706,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
 
   m_fittingManager = std::make_shared<CLineModelFitting>(
       m_continuumFittingOperator, ElementComposition::OneLine);
-
-  // TODO handle igm coeff
-
-  // does m_fittingManager->m_enableAmplitudeOffsets = true;
   m_fittingManager->setPassMode(3);
 
   m_estimateLeastSquareFast = 0;

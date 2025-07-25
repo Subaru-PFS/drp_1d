@@ -69,7 +69,8 @@ bool CLineModelSolve::PopulateParameters(
 
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
-  m_opt_lineratiotype = parameterStore->GetScoped<std::string>("lineRatioType");
+  m_opt_lineratiotype = CLineRatioManager::stringToType.at(
+      parameterStore->GetScoped<std::string>("lineRatioType"));
 
   m_opt_continuumreest =
       parameterStore->GetScoped<std::string>("continuumReestimation");
@@ -162,6 +163,9 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
       m_opt_continuumcomponent.isContinuumFit() &&
       m_linemodel.m_opt_continuumcomponent.isFromSpectrum();
 
+  // If continuum component switched to fromSpectrum, compute the evidence of
+  // continuum only. This allows to make a "fair" evidence comparison with
+  // template fitting where the continuum is not filtered out.
   if (switchedToFromSpectrum) {
     COperatorPdfz pdfzContinuum = initializePdfz(
         maxPeakPerWindow, peakSeparation, cutThreshold, extremaCount);
@@ -372,7 +376,8 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
   chisquarearray.zstep = m_coarseRedshiftStep;
   chisquarearray.zgridParams = spZgridParams;
-  if (!spZgridParams.empty())
+  const bool &isSecondPass = !spZgridParams.empty();
+  if (isSecondPass)
     chisquarearray.parentCandidates = parentZCand;
 
   chisquarearray.cstLog = result->cstLog;
@@ -389,11 +394,14 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
     return chisquarearray;
   }
 
-  if (m_opt_lineratiotype != "tplRatio") {
+  if (m_opt_lineratiotype == CLineRatioManager::EType::tplRatio ||
+      m_opt_lineratiotype == CLineRatioManager::EType::tplCorr ||
+      (m_opt_lineratiotype == CLineRatioManager::EType::ratioToFree &&
+       !isSecondPass)) {
+    fillChisquareArrayForTplRatio(result, chisquarearray);
+  } else {
     zpriors.push_back(BuildZpriors(result));
     chisquares.push_back(result->ChiSquare);
-  } else {
-    fillChisquareArrayForTplRatio(result, chisquarearray);
   }
 
   if (result->ChiSquareTplContinuum.empty())

@@ -115,7 +115,11 @@ class TestLineModelSolve:
     class TestFirstPass:
         def _make_parameter_dict(self, **kwargs) -> dict:
             kwargs["method"] = "lineModelSolve"
-            if kwargs["lineModelSolve"]["lineModel"]["lineRatioType"] in ["tplRatio", "tplCorr"]:
+            if kwargs["lineModelSolve"]["lineModel"]["lineRatioType"] in [
+                "tplRatio",
+                "tplCorr",
+                "ratioToFree",
+            ]:
                 kwargs["lineModelSolve"]["lineModel"]["tplRatioCatalog"] = "sth"
                 kwargs["lineModelSolve"]["lineModel"]["tplRatioIsmFit"] = False
             param_dict = make_parameter_dict_at_redshift_solver_level(**kwargs)

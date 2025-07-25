@@ -106,7 +106,7 @@ public:
   void SetFittingMethod(const std::string &fitMethod,
                         bool enableAmplitudeOffsets = false,
                         bool enableLambdaOffsetsFit = false);
-  void setLineRatioType(const std::string &lineratio);
+  void setLineRatioManager(CLineRatioManager::EType lineratio);
   void SetAbsLinesLimit(Float64 limit);
 
   CMask getOutsideLinesMask() const;
@@ -167,7 +167,7 @@ public:
   const CSpectrum &getSpectrum() const {
     return *((*m_inputSpcs).at(m_spectraIndex.get()));
   }
-  shared_ptr<const CSpectrum> getSpectrumPtr() {
+  std::shared_ptr<const CSpectrum> getSpectrumPtr() {
     return (*m_inputSpcs).at(m_spectraIndex.get());
   }
 
@@ -209,7 +209,19 @@ public:
   Int32 getTplratio_count() const;
   TFloat64List getTplratio_priors() const;
 
-  std::string const &getLineRatioType() const { return m_lineRatioType; }
+  CLineRatioManager::EType const getLineRatioStrictType() const {
+    return m_lineRatioManager->getStrictType();
+  }
+
+  bool const isLineRatioRules() const { return m_lineRatioManager->isRules(); }
+
+  bool const isLineRatioTplRatio() const {
+    return m_lineRatioManager->isTplRatio();
+  }
+
+  bool const isLineRatioTplCorr() const {
+    return m_lineRatioManager->isTplCorr();
+  }
 
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
@@ -218,12 +230,23 @@ public:
 
   CSpectraGlobalIndex &getSpectraIndex() const { return m_spectraIndex; }
   void refreshAllModels();
+  bool needsCatalog();
+  void initMembers(const std::shared_ptr<COperatorContinuumFitting>
+                       &continuumFittingOperator,
+                   CLineRatioManager::EType const &lineRatioType,
+                   ElementComposition element_composition);
+  void reloadFor2ndPass(
+      const std::shared_ptr<COperatorContinuumFitting>
+          &continuumFittingOperator,
+      ElementComposition element_composition = ElementComposition::Default);
+  void
+  setChiSquareRatioResult(const Int32 index_z,
+                          const std::shared_ptr<CLineModelResult> &lmResult);
 
 private:
   void initParameters();
-  void initMembers(const std::shared_ptr<COperatorContinuumFitting>
-                       &continuumFittingOperator,
-                   ElementComposition element_composition);
+  void setElementsVector(CLineRatioManager::EType const &lineRatioType,
+                         ElementComposition const &element_composition);
 
   void LogCatalogInfos();
   void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
@@ -251,8 +274,6 @@ private:
 
   const CLineMap m_RestLineList;
 
-  Int32 m_pass = 1;
-
   std::shared_ptr<CContinuumModelSolution> m_continuumFitValues;
   std::shared_ptr<CContinuumManager> m_continuumManager;
 
@@ -268,8 +289,6 @@ private:
   Float64 m_nominalWidthDefault;
 
   std::string m_fittingmethod;
-
-  std::string m_lineRatioType;
 
   bool m_forcedisableMultipleContinuumfit = false;
 
@@ -291,6 +310,8 @@ private:
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
+
+  Int32 m_pass = 1;
 
   mutable CSpectraGlobalIndex m_spectraIndex;
 };
