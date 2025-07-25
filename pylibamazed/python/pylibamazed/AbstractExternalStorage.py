@@ -37,7 +37,6 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 from abc import ABCMeta, abstractmethod
-import os
 
 import h5py
 import pandas as pd
@@ -78,14 +77,14 @@ class AbstractExternalStorage(metaclass=ABCMeta):
 
     #  to be used as context manager
     def __enter__(self):
-        spectrum_id, obs_id = self._call_params
+        spectrum_id, path, obs_id = self._call_params
         del self._call_params
-        self.resource = self.read(spectrum_id, obs_id)
+        self.resource = self.read(spectrum_id, path, obs_id)
         return self.resource
 
-    def __call__(self, spectrum_id, obs_id=""):
+    def __call__(self, spectrum_id, path: str = "", obs_id: str = ""):
         # store read parameters
-        self._call_params = (spectrum_id, obs_id)
+        self._call_params = (spectrum_id, path, obs_id)
 
         return self
 
@@ -96,16 +95,18 @@ class AbstractExternalStorage(metaclass=ABCMeta):
 
     @abstractmethod
     @doc_method
-    def read(self, spectrum_id, obs_id: str = "", path: str = ""):
+    def read(self, spectrum_id, path: str = "", obs_id: str = ""):
         """
         Read a spectrum file and return its data.
 
-        :param obs_id: id of the observation
+        :param spectrun_id: id of the source
+        :type spectrum_id: any
+        :param path: path or anything else neded to acquire the resource
+        :type param path: str
+        :param obs_id: id of the observation, for multiple observations of the same source
         :type obs_id: str
-        :param kwargs: additional keyword arguments
-        :type kwargs: dict
 
-        :return: HDUList or DataFrame
+        :return: resource
         """
         raise NotImplementedError("Implement in derived class")
 
@@ -171,21 +172,3 @@ class AbstractExternalStorage(metaclass=ABCMeta):
         """
         spectrum = h5py.File(filepath, "r")
         return spectrum
-
-    def _get_spectrum_path(self, spectrum_id, obs_id=""):
-        if self.config.spectrum_path_col:
-            if obs_id:
-                s_filename = obs_id
-            else:
-                s_filename = spectrum_id.Path
-        elif obs_id:
-            s_filename = (
-                self.config.spectrum_prefix
-                + spectrum_id.ProcessingID
-                + "_"
-                + obs_id
-                + self.config.spectrum_suffix
-            )
-        else:
-            s_filename = self.config.spectrum_prefix + spectrum_id.ProcessingID + self.config.spectrum_suffix
-        return os.path.join(self.config.spectrum_dir, s_filename)
