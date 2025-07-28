@@ -25,7 +25,6 @@ author = "CESAM-LAM"
 # The full version, including alpha/beta/rc tags
 release = "0.28.0"
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -57,7 +56,10 @@ exclude_patterns = []
 #
 html_theme = "sphinx_rtd_theme"
 
-html_theme_options = {"titles_only": False, "navigation_depth": 4}
+html_theme_options = {
+    "navigation_depth": 4,
+    "titles_only": True,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

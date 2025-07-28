@@ -6,7 +6,6 @@ This is not a complete reference, but rather a guide to help you understand how 
 For the full reference, please refer to the :doc:`reference` page.
 
  .. toctree::
-    :maxdepth: 2
 
     methods/parameters
     methods/input

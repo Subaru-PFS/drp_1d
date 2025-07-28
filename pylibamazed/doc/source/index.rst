@@ -7,7 +7,6 @@ Welcome to PyLibAmazed's documentation!
 =======================================
 
  .. toctree::
-   :maxdepth: 4
 
    api
    algorithms
