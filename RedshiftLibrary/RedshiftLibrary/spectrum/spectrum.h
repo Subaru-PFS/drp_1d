@@ -178,7 +178,6 @@ public:
   integrateFluxes_usingTrapez(CSpectrumSpectralAxis const &spectralAxis,
                               CSpectrumFluxAxis const &fluxAxis,
                               TInt32RangeList const &indexRangeList);
-  const CMask &getCMask() { return m_mask; }
 
 protected:
   friend CRebin;
@@ -212,7 +211,7 @@ protected:
   std::string m_FullPath;
 
   CSpectrumSpectralAxis m_SpectralAxis;
-  CMask m_mask;
+
   mutable std::unique_ptr<CRebin> m_rebin;
   std::shared_ptr<const CPhotometricData> m_photData;
   std::string m_obsId = "";

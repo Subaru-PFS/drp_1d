@@ -53,7 +53,6 @@ public:
   CFullSpectrum(const std::string &name, const std::string &obsId = "");
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
 
-  CFullSpectrum(const CSpectrum &other, const TFloat64List &mask);
   CFullSpectrum(const CFullSpectrum &other, const TFloat64List &mask);
   CFullSpectrum(const CFullSpectrum &other);
   CFullSpectrum(CFullSpectrum &&other);

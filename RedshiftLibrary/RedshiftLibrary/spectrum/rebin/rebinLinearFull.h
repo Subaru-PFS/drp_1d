@@ -59,7 +59,7 @@ protected:
              CMask &rebinedMask, const std::string opt_error_interp,
              const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
              Int32 &cursor) override;
-  const std::string m_type = "lin";
+  const std::string m_type = "linFull";
 };
 
 } // namespace NSEpic
