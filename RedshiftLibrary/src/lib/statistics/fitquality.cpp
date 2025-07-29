@@ -62,14 +62,23 @@ Float64 chi2(const TFloat64List &residuals) {
 }
 
 Float64 reducedChi2(const Float64 chi2, const Int32 nPixels) {
-  if (nPixels <= 0)
-    THROWG(ErrorCode::INTERNAL_ERROR, "nPixels must be > 0 ");
+  if (nPixels <= 0) {
+    Flag.warning(WarningCode::TOO_LITTLE_PIXELS,
+                 Formatter()
+                     << "          NSFitQuality::" << __func__
+                     << ": nPixels must be > 0 for reduced chi2 computation");
+    return NAN;
+  }
   return chi2 / nPixels;
 }
 
 Float64 pValue(const Float64 chi2, const Int32 nPixels) {
-  if (nPixels <= 1)
-    THROWG(ErrorCode::INTERNAL_ERROR, "nPixels must be > 2 ");
+  if (nPixels <= 1) {
+    Flag.warning(WarningCode::TOO_LITTLE_PIXELS,
+                 Formatter() << "          NSFitQuality::" << __func__
+                             << ": nPixels must be > 2 for pValue computation");
+    return NAN;
+  }
   if (chi2 > DBL_MAX)
     return 0;
   boost::math::chi_squared chi2Dist(nPixels - 1);

@@ -44,12 +44,12 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(FitQuality_test)
 BOOST_AUTO_TEST_CASE(reducedChi2_test) {
-  BOOST_CHECK_THROW(NSFitQuality::reducedChi2(10., 0), AmzException);
+  BOOST_CHECK_NO_THROW(NSFitQuality::reducedChi2(10., 0));
   BOOST_CHECK_CLOSE(NSFitQuality::reducedChi2(100., 10), 10., 1e-4);
 }
 
 BOOST_AUTO_TEST_CASE(pValue_test) {
-  BOOST_CHECK_THROW(NSFitQuality::pValue(10., 1), AmzException);
+  BOOST_CHECK_NO_THROW(NSFitQuality::pValue(10., 1));
   BOOST_CHECK_CLOSE(NSFitQuality::pValue(5., 4), 0.1717971442967335, 1e-4);
 }
 
