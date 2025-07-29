@@ -66,12 +66,11 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       // perform linear interpolation of the flux
       Float64 xSrcStep = (Xsrc[k + 1] - Xsrc[k]);
       Float64 t = (Xtgt[cursor] - Xsrc[k]) / xSrcStep;
-      if (origin.getMask()[k] && origin.getMask()[k + 1])
+      if (origin.getMask()[k] && origin.getMask()[k + 1]) {
         rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
-      else
+        rebinedMask[cursor] = 1;
+      } else
         rebinedFluxAxis[cursor] = 0;
-
-      rebinedMask[cursor] = 1;
 
       if (opt_error_interp == "rebin" && origin.getMask()[k] &&
           origin.getMask()[k + 1])
@@ -84,13 +83,13 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
             targetSpectralAxis, Xtgt, cursor, xSrcStep);
         error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
       } else {
-        Log.LogInfo(Formatter()
-                    << "set error to dbl_min at " << cursor
-                    << " mask before=" << (Int32)origin.getMask()[k]
-                    << " after=" << (Int32)origin.getMask()[k + 1] << " at "
-                    << targetSpectralAxis[cursor] << " between" << Xsrc[k]
-                    << " and " << Xsrc[k + 1]);
-        error_tmp[cursor] = DBL_MIN;
+        Log.LogDetail(Formatter()
+                      << "set error to dbl_min at " << cursor
+                      << " mask before=" << (Int32)origin.getMask()[k]
+                      << " after=" << (Int32)origin.getMask()[k + 1] << " at "
+                      << targetSpectralAxis[cursor] << " between" << Xsrc[k]
+                      << " and " << Xsrc[k + 1]);
+        error_tmp[cursor] = DBL_MAX;
       }
       cursor++;
     }

@@ -90,19 +90,7 @@ void CFullSpectrum::Rebin(const TFloat64Range &range,
   m_rebin->compute(range, targetSpectralAxis, rebinedSpectrum, rebinedMask,
                    opt_error_interp);
 
-  CMask newMask(rebinedSpectrum.GetSampleCount(), 1);
-  for (Int32 index = 0; index < rebinedSpectrum.GetSampleCount(); index++) {
-    auto lambda = targetSpectralAxis[index];
-    auto originIndex = m_SpectralAxis.GetIndexAtWaveLength(lambda);
-    if (originIndex == 0 && m_mask[originIndex] == 0)
-      newMask[index] = 0;
-    else if (m_mask[originIndex] == 0 || m_mask[originIndex - 1] == 0) {
-      Log.LogInfo(Formatter() << "setting mask to false at " << index
-                              << " after " << originIndex);
-      newMask[index] = 0;
-    }
-  }
-  rebinedSpectrum.setMask(newMask);
+  rebinedSpectrum.setMask(rebinedMask);
 }
 
 bool CFullSpectrum::checkCorrectness(bool valid, Int32 index) const {
