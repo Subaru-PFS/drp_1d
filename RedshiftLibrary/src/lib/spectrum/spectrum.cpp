@@ -589,7 +589,7 @@ void CSpectrum::SetContinuumEstimationMethod(
 }
 
 void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
-  m_rebin = std::move(*m_rebin).convert(opt_interp);
+  m_rebin = CRebin::create(opt_interp, *this);
 }
 
 // Test methode Rebin

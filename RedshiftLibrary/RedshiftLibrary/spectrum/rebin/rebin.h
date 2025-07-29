@@ -58,7 +58,6 @@ public:
 
   CRebin(CRebin &&other) = default;
 
-  std::unique_ptr<CRebin> convert(const std::string opt_interp) &&;
   static std::unique_ptr<CRebin> create(const std::string &opt_interp,
                                         const CSpectrum &spectrum);
   void compute(const TFloat64Range &range,
@@ -81,11 +80,6 @@ protected:
                            const TAxisSampleList &Xtgt, Int32 cursor,
                            Float64 xSrcStep);
   const CSpectrum &m_spectrum;
-
-  TFloat64List m_pfgFlux;
-  bool m_FineGridInterpolated = false;
-  const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
-                                         // check if enough to be private
 };
 
 } // namespace NSEpic

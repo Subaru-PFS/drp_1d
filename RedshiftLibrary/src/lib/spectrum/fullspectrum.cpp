@@ -45,10 +45,22 @@
 using namespace NSEpic;
 using namespace std;
 
+CFullSpectrum::CFullSpectrum() : CSpectrum() {}
+
+CFullSpectrum::CFullSpectrum(const CFullSpectrum &other)
+    : CSpectrum(other), m_mask(other.m_mask) {
+  m_rebin = CRebin::create("linearFull", *this);
+}
+
+CFullSpectrum::CFullSpectrum(CFullSpectrum &&other)
+    : CSpectrum(other), m_mask(std::move(other.m_mask)) {}
+
 CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
                              CSpectrumFluxAxis fluxAxis,
                              TMaskList invalidPixels)
-    : CSpectrum(spectralAxis, fluxAxis), m_mask(invalidPixels) {}
+    : CSpectrum(std::move(spectralAxis), std::move(fluxAxis)),
+      m_mask(std::move(invalidPixels)) {}
+
 CFullSpectrum::CFullSpectrum(const CSpectrum &other, const TFloat64List &mask)
     : CSpectrum(other, mask) {}
 

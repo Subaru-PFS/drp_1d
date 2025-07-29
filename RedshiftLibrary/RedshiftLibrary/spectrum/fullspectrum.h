@@ -46,6 +46,7 @@ namespace NSEpic {
 
 class CFullSpectrum : public CSpectrum {
 public:
+  CFullSpectrum();
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis,
                 TMaskList invalidPixels);
 
@@ -53,6 +54,8 @@ public:
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
 
   CFullSpectrum(const CSpectrum &other, const TFloat64List &mask);
+  CFullSpectrum(const CFullSpectrum &other);
+  CFullSpectrum(CFullSpectrum &&other);
 
   std::shared_ptr<CSpectrum> getUnmaskedSpectrum();
   void Rebin(const TFloat64Range &range,
