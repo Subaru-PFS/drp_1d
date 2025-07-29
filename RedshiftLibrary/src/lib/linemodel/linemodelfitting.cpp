@@ -1321,9 +1321,10 @@ CLineModelFitting::GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
 
     auto &model = getSpectrumModel();
     auto const &spectralAxis = model.GetModelSpectrum().GetSpectralAxis();
-    auto const &continuumFluxAxis = model.GetModelContinuum();
+    auto const continuumFluxAxis = model.GetModelContinuum();
     return elt.GetContinuumAtCenterProfile(line_index, spectralAxis, redshift,
-                                           continuumFluxAxis);
+                                           continuumFluxAxis,
+                                           m_enableAmplitudeOffsets);
   }
   return std::make_pair(NAN, NAN);
 }

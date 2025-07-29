@@ -126,10 +126,14 @@ public:
                    Float64 redshift);
 
   void setHapriorOption(Int32 opt);
-  const CSpectrum &
-  getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
+
+  std::pair<CModelSpectrumResult, CModelSpectrumResult>
+  getFittedModel(const CLineModelSolution &bestModelSolution,
+                 std::string const &obsId);
+
   std::shared_ptr<CContinuumFitStore const> const &
   getContinuumFitStoreFirstPass() const;
+
   void retrieveContinuumFitStoreFirstPass();
   void setResult(std::shared_ptr<CLineModelResult> res) { m_result = res; }
 

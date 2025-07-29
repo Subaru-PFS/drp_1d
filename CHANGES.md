@@ -4,6 +4,7 @@
 ### Added
 * [6542] : Add a ratioToFree option to perform a "free" second pass after a "tplRatio" first pass (lineRatioType)
 * [9699] : Add a check on input parameters : ignoreLineSupport must be true if continuumComponent is powerlaw
+* [9874] : Add continuum model in lineMeasSolve outputs 
 ### Changed
 * [9851] : Rename & homogenize quality indicators in output specifications
 * [9859] : Update error codes & messages

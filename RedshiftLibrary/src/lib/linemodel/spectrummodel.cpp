@@ -72,8 +72,20 @@ const CSpectrum &CSpectrumModel::GetModelSpectrum() const {
 /**
  * \brief Returns a pointer to the (re-)estimated continuum flux.
  **/
-const CSpectrumFluxAxis &CSpectrumModel::GetModelContinuum() const {
-  return m_ContinuumFluxAxis;
+CSpectrumFluxAxis CSpectrumModel::GetModelContinuum() const {
+  CSpectrumFluxAxis newContinuumFluxAxis;
+  if (m_enableAmplitudeOffsets) {
+    newContinuumFluxAxis.SetSize(m_ContinuumFluxAxis.GetSamplesCount());
+    auto const &continuumSamples = m_ContinuumFluxAxis.GetSamplesVector();
+    auto const &polySamples = m_PolynomialUnderLinesFluxAxis.GetSamplesVector();
+    auto &newContinuumSamples = newContinuumFluxAxis.GetSamplesVector();
+    std::transform(continuumSamples.begin(), continuumSamples.end(),
+                   polySamples.begin(), newContinuumSamples.begin(),
+                   std::plus());
+  } else {
+    newContinuumFluxAxis = m_ContinuumFluxAxis;
+  }
+  return newContinuumFluxAxis;
 }
 
 void CSpectrumModel::initModelWithContinuum() {
@@ -104,8 +116,14 @@ void CSpectrumModel::refreshModel(CLine::EType lineTypeFilter) {
 
   if (m_enableAmplitudeOffsets) {
     // add amplitude offsets
+    m_PolynomialUnderLinesFluxAxis =
+        CSpectrumFluxAxis(modelFluxAxis.GetSamplesCount(), 0);
     m_Elements.addToSpectrumAmplitudeOffset(m_SpectrumModel.GetSpectralAxis(),
-                                            modelFluxAxis);
+                                            m_PolynomialUnderLinesFluxAxis);
+    auto &modelSamples = modelFluxAxis.GetSamplesVector();
+    auto const &polySamples = m_PolynomialUnderLinesFluxAxis.GetSamplesVector();
+    std::transform(polySamples.begin(), polySamples.end(), modelSamples.begin(),
+                   modelSamples.begin(), std::plus());
   }
 
   // create spectrum model

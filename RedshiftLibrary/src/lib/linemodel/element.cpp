@@ -165,10 +165,8 @@ std::pair<Float64, Float64> CLineModelElement::GetContinuumAtCenterProfile(
 
   Float64 cont = continuumfluxAxis[IdxCenterProfile];
   Float64 contStd = NAN;
-
   if (enableAmplitudeOffsets) {
     auto const &polyCoeffs = getElementParam()->GetPolynomCoeffs();
-    cont += polyCoeffs.getValue(spectralAxis[IdxCenterProfile]);
     contStd = std::sqrt(polyCoeffs.getVariance(spectralAxis[IdxCenterProfile]));
   }
   return std::make_pair(cont, contStd);
