@@ -96,7 +96,7 @@ class CustomParametersChecker(ParametersChecker):
     def _check_filters(self, obs_id: str):
         filters = self.accessor.get_filters(default=[], obs_id=obs_id)
 
-        DEFAULT_COLUMN_NAMES = ["waves", "fluxes", "errors", "unused"]
+        DEFAULT_COLUMN_NAMES = ["wave", "flux", "error", "unused"]
         if not filters:
             return
         filter_keys = [filt["key"] for filt in filters if filt.get("type", "byValue") == "byValue"]
