@@ -58,14 +58,6 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
   setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
 }
 
-CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext,
-                                             const CFullSpectrum &spc,
-                                             const TLambdaRange &lambdaRange)
-    : m_inputContext(inputContext) {
-  m_logGridStep = m_inputContext.getLogGridStep();
-  setupRebinning(spc, lambdaRange);
-}
-
 /**
  * Brief: Get loglambdastep and update the zrange accordingly
  * Below code relies on the fact that both loglambda grid and the

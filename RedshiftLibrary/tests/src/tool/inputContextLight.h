@@ -680,6 +680,7 @@ public:
     ctx->m_constLambdaRanges.push_back(std::make_shared<const TFloat64Range>(
         paramStore->Get<TFloat64Range>("lambdaRange")));
     ctx->addFullSpectrum(spc);
+    ctx->addRebinFullSpectrum(spc);
     ctx->m_logGridStep = spc->GetSpectralAxis().GetlogGridStep();
     ctx->addRebinSpectrum(spc);
   }
