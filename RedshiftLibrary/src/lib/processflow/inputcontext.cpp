@@ -242,6 +242,11 @@ void CInputContext::Init() {
       spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect,
                                      nbSamplesMin); // not mandatory
       spectrum_ptr->InitSpectrumContinuum(*m_ParameterStore);
+      m_rebinnedFullClampedLambdaRanges.emplace_back(new TFloat64Range());
+      m_constRebinnedFullClampedLambdaRanges.push_back(
+          m_rebinnedFullClampedLambdaRanges.back());
+      spectrum_ptr->GetSpectralAxis().ClampLambdaRange(
+          *lambdaRange_ptr, *m_rebinnedFullClampedLambdaRanges.back());
     }
   }
   // insert extinction correction objects if needed

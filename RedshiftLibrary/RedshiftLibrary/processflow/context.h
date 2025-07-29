@@ -201,6 +201,11 @@ public:
     return m_inputContext->getRebinnedClampedLambdaRanges();
   }
 
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
+  getRebinnedFullClampedLambdaRanges() const {
+    return m_inputContext->getRebinnedFullClampedLambdaRanges();
+  }
+
   const std::vector<std::shared_ptr<const CSpectrum>> &
   getSpectra(bool rebinned = false) const {
     if (rebinned)

@@ -106,7 +106,7 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
     m_spectra.clear();
     for (const auto &spectrum : Context.getRebinnedFullSpectra())
       m_spectra.push_back(spectrum);
-    m_lambdaRanges = Context.getRebinnedClampedLambdaRanges();
+    m_lambdaRanges = Context.getRebinnedFullClampedLambdaRanges();
     return;
   }
 

@@ -225,6 +225,10 @@ public:
   getRebinnedClampedLambdaRanges() const {
     return m_constRebinnedClampedLambdaRanges;
   }
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
+  getRebinnedFullClampedLambdaRanges() const {
+    return m_constRebinnedFullClampedLambdaRanges;
+  }
 
 private:
   friend class ::fixture_InputContext;
@@ -247,10 +251,13 @@ private:
   std::vector<std::shared_ptr<TFloat64Range>> m_lambdaRanges;
   std::vector<std::shared_ptr<TFloat64Range>> m_clampedLambdaRanges;
   std::vector<std::shared_ptr<TFloat64Range>> m_rebinnedClampedLambdaRanges;
+  std::vector<std::shared_ptr<TFloat64Range>> m_rebinnedFullClampedLambdaRanges;
   std::vector<std::shared_ptr<const TFloat64Range>> m_constLambdaRanges;
   std::vector<std::shared_ptr<const TFloat64Range>> m_constClampedLambdaRanges;
   std::vector<std::shared_ptr<const TFloat64Range>>
       m_constRebinnedClampedLambdaRanges;
+  std::vector<std::shared_ptr<const TFloat64Range>>
+      m_constRebinnedFullClampedLambdaRanges;
 
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::map<std::string, std::map<std::string, std::shared_ptr<CLineCatalog>>>
