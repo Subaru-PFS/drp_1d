@@ -64,6 +64,10 @@ CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
 CFullSpectrum::CFullSpectrum(const CSpectrum &other, const TFloat64List &mask)
     : CSpectrum(other, mask) {}
 
+CFullSpectrum::CFullSpectrum(const CFullSpectrum &other,
+                             const TFloat64List &mask)
+    : CSpectrum(other, mask), m_mask(other.m_mask) {}
+
 CFullSpectrum::CFullSpectrum(const std::string &name, const std::string &obsId)
     : CSpectrum(name, obsId) {}
 
