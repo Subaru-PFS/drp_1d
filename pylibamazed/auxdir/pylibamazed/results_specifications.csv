@@ -151,6 +151,9 @@ LinemeasLineFittingGroupInfo	linemeas	True	object	fittingGroupInfo	linemeas	S10
 LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	i
 LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	i
 LinemeasContinuumPCoeff2	linemeas	True	object	continuum_pCoeff2	linemeas	i
+LinemeasLineWidthUncertainty	linemeas	True	object	SigmasUncertainty	linemeas	f8
+LinemeasEquivalentWidth	linemeas	True	object	EquivalentWidth	linemeas	f8
+LinemeasEquivalentWidthUncertainty	linemeas	True	object	EquivalentWidthUncertainty	linemeas	f8
 LinemeasRedshift	linemeas_parameters	False	object	Redshift	linemeas	f8
 Linemeas_snrOII	linemeas_parameters	False	object	snrOII	linemeas	f8
 Linemeas_snrHaNII	linemeas_parameters	False	object	snrHa	linemeas	f8

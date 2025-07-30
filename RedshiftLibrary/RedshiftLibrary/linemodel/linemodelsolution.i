@@ -42,6 +42,10 @@ public:
   CLineModelSolution() : COperatorResult("CLineModelSolution"){};
   CLineModelSolution(const CLineMap &restLineList);
   bool isLineValid(Int32 lineIdx) const;
+  size_t size() const;
+  void computeSigmaUncertainty(const std::string& lineWidthType);
+  void computeEquivalentWidth();
+  
   TInt32List ElementId; // id of the linemodel element it is part of
   TFloat64List Amplitudes;
   TFloat64List AmplitudesUncertainties; // noise sigma
@@ -57,6 +61,10 @@ public:
                                       // each line
   TFloat64List FluxDirectIntegrationUncertainty; // Flux uncertainty by direct
                                            // integration for each line
+  TFloat64List SigmasUncertainty;                // width (Gaussian sigma) uncertainty for each line
+  TFloat64List EquivalentWidth; //Equivalent width
+  TFloat64List EquivalentWidthUncertainty; //Equivalent width
+  
   TInt32List lineId;
 
   Float64 snrHa = NAN;
