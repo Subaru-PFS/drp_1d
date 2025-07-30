@@ -70,5 +70,5 @@ void CSpectrumAxis::clear() {
 CSpectrumAxis
 CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
 {
-  return CSpectrumAxis(maskVector<Float64>(mask, m_Samples));
+  return CSpectrumAxis(NSVectorOp::maskVector<Float64>(mask, m_Samples));
 }

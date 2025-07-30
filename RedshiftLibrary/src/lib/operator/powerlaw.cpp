@@ -177,7 +177,7 @@ TChi2Result
 COperatorPowerLaw::findMinChi2OnIgmIsm(T3DCurve const &curve3D,
                                        T2DPowerLawCoefsPair const &coefs) {
   T2DList<Float64> chiSquareInterm = computeChi2(curve3D, coefs);
-  TInt32Pair minChi2Idxs = find2DVectorMinIndexes(chiSquareInterm);
+  TInt32Pair minChi2Idxs = NSVectorOp::find2DVectorMinIndexes(chiSquareInterm);
   return {minChi2Idxs.first, minChi2Idxs.second,
           chiSquareInterm[minChi2Idxs.first][minChi2Idxs.second]};
 }

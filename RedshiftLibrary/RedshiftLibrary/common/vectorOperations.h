@@ -45,9 +45,10 @@
 
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
+
 #include "RedshiftLibrary/common/size.h"
 
-namespace NSEpic {
+namespace NSEpic::NSVectorOp {
 
 template <typename T>
 TList<T> maskVector(const TMaskList &mask, const TList<T> &inputVector) {
@@ -224,5 +225,5 @@ interpolateBetweenDuplicates(TList<T> const &source, Int32 insertionIdx,
   return interpVect;
 }
 
-} // namespace NSEpic
+} // namespace NSEpic::NSVectorOp
 #endif

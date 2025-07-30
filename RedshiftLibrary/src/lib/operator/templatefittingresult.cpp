@@ -141,41 +141,52 @@ void CTemplateFittingResult::updateVectors(
   auto const &[insertionIdx, overwrittenSourceIndices, count, largeStepFactor] =
       secondPassIndices;
   Int32 ndup = overwrittenSourceIndices.size();
-  insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<TFitQuality>(FitQuality, insertionIdx, count, {}, ndup);
-  insertWithDuplicates<Float64>(ChiSquarePhot, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitAmplitude, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitAmplitudeError, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(FitAmplitudeSigma, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(FitEbmvCoeff, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Int32>(FitMeiksinIdx, insertionIdx, count, -1, ndup);
-  insertWithDuplicates<Float64>(FitDtM, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitMtM, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(LogPrior, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(SNR, insertionIdx, count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<TFitQuality>(FitQuality, insertionIdx, count,
+                                                {}, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquarePhot, insertionIdx, count,
+                                            NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitAmplitude, insertionIdx, count,
+                                            NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitAmplitudeError, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitAmplitudeSigma, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitEbmvCoeff, insertionIdx, count,
+                                            NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Int32>(FitMeiksinIdx, insertionIdx, count,
+                                          -1, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitDtM, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitMtM, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(LogPrior, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(SNR, insertionIdx, count, NAN,
+                                            ndup);
 
-  insertWithDuplicates<std::vector<Float64>>(
+  NSVectorOp::insertWithDuplicates<std::vector<Float64>>(
       Overlap, insertionIdx, count,
       std::vector<Float64>(Overlap[0].size(), NAN), ndup);
 
-  auto const chi2ToInsert = interpolateBetweenDuplicates(
+  auto const chi2ToInsert = NSVectorOp::interpolateBetweenDuplicates(
       ChiSquareIntermediate, insertionIdx, overwrittenSourceIndices, count,
       largeStepFactor);
-  insertWithDuplicates(ChiSquareIntermediate, insertionIdx, chi2ToInsert, ndup);
+  NSVectorOp::insertWithDuplicates(ChiSquareIntermediate, insertionIdx,
+                                   chi2ToInsert, ndup);
 
-  auto const ismEbmvIdxToInsert = interpolateBetweenDuplicates(
+  auto const ismEbmvIdxToInsert = NSVectorOp::interpolateBetweenDuplicates(
       IsmEbmvIdxIntermediate, insertionIdx, overwrittenSourceIndices, count,
       largeStepFactor);
-  insertWithDuplicates(IsmEbmvIdxIntermediate, insertionIdx, ismEbmvIdxToInsert,
-                       ndup);
+  NSVectorOp::insertWithDuplicates(IsmEbmvIdxIntermediate, insertionIdx,
+                                   ismEbmvIdxToInsert, ndup);
 
-  auto const igmMeiksinIdxToInsert = interpolateBetweenDuplicates(
+  auto const igmMeiksinIdxToInsert = NSVectorOp::interpolateBetweenDuplicates(
       IgmMeiksinIdxIntermediate, insertionIdx, overwrittenSourceIndices, count,
       largeStepFactor);
-  insertWithDuplicates<TInt32List>(IgmMeiksinIdxIntermediate, insertionIdx,
-                                   igmMeiksinIdxToInsert, ndup);
+  NSVectorOp::insertWithDuplicates<TInt32List>(
+      IgmMeiksinIdxIntermediate, insertionIdx, igmMeiksinIdxToInsert, ndup);
 }
 
 std::pair<Int32, Int32> CTemplateFittingResult::getIsmIgmSizes() const {

@@ -123,9 +123,9 @@ CTemplate::CTemplate(const CTemplate &other, const TMaskList &mask)
           CSpectrumFluxAxis(other.m_NoIsmIgmFluxAxis.MaskAxis(mask));
 
       m_computedDustCoeff =
-          maskVector<Float64>(mask, other.m_computedDustCoeff);
+          NSVectorOp::maskVector<Float64>(mask, other.m_computedDustCoeff);
       m_computedMeiksingCoeff =
-          maskVector<Float64>(mask, other.m_computedMeiksingCoeff);
+          NSVectorOp::maskVector<Float64>(mask, other.m_computedMeiksingCoeff);
     }
   }
 }

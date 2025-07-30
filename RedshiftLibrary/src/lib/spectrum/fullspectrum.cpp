@@ -67,7 +67,8 @@ CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
 CFullSpectrum::CFullSpectrum(const CFullSpectrum &other, const TMaskList &mask)
     : CSpectrum(other, mask) {
 
-  auto const new_mask = maskVector<Mask>(mask, other.m_mask.getMaskList());
+  auto const new_mask =
+      NSVectorOp::maskVector<Mask>(mask, other.m_mask.getMaskList());
 
   m_mask = CMask(new_mask);
 }
