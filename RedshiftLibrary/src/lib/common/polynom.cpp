@@ -113,7 +113,7 @@ CPolynomCoeffs CPolynomCoeffsNormalized::getPolynomCoeffs() const {
   poly.m_a2 = coeffs_out(2);
 
   if ((m_covar.array() != 0.0).any())
-    poly.m_covar = m_convCoeff.transpose() * m_covar * m_convCoeff;
+    poly.m_covar = m_convCoeff * m_covar * m_convCoeff.transpose();
   return poly;
 }
 
@@ -126,7 +126,7 @@ void CPolynomCoeffsNormalized::setFromPolynomCoeffs(
   m_a2 = coeffs(2);
 
   if ((poly.m_covar.array() != 0.0).any())
-    m_covar = m_convCoeffInv.transpose() * poly.m_covar * m_convCoeffInv;
+    m_covar = m_convCoeffInv * poly.m_covar * m_convCoeffInv.transpose();
 }
 
 std::pair<Float64, TFloat64List>
