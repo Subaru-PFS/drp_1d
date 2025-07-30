@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   // ssratio = 1
   TMaskList mask = spcAxis.GetSubSamplingMask(ssratio, range);
   BOOST_CHECK(mask.size() == 5);
-  TMaskList mask_ref(5, 1.);
+  TMaskList mask_ref(5, 1);
   BOOST_CHECK(mask == mask_ref);
 
   // ssratio = 2

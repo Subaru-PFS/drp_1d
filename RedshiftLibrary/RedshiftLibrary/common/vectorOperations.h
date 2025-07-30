@@ -49,6 +49,21 @@
 
 namespace NSEpic {
 
+template <typename T>
+TList<T> maskVector(const TMaskList &mask, const TList<T> &inputVector) {
+  TList<T> outputVector;
+  if (mask.size() != inputVector.size()) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "mask and vector sizes do not match");
+  }
+  Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
+  outputVector.reserve(sum);
+  for (Int32 i = 0; i < ssize(mask); i++) {
+    if (mask[i] == 1.)
+      outputVector.push_back(inputVector[i]);
+  }
+  return outputVector;
+}
+
 // insert source into destination with ndup overlaping elements
 template <typename T>
 inline void insertWithDuplicates(std::vector<T> &dest, Int32 pos,
