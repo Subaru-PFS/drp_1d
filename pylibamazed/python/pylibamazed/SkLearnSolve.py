@@ -83,7 +83,7 @@ class SkLearnSolve(AbstractReliabilitySolver):
                 "LSF_SIG": "",
                 "Z": "galaxy.Redshift",
                 "Z_ERR": "galaxy.RedshiftUncertainty",
-                "Z_PROB": "",
+                "Z_PROB": "galaxy.RedshiftProba",
                 "HA_FLUX": "galaxy.lfHaNII",
                 "HA_SNR": "galaxy.snrHaNII",
                 "OII_FLUX": "galaxy.lfOII",
@@ -97,8 +97,8 @@ class SkLearnSolve(AbstractReliabilitySolver):
                 "NDITH_STD": "",
             }
         )
-        col_used = ["LSF_SIG", "Z", "Z_ERR", "HA_FLUX", "HA_SNR", "OII_FLUX", "OII_SNR", "VEL_EMI"]
-
+        #
+        col_used = ["Z", "Z_ERR", "Z_PROB", "HA_FLUX", "HA_SNR", "VEL_EMI"]
         v = np.ndarray([len(col_used)])
         idx = 0
         lines_ids = []
