@@ -119,7 +119,7 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
 
   for (auto const &[logSampledSpectrum_ptr, logSampledLambdaRange_ptr] :
        boost::combine(Context.getRebinnedFullSpectra(),
-                      Context.getRebinnedClampedLambdaRanges())) {
+                      Context.getRebinnedFullClampedLambdaRanges())) {
 
     TFloat64List mask_spc =
         logSampledSpectrum_ptr->GetSpectralAxis().GetSubSamplingMask(

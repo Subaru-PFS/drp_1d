@@ -57,6 +57,11 @@ public:
   CFullSpectrum(const CFullSpectrum &other);
   CFullSpectrum(CFullSpectrum &&other);
 
+  ~CFullSpectrum() = default;
+
+  CFullSpectrum &operator=(const CFullSpectrum &other) = default;
+  CFullSpectrum &operator=(CFullSpectrum &&other) = default;
+
   std::shared_ptr<CSpectrum> getUnmaskedSpectrum();
   void Rebin(const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,

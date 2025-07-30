@@ -125,7 +125,8 @@ void CInputContext::RebinInputs() {
   Log.LogInfo(Formatter() << "loggrid step=" << m_logGridStep);
   std::string const errorRebinMethod = "rebinVariance";
 
-  for (auto const &spectrum_ptr : m_fullSpectra) {
+  for (auto const &[spectrum_ptr, const_lambdaRange_ptr] :
+       boost::combine(m_fullSpectra, m_lambdaRanges)) {
     CSpectrumLogRebinning logReb(*this);
     if (!spectrum_ptr->GetSpectralAxis().IsLogSampled())
       addRebinFullSpectrum(
@@ -138,6 +139,12 @@ void CInputContext::RebinInputs() {
         m_logRebin.insert({cat, SRebinResults{zrange}});
       }
     }
+
+    m_rebinnedFullClampedLambdaRanges.emplace_back(new TFloat64Range());
+    m_constRebinnedFullClampedLambdaRanges.push_back(
+        m_rebinnedFullClampedLambdaRanges.back());
+    m_rebinnedFullSpectra.back()->GetSpectralAxis().ClampLambdaRange(
+        *const_lambdaRange_ptr, *m_rebinnedFullClampedLambdaRanges.back());
   }
 
   for (auto const &[spectrum_ptr, lambdaRange_ptr,
@@ -242,11 +249,6 @@ void CInputContext::Init() {
       spectrum_ptr->ValidateSpectrum(*lambdaRange_ptr, enableInputSpcCorrect,
                                      nbSamplesMin); // not mandatory
       spectrum_ptr->InitSpectrumContinuum(*m_ParameterStore);
-      m_rebinnedFullClampedLambdaRanges.emplace_back(new TFloat64Range());
-      m_constRebinnedFullClampedLambdaRanges.push_back(
-          m_rebinnedFullClampedLambdaRanges.back());
-      spectrum_ptr->GetSpectralAxis().ClampLambdaRange(
-          *lambdaRange_ptr, *m_rebinnedFullClampedLambdaRanges.back());
     }
   }
   // insert extinction correction objects if needed
@@ -291,10 +293,12 @@ void CInputContext::resetSpectrumSpecific() {
   m_constRebinnedFullSpectra.clear();
   m_lambdaRanges.clear();
   m_rebinnedClampedLambdaRanges.clear();
+  m_rebinnedFullClampedLambdaRanges.clear();
   m_clampedLambdaRanges.clear();
   m_constLambdaRanges.clear();
   m_constClampedLambdaRanges.clear();
   m_constRebinnedClampedLambdaRanges.clear();
+  m_constRebinnedFullClampedLambdaRanges.clear();
   // not always spectrum specific
   m_TemplateCatalog.reset();
   // those one should not be here, they stay until api modification (only load

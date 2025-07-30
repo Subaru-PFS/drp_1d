@@ -69,9 +69,10 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       if (origin.getMask()[k] && origin.getMask()[k + 1]) {
         rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
         rebinedMask[cursor] = 1;
-      } else
+      } else {
+        rebinedMask[cursor] = 0;
         rebinedFluxAxis[cursor] = 0;
-
+      }
       if (opt_error_interp == "rebin" && origin.getMask()[k] &&
           origin.getMask()[k + 1])
         error_tmp[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
