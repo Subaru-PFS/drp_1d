@@ -67,12 +67,12 @@ void CSpectrumAxis::clear() {
     maskedAxis is the output axis after applying the mask on the current object
 */
 CSpectrumAxis
-CSpectrumAxis::MaskAxis(const TFloat64List &mask) const // mask is 0. or 1.
+CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
 {
   return CSpectrumAxis(maskVector(mask, m_Samples));
 }
 
-TFloat64List CSpectrumAxis::maskVector(const TFloat64List &mask,
+TFloat64List CSpectrumAxis::maskVector(const TMaskList &mask,
                                        const TFloat64List &inputVector) {
   TFloat64List outputVector;
   if (mask.size() != inputVector.size()) {
@@ -82,7 +82,7 @@ TFloat64List CSpectrumAxis::maskVector(const TFloat64List &mask,
   outputVector.clear();
   outputVector.reserve(sum);
   for (Int32 i = 0; i < ssize(mask); i++) {
-    if (mask[i] == 1.)
+    if (mask[i])
       outputVector.push_back(inputVector[i]);
   }
   return outputVector;

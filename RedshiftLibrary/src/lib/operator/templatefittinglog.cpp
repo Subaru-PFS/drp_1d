@@ -121,7 +121,7 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
        boost::combine(Context.getRebinnedFullSpectra(),
                       Context.getRebinnedFullClampedLambdaRanges())) {
 
-    TFloat64List mask_spc =
+    TMaskList mask_spc =
         logSampledSpectrum_ptr->GetSpectralAxis().GetSubSamplingMask(
             m_ssRatio, *logSampledLambdaRange_ptr);
     std::shared_ptr<CFullSpectrum> ssSpectrum =
@@ -1080,7 +1080,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
     TInt32Range ilbda = FindTplSpectralIndex(m_spectra[0]->GetSpectralAxis(),
                                              logSampledTpl.GetSpectralAxis(),
                                              TFloat64Range(m_redshifts));
-    TFloat64List mask_tpl =
+    TMaskList mask_tpl =
         logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
 
     m_templateRebined_bf[0] = CTemplate(logSampledTpl, mask_tpl);

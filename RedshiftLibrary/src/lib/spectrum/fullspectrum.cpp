@@ -63,8 +63,7 @@ CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
   m_rebin = CRebin::create("linFull", *this);
 }
 
-CFullSpectrum::CFullSpectrum(const CFullSpectrum &other,
-                             const TFloat64List &mask)
+CFullSpectrum::CFullSpectrum(const CFullSpectrum &other, const TMaskList &mask)
     : CSpectrum(other, mask) {
 
   auto new_mask = CSpectrumAxis::maskVector(
@@ -81,9 +80,7 @@ CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
     : CSpectrum(spectralAxis, fluxAxis) {}
 
 std::shared_ptr<CSpectrum> CFullSpectrum::getUnmaskedSpectrum() {
-  return std::make_shared<CSpectrum>(
-      *this,
-      TFloat64List(m_mask.getMaskList().begin(), m_mask.getMaskList().end()));
+  return std::make_shared<CSpectrum>(*this, m_mask.getMaskList());
 }
 
 /**

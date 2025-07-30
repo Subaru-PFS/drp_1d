@@ -497,7 +497,7 @@ void CLineDetection::RemoveStrongFromSpectra(
   }
 
   // create the mask on the strong peaks
-  TFloat64List mask(spectrum.GetSampleCount(), 1);
+  TMaskList mask(spectrum.GetSampleCount(), 1);
   for (Int32 k = 0; k < wavesAxis.GetSamplesCount(); k++) {
     for (auto &[_, strong] : toExclude) {
       if (strong.GetBegin() <= wavesAxis[k] &&

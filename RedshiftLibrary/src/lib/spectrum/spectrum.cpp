@@ -62,7 +62,7 @@ CSpectrum::CSpectrum(const std::string &name, const std::string &obsId)
     : m_Name(name), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))),
       m_obsId(obsId){};
 
-CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
+CSpectrum::CSpectrum(const CSpectrum &other, const TMaskList &mask)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),

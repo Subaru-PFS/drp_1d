@@ -87,7 +87,7 @@ public:
   CSpectrum(const std::string &name, const std::string &obsId = "");
   CSpectrum(const CSpectrum &other);
   CSpectrum(CSpectrum &&other);
-  CSpectrum(const CSpectrum &other, const TFloat64List &mask);
+  CSpectrum(const CSpectrum &other, const TMaskList &mask);
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis,
             const std::shared_ptr<const CLSF> &lsf);

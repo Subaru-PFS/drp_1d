@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   // create spectrum
   spc.InitSpectrumContinuum(*paramStore);
   spc.EstimateContinuum();
-  TFloat64List maskList(spcAxisSize, 1);
+  TMaskList maskList(spcAxisSize, 1);
 
   // constructor
   CSpectrum spc_2;
