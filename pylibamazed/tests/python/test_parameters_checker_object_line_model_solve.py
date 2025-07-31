@@ -73,7 +73,12 @@ class TestLineModelSolve:
 
         def test_error_if_ismfit_enabled_and_ebmv_section_is_not_present(self):
             param_dict = self._make_parameter_dict(
-                **{"lineModelSolve": {"lineModel": {"continuumFit": {"ismFit": True}}}}
+                object_level_params={"templateDir": ""},
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {"continuumComponent": "tplFit", "continuumFit": {"ismFit": True}}
+                    }
+                },
             )
             with pytest.raises(APIException, match=r"Missing parameter ebmv"):
                 check_from_parameter_dict(param_dict)
@@ -86,11 +91,17 @@ class TestLineModelSolve:
 
         def test_error_if_fftprocessing_enabled_but_photometry_enabled(self):
             param_dict = self._make_parameter_dict(
+                object_level_params={"templateDir": ""},
                 **{
                     "lineModelSolve": {
-                        "lineModel": {"continuumFit": {"fftProcessing": True}, "enablePhotometry": True}
+                        "lineModel": {
+                            "continuumComponent": "tplFit",
+                            "useLogLambdaSampling": False,
+                            "continuumFit": {"fftProcessing": True},
+                            "enablePhotometry": True,
+                        }
                     }
-                }
+                },
             )
             param_dict["photometryTransmissionDir"] = "sth"
             param_dict["photometryBand"] = "sth"
@@ -99,18 +110,19 @@ class TestLineModelSolve:
 
         def test_error_if_activate_fft_and_ignore_line_support(self):
             param_dict = self._make_parameter_dict(
+                object_level_params={"templateDir": ""},
                 **{
                     "lineModelSolve": {
-                        "lineModel": {"continuumFit": {"fftProcessing": True, "ignoreLineSupport": True}}
+                        "lineModel": {
+                            "continuumComponent": "tplFit",
+                            "useLogLambdaSampling": False,
+                            "continuumFit": {"fftProcessing": True, "ignoreLineSupport": True},
+                        }
                     }
-                }
+                },
             )
-            with pytest.raises(
-                APIException,
-                match=r"LineModelSolve continuumFit fftProcessing "
-                r"and ignoreLinesSupport are incompatible",
-            ):
-                check_from_parameter_dict(param_dict)
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
 
         @pytest.mark.parametrize("method", ["powerLaw", "powerLawAuto"])
         def test_error_if_powerlaw_and_not_ignore_line_support(self, method):

@@ -542,16 +542,9 @@ class CustomParametersChecker(ParametersChecker):
             error_message=f"object {spectrum_model} lineModelSolve continuumFit",
             warning_message=f"object {spectrum_model} continuumFit section",
         )
-        activate_fft = self.accessor.get_linemodel_continuumfit_fft(spectrum_model)
         activate_ignoreLinesSupport = self.accessor.get_linemodel_continuumfit_ignoreLinesSupport(
             spectrum_model
         )
-        if activate_fft and activate_ignoreLinesSupport:
-            raise APIException(
-                ErrorCode.INVALID_PARAMETER_FILE,
-                "LineModelSolve continuumFit fftProcessing and ignoreLinesSupport are incompatible"
-                f"unset one of them on object {spectrum_model}",
-            )
         is_powerlaw = self.accessor.get_linemodel_continuum_component(spectrum_model) in [
             "powerLaw",
             "powerLawAuto",
