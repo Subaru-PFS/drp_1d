@@ -256,25 +256,6 @@ void COperatorTemplateFitting::updateQualityFitWithResult(
       nPixels, maskInRange);
 }
 
-std::pair<TList<CMask>, Int32>
-COperatorTemplateFitting::getMaskListAndNSamples(Float64 redshift) const {
-  // get masks & determine number of samples actually used
-  TList<CMask> mask_list;
-  Int32 n_samples = 0; // total number of samples
-  mask_list.reserve(m_spectra.size());
-  for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
-    const CMask &mask =
-        m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
-                               *m_lambdaRanges[spcIndex], redshift, spcIndex);
-    n_samples +=
-        std::count(mask.getMaskList().begin() + m_kStart[spcIndex],
-                   mask.getMaskList().begin() + m_kEnd[spcIndex] + 1, Mask(1));
-    mask_list.push_back(std::move(mask));
-  }
-
-  return std::make_pair(std::move(mask_list), n_samples);
-}
-
 void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {
 
   m_sumCross_outsideIGM.assign(m_spectra.size(),

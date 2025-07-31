@@ -132,9 +132,6 @@ protected:
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
 
-  virtual std::pair<TList<CMask>, Int32>
-  getMaskListAndNSamples(Float64 redshift) const;
-
   virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
   virtual bool igmIsInRange(const TFloat64RangeList &ranges) const;
