@@ -313,5 +313,5 @@ void CInputContext::addFullSpectrum(
   m_fullSpectra.push_back(spectrum);
   m_constFullSpectra.push_back(spectrum);
   m_spectra.push_back(spectrum->getUnmaskedSpectrum());
-  m_constSpectra.push_back(spectrum->getUnmaskedSpectrum());
+  m_constSpectra.push_back(m_spectra.back());
 }

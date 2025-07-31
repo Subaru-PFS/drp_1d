@@ -59,7 +59,7 @@ TList<T> maskVector(const TMaskList &mask, const TList<T> &inputVector) {
   Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
   outputVector.reserve(sum);
   for (Int32 i = 0; i < ssize(mask); i++) {
-    if (mask[i] == 1.)
+    if (mask[i] == 1)
       outputVector.push_back(inputVector[i]);
   }
   return outputVector;

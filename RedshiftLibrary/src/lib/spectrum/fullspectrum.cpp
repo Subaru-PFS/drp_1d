@@ -50,12 +50,6 @@ CFullSpectrum::CFullSpectrum() : CSpectrum() {
   m_rebin = CRebin::create("linFull", *this);
 }
 
-CFullSpectrum::CFullSpectrum(const CFullSpectrum &other)
-    : CSpectrum(other), m_mask(other.m_mask) {}
-
-CFullSpectrum::CFullSpectrum(CFullSpectrum &&other)
-    : CSpectrum(other), m_mask(std::move(other.m_mask)) {}
-
 CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
                              CSpectrumFluxAxis fluxAxis,
                              TMaskList invalidPixels)

@@ -95,8 +95,7 @@ inline Int32 CMask::GetMaskedSampleCount() const {
 inline void CMask::SetSize(Int32 s) { m_Mask.resize(s); }
 
 inline Int32 CMask::GetUnMaskedSampleCount() const {
-  return std::reduce(m_Mask.cbegin(), m_Mask.cend(), 0,
-                     [](Int32 l, Int32 r) { return l + r; });
+  return std::reduce(m_Mask.cbegin(), m_Mask.cend(), 0, std::plus());
 }
 
 } // namespace NSEpic

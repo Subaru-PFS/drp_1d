@@ -208,8 +208,8 @@ TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
   for (auto const &vect : spcFlux)
     nTotPixels += vect.size();
 
-  const auto isMasked = [useMask](const std::vector<CMask> &mask, Int32 spcIdx,
-                                  Int32 pixelIdx) {
+  const auto isValid = [useMask](const std::vector<CMask> &mask, Int32 spcIdx,
+                                 Int32 pixelIdx) {
     return !useMask || mask[spcIdx][pixelIdx];
   };
   TFloat64List residuals;
@@ -217,7 +217,7 @@ TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
   Int32 sumNPixels = 0;
   for (Int32 spcIdx = 0; spcIdx != nSpectra; spcIdx++) {
     for (Int32 pixelIdx = 0; pixelIdx != ssize(spcFlux[spcIdx]); pixelIdx++) {
-      if (isMasked(mask, spcIdx, pixelIdx)) {
+      if (isValid(mask, spcIdx, pixelIdx)) {
         const Float64 residual = NSFitQuality::computeResidual(
             spcFlux[spcIdx][pixelIdx], modelFlux[spcIdx][pixelIdx],
             spcFluxError[spcIdx][pixelIdx]);

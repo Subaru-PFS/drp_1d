@@ -49,7 +49,7 @@
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
@@ -87,6 +87,10 @@ public:
 
 private:
   friend class templateFittingLog_test::EstimateXtY_test;
+
+  // shadow CoperatorContinuumFitting::m_spectra
+  std::vector<std::shared_ptr<const CFullSpectrum>> m_spectra;
+
   Float64 m_logstep;
   Int32 m_ssRatio;
 
@@ -106,6 +110,21 @@ private:
                   const Float64 &dtd);
 
   TInt32RangeList FindZRanges(const TFloat64List &redshifts);
+
+  void updateGlobalResults(
+      const std::shared_ptr<CTemplateFittingResult> &result,
+      const std::shared_ptr<const CTemplateFittingResult> &subResult,
+      Int32 resultIdx);
+
+  void
+  applyPrior(const std::shared_ptr<CTemplateFittingResult> &result,
+             const std::shared_ptr<const CTemplateFittingResult> &subResult,
+             Int32 resultIdx, const CPriorHelper::TPriorZEList &logpriorze,
+             Float64 dtd);
+
+  void computeFitQuality(const std::shared_ptr<CTemplateFittingResult> &result,
+                         Int32 resultIdx, Int32 subResultSize,
+                         Int32 firstTplIdx);
 
   void EstimateXtY(const TFloat64List &X, const TFloat64List &Y,
                    TFloat64List &XtY, Int32 precomputedFFT = -1);

@@ -54,8 +54,8 @@ public:
   CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
 
   CFullSpectrum(const CFullSpectrum &other, const TMaskList &mask);
-  CFullSpectrum(const CFullSpectrum &other);
-  CFullSpectrum(CFullSpectrum &&other);
+  CFullSpectrum(const CFullSpectrum &other) = default;
+  CFullSpectrum(CFullSpectrum &&other) = default;
 
   ~CFullSpectrum() = default;
 

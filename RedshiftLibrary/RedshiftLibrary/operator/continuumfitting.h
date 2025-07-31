@@ -80,6 +80,13 @@ class COperatorContinuumFitting : public COperator {
 
 public:
   COperatorContinuumFitting();
+  virtual ~COperatorContinuumFitting() = default;
+  COperatorContinuumFitting(const COperatorContinuumFitting &) = default;
+  COperatorContinuumFitting(COperatorContinuumFitting &&) = default;
+  COperatorContinuumFitting &
+  operator=(const COperatorContinuumFitting &) = default;
+  COperatorContinuumFitting &operator=(COperatorContinuumFitting &&) = default;
+
   virtual bool IsFFTProcessing() { return false; };
   void setMaskBuilder(const std::shared_ptr<CMaskBuilder> &maskBuilder) {
     m_maskBuilder = maskBuilder;

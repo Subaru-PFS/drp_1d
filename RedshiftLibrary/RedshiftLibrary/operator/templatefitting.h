@@ -113,6 +113,11 @@ public:
   COperatorTemplateFitting(const TFloat64List &redshifts)
       : COperatorTemplateFittingBase(redshifts){};
   virtual ~COperatorTemplateFitting() = default;
+  COperatorTemplateFitting(const COperatorTemplateFitting &) = default;
+  COperatorTemplateFitting(COperatorTemplateFitting &&) = default;
+  COperatorTemplateFitting &
+  operator=(const COperatorTemplateFitting &) = default;
+  COperatorTemplateFitting &operator=(COperatorTemplateFitting &&) = default;
 
   std::shared_ptr<CTemplateFittingResult> Compute(
       const CTemplate &tpl, Float64 overlapThreshold, std::string opt_interp,

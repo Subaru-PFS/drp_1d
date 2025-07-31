@@ -454,18 +454,23 @@ Int32 COperatorTemplateFittingLog::FitAllz(
   // since dtd is cte, better compute it here
   const TAxisSampleList &error =
       m_spectra[0]->GetFluxAxis().GetError().GetSamplesVector();
-  ;
+
   const Int32 nRedshifts = result->Redshifts.size();
   const TAxisSampleList &spectrumRebinedFluxRaw =
       m_spectra[0]->GetFluxAxis().GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
+  auto const &mask = m_spectra[0]->getMask();
+  const Int32 nSpcUnmaskedPixels = mask.GetUnMaskedSampleCount();
   Float64 dtd = 0.0;
   TFloat64List inv_err2(nSpcPixels);
   TFloat64List inv_err(nSpcPixels);
   for (Int32 j = 0; j < ssize(error); j++) {
-    inv_err[j] = 1.0 / error[j];
-    inv_err2[j] = inv_err[j] * inv_err[j];
-    dtd += spectrumRebinedFluxRaw[j] * spectrumRebinedFluxRaw[j] * inv_err2[j];
+    if (mask.getMaskList()[j]) {
+      inv_err[j] = 1.0 / error[j];
+      inv_err2[j] = inv_err[j] * inv_err[j];
+      dtd +=
+          spectrumRebinedFluxRaw[j] * spectrumRebinedFluxRaw[j] * inv_err2[j];
+    }
   }
 
   for (Int32 k = 0; k < nzranges; k++) {
@@ -508,153 +513,193 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd);
 
     // copy subresults into global results
-    for (Int32 isubz = 0; isubz < ssize(subresult->Redshifts); isubz++) {
-      Int32 fullResultIdx = isubz + izrangelist[k].GetBegin();
-      if (fullResultIdx >= ssize(result->ChiSquare))
-        THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
-      result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
-      result->FitQuality[fullResultIdx] = subresult->FitQuality[isubz];
-      result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
-      result->FitAmplitudeError[fullResultIdx] =
-          subresult->FitAmplitudeError[isubz];
-      result->FitAmplitudeSigma[fullResultIdx] =
-          subresult->FitAmplitudeSigma[isubz];
-      result->FitDtM[fullResultIdx] = subresult->FitDtM[isubz];
-      result->FitMtM[fullResultIdx] = subresult->FitMtM[isubz];
-      result->SNR[fullResultIdx] = subresult->SNR[isubz];
+    updateGlobalResults(result, subresult, izrangelist[k].GetBegin());
 
-      Float64 logprior = 0.;
-      if (logpriorze.size() > 0) {
-        Int32 kism_best = 0;
-        if (subresult->FitEbmvCoeff[isubz] != -1.0)
-          kism_best =
-              m_templateRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvIndex(
-                  subresult->FitEbmvCoeff[isubz]);
+    if (logpriorze.size() > 0)
+      applyPrior(result, subresult, izrangelist[k].GetBegin(), logpriorze, dtd);
 
-        const CPriorHelper::SPriorTZE &pTZE =
-            logpriorze[fullResultIdx][kism_best];
-        logprior += -2.0 * pTZE.betaTE * pTZE.logprior_precompTE;
-        logprior += -2.0 * pTZE.betaA * pTZE.logprior_precompA;
-        logprior += -2.0 * pTZE.betaZ * pTZE.logprior_precompZ;
-
-        if (pTZE.A_sigma > 0.0 && pTZE.A_mean > 0.0) {
-          // now update the amplitude if there is any constraints from the
-          // priors
-          Float64 ampl = result->FitAmplitude[fullResultIdx];
-          Float64 ampl_err = result->FitAmplitudeError[fullResultIdx];
-          Float64 ampl_sigma = result->FitAmplitudeSigma[fullResultIdx];
-          if (pTZE.betaA > 0.0) {
-            Float64 bss2 = pTZE.betaA / (pTZE.A_sigma * pTZE.A_sigma);
-            ampl = (result->FitDtM[fullResultIdx] + pTZE.A_mean * bss2) /
-                   (result->FitMtM[fullResultIdx] + bss2);
-            ampl_err = sqrt(result->FitMtM[fullResultIdx]) /
-                       (result->FitMtM[fullResultIdx] + bss2);
-
-          } else {
-            ampl =
-                result->FitDtM[fullResultIdx] / result->FitMtM[fullResultIdx];
-            ampl_err = sqrt(1. / result->FitMtM[fullResultIdx]);
-          }
-
-          Log.LogDebug(Formatter()
-                       << "update the amplitude "
-                          "(a_mean="
-                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
-          Log.LogDebug(Formatter() << "update the amplitude "
-                                      "(ampl was = "
-                                   << result->FitAmplitude[fullResultIdx]
-                                   << ", updated to " << ampl);
-
-          // check negative amplitude
-          ampl_sigma = ampl / ampl_err;
-          applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
-
-          result->FitAmplitude[fullResultIdx] = ampl;
-          result->FitAmplitudeError[fullResultIdx] = ampl_err;
-          result->FitAmplitudeSigma[fullResultIdx] = ampl_sigma;
-          const Float64 chi2 = dtd +
-                               result->FitMtM[fullResultIdx] * ampl * ampl -
-                               2. * ampl * result->FitDtM[fullResultIdx];
-          result->ChiSquare[fullResultIdx] = chi2;
-          Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
-                          (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
-          if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
-            THROWG(ErrorCode::INTERNAL_ERROR,
-                   Formatter() << " Invalid logPa value (a_mean=" << pTZE.A_mean
-                               << ", a_sigma=" << pTZE.A_sigma);
-          }
-          logprior += logPa;
-        } else {
-          Log.LogDebug(Formatter()
-                       << "NOT updating the "
-                          "amplitude (a_mean="
-                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
-        }
-        if (std::isnan(logprior) || logprior != logprior ||
-            std::isinf(logprior)) {
-          THROWG(ErrorCode::INTERNAL_ERROR,
-                 Formatter() << "Invalid logPa value (a_mean=" << pTZE.A_mean
-                             << ", a_sigma=" << pTZE.A_sigma
-                             << ", precompA=" << pTZE.logprior_precompA);
-        }
-        result->ChiSquare[fullResultIdx] += logprior;
-      }
-      result->Overlap[fullResultIdx] = subresult->Overlap[isubz];
-      result->LogPrior[fullResultIdx] = logprior;
-      result->FitEbmvCoeff[fullResultIdx] = subresult->FitEbmvCoeff[isubz];
-      result->FitMeiksinIdx[fullResultIdx] = subresult->FitMeiksinIdx[isubz];
-
-      if (m_enableIGM && result->FitMeiksinIdx[fullResultIdx] != -1)
-        ApplyMeiksinCoeff(result->FitMeiksinIdx[fullResultIdx]);
-      if (m_enableISM && result->FitEbmvCoeff[fullResultIdx] != -1)
-        ApplyDustCoeff(
-            m_templateRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(
-                result->FitEbmvCoeff[fullResultIdx]));
-
-      // Compute model flux
-      const auto &tplRebinedFluxRaw{
-          m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector()};
-
-      const Int32 firstTplIdx = ilbda.GetBegin() + isubz;
-      TAxisSampleList modelFlux{tplRebinedFluxRaw.begin() + firstTplIdx,
-                                tplRebinedFluxRaw.begin() + firstTplIdx +
-                                    nSpcPixels};
-      for (auto lambdaIdx = 0; lambdaIdx < ssize(modelFlux); ++lambdaIdx) {
-        modelFlux[lambdaIdx] =
-            modelFlux[lambdaIdx] * result->FitAmplitude[fullResultIdx];
-      }
-
-      result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
-          spectrumRebinedFluxRaw, modelFlux, error,
-          result->ChiSquare[fullResultIdx], nSpcPixels);
-
-      for (Int32 kigm = 0;
-           kigm < ssize(result->IgmMeiksinIdxIntermediate[fullResultIdx]);
-           kigm++)
-        result->IgmMeiksinIdxIntermediate[fullResultIdx][kigm] =
-            subresult->IgmMeiksinIdxIntermediate[isubz][kigm];
-      for (Int32 kism = 0;
-           kism < ssize(result->ChiSquareIntermediate[fullResultIdx]); kism++) {
-        result->IsmEbmvIdxIntermediate[fullResultIdx][kism] =
-            subresult->IsmEbmvIdxIntermediate[isubz][kism];
-        for (Int32 kigm = 0;
-             kigm < ssize(result->ChiSquareIntermediate[fullResultIdx][kism]);
-             kigm++) {
-          result->ChiSquareIntermediate[fullResultIdx][kism][kigm] =
-              subresult->ChiSquareIntermediate[isubz][kism][kigm];
-          if (logpriorze.size() > 0) {
-            Float64 logprior =
-                0.; // not implemented -> not a problem for fullmodel, but will
-                    // be necessary for tplmodel method for example
-            result->ChiSquareIntermediate[fullResultIdx][kism][kigm] +=
-                logprior;
-          }
-        }
-      }
-    }
+    computeFitQuality(result, izrangelist[k].GetBegin(),
+                      subresult->Redshifts.size(), ilbda.GetBegin());
   }
 
   return 0;
+}
+
+void COperatorTemplateFittingLog::updateGlobalResults(
+    const std::shared_ptr<CTemplateFittingResult> &result,
+    const std::shared_ptr<const CTemplateFittingResult> &subResult,
+    Int32 resultIdx) {
+  for (Int32 isubz = 0, fullResultIdx = resultIdx;
+       isubz < ssize(subResult->Redshifts); ++isubz, ++fullResultIdx) {
+    if (fullResultIdx >= ssize(result->ChiSquare))
+      THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+    result->ChiSquare[fullResultIdx] = subResult->ChiSquare[isubz];
+    result->FitQuality[fullResultIdx] = subResult->FitQuality[isubz];
+    result->FitAmplitude[fullResultIdx] = subResult->FitAmplitude[isubz];
+    result->FitAmplitudeError[fullResultIdx] =
+        subResult->FitAmplitudeError[isubz];
+    result->FitAmplitudeSigma[fullResultIdx] =
+        subResult->FitAmplitudeSigma[isubz];
+    result->FitDtM[fullResultIdx] = subResult->FitDtM[isubz];
+    result->FitMtM[fullResultIdx] = subResult->FitMtM[isubz];
+    result->SNR[fullResultIdx] = subResult->SNR[isubz];
+    result->Overlap[fullResultIdx] = subResult->Overlap[isubz];
+    result->FitEbmvCoeff[fullResultIdx] = subResult->FitEbmvCoeff[isubz];
+    result->FitMeiksinIdx[fullResultIdx] = subResult->FitMeiksinIdx[isubz];
+
+    for (Int32 kigm = 0;
+         kigm < ssize(result->IgmMeiksinIdxIntermediate[fullResultIdx]); kigm++)
+      result->IgmMeiksinIdxIntermediate[fullResultIdx][kigm] =
+          subResult->IgmMeiksinIdxIntermediate[isubz][kigm];
+    for (Int32 kism = 0;
+         kism < ssize(result->ChiSquareIntermediate[fullResultIdx]); kism++) {
+      result->IsmEbmvIdxIntermediate[fullResultIdx][kism] =
+          subResult->IsmEbmvIdxIntermediate[isubz][kism];
+      for (Int32 kigm = 0;
+           kigm < ssize(result->ChiSquareIntermediate[fullResultIdx][kism]);
+           kigm++) {
+        result->ChiSquareIntermediate[fullResultIdx][kism][kigm] =
+            subResult->ChiSquareIntermediate[isubz][kism][kigm];
+      }
+    }
+  }
+}
+
+void COperatorTemplateFittingLog::applyPrior(
+    const std::shared_ptr<CTemplateFittingResult> &result,
+    const std::shared_ptr<const CTemplateFittingResult> &subResult,
+    Int32 resultIdx, const CPriorHelper::TPriorZEList &logpriorze,
+    Float64 dtd) {
+  for (Int32 isubz = 0, fullResultIdx = resultIdx;
+       isubz < ssize(subResult->Redshifts); ++isubz, ++fullResultIdx) {
+    if (fullResultIdx >= ssize(result->ChiSquare))
+      THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+
+    Float64 logprior = 0.;
+    if (logpriorze.size() > 0) {
+      Int32 kism_best = 0;
+      if (subResult->FitEbmvCoeff[isubz] != -1.0)
+        kism_best =
+            m_templateRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvIndex(
+                subResult->FitEbmvCoeff[isubz]);
+
+      const CPriorHelper::SPriorTZE &pTZE =
+          logpriorze[fullResultIdx][kism_best];
+      logprior += -2.0 * pTZE.betaTE * pTZE.logprior_precompTE;
+      logprior += -2.0 * pTZE.betaA * pTZE.logprior_precompA;
+      logprior += -2.0 * pTZE.betaZ * pTZE.logprior_precompZ;
+
+      if (pTZE.A_sigma > 0.0 && pTZE.A_mean > 0.0) {
+        // now update the amplitude if there is any constraints from the
+        // priors
+        Float64 ampl = result->FitAmplitude[fullResultIdx];
+        Float64 ampl_err = result->FitAmplitudeError[fullResultIdx];
+        Float64 ampl_sigma = result->FitAmplitudeSigma[fullResultIdx];
+        if (pTZE.betaA > 0.0) {
+          Float64 bss2 = pTZE.betaA / (pTZE.A_sigma * pTZE.A_sigma);
+          ampl = (result->FitDtM[fullResultIdx] + pTZE.A_mean * bss2) /
+                 (result->FitMtM[fullResultIdx] + bss2);
+          ampl_err = sqrt(result->FitMtM[fullResultIdx]) /
+                     (result->FitMtM[fullResultIdx] + bss2);
+
+        } else {
+          ampl = result->FitDtM[fullResultIdx] / result->FitMtM[fullResultIdx];
+          ampl_err = sqrt(1. / result->FitMtM[fullResultIdx]);
+        }
+
+        Log.LogDebug(Formatter()
+                     << "update the amplitude "
+                        "(a_mean="
+                     << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
+        Log.LogDebug(Formatter() << "update the amplitude "
+                                    "(ampl was = "
+                                 << result->FitAmplitude[fullResultIdx]
+                                 << ", updated to " << ampl);
+
+        // check negative amplitude
+        ampl_sigma = ampl / ampl_err;
+        applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
+
+        result->FitAmplitude[fullResultIdx] = ampl;
+        result->FitAmplitudeError[fullResultIdx] = ampl_err;
+        result->FitAmplitudeSigma[fullResultIdx] = ampl_sigma;
+        const Float64 chi2 = dtd + result->FitMtM[fullResultIdx] * ampl * ampl -
+                             2. * ampl * result->FitDtM[fullResultIdx];
+        result->ChiSquare[fullResultIdx] = chi2;
+        Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
+                        (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
+        if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
+          THROWG(ErrorCode::INTERNAL_ERROR,
+                 Formatter() << " Invalid logPa value (a_mean=" << pTZE.A_mean
+                             << ", a_sigma=" << pTZE.A_sigma);
+        }
+        logprior += logPa;
+      } else {
+        Log.LogDebug(Formatter()
+                     << "NOT updating the "
+                        "amplitude (a_mean="
+                     << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
+      }
+      if (std::isnan(logprior) || logprior != logprior ||
+          std::isinf(logprior)) {
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "Invalid logPa value (a_mean=" << pTZE.A_mean
+                           << ", a_sigma=" << pTZE.A_sigma
+                           << ", precompA=" << pTZE.logprior_precompA);
+      }
+      result->ChiSquare[fullResultIdx] += logprior;
+    }
+    result->LogPrior[fullResultIdx] = logprior;
+  }
+}
+
+void COperatorTemplateFittingLog::computeFitQuality(
+    const std::shared_ptr<CTemplateFittingResult> &result, Int32 resultIdx,
+    Int32 subResultSize, Int32 firstTplIdx) {
+
+  const auto &spectrumRebinedFluxRaw =
+      m_spectra[0]->GetFluxAxis().GetSamplesVector();
+  const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
+  auto const &mask = m_spectra[0]->getMask();
+  const Int32 nSpcUnmaskedPixels = mask.GetUnMaskedSampleCount();
+  const auto &error = m_spectra[0]->GetFluxAxis().GetError().GetSamplesVector();
+
+  for (Int32 isubz = 0, fullResultIdx = resultIdx; isubz < subResultSize;
+       ++isubz, ++fullResultIdx, ++firstTplIdx) {
+    if (fullResultIdx >= ssize(result->ChiSquare))
+      THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+
+    if (m_enableIGM && result->FitMeiksinIdx[fullResultIdx] != -1)
+      ApplyMeiksinCoeff(result->FitMeiksinIdx[fullResultIdx]);
+    if (m_enableISM && result->FitEbmvCoeff[fullResultIdx] != -1)
+      ApplyDustCoeff(
+          m_templateRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(
+              result->FitEbmvCoeff[fullResultIdx]));
+
+    // Compute model flux
+    const auto &tplRebinedFluxRaw{
+        m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector()};
+
+    TAxisSampleList modelFlux{tplRebinedFluxRaw.begin() + firstTplIdx,
+                              tplRebinedFluxRaw.begin() + firstTplIdx +
+                                  nSpcPixels};
+    for (auto lambdaIdx = 0; lambdaIdx < ssize(modelFlux); ++lambdaIdx) {
+      modelFlux[lambdaIdx] =
+          modelFlux[lambdaIdx] * result->FitAmplitude[fullResultIdx];
+    }
+
+    TList<TFloat64List> spcFluxVect;
+    TList<TFloat64List> modelFluxVect;
+    TList<TFloat64List> spcFluxErrorVect;
+    TList<CMask> maskVect;
+    spcFluxVect.push_back(spectrumRebinedFluxRaw);
+    modelFluxVect.push_back((std::move(modelFlux)));
+    spcFluxErrorVect.push_back(error);
+    maskVect.push_back(mask);
+    result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
+        spcFluxVect, modelFluxVect, spcFluxErrorVect,
+        result->ChiSquare[fullResultIdx], nSpcUnmaskedPixels, maskVect);
+  }
 }
 
 /**
