@@ -62,10 +62,7 @@ class SkLearnSolve(AbstractReliabilitySolver):
         classifier = self.calibration_library.reliability["sklearn"][self.object_type]["classifier"]
         classes = self.calibration_library.reliability["sklearn"][self.object_type]["classes"]
         success = classes[-1]
-        try:
-            return self.get_probas(output, classifier, classes)[success]
-        except APIException:
-            return None
+        return self.get_probas(output, classifier, classes)[success]
 
     @doc_method
     def get_probas(self, output, classifier, classes):
