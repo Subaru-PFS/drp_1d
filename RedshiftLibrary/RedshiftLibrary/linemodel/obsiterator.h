@@ -49,7 +49,7 @@
 #define ASSERT_SpectraGlobalIndex_IS_VALID(globalIndex)                        \
   do {                                                                         \
     auto const &[isValid, msg] = (globalIndex).isValid();                      \
-    ASSERT(isValid, ErrorCode::INVALID_SPECTRUM_INDEX, msg);                   \
+    ASSERT(isValid, ErrorCode::IE_INVALID_SPECTRUM_INDEX, msg);                \
   } while (0)
 
 namespace NSEpic {

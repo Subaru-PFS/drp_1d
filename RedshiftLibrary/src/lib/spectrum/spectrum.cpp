@@ -680,7 +680,7 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
     return;
   // check if spectrum LSF spectralAxis covers clamped lambdaRange
   if (!m_LSF->checkAvailability(lmin) || !m_LSF->checkAvailability(lmax)) {
-    THROWG(ErrorCode::INVALID_LSF,
+    THROWG(ErrorCode::INSUFFICIENT_LSF_COVERAGE,
            Formatter() << "Failed to validate lsf on wavelength range [" << lmin
                        << ";" << lmax << "]");
   }

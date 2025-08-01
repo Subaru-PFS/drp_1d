@@ -50,7 +50,7 @@ class TestFilterItem:
         FilterItem("T", "<", 1)
 
         # Init raises error if unkown instruction
-        with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
+        with pytest.raises(APIException, match=r"IE_INVALID_FILTER_INSTRUCTION"):
             FilterItem("T", "unkown", 1)
 
     def test_apply(self):
@@ -101,7 +101,7 @@ class TestFilterItem:
         assert filter.apply(df2).equals(pd.Series([True, False, True, False]))
 
         filter.key = "unexistant col"
-        with pytest.raises(APIException, match=r"INVALID_FILTER_KEY"):
+        with pytest.raises(APIException, match=r"IE_INVALID_FILTER_KEY"):
             filter.apply(df)
 
         with pytest.raises(APIException, match=r"INTERNAL_ERROR"):
@@ -116,7 +116,7 @@ class TestFilterItem:
         FilterItem.check_instruction(">")
 
         # Instruction is not registered -> error
-        with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
+        with pytest.raises(APIException, match=r"IE_INVALID_FILTER_INSTRUCTION"):
             FilterItem.check_instruction("unkown")
 
 
@@ -125,7 +125,7 @@ class TestFilterMorphology:
         FilterMorphology("opening", [1, 1])
 
     # Init raises error if unkown instruction
-    with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
+    with pytest.raises(APIException, match=r"IE_INVALID_FILTER_INSTRUCTION"):
         FilterMorphology("unkown", [1, 1])
 
     def test_apply_opening(self):

@@ -92,7 +92,7 @@ class AbstractFilterItem(metaclass=ABCMeta):
     def check_instruction(cls, instruction: str):
         if instruction not in cls.allowed_instructions:
             raise APIException(
-                ErrorCode.INVALID_FILTER_INSTRUCTION,
+                ErrorCode.IE_INVALID_FILTER_INSTRUCTION,
                 f"Instruction {instruction} is not registered."
                 f"Allowed instructions are: {cls.allowed_instructions}",
             )
@@ -115,7 +115,7 @@ class FilterItem(AbstractFilterItem):
         if df is None:
             raise APIException(ErrorCode.INTERNAL_ERROR, "df parameter is None, should be a pandas DataFrame")
         if self.key not in df:
-            raise APIException(ErrorCode.INVALID_FILTER_KEY, f"Column {self.key} does not exist")
+            raise APIException(ErrorCode.IE_INVALID_FILTER_KEY, f"Column {self.key} does not exist")
         action = self._action_from_instruction()
         newMask = action(df[self.key])
         if mask is None:

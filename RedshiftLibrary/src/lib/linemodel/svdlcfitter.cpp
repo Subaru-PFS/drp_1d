@@ -123,8 +123,8 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   const auto &ErrorNoContinuum = getSpectrum().GetFluxAxis().GetError();
 
   if (EltsIdx.size() < 1)
-    THROWG(ErrorCode::EMPTY_LIST, Formatter()
-                                      << "Input elements list is empty");
+    THROWG(ErrorCode::IE_EMPTY_LIST, Formatter()
+                                         << "Input elements list is empty");
   Int32 nddl_ini =
       EltsIdx.size() + 1 +
       std ::max(m_fitc_polyOrder + 1,
