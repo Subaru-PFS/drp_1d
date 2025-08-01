@@ -55,10 +55,10 @@ class CustomParametersChecker(ParametersChecker):
         self,
         parameters: dict,
         FilterLoader=ParamJsonFilterLoader,
-        Accessor=ParametersAccessor,
+        accessor_class=ParametersAccessor,
     ):
         self.filter_loader = FilterLoader()
-        self.accessor = Accessor(parameters)
+        self.accessor = accessor_class(parameters)
 
     def check(self):
         self._check_general()

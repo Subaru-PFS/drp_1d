@@ -50,10 +50,10 @@ class Container(Generic[T]):
                 self.append(kwargs[key], key)
 
     def __repr__(self):
-        repr = ""
+        rep = ""
         for key in self.data:
-            repr += f"\n{key}: {self.data[key]}"
-        return repr
+            rep += f"\n{key}: {self.data[key]}"
+        return rep
 
     def __eq__(self, __value__):
         if type(self) != type(__value__):

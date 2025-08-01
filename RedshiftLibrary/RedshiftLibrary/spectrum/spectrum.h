@@ -106,7 +106,7 @@ public:
   const std::string &GetName() const;
   const std::string &getObsID() const;
   void setObsID(const std::string &obsID);
-  const EType GetType() const;
+  EType GetType() const;
 
   bool InvertFlux();
 
@@ -153,8 +153,8 @@ public:
                        Float64 coeffCorr = 10.0);
 
   const std::string &GetFullPath() const;
-  const Float64 GetMedianWinsize() const;
-  const bool GetMedianEvenReflection() const;
+  Float64 GetMedianWinsize() const;
+  bool GetMedianEvenReflection() const;
   const std::string &GetContinuumEstimationMethod() const;
 
   void SetFullPath(const char *nameP);

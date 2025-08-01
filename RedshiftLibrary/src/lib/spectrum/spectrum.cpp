@@ -390,9 +390,10 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
 
   TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(wlRange);
   Int32 n = iRange.GetLength() + 1;
-  Float64 x[n];
-  Float64 y[n];
-  Float64 w[n];
+
+  TFloat64List x(n);
+  TFloat64List y(n);
+  TFloat64List w(n);
 
   for (Int32 k = 0; k < n; k++) {
     Int32 ik = k + iRange.GetBegin();
@@ -402,8 +403,8 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
   }
 
   double c0, c1, cov00, cov01, cov11, chisq;
-  gsl_fit_wlinear(x, 1, w, 1, y, 1, n, &c0, &c1, &cov00, &cov01, &cov11,
-                  &chisq);
+  gsl_fit_wlinear(x.data(), 1, w.data(), 1, y.data(), 1, n, &c0, &c1, &cov00,
+                  &cov01, &cov11, &chisq);
 
   a = c1;
   b = c0;
@@ -418,7 +419,7 @@ void CSpectrum::setObsID(const std::string &obsID) { m_obsId = obsID; }
 
 void CSpectrum::SetName(std::string name) { m_Name = std::move(name); }
 
-const CSpectrum::EType CSpectrum::GetType() const { return m_spcType; }
+CSpectrum::EType CSpectrum::GetType() const { return m_spcType; }
 
 void CSpectrum::SetType(const CSpectrum::EType type) const {
   if (m_spcType != type) {
@@ -535,9 +536,9 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
 
 const std::string &CSpectrum::GetFullPath() const { return m_FullPath; }
 
-const Float64 CSpectrum::GetMedianWinsize() const { return m_medianWindowSize; }
+Float64 CSpectrum::GetMedianWinsize() const { return m_medianWindowSize; }
 
-const bool CSpectrum::GetMedianEvenReflection() const {
+bool CSpectrum::GetMedianEvenReflection() const {
   return m_medianEvenReflection;
 }
 
