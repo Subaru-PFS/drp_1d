@@ -73,6 +73,8 @@ from pylibamazed.redshift import (
     VecTFloat64List,
     undefStr,
 )
+from pylibamazed.DocDecorator import doc_method
+
 
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
@@ -90,6 +92,7 @@ def _get_linecatalog_strid(lineCatalog_df):
     ]
 
 
+@doc_method
 def load_sklearn_classifier(path, classifier):
     zlog.LogInfo(f"reliability: loading scikit-learn {classifier} for galaxy")
     try:
@@ -106,6 +109,7 @@ def load_sklearn_classifier(path, classifier):
     return ret
 
 
+@doc_method
 def load_reliability_model(model_path, parameters: Parameters, object_type):
     zlog.LogInfo(f"reliability: loading neural network for {object_type}")
     try:
@@ -580,6 +584,7 @@ class CalibrationLibrary:
             ) from None
 
     @exception_decorator
+    @doc_method
     def get_lines_ids(self, attributes):
         lines_ids = dict()
         lines = None

@@ -107,6 +107,7 @@ class ParametersAccessor:
         return self.parameters.get("photometryBand", [])
 
     @exception_decorator
+    @doc_method
     def get_multiobs_method(self) -> Optional[str]:
         return self.parameters.get("multiObsMethod")
 
@@ -207,14 +208,10 @@ class ParametersAccessor:
         )
 
     def get_sk_learn_classifier(self, spectrum_model: str) -> str:
-        return self._get_on_None(
-            self.get_sk_learn_solver_section(spectrum_model), "skLearnClassifier"
-        )
+        return self._get_on_None(self.get_sk_learn_solver_section(spectrum_model), "skLearnClassifier")
 
     def get_sk_learn_classifier_file(self, spectrum_model: str) -> str:
-        return self._get_on_None(
-            self.get_sk_learn_solver_section(spectrum_model), "classifierFile"
-        )
+        return self._get_on_None(self.get_sk_learn_solver_section(spectrum_model), "classifierFile")
 
     def get_template_dir(self, spectrum_model: str) -> Optional[str]:
         return self.get_spectrum_model_section(spectrum_model).get("templateDir")
@@ -658,6 +655,7 @@ class ParametersAccessor:
     def get_redshift_sampling(self, spectrum_model):
         return self.get_spectrum_model_section(spectrum_model).get("redshiftSampling")
 
+    @doc_method
     def get_observation_ids(self):
         try:
             return list(self.parameters["lambdaRange"].keys())
