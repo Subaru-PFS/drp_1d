@@ -1,6 +1,11 @@
 Log
 ===
 
+.. contents::
+   :local:
+   :depth: 2
+   :backlinks: entry
+
 Logging
 -------
 

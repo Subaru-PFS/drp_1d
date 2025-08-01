@@ -1,6 +1,11 @@
 Input
 =====
 
+.. contents::
+   :local:
+   :depth: 2
+   :backlinks: entry
+
 Implementing the Reader
 -----------------------
 

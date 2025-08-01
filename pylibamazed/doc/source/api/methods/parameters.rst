@@ -1,6 +1,11 @@
 Parameters
 ==========
 
+.. contents::
+   :local:
+   :depth: 2
+   :backlinks: entry
+
 The parameters class
 --------------------
 
