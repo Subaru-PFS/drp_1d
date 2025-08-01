@@ -63,7 +63,7 @@ class TestParametersCheckGeneral:
             def test_ok_if_filter_uses_a_default_or_additional_column(self, zflag):
                 parametersDict = {
                     "filters": [
-                        {"key": "errors", "instruction": "^", "value": "8"},
+                        {"key": "error", "instruction": "^", "value": "8"},
                         {"key": "zzz", "instruction": "^", "value": "8"},
                     ],
                     "additionalCols": ["zzz"],
