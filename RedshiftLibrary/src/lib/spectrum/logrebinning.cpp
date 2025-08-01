@@ -48,13 +48,12 @@ using namespace std;
 CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
     : m_inputContext(inputContext) {
   m_logGridStep = m_inputContext.getLogGridStep();
-  std::shared_ptr<CSpectrum> spc;
-  if (inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()) {
-    spc =
-        m_inputContext
-            .GetRebinnedSpectrum(); // retrieve the corrected rebinned spectrum
+  std::shared_ptr<CFullSpectrum> spc;
+  if (inputContext.GetFullSpectrum()->GetSpectralAxis().IsLogSampled()) {
+    spc = m_inputContext.GetRebinnedFullSpectrum(); // retrieve the corrected
+                                                    // rebinned spectrum
   } else {
-    spc = m_inputContext.GetSpectrum();
+    spc = m_inputContext.GetFullSpectrum();
   }
   setupRebinning(*spc, *(m_inputContext.getLambdaRange()));
 }
@@ -62,7 +61,7 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
 /**
  * Brief: Get loglambdastep and update the zrange accordingly
  * Below code relies on the fact that both loglambda grid and the
- log(Redshift+1) grid follows the same arithmetic progession with a common step
+ log(Redshift+1) grid follows the same arithmetic progression with a common step
  * if spectrum is already rebinned, then it imposes the rebinning and the
  creation of zGrid
  * Otherwise, it's the input zrange that decides on the rebinning param.
@@ -70,7 +69,7 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
  should be modified to use 1+redshiftstep for the common ratio (or construct the
  grid using arithmetic log progression).
 */
-void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
+void CSpectrumLogRebinning::setupRebinning(const CFullSpectrum &spectrum,
                                            const TFloat64Range &lambdaRange) {
   if (spectrum.GetSpectralAxis().IsLogSampled(m_logGridStep)) {
     // compute reference lambda range
@@ -122,8 +121,8 @@ void CSpectrumLogRebinning::setupRebinning(CSpectrum &spectrum,
  *  Rebin the spectrum with the calculated logGridStep if spectrum not already
  * rebinned: step1: construct the spectralAxis step2: do the rebin
  */
-std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
-    CSpectrum const &spectrum, std::string const &errorRebinMethod) const {
+std::shared_ptr<CFullSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
+    CFullSpectrum const &spectrum, std::string const &errorRebinMethod) const {
   TFloat64Range lambdaRange_spc;
   Int32 loglambda_count_spc;
   if (spectrum.GetSpectralAxis().IsLogSampled()) {
@@ -166,7 +165,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
 
   // prepare return rebinned vector
   auto spectrumRebinedLog =
-      make_shared<CSpectrum>(spectrum.GetName(), spectrum.getObsID());
+      make_shared<CFullSpectrum>(spectrum.GetName(), spectrum.getObsID());
   CMask mskRebinedLog;
 
   const CSpectrumSpectralAxis targetSpectralAxis =
@@ -177,7 +176,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
                                  0.5 * m_logGridStep);
 
   // rebin the spectrum
-  spectrum.setRebinInterpMethod(m_rebinMethod);
+  spectrum.setRebinInterpMethod("linFull");
   spectrum.Rebin(spcLbdaRange, targetSpectralAxis, *spectrumRebinedLog,
                  mskRebinedLog, errorRebinMethod);
 

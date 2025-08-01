@@ -90,7 +90,7 @@ CTemplate::CTemplate(CTemplate &&other)
       m_computedMeiksingCoeff(std::move(other.m_computedMeiksingCoeff)),
       m_NoIsmIgmFluxAxis(std::move(other.m_NoIsmIgmFluxAxis)) {}
 
-CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
+CTemplate::CTemplate(const CTemplate &other, const TMaskList &mask)
     : CSpectrum(other, mask),
       m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
       m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin),

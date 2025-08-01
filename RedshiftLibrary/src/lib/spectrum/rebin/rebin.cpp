@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
+#include "RedshiftLibrary/spectrum/rebin/rebinLinearFull.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinSpline.h"
 
@@ -110,26 +111,11 @@ Float64 CRebin::computeXStepCompensation(
   return xStepCompensation;
 }
 
-std::unique_ptr<CRebin> CRebin::convert(const std::string opt_interp) && {
-  if (opt_interp == "lin")
-    return std::unique_ptr<CRebin>(new CRebinLinear(std::move(*this)));
-  if (opt_interp == "preComputedFineGrid")
-    return std::unique_ptr<CRebin>(new CRebinFineGrid(std::move(*this)));
-  if (opt_interp == "spline")
-    return std::unique_ptr<CRebin>(new CRebinSpline(std::move(*this)));
-  if (opt_interp == "ngp")
-    return std::unique_ptr<CRebin>(new CRebinNgp(std::move(*this)));
-
-  THROWG(
-      ErrorCode::IE_INVALID_PARAMETER,
-      Formatter() << "Unsupported value : " << opt_interp
-                  << " Only {lin, precomputedfinegrid, ngp, spline} values are "
-                     "supported for TemplateFittingSolver.interpolation");
-}
-
 std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
                                        const CSpectrum &spectrum) {
   if (opt_interp == "lin")
+    return std::unique_ptr<CRebin>(new CRebinLinear(spectrum));
+  if (opt_interp == "linFull")
     return std::unique_ptr<CRebin>(new CRebinLinear(spectrum));
   if (opt_interp == "preComputedFineGrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(spectrum));

@@ -243,3 +243,15 @@ class Parameters(ParametersAccessor):
 
     def is_log_sampling(self, spectrum_model: str):
         return self.get_redshift_sampling(spectrum_model) == "log"
+
+    def full_spectrum_required(self):
+        for spectrum_model in self.get_spectrum_models([]):
+            if self.get_redshift_solver_method(spectrum_model) is not None:
+                solve_method = self.get_redshift_solver_method(spectrum_model)
+                if solve_method == ESolveMethod.LINE_MODEL:
+                    if self.get_linemodel_continuumfit_fft(spectrum_model):
+                        return True
+                elif solve_method == ESolveMethod.TEMPLATE_FITTING:
+                    if self.get_template_fitting_fft(spectrum_model):
+                        return True
+        return False

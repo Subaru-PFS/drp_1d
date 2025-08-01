@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(SpectrumAxis_test) {
 
   // test maskVector
   Float64 n6Array[] = {0, 1, 2, 3, 4, 5};
-  TFloat64List n6Mask = {0, 0, 1, 1, 0, 0};
+  TMaskList n6Mask = {0, 0, 1, 1, 0, 0};
   CSpectrumAxis n6Axis(n6Array, 6);
   TFloat64List outputVector =
       n6Axis.maskVector(n6Mask, n6Axis.GetSamplesVector());

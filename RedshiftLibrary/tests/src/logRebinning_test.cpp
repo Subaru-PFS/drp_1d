@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(setupRebinning_test) {
   // logSampled spectrum
   CSpectrumAxis lbdaAxis({exp(2), exp(3), exp(4)});
   CSpectrumFluxAxis fluxAxis({0, 0, 0});
-  CSpectrum spc_1(lbdaAxis, fluxAxis);
+  CFullSpectrum spc_1(lbdaAxis, fluxAxis);
   TFloat64Range lbdaRange(exp(3), exp(6));
 
   logRebinning.m_logGridStep = 0.1;
@@ -178,17 +178,17 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
   // create logSampled spectrum
   CSpectrumLogRebinning logRebinning(*ctx_logSampled);
 
-  BOOST_CHECK_THROW(
-      logRebinning.loglambdaRebinSpectrum(*ctx_logSampled->GetSpectrum(), "no"),
-      AmzException);
+  BOOST_CHECK_THROW(logRebinning.loglambdaRebinSpectrum(
+                        *ctx_logSampled->GetFullSpectrum(), "no"),
+                    AmzException);
 
   // create not logSampled spectrum
   CSpectrumLogRebinning logRebinningNotLog(*ctx_notLogSampled);
-  ctx_notLogSampled->GetSpectrum()->SetName("spc_notLog");
+  ctx_notLogSampled->GetFullSpectrum()->SetName("spc_notLog");
 
-  std::shared_ptr<CSpectrum> spcLogRebinning =
+  std::shared_ptr<CFullSpectrum> spcLogRebinning =
       logRebinningNotLog.loglambdaRebinSpectrum(
-          *ctx_notLogSampled->GetSpectrum(), "no");
+          *ctx_notLogSampled->GetFullSpectrum(), "no");
   BOOST_CHECK(spcLogRebinning->GetName() == "spc_notLog");
   BOOST_CHECK(spcLogRebinning->GetSpectralAxis().IsLogSampled() == true);
   TFloat64Range lbdaRange(4680.4680234007774, 4711.9324472744638);
@@ -199,11 +199,11 @@ BOOST_AUTO_TEST_CASE(loglambdaRebinSpectrum_test) {
       spcLogRebinning->GetSpectralAxis().GetSamplesVector().back(),
       lbdaRange.GetEnd(), 1e-8);
 
-  ctx_notLogSampled->GetSpectrum()->SetSpectralAndFluxAxes(
+  ctx_notLogSampled->GetFullSpectrum()->SetSpectralAndFluxAxes(
       CSpectrumSpectralAxis(TFloat64List{1212, 1212.4, 1213}),
       CSpectrumFluxAxis(TFloat64List{0, 0, 0}));
   BOOST_CHECK_THROW(logRebinningNotLog.loglambdaRebinSpectrum(
-                        *ctx_notLogSampled->GetSpectrum(), "no"),
+                        *ctx_notLogSampled->GetFullSpectrum(), "no"),
                     AmzException);
 }
 

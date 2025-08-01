@@ -112,15 +112,14 @@ public:
   bool IsLogSampled() const;
   Float64 GetlogGridStep() const;
   void RecomputePreciseLoglambda();
-  TFloat64List GetSubSamplingMask(Int32 ssratio) const;
-  TFloat64List GetSubSamplingMask(Int32 ssratio,
-                                  TFloat64Range const &lambdarange) const;
-  TFloat64List GetSubSamplingMask(Int32 ssratio,
-                                  const TInt32Range &ilbda) const;
+  TMaskList GetSubSamplingMask(Int32 ssratio) const;
+  TMaskList GetSubSamplingMask(Int32 ssratio,
+                               TFloat64Range const &lambdarange) const;
+  TMaskList GetSubSamplingMask(Int32 ssratio, const TInt32Range &ilbda) const;
   Int32 GetLogSamplingIntegerRatio(Float64 logstep, Float64 &modulo) const;
   bool isSorted() const;
 
-  CSpectrumSpectralAxis MaskAxis(const TFloat64List &masks) const;
+  CSpectrumSpectralAxis MaskAxis(const TMaskList &masks) const;
   void SetSize(Int32 s) override;
   CSpectrumSpectralAxis blueShift(Float64 z) const;
   CSpectrumSpectralAxis redShift(Float64 z) const;

@@ -53,7 +53,7 @@
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/axis.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/fitquality.h"
 
@@ -84,14 +84,14 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
 
   Float64 modulo;
 
-  m_ssRatio = Context.GetRebinnedSpectrum()
+  m_ssRatio = Context.getRebinnedFullSpectra()[0]
                   ->GetSpectralAxis()
                   .GetLogSamplingIntegerRatio(m_logstep, modulo);
   if (std::abs(modulo) > 1E-12)
     THROWG(ErrorCode::INTERNAL_ERROR, "spc and tpl do not have a lambdastep "
                                       "multiple of redshift step");
-  for (auto it = Context.getRebinnedSpectra().cbegin() + 1,
-            end = Context.getRebinnedSpectra().cend();
+  for (auto it = Context.getRebinnedFullSpectra().cbegin() + 1,
+            end = Context.getRebinnedFullSpectra().cend();
        it != end; ++it) {
     if ((*it)->GetSpectralAxis().GetLogSamplingIntegerRatio(
             m_logstep, modulo) != m_ssRatio)
@@ -103,8 +103,10 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
   }
 
   if (m_ssRatio == 1) {
-    m_spectra = Context.getRebinnedSpectra();
-    m_lambdaRanges = Context.getRebinnedClampedLambdaRanges();
+    m_spectra.clear();
+    for (const auto &spectrum : Context.getRebinnedFullSpectra())
+      m_spectra.push_back(spectrum);
+    m_lambdaRanges = Context.getRebinnedFullClampedLambdaRanges();
     return;
   }
 
@@ -116,14 +118,14 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
   m_lambdaRanges.reserve(Context.getSpectra().size());
 
   for (auto const &[logSampledSpectrum_ptr, logSampledLambdaRange_ptr] :
-       boost::combine(Context.getRebinnedSpectra(),
-                      Context.getRebinnedClampedLambdaRanges())) {
+       boost::combine(Context.getRebinnedFullSpectra(),
+                      Context.getRebinnedFullClampedLambdaRanges())) {
 
-    TFloat64List mask_spc =
+    TMaskList mask_spc =
         logSampledSpectrum_ptr->GetSpectralAxis().GetSubSamplingMask(
             m_ssRatio, *logSampledLambdaRange_ptr);
-    std::shared_ptr<CSpectrum> ssSpectrum =
-        std::make_shared<CSpectrum>(*logSampledSpectrum_ptr, mask_spc);
+    std::shared_ptr<CFullSpectrum> ssSpectrum =
+        std::make_shared<CFullSpectrum>(*logSampledSpectrum_ptr, mask_spc);
     // scale the variance by ssratio
     CSpectrumNoiseAxis scaledNoise = ssSpectrum->GetErrorAxis();
     scaledNoise *= 1. / sqrt(m_ssRatio);
@@ -1078,7 +1080,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
     TInt32Range ilbda = FindTplSpectralIndex(m_spectra[0]->GetSpectralAxis(),
                                              logSampledTpl.GetSpectralAxis(),
                                              TFloat64Range(m_redshifts));
-    TFloat64List mask_tpl =
+    TMaskList mask_tpl =
         logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
 
     m_templateRebined_bf[0] = CTemplate(logSampledTpl, mask_tpl);

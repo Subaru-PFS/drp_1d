@@ -91,3 +91,11 @@ Float64 CMask::ComputeOverlapFraction(const CMask &other) const {
 Float64 CMask::IntersectAndComputeOverlapFraction(const CMask &other) const {
   return ComputeOverlapFraction(*this & other);
 }
+
+CMask CMask::extract(Int32 startIdx, Int32 endIdx) const {
+
+  if (!m_Mask.size())
+    return CMask();
+  return CMask(
+      TMaskList(m_Mask.begin() + startIdx, m_Mask.begin() + endIdx + 1));
+}

@@ -62,7 +62,7 @@ CSpectrum::CSpectrum(const std::string &name, const std::string &obsId)
     : m_Name(name), m_rebin(std::unique_ptr<CRebin>(new CRebinLinear(*this))),
       m_obsId(obsId){};
 
-CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
+CSpectrum::CSpectrum(const CSpectrum &other, const TMaskList &mask)
     : m_estimationMethod(other.m_estimationMethod),
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
@@ -453,7 +453,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
   TBoolList validSamples = flux.checkFlux();
   for (Int32 i = iMin; i < iMax; i++) {
     // collect invalid values
-    if (!validSamples[i]) {
+    if (!checkCorrectness(validSamples[i], i)) {
       ++nInvalid;
       ++invalidElements[to_string(flux[i])];
     }
@@ -501,7 +501,7 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   // check noise
   TBoolList validSamples = GetFluxAxis().GetError().checkNoise();
   for (Int32 i = iMin; i < iMax; i++) {
-    if (!validSamples[i]) {
+    if (!checkCorrectness(validSamples[i], i)) {
       ++nInvalid;
       invalidElements[to_string(error[i])]++;
     }
@@ -589,7 +589,7 @@ void CSpectrum::SetContinuumEstimationMethod(
 }
 
 void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
-  m_rebin = std::move(*m_rebin).convert(opt_interp);
+  m_rebin = CRebin::create(opt_interp, *this);
 }
 
 // Test methode Rebin

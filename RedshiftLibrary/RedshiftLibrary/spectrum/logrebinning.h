@@ -44,7 +44,7 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
@@ -65,8 +65,8 @@ class CSpectrumLogRebinning {
 public:
   // applying Rule of zero
   CSpectrumLogRebinning(CInputContext &inputContext);
-  std::shared_ptr<CSpectrum> loglambdaRebinSpectrum(
-      CSpectrum const &spectrum,
+  std::shared_ptr<CFullSpectrum> loglambdaRebinSpectrum(
+      CFullSpectrum const &spectrum,
       std::string const &errorRebinMethod = "rebinVariance") const;
   std::shared_ptr<CTemplate>
   loglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl,
@@ -84,7 +84,8 @@ private:
   friend class LogRebinning_test::inferTemplateRebinningSetup_test;
   friend class LogRebinning_test::loglambdaRebinTemplate_test;
 
-  void setupRebinning(CSpectrum &spectrum, const TFloat64Range &lambdaRange);
+  void setupRebinning(const CFullSpectrum &spectrum,
+                      const TFloat64Range &lambdaRange);
   CSpectrumSpectralAxis
   computeTargetLogSpectralAxis(const TFloat64Range &lambdarange,
                                Int32 gridCount) const;

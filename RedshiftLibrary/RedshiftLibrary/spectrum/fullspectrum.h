@@ -36,54 +36,45 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <algorithm>
+#ifndef _REDSHIFT_FULL_SPECTRUM_
+#define _REDSHIFT_FULL_SPECTRUM_
 
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include <memory>
 
-using namespace NSEpic;
+namespace NSEpic {
 
-CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
-  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
-                 [op](Float64 sample) { return sample * op; });
-  return *this;
-}
+class CFullSpectrum : public CSpectrum {
+public:
+  CFullSpectrum();
+  CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis,
+                TMaskList invalidPixels);
 
-CSpectrumAxis &CSpectrumAxis::operator/=(const Float64 op) {
-  for (Int32 i = 0; i < ssize(m_Samples); i++) {
-    m_Samples[i] /= op;
-  }
-  return *this;
-}
+  CFullSpectrum(const std::string &name, const std::string &obsId = "");
+  CFullSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
 
-void CSpectrumAxis::SetSize(Int32 s) { m_Samples.resize(s); }
-void CSpectrumAxis::clear() {
-  resetAxisProperties();
-  m_Samples.clear();
-}
+  CFullSpectrum(const CFullSpectrum &other, const TMaskList &mask);
+  CFullSpectrum(const CFullSpectrum &other);
+  CFullSpectrum(CFullSpectrum &&other);
 
-/*
-    maskedAxis is the output axis after applying the mask on the current object
-*/
-CSpectrumAxis
-CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
-{
-  return CSpectrumAxis(maskVector(mask, m_Samples));
-}
+  ~CFullSpectrum() = default;
 
-TFloat64List CSpectrumAxis::maskVector(const TMaskList &mask,
-                                       const TFloat64List &inputVector) {
-  TFloat64List outputVector;
-  if (mask.size() != inputVector.size()) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "mask and vector sizes do not match");
-  }
-  Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
-  outputVector.clear();
-  outputVector.reserve(sum);
-  for (Int32 i = 0; i < ssize(mask); i++) {
-    if (mask[i])
-      outputVector.push_back(inputVector[i]);
-  }
-  return outputVector;
-}
+  CFullSpectrum &operator=(const CFullSpectrum &other) = default;
+  CFullSpectrum &operator=(CFullSpectrum &&other) = default;
+
+  std::shared_ptr<CSpectrum> getUnmaskedSpectrum();
+  void Rebin(const TFloat64Range &range,
+             const CSpectrumSpectralAxis &targetSpectralAxis,
+             CFullSpectrum &rebinedSpectrum, CMask &rebinedMask,
+             const std::string &opt_error_interp) const;
+
+  //    mutable std::unique_ptr<CRebin<CFullSpectrum>> m_fullRebin;
+  const CMask &getMask() const { return m_mask; }
+  void setMask(const CMask &mask) { m_mask = mask; }
+  bool checkCorrectness(bool valid, Int32 index) const override;
+
+protected:
+  CMask m_mask;
+};
+} // namespace NSEpic
+#endif

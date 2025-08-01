@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   BOOST_CHECK(tpl8.GetSampleCount() == 0);
 
   // InitIsmIgmConfig
-  TFloat64List maskList(spcAxisSize, 1);
+  TMaskList maskList(spcAxisSize, 1);
   maskList[0] = 0;
   tpl9.InitIsmIgmConfig(0, 40, 2.8);
   CTemplate tpl10(tpl9, maskList);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   BOOST_CHECK(ssize(tpl10.m_computedMeiksingCoeff) == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_computedMeiksingCoeff[0] == 1.);
 
-  TFloat64List maskList2(spcAxisSize, 0);
+  TMaskList maskList2(spcAxisSize, 0);
   tpl7.InitIsmIgmConfig(0, 2, 2.8);
   maskList2[3] = 1.;
   CTemplate tpl11(tpl7, maskList2);

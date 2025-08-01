@@ -87,7 +87,7 @@ public:
   CSpectrum(const std::string &name, const std::string &obsId = "");
   CSpectrum(const CSpectrum &other);
   CSpectrum(CSpectrum &&other);
-  CSpectrum(const CSpectrum &other, const TFloat64List &mask);
+  CSpectrum(const CSpectrum &other, const TMaskList &mask);
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis,
             const std::shared_ptr<const CLSF> &lsf);
@@ -149,6 +149,7 @@ public:
   bool RemoveContinuum(CContinuum &remover) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;
+  virtual bool checkCorrectness(bool valid, Int32 index) const { return valid; }
   bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                        Float64 coeffCorr = 10.0);
 
@@ -210,6 +211,7 @@ protected:
   std::string m_FullPath;
 
   CSpectrumSpectralAxis m_SpectralAxis;
+
   mutable std::unique_ptr<CRebin> m_rebin;
   std::shared_ptr<const CPhotometricData> m_photData;
   std::string m_obsId = "";

@@ -297,7 +297,7 @@ const std::string jsonStringFromSpectrum =
     "\"badChi2Threshold\": 100,"
     "\"ismFit\" : true,"
     "\"igmFit\" : true,"
-    "\"fftProcessing\": true, "
+    "\"fftProcessing\": false, "
     "\"priors\": { \"betaA\" : 1, \"betaTE\" : 1, \"betaZ\" : 1,"
     "\"catalogDirPath\" : \"\"}}}}}}}";
 

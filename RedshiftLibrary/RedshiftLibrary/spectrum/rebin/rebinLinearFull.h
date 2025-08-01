@@ -36,54 +36,32 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <algorithm>
+#ifndef _REDSHIFT_SPECTRUM_REBIN_REBINLINEARFULL_
+#define _REDSHIFT_SPECTRUM_REBIN_REBINLINEARFULL_
 
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/rebin/rebin.h"
+namespace NSEpic {
 
-using namespace NSEpic;
+/**
+ * \ingroup Redshift
+ */
+class CRebinLinearFull : public CRebin {
 
-CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
-  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
-                 [op](Float64 sample) { return sample * op; });
-  return *this;
-}
+public:
+  using CRebin::CRebin;
+  CRebinLinearFull(CRebin &&other) : CRebin(std::move(other)){};
 
-CSpectrumAxis &CSpectrumAxis::operator/=(const Float64 op) {
-  for (Int32 i = 0; i < ssize(m_Samples); i++) {
-    m_Samples[i] /= op;
-  }
-  return *this;
-}
+  const std::string &getType() override { return m_type; };
 
-void CSpectrumAxis::SetSize(Int32 s) { m_Samples.resize(s); }
-void CSpectrumAxis::clear() {
-  resetAxisProperties();
-  m_Samples.clear();
-}
+protected:
+  void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
+             const CSpectrumSpectralAxis &targetSpectralAxis,
+             CMask &rebinedMask, const std::string opt_error_interp,
+             const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
+             Int32 &cursor) override;
+  const std::string m_type = "linFull";
+};
 
-/*
-    maskedAxis is the output axis after applying the mask on the current object
-*/
-CSpectrumAxis
-CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
-{
-  return CSpectrumAxis(maskVector(mask, m_Samples));
-}
+} // namespace NSEpic
 
-TFloat64List CSpectrumAxis::maskVector(const TMaskList &mask,
-                                       const TFloat64List &inputVector) {
-  TFloat64List outputVector;
-  if (mask.size() != inputVector.size()) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "mask and vector sizes do not match");
-  }
-  Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
-  outputVector.clear();
-  outputVector.reserve(sum);
-  for (Int32 i = 0; i < ssize(mask); i++) {
-    if (mask[i])
-      outputVector.push_back(inputVector[i]);
-  }
-  return outputVector;
-}
+#endif

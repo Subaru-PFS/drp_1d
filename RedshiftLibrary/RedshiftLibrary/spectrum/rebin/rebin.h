@@ -42,8 +42,8 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
 /**
@@ -58,7 +58,6 @@ public:
 
   CRebin(CRebin &&other) = default;
 
-  std::unique_ptr<CRebin> convert(const std::string opt_interp) &&;
   static std::unique_ptr<CRebin> create(const std::string &opt_interp,
                                         const CSpectrum &spectrum);
   void compute(const TFloat64Range &range,
@@ -81,11 +80,6 @@ protected:
                            const TAxisSampleList &Xtgt, Int32 cursor,
                            Float64 xSrcStep);
   const CSpectrum &m_spectrum;
-
-  TFloat64List m_pfgFlux;
-  bool m_FineGridInterpolated = false;
-  const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
-                                         // check if enough to be private
 };
 
 } // namespace NSEpic
