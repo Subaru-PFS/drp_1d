@@ -169,7 +169,7 @@ COperatorTemplateFittingBase::GetIGMStartingRedshiftValue(Float64 spcLbda0) {
 void COperatorTemplateFittingBase::applyPositiveAndNonNullConstraint(
     const Float64 amp_sigma, Float64 &ampl) const {
   if (amp_sigma < m_continuum_null_amp_threshold)
-    ampl = 0.;
+    ampl = 0.; // will be the case for NAN amp_sigma
   return;
 }
 

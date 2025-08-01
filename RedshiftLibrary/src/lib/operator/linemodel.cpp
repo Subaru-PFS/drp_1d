@@ -68,6 +68,7 @@
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
@@ -448,20 +449,14 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
 
   makeContinuumFittingOperator(redshifts);
 
-  if (fftprocessing && ignoreLinesSupport == true) {
-    ignoreLinesSupport = false;
-    Flag.warning(WarningCode::FORCED_IGNORELINESUPPORT_TO_FALSE,
-                 Formatter() << "  COperatorLineModel::" << __func__
-                             << ": unable to ignoreLinesSupport if "
-                                "fftProcessing. ignoreLinesSupport disabled");
-  }
   if (ignoreLinesSupport) {
-    m_fittingManager->getSpectraIndex()
-        .setAtBegining(); // TODO multiobs, dummy implementation
+    std::shared_ptr<const CLSF> lsf =
+        fftprocessing ? m_fittingManager->buildEquivConstantResolLSF()
+                      : nullptr;
     m_continuumFittingOperator->setMaskBuilder(
         std::make_shared<COutsideLineMaskBuilder>(
             m_fittingManager->getElementListVector(),
-            m_fittingManager->getSpectraIndex()));
+            m_fittingManager->getSpectraIndex(), lsf));
   }
   std::vector<std::shared_ptr<const COperatorResult>> chisquareResultsAllTpl;
   TStringList chisquareResultsTplName;

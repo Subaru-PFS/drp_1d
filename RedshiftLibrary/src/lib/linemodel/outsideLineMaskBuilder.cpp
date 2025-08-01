@@ -42,10 +42,35 @@
 
 using namespace NSEpic;
 
+CSwitchToZIndependantLSF::CSwitchToZIndependantLSF(
+    std::shared_ptr<CLMEltListVector> const &elements_vector,
+    CSpectraGlobalIndex &spectraIndex, std::shared_ptr<const CLSF> const &lsf)
+    : m_spectraIndex(spectraIndex), m_ElementsVector(elements_vector) {
+
+  m_LSFs_backup.reserve(*m_spectraIndex.end());
+
+  for ([[maybe_unused]] auto const &spcIndex : m_spectraIndex) {
+    auto &elementList = elements_vector->getElementList();
+    // save initial lsf, assuming all elements in the elementlist have the same
+    m_LSFs_backup.push_back(elementList.getLSF(0));
+
+    // set new LSF
+    elementList.setLSF(lsf);
+  }
+}
+
+CSwitchToZIndependantLSF::~CSwitchToZIndependantLSF() {
+  // reset back initial LSFs
+  for (auto const &spcIndex : m_spectraIndex) {
+    auto &elementList = m_ElementsVector->getElementList();
+    elementList.setLSF(m_LSFs_backup[spcIndex]);
+  }
+}
+
 COutsideLineMaskBuilder::COutsideLineMaskBuilder(
     std::shared_ptr<CLMEltListVector> const &elements_vector,
-    CSpectraGlobalIndex const &spcIndex)
-    : m_ElementsVector(elements_vector), m_spcIndex(spcIndex) {}
+    CSpectraGlobalIndex const &spcIndex, std::shared_ptr<const CLSF> const &lsf)
+    : m_ElementsVector(elements_vector), m_spcIndex(spcIndex), m_lsf(lsf) {}
 
 CMask COutsideLineMaskBuilder::getMask(
     const CSpectrumSpectralAxis &spectralAxis, const TFloat64Range &lambdaRange,
@@ -53,6 +78,10 @@ CMask COutsideLineMaskBuilder::getMask(
 
   m_spcIndex.set(spc_index);
   auto &elements = m_ElementsVector->getElementList();
+
+  if (m_lsf)
+    CSwitchToZIndependantLSF switchLsf(m_ElementsVector, m_spcIndex, m_lsf);
+
   // prepare the elements support
   for (auto &elt : elements) {
     elt->getElementParam()->resetAsymfitParams();

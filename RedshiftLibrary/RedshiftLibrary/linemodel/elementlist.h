@@ -115,6 +115,9 @@ public:
     for (auto elt : m_Elements)
       elt->debug(os);
   }
+
+  void setLSF(std::shared_ptr<const CLSF> const &lsf);
+  const std::shared_ptr<CLSF const> &getLSF(Int32 eltIdx);
 };
 
 class CLMEltListVector {

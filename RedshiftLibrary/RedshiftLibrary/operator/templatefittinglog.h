@@ -59,11 +59,51 @@ class EstimateXtY_test;
 
 namespace NSEpic {
 
+enum class EPrecomputedFFT {
+  none,
+  spcFluxOverErr2,
+  spcFlux2OverErr2,
+  spcOneOverErr2,
+  spcMask,
+  tplMask
+};
+
+class FFTPlans {
+public:
+  FFTPlans(Int32 n) { initFFT(n); };
+  ~FFTPlans() { freeFFTPlans(); };
+  FFTPlans(FFTPlans const &other) = delete;
+  FFTPlans(FFTPlans &&other);
+  FFTPlans &operator=(FFTPlans const &other) = delete;
+  FFTPlans &operator=(FFTPlans &&other);
+  void storeFFT(EPrecomputedFFT precomputed, fftw_complex *fft);
+  void copyFFT(fftw_complex *src, fftw_complex *dest);
+  bool isPrecomputed(EPrecomputedFFT precomputed);
+  void allocatePrecomputedFFT(EPrecomputedFFT precomputed);
+
+  // buffers for fft computation
+  Int32 nPaddedSamples = 0;
+  Float64 *inX = nullptr;
+  fftw_complex *outX = nullptr;
+  fftw_plan pX = nullptr;
+  Float64 *inY = nullptr;
+  fftw_complex *outY = nullptr;
+  fftw_plan pY = nullptr;
+  fftw_complex *outXY = nullptr;
+  Float64 *inXY = nullptr;
+  fftw_plan pBackward = nullptr;
+  std::map<EPrecomputedFFT, fftw_complex *> precomputedFFT;
+
+private:
+  void initFFT(Int32 n);
+  void freeFFTPlans();
+  void freeFFTPrecomputedBuffers();
+};
+
 class COperatorTemplateFittingLog : public COperatorTemplateFittingBase {
 
 public:
   COperatorTemplateFittingLog(const TFloat64List &redshifts);
-  ~COperatorTemplateFittingLog();
 
   void SetRedshifts(const TFloat64List &redshifts) override;
   void CheckRedshifts();
@@ -98,18 +138,21 @@ private:
   Int32 exportIGMIdx = 5;
   Int32 exportISMIdx = -1;
 
-  Int32 FitAllz(std::shared_ptr<CTemplateFittingResult> result,
-                const TInt32List &MeiksinList = TInt32List(1, 0),
-                const TInt32List &EbmvList = TInt32List(1, 0),
-                const CPriorHelper::TPriorZEList &logpriorze =
-                    CPriorHelper::TPriorZEList());
+  void FitAllz(std::shared_ptr<CTemplateFittingResult> result,
+               const TInt32List &MeiksinList = TInt32List(1, 0),
+               const TInt32List &EbmvList = TInt32List(1, 0),
+               const CPriorHelper::TPriorZEList &logpriorze =
+                   CPriorHelper::TPriorZEList(),
+               CMask const &lineMask = {});
 
-  Int32 FitRangez(const TFloat64List &inv_err2, const TInt32Range &range,
-                  const std::shared_ptr<CTemplateFittingResult> &result,
-                  const TInt32List &MeiksinList, const TInt32List &EbmvList,
-                  const Float64 &dtd);
+  void FitRangez(const TFloat64List &inv_err2, const TInt32Range &range,
+                 const std::shared_ptr<CTemplateFittingResult> &result,
+                 const TInt32List &MeiksinList, const TInt32List &EbmvList,
+                 const Float64 &dtd, CMask const &lineMask);
 
   TInt32RangeList FindZRanges(const TFloat64List &redshifts);
+
+  CMask maskTemplate();
 
   void updateGlobalResults(
       const std::shared_ptr<CTemplateFittingResult> &result,
@@ -124,35 +167,19 @@ private:
 
   void computeFitQuality(const std::shared_ptr<CTemplateFittingResult> &result,
                          Int32 resultIdx, Int32 subResultSize,
-                         Int32 firstTplIdx);
+                         Int32 firstTplIdx, CMask const &lineMask);
 
   void EstimateXtY(const TFloat64List &X, const TFloat64List &Y,
-                   TFloat64List &XtY, Int32 precomputedFFT = -1);
-  Int32 InitFFT(Int32 n);
+                   TFloat64List &XtY, FFTPlans &fftPlans,
+                   EPrecomputedFFT fftX = EPrecomputedFFT::none,
+                   EPrecomputedFFT fftY = EPrecomputedFFT::none);
+
   Int32 EstimateMtMFast(const TFloat64List &X, const TFloat64List &Y,
                         Int32 nShifts, TFloat64List &XtY);
 
-  void freeFFTPlans();
-  void freeFFTPrecomputedBuffers();
-
   bool m_enableISM = true;
   bool m_enableIGM = true;
-
-  // buffers for fft computation
-  Int32 m_nPaddedSamples = 0;
-  Float64 *inSpc = nullptr;
-  fftw_complex *outSpc = nullptr;
-  fftw_plan pSpc = nullptr;
-  Float64 *inTpl = nullptr;
-  fftw_complex *outTpl = nullptr;
-  fftw_plan pTpl = nullptr;
-  fftw_complex *outCombined = nullptr;
-  Float64 *inCombined = nullptr;
-  fftw_plan pBackward = nullptr;
-  fftw_complex *precomputedFFT_spcFluxOverErr2 = nullptr;
-  fftw_complex *precomputedFFT_spcOneOverErr2 = nullptr;
 };
-
 } // namespace NSEpic
 
 #endif

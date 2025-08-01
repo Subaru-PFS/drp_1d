@@ -68,6 +68,7 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
@@ -88,9 +89,7 @@ CLineModelFitting::CLineModelFitting(
 
   m_inputSpcs = std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>(
       Context.getSpectra(m_useloglambdasampling));
-  m_lambdaRanges = // std::make_shared<std::vector<std::shared_ptr<const
-                   // TLambdaRange>>>(
-      Context.getClampedLambdaRanges(m_useloglambdasampling);
+  m_lambdaRanges = Context.getClampedLambdaRanges(m_useloglambdasampling);
   auto lineRatioType = CLineRatioManager::stringToType.at(
       Context.GetParameterStore()->GetScoped<std::string>("lineRatioType"));
   initMembers(continuumFittingOperator, lineRatioType, element_composition);
@@ -1050,10 +1049,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(bool fullSolution) {
   return modelSolution;
 }
 
-void CLineModelFitting::SetLSF() {
+void CLineModelFitting::SetLSF(std::shared_ptr<const CLSF> const &lsf_) {
   for (auto &spcIndex : m_spectraIndex) {
 
-    const std::shared_ptr<const CLSF> &lsf = getSpectrum().GetLSF();
+    const std::shared_ptr<const CLSF> &lsf =
+        lsf_ ? lsf_ : getSpectrum().GetLSF();
 
     if (lsf == nullptr) {
       THROWG(ErrorCode::INTERNAL_ERROR,
@@ -1065,12 +1065,9 @@ void CLineModelFitting::SetLSF() {
       THROWG(ErrorCode::INTERNAL_ERROR,
              " Cannot enable LSF, LSF spectrum member is not valid " + message);
     }
-    for (Int32 j = 0; j < getElementList().size(); j++) {
-      getElementList()[j]->SetLSF(
-          lsf); // lsf has now a type to be used for width computations
-    }
+
+    getElementList().setLSF(lsf);
   }
-  // m_spectraIndex.setAtBegining();
 }
 
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
@@ -1353,4 +1350,18 @@ void CLineModelFitting::refreshAllModels() { m_models->refreshAllModels(); }
 void CLineModelFitting::setChiSquareRatioResult(
     const Int32 index_z, const std::shared_ptr<CLineModelResult> &lmResult) {
   return m_lineRatioManager->setChiSquareRatioResult(index_z, lmResult);
-};
+}
+
+std::shared_ptr<const CLSF>
+CLineModelFitting::buildEquivConstantResolLSF() const {
+  getSpectraIndex().setAtBegining(); // TODO multiobs, get first spectrum lsf
+
+  Float64 lambda = getLambdaRange().GetMidRange();
+
+  Float64 resolution = CLSFGaussianConstantResolution::computeResolution(
+      lambda, getSpectrum().GetLSF()->GetWidth(lambda));
+  std::shared_ptr<TLSFArguments> args =
+      std::make_shared<TLSFGaussianConstantResolutionArgs>(resolution);
+
+  return LSFFactory.Create("gaussianConstantResolution", args);
+}
