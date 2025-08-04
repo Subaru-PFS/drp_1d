@@ -146,7 +146,7 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
             "redshift step of reliability model must be identical to solver one : "
             f"{redshift_range_step} != {s_redshift_range_step}",
         )
-    model = models.load_model(model_path)
+    model = models.load_model(model_path, compile=False)
     ret["model"] = model
     ret["parameters"] = dict()
     ret["parameters"]["zgrid_end"] = model_ha["zgrid_end"]
