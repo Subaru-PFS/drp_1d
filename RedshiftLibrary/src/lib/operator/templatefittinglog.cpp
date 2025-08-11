@@ -103,18 +103,18 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
   }
 
   if (m_ssRatio == 1) {
-    m_spectra.clear();
+    m_spectraFull.clear();
     for (const auto &spectrum : Context.getRebinnedFullSpectra())
-      m_spectra.push_back(spectrum);
+      m_spectraFull.push_back(spectrum);
     m_lambdaRanges = Context.getRebinnedFullClampedLambdaRanges();
     return;
   }
 
   // else subsampling required, subsample each spectrum :
   //  (coarse redshift grid)
-  m_spectra.clear();
+  m_spectraFull.clear();
   m_lambdaRanges.clear();
-  m_spectra.reserve(Context.getSpectra().size());
+  m_spectraFull.reserve(Context.getSpectra().size());
   m_lambdaRanges.reserve(Context.getSpectra().size());
 
   for (auto const &[logSampledSpectrum_ptr, logSampledLambdaRange_ptr] :
@@ -144,7 +144,7 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
     ssSpectrum->GetSpectralAxis().ClampLambdaRange(*logSampledLambdaRange_ptr,
                                                    *ssLambdaRange);
 
-    m_spectra.push_back(std::move(ssSpectrum));
+    m_spectraFull.push_back(std::move(ssSpectrum));
     m_lambdaRanges.push_back(std::move(ssLambdaRange));
   }
 }
@@ -204,12 +204,10 @@ void COperatorTemplateFittingLog::EstimateXtY(
     fftw_execute(plans.pX);
     Log.LogDebug(Formatter() << __func__ << ": X-fft done");
 
-    if (fftX != EPrecomputedFFT::none) {
-      plans.allocatePrecomputedFFT(fftX);
-      plans.copyFFT(plans.outX, plans.precomputedFFT.at(fftX));
-    }
+    if (fftX != EPrecomputedFFT::none)
+      plans.storeFFT(fftX, plans.outX);
   } else {
-    plans.copyFFT(plans.precomputedFFT.at(fftX), plans.outX);
+    plans.getFFT(fftX, plans.outX);
   }
 
   Log.LogDebug(Formatter() << __func__ << ": Processing X-fft with n=" << nY
@@ -229,12 +227,10 @@ void COperatorTemplateFittingLog::EstimateXtY(
     fftw_execute(plans.pY);
     Log.LogDebug(Formatter() << __func__ << ": Y-fft done");
 
-    if (fftY != EPrecomputedFFT::none) {
-      plans.allocatePrecomputedFFT(fftY);
-      plans.copyFFT(plans.outY, plans.precomputedFFT.at(fftY));
-    }
+    if (fftY != EPrecomputedFFT::none)
+      plans.storeFFT(fftY, plans.outY);
   } else {
-    plans.copyFFT(plans.precomputedFFT.at(fftY), plans.outY);
+    plans.getFFT(fftY, plans.outY);
   }
 
   // Multiplying the FFT outputs
@@ -321,6 +317,7 @@ void FFTPlans::freeFFTPrecomputedBuffers() {
       fftw_free(fft);
       fft = nullptr;
     }
+  precomputedFFT.clear();
 }
 
 void FFTPlans::freeFFTPlans() {
@@ -365,9 +362,13 @@ void FFTPlans::freeFFTPlans() {
 }
 
 void FFTPlans::storeFFT(EPrecomputedFFT precomputed, fftw_complex *fft) {
-  if (precomputedFFT.at(precomputed) == nullptr)
+  if (!isPrecomputed(precomputed))
     allocatePrecomputedFFT(precomputed);
   copyFFT(fft, precomputedFFT.at(precomputed));
+}
+
+void FFTPlans::getFFT(EPrecomputedFFT precomputed, fftw_complex *fft) {
+  copyFFT(precomputedFFT.at(precomputed), fft);
 }
 
 void FFTPlans::copyFFT(fftw_complex *src, fftw_complex *dest) {
@@ -403,7 +404,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
   TInt32List zsplit;
   if (m_enableIGM) {
     Float64 zmin_igm =
-        GetIGMStartingRedshiftValue(m_spectra[0]->GetSpectralAxis()[0]);
+        GetIGMStartingRedshiftValue(m_spectraFull[0]->GetSpectralAxis()[0]);
     if (zmin_igm > redshifts.front() && zmin_igm < redshifts.back()) {
       Int32 i_zmin_igm = -1;
       TFloat64Index::getClosestLowerIndex(redshifts, zmin_igm, i_zmin_igm);
@@ -478,19 +479,18 @@ void COperatorTemplateFittingLog::FitAllz(
 
   // since dtd is cte, better compute it here
   const TAxisSampleList &error =
-      m_spectra[0]->GetFluxAxis().GetError().GetSamplesVector();
+      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
 
   const Int32 nRedshifts = result->Redshifts.size();
   const TAxisSampleList &spectrumRebinedFluxRaw =
-      m_spectra[0]->GetFluxAxis().GetSamplesVector();
+      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
-  auto const &mask = m_spectra[0]->getMask();
-  const Int32 nSpcUnmaskedPixels = mask.GetUnMaskedSampleCount();
+  auto const &mask = m_spectraFull[0]->getMask();
   Float64 dtd = 0.0;
   TFloat64List inv_err2(nSpcPixels);
   TFloat64List inv_err(nSpcPixels);
   for (Int32 j = 0; j < ssize(error); j++) {
-    if (mask.getMaskList()[j]) {
+    if (mask[j]) {
       inv_err[j] = 1.0 / error[j];
       inv_err2[j] = inv_err[j] * inv_err[j];
       dtd +=
@@ -688,10 +688,11 @@ void COperatorTemplateFittingLog::computeFitQuality(
     Int32 subResultSize, Int32 firstTplIdx, CMask const &lineMask) {
 
   const auto &spectrumRebinedFluxRaw =
-      m_spectra[0]->GetFluxAxis().GetSamplesVector();
+      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
-  auto const &mask = m_spectra[0]->getMask();
-  const auto &error = m_spectra[0]->GetFluxAxis().GetError().GetSamplesVector();
+  auto const &mask = m_spectraFull[0]->getMask();
+  const auto &error =
+      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
 
   for (Int32 isubz = 0, fullResultIdx = resultIdx; isubz < subResultSize;
        ++isubz, ++fullResultIdx, ++firstTplIdx) {
@@ -763,11 +764,12 @@ void COperatorTemplateFittingLog::FitRangez(
     const Float64 &dtd, CMask const &lineMask) {
 
   const TAxisSampleList &spectrumRebinedLambda =
-      m_spectra[0]->GetSpectralAxis().GetSamplesVector();
+      m_spectraFull[0]->GetSpectralAxis().GetSamplesVector();
   const TAxisSampleList &spectrumRebinedFluxRaw =
-      m_spectra[0]->GetFluxAxis().GetSamplesVector();
-  auto const &spcMask = m_spectra[0]->getMask();
-  Int32 nSpc = spectrumRebinedLambda.size();
+      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
+  auto const &spcMask = m_spectraFull[0]->getMask();
+  const Int32 nSpc = spectrumRebinedLambda.size();
+  const Int32 nSpcUnmaskedPixels = spcMask.GetUnMaskedSampleCount();
 
   const TAxisSampleList &tplRebinedLambdaGlobal =
       m_templateRebined_bf[0].GetSpectralAxis().GetSamplesVector();
@@ -894,16 +896,14 @@ void COperatorTemplateFittingLog::FitRangez(
   // precompute DtD and nValidSamples in case of lineMask
   // since constant for all ism/igm
   TFloat64List DtD_vec(nshifts, dtd);
-  TFloat64List nValidSamples_vec(nshifts, nSpc);
+  TFloat64List nValidSamples_vec(nshifts, nSpcUnmaskedPixels);
   if (lineMask.GetMasksCount()) {
     // Estimate DtD if lineMask
     EstimateXtY(spcRebinedFlux2OverErr2, lineMaskFloat, DtD_vec, fftPlans,
-                EPrecomputedFFT::spcFlux2OverErr2, EPrecomputedFFT::tplMask);
+                EPrecomputedFFT::none, EPrecomputedFFT::tplMask);
 
     EstimateXtY(spcMaskFloat, lineMaskFloat, nValidSamples_vec, fftPlans,
-                EPrecomputedFFT::spcMask, EPrecomputedFFT::tplMask);
-  } else {
-    DtD_vec.assign(nshifts, dtd);
+                EPrecomputedFFT::none, EPrecomputedFFT::tplMask);
   }
 
   // note that there is no need to copy the ism/igm cause they already exist in
@@ -1082,7 +1082,7 @@ void COperatorTemplateFittingLog::FitRangez(
  */
 TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
     const TFloat64Range &redshiftrange) const {
-  return FindTplSpectralIndex(m_spectra[0]->GetSpectralAxis(),
+  return FindTplSpectralIndex(m_spectraFull[0]->GetSpectralAxis(),
                               m_templateRebined_bf[0].GetSpectralAxis(),
                               redshiftrange);
 }
@@ -1179,7 +1179,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   }
   // check if spc and tpl have same step
   const Float64 epsilon = 1E-8;
-  if (std::abs(m_spectra[0]->GetSpectralAxis().GetlogGridStep() -
+  if (std::abs(m_spectraFull[0]->GetSpectralAxis().GetlogGridStep() -
                logSampledTpl.GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
       epsilon)
     THROWG(ErrorCode::INTERNAL_ERROR,
@@ -1191,9 +1191,9 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   if (m_ssRatio == 1) { // no required subsampling
     m_templateRebined_bf[0] = logSampledTpl;
   } else {
-    TInt32Range ilbda = FindTplSpectralIndex(m_spectra[0]->GetSpectralAxis(),
-                                             logSampledTpl.GetSpectralAxis(),
-                                             TFloat64Range(m_redshifts));
+    TInt32Range ilbda = FindTplSpectralIndex(
+        m_spectraFull[0]->GetSpectralAxis(), logSampledTpl.GetSpectralAxis(),
+        TFloat64Range(m_redshifts));
     TMaskList mask_tpl =
         logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
 
@@ -1259,6 +1259,9 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   }
 
   // estimate CstLog for PDF estimation
+  //   note: with linemask it is not a constant anymore, since the number of
+  //   valid pixels depends on z, BUT this quantity is never used in linemodel.
+  //    It is used in templatefittingSolve, which has no linemask.
   result->CstLog = EstimateLikelihoodCstLog();
 
   return result;
@@ -1276,4 +1279,33 @@ CMask COperatorTemplateFittingLog::maskTemplate() {
   }
   m_templateRebined_bf[0].SetFluxAxis(std::move(fluxAxis));
   return mask;
+}
+
+Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
+  Float64 cstLog = 0.0;
+  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+       boost::combine(m_spectraFull, m_lambdaRanges)) {
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        spectrum_ptr->GetSpectralAxis();
+    const TFloat64List &error =
+        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
+    auto const &mask = spectrum_ptr->getMask();
+
+    Int32 numDevs = 0;
+
+    Float64 sumLogNoise = 0.0;
+
+    Int32 imin;
+    Int32 imax;
+    lambdaRange_ptr->getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    for (Int32 j = imin; j <= imax; j++) {
+      if (mask[j]) {
+        numDevs++;
+        sumLogNoise += log(error[j]);
+      }
+    }
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+  }
+  return cstLog;
 }

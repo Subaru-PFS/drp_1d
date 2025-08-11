@@ -59,14 +59,7 @@ class EstimateXtY_test;
 
 namespace NSEpic {
 
-enum class EPrecomputedFFT {
-  none,
-  spcFluxOverErr2,
-  spcFlux2OverErr2,
-  spcOneOverErr2,
-  spcMask,
-  tplMask
-};
+enum class EPrecomputedFFT { none, spcFluxOverErr2, spcOneOverErr2, tplMask };
 
 class FFTPlans {
 public:
@@ -77,6 +70,7 @@ public:
   FFTPlans &operator=(FFTPlans const &other) = delete;
   FFTPlans &operator=(FFTPlans &&other);
   void storeFFT(EPrecomputedFFT precomputed, fftw_complex *fft);
+  void getFFT(EPrecomputedFFT precomputed, fftw_complex *fft);
   void copyFFT(fftw_complex *src, fftw_complex *dest);
   bool isPrecomputed(EPrecomputedFFT precomputed);
   void allocatePrecomputedFFT(EPrecomputedFFT precomputed);
@@ -128,16 +122,6 @@ public:
 private:
   friend class templateFittingLog_test::EstimateXtY_test;
 
-  // shadow CoperatorContinuumFitting::m_spectra
-  std::vector<std::shared_ptr<const CFullSpectrum>> m_spectra;
-
-  Float64 m_logstep;
-  Int32 m_ssRatio;
-
-  // hardcoded config: FIT_RANGEZ
-  Int32 exportIGMIdx = 5;
-  Int32 exportISMIdx = -1;
-
   void FitAllz(std::shared_ptr<CTemplateFittingResult> result,
                const TInt32List &MeiksinList = TInt32List(1, 0),
                const TInt32List &EbmvList = TInt32List(1, 0),
@@ -177,6 +161,13 @@ private:
   Int32 EstimateMtMFast(const TFloat64List &X, const TFloat64List &Y,
                         Int32 nShifts, TFloat64List &XtY);
 
+  Float64 EstimateLikelihoodCstLog() const override;
+
+  // shadow CoperatorContinuumFitting::m_spectra
+  std::vector<std::shared_ptr<const CFullSpectrum>> m_spectraFull;
+
+  Float64 m_logstep;
+  Int32 m_ssRatio;
   bool m_enableISM = true;
   bool m_enableIGM = true;
 };
