@@ -116,7 +116,7 @@ std::unique_ptr<CRebin> CRebin::create(const std::string &opt_interp,
   if (opt_interp == "lin")
     return std::unique_ptr<CRebin>(new CRebinLinear(spectrum));
   if (opt_interp == "linFull")
-    return std::unique_ptr<CRebin>(new CRebinLinear(spectrum));
+    return std::unique_ptr<CRebin>(new CRebinLinearFull(spectrum));
   if (opt_interp == "preComputedFineGrid")
     return std::unique_ptr<CRebin>(new CRebinFineGrid(spectrum));
   if (opt_interp == "spline")
