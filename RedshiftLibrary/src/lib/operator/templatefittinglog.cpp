@@ -549,9 +549,9 @@ void COperatorTemplateFittingLog::FitAllz(
     if (logpriorze.size() > 0)
       applyPrior(result, subresult, izrangelist[k].GetBegin(), logpriorze, dtd);
 
-    computeFitQuality(result, izrangelist[k].GetBegin(),
-                      subresult->Redshifts.size(), ilbda.GetBegin(),
-                      lineMaskatThisRange);
+    // computeFitQuality(result, izrangelist[k].GetBegin(),
+    //                   subresult->Redshifts.size(), ilbda.GetBegin(),
+    //                   lineMaskatThisRange);
   }
 }
 
