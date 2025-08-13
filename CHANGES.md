@@ -1,6 +1,13 @@
 # Changelog
 
-## 1.11
+## 1.13
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## 1.12.0 (2025-08-08)
 ### Added
 * [6542] : Add a ratioToFree option to perform a "free" second pass after a "tplRatio" first pass (lineRatioType)
 * [9699] : Add a check on input parameters : ignoreLineSupport must be true if continuumComponent is powerlaw
@@ -11,8 +18,6 @@
 * [9851] : Rename & homogenize quality indicators in output specifications
 * [9859] : Update error codes & messages
 * [9917] : FitQuality: convert the error to a warning when there is less than 1 or 2 pixels
-### Deprecated
-### Removed
 ### Fixed
 * [9945] : Fix memory leak in the convolution of the IGM extinction curves
 * [9899] : [api] Fix get_attribute_short for objectInfo and performances
