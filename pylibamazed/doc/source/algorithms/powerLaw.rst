@@ -60,7 +60,13 @@ Therefore, maximizing log-likelihood leads to minimizing :math:`\sum (\frac{\eta
      \sum \left( \frac{\eta_i}{\sigma_i} \right)^2 = \sum \left( \frac{d_i - M_i}{\sigma_i} \right)^2
 
 
-Using matrix notation, minimze :math:`(d-M \cdot \theta)^T N^{-1} (d - M \cdot \theta)` with :math:`N` the covariance matrix,  a diagonal matrix with :math:`n_{i,i}=\sigma_i^2`.
+Using matrix notation, minimze 
+
+.. math::
+     (d-M \cdot \theta)^T N^{-1} (d - M \cdot \theta)
+     \quad (2)
+
+With :math:`N` the covariance matrix,  a diagonal matrix with :math:`n_{i,i}=\sigma_i^2`.
 
 Supposing :math:`M(\theta) =  M \cdot \theta` :
 
@@ -82,7 +88,7 @@ With :
      \text{, and }
      M = \left( \begin{array}{cccc} 1 & X_i & 0 & 0 \\ \vdots & \vdots & \vdots & \vdots \\ 0 & 0 & 1 & X_i \\ \vdots & \vdots & \vdots & \vdots \end{array} \right)
 
-Which can be reduced with the continuity constraint of the 2 power laws in (1) :
+Which can be reduced with the continuity constraint of the 2 power laws in **(1)** :
 
 .. math::
      \theta = \left( \begin{array}{c} A_1 \\ b_1 \\ b_2 \end{array} \right)
@@ -92,11 +98,58 @@ Which can be reduced with the continuity constraint of the 2 power laws in (1) :
 
 Matrix calculations then allow to find an analytic solution to this equation.
 
+Case were b1 / b2 is fixed
+---------------------------
+Constraints on min / max value of b1 and b2 can be set in parameters.
+If b1 or b2 reaches these limits, we redo the fit with b1 or b2 fixed to the limit value.
+We then have a linear least square fitting with 2 parameters.
 
+If :math:`b_1` or :math:`b_2` is fixed to :math:`\bar{b_1}` (resp. :math:`\bar{b_2}`), we use :math:`M(\theta) = M \cdot \theta + \gamma` in **(2)**, which leads to: 
+
+.. math::
+     \boxed{
+          \theta =  (M^T N^{-1} M)^{-1} \cdot M^T N^{-1} (d - \gamma)
+     }
+
+b1 fixed
+^^^^^^^^
+
+From **(1)** , we obtain:
+
+.. math:: 
+     \theta = \left( \begin{array}{c} A_2 \\ b_2 \end{array} \right)
+     \text{, }
+     M = \left( \begin{array}{cc} 1 & X_c \\ \vdots & \vdots \\ 1 & X_i \\ \vdots & \vdots \end{array} \right)
+     \text{, and }
+     \gamma = \left( \begin{array}{c} \bar{b_1}(X_i - X_c) \\ \vdots \\ 0 \\ \vdots \end{array} \right)
+
+
+b2 fixed
+^^^^^^^^
+From **(1)** , we obtain:
+
+.. math:: 
+     \theta = \left( \begin{array}{c} A_1 \\ b_1 \end{array} \right)
+     \text{, }
+     M = \left( \begin{array}{cc} 1 & X_i \\ \vdots & \vdots \\ 1 & X_c \\ \vdots & \vdots \end{array} \right)
+     \text{, and }
+     \gamma = \left( \begin{array}{c} 0 \\ \vdots \\ \bar{b_2}(X_i - X_c) \\ \vdots \end{array} \right)
+
+b1 and b2 fixed
+^^^^^^^^^^^^^^^
+From **(1)** , we obtain:
+
+.. math::
+     \theta = \left( \begin{array}{c} A_1 \end{array} \right)
+     \text{, }
+     M = \left( \begin{array}{c} 1 \\ \vdots \end{array} \right)
+     \text{, and }
+     \gamma = \left( \begin{array}{c} \bar{b_1}X_i \\ \vdots \\ \bar{b_1}X_c + \bar{b_2}(X_i - X_c) \\ \vdots \end{array} \right)
+   
 Calculating coefs standard deviations
 -------------------------------------
 
-Variances and covariances of A1, b1, b2 are the terms of :math:`(M^T N^{-1} M)^{-1}`.
+Variances and covariances of A1, b1, b2 are the terms of :math:`M^{-1}`.
 We use the approximation :math:`\text{Var}(a_1) = \text{Var}(\exp(A_1)) \approx a_1^2 var(A1)` 
 
 For A2, based on :math:`A2 = A1 + (b1-b2) X_c` we find:
@@ -110,7 +163,7 @@ Estimating continuum amplitude
 ------------------------------
 
 To calculate continuum SNR, we use :math:`\text{max}(\frac{a_1}{\sigma_{a_1}}, \frac{a_2}{\sigma_{a_2}})`
-If SNR is lwoer than threshold defined in parameters, we apply same behavior than in template fitting.
+If SNR is lower than threshold defined in parameters, we apply same behavior than in template fitting.
 
 
 Behaviour for too little sample
@@ -120,7 +173,7 @@ Two main cases of too little cases are possible:
 
 * The total number of samples is too low : coefficient are forced to zero, and a warning is issued.
 * One of either sides of lambda cut does not have enough samples:
-    - The coefficients are calculated using the side with enough samples
+    - The coefficients are calculated using the side with enough samples: we use a simple least square fitting method.
     - They are extended to the side with too little samples before chi2 calculation
 
 

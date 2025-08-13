@@ -65,6 +65,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_lsf()
         self._check_continuum_removal()
         self._check_templateCatalog_continuum_removal()
+        self._check_power_law_parameters()
         self._check_linemeas_runmode()
         for object in self.accessor.get_spectrum_models([]):
             self._check_object(object)
@@ -158,6 +159,15 @@ class CustomParametersChecker(ParametersChecker):
         self._check_continuum_removal_section_presence()
         self._check_IrregularSamplingMedian_kernel_width(fromTemplateCatalog)
         self._check_IrregularSamplingMedian_kernel_reflection(fromTemplateCatalog)
+
+    def _check_power_law_parameters(self) -> None:
+        for spectrum_model in self.accessor.get_spectrum_models([]):
+            self._check_dependant_condition(
+                self.accessor.get_linemodel_continuum_component(spectrum_model)
+                in ["powerLaw", "powerLawAuto"],
+                self.accessor.get_power_law_section(spectrum_model) is not None,
+                f"{spectrum_model} lineModelSolve lineModel powerLaw section",
+            )
 
     def _check_templateCatalog_continuum_removal(self) -> None:
         self._check_templateCatalog_continuum_removal_section_presence()
@@ -355,8 +365,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_templateFittingSolve_exclusive_fft_photometry(self, spectrum_model: str) -> None:
         activateFft = self.accessor.get_template_fitting_fft(spectrum_model)
-        activatePhotometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
-        if activateFft and activatePhotometry:
+        activate_photometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
+        if activateFft and activate_photometry:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Template fitting: cannot activate both fft and photometry. Please deactivate "
@@ -365,9 +375,9 @@ class CustomParametersChecker(ParametersChecker):
             )
 
     def _check_templateFittingSolve_exclusive_twopass_photometry(self, spectrum_model: str) -> None:
-        activatePhotometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
+        activate_photometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
         singlePass = self.accessor.get_template_fitting_single_pass(spectrum_model)
-        if activatePhotometry and not singlePass:
+        if activate_photometry and not singlePass:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Template fitting: cannot activate both two pass and photometry. Please activate "
@@ -524,9 +534,9 @@ class CustomParametersChecker(ParametersChecker):
         )
 
     def _check_lineModelSolve_exclusive_fft_photometry(self, spectrum_model: str) -> None:
-        activateContinuumFft = self.accessor.get_linemodel_continuumfit_fft(spectrum_model)
-        activatePhotometry = self.accessor.get_line_model_photometry(spectrum_model)
-        if activateContinuumFft and activatePhotometry:
+        activate_continuum_fft = self.accessor.get_linemodel_continuumfit_fft(spectrum_model)
+        activate_photometry = self.accessor.get_line_model_photometry(spectrum_model)
+        if activate_continuum_fft and activate_photometry:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Line model solve: cannot activate both fft and photometry. Please deactivate "

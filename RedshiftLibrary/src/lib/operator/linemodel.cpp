@@ -283,7 +283,7 @@ void COperatorLineModel::fitContinuumTemplates(
       castedOperator->SetRedshifts(redshiftsContinuumFit);
       templatefittingResult =
           castedOperator->Compute(m_opt_tplfit_extinction, m_opt_tplfit_dustFit,
-                                  m_opt_continuum_null_amp_threshold, "full",
+                                  m_opt_continuum_null_amp_threshold,
                                   ebmvIndices[i], meiksinIndices[i]);
     } else {
       CPriorHelper::TPriorZEList zePriorData;

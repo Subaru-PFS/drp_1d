@@ -15,7 +15,7 @@
     "priors"
   ],
   "additionalProperties": false,
-  "description": "Concerns only fullmodel ie `continuumComponent=\"tplFit\"`",
+  "description": "Concerns only fullmodel ie `continuumComponent=\"tplFit\", \"tplFitAuto\",  \"powerLaw\" or \"powerLawauto\"`",
   "properties": {
     "fftProcessing": {
       "type": "boolean",

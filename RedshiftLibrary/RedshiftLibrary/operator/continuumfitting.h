@@ -47,6 +47,10 @@
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
 
+namespace continuumFitting_test {
+class simple_powerlaw;
+}
+
 namespace NSEpic {
 
 class CSpectrum;
@@ -94,6 +98,8 @@ public:
   }
 
 protected:
+  friend continuumFitting_test::simple_powerlaw;
+
   std::shared_ptr<CMaskBuilder> m_maskBuilder;
   std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;

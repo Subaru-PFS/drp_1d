@@ -43,6 +43,7 @@ from tests.python.utils import (
     WarningUtils,
     check_from_parameter_dict,
     make_parameter_dict_at_redshift_solver_level,
+    make_parameter_dict_at_linemodelsolve_level,
 )
 
 
@@ -132,6 +133,7 @@ class TestLineModelSolve:
                         "lineModel": {
                             "continuumComponent": method,
                             "continuumFit": {"ignoreLineSupport": False},
+                            "powerLaw": {},
                         }
                     }
                 }
@@ -444,3 +446,31 @@ class TestLineModelSolve:
                 }
             )
             check_from_parameter_dict(param_dict)
+
+    class TestPowerLawSection:
+        def _make_parameter_dict(self, **kwargs) -> dict:
+            kwargs["continuumFit"] = {"ignoreLineSupport": True}
+            param_dict = make_parameter_dict_at_linemodelsolve_level(**kwargs)
+            if kwargs.get("continuumComponent") == "powerLawAuto":
+                param_dict["continuumRemoval"] = {}
+            return param_dict
+
+        @pytest.mark.parametrize("method", ["powerLaw", "powerLawAuto"])
+        def test_error_if_powerlaw_but_section_is_not_present(self, method):
+            param_dict = self._make_parameter_dict(**{"continuumComponent": method})
+            with pytest.raises(
+                APIException,
+                match=r"lineModelSolve lineModel powerLaw section",
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("method", ["powerLaw", "powerLawAuto"])
+        def test_ok_if_powerlaw_and_section_is_present(self, zflag, method):
+            param_dict = self._make_parameter_dict(**{"continuumComponent": method, "powerLaw": {}})
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        def test_warning_if_powerlaw_but_section_is_not_present(self, zflag):
+            param_dict = self._make_parameter_dict(**{"continuumComponent": "sth", "powerLaw": {}})
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
