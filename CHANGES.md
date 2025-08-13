@@ -2,6 +2,7 @@
 
 ## 1.13
 ### Added
+* [5653] : Added the FFT template fitting when input spectrum has masked samples and also enable the option ignoreLineSupport
 ### Changed
 ### Deprecated
 ### Removed
