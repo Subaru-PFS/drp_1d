@@ -6,6 +6,7 @@
 * [9699] : Add a check on input parameters : ignoreLineSupport must be true if continuumComponent is powerlaw
 * [9874] : Add continuum model in lineMeasSolve outputs 
 * [9470] : Add attributes in line measurements, including Equivalent Width
+* [7712] : Implement flagged spectrum for templatefitting with FFT
 ### Changed
 * [9851] : Rename & homogenize quality indicators in output specifications
 * [9859] : Update error codes & messages
