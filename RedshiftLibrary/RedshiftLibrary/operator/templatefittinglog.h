@@ -129,7 +129,9 @@ private:
                    CPriorHelper::TPriorZEList(),
                CMask const &lineMask = {});
 
-  void FitRangez(const TFloat64List &inv_err2, const TInt32Range &range,
+  void FitRangez(const TFloat64List &inv_err2,
+                 const TFloat64List &spcFluxOverErr2,
+                 const TFloat64List &spcFlux2OverErr2, const TInt32Range &range,
                  const std::shared_ptr<CTemplateFittingResult> &result,
                  const TInt32List &MeiksinList, const TInt32List &EbmvList,
                  const Float64 &dtd, CMask const &lineMask);

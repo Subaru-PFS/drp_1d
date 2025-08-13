@@ -245,9 +245,9 @@ void COperatorTemplateFittingLog::EstimateXtY(
   Log.LogDebug(Formatter() << __func__ << ": backward-fft done");
 
   XtY.resize(nshifts);
-  XtY.front() = plans.inXY[nPadded - 1] / (Float64)nPadded;
+  XtY.front() = plans.inXY[nPadded - 1] / Float64(nPadded);
   for (Int32 k = 1; k < nshifts; k++)
-    XtY[k] = plans.inXY[k - 1] / (Float64)nPadded;
+    XtY[k] = plans.inXY[k - 1] / Float64(nPadded);
 }
 
 FFTPlans::FFTPlans(FFTPlans &&other) { *this = std::move(other); }
@@ -489,12 +489,16 @@ void COperatorTemplateFittingLog::FitAllz(
   Float64 dtd = 0.0;
   TFloat64List inv_err2(nSpcPixels);
   TFloat64List inv_err(nSpcPixels);
+  TFloat64List spcRebinedFluxOverErr2(nSpcPixels);
+  TFloat64List spcRebinedFlux2OverErr2(nSpcPixels);
   for (Int32 j = 0; j < ssize(error); j++) {
     if (mask[j]) {
       inv_err[j] = 1.0 / error[j];
       inv_err2[j] = inv_err[j] * inv_err[j];
-      dtd +=
-          spectrumRebinedFluxRaw[j] * spectrumRebinedFluxRaw[j] * inv_err2[j];
+      spcRebinedFluxOverErr2[j] = spectrumRebinedFluxRaw[j] * inv_err2[j];
+      spcRebinedFlux2OverErr2[j] =
+          spcRebinedFluxOverErr2[j] * spectrumRebinedFluxRaw[j];
+      dtd += spcRebinedFlux2OverErr2[j];
     }
   }
 
@@ -540,8 +544,8 @@ void COperatorTemplateFittingLog::FitAllz(
             ? lineMask.extract(ilbda.GetBegin(), ilbda.GetEnd())
             : CMask();
 
-    FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd,
-              lineMaskatThisRange);
+    FitRangez(inv_err2, spcRebinedFluxOverErr2, spcRebinedFlux2OverErr2, ilbda,
+              subresult, MeiksinList, EbmvList, dtd, lineMaskatThisRange);
 
     // copy subresults into global results
     updateGlobalResults(result, subresult, izrangelist[k].GetBegin());
@@ -758,15 +762,15 @@ void COperatorTemplateFittingLog::computeFitQuality(
  * @return
  */
 void COperatorTemplateFittingLog::FitRangez(
-    const TFloat64List &inv_err2, const TInt32Range &currentRange,
+    const TFloat64List &inv_err2, const TFloat64List &spcRebinedFluxOverErr2,
+    const TFloat64List &spcRebinedFlux2OverErr2,
+    const TInt32Range &currentRange,
     const std::shared_ptr<CTemplateFittingResult> &result,
     const TInt32List &MeiksinList, const TInt32List &EbmvList,
     const Float64 &dtd, CMask const &lineMask) {
 
   const TAxisSampleList &spectrumRebinedLambda =
       m_spectraFull[0]->GetSpectralAxis().GetSamplesVector();
-  const TAxisSampleList &spectrumRebinedFluxRaw =
-      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
   auto const &spcMask = m_spectraFull[0]->getMask();
   const Int32 nSpc = spectrumRebinedLambda.size();
   const Int32 nSpcUnmaskedPixels = spcMask.GetUnMaskedSampleCount();
@@ -779,19 +783,9 @@ void COperatorTemplateFittingLog::FitRangez(
   kend = currentRange.GetEnd();
   Int32 nTpl = kend - kstart + 1;
 
-  TAxisSampleList spcRebinedFluxOverErr2(nSpc);
-  for (Int32 j = 0; j < nSpc; j++) {
-    spcRebinedFluxOverErr2[j] = spectrumRebinedFluxRaw[j] * inv_err2[j];
-  }
-  TAxisSampleList spcRebinedFlux2OverErr2;
   TFloat64List lineMaskFloat;
   TFloat64List spcMaskFloat;
   if (lineMask.GetMasksCount()) {
-    spcRebinedFlux2OverErr2.resize(nSpc);
-    for (Int32 j = 0; j < nSpc; j++)
-      spcRebinedFlux2OverErr2[j] =
-          spcRebinedFluxOverErr2[j] * spectrumRebinedFluxRaw[j];
-
     lineMaskFloat = TFloat64List(lineMask.getMaskList().begin(),
                                  lineMask.getMaskList().end());
 
@@ -896,14 +890,17 @@ void COperatorTemplateFittingLog::FitRangez(
   // precompute DtD and nValidSamples in case of lineMask
   // since constant for all ism/igm
   TFloat64List DtD_vec(nshifts, dtd);
-  TFloat64List nValidSamples_vec(nshifts, nSpcUnmaskedPixels);
+  TInt32List nValidSamples_vec(nshifts, nSpcUnmaskedPixels);
   if (lineMask.GetMasksCount()) {
     // Estimate DtD if lineMask
     EstimateXtY(spcRebinedFlux2OverErr2, lineMaskFloat, DtD_vec, fftPlans,
                 EPrecomputedFFT::none, EPrecomputedFFT::tplMask);
-
-    EstimateXtY(spcMaskFloat, lineMaskFloat, nValidSamples_vec, fftPlans,
+    TFloat64List nValidSamples_vec_float;
+    EstimateXtY(spcMaskFloat, lineMaskFloat, nValidSamples_vec_float, fftPlans,
                 EPrecomputedFFT::none, EPrecomputedFFT::tplMask);
+    std::transform(nValidSamples_vec_float.cbegin(),
+                   nValidSamples_vec_float.cend(), nValidSamples_vec.begin(),
+                   [](Float64 v) { return std::round(v); });
   }
 
   // note that there is no need to copy the ism/igm cause they already exist in
